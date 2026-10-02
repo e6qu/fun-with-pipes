@@ -264,7 +264,17 @@ fn allowances(text: &str, m: &Module) -> Vec<(u32, u32, HashSet<String>)> {
     let Ok((_, comments)) = lex_with_comments(text, 0) else {
         return vec![];
     };
-    let mut starts: Vec<u32> = m.decls.iter().map(|d| d.span().line).collect();
+    // a binding belongs to the signature right before it
+    let mut starts: Vec<u32> = m
+        .decls
+        .iter()
+        .enumerate()
+        .filter(|(i, d)| match (d, i.checked_sub(1).map(|j| &m.decls[j])) {
+            (Decl::Bind(b), Some(Decl::Sig { sig, .. })) => sig.name != b.name,
+            _ => true,
+        })
+        .map(|(_, d)| d.span().line)
+        .collect();
     starts.sort();
     starts.dedup();
     let mut out = Vec::new();

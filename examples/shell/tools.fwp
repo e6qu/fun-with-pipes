@@ -20,6 +20,8 @@ words-of = words
 
 Point = { x: F64, y: F64 }
 
+# the executable is named after the standard library's `norm`
+# fwp:allow(shadows-std)
 export norm : Point -> F64
 norm = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
 

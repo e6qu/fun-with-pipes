@@ -248,7 +248,8 @@ struct Fmt<'a> {
 ///   `match` and its arms);
 /// - `expr`/`app`/`atom`: the best form, broken over lines if needed.
 ///
-/// Every continuation line is indented past `indent`, so the offside rule
+/// Continuation lines are indented past `indent` (only closing brackets,
+/// inside which layout is suspended, come back to it), so the offside rule
 /// reads the result as one expression.
 impl Fmt<'_> {
     // ----- declarations

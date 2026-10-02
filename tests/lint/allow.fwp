@@ -11,4 +11,9 @@ twice = map (mul 2) | id | map show | map string.length
 # fwp:allow(redundant-id)
 again = map show | map string.length
 
-main = [[1, 2] | twice | echo, [3] | again | echo] | ignore
+# a signature and its binding are one declaration
+# fwp:allow(shadows-std)
+reverse : List[a] -> List[a]
+reverse = id
+
+main = [[1, 2] | twice | echo, [3] | again | reverse | echo] | ignore

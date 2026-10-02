@@ -79,6 +79,7 @@ fn lint_command_exit_status() {
     let clean = std::process::Command::new(fwp)
         .arg("lint")
         .arg(dir.join("tests/lint/library.fwp"))
+        .arg(dir.join("docs/tutorials/13-tooling"))
         .output()
         .unwrap();
     assert!(

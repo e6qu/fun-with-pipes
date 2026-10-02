@@ -19,6 +19,7 @@ checks the code shown in each README against the program.
 | 10 | [WebAssembly](10-webassembly/README.md) | WASI and browser targets |
 | 11 | [Compile-time code and macros](11-comptime-and-macros/README.md) | `comptime`, `type[T]`, `quote`, macros |
 | 12 | [Numerics](12-numerics/README.md) | matrices, complex numbers, automatic differentiation |
+| 13 | [Tooling](13-tooling/README.md) | `fwp fmt`, `fwp lint`, the language server |
 
 Start with the first, which introduces the notation the others rely on.
 After that, the tutorials stand alone. The [language
