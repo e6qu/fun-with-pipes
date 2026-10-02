@@ -7,6 +7,67 @@ use crate::value::Value;
 
 const MAX_DEPTH: usize = 512;
 
+/// A parsed JSON value whose numbers keep their text, so that typed
+/// decoding (`src/jsontype.rs`) can read integers of any width exactly.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Raw {
+    Null,
+    Bool(bool),
+    Num(String),
+    Str(String),
+    Arr(Vec<Raw>),
+    Obj(Vec<(String, Raw)>),
+}
+
+impl Raw {
+    /// Parse a JSON text (the errors of `json.parse`).
+    pub fn parse(text: &str) -> Result<Raw, String> {
+        let mut p = Parser {
+            s: text.as_bytes(),
+            p: 0,
+            depth: 0,
+        };
+        let v = p.raw()?;
+        p.ws();
+        if p.p != p.s.len() {
+            return err("trailing characters", p.p);
+        }
+        Ok(v)
+    }
+
+    fn to_json(&self) -> Json {
+        match self {
+            Raw::Null => Json::Null,
+            Raw::Bool(b) => Json::Bool(*b),
+            Raw::Num(t) => Json::Num(t.parse().unwrap_or(0.0)),
+            Raw::Str(s) => Json::Str(s.clone()),
+            Raw::Arr(xs) => Json::Arr(xs.iter().map(Raw::to_json).collect()),
+            Raw::Obj(fs) => Json::Obj(fs.iter().map(|(k, v)| (k.clone(), v.to_json())).collect()),
+        }
+    }
+
+    /// A value of the standard library's `Json` type.
+    pub fn to_value(&self) -> Value {
+        match self {
+            Raw::Null => Value::data(0, vec![]),
+            Raw::Bool(b) => Value::data(1, vec![Value::bool(*b)]),
+            Raw::Num(t) => Value::data(2, vec![Value::F64(t.parse().unwrap_or(0.0))]),
+            Raw::Str(s) => Value::data(3, vec![Value::str(s)]),
+            Raw::Arr(xs) => {
+                Value::data(4, vec![Value::list(xs.iter().map(Raw::to_value).collect())])
+            }
+            Raw::Obj(fs) => Value::data(
+                5,
+                vec![Value::list(
+                    fs.iter()
+                        .map(|(k, v)| Value::tuple(vec![Value::str(k), v.to_value()]))
+                        .collect(),
+                )],
+            ),
+        }
+    }
+}
+
 struct Parser<'a> {
     s: &'a [u8],
     p: usize,
@@ -22,29 +83,12 @@ fn err<T>(what: &str, at: usize) -> PResult<T> {
 impl Parser<'_> {
     /// A value as plain data.
     fn json(&mut self) -> PResult<Json> {
-        fn conv(v: &Value) -> Json {
-            let Value::Data(tag, fs) = v else {
-                return Json::Null;
-            };
-            match tag {
-                1 => Json::Bool(fs[0].as_bool()),
-                2 => Json::Num(fs[0].as_f64().unwrap_or(0.0)),
-                3 => Json::Str(fs[0].as_str().to_string()),
-                4 => Json::Arr(fs[0].list_items().iter().map(conv).collect()),
-                5 => Json::Obj(
-                    fs[0]
-                        .list_items()
-                        .iter()
-                        .filter_map(|kv| match kv {
-                            Value::Record(p) => Some((p[0].as_str().to_string(), conv(&p[1]))),
-                            _ => None,
-                        })
-                        .collect(),
-                ),
-                _ => Json::Null,
-            }
-        }
-        Ok(conv(&self.value()?))
+        Ok(self.raw()?.to_json())
+    }
+
+    /// A value of the standard library's `Json` type.
+    fn value(&mut self) -> PResult<Value> {
+        Ok(self.raw()?.to_value())
     }
 
     fn ws(&mut self) {
@@ -53,7 +97,8 @@ impl Parser<'_> {
         }
     }
 
-    fn value(&mut self) -> PResult<Value> {
+    /// A value with its numbers as written (see [`Raw`]).
+    fn raw(&mut self) -> PResult<Raw> {
         self.ws();
         let Some(&c) = self.s.get(self.p) else {
             return err("unexpected end of input", self.p);
@@ -72,16 +117,16 @@ impl Parser<'_> {
                 self.depth -= 1;
                 r
             }
-            b'"' => Ok(Value::data(3, vec![Value::str(&self.string()?)])),
-            b't' => self.word("true", Value::data(1, vec![Value::bool(true)])),
-            b'f' => self.word("false", Value::data(1, vec![Value::bool(false)])),
-            b'n' => self.word("null", Value::data(0, vec![])),
+            b'"' => Ok(Raw::Str(self.string()?)),
+            b't' => self.word("true", Raw::Bool(true)),
+            b'f' => self.word("false", Raw::Bool(false)),
+            b'n' => self.word("null", Raw::Null),
             b'-' | b'0'..=b'9' => self.number(),
             _ => err("unexpected character", self.p),
         }
     }
 
-    fn word(&mut self, w: &str, v: Value) -> PResult<Value> {
+    fn word(&mut self, w: &str, v: Raw) -> PResult<Raw> {
         if self.s[self.p..].starts_with(w.as_bytes()) {
             self.p += w.len();
             Ok(v)
@@ -98,7 +143,7 @@ impl Parser<'_> {
         self.p - start
     }
 
-    fn number(&mut self) -> PResult<Value> {
+    fn number(&mut self) -> PResult<Raw> {
         let start = self.p;
         if self.s[self.p] == b'-' {
             self.p += 1;
@@ -126,10 +171,7 @@ impl Parser<'_> {
             }
         }
         let text = std::str::from_utf8(&self.s[start..self.p]).unwrap_or("0");
-        Ok(Value::data(
-            2,
-            vec![Value::F64(text.parse().unwrap_or(0.0))],
-        ))
+        Ok(Raw::Num(text.to_string()))
     }
 
     fn hex4(&mut self) -> PResult<u32> {
@@ -220,7 +262,7 @@ impl Parser<'_> {
         }
     }
 
-    fn array(&mut self) -> PResult<Value> {
+    fn array(&mut self) -> PResult<Raw> {
         self.p += 1;
         let mut items = Vec::new();
         self.ws();
@@ -228,13 +270,13 @@ impl Parser<'_> {
             self.p += 1;
         } else {
             loop {
-                items.push(self.value()?);
+                items.push(self.raw()?);
                 if !self.next(b']')? {
                     break;
                 }
             }
         }
-        Ok(Value::data(4, vec![Value::list(items)]))
+        Ok(Raw::Arr(items))
     }
 
     fn expect(&mut self, c: u8) -> PResult<()> {
@@ -246,7 +288,7 @@ impl Parser<'_> {
         }
     }
 
-    fn object(&mut self) -> PResult<Value> {
+    fn object(&mut self) -> PResult<Raw> {
         self.p += 1;
         let mut fields = Vec::new();
         self.ws();
@@ -258,14 +300,14 @@ impl Parser<'_> {
                 let k = self.string()?;
                 self.expect(b':')?;
                 self.p += 1;
-                let v = self.value()?;
-                fields.push(Value::tuple(vec![Value::str(&k), v]));
+                let v = self.raw()?;
+                fields.push((k, v));
                 if !self.next(b'}')? {
                     break;
                 }
             }
         }
-        Ok(Value::data(5, vec![Value::list(fields)]))
+        Ok(Raw::Obj(fields))
     }
 }
 
@@ -290,7 +332,7 @@ pub fn parse(text: &str) -> Value {
     }
 }
 
-fn escape(s: &str, out: &mut String) {
+pub fn escape(s: &str, out: &mut String) {
     out.push('"');
     for c in s.chars() {
         match c {

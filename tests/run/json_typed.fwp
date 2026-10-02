@@ -1,0 +1,252 @@
+# Typed JSON: json.write and json.read for every kind of encodable type,
+# and the error messages with their JSON paths.
+
+Color =
+    | Red
+    | Green
+    | Blue
+
+Shape =
+    | Circle F64
+    | Rect F64 F64
+    | Dot
+
+Point = { y: I64, x: I64 }
+
+Item = {
+    name: String,
+    price: F64,
+    tags: List[String],
+    note: Option[String],
+    color: Color,
+}
+
+Order = { id: U64, items: List[Item], shipped: Bool }
+
+Tree =
+    | Leaf
+    | Node Tree I64 Tree
+
+items : List[Item]
+items = [
+    Item { name = "pen", price = 1.5, tags = ["office"], note = None, color = Red },
+    Item {
+        name = "cup \"x\"\n",
+        price = 3.0,
+        tags = [],
+        note = Some "é",
+        color = Blue,
+    },
+]
+
+read-items : String -> Result[List[Item], String]
+read-items = json.read
+
+read-order : String -> Result[Order, String]
+read-order = json.read
+
+read-i8 : String -> Result[I8, String]
+read-i8 = json.read
+
+read-u64 : String -> Result[U64, String]
+read-u64 = json.read
+
+read-i64 : String -> Result[I64, String]
+read-i64 = json.read
+
+read-i128 : String -> Result[I128, String]
+read-i128 = json.read
+
+read-u128 : String -> Result[U128, String]
+read-u128 = json.read
+
+read-f64 : String -> Result[F64, String]
+read-f64 = json.read
+
+read-f32 : String -> Result[F32, String]
+read-f32 = json.read
+
+read-bool : String -> Result[Bool, String]
+read-bool = json.read
+
+read-shapes : String -> Result[List[Shape], String]
+read-shapes = json.read
+
+read-colors : String -> Result[Set[Color], String]
+read-colors = json.read
+
+read-map : String -> Result[Map[String, I64], String]
+read-map = json.read
+
+read-pairs : String -> Result[Map[I64, String], String]
+read-pairs = json.read
+
+read-tuple : String -> Result[(String, I64, Bool), String]
+read-tuple = json.read
+
+read-bytes : String -> Result[Bytes, String]
+read-bytes = json.read
+
+read-duration : String -> Result[Duration, String]
+read-duration = json.read
+
+read-nested : String -> Result[List[Option[Option[I64]]], String]
+read-nested = json.read
+
+read-tree : String -> Result[Tree, String]
+read-tree = json.read
+
+read-unit : String -> Result[(), String]
+read-unit = json.read
+
+read-json : String -> Result[Map[String, Json], String]
+read-json = json.read
+
+read-trits : String -> Result[(Trit, TInt[3]), String]
+read-trits = json.read
+
+read-array : String -> Result[Array[Point], String]
+read-array = json.read
+
+main =
+    ()
+    | const items
+    | json.write
+    | tap print
+    | read-items
+    | echo
+    | const [Circle 1.0, Rect 2.0 3.5, Dot]
+    | json.write
+    | tap print
+    | read-shapes
+    | echo
+    | const (9223372036854775807, -170141183460469231731687303715884105728i128)
+    | json.write
+    | print
+    | const (340282366920938463463374607431768211455u128, 255u8, -1i8)
+    | json.write
+    | print
+    | const [0.1, -0.0, 1e300, 1.0, 123456789012345680.0]
+    | json.write
+    | print
+    | const [1.0 | div 0.0, -1.0 | div 0.0, 0.0 | div 0.0]
+    | json.write
+    | print
+    | const (0.1f32, 3.4e38f32)
+    | json.write
+    | print
+    | const "héllo\u{1}\t\"\\" | json.write
+    | print
+    | const ("foobar" | string.to-bytes, "fo" | string.to-bytes)
+    | json.write
+    | print
+    | const (1500ms, 2min, 7ns, -3s)
+    | json.write
+    | print
+    | const (map.from-list [("b", 2), ("a", 1)], [Red, Blue] | set.from-list)
+    | json.write
+    | print
+    | const (map.from-list [(2, "two"), (1, "one")])
+    | json.write
+    | print
+    | const [Some (Some 1), Some None, None]
+    | json.write
+    | print
+    | const (Node (Node Leaf 1 Leaf) 2 Leaf)
+    | json.write
+    | print
+    | const ((), Point { x = 1, y = 2 }, { b = 1, a = "x" })
+    | json.write
+    | print
+    | const (Ok 1, Err "no", Equal)
+    | json.write
+    | print
+    | const ("{\"a\": [1, 2.5, true, null]}" | json.parse | result.unwrap-or Json.Null)
+    | json.write
+    | print
+    | const (0t+-0, trit.neg, array.from-list [1, 2])
+    | json.write
+    | print
+    | const items
+    | json.encode-value
+    | json.decode
+    | read-back
+    | const [
+        "{\"id\": 1, \"items\": [], \"shipped\": false}",
+        "{\"id\": \"18446744073709551615\", \"items\": [], \"shipped\": \"true\"}",
+        "{\"id\": 1e3, \"items\": [], \"shipped\": false, \"extra\": [1]}",
+        "{\"id\": 1, \"items\": [{\"name\": \"a\", \"price\": 1, \"tags\": [], \"color\": \"Green\", \"note\": null}], \"shipped\": true}",
+        "{\"id\": -1, \"items\": [], \"shipped\": false}",
+        "{\"id\": 1.5, \"items\": [], \"shipped\": false}",
+        "{\"id\": 18446744073709551616, \"items\": [], \"shipped\": false}",
+        "{\"items\": [], \"shipped\": false}",
+        "{\"id\": 1, \"items\": [{\"name\": \"a\", \"price\": \"x\", \"tags\": [], \"color\": \"Red\"}], \"shipped\": false}",
+        "{\"id\": 1, \"items\": [{\"name\": \"a\", \"price\": 1, \"tags\": [3], \"color\": \"Red\"}], \"shipped\": false}",
+        "{\"id\": 1, \"items\": [{\"name\": \"a\", \"price\": 1, \"tags\": [], \"color\": \"Purple\"}], \"shipped\": false}",
+        "{\"id\": 1, \"items\": {}, \"shipped\": false}",
+        "{\"id\": 1, \"items\": [], \"shipped\": null}",
+        "[1, 2",
+        "{\"id\": 1} x",
+        "",
+    ]
+    | each (read-order | echo)
+    | const ["127", "-128", "128", "-129", "\"12\"", "\"12x\"", "1e2", "0.0", "true"]
+    | each (read-i8 | echo)
+    | const ["18446744073709551615", "-0", "1e19", "1e20"]
+    | each (read-u64 | echo)
+    | const ["9223372036854775807", "-9223372036854775808", "-9223372036854775809"]
+    | each (read-i64 | echo)
+    | const ["\"-170141183460469231731687303715884105728\"", "170141183460469231731687303715884105728"]
+    | each (read-i128 | echo)
+    | const ["340282366920938463463374607431768211455", "\"340282366920938463463374607431768211456\""]
+    | each (read-u128 | echo)
+    | const ["0.1", "\"2.5\"", "\"NaN\"", "\"-Infinity\"", "1e400", "\"x\"", "null"]
+    | each (read-f64 | echo)
+    | const ["0.1", "16777217", "1e-50"]
+    | each (read-f32 | echo)
+    | const ["true", "\"false\"", "1", "\"yes\""]
+    | each (read-bool | echo)
+    | const [
+        "[{\"type\": \"Rect\", \"value\": [1, 2]}, \"Dot\", {\"type\": \"Dot\"}]",
+        "[{\"value\": 1}]",
+        "[{\"type\": \"Square\"}]",
+        "[{\"type\": \"Circle\"}]",
+        "[{\"type\": \"Rect\", \"value\": [1]}]",
+        "[\"Circle\"]",
+        "[3]",
+    ]
+    | each (read-shapes | echo)
+    | const ["[\"Blue\", \"Red\", \"Blue\"]", "[\"red\"]"]
+    | each (read-colors | echo)
+    | const ["{\"b\": 2, \"a\": 1, \"b\": 3}", "{\"weird key\": \"x\"}", "[]"]
+    | each (read-map | echo)
+    | const ["[[2, \"two\"], [1, \"one\"]]", "[[1]]", "{}"]
+    | each (read-pairs | echo)
+    | const ["[\"a\", 1, true]", "[\"a\", 1]", "{}"]
+    | each (read-tuple | echo)
+    | const ["\"Zm9vYmFy\"", "\"Zm8\"", "\"Zm8=\"", "\"Z\"", "\"a b\""]
+    | each (read-bytes | echo)
+    | const ["\"1500ms\"", "\"1.5s\"", "\"-2min\"", "1000", "\"1.5ns\"", "\"5 days\""]
+    | each (read-duration | echo)
+    | const ["[[1], [null], null]", "[1]"]
+    | each (read-nested | echo)
+    | const [
+        "{\"type\": \"Node\", \"value\": [\"Leaf\", 1, {\"type\": \"Leaf\"}]}",
+        "{\"type\": \"Node\", \"value\": [\"Leaf\", \"x\", \"Leaf\"]}",
+    ]
+    | each (read-tree | echo)
+    | const ["{}", "null", "[]", "[1]"]
+    | each (read-unit | echo)
+    | const ["{\"a\": {\"b\": [1, 2.5]}, \"c\": null}"]
+    | each (read-json | echo)
+    | const ["[-1, 13]", "[2, 0]", "[0, 14]"]
+    | each (read-trits | echo)
+    | const ["[{\"x\": 1, \"y\": 2}]", "[{\"x\": 1}]"]
+    | each (read-array | echo)
+    | const (range 0 40 | map (const "a") | join "")
+    | format "\"{}\""
+    | read-i8
+    | echo
+
+read-back : Result[List[Item], String] -> () ! {IO}
+read-back = echo

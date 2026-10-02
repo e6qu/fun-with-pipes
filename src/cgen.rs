@@ -299,18 +299,52 @@ impl<'p> Gen<'p> {
                         }
                         let vrefs: Vec<String> =
                             (0..vs.len()).map(|vi| format!("d{}_v{}", id, vi)).collect();
+                        // flags for typed JSON (runtime/fwp_rt_json.c)
+                        let flag = match n.as_str() {
+                            "std::Bool" => 1,
+                            "std::Option" => 2,
+                            "std::Json" => 3,
+                            _ => 0,
+                        };
                         format!(
-                            "static fwp_desc d{id};\n{vf}\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const int d{id}_a[] = {{{arity}}};\nstatic const fwp_desc *const *const d{id}_vf[] = {{{vrefs}}};\nstatic fwp_desc d{id} = {{K_ADT, {name}, {n}, d{id}_n, 0, d{id}_a, d{id}_vf}};",
+                            "static fwp_desc d{id};\n{vf}\nstatic const char *const d{id}_n[] = {{{names}}};\nstatic const int d{id}_a[] = {{{arity}}};\nstatic const fwp_desc *const *const d{id}_vf[] = {{{vrefs}}};\nstatic fwp_desc d{id} = {{K_ADT, {name}, {n}, d{id}_n, 0, d{id}_a, d{id}_vf, .width = {flag}}};",
                             id = id,
                             vf = vf.join("\n"),
                             names = names.join(", "),
                             arity = arity.join(", "),
                             vrefs = vrefs.join(", "),
                             name = Self::cstr(&short),
-                            n = vs.len()
+                            n = vs.len(),
+                            flag = flag
                         )
                     }
-                    Some(TypeShape::Record(fs)) => self.record_desc(id, Some(&short), &fs, false),
+                    Some(TypeShape::Record(fs)) => {
+                        let mut d = self.record_desc(id, Some(&short), &fs, false);
+                        // typed JSON writes nominal records in declaration
+                        // order; `Duration` is a string
+                        if n == "std::Duration" {
+                            d = d.replace(".width = 0}", ".width = 2}");
+                        } else if let Some(names) = self.prog.field_order.get(n) {
+                            let order: Vec<String> = names
+                                .iter()
+                                .filter_map(|l| fs.iter().position(|(f, _)| f == l))
+                                .map(|i| i.to_string())
+                                .collect();
+                            if order.len() == fs.len() && !fs.is_empty() {
+                                d = d.replace(
+                                    ".width = 0}",
+                                    &format!(".width = 0, .order = d{}_o}}", id),
+                                );
+                                d = format!(
+                                    "static const int d{}_o[] = {{{}}};\n{}",
+                                    id,
+                                    order.join(", "),
+                                    d
+                                );
+                            }
+                        }
+                        d
+                    }
                     _ => simple("K_OPAQUE", &short),
                 }
             }
@@ -854,6 +888,11 @@ impl<'p> Gen<'p> {
             "and" => "return (l0 == FWP_TRUE && l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "or" => "return (l0 == FWP_TRUE || l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "show" => format!("return fwp_show(l0, {});", self.desc(&p(0))),
+            "json.write" => format!("return fwp_p_json_write(l0, {});", self.desc(&p(0))),
+            "json.read" => format!(
+                "return fwp_p_json_read(l0, {});",
+                self.desc(&elem(&result, 0))
+            ),
             "format" => format!("return fwp_p_format(l0, l1, {});", self.desc(&p(1))),
             "fail" => format!("fwp_fail(l0, {}); return 0;", self.desc(&p(0))),
             "sort" => format!("return fwp_p_sort(l0, {});", self.desc(&elem(&p(0), 0))),

@@ -22,6 +22,7 @@ pub mod infer;
 pub mod interp;
 pub mod ir;
 pub mod json;
+pub mod jsontype;
 pub mod lexer;
 pub mod linalg;
 pub mod lint;

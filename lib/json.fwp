@@ -14,6 +14,25 @@ foreign "fwp" json.parse : String -> Result[Json, String]
 # compact JSON text; integral numbers below 1e15 have no fraction
 foreign "fwp" json.encode : Json -> String
 
+# The JSON text of any value whose type can be encoded: records are
+# objects, lists arrays, `Option` fields are left out when `None`, enums
+# are strings and other variants `{"type": "Circle", "value": ...}`.
+# Integers are written exactly; `I128` and `U128` as strings, `Bytes` in
+# base64 and `Duration` as `"1500ms"`. See docs/rest.md for the mapping.
+foreign "fwp" json.write : a -> String where Encode[a]
+# A value of the expected type from JSON text. Errors give the JSON path
+# of the offending value: `$.items[2].price: expected a number, got "x"`.
+# Integers, floats and `Bool` may also be strings (`"42"`).
+foreign "fwp" json.read : String -> Result[a, String] where Decode[a]
+
+# `json.write` as a `Json` value (numbers become `F64`)
+json.encode-value : a -> Json where Encode[a]
+json.encode-value = json.write | json.parse | result.unwrap-or Json.Null
+
+# a typed value from a `Json` value (see `json.read`)
+json.decode : Json -> Result[a, String] where Decode[a]
+json.decode = json.encode | json.read
+
 # the value of the first pair with the given key
 json.lookup : String -> List[(String, a)] -> Option[a]
 json.lookup = eq | compose .0 | find | flip compose (option.map .1)
