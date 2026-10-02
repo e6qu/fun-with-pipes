@@ -83,3 +83,9 @@ the-i64 = id
 
 the-u8 : Option[U8] -> Option[U8]
 the-u8 = id
+
+# the parts before and after the first occurrence of a separator
+foreign "fwp" string.split-once : String -> String -> Option[(String, String)]
+
+test "split-once" = "key: value: x" | string.split-once ": " | eq (Some ("key", "value: x"))
+test "split-once missing" = "abc" | string.split-once "=" | eq None

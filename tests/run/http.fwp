@@ -1,0 +1,87 @@
+# An HTTP server and its client in one program: routing, path parameters,
+# JSON bodies, middleware (auth, timeout), streaming, limits and errors.
+
+hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+hello = http.param "name" | option.unwrap-or "world" | format "hello, {}" | http.text 200
+
+echo-x : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+echo-x = http.json-body | json.get "x" | option.unwrap-or Json.Null | json.response
+
+slow : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+slow = timeout 50ms | tap (const 2s | task.sleep) | const "late" | http.text 200
+
+secret : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+secret = auth.bearer "s3cret" | const "welcome" | http.text 200
+
+stream : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+stream = const produce | http.stream 200 "text/plain"
+
+produce : Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
+produce = flip send-parts ["one ", "two ", "three"]
+
+send-parts : Channel[Bytes] -> List[String] -> () ! {Async}
+send-parts = curry (fork each (.0 | channel.send | compose string.to-bytes | flip compose ignore) .1)
+
+routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes = http.router [
+    http.route "GET" "/hello" hello,
+    http.route "GET" "/hello/:name" hello,
+    http.route "POST" "/echo" echo-x,
+    http.route "GET" "/slow" slow,
+    http.route "GET" "/secret" secret,
+    http.route "GET" "/stream" stream,
+]
+
+config : ServerConfig
+config = "unused" | http.config | with { max-header-bytes = 200, max-body-bytes = 64 }
+
+cases : List[(String, String, String, List[(String, String)])]
+cases = [
+    ("GET", "/hello", "", []),
+    ("GET", "/hello/fwp", "", []),
+    ("GET", "/hello?x=1", "", []),
+    ("GET", "/nope", "", []),
+    ("DELETE", "/hello", "", []),
+    ("POST", "/echo", "{\"x\": [1, \"two\", {\"y\": null}]}", [("content-type", "application/json")]),
+    ("POST", "/echo", "not json", []),
+    ("POST", "/echo", "0123456789012345678901234567890123456789012345678901234567890123456789", []),
+    ("GET", "/secret", "", []),
+    ("GET", "/secret", "", [("authorization", "Bearer s3cret")]),
+    ("GET", "/slow", "", []),
+    ("GET", "/stream", "", []),
+    ("HEAD", "/hello", "", []),
+]
+
+raws : List[String]
+raws = [
+    "GARBAGE\r\n\r\n",
+    "GET / HTTP/2.0\r\n\r\n",
+    "GET / HTTP/1.1\r\nbad header\r\n\r\n",
+    "GET / HTTP/1.1\r\nx: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n\r\n",
+    "GET /hello HTTP/1.1\r\n\r\nGET /hello/again HTTP/1.1\r\nconnection: close\r\n\r\n",
+    "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n",
+]
+
+to-request : (String, (String, String, String, List[(String, String)])) -> ClientRequest
+to-request = make ClientRequest { method = .1 | .0, url = fork concat (.1 | .1) .0, body = .1 | .2 | string.to-bytes, headers = .1 | .3 }
+
+show-result : Result[ClientResponse, IoError] -> String
+show-result = match
+    Ok _ -> both .status (.body | string.from-bytes | option.unwrap-or "?") | format "{} {}"
+    Err _ -> .message | flip concat "error: "
+
+run-checks : String -> () ! {Async, IO, Network}
+run-checks = curry id | flip map cases | each (to-request | attempt http.send | show-result | print)
+
+raw : (String, String) -> String ! {Async, Network, Error[IoError]}
+raw = both (.0 | tcp.connect) .1 | tap (fork tcp.write (.1 | string.to-bytes) .0) | .0 | both http.read-all tcp.close | .0 | string.from-bytes | option.unwrap-or "" | replace "\r\n" "|"
+
+show-raw : Result[String, IoError] -> String
+show-raw = match
+    Ok _ -> id
+    Err _ -> .message | flip concat "error: "
+
+run-raws : String -> () ! {Async, IO, Network}
+run-raws = curry id | flip map raws | each (attempt raw | show-raw | print)
+
+main = "127.0.0.1:0" | tcp.listen | both (both id (const (config, routes)) | spawn-with (uncurry http.serve-on)) (tcp.local-addr | both (format "http://{}" | run-checks) run-raws) | tap (const () | signal.request-shutdown) | .0 | task.await | ignore

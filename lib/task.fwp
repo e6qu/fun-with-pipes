@@ -1,0 +1,42 @@
+# Structured concurrency: tasks, channels, cancellation and deadlines.
+#
+# Tasks form a tree: a task finishes only after its children finished, and
+# cancelling a task cancels its subtree. Cancellation is observed when a
+# task suspends (sleeping, waiting on a channel, another task or a socket)
+# and unwinds it; `attempt` does not catch it. A deadline cancels its task
+# when it passes. In the native runtime tasks are green threads on an
+# event loop; the interpreter runs each task on a thread, one at a time.
+
+Task[a] = builtin
+Channel[a] = builtin
+
+# start a task; it may perform IO but must handle its own errors
+foreign "fwp" task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
+# wait for a task: `None` if it was cancelled
+foreign "fwp" task.await : Task[a] -> Option[a] ! {Async}
+foreign "fwp" task.cancel : Task[a] -> () ! {Async}
+# run a task with a deadline and wait for it
+foreign "fwp" task.within : Duration -> (() -> a ! {Async, IO, Network, FileIO}) -> Option[a] ! {Async}
+foreign "fwp" task.sleep : Duration -> () ! {Async}
+foreign "fwp" task.yield : () -> () ! {Async}
+# set (or tighten) the current task's deadline, passing a value through
+foreign "fwp" task.deadline : Duration -> a -> a ! {Async}
+foreign "fwp" task.cancelled : () -> Bool ! {Async}
+# run a function and wait for every task it started; when it fails, those
+# tasks are cancelled
+foreign "fwp" task.scope : (() -> a ! {Async | e}) -> a ! {Async | e}
+
+# bounded FIFO channels: `send` waits while the channel is full, which
+# propagates backpressure; `recv` gives `None` once closed and drained
+foreign "fwp" channel.make : I64 -> Channel[a] ! {Async}
+foreign "fwp" channel.send : Channel[a] -> a -> Bool ! {Async}
+foreign "fwp" channel.recv : Channel[a] -> Option[a] ! {Async}
+foreign "fwp" channel.recv-for : Duration -> Channel[a] -> Option[a] ! {Async}
+foreign "fwp" channel.close : Channel[a] -> () ! {Async}
+
+# run tasks for every element and collect their results in order
+task.map : (a -> b ! {Async, IO, Network, FileIO}) -> List[a] -> List[Option[b]] ! {Async}
+task.map = spawn-with | map | flip compose (map task.await)
+
+spawn-with : (a -> b ! {Async, IO, Network, FileIO}) -> a -> Task[b] ! {Async}
+spawn-with = then2 (flip compose | compose const) task.spawn

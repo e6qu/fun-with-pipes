@@ -1,0 +1,46 @@
+# Structured logs (logfmt lines on stderr) and process metrics.
+
+# `log.event level message fields`
+log.event : String -> String -> List[(String, String)] -> () ! {IO}
+log.event = curry3 (fork log.line-of (const () | time.unix | duration.millis) id | flip concat "\n" | eprint)
+
+log.line-of : I64 -> (String, String, List[(String, String)]) -> String
+log.line-of = curry (fork concat log.fields (fork concat (.1 | .1 | log.quote) (both .0 (.1 | .0) | format "ts={} level={} msg=")))
+
+log.fields : (I64, (String, String, List[(String, String)])) -> String
+log.fields = .1 | .2 | map (both .0 (.1 | log.quote) | format " {}={}") | join ""
+
+log.quote : String -> String
+log.quote = replace "\\" "\\\\" | replace "\"" "\\\"" | replace "\n" "\\n" | format "\"{}\""
+
+log.info : String -> () ! {IO}
+log.info = flip (log.event "info") []
+
+log.warn : String -> () ! {IO}
+log.warn = flip (log.event "warn") []
+
+log.error : String -> () ! {IO}
+log.error = flip (log.event "error") []
+
+# counters only grow; gauges are set; observations add `_count` and `_sum`
+foreign "fwp" metrics.add : String -> F64 -> () ! {IO}
+foreign "fwp" metrics.set : String -> F64 -> () ! {IO}
+foreign "fwp" metrics.observe : String -> F64 -> () ! {IO}
+# (name, kind, value), in name order
+foreign "fwp" metrics.snapshot : () -> List[(String, String, F64)] ! {IO}
+
+metrics.inc : String -> () ! {IO}
+metrics.inc = flip metrics.add 1.0
+
+# Prometheus text exposition format
+metrics.render : () -> String ! {IO}
+metrics.render = metrics.snapshot | map metrics.line | join ""
+
+metrics.line : (String, String, F64) -> String
+metrics.line = if (.1 | eq "summary") metrics.sample (fork concat metrics.sample (both .0 .1 | format "# TYPE {} {}\n"))
+
+metrics.sample : (String, String, F64) -> String
+metrics.sample = both .0 .2 | format "{} {}\n"
+
+test "log line" = ("info", "started", [("port", "8080")]) | log.line-of 5 | eq "ts=5 level=info msg=\"started\" port=\"8080\""
+test "metrics" = [metrics.inc "fwp_test_requests", metrics.inc "fwp_test_requests", metrics.set "fwp_test_load" 0.5, metrics.observe "fwp_test_latency" 2.0] | const () | metrics.render | eq "fwp_test_latency_count 1.0\nfwp_test_latency_sum 2.0\n# TYPE fwp_test_load gauge\nfwp_test_load 0.5\n# TYPE fwp_test_requests counter\nfwp_test_requests 2.0\n"

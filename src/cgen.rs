@@ -13,6 +13,9 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
+    include_str!("../runtime/fwp_rt_task.c"),
+    include_str!("../runtime/fwp_rt_json.c"),
+    include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
 ];
 
@@ -157,6 +160,11 @@ impl<'p> Gen<'p> {
                     "std::String" => return simple("K_STR", "String"),
                     "std::Bytes" => return simple("K_BYTES", "Bytes"),
                     "std::File" => return simple("K_FILE", "File"),
+                    "std::Task" => return simple("K_NATIVE", "task"),
+                    "std::Channel" => return simple("K_NATIVE", "channel"),
+                    "std::Listener" => return simple("K_NATIVE", "listener"),
+                    "std::Conn" => return simple("K_NATIVE", "connection"),
+                    "std::UdpSocket" => return simple("K_NATIVE", "udp socket"),
                     "std::List" | "std::Array" | "std::Set" => {
                         let e = self.desc_id(&elem(mt, 0));
                         let k = match n.as_str() {
@@ -348,7 +356,7 @@ impl<'p> Gen<'p> {
                     }
                 )
             }
-            Value::File(_) => "0".into(),
+            Value::File(_) | Value::Native(_) => "0".into(),
             Value::Closure(c) => {
                 self.used_closures[c.func] = true;
                 let parts: Vec<String> = c.args.iter().map(|f| self.const_expr(f)).collect();
@@ -799,6 +807,26 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_file_write_new(l0, l1, {});", err),
                 }
             }
+            "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
+            | "tcp.read-for" | "tcp.write" | "udp.bind" | "udp.send-to" | "udp.recv-from"
+            | "dns.resolve" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let (f, n) = match sym {
+                    "tcp.listen" => ("fwp_p_tcp_listen", 1),
+                    "tcp.accept" => ("fwp_p_tcp_accept", 1),
+                    "tcp.accept-for" => ("fwp_p_tcp_accept_for", 2),
+                    "tcp.connect" => ("fwp_p_tcp_connect", 1),
+                    "tcp.read" => ("fwp_p_tcp_read", 2),
+                    "tcp.read-for" => ("fwp_p_tcp_read_for", 3),
+                    "tcp.write" => ("fwp_p_tcp_write", 2),
+                    "udp.bind" => ("fwp_p_udp_bind", 1),
+                    "udp.send-to" => ("fwp_p_udp_send_to", 3),
+                    "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
+                    _ => ("fwp_p_dns_resolve", 1),
+                };
+                let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
+                format!("return {}({}, {});", f, args.join(", "), err)
+            }
             _ => {
                 let simple: &[(&str, &str)] = &[
                     ("map", "fwp_p_map(l0, l1)"),
@@ -908,6 +936,45 @@ impl<'p> Gen<'p> {
                     ("modify", "fwp_p_modify(l0)"),
                     ("run-state", "fwp_p_run_state(l0, l1, l2)"),
                     ("file.close", "fwp_p_file_close(l0)"),
+                    ("loop", "fwp_p_loop(l0, l1)"),
+                    ("json.parse", "fwp_p_json_parse(l0)"),
+                    ("json.encode", "fwp_p_json_encode(l0)"),
+                    ("string.split-once", "fwp_p_split_once(l0, l1)"),
+                    ("bytes.find", "fwp_p_bytes_find(l0, l1)"),
+                    ("url.encode", "fwp_p_url_encode(l0)"),
+                    ("url.decode", "fwp_p_url_decode(l0, 0)"),
+                    ("form.decode", "fwp_p_url_decode(l0, 1)"),
+                    ("url.split", "fwp_p_url_split(l0)"),
+                    ("http.parse-request-head", "fwp_p_parse_request_head(l0)"),
+                    ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
+                    ("int.to-hex", "fwp_p_to_hex(l0)"),
+                    ("int.parse-hex", "fwp_p_parse_hex(l0)"),
+                    ("task.spawn", "fwp_p_task_spawn(l0)"),
+                    ("task.await", "fwp_p_task_await(l0)"),
+                    ("task.cancel", "fwp_p_task_cancel(l0)"),
+                    ("task.within", "fwp_p_task_within(l0, l1)"),
+                    ("task.sleep", "fwp_p_task_sleep(l0)"),
+                    ("task.yield", "fwp_p_task_yield()"),
+                    ("task.deadline", "fwp_p_task_deadline(l0, l1)"),
+                    ("task.cancelled", "fwp_p_task_cancelled()"),
+                    ("task.scope", "fwp_p_task_scope(l0)"),
+                    ("channel.make", "fwp_p_channel_make(l0)"),
+                    ("channel.send", "fwp_p_channel_send(l0, l1)"),
+                    ("channel.recv", "fwp_p_channel_recv(l0)"),
+                    ("channel.recv-for", "fwp_p_channel_recv_for(l0, l1)"),
+                    ("channel.close", "fwp_p_channel_close(l0)"),
+                    ("tcp.local-addr", "fwp_p_local_addr(l0)"),
+                    ("tcp.peer-addr", "fwp_p_peer_addr(l0)"),
+                    ("tcp.stop", "fwp_p_tcp_stop(l0)"),
+                    ("tcp.close", "fwp_p_sock_close(l0)"),
+                    ("udp.local-addr", "fwp_p_local_addr(l0)"),
+                    ("udp.close", "fwp_p_sock_close(l0)"),
+                    ("signal.shutdown-requested", "fwp_p_shutdown_requested()"),
+                    ("signal.request-shutdown", "fwp_p_request_shutdown()"),
+                    ("metrics.add", "fwp_p_metrics_update(0, l0, l1)"),
+                    ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
+                    ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
+                    ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),
@@ -1210,10 +1277,12 @@ static const fwp_exec_spec exec_spec = {{
         if (setjmp(h.jb) == 0) {{
             V v = caf{id}();
             fwp_handlers = h.prev;
+            fwp_tasks_finish();
             if (v == FWP_TRUE) {{ pass++; printf("test %s ... ok\n", {name}); }}
             else {{ fail++; printf("test %s ... FAILED\n", {name}); }}
         }} else {{
             fwp_handlers = h.prev; fwp_state_len = h.state_depth; fail++;
+            fwp_tasks_abort();
             fwp_buf b = {{0}}; fwp_write(&b, h.value, h.desc, 1);
             printf("test %s ... FAILED (error: %s)\n", {name}, b.d ? b.d : "");
         }}
@@ -1227,7 +1296,7 @@ static const fwp_exec_spec exec_spec = {{
         r
     } else {
         format!(
-            "    V r = caf{}();\n    (void){};\n    fwp_exit_code = {};",
+            "    V r = caf{}();\n    fwp_tasks_finish();\n    (void){};\n    fwp_exit_code = {};",
             main,
             main_desc,
             if exit_code {
@@ -1261,6 +1330,7 @@ int main(int argc, char **argv) {{
     clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);
     fwp_seed_rng();
     setvbuf(stdout, 0, _IOFBF, 1 << 16);
+    signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     pthread_attr_setstacksize(&attr, (size_t)1 << 30);

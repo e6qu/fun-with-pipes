@@ -10,8 +10,10 @@ users
 | sort
 ```
 
-See [PLAN.md](PLAN.md) and [docs/protocol.md](docs/protocol.md) for the language design decisions and the
-implementation roadmap.
+See [PLAN.md](PLAN.md) for the language design decisions and the
+implementation roadmap, [docs/protocol.md](docs/protocol.md) for the typed
+process protocol and [docs/concurrency.md](docs/concurrency.md) for tasks,
+networking and the HTTP server.
 
 ## Status
 
@@ -27,7 +29,8 @@ implementation roadmap.
 | Standalone function executables, typed pipe protocol (`PIPE_V1`), `fwp pipe` | done |
 | Comptime evaluation, `Syntax` values, hygienic macros, `type[T]` reflection | done |
 | Linear algebra (sized vectors/matrices), complex numbers, autodiff, balanced ternary, SIMD, tensor graphs | done |
-| Concurrency, networking, FFI, WASM | planned |
+| Structured concurrency (tasks, channels, deadlines), TCP/UDP/DNS, HTTP/1.1 server and client, JSON, URLs, logs, metrics | done |
+| FFI, WASM, fat binaries | planned |
 
 ## Usage
 

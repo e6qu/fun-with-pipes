@@ -36,6 +36,8 @@ pub enum Value {
     TInt(i64),
     Trit(i8),
     File(Rc<RefCell<FileState>>),
+    /// Task, channel or socket.
+    Native(Rc<crate::sched::Native>),
 }
 
 #[derive(Debug)]
@@ -157,6 +159,7 @@ impl Value {
             Value::TInt(_) => 18,
             Value::Trit(_) => 19,
             Value::File(_) => 20,
+            Value::Native(_) => 21,
             Value::Bytes(_) => 21,
         }
     }
@@ -190,6 +193,7 @@ impl Ord for Value {
             (Trit(a), Trit(b)) => a.cmp(b),
             (Closure(a), Closure(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
             (File(a), File(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
+            (Native(a), Native(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
             _ => self.rank().cmp(&other.rank()),
         }
     }
@@ -420,6 +424,7 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
             out.push(']');
         }
         Value::File(f) => out.push_str(&format!("<file {}>", f.borrow().path)),
+        Value::Native(n) => out.push_str(n.describe()),
         Value::Array(items) => {
             let elem = match mt {
                 MT::Con(_, args) if !args.is_empty() => args[0].clone(),

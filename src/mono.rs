@@ -615,6 +615,7 @@ impl<'a> Mono<'a> {
                 ),
                 crate::interp::Ctl::Trap(m) => format!("`comptime` evaluation trapped: {}", m),
                 crate::interp::Ctl::Exit(c) => format!("`comptime` evaluation exited with {}", c),
+                crate::interp::Ctl::Cancelled => "`comptime` evaluation was cancelled".to_string(),
             })
         };
         match result {
@@ -722,6 +723,7 @@ impl<'a> Mono<'a> {
                 };
                 let mut idxs = Vec::new();
                 for seg in path {
+                    self.register_shapes(&cur);
                     let idx = record_index(&self.prog, &cur, seg).ok_or_else(|| {
                         Diagnostic::error(
                             e.span,
@@ -794,6 +796,7 @@ impl<'a> Mono<'a> {
             ExprKind::With(fields) => {
                 let mt = self.node_mt(e.id, s);
                 let rec = mt.as_fun().map(|(a, _)| a.clone()).unwrap_or(MT::unit());
+                self.register_shapes(&rec);
                 let k = fields.len() as u32;
                 let mut idxs = Vec::new();
                 let mut vals = Vec::new();
@@ -814,6 +817,7 @@ impl<'a> Mono<'a> {
             ExprKind::Make(_, fields) => {
                 let mt = self.node_mt(e.id, s);
                 let out = mt.as_fun().map(|(_, b)| b.clone()).unwrap_or(MT::unit());
+                self.register_shapes(&out);
                 let k = fields.len() as u32;
                 let labels = record_labels(&self.prog, &out);
                 let mut order = Vec::new();
@@ -836,6 +840,7 @@ impl<'a> Mono<'a> {
             ExprKind::Update(fields) => {
                 let mt = self.node_mt(e.id, s);
                 let rec = mt.as_fun().map(|(a, _)| a.clone()).unwrap_or(MT::unit());
+                self.register_shapes(&rec);
                 let k = fields.len() as u32;
                 let mut idxs = Vec::new();
                 let mut vals = Vec::new();

@@ -501,10 +501,12 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     if (setjmp(h.jb) == 0) {
         V r = n == 0 ? caf_exec_entry() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);
         fwp_handlers = h.prev;
+        fwp_tasks_finish();
         *failed = 0;
         return r;
     }
     fwp_handlers = h.prev;
+    fwp_tasks_abort();
     fwp_flush();
     fprintf(stderr, "error: ");
     fwp_display_top(h.value, h.desc, stderr);

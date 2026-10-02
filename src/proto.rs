@@ -104,7 +104,7 @@ pub fn encode(out: &mut Vec<u8>, v: &Value, mt: &MT, prog: &Program) {
                 }
             }
         }
-        Value::Closure(_) | Value::File(_) => {}
+        Value::Closure(_) | Value::File(_) | Value::Native(_) => {}
     }
 }
 
