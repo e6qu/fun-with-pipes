@@ -1008,17 +1008,28 @@ mismatch`, ...).
 # `SSL_CERT_DIR` override them) or those in `ca-file` (PEM), and it must be
 # for `server-name`, by default the host of the address (sent with SNI
 # unless it is an IP address). `alpn`: the protocols to offer
-# (`tls.alpn` tells the one chosen).
+# (`tls.alpn` tells the one chosen). `cert-file` and `key-file`: a client
+# certificate chain and its private key (PEM), for servers that require
+# one (mutual TLS); the key may be in the certificate's file.
 TlsOptions = {
     ca-file: Option[String],
     insecure: Bool,
     server-name: Option[String],
     alpn: List[String],
+    cert-file: Option[String],
+    key-file: Option[String],
 }
 
-# A server's certificate chain and private key (PEM files), and the
-# protocols it accepts (ALPN), in its order of preference.
-TlsServer = { cert-file: String, key-file: String, alpn: List[String] }
+# A server's certificate chain and private key (PEM files), the protocols
+# it accepts (ALPN), in its order of preference, and the CA certificates
+# (PEM) of the client certificates it requires (mutual TLS; `None`: it
+# does not ask clients for certificates).
+TlsServer = {
+    cert-file: String,
+    key-file: String,
+    alpn: List[String],
+    client-ca: Option[String],
+}
 
 # finish the handshake now (for an accepted connection: its handshake
 # otherwise happens on its first read or write); nothing for a plain
@@ -1030,6 +1041,12 @@ tls.alpn : Conn -> String ! {Network}
 
 # a TLS connection (not a plain TCP one)
 tls.secure : Conn -> Bool ! {Network}
+
+# the subject of the certificate the peer presented
+# (`CN=alice,O=Example`, as RFC 2253 writes names), after the handshake:
+# the client's for a server that requires client certificates, the
+# server's for a client; `None` for a plain connection
+tls.peer-subject : Conn -> Option[String] ! {Network}
 
 # OpenSSL can be used (the interpreter loads it when a program first uses
 # TLS; native programs that use TLS are linked with it)
@@ -1053,8 +1070,16 @@ tls.options : TlsOptions
 # trust the CA certificates of a PEM file
 tls.with-ca : String -> TlsOptions -> TlsOptions
 
+# present a client certificate chain and its private key (PEM files):
+# `tls.options | tls.with-cert "client.pem" "client.key"`
+tls.with-cert : String -> String -> TlsOptions -> TlsOptions
+
 # a server with a certificate chain and key (PEM files), without protocols
 tls.server : String -> String -> TlsServer
+
+# require client certificates signed by the CA certificates of a PEM file
+# (mutual TLS): a client without one fails its handshake
+tls.with-client-ca : String -> TlsServer -> TlsServer
 
 # connect to "host:port" and finish the handshake
 tls.connect : String -> Conn ! {Async, Network, Error[IoError]}
@@ -1148,6 +1173,11 @@ http.query-param : String -> Request -> Option[String]
 
 # a path parameter bound by the router (`/users/:id`)
 http.param : String -> Request -> Option[String]
+
+# the subject of the client's certificate (`CN=alice,O=Example`), when the
+# server requires client certificates (mutual TLS: `client-ca` in its
+# `TlsServer`), which it has then verified
+http.peer-subject : Request -> Option[String]
 http.body-text : Request -> String
 http.form : Request -> List[(String, String)]
 
@@ -1326,11 +1356,13 @@ RestPlace =
     | RestPlace.Header String
     | RestPlace.Cookie String
 
-# A security scheme: `Authorization: Bearer <token>`, or an API key in a
-# place ("header", "query" or "cookie") under a name.
+# A security scheme: `Authorization: Bearer <token>`, an API key in a
+# place ("header", "query" or "cookie") under a name, or the subject of
+# the client's certificate (mutual TLS, `http.peer-subject`).
 RestAuth =
     | RestAuth.Bearer
     | RestAuth.ApiKey String String
+    | RestAuth.ClientCert
 
 # Cross-origin requests (CORS): the origins allowed (`*` for any; none
 # allows no cross-origin request), the methods and request headers they
@@ -1446,7 +1478,8 @@ rest.main : String -> List[Route] -> () ! {Async, IO, Network}
 # Serve a REST API: its routes, `/openapi.json`, `/docs`, and CORS, with
 # JSON error responses (`{"error": "not found"}` for unknown paths, and
 # for the server's own errors, such as timeouts). The command line is
-# `[--listen host:port] [--tls-cert file --tls-key file] [--cors origins]
+# `[--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca
+# file]] [--cors origins]
 # [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
 # `127.0.0.1:8080`, the certificate and key (PEM files, for HTTPS) to
 # `FWP_TLS_CERT` and `FWP_TLS_KEY`, and the allowed origins (separated by
@@ -1588,6 +1621,36 @@ grpc.metadata : () -> List[(String, String)] ! {Network}
 # one metadata value of the call being served
 grpc.header : String -> Option[String] ! {Network}
 
+# add a header to the response of the call the current task serves: sent
+# with its first message (so set it before sending any)
+grpc.set-header : String -> String -> () ! {Network}
+
+# add a trailer to the response of the call the current task serves: sent
+# with its status
+grpc.set-trailer : String -> String -> () ! {Network}
+
+# run a function whose calls compress their messages with gzip
+# (`grpc-encoding: gzip`; servers then compress their responses too).
+# Compressed messages are always accepted.
+grpc.with-gzip : (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# run a function, and collect the response metadata (headers and
+# trailers, with lower-case names) of the calls it makes that end
+grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}
+
+# the response metadata (headers and trailers) a call has received so far
+grpc.response-metadata : GrpcStream -> List[(String, String)] ! {Network}
+
+# the subject of the client's certificate (`CN=alice,O=Example`) of the
+# call the current task serves, when the server requires client
+# certificates (mutual TLS); `None` otherwise
+grpc.peer-subject : () -> Option[String] ! {Network}
+
+# run a function whose calls connect over TLS with these options: a CA
+# file, no verification, a server name, a client certificate (ALPN is h2).
+# Connections are kept per address and options.
+grpc.with-tls : TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
 # run a function whose calls send this metadata as well
 grpc.with-metadata : List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}
 
@@ -1605,8 +1668,9 @@ grpc.server-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> Str
 # a client-streaming call: the requests are the iterator's elements
 grpc.client-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> b ! {Network, Error[GrpcError]}
 
-# a bidirectional call: it sends the requests, then each response goes to
-# the channel
+# a bidirectional call: a task of its own sends the requests while each
+# response goes to the channel (the requests may be infinite: the call
+# ends when the server ends it)
 grpc.bidi-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
 
 # Lower level: start a call (`grpc.open address path`), send messages,
@@ -1624,7 +1688,8 @@ grpc.cancel : GrpcStream -> () ! {Network}
 grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
 # serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
-# certificate chain and private key (`tls.server "cert.pem" "key.pem"`);
+# certificate chain and private key (`tls.server "cert.pem" "key.pem"`,
+# and `tls.with-client-ca "ca.pem"` to require client certificates);
 # clients call `tls://host:port`
 grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 

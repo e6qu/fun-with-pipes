@@ -39,8 +39,13 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | `None` | nothing | 404 | an absent `optional` |
 | `Err e`, `Error[E]` | `name: e` on stderr, exit status 1 | `{"error": e}` with a status (`# error:`, the error's `status`, else 500) | the `error` of the response's `oneof`; `Error[GrpcError]` is a status |
 | bad arguments | usage error, exit status 2 | 400 `{"error": "path.id: ..."}` | `INVALID_ARGUMENT` |
-| TLS | — | HTTPS with `--tls-cert` and `--tls-key` ([tls.md](tls.md#rest)) | TLS with `--tls-cert` and `--tls-key`; clients call `tls://host:port` ([tls.md](tls.md#grpc)) |
-| documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `/openapi.json`) | `.proto` (`fwp proto`), server reflection |
+| request headers | environment variables (`[env: VAR]`) | parameters (`# header:`, `# cookie:`, field comments), or a `Request` parameter | `grpc.metadata ()`, `grpc.header name` |
+| response status and headers | `Outcome` (the exit status) | `RestReply[T]` (`rest.reply 201 x`, `rest.with-header`) | `grpc.set-header`, `grpc.set-trailer`; statuses from `Error[GrpcError]` or `Iterator[Result[R, GrpcError]]` |
+| authentication | — | `# auth:` (bearer tokens, API keys, client certificates) verified by `authenticate` | client certificates (`grpc.peer-subject`); metadata the function checks |
+| browsers | — | CORS (`# cors:`, `--cors`) | — |
+| compression | — | — | gzip (`grpc.with-gzip`) |
+| TLS | — | HTTPS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca` ([tls.md](tls.md#rest)) | TLS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca`; clients call `tls://host:port` ([tls.md](tls.md#grpc)) |
+| documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `--yaml`, `/openapi.json`) and its page (`/docs`) | `.proto` (`fwp proto`), server reflection |
 | calling it from fwp | `process.run` | `fwp openapi --import` gives typed functions | `fwp proto --import` gives typed functions; or the same call, made remote by the build |
 | versioning | — | unknown members are ignored, so new `Option` fields and new results' fields keep clients working; the document is the contract | a type fingerprint between fwp programs; field numbers for others |
 
@@ -55,8 +60,15 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | `# grpc: Method`, `# grpc: package.Service/Method` | — | — | the method's name and service; in the file's leading comment, `# grpc: package.Service` names the service |
 | `# status: 201` | — | the success status | — |
 | `# error: 404`, `# error: V 404, W 422` | — | error statuses | — |
+| `# header: X-Id -> id`, `# cookie: s -> sid` | — | parameters from headers and cookies | — |
+| `# auth: bearer`, `# auth: api-key header X-Key`, `# auth: client-cert`, `# auth: none` | — | security schemes (also in the file's leading comment) | — |
+| `# timeout: 5s` | — | a time limit (503) | — |
+| `# response-header: Location ...` | — | a header of a `RestReply` | — |
+| `# cors: origins` (leading comment) | — | allowed origins | — |
 | a field comment `-x text` | the short flag `-x` and the flag's help | the query parameter's description | — |
 | a field comment `json: name` | — | the JSON name of the field | — |
+| a field comment `header: X-Id`, `cookie: name` | — | the field comes from a header or cookie | — |
+| a type comment `json: untagged` | — | a variant type written as its value alone | — |
 | `export f.defaults`, `export defaults` | defaults of flags | — | — |
 | `export version` | `--version` | `info.version` | — |
 
@@ -90,3 +102,15 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 
 The choice is made when building, so a function can be all three at once,
 and moving from one to another needs no change to the function.
+
+## Limitations
+
+* Parameters that only one interface has (a `Request`, the principal of
+  `# auth:`, header parameters) make a function less useful as the others:
+  a `Request` parameter is a message on gRPC and a flag record on the
+  command line. Keep such functions thin, around a function of the data.
+* Authentication is per interface: REST endpoints verify credentials
+  with `authenticate`, gRPC methods check metadata or the client's
+  certificate themselves, and command lines have none.
+* Streams are gRPC's alone: REST has no streaming responses, and the
+  command line reads standard input as a list.

@@ -324,7 +324,10 @@ http.dispatch = curry (match
     (_, None) -> http.missing
     (_, Some _) -> curry (fork
         apply
-        (fork http.set-params (fork append (.1 | .1) (.0 | .1 | .params)) (.0 | .1))
+        (fork
+            http.set-params
+            (fork append (.1 | .1) (.0 | .1 | .params))
+            (.0 | .1))
         (.1 | .0 | .handler)))
 
 # internal

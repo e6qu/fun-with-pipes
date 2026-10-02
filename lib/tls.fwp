@@ -138,22 +138,23 @@ tls.connect-with = curry (fork apply .1 (.0 | tls._connector))
 
 # internal
 tls._connector : TlsOptions -> String -> Conn ! {Async, Network, Error[IoError]}
-tls._connector = fork
-    apply
-    (.key-file | option.unwrap-or "")
-    (fork
+tls._connector =
+    fork
         apply
-        (.cert-file | option.unwrap-or "")
+        (.key-file | option.unwrap-or "")
         (fork
             apply
-            .alpn
+            (.cert-file | option.unwrap-or "")
             (fork
                 apply
-                (.server-name | option.unwrap-or "")
+                .alpn
                 (fork
                     apply
-                    .insecure
-                    (.ca-file | option.unwrap-or "" | tls._connect)))))
+                    (.server-name | option.unwrap-or "")
+                    (fork
+                        apply
+                        .insecure
+                        (.ca-file | option.unwrap-or "" | tls._connect)))))
 
 # listen on "host:port"; connections accepted from it are TLS connections
 tls.listen : TlsServer -> String -> Listener ! {Network, Error[IoError]}
@@ -161,10 +162,11 @@ tls.listen = curry (fork apply .1 (.0 | tls._listener))
 
 # internal
 tls._listener : TlsServer -> String -> Listener ! {Network, Error[IoError]}
-tls._listener = fork
-    apply
-    (.client-ca | option.unwrap-or "")
-    (fork apply .alpn (fork apply .key-file (.cert-file | tls._listen)))
+tls._listener =
+    fork
+        apply
+        (.client-ca | option.unwrap-or "")
+        (fork apply .alpn (fork apply .key-file (.cert-file | tls._listen)))
 
 test "tls.options" = tls.options | .insecure | not
 test "tls.with-ca" =

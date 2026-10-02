@@ -251,10 +251,12 @@ fwp serve --grpc file.fwp [--listen A]        serve the exported functions over 
     --tls-cert F --tls-key F                  (any `fwp serve`, and the servers that --rest,
                                               --grpc and --service build) serve over TLS
                                               with this certificate chain and key (PEM; see tls.md)
+    --tls-client-ca F                         and require client certificates signed by these CAs
+    --cors ORIGINS                            (REST servers) allow these origins from browsers
 fwp proto file.fwp [--service M]...           print the .proto of the services
 fwp proto --grpc file.fwp                     print the .proto of the exported functions
 fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes of a .proto file
-fwp openapi file.fwp                          print the OpenAPI document of the REST endpoints
+fwp openapi [--yaml] file.fwp                 print the OpenAPI document of the REST endpoints
 fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI document
 fwp exec file.fwp fn [args...]                run an exported function
 fwp exec --cli file.fwp [command] [args...]   run the file as `--cli` builds it
@@ -362,6 +364,9 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#grpc)) |
 | `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
 | `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |
+| `FWP_TLS_CLIENT_CA` | the CA certificates (PEM) of the client certificates that REST and gRPC servers require, without `--tls-client-ca` (see [tls.md](tls.md#mutual-tls)) |
+| `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`, `_CERT`, `_KEY` | the TLS options of the clients of service `M`: a CA file, no verification, the server name, a client certificate and key (see [tls.md](tls.md#grpc)) |
+| `FWP_REST_CORS` | the origins (separated by commas, or `*`) that may call a REST server from browsers, without `--cors` (see [rest.md](rest.md#cors)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |

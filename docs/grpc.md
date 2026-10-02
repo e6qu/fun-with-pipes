@@ -133,6 +133,7 @@ Whether a method streams is decided by its type:
 |---|---|---|
 | `A -> B -> R` | unary | one request `{arg1, arg2}`, one response `{value}` |
 | `A -> Iterator[R]` | server streaming | a response per element |
+| `A -> Iterator[Result[R, GrpcError]]` | server streaming | a response per `Ok`; the first `Err` ends the stream with its status |
 | `A -> Channel[R] -> ()` | server streaming | a response per value sent to the channel |
 | `Iterator[A] -> R` | client streaming | a request `{arg1}` per element |
 | `Iterator[A] -> Iterator[R]` | bidirectional | |
@@ -156,15 +157,30 @@ besides an output channel; gRPC has no other request then.
   next request message, so a bidirectional function can answer each
   request before the next one arrives. A request that cannot be decoded
   fails the call with `INVALID_ARGUMENT`.
+* **`Iterator[Result[R, GrpcError]]` results** are streams that can fail
+  part way: the messages are `R`s, and an `Err` ends the stream with its
+  status (`OUT_OF_RANGE`, ...) in the trailers. A caller of such a remote
+  function gets the same iterator back: its `Ok`s, then, if the stream
+  fails (with a status, or because the connection is lost), one `Err`
+  with the status, and the end. Nothing traps.
+
+  ```fwp
+  # n, ..., 1, then a status: a stream of results ends with its first `Err`
+  export countdown : I64 -> Iterator[Result[I64, GrpcError]]
+  ```
 
 Called from fwp, the same rules apply in the other direction, so a split
 program behaves as one program: a remote `A -> Iterator[R]` returns a lazy
 iterator that receives as it is forced (a failure before the first element
 is raised in the caller; later failures trap, as forcing an iterator
-cannot fail), a remote `A -> Channel[R] -> ()` sends each received value to
-the caller's channel (with backpressure) and returns when the stream ends,
-and a client stream sends the elements of the caller's iterator, then
-reads the responses.
+cannot fail: use `Iterator[Result[R, GrpcError]]` for streams that may
+fail part way), a remote `A -> Channel[R] -> ()` sends each received value
+to the caller's channel (with backpressure) and returns when the stream
+ends, and a client stream sends the elements of the caller's iterator.
+A bidirectional call sends them from a task of its own while the caller
+receives the responses, so requests and responses interleave: the request
+iterator may be infinite, or wait for time to pass, and the call ends when
+the server ends it (`iter.count-from 1 | greeter.firsts` takes three).
 
 ## Errors and status codes
 
@@ -232,9 +248,38 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
 | `grpc.metadata ()` | the request headers of the call the task serves, as `(name, value)` pairs with lower-case names (without pseudo-headers and `content-type`, `te`, `grpc-timeout`, `grpc-encoding`, `grpc-accept-encoding`, `fwp-fingerprint`); `[]` outside a call |
 | `grpc.header name` | one of them |
 | `grpc.with-metadata pairs f` | `f`'s calls send these headers too (names are lower-cased; nested uses add up) |
+| `grpc.set-header name value` | add a header to the response of the call being served; it is sent with the first response message, so set it before |
+| `grpc.set-trailer name value` | add a trailer, sent with the status |
+| `grpc.with-response-metadata f` | run `f`, and the response headers and trailers of the calls it made: `(result, pairs)` |
+| `grpc.response-metadata stream` | the response headers and trailers a `grpc.open` call has received so far |
+| `grpc.peer-subject ()` | the subject of the client's certificate, on servers that require them ([TLS](#tls)) |
 
 Tasks started by a served function see its call's metadata. Binary
-headers (`-bin`) are passed as their base64 text.
+headers (`-bin`) are passed as their base64 text. Response metadata leaves
+out `content-type`, `grpc-status`, `grpc-message`, `grpc-encoding` and
+`grpc-accept-encoding`.
+
+```fwp
+# a greeting with response metadata: a header and a trailer
+export tagged : String -> String ! {Network}
+```
+
+`grpc.with-response-metadata (const "Ann" | greeter.tagged)` is then
+`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`.
+
+## Compression
+
+Messages compressed with gzip (`grpc-encoding: gzip`) are accepted by
+servers and clients, which advertise `grpc-accept-encoding: gzip`.
+`grpc.with-gzip f` makes the calls `f` makes compress their requests, and
+a server compresses the responses of a call whose requests are
+compressed. Messages under 64 bytes are sent uncompressed (gRPC flags each
+message). DEFLATE is written from scratch (`src/gzip.rs`, and in C in
+`runtime/fwp_rt_h2.c`): decoding is complete; encoding uses fixed Huffman
+codes and a greedy LZ77 search, which compresses repetitive messages well
+but less than zlib. A message that decompresses to more than 64 MiB is
+rejected, and other encodings (`deflate`, `snappy`) fail the call with
+`INVALID_ARGUMENT`.
 
 ## Concurrency
 
@@ -277,6 +322,15 @@ Ok (weather.Place {lat = 38.7, name = "Lisbon"})
   `FWP_SERVICE_<M>` or as the address of a generated client function or of
   `grpc.open`. The server's certificate must be valid for `host` and
   signed by a CA the system trusts, or one in `SSL_CERT_FILE`.
+  `grpc.with-tls options f` gives the calls of `f` other `TlsOptions`: a
+  CA file, no verification, a server name, a client certificate; split
+  builds read them from `FWP_SERVICE_<M>_CA`, `_INSECURE`,
+  `_SERVER_NAME`, `_CERT` and `_KEY`.
+* **Client certificates**: `--tls-client-ca ca.pem` (or
+  `FWP_TLS_CLIENT_CA`; `tls.with-client-ca` for `grpc.serve-tls`) makes a
+  server require client certificates signed by that CA, and
+  `grpc.peer-subject ()` gives a served call its client's subject
+  ([tls.md](tls.md#mutual-tls)).
 
 ## Importing a .proto file
 
@@ -323,8 +377,9 @@ greeter.say-hello.route : (HelloRequest -> HelloReply ! {Async, IO, Network, Fil
 
 Client functions take the address first. Streaming methods follow the
 rules above: a server stream sends its responses to a channel, a client
-stream takes an `Iterator`, and a bidirectional call sends the whole
-request iterator, then passes the responses to the channel. A record
+stream takes an `Iterator`, and a bidirectional call sends the elements
+of the request iterator from a task of its own while it passes the
+responses to the channel. A record
 `GreeterServer` holds an implementation of every method, and
 `greeter.routes` turns one into routes for `grpc.serve`:
 
@@ -366,7 +421,8 @@ them against:
 
 * **grpcurl** (grpc-go), when installed: listing and describing services
   through reflection, unary and streaming calls with JSON, metadata,
-  deadlines, statuses and health checks;
+  response headers and trailers, statuses in the trailers of a stream,
+  deadlines, statuses, health checks, and client certificates;
 * **Go's HTTP/2 client** (the standard library), when Go is installed:
   every kind of call, with metadata, a deadline and statuses;
 * **protoc**, when installed, which must accept the generated `.proto`.
@@ -376,19 +432,19 @@ HPACK implementation.
 
 ## Limitations
 
-* TLS has no client certificates, and clients trust only the system's CA
-  certificates or `SSL_CERT_FILE` ([tls.md](tls.md#limitations)).
-* No compression: a compressed message is rejected.
-* No response metadata: servers send only `grpc-status` and
-  `grpc-message`, and clients do not expose response headers or
-  trailers.
-* Servers of `grpc.serve` routes have no reflection.
-* A bidirectional call from an imported client sends all its requests
-  before reading responses (fwp-to-fwp calls between split services
-  behave the same); a server reads requests and writes responses as
-  they come.
-* After the first element, a failure of a remote `Iterator` result traps
-  in the client, since forcing an iterator cannot raise an error.
+* TLS limits: see [tls.md](tls.md#limitations).
+* gzip is the only compression; the encoder compresses less than zlib.
+  Clients compress only within `grpc.with-gzip`.
+* Servers of `grpc.serve` routes have no reflection: a `.proto` file's
+  descriptors (and those of the files it imports, such as
+  `google/protobuf/timestamp.proto`) are not kept by `fwp proto --import`.
+  Give tools the `.proto` file (`grpcurl -proto`).
+* After the first element, a failure of a remote `Iterator[R]` result
+  traps in the client, since forcing an iterator cannot raise an error;
+  `Iterator[Result[R, GrpcError]]` reports it instead. The request sender
+  of a remote bidirectional call whose result is an `Iterator` runs until
+  the call ends; a trap while it forces a request traps the caller when
+  it next receives.
 * Clients retry a call only when a reused connection turns out to be
   closed before the server saw the request; there is no retry policy, no
   keepalive pinging and no load balancing.

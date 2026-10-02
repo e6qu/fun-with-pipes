@@ -328,9 +328,10 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- No compression; see [grpc.md](grpc.md#limitations) for the limits of
-  the gRPC implementation, and [tls.md](tls.md#limitations) for those of
-  TLS.
+- See [grpc.md](grpc.md#limitations) for the limits of the gRPC
+  implementation, and [tls.md](tls.md#limitations) for those of TLS.
+  A service's clients read their TLS options from `FWP_SERVICE_<M>_CA`,
+  `_INSECURE`, `_SERVER_NAME`, `_CERT` and `_KEY` ([tls.md](tls.md#grpc)).
 - A trap inside a task spawned by a served function stops the server (a
   trap in the function itself is reported to the caller).
 - Services need the native target; WebAssembly programs cannot call them.

@@ -164,8 +164,9 @@ foreign "fwp" grpc.server-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcE
 # a client-streaming call: the requests are the iterator's elements
 foreign "fwp" grpc.client-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> b ! {Network, Error[GrpcError]}
 
-# a bidirectional call: it sends the requests, then each response goes to
-# the channel
+# a bidirectional call: a task of its own sends the requests while each
+# response goes to the channel (the requests may be infinite: the call
+# ends when the server ends it)
 foreign "fwp" grpc.bidi-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
 
 # Lower level: start a call (`grpc.open address path`), send messages,
@@ -191,10 +192,11 @@ foreign "fwp" grpc._serve-tls : String -> String -> String -> String -> List[Grp
 # and `tls.with-client-ca "ca.pem"` to require client certificates);
 # clients call `tls://host:port`
 grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-grpc.serve-tls = fork
-    apply
-    (.client-ca | option.unwrap-or "")
-    (fork apply .key-file (.cert-file | grpc._serve-tls))
+grpc.serve-tls =
+    fork
+        apply
+        (.client-ca | option.unwrap-or "")
+        (fork apply .key-file (.cert-file | grpc._serve-tls))
 
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
