@@ -1,0 +1,3 @@
+import mods.a
+import mods.sub.b
+main = a.a | echo

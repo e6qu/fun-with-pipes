@@ -522,11 +522,26 @@ impl<'a> Lexer<'a> {
         };
         if let Some(sfx) = &suffix {
             if let Some(unit) = duration_unit(sfx) {
-                let v: f64 = digits.parse().unwrap_or(0.0);
-                let mut ns = if is_float {
-                    (v * unit as f64).round() as i128
+                if radix != 10 {
+                    return self.err(line, col, "duration literals must be decimal");
+                }
+                let ns = if is_float {
+                    let v: f64 = digits.parse().unwrap_or(f64::INFINITY);
+                    let ns = (v * unit as f64).round();
+                    (ns < i64::MAX as f64).then_some(ns as i128)
                 } else {
-                    digits.parse::<i128>().unwrap_or(0) * unit
+                    digits
+                        .parse::<i128>()
+                        .ok()
+                        .and_then(|d| d.checked_mul(unit))
+                        .filter(|ns| *ns <= i64::MAX as i128)
+                };
+                let Some(mut ns) = ns else {
+                    return self.err(
+                        line,
+                        col,
+                        "duration literal out of range (at most about 292 years)",
+                    );
                 };
                 if neg {
                     ns = -ns;

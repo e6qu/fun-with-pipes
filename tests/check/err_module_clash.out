@@ -1,0 +1,3 @@
+check/mods/sub/b.fwp:1:1: error: module `helper` is imported from two different files; module names must be unique
+1 | import helper
+  | ^^^^^^

@@ -11,7 +11,10 @@ fn run(path: &Path) -> String {
     let name = format!("check/{}", path.file_name().unwrap().to_string_lossy());
     match check_source(&name, &text, path.parent()) {
         Ok(c) => format!("{}{}", c.render_warnings(), signatures(&c)),
-        Err(f) => f.rendered,
+        // imported files are named by their full path
+        Err(f) => f
+            .rendered
+            .replace(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/"), ""),
     }
 }
 
