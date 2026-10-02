@@ -198,6 +198,10 @@ prim.one : a
 prim.from-int : I64 -> a
 prim.from-float : F64 -> a
 
+# Stop the program with `fwp: trap: <message>` (exit code 101), as a failed
+# run-time check does; for library invariants, not for recoverable errors.
+prim.trap : String -> a
+
 # Explicit overflow behaviour (default arithmetic is checked and traps).
 wrapping.add : a -> a -> a where Integer[a]
 wrapping.sub : a -> a -> a where Integer[a]
@@ -331,7 +335,10 @@ drop-while : (a -> Bool ! e) -> List[a] -> List[a] ! e
 
 # `xs | zip ys` pairs each x with the y at the same position.
 zip : List[b] -> List[a] -> List[(a, b)]
-zip-with : (a -> b -> c ! e) -> List[b] -> List[a] -> List[c] ! e
+
+# `xs | zip-with f ys` is `f y x` for each pair, the subject's element last
+# as everywhere else: `xs | zip-with sub ys` is x - y, like `x | sub y`.
+zip-with : (b -> a -> c ! e) -> List[b] -> List[a] -> List[c] ! e
 unzip : List[(a, b)] -> (List[a], List[b])
 
 # `range 0 5` is [0, 1, 2, 3, 4].
@@ -352,7 +359,11 @@ any : (a -> Bool ! e) -> List[a] -> Bool ! e
 all : (a -> Bool ! e) -> List[a] -> Bool ! e
 count : (a -> Bool ! e) -> List[a] -> I64 ! e
 contains : a -> List[a] -> Bool where Eq[a]
+
+# (accepted, rejected), each in the original order; the predicate runs
+# once per element
 partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
+list.partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
 enumerate : List[a] -> List[(I64, a)] where Dup[a]
 each : (a -> () ! e) -> List[a] -> () ! e
 filter-map : (a -> Option[b] ! e) -> List[a] -> List[b] ! e
@@ -361,7 +372,7 @@ minimum : List[a] -> Option[a] where Ord[a]
 singleton : a -> List[a]
 sum : List[a] -> a where Add[a], Zero[a]
 product : List[a] -> a where Mul[a], One[a]
-the-ints : List[I64] -> List[I64]
+list.test-ints : List[I64] -> List[I64]
 ```
 
 ## Option and Result
@@ -389,9 +400,9 @@ result.unwrap-or : a -> Result[a, x] -> a
 result.is-ok : Result[a, x] -> Bool
 result.to-option : Result[a, x] -> Option[a]
 result.from-option : x -> Option[a] -> Result[a, x]
-the-opt : Option[I64] -> Option[I64]
-the-res : Result[I64, String] -> Result[I64, String]
-the-res-s : Result[String, String] -> Result[String, String]
+option.test-opt : Option[I64] -> Option[I64]
+result.test-res : Result[I64, String] -> Result[I64, String]
+result.test-res-s : Result[String, String] -> Result[String, String]
 ```
 
 ## Strings
@@ -431,6 +442,11 @@ string.repeat : I64 -> String -> String
 string.reverse : String -> String
 string.slice : I64 -> I64 -> String -> String
 string.find : String -> String -> Option[I64]
+
+# `s | pad-left n fill` puts copies of the first character of `fill` before
+# `s` until it is n characters (Unicode scalar values) long; pad-right puts
+# them after. A string already n or more characters long is returned
+# unchanged (never truncated), as it is for an empty `fill` or n <= 0.
 pad-left : I64 -> String -> String -> String
 pad-right : I64 -> String -> String -> String
 string.codepoints : String -> List[U32]
@@ -438,15 +454,21 @@ string.from-codepoints : List[U32] -> Option[String]
 string.to-bytes : String -> Bytes
 string.from-bytes : Bytes -> Option[String]
 parse-int : String -> Option[a] where Integer[a]
+
+# decimal and exponent notation, plus `nan`, `inf`, `-inf` and `infinity`
+# in any case (so `show` output such as "NaN" parses back)
 parse-float : String -> Option[a] where Float[a]
 
 # Fill `{}` placeholders with the fields of a tuple or record (or with the
 # value itself), displayed as by `show` but with strings unquoted:
 # `("x", 2) | format "{} = {}"` is "x = 2". `{{` and `}}` are literal braces.
+# The number of placeholders must equal the number of values (the fields,
+# or 1 for any other value); a mismatch is a trap.
 format : String -> a -> String where Display[a]
 string.is-empty : String -> Bool
-the-i64 : Option[I64] -> Option[I64]
-the-u8 : Option[U8] -> Option[U8]
+string.test-i64 : Option[I64] -> Option[I64]
+string.test-u8 : Option[U8] -> Option[U8]
+string.test-of : List[Option[F64]] -> List[Option[F64]]
 
 # the parts before and after the first occurrence of a separator
 string.split-once : String -> String -> Option[(String, String)]
@@ -506,7 +528,7 @@ bytes.append : Bytes -> Bytes -> Bytes
 
 # Count occurrences: `["a", "b", "a"] | frequencies`.
 frequencies : List[a] -> Map[a, I64] where Ord[a]
-the-oi : Option[I64] -> Option[I64]
+map.test-oi : Option[I64] -> Option[I64]
 
 # offset of the first occurrence of a byte sequence
 bytes.find : Bytes -> Bytes -> Option[I64]
@@ -537,8 +559,20 @@ iter.to-list : Iterator[a] -> List[a]
 # The arms below receive their holes as one tuple via `curry3` and pick
 # them apart with selectors: (f, x, rest).
 iter.map : (a -> b) -> Iterator[a] -> Iterator[b] where Dup[a]
+
+# Rejected elements are skipped in a `loop`, so long runs of them run in
+# constant stack space.
 iter.filter : (a -> Bool) -> Iterator[a] -> Iterator[a] where Dup[a]
+
+# one step over (predicate, iterator): stop at the next accepted element
+rec iter.filter-step : (a -> Bool, Iterator[a]) -> Step[(a -> Bool, Iterator[a]), Iterator[a]] where Dup[a]
+
+# `iter.take n` is the first n elements (none when n <= 0). The element
+# after the n-th is never forced.
 iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
+
+# n >= 1
+rec iter.take-some : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
 
 # `iter.iterate f x` is x, f x, f (f x), ...
 iter.iterate : (a -> a) -> a -> Iterator[a] where Dup[a]
@@ -638,6 +672,10 @@ tcp.connect : String -> Conn ! {Async, Network, Error[IoError]}
 tcp.read : I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}
 tcp.read-for : Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}
 tcp.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
+
+# write, failing with a "timeout" error if that takes longer than the
+# duration (part of the data may have been sent)
+tcp.write-for : Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 tcp.close : Conn -> () ! {Network}
 tcp.peer-addr : Conn -> String ! {Network}
 udp.bind : String -> UdpSocket ! {Network, Error[IoError]}
@@ -668,9 +706,10 @@ ordinary composition:
 
 The server runs every connection in its own task. It bounds the number of
 connections (accepting waits while all slots are taken), the size of
-request heads and bodies and the requests per connection; it applies idle
-and per-request timeouts; and on SIGINT/SIGTERM it stops accepting, lets
-in-flight requests finish within a grace period, then cancels the rest.
+request heads and bodies and the requests per connection; it applies idle,
+header, body, write and per-request timeouts; and on SIGINT/SIGTERM it
+stops accepting, lets in-flight requests finish within a grace period,
+then cancels the rest.
 
 ```fwp
 Request = {
@@ -701,11 +740,22 @@ ServerConfig = {
     max-body-bytes: I64,
     max-requests-per-connection: I64,
     idle-timeout: Duration,
+    header-timeout: Duration,
+    body-timeout: Duration,
+    write-timeout: Duration,
     request-timeout: Duration,
     shutdown-grace: Duration,
 }
 http.parse-request-head : Bytes -> Result[(String, String, String, List[(String, String)]), String]
 http.parse-response-head : Bytes -> Result[(String, I64, String, List[(String, String)]), String]
+
+# a header that can be written as is: a token as its name, and no control
+# characters (CR, LF, NUL, ...) but tabs in its value
+http.field-ok : String -> String -> Bool
+
+# the body length request headers declare: 0 without content-length, -1
+# when it is not a plain decimal number or the header is repeated
+http.content-length : List[(String, String)] -> I64
 http.config : String -> ServerConfig
 
 # a response with a status, a content type and a body
@@ -769,8 +819,8 @@ http.match-path : List[String] -> List[String] -> Option[List[(String, String)]]
 http.seg-match : (String, String) -> Option[Option[(String, String)]]
 
 # all present
-option.all : List[Option[a]] -> Option[List[a]]
-option.all-step : Option[List[a]] -> Option[a] -> Option[List[a]]
+http.all-some : List[Option[a]] -> Option[List[a]]
+http.all-some-step : Option[List[a]] -> Option[a] -> Option[List[a]]
 http.dispatch : (List[Route], Request) -> Option[(Route, List[(String, String)])] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 http.set-params : List[(String, String)] -> Request -> Request
 http.missing : (List[Route], Request) -> Response ! {Error[HttpError]}
@@ -782,7 +832,10 @@ Server = {
     handler: Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]},
     slots: Channel[()],
 }
-ConnState = { server: Server, conn: Conn, buffer: Bytes, served: I64 }
+
+# `until`: the monotonic time by which the current request's head (and
+# then its body) must have arrived
+ConnState = { server: Server, conn: Conn, buffer: Bytes, served: I64, until: Duration }
 
 Head =
     | Head.Closed
@@ -797,14 +850,19 @@ Pending = {
     headers: List[(String, String)],
     length: I64,
 }
+
+BodyEnd =
+    | BodyEnd.Closed
+    | BodyEnd.Late Pending
+    | BodyEnd.Done Pending
 Exchange = { st: ConnState, request: Request, keep: Bool }
-Out = { conn: Conn, keep: Bool, head-only: Bool, response: Response }
+Out = { conn: Conn, keep: Bool, head-only: Bool, response: Response, timeout: Duration }
 http.no-bytes : Bytes
 http.crlf : Bytes
 http.crlf2 : Bytes
 http.last-chunk : Bytes
-bytes.take : I64 -> Bytes -> Bytes
-bytes.drop : I64 -> Bytes -> Bytes
+http.bytes-take : I64 -> Bytes -> Bytes
+http.bytes-drop : I64 -> Bytes -> Bytes
 
 # Listen on `addr` and serve until a shutdown signal.
 http.serve : ServerConfig -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network, Error[IoError]}
@@ -822,10 +880,26 @@ http.release : Server -> Server ! {Async}
 http.conn-main : (Server, Conn) -> () ! {Async, IO, Network, FileIO}
 http.serve-conn : (Server, Conn) -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 http.conn-step : ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.head-step : ConnState -> Step[ConnState, Head] ! {Async, Network, Error[IoError]}
-http.head-found : ConnState -> Option[I64] -> Step[ConnState, Head] ! {Async, Network, Error[IoError]}
-http.head-more : ConnState -> Step[ConnState, Head] ! {Async, Network, Error[IoError]}
-http.head-read : ConnState -> Option[Bytes] -> Step[ConnState, Head]
+
+# a monotonic deadline a duration from now (capped at about a century)
+http.later : Duration -> Duration ! {IO}
+
+# the time left until a deadline (negative once it passed)
+http.left : Duration -> Duration ! {IO}
+http.with-until : Duration -> ConnState -> ConnState
+http.head-deadline : ConnState -> ConnState ! {IO}
+http.head-step : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
+http.head-found : ConnState -> Option[I64] -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
+http.head-more : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
+
+# before the first byte of a request: the idle timeout; after it, what is
+# left of the header timeout (a client trickling bytes cannot hold the
+# connection forever)
+http.head-wait : ConnState -> Duration ! {IO}
+http.head-read : ConnState -> Option[Bytes] -> Step[ConnState, Head] ! {IO}
+
+# the header timeout counts from the first byte of the request
+http.first-byte : ConnState -> ConnState ! {IO}
 http.with-buffer : Bytes -> ConnState -> ConnState
 http.on-head : Head -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 
@@ -836,10 +910,14 @@ http.on-parsed : ConnState -> Result[(String, String, String, List[(String, Stri
 http.check-body : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.pending-error : I64 -> String -> Pending -> Step[ConnState, ()] ! {Async, Network, Error[IoError]}
 http.read-body : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.body-step : Pending -> Step[Pending, Option[Pending]] ! {Async, Network, Error[IoError]}
-http.body-read : Pending -> Option[Bytes] -> Step[Pending, Option[Pending]]
+
+# the whole body must arrive within the body timeout
+http.body-deadline : Pending -> Pending ! {IO}
+http.body-step : Pending -> Step[Pending, BodyEnd] ! {Async, IO, Network, Error[IoError]}
+http.body-read : Pending -> Option[Bytes] -> Step[Pending, BodyEnd]
+http.pending-st : ConnState -> Pending -> Pending
 http.pending-append : Bytes -> Pending -> Pending
-http.on-body : Option[Pending] -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
+http.on-body : BodyEnd -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.respond-to : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.request-of : Pending -> Request ! {Network}
 http.path-of : String -> String
@@ -851,6 +929,14 @@ http.run-handler : Exchange -> Response ! {Async}
 http.outcome : Option[Result[Response, HttpError]] -> Response
 http.next-served : ConnState -> ConnState
 http.write-out : Out -> () ! {Async, Network, Error[IoError]}
+
+# A response that cannot be written as is (a header with CR or LF would
+# let a handler's input split the response) is replaced by a 500.
+http.checked : Out -> Out
+http.response-ok : Response -> Bool
+
+# write with the write timeout
+http.put : Out -> Bytes -> () ! {Async, Network, Error[IoError]}
 http.send-body : Out -> Body -> () ! {Async, Network, Error[IoError]}
 http.stream-body : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, Network, Error[IoError]}
 http.stream-start : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, Network, Error[IoError]}
@@ -861,8 +947,12 @@ http.stream-finish : (((Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
 
 # run a producer, then close its channel
 http.closing : (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
-http.chunk-step : (Conn, Channel[Bytes]) -> Step[(Conn, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
-http.chunk-got : (Conn, Channel[Bytes]) -> Option[Bytes] -> Step[(Conn, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
+http.chunk-step : (Out, Channel[Bytes]) -> Step[(Out, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
+http.chunk-got : (Out, Channel[Bytes]) -> Option[Bytes] -> Step[(Out, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
+
+# chunk sizes: lower-case hexadecimal (negative numbers with a sign)
+http.to-hex : I64 -> String = "int.to-hex"
+http.parse-hex : String -> Option[I64] = "int.parse-hex"
 http.chunk-frame : Bytes -> Bytes
 http.head-bytes : Out -> Bytes
 http.head-parts : List[Out -> String]
@@ -874,9 +964,20 @@ http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}
 
 # send a request (one connection per request) and read the whole response
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+
+# refuse a method or header that would not make one well-formed request
+# (URLs with spaces or control characters do not parse)
+http.check-request : ClientRequest -> ClientRequest ! {Error[IoError]}
 http.require-url : Option[Url] -> Url ! {Error[IoError]}
 http.send-to : ClientRequest -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
 http.host-port : Url -> String
+
+# IPv6 literals in brackets
+http.host-name : Url -> String
+
+# the host header: with the port when it is not the scheme's default
+http.host-header : Url -> String
+http.default-port : String -> I64
 http.request-bytes : (ClientRequest, Url) -> Bytes
 http.request-parts : List[(ClientRequest, Url) -> String]
 http.target-of : Url -> String
@@ -920,7 +1021,7 @@ json.parse : String -> Result[Json, String]
 json.encode : Json -> String
 
 # the value of the first pair with the given key
-lookup : String -> List[(String, a)] -> Option[a]
+json.lookup : String -> List[(String, a)] -> Option[a]
 
 # field of an object
 json.get : String -> Json -> Option[Json]
@@ -957,12 +1058,10 @@ url.decode : String -> Option[String]
 
 # like url.decode, with `+` as a space (query strings and form bodies)
 form.decode : String -> Option[String]
-int.to-hex : I64 -> String
-int.parse-hex : String -> Option[I64]
 url.parse : String -> Option[Url]
 
 # both present
-option.both : (Option[a], Option[b]) -> Option[(a, b)]
+form.both-some : (Option[a], Option[b]) -> Option[(a, b)]
 
 # decoded name/value pairs of `a=1&b=x+y`; malformed pairs are skipped
 form.parse : String -> List[(String, String)]
@@ -982,6 +1081,8 @@ Structured logs (logfmt lines on stderr) and process metrics.
 log.event : String -> String -> List[(String, String)] -> () ! {IO}
 log.line-of : I64 -> (String, String, List[(String, String)]) -> String
 log.fields : (I64, (String, String, List[(String, String)])) -> String
+
+# a logfmt value: quoted, with backslashes, quotes and line breaks escaped
 log.quote : String -> String
 log.info : String -> () ! {IO}
 log.warn : String -> () ! {IO}
@@ -1033,14 +1134,15 @@ vector.get : I64 -> Vector[t, n] -> Option[t]
 vector.via : (Array[a] -> Array[b]) -> Vector[a, n] -> Vector[b, n]
 vector.map : (a -> b) -> Vector[a, n] -> Vector[b, n]
 
-# `xs | vector.zip-with f ys` combines elements at the same position: f x y
-vector.zip-with : (a -> b -> c) -> Vector[b, n] -> Vector[a, n] -> Vector[c, n]
+# `xs | vector.zip-with f ys` combines elements at the same position as
+# `f y x` (the subject last, like zip-with): `a | vector.sub b` is a - b
+vector.zip-with : (b -> a -> c) -> Vector[b, n] -> Vector[a, n] -> Vector[c, n]
 vector.add : Vector[t, n] -> Vector[t, n] -> Vector[t, n] where Add[t]
 vector.sub : Vector[t, n] -> Vector[t, n] -> Vector[t, n] where Sub[t]
 vector.scale : t -> Vector[t, n] -> Vector[t, n] where Mul[t]
 
 # dot product of two lists
-dotl : List[t] -> List[t] -> t where Ring[t]
+matrix.dot-list : List[t] -> List[t] -> t where Ring[t]
 dot : Vector[t, n] -> Vector[t, n] -> t where Ring[t]
 norm : Vector[a, n] -> a where Ring[a], Floating[a], Dup[a]
 matrix : List[List[t]] -> Matrix[t, m, n]
@@ -1049,8 +1151,10 @@ matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.rows-of : Matrix[t, m, n] -> List[List[t]]
 matrix.from-rows : List[List[t]] -> Matrix[t, Dyn, Dyn]
 
-# `m | matrix.get i j`
+# `m | matrix.get i j` is the element in row i, column j; None when either
+# index is out of range (like `nth` and `array.get`)
 matrix.get : I64 -> I64 -> Matrix[t, m, n] -> Option[t]
+matrix.in-bounds : (I64, I64, Matrix[t, m, n]) -> Bool
 transpose : Matrix[t, m, n] -> Matrix[t, n, m]
 
 # each row of the subject times every column in `cols`
@@ -1091,6 +1195,7 @@ Complex[T] = { re: T, im: T }
 complex : t -> t -> Complex[t]
 complex.conj : Complex[t] -> Complex[t] where Neg[t]
 complex.abs : Complex[a] -> a where Ring[a], Floating[a], Dup[a]
+matrix.test-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
 ```
 
 ## Automatic differentiation
@@ -1162,12 +1267,22 @@ tensor.map : (F64 -> F64) -> TensorExpr[n] -> TensorExpr[n]
 
 # element i of an expression
 rec tensor.at : TensorExpr[n] -> I64 -> F64
-rec tensor.length : TensorExpr[n] -> I64
+
+# The number of elements, or None for an expression made only of fills
+# (a fill takes the length of what it is combined with). Combining two
+# operands of different lengths is a trap.
+rec tensor.length : TensorExpr[n] -> Option[I64]
+tensor.same-length : Option[I64] -> Option[I64] -> Option[I64]
+
+# Evaluate an expression; a trap when it is made only of fills, whose
+# length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
+tensor.realized-length : TensorExpr[n] -> I64
 rec graph.size : TensorExpr[n] -> I64
 
 # Constant folding: combine constants and nested scalings.
 rec graph.constant-fold : TensorExpr[n] -> TensorExpr[n]
+tensor.test-te : TensorExpr[2] -> TensorExpr[2]
 ```
 
 ## Balanced ternary
@@ -1188,6 +1303,9 @@ tint.of-int : I64 -> Option[TInt[n]]
 tint.trits : TInt[n] -> List[Trit]
 tint.from-trits : List[Trit] -> Option[TInt[n]]
 trits.pack : List[Trit] -> Bytes
+
+# `bs | trits.unpack n`: the first n trits, but never more than the bytes
+# hold (5 per byte); positions past the end are not read as trits
 trits.unpack : I64 -> Bytes -> List[Trit]
 trit.pos : Trit
 trit.zero : Trit
@@ -1199,7 +1317,7 @@ PackedTrits[N] = { count: I64, bytes: Bytes }
 packed.from-tint : TInt[n] -> PackedTrits[n]
 packed.to-tint : PackedTrits[n] -> Option[TInt[n]]
 packed.trits : PackedTrits[n] -> List[Trit]
-the-t2 : Option[TInt[2]] -> Option[TInt[2]]
+tint.test-t2 : Option[TInt[2]] -> Option[TInt[2]]
 ```
 
 ## SIMD
@@ -1226,10 +1344,10 @@ simd.dot : Vec[n, t] -> Vec[n, t] -> t where Numeric[t]
 
 # `c | simd.mul-add a b` is a·b + c (rounded after each step)
 simd.mul-add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
-the-v4 : Vec[4, F64] -> Vec[4, F64]
-the-ov4 : Option[Vec[4, F64]] -> Option[Vec[4, F64]]
-the-i4 : Vec[4, I32] -> Vec[4, I32]
-the-iv8 : Vec[8, I64] -> Vec[8, I64]
+simd.test-v4 : Vec[4, F64] -> Vec[4, F64]
+simd.test-ov4 : Option[Vec[4, F64]] -> Option[Vec[4, F64]]
+simd.test-i4 : Vec[4, I32] -> Vec[4, I32]
+simd.test-iv8 : Vec[8, I64] -> Vec[8, I64]
 ```
 
 ## C interop
