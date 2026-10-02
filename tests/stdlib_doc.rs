@@ -22,6 +22,7 @@ const MODULES: &[(&str, &str)] = &[
     ("csv", "CSV"),
     ("task", "Tasks and channels"),
     ("net", "Networking"),
+    ("tls", "TLS"),
     ("http", "HTTP"),
     ("json", "JSON"),
     ("rest", "REST endpoints and clients"),

@@ -58,9 +58,10 @@ main =
 
 ## Quick start
 
-Requirements: Rust (stable) and a C compiler. Optionally, for WebAssembly:
-clang with a WASI sysroot (Debian/Ubuntu: `wasi-libc`,
-`libclang-rt-18-dev-wasm32`, `lld`) and node.
+Requirements: Rust (stable) and a C compiler. For TLS (HTTPS, gRPC over
+TLS): OpenSSL 3 (`libssl3`; to build native programs that use it, also
+`libssl-dev`). Optionally, for WebAssembly: clang with a WASI sysroot
+(Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`, `lld`) and node.
 
 ```
 cargo build --release
@@ -93,7 +94,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | eighteen tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs and gRPC |
+| [docs/tutorials](docs/tutorials/README.md) | nineteen tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs, gRPC and TLS |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
@@ -101,6 +102,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 | [docs/rest.md](docs/rest.md) | any function as a REST endpoint: routes, the JSON codec, OpenAPI documents and generated clients |
 | [docs/interfaces.md](docs/interfaces.md) | one function as a command, a REST endpoint and a gRPC method, compared |
 | [docs/grpc.md](docs/grpc.md) | any function as a gRPC method: streams, deadlines, metadata, statuses, reflection, and clients and servers from `.proto` files |
+| [docs/tls.md](docs/tls.md) | TLS with the system's OpenSSL: HTTPS servers and clients, REST over HTTPS, gRPC over TLS |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
 | [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |

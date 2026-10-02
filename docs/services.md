@@ -88,6 +88,12 @@ reports.
 |---|---|---|
 | `FWP_SERVICE_<M>` | clients of `m`, and `m`'s server when `--listen` is not given | the address given at build time with `--service m=host:port`, else `127.0.0.1:50051` |
 
+An address `tls://host:port` (or `grpcs://host:port`) is TLS: clients
+connect with TLS and verify the server's certificate, and the server,
+which then needs `--tls-cert` and `--tls-key` (or `FWP_TLS_CERT` and
+`FWP_TLS_KEY`), listens on `host:port` with TLS. See
+[tls.md](tls.md#grpc).
+
 `<M>` is the module name in upper case with every other character
 replaced by `_`: `inventory` is `FWP_SERVICE_INVENTORY`, `shop.billing` is
 `FWP_SERVICE_SHOP_BILLING`. The variable is read at each call, so a
@@ -153,8 +159,9 @@ names (`price-of` and `price.of` would both be `PriceOf`).
 ## The wire format
 
 Calls are [gRPC](https://grpc.io/docs/what-is-grpc/) calls over HTTP/2
-cleartext with prior knowledge (h2c): any gRPC client and server can take
-part, given the `.proto` file (or server reflection).
+cleartext with prior knowledge (h2c), or over TLS with ALPN `h2` for
+`tls://` addresses ([tls.md](tls.md#grpc)): any gRPC client and server can
+take part, given the `.proto` file (or server reflection).
 
 - **Names.** The package is `fwp`, a module `inventory` is the service
   `Inventory` (`shop.inventory` is `ShopInventory`), and a function
@@ -308,8 +315,8 @@ they are deployed separately, and an old client can meet a new server.
   queue. A server starts a task per call as soon as its headers arrive,
   so calls run concurrently and a call reads its requests as they come;
   responses are sent within the flow control windows.
-- There is no TLS; put services on a private network or behind a proxy
-  that terminates TLS.
+- TLS is the system's OpenSSL ([tls.md](tls.md)); everything else is
+  fwp's own.
 
 The implementation is written from scratch, in Rust for the interpreter
 (`src/h2.rs`, `src/grpc.rs`) and in C for native programs
@@ -321,8 +328,9 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- No TLS and no compression; see [grpc.md](grpc.md#limitations) for the
-  limits of the gRPC implementation.
+- No compression; see [grpc.md](grpc.md#limitations) for the limits of
+  the gRPC implementation, and [tls.md](tls.md#limitations) for those of
+  TLS.
 - Native servers allocate from the bump heap and never free (see
   [design](design.md)), so a long-running native service grows with the
   data it handles. Interpreted servers free memory.

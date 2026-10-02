@@ -17,6 +17,7 @@ Every module is available without an import.
 - [CSV](#csv)
 - [Tasks and channels](#tasks-and-channels)
 - [Networking](#networking)
+- [TLS](#tls)
 - [HTTP](#http)
 - [JSON](#json)
 - [REST endpoints and clients](#rest-endpoints-and-clients)
@@ -986,6 +987,83 @@ signal.shutdown-requested : () -> Bool ! {Async}
 signal.request-shutdown : () -> () ! {Async}
 ```
 
+## TLS
+
+`lib/tls.fwp`
+
+TLS: encrypted, authenticated connections, with the system's OpenSSL 3
+(see docs/tls.md). A TLS connection is a `Conn` like a TCP connection:
+`tcp.read`, `tcp.write`, `tcp.close` and the rest work on it, encrypting
+and decrypting, so code written for TCP connections (the HTTP server and
+client among it) works over TLS unchanged; the `tls.*` names below are
+the same functions. A connection's handshake happens when it is opened
+(`tls.connect`), or on its first read or write (`tls.accept`), in the
+task that uses it: a slow handshake holds up no other task. Failures are
+`IoError`s of kind "tls" (`certificate verify failed: hostname
+mismatch`, ...).
+
+```fwp
+# How a client connects. The server's certificate is verified unless
+# `insecure`: against the system's CA certificates (`SSL_CERT_FILE` and
+# `SSL_CERT_DIR` override them) or those in `ca-file` (PEM), and it must be
+# for `server-name`, by default the host of the address (sent with SNI
+# unless it is an IP address). `alpn`: the protocols to offer
+# (`tls.alpn` tells the one chosen).
+TlsOptions = {
+    ca-file: Option[String],
+    insecure: Bool,
+    server-name: Option[String],
+    alpn: List[String],
+}
+
+# A server's certificate chain and private key (PEM files), and the
+# protocols it accepts (ALPN), in its order of preference.
+TlsServer = { cert-file: String, key-file: String, alpn: List[String] }
+
+# finish the handshake now (for an accepted connection: its handshake
+# otherwise happens on its first read or write); nothing for a plain
+# connection
+tls.handshake : Conn -> () ! {Async, Network, Error[IoError]}
+
+# the protocol chosen with ALPN ("" for none)
+tls.alpn : Conn -> String ! {Network}
+
+# a TLS connection (not a plain TCP one)
+tls.secure : Conn -> Bool ! {Network}
+
+# OpenSSL can be used (the interpreter loads it when a program first uses
+# TLS; native programs that use TLS are linked with it)
+tls.available : () -> Bool ! {Network}
+
+# The same functions as `tcp.*`.
+tls.accept : Listener -> Conn ! {Async, Network, Error[IoError]} = "tcp.accept"
+tls.accept-for : Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]} = "tcp.accept-for"
+tls.local-addr : Listener -> String ! {Network} = "tcp.local-addr"
+tls.stop : Listener -> () ! {Network} = "tcp.stop"
+tls.read : I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]} = "tcp.read"
+tls.read-for : Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]} = "tcp.read-for"
+tls.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]} = "tcp.write"
+tls.write-for : Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]} = "tcp.write-for"
+tls.close : Conn -> () ! {Network} = "tcp.close"
+tls.peer-addr : Conn -> String ! {Network} = "tcp.peer-addr"
+
+# verify with the system's CA certificates; no protocols
+tls.options : TlsOptions
+
+# trust the CA certificates of a PEM file
+tls.with-ca : String -> TlsOptions -> TlsOptions
+
+# a server with a certificate chain and key (PEM files), without protocols
+tls.server : String -> String -> TlsServer
+
+# connect to "host:port" and finish the handshake
+tls.connect : String -> Conn ! {Async, Network, Error[IoError]}
+tls.connect-with : TlsOptions -> String -> Conn ! {Async, Network, Error[IoError]}
+
+# listen on "host:port"; connections accepted from it are TLS connections
+tls.listen : TlsServer -> String -> Listener ! {Network, Error[IoError]}
+```
+
 ## HTTP
 
 `lib/http.fwp`
@@ -1003,6 +1081,10 @@ request heads and bodies and the requests per connection; it applies idle,
 header, body, write and per-request timeouts; and on SIGINT/SIGTERM it
 stops accepting, lets in-flight requests finish within a grace period,
 then cancels the rest.
+
+With `tls` in its config the server speaks HTTPS, and the client speaks
+HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
+connections, which are `Conn`s too.
 
 ```fwp
 Request = {
@@ -1038,6 +1120,7 @@ ServerConfig = {
     write-timeout: Duration,
     request-timeout: Duration,
     shutdown-grace: Duration,
+    tls: Option[TlsServer],
 }
 http.config : String -> ServerConfig
 
@@ -1089,10 +1172,15 @@ http.route : String -> String -> (Request -> Response ! {Async, IO, Network, Fil
 # dispatch to the first matching route; 404 or 405 otherwise
 http.router : List[Route] -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 
-# Listen on `addr` and serve until a shutdown signal.
+# Listen on `addr` and serve until a shutdown signal; HTTPS with `tls`
+# (`http.config addr | with { tls = Some (tls.server "cert.pem" "key.pem") }`).
 http.serve : ServerConfig -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network, Error[IoError]}
 
-# Serve on a listener (for example one bound to port 0).
+# listen on a config's address, with TLS if it has `tls`
+http.listen : ServerConfig -> Listener ! {Network, Error[IoError]}
+
+# Serve on a listener (for example one bound to port 0; a listener from
+# `tls.listen` serves HTTPS).
 http.serve-on : Listener -> (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network}
 
 ClientRequest = {
@@ -1105,8 +1193,14 @@ ClientResponse = { status: I64, headers: List[(String, String)], body: Bytes }
 http.get : String -> ClientResponse ! {Async, Network, Error[IoError]}
 http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}
 
-# send a request (one connection per request) and read the whole response
+# send a request (one connection per request) and read the whole response;
+# `https://` URLs are fetched over TLS, verifying the server's certificate
+# with the system's CA certificates
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+
+# send a request, with these TLS options for `https://` URLs (for example
+# `tls.options | tls.with-ca "ca.pem"`)
+http.send-with : TlsOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
 ```
 
 ## JSON
@@ -1235,8 +1329,10 @@ rest.failure : RestRoute -> e -> Response where Encode[e]
 
 # Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
 # error responses (`{"error": "not found"}` for unknown paths). The
-# command line is `[--listen host:port] [--openapi] [--help]`; the address
-# defaults to `FWP_REST_ADDR`, else `127.0.0.1:8080`.
+# command line is `[--listen host:port] [--tls-cert file --tls-key file]
+# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
+# `127.0.0.1:8080`, and the certificate and key (PEM files, for HTTPS) to
+# `FWP_TLS_CERT` and `FWP_TLS_KEY`.
 rest.main : String -> List[Route] -> () ! {Async, IO, Network}
 
 # The handler of a server: the endpoints and `/openapi.json`, with errors
@@ -1382,6 +1478,11 @@ grpc.cancel : GrpcStream -> () ! {Network}
 # port, reported on standard error), with health checking
 # (`grpc.health.v1.Health`), until the task is cancelled
 grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+
+# serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
+# certificate chain and private key (`tls.server "cert.pem" "key.pem"`);
+# clients call `tls://host:port`
+grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute

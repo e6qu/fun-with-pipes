@@ -64,9 +64,11 @@ exported functions and a chat room built from a `.proto` file.
 
 A server takes `--listen host:port`; without it, it listens on the address
 in `FWP_SERVICE_<APP>` (for `app.fwp`; see [services.md](services.md#addresses)),
-else `127.0.0.1:50051`. Port 0 picks a free port. It writes
-`fwp: service app listening on host:port` on stderr once it accepts
-connections. Besides the program's methods it serves:
+else `127.0.0.1:50051`. Port 0 picks a free port. With `--tls-cert file`
+and `--tls-key file` (or `FWP_TLS_CERT` and `FWP_TLS_KEY`) it serves over
+TLS ([below](#tls)). It writes `fwp: service app listening on host:port`
+(`tls://host:port` with TLS) on stderr once it accepts connections.
+Besides the program's methods it serves:
 
 * **server reflection** (`grpc.reflection.v1.ServerReflection` and
   `v1alpha`), so `grpcurl` and other tools need no `.proto` file: the file
@@ -250,6 +252,32 @@ headers (`-bin`) are passed as their base64 text.
 * Native programs run tasks as green threads on an event loop (epoll on
   Linux); the interpreter runs each task on a thread, one at a time.
 
+## TLS
+
+Servers and clients speak gRPC over TLS (HTTP/2 with ALPN `h2`, as every
+gRPC implementation does), with the system's OpenSSL; h2c stays the
+default. [tls.md](tls.md#grpc) has the details.
+
+```
+$ fwp serve --grpc examples/grpc/weather.fwp --tls-cert server.pem --tls-key server.key
+fwp: service weather listening on tls://127.0.0.1:50051
+$ grpcurl -cacert ca.pem localhost:50051 list
+grpc.health.v1.Health
+weather.Weather
+$ SSL_CERT_FILE=ca.pem FWP_SERVICE_WEATHER=tls://localhost:50051 fwp run --service weather examples/grpc/forecast-client.fwp
+Ok (weather.Place {lat = 38.7, name = "Lisbon"})
+...
+```
+
+* **Servers**: `--tls-cert` and `--tls-key` (or `FWP_TLS_CERT` and
+  `FWP_TLS_KEY`) for `--grpc` and `--service` servers;
+  `grpc.serve-tls (tls.server "cert.pem" "key.pem") address routes` for
+  routes.
+* **Clients**: the address `tls://host:port` (or `grpcs://host:port`), in
+  `FWP_SERVICE_<M>` or as the address of a generated client function or of
+  `grpc.open`. The server's certificate must be valid for `host` and
+  signed by a CA the system trusts, or one in `SSL_CERT_FILE`.
+
 ## Importing a .proto file
 
 ```
@@ -348,8 +376,8 @@ HPACK implementation.
 
 ## Limitations
 
-* No TLS: put services on a private network or behind a proxy that
-  terminates TLS (Envoy, nginx and the like speak h2c to backends).
+* TLS has no client certificates, and clients trust only the system's CA
+  certificates or `SSL_CERT_FILE` ([tls.md](tls.md#limitations)).
 * No compression: a compressed message is rejected.
 * No response metadata: servers send only `grpc-status` and
   `grpc-message`, and clients do not expose response headers or

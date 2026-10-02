@@ -727,6 +727,7 @@ impl<'p> Interp<'p> {
                 || sym.starts_with("tcp.")
                 || sym.starts_with("udp.")
                 || sym.starts_with("dns.")
+                || sym.starts_with("tls.")
                 || sym.starts_with("signal.")
                 || sym.starts_with("metrics.") =>
             {

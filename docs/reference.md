@@ -220,6 +220,8 @@ subcommands, environment variables, shell completion and man pages
 ([cli.md](cli.md)), as REST endpoints with a JSON contract and an
 OpenAPI document ([rest.md](rest.md)), and as gRPC methods
 ([grpc.md](grpc.md)); [interfaces.md](interfaces.md) compares them.
+The HTTP, REST and gRPC servers and clients also speak TLS
+([tls.md](tls.md)).
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
@@ -246,6 +248,9 @@ fwp serve [--service M]... file.fwp module [--listen A]
                                               serve a module over gRPC (interpreter)
 fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints (interpreter)
 fwp serve --grpc file.fwp [--listen A]        serve the exported functions over gRPC (interpreter)
+    --tls-cert F --tls-key F                  (any `fwp serve`, and the servers that --rest,
+                                              --grpc and --service build) serve over TLS
+                                              with this certificate chain and key (PEM; see tls.md)
 fwp proto file.fwp [--service M]...           print the .proto of the services
 fwp proto --grpc file.fwp                     print the .proto of the exported functions
 fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes of a .proto file
@@ -292,7 +297,7 @@ rejected otherwise.
 
 | Target | Output | Runtime |
 |---|---|---|
-| native | an executable | all features |
+| native | an executable | all features; a program that uses TLS ([tls.md](tls.md): HTTPS, HTTP clients, REST servers, gRPC) is linked with OpenSSL and depends on `libssl.so.3`, and building it needs OpenSSL's headers (`libssl-dev`) |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no tasks, sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
@@ -354,8 +359,10 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 |---|---|
 | `FWP_SEED` | fixes the seed of `random.*` |
 | `FWP_OUT=bin` | makes executable functions write the binary protocol |
-| `FWP_SERVICE_<M>` | the `host:port` of service `M` (see [services](services.md)) |
+| `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#grpc)) |
 | `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
+| `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |
+| `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `CC` | the C compiler for native builds |
 | `AR` | the archiver for `--staticlib` |

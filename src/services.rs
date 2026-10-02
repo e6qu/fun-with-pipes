@@ -54,9 +54,10 @@ pub fn listen_address(prog: &Program, listen: Option<String>) -> String {
     listen.unwrap_or_else(|| address(&svc.module, &svc.default_addr))
 }
 
-/// Serve the program's service with the interpreter (`fwp serve`).
-pub fn serve(prog: &Program, listen: Option<String>) -> i32 {
-    crate::grpc::serve(prog, listen)
+/// Serve the program's service with the interpreter (`fwp serve`), over
+/// TLS with a certificate and key (PEM files).
+pub fn serve(prog: &Program, listen: Option<String>, tls: Option<(String, String)>) -> i32 {
+    crate::grpc::serve(prog, listen, tls)
 }
 
 /// The `.proto` file for the services of a program compiled once per

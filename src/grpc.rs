@@ -32,6 +32,7 @@ use crate::proto::{self, Reader};
 use crate::protobuf::{MethodSchema, NodeId, Schema};
 use crate::rpc::{self, Input, Output, Shape};
 use crate::sched::{native, opt, poll_fd, wrap, ChanState, Native, TaskShared};
+use crate::tls::{self, Io};
 use crate::value::{Closure, Value};
 
 pub use h2::{
@@ -107,6 +108,8 @@ type StreamRef = Rc<RefCell<Stream>>;
 
 struct Conn {
     sock: Option<TcpStream>,
+    /// The TLS session of a TLS connection.
+    tls: Option<tls::Session>,
     fd: i32,
     /// What the server serves (`None` for a client connection).
     server: Option<Rc<Server>>,
@@ -158,6 +161,7 @@ impl Conn {
         out.extend(h2::our_settings());
         Conn {
             sock: Some(sock),
+            tls: None,
             fd,
             server,
             authority,
@@ -434,6 +438,7 @@ fn conn_dead(it: &mut Interp, c: &ConnRef, why: &str) {
             return;
         }
         cb.dead = Some(why.to_string());
+        cb.tls.take();
         if let Some(s) = cb.sock.take() {
             let _ = s.shutdown(std::net::Shutdown::Both);
         }
@@ -456,6 +461,68 @@ fn conn_dead(it: &mut Interp, c: &ConnRef, why: &str) {
     it.world.event();
 }
 
+/// A plain socket's read or write as a TLS session's would be.
+fn plain_io(r: std::io::Result<usize>, write: bool) -> Io {
+    match r {
+        Ok(k) => Io::Done(k),
+        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Io::Wait(write),
+        Err(e) => Io::Err(e),
+    }
+}
+
+/// Read from a connection, through its TLS session if it has one; `None`
+/// once it is closed.
+fn conn_read(cb: &mut Conn, buf: &mut [u8]) -> Option<Io> {
+    if let Some(t) = cb.tls.as_mut() {
+        return Some(t.read(buf));
+    }
+    cb.sock.as_ref().map(|s| plain_io((&*s).read(buf), false))
+}
+
+/// Write to a connection, through its TLS session if it has one.
+fn conn_write(cb: &mut Conn, data: &[u8]) -> Option<Io> {
+    if let Some(t) = cb.tls.as_mut() {
+        return Some(t.write(data));
+    }
+    cb.sock.as_ref().map(|s| plain_io((&*s).write(data), true))
+}
+
+/// The message of a failed read or write.
+fn io_text(r: &Io) -> String {
+    match r {
+        Io::Err(e) => h2::io_msg(e),
+        Io::Fail(m) => m.clone(),
+        _ => String::new(),
+    }
+}
+
+/// How long a client may take over the TLS handshake.
+const HANDSHAKE: Duration = Duration::from_secs(10);
+
+/// Finish a TLS handshake, waiting in the task; the failure otherwise.
+fn finish_handshake(
+    it: &mut Interp,
+    c: &ConnRef,
+    timeout: Option<Instant>,
+) -> R<Result<(), String>> {
+    let fd = c.borrow().fd;
+    loop {
+        let r = match c.borrow_mut().tls.as_mut() {
+            Some(t) => t.handshake(),
+            None => return Ok(Ok(())),
+        };
+        match r {
+            Io::Done(_) => return Ok(Ok(())),
+            Io::Wait(w) => {
+                if !it.wait_fd(fd, w, timeout)? {
+                    return Ok(Err("TLS handshake timed out".into()));
+                }
+            }
+            r => return Ok(Err(io_text(&r))),
+        }
+    }
+}
+
 /// The reader task of a connection.
 fn reader(it: &mut Interp, c: ConnRef) {
     let fd = c.borrow().fd;
@@ -464,19 +531,16 @@ fn reader(it: &mut Interp, c: ConnRef) {
         if c.borrow().dead.is_some() {
             return;
         }
-        let r = {
-            let cb = c.borrow();
-            match &cb.sock {
-                Some(s) => (&*s).read(&mut buf),
-                None => return,
-            }
+        let r = match conn_read(&mut c.borrow_mut(), &mut buf) {
+            Some(r) => r,
+            None => return,
         };
         match r {
-            Ok(0) => {
+            Io::Done(0) => {
                 let why = format!("connection to {} closed", c.borrow().authority);
                 return conn_dead(it, &c, &why);
             }
-            Ok(n) => {
+            Io::Done(n) => {
                 let acts = process_input(&mut c.borrow_mut(), &buf[..n]);
                 for t in acts.cancel {
                     t.cancel();
@@ -494,16 +558,12 @@ fn reader(it: &mut Interp, c: ConnRef) {
                     return conn_dead(it, &c, &why);
                 }
             }
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                it.world.blocking(|| poll_fd(fd, false, 1000));
+            Io::Wait(w) => {
+                it.world.blocking(|| poll_fd(fd, w, 1000));
             }
-            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-            Err(e) => {
-                let why = format!(
-                    "cannot read from {}: {}",
-                    c.borrow().authority,
-                    h2::io_msg(&e)
-                );
+            Io::Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            r => {
+                let why = format!("cannot read from {}: {}", c.borrow().authority, io_text(&r));
                 return conn_dead(it, &c, &why);
             }
         }
@@ -519,23 +579,23 @@ fn flush_now(it: &mut Interp, c: &ConnRef) {
                 return;
             }
             let out = std::mem::take(&mut cb.out);
-            let r = match &cb.sock {
-                Some(s) => (&*s).write(&out),
+            let r = match conn_write(&mut cb, &out) {
+                Some(r) => r,
                 None => return,
             };
             cb.out = out;
-            if let Ok(n) = &r {
+            if let Io::Done(n) = &r {
                 cb.out.drain(..*n);
             }
             r
         };
         match r {
-            Ok(_) => {}
-            Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+            Io::Done(_) => {}
+            Io::Wait(w) => {
                 let fd = c.borrow().fd;
-                it.world.blocking(|| poll_fd(fd, true, 10));
+                it.world.blocking(|| poll_fd(fd, w, 10));
             }
-            Err(_) => return,
+            _ => return,
         }
     }
 }
@@ -553,12 +613,12 @@ fn writer(it: &mut Interp, c: ConnRef) {
                 None
             } else {
                 let out = std::mem::take(&mut cb.out);
-                let r = match &cb.sock {
-                    Some(s) => (&*s).write(&out),
+                let r = match conn_write(&mut cb, &out) {
+                    Some(r) => r,
                     None => return,
                 };
                 cb.out = out;
-                if let Ok(n) = &r {
+                if let Io::Done(n) = &r {
                     cb.out.drain(..*n);
                 }
                 Some(r)
@@ -566,21 +626,17 @@ fn writer(it: &mut Interp, c: ConnRef) {
         };
         match r {
             None => it.world.park(None),
-            Some(Ok(0)) => {
+            Some(Io::Done(0)) => {
                 let why = format!("connection to {} closed", c.borrow().authority);
                 return conn_dead(it, &c, &why);
             }
-            Some(Ok(_)) => it.world.event(),
-            Some(Err(e)) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                it.world.blocking(|| poll_fd(fd, true, 1000));
+            Some(Io::Done(_)) => it.world.event(),
+            Some(Io::Wait(w)) => {
+                it.world.blocking(|| poll_fd(fd, w, 1000));
             }
-            Some(Err(e)) if e.kind() == std::io::ErrorKind::Interrupted => {}
-            Some(Err(e)) => {
-                let why = format!(
-                    "cannot send to {}: {}",
-                    c.borrow().authority,
-                    h2::io_msg(&e)
-                );
+            Some(Io::Err(e)) if e.kind() == std::io::ErrorKind::Interrupted => {}
+            Some(r) => {
+                let why = format!("cannot send to {}: {}", c.borrow().authority, io_text(&r));
                 return conn_dead(it, &c, &why);
             }
         }
@@ -781,8 +837,9 @@ fn recv(it: &mut Interp, c: &ConnRef, s: &StreamRef, deadline: Option<Instant>) 
 
 // ================================================================= client
 
-fn connect(it: &mut Interp, addr: &str) -> R<Result<ConnRef, String>> {
+fn connect(it: &mut Interp, given: &str) -> R<Result<ConnRef, String>> {
     it.check_cancel()?;
+    let (secure, addr) = tls::grpc_addr(given);
     let a = addr.to_string();
     let r = it.world.blocking(move || TcpStream::connect(&a));
     let sock = match r {
@@ -799,7 +856,29 @@ fn connect(it: &mut Interp, addr: &str) -> R<Result<ConnRef, String>> {
     if let Err(e) = sock.set_nonblocking(true) {
         return Ok(Err(format!("cannot connect to {}: {}", addr, e)));
     }
-    let c = Rc::new(RefCell::new(Conn::new(sock, addr.to_string(), None)));
+    let session = if secure {
+        // verified with the system's CA certificates (SSL_CERT_FILE,
+        // SSL_CERT_DIR), offering h2
+        match tls::Session::client(
+            sock.as_raw_fd(),
+            &tls::ClientOpts {
+                ca: "",
+                verify: true,
+                name: tls::host_of(addr),
+                alpn: &["h2".to_string()],
+            },
+        ) {
+            Ok(s) => Some(s),
+            Err(e) => return Ok(Err(format!("cannot connect to {}: {}", addr, e))),
+        }
+    } else {
+        None
+    };
+    let c = Rc::new(RefCell::new(Conn::new(sock, given.to_string(), None)));
+    c.borrow_mut().tls = session;
+    if let Err(e) = finish_handshake(it, &c, None)? {
+        return Ok(Err(format!("cannot connect to {}: {}", addr, e)));
+    }
     let (r, w) = (c.clone(), c.clone());
     let r = crate::sched::Baton(r);
     let w = crate::sched::Baton(w);
@@ -811,7 +890,7 @@ fn connect(it: &mut Interp, addr: &str) -> R<Result<ConnRef, String>> {
         .unwrap()
         .0
         .pool
-        .insert(addr.to_string(), c.clone());
+        .insert(given.to_string(), c.clone());
     Ok(Ok(c))
 }
 
@@ -852,10 +931,11 @@ fn open_call(
         let mut cb = c.borrow_mut();
         let id = cb.next_stream;
         cb.next_stream += 2;
-        let authority = cb.authority.clone();
+        let authority = tls::grpc_addr(&cb.authority).1.to_string();
+        let scheme = if cb.tls.is_some() { "https" } else { "http" };
         let mut hs: Vec<(&str, &str)> = vec![
             (":method", "POST"),
-            (":scheme", "http"),
+            (":scheme", scheme),
             (":path", path),
             (":authority", &authority),
             ("content-type", "application/grpc"),
@@ -2059,7 +2139,12 @@ fn bind(addr: &str) -> Result<TcpListener, String> {
 }
 
 /// Accept connections and serve them, until the task is cancelled.
-fn accept_loop(it: &mut Interp, l: TcpListener, server: Rc<Server>) -> R<()> {
+fn accept_loop(
+    it: &mut Interp,
+    l: TcpListener,
+    server: Rc<Server>,
+    ctx: Option<Rc<tls::Ctx>>,
+) -> R<()> {
     let fd = l.as_raw_fd();
     loop {
         match l.accept() {
@@ -2068,11 +2153,19 @@ fn accept_loop(it: &mut Interp, l: TcpListener, server: Rc<Server>) -> R<()> {
                 if sock.set_nonblocking(true).is_err() {
                     continue;
                 }
+                let session = match &ctx {
+                    Some(ctx) => match tls::Session::server(ctx, sock.as_raw_fd()) {
+                        Ok(s) => Some(s),
+                        Err(_) => continue,
+                    },
+                    None => None,
+                };
                 let c = Rc::new(RefCell::new(Conn::new(
                     sock,
                     peer.to_string(),
                     Some(server.clone()),
                 )));
+                c.borrow_mut().tls = session;
                 let job = crate::sched::Baton(c);
                 it.spawn_rust(
                     Box::new(move |it| {
@@ -2099,6 +2192,13 @@ fn accept_loop(it: &mut Interp, l: TcpListener, server: Rc<Server>) -> R<()> {
 }
 
 fn serve_conn(it: &mut Interp, c: ConnRef) {
+    // a TLS connection's handshake, in this task
+    let deadline = Instant::now() + HANDSHAKE;
+    match finish_handshake(it, &c, Some(deadline)) {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => return conn_dead(it, &c, &e),
+        Err(_) => return conn_dead(it, &c, "cancelled"),
+    }
     let w = crate::sched::Baton(c.clone());
     it.spawn_rust(
         Box::new(move |it| {
@@ -2114,8 +2214,19 @@ fn serve_conn(it: &mut Interp, c: ConnRef) {
     conn_dead(it, &c, &why);
 }
 
-/// Serve the program's service with the interpreter (`fwp serve`).
-pub fn serve(prog: &Program, listen: Option<String>) -> i32 {
+/// A server's TLS context (offering h2), from its certificate and key.
+fn server_tls(files: Option<(String, String)>) -> Result<Option<Rc<tls::Ctx>>, String> {
+    match files {
+        Some((cert, key)) => {
+            tls::server_ctx(&cert, &key, &["h2".to_string()]).map(|c| Some(Rc::new(c)))
+        }
+        None => Ok(None),
+    }
+}
+
+/// Serve the program's service with the interpreter (`fwp serve`), over
+/// TLS with a certificate and key.
+pub fn serve(prog: &Program, listen: Option<String>, tls: Option<(String, String)>) -> i32 {
     let server = match compiled_server(prog) {
         Ok(s) => Rc::new(s),
         Err(e) => {
@@ -2123,7 +2234,24 @@ pub fn serve(prog: &Program, listen: Option<String>) -> i32 {
             return 2;
         }
     };
-    let addr = crate::services::listen_address(prog, listen);
+    let ctx = match server_tls(tls) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("fwp serve: {}", e);
+            return 1;
+        }
+    };
+    let given = crate::services::listen_address(prog, listen);
+    // `tls://host:port` (as clients are given it) is host:port, with TLS
+    let (secure, addr) = tls::grpc_addr(&given);
+    let addr = addr.to_string();
+    if secure && ctx.is_none() {
+        eprintln!(
+            "fwp serve: {} needs a certificate and key (--tls-cert and --tls-key, or FWP_TLS_CERT and FWP_TLS_KEY)",
+            given
+        );
+        return 1;
+    }
     let l = match bind(&addr) {
         Ok(l) => l,
         Err(e) => {
@@ -2132,10 +2260,14 @@ pub fn serve(prog: &Program, listen: Option<String>) -> i32 {
         }
     };
     let local = l.local_addr().map(|a| a.to_string()).unwrap_or(addr);
-    eprintln!("fwp: service {} listening on {}", server.module, local);
+    let scheme = if ctx.is_some() { "tls://" } else { "" };
+    eprintln!(
+        "fwp: service {} listening on {}{}",
+        server.module, scheme, local
+    );
     let stdout = std::io::stdout();
     let mut it = Interp::new(prog, Box::new(std::io::LineWriter::new(stdout)));
-    match accept_loop(&mut it, l, server) {
+    match accept_loop(&mut it, l, server, ctx) {
         Ok(()) => 0,
         Err(_) => 1,
     }
@@ -2425,7 +2557,22 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             r
         }
         // ----- serving
-        "grpc.serve" => {
+        "grpc.serve" | "grpc._serve-tls" => {
+            // certificate and key first for TLS
+            let (files, a) = if sym == "grpc._serve-tls" {
+                (
+                    Some((a[0].as_str().to_string(), a[1].as_str().to_string())),
+                    &a[2..],
+                )
+            } else {
+                (None, &a[..])
+            };
+            let ctx = server_tls(files).map_err(|e| {
+                Ctl::Fail(
+                    Value::tuple(vec![Value::str("tls"), Value::str(&e)]),
+                    MT::con("std::IoError"),
+                )
+            })?;
             let addr = a[0].as_str().to_string();
             let mut routes = HashMap::new();
             for r in a[1].list_items() {
@@ -2457,8 +2604,9 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             })?;
             let local = l.local_addr().map(|a| a.to_string()).unwrap_or(addr);
             let _ = it.out.flush();
-            eprintln!("fwp: gRPC server listening on {}", local);
-            accept_loop(it, l, server)?;
+            let scheme = if ctx.is_some() { "tls://" } else { "" };
+            eprintln!("fwp: gRPC server listening on {}{}", scheme, local);
+            accept_loop(it, l, server, ctx)?;
             Ok(Value::unit())
         }
         "grpc._force" => {

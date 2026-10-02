@@ -153,6 +153,14 @@ foreign "fwp" grpc.cancel : GrpcStream -> () ! {Network}
 # port, reported on standard error), with health checking
 # (`grpc.health.v1.Health`), until the task is cancelled
 foreign "fwp" grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+# certificate, key, address, routes
+foreign "fwp" grpc._serve-tls : String -> String -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+
+# serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
+# certificate chain and private key (`tls.server "cert.pem" "key.pem"`);
+# clients call `tls://host:port`
+grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+grpc.serve-tls = fork apply .key-file (.cert-file | grpc._serve-tls)
 
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute

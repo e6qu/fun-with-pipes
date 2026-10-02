@@ -11,6 +11,10 @@
 # header, body, write and per-request timeouts; and on SIGINT/SIGTERM it
 # stops accepting, lets in-flight requests finish within a grace period,
 # then cancels the rest.
+#
+# With `tls` in its config the server speaks HTTPS, and the client speaks
+# HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
+# connections, which are `Conn`s too.
 
 Request = {
     method: String,
@@ -47,6 +51,7 @@ ServerConfig = {
     write-timeout: Duration,
     request-timeout: Duration,
     shutdown-grace: Duration,
+    tls: Option[TlsServer],
 }
 
 # internal
@@ -77,6 +82,7 @@ http.config = make ServerConfig {
     write-timeout = const 30s,
     request-timeout = const 30s,
     shutdown-grace = const 5s,
+    tls = const None,
 }
 
 # a response with a status, a content type and a body
@@ -390,11 +396,32 @@ http.bytes-take = bytes.slice 0
 http.bytes-drop : I64 -> Bytes -> Bytes
 http.bytes-drop = flip bytes.slice 1000000000000
 
-# Listen on `addr` and serve until a shutdown signal.
+# Listen on `addr` and serve until a shutdown signal; HTTPS with `tls`
+# (`http.config addr | with { tls = Some (tls.server "cert.pem" "key.pem") }`).
 http.serve : ServerConfig -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network, Error[IoError]}
-http.serve = curry (fork http.serve-on (.0 | .addr | tcp.listen) id)
+http.serve = curry (fork http.serve-on (.0 | http.listen) id)
 
-# Serve on a listener (for example one bound to port 0).
+# listen on a config's address, with TLS if it has `tls`
+http.listen : ServerConfig -> Listener ! {Network, Error[IoError]}
+http.listen = fork http.listen-with .tls .addr
+
+# internal
+http.listen-with : Option[TlsServer] -> String -> Listener ! {Network, Error[IoError]}
+http.listen-with = curry (match
+    (None, _) -> tcp.listen
+    (Some _, _) -> http.tls-server | tls.listen)
+
+# a TLS server that offers HTTP/1.1 with ALPN
+# internal
+http.tls-server : TlsServer -> TlsServer
+http.tls-server = make TlsServer {
+    cert-file = .cert-file,
+    key-file = .key-file,
+    alpn = const ["http/1.1"],
+}
+
+# Serve on a listener (for example one bound to port 0; a listener from
+# `tls.listen` serves HTTPS).
 http.serve-on : Listener -> (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network}
 http.serve-on = curry (spawn-with http.accept-main | task.await | ignore)
 
@@ -947,11 +974,17 @@ http.post = curry (make ClientRequest {
     body = .1,
 } | http.send)
 
-# send a request (one connection per request) and read the whole response
+# send a request (one connection per request) and read the whole response;
+# `https://` URLs are fetched over TLS, verifying the server's certificate
+# with the system's CA certificates
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send =
-    http.check-request
-    | fork http.send-to id (.url | url.parse | http.require-url)
+http.send = http.send-with tls.options
+
+# send a request, with these TLS options for `https://` URLs (for example
+# `tls.options | tls.with-ca "ca.pem"`)
+http.send-with : TlsOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-with = curry (both .0 (.1 | http.check-request)
+    | fork http.send-to id (.1 | .url | url.parse | http.require-url))
 
 # refuse a method or header that would not make one well-formed request
 # (URLs with spaces or control characters do not parse)
@@ -974,12 +1007,33 @@ http.require-url = match
     None -> fail { kind = "url", message = "invalid URL" }
 
 # internal
-http.send-to : ClientRequest -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send-to = curry (both id (.1 | http.host-port | tcp.connect)
+http.send-to : (TlsOptions, ClientRequest) -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-to = curry (both (both (.0 | .1) .1) http.open
     | tap (fork tcp.write (.0 | http.request-bytes) .1)
     | both (.1 | http.read-all) (.1 | tcp.close)
     | .0
     | http.parse-client)
+
+# connect to a URL's server: with TLS for https, offering HTTP/1.1
+# internal
+http.open : ((TlsOptions, ClientRequest), Url) -> Conn ! {Async, Network, Error[IoError]}
+http.open =
+    if
+        (.1 | .scheme | eq "https")
+        (fork
+            apply
+            (.1 | http.host-port)
+            (.0 | .0 | http.tls-client | tls.connect-with))
+        (.1 | http.host-port | tcp.connect)
+
+# internal
+http.tls-client : TlsOptions -> TlsOptions
+http.tls-client = make TlsOptions {
+    ca-file = .ca-file,
+    insecure = .insecure,
+    server-name = .server-name,
+    alpn = const ["http/1.1"],
+}
 
 # internal
 http.host-port : Url -> String

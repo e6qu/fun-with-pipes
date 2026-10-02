@@ -39,6 +39,7 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | `None` | nothing | 404 | an absent `optional` |
 | `Err e`, `Error[E]` | `name: e` on stderr, exit status 1 | `{"error": e}` with a status (`# error:`, the error's `status`, else 500) | the `error` of the response's `oneof`; `Error[GrpcError]` is a status |
 | bad arguments | usage error, exit status 2 | 400 `{"error": "path.id: ..."}` | `INVALID_ARGUMENT` |
+| TLS | — | HTTPS with `--tls-cert` and `--tls-key` ([tls.md](tls.md#rest)) | TLS with `--tls-cert` and `--tls-key`; clients call `tls://host:port` ([tls.md](tls.md#grpc)) |
 | documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `/openapi.json`) | `.proto` (`fwp proto`), server reflection |
 | calling it from fwp | `process.run` | `fwp openapi --import` gives typed functions | `fwp proto --import` gives typed functions; or the same call, made remote by the build |
 | versioning | — | unknown members are ignored, so new `Option` fields and new results' fields keep clients working; the document is the contract | a type fingerprint between fwp programs; field numbers for others |

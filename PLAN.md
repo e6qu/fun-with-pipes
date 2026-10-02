@@ -85,7 +85,16 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    files into fwp types, codecs (`lib/protobuf.fwp`), clients and server
    routes (`lib/grpc.fwp`). See [docs/grpc.md](docs/grpc.md) and
    [tutorial 18](docs/tutorials/18-grpc/README.md).
-7. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+7. **TLS** (done). HTTPS servers and clients, REST over HTTPS
+   (`--tls-cert`, `--tls-key`) and gRPC over TLS (ALPN `h2`, `tls://`
+   addresses), with the system's OpenSSL 3 in both backends: native
+   programs that use TLS link it, the interpreter loads it with `dlopen`.
+   TLS connections are `Conn`s, so the HTTP server and client run over
+   them unchanged, and handshakes wait on the task scheduler in the
+   connection's own task. `lib/tls.fwp` has connections with
+   verification, SNI and ALPN. See [docs/tls.md](docs/tls.md) and
+   [tutorial 19](docs/tutorials/19-tls/README.md).
+8. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

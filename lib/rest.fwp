@@ -41,7 +41,13 @@ RestRoute = {
 
 # Options of a REST server's command line.
 # internal
-RestOptions = { listen: Option[String], openapi: Bool, help: Bool }
+RestOptions = {
+    listen: Option[String],
+    tls-cert: Option[String],
+    tls-key: Option[String],
+    openapi: Bool,
+    help: Bool,
+}
 
 # A route of `http.router` that calls a function with the arguments of a
 # request and responds with its result as JSON.
@@ -363,8 +369,10 @@ rest.http-error =
 
 # Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
 # error responses (`{"error": "not found"}` for unknown paths). The
-# command line is `[--listen host:port] [--openapi] [--help]`; the address
-# defaults to `FWP_REST_ADDR`, else `127.0.0.1:8080`.
+# command line is `[--listen host:port] [--tls-cert file --tls-key file]
+# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
+# `127.0.0.1:8080`, and the certificate and key (PEM files, for HTTPS) to
+# `FWP_TLS_CERT` and `FWP_TLS_KEY`.
 rest.main : String -> List[Route] -> () ! {Async, IO, Network}
 rest.main = curry (fork
     rest.start
@@ -373,12 +381,18 @@ rest.main = curry (fork
 
 # internal
 rest.default-options : RestOptions
-rest.default-options =
-    RestOptions { listen = None, openapi = False, help = False }
+rest.default-options = RestOptions {
+    listen = None,
+    tls-cert = None,
+    tls-key = None,
+    openapi = False,
+    help = False,
+}
 
 # internal
 rest.usage : String
-rest.usage = "usage: server [--listen host:port] [--openapi] [--help]"
+rest.usage =
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--openapi] [--help]"
 
 # internal
 rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
@@ -405,13 +419,11 @@ rest.run-with =
 # internal
 rest.help : String
 rest.help =
-    "usage: server [--listen host:port] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --tls-cert file     serve HTTPS with this certificate chain (PEM; default: $FWP_TLS_CERT)\n  --tls-key file      and this private key (PEM; default: $FWP_TLS_KEY)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
 
 # internal
 rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
-rest.listen =
-    attempt (fork rest.serve-at .0 (.1 | .0 | .listen | rest.address))
-    | rest.stopped
+rest.listen = attempt (fork rest.serve-at .0 (.1 | .0)) | rest.stopped
 
 # internal
 rest.address : Option[String] -> String ! {IO}
@@ -422,15 +434,53 @@ rest.address =
         (const "FWP_REST_ADDR" | env.get | option.unwrap-or "127.0.0.1:8080")
 
 # internal
-rest.serve-at : (String, List[Route]) -> String -> () ! {Async, IO, Network, Error[IoError]}
-rest.serve-at = curry (fork
-    rest.serve-on
-    (.1
-        | tcp.listen
-        | tap (tcp.local-addr
-            | format "fwp: rest listening on http://{}"
-            | eprint))
-    .0)
+rest.serve-at : (String, List[Route]) -> RestOptions -> () ! {Async, IO, Network, Error[IoError]}
+rest.serve-at = curry (fork rest.serve-on (.1 | rest.open) .0)
+
+# listen, with TLS when there is a certificate and key
+# internal
+rest.open : RestOptions -> Listener ! {IO, Network, Error[IoError]}
+rest.open =
+    fork
+        rest.open-with
+        (fork
+            rest.tls-files
+            (.tls-cert | rest.or-env "FWP_TLS_CERT")
+            (.tls-key | rest.or-env "FWP_TLS_KEY"))
+        (.listen | rest.address)
+
+# internal
+rest.or-env : String -> Option[String] -> Option[String] ! {IO}
+rest.or-env = curry (match
+    (_, None) -> env.get | option.filter (string.is-empty | not)
+    (_, Some _) -> const Some)
+
+# internal
+rest.tls-files : Option[String] -> Option[String] -> Option[TlsServer] ! {Error[IoError]}
+rest.tls-files = curry (match
+    (None, None) -> None
+    (Some _, Some _) -> curry (uncurry tls.server | Some)
+    (Some _, None) -> const (fail {
+        kind = "tls",
+        message = "--tls-cert needs --tls-key (or FWP_TLS_KEY)",
+    })
+    (None, Some _) -> const (fail {
+        kind = "tls",
+        message = "--tls-key needs --tls-cert (or FWP_TLS_CERT)",
+    }))
+
+# internal
+rest.open-with : Option[TlsServer] -> String -> Listener ! {IO, Network, Error[IoError]}
+rest.open-with = curry (match
+    (None, _) -> tcp.listen | tap (rest.announce "http")
+    (Some _, _) -> curry (fork apply .1 (.0 | http.tls-server | tls.listen)
+        | tap (rest.announce "https")))
+
+# internal
+rest.announce : String -> Listener -> () ! {IO, Network}
+rest.announce = curry (both .0 (.1 | tcp.local-addr)
+    | format "fwp: rest listening on {}://{}"
+    | eprint)
 
 # internal
 rest.serve-on : Listener -> (String, List[Route]) -> () ! {Async, IO, Network}

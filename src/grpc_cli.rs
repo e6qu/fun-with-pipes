@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use crate::ir::Program;
 
 const USAGE: &str = "usage: fwp build <file.fwp> --grpc [-o out] [-O0..-O3] [--fat] [--emit-c]
-       fwp serve --grpc <file.fwp> [--listen host:port]
+       fwp serve --grpc <file.fwp> [--listen host:port] [--tls-cert file --tls-key file]
        fwp proto --grpc <file.fwp>
        fwp proto --import <file.proto> [-o out.fwp]";
 
@@ -107,6 +107,14 @@ pub fn build(args: &[String]) -> i32 {
 /// `fwp serve --grpc file.fwp`: serve the file's exported functions with
 /// the interpreter.
 pub fn serve(args: &[String]) -> i32 {
+    let mut args = args.to_vec();
+    let tls = match crate::tls::server_files(&mut args) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("fwp serve: {}\n{}", e, USAGE);
+            return 2;
+        }
+    };
     let mut path = None;
     let mut listen = None;
     let mut remote = Vec::new();
@@ -137,7 +145,7 @@ pub fn serve(args: &[String]) -> i32 {
         return 2;
     };
     crate::driver::with_big_stack(move || match compile(&path, remote) {
-        Ok(prog) => crate::grpc::serve(&prog, listen),
+        Ok(prog) => crate::grpc::serve(&prog, listen, tls),
         Err(e) => report("serve", e),
     })
 }
