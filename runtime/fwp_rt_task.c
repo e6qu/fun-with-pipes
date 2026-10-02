@@ -15,9 +15,11 @@
  * compiling for that target */
 static void fwp_tasks_finish(void) {}
 static void fwp_tasks_abort(void) {}
+static void fwp_stack_guard_init(size_t size) { (void)size; }
 #else
 #include <ucontext.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -1133,5 +1135,58 @@ static V fwp_p_loop(V f, V s) {
         if (fwp_tag(r) != 0) return OBJ(r)->f[0];
         s = OBJ(r)->f[0];
     }
+}
+
+/* ----- stack overflow
+ * A fault next to the end of the running stack (the main thread's, of
+ * fwp_main_stack_size bytes below fwp_main_stack_top, or the current
+ * task's) is a stack overflow: it is reported as a trap, with the message
+ * and exit code of the interpreter. Other faults keep their default
+ * action. The handler runs on an alternate signal stack. */
+
+static char *fwp_main_stack_top = 0;
+static size_t fwp_main_stack_size = 0;
+
+static int fwp_near(uintptr_t a, uintptr_t lo, uintptr_t hi) { return a >= lo && a < hi; }
+
+static void fwp_segv(int sig, siginfo_t *si, void *uc) {
+    (void)uc;
+    uintptr_t a = (uintptr_t)si->si_addr, slack = (uintptr_t)1 << 20;
+    int overflow = 0;
+    if (fwp_cur && fwp_cur->stack) {
+        uintptr_t lo = (uintptr_t)fwp_cur->stack;
+        overflow = fwp_near(a, lo > slack ? lo - slack : 0, lo + 4096);
+    } else if (fwp_main_stack_top) {
+        uintptr_t end = (uintptr_t)fwp_main_stack_top - fwp_main_stack_size;
+        overflow = fwp_near(a, end - slack, end + slack);
+    }
+    if (!overflow) {
+        signal(sig, SIG_DFL); /* the fault repeats with the default action */
+        return;
+    }
+    fwp_flush();
+    static const char msg[] = "fwp: trap: stack overflow\n";
+    if (write(2, msg, sizeof msg - 1) < 0) { /* nothing more to do */ }
+    _exit(101);
+}
+
+/* called at the top of the main thread, whose stack has `size` bytes */
+static void fwp_stack_guard_init(size_t size) {
+    char here;
+    fwp_main_stack_top = &here;
+    fwp_main_stack_size = size;
+    static char alt[1 << 16];
+    stack_t ss;
+    ss.ss_sp = alt;
+    ss.ss_size = sizeof alt;
+    ss.ss_flags = 0;
+    if (sigaltstack(&ss, 0) != 0) return;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = fwp_segv;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, 0);
+    sigaction(SIGBUS, &sa, 0);
 }
 #endif /* __wasi__ */

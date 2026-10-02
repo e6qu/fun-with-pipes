@@ -524,6 +524,38 @@ static int fwp_valid_utf8(const unsigned char *d, size_t n) {
     return 1;
 }
 
+/* text from outside the program (stdin, arguments, the environment):
+ * each maximal invalid subsequence becomes U+FFFD, exactly as Rust's
+ * String::from_utf8_lossy */
+static V fwp_str_lossy(const char *s, size_t n) {
+    const unsigned char *d = (const unsigned char *)s;
+    if (fwp_valid_utf8(d, n)) return fwp_str_new(s, n);
+    fwp_buf b = {0};
+    size_t i = 0;
+    while (i < n) {
+        unsigned char c = d[i];
+        if (c < 0x80) { buf_putc(&b, (char)c); i++; continue; }
+        int need;
+        unsigned char lo = 0x80, hi = 0xBF;
+        if (c >= 0xC2 && c <= 0xDF) need = 1;
+        else if (c >= 0xE0 && c <= 0xEF) { need = 2; if (c == 0xE0) lo = 0xA0; if (c == 0xED) hi = 0x9F; }
+        else if (c >= 0xF0 && c <= 0xF4) { need = 3; if (c == 0xF0) lo = 0x90; if (c == 0xF4) hi = 0x8F; }
+        else { buf_puts(&b, "\xEF\xBF\xBD"); i++; continue; }
+        size_t j = i + 1;
+        int k = 0;
+        while (k < need && j < n) {
+            unsigned char x = d[j];
+            if (k == 0 ? (x < lo || x > hi) : (x & 0xC0) != 0x80) break;
+            j++;
+            k++;
+        }
+        if (k == need) buf_put(&b, s + i, j - i);
+        else buf_puts(&b, "\xEF\xBF\xBD");
+        i = j;
+    }
+    return buf_to_str(&b);
+}
+
 static V fwp_p_from_bytes(V b) {
     if (!fwp_valid_utf8((const unsigned char *)STR(b)->d, STR(b)->len)) return FWP_NONE;
     return fwp_some(fwp_str_new(STR(b)->d, STR(b)->len));
@@ -891,7 +923,9 @@ static V fwp_read_stdin_all(void) {
     char tmp[65536];
     size_t n;
     while ((n = fread(tmp, 1, sizeof tmp, stdin)) > 0) buf_put(&b, tmp, n);
-    return buf_to_str(&b);
+    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    free(b.d);
+    return r;
 }
 
 static V fwp_p_read_line(void) {
@@ -905,7 +939,9 @@ static V fwp_p_read_line(void) {
     }
     if (!any) { free(b.d); return FWP_NONE; }
     if (b.len > 0 && b.d[b.len - 1] == '\r' && c == '\n') b.len--;
-    return fwp_some(buf_to_str(&b));
+    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    free(b.d);
+    return fwp_some(r);
 }
 
 static V fwp_p_read_lines(void) {
@@ -915,13 +951,13 @@ static V fwp_p_read_lines(void) {
 
 static V fwp_p_args(void) {
     V r = 0;
-    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_cstr(fwp_argv[i]), r);
+    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])), r);
     return r;
 }
 
 static V fwp_p_env_get(V name) {
     const char *v = getenv(STR(name)->d);
-    return v ? fwp_some(fwp_cstr(v)) : FWP_NONE;
+    return v ? fwp_some(fwp_str_lossy(v, strlen(v))) : FWP_NONE;
 }
 
 static struct timespec fwp_start_time;
@@ -1305,6 +1341,22 @@ static double *la_get(V arr, size_t n) {
     return d;
 }
 
+/* traps unless array `arr` holds a rows x cols matrix (as la_check in
+ * src/prims_std.rs) */
+static void la_check(const char *name, V arr, int64_t rows, int64_t cols) {
+    char msg[256];
+    if (rows < 0 || cols < 0) {
+        snprintf(msg, sizeof msg, "%s: negative dimension", name);
+        fwp_trap(msg);
+    }
+    size_t len = ARR(arr)->len;
+    if ((i128)len != (i128)rows * (i128)cols) {
+        snprintf(msg, sizeof msg, "%s: %zu elements given for a %lldx%lld matrix", name, len,
+                 (long long)rows, (long long)cols);
+        fwp_trap(msg);
+    }
+}
+
 static V la_put(const double *d, size_t n) {
     V r = fwp_arr_new(n);
     for (size_t i = 0; i < n; i++) ARR(r)->d[i] = fwp_from_f64(d[i]);
@@ -1312,8 +1364,9 @@ static V la_put(const double *d, size_t n) {
 }
 
 static V fwp_p_lu_solve(V nv, V av, V bv) {
+    la_check("linalg.lu-solve", av, (int64_t)nv, (int64_t)nv);
+    la_check("linalg.lu-solve", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
-    if (ARR(av)->len < n * n || ARR(bv)->len < n) return FWP_NONE;
     double *a = la_get(av, n * n), *x = la_get(bv, n);
     for (size_t k = 0; k < n; k++) {
         size_t p = k;
@@ -1340,6 +1393,7 @@ static V fwp_p_lu_solve(V nv, V av, V bv) {
 }
 
 static V fwp_p_det(V nv, V av) {
+    la_check("linalg.det", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n), d = 1.0;
     for (size_t k = 0; k < n; k++) {
@@ -1361,6 +1415,7 @@ static V fwp_p_det(V nv, V av) {
 }
 
 static V fwp_p_inverse(V nv, V av) {
+    la_check("linalg.inverse", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
     double *inv = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1391,6 +1446,7 @@ static V fwp_p_inverse(V nv, V av) {
 }
 
 static V fwp_p_cholesky(V nv, V av) {
+    la_check("linalg.cholesky", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
     double *l = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1410,6 +1466,7 @@ static V fwp_p_cholesky(V nv, V av) {
 }
 
 static V fwp_p_qr(V mv, V nv, V av) {
+    la_check("linalg.qr", av, (int64_t)mv, (int64_t)nv);
     size_t m = (size_t)(int64_t)mv, n = (size_t)(int64_t)nv;
     double *q = la_get(av, m * n);
     double *r = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1440,6 +1497,8 @@ static double la_dot(const double *x, const double *y, size_t n) {
 static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
     int64_t maxit = (int64_t)itv;
     double tol = fwp_f64(tolv);
+    la_check("linalg.cg", av, (int64_t)nv, (int64_t)nv);
+    la_check("linalg.cg", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n), *r = la_get(bv, n), *p = la_get(bv, n);
     double *x = (double *)fwp_alloc((n + 1) * sizeof(double));

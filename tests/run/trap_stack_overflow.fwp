@@ -1,0 +1,14 @@
+# Unbounded recursion traps with the same message and exit code in both
+# backends (here in a task, whose stack is 256 MiB in both).
+rec down : I64 -> I64
+down = match
+    0 -> 0
+    _ -> sub 1 | down | add 1
+
+main =
+    [1000]
+    | map down
+    | echo
+    | const [1000000000000]
+    | task.map down
+    | echo

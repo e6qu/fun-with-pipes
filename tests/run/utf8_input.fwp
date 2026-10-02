@@ -1,0 +1,9 @@
+# Invalid UTF-8 on stdin becomes U+FFFD (one per maximal invalid sequence).
+main =
+    ()
+    | read-line
+    | echo
+    | const ()
+    | read-all
+    | both id (string.to-bytes | bytes.length)
+    | echo

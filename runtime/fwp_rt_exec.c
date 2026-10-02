@@ -290,7 +290,18 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
                     memcpy(num, t, l - ul);
                     num[l - ul] = 0;
                     if (fwp_valid_int(num, l - ul)) {
-                        V f[1] = {(V)(strtoll(num, 0, 10) * units[u].k)};
+                        /* the count and the nanoseconds must fit in I64 */
+                        size_t i = num[0] == '+' || num[0] == '-' ? 1 : 0;
+                        i128 x = 0;
+                        for (; num[i]; i++) {
+                            x = x * 10 + (num[i] - '0');
+                            if (x > (i128)INT64_MAX + 1) return 0;
+                        }
+                        if (num[0] == '-') x = -x;
+                        if (x > INT64_MAX) return 0;
+                        x *= units[u].k;
+                        if (x > INT64_MAX || x < INT64_MIN) return 0;
+                        V f[1] = {(V)(int64_t)x};
                         *out = fwp_record(1, f);
                         return 1;
                     }
@@ -353,7 +364,7 @@ static int fwp_parse_text(const char *s, size_t n, const fwp_desc *d, V *out) {
 typedef struct { const unsigned char *d; size_t n, i; } fwp_rd;
 
 static int rd_take(fwp_rd *r, size_t k, const unsigned char **out) {
-    if (r->i + k > r->n) return 0;
+    if (k > r->n - r->i) return 0;
     *out = r->d + r->i;
     r->i += k;
     return 1;
@@ -364,6 +375,7 @@ static int rd_leb(fwp_rd *r, uint64_t *x) {
     for (int shift = 0; shift < 64; shift += 7) {
         const unsigned char *b;
         if (!rd_take(r, 1, &b)) return 0;
+        if (shift == 63 && (b[0] & 0x7f) > 1) return 0; /* beyond 64 bits */
         *x |= (uint64_t)(b[0] & 0x7f) << shift;
         if (!(b[0] & 0x80)) return 1;
     }
@@ -400,7 +412,7 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     }
     case K_STR: case K_BYTES: {
         const unsigned char *b;
-        if (!rd_leb(r, &x) || !rd_take(r, (size_t)x, &b)) return 0;
+        if (!rd_leb(r, &x) || x > r->n || !rd_take(r, (size_t)x, &b)) return 0;
         if (d->kind == K_STR && !fwp_valid_utf8(b, (size_t)x)) return 0;
         *out = fwp_str_new((const char *)b, (size_t)x);
         return 1;
@@ -530,15 +542,28 @@ static int fwp_read_exact(unsigned char *buf, size_t n) {
     return i == n || fread(buf + i, 1, n - i, stdin) == n - i;
 }
 
+/* the longest capability or type name a header may carry (as
+ * MAX_HEADER_NAME in src/proto.rs) */
+#define FWP_MAX_HEADER_NAME ((uint64_t)1 << 20)
+
+/* 1: read; 0: truncated; -1: malformed (over 64 bits) */
 static int fwp_stdin_leb(uint64_t *x) {
     *x = 0;
     for (int shift = 0; shift < 64; shift += 7) {
         unsigned char b;
         if (!fwp_read_exact(&b, 1)) return 0;
+        if (shift == 63 && (b & 0x7f) > 1) return -1;
         *x |= (uint64_t)(b & 0x7f) << shift;
         if (!(b & 0x80)) return 1;
     }
-    return 0;
+    return -1;
+}
+
+/* a header name length: 1, 0 (truncated) or -1 (malformed or too long) */
+static int fwp_stdin_name_len(uint64_t *x) {
+    int ok = fwp_stdin_leb(x);
+    if (ok == 1 && *x > FWP_MAX_HEADER_NAME) return -1;
+    return ok;
 }
 
 /* read a text line from stdin into a fresh string (without the newline);
@@ -566,8 +591,9 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     }
     V *args = (V *)fwp_alloc((size_t)(n + 1) * sizeof(V));
     for (int i = 0; i < k; i++) {
-        if (!fwp_parse_text(argv[i + 1], strlen(argv[i + 1]), s->params[i], &args[i])) {
-            fprintf(stderr, "%s: argument %d: cannot parse `%s` as %s\n", s->name, i + 1, argv[i + 1],
+        V a = fwp_str_lossy(argv[i + 1], strlen(argv[i + 1]));
+        if (!fwp_parse_text(STR(a)->d, STR(a)->len, s->params[i], &args[i])) {
+            fprintf(stderr, "%s: argument %d: cannot parse `%s` as %s\n", s->name, i + 1, STR(a)->d,
                     s->param_names[i]);
             return 2;
         }
@@ -576,7 +602,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     fwp_exec_binary_out = outv && strcmp(outv, "bin") == 0;
     fwp_prog_out = fwp_exec_binary_out ? stderr : stdout;
     if (fwp_exec_binary_out) fwrite(s->out_header, 1, s->out_header_len, stdout);
-    int code = 0, failed = 0;
+    int code = 0, failed = 0, ok = 1;
     if (k == n) {
         V r = fwp_exec_call(s, args, n, &failed);
         fflush(fwp_prog_out);
@@ -595,9 +621,10 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             unsigned char ver;
             uint64_t ncaps, l;
             unsigned char fp[16];
-            if (!fwp_read_exact(&ver, 1) || !fwp_stdin_leb(&ncaps)) goto bad_header;
+            if (!fwp_read_exact(&ver, 1)) goto bad_header;
+            if ((ok = fwp_stdin_leb(&ncaps)) != 1) goto header_error;
             for (uint64_t i = 0; i < ncaps && i < 64; i++) {
-                if (!fwp_stdin_leb(&l)) goto bad_header;
+                if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
                 unsigned char tmp[256];
                 while (l > 0) {
                     size_t chunk = l > sizeof tmp ? sizeof tmp : (size_t)l;
@@ -605,7 +632,8 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                     l -= chunk;
                 }
             }
-            if (!fwp_read_exact(fp, 16) || !fwp_stdin_leb(&l)) goto bad_header;
+            if (!fwp_read_exact(fp, 16)) goto bad_header;
+            if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
             char *tname = (char *)fwp_alloc((size_t)l + 1);
             if (l && !fwp_read_exact((unsigned char *)tname, (size_t)l)) goto bad_header;
             tname[l] = 0;
@@ -625,17 +653,20 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             V v;
             if (binary) {
                 unsigned char hdr[5];
-                if (!fwp_read_exact(hdr, 5) || hdr[0] == 0) break;
+                if (!fwp_read_exact(hdr, 1)) break;
+                if (!fwp_read_exact(hdr + 1, 4)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 size_t len = (size_t)hdr[1] | ((size_t)hdr[2] << 8) | ((size_t)hdr[3] << 16) | ((size_t)hdr[4] << 24);
                 unsigned char *pl = (unsigned char *)fwp_alloc(len + 1);
                 if (len && !fwp_read_exact(pl, len)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
+                if (hdr[0] == 0) break;
                 fwp_rd r = {pl, len, 0};
-                if (!fwp_decode(&r, s->in_elem, &v)) { fprintf(stderr, "%s: truncated value\n", s->name); code = 3; break; }
+                if (!fwp_decode(&r, s->in_elem, &v)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
             } else {
                 if (!fwp_read_text_line(&line)) break;
-                if (!fwp_parse_text(line.d ? line.d : "", line.len, s->in_elem, &v)) {
-                    fprintf(stderr, "%s: cannot parse input `%.*s` as %s\n", s->name, (int)line.len,
-                            line.d ? line.d : "", s->in_type);
+                V t = fwp_str_lossy(line.d ? line.d : "", line.len);
+                if (!fwp_parse_text(STR(t)->d, STR(t)->len, s->in_elem, &v)) {
+                    fprintf(stderr, "%s: cannot parse input `%.*s` as %s\n", s->name, (int)STR(t)->len,
+                            STR(t)->d, s->in_type);
                     code = 3;
                     break;
                 }
@@ -668,6 +699,11 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     }
     fflush(stdout);
     return code;
+header_error:
+    if (ok < 0) {
+        fprintf(stderr, "%s: bad header\n", s->name);
+        return 3;
+    }
 bad_header:
     fprintf(stderr, "%s: truncated header\n", s->name);
     return 3;

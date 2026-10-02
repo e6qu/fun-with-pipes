@@ -293,6 +293,16 @@ impl Env {
                     let map: HashMap<TV, Type> = params.iter().cloned().zip(cargs).collect();
                     return Ok(TypeTable::subst(ty, &map));
                 }
+                if canon == "std::TInt" {
+                    if let Some(Type::Nat(w)) = cargs.first() {
+                        if *w > crate::value::TINT_MAX_WIDTH {
+                            return Err(Diagnostic::error(
+                                te.span,
+                                crate::value::tint_width_error(*w),
+                            ));
+                        }
+                    }
+                }
                 Ok(Type::Con(canon, cargs))
             }
             TypeKind::Fun(a, b, eff) => {

@@ -78,6 +78,7 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Float {
             value,
             suffix: None,
+            ..
         } => c(S_FLOAT, vec![IR::Const(Value::F64(*value))]),
         ExprKind::Str(x) => c(S_STR, vec![s(x)]),
         ExprKind::Var(n) => c(S_NAME, vec![s(&cx.value_name(n))]),
@@ -328,6 +329,7 @@ impl Builder<'_> {
             S_FLOAT => match &fs[0] {
                 Value::F64(x) => ExprKind::Float {
                     value: *x,
+                    value32: *x as f32,
                     suffix: None,
                 },
                 _ => return Err("malformed SFloat".into()),

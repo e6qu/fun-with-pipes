@@ -1,0 +1,2 @@
+# Exit codes are taken modulo 256, as by the operating system.
+main = ["before"] | each print | const 259 | exit

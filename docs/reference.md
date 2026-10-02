@@ -21,7 +21,7 @@ library is listed in [stdlib.md](stdlib.md).
   `F128` at `F64` precision.
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,
   `1h`. They are decimal and at most about 292 years.
-- **Balanced ternary literals:** `0t+-0` (`TInt`).
+- **Balanced ternary literals:** `0t+-0` (`TInt[3]`, one trit per digit).
 - **Strings:** `"..."`, with the escapes `\n \t \r \0 \\ \"` and
   `\u{1F600}`.
 - **Layout:** a declaration continues on the following lines as long as they
@@ -123,7 +123,11 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   `F32`, `F64`, `F128`, `TInt[N]`, `Trit`.
   - Integer arithmetic traps on overflow; `wrapping.*`, `saturating.*`,
     `checked.*` and `overflowing.*` give the other behaviours.
-  - Floats are IEEE.
+  - `TInt[N]` has at most 40 trits; a wider `TInt` is a compile error.
+  - Floats are IEEE. An `F32` literal is rounded once, directly to `F32`;
+    an integer literal at a float type is its magnitude, rounded once.
+    `neg` flips the sign, so `neg 0.0` is `-0.0`. `float.to-int` is `None`
+    unless the truncated value fits the integer type exactly.
 - **Basic types:** `Bool`, `String` (UTF-8), `Bytes`, `Duration`,
   `List[T]`, `Array[T]`, `Map[K, V]`, `Set[T]`, `Option[T]`,
   `Result[T, E]`.
@@ -236,9 +240,19 @@ Exit codes:
 | 1 | uncaught error, or the main task was cancelled |
 | 2 | usage error, or an executable function's argument cannot be parsed |
 | 3 | malformed input to an executable function |
-| 101 | trap: overflow, division by zero, deadlock, or recursion too deep |
+| 101 | trap: overflow, division by zero, deadlock, or stack overflow (`fwp: trap: stack overflow`) |
 
-When `main` has type `I32`, its value is the exit code (modulo 256).
+When `main` has type `I32`, its value is the exit code. `exit n` exits with `n` modulo 256 (`exit 259` is 3, `exit -1` is 255),
+as the operating system reports it, in both backends.
+
+Text from outside the program, that is, standard input (`read-line`,
+`read-all`, `read-lines`, and the text records of executables), command-line
+arguments (`args`, and the arguments of executables) and environment
+variables (`env.get`), is decoded as UTF-8 by both backends in the same
+way: each maximal invalid sequence of bytes becomes one U+FFFD (`�`), as
+Rust's `String::from_utf8_lossy` does. Strings are therefore always valid
+UTF-8. Strings in the binary pipe protocol must be valid UTF-8 and are
+rejected otherwise.
 
 ### Targets
 

@@ -107,20 +107,25 @@ impl Input {
                 None => Ok(None),
                 Some(payload) => {
                     let mut rd = proto::Reader::new(&payload);
-                    proto::decode(&mut rd, elem, prog).map(Some)
+                    // one message for every decoding failure, as in the
+                    // native runtime
+                    proto::decode(&mut rd, elem, prog)
+                        .map(Some)
+                        .map_err(|_| "malformed value".to_string())
                 }
             },
             Input::Text(r) => {
-                let mut line = String::new();
-                match r.read_line(&mut line) {
+                let mut bytes = Vec::new();
+                match r.read_until(b'\n', &mut bytes) {
                     Ok(0) => Ok(None),
                     Ok(_) => {
-                        if line.ends_with('\n') {
-                            line.pop();
-                            if line.ends_with('\r') {
-                                line.pop();
+                        if bytes.ends_with(b"\n") {
+                            bytes.pop();
+                            if bytes.ends_with(b"\r") {
+                                bytes.pop();
                             }
                         }
+                        let line = crate::value::lossy(&bytes);
                         crate::textio::parse(&line, elem, prog)
                             .map(Some)
                             .map_err(|_| format!("cannot parse input `{}` as {}", line, elem))

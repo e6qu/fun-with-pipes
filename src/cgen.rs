@@ -527,8 +527,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Value::F64(x) => {
                         format!("fwp_f64({}) == fwp_f64((V)0x{:x}ULL)", v, x.to_bits())
                     }
-                    Value::I128(x) => format!("fwp_i128({}) == (i128){}", v, x),
-                    Value::U128(x) => format!("fwp_u128({}) == (u128){}ULL", v, x),
+                    Value::I128(x) => {
+                        let (hi, lo) = ((*x as u128 >> 64) as u64, *x as u128 as u64);
+                        format!(
+                            "fwp_i128({}) == (i128)(((u128){}ULL << 64) | {}ULL)",
+                            v, hi, lo
+                        )
+                    }
+                    Value::U128(x) => {
+                        let (hi, lo) = ((*x >> 64) as u64, *x as u64);
+                        format!("fwp_u128({}) == (((u128){}ULL << 64) | {}ULL)", v, hi, lo)
+                    }
                     other => {
                         let c = self.g.const_expr(other);
                         format!("{} == {}", v, c)
@@ -575,7 +584,7 @@ impl<'p> Gen<'p> {
                 rw
             ),
             "prim.neg" => format!(
-                "return fwp_arith({rk}, OP_SUB, fwp_from_i128({rk}, 0, {n}, {w}), l0, {n}, {w});",
+                "return fwp_neg({rk}, l0, {n}, {w});",
                 rk = rk,
                 n = Self::cstr(&rname),
                 w = rw
@@ -1708,8 +1717,11 @@ static void fwp_init_consts(void) {{
 
 static int fwp_exit_code = 0;
 
+static size_t fwp_main_stack = (size_t)1 << 30;
+
 static void *fwp_main_thread(void *arg) {{
     (void)arg;
+    fwp_stack_guard_init(fwp_main_stack);
     fwp_init_consts();
 {run}
     fflush(stdout);
@@ -1730,9 +1742,16 @@ int main(int argc, char **argv) {{
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, (size_t)1 << 30);
+    pthread_attr_setstacksize(&attr, fwp_main_stack);
     pthread_t t;
-    if (pthread_create(&t, &attr, fwp_main_thread, 0) != 0) fwp_main_thread(0);
+    if (pthread_create(&t, &attr, fwp_main_thread, 0) != 0) {{
+        /* on the process stack instead */
+        struct rlimit rl;
+        fwp_main_stack = getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY
+                             ? (size_t)rl.rlim_cur
+                             : (size_t)8 << 20;
+        fwp_main_thread(0);
+    }}
     else pthread_join(t, 0);
 #endif
     fflush(stdout);

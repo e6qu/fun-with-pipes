@@ -22,6 +22,8 @@ pub enum Tok {
     },
     Float {
         value: f64,
+        /// The literal rounded once, directly to `F32` precision.
+        value32: f32,
         suffix: Option<String>,
     },
     /// Balanced ternary literal `0t+-0`, most significant trit first.
@@ -558,13 +560,19 @@ impl<'a> Lexer<'a> {
             if radix != 10 {
                 return self.err(line, col, "float literals must be decimal");
             }
-            let mut v: f64 = digits
-                .parse()
-                .map_err(|_| Diagnostic::error(self.span_from(line, col, s), "bad float"))?;
+            let bad = |_| Diagnostic::error(self.span_from(line, col, s), "bad float");
+            let mut v: f64 = digits.parse().map_err(bad)?;
+            // parsed separately: rounding the f64 again would round twice
+            let mut v32: f32 = digits.parse().map_err(bad)?;
             if neg {
                 v = -v;
+                v32 = -v32;
             }
-            return Ok(Tok::Float { value: v, suffix });
+            return Ok(Tok::Float {
+                value: v,
+                value32: v32,
+                suffix,
+            });
         }
         if let Some(sfx) = &suffix {
             if !is_int_suffix(sfx) {
@@ -699,10 +707,12 @@ mod tests {
                 },
                 Tok::Float {
                     value: 1.5,
+                    value32: 1.5,
                     suffix: Some("f32".into())
                 },
                 Tok::Float {
                     value: 2000.0,
+                    value32: 2000.0,
                     suffix: None
                 },
                 Tok::Int {

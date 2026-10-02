@@ -45,3 +45,9 @@ halve = match
 
 export safe-div : I64 -> I64 -> I64
 safe-div = div
+
+export later : Duration -> Duration
+later = id
+
+export flag : Bool -> Bool
+flag = not

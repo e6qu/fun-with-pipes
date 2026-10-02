@@ -278,7 +278,7 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Int { neg, mag, suffix } => {
             format!("{}{}", int_lit(*neg, *mag), suffix.as_deref().unwrap_or(""))
         }
-        ExprKind::Float { value, suffix } => {
+        ExprKind::Float { value, suffix, .. } => {
             format!("{}{}", float_lit(*value), suffix.as_deref().unwrap_or(""))
         }
         ExprKind::Str(s) => crate::value::escape_str(s),

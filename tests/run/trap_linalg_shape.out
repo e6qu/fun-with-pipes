@@ -1,0 +1,4 @@
+-2.0
+--- stderr
+fwp: trap: linalg.det: 3 elements given for a 2x2 matrix
+--- exit 101

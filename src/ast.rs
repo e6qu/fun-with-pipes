@@ -20,6 +20,8 @@ pub enum ExprKind {
     },
     Float {
         value: f64,
+        /// The literal rounded once, directly to `F32` precision.
+        value32: f32,
         suffix: Option<String>,
     },
     Str(String),

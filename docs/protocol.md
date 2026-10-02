@@ -31,6 +31,10 @@ For a function with `n` curried parameters:
 * `k` command-line arguments fill the first `k` parameters. Each argument is
   parsed from the canonical text format of its type (the format `show`
   produces), except that a top-level `String` is taken verbatim.
+  A top-level `Bool` may also be written `true` or `false` (in exactly
+  that case). A `Duration` is an integer and a unit (`ns`, `us`, `ms`,
+  `s`, `min`, `h`) whose nanoseconds fit in an `I64`; larger durations
+  are rejected.
 * With all `n` arguments, the function runs once.
 * With `n - 1` arguments, the last parameter comes from **stdin**:
   * a `List[T]` parameter receives all input records at once;
@@ -39,7 +43,9 @@ For a function with `n` curried parameters:
 * Any other number of arguments prints a usage line and exits with status 2,
   as does an argument that cannot be parsed.
 
-Text input records are lines. Binary input is detected by its magic bytes.
+Text input records are lines; invalid UTF-8 in them (and in arguments)
+becomes U+FFFD, as for all text read by a program. Binary input is
+detected by its magic bytes.
 
 ## Output
 
@@ -98,6 +104,16 @@ architecture-independent:
 
 `hash` is FNV-1a 64 over the same encoding, so it is stable across runs,
 backends and machines.
+
+Decoding is strict, and fails the same way in both backends (exit 3):
+
+* a header whose capability or type name is longer than 1 MiB, or whose
+  LEB128 numbers do not fit in 64 bits, is a `bad header`; a header cut
+  short is a `truncated header`;
+* a frame cut short is a `truncated frame`;
+* a payload that does not decode (a length or count beyond the payload,
+  an over-long LEB128 number, a string that is not UTF-8, an unknown
+  constructor) is a `malformed value`.
 
 ## Pipelines
 

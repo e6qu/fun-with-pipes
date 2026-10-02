@@ -435,6 +435,7 @@ impl<'p> Interp<'p> {
         let started = std::thread::Builder::new()
             .stack_size(256 << 20)
             .spawn(move || {
+                crate::interp::set_stack_limit(256 << 20);
                 let job = job;
                 let Baton((mut it, thunk)) = job;
                 world.acquire();
@@ -573,8 +574,9 @@ impl<'p> Interp<'p> {
     /// `metrics`. `None` if `sym` is not one of them.
     pub(crate) fn prim_conc(&mut self, sym: &str, a: &mut [Value]) -> Option<R<Value>> {
         let now = Instant::now;
-        let r: R<Value> = (|| -> R<Value> {
-            Ok(match sym {
+        // `Ok(None)`: not one of these primitives
+        let r = (|| -> R<Option<Value>> {
+            Ok(Some(match sym {
                 // ----- tasks
                 "task.spawn" => {
                     let t = self.spawn(a[0].clone(), None);
@@ -928,13 +930,10 @@ impl<'p> Interp<'p> {
                             .collect(),
                     )
                 }
-                _ => return Err(Ctl::Exit(i32::MIN)),
-            })
+                _ => return Ok(None),
+            }))
         })();
-        match r {
-            Err(Ctl::Exit(i32::MIN)) => None,
-            other => Some(other),
-        }
+        r.transpose()
     }
 
     fn await_task(&mut self, t: &Arc<TaskShared>) -> R<Value> {

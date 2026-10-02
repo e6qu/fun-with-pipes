@@ -175,16 +175,26 @@ pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
         "U32" => Value::U32(mag as u32),
         "U64" | "USize" => Value::U64(mag as u64),
         "U128" => Value::U128(mag),
-        "F32" | "F16" | "BF16" => Value::F32(v as f32),
-        "F64" | "F128" => Value::F64(v as f64),
+        // from the magnitude, which may be 2^127 or more (one rounding)
+        // (an integer zero has no sign)
+        "F32" | "F16" | "BF16" => Value::F32(if neg && mag != 0 {
+            -(mag as f32)
+        } else {
+            mag as f32
+        }),
+        "F64" | "F128" => Value::F64(if neg && mag != 0 {
+            -(mag as f64)
+        } else {
+            mag as f64
+        }),
         _ => return None,
     })
 }
 
-pub fn float_value(mt: &MT, x: f64) -> Option<Value> {
+pub fn float_value(mt: &MT, x: f64, x32: f32) -> Option<Value> {
     match mt {
         MT::Con(n, _) => match n.as_str() {
-            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(x as f32)),
+            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(x32)),
             "std::F64" | "std::F128" => Some(Value::F64(x)),
             _ => None,
         },
@@ -742,9 +752,9 @@ impl<'a> Mono<'a> {
                     }
                 }
             }
-            ExprKind::Float { value, .. } => {
+            ExprKind::Float { value, value32, .. } => {
                 let mt = self.node_mt(e.id, s);
-                match float_value(&mt, *value) {
+                match float_value(&mt, *value, *value32) {
                     Some(v) => Ok(Expr::Const(v)),
                     None => self.literal_via_trait(
                         "std::FromFloat",
@@ -978,6 +988,10 @@ impl<'a> Mono<'a> {
     }
 
     fn var(&mut self, e: &ast::Expr, s: &Subst) -> MResult<Expr> {
+        // type-level naturals can reach `TInt` through generic code
+        if let Some(w) = crate::value::too_wide_tint(&self.node_mt(e.id, s)) {
+            return Err(Diagnostic::error(e.span, crate::value::tint_width_error(w)));
+        }
         let inst = self.typed.insts[&e.id].clone();
         let types: Vec<MT> = inst.types.iter().map(|t| self.mt(t, s)).collect();
         let g = &self.env.globals[&inst.target];

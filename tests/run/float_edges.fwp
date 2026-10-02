@@ -1,0 +1,24 @@
+# float.to-int at the edges of the 128-bit types, and neg of zero.
+i128 : Option[I128] -> Option[I128]
+i128 = id
+
+u128 : Option[U128] -> Option[U128]
+u128 = id
+
+main = [
+    -170141183460469231731687303715884105728.0 | float.to-int | i128 | echo,
+    -170141183460469231731687303715884105728.0 | float.to-int | u128 | echo,
+    -1.7014118346046925e38 | float.to-int | i128 | echo,
+    170141183460469231731687303715884105728.0 | float.to-int | i128 | echo,
+    170141183460469231731687303715884105728.0 | float.to-int | u128 | echo,
+    1.7014118346046921e38 | float.to-int | i128 | echo,
+    3.4028236692093842e38 | float.to-int | u128 | echo,
+    340282366920938463463374607431768211456.0 | float.to-int | u128 | echo,
+    3.4e38f32 | float.to-int | u128 | echo,
+    -0.5 | float.to-int | u128 | echo,
+    0.0 | neg | echo,
+    0.0f32 | neg | echo,
+    -0.0 | neg | echo,
+    2.5 | neg | echo,
+    0.0 | neg | div 1.0 | echo,
+] | ignore

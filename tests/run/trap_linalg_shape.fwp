@@ -1,0 +1,5 @@
+# Linear algebra checks the array against the dimensions (a ragged matrix).
+main = [
+    [[1.0, 2.0], [3.0, 4.0]] | matrix.from-rows | determinant | echo,
+    [[1.0, 2.0], [3.0]] | matrix.from-rows | determinant | echo,
+] | ignore

@@ -1035,6 +1035,9 @@ impl<'a> Infer<'a> {
                 Ok(Type::con(&format!("std::{}", name)))
             }
             ExprKind::Str(_) => Ok(Type::con("std::String")),
+            ExprKind::Trits(ts) if ts.len() as u64 > crate::value::TINT_MAX_WIDTH => Err(
+                Diagnostic::error(e.span, crate::value::tint_width_error(ts.len() as u64)),
+            ),
             ExprKind::Trits(ts) => Ok(Type::Con(
                 "std::TInt".into(),
                 vec![Type::Nat(ts.len() as u64)],

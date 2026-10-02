@@ -1,0 +1,5 @@
+--- stderr
+err_tint_too_wide.fwp:2:22: error: `TInt[41]` is too wide: balanced ternary integers have at most 40 trits
+2 | wide : I64 -> Option[TInt[41]]
+  |                      ^^^^
+--- exit 1

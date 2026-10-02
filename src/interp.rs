@@ -28,6 +28,28 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
     Err(Ctl::Trap(msg.into()))
 }
 
+thread_local! {
+    /// The lowest stack address calls may reach on this thread (0: no
+    /// limit); see [`set_stack_limit`].
+    static STACK_LIMIT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// The current stack position, approximately.
+#[inline(always)]
+fn stack_position() -> usize {
+    let here = 0u8;
+    std::hint::black_box(&here) as *const u8 as usize
+}
+
+/// Called at the start of a thread with a stack of `size` bytes: calls
+/// that get close to its end trap with "stack overflow", as native
+/// programs do, instead of aborting the process.
+pub fn set_stack_limit(size: usize) {
+    let reserve = (size / 16).max(1 << 20);
+    let limit = stack_position().saturating_sub(size.saturating_sub(reserve));
+    STACK_LIMIT.with(|l| l.set(limit));
+}
+
 pub struct Interp<'p> {
     pub prog: &'p Program,
     /// Values of argument-less functions, shared by all tasks.
@@ -88,6 +110,9 @@ impl<'p> Interp<'p> {
     }
 
     pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
+        if stack_position() < STACK_LIMIT.with(|l| l.get()) {
+            return trap("stack overflow");
+        }
         let f = &self.prog.funcs[id];
         if f.arity == 0 {
             if let Some(v) = &self.cafs.borrow()[id] {
@@ -266,7 +291,13 @@ impl<'p> Interp<'p> {
             "prim.mul" => arith(Op::Mul, &a[1], &a[0], &result),
             "prim.div" => arith(Op::Div, &a[1], &a[0], &result),
             "prim.rem" => arith(Op::Rem, &a[1], &a[0], &result),
-            "prim.neg" => arith(Op::Sub, &zero_of(&result)?, &a[0], &result),
+            // floats flip the sign (so `neg 0.0` is -0.0); integers are
+            // checked `0 - x`
+            "prim.neg" => match &a[0] {
+                Value::F32(x) => Ok(Value::F32(-x)),
+                Value::F64(x) => Ok(Value::F64(-x)),
+                x => arith(Op::Sub, &zero_of(&result)?, x, &result),
+            },
             "prim.zero" => zero_of(&result),
             "prim.one" => from_i128(&result, 1),
             "prim.from-int" => from_i128(&result, a[0].as_i128().unwrap()),
@@ -333,11 +364,13 @@ impl<'p> Interp<'p> {
                 if !x.is_finite() {
                     return Ok(Value::nullary(0));
                 }
+                // exact bounds: [-2^127, 2^127) converts through i128,
+                // [2^127, 2^128) only to U128
                 let t = x.trunc();
-                if !(-1.7e38..=3.4e38).contains(&t) {
-                    return Ok(Value::nullary(0));
-                }
-                let v = if t >= 0.0 && t > i128::MAX as f64 {
+                let p127 = 2f64.powi(127);
+                let v = if t < -p127 || t >= 2.0 * p127 {
+                    None
+                } else if t >= p127 {
                     u128_to(&r, t as u128)
                 } else {
                     checked_int(&r, t as i128)
