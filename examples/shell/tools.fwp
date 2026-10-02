@@ -1,0 +1,27 @@
+# Exported functions become standalone executables:
+#
+#   fwp build tools.fwp --fn normalize -o normalize
+#   printf '  Hello\n WORLD \n' | ./normalize
+#
+# Curried arguments come from the command line, the last one may come from
+# stdin (one record per line, or binary frames from another fwp program).
+
+export normalize : String -> String
+normalize = trim | lower
+
+export scale : I64 -> I64 -> I64
+scale = mul
+
+export total : List[I64] -> I64
+total = sum
+
+export words-of : String -> List[String]
+words-of = words
+
+Point = { x: F64, y: F64 }
+
+export norm : Point -> F64
+norm = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
+
+export shout : String -> () ! {IO}
+shout = upper | print

@@ -859,13 +859,13 @@ static V fwp_p_bytes_slice(V start, V len, V b) {
 /* --------------------------------------------------------------------- io */
 
 static V fwp_p_print(V s) {
-    fwrite(STR(s)->d, 1, STR(s)->len, stdout);
-    fputc('\n', stdout);
+    fwrite(STR(s)->d, 1, STR(s)->len, fwp_prog_out);
+    fputc('\n', fwp_prog_out);
     return FWP_UNIT;
 }
 
 static V fwp_p_write(V s) {
-    fwrite(STR(s)->d, 1, STR(s)->len, stdout);
+    fwrite(STR(s)->d, 1, STR(s)->len, fwp_prog_out);
     return FWP_UNIT;
 }
 

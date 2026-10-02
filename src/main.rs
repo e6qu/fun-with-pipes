@@ -9,8 +9,14 @@ fwp - the fwp (\"foop\") language
 
 usage:
   fwp run <file.fwp> [args...]   run a program's `main` (interpreter)
-  fwp build <file.fwp> [-o out] [--emit-c] [-O0|-O1|-O2|-O3]
-                                 compile `main` to a native executable
+  fwp build <file.fwp> [-o out] [--fn name] [--emit-c] [-O0|-O1|-O2|-O3]
+                                 compile `main` (or an exported function) to a
+                                 native executable
+  fwp exec <file.fwp> <fn> [args...]
+                                 run an exported function as an executable would
+  fwp pipe '<file.fwp:fn args> | <file.fwp:fn> ...'
+                                 connect exported functions with the binary
+                                 typed protocol
   fwp test <file.fwp>            run the `test` declarations of a file
   fwp test --std                 run the standard library's tests
   fwp test ... --native          run tests compiled to native code
@@ -26,6 +32,8 @@ fn main() -> ExitCode {
         Some("run") => run(&args[1..]),
         Some("test") => test(&args[1..]),
         Some("build") => build(&args[1..]),
+        Some("exec") => exec(&args[1..]),
+        Some("pipe") => pipe(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS
@@ -172,6 +180,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut path = None;
     let mut out = None;
     let mut emit_c = false;
+    let mut func: Option<String> = None;
     let mut opt = "-O2".to_string();
     let mut i = 0;
     while i < args.len() {
@@ -181,6 +190,10 @@ fn build(args: &[String]) -> ExitCode {
                 out = args.get(i).cloned();
             }
             "--emit-c" => emit_c = true,
+            "--fn" => {
+                i += 1;
+                func = args.get(i).cloned();
+            }
             a if a.starts_with("-O") => opt = a.to_string(),
             a => path = Some(a.to_string()),
         }
@@ -192,15 +205,19 @@ fn build(args: &[String]) -> ExitCode {
     };
     let src = std::path::PathBuf::from(&path);
     let out = out.map(std::path::PathBuf::from).unwrap_or_else(|| {
-        let stem = src
-            .file_stem()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_string();
+        let stem = match &func {
+            Some(f) => f.clone(),
+            None => src
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string(),
+        };
         std::path::PathBuf::from(stem)
     });
     let roots = fwp::mono::Roots {
-        main: true,
+        main: func.is_none(),
+        exports: func.is_some(),
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
@@ -212,7 +229,14 @@ fn build(args: &[String]) -> ExitCode {
             }
         };
         eprint!("{}", c.render_warnings());
-        let csrc = match fwp::cgen::generate(&prog) {
+        let generated = match &func {
+            None => fwp::cgen::generate(&prog),
+            Some(name) => match prog.exports.iter().find(|(n, _)| n == name) {
+                Some((_, fid)) => fwp::cgen::generate_exec(&prog, *fid, name),
+                None => Err(format!("`{}` is not an exported function", name)),
+            },
+        };
+        let csrc = match generated {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("fwp build: {}", e);
@@ -236,4 +260,57 @@ fn build(args: &[String]) -> ExitCode {
         }
     });
     ExitCode::from(code)
+}
+
+fn exec(args: &[String]) -> ExitCode {
+    let (Some(path), Some(name)) = (args.first().cloned(), args.get(1).cloned()) else {
+        eprintln!("fwp exec: usage: fwp exec <file.fwp> <function> [args...]");
+        return ExitCode::from(2);
+    };
+    let fargs: Vec<String> = args[2..].to_vec();
+    let roots = fwp::mono::Roots {
+        exports: true,
+        ..Default::default()
+    };
+    let code = fwp::driver::with_big_stack(move || {
+        match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
+            Ok((c, prog)) => {
+                eprint!("{}", c.render_warnings());
+                match prog.exports.iter().find(|(n, _)| *n == name) {
+                    Some((_, fid)) => fwp::exec::exec(&prog, *fid, &name, &fargs),
+                    None => {
+                        let names: Vec<&str> =
+                            prog.exports.iter().map(|(n, _)| n.as_str()).collect();
+                        eprintln!(
+                            "fwp exec: `{}` is not an exported function (exported: {})",
+                            name,
+                            if names.is_empty() {
+                                "none".to_string()
+                            } else {
+                                names.join(", ")
+                            }
+                        );
+                        2
+                    }
+                }
+            }
+            Err(f) => {
+                eprint!("{}", f.rendered);
+                1
+            }
+        }
+    });
+    ExitCode::from(code.clamp(0, 255) as u8)
+}
+
+fn pipe(args: &[String]) -> ExitCode {
+    let spec = args.join(" ");
+    let exe = std::env::current_exe().unwrap_or_else(|_| "fwp".into());
+    match fwp::exec::run_pipeline(&exe, &spec) {
+        Ok(code) => ExitCode::from(code.clamp(0, 255) as u8),
+        Err(e) => {
+            eprintln!("fwp pipe: {}", e);
+            ExitCode::from(2)
+        }
+    }
 }

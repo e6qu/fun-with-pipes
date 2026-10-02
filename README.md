@@ -10,7 +10,7 @@ users
 | sort
 ```
 
-See [PLAN.md](PLAN.md) for the language design decisions and the
+See [PLAN.md](PLAN.md) and [docs/protocol.md](docs/protocol.md) for the language design decisions and the
 implementation roadmap.
 
 ## Status
@@ -24,7 +24,7 @@ implementation roadmap.
 | Monomorphization, typed IR, interpreter (`fwp run`, `fwp test`) | done |
 | Standard library: lists, Option/Result, strings, arrays, maps, sets, bytes, lazy iterators, IO | done |
 | IR optimizer, native AOT via C (`fwp build`), differential testing | done |
-| Standalone function executables, typed pipe protocol | planned |
+| Standalone function executables, typed pipe protocol (`PIPE_V1`), `fwp pipe` | done |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |
 
 ## Usage
@@ -33,6 +33,7 @@ implementation roadmap.
 cargo build --release
 ./target/release/fwp run examples/hello.fwp            # run main (interpreter)
 ./target/release/fwp build examples/hello.fwp -o hello # native executable via C
+./target/release/fwp build tools.fwp --fn scale        # an exported function as an executable
 ./target/release/fwp test some-file.fwp                # run test declarations
 ./target/release/fwp test --std                        # run the standard library's tests
 ./target/release/fwp check examples/hello.fwp          # print inferred types
