@@ -1,10 +1,14 @@
 # fwp executables and the typed process protocol
 
-Every exported function can be compiled into a standalone executable:
+Every exported function can be compiled into a standalone executable.
+The examples on this page use `examples/shell/tools.fwp`, which contains:
 
 ```
 export scale : I64 -> I64 -> I64
 scale = mul
+
+export total : List[I64] -> I64
+total = sum
 ```
 
 ```
@@ -32,7 +36,8 @@ For a function with `n` curried parameters:
   * a `List[T]` parameter receives all input records at once;
   * any other parameter type is applied to each record in turn, and results
     are written as they are produced (streaming).
-* Any other number of arguments prints a usage line and exits with status 2.
+* Any other number of arguments prints a usage line and exits with status 2,
+  as does an argument that cannot be parsed.
 
 Text input records are lines. Binary input is detected by its magic bytes.
 

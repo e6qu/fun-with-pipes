@@ -6,15 +6,8 @@ Concurrency is structured. `task.spawn` starts a task as a child of the
 current one. A task finishes only after all of its children have finished,
 and a program's `main` (or a test) waits for every task it started.
 
-```
-task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
-task.await : Task[a] -> Option[a] ! {Async}      # None if it was cancelled
-task.cancel : Task[a] -> () ! {Async}
-task.within : Duration -> (() -> a ! {...}) -> Option[a] ! {Async}
-task.deadline : Duration -> a -> a ! {Async}     # also `timeout`
-task.scope : (() -> a ! {Async | e}) -> a ! {Async | e}
-task.sleep, task.yield, task.cancelled, task.map
-```
+`task.await` returns `None` for a cancelled task. The functions are
+listed in the [standard library reference](stdlib.md#tasks-and-channels).
 
 A spawned function may perform IO but must handle its own errors, because
 `Error` is not among its allowed effects. If a task fails in some other way
@@ -29,16 +22,9 @@ passes, so a deadline set on a task also applies to all of its children.
 `task.scope f` waits for the tasks that `f` started; if `f` fails, those
 tasks are cancelled first.
 
-Channels are bounded FIFO queues:
-
-```
-channel.make : I64 -> Channel[a] ! {Async}
-channel.send : Channel[a] -> a -> Bool ! {Async}   # False once closed
-channel.recv : Channel[a] -> Option[a] ! {Async}   # None once closed and empty
-channel.recv-for, channel.close
-```
-
-A sender that finds the channel full waits, which propagates backpressure.
+Channels are bounded FIFO queues: `channel.send` returns `False` once the
+channel is closed, and `channel.recv` returns `None` once it is closed and
+empty. A sender that finds the channel full waits, which propagates backpressure.
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running
@@ -107,6 +93,9 @@ drives it, both interpreted and native, with curl, a concurrent keep-alive
 load test, and a SIGTERM shutdown while a request is in flight.
 
 ## JSON, URLs, logs and metrics
+
+The signatures of everything below are in the
+[standard library reference](stdlib.md#http).
 
 - **JSON:** `json.parse` (errors give the byte offset), `json.encode`,
   `json.get`, `json.at` and `json.as-*`. `null` is the explicit variant
