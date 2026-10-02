@@ -43,7 +43,11 @@ age = parse-age | check-age
 
 # `run-state` gives a function a piece of mutable state.
 count-long : List[String] -> I64
-count-long = run-state 0 (each (if (string.length | gt 3) (const (add 1) | modify) (const ()))) | .1
+count-long =
+    run-state
+        0
+        (each (if (string.length | gt 3) (const (add 1) | modify) (const ())))
+    | .1
 
 main = [
     "42" | attempt age | echo,

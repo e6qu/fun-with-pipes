@@ -64,11 +64,33 @@ json.object = Json.Obj
 json.strings : List[String] -> Json
 json.strings = map Json.Str | Json.Arr
 
-test "json round trip" = "{\"a\": [1, 2.5, true, null], \"b\": \"x\\ny\"}" | json.parse | result.map json.encode | eq (Ok "{\"a\":[1,2.5,true,null],\"b\":\"x\\ny\"}")
-test "json get" = "{\"a\": {\"b\": [10, 20]}}" | json.parse | result.to-option | option.and-then (json.get "a") | option.and-then (json.get "b") | option.and-then (json.at 1) | option.and-then json.as-number | eq (Some 20.0)
-test "json error" = "[1, 2" | json.parse | eq (Err "unexpected end of input at byte 5")
-test "json bad escape" = "\"\\q\"" | json.parse | eq (Err "invalid escape at byte 2")
-test "json trailing" = "1 2" | json.parse | eq (Err "trailing characters at byte 2")
-test "json unicode" = "\"\\u00e9\\ud83d\\ude00\"" | json.parse | eq (Ok (Json.Str "é😀"))
-test "json numbers" = [json.int 42, Json.Num 0.1, Json.Num -1.5e300, Json.Num 1e15] | Json.Arr | json.encode | eq "[42,0.1,-1.5e+300,1000000000000000.0]"
-test "json escapes" = "a\"b\\c\td\u{1}" | Json.Str | json.encode | eq "\"a\\\"b\\\\c\\td\\u0001\""
+test "json round trip" =
+    "{\"a\": [1, 2.5, true, null], \"b\": \"x\\ny\"}"
+    | json.parse
+    | result.map json.encode
+    | eq (Ok "{\"a\":[1,2.5,true,null],\"b\":\"x\\ny\"}")
+test "json get" =
+    "{\"a\": {\"b\": [10, 20]}}"
+    | json.parse
+    | result.to-option
+    | option.and-then (json.get "a")
+    | option.and-then (json.get "b")
+    | option.and-then (json.at 1)
+    | option.and-then json.as-number
+    | eq (Some 20.0)
+test "json error" =
+    "[1, 2" | json.parse | eq (Err "unexpected end of input at byte 5")
+test "json bad escape" =
+    "\"\\q\"" | json.parse | eq (Err "invalid escape at byte 2")
+test "json trailing" =
+    "1 2" | json.parse | eq (Err "trailing characters at byte 2")
+test "json unicode" =
+    "\"\\u00e9\\ud83d\\ude00\"" | json.parse | eq (Ok (Json.Str "é😀"))
+test "json numbers" = [
+    json.int 42,
+    Json.Num 0.1,
+    Json.Num -1.5e300,
+    Json.Num 1e15,
+] | Json.Arr | json.encode | eq "[42,0.1,-1.5e+300,1000000000000000.0]"
+test "json escapes" =
+    "a\"b\\c\td\u{1}" | Json.Str | json.encode | eq "\"a\\\"b\\\\c\\td\\u0001\""

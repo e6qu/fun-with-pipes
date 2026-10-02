@@ -24,16 +24,25 @@ dual.re2 = both (.0 | .re) (.1 | .re)
 dual.eps2 = both (.0 | .eps) (.1 | .eps)
 
 impl Add[Dual[t]] where Add[t] =
-    add = curry (make Dual { re = dual.re2 | uncurry add, eps = dual.eps2 | uncurry add })
+    add = curry (make Dual {
+        re = dual.re2 | uncurry add,
+        eps = dual.eps2 | uncurry add,
+    })
 
 impl Sub[Dual[t]] where Sub[t] =
-    sub = curry (make Dual { re = dual.re2 | uncurry sub, eps = dual.eps2 | uncurry sub })
+    sub = curry (make Dual {
+        re = dual.re2 | uncurry sub,
+        eps = dual.eps2 | uncurry sub,
+    })
 
 # product rule
 impl Mul[Dual[t]] where Ring[t], Dup[t] =
     mul = curry (make Dual {
         re = dual.re2 | uncurry mul,
-        eps = both (both (.0 | .re) (.1 | .eps) | uncurry mul) (both (.0 | .eps) (.1 | .re) | uncurry mul)
+        eps =
+            both
+                (both (.0 | .re) (.1 | .eps) | uncurry mul)
+                (both (.0 | .eps) (.1 | .re) | uncurry mul)
             | uncurry add,
     })
 
@@ -41,10 +50,13 @@ impl Mul[Dual[t]] where Ring[t], Dup[t] =
 impl Div[Dual[t]] where Field[t], Dup[t] =
     div = curry (make Dual {
         re = dual.re2 | uncurry div,
-        eps = both
-            (.0 | .re | fork mul id id)
-            (both (both (.1 | .re) (.0 | .eps) | uncurry mul) (both (.1 | .eps) (.0 | .re) | uncurry mul)
-                | uncurry sub)
+        eps =
+            both
+                (.0 | .re | fork mul id id)
+                (both
+                        (both (.1 | .re) (.0 | .eps) | uncurry mul)
+                        (both (.1 | .eps) (.0 | .re) | uncurry mul)
+                    | uncurry sub)
             | uncurry div,
     })
 
@@ -99,16 +111,18 @@ dual.seed = curry (both (.0 | dual.seed-one) (.1 | enumerate) | uncurry map)
 # all partial derivatives of a scalar function at a point
 gradient : (List[Dual[t]] -> Dual[t]) -> List[t] -> List[t] where Zero[t], One[t], Dup[t]
 gradient = curry (both
-    (both (.1 | flip dual.seed) (.0 | flip compose .eps) | uncurry compose)
-    (.1 | length | range 0)
+        (both (.1 | flip dual.seed) (.0 | flip compose .eps) | uncurry compose)
+        (.1 | length | range 0)
     | uncurry map)
 
 # rows are outputs, columns are inputs
 jacobian : (List[Dual[t]] -> List[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
 jacobian = curry (both
-    (both (.1 | flip dual.seed) (.0 | flip compose (map .eps)) | uncurry compose)
-    (.1 | length | range 0)
-    | uncurry map | list.transpose)
+        (both (.1 | flip dual.seed) (.0 | flip compose (map .eps))
+            | uncurry compose)
+        (.1 | length | range 0)
+    | uncurry map
+    | list.transpose)
 
 # second derivatives of a scalar function (nested duals)
 hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
@@ -117,5 +131,11 @@ hessian = gradient | jacobian
 test "derivative of x^2" = 3.0 | derivative (fork mul id id) | eq 6.0
 test "derivative of sin at 0" = 0.0 | derivative sin | eq 1.0
 test "quotient rule" = 2.0 | derivative (fork div id (add 1.0)) | eq -0.25
-test "stop-gradient" = 2.0 | derivative (fork mul id (stop-gradient)) | eq 2.0
-test "gradient" = [1.0, 2.0] | gradient (fork mul (nth 0 | option.unwrap-or zero) (nth 1 | option.unwrap-or zero)) | eq [2.0, 1.0]
+test "stop-gradient" = 2.0 | derivative (fork mul id stop-gradient) | eq 2.0
+test "gradient" =
+    [1.0, 2.0]
+    | gradient (fork
+        mul
+        (nth 0 | option.unwrap-or zero)
+        (nth 1 | option.unwrap-or zero))
+    | eq [2.0, 1.0]

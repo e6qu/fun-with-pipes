@@ -79,19 +79,37 @@ test "pad-left first fill character" = "é" | pad-left 3 "ab" | eq "aaé"
 test "pad-left empty fill" = "7" | pad-left 3 "" | eq "7"
 test "pad-left negative width" = "7" | pad-left -2 "0" | eq "7"
 test "string.codepoints" = "A€" | string.codepoints | eq [65u32, 8364]
-test "string.from-codepoints" = [104u32, 105] | string.from-codepoints | eq (Some "hi")
-test "bytes round trip" = "héllo" | string.to-bytes | string.from-bytes | eq (Some "héllo")
+test "string.from-codepoints" =
+    [104u32, 105] | string.from-codepoints | eq (Some "hi")
+test "bytes round trip" =
+    "héllo" | string.to-bytes | string.from-bytes | eq (Some "héllo")
 test "parse-int" = "-42" | parse-int | eq (Some -42i32)
 test "parse-int rejects" = "4x" | parse-int | string.test-i64 | eq None
 test "parse-int range" = "300" | parse-int | string.test-u8 | eq None
 test "parse-float" = "2.5e3" | parse-float | eq (Some 2500.0)
-test "parse-float infinities" = ["inf", "-inf", "+Infinity", "-INF"] | map parse-float | eq [Some (1.0 | div 0.0), Some (-1.0 | div 0.0), Some (1.0 | div 0.0), Some (-1.0 | div 0.0)]
-test "parse-float nan" = ["nan", "NaN"] | map (parse-float | option.map (fork ne id id)) | eq [Some True, Some True]
+test "parse-float infinities" =
+    ["inf", "-inf", "+Infinity", "-INF"]
+    | map parse-float
+    | eq [
+        Some (1.0 | div 0.0),
+        Some (-1.0 | div 0.0),
+        Some (1.0 | div 0.0),
+        Some (-1.0 | div 0.0),
+    ]
+test "parse-float nan" =
+    ["nan", "NaN"]
+    | map (parse-float | option.map (fork ne id id))
+    | eq [Some True, Some True]
 test "parse-float f32 inf" = "inf" | parse-float | eq (Some (1.0f32 | div 0.0))
-test "parse-float rejects" = ["", "in", "nanx", "--inf", "1e"] | map parse-float | string.test-of | eq [None, None, None, None, None]
+test "parse-float rejects" =
+    ["", "in", "nanx", "--inf", "1e"]
+    | map parse-float
+    | string.test-of
+    | eq [None, None, None, None, None]
 test "string.is-empty" = "" | string.is-empty
 test "format tuple" = ("x", 2) | format "{} = {}" | eq "x = 2"
-test "format record" = { a = 1.5, b = [1] } | format "{} and {}" | eq "1.5 and [1]"
+test "format record" =
+    { a = 1.5, b = [1] } | format "{} and {}" | eq "1.5 and [1]"
 test "format value" = 42 | format "<{}> {{}}" | eq "<42> {}"
 
 string.test-i64 : Option[I64] -> Option[I64]
@@ -106,5 +124,6 @@ string.test-of = id
 # the parts before and after the first occurrence of a separator
 foreign "fwp" string.split-once : String -> String -> Option[(String, String)]
 
-test "split-once" = "key: value: x" | string.split-once ": " | eq (Some ("key", "value: x"))
+test "split-once" =
+    "key: value: x" | string.split-once ": " | eq (Some ("key", "value: x"))
 test "split-once missing" = "abc" | string.split-once "=" | eq None

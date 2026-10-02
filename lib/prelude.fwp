@@ -95,14 +95,18 @@ SynPat =
 foreign "fwp" syntax.show : Syntax -> String
 
 # `assert!(cond)` fails with the source text of `cond` when it is False.
-assert.template = quote (unquote!(0) | match
-    True -> ()
-    False -> fail unquote!(1))
+assert.template =
+    quote (unquote!(0) | match
+        True -> ()
+        False -> fail unquote!(1))
 
-macro assert = fork assert.template id (syntax.show | flip concat "assertion failed: " | SStr)
+macro assert = fork assert.template id (syntax.show
+    | flip concat "assertion failed: "
+    | SStr)
 
 # `dbg!(e)` prints `<source of e> = <value>` to stderr and returns the value.
-dbg.template = quote (unquote!(0) | tap (show | flip concat unquote!(1) | eprint))
+dbg.template =
+    quote (unquote!(0) | tap (show | flip concat unquote!(1) | eprint))
 
 macro dbg = fork dbg.template id (syntax.show | concat " = " | SStr)
 

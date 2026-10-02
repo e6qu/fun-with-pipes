@@ -1,0 +1,6 @@
+# A module without `main` or exports: its bindings are for importers, so
+# none is reported as unused.
+
+area = fork mul .w .h
+
+perimeter = fork add .w .h | mul 2

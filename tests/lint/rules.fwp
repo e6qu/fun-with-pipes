@@ -1,0 +1,29 @@
+# One example of each lint rule.
+
+# unused-binding: private, not main, never referred to
+helper = add 1
+
+used = mul 2
+
+# a recursive binding that only refers to itself is still unused
+rec countdown = match
+    0 -> 0
+    _ -> sub 1 | countdown
+
+export twice : I64 -> I64
+twice = used | id
+
+# map-fusion
+lengths = map words | map length
+
+# trivial-match
+apply-all = match
+    _ -> const 0
+
+# shadows-std
+reverse = id
+
+# missing-binding
+orphan : I64 -> I64
+
+main = [1, 2] | map twice | echo | ignore

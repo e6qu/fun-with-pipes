@@ -238,3 +238,44 @@ impl Decl {
 pub struct Module {
     pub decls: Vec<Decl>,
 }
+
+impl Expr {
+    /// Visit this expression and every expression inside it, outer first.
+    pub fn walk(&self, f: &mut dyn FnMut(&Expr)) {
+        f(self);
+        match &self.kind {
+            ExprKind::App(g, args) => {
+                g.walk(f);
+                args.iter().for_each(|a| a.walk(f));
+            }
+            ExprKind::Pipe(a, b) => {
+                a.walk(f);
+                b.walk(f);
+            }
+            ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+                xs.iter().for_each(|x| x.walk(f))
+            }
+            ExprKind::Record(fs)
+            | ExprKind::NominalRecord(_, fs)
+            | ExprKind::With(fs)
+            | ExprKind::Make(_, fs)
+            | ExprKind::Update(fs) => fs.iter().for_each(|(_, x)| x.walk(f)),
+            ExprKind::Match(arms) => arms.iter().for_each(|a| a.body.walk(f)),
+            ExprKind::Comptime(x) | ExprKind::Quote(x) => x.walk(f),
+            _ => {}
+        }
+    }
+}
+
+impl Decl {
+    /// The expressions of a declaration: binding, method and test bodies.
+    pub fn bodies(&self) -> Vec<&Expr> {
+        match self {
+            Decl::Bind(b) | Decl::Macro(b) => vec![&b.body],
+            Decl::Test { body, .. } => vec![body],
+            Decl::Trait(t) => t.defaults.iter().map(|b| &b.body).collect(),
+            Decl::Impl(i) => i.bindings.iter().map(|b| &b.body).collect(),
+            _ => vec![],
+        }
+    }
+}

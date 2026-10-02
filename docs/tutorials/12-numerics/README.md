@@ -51,7 +51,12 @@ main = [
     complex 1.0 2.0 | mul (complex 3.0 -1.0) | echo,
     3.0 | derivative f | echo,
     1.0 | iterate 5 newton-step | last | echo,
-    [3.0, 4.0] | gradient (fork add (nth 0 | option.unwrap-or zero | fork mul id id) (nth 1 | option.unwrap-or zero)) | echo,
+    [3.0, 4.0]
+    | gradient (fork
+        add
+        (nth 0 | option.unwrap-or zero | fork mul id id)
+        (nth 1 | option.unwrap-or zero))
+    | echo,
 ] | ignore
 ```
 
@@ -74,4 +79,4 @@ code, down to the last digit.
 
 ---
 
-Previous: [Compile-time code and macros](../11-comptime-and-macros/README.md) · [All tutorials](../README.md)
+Previous: [Compile-time code and macros](../11-comptime-and-macros/README.md) · Next: [Tooling](../13-tooling/README.md) · [All tutorials](../README.md)

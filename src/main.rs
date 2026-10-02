@@ -30,6 +30,14 @@ usage:
   fwp test ... --native          run tests compiled to native code
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
+  fwp fmt [--check] [paths...]   format files in place (directories are
+                                 searched for .fwp files; default: .);
+                                 --check lists unformatted files instead
+  fwp lint [paths...]            report likely mistakes and simplifications
+                                 (exit status 1 if there are any); a comment
+                                 `# fwp:allow(code)` above a declaration
+                                 silences a rule in it
+  fwp lsp                        run the language server on stdin/stdout
   fwp help                       show this message
 ";
 
@@ -69,6 +77,14 @@ fn main() -> ExitCode {
         Some("build") => build(&args[1..]),
         Some("exec") => exec(&args[1..]),
         Some("pipe") => pipe(&args[1..]),
+        Some("fmt") => fmt(&args[1..]),
+        Some("lint") => lint(&args[1..]),
+        Some("lsp") => {
+            let code = fwp::driver::with_big_stack(|| {
+                fwp::lsp::serve(std::io::stdin().lock(), std::io::stdout())
+            });
+            ExitCode::from(code as u8)
+        }
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS
@@ -437,4 +453,103 @@ fn pipe(args: &[String]) -> ExitCode {
             ExitCode::from(2)
         }
     }
+}
+
+/// The `.fwp` files named by the arguments; directories are searched
+/// recursively (skipping hidden directories and `target`).
+fn source_files(args: &[String]) -> Vec<std::path::PathBuf> {
+    fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        let Ok(rd) = std::fs::read_dir(dir) else {
+            return;
+        };
+        let mut entries: Vec<_> = rd.filter_map(|e| e.ok()).map(|e| e.path()).collect();
+        entries.sort();
+        for p in entries {
+            let name = p.file_name().unwrap_or_default().to_string_lossy();
+            if p.is_dir() {
+                if !name.starts_with('.') && name != "target" {
+                    walk(&p, out);
+                }
+            } else if p.extension().is_some_and(|e| e == "fwp") {
+                out.push(p);
+            }
+        }
+    }
+    let mut out = Vec::new();
+    let paths: Vec<&str> = if args.is_empty() {
+        vec!["."]
+    } else {
+        args.iter().map(String::as_str).collect()
+    };
+    for a in paths {
+        let p = std::path::PathBuf::from(a);
+        if p.is_dir() {
+            walk(&p, &mut out);
+        } else {
+            out.push(p);
+        }
+    }
+    out
+}
+
+fn fmt(args: &[String]) -> ExitCode {
+    let check = args.iter().any(|a| a == "--check");
+    let paths: Vec<String> = args.iter().filter(|a| *a != "--check").cloned().collect();
+    let mut code = ExitCode::SUCCESS;
+    for path in source_files(&paths) {
+        let text = match std::fs::read_to_string(&path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("fwp fmt: cannot read {}: {}", path.display(), e);
+                code = ExitCode::from(2);
+                continue;
+            }
+        };
+        let formatted = match fwp::fmt::format_source(&text) {
+            Ok(f) => f,
+            Err(d) => {
+                let mut sm = SourceMap::default();
+                sm.add(path.display().to_string(), text);
+                eprint!("{}", d.render(&sm));
+                code = ExitCode::from(1);
+                continue;
+            }
+        };
+        if formatted == text {
+            continue;
+        }
+        if check {
+            println!("{}", path.display());
+            code = ExitCode::from(1);
+        } else if let Err(e) = std::fs::write(&path, formatted) {
+            eprintln!("fwp fmt: cannot write {}: {}", path.display(), e);
+            code = ExitCode::from(2);
+        }
+    }
+    code
+}
+
+fn lint(args: &[String]) -> ExitCode {
+    let mut code = ExitCode::SUCCESS;
+    for path in source_files(args) {
+        let text = match std::fs::read_to_string(&path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("fwp lint: cannot read {}: {}", path.display(), e);
+                code = ExitCode::from(2);
+                continue;
+            }
+        };
+        let mut sm = SourceMap::default();
+        let file = sm.add(path.display().to_string(), text.clone());
+        let diags = match fwp::lint::lint_source(&text, file) {
+            Ok(ws) => ws.into_iter().map(|w| w.diag).collect(),
+            Err(errors) => errors,
+        };
+        if !diags.is_empty() {
+            eprint!("{}", fwp::diag::render_all(&diags, &sm));
+            code = ExitCode::from(1);
+        }
+    }
+    code
 }

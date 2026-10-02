@@ -52,14 +52,16 @@ fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
 fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
 fwp test --std                           # the standard library's own tests
+fwp fmt --check . && fwp lint examples   # formatting and lint checks
+fwp lsp                                  # the language server, for editors
 ```
 
 ## Documentation
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | twelve tutorials, from pipes to WebAssembly |
-| [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop |
+| [docs/tutorials](docs/tutorials/README.md) | thirteen tutorials, from pipes to WebAssembly and tooling |
+| [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
@@ -70,12 +72,13 @@ fwp test --std                           # the standard library's own tests
 
 ```
 src/        compiler: lexer, parser, type checker, monomorphizer, optimizer,
-            interpreter, C code generator, protocol, FFI, scheduler
+            interpreter, C code generator, protocol, FFI, scheduler;
+            formatter, linter and language server
 runtime/    the C runtime embedded in native programs (and WASM helpers)
 lib/        the standard library, written in fwp (with its tests)
 examples/   a word counter, a JSON API server, executable tools
-tests/      golden programs, type-check snapshots, protocol, HTTP, FFI,
-            WebAssembly and fat-binary tests
+tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
+            FFI, WebAssembly, fat-binary, formatter and language server tests
 docs/       documentation and tutorials
 ```
 

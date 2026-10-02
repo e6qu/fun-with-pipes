@@ -231,6 +231,9 @@ fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes
 fwp test file.fwp [--native]                  run test declarations
 fwp test --std [--native]                     the standard library's tests
 fwp check [--parse] file.fwp                  print inferred types (or the syntax tree)
+fwp fmt [--check] [paths...]                  format files in place (see below)
+fwp lint [paths...]                           warn about likely mistakes (see below)
+fwp lsp                                       the language server, on stdin/stdout
 ```
 
 Exit codes:
@@ -279,3 +282,134 @@ checks this.
 | `AR` | the archiver for `--staticlib` |
 | `FWP_WASM_CC` | the C compiler for WebAssembly builds |
 | `FWP_BLESS=1` | regenerates the expected outputs of the test suite |
+
+## Formatting, linting and editors
+
+### `fwp fmt`
+
+`fwp fmt [--check] [paths...]` formats `.fwp` files in place. Directories
+are searched recursively (hidden directories and `target` are skipped);
+without paths it formats the current directory. With `--check` it changes
+nothing, prints the files that are not formatted and exits with status 1
+if there are any. A file with a syntax error is reported and left alone.
+
+The layout is canonical, computed from the syntax tree:
+
+- 80 columns and 4-space indentation;
+- an expression that fits on its line stays on it, otherwise it moves to
+  the next line, and a pipeline that still does not fit gets one stage
+  per line with a leading `|`;
+- `match` arms go on their own lines, and the `match` keyword stays at the
+  end of the line that introduces it (`f = match`, `curry (match`,
+  `x | match`);
+- brackets and records that do not fit get one item per line with a
+  trailing comma, closing at the indentation of the line that opened
+  them (`f [` ... `]`);
+- an application that does not fit keeps a simple function and arguments
+  on the line and breaks its last argument, or puts one argument per line;
+- `make`, `with` and `update` arguments are parenthesized;
+- literals keep their spelling (`0xff`, `1_000`, `150ms`, escapes).
+
+Comments are kept: comments between declarations stay in place, and a
+declaration that contains a comment is left as written (only trailing
+whitespace is removed). Runs of blank lines become one, and the file ends
+with a single newline. Formatting is idempotent and never changes the
+syntax tree; the test suite checks both over every `.fwp` file of the
+repository.
+
+### `fwp lint`
+
+`fwp lint [paths...]` prints warnings in the same form as compiler
+diagnostics and exits with status 1 if there are any (2 if a file cannot
+be read). It does not type-check the files; `fwp check` does. The rules:
+
+| Code | Warns about |
+|---|---|
+| `unused-binding` | a top-level binding that is not exported, not `main` and not used anywhere in the file (only in files with `main` or exports; names starting with `_` are exempt) |
+| `redundant-id` | a `\| id` stage |
+| `map-fusion` | `map f \| map g`, which is `map (f \| g)` with one traversal |
+| `trivial-match` | a `match` whose only arm is `_ -> f`, which is just `f` |
+| `shadows-std` | a top-level definition with the name of a standard library function |
+| `missing-binding` | a signature without a binding |
+
+A comment `# fwp:allow(code, ...)` in the comment lines directly above a
+declaration silences those rules inside it:
+
+```fwp
+# kept for the next release
+# fwp:allow(unused-binding)
+legacy-total = map .amount | sum
+```
+
+### `fwp lsp`
+
+`fwp lsp` is a language server that speaks the Language Server Protocol
+over stdin and stdout. It supports:
+
+- diagnostics: syntax errors (all of them, thanks to recovery at
+  declaration boundaries), type errors and warnings, and lint warnings
+  with their codes, refreshed on every change (full document sync;
+  imports are read from disk);
+- hover: the inferred type of the name under the cursor (a top-level
+  name, an imported or standard library name) and, for a generic name,
+  its type at that use;
+- go to definition: top-level and imported names, types and constructors,
+  and standard library names when `lib/` is next to the compiler's
+  sources;
+- document symbols: the top-level declarations;
+- formatting: the whole document with `fwp fmt`;
+- completion: the file's top-level names and the standard library's, with
+  their types.
+
+Any editor with a generic LSP client can use it: run `fwp lsp` for
+`*.fwp` files. For Neovim (0.11 or later):
+
+```lua
+vim.filetype.add({ extension = { fwp = "fwp" } })
+vim.lsp.config("fwp", {
+  cmd = { "fwp", "lsp" },
+  filetypes = { "fwp" },
+  root_markers = { ".git" },
+})
+vim.lsp.enable("fwp")
+```
+
+For Helix, in `languages.toml`:
+
+```toml
+[[language]]
+name = "fwp"
+scope = "source.fwp"
+file-types = ["fwp"]
+comment-token = "#"
+language-servers = ["fwp"]
+
+[language-server.fwp]
+command = "fwp"
+args = ["lsp"]
+```
+
+VS Code has no built-in generic client. Either configure a generic LSP
+client extension with the command `fwp`, the argument `lsp` and the file
+pattern `**/*.fwp`, or use a minimal extension built on
+`vscode-languageclient`:
+
+```js
+// extension.js; package.json declares "activationEvents": ["onLanguage:fwp"]
+// and contributes a language "fwp" with the extension ".fwp"
+const { LanguageClient } = require("vscode-languageclient/node");
+
+let client;
+
+exports.activate = () => {
+  client = new LanguageClient(
+    "fwp",
+    "fwp",
+    { command: "fwp", args: ["lsp"] },
+    { documentSelector: [{ scheme: "file", language: "fwp" }] }
+  );
+  client.start();
+};
+
+exports.deactivate = () => client && client.stop();
+```

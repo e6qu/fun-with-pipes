@@ -173,6 +173,7 @@ fn ty_atom(t: &TypeExpr) -> String {
         }
         TypeKind::Fun(..) => format!("({})", ty(t)),
         TypeKind::Unit => "()".into(),
+        TypeKind::Tuple(ts) if ts.len() == 1 => format!("({},)", ty(&ts[0])),
         TypeKind::Tuple(ts) => format!("({})", tys(ts)),
         TypeKind::Record(fs, tail) => record_ty(fs, tail),
         TypeKind::Nat(n) => n.to_string(),
@@ -256,9 +257,16 @@ fn app_level(e: &Expr) -> String {
     match &e.kind {
         ExprKind::App(f, args) => {
             let mut s = atom(f);
+            let mut prev = &**f;
             for a in args {
                 s.push(' ');
-                s.push_str(&atom(a));
+                // `C {..}` would be a nominal record
+                if matches!(prev.kind, ExprKind::Ctor(_)) && matches!(a.kind, ExprKind::Record(_)) {
+                    s.push_str(&format!("({})", atom(a)));
+                } else {
+                    s.push_str(&atom(a));
+                }
+                prev = a;
             }
             s
         }
@@ -289,6 +297,7 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Selector(p) => format!(".{}", p.join(".")),
         ExprKind::App(..) | ExprKind::Pipe(..) => format!("({})", expr(e)),
         ExprKind::Unit => "()".into(),
+        ExprKind::Tuple(items) if items.len() == 1 => format!("({},)", expr(&items[0])),
         ExprKind::Tuple(items) => format!(
             "({})",
             items.iter().map(expr).collect::<Vec<_>>().join(", ")
@@ -338,6 +347,7 @@ pub fn pattern(p: &Pattern) -> String {
             }
             s
         }
+        PatKind::Tuple(ps) if ps.len() == 1 => format!("({},)", pattern(&ps[0])),
         PatKind::Tuple(ps) => format!(
             "({})",
             ps.iter().map(pattern).collect::<Vec<_>>().join(", ")

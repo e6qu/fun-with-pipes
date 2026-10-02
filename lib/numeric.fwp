@@ -46,8 +46,12 @@ vector.map = array.map | vector.via
 # `xs | vector.zip-with f ys` combines elements at the same position as
 # `f y x` (the subject last, like zip-with): `a | vector.sub b` is a - b
 vector.zip-with : (b -> a -> c) -> Vector[b, n] -> Vector[a, n] -> Vector[c, n]
-vector.zip-with = curry3 (both (both .0 (.1 | vector.to-list) | uncurry zip-with) (.2 | vector.to-list)
-    | uncurry id | array.from-list | vector.wrap)
+vector.zip-with = curry3 (both
+        (both .0 (.1 | vector.to-list) | uncurry zip-with)
+        (.2 | vector.to-list)
+    | uncurry id
+    | array.from-list
+    | vector.wrap)
 
 vector.add : Vector[t, n] -> Vector[t, n] -> Vector[t, n] where Add[t]
 vector.add = vector.zip-with add
@@ -84,7 +88,11 @@ matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.square = curry (make Matrix { rows = .0, cols = .0, data = .1 })
 
 matrix.rows-of : Matrix[t, m, n] -> List[List[t]]
-matrix.rows-of = if (.cols | lt 1) (.rows | flip repeat []) (both .cols (.data | array.to-list) | uncurry chunks)
+matrix.rows-of =
+    if
+        (.cols | lt 1)
+        (.rows | flip repeat [])
+        (both .cols (.data | array.to-list) | uncurry chunks)
 
 matrix.from-rows : List[List[t]] -> Matrix[t, Dyn, Dyn]
 matrix.from-rows = matrix | matrix.dyn
@@ -92,14 +100,20 @@ matrix.from-rows = matrix | matrix.dyn
 # `m | matrix.get i j` is the element in row i, column j; None when either
 # index is out of range (like `nth` and `array.get`)
 matrix.get : I64 -> I64 -> Matrix[t, m, n] -> Option[t]
-matrix.get = curry3 (if matrix.in-bounds
-    (both (both (both .0 (.2 | .cols) | uncurry mul) .1 | uncurry add) (.2 | .data) | uncurry array.get)
+matrix.get = curry3 (if
+    matrix.in-bounds
+    (both
+            (both (both .0 (.2 | .cols) | uncurry mul) .1 | uncurry add)
+            (.2 | .data)
+        | uncurry array.get)
     (const None))
 
 matrix.in-bounds : (I64, I64, Matrix[t, m, n]) -> Bool
-matrix.in-bounds = fork and
-    (fork and (.0 | ge 0) (fork lt (.2 | .rows) .0))
-    (fork and (.1 | ge 0) (fork lt (.2 | .cols) .1))
+matrix.in-bounds =
+    fork
+        and
+        (fork and (.0 | ge 0) (fork lt (.2 | .rows) .0))
+        (fork and (.1 | ge 0) (fork lt (.2 | .cols) .1))
 
 transpose : Matrix[t, m, n] -> Matrix[t, n, m]
 transpose = make Matrix {
@@ -117,14 +131,23 @@ matmul : Matrix[t, k, n] -> Matrix[t, m, k] -> Matrix[t, m, n] where Ring[t]
 matmul = curry (make Matrix {
     rows = .1 | .rows,
     cols = .0 | .cols,
-    data = both (.0 | transpose | matrix.rows-of | matrix.row-products) (.1 | matrix.rows-of)
-        | uncurry map | flatten | array.from-list,
+    data =
+        both
+            (.0 | transpose | matrix.rows-of | matrix.row-products)
+            (.1 | matrix.rows-of)
+        | uncurry map
+        | flatten
+        | array.from-list,
 })
 
 # `m | matrix.apply v` is the product m·v
 matrix.apply : Vector[t, n] -> Matrix[t, m, n] -> Vector[t, m] where Ring[t]
-matrix.apply = curry (both (.0 | vector.to-list | matrix.dot-list) (.1 | matrix.rows-of) | uncurry map
-    | array.from-list | vector.wrap)
+matrix.apply = curry (both
+        (.0 | vector.to-list | matrix.dot-list)
+        (.1 | matrix.rows-of)
+    | uncurry map
+    | array.from-list
+    | vector.wrap)
 
 bool.to-num : Bool -> t where Zero[t], One[t]
 bool.to-num = match
@@ -135,7 +158,11 @@ identity : I64 -> Matrix[t, Dyn, Dyn] where Zero[t], One[t]
 identity = make Matrix {
     rows = id,
     cols = id,
-    data = fork array.generate (fork mul id id) (both div rem | uncurry (fork eq) | flip compose bool.to-num),
+    data =
+        fork
+            array.generate
+            (fork mul id id)
+            (both div rem | uncurry (fork eq) | flip compose bool.to-num),
 }
 
 # ------------------------------------------------- dense linear algebra (F64)
@@ -150,18 +177,25 @@ foreign "fwp" list.transpose : List[List[a]] -> List[List[a]]
 
 # `b | solve a` solves a·x = b (None when a is singular)
 solve : Matrix[F64, n, n] -> Vector[F64, n] -> Option[Vector[F64, n]]
-solve = curry (both (both (.0 | .rows) (.0 | .data) | uncurry linalg.lu-solve) (.1 | .data)
-    | uncurry id | option.map vector.wrap)
+solve = curry (both
+        (both (.0 | .rows) (.0 | .data) | uncurry linalg.lu-solve)
+        (.1 | .data)
+    | uncurry id
+    | option.map vector.wrap)
 
 determinant : Matrix[F64, n, n] -> F64
 determinant = both .rows .data | uncurry linalg.det
 
 inverse : Matrix[F64, n, n] -> Option[Matrix[F64, n, n]]
-inverse = both .rows (both .rows .data | uncurry linalg.inverse) | uncurry (matrix.square | option.map)
+inverse =
+    both .rows (both .rows .data | uncurry linalg.inverse)
+    | uncurry (matrix.square | option.map)
 
 # lower-triangular L with a = L·Lᵀ (None if a is not positive definite)
 cholesky : Matrix[F64, n, n] -> Option[Matrix[F64, n, n]]
-cholesky = both .rows (both .rows .data | uncurry linalg.cholesky) | uncurry (matrix.square | option.map)
+cholesky =
+    both .rows (both .rows .data | uncurry linalg.cholesky)
+    | uncurry (matrix.square | option.map)
 
 # a = Q·R with orthonormal columns in Q (m×n) and upper-triangular R (n×n)
 qr : Matrix[F64, m, n] -> (Matrix[F64, m, n], Matrix[F64, n, n])
@@ -179,7 +213,11 @@ cg : I64 -> F64 -> Matrix[F64, n, n] -> Vector[F64, n] -> Vector[F64, n]
 cg = curry3 (cg.raw | vector.via)
 
 cg.raw : (I64, F64, Matrix[F64, n, n]) -> Array[F64] -> Array[F64]
-cg.raw = both (both (both .0 .1 | uncurry linalg.cg) (.2 | .rows) | uncurry id) (.2 | .data) | uncurry id
+cg.raw =
+    both
+        (both (both .0 .1 | uncurry linalg.cg) (.2 | .rows) | uncurry id)
+        (.2 | .data)
+    | uncurry id
 
 # ----------------------------------------------------------- complex numbers
 
@@ -199,31 +237,48 @@ complex.re2 = both (.0 | .re) (.1 | .re)
 complex.im2 = both (.0 | .im) (.1 | .im)
 
 impl Add[Complex[t]] where Add[t] =
-    add = curry (make Complex { re = complex.re2 | uncurry add, im = complex.im2 | uncurry add })
+    add = curry (make Complex {
+        re = complex.re2 | uncurry add,
+        im = complex.im2 | uncurry add,
+    })
 
 impl Sub[Complex[t]] where Sub[t] =
-    sub = curry (make Complex { re = complex.re2 | uncurry sub, im = complex.im2 | uncurry sub })
+    sub = curry (make Complex {
+        re = complex.re2 | uncurry sub,
+        im = complex.im2 | uncurry sub,
+    })
 
 # (a + bi)(c + di) = (ac - bd) + (ad + bc)i
 impl Mul[Complex[t]] where Ring[t], Dup[t] =
     mul = curry (make Complex {
-        re = both (complex.im2 | uncurry mul) (complex.re2 | uncurry mul) | uncurry sub,
-        im = both (both (.0 | .re) (.1 | .im) | uncurry mul) (both (.0 | .im) (.1 | .re) | uncurry mul)
+        re =
+            both (complex.im2 | uncurry mul) (complex.re2 | uncurry mul)
+            | uncurry sub,
+        im =
+            both
+                (both (.0 | .re) (.1 | .im) | uncurry mul)
+                (both (.0 | .im) (.1 | .re) | uncurry mul)
             | uncurry add,
     })
 
 # data-last: `y | div x` is y / x = y·conj(x) / |x|²
 impl Div[Complex[t]] where Field[t], Dup[t] =
     div = curry (make Complex {
-        re = both
-            (.0 | fork add (.re | fork mul id id) (.im | fork mul id id))
-            (both (both (.1 | .re) (.0 | .re) | uncurry mul) (both (.1 | .im) (.0 | .im) | uncurry mul)
-                | uncurry add)
+        re =
+            both
+                (.0 | fork add (.re | fork mul id id) (.im | fork mul id id))
+                (both
+                        (both (.1 | .re) (.0 | .re) | uncurry mul)
+                        (both (.1 | .im) (.0 | .im) | uncurry mul)
+                    | uncurry add)
             | uncurry div,
-        im = both
-            (.0 | fork add (.re | fork mul id id) (.im | fork mul id id))
-            (both (both (.1 | .re) (.0 | .im) | uncurry mul) (both (.1 | .im) (.0 | .re) | uncurry mul)
-                | uncurry sub)
+        im =
+            both
+                (.0 | fork add (.re | fork mul id id) (.im | fork mul id id))
+                (both
+                        (both (.1 | .re) (.0 | .im) | uncurry mul)
+                        (both (.1 | .im) (.0 | .re) | uncurry mul)
+                    | uncurry sub)
             | uncurry div,
     })
 
@@ -246,41 +301,119 @@ test "vector" = vector [1, 2, 3] | vector.to-list | eq [1, 2, 3]
 test "vector.length" = vector [1.0, 2.0] | vector.length | eq 2
 test "vector.get" = vector [5, 6] | vector.get 1 | eq (Some 6)
 test "vector.get out of range" = vector [5, 6] | vector.get 2 | eq None
-test "vector.map" = vector [1, 2] | vector.map (mul 3) | vector.to-list | eq [3, 6]
-test "vector.add" = vector [1, 2] | vector.add (vector [10, 20]) | vector.to-list | eq [11, 22]
-test "vector.sub" = vector [10, 20] | vector.sub (vector [1, 2]) | vector.to-list | eq [9, 18]
-test "vector.zip-with order" = vector [1, 2] | vector.zip-with (curry id) (vector ["a", "b"]) | vector.to-list | eq [("a", 1), ("b", 2)]
-test "vector.scale" = vector [1, 2] | vector.scale 4 | vector.to-list | eq [4, 8]
+test "vector.map" =
+    vector [1, 2] | vector.map (mul 3) | vector.to-list | eq [3, 6]
+test "vector.add" =
+    vector [1, 2] | vector.add (vector [10, 20]) | vector.to-list | eq [11, 22]
+test "vector.sub" =
+    vector [10, 20] | vector.sub (vector [1, 2]) | vector.to-list | eq [9, 18]
+test "vector.zip-with order" =
+    vector [1, 2]
+    | vector.zip-with (curry id) (vector ["a", "b"])
+    | vector.to-list
+    | eq [("a", 1), ("b", 2)]
+test "vector.scale" =
+    vector [1, 2] | vector.scale 4 | vector.to-list | eq [4, 8]
 test "vector.from-list" = [1, 2, 3] | vector.from-list | vector.length | eq 3
 test "dot" = vector [1, 2, 3] | dot (vector [4, 5, 6]) | eq 32
 test "norm" = vector [3.0, 4.0] | norm | eq 5.0
 test "matrix" = matrix [[1, 2], [3, 4]] | both .rows .cols | eq (2, 2)
-test "matrix.rows-of" = matrix [[1, 2, 3], [4, 5, 6]] | matrix.rows-of | eq [[1, 2, 3], [4, 5, 6]]
+test "matrix.rows-of" =
+    matrix [[1, 2, 3], [4, 5, 6]] | matrix.rows-of | eq [[1, 2, 3], [4, 5, 6]]
 test "matrix.get" = matrix [[1, 2], [3, 4]] | matrix.get 1 0 | eq (Some 3)
-test "matrix.get column out of range" = matrix [[1, 2], [3, 4]] | matrix.get 0 2 | eq None
-test "matrix.get row out of range" = matrix [[1, 2], [3, 4]] | matrix.get 2 0 | eq None
+test "matrix.get column out of range" =
+    matrix [[1, 2], [3, 4]] | matrix.get 0 2 | eq None
+test "matrix.get row out of range" =
+    matrix [[1, 2], [3, 4]] | matrix.get 2 0 | eq None
 test "matrix.get negative" = matrix [[1, 2], [3, 4]] | matrix.get -1 1 | eq None
-test "empty matrix" = [] | matrix.from-rows | matrix.test-im | both matrix.rows-of (transpose | matrix.rows-of) | eq ([], [])
-test "empty matrix get" = [] | matrix.from-rows | matrix.test-im | matrix.get 0 0 | eq None
-test "empty matrix product" = [] | matrix.from-rows | matrix.test-im | matmul ([] | matrix.from-rows) | matrix.rows-of | eq []
-test "matrix with empty rows" = [[], []] | matrix.from-rows | matrix.test-im | matrix.rows-of | eq [[], []]
-test "transpose" = matrix [[1, 2, 3], [4, 5, 6]] | transpose | matrix.rows-of | eq [[1, 4], [2, 5], [3, 6]]
-test "matmul" = matrix [[1, 2], [3, 4]] | matmul (matrix [[0, 1], [1, 0]]) | matrix.rows-of | eq [[2, 1], [4, 3]]
-test "matmul shapes" = matrix [[1, 2, 3], [4, 5, 6]] | matmul (matrix [[1], [1], [1]]) | matrix.rows-of | eq [[6], [15]]
-test "matrix.apply" = matrix [[1, 2], [3, 4]] | matrix.apply (vector [1, 1]) | vector.to-list | eq [3, 7]
-test "identity" = 2 | identity | matrix.test-im | matrix.rows-of | eq [[1, 0], [0, 1]]
-test "solve" = vector [3.0, 5.0] | solve (matrix [[2.0, 0.0], [0.0, 4.0]]) | option.map vector.to-list | eq (Some [1.5, 1.25])
-test "solve singular" = vector [1.0, 1.0] | solve (matrix [[1.0, 2.0], [2.0, 4.0]]) | option.map vector.to-list | eq None
-test "determinant" = matrix [[2.0, 1.0], [1.0, 3.0]] | determinant | sub 5.0 | abs | lt 1e-12
-test "inverse" = matrix [[2.0, 0.0], [0.0, 4.0]] | inverse | option.map matrix.rows-of | eq (Some [[0.5, 0.0], [0.0, 0.25]])
-test "cholesky" = matrix [[4.0, 0.0], [0.0, 9.0]] | cholesky | option.map matrix.rows-of | eq (Some [[2.0, 0.0], [0.0, 3.0]])
-test "cholesky not positive definite" = matrix [[1.0, 2.0], [2.0, 1.0]] | cholesky | option.map matrix.rows-of | eq None
-test "qr reconstructs" = matrix [[1.0, 2.0], [3.0, 4.0]] | qr | fork matmul .1 .0 | matrix.rows-of | flatten | zip-with sub [1.0, 2.0, 3.0, 4.0] | all (abs | lt 1e-9)
-test "cg" = vector [2.0, 8.0] | cg 10 1e-12 (matrix [[2.0, 0.0], [0.0, 4.0]]) | vector.to-list | zip-with sub [1.0, 2.0] | all (abs | lt 1e-9)
-test "complex add" = complex 1.0 2.0 | add (complex 3.0 -1.0) | eq (complex 4.0 1.0)
-test "complex sub" = complex 1.0 2.0 | sub (complex 3.0 -1.0) | eq (complex -2.0 3.0)
-test "complex mul" = complex 1.0 2.0 | mul (complex 3.0 -1.0) | eq (complex 5.0 5.0)
-test "complex div" = complex 5.0 5.0 | div (complex 3.0 -1.0) | eq (complex 1.0 2.0)
+test "empty matrix" =
+    []
+    | matrix.from-rows
+    | matrix.test-im
+    | both matrix.rows-of (transpose | matrix.rows-of)
+    | eq ([], [])
+test "empty matrix get" =
+    [] | matrix.from-rows | matrix.test-im | matrix.get 0 0 | eq None
+test "empty matrix product" =
+    []
+    | matrix.from-rows
+    | matrix.test-im
+    | matmul ([] | matrix.from-rows)
+    | matrix.rows-of
+    | eq []
+test "matrix with empty rows" =
+    [[], []] | matrix.from-rows | matrix.test-im | matrix.rows-of | eq [[], []]
+test "transpose" =
+    matrix [[1, 2, 3], [4, 5, 6]]
+    | transpose
+    | matrix.rows-of
+    | eq [[1, 4], [2, 5], [3, 6]]
+test "matmul" =
+    matrix [[1, 2], [3, 4]]
+    | matmul (matrix [[0, 1], [1, 0]])
+    | matrix.rows-of
+    | eq [[2, 1], [4, 3]]
+test "matmul shapes" =
+    matrix [[1, 2, 3], [4, 5, 6]]
+    | matmul (matrix [[1], [1], [1]])
+    | matrix.rows-of
+    | eq [[6], [15]]
+test "matrix.apply" =
+    matrix [[1, 2], [3, 4]]
+    | matrix.apply (vector [1, 1])
+    | vector.to-list
+    | eq [3, 7]
+test "identity" =
+    2 | identity | matrix.test-im | matrix.rows-of | eq [[1, 0], [0, 1]]
+test "solve" =
+    vector [3.0, 5.0]
+    | solve (matrix [[2.0, 0.0], [0.0, 4.0]])
+    | option.map vector.to-list
+    | eq (Some [1.5, 1.25])
+test "solve singular" =
+    vector [1.0, 1.0]
+    | solve (matrix [[1.0, 2.0], [2.0, 4.0]])
+    | option.map vector.to-list
+    | eq None
+test "determinant" =
+    matrix [[2.0, 1.0], [1.0, 3.0]] | determinant | sub 5.0 | abs | lt 1e-12
+test "inverse" =
+    matrix [[2.0, 0.0], [0.0, 4.0]]
+    | inverse
+    | option.map matrix.rows-of
+    | eq (Some [[0.5, 0.0], [0.0, 0.25]])
+test "cholesky" =
+    matrix [[4.0, 0.0], [0.0, 9.0]]
+    | cholesky
+    | option.map matrix.rows-of
+    | eq (Some [[2.0, 0.0], [0.0, 3.0]])
+test "cholesky not positive definite" =
+    matrix [[1.0, 2.0], [2.0, 1.0]]
+    | cholesky
+    | option.map matrix.rows-of
+    | eq None
+test "qr reconstructs" =
+    matrix [[1.0, 2.0], [3.0, 4.0]]
+    | qr
+    | fork matmul .1 .0
+    | matrix.rows-of
+    | flatten
+    | zip-with sub [1.0, 2.0, 3.0, 4.0]
+    | all (abs | lt 1e-9)
+test "cg" =
+    vector [2.0, 8.0]
+    | cg 10 1e-12 (matrix [[2.0, 0.0], [0.0, 4.0]])
+    | vector.to-list
+    | zip-with sub [1.0, 2.0]
+    | all (abs | lt 1e-9)
+test "complex add" =
+    complex 1.0 2.0 | add (complex 3.0 -1.0) | eq (complex 4.0 1.0)
+test "complex sub" =
+    complex 1.0 2.0 | sub (complex 3.0 -1.0) | eq (complex -2.0 3.0)
+test "complex mul" =
+    complex 1.0 2.0 | mul (complex 3.0 -1.0) | eq (complex 5.0 5.0)
+test "complex div" =
+    complex 5.0 5.0 | div (complex 3.0 -1.0) | eq (complex 1.0 2.0)
 test "complex.conj" = complex 1.0 2.0 | complex.conj | eq (complex 1.0 -2.0)
 test "complex.abs" = complex 3.0 4.0 | complex.abs | eq 5.0
 test "complex from-int" = 3 | from-int | eq (complex 3.0 0.0)
