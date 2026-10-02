@@ -965,6 +965,13 @@ static V fwp_p_eprint(V s) {
     return FWP_UNIT;
 }
 
+static V fwp_p_ewrite(V s) {
+    fflush(stdout);
+    fwrite(STR(s)->d, 1, STR(s)->len, stderr);
+    fflush(stderr);
+    return FWP_UNIT;
+}
+
 static V fwp_read_stdin_all(void) {
     fflush(stdout);
     fwp_buf b = {0};

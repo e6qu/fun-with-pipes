@@ -1,0 +1,37 @@
+# CSV: parsing with quotes, typed records by header name, encoding.
+
+Kind =
+    | Fruit
+    | Vegetable
+    | DriedFruit
+
+Item = { name: String, qty: I64, price: Option[F64], kind: Kind, organic: Bool }
+
+text : String
+text =
+    "Name,QTY,price,kind,organic\n\"Apple, Gala\",3,0.5,fruit,true\n\"Carrot \"\"baby\"\"\",12,,VEGETABLE,false\r\nRaisin,1,2.25,dried-fruit,True\n"
+
+items : String -> Result[List[Item], String]
+items = csv.parse-records
+
+totals : List[Item] -> List[String]
+totals = map (both
+        .name
+        (fork mul (.qty | int.to-float) (.price | option.unwrap-or 0.0))
+    | format "{}: {}")
+
+main = [
+    text | csv.parse | each echo,
+    text | items | result.map totals | echo,
+    text | items | result.map (map .kind) | echo,
+    "name,qty,kind,organic\nx,many,fruit,true\n" | items | echo,
+    "name\nx\n" | items | echo,
+    "name,qty,kind,organic\nx,1,meat,false\n" | items | echo,
+    "" | items | echo,
+    "a\tb\n1\t\"2\t3\"\n" | csv.parse-with "\t" | echo,
+    [["id", "note"], ["1", "a, b"], ["2", "say \"hi\""], ["3", ""]]
+    | csv.encode
+    | write,
+    [["x", "y;z"]] | csv.encode-with ";" | write,
+    "x,y" | csv.field "," | print,
+] | ignore

@@ -22,6 +22,11 @@ fn path_error(kind: &str, path: &str, e: &std::io::Error) -> Ctl {
     io_error(kind, format!("{}: {}", path, io_msg(e)))
 }
 
+/// Whether the program's own output goes to stderr (an executable writing
+/// the binary protocol on stdout): programs it calls write there too.
+pub static OUTPUT_TO_STDERR: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 fn lossy_os(s: &std::ffi::OsStr) -> String {
     s.to_string_lossy().into_owned()
 }
@@ -45,6 +50,8 @@ pub fn handles(sym: &str) -> bool {
             | "env.vars"
             | "env.cwd"
             | "term.is-tty"
+            | "term.width"
+            | "term.read-secret"
             | "process.run-input"
             | "process.call"
     )
@@ -162,6 +169,31 @@ pub fn prim(sym: &str, a: &[Value], out: &mut dyn Write) -> Result<Value, Ctl> {
                 _ => false,
             }))
         }
+        "term.width" => Ok(Value::I64(term_width())),
+        "term.read-secret" => {
+            let _ = out.flush();
+            let _ = std::io::stderr().flush();
+            let echo = tty::echo_off();
+            let mut line = Vec::new();
+            use std::io::BufRead;
+            let r = std::io::stdin().lock().read_until(b'\n', &mut line);
+            if let Some(saved) = echo {
+                tty::restore(saved);
+                eprintln!();
+            }
+            Ok(match r {
+                Ok(0) | Err(_) => Value::data(0, vec![]),
+                Ok(_) => {
+                    if line.ends_with(b"\n") {
+                        line.pop();
+                        if line.ends_with(b"\r") {
+                            line.pop();
+                        }
+                    }
+                    Value::data(1, vec![Value::str(&lossy(&line))])
+                }
+            })
+        }
         "process.run-input" => {
             let _ = out.flush();
             run(a[1].list_items(), Some(a[0].as_str().as_bytes().to_vec()))
@@ -172,6 +204,115 @@ pub fn prim(sym: &str, a: &[Value], out: &mut dyn Write) -> Result<Value, Ctl> {
         }
         _ => Err(Ctl::Trap(format!("primitive `{}` is not implemented", sym))),
     }
+}
+
+/// The width of the terminal: `COLUMNS` (digits only), else the terminal
+/// of stdout, stderr or stdin, else 80.
+fn term_width() -> i64 {
+    if let Ok(c) = std::env::var("COLUMNS") {
+        if !c.is_empty() && c.len() <= 5 && c.bytes().all(|b| b.is_ascii_digit()) {
+            let w: i64 = c.parse().unwrap_or(0);
+            if w > 0 {
+                return w;
+            }
+        }
+    }
+    tty::columns().unwrap_or(80)
+}
+
+/// The terminal through the C library: its size and its echo.
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+mod tty {
+    use std::ffi::{c_int, c_ulong};
+
+    #[repr(C)]
+    #[derive(Default)]
+    struct WinSize {
+        row: u16,
+        col: u16,
+        xpixel: u16,
+        ypixel: u16,
+    }
+
+    /// `struct termios`, as bytes: large enough on both systems.
+    #[repr(C, align(8))]
+    #[derive(Clone, Copy)]
+    pub struct Termios([u8; 256]);
+
+    extern "C" {
+        fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
+        fn isatty(fd: c_int) -> c_int;
+        fn tcgetattr(fd: c_int, t: *mut Termios) -> c_int;
+        fn tcsetattr(fd: c_int, action: c_int, t: *const Termios) -> c_int;
+    }
+
+    #[cfg(target_os = "linux")]
+    const TIOCGWINSZ: c_ulong = 0x5413;
+    #[cfg(target_os = "macos")]
+    const TIOCGWINSZ: c_ulong = 0x40087468;
+    const ECHO: u64 = 0o10;
+    const TCSAFLUSH: c_int = 2;
+
+    pub fn columns() -> Option<i64> {
+        for fd in [1, 2, 0] {
+            let mut ws = WinSize::default();
+            // SAFETY: TIOCGWINSZ writes a `struct winsize`.
+            if unsafe { ioctl(fd, TIOCGWINSZ, &mut ws as *mut WinSize) } == 0 && ws.col > 0 {
+                return Some(ws.col as i64);
+            }
+        }
+        None
+    }
+
+    /// `c_lflag` of `struct termios`: a 32-bit field at byte 12 on Linux,
+    /// a 64-bit one at byte 24 on macOS.
+    fn lflag(t: &mut Termios) -> &mut [u8] {
+        if cfg!(target_os = "linux") {
+            &mut t.0[12..16]
+        } else {
+            &mut t.0[24..32]
+        }
+    }
+
+    /// Turn the echo of standard input off when it is a terminal; the
+    /// settings to restore.
+    pub fn echo_off() -> Option<Termios> {
+        let mut t = Termios([0; 256]);
+        // SAFETY: the buffer is larger than `struct termios`.
+        if unsafe { isatty(0) } == 0 || unsafe { tcgetattr(0, &mut t) } != 0 {
+            return None;
+        }
+        let saved = t;
+        let f = lflag(&mut t);
+        let mut v = [0u8; 8];
+        v[..f.len()].copy_from_slice(f);
+        let x = u64::from_ne_bytes(v) & !ECHO;
+        let n = f.len();
+        f.copy_from_slice(&x.to_ne_bytes()[..n]);
+        // SAFETY: as above.
+        unsafe { tcsetattr(0, TCSAFLUSH, &t) };
+        Some(saved)
+    }
+
+    pub fn restore(t: Termios) {
+        // SAFETY: the settings `echo_off` read.
+        unsafe { tcsetattr(0, TCSAFLUSH, &t) };
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+mod tty {
+    pub struct Termios;
+
+    pub fn columns() -> Option<i64> {
+        None
+    }
+
+    pub fn echo_off() -> Option<Termios> {
+        None
+    }
+
+    pub fn restore(_: Termios) {}
 }
 
 /// The exit status of a process as a shell reports it: the exit code, or
@@ -202,6 +343,9 @@ fn run(argv: Vec<Value>, input: Option<Vec<u8>>) -> Result<Value, Ctl> {
     let mut cmd = Command::new(prog);
     cmd.args(&argv[1..]);
     let Some(input) = input else {
+        if OUTPUT_TO_STDERR.load(std::sync::atomic::Ordering::Relaxed) {
+            cmd.stdout(Stdio::from(std::io::stderr()));
+        }
         let st = cmd.status().map_err(|e| path_error("spawn", prog, &e))?;
         return Ok(Value::I32(status_code(st)));
     };

@@ -1,0 +1,17 @@
+["Name", "QTY", "price", "kind", "organic"]
+["Apple, Gala", "3", "0.5", "fruit", "true"]
+["Carrot \"baby\"", "12", "", "VEGETABLE", "false"]
+["Raisin", "1", "2.25", "dried-fruit", "True"]
+Ok ["Apple, Gala: 1.5", "Carrot \"baby\": 0.0", "Raisin: 2.25"]
+Ok [Fruit, Vegetable, DriedFruit]
+Err "row 2: column `qty`: cannot parse `many` as I64"
+Err "missing column `kind`"
+Err "row 2: column `kind`: `meat` is not one of fruit, vegetable, dried-fruit"
+Ok []
+[["a", "b"], ["1", "2\t3"]]
+id,note
+1,"a, b"
+2,"say ""hi"""
+3,
+x;"y;z"
+"x,y"

@@ -7,6 +7,8 @@
 pub mod ast;
 pub mod cgen;
 pub mod cli;
+pub mod cli_gen;
+pub mod csv;
 pub mod diag;
 pub mod driver;
 pub mod env;

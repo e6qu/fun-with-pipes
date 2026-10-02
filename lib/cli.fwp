@@ -22,10 +22,42 @@ foreign "fwp" cli.help : o -> String
 cli.usage-error : String -> String -> a ! {IO}
 cli.usage-error = curry (both (.1 | eprint) (.0 | eprint) | const 2 | exit)
 
+# ------------------------------------------------------------ exit status
+
+# The result of an exported function that chooses its exit status:
+# `output` is written as a result of its type would be (a list one
+# element per line, `None` nothing, `Err` as an error...), then the
+# program exits with `status` (modulo 256).
+Outcome[T] = { output: T, status: I32 }
+
+# `lines | outcome.of (if is-empty (const 1) (const 0))`: the status
+# computed from the output.
+outcome.of : (a -> I32 ! e) -> a -> Outcome[a] ! e where Dup[a]
+outcome.of = both id | flip compose (make Outcome { output = .0, status = .1 })
+
+# `outcome.exit 3 output`: the output with a fixed status.
+outcome.exit : I32 -> a -> Outcome[a]
+outcome.exit = curry (make Outcome { output = .1, status = .0 })
+
+# Status 1 when the output satisfies the predicate (`grep` finding
+# nothing): `outcome.fail-if is-empty`.
+outcome.fail-if : (a -> Bool ! e) -> a -> Outcome[a] ! e where Dup[a]
+outcome.fail-if = flip compose (if id (const 1) (const 0)) | outcome.of
+
 # ---------------------------------------------------------------- terminal
 
 # Whether a standard stream (0 stdin, 1 stdout, 2 stderr) is a terminal.
 foreign "fwp" term.is-tty : I32 -> Bool ! {IO}
+
+# The width of the terminal in columns: `COLUMNS` when it is set to a
+# number, else the width of the terminal of stdout, stderr or stdin, else
+# 80.
+foreign "fwp" term.width : () -> I64 ! {IO}
+
+# Read a line from standard input without showing it, when it is a
+# terminal (a newline is written on stderr after it); `None` at the end
+# of the input. WebAssembly targets cannot turn the echo off.
+foreign "fwp" term.read-secret : () -> Option[String] ! {IO}
 
 # Whether to colour standard output: it is a terminal and `NO_COLOR` is
 # not set (see no-color.org).
@@ -72,30 +104,113 @@ ansi.magenta = ansi.style "35"
 ansi.cyan : String -> String
 ansi.cyan = ansi.style "36"
 
+# ----------------------------------------------------------------- prompts
+
+# `"Name: " | prompt.line` asks on stderr and reads a line from standard
+# input; `None` at the end of the input.
+prompt.line : String -> Option[String] ! {IO}
+prompt.line = ewrite | read-line
+
+# `"Delete it?" | prompt.confirm` asks `Delete it? [y/N] ` and is `True`
+# for an answer that starts with `y` or `Y` (not at the end of the input).
+prompt.confirm : String -> Bool ! {IO}
+prompt.confirm =
+    concat " [y/N] "
+    | prompt.line
+    | option.map (trim | lower | starts-with "y")
+    | option.unwrap-or False
+
+# `"Password: " | prompt.password` asks on stderr and reads a line
+# without showing it (see `term.read-secret`).
+prompt.password : String -> Option[String] ! {IO}
+prompt.password = ewrite | term.read-secret
+
+# ---------------------------------------------------------------- progress
+
+# `"12 of 40 files" | progress.show` writes a status line on stderr that
+# the next one replaces, when stderr is a terminal; nothing otherwise, so
+# that logs and pipes stay clean. The line is cut to the terminal's width.
+progress.show : String -> () ! {IO}
+progress.show =
+    if
+        (const 2 | term.is-tty)
+        (fork progress.line (const () | term.width) id | ewrite)
+        ignore
+
+# Clear the status line of `progress.show` (when stderr is a terminal).
+progress.clear : () -> () ! {IO}
+progress.clear = if (const 2 | term.is-tty) (const "\r\u{1b}[K" | ewrite) ignore
+
+# The text `progress.show` writes for a terminal `width` columns wide:
+# a carriage return, the line cut to `width - 1` characters and an
+# erase-to-end-of-line.
+progress.line : I64 -> String -> String
+progress.line = curry (both (.0 | sub 1 | max 0) .1
+    | uncurry (string.slice 0)
+    | flip concat "\r"
+    | concat "\u{1b}[K")
+
+# `(done, total) | progress.bar 20` is `[#####               ]  25%`.
+progress.bar : I64 -> (I64, I64) -> String
+progress.bar = curry (both
+        (fork progress._cells .0 (uncurry progress._part))
+        (both (const 100) .1 | uncurry progress._part | show | pad-left 3 " ")
+    | format "[{}] {}%")
+
+# `n` times `done / total`, from 0 to `n` (`n` when `total` <= 0).
+progress._part : I64 -> (I64, I64) -> I64
+progress._part = curry (if
+    (.1 | .1 | le 0)
+    .0
+    (fork
+        min
+        .0
+        (both (both .0 (.1 | .0) | uncurry mul) (.1 | .1)
+            | uncurry (flip div)
+            | max 0)))
+
+progress._cells : I64 -> I64 -> String
+progress._cells = curry (both
+        (.1 | flip string.repeat "#")
+        (fork sub .1 .0 | flip string.repeat " ")
+    | uncurry (flip concat))
+
 # ------------------------------------------------------------------ tables
 
 # Rows of cells as lines of aligned columns, two spaces apart. Widths
 # count characters.
 table.lines : List[List[String]] -> List[String]
-table.lines = fork table.render table.widths id
+table.lines = fork table._render table.widths id
 
 # `table.lines` as one string, each line ending in a newline.
 table.format : List[List[String]] -> String
 table.format = table.lines | map (concat "\n") | join ""
 
+# The width of each column: its longest cell, in characters.
 table.widths : List[List[String]] -> List[I64]
 table.widths =
     list.transpose | map (map string.length | maximum | option.unwrap-or 0)
 
-table.render : List[I64] -> List[List[String]] -> List[String]
-table.render = curry (fork map (.0 | table.row) .1)
+table._render : List[I64] -> List[List[String]] -> List[String]
+table._render = curry (fork map (.0 | table._row) .1)
 
-table.row : List[I64] -> List[String] -> String
-table.row = curry (uncurry (flip zip)
+table._row : List[I64] -> List[String] -> String
+table._row = curry (uncurry (flip zip)
     | map (uncurry (flip pad-right " "))
     | join "  "
     | trim-end)
 
+test "outcome.of" =
+    [1, 2]
+    | outcome.of (length | int.convert | option.unwrap-or 0)
+    | .status
+    | eq 2i32
+test "outcome.fail-if" = [] | outcome.fail-if is-empty | .status | eq 1i32
+test "outcome.exit" = "x" | outcome.exit 3 | .output | eq "x"
+test "progress.bar" = (1, 4) | progress.bar 8 | eq "[##      ]  25%"
+test "progress.bar full" = (9, 4) | progress.bar 4 | eq "[####] 100%"
+test "progress.bar empty" = (0, 0) | progress.bar 2 | eq "[##] 100%"
+test "progress.line" = "abcdef" | progress.line 4 | eq "\rabc\u{1b}[K"
 test "ansi.style" = "x" | ansi.bold | eq "\u{1b}[1mx\u{1b}[0m"
 test "table.format" =
     [["a", "bb"], ["ccc", "d"]] | table.format | eq "a    bb\nccc  d\n"

@@ -2,7 +2,8 @@
 //! function look like on a command line, and the help text, from its type
 //! and doc comments. The interpreter (`src/exec.rs`) and the C runtime
 //! (`runtime/fwp_rt_exec.c`) parse arguments with the same rules; the
-//! texts (help, usage, defaults) are computed here once for both.
+//! texts (help, usage, defaults, completion scripts, the man page) are
+//! computed here once for both.
 //!
 //! * A first parameter that is a record (other than a tuple or `Duration`)
 //!   is an *options record*: its fields are flags, `--name value` or
@@ -10,17 +11,28 @@
 //!   `Option[T]` fields are optional, `List[T]` fields repeatable, and
 //!   other fields required unless the exported value `<fn>.defaults` or
 //!   `defaults` (a record with some of the fields) gives them a default.
-//! * A field comment that starts with `-c` gives the flag a short form.
+//! * A field comment `-c <NAME> text [env: VAR]` gives the flag a short
+//!   form, a value name for the help and an environment variable that
+//!   supplies the value when the flag is absent.
 //! * The `#` comment block right above the `export` describes the command;
 //!   a line `# args: NAME...` names its positional parameters, and a
 //!   trailing `...` makes the last one (a `List`) take the remaining
 //!   arguments; `# command: name` renames the command.
+//! * Trailing positional parameters of type `Option[T]`, or with a default
+//!   (a field of `<fn>.defaults` named like the argument), may be omitted.
+//! * A value whose type is an enumeration (constructors without fields) is
+//!   written as a constructor name, in any case, in kebab-case or not.
 //! * A final `()` parameter is given implicitly.
-//! * `--help`/`-h` print the help, `--version` the exported `version`.
+//! * `--help`/`-h` print the help, `--version` the exported `version`,
+//!   and the program's first argument `--completions SHELL` or `--man` a
+//!   completion script or a man page (`src/cli_gen.rs`).
+//! * A result `Outcome[T]` (lib/cli.fwp) is `T` written as usual, and the
+//!   exit status.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 
+use crate::ast::{Decl, TypeBody};
 use crate::ir::{FuncId, Program, TypeShape, MT};
 use crate::value::{display, Value};
 
@@ -49,35 +61,66 @@ pub struct FuncDoc {
 pub struct FieldDoc {
     pub doc: String,
     pub short: Option<char>,
+    /// The value's name in the help: `<N>` in `-n <N>  how many`.
+    pub placeholder: Option<String>,
+    /// `[env: VAR]`: the variable that gives the value when the flag is
+    /// absent.
+    pub env: Option<String>,
 }
 
-fn comment_text(line: &str) -> Option<&str> {
-    let t = line.trim_start();
-    let c = t.strip_prefix('#')?;
-    Some(c.strip_prefix(' ').unwrap_or(c).trim_end())
+/// The text of a comment: without the `#`, one space and trailing space.
+fn comment_text(c: &str) -> &str {
+    let c = c.trim_start();
+    let c = c.strip_prefix('#').unwrap_or(c);
+    c.strip_prefix(' ').unwrap_or(c).trim_end()
 }
 
-fn is_ident_char(c: char) -> bool {
-    c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.'
-}
-
-/// A field comment `-v  text`: the short flag and the text.
-fn short_flag(doc: &str) -> FieldDoc {
-    let mut cs = doc.chars();
+/// A field comment: `-v`, `<NAME>` and `[env: VAR]`, then the text.
+pub fn field_doc(text: &str) -> FieldDoc {
+    let mut rest = text.trim();
+    let mut d = FieldDoc::default();
+    let mut cs = rest.chars();
     if let (Some('-'), Some(c)) = (cs.next(), cs.next()) {
-        let rest = cs.as_str();
-        if c.is_ascii_alphabetic() && (rest.is_empty() || rest.starts_with([' ', ':', ','])) {
-            let rest = rest.trim_start_matches([':', ',']).trim();
-            return FieldDoc {
-                doc: rest.to_string(),
-                short: Some(c),
-            };
+        let after = cs.as_str();
+        if c.is_ascii_alphabetic() && (after.is_empty() || after.starts_with([' ', ':', ','])) {
+            d.short = Some(c);
+            rest = after.trim_start_matches([':', ',']).trim_start();
         }
     }
-    FieldDoc {
-        doc: doc.to_string(),
-        short: None,
+    // a `--name` that repeats the long flag
+    if let Some(r) = rest.strip_prefix("--") {
+        if r.starts_with(|c: char| c.is_ascii_alphabetic()) {
+            let end = r.find([' ', '=', ':']).unwrap_or(r.len());
+            rest = r[end..].trim_start_matches(['=', ':']).trim_start();
+        }
     }
+    if let Some(r) = rest.strip_prefix('<') {
+        if let Some(end) = r.find('>') {
+            let name = &r[..end];
+            if !name.is_empty() && !name.contains(char::is_whitespace) {
+                d.placeholder = Some(name.to_string());
+                rest = r[end + 1..].trim_start_matches([':', ',']).trim_start();
+            }
+        }
+    }
+    let mut doc = rest.to_string();
+    if let Some(i) = doc.find("[env:") {
+        if let Some(j) = doc[i..].find(']') {
+            let var = doc[i + 5..i + j].trim().to_string();
+            if !var.is_empty() {
+                d.env = Some(var);
+                let before = doc[..i].trim_end();
+                let after = doc[i + j + 1..].trim_start();
+                doc = match (before.is_empty(), after.is_empty()) {
+                    (_, true) => before.to_string(),
+                    (true, false) => after.to_string(),
+                    (false, false) => format!("{} {}", before, after),
+                };
+            }
+        }
+    }
+    d.doc = doc;
+    d
 }
 
 impl Docs {
@@ -96,108 +139,137 @@ impl Docs {
         d
     }
 
-    /// Collect the documentation of one file.
+    /// Collect the documentation of one file from its syntax tree and
+    /// comments: the comment lines directly above a declaration (or a
+    /// field) document it, as does a comment after a field on its line.
     pub fn add(&mut self, text: &str, root: bool) {
-        let lines: Vec<&str> = text.lines().collect();
-        // the module description
-        if root {
-            let mut i = 0;
-            let mut block = Vec::new();
-            while i < lines.len() && lines[i].starts_with('#') {
-                if let Some(t) = comment_text(lines[i]) {
-                    block.push(t.to_string());
-                }
-                i += 1;
+        let Ok((toks, comments)) = crate::lexer::lex_with_comments(text, 0) else {
+            return;
+        };
+        let mut next = 0;
+        let (m, _) = crate::parser::parse_module_recover(text, 0, &mut next);
+        let code: BTreeSet<u32> = toks
+            .iter()
+            .filter(|t| t.tok != crate::lexer::Tok::Eof)
+            .map(|t| t.span.line)
+            .collect();
+        // comments alone on their line, and comments after code
+        let mut alone: BTreeMap<u32, String> = BTreeMap::new();
+        let mut trailing: BTreeMap<u32, String> = BTreeMap::new();
+        for c in &comments {
+            let t = comment_text(&c.text).to_string();
+            if code.contains(&c.line) {
+                trailing.insert(c.line, t);
+            } else {
+                alone.insert(c.line, t);
             }
-            if !block.is_empty() && (i >= lines.len() || lines[i].trim().is_empty()) {
+        }
+        // the comment lines right above `line`, below `floor`
+        let above = |line: u32, floor: u32| -> Vec<String> {
+            let mut v = Vec::new();
+            let mut l = line;
+            while l > floor + 1 {
+                match alone.get(&(l - 1)) {
+                    Some(t) => v.push(t.clone()),
+                    None => break,
+                }
+                l -= 1;
+            }
+            v.reverse();
+            v
+        };
+        // the module description
+        if root && alone.contains_key(&1) {
+            let mut k = 1;
+            let mut block = Vec::new();
+            while let Some(t) = alone.get(&k) {
+                block.push(t.clone());
+                k += 1;
+            }
+            if !code.contains(&k) {
                 if block.first().is_some_and(|l| l.starts_with('!')) {
                     block.remove(0); // a `#!` line
                 }
                 self.module = trim_blank(block);
             }
         }
-        for (i, l) in lines.iter().enumerate() {
-            // `export name ...` (a signature or a bare export)
-            if let Some(rest) = l.strip_prefix("export ") {
-                let name: String = rest.chars().take_while(|c| is_ident_char(*c)).collect();
-                if name.is_empty() || !root {
-                    continue;
+        // (a module description is separated from the first declaration
+        // by a blank line, which ends the block above it)
+        let doc_of = |line: u32| above(line, 0);
+        let mut exported: Vec<(String, Vec<String>)> = Vec::new();
+        let mut other: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        for d in &m.decls {
+            match d {
+                Decl::Sig { sig, export: true } => {
+                    exported.push((sig.name.clone(), doc_of(sig.span.line)))
                 }
-                let mut j = i;
-                let mut block = Vec::new();
-                while j > 0 && lines[j - 1].starts_with('#') {
-                    j -= 1;
-                    block.push(comment_text(lines[j]).unwrap_or("").to_string());
-                }
-                block.reverse();
-                // a comment block that starts the file and is followed by a
-                // blank line describes the module, not this export
-                let mut doc = FuncDoc::default();
-                for t in block {
-                    if let Some(a) = t.strip_prefix("args:") {
-                        doc.args = Some(a.split_whitespace().map(str::to_string).collect());
-                    } else if let Some(c) = t.strip_prefix("command:") {
-                        doc.command = Some(c.trim().to_string());
-                    } else if !t.starts_with("fwp:allow") {
-                        doc.lines.push(t);
+                Decl::Export { span, name } => exported.push((name.clone(), doc_of(span.line))),
+                Decl::Sig { sig, export: false } => {
+                    let b = doc_of(sig.span.line);
+                    if !b.is_empty() {
+                        other.entry(sig.name.clone()).or_insert(b);
                     }
                 }
-                doc.lines = trim_blank(doc.lines);
-                self.funcs.entry(name).or_insert(doc);
-                continue;
-            }
-            // `Name = {` or `Name[T] = {`, possibly `repr(C) Name = {`
-            let decl = l.strip_prefix("repr(C) ").unwrap_or(l);
-            if !decl.starts_with(|c: char| c.is_ascii_uppercase()) {
-                continue;
-            }
-            let name: String = decl.chars().take_while(|c| is_ident_char(*c)).collect();
-            let Some(eq) = decl.find('=') else {
-                continue;
-            };
-            if decl[..eq].contains(':') || !decl[eq + 1..].trim_start().starts_with('{') {
-                continue;
-            }
-            let mut fields = BTreeMap::new();
-            let mut pending: Vec<String> = Vec::new();
-            let mut body: Vec<&str> = vec![&decl[eq + 1..]];
-            body.extend(
-                lines[i + 1..]
-                    .iter()
-                    .take_while(|l| l.is_empty() || l.starts_with([' ', '\t', '}']))
-                    .copied(),
-            );
-            for b in body {
-                let t = b.trim().trim_start_matches('{').trim();
-                if let Some(c) = comment_text(t) {
-                    pending.push(c.to_string());
-                    continue;
+                Decl::Bind(b) => {
+                    let block = doc_of(b.span.line);
+                    if !block.is_empty() {
+                        other.entry(b.name.clone()).or_insert(block);
+                    }
                 }
-                let field: String = t.chars().take_while(|c| is_ident_char(*c)).collect();
-                if !field.is_empty() && t[field.len()..].trim_start().starts_with(':') {
-                    // a trailing comment on the field's line
-                    let trailing = t.find('#').and_then(|k| comment_text(&t[k..]));
-                    let text = match trailing {
-                        Some(c) => c.to_string(),
-                        None => pending.join(" "),
+                Decl::Type(td) => {
+                    let TypeBody::Record(fs) = &td.body else {
+                        continue;
                     };
-                    fields.insert(field, short_flag(text.trim()));
+                    let lines: Vec<u32> = fs.iter().map(|(_, t)| t.span.line).collect();
+                    let mut fields = BTreeMap::new();
+                    for (i, (name, t)) in fs.iter().enumerate() {
+                        let line = t.span.line;
+                        let alone_on_line = lines.iter().filter(|l| **l == line).count() == 1;
+                        let floor = if i == 0 { td.span.line } else { lines[i - 1] };
+                        let text = match trailing.get(&line) {
+                            Some(c) if alone_on_line && line != td.span.line => c.clone(),
+                            _ => above(line, floor).join(" "),
+                        };
+                        fields.insert(name.clone(), field_doc(text.trim()));
+                    }
+                    if !fields.is_empty() {
+                        self.fields.entry(td.name.clone()).or_insert(fields);
+                    }
                 }
-                pending.clear();
-                if t.contains('}') {
-                    break;
+                _ => {}
+            }
+        }
+        if !root {
+            return;
+        }
+        for (name, mut block) in exported {
+            if block.is_empty() {
+                block = other.get(&name).cloned().unwrap_or_default();
+            }
+            let mut doc = FuncDoc::default();
+            for t in block {
+                if let Some(a) = t.strip_prefix("args:") {
+                    doc.args = Some(a.split_whitespace().map(str::to_string).collect());
+                } else if let Some(c) = t.strip_prefix("command:") {
+                    doc.command = Some(c.trim().to_string());
+                } else if !t.starts_with("fwp:allow") {
+                    doc.lines.push(t);
                 }
             }
-            if !fields.is_empty() {
-                self.fields.entry(name).or_insert(fields);
-            }
+            doc.lines = trim_blank(doc.lines);
+            self.funcs.entry(name).or_insert(doc);
         }
     }
 
-    /// The field comments of a record type (by its canonical name).
+    /// The field comments of a record type (by its name, without its
+    /// module).
     pub fn fields_of(&self, ty: &MT) -> Option<&BTreeMap<String, FieldDoc>> {
         match ty {
-            MT::Con(n, _) => self.fields.get(&MT::short_name(n)),
+            MT::Con(n, _) => {
+                let bare = n.rsplit("::").next().unwrap_or(n);
+                let bare = bare.rsplit('.').next().unwrap_or(bare);
+                self.fields.get(bare)
+            }
             _ => None,
         }
     }
@@ -214,7 +286,7 @@ fn trim_blank(mut v: Vec<String>) -> Vec<String> {
 }
 
 /// The first sentence of a description.
-fn summary(lines: &[String]) -> String {
+pub fn summary(lines: &[String]) -> String {
     let mut para = String::new();
     for l in lines {
         if l.trim().is_empty() {
@@ -228,6 +300,73 @@ fn summary(lines: &[String]) -> String {
     match para.find(". ") {
         Some(i) => para[..=i].to_string(),
         None => para,
+    }
+}
+
+// ------------------------------------------------------------ enumerations
+
+/// The constructors of an enumeration: a type whose constructors have no
+/// fields (other than `Bool`), in kebab-case.
+pub fn choices(mt: &MT, prog: &Program) -> Option<Vec<String>> {
+    if *mt == MT::con("std::Bool") {
+        return None;
+    }
+    match prog.shapes.get(mt) {
+        Some(TypeShape::Adt(vs)) if !vs.is_empty() && vs.iter().all(|(_, f)| f.is_empty()) => {
+            Some(vs.iter().map(|(n, _)| kebab(n)).collect())
+        }
+        _ => None,
+    }
+}
+
+/// `JsonLines` is `json-lines`.
+pub fn kebab(name: &str) -> String {
+    let mut out = String::new();
+    let mut prev_lower = false;
+    for c in name.chars() {
+        if c.is_ascii_uppercase() {
+            if prev_lower {
+                out.push('-');
+            }
+            out.push(c.to_ascii_lowercase());
+            prev_lower = false;
+        } else {
+            out.push(c);
+            prev_lower = c.is_ascii_lowercase() || c.is_ascii_digit();
+        }
+    }
+    out
+}
+
+/// A name compared without case, `-` and `_`.
+fn loose(s: &str) -> String {
+    s.chars()
+        .filter(|c| *c != '-' && *c != '_')
+        .map(|c| c.to_ascii_lowercase())
+        .collect()
+}
+
+/// Parse a value given on the command line (an argument, a flag's value,
+/// an environment variable): the text format, except that an enumeration
+/// is a constructor name in any case. The error is the message after
+/// `option ...: ` or `argument ...: `.
+pub fn parse_value(text: &str, ty: &MT, prog: &Program) -> Result<Value, String> {
+    if let Some(cs) = choices(ty, prog) {
+        let t = loose(text);
+        return match cs.iter().position(|c| loose(c) == t && !t.is_empty()) {
+            Some(i) => Ok(Value::data(i as u32, vec![])),
+            None => Err(format!("`{}` is not one of {}", text, cs.join(", "))),
+        };
+    }
+    crate::textio::parse(text, ty, prog).map_err(|_| format!("cannot parse `{}` as {}", text, ty))
+}
+
+/// How a value is shown in the help: as the text format shows it, with
+/// the constructors of enumerations in kebab-case.
+fn show_value(v: &Value, ty: &MT, prog: &Program) -> String {
+    match (choices(ty, prog), v) {
+        (Some(cs), Value::Data(t, _)) => cs[*t as usize].clone(),
+        _ => display(v, ty, prog, false),
     }
 }
 
@@ -259,6 +398,13 @@ pub struct Flag {
     /// The type of one value on the command line.
     pub value_ty: MT,
     pub doc: String,
+    /// The value's name in the help (`<N>`), by default its type.
+    pub placeholder: String,
+    /// The environment variable that gives the value when the flag is
+    /// absent.
+    pub env: Option<String>,
+    /// The values of an enumeration, in kebab-case.
+    pub choices: Option<Vec<String>>,
 }
 
 /// The fields of an options record, as flags in declaration order.
@@ -280,6 +426,10 @@ pub fn list_elem(mt: &MT) -> Option<MT> {
     con_arg(mt, "std::List")
 }
 
+pub fn option_elem(mt: &MT) -> Option<MT> {
+    con_arg(mt, "std::Option")
+}
+
 /// The fields of a record type that can be an options record: a nominal
 /// or structural record that is not a tuple, unit or `Duration`.
 fn record_fields(mt: &MT, prog: &Program) -> Option<Vec<(String, MT)>> {
@@ -296,6 +446,18 @@ fn record_fields(mt: &MT, prog: &Program) -> Option<Vec<(String, MT)>> {
         .iter()
         .any(|(l, _)| l.starts_with(|c: char| c.is_ascii_digit()));
     (!fs.is_empty() && !tuple).then_some(fs)
+}
+
+/// Notes after a flag's or argument's description, in parentheses.
+fn notes_text(doc: &str, notes: &[String]) -> String {
+    let mut text = doc.to_string();
+    if !notes.is_empty() {
+        if !text.is_empty() {
+            text.push(' ');
+        }
+        let _ = write!(text, "({})", notes.join("; "));
+    }
+    text
 }
 
 impl Options {
@@ -320,7 +482,7 @@ impl Options {
             let ty = fs[index].1.clone();
             let (kind, value_ty) = if ty == MT::con("std::Bool") {
                 (FlagKind::Switch, ty.clone())
-            } else if let Some(t) = con_arg(&ty, "std::Option") {
+            } else if let Some(t) = option_elem(&ty) {
                 (FlagKind::Optional, t)
             } else if let Some(t) = list_elem(&ty) {
                 (FlagKind::Repeated, t)
@@ -333,9 +495,12 @@ impl Options {
                 index,
                 short: d.short,
                 kind,
+                placeholder: d.placeholder.unwrap_or_else(|| value_ty.to_string()),
+                choices: choices(&value_ty, prog),
                 field_ty: ty,
                 value_ty,
                 doc: d.doc,
+                env: d.env,
             });
         }
         Some(Options {
@@ -352,49 +517,59 @@ impl Options {
             None => format!("    --{}", f.name),
         };
         if f.kind != FlagKind::Switch {
-            let _ = write!(s, " <{}>", f.value_ty);
+            let _ = write!(s, " <{}>", f.placeholder);
         }
         s
     }
 
+    /// The notes of a flag in the help, from its default note (`None`:
+    /// no default), with the environment variable or not.
+    fn notes(f: &Flag, default: Option<&String>, env: bool) -> Vec<String> {
+        let mut notes = Vec::new();
+        if let Some(cs) = &f.choices {
+            notes.push(format!("one of: {}", cs.join(", ")));
+        }
+        match (f.kind, default) {
+            (FlagKind::Single, None) => notes.push("required".into()),
+            (FlagKind::Repeated, None) => notes.push("repeatable".into()),
+            (FlagKind::Repeated, Some(d)) => {
+                notes.push("repeatable".into());
+                notes.push(format!("default: {}", d));
+            }
+            (_, Some(d)) => notes.push(format!("default: {}", d)),
+            _ => {}
+        }
+        if let (true, Some(v)) = (env, &f.env) {
+            notes.push(format!("env: {}", v));
+        }
+        notes
+    }
+
     /// Help lines for the flags: (left column, description) pairs.
-    fn rows(&self, defaults: &[Option<String>]) -> Vec<(String, String)> {
+    fn rows(&self, defaults: &[Option<String>], env: bool) -> Vec<(String, String)> {
         self.flags
             .iter()
             .zip(defaults)
             .map(|(f, d)| {
-                let note = match (f.kind, d) {
-                    (FlagKind::Single, None) => "(required)".to_string(),
-                    (FlagKind::Repeated, None) => "(repeatable)".to_string(),
-                    (FlagKind::Repeated, Some(d)) => format!("(repeatable; default: {})", d),
-                    (_, Some(d)) => format!("(default: {})", d),
-                    _ => String::new(),
-                };
-                let mut text = f.doc.clone();
-                if !note.is_empty() {
-                    if !text.is_empty() {
-                        text.push(' ');
-                    }
-                    text.push_str(&note);
-                }
-                (Self::left(f), text)
+                (
+                    Self::left(f),
+                    notes_text(&f.doc, &Self::notes(f, d.as_ref(), env)),
+                )
             })
             .collect()
     }
 
     /// The help text of a default value, or `None` when it goes without
     /// saying (`False`, `None`, `[]`).
-    pub fn default_note(kind: FlagKind, v: &Value, ty: &MT, prog: &Program) -> Option<String> {
-        match kind {
+    pub fn default_note(f: &Flag, v: &Value, prog: &Program) -> Option<String> {
+        match f.kind {
             FlagKind::Switch if matches!(v, Value::Data(0, _)) => None,
             FlagKind::Optional => match v {
-                Value::Data(1, fs) => {
-                    Some(display(&fs[0], &con_arg(ty, "std::Option")?, prog, false))
-                }
+                Value::Data(1, fs) => Some(show_value(&fs[0], &f.value_ty, prog)),
                 _ => None,
             },
             FlagKind::Repeated if v.list_items().is_empty() => None,
-            _ => Some(display(v, ty, prog, false)),
+            _ => Some(show_value(v, &f.field_ty, prog)),
         }
     }
 }
@@ -418,11 +593,68 @@ pub fn columns(rows: &[(String, String)]) -> String {
     out
 }
 
+// ------------------------------------------------------------ positionals
+
+/// How a positional parameter takes its argument.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PosKind {
+    Required = 0,
+    /// A trailing `Option[T]` parameter: `None` when absent.
+    Optional = 1,
+    /// A trailing parameter with a default.
+    Defaulted = 2,
+    /// The last parameter, a `List`, takes the remaining arguments
+    /// (`# args: FILE...`).
+    Variadic = 3,
+}
+
+#[derive(Clone, Debug)]
+pub struct Positional {
+    /// The name in the usage and help: from `# args:`, or `<Type>`.
+    pub name: String,
+    /// The parameter's type.
+    pub ty: MT,
+    /// The type of one argument (`T` of an optional `Option[T]` or of a
+    /// variadic `List[T]`).
+    pub value_ty: MT,
+    pub kind: PosKind,
+    /// The canonical text of the default, at `ty`.
+    pub default: Option<String>,
+    /// The default as the help shows it.
+    pub default_note: Option<String>,
+    /// The values of an enumeration, in kebab-case.
+    pub choices: Option<Vec<String>>,
+}
+
+/// What an argument completes to in a shell: a file or a directory.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PathKind {
+    File,
+    Dir,
+}
+
+/// A `String` value named `FILE`, `PATH` or `DIR` (or ending in `-file`,
+/// `_path`...) is a path.
+pub fn path_kind(name: &str, ty: &MT) -> Option<PathKind> {
+    if *ty != MT::con("std::String") {
+        return None;
+    }
+    let u = name.to_ascii_uppercase();
+    let last = u.rsplit(['-', '_']).next().unwrap_or(&u);
+    match last {
+        "FILE" | "FILES" | "PATH" | "PATHS" | "FILENAME" => Some(PathKind::File),
+        "DIR" | "DIRS" | "DIRECTORY" | "DIRECTORIES" => Some(PathKind::Dir),
+        _ => None,
+    }
+}
+
 // --------------------------------------------------------------- commands
 
 /// How the result of a command is written.
 #[derive(Clone, Debug)]
 pub struct Output {
+    /// `Outcome[T]`: the positions of `output` and `status` in the record.
+    pub outcome: Option<(usize, usize)>,
     /// `Result[T, E]`: the error type `E`.
     pub error: Option<MT>,
     /// `Option[T]` (after unwrapping a `Result`): `None` writes nothing.
@@ -434,8 +666,21 @@ pub struct Output {
 }
 
 impl Output {
-    pub fn of(result: &MT) -> Output {
+    pub fn of(result: &MT, prog: &Program) -> Output {
         let mut t = result.clone();
+        let mut outcome = None;
+        if let MT::Con(n, a) = &t {
+            if n == "std::Outcome" && a.len() == 1 {
+                if let Some(TypeShape::Record(fs)) = prog.shapes.get(&t) {
+                    let o = fs.iter().position(|(l, _)| l == "output");
+                    let s = fs.iter().position(|(l, _)| l == "status");
+                    if let (Some(o), Some(s)) = (o, s) {
+                        outcome = Some((o, s));
+                        t = a[0].clone();
+                    }
+                }
+            }
+        }
         let error = match &t {
             MT::Con(n, a) if n == "std::Result" && a.len() == 2 => {
                 let e = a[1].clone();
@@ -444,7 +689,7 @@ impl Output {
             }
             _ => None,
         };
-        let option = match con_arg(&t, "std::Option") {
+        let option = match option_elem(&t) {
             Some(x) => {
                 t = x;
                 true
@@ -459,6 +704,7 @@ impl Output {
             None => false,
         };
         Output {
+            outcome,
             error,
             option,
             list,
@@ -487,18 +733,20 @@ pub struct Command {
     /// Defaults of the flags (`<fn>.defaults`): the canonical text of
     /// each field's value, parsed at the field's type when it is used.
     pub defaults: Vec<Option<String>>,
+    /// The help notes of the defaults (`None`: not shown).
+    pub default_notes: Vec<Option<String>>,
     /// The function's only parameter is a record with a required field:
     /// with no arguments, or a first argument that does not start with
     /// `-`, the record comes from stdin or the argument as before.
     pub record_fallback: bool,
-    /// Display names of the positional parameters.
-    pub positional: Vec<String>,
-    /// The last positional parameter takes the remaining arguments.
-    pub variadic: bool,
+    /// The positional parameters.
+    pub positional: Vec<Positional>,
     /// The positional parameters have names (`# args:`).
     pub named: bool,
     /// The last parameter is `()`, which is given implicitly.
     pub unit_last: bool,
+    /// The description (the comment block above the `export`).
+    pub doc: Vec<String>,
     pub summary: String,
     /// The usage text printed on usage errors.
     pub usage: String,
@@ -515,12 +763,40 @@ impl Command {
 
     /// The number of positional parameters.
     pub fn npos(&self) -> usize {
-        self.pos_range().len()
+        self.positional.len()
     }
 
-    /// The last positional parameter may come from stdin.
+    /// The last positional parameter takes the remaining arguments.
+    pub fn variadic(&self) -> bool {
+        self.positional
+            .last()
+            .is_some_and(|p| p.kind == PosKind::Variadic)
+    }
+
+    /// The number of required positional parameters (which come first).
+    pub fn nrequired(&self) -> usize {
+        self.positional
+            .iter()
+            .filter(|p| p.kind == PosKind::Required)
+            .count()
+    }
+
+    /// The last positional parameter may come from stdin: it is required
+    /// (no parameter is optional or variadic).
     pub fn stdin_last(&self) -> bool {
-        !self.variadic && self.npos() > 0
+        self.npos() > 0 && self.nrequired() == self.npos()
+    }
+
+    /// The environment variables of the flags.
+    pub fn env_vars(&self) -> Vec<(&Flag, &str)> {
+        match &self.options {
+            Some(o) => o
+                .flags
+                .iter()
+                .filter_map(|f| f.env.as_deref().map(|e| (f, e)))
+                .collect(),
+            None => Vec::new(),
+        }
     }
 }
 
@@ -567,6 +843,12 @@ pub fn commands(prog: &Program, prefix: Option<&str>) -> Result<Vec<Command>, St
     Ok(out)
 }
 
+/// The field of a defaults record that gives a positional argument its
+/// default: the argument's name in lower case (`DIR` is `dir`).
+fn arg_field(name: &str) -> String {
+    name.to_ascii_lowercase().replace('_', "-")
+}
+
 /// One exported function as a command.
 pub fn command(
     prog: &Program,
@@ -587,63 +869,12 @@ pub fn command(
         None => command.clone(),
     };
     let options = params.first().and_then(|p| Options::of(p, prog));
-    // defaults
-    let mut defaults = Vec::new();
-    let mut notes = Vec::new();
-    if let Some(o) = &options {
-        defaults = vec![None; o.flags.len()];
-        notes = vec![None; o.flags.len()];
-        // the program's `defaults` (the fields this record has), then the
-        // command's own
-        for (dname, partial) in [
-            ("defaults".to_string(), true),
-            (format!("{}.defaults", export), false),
-        ] {
-            let Some((_, did)) = prog.exports.iter().find(|(n, _)| *n == dname) else {
-                continue;
-            };
-            let dty = prog.funcs[*did].ty.clone();
-            let fs = record_fields(&dty, prog)
-                .filter(|_| prog.funcs[*did].arity == 0)
-                .ok_or_else(|| format!("`{}` must be a record", dname))?;
-            let v = eval_const(prog, *did).map_err(|e| format!("`{}`: {}", dname, e))?;
-            let Value::Record(vals) = &v else {
-                return Err(format!("`{}` must be a record", dname));
-            };
-            for (i, (l, t)) in fs.iter().enumerate() {
-                let Some(k) = o.flags.iter().position(|f| f.name == *l) else {
-                    if partial {
-                        continue;
-                    }
-                    return Err(format!(
-                        "`{}` has a field `{}`, which `{}` does not have",
-                        dname, l, o.record
-                    ));
-                };
-                let fl = &o.flags[k];
-                if *t != fl.field_ty {
-                    return Err(format!(
-                        "`{}`: the field `{}` is a `{}`, but the option `--{}` is a `{}`",
-                        dname, l, t, l, fl.field_ty
-                    ));
-                }
-                defaults[k] = Some(display(&vals[i], t, prog, true));
-                notes[k] = Options::default_note(fl.kind, &vals[i], t, prog);
-            }
-        }
-    }
-    let required = options.as_ref().is_some_and(|o| {
-        o.flags
-            .iter()
-            .zip(&defaults)
-            .any(|(f, d)| f.kind == FlagKind::Single && d.is_none())
-    });
-    let record_fallback = options.is_some() && n == 1 && required;
     let first = options.is_some() as usize;
     let unit_last = n > first && params[n - 1] == MT::unit();
     let pos_types = &params[first..n - unit_last as usize];
     let npos = pos_types.len();
-    let (positional, variadic) = match &doc.args {
+    // the names of the positional parameters
+    let (names, variadic) = match &doc.args {
         Some(names) => {
             if names.len() != npos {
                 return Err(format!(
@@ -668,137 +899,291 @@ pub fn command(
                     variadic = true;
                 }
             }
-            (names, variadic)
+            (Some(names), variadic)
         }
-        None => (
-            pos_types.iter().map(|t| format!("<{}>", t)).collect(),
-            false,
-        ),
+        None => (None, false),
     };
+    // defaults: the program's `defaults` (the fields this command has),
+    // then the command's own
+    let nflags = options.as_ref().map_or(0, |o| o.flags.len());
+    let mut defaults: Vec<Option<String>> = vec![None; nflags];
+    let mut notes: Vec<Option<String>> = vec![None; nflags];
+    let mut pos_defaults: Vec<Option<(String, String)>> = vec![None; npos];
+    for (dname, partial) in [
+        ("defaults".to_string(), true),
+        (format!("{}.defaults", export), false),
+    ] {
+        let Some((_, did)) = prog.exports.iter().find(|(n, _)| *n == dname) else {
+            continue;
+        };
+        let dty = prog.funcs[*did].ty.clone();
+        let fs = record_fields(&dty, prog)
+            .filter(|_| prog.funcs[*did].arity == 0)
+            .ok_or_else(|| format!("`{}` must be a record", dname))?;
+        let v = eval_const(prog, *did).map_err(|e| format!("`{}`: {}", dname, e))?;
+        let Value::Record(vals) = &v else {
+            return Err(format!("`{}` must be a record", dname));
+        };
+        for (i, (l, t)) in fs.iter().enumerate() {
+            let flag = options
+                .as_ref()
+                .and_then(|o| o.flags.iter().position(|f| f.name == *l));
+            if let (Some(k), Some(o)) = (flag, &options) {
+                let fl = &o.flags[k];
+                if *t != fl.field_ty {
+                    return Err(format!(
+                        "`{}`: the field `{}` is a `{}`, but the option `--{}` is a `{}`",
+                        dname, l, t, l, fl.field_ty
+                    ));
+                }
+                defaults[k] = Some(display(&vals[i], t, prog, true));
+                notes[k] = Options::default_note(fl, &vals[i], prog);
+                continue;
+            }
+            // the program's `defaults` are for options only
+            let arg = names
+                .as_ref()
+                .filter(|_| !partial)
+                .and_then(|ns| ns.iter().position(|a| arg_field(a) == *l));
+            if let Some(j) = arg {
+                if *t != pos_types[j] {
+                    return Err(format!(
+                        "`{}`: the field `{}` is a `{}`, but the argument `{}` is a `{}`",
+                        dname,
+                        l,
+                        t,
+                        names.as_ref().map_or("", |ns| &ns[j]),
+                        pos_types[j]
+                    ));
+                }
+                let note = match (variadic && j + 1 == npos, list_elem(t)) {
+                    (true, Some(e)) => vals[i]
+                        .list_items()
+                        .iter()
+                        .map(|x| show_value(x, &e, prog))
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                    _ => show_value(&vals[i], t, prog),
+                };
+                pos_defaults[j] = Some((display(&vals[i], t, prog, true), note));
+                continue;
+            }
+            if !partial {
+                return Err(format!(
+                    "`{}` has a field `{}`, which is neither an option nor an argument of `{}`",
+                    dname, l, export
+                ));
+            }
+        }
+    }
+    // trailing `Option` or defaulted parameters are optional
+    let fixed = npos - variadic as usize;
+    let mut opt_from = fixed;
+    while opt_from > 0
+        && (pos_defaults[opt_from - 1].is_some() || option_elem(&pos_types[opt_from - 1]).is_some())
+    {
+        opt_from -= 1;
+    }
+    let mut positional = Vec::new();
+    for (j, t) in pos_types.iter().enumerate() {
+        let (kind, value_ty) = if variadic && j + 1 == npos {
+            (PosKind::Variadic, list_elem(t).unwrap_or_else(MT::unit))
+        } else if j >= opt_from && pos_defaults[j].is_some() {
+            (PosKind::Defaulted, t.clone())
+        } else if j >= opt_from {
+            (PosKind::Optional, option_elem(t).unwrap_or_else(MT::unit))
+        } else {
+            (PosKind::Required, t.clone())
+        };
+        if kind == PosKind::Required && pos_defaults[j].is_some() {
+            let ns = names.as_deref().unwrap_or(&[]);
+            let later = (j + 1..fixed)
+                .find(|k| pos_defaults[*k].is_none() && option_elem(&pos_types[*k]).is_none())
+                .unwrap_or(j);
+            return Err(format!(
+                "the argument `{}` of `{}` has a default, but `{}` after it is required",
+                ns.get(j).map_or("", |s| s),
+                export,
+                ns.get(later).map_or("", |s| s),
+            ));
+        }
+        positional.push(Positional {
+            name: match &names {
+                Some(ns) => ns[j].clone(),
+                None => format!("<{}>", value_ty),
+            },
+            ty: t.clone(),
+            choices: choices(&value_ty, prog),
+            value_ty,
+            kind,
+            default: pos_defaults[j].as_ref().map(|d| d.0.clone()),
+            default_note: pos_defaults[j].as_ref().map(|d| d.1.clone()),
+        });
+    }
+    let required = options.as_ref().is_some_and(|o| {
+        o.flags
+            .iter()
+            .zip(&defaults)
+            .any(|(f, d)| f.kind == FlagKind::Single && d.is_none())
+    });
+    let record_fallback = options.is_some() && n == 1 && required;
     let mut c = Command {
         name,
         export: export.to_string(),
         command,
         fid,
         params,
-        output: Output::of(&result),
+        output: Output::of(&result, prog),
         result,
         options,
         defaults,
+        default_notes: notes,
         record_fallback,
         positional,
-        variadic,
         named: doc.args.is_some(),
         unit_last,
         summary: summary(&doc.lines),
+        doc: doc.lines.clone(),
         usage: String::new(),
         help: String::new(),
         version,
     };
     c.usage = usage_text(&c);
-    c.help = help_text(&c, &doc.lines, &notes);
+    c.help = help_text(&c);
     Ok(c)
 }
 
-fn usage_line(c: &Command) -> String {
-    let mut s = format!("usage: {}", c.name);
+/// The usage line without `usage: `.
+pub fn synopsis(c: &Command) -> String {
+    let mut s = c.name.clone();
     if c.options.is_some() {
         s.push_str(" [options]");
     }
-    for (i, p) in c.positional.iter().enumerate() {
-        if c.variadic && i + 1 == c.positional.len() {
-            let _ = write!(s, " [{}...]", p);
-        } else {
-            let _ = write!(s, " {}", p);
-        }
+    for p in &c.positional {
+        let _ = match p.kind {
+            PosKind::Required => write!(s, " {}", p.name),
+            PosKind::Optional | PosKind::Defaulted => write!(s, " [{}]", p.name),
+            PosKind::Variadic => write!(s, " [{}...]", p.name),
+        };
     }
     s
 }
 
 fn usage_text(c: &Command) -> String {
-    let mut s = usage_line(c);
+    let mut s = format!("usage: {}", synopsis(c));
     if c.stdin_last() {
         s.push_str("\n  (the last argument may instead be given as records on stdin)");
     }
     s
 }
 
-fn help_text(c: &Command, doc: &[String], notes: &[Option<String>]) -> String {
-    let mut s = usage_line(c);
-    s.push('\n');
-    if !doc.is_empty() {
-        s.push('\n');
-        for l in doc {
-            s.push_str(l);
-            s.push('\n');
-        }
-    }
-    let pos_types = &c.params[c.pos_range()];
-    if !pos_types.is_empty() {
-        let rows: Vec<(String, String)> = c
-            .positional
-            .iter()
-            .zip(pos_types)
-            .enumerate()
-            .map(|(i, (p, t))| {
-                let last = i + 1 == pos_types.len();
-                // the type, unless it is the name already (`<I64>`)
-                let mut text = match (c.named, last && c.variadic) {
-                    (false, _) => String::new(),
-                    (true, true) => list_elem(t).unwrap_or(MT::unit()).to_string(),
-                    (true, false) => t.to_string(),
-                };
-                let note = if last && c.variadic {
-                    "any number"
-                } else if last && list_elem(t).is_some() {
-                    "or all lines of standard input"
-                } else if last {
-                    "or one per line of standard input"
+/// The help rows of the positional parameters.
+pub fn argument_rows(c: &Command) -> Vec<(String, String)> {
+    let n = c.positional.len();
+    c.positional
+        .iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let last = i + 1 == n;
+            // the type, unless it is the name already (`<I64>`)
+            let mut parts = Vec::new();
+            if c.named {
+                parts.push(p.value_ty.to_string());
+            }
+            if let Some(cs) = &p.choices {
+                parts.push(format!("one of: {}", cs.join(", ")));
+            }
+            match p.kind {
+                PosKind::Variadic => parts.push("any number".into()),
+                PosKind::Optional => parts.push("optional".into()),
+                _ => {}
+            }
+            if let Some(d) = &p.default_note {
+                parts.push(format!("default: {}", d));
+            }
+            if last && c.stdin_last() {
+                parts.push(if list_elem(&p.ty).is_some() {
+                    "or all lines of standard input".into()
                 } else {
-                    ""
-                };
-                if !note.is_empty() {
-                    if !text.is_empty() {
-                        text.push_str(", ");
-                    }
-                    text.push_str(note);
-                }
-                let left = if last && c.variadic {
-                    format!("{}...", p)
-                } else {
-                    p.clone()
-                };
-                (left, text)
-            })
-            .collect();
-        s.push_str("\narguments:\n");
-        s.push_str(&columns(&rows));
-    }
-    let mut rows = match &c.options {
-        Some(o) => o.rows(notes),
-        None => Vec::new(),
-    };
+                    "or one per line of standard input".into()
+                });
+            }
+            let left = if p.kind == PosKind::Variadic {
+                format!("{}...", p.name)
+            } else {
+                p.name.clone()
+            };
+            (left, parts.join(", "))
+        })
+        .collect()
+}
+
+/// The rows of the flags `--help` and `--version` that a command has.
+pub fn builtin_rows(c: &Command) -> Vec<(String, String)> {
+    let mut rows = Vec::new();
     let short_h = c
         .options
         .as_ref()
         .is_some_and(|o| o.flags.iter().any(|f| f.short == Some('h')));
-    let has = |n: &str| {
-        c.options
-            .as_ref()
-            .is_some_and(|o| o.flags.iter().any(|f| f.name == n))
-    };
-    if !has("help") {
+    if !has_flag(c, "help") {
         rows.push((
             if short_h { "    --help" } else { "-h, --help" }.to_string(),
             "show this help".into(),
         ));
     }
-    if c.version.is_some() && !has("version") {
+    if c.version.is_some() && !has_flag(c, "version") {
         rows.push(("    --version".into(), "show the version".into()));
     }
+    rows
+}
+
+/// Whether the options record has a field named `n`.
+pub fn has_flag(c: &Command, n: &str) -> bool {
+    c.options
+        .as_ref()
+        .is_some_and(|o| o.flags.iter().any(|f| f.name == n))
+}
+
+/// The help rows of the flags of a command.
+pub fn flag_rows(c: &Command) -> Vec<(String, String)> {
+    match &c.options {
+        Some(o) => o.rows(&c.default_notes, true),
+        None => Vec::new(),
+    }
+}
+
+fn help_text(c: &Command) -> String {
+    let mut s = format!("usage: {}\n", synopsis(c));
+    if !c.doc.is_empty() {
+        s.push('\n');
+        for l in &c.doc {
+            s.push_str(l);
+            s.push('\n');
+        }
+    }
+    if !c.positional.is_empty() {
+        s.push_str("\narguments:\n");
+        s.push_str(&columns(&argument_rows(c)));
+    }
+    let mut rows = flag_rows(c);
+    rows.extend(builtin_rows(c));
     s.push_str("\noptions:\n");
     s.push_str(&columns(&rows));
     s
+}
+
+/// The rows of the options of a multi-command program.
+pub fn program_option_rows(cmds: &[Command]) -> Vec<(String, String)> {
+    let mut opts = vec![("-h, --help".to_string(), "show this help".to_string())];
+    if cmds.first().is_some_and(|c| c.version.is_some()) {
+        opts.push(("    --version".into(), "show the version".into()));
+    }
+    opts.push((
+        "    --completions <SHELL>".into(),
+        "print a completion script for bash, zsh or fish".into(),
+    ));
+    opts.push(("    --man".into(), "print a man page".into()));
+    opts
 }
 
 /// The help of a multi-command program.
@@ -820,12 +1205,8 @@ pub fn program_help(name: &str, cmds: &[Command], prog: &Program) -> String {
     }
     s.push_str("\ncommands:\n");
     s.push_str(&columns(&rows));
-    let mut opts = vec![("-h, --help".to_string(), "show this help".to_string())];
-    if cmds.first().is_some_and(|c| c.version.is_some()) {
-        opts.push(("    --version".into(), "show the version".into()));
-    }
     s.push_str("\noptions:\n");
-    s.push_str(&columns(&opts));
+    s.push_str(&columns(&program_option_rows(cmds)));
     let _ = write!(
         s,
         "\nRun `{} help <command>` for the arguments of a command.\n",
@@ -884,12 +1265,8 @@ pub fn parse_args(
     let mut i = 0;
     let set = |vals: &mut Vec<FlagValue>, k: usize, text: &str| -> Result<(), String> {
         let f = &fl[k];
-        let v = crate::textio::parse(text, &f.value_ty, prog).map_err(|_| {
-            format!(
-                "option `--{}`: cannot parse `{}` as {}",
-                f.name, text, f.value_ty
-            )
-        })?;
+        let v = parse_value(text, &f.value_ty, prog)
+            .map_err(|m| format!("option `--{}`: {}", f.name, m))?;
         match (f.kind, &mut vals[k]) {
             (FlagKind::Repeated, FlagValue::Many(xs)) => xs.push(v),
             (FlagKind::Repeated, slot) => *slot = FlagValue::Many(vec![v]),
@@ -998,24 +1375,58 @@ pub fn parse_args(
     Ok(Parsed::Args(vals, pos))
 }
 
-/// Build the options record from parsed flag values and defaults (the
-/// canonical text of each default, or for `cli.parse` the values).
+/// The value of a flag from its environment variable: `None` when the
+/// variable is unset or empty. A switch also takes `1` and `0`.
+pub fn env_value(f: &Flag, text: &str, prog: &Program) -> Result<Option<Value>, String> {
+    if text.is_empty() {
+        return Ok(None);
+    }
+    let var = f.env.as_deref().unwrap_or("");
+    let text = match (f.kind, text) {
+        (FlagKind::Switch, "1") => "true",
+        (FlagKind::Switch, "0") => "false",
+        _ => text,
+    };
+    let v = parse_value(text, &f.value_ty, prog)
+        .map_err(|m| format!("environment variable `{}`: {}", var, m))?;
+    Ok(Some(match f.kind {
+        FlagKind::Optional => Value::data(1, vec![v]),
+        FlagKind::Repeated => Value::list(vec![v]),
+        _ => v,
+    }))
+}
+
+/// Build the options record from parsed flag values, environment
+/// variables (`env` looks one up) and defaults (the canonical text of
+/// each default, or for `cli.parse` the values).
 pub fn build_record(
     o: &Options,
     vals: Vec<FlagValue>,
     defaults: &[Option<Value>],
+    env: &dyn Fn(&str) -> Option<String>,
+    prog: &Program,
 ) -> Result<Value, String> {
     let mut fields = vec![Value::unit(); o.nfields];
     for (k, (f, v)) in o.flags.iter().zip(vals).enumerate() {
+        let from_env = match (&v, &f.env) {
+            (FlagValue::Unset, Some(var)) => match env(var) {
+                Some(t) => env_value(f, &t, prog)?,
+                None => None,
+            },
+            _ => None,
+        };
         fields[f.index] = match v {
             FlagValue::One(x) if f.kind == FlagKind::Optional => Value::data(1, vec![x]),
             FlagValue::One(x) => x,
             FlagValue::Many(xs) => Value::list(xs),
-            FlagValue::Unset => match (&defaults[k], f.kind) {
-                (Some(d), _) => d.clone(),
-                (None, FlagKind::Switch) | (None, FlagKind::Optional) => Value::data(0, vec![]),
-                (None, FlagKind::Repeated) => Value::list(vec![]),
-                (None, FlagKind::Single) => {
+            FlagValue::Unset => match (from_env, &defaults[k], f.kind) {
+                (Some(e), _, _) => e,
+                (None, Some(d), _) => d.clone(),
+                (None, None, FlagKind::Switch) | (None, None, FlagKind::Optional) => {
+                    Value::data(0, vec![])
+                }
+                (None, None, FlagKind::Repeated) => Value::list(vec![]),
+                (None, None, FlagKind::Single) => {
                     return Err(format!("missing option `--{}`", f.name));
                 }
             },
@@ -1039,6 +1450,74 @@ pub fn default_values(c: &Command, prog: &Program) -> Vec<Option<Value>> {
         .collect()
 }
 
+/// Why positional arguments do not fit a command.
+pub enum ArgError {
+    /// The wrong number of arguments: the usage.
+    Usage,
+    /// An argument that does not parse (the message).
+    Value(String),
+}
+
+/// The values of the positional parameters from the arguments, and
+/// whether the last one comes from standard input (it is then missing).
+pub fn bind_positional(
+    c: &Command,
+    args: &[String],
+    prog: &Program,
+) -> Result<(Vec<Value>, bool), ArgError> {
+    let ps = &c.positional;
+    let k = args.len();
+    let nreq = c.nrequired();
+    let nfixed = ps.len() - c.variadic() as usize;
+    let from_stdin = k < nreq;
+    if (from_stdin && !(c.stdin_last() && k + 1 == nreq)) || (!c.variadic() && k > nfixed) {
+        return Err(ArgError::Usage);
+    }
+    let parse = |i: usize, t: &MT| {
+        parse_value(&args[i], t, prog)
+            .map_err(|m| ArgError::Value(format!("argument {}: {}", i + 1, m)))
+    };
+    let default = |p: &Positional| {
+        p.default
+            .as_ref()
+            .and_then(|d| crate::textio::parse(d, &p.ty, prog).ok())
+    };
+    let mut vals = Vec::new();
+    let mut i = 0;
+    for p in ps {
+        match p.kind {
+            PosKind::Required if i < k => {
+                vals.push(parse(i, &p.value_ty)?);
+                i += 1;
+            }
+            PosKind::Required => break,
+            PosKind::Optional | PosKind::Defaulted if i < k => {
+                let v = parse(i, &p.value_ty)?;
+                vals.push(if p.kind == PosKind::Optional {
+                    Value::data(1, vec![v])
+                } else {
+                    v
+                });
+                i += 1;
+            }
+            PosKind::Optional => vals.push(Value::data(0, vec![])),
+            PosKind::Defaulted => vals.push(default(p).unwrap_or_else(Value::unit)),
+            PosKind::Variadic => {
+                let mut rest = Vec::new();
+                while i < k {
+                    rest.push(parse(i, &p.value_ty)?);
+                    i += 1;
+                }
+                vals.push(match default(p) {
+                    Some(d) if rest.is_empty() => d,
+                    _ => Value::list(rest),
+                });
+            }
+        }
+    }
+    Ok((vals, from_stdin))
+}
+
 /// `cli.parse`: the options record `T` (with `defaults` for every field)
 /// and the positional arguments, or an error message.
 pub fn parse_with(
@@ -1055,7 +1534,7 @@ pub fn parse_with(
     };
     let ds: Vec<Option<Value>> = o.flags.iter().map(|f| Some(dv[f.index].clone())).collect();
     match parse_args(Some(&o.flags), argv, false, false, prog)? {
-        Parsed::Args(vals, pos) => Ok((build_record(&o, vals, &ds)?, pos)),
+        Parsed::Args(vals, pos) => Ok((build_record(&o, vals, &ds, &|_| None, prog)?, pos)),
         _ => unreachable!("help and version are not recognized"),
     }
 }
@@ -1072,9 +1551,9 @@ pub fn options_help(mt: &MT, defaults: &Value, prog: &Program) -> String {
     let notes: Vec<Option<String>> = o
         .flags
         .iter()
-        .map(|f| Options::default_note(f.kind, &dv[f.index], &f.field_ty, prog))
+        .map(|f| Options::default_note(f, &dv[f.index], prog))
         .collect();
-    columns(&o.rows(&notes))
+    columns(&o.rows(&notes, false))
 }
 
 /// For the C runtime: each flag's help line up to its description: the

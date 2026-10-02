@@ -94,7 +94,7 @@ test "map.remove" =
     | map.insert "a" 1
     | map.remove "a"
     | map.get "a"
-    | map.test-oi
+    | map._test-oi
     | eq None
 test "map.contains" = map.empty | map.insert 3 "x" | map.contains 3
 test "map.size" =
@@ -144,8 +144,8 @@ test "bytes.slice" =
 test "frequencies" =
     ["a", "b", "a"] | frequencies | map.to-list | eq [("a", 2), ("b", 1)]
 
-map.test-oi : Option[I64] -> Option[I64]
-map.test-oi = id
+map._test-oi : Option[I64] -> Option[I64]
+map._test-oi = id
 
 # offset of the first occurrence of a byte sequence
 foreign "fwp" bytes.find : Bytes -> Bytes -> Option[I64]

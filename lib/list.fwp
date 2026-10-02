@@ -66,10 +66,10 @@ contains = index-of | flip compose option.is-some
 # once per element
 partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
 partition =
-    flip both id | map | flip compose (fold-right list.partition-step ([], []))
+    flip both id | map | flip compose (fold-right list._partition-step ([], []))
 
-list.partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
-list.partition-step = curry (match
+list._partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
+list._partition-step = curry (match
     ((True, _), _) -> curry (both (both .0 (.1 | .0) | uncurry Cons) (.1 | .1))
     ((False, _), _) -> curry (both (.1 | .0) (both .0 (.1 | .1) | uncurry Cons)))
 
@@ -129,10 +129,10 @@ test "scan" = [1, 2, 3] | scan add 0 | eq [0, 1, 3, 6]
 test "chunks" = [1, 2, 3, 4, 5] | chunks 2 | eq [[1, 2], [3, 4], [5]]
 test "iterate" = 1 | iterate 4 (mul 2) | eq [1, 2, 4, 8]
 test "head" = [7, 8] | head | eq (Some 7)
-test "head of empty" = [] | list.test-ints | head | eq None
+test "head of empty" = [] | list._test-ints | head | eq None
 test "tail" = [7, 8] | tail | eq (Some [8])
 test "last" = [7, 8] | last | eq (Some 8)
-test "is-empty" = [] | list.test-ints | is-empty
+test "is-empty" = [] | list._test-ints | is-empty
 test "any" = [1, 2, 3] | any (eq 2)
 test "all" = [1, 2, 3] | all (gt 0)
 test "count" = [1, 2, 3, 4] | count (gt 2) | eq 2
@@ -151,5 +151,5 @@ test "singleton" = 5 | singleton | eq [5]
 test "sum" = [1, 2, 3] | sum | eq 6
 test "product" = [2, 3, 4] | product | eq 24
 
-list.test-ints : List[I64] -> List[I64]
-list.test-ints = id
+list._test-ints : List[I64] -> List[I64]
+list._test-ints = id

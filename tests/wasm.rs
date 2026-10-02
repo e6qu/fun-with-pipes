@@ -202,3 +202,83 @@ fn webassembly_tutorial_runs_under_wasi() {
         std::fs::read_to_string(tut.join("main.out")).unwrap()
     );
 }
+
+/// A command-line program built for WebAssembly: flags, enumerations,
+/// environment variables, optional arguments, exit statuses and the
+/// generated completion script, as with the interpreter.
+#[test]
+fn command_line_program_under_wasi() {
+    if !available() {
+        return;
+    }
+    let src = dir().join("cli/features.fwp");
+    // the program is named after its file
+    let tmp = std::env::temp_dir().join(format!("fwp-wasm-cli-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).unwrap();
+    let wasm = tmp.join("features.wasm");
+    let b = Command::new(fwp())
+        .arg("build")
+        .arg(&src)
+        .args(["--cli", "--target", "wasm32-wasi", "-o"])
+        .arg(&wasm)
+        .output()
+        .unwrap();
+    assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+    let run = |cmd: &mut Command, args: &[&str], stdin: &str, env: &[(&str, &str)]| {
+        use std::io::Write;
+        let mut child = cmd
+            .args(args)
+            .envs(env.iter().copied())
+            .env_remove("FEATURES_FORMAT")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(stdin.as_bytes())
+            .unwrap();
+        let o = child.wait_with_output().unwrap();
+        render(&o.stdout, &o.stderr, o.status.code().unwrap_or(-1))
+    };
+    type Case<'a> = (&'a [&'a str], &'a str, &'a [(&'a str, &'a str)]);
+    let cases: &[Case] = &[
+        (&["render", "w", "-f", "CSV_LINES", "d"], "", &[]),
+        (
+            &["render", "w"],
+            "",
+            &[("FEATURES_COUNT", "7"), ("FEATURES_QUIET", "1")],
+        ),
+        (&["render", "w"], "", &[("FEATURES_COUNT", "x")]),
+        (&["pick", "x"], "", &[]),
+        (&["pick", "x", "nope"], "", &[]),
+        (&["search", "a", "b"], "", &[]),
+        (&["leave", "300"], "", &[]),
+        (&["check"], "1\n-2\n", &[]),
+        (&["help", "render"], "", &[]),
+        (&["--completions", "bash"], "", &[]),
+        (&["--man"], "", &[]),
+    ];
+    for (args, stdin, env) in cases {
+        let want = run(
+            Command::new(fwp()).args(["exec", "--cli"]).arg(&src),
+            args,
+            stdin,
+            env,
+        );
+        let got = run(
+            Command::new("node")
+                .arg("--no-warnings")
+                .arg(dir().join("wasm/wasi-run.mjs"))
+                .arg(&wasm),
+            args,
+            stdin,
+            env,
+        );
+        assert_eq!(got, want, "features {:?}", args);
+    }
+    let _ = std::fs::remove_dir_all(&tmp);
+}

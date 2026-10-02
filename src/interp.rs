@@ -738,6 +738,31 @@ impl<'p> Interp<'p> {
                     },
                 )
             }
+            "csv.parse-with" => {
+                let sep = a[0].as_str().as_bytes().first().copied().unwrap_or(b',');
+                Ok(Value::list(
+                    crate::csv::parse(a[1].as_str(), sep)
+                        .iter()
+                        .map(|r| Value::list(r.iter().map(|c| Value::str(c)).collect()))
+                        .collect(),
+                ))
+            }
+            "csv.decode" => {
+                // Result[List[t], String]
+                let t = match &result {
+                    MT::Con(_, args) => match args.first() {
+                        Some(MT::Con(_, e)) => e.first().cloned().unwrap_or_else(MT::unit),
+                        _ => MT::unit(),
+                    },
+                    _ => MT::unit(),
+                };
+                Ok(
+                    match crate::csv::decode(&a[0].list_items(), &t, self.prog) {
+                        Ok(vs) => Value::data(0, vec![Value::list(vs)]),
+                        Err(m) => Value::data(1, vec![Value::str(&m)]),
+                    },
+                )
+            }
             "cli.help" => Ok(Value::str(&crate::cli::options_help(
                 &params[0], &a[0], self.prog,
             ))),

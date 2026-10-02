@@ -23,23 +23,23 @@ url.parse =
     })
 
 # both present
-form.both-some : (Option[a], Option[b]) -> Option[(a, b)]
-form.both-some = match
+form._both-some : (Option[a], Option[b]) -> Option[(a, b)]
+form._both-some = match
     (Some _, Some _) -> curry Some
     _ -> const None
 
 # decoded name/value pairs of `a=1&b=x+y`; malformed pairs are skipped
 form.parse : String -> List[(String, String)]
-form.parse = split "&" | filter (string.is-empty | not) | filter-map form.pair
+form.parse = split "&" | filter (string.is-empty | not) | filter-map form._pair
 
-form.pair : String -> Option[(String, String)]
-form.pair = fork form.pair-of id (string.split-once "=")
+form._pair : String -> Option[(String, String)]
+form._pair = fork form._pair-of id (string.split-once "=")
 
-form.pair-of : String -> Option[(String, String)] -> Option[(String, String)]
-form.pair-of = curry (match
+form._pair-of : String -> Option[(String, String)] -> Option[(String, String)]
+form._pair-of = curry (match
     (_, None) -> form.decode | option.map (flip (curry id) "")
     (_, Some _) ->
-        const (both (.0 | form.decode) (.1 | form.decode) | form.both-some))
+        const (both (.0 | form.decode) (.1 | form.decode) | form._both-some))
 
 form.encode : List[(String, String)] -> String
 form.encode =

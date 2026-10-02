@@ -158,7 +158,7 @@ impl<'p> Gen<'p> {
         for (k, f) in o.flags.iter().enumerate() {
             let (left, pad) = &lefts[k];
             rows.push(format!(
-                "    {{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}}",
+                "    {{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}}",
                 c_string_literal(f.name.as_bytes()),
                 f.short.map(|c| c as u32).unwrap_or(0),
                 f.kind as u8,
@@ -173,6 +173,10 @@ impl<'p> Gen<'p> {
                 c_string_literal(left.as_bytes()),
                 c_string_literal(pad.as_bytes()),
                 c_string_literal(f.doc.as_bytes()),
+                match &f.env {
+                    Some(e) => c_string_literal(e.as_bytes()),
+                    None => "0".into(),
+                },
             ));
         }
         let _ = writeln!(
@@ -944,6 +948,40 @@ impl<'p> Gen<'p> {
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 format!("return {}({}, {});", f, args.join(", "), err)
             }
+            "csv.decode" => {
+                // Result[List[t], String]
+                let t = elem(&elem(&result, 0), 0);
+                let fields = match &t {
+                    MT::Record(fs) => fs.clone(),
+                    MT::Con(..) => match self.prog.shapes.get(&t) {
+                        Some(TypeShape::Record(fs)) => fs.clone(),
+                        _ => Vec::new(),
+                    },
+                    _ => Vec::new(),
+                };
+                let named = !fields.is_empty()
+                    && !fields
+                        .iter()
+                        .any(|(l, _)| l.starts_with(|c: char| c.is_ascii_digit()));
+                if !named {
+                    return Ok(format!(
+                        "return fwp_p_csv_decode(l0, 0, 0, {});",
+                        c_string_literal(t.to_string().as_bytes())
+                    ));
+                }
+                let names: Vec<String> = fields
+                    .iter()
+                    .map(|(_, ft)| {
+                        let shown = crate::cli::option_elem(ft).unwrap_or_else(|| ft.clone());
+                        c_string_literal(shown.to_string().as_bytes())
+                    })
+                    .collect();
+                format!(
+                    "static const char *const names[] = {{{}}};\n    return fwp_p_csv_decode(l0, {}, names, 0);",
+                    names.join(", "),
+                    self.desc(&t)
+                )
+            }
             "cli.parse" | "cli.help" => {
                 let Some(o) = crate::cli::Options::of(&p(0), self.prog) else {
                     // as the interpreter: not a record of options
@@ -1083,6 +1121,10 @@ impl<'p> Gen<'p> {
                     ("syntax.show", "fwp_p_syntax_show(l0)"),
                     ("write", "fwp_p_write(l0)"),
                     ("eprint", "fwp_p_eprint(l0)"),
+                    ("ewrite", "fwp_p_ewrite(l0)"),
+                    ("term.width", "fwp_p_term_width()"),
+                    ("term.read-secret", "fwp_p_term_read_secret()"),
+                    ("csv.parse-with", "fwp_p_csv_parse_with(l0, l1)"),
                     ("read-line", "fwp_p_read_line()"),
                     ("read-all", "fwp_read_stdin_all()"),
                     ("read-lines", "fwp_p_read_lines()"),
@@ -1604,6 +1646,9 @@ pub fn generate_cli(prog: &Program, name: &str) -> Result<String, String> {
     generate_mode(prog, Mode::Exec(cmds, Some(name)))
 }
 
+/// The start of `main` of a command-line program: its texts.
+const CLI_INIT: &str = "    fwp_cli_version = exec_version;\n    for (int i = 0; i < 3; i++) fwp_cli_scripts[i] = exec_scripts[i];\n    fwp_cli_man = exec_man;\n";
+
 fn bytes_literal(b: &[u8]) -> String {
     let parts: Vec<String> = b.iter().map(|x| x.to_string()).collect();
     format!(
@@ -1719,23 +1764,40 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 Some(o) => (g.flag_table(o, &c.defaults), o.flags.len(), o.nfields),
                 None => ("0".to_string(), 0, 0),
             };
-            let velem = if c.variadic {
-                crate::cli::list_elem(&last).unwrap_or(MT::unit())
-            } else {
-                MT::unit()
+            let mut prows = Vec::new();
+            for p in &c.positional {
+                prows.push(format!(
+                    "{{{}, {}, {}, {}, {}}}",
+                    g.desc(&p.value_ty),
+                    c_string_literal(p.value_ty.to_string().as_bytes()),
+                    g.desc(&p.ty),
+                    p.kind as u8,
+                    match &p.default {
+                        Some(d) => c_string_literal(d.as_bytes()),
+                        None => "0".into(),
+                    }
+                ));
+            }
+            if prows.is_empty() {
+                prows.push("{0, 0, 0, 0, 0}".into());
+            }
+            let (outcome, ro, rs) = match out.outcome {
+                Some((o, st)) => (1, o, st),
+                None => (0, 0, 0),
             };
             let _ = write!(
                 exec_defs,
                 r#"
 static const fwp_desc *const exec_params{i}[] = {{{pd}}};
 static const char *const exec_param_names{i}[] = {{{pn}}};
+static const fwp_pos exec_pos{i}[] = {{{prows}}};
 static const unsigned char exec_out_header{i}[] = {header};
 static const unsigned char exec_in_fp{i}[16] = {fp};
 static V exec_caf{i}(void) {{ return {entry}; }}
 static const fwp_exec_spec exec_spec{i} = {{
     {name}, {export}, {usage}, {help}, {fid}, {arity}, exec_params{i}, exec_param_names{i},
-    {has_opts}, {fallback}, {nflags}, {nfields}, {flags}, {variadic}, {unit_last}, {vd}, {vn},
-    {err}, {ropt}, {rlist}, {od}, exec_out_header{i}, sizeof exec_out_header{i}, {llist}, {idd},
+    {has_opts}, {fallback}, {nflags}, {nfields}, {flags}, exec_pos{i}, {npos}, {nreq}, {variadic}, {unit_last},
+    {outcome}, {ro}, {rs}, {err}, {ropt}, {rlist}, {od}, exec_out_header{i}, sizeof exec_out_header{i}, {llist}, {idd},
     {itype}, exec_in_fp{i}, exec_caf{i}}};
 "#,
                 i = i,
@@ -1749,6 +1811,7 @@ static const fwp_exec_spec exec_spec{i} = {{
                 } else {
                     pn.join(", ")
                 },
+                prows = prows.join(", "),
                 header = bytes_literal(&header),
                 fp = bytes_literal(&fp),
                 entry = if n == 0 {
@@ -1767,10 +1830,13 @@ static const fwp_exec_spec exec_spec{i} = {{
                 nflags = nflags,
                 nfields = nfields,
                 flags = flags,
-                variadic = c.variadic as u8,
+                npos = c.positional.len(),
+                nreq = c.nrequired(),
+                variadic = c.variadic() as u8,
                 unit_last = c.unit_last as u8,
-                vd = g.desc(&velem),
-                vn = c_string_literal(velem.to_string().as_bytes()),
+                outcome = outcome,
+                ro = ro,
+                rs = rs,
                 err = match &out.error {
                     Some(e) => g.desc(e),
                     None => "0".into(),
@@ -1783,6 +1849,21 @@ static const fwp_exec_spec exec_spec{i} = {{
                 itype = c_string_literal(in_elem.to_string().as_bytes()),
             );
         }
+        // completion scripts and the man page
+        let multi = program.as_deref();
+        let mut scripts = Vec::new();
+        for sh in crate::cli_gen::SHELLS {
+            let text = crate::cli_gen::completions(sh, cmds, multi).unwrap_or_default();
+            scripts.push(c_string_literal(text.as_bytes()));
+        }
+        let _ = writeln!(
+            exec_defs,
+            "static const char *const exec_scripts[3] = {{{}}};\nstatic const char exec_man[] = {};",
+            scripts.join(", "),
+            c_string_literal(
+                crate::cli_gen::man_page(cmds, multi, &prog.docs.module).as_bytes()
+            ),
+        );
         let version = crate::cli::version(prog)?;
         let _ = writeln!(
             exec_defs,
@@ -2004,9 +2085,10 @@ static const fwp_exec_spec exec_spec{i} = {{
         "    fwp_exit_code = fwp_serve(&fwp_svc, fwp_argc, fwp_argv);".to_string()
     } else if let Mode::Exec(cmds, program) = &mode {
         match program {
-            None => "    fwp_cli_version = exec_version;\n    fwp_exit_code = fwp_exec(&exec_spec0, fwp_argc, fwp_argv);".to_string(),
+            None => format!("{}    fwp_cli_single = 1;\n    fwp_exit_code = fwp_exec(&exec_spec0, fwp_argc, fwp_argv);", CLI_INIT),
             Some(name) => format!(
-                "    fwp_cli_version = exec_version;\n    fwp_exit_code = fwp_exec_program({}, exec_cmds, {}, exec_program_help, exec_program_usage, fwp_argc, fwp_argv);",
+                "{}    fwp_exit_code = fwp_exec_program({}, exec_cmds, {}, exec_program_help, exec_program_usage, fwp_argc, fwp_argv);",
+                CLI_INIT,
                 c_string_literal(name.as_bytes()),
                 cmds.len()
             ),

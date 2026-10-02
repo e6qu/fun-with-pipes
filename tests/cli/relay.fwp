@@ -1,0 +1,5 @@
+# Run a command; its status (tests/cli.rs: what it writes goes to stderr
+# when the output is the binary protocol).
+# args: COMMAND...
+export relay : List[String] -> I32 ! {Process, Error[IoError]}
+relay = process.call

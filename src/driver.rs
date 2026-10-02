@@ -25,6 +25,7 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/fs.fwp", include_str!("../lib/fs.fwp")),
     ("<std>/process.fwp", include_str!("../lib/process.fwp")),
     ("<std>/cli.fwp", include_str!("../lib/cli.fwp")),
+    ("<std>/csv.fwp", include_str!("../lib/csv.fwp")),
     ("<std>/numeric.fwp", include_str!("../lib/numeric.fwp")),
     ("<std>/autodiff.fwp", include_str!("../lib/autodiff.fwp")),
     ("<std>/ternary.fwp", include_str!("../lib/ternary.fwp")),

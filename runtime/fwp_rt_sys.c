@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #ifndef __wasi__
+#include <termios.h>
+#include <sys/ioctl.h>
 #include <spawn.h>
 #include <poll.h>
 #include <fcntl.h>
@@ -154,6 +156,48 @@ static V fwp_p_term_is_tty(V fd) {
     return isatty(f) ? FWP_TRUE : FWP_FALSE;
 }
 
+/* the width of the terminal: COLUMNS (digits only), else the terminal of
+ * stdout, stderr or stdin, else 80 (src/sys.rs term_width) */
+static V fwp_p_term_width(void) {
+    const char *c = getenv("COLUMNS");
+    if (c && *c && strlen(c) <= 5 && strspn(c, "0123456789") == strlen(c)) {
+        long w = strtol(c, 0, 10);
+        if (w > 0) return (V)(int64_t)w;
+    }
+#ifndef __wasi__
+    int fds[3] = {1, 2, 0};
+    for (int i = 0; i < 3; i++) {
+        struct winsize ws;
+        if (ioctl(fds[i], TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0) return (V)(int64_t)ws.ws_col;
+    }
+#endif
+    return (V)(int64_t)80;
+}
+
+/* a line read with the terminal's echo off (when stdin is one), then a
+ * newline on stderr */
+static V fwp_p_term_read_secret(void) {
+    fwp_flush();
+    fflush(stderr);
+#ifndef __wasi__
+    struct termios old, quiet;
+    int tty = isatty(0) && tcgetattr(0, &old) == 0;
+    if (tty) {
+        quiet = old;
+        quiet.c_lflag &= ~(tcflag_t)ECHO;
+        tcsetattr(0, TCSAFLUSH, &quiet);
+    }
+#endif
+    V r = fwp_p_read_line();
+#ifndef __wasi__
+    if (tty) {
+        tcsetattr(0, TCSAFLUSH, &old);
+        fputc('\n', stderr);
+    }
+#endif
+    return r;
+}
+
 #ifndef __wasi__
 /* exit status as a shell reports it */
 static int fwp_status_code(int st) {
@@ -177,7 +221,13 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
     fflush(stderr);
     pid_t pid;
     if (!capture) {
-        int rc = posix_spawnp(&pid, args[0], 0, 0, args, environ);
+        /* the program's own output goes to stderr (FWP_OUT=bin): so does
+         * the called program's */
+        posix_spawn_file_actions_t fa;
+        posix_spawn_file_actions_init(&fa);
+        if (fwp_prog_out == stderr) posix_spawn_file_actions_adddup2(&fa, 2, 1);
+        int rc = posix_spawnp(&pid, args[0], &fa, 0, args, environ);
+        posix_spawn_file_actions_destroy(&fa);
         if (rc != 0) { errno = rc; return fwp_io_error_path("spawn", args[0], err); }
         int st;
         while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}

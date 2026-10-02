@@ -38,11 +38,11 @@ rec iter.map = curry (match
 # Rejected elements are skipped in a `loop`, so long runs of them run in
 # constant stack space.
 iter.filter : (a -> Bool) -> Iterator[a] -> Iterator[a] where Dup[a]
-rec iter.filter = curry (loop iter.filter-step)
+rec iter.filter = curry (loop iter._filter-step)
 
 # one step over (predicate, iterator): stop at the next accepted element
-rec iter.filter-step : (a -> Bool, Iterator[a]) -> Step[(a -> Bool, Iterator[a]), Iterator[a]] where Dup[a]
-iter.filter-step = match
+rec iter._filter-step : (a -> Bool, Iterator[a]) -> Step[(a -> Bool, Iterator[a]), Iterator[a]] where Dup[a]
+iter._filter-step = match
     (_, Done) -> const (Stop Done)
     (_, Yield _ _) -> curry3 (if
         (both .0 .1 | uncurry id)
@@ -52,11 +52,11 @@ iter.filter-step = match
 # `iter.take n` is the first n elements (none when n <= 0). The element
 # after the n-th is never forced.
 iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
-rec iter.take = curry (if (.0 | lt 1) (const Done) (uncurry iter.take-some))
+rec iter.take = curry (if (.0 | lt 1) (const Done) (uncurry iter._take-some))
 
 # n >= 1
-rec iter.take-some : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
-iter.take-some = curry (match
+rec iter._take-some : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
+iter._take-some = curry (match
     (_, Done) -> const Done
     (_, Yield _ _) -> curry3 (fork
         Yield

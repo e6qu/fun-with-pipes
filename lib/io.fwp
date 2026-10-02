@@ -2,6 +2,8 @@
 
 foreign "fwp" write : String -> () ! {IO}
 foreign "fwp" eprint : String -> () ! {IO}
+# Write text on stderr without a newline (prompts, progress).
+foreign "fwp" ewrite : String -> () ! {IO}
 foreign "fwp" read-line : () -> Option[String] ! {IO}
 foreign "fwp" read-all : () -> String ! {IO}
 foreign "fwp" read-lines : () -> List[String] ! {IO}
@@ -12,6 +14,34 @@ foreign "fwp" env.vars : () -> List[(String, String)] ! {IO}
 foreign "fwp" env.cwd : () -> String ! {IO}
 foreign "fwp" time.monotonic : () -> Duration ! {IO}
 foreign "fwp" time.unix : () -> Duration ! {IO}
+
+# Apply `f` to each line of standard input as it is read, in constant
+# memory: `() | each-line (upper | print)`.
+each-line : (String -> () ! {IO | e}) -> () -> () ! {IO | e}
+each-line = io._line-step | loop
+
+# `s | fold-lines f` folds `f` over the lines of standard input as they
+# are read, from the state `s`: `0 | fold-lines (curry (.0 | add 1))`
+# counts them.
+fold-lines : (s -> String -> s ! {IO | e}) -> s -> s ! {IO | e} where Dup[s]
+fold-lines = io._fold-step | loop
+
+io._line-step : (String -> () ! {IO | e}) -> () -> Step[(), ()] ! {IO | e}
+io._line-step = option.map | flip compose io._again | compose read-line
+
+io._again : Option[()] -> Step[(), ()]
+io._again = match
+    Some -> const (Again ())
+    None -> Stop ()
+
+io._fold-step : (s -> String -> s ! {IO | e}) -> s -> Step[s, s] ! {IO | e} where Dup[s]
+io._fold-step = curry (both id (const () | read-line)
+    | if
+        (.1 | option.is-none)
+        (.0 | .1 | Stop)
+        (both (.0 | .0 | uncurry) (both (.0 | .1) (.1 | option.unwrap-or ""))
+            | uncurry (flip apply)
+            | Again))
 
 # The user's home directory (`HOME`).
 env.home : () -> Option[String] ! {IO}

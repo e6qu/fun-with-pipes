@@ -2,12 +2,15 @@
 
 # `log.event level message fields`
 log.event : String -> String -> List[(String, String)] -> () ! {IO}
-log.event = curry3 (fork log.line-of (const () | time.unix | duration.millis) id
+log.event = curry3 (fork
+        log._line-of
+        (const () | time.unix | duration.millis)
+        id
     | flip concat "\n"
     | eprint)
 
-log.line-of : I64 -> (String, String, List[(String, String)]) -> String
-log.line-of = curry (fork
+log._line-of : I64 -> (String, String, List[(String, String)]) -> String
+log._line-of = curry (fork
     concat
     log.fields
     (fork
@@ -49,21 +52,21 @@ metrics.inc = flip metrics.add 1.0
 
 # Prometheus text exposition format
 metrics.render : () -> String ! {IO}
-metrics.render = metrics.snapshot | map metrics.line | join ""
+metrics.render = metrics.snapshot | map metrics._line | join ""
 
-metrics.line : (String, String, F64) -> String
-metrics.line =
+metrics._line : (String, String, F64) -> String
+metrics._line =
     if
         (.1 | eq "summary")
-        metrics.sample
-        (fork concat metrics.sample (both .0 .1 | format "# TYPE {} {}\n"))
+        metrics._sample
+        (fork concat metrics._sample (both .0 .1 | format "# TYPE {} {}\n"))
 
-metrics.sample : (String, String, F64) -> String
-metrics.sample = both .0 .2 | format "{} {}\n"
+metrics._sample : (String, String, F64) -> String
+metrics._sample = both .0 .2 | format "{} {}\n"
 
 test "log line" =
     ("info", "started", [("port", "8080")])
-    | log.line-of 5
+    | log._line-of 5
     | eq "ts=5 level=info msg=\"started\" port=\"8080\""
 test "log.quote escapes" =
     "a\\b\"c\r\nd" | log.quote | eq "\"a\\\\b\\\"c\\r\\nd\""

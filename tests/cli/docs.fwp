@@ -1,0 +1,39 @@
+# Doc comments found through the syntax tree (tests/cli.rs).
+
+import docmods.types
+
+# Count words.
+#
+# The signature spans several lines.
+# args: WORDS...
+export count-words :
+    docmods.types.CountOptions
+    -> List[String]
+    -> I64
+count-words = curry (if
+    (.0 | .unique)
+    (.1 | unique | length)
+    (.1 | length))
+
+# Count down from N.
+# args: N
+rec countdown : I64 -> List[I64]
+countdown = if (le 0) (const []) (fork Cons id (sub 1 | countdown))
+
+export countdown
+
+# Say something in a style.
+# args: WORD
+export say : Style -> String -> String
+say = curry (both (.0 | .loud) .1 | match
+    (True, _) -> upper
+    (False, _) -> id)
+
+export say.defaults : { word: String }
+say.defaults = { word = "hello" }
+
+Style =
+    {
+        # -l  in capitals
+        loud: Bool,
+    }

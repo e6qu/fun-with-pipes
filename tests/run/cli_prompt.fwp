@@ -1,0 +1,16 @@
+# Prompts, streaming standard input and progress (stdin and stderr are not
+# terminals here).
+
+main = [
+    "Name: " | prompt.line | echo,
+    "Sure?" | prompt.confirm | echo,
+    "Again?" | prompt.confirm | echo,
+    "Password: " | prompt.password | echo,
+    () | term.width | gt 0 | echo,
+    "working" | progress.show,
+    () | progress.clear,
+    (3, 10) | progress.bar 10 | print,
+    () | each-line (upper | print),
+    () | read-line | echo,
+    "Again?" | prompt.confirm | echo,
+] | ignore

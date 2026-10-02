@@ -14,6 +14,7 @@ Every module is available without an import.
 - [Files, directories and paths](#files-directories-and-paths)
 - [Processes](#processes)
 - [Command-line programs and terminals](#command-line-programs-and-terminals)
+- [CSV](#csv)
 - [Tasks and channels](#tasks-and-channels)
 - [Networking](#networking)
 - [HTTP](#http)
@@ -366,7 +367,6 @@ contains : a -> List[a] -> Bool where Eq[a]
 # (accepted, rejected), each in the original order; the predicate runs
 # once per element
 partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
-list.partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
 enumerate : List[a] -> List[(I64, a)] where Dup[a]
 each : (a -> () ! e) -> List[a] -> () ! e
 filter-map : (a -> Option[b] ! e) -> List[a] -> List[b] ! e
@@ -375,7 +375,6 @@ minimum : List[a] -> Option[a] where Ord[a]
 singleton : a -> List[a]
 sum : List[a] -> a where Add[a], Zero[a]
 product : List[a] -> a where Mul[a], One[a]
-list.test-ints : List[I64] -> List[I64]
 ```
 
 ## Option and Result
@@ -403,9 +402,6 @@ result.unwrap-or : a -> Result[a, x] -> a
 result.is-ok : Result[a, x] -> Bool
 result.to-option : Result[a, x] -> Option[a]
 result.from-option : x -> Option[a] -> Result[a, x]
-option.test-opt : Option[I64] -> Option[I64]
-result.test-res : Result[I64, String] -> Result[I64, String]
-result.test-res-s : Result[String, String] -> Result[String, String]
 ```
 
 ## Strings
@@ -469,9 +465,6 @@ parse-float : String -> Option[a] where Float[a]
 # or 1 for any other value); a mismatch is a trap.
 format : String -> a -> String where Display[a]
 string.is-empty : String -> Bool
-string.test-i64 : Option[I64] -> Option[I64]
-string.test-u8 : Option[U8] -> Option[U8]
-string.test-of : List[Option[F64]] -> List[Option[F64]]
 
 # the parts before and after the first occurrence of a separator
 string.split-once : String -> String -> Option[(String, String)]
@@ -535,7 +528,6 @@ frequencies : List[a] -> Map[a, I64] where Ord[a]
 # The elements by key, in their original order:
 # `[1, 2, 3, 4] | group-by (rem 2)` is `map {0: [2, 4], 1: [1, 3]}`.
 group-by : (a -> k ! e) -> List[a] -> Map[k, List[a]] ! e where Ord[k]
-map.test-oi : Option[I64] -> Option[I64]
 
 # offset of the first occurrence of a byte sequence
 bytes.find : Bytes -> Bytes -> Option[I64]
@@ -571,15 +563,9 @@ iter.map : (a -> b) -> Iterator[a] -> Iterator[b] where Dup[a]
 # constant stack space.
 iter.filter : (a -> Bool) -> Iterator[a] -> Iterator[a] where Dup[a]
 
-# one step over (predicate, iterator): stop at the next accepted element
-rec iter.filter-step : (a -> Bool, Iterator[a]) -> Step[(a -> Bool, Iterator[a]), Iterator[a]] where Dup[a]
-
 # `iter.take n` is the first n elements (none when n <= 0). The element
 # after the n-th is never forced.
 iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
-
-# n >= 1
-rec iter.take-some : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
 
 # `iter.iterate f x` is x, f x, f (f x), ...
 iter.iterate : (a -> a) -> a -> Iterator[a] where Dup[a]
@@ -594,6 +580,9 @@ Console, environment and time.
 ```fwp
 write : String -> () ! {IO}
 eprint : String -> () ! {IO}
+
+# Write text on stderr without a newline (prompts, progress).
+ewrite : String -> () ! {IO}
 read-line : () -> Option[String] ! {IO}
 read-all : () -> String ! {IO}
 read-lines : () -> List[String] ! {IO}
@@ -606,6 +595,15 @@ env.vars : () -> List[(String, String)] ! {IO}
 env.cwd : () -> String ! {IO}
 time.monotonic : () -> Duration ! {IO}
 time.unix : () -> Duration ! {IO}
+
+# Apply `f` to each line of standard input as it is read, in constant
+# memory: `() | each-line (upper | print)`.
+each-line : (String -> () ! {IO | e}) -> () -> () ! {IO | e}
+
+# `s | fold-lines f` folds `f` over the lines of standard input as they
+# are read, from the state `s`: `0 | fold-lines (curry (.0 | add 1))`
+# counts them.
+fold-lines : (s -> String -> s ! {IO | e}) -> s -> s ! {IO | e} where Dup[s]
 
 # The user's home directory (`HOME`).
 env.home : () -> Option[String] ! {IO}
@@ -687,13 +685,10 @@ path.extension : String -> String
 
 # The last component without its extension.
 path.stem : String -> String
-path.normalize-step : List[String] -> String -> List[String]
 
 # Remove `.` components, empty components and `x/..` pairs:
 # `"a/./b/../c/"` is `"a/c"`, `"/../x"` is `"/x"` and `""` is `"."`.
 path.normalize : String -> String
-path.normalize-with : Bool -> String -> String
-path.parts : String -> List[String]
 ```
 
 ## Processes
@@ -755,8 +750,35 @@ cli.help : o -> String
 # message and the usage on stderr and exits with status 2.
 cli.usage-error : String -> String -> a ! {IO}
 
+# The result of an exported function that chooses its exit status:
+# `output` is written as a result of its type would be (a list one
+# element per line, `None` nothing, `Err` as an error...), then the
+# program exits with `status` (modulo 256).
+Outcome[T] = { output: T, status: I32 }
+
+# `lines | outcome.of (if is-empty (const 1) (const 0))`: the status
+# computed from the output.
+outcome.of : (a -> I32 ! e) -> a -> Outcome[a] ! e where Dup[a]
+
+# `outcome.exit 3 output`: the output with a fixed status.
+outcome.exit : I32 -> a -> Outcome[a]
+
+# Status 1 when the output satisfies the predicate (`grep` finding
+# nothing): `outcome.fail-if is-empty`.
+outcome.fail-if : (a -> Bool ! e) -> a -> Outcome[a] ! e where Dup[a]
+
 # Whether a standard stream (0 stdin, 1 stdout, 2 stderr) is a terminal.
 term.is-tty : I32 -> Bool ! {IO}
+
+# The width of the terminal in columns: `COLUMNS` when it is set to a
+# number, else the width of the terminal of stdout, stderr or stdin, else
+# 80.
+term.width : () -> I64 ! {IO}
+
+# Read a line from standard input without showing it, when it is a
+# terminal (a newline is written on stderr after it); `None` at the end
+# of the input. WebAssembly targets cannot turn the echo off.
+term.read-secret : () -> Option[String] ! {IO}
 
 # Whether to colour standard output: it is a terminal and `NO_COLOR` is
 # not set (see no-color.org).
@@ -778,15 +800,86 @@ ansi.blue : String -> String
 ansi.magenta : String -> String
 ansi.cyan : String -> String
 
+# `"Name: " | prompt.line` asks on stderr and reads a line from standard
+# input; `None` at the end of the input.
+prompt.line : String -> Option[String] ! {IO}
+
+# `"Delete it?" | prompt.confirm` asks `Delete it? [y/N] ` and is `True`
+# for an answer that starts with `y` or `Y` (not at the end of the input).
+prompt.confirm : String -> Bool ! {IO}
+
+# `"Password: " | prompt.password` asks on stderr and reads a line
+# without showing it (see `term.read-secret`).
+prompt.password : String -> Option[String] ! {IO}
+
+# `"12 of 40 files" | progress.show` writes a status line on stderr that
+# the next one replaces, when stderr is a terminal; nothing otherwise, so
+# that logs and pipes stay clean. The line is cut to the terminal's width.
+progress.show : String -> () ! {IO}
+
+# Clear the status line of `progress.show` (when stderr is a terminal).
+progress.clear : () -> () ! {IO}
+
+# The text `progress.show` writes for a terminal `width` columns wide:
+# a carriage return, the line cut to `width - 1` characters and an
+# erase-to-end-of-line.
+progress.line : I64 -> String -> String
+
+# `(done, total) | progress.bar 20` is `[#####               ]  25%`.
+progress.bar : I64 -> (I64, I64) -> String
+
 # Rows of cells as lines of aligned columns, two spaces apart. Widths
 # count characters.
 table.lines : List[List[String]] -> List[String]
 
 # `table.lines` as one string, each line ending in a newline.
 table.format : List[List[String]] -> String
+
+# The width of each column: its longest cell, in characters.
 table.widths : List[List[String]] -> List[I64]
-table.render : List[I64] -> List[List[String]] -> List[String]
-table.row : List[I64] -> List[String] -> String
+```
+
+## CSV
+
+`lib/csv.fwp`
+
+CSV (RFC 4180): records of fields separated by commas (or another
+one-byte separator) and lines ending in `\n` or `\r\n`. A field in
+double quotes may contain separators, newlines and quotes written `""`.
+Reading is lenient: text after a closing quote is part of the field, a
+quote that is never closed runs to the end, and empty lines are skipped.
+
+```fwp
+# `"a,b\n1,2\n" | csv.parse` is `[["a", "b"], ["1", "2"]]`.
+csv.parse : String -> List[List[String]]
+
+# `text | csv.parse-with ";"` reads fields separated by the first byte of
+# the separator (`"\t"` for tab-separated values).
+csv.parse-with : String -> String -> List[List[String]]
+
+# Records of a record type from rows whose first row is the header: each
+# field comes from the column of its name (a header `First Name` or
+# `first_name` is the field `first-name`), parsed as a command-line
+# argument (strings as they are, numbers, `true`, constructor names of
+# enumerations in any case). An `Option` field is `None` when its cell is
+# empty or its column missing. A missing column or a cell that does not
+# parse is an `Err` with the row number (the header is row 1).
+csv.decode : List[List[String]] -> Result[List[t], String] where Decode[t]
+
+# `file.read "people.csv" | csv.parse-records` with a type annotation:
+# `csv.parse` then `csv.decode`.
+csv.parse-records : String -> Result[List[t], String] where Decode[t]
+
+# Rows as CSV text: every line ends with `\n`, and a field is quoted when
+# it contains a comma, a quote or a line break.
+csv.encode : List[List[String]] -> String
+
+# `rows | csv.encode-with "\t"`.
+csv.encode-with : String -> List[List[String]] -> String
+
+# One field, quoted when it needs to be: `"a,b" | csv.field ","` is
+# `"\"a,b\""`.
+csv.field : String -> String -> String
 ```
 
 ## Tasks and channels
@@ -1270,13 +1363,8 @@ url.decode : String -> Option[String]
 form.decode : String -> Option[String]
 url.parse : String -> Option[Url]
 
-# both present
-form.both-some : (Option[a], Option[b]) -> Option[(a, b)]
-
 # decoded name/value pairs of `a=1&b=x+y`; malformed pairs are skipped
 form.parse : String -> List[(String, String)]
-form.pair : String -> Option[(String, String)]
-form.pair-of : String -> Option[(String, String)] -> Option[(String, String)]
 form.encode : List[(String, String)] -> String
 ```
 
@@ -1289,7 +1377,6 @@ Structured logs (logfmt lines on stderr) and process metrics.
 ```fwp
 # `log.event level message fields`
 log.event : String -> String -> List[(String, String)] -> () ! {IO}
-log.line-of : I64 -> (String, String, List[(String, String)]) -> String
 log.fields : (I64, (String, String, List[(String, String)])) -> String
 
 # a logfmt value: quoted, with backslashes, quotes and line breaks escaped
@@ -1309,8 +1396,6 @@ metrics.inc : String -> () ! {IO}
 
 # Prometheus text exposition format
 metrics.render : () -> String ! {IO}
-metrics.line : (String, String, F64) -> String
-metrics.sample : (String, String, F64) -> String
 ```
 
 ## Vectors, matrices and complex numbers
@@ -1395,17 +1480,14 @@ cholesky : Matrix[F64, n, n] -> Option[Matrix[F64, n, n]]
 
 # a = Q·R with orthonormal columns in Q (m×n) and upper-triangular R (n×n)
 qr : Matrix[F64, m, n] -> (Matrix[F64, m, n], Matrix[F64, n, n])
-qr.raw : Matrix[F64, m, n] -> (Array[F64], Array[F64])
 
 # `b | cg iterations tolerance a`: conjugate gradient for symmetric
 # positive-definite a
 cg : I64 -> F64 -> Matrix[F64, n, n] -> Vector[F64, n] -> Vector[F64, n]
-cg.raw : (I64, F64, Matrix[F64, n, n]) -> Array[F64] -> Array[F64]
 Complex[T] = { re: T, im: T }
 complex : t -> t -> Complex[t]
 complex.conj : Complex[t] -> Complex[t] where Neg[t]
 complex.abs : Complex[a] -> a where Ring[a], Floating[a], Dup[a]
-matrix.test-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
 ```
 
 ## Automatic differentiation
@@ -1482,17 +1564,14 @@ rec tensor.at : TensorExpr[n] -> I64 -> F64
 # (a fill takes the length of what it is combined with). Combining two
 # operands of different lengths is a trap.
 rec tensor.length : TensorExpr[n] -> Option[I64]
-tensor.same-length : Option[I64] -> Option[I64] -> Option[I64]
 
 # Evaluate an expression; a trap when it is made only of fills, whose
 # length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
-tensor.realized-length : TensorExpr[n] -> I64
 rec graph.size : TensorExpr[n] -> I64
 
 # Constant folding: combine constants and nested scalings.
 rec graph.constant-fold : TensorExpr[n] -> TensorExpr[n]
-tensor.test-te : TensorExpr[2] -> TensorExpr[2]
 ```
 
 ## Balanced ternary
@@ -1527,7 +1606,6 @@ PackedTrits[N] = { count: I64, bytes: Bytes }
 packed.from-tint : TInt[n] -> PackedTrits[n]
 packed.to-tint : PackedTrits[n] -> Option[TInt[n]]
 packed.trits : PackedTrits[n] -> List[Trit]
-tint.test-t2 : Option[TInt[2]] -> Option[TInt[2]]
 ```
 
 ## SIMD
@@ -1554,10 +1632,6 @@ simd.dot : Vec[n, t] -> Vec[n, t] -> t where Numeric[t]
 
 # `c | simd.mul-add a b` is a·b + c (rounded after each step)
 simd.mul-add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
-simd.test-v4 : Vec[4, F64] -> Vec[4, F64]
-simd.test-ov4 : Option[Vec[4, F64]] -> Option[Vec[4, F64]]
-simd.test-i4 : Vec[4, I32] -> Vec[4, I32]
-simd.test-iv8 : Vec[8, I64] -> Vec[8, I64]
 ```
 
 ## C interop

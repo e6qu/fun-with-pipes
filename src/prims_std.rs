@@ -838,6 +838,13 @@ impl<'p> Interp<'p> {
                     eprintln!("{}", a[0].as_str());
                     Value::unit()
                 }
+                "ewrite" => {
+                    let _ = self.out.flush();
+                    let mut e = std::io::stderr();
+                    let _ = e.write_all(a[0].as_str().as_bytes());
+                    let _ = e.flush();
+                    Value::unit()
+                }
                 "read-line" => {
                     let _ = self.out.flush();
                     let mut line = Vec::new();

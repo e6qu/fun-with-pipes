@@ -1,0 +1,69 @@
+# CSV (RFC 4180): records of fields separated by commas (or another
+# one-byte separator) and lines ending in `\n` or `\r\n`. A field in
+# double quotes may contain separators, newlines and quotes written `""`.
+# Reading is lenient: text after a closing quote is part of the field, a
+# quote that is never closed runs to the end, and empty lines are skipped.
+
+# `"a,b\n1,2\n" | csv.parse` is `[["a", "b"], ["1", "2"]]`.
+csv.parse : String -> List[List[String]]
+csv.parse = csv.parse-with ","
+
+# `text | csv.parse-with ";"` reads fields separated by the first byte of
+# the separator (`"\t"` for tab-separated values).
+foreign "fwp" csv.parse-with : String -> String -> List[List[String]]
+
+# Records of a record type from rows whose first row is the header: each
+# field comes from the column of its name (a header `First Name` or
+# `first_name` is the field `first-name`), parsed as a command-line
+# argument (strings as they are, numbers, `true`, constructor names of
+# enumerations in any case). An `Option` field is `None` when its cell is
+# empty or its column missing. A missing column or a cell that does not
+# parse is an `Err` with the row number (the header is row 1).
+foreign "fwp" csv.decode : List[List[String]] -> Result[List[t], String] where Decode[t]
+
+# `file.read "people.csv" | csv.parse-records` with a type annotation:
+# `csv.parse` then `csv.decode`.
+csv.parse-records : String -> Result[List[t], String] where Decode[t]
+csv.parse-records = csv.parse | csv.decode
+
+# Rows as CSV text: every line ends with `\n`, and a field is quoted when
+# it contains a comma, a quote or a line break.
+csv.encode : List[List[String]] -> String
+csv.encode = csv.encode-with ","
+
+# `rows | csv.encode-with "\t"`.
+csv.encode-with : String -> List[List[String]] -> String
+csv.encode-with = curry (fork map (.0 | csv._line) .1 | join "")
+
+# One field, quoted when it needs to be: `"a,b" | csv.field ","` is
+# `"\"a,b\""`.
+csv.field : String -> String -> String
+csv.field = curry (if
+    (uncurry csv._needs-quotes)
+    (.1 | replace "\"" "\"\"" | flip concat "\"" | concat "\"")
+    .1)
+
+csv._needs-quotes : String -> String -> Bool
+csv._needs-quotes = curry (fork
+    any
+    (.1 | flip string.contains)
+    (.0 | flip Cons ["\"", "\n", "\r"]))
+
+csv._line : String -> List[String] -> String
+csv._line = curry (if
+    (.1 | eq [""])
+    (const "\"\"\n")
+    (fork join .0 (fork map (.0 | csv.field) .1) | concat "\n"))
+
+test "csv.parse" =
+    "name,qty\r\n\"Smith, J\",\"say \"\"hi\"\"\"\n\nx,\"a\nb\"\n"
+    | csv.parse
+    | eq [["name", "qty"], ["Smith, J", "say \"hi\""], ["x", "a\nb"]]
+test "csv.parse empty fields" = ",\n\"\"" | csv.parse | eq [["", ""], [""]]
+test "csv.parse-with" = "a;b\tc" | csv.parse-with ";" | eq [["a", "b\tc"]]
+test "csv.encode" =
+    [["a", "b,c"], ["say \"hi\"", "x\ny"]]
+    | csv.encode
+    | eq "a,\"b,c\"\n\"say \"\"hi\"\"\",\"x\ny\"\n"
+test "csv round trip" =
+    [["", " a ", "\"", ",;"], [""]] | fork eq id (csv.encode | csv.parse)
