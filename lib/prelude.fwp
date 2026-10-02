@@ -1,7 +1,8 @@
 # fwp standard prelude.
 #
 # Argument order convention: the "subject" of an operation comes last, so
-# that `x | sub 1` means x - 1 and `x | lt 5` means x < 5.
+# that `x | sub 1` means x - 1, `x | div 2` means x / 2 and `x | lt 5`
+# means x < 5.
 
 # ---------------------------------------------------------------- primitives
 I8 = builtin
@@ -61,37 +62,198 @@ foreign "fwp" const : a -> b -> a
 foreign "fwp" flip : (a -> b -> c ! e) -> b -> a -> c ! e
 foreign "fwp" compose : (a -> b ! e) -> (b -> c ! e) -> a -> c ! e
 foreign "fwp" apply : a -> (a -> b ! e) -> b ! e
-foreign "fwp" fork : (b -> c -> d ! e) -> (a -> b ! e) -> (a -> c ! e) -> a -> d ! e
-foreign "fwp" both : (a -> b ! e) -> (a -> c ! e) -> a -> (b, c) ! e
-foreign "fwp" dup : a -> (a, a)
+foreign "fwp" fork : (b -> c -> d ! e) -> (a -> b ! e) -> (a -> c ! e) -> a -> d ! e where Dup[a]
+foreign "fwp" both : (a -> b ! e) -> (a -> c ! e) -> a -> (b, c) ! e where Dup[a]
+foreign "fwp" dup : a -> (a, a) where Dup[a]
 foreign "fwp" on : (b -> b -> c ! e) -> (a -> b ! e) -> a -> a -> c ! e
 foreign "fwp" uncurry : (a -> b -> c ! e) -> (a, b) -> c ! e
 foreign "fwp" curry : ((a, b) -> c ! e) -> a -> b -> c ! e
 foreign "fwp" swap : (a, b) -> (b, a)
 foreign "fwp" first : (a -> c ! e) -> (a, b) -> (c, b) ! e
 foreign "fwp" second : (b -> c ! e) -> (a, b) -> (a, c) ! e
-foreign "fwp" if : (a -> Bool ! e) -> (a -> b ! e) -> (a -> b ! e) -> a -> b ! e
+foreign "fwp" if : (a -> Bool ! e) -> (a -> b ! e) -> (a -> b ! e) -> a -> b ! e where Dup[a]
 
-# ------------------------------------------------------------- arithmetic
-foreign "fwp" add : I64 -> I64 -> I64
-foreign "fwp" sub : I64 -> I64 -> I64
-foreign "fwp" mul : I64 -> I64 -> I64
-foreign "fwp" div : I64 -> I64 -> I64
-foreign "fwp" eq : a -> a -> Bool
-foreign "fwp" lt : I64 -> I64 -> Bool
+# ------------------------------------------------------------- numeric traits
+trait Add[T] =
+    add : T -> T -> T
+
+trait Sub[T] =
+    sub : T -> T -> T
+
+trait Mul[T] =
+    mul : T -> T -> T
+
+trait Div[T] =
+    div : T -> T -> T
+
+trait Rem[T] =
+    rem : T -> T -> T
+
+trait Neg[T] =
+    neg : T -> T
+
+trait Zero[T] =
+    zero : T
+
+trait One[T] =
+    one : T
+
+trait FromInt[T] =
+    from-int : I64 -> T
+
+trait FromFloat[T] =
+    from-float : F64 -> T
+
+trait Ring[T] : Add[T], Sub[T], Mul[T], Zero[T], One[T] = {}
+
+trait Field[T] : Ring[T], Div[T] = {}
+
+# Primitive implementations; the impls themselves are generated for every
+# numeric primitive type.
+foreign "fwp" prim.add : a -> a -> a
+foreign "fwp" prim.sub : a -> a -> a
+foreign "fwp" prim.mul : a -> a -> a
+foreign "fwp" prim.div : a -> a -> a
+foreign "fwp" prim.rem : a -> a -> a
+foreign "fwp" prim.neg : a -> a
+foreign "fwp" prim.zero : a
+foreign "fwp" prim.one : a
+foreign "fwp" prim.from-int : I64 -> a
+foreign "fwp" prim.from-float : F64 -> a
+
+# Explicit overflow behaviour (default arithmetic is checked and traps).
+foreign "fwp" wrapping.add : a -> a -> a where Integer[a]
+foreign "fwp" wrapping.sub : a -> a -> a where Integer[a]
+foreign "fwp" wrapping.mul : a -> a -> a where Integer[a]
+foreign "fwp" saturating.add : a -> a -> a where Integer[a]
+foreign "fwp" saturating.sub : a -> a -> a where Integer[a]
+foreign "fwp" saturating.mul : a -> a -> a where Integer[a]
+foreign "fwp" overflowing.add : a -> a -> (a, Bool) where Integer[a]
+foreign "fwp" overflowing.sub : a -> a -> (a, Bool) where Integer[a]
+foreign "fwp" overflowing.mul : a -> a -> (a, Bool) where Integer[a]
+foreign "fwp" checked.add : a -> a -> Option[a] where Integer[a]
+foreign "fwp" checked.sub : a -> a -> Option[a] where Integer[a]
+foreign "fwp" checked.mul : a -> a -> Option[a] where Integer[a]
+foreign "fwp" checked.div : a -> a -> Option[a] where Integer[a]
+
+# Bit operations.
+foreign "fwp" bit.and : a -> a -> a where Integer[a]
+foreign "fwp" bit.or : a -> a -> a where Integer[a]
+foreign "fwp" bit.xor : a -> a -> a where Integer[a]
+foreign "fwp" bit.not : a -> a where Integer[a]
+foreign "fwp" bit.shl : U32 -> a -> a where Integer[a]
+foreign "fwp" bit.shr : U32 -> a -> a where Integer[a]
+
+# Explicit conversions (there are no implicit ones).
+foreign "fwp" int.convert : a -> Option[b] where Integer[a], Integer[b]
+foreign "fwp" int.to-float : a -> b where Integer[a], Float[b]
+foreign "fwp" float.to-int : a -> Option[b] where Float[a], Integer[b]
+foreign "fwp" float.convert : a -> b where Float[a], Float[b]
+
+# Floating point.
+foreign "fwp" sqrt : a -> a where Float[a]
+foreign "fwp" exp : a -> a where Float[a]
+foreign "fwp" ln : a -> a where Float[a]
+foreign "fwp" sin : a -> a where Float[a]
+foreign "fwp" cos : a -> a where Float[a]
+foreign "fwp" tan : a -> a where Float[a]
+foreign "fwp" pow : a -> a -> a where Float[a]
+foreign "fwp" floor : a -> a where Float[a]
+foreign "fwp" ceil : a -> a where Float[a]
+foreign "fwp" round : a -> a where Float[a]
+foreign "fwp" abs : a -> a where Signed[a]
+
+# ------------------------------------------------------------- comparison
+foreign "fwp" eq : a -> a -> Bool where Eq[a]
+foreign "fwp" ne : a -> a -> Bool where Eq[a]
+foreign "fwp" lt : a -> a -> Bool where Ord[a]
+foreign "fwp" le : a -> a -> Bool where Ord[a]
+foreign "fwp" gt : a -> a -> Bool where Ord[a]
+foreign "fwp" ge : a -> a -> Bool where Ord[a]
+foreign "fwp" compare : a -> a -> Ordering where Ord[a]
+foreign "fwp" min : a -> a -> a where Ord[a]
+foreign "fwp" max : a -> a -> a where Ord[a]
+foreign "fwp" hash : a -> U64 where Hash[a]
 foreign "fwp" not : Bool -> Bool
+foreign "fwp" and : Bool -> Bool -> Bool
+foreign "fwp" or : Bool -> Bool -> Bool
 
 # ------------------------------------------------------------- lists
 foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
 foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e
 foreign "fwp" fold : (b -> a -> b ! e) -> b -> List[a] -> b ! e
-foreign "fwp" sort : List[a] -> List[a]
+foreign "fwp" sort : List[a] -> List[a] where Ord[a]
 foreign "fwp" length : List[a] -> I64
+
+sum : List[a] -> a where Add[a], Zero[a]
+sum = fold add zero
+
+product : List[a] -> a where Mul[a], One[a]
+product = fold mul one
+
+# ------------------------------------------------------------- options
+#
+# Multi-argument pattern functions use `curry` with a tuple match: the holes
+# of the matched tuple are passed to the arm body in order.
+
+option.map : (a -> b ! e) -> Option[a] -> Option[b] ! e
+option.map = curry (match
+    (_, Some _) -> flip compose Some
+    (_, None) -> const None)
+
+option.and-then : (a -> Option[b] ! e) -> Option[a] -> Option[b] ! e
+option.and-then = curry (match
+    (_, Some _) -> id
+    (_, None) -> const None)
+
+option.ap : Option[a -> b] -> Option[a] -> Option[b]
+option.ap = curry (match
+    (Some _, Some _) -> flip compose Some
+    _ -> const None)
+
+option.unwrap-or : a -> Option[a] -> a
+option.unwrap-or = curry (match
+    (_, Some _) -> const id
+    (_, None) -> id)
+
+# ------------------------------------------------------------- functor & monad
+trait Functor[F] =
+    fmap : (a -> b ! e) -> F[a] -> F[b] ! e
+
+trait Applicative[F] : Functor[F] =
+    pure : a -> F[a]
+    ap : F[a -> b] -> F[a] -> F[b]
+
+trait Monad[M] : Applicative[M] =
+    bind : (a -> M[b] ! e) -> M[a] -> M[b] ! e
+
+foreign "fwp" list.flat-map : (a -> List[b] ! e) -> List[a] -> List[b] ! e
+foreign "fwp" list.ap : List[a -> b] -> List[a] -> List[b]
+
+impl Functor[List] =
+    fmap = map
+
+impl Applicative[List] =
+    pure = flip Cons Nil
+    ap = list.ap
+
+impl Monad[List] =
+    bind = list.flat-map
+
+impl Functor[Option] =
+    fmap = option.map
+
+impl Applicative[Option] =
+    pure = Some
+    ap = option.ap
+
+impl Monad[Option] =
+    bind = option.and-then
 
 # ------------------------------------------------------------- strings, io
 foreign "fwp" trim : String -> String
 foreign "fwp" lower : String -> String
 foreign "fwp" upper : String -> String
 foreign "fwp" concat : String -> String -> String
-foreign "fwp" show : a -> String
+foreign "fwp" show : a -> String where Display[a]
 foreign "fwp" print : String -> () ! {IO}

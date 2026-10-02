@@ -1,0 +1,3 @@
+check/err_literal_inferred.fwp:2:9: error: literal `300` does not fit in `U8`
+2 | small = 300
+  |         ^^^

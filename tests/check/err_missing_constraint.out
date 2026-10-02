@@ -1,0 +1,4 @@
+check/err_missing_constraint.fwp:2:11: error: missing constraint `IntLit[a]`
+2 | inc = add 1
+  |           ^
+  note: add `where IntLit[a]` to the signature of `inc`

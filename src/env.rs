@@ -107,8 +107,47 @@ pub struct ModuleInfo {
     pub imports: HashSet<String>,
 }
 
+/// Classes solved by the compiler from the structure of types, or by
+/// membership in a fixed set of primitive types.
+pub const BUILTIN_CLASSES: &[&str] = &[
+    "Eq", "Ord", "Hash", "Display", "Dup", "Encode", "Decode", "IntLit", "FloatLit", "Integer",
+    "Signed", "Float", "Numeric",
+];
+
+#[derive(Clone, Debug)]
+pub struct TraitDef {
+    pub name: String,
+    pub span: Span,
+    pub params: Vec<TV>,
+    pub param_kinds: Vec<usize>,
+    /// Superclass predicates over `params`.
+    pub supers: Vec<Pred>,
+    /// Canonical method names.
+    pub methods: Vec<String>,
+    /// Default method bodies.
+    pub defaults: HashMap<String, Expr>,
+    pub module: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ImplDef {
+    pub trait_name: String,
+    pub span: Span,
+    /// Variables of the impl head (rigid templates).
+    pub vars: Vec<TV>,
+    pub head: Vec<Type>,
+    pub context: Vec<Pred>,
+    /// Method canonical name -> binding index.
+    pub methods: HashMap<String, usize>,
+    pub module: String,
+}
+
 #[derive(Default)]
 pub struct Env {
+    pub traits: HashMap<String, TraitDef>,
+    pub impls: Vec<ImplDef>,
+    /// Next fresh AST node id (for copies of default method bodies).
+    pub next_node_id: NodeId,
     pub table: TypeTable,
     pub types: HashMap<String, TypeDef>,
     pub ctors: HashMap<String, CtorDef>,
@@ -403,6 +442,17 @@ impl Env {
                 }
             }
         }
+        // Phase 2b: traits.
+        for (m, _, decls) in &modules {
+            let scope = Scope { module: m.clone() };
+            for d in decls {
+                if let Decl::Trait(td) = d {
+                    if let Err(e) = self.trait_decl(td, &scope) {
+                        self.errors.push(e);
+                    }
+                }
+            }
+        }
         // Phase 3: signatures, bindings, foreign functions, tests.
         for (m, _, decls) in &modules {
             let scope = Scope { module: m.clone() };
@@ -474,20 +524,11 @@ impl Env {
                         name,
                         symbol,
                         ty,
+                        constraints,
                     } => {
                         let canon = format!("{}::{}", m, name);
-                        let mut vars = Vec::new();
-                        if let Err(e) = self.kind_check(ty, &scope, 0, &mut HashMap::new()) {
-                            self.errors.push(e);
-                            continue;
-                        }
-                        match self.conv_type(ty, &scope, &mut vars, true) {
-                            Ok(t) => {
-                                let scheme = Scheme {
-                                    vars: vars.iter().map(|(_, v)| *v).collect(),
-                                    preds: vec![],
-                                    ty: t,
-                                };
+                        match self.scheme_of(ty, constraints, &scope, &[]) {
+                            Ok(scheme) => {
                                 if self.globals.contains_key(&canon) {
                                     self.errors.push(Diagnostic::error(
                                         *span,
@@ -547,6 +588,13 @@ impl Env {
                     sig.span,
                     format!("signature for `{}` has no binding", name),
                 ));
+            }
+            for d in decls {
+                if let Decl::Impl(id) = d {
+                    if let Err(e) = self.impl_decl(id, &scope) {
+                        self.errors.push(e);
+                    }
+                }
             }
             for (name, span) in exports {
                 let canon = format!("{}::{}", m, name);
@@ -656,25 +704,348 @@ impl Env {
     }
 
     pub fn sig_scheme(&mut self, sig: &Sig, scope: &Scope) -> Result<Scheme, Diagnostic> {
-        self.kind_check(&sig.ty, scope, 0, &mut HashMap::new())?;
-        let mut vars = Vec::new();
-        let ty = self.conv_type(&sig.ty, scope, &mut vars, true)?;
+        self.scheme_of(&sig.ty, &sig.constraints, scope, &[])
+    }
+
+    /// Convert a signature to a scheme. `preset` gives already-bound type
+    /// variables (trait parameters), which come first in the scheme.
+    pub fn scheme_of(
+        &mut self,
+        ty: &TypeExpr,
+        constraints: &[Constraint],
+        scope: &Scope,
+        preset: &[(String, TV, usize)],
+    ) -> Result<Scheme, Diagnostic> {
+        let mut kinds: HashMap<String, usize> =
+            preset.iter().map(|(n, _, k)| (n.clone(), *k)).collect();
+        self.kind_check(ty, scope, 0, &mut kinds)?;
+        let mut vars: Vec<(String, TV)> = preset.iter().map(|(n, v, _)| (n.clone(), *v)).collect();
+        let t = self.conv_type(ty, scope, &mut vars, true)?;
         let mut preds = Vec::new();
-        for c in &sig.constraints {
-            let mut args = Vec::new();
-            for a in &c.args {
-                args.push(self.conv_type(a, scope, &mut vars, false)?);
-            }
-            preds.push(Pred {
-                trait_name: c.trait_name.clone(),
-                args,
-            });
+        for c in constraints {
+            preds.push(self.conv_constraint(c, scope, &mut vars, &mut kinds)?);
         }
         Ok(Scheme {
             vars: vars.iter().map(|(_, v)| *v).collect(),
             preds,
-            ty,
+            ty: t,
         })
+    }
+
+    pub fn resolve_trait(&self, scope: &Scope, name: &str) -> Option<String> {
+        if let Some(c) = self
+            .candidates(scope, name)
+            .into_iter()
+            .find(|c| self.traits.contains_key(c))
+        {
+            return Some(c);
+        }
+        if BUILTIN_CLASSES.contains(&name) {
+            return Some(format!("std::{}", name));
+        }
+        None
+    }
+
+    /// Parameter kinds of a trait (builtin classes take ordinary types).
+    pub fn trait_param_kinds(&self, canon: &str) -> Vec<usize> {
+        match self.traits.get(canon) {
+            Some(t) => t.param_kinds.clone(),
+            None => vec![0],
+        }
+    }
+
+    fn conv_constraint(
+        &mut self,
+        c: &Constraint,
+        scope: &Scope,
+        vars: &mut Vec<(String, TV)>,
+        kinds: &mut HashMap<String, usize>,
+    ) -> Result<Pred, Diagnostic> {
+        let Some(tc) = self.resolve_trait(scope, &c.trait_name) else {
+            return Err(Diagnostic::error(
+                c.span,
+                format!("unknown trait `{}`", c.trait_name),
+            ));
+        };
+        let pk = self.trait_param_kinds(&tc);
+        if pk.len() != c.args.len() {
+            return Err(Diagnostic::error(
+                c.span,
+                format!(
+                    "trait `{}` takes {} type argument(s), got {}",
+                    c.trait_name,
+                    pk.len(),
+                    c.args.len()
+                ),
+            ));
+        }
+        let mut args = Vec::new();
+        for (a, k) in c.args.iter().zip(pk) {
+            self.kind_check(a, scope, k, kinds)?;
+            args.push(self.conv_type(a, scope, vars, true)?);
+        }
+        Ok(Pred {
+            trait_name: tc,
+            args,
+        })
+    }
+
+    /// Register a trait: its parameters, superclasses and methods.
+    fn trait_decl(&mut self, td: &TraitDecl, scope: &Scope) -> Result<(), Diagnostic> {
+        let canon = format!("{}::{}", scope.module, td.name);
+        // Parameter kinds from method signatures.
+        let mut kinds: HashMap<String, usize> = HashMap::new();
+        for m in &td.methods {
+            collect_var_kinds(&m.ty, &mut kinds);
+        }
+        let mut preset = Vec::new();
+        for p in &td.params {
+            let v = self.table.fresh_rigid(Kind::Star, 0, p);
+            preset.push((p.clone(), v, kinds.get(p).copied().unwrap_or(0)));
+        }
+        let params: Vec<TV> = preset.iter().map(|(_, v, _)| *v).collect();
+        let param_kinds: Vec<usize> = preset.iter().map(|(_, _, k)| *k).collect();
+        // Insert early so methods/supers may refer to the trait itself.
+        self.traits.insert(
+            canon.clone(),
+            TraitDef {
+                name: canon.clone(),
+                span: td.span,
+                params: params.clone(),
+                param_kinds: param_kinds.clone(),
+                supers: vec![],
+                methods: vec![],
+                defaults: HashMap::new(),
+                module: scope.module.clone(),
+            },
+        );
+        let mut supers = Vec::new();
+        let mut vars: Vec<(String, TV)> = preset.iter().map(|(n, v, _)| (n.clone(), *v)).collect();
+        let mut vk: HashMap<String, usize> =
+            preset.iter().map(|(n, _, k)| (n.clone(), *k)).collect();
+        for c in &td.supers {
+            supers.push(self.conv_constraint(c, scope, &mut vars, &mut vk)?);
+        }
+        let self_pred = Pred {
+            trait_name: canon.clone(),
+            args: params.iter().map(|v| Type::Var(*v)).collect(),
+        };
+        let mut methods = Vec::new();
+        for m in &td.methods {
+            let mut scheme = self.scheme_of(&m.ty, &m.constraints, scope, &preset)?;
+            scheme.preds.insert(0, self_pred.clone());
+            let mcanon = format!("{}::{}", scope.module, m.name);
+            if self.globals.contains_key(&mcanon) {
+                return Err(Diagnostic::error(
+                    m.span,
+                    format!("`{}` is defined twice", m.name),
+                ));
+            }
+            self.globals.insert(
+                mcanon.clone(),
+                Global {
+                    name: mcanon.clone(),
+                    kind: GlobalKind::Method {
+                        trait_name: canon.clone(),
+                    },
+                    span: m.span,
+                    scheme: Some(scheme),
+                    exported: false,
+                },
+            );
+            methods.push(mcanon);
+        }
+        let mut defaults = HashMap::new();
+        for d in &td.defaults {
+            let mcanon = format!("{}::{}", scope.module, d.name);
+            if !methods.contains(&mcanon) {
+                return Err(Diagnostic::error(
+                    d.span,
+                    format!("`{}` is not a method of trait `{}`", d.name, td.name),
+                ));
+            }
+            defaults.insert(mcanon, d.body.clone());
+        }
+        let t = self.traits.get_mut(&canon).unwrap();
+        t.supers = supers;
+        t.methods = methods;
+        t.defaults = defaults;
+        Ok(())
+    }
+
+    /// Register an impl and create bindings for its methods.
+    fn impl_decl(&mut self, id: &ImplDecl, scope: &Scope) -> Result<(), Diagnostic> {
+        let Some(tc) = self.resolve_trait(scope, &id.trait_name) else {
+            return Err(Diagnostic::error(
+                id.span,
+                format!("unknown trait `{}`", id.trait_name),
+            ));
+        };
+        let Some(tdef) = self.traits.get(&tc).cloned() else {
+            return Err(Diagnostic::error(
+                id.span,
+                format!(
+                    "`{}` is derived automatically from the structure of types and cannot be implemented",
+                    id.trait_name
+                ),
+            ));
+        };
+        if tdef.params.len() != id.args.len() {
+            return Err(Diagnostic::error(
+                id.span,
+                format!(
+                    "trait `{}` takes {} type argument(s), got {}",
+                    id.trait_name,
+                    tdef.params.len(),
+                    id.args.len()
+                ),
+            ));
+        }
+        let mut vars: Vec<(String, TV)> = Vec::new();
+        let mut kinds: HashMap<String, usize> = HashMap::new();
+        let mut head = Vec::new();
+        for (a, k) in id.args.iter().zip(&tdef.param_kinds) {
+            self.kind_check(a, scope, *k, &mut kinds)?;
+            head.push(self.conv_type(a, scope, &mut vars, true)?);
+        }
+        let mut context = Vec::new();
+        for c in &id.constraints {
+            context.push(self.conv_constraint(c, scope, &mut vars, &mut kinds)?);
+        }
+        let impl_vars: Vec<TV> = vars.iter().map(|(_, v)| *v).collect();
+        let mut methods = HashMap::new();
+        let mut given_names = HashSet::new();
+        for b in &id.bindings {
+            let mcanon = format!("{}::{}", tdef.module, b.name);
+            if !tdef.methods.contains(&mcanon) {
+                return Err(Diagnostic::error(
+                    b.span,
+                    format!("`{}` is not a method of trait `{}`", b.name, id.trait_name),
+                ));
+            }
+            if !given_names.insert(mcanon.clone()) {
+                return Err(Diagnostic::error(
+                    b.span,
+                    format!("method `{}` is defined twice", b.name),
+                ));
+            }
+        }
+        let head_pred = Pred {
+            trait_name: tc.clone(),
+            args: head.clone(),
+        };
+        for mcanon in &tdef.methods {
+            let (body, rec, span, module) = match id
+                .bindings
+                .iter()
+                .find(|b| format!("{}::{}", tdef.module, b.name) == *mcanon)
+            {
+                Some(b) => (b.body.clone(), b.rec, b.span, scope.module.clone()),
+                None => match tdef.defaults.get(mcanon) {
+                    Some(e) => (
+                        renumber(e, &mut self.next_node_id),
+                        true,
+                        id.span,
+                        tdef.module.clone(),
+                    ),
+                    None => {
+                        return Err(Diagnostic::error(
+                            id.span,
+                            format!(
+                                "impl of `{}` is missing method `{}`",
+                                id.trait_name,
+                                display_name(mcanon)
+                            ),
+                        ))
+                    }
+                },
+            };
+            // Method scheme instantiated at the impl head; the method's own
+            // variables get fresh rigid copies.
+            let ms = self.globals[mcanon].scheme.clone().unwrap();
+            let mut map: HashMap<TV, Type> = HashMap::new();
+            for (p, h) in tdef.params.iter().zip(&head) {
+                map.insert(*p, h.clone());
+            }
+            let mut own = Vec::new();
+            for v in ms.vars.iter().skip(tdef.params.len()) {
+                let info = self.table.vars[*v as usize].clone();
+                let nv = self
+                    .table
+                    .fresh_rigid(info.kind, 0, info.rigid.as_deref().unwrap_or("t"));
+                map.insert(*v, Type::Var(nv));
+                own.push(nv);
+            }
+            let ty = TypeTable::subst(&ms.ty, &map);
+            let mut preds: Vec<Pred> = ms
+                .preds
+                .iter()
+                .skip(1)
+                .map(|p| Pred {
+                    trait_name: p.trait_name.clone(),
+                    args: p.args.iter().map(|a| TypeTable::subst(a, &map)).collect(),
+                })
+                .collect();
+            preds.extend(context.iter().cloned());
+            preds.push(head_pred.clone());
+            let mut all_vars = impl_vars.clone();
+            all_vars.extend(own);
+            let short = mcanon.rsplit("::").next().unwrap();
+            let head_src: Vec<String> = id.args.iter().map(crate::pretty::ty).collect();
+            let bname = format!(
+                "{}::{}[{}].{}",
+                scope.module,
+                id.trait_name,
+                head_src.join(", "),
+                short
+            );
+            let idx = self.bindings.len();
+            self.bindings.push(BindingInfo {
+                name: bname.clone(),
+                module,
+                span,
+                rec,
+                body,
+                annotated: true,
+                mono_vars: all_vars.clone(),
+                test_name: None,
+            });
+            self.globals.insert(
+                bname.clone(),
+                Global {
+                    name: bname,
+                    kind: GlobalKind::Binding(idx),
+                    span,
+                    scheme: Some(Scheme {
+                        vars: all_vars,
+                        preds,
+                        ty,
+                    }),
+                    exported: false,
+                },
+            );
+            methods.insert(mcanon.clone(), idx);
+        }
+        // Overlap check against earlier impls of the same trait.
+        for other in &self.impls {
+            if other.trait_name == tc && heads_overlap(&self.table, &other.head, &head) {
+                return Err(Diagnostic::error(
+                    id.span,
+                    format!("overlapping impls of `{}`", id.trait_name),
+                )
+                .with_note("an earlier impl already covers some of the same types"));
+            }
+        }
+        self.impls.push(ImplDef {
+            trait_name: tc,
+            span: id.span,
+            vars: impl_vars,
+            head,
+            context,
+            methods,
+            module: scope.module.clone(),
+        });
+        Ok(())
     }
 
     fn type_body(&mut self, td: &TypeDecl, scope: &Scope) -> Result<(), Diagnostic> {
@@ -845,4 +1216,140 @@ fn collect_var_kinds(t: &TypeExpr, out: &mut HashMap<String, usize>) {
         TypeKind::Record(fs, _) => fs.iter().for_each(|(_, x)| collect_var_kinds(x, out)),
         _ => {}
     }
+}
+
+/// Copy an expression with fresh node ids.
+pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
+    let mut e = e.clone();
+    fn go(e: &mut Expr, next: &mut NodeId) {
+        e.id = *next;
+        *next += 1;
+        match &mut e.kind {
+            ExprKind::App(f, args) => {
+                go(f, next);
+                args.iter_mut().for_each(|a| go(a, next));
+            }
+            ExprKind::Pipe(a, b) => {
+                go(a, next);
+                go(b, next);
+            }
+            ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+                xs.iter_mut().for_each(|a| go(a, next))
+            }
+            ExprKind::Record(fs)
+            | ExprKind::NominalRecord(_, fs)
+            | ExprKind::With(fs)
+            | ExprKind::Make(_, fs)
+            | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| go(a, next)),
+            ExprKind::Match(arms) => arms.iter_mut().for_each(|a| go(&mut a.body, next)),
+            ExprKind::Comptime(x) | ExprKind::Quote(x) => go(x, next),
+            _ => {}
+        }
+    }
+    go(&mut e, next);
+    e
+}
+
+/// One-way matching of an impl head (whose variables are `pattern vars`)
+/// against a target type. Returns false if the target is not yet specific
+/// enough or does not match.
+pub fn match_type(
+    table: &TypeTable,
+    pat: &Type,
+    target: &Type,
+    pvars: &[TV],
+    subst: &mut HashMap<TV, Type>,
+) -> bool {
+    let target = table.resolve(target);
+    match pat {
+        Type::Var(v) if pvars.contains(v) => match subst.get(v) {
+            Some(prev) => types_equal(table, prev, &target),
+            None => {
+                subst.insert(*v, target);
+                true
+            }
+        },
+        Type::Var(v) => matches!(target, Type::Var(w) if *v == w),
+        Type::Con(n, args) => match &target {
+            Type::Con(m, targs) if n == m && args.len() == targs.len() => args
+                .iter()
+                .zip(targs)
+                .all(|(a, b)| match_type(table, a, b, pvars, subst)),
+            _ => false,
+        },
+        Type::App(h, args) => match &target {
+            Type::Con(m, targs) if targs.len() >= args.len() => {
+                let k = targs.len() - args.len();
+                match_type(
+                    table,
+                    h,
+                    &Type::Con(m.clone(), targs[..k].to_vec()),
+                    pvars,
+                    subst,
+                ) && args
+                    .iter()
+                    .zip(&targs[k..])
+                    .all(|(a, b)| match_type(table, a, b, pvars, subst))
+            }
+            Type::App(th, targs) if targs.len() == args.len() => {
+                match_type(table, h, th, pvars, subst)
+                    && args
+                        .iter()
+                        .zip(targs)
+                        .all(|(a, b)| match_type(table, a, b, pvars, subst))
+            }
+            _ => false,
+        },
+        Type::Fun(a, b, _) => match &target {
+            Type::Fun(ta, tb, _) => {
+                match_type(table, a, ta, pvars, subst) && match_type(table, b, tb, pvars, subst)
+            }
+            _ => false,
+        },
+        Type::Record(r) => match &target {
+            Type::Record(tr) => {
+                let tr = table.flatten_row(tr);
+                r.tail.is_none()
+                    && tr.tail.is_none()
+                    && r.fields.len() == tr.fields.len()
+                    && r.fields
+                        .iter()
+                        .zip(&tr.fields)
+                        .all(|((l1, a), (l2, b))| l1 == l2 && match_type(table, a, b, pvars, subst))
+            }
+            _ => false,
+        },
+        Type::Nat(n) => matches!(target, Type::Nat(m) if *n == m),
+    }
+}
+
+pub fn types_equal(table: &TypeTable, a: &Type, b: &Type) -> bool {
+    table.zonk(a) == table.zonk(b)
+}
+
+/// Whether two impl heads could both apply to some type.
+fn heads_overlap(table: &TypeTable, a: &[Type], b: &[Type]) -> bool {
+    fn ov(table: &TypeTable, x: &Type, y: &Type) -> bool {
+        let x = table.resolve(x);
+        let y = table.resolve(y);
+        match (&x, &y) {
+            (Type::Var(_), _) | (_, Type::Var(_)) => true,
+            (Type::Con(n, xs), Type::Con(m, ys)) => {
+                n == m && xs.len() == ys.len() && xs.iter().zip(ys).all(|(p, q)| ov(table, p, q))
+            }
+            (Type::Fun(a1, b1, _), Type::Fun(a2, b2, _)) => ov(table, a1, a2) && ov(table, b1, b2),
+            (Type::Record(r1), Type::Record(r2)) => {
+                r1.fields.len() == r2.fields.len()
+                    && r1
+                        .fields
+                        .iter()
+                        .zip(&r2.fields)
+                        .all(|((l1, p), (l2, q))| l1 == l2 && ov(table, p, q))
+            }
+            (Type::Nat(n), Type::Nat(m)) => n == m,
+            (Type::App(..), _) | (_, Type::App(..)) => true,
+            _ => false,
+        }
+    }
+    a.iter().zip(b).all(|(x, y)| ov(table, x, y))
 }

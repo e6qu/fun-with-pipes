@@ -1,0 +1,4 @@
+check/err_ambiguous.fwp:1:24: error: ambiguous type: cannot determine which `Display[a]` to use
+1 | mystery = from-int 3 | show
+  |                        ^^^^
+  note: add a type signature or a literal suffix to pin the type down

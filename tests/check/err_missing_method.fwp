@@ -1,0 +1,5 @@
+trait Pair[T] =
+    left : T -> I64
+    right : T -> I64
+impl Pair[Bool] =
+    left = const 1

@@ -1,0 +1,3 @@
+check/err_missing_method.fwp:4:1: error: impl of `Pair` is missing method `right`
+4 | impl Pair[Bool] =
+  | ^^^^

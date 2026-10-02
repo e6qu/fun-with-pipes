@@ -1,0 +1,20 @@
+unbox : Box[a] -> a
+inc-all : a[b] -> a[b] where Add[b], MyFunctor[a], IntLit[b]
+halve-even : a -> Option[b] where Eq[a], IntLit[b], IntLit[a]
+monadic : Option[I64]
+pairs : List[String]
+shout-bool : Bool -> String
+ring-thing : a -> a where Ring[a]
+dual-add : Dual -> Dual -> Dual
+dual-mul : Dual -> Dual -> Dual
+poly : a -> a where Mul[a], Add[a], IntLit[a], Dup[a]
+poly-dual : Dual -> Dual
+derivative-at : F64 -> F64
+birthday : {age: a | r} -> {age: a | r} where Add[a], IntLit[a]
+square : a -> a where Mul[a], Dup[a]
+square-dual : Dual -> Dual
+twice-int : a -> a where Mul[a], IntLit[a]
+x : String
+y : String
+bits : U8
+checked : Option[U8]

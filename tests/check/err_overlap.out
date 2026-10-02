@@ -1,0 +1,4 @@
+check/err_overlap.fwp:5:1: error: overlapping impls of `Size`
+5 | impl Size[List[I64]] =
+  | ^^^^
+  note: an earlier impl already covers some of the same types

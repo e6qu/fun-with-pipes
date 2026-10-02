@@ -1,0 +1,3 @@
+check/err_no_impl.fwp:1:14: error: no implementation of `Add[String]`
+1 | oops = "a" | add "b"
+  |              ^^^

@@ -1,18 +1,18 @@
-inc : I64 -> I64
-double : I64 -> I64
+inc : a -> a where Add[a], IntLit[a]
+double : a -> a where Mul[a], IntLit[a]
 normalize : String -> String
 users : List[User]
 active-names : List[String]
 get-name : {name: a | r} -> a
-older : {age: I64 | r} -> {age: I64 | r}
+older : {age: a | r} -> {age: a | r} where IntLit[a]
 older-users : List[{active: Bool, age: I64, name: String}]
 pair : (I64, String)
 second-of : {1: a | r} -> a
 city : {address: {city: a | r} | r1} -> a
-factorial : I64 -> I64
-describe : Option[a] -> String
+factorial : a -> a where Sub[a], Mul[a], Eq[a], IntLit[a], Dup[a]
+describe : Option[a] -> String where Display[a]
 first-two : List[a] -> Bool
 twice : (a -> a ! e) -> a -> a ! e
-inc-twice : I64 -> I64
+inc-twice : a -> a where Add[a], IntLit[a]
 shout : String -> String
 main : ()

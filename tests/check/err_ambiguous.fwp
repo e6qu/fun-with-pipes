@@ -1,0 +1,1 @@
+mystery = from-int 3 | show

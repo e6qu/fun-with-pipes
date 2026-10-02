@@ -19,7 +19,8 @@ implementation roadmap.
 |---|---|
 | Lexer, parser, layout rule, diagnostics | done |
 | Type inference (HM, rows, ADTs, records, `rec`, pipe modes, exhaustiveness) | done |
-| Traits, effects enforcement | planned |
+| Traits (HKT, superclasses, defaults), sized numerics, literal and structural classes | done |
+| Effects enforcement, resources | planned |
 | Interpreter, stdlib | planned |
 | Native AOT (C backend), executables, pipe protocol | planned |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |

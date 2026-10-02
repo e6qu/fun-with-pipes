@@ -1,0 +1,3 @@
+check/err_eq_adt_with_fn.fwp:2:8: error: values of type `Handler` cannot be compared for equality (`Eq` is required)
+2 | same = eq (Handler id) (Handler id)
+  |        ^^

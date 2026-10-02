@@ -9,4 +9,6 @@ pub mod infer;
 pub mod lexer;
 pub mod parser;
 pub mod pretty;
+pub mod solve;
+pub mod stdgen;
 pub mod types;
