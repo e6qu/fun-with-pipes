@@ -1,0 +1,5 @@
+Some (Quote {id = 2, text = "Make it work, make it right, make it fast."})
+3
+Some "ca.pem"
+False
+Some "server.pem"

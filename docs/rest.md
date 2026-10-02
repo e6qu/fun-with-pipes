@@ -38,10 +38,12 @@ one.
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API |
 
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
-`127.0.0.1:8080`; port 0 picks a free port), `--openapi` (print the
+`127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
+`--tls-key file` (default: `FWP_TLS_CERT` and `FWP_TLS_KEY`; with both,
+it serves HTTPS, see [tls.md](tls.md#rest)), `--openapi` (print the
 document and exit) and `--help`. It writes
-`fwp: rest listening on http://host:port` on stderr once it accepts
-connections, and serves:
+`fwp: rest listening on http://host:port` (`https://` with TLS) on stderr
+once it accepts connections, and serves:
 
 * each endpoint, with JSON request and response bodies;
 * `GET /openapi.json`, the document `fwp openapi` prints;
@@ -278,7 +280,9 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
 * **Errors.** Any other response raises `Error[RestError]`, a record of
   the status and the body; a failed connection has the status 0.
 * **The client** is `rest.fetch` in `lib/rest.fwp` over `http.send`: one
-  connection per call, no TLS.
+  connection per call; `https://` base URLs use TLS, verifying the
+  server's certificate with the system's CA certificates (or
+  `SSL_CERT_FILE`; see [tls.md](tls.md)).
 
 Schemas outside this subset (`allOf`, a `oneOf` other than fwp's
 variants, `not`, enums of numbers) become `Json` values, and operations
@@ -325,9 +329,10 @@ endpoints byte for byte.
 
 * JSON only: no content negotiation, forms, multipart bodies, headers or
   cookies as parameters, and no streaming responses.
-* No authentication, CORS or TLS; put the server behind a proxy, or write
-  a server by hand with `rest.endpoint` and the middleware of
-  `lib/http.fwp`.
+* No authentication or CORS; put the server behind a proxy, or write a
+  server by hand with `rest.endpoint` and the middleware of
+  `lib/http.fwp`. TLS is built in ([tls.md](tls.md)), without client
+  certificates.
 * The status of a success is fixed per endpoint, and a function cannot set
   response headers.
 * Constructor names are JSON names: enums with values that are not fwp

@@ -1,0 +1,17 @@
+# Fetches the URLs given as arguments with `http.get`, printing the status
+# and the first line of each body (tests/tls.rs runs it against HTTPS
+# servers, with the test CA in SSL_CERT_FILE).
+
+shown : Result[ClientResponse, IoError] -> String
+shown = match
+    Ok _ ->
+        both .status (.body
+            | string.from-bytes
+            | option.unwrap-or "?"
+            | lines
+            | head
+            | option.unwrap-or "")
+        | format "{} {}"
+    Err _ -> both .kind .message | format "{} error: {}"
+
+main = args () | map (attempt http.get | shown | print) | ignore

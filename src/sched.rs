@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 
 use crate::interp::{Ctl, Interp, R};
 use crate::ir::MT;
+use crate::tls::Io;
 use crate::value::Value;
 
 /// Contents only accessed by the thread holding the baton.
@@ -184,8 +185,14 @@ impl ChanState {
 pub enum Native {
     Task(Arc<TaskShared>),
     Chan(RefCell<ChanState>),
-    Listener(RefCell<Option<TcpListener>>),
-    Conn(RefCell<Option<TcpStream>>),
+    /// A listener, with the TLS context of its connections (`tls.listen`).
+    Listener(RefCell<Option<TcpListener>>, Option<Rc<crate::tls::Ctx>>),
+    /// A connection, with its TLS session if it has one: reads and writes
+    /// go through the session.
+    Conn(
+        RefCell<Option<TcpStream>>,
+        RefCell<Option<crate::tls::Session>>,
+    ),
     Udp(RefCell<Option<UdpSocket>>),
     /// A gRPC call or a position in a received stream.
     Grpc(crate::grpc::Obj),
@@ -202,8 +209,8 @@ impl Native {
         match self {
             Native::Task(_) => "<task>",
             Native::Chan(_) => "<channel>",
-            Native::Listener(_) => "<listener>",
-            Native::Conn(_) => "<connection>",
+            Native::Listener(..) => "<listener>",
+            Native::Conn(..) => "<connection>",
             Native::Udp(_) => "<udp socket>",
             Native::Grpc(_) => "<grpc stream>",
         }
@@ -310,6 +317,15 @@ fn check_addr(addr: &str) -> Result<(), String> {
     }
 }
 
+/// A plain socket's read or write as a TLS session's would be.
+fn plain_io(r: std::io::Result<usize>, write: bool) -> Io {
+    match r {
+        Ok(k) => Io::Done(k),
+        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => Io::Wait(write),
+        Err(e) => Io::Err(e),
+    }
+}
+
 pub(crate) fn native(v: &Value) -> R<&Native> {
     match v {
         Value::Native(n) => Ok(n),
@@ -369,7 +385,7 @@ impl<'p> Interp<'p> {
     /// Callers retry their operation either way, and so also notice a
     /// socket that another task closed meanwhile (whose descriptor number
     /// may already belong to a new socket).
-    fn wait_fd(&mut self, fd: i32, write: bool, timeout: Option<Instant>) -> R<bool> {
+    pub(crate) fn wait_fd(&mut self, fd: i32, write: bool, timeout: Option<Instant>) -> R<bool> {
         self.check_cancel()?;
         let now = Instant::now();
         if let Some(t) = timeout {
@@ -543,9 +559,70 @@ impl<'p> Interp<'p> {
     }
 
     fn conn<'a>(&self, v: &'a Value) -> R<&'a RefCell<Option<TcpStream>>> {
+        Ok(self.conn_tls(v)?.0)
+    }
+
+    /// A connection and its TLS session.
+    #[allow(clippy::type_complexity)]
+    fn conn_tls<'a>(
+        &self,
+        v: &'a Value,
+    ) -> R<(
+        &'a RefCell<Option<TcpStream>>,
+        &'a RefCell<Option<crate::tls::Session>>,
+    )> {
         match native(v)? {
-            Native::Conn(c) => Ok(c),
+            Native::Conn(c, t) => Ok((c, t)),
             _ => Err(Ctl::Trap("internal: not a connection".into())),
+        }
+    }
+
+    /// Read from a connection, through its TLS session if it has one.
+    fn sock_read(&self, c: &Value, buf: &mut [u8]) -> R<Io> {
+        let (st, tl) = self.conn_tls(c)?;
+        if let Some(s) = tl.borrow_mut().as_mut() {
+            return Ok(s.read(buf));
+        }
+        match st.borrow_mut().as_mut() {
+            Some(s) => Ok(plain_io(s.read(buf), false)),
+            None => Err(self.io_err("closed", "connection is closed")),
+        }
+    }
+
+    /// Write to a connection, through its TLS session if it has one.
+    fn sock_write(&self, c: &Value, data: &[u8]) -> R<Io> {
+        let (st, tl) = self.conn_tls(c)?;
+        if let Some(s) = tl.borrow_mut().as_mut() {
+            return Ok(s.write(data));
+        }
+        match st.borrow_mut().as_mut() {
+            Some(s) => Ok(match s.write(data) {
+                Ok(0) => Io::Err(std::io::Error::other("connection closed by peer")),
+                r => plain_io(r, true),
+            }),
+            None => Err(self.io_err("closed", "connection is closed")),
+        }
+    }
+
+    /// Finish a connection's TLS handshake (nothing for plain connections
+    /// and finished handshakes).
+    fn tls_handshake(&mut self, c: &Value, timeout: Option<Instant>, what: &str) -> R<bool> {
+        loop {
+            let fd = self.conn_fd(c)?;
+            let r = match self.conn_tls(c)?.1.borrow_mut().as_mut() {
+                Some(s) if !s.handshaken() => s.handshake(),
+                _ => return Ok(true),
+            };
+            match r {
+                Io::Done(_) => return Ok(true),
+                Io::Wait(w) => {
+                    if !self.wait_fd(fd, w, timeout)? {
+                        return Ok(false);
+                    }
+                }
+                Io::Err(e) => return Err(self.io_err("tls", format!("{}{}", what, e))),
+                Io::Fail(m) => return Err(self.io_err("tls", format!("{}{}", what, m))),
+            }
         }
     }
 
@@ -561,19 +638,16 @@ impl<'p> Interp<'p> {
         let mut buf = vec![0u8; n.max(1)];
         loop {
             let fd = self.conn_fd(c)?;
-            let r = match self.conn(c)?.borrow_mut().as_mut() {
-                Some(s) => s.read(&mut buf),
-                None => return Err(self.io_err("closed", "connection is closed")),
-            };
-            match r {
-                Ok(k) => return Ok(Some(Value::Bytes(Rc::from(&buf[..k])))),
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    if !self.wait_fd(fd, false, timeout)? {
+            match self.sock_read(c, &mut buf)? {
+                Io::Done(k) => return Ok(Some(Value::Bytes(Rc::from(&buf[..k])))),
+                Io::Wait(w) => {
+                    if !self.wait_fd(fd, w, timeout)? {
                         return Ok(None);
                     }
                 }
-                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-                Err(e) => return Err(self.io_err("read", e)),
+                Io::Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Io::Err(e) => return Err(self.io_err("read", e)),
+                Io::Fail(m) => return Err(self.io_err("tls", m)),
             }
         }
     }
@@ -583,27 +657,23 @@ impl<'p> Interp<'p> {
         let mut off = 0;
         while off < data.len() {
             let fd = self.conn_fd(c)?;
-            let r = match self.conn(c)?.borrow_mut().as_mut() {
-                Some(s) => s.write(&data[off..]),
-                None => return Err(self.io_err("closed", "connection is closed")),
-            };
-            match r {
-                Ok(0) => return Err(self.io_err("write", "connection closed by peer")),
-                Ok(k) => off += k,
-                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    if !self.wait_fd(fd, true, timeout)? {
+            match self.sock_write(c, &data[off..])? {
+                Io::Done(k) => off += k,
+                Io::Wait(w) => {
+                    if !self.wait_fd(fd, w, timeout)? {
                         return Err(self.io_err("timeout", "write timed out"));
                     }
                 }
-                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
-                Err(e) => return Err(self.io_err("write", e)),
+                Io::Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
+                Io::Err(e) => return Err(self.io_err("write", e)),
+                Io::Fail(m) => return Err(self.io_err("tls", m)),
             }
         }
         Ok(())
     }
 
     fn accept(&mut self, l: &Value, timeout: Option<Instant>) -> R<Option<Value>> {
-        let Native::Listener(cell) = native(l)? else {
+        let Native::Listener(cell, ctx) = native(l)? else {
             return Err(Ctl::Trap("internal: not a listener".into()));
         };
         loop {
@@ -615,7 +685,19 @@ impl<'p> Interp<'p> {
                 Ok((s, _)) => {
                     let _ = s.set_nonblocking(true);
                     let _ = s.set_nodelay(true);
-                    return Ok(Some(wrap(Native::Conn(RefCell::new(Some(s))))));
+                    // a TLS connection's handshake happens on its first
+                    // read or write, in the task that serves it
+                    let session = match ctx {
+                        Some(ctx) => Some(
+                            crate::tls::Session::server(ctx, s.as_raw_fd())
+                                .map_err(|e| self.io_err("tls", e))?,
+                        ),
+                        None => None,
+                    };
+                    return Ok(Some(wrap(Native::Conn(
+                        RefCell::new(Some(s)),
+                        RefCell::new(session),
+                    ))));
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                     if !self.wait_fd(fd, false, timeout)? {
@@ -789,10 +871,10 @@ impl<'p> Interp<'p> {
                         .map_err(|e| self.io_err("listen", format!("{}: {}", addr, e)))?;
                     l.set_nonblocking(true)
                         .map_err(|e| self.io_err("listen", e))?;
-                    wrap(Native::Listener(RefCell::new(Some(l))))
+                    wrap(Native::Listener(RefCell::new(Some(l)), None))
                 }
                 "tcp.local-addr" => {
-                    let Native::Listener(l) = native(&a[0])? else {
+                    let Native::Listener(l, _) = native(&a[0])? else {
                         return Err(Ctl::Trap("internal: not a listener".into()));
                     };
                     let s = l
@@ -813,7 +895,7 @@ impl<'p> Interp<'p> {
                     opt(self.accept(&l, Some(t))?)
                 }
                 "tcp.stop" => {
-                    if let Native::Listener(l) = native(&a[0])? {
+                    if let Native::Listener(l, _) = native(&a[0])? {
                         l.borrow_mut().take();
                     }
                     Value::unit()
@@ -826,7 +908,7 @@ impl<'p> Interp<'p> {
                     let s = r.map_err(|e| self.io_err("connect", format!("{}: {}", addr, e)))?;
                     let _ = s.set_nonblocking(true);
                     let _ = s.set_nodelay(true);
-                    wrap(Native::Conn(RefCell::new(Some(s))))
+                    wrap(Native::Conn(RefCell::new(Some(s)), RefCell::new(None)))
                 }
                 "tcp.read" => {
                     let n = a[0].as_i128().unwrap_or(0).max(1) as usize;
@@ -855,6 +937,9 @@ impl<'p> Interp<'p> {
                     Value::unit()
                 }
                 "tcp.close" => {
+                    if let Some(mut t) = self.conn_tls(&a[0])?.1.borrow_mut().take() {
+                        t.shutdown();
+                    }
                     if let Some(s) = self.conn(&a[0])?.borrow_mut().take() {
                         let _ = s.shutdown(std::net::Shutdown::Both);
                     }
@@ -870,6 +955,74 @@ impl<'p> Interp<'p> {
                         .unwrap_or_default();
                     Value::str(&s)
                 }
+                // ----- TLS
+                "tls._connect" => {
+                    // CA file, insecure, server name, protocols, address
+                    let addr = a[4].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("connect", e))?;
+                    crate::tls::check().map_err(|e| self.io_err("tls", e))?;
+                    self.check_cancel()?;
+                    let r = self.world.blocking(|| TcpStream::connect(&addr));
+                    let s = r.map_err(|e| self.io_err("connect", format!("{}: {}", addr, e)))?;
+                    let _ = s.set_nonblocking(true);
+                    let _ = s.set_nodelay(true);
+                    let alpn: Vec<String> = a[3]
+                        .list_items()
+                        .iter()
+                        .map(|v| v.as_str().to_string())
+                        .collect();
+                    let name = match a[2].as_str() {
+                        "" => crate::tls::host_of(&addr).to_string(),
+                        n => n.to_string(),
+                    };
+                    let session = crate::tls::Session::client(
+                        s.as_raw_fd(),
+                        &crate::tls::ClientOpts {
+                            ca: a[0].as_str(),
+                            verify: !a[1].as_bool(),
+                            name: &name,
+                            alpn: &alpn,
+                        },
+                    )
+                    .map_err(|e| self.io_err("tls", format!("{}: {}", addr, e)))?;
+                    let c = wrap(Native::Conn(
+                        RefCell::new(Some(s)),
+                        RefCell::new(Some(session)),
+                    ));
+                    self.tls_handshake(&c, None, &format!("{}: ", addr))?;
+                    c
+                }
+                "tls._listen" => {
+                    // certificate, key, protocols, address
+                    let alpn: Vec<String> = a[2]
+                        .list_items()
+                        .iter()
+                        .map(|v| v.as_str().to_string())
+                        .collect();
+                    let ctx = crate::tls::server_ctx(a[0].as_str(), a[1].as_str(), &alpn)
+                        .map_err(|e| self.io_err("tls", e))?;
+                    let addr = a[3].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("listen", e))?;
+                    let l = TcpListener::bind(&addr)
+                        .map_err(|e| self.io_err("listen", format!("{}: {}", addr, e)))?;
+                    l.set_nonblocking(true)
+                        .map_err(|e| self.io_err("listen", e))?;
+                    wrap(Native::Listener(RefCell::new(Some(l)), Some(Rc::new(ctx))))
+                }
+                "tls.handshake" => {
+                    let c = a[0].clone();
+                    self.tls_handshake(&c, None, "")?;
+                    Value::unit()
+                }
+                "tls.alpn" => {
+                    let s = match self.conn_tls(&a[0])?.1.borrow().as_ref() {
+                        Some(s) => s.alpn(),
+                        None => String::new(),
+                    };
+                    Value::str(&s)
+                }
+                "tls.secure" => Value::bool(self.conn_tls(&a[0])?.1.borrow().is_some()),
+                "tls.available" => Value::bool(crate::tls::available()),
                 // ----- UDP
                 "udp.bind" => {
                     let addr = a[0].as_str().to_string();

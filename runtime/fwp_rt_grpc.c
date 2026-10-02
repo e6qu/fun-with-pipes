@@ -83,8 +83,9 @@ typedef struct g_server g_server;
 
 struct g_conn {
     int fd, refs;
+    SSL *ssl;                  /* the TLS session of a TLS connection */
     const g_server *server;    /* 0 for a client connection */
-    char authority[256];
+    char authority[256];       /* a client's: the address it was given */
     h2_hpack dec;
     h2_peer peer;
     int64_t conn_window;
@@ -210,6 +211,40 @@ static g_conn *g_conn_new(int fd, const char *authority, const g_server *server)
     }
     h2_our_settings(&c->out);
     return c;
+}
+
+/* A gRPC address and its transport: `tls://host:port` and
+ * `grpcs://host:port` (or `https://`) are TLS, anything else (`host:port`,
+ * `grpc://`, `http://`) cleartext h2c; as src/tls.rs `grpc_addr`. Sets
+ * *tls and copies host:port to out. */
+static void g_addr(const char *addr, int *tls, char *out, size_t n) {
+    static const char *const pre[] = {"tls://", "grpcs://", "https://", "grpc://", "http://"};
+    *tls = 0;
+    for (int i = 0; i < 5; i++) {
+        size_t l = strlen(pre[i]);
+        if (strncmp(addr, pre[i], l) == 0) {
+            *tls = i < 3;
+            addr += l;
+            break;
+        }
+    }
+    snprintf(out, n, "%s", addr);
+    size_t k = strlen(out);
+    while (k > 0 && out[k - 1] == '/') out[--k] = 0;
+}
+
+/* reads and writes, through the TLS session of a TLS connection: as recv
+ * and send, or -2 for a TLS failure (fwp_tls_err); *ww: wait to write */
+static ssize_t g_io_recv(g_conn *c, void *buf, size_t n, int *ww) {
+    *ww = 0;
+    if (c->ssl) return fwp_tls_recv(c->ssl, (char *)buf, n, ww);
+    return recv(c->fd, buf, n, 0);
+}
+
+static ssize_t g_io_send(g_conn *c, const void *buf, size_t n, int *ww) {
+    *ww = 1;
+    if (c->ssl) return fwp_tls_send(c->ssl, (const char *)buf, n, ww);
+    return send(c->fd, buf, n, MSG_NOSIGNAL);
 }
 
 /* --------------------------------------------------------- reading frames */
@@ -443,6 +478,7 @@ static void g_conn_dead(g_conn *c, const char *why) {
 static void g_conn_release(g_conn *c) {
     if (--c->refs > 0) return;
     fwp_fd_closing(c->fd);
+    if (c->ssl) { fwp_tls_free(c->ssl); c->ssl = 0; }
     close(c->fd);
     c->fd = -1;
     h2b_free(&c->in);
@@ -451,14 +487,31 @@ static void g_conn_release(g_conn *c) {
 
 static void g_start_call(g_conn *c, g_stream *s);
 
+static void g_writer(void *arg, int cancelled);
+
+/* how long a client may take over the TLS handshake */
+#define G_HANDSHAKE_NS 10000000000LL
+
 static void g_reader(void *arg, int cancelled) {
     g_conn *c = (g_conn *)arg;
     if (cancelled) { g_conn_dead(c, "cancelled"); g_conn_release(c); return; }
     fwp_cur->unwinding = 1; /* not cancellable */
+    if (c->server) {
+        /* a TLS server connection's handshake, in this task; then its
+         * writer, a child of this task: it ends with the connection */
+        if (c->ssl && !fwp_tls_finish(c->ssl, c->fd, fwp_now_ns() + G_HANDSHAKE_NS)) {
+            g_conn_dead(c, fwp_tls_err);
+            g_conn_release(c);
+            return;
+        }
+        c->refs++;
+        fwp_spawn_task(0, g_writer, c, 0, 0);
+    }
     unsigned char buf[65536];
     for (;;) {
         if (c->dead) break;
-        ssize_t k = recv(c->fd, buf, sizeof buf, 0);
+        int ww;
+        ssize_t k = g_io_recv(c, buf, sizeof buf, &ww);
         if (k > 0) {
             g_slist fresh = {0, 0, 0};
             char *dead = 0;
@@ -469,7 +522,7 @@ static void g_reader(void *arg, int cancelled) {
             if (dead) {
                 /* send the GOAWAY if it can be sent now */
                 if (c->out.len) {
-                    ssize_t w = send(c->fd, c->out.d, c->out.len, MSG_NOSIGNAL);
+                    ssize_t w = g_io_send(c, c->out.d, c->out.len, &ww);
                     (void)w;
                 }
                 g_conn_dead(c, dead);
@@ -484,12 +537,12 @@ static void g_reader(void *arg, int cancelled) {
             g_conn_dead(c, m);
             break;
         }
-        if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-            fwp_wait_fd(c->fd, 0, 0);
+        if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+            fwp_wait_fd(c->fd, ww, 0);
             continue;
         }
-        char m[400];
-        snprintf(m, sizeof m, "cannot read from %s: %s", c->authority, strerror(errno));
+        char m[900];
+        snprintf(m, sizeof m, "cannot read from %s: %s", c->authority, k == -2 ? fwp_tls_err : strerror(errno));
         g_conn_dead(c, m);
         break;
     }
@@ -506,18 +559,20 @@ static void g_writer(void *arg, int cancelled) {
             fwp_park(&c->writer_wl, 0);
             continue;
         }
-        ssize_t k = send(c->fd, c->out.d, c->out.len, MSG_NOSIGNAL);
+        int ww;
+        ssize_t k = g_io_send(c, c->out.d, c->out.len, &ww);
         if (k > 0) {
             h2b_drop(&c->out, (size_t)k);
             fwp_wake_all(&c->space_wl);
             continue;
         }
-        if (k < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
-            fwp_wait_fd(c->fd, 1, 0);
+        if (k == -1 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
+            fwp_wait_fd(c->fd, ww, 0);
             continue;
         }
-        char m[400];
-        snprintf(m, sizeof m, "cannot send to %s: %s", c->authority, k == 0 ? "connection closed" : strerror(errno));
+        char m[900];
+        snprintf(m, sizeof m, "cannot send to %s: %s", c->authority,
+                 k == 0 ? "connection closed" : k == -2 ? fwp_tls_err : strerror(errno));
         g_conn_dead(c, m);
         break;
     }
@@ -680,8 +735,10 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 
 /* ------------------------------------------------------------------ client */
 
-static g_conn *g_connect(const char *addr, char **err) {
-    char host[256], port[32];
+static g_conn *g_connect(const char *given, char **err) {
+    char host[256], port[32], addr[300];
+    int tls;
+    g_addr(given, &tls, addr, sizeof addr);
     if (!fwp_split_addr(addr, host, sizeof host, port, sizeof port)) {
         *err = g_strdupf("cannot connect to %s: invalid socket address", addr);
         return 0;
@@ -719,7 +776,20 @@ static g_conn *g_connect(const char *addr, char **err) {
     }
     int one = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
-    g_conn *c = g_conn_new(fd, addr, 0);
+    SSL *ssl = 0;
+    if (tls) {
+        /* verified with the system's CA certificates (SSL_CERT_FILE,
+         * SSL_CERT_DIR), offering h2 */
+        ssl = fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3);
+        if (!ssl || !fwp_tls_finish(ssl, fd, 0)) {
+            *err = g_strdupf("cannot connect to %s: %s", addr, fwp_tls_err);
+            if (ssl) SSL_free(ssl);
+            close(fd);
+            return 0;
+        }
+    }
+    g_conn *c = g_conn_new(fd, given, 0);
+    c->ssl = ssl;
     c->refs = 2;
     fwp_spawn_task(0, g_reader, c, 0, 1);
     fwp_spawn_task(0, g_writer, c, 0, 1);
@@ -758,11 +828,14 @@ static g_stream *g_open(const char *addr, const char *path, const char *fp, g_co
     int64_t deadline = g_earliest(ctx->deadline, fwp_cur->deadline);
     uint32_t id = c->next_stream;
     c->next_stream += 2;
+    char authority[300];
+    int tls;
+    g_addr(c->authority, &tls, authority, sizeof authority);
     h2_buf blk = {0};
     h2_hpack_lit(&blk, ":method", "POST");
-    h2_hpack_lit(&blk, ":scheme", "http");
+    h2_hpack_lit(&blk, ":scheme", c->ssl ? "https" : "http");
     h2_hpack_lit(&blk, ":path", path);
-    h2_hpack_lit(&blk, ":authority", c->authority);
+    h2_hpack_lit(&blk, ":authority", authority);
     h2_hpack_lit(&blk, "content-type", "application/grpc");
     h2_hpack_lit(&blk, "te", "trailers");
     if (deadline) {
@@ -1118,6 +1191,7 @@ struct g_server {
     const fwp_service *svc;    /* reflection and health (exported functions) */
     const char **services;     /* full service names (GrpcRoutes) */
     size_t nservices;
+    SSL_CTX *tls;              /* serving TLS (h2 with ALPN) */
 };
 
 typedef struct {
@@ -1601,14 +1675,10 @@ static void g_accept_loop(int lfd, const g_server *srv) {
             char peer[128];
             fwp_fmt_addr((struct sockaddr *)&ss, peer, sizeof peer);
             g_conn *c = g_conn_new(fd, peer, srv);
-            c->refs = 2;
-            fwp_task *rt = fwp_spawn_task(0, g_reader, c, 0, 0);
-            /* the writer is a child of the reader: it ends with the
-             * connection */
-            fwp_task *saved = fwp_cur;
-            fwp_cur = rt;
-            fwp_spawn_task(0, g_writer, c, 0, 0);
-            fwp_cur = saved;
+            if (srv->tls) c->ssl = (SSL *)fwp_tls_accepted(srv->tls, fd);
+            /* the reader starts the writer (after a TLS handshake) */
+            c->refs = 1;
+            fwp_spawn_task(0, g_reader, c, 0, 0);
             continue;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ECONNABORTED) {
@@ -1629,22 +1699,65 @@ static const char *const g_builtin_paths[4] = {
 };
 
 /* serve a module's exported functions (a service executable) */
+/* the TLS context of a server with a certificate and key (`--tls-cert`,
+ * `--tls-key`, else FWP_TLS_CERT and FWP_TLS_KEY); 0 without them, and
+ * -1 (reported) on errors */
+static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
+    *failed = 0;
+    if (!cert || !*cert) cert = getenv("FWP_TLS_CERT");
+    if (!key || !*key) key = getenv("FWP_TLS_KEY");
+    if (cert && !*cert) cert = 0;
+    if (key && !*key) key = 0;
+    if (!cert && !key) return 0;
+    if (!cert || !key) {
+        fprintf(stderr, "fwp serve: %s\n",
+                cert ? "a TLS certificate needs a key (--tls-key or FWP_TLS_KEY)"
+                     : "a TLS key needs a certificate (--tls-cert or FWP_TLS_CERT)");
+        *failed = 1;
+        return 0;
+    }
+    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3);
+    if (!ctx) {
+        fprintf(stderr, "fwp serve: %s\n", fwp_tls_err);
+        *failed = 1;
+    }
+    return ctx;
+}
+
 static int fwp_serve(const fwp_service *s, int argc, char **argv) {
-    const char *listen_at = 0;
+    const char *listen_at = 0, *cert = 0, *key = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--listen") == 0 && i + 1 < argc) listen_at = argv[++i];
         else if (strncmp(argv[i], "--listen=", 9) == 0) listen_at = argv[i] + 9;
+        else if (strcmp(argv[i], "--tls-cert") == 0 && i + 1 < argc) cert = argv[++i];
+        else if (strncmp(argv[i], "--tls-cert=", 11) == 0) cert = argv[i] + 11;
+        else if (strcmp(argv[i], "--tls-key") == 0 && i + 1 < argc) key = argv[++i];
+        else if (strncmp(argv[i], "--tls-key=", 10) == 0) key = argv[i] + 10;
         else {
-            fprintf(stderr, "usage: %s [--listen host:port]\n", argv[0]);
+            fprintf(stderr, "usage: %s [--listen host:port] [--tls-cert file --tls-key file]\n", argv[0]);
             return 2;
         }
     }
+    int failed;
+    SSL_CTX *tls = g_server_tls(cert, key, &failed);
+    if (failed) return 1;
     if (!listen_at) {
         listen_at = getenv(s->env);
         if (!listen_at || !*listen_at) listen_at = s->default_addr;
     }
+    /* `tls://host:port` (as clients are given it) is host:port, with TLS */
+    char hostport[300];
+    int secure;
+    g_addr(listen_at, &secure, hostport, sizeof hostport);
+    if (secure && !tls) {
+        fprintf(stderr,
+                "fwp serve: %s needs a certificate and key (--tls-cert and --tls-key, or FWP_TLS_CERT and "
+                "FWP_TLS_KEY)\n",
+                listen_at);
+        return 1;
+    }
     char bound[300];
-    int fd = h2_listen(listen_at, bound, sizeof bound);
+    int fd = h2_listen(hostport, bound, sizeof bound);
     if (fd < 0) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
         return 1;
@@ -1663,8 +1776,9 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     }
     srv->module = s->module;
     srv->svc = s;
+    srv->tls = tls;
     g_grpc_error_desc = s->grpc_error;
-    fprintf(stderr, "fwp: service %s listening on %s\n", s->module, bound);
+    fprintf(stderr, "fwp: service %s listening on %s%s\n", s->module, tls ? "tls://" : "", bound);
     fflush(stderr);
     fwp_tasks_init();
     g_accept_loop(fd, srv);
@@ -1832,8 +1946,8 @@ static V fwp_p_grpc_with_deadline(V d, V f) {
     return g_with_ctx(ctx, f);
 }
 
-/* GrpcRoute = { handler, path } */
-static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
+/* GrpcRoute = { handler, path }; over TLS with the context `tls` */
+static V g_serve_routes(SSL_CTX *tls, V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
     fwp_tasks_init();
     char bound[300];
     int fd = h2_listen(STR(addr)->d, bound, sizeof bound);
@@ -1861,12 +1975,24 @@ static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_des
     srv->routes[srv->n].path = g_builtin_paths[3];
     srv->routes[srv->n++].kind = G_ROUTE_WATCH;
     srv->module = "";
+    srv->tls = tls;
     g_grpc_error_desc = gerr;
     fflush(fwp_prog_out);
-    fprintf(stderr, "fwp: gRPC server listening on %s\n", bound);
+    fprintf(stderr, "fwp: gRPC server listening on %s%s\n", tls ? "tls://" : "", bound);
     fflush(stderr);
     g_accept_loop(fd, srv);
     return FWP_UNIT;
+}
+
+static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
+    return g_serve_routes(0, addr, routes, ioerr, gerr);
+}
+
+/* certificate, key (PEM files), address, routes */
+static V fwp_p_grpc_serve_tls(V cert, V key, V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
+    SSL_CTX *tls = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3);
+    if (!tls) return fwp_io_error("tls", fwp_tls_err, ioerr);
+    return g_serve_routes(tls, addr, routes, ioerr, gerr);
 }
 
 /* the typed calls (kinds 0-3: unary, server-streaming, client-streaming,

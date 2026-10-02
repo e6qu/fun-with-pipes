@@ -1,0 +1,26 @@
+client: echo: hello (alpn "")
+server: ok (alpn "")
+client: echo: hello (alpn "h2")
+server: ok (alpn "h2")
+client: echo: hello (alpn "http/1.1")
+server: ok (alpn "http/1.1")
+client: echo: hello (alpn "")
+server: ok (alpn "")
+client: tls error: localhost:PORT: certificate verify failed: unable to get local issuer certificate
+server: TLS handshake failed: tlsv1 alert unknown ca
+client: tls error: localhost:PORT: certificate verify failed: hostname mismatch
+server: TLS handshake failed: sslv3 alert bad certificate
+client: echo: hello (alpn "")
+server: ok (alpn "")
+client: plain request sent
+server: TLS handshake failed: http request
+client: tls error: 127.0.0.1:PORT: TLS handshake failed: wrong version number
+client: echo: hello (alpn "h2")
+server: ok (alpn "h2")
+server: TLS handshake failed: connection closed
+client: secure True, after closing False
+server: ok (alpn "")
+client: tls error: missing.pem: No such file or directory
+client: tls error: other.key: cannot load the private key: key values mismatch
+client: 200 hello from /a over HTTPS
+client: tls error: localhost:PORT: certificate verify failed: unable to get local issuer certificate

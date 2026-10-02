@@ -41,6 +41,10 @@ usage:
   fwp serve --rest <file.fwp> [--listen addr]
                                  serve a file's exported functions as REST
                                  endpoints with the interpreter
+                                 (every `fwp serve`, and the servers that
+                                 --rest, --grpc and --service build, take
+                                 --tls-cert file --tls-key file to serve
+                                 over TLS; see docs/tls.md)
   fwp proto <file.fwp> [--service m]...
                                  print the .proto file of the services
   fwp openapi <file.fwp>         print the OpenAPI document of the endpoints
@@ -649,6 +653,13 @@ fn serve(args: &[String]) -> ExitCode {
         return ExitCode::from(fwp::grpc_cli::serve(args).clamp(0, 255) as u8);
     }
     let mut args = args.to_vec();
+    let tls = match fwp::tls::server_files(&mut args) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("fwp serve: {}", e);
+            return ExitCode::from(2);
+        }
+    };
     let mut remote = take_services(&mut args);
     let mut listen = None;
     let mut pos = Vec::new();
@@ -673,7 +684,7 @@ fn serve(args: &[String]) -> ExitCode {
     }
     let [path, module] = &pos[..] else {
         eprintln!(
-            "fwp serve: usage: fwp serve [--service m]... <file.fwp> <module> [--listen host:port]"
+            "fwp serve: usage: fwp serve [--service m]... <file.fwp> <module> [--listen host:port] [--tls-cert file --tls-key file]"
         );
         return ExitCode::from(2);
     };
@@ -687,7 +698,7 @@ fn serve(args: &[String]) -> ExitCode {
         match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
-                fwp::services::serve(&prog, listen)
+                fwp::services::serve(&prog, listen, tls)
             }
             Err(f) => {
                 eprint!("{}", f.rendered);

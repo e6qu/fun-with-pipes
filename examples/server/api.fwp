@@ -4,8 +4,9 @@
 #     fwp build examples/server/api.fwp && ./api
 #
 # FWP_ADDR sets the listen address (default 127.0.0.1:8080); the actual
-# address is printed on stderr. SIGINT/SIGTERM shut down gracefully:
-# requests in flight get a few seconds to finish.
+# address is printed on stderr. With FWP_TLS_CERT and FWP_TLS_KEY (PEM
+# files) it serves HTTPS. SIGINT/SIGTERM shut down gracefully: requests in
+# flight get a few seconds to finish.
 
 # GET /health
 health : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
@@ -84,12 +85,32 @@ handler = http.count | timeout 5s | routes
 config : ServerConfig
 config = "unused" | http.config | with { shutdown-grace = 3s }
 
+# the certificate and key of FWP_TLS_CERT and FWP_TLS_KEY
+tls-files : () -> Option[TlsServer] ! {IO}
+tls-files =
+    const ()
+    | both (const "FWP_TLS_CERT" | env.get) (const "FWP_TLS_KEY" | env.get)
+    | match
+        (Some _, Some _) -> curry (uncurry tls.server | Some)
+        _ -> const None
+
+# listen, with TLS when there is a certificate and key
+listen : String -> Listener ! {IO, Network, Error[IoError]}
+listen = fork listen-with (const () | tls-files) id
+
+listen-with : Option[TlsServer] -> String -> Listener ! {IO, Network, Error[IoError]}
+listen-with = curry (match
+    (None, _) ->
+        tcp.listen
+        | tap (tcp.local-addr | format "listening on http://{}" | eprint)
+    (Some _, _) -> curry (fork apply .1 (.0 | tls.listen)
+        | tap (tcp.local-addr | format "listening on https://{}" | eprint)))
+
 main =
     "FWP_ADDR"
     | env.get
     | option.unwrap-or "127.0.0.1:8080"
-    | tcp.listen
-    | tap (tcp.local-addr | format "listening on http://{}" | eprint)
+    | listen
     | flip http.serve-on (config, handler)
     | const "stopped"
     | eprint

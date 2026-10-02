@@ -92,8 +92,14 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
     requests finish within `shutdown-grace`, then cancels whatever is left.
 - **Client:** `http.get`, `http.post` and `http.send`. Each request uses one
   connection; responses may be chunked or sized by `content-length`.
+- **TLS:** a config with `tls = Some (tls.server "cert.pem" "key.pem")`
+  serves HTTPS, and the client fetches `https://` URLs, verifying
+  certificates (`http.send-with` takes `TlsOptions`). TLS connections are
+  `Conn`s, so the same server and client code runs over them; handshakes
+  wait on the scheduler like any socket operation, in the connection's own
+  task. See [tls.md](tls.md).
 
-TLS, HTTP/3 and WebSocket are not implemented yet; HTTP/2 is used only
+HTTP/3 and WebSocket are not implemented yet; HTTP/2 is used only
 by [gRPC](grpc.md), whose servers and clients also run on the task
 scheduler. Request bodies
 with a transfer encoding are rejected with 501, and requests whose

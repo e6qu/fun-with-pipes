@@ -1,0 +1,285 @@
+# TLS connections (lib/tls.fwp) on both backends, run by tests/tls.rs in a
+# directory with a throwaway CA (ca.pem), a certificate for localhost and
+# 127.0.0.1 signed by it (server.pem, server.key) and an unrelated key
+# (other.key): verification, its failures, ALPN, plain clients and
+# servers, a stalled handshake that holds up no other connection, and
+# HTTPS. Ports are replaced by PORT in the output.
+
+# What a test client knows: the TLS server's port, the address of a plain
+# server, and the channel on which the TLS server reports each connection.
+Ctx = { port: String, plain: String, events: Channel[String] }
+
+# ------------------------------------------------------------ the server
+
+# answer "echo: " and what was read; the protocol chosen with ALPN
+echo : Conn -> String ! {Async, Network, Error[IoError]}
+echo =
+    tap tls.handshake
+    | tap (fork
+        tcp.write
+        (tcp.read 100
+            | fork bytes.append id (const ("echo: " | string.to-bytes)))
+        id)
+    | both tls.alpn tcp.close
+    | .0
+
+outcome : Result[String, IoError] -> String
+outcome = match
+    Ok _ -> format "server: ok (alpn \"{}\")"
+    Err _ -> .message | format "server: {}"
+
+handle : (Conn, Channel[String]) -> () ! {Async, IO, Network}
+handle = fork channel.send .1 (.0 | attempt echo | outcome) | ignore
+
+# accept connections forever, each in its own task (where its handshake
+# happens)
+serve-step : (Listener, Channel[String]) -> Step[(Listener, Channel[String]), ()] ! {Async, IO, Network}
+serve-step =
+    tap (attempt (both (.0 | tcp.accept) .1 | spawn-with handle)) | Again
+
+# a plain server: one connection, answered with text that is not TLS
+plain-server : Listener -> () ! {Async, IO, Network}
+plain-server =
+    attempt (tcp.accept
+        | tap (tcp.write ("hello, plain text\n" | string.to-bytes))
+        | tcp.close)
+    | ignore
+
+# ------------------------------------------------------------ the clients
+
+scrub : String -> String -> String
+scrub = flip replace "PORT"
+
+talk : (TlsOptions, String) -> String ! {Async, Network, Error[IoError]}
+talk =
+    uncurry tls.connect-with
+    | tap (tls.write ("hello" | string.to-bytes))
+    | both
+        (both
+            (tls.read 100 | string.from-bytes | option.unwrap-or "?")
+            tls.alpn)
+        tls.close
+    | .0
+    | format "{} (alpn \"{}\")"
+
+shown : Result[String, IoError] -> String
+shown = match
+    Ok _ -> format "client: {}"
+    Err _ -> both .kind .message | format "client: {} error: {}"
+
+# a client connects with options to an address ("localhost" or
+# "127.0.0.1" and the port); then the server's side of it
+try : String -> TlsOptions -> Ctx -> () ! {Async, IO, Network}
+try = curry3 (tap (fork
+            scrub
+            (.2 | .port)
+            (both .1 (fork concat (.2 | .port) (.0 | format "{}:"))
+                | attempt talk
+                | shown)
+        | print)
+    | .2
+    | server-said)
+
+server-said : Ctx -> () ! {Async, IO}
+server-said =
+    .events | channel.recv-for 5s | option.unwrap-or "server: (nothing)" | print
+
+trusted : TlsOptions
+trusted = tls.options | tls.with-ca "ca.pem"
+
+h2 : TlsOptions
+h2 = trusted | with { alpn = ["h2"] }
+
+http11 : TlsOptions
+http11 = trusted | with { alpn = ["spdy/1", "http/1.1"] }
+
+wrong-name : TlsOptions
+wrong-name = trusted | with { server-name = Some "wrong.example" }
+
+insecure : TlsOptions
+insecure = tls.options | with { insecure = True }
+
+# a plain TCP client of the TLS server
+plain-client : Ctx -> () ! {Async, IO, Network}
+plain-client =
+    tap (.port
+        | format "127.0.0.1:{}"
+        | attempt (tcp.connect
+            | tap (tcp.write ("GET / HTTP/1.0\r\n\r\n" | string.to-bytes))
+            | tap (attempt (tcp.read-for 2s 100) | ignore)
+            | tcp.close
+            | const "plain request sent")
+        | shown
+        | print)
+    | server-said
+
+# a TLS client of a plain server
+tls-to-plain : Ctx -> () ! {Async, IO, Network}
+tls-to-plain =
+    fork
+        scrub
+        (.plain | port-of)
+        (.plain
+            | attempt
+                (tls.connect-with trusted | tap tcp.close | const "connected")
+            | shown)
+    | print
+
+# a client that connects but never starts its handshake holds up no other
+# connection; its handshake fails when it goes away
+stalled : Ctx -> () ! {Async, IO, Network}
+stalled = fork apply id (.port
+    | format "127.0.0.1:{}"
+    | attempt tcp.connect
+    | stalled-then)
+
+stalled-then : Result[Conn, IoError] -> Ctx -> () ! {Async, IO, Network}
+stalled-then = curry (match
+    (Ok _, _) -> curry (tap (.1 | try "localhost" h2)
+        | tap (.0 | tcp.close)
+        | .1
+        | server-said)
+    (Err _, _) -> curry (.0 | .message | print))
+
+# the TLS state of a connection, before and after closing it
+secure : Ctx -> () ! {Async, IO, Network}
+secure =
+    tap (.port
+        | format "localhost:{}"
+        | attempt (tls.connect-with trusted
+            | both tls.secure (tap (tcp.write ("x" | string.to-bytes))
+                | tap (tcp.read 100)
+                | tap tcp.close
+                | tls.secure)
+            | format "secure {}, after closing {}")
+        | shown
+        | print)
+    | server-said
+
+# certificates and keys that cannot be used
+bad-files : () -> () ! {IO, Network}
+bad-files =
+    const [("missing.pem", "server.key"), ("server.pem", "other.key")]
+    | map (attempt (uncurry tls.server
+            | tls.listen
+            | apply "127.0.0.1:0"
+            | tls.local-addr
+            | const "listening")
+        | shown)
+    | map print
+    | ignore
+
+# ------------------------------------------------------------ HTTPS
+
+handler : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+handler = .path | format "hello from {} over HTTPS" | http.text 200
+
+fetch : TlsOptions -> String -> String ! {Async, Network, Error[IoError]}
+fetch = curry (fork
+        apply
+        (.1
+            | make ClientRequest {
+                method = const "GET",
+                url = id,
+                headers = const [],
+                body = const ("" | string.to-bytes),
+            })
+        (.0 | http.send-with)
+    | both .status (.body | string.from-bytes | option.unwrap-or "?")
+    | format "{} {}")
+
+https-config : ServerConfig
+https-config =
+    "127.0.0.1:0"
+    | http.config
+    | with { tls = Some (tls.server "server.pem" "server.key") }
+
+https : () -> () ! {Async, IO, Network}
+https = const https-config | attempt http.listen | https-on
+
+https-on : Result[Listener, IoError] -> () ! {Async, IO, Network}
+https-on = match
+    Err _ -> .message | print
+    Ok _ ->
+        both
+            (both id (const (http.config "unused", handler))
+                | spawn-with (uncurry http.serve-on))
+            (tcp.local-addr | port-of)
+        | tap (.1 | https-clients)
+        | tap (const () | signal.request-shutdown)
+        | .0
+        | task.await
+        | ignore
+
+https-clients : String -> () ! {Async, IO, Network}
+https-clients =
+    tap (fork
+            scrub
+            id
+            (format "https://localhost:{}/a" | attempt (fetch trusted) | shown)
+        | print)
+    | fork
+        scrub
+        id
+        (format "https://localhost:{}/b" | attempt (fetch tls.options) | shown)
+    | print
+
+# ------------------------------------------------------------ main
+
+port-of : String -> String
+port-of = string.split-once ":" | option.map .1 | option.unwrap-or ""
+
+scenarios : List[Ctx -> () ! {Async, IO, Network}]
+scenarios = [
+    try "localhost" trusted,
+    try "localhost" h2,
+    try "localhost" http11,
+    try "127.0.0.1" trusted,
+    try "localhost" tls.options,
+    try "localhost" wrong-name,
+    try "localhost" insecure,
+    plain-client,
+    tls-to-plain,
+    stalled,
+    secure,
+]
+
+tls-server : () -> Listener ! {Network, Error[IoError]}
+tls-server =
+    const "127.0.0.1:0"
+    | tls.listen (tls.server "server.pem" "server.key"
+        | with { alpn = ["h2", "http/1.1"] })
+
+plain-listener : () -> Listener ! {Network, Error[IoError]}
+plain-listener = const "127.0.0.1:0" | tcp.listen
+
+Started = { server: Task[()], plain: Task[()], ctx: Ctx }
+
+start : () -> Started ! {Async, IO, Network, Error[IoError]}
+start =
+    const 16
+    | channel.make
+    | both id (const () | tls-server)
+    | both id (const () | plain-listener)
+    | make Started {
+        server = .0 | both .1 .0 | spawn-with (loop serve-step),
+        plain = .1 | spawn-with plain-server,
+        ctx = make Ctx {
+            port = .0 | .1 | tcp.local-addr | port-of,
+            plain = .1 | tcp.local-addr,
+            events = .0 | .0,
+        },
+    }
+
+go : Started -> () ! {Async, IO, Network}
+go =
+    tap (.ctx | fork map apply (const scenarios))
+    | tap (.server | task.cancel)
+    | tap (.plain | task.cancel)
+    | tap (const () | bad-files)
+    | tap (const () | https)
+    | ignore
+
+main = () | attempt start | match
+    Ok -> go
+    Err -> .message | print

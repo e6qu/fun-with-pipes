@@ -683,7 +683,20 @@ static V fwp_p_channel_close(V ch) {
 
 /* ----- sockets */
 
-typedef struct { int fd; int kind; } fwp_sock; /* kind: 0 listener, 1 conn, 2 udp */
+/* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
+ * connection's TLS session (fwp_rt_tls.c), or 0 */
+typedef struct { int fd; int kind; void *tls; } fwp_sock;
+
+#ifdef FWP_TLS
+/* TLS sessions (fwp_rt_tls.c, embedded in programs that use TLS): like
+ * read and send, with -2 for a TLS failure described in fwp_tls_err, and
+ * *ww telling which way to wait after EAGAIN (1: to write) */
+static char fwp_tls_err[512];
+static ssize_t fwp_tls_recv(void *ssl, char *buf, size_t n, int *ww);
+static ssize_t fwp_tls_send(void *ssl, const char *buf, size_t n, int *ww);
+static void fwp_tls_free(void *ssl);
+static void *fwp_tls_accepted(void *ctx, int fd);
+#endif
 
 static V fwp_os_error(const char *kind, const char *what, const fwp_desc *d) {
     char buf[1024];
@@ -743,6 +756,7 @@ static V fwp_sock_new(int fd, int kind) {
     fwp_sock *s = (fwp_sock *)malloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
+    s->tls = 0;
     return PTR(s);
 }
 
@@ -861,7 +875,13 @@ static V fwp_accept(V l, int64_t at, const fwp_desc *err) {
             fwp_nonblock(fd);
             int one = 1;
             setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
-            return fwp_sock_new(fd, 1);
+            V c = fwp_sock_new(fd, 1);
+#ifdef FWP_TLS
+            /* the handshake happens on the first read or write, in the
+             * task that serves the connection */
+            if (SOCK(l)->tls) SOCK(c)->tls = fwp_tls_accepted(SOCK(l)->tls, fd);
+#endif
+            return c;
         }
         if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR || errno == ECONNABORTED) {
             if (!fwp_wait_fd(lfd, 0, at)) return 0;
@@ -927,14 +947,23 @@ static V fwp_tcp_read(V nv, V c, int64_t at, const fwp_desc *err) {
     for (;;) {
         int fd = SOCK(c)->fd;
         if (fd < 0) { free(buf); return fwp_closed_error("connection", err); }
-        ssize_t k = read(fd, buf, (size_t)n);
+        int ww = 0;
+        ssize_t k;
+#ifdef FWP_TLS
+        if (SOCK(c)->tls) k = fwp_tls_recv(SOCK(c)->tls, buf, (size_t)n, &ww);
+        else
+#endif
+            k = read(fd, buf, (size_t)n);
         if (k >= 0) {
             V r = fwp_str_new(buf, (size_t)k);
             free(buf);
             return r;
         }
+#ifdef FWP_TLS
+        if (k == -2) { free(buf); return fwp_io_error("tls", fwp_tls_err, err); }
+#endif
         if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-            if (!fwp_wait_fd(fd, 0, at)) { free(buf); return 0; }
+            if (!fwp_wait_fd(fd, ww, at)) { free(buf); return 0; }
             continue;
         }
         free(buf);
@@ -955,10 +984,19 @@ static V fwp_tcp_write(V data, V c, int64_t at, const fwp_desc *err) {
     while (off < len) {
         int fd = SOCK(c)->fd;
         if (fd < 0) return fwp_closed_error("connection", err);
-        ssize_t k = send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
+        int ww = 1;
+        ssize_t k;
+#ifdef FWP_TLS
+        if (SOCK(c)->tls) k = fwp_tls_send(SOCK(c)->tls, STR(data)->d + off, len - off, &ww);
+        else
+#endif
+            k = send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
         if (k > 0) { off += (size_t)k; continue; }
+#ifdef FWP_TLS
+        if (k == -2) return fwp_io_error("tls", fwp_tls_err, err);
+#endif
         if (k < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
-            if (!fwp_wait_fd(fd, 1, at)) return fwp_io_error("timeout", "write timed out", err);
+            if (!fwp_wait_fd(fd, ww, at)) return fwp_io_error("timeout", "write timed out", err);
             continue;
         }
         if (k == 0) return fwp_io_error("write", "connection closed by peer", err);
@@ -978,6 +1016,9 @@ static V fwp_p_sock_close(V c) {
         int fd = SOCK(c)->fd;
         SOCK(c)->fd = -1;
         fwp_fd_closing(fd);
+#ifdef FWP_TLS
+        if (SOCK(c)->kind == 1 && SOCK(c)->tls) { fwp_tls_free(SOCK(c)->tls); SOCK(c)->tls = 0; }
+#endif
         if (SOCK(c)->kind == 1) shutdown(fd, SHUT_RDWR);
         close(fd);
     }

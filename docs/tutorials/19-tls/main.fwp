@@ -1,0 +1,61 @@
+# 19. TLS
+#
+# The exported functions of this file, served over HTTPS and over gRPC
+# with TLS once there is a certificate: the README makes one and serves
+# them. `main` calls them in-process, and shows the TLS settings of a
+# client and of a server.
+#
+# grpc: quotes.Quotes
+
+Quote = { id: I64, text: String }
+
+all-quotes : List[Quote]
+all-quotes = [
+    Quote { id = 1, text = "Simplicity is prerequisite for reliability." },
+    Quote { id = 2, text = "Make it work, make it right, make it fast." },
+    Quote { id = 3, text = "Data dominates." },
+]
+
+# A quote by its id.
+# route: GET /sayings/{id}
+export saying : I64 -> Option[Quote]
+saying = eq | compose .id | find | apply all-quotes
+
+# How many quotes there are.
+# route: GET /count
+export count : () -> I64
+count = const all-quotes | length
+
+# A client that trusts the CA of the README (instead of the system's).
+client : TlsOptions
+client = tls.options | tls.with-ca "ca.pem"
+
+# Fetch a quote from the HTTPS server of the README.
+fetch : I64 -> String ! {Async, Network, Error[IoError]}
+fetch =
+    format "https://localhost:8443/sayings/{}"
+    | make ClientRequest {
+        method = const "GET",
+        url = id,
+        headers = const [],
+        body = const ("" | string.to-bytes),
+    }
+    | http.send-with client
+    | .body
+    | string.from-bytes
+    | option.unwrap-or ""
+
+# An HTTPS server's configuration, for `http.serve`.
+server : ServerConfig
+server =
+    "127.0.0.1:8443"
+    | http.config
+    | with { tls = Some (tls.server "server.pem" "server.key") }
+
+main = [
+    2 | saying | echo,
+    () | count | echo,
+    client | .ca-file | echo,
+    client | .insecure | echo,
+    server | .tls | option.map .cert-file | echo,
+] | ignore

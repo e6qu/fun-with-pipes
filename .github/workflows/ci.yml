@@ -18,8 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: WebAssembly toolchain
-        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32
+      - name: WebAssembly toolchain, OpenSSL headers (TLS)
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libssl-dev openssl
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy
