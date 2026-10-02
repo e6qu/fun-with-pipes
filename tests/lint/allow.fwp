@@ -1,0 +1,14 @@
+# `# fwp:allow(code, ...)` above a declaration silences rules inside it.
+
+# fwp:allow(unused-binding)
+helper = add 1
+
+# a ruler, then the allowance
+# fwp:allow(redundant-id, map-fusion)
+twice = map (mul 2) | id | map show | map string.length
+
+# only the listed rule is silenced
+# fwp:allow(redundant-id)
+again = map show | map string.length
+
+main = [[1, 2] | twice | echo, [3] | again | echo] | ignore

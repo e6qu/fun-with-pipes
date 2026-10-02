@@ -1,0 +1,30 @@
+lint/rules.fwp:4:1: warning: `helper` is never used [unused-binding]
+4 | helper = add 1
+  | ^^^^^^
+lint/rules.fwp:9:5: warning: `countdown` is never used [unused-binding]
+9 | rec countdown = match
+  |     ^^^^^^^^^
+lint/rules.fwp:14:14: warning: this `| id` stage does nothing; remove it [redundant-id]
+14 | twice = used | id
+   |              ^^^^
+lint/rules.fwp:17:1: warning: `lengths` is never used [unused-binding]
+17 | lengths = map words | map length
+   | ^^^^^^^
+lint/rules.fwp:17:21: warning: `map words | map length` traverses twice; use `map (words | length)` [map-fusion]
+17 | lengths = map words | map length
+   |                     ^^^^^
+lint/rules.fwp:20:1: warning: `apply-all` is never used [unused-binding]
+20 | apply-all = match
+   | ^^^^^^^^^
+lint/rules.fwp:20:13: warning: a `match` with a single `_` arm is just its body [trivial-match]
+20 | apply-all = match
+   |             ^^^^^
+lint/rules.fwp:24:1: warning: `reverse` hides the standard library function of the same name [shadows-std]
+24 | reverse = id
+   | ^^^^^^^
+lint/rules.fwp:24:1: warning: `reverse` is never used [unused-binding]
+24 | reverse = id
+   | ^^^^^^^
+lint/rules.fwp:27:1: warning: `orphan` has a signature but no binding [missing-binding]
+27 | orphan : I64 -> I64
+   | ^^^^^^

@@ -33,6 +33,10 @@ usage:
   fwp fmt [--check] [paths...]   format files in place (directories are
                                  searched for .fwp files; default: .);
                                  --check lists unformatted files instead
+  fwp lint [paths...]            report likely mistakes and simplifications
+                                 (exit status 1 if there are any); a comment
+                                 `# fwp:allow(code)` above a declaration
+                                 silences a rule in it
   fwp help                       show this message
 ";
 
@@ -73,6 +77,7 @@ fn main() -> ExitCode {
         Some("exec") => exec(&args[1..]),
         Some("pipe") => pipe(&args[1..]),
         Some("fmt") => fmt(&args[1..]),
+        Some("lint") => lint(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS
@@ -512,6 +517,31 @@ fn fmt(args: &[String]) -> ExitCode {
         } else if let Err(e) = std::fs::write(&path, formatted) {
             eprintln!("fwp fmt: cannot write {}: {}", path.display(), e);
             code = ExitCode::from(2);
+        }
+    }
+    code
+}
+
+fn lint(args: &[String]) -> ExitCode {
+    let mut code = ExitCode::SUCCESS;
+    for path in source_files(args) {
+        let text = match std::fs::read_to_string(&path) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("fwp lint: cannot read {}: {}", path.display(), e);
+                code = ExitCode::from(2);
+                continue;
+            }
+        };
+        let mut sm = SourceMap::default();
+        let file = sm.add(path.display().to_string(), text.clone());
+        let diags = match fwp::lint::lint_source(&text, file) {
+            Ok(ws) => ws.into_iter().map(|w| w.diag).collect(),
+            Err(errors) => errors,
+        };
+        if !diags.is_empty() {
+            eprint!("{}", fwp::diag::render_all(&diags, &sm));
+            code = ExitCode::from(1);
         }
     }
     code
