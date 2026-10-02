@@ -29,7 +29,13 @@ Tree =
 
 items : List[Item]
 items = [
-    Item { name = "pen", price = 1.5, tags = ["office"], note = None, color = Red },
+    Item {
+        name = "pen",
+        price = 1.5,
+        tags = ["office"],
+        note = None,
+        color = Red,
+    },
     Item {
         name = "cup \"x\"\n",
         price = 3.0,
@@ -135,7 +141,8 @@ main =
     | const (0.1f32, 3.4e38f32)
     | json.write
     | print
-    | const "héllo\u{1}\t\"\\" | json.write
+    | const "héllo\u{1}\t\"\\"
+    | json.write
     | print
     | const ("foobar" | string.to-bytes, "fo" | string.to-bytes)
     | json.write
@@ -161,7 +168,9 @@ main =
     | const (Ok 1, Err "no", Equal)
     | json.write
     | print
-    | const ("{\"a\": [1, 2.5, true, null]}" | json.parse | result.unwrap-or Json.Null)
+    | const ("{\"a\": [1, 2.5, true, null]}"
+        | json.parse
+        | result.unwrap-or Json.Null)
     | json.write
     | print
     | const (0t+-0, trit.neg, array.from-list [1, 2])
@@ -190,17 +199,45 @@ main =
         "",
     ]
     | each (read-order | echo)
-    | const ["127", "-128", "128", "-129", "\"12\"", "\"12x\"", "1e2", "0.0", "true"]
+    | const [
+        "127",
+        "-128",
+        "128",
+        "-129",
+        "\"12\"",
+        "\"12x\"",
+        "1e2",
+        "0.0",
+        "true",
+    ]
     | each (read-i8 | echo)
     | const ["18446744073709551615", "-0", "1e19", "1e20"]
     | each (read-u64 | echo)
-    | const ["9223372036854775807", "-9223372036854775808", "-9223372036854775809"]
+    | const [
+        "9223372036854775807",
+        "-9223372036854775808",
+        "-9223372036854775809",
+    ]
     | each (read-i64 | echo)
-    | const ["\"-170141183460469231731687303715884105728\"", "170141183460469231731687303715884105728"]
+    | const [
+        "\"-170141183460469231731687303715884105728\"",
+        "170141183460469231731687303715884105728",
+    ]
     | each (read-i128 | echo)
-    | const ["340282366920938463463374607431768211455", "\"340282366920938463463374607431768211456\""]
+    | const [
+        "340282366920938463463374607431768211455",
+        "\"340282366920938463463374607431768211456\"",
+    ]
     | each (read-u128 | echo)
-    | const ["0.1", "\"2.5\"", "\"NaN\"", "\"-Infinity\"", "1e400", "\"x\"", "null"]
+    | const [
+        "0.1",
+        "\"2.5\"",
+        "\"NaN\"",
+        "\"-Infinity\"",
+        "1e400",
+        "\"x\"",
+        "null",
+    ]
     | each (read-f64 | echo)
     | const ["0.1", "16777217", "1e-50"]
     | each (read-f32 | echo)
@@ -226,7 +263,14 @@ main =
     | each (read-tuple | echo)
     | const ["\"Zm9vYmFy\"", "\"Zm8\"", "\"Zm8=\"", "\"Z\"", "\"a b\""]
     | each (read-bytes | echo)
-    | const ["\"1500ms\"", "\"1.5s\"", "\"-2min\"", "1000", "\"1.5ns\"", "\"5 days\""]
+    | const [
+        "\"1500ms\"",
+        "\"1.5s\"",
+        "\"-2min\"",
+        "1000",
+        "\"1.5ns\"",
+        "\"5 days\"",
+    ]
     | each (read-duration | echo)
     | const ["[[1], [null], null]", "[1]"]
     | each (read-nested | echo)
