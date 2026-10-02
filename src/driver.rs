@@ -392,7 +392,7 @@ pub fn wasm_host_unsupported(prog: &crate::ir::Program) -> Option<String> {
 
 /// The stack of the WebAssembly build of fwp, in bytes. It must match the
 /// `-zstack-size` linker argument in `.cargo/config.toml`.
-pub const WASM_STACK_SIZE: usize = 128 << 20;
+pub const WASM_STACK_SIZE: usize = 256 << 20;
 
 /// Run `f` on a thread with a large stack (deeply recursive tacit code).
 /// WebAssembly has no threads: `f` runs on the main stack, whose size is
