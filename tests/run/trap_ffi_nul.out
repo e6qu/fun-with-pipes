@@ -1,0 +1,4 @@
+3
+--- stderr
+fwp: trap: a string passed to C contains a NUL character
+--- exit 101

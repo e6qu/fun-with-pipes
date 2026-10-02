@@ -16,6 +16,9 @@ foreign "fwp" tcp.connect : String -> Conn ! {Async, Network, Error[IoError]}
 foreign "fwp" tcp.read : I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}
 foreign "fwp" tcp.read-for : Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}
 foreign "fwp" tcp.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
+# write, failing with a "timeout" error if that takes longer than the
+# duration (part of the data may have been sent)
+foreign "fwp" tcp.write-for : Duration -> Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
 foreign "fwp" tcp.close : Conn -> () ! {Network}
 foreign "fwp" tcp.peer-addr : Conn -> String ! {Network}
 

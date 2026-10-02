@@ -1,0 +1,6 @@
+# A string with a NUL character cannot be passed to C (C would see a
+# shorter string): both backends trap.
+
+foreign "C" strlen : String -> USize
+
+main = ["abc", "a\0b"] | each (strlen | echo)

@@ -21,7 +21,8 @@ extern "C" {
 const RTLD_NOW: c_int = 2;
 
 type ShimFn = unsafe extern "C" fn(*const u64, *mut u64);
-type SetHostFn = unsafe extern "C" fn(*const c_void, *mut c_void);
+/// Sets the context of the current foreign call; returns the previous one.
+type SetHostFn = unsafe extern "C" fn(*const c_void, *mut c_void) -> *mut c_void;
 
 pub struct FfiLib {
     shims: HashMap<FuncId, ShimFn>,
@@ -35,11 +36,11 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 /// Build and load the shim for every foreign C function of a program.
 fn load(prog: &Program) -> Result<FfiLib, String> {
     let src = ffi::shim_source(prog)?;
-    let dir = std::env::temp_dir().join(format!("fwp-ffi-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let n = std::fs::read_dir(&dir).map(|d| d.count()).unwrap_or(0);
-    let c_path = dir.join(format!("shim{}.c", n));
-    let so_path = dir.join(format!("shim{}.so", n));
+    // removed (with the files in it) when this function returns: the
+    // library stays loaded
+    let dir = crate::cgen::TempDir::new("fwp-ffi")?;
+    let c_path = dir.join("shim.c");
+    let so_path = dir.join("shim.so");
     std::fs::write(&c_path, src).map_err(|e| e.to_string())?;
     let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
     let out = std::process::Command::new(&cc)
@@ -288,11 +289,14 @@ impl<'p> Interp<'p> {
             keep: &mut keep,
         };
         unsafe {
-            (lib.set_host)(
+            // a callback may make foreign calls of its own: restore the
+            // outer call's context when this one returns
+            let prev = (lib.set_host)(
                 host_call as *const c_void,
                 &mut ctx as *mut CallCtx as *mut c_void,
             );
             (lib.shims[&id])(words.as_ptr(), out.as_mut_ptr());
+            (lib.set_host)(host_call as *const c_void, prev);
         }
         if let Some(e) = ctx.error.take() {
             return Err(e);

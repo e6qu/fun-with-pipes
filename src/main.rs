@@ -172,13 +172,20 @@ fn test(args: &[String]) -> ExitCode {
                         return 1;
                     }
                 };
-                let exe = std::env::temp_dir().join(format!("fwp-tests-{}", std::process::id()));
+                let dir = match fwp::cgen::TempDir::new("fwp-tests") {
+                    Ok(d) => d,
+                    Err(e) => {
+                        eprintln!("fwp test: {}", e);
+                        return 1;
+                    }
+                };
+                let exe = dir.join("tests");
                 if let Err(e) = fwp::cgen::compile_c(&src, &exe, "-O1") {
                     eprintln!("fwp test: {}", e);
                     return 1;
                 }
                 let status = std::process::Command::new(&exe).status();
-                let _ = std::fs::remove_file(&exe);
+                drop(dir);
                 match status {
                     Ok(s) => s.code().unwrap_or(1),
                     Err(e) => {

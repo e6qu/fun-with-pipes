@@ -1482,6 +1482,13 @@ static V fwp_p_list_transpose(V xss) {
 
 /* ----- results of foreign C functions */
 
+/* a string for C: NUL-terminated, so it must not contain NUL itself (C
+ * would see a shorter string); traps as the interpreter does */
+static const char *fwp_c_str_arg(V s) {
+    if (memchr(STR(s)->d, 0, STR(s)->len)) fwp_trap("a string passed to C contains a NUL character");
+    return (const char *)STR(s)->d;
+}
+
 static V fwp_c_string(const char *p) {
     if (!p) fwp_trap("foreign function returned a null string");
     size_t n = strlen(p);

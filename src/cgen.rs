@@ -841,7 +841,7 @@ impl<'p> Gen<'p> {
                 }
             }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
-            | "tcp.read-for" | "tcp.write" | "udp.bind" | "udp.send-to" | "udp.recv-from"
+            | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
             | "dns.resolve" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 let (f, n) = match sym {
@@ -852,6 +852,7 @@ impl<'p> Gen<'p> {
                     "tcp.read" => ("fwp_p_tcp_read", 2),
                     "tcp.read-for" => ("fwp_p_tcp_read_for", 3),
                     "tcp.write" => ("fwp_p_tcp_write", 2),
+                    "tcp.write-for" => ("fwp_p_tcp_write_for", 3),
                     "udp.bind" => ("fwp_p_udp_bind", 1),
                     "udp.send-to" => ("fwp_p_udp_send_to", 3),
                     "udp.recv-from" => ("fwp_p_udp_recv_from", 2),
@@ -980,6 +981,8 @@ impl<'p> Gen<'p> {
                     ("url.split", "fwp_p_url_split(l0)"),
                     ("http.parse-request-head", "fwp_p_parse_request_head(l0)"),
                     ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
+                    ("http.field-ok", "fwp_p_field_ok(l0, l1)"),
+                    ("http.content-length", "fwp_p_content_length(l0)"),
                     ("int.to-hex", "fwp_p_to_hex(l0)"),
                     ("int.parse-hex", "fwp_p_parse_hex(l0)"),
                     ("task.spawn", "fwp_p_task_spawn(l0)"),
@@ -1093,7 +1096,7 @@ fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
         CType::F32 => format!("fwp_f32({})", v),
         CType::F64 => format!("fwp_f64({})", v),
         CType::Bool => format!("(({}) == FWP_TRUE)", v),
-        CType::Str => format!("((const char *)STR({})->d)", v),
+        CType::Str => format!("fwp_c_str_arg({})", v),
         CType::Bytes => format!("((const uint8_t *)STR({})->d)", v),
         CType::Ptr | CType::Callback { .. } => format!("((void *)(uintptr_t)({}))", v),
         CType::OptPtr => format!(
@@ -1200,6 +1203,7 @@ impl Gen<'_> {
                 .collect();
         let mut body = String::new();
         let mut args = Vec::new();
+        let mut restore = Vec::new();
         for (k, (i, c)) in params.iter().enumerate() {
             if let CType::Callback {
                 params: cps,
@@ -1256,17 +1260,34 @@ impl Gen<'_> {
                 } else {
                     let _ = writeln!(self.ffi_decls, "    return {};\n}}", ffi_to_c(cr, "r"));
                 }
-                let _ = writeln!(body, "    fwp_cbslot_{}_{} = l{};", id, k, i);
+                // saved and restored around the call: a callback may call
+                // this function again (C calling fwp calling C)
+                let _ = writeln!(
+                    body,
+                    "    V fwp_saved_{k} = fwp_cbslot_{id}_{k};\n    fwp_cbslot_{id}_{k} = l{i};",
+                    id = id,
+                    k = k,
+                    i = i
+                );
+                restore.push(format!("    fwp_cbslot_{}_{} = fwp_saved_{};\n", id, k, k));
                 args.push(format!("(void *)fwp_cb_{}_{}", id, k));
             } else {
                 args.push(ffi_to_c(c, &format!("l{}", i)));
             }
         }
         let call = format!("{}({})", cname, args.join(", "));
+        let restore = restore.concat();
         if ret == CType::Void {
-            let _ = writeln!(body, "    {};\n    return FWP_UNIT;", call);
-        } else {
+            let _ = write!(body, "    {};\n{}    return FWP_UNIT;\n", call, restore);
+        } else if restore.is_empty() {
             let _ = writeln!(body, "    return {};", ffi_from_c(&ret, &call));
+        } else {
+            let _ = write!(
+                body,
+                "    V fwp_r = {};\n{}    return fwp_r;\n",
+                ffi_from_c(&ret, &call),
+                restore
+            );
         }
         Ok(body)
     }
@@ -1775,6 +1796,75 @@ pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     Ok(())
 }
 
+/// A private temporary directory (mode 0700, with an unpredictable name,
+/// created fresh so that nobody else can have placed files in it),
+/// removed with its contents when dropped.
+pub struct TempDir {
+    path: std::path::PathBuf,
+}
+
+impl TempDir {
+    pub fn new(prefix: &str) -> Result<TempDir, String> {
+        use std::os::unix::fs::DirBuilderExt;
+        let base = std::env::temp_dir();
+        let mut last = String::new();
+        for attempt in 0..16u32 {
+            let path = base.join(format!("{}-{}", prefix, random_suffix(attempt)));
+            match std::fs::DirBuilder::new().mode(0o700).create(&path) {
+                Ok(()) => return Ok(TempDir { path }),
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                    last = e.to_string();
+                }
+                Err(e) => {
+                    return Err(format!(
+                        "cannot create a temporary directory in {}: {}",
+                        base.display(),
+                        e
+                    ))
+                }
+            }
+        }
+        Err(format!(
+            "cannot create a temporary directory in {}: {}",
+            base.display(),
+            last
+        ))
+    }
+
+    pub fn path(&self) -> &std::path::Path {
+        &self.path
+    }
+
+    pub fn join(&self, name: impl AsRef<std::path::Path>) -> std::path::PathBuf {
+        self.path.join(name)
+    }
+}
+
+impl Drop for TempDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+/// 128 random bits as hex, from /dev/urandom (falling back to the clock,
+/// the process id and the attempt number, which are at least unique).
+fn random_suffix(attempt: u32) -> String {
+    use std::io::Read;
+    let mut b = [0u8; 16];
+    let random = std::fs::File::open("/dev/urandom")
+        .and_then(|mut f| f.read_exact(&mut b))
+        .is_ok();
+    if !random {
+        let t = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let x = t ^ ((std::process::id() as u128) << 64) ^ ((attempt as u128) << 96);
+        b = x.to_le_bytes();
+    }
+    b.iter().map(|c| format!("{:02x}", c)).collect()
+}
+
 /// Compile C source to an executable with the system C compiler.
 pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<(), String> {
     compile_for(c_source, output, opt, Target::Native)
@@ -1800,27 +1890,48 @@ fn fat_variants() -> Vec<(&'static str, &'static str, &'static str)> {
     match std::env::consts::ARCH {
         "x86_64" => vec![
             ("x86-64", "-march=x86-64", "1"),
+            // the whole feature level (the compiler may use any of its
+            // instructions: LZCNT, MOVBE, F16C, ...), see FWP_CPU_LEVEL
             (
                 "x86-64-v2",
                 "-march=x86-64-v2",
-                "__builtin_cpu_supports(\"sse4.2\") && __builtin_cpu_supports(\"popcnt\")",
+                "FWP_CPU_LEVEL(\"x86-64-v2\")",
             ),
             (
                 "x86-64-v3",
                 "-march=x86-64-v3",
-                "__builtin_cpu_supports(\"avx2\") && __builtin_cpu_supports(\"bmi2\") && __builtin_cpu_supports(\"fma\")",
+                "FWP_CPU_LEVEL(\"x86-64-v3\")",
             ),
         ],
         _ => vec![("baseline", "", "1")],
     }
 }
 
+/// `FWP_CPU_LEVEL(level)`: the CPU supports a whole x86-64 feature level.
+/// Compilers that know the levels (GCC 12, Clang 16 and later) check every
+/// feature of the level, the OS support for AVX state included; older ones
+/// check the features they can name.
+const FAT_CPU_LEVEL: &str = r#"#if defined(__x86_64__) || defined(__i386__)
+#if (defined(__clang__) && __clang_major__ >= 16) || (!defined(__clang__) && defined(__GNUC__) && __GNUC__ >= 12)
+#define FWP_CPU_LEVEL(l) __builtin_cpu_supports(l)
+#else
+#define FWP_CPU_V2 (__builtin_cpu_supports("sse3") && __builtin_cpu_supports("ssse3") && \
+                    __builtin_cpu_supports("sse4.1") && __builtin_cpu_supports("sse4.2") && \
+                    __builtin_cpu_supports("popcnt"))
+#define FWP_CPU_V3 (FWP_CPU_V2 && __builtin_cpu_supports("avx") && __builtin_cpu_supports("avx2") && \
+                    __builtin_cpu_supports("bmi") && __builtin_cpu_supports("bmi2") && \
+                    __builtin_cpu_supports("fma"))
+#define FWP_CPU_LEVEL(l) (!strcmp(l, "x86-64-v3") ? FWP_CPU_V3 : FWP_CPU_V2)
+#endif
+#endif
+
+"#;
+
 /// Compile a fat executable: the program once per CPU variant, and a
 /// dispatcher that runs the best variant the CPU supports. FWP_VARIANT
 /// selects a variant by name; FWP_VARIANT_SHOW=1 reports the choice.
 pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Result<(), String> {
-    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dir = TempDir::new("fwp-build")?;
     let c_path = dir.join("fat-program.c");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
@@ -1845,6 +1956,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
     if result.is_ok() {
         let mut d =
             String::from("#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n");
+        d.push_str(FAT_CPU_LEVEL);
         for i in 0..variants.len() {
             let _ = writeln!(d, "int fwp_variant_{}(int, char **);", i);
         }
@@ -1903,8 +2015,7 @@ pub fn compile_library(
     opt: &str,
     kind: LibKind,
 ) -> Result<(), String> {
-    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dir = TempDir::new("fwp-build")?;
     let c_path = dir.join("library.c");
     let obj = dir.join("library.o");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
@@ -1966,8 +2077,7 @@ pub fn compile_for(
     opt: &str,
     target: Target,
 ) -> Result<(), String> {
-    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let dir = TempDir::new("fwp-build")?;
     let stem = output
         .file_name()
         .map(|s| s.to_string_lossy().to_string())

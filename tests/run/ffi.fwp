@@ -38,6 +38,17 @@ sorted = fork sort-at (length | int.convert | option.unwrap-or 0usize) fill
 sort-at : USize -> Ptr[I32] -> List[I32] ! {Unsafe}
 sort-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply compare) | fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
 
+# a comparator that itself sorts with C: C calls fwp, which calls C, which
+# calls fwp again; the outer sort must keep its own comparator
+descending : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
+descending = curry (tap (const [3, 1, 2] | sorted | ignore) | both (.0 | ptr.read) (.1 | ptr.read) | uncurry sub)
+
+sorted-desc : List[I32] -> List[I32] ! {Unsafe}
+sorted-desc = fork sort-desc-at (length | int.convert | option.unwrap-or 0usize) fill
+
+sort-desc-at : USize -> Ptr[I32] -> List[I32] ! {Unsafe}
+sort-desc-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply descending) | fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+
 formatted : () -> String ! {Unsafe}
 formatted = const 64 | mem.alloc | tap (snprintf | apply 64usize | apply "%lld-%s" | apply 42 | apply "x") | ptr.read-string
 
@@ -52,5 +63,6 @@ main = [
     "FWP_NO_SUCH_VARIABLE" | getenv | option.is-none | echo,
     strchr "hello" 108 | option.map ptr.read-string | echo,
     [5, -2, 9, 0, 3] | sorted | echo,
+    [5, -2, 9, 0, 3, 7, 1] | sorted-desc | echo,
     () | formatted | print,
 ] | ignore

@@ -84,6 +84,8 @@ static long fwp_find_char(const char *d, size_t n, char c) {
 static V fwp_p_url_split(V sv) {
     const char *s = STR(sv)->d;
     size_t n = STR(sv)->len;
+    for (size_t j = 0; j < n; j++)
+        if ((unsigned char)s[j] <= 0x20 || s[j] == 0x7f) return FWP_NONE;
     long i = fwp_memfind(s, n, "://", 3);
     if (i <= 0) return FWP_NONE;
     char *scheme = (char *)malloc((size_t)i + 1);
@@ -115,7 +117,8 @@ static V fwp_p_url_split(V sv) {
         hn = (size_t)e;
         const char *after = auth + 1 + e + 1;
         size_t aftern = an - 1 - (size_t)e - 1;
-        if (aftern > 0 && after[0] == ':') { port = after + 1; portn = aftern - 1; }
+        if (aftern > 0 && after[0] != ':') { free(scheme); return FWP_NONE; }
+        if (aftern > 0) { port = after + 1; portn = aftern - 1; }
     } else {
         long c = fwp_rfind_char(auth, an, ':');
         if (c >= 0) { hn = (size_t)c; port = auth + c + 1; portn = an - (size_t)c - 1; }
@@ -140,6 +143,46 @@ static V fwp_p_url_split(V sv) {
 
 static int fwp_tchar(unsigned char c) {
     return isalnum(c) || (c && strchr("!#$%&'*+-.^_`|~", c));
+}
+
+/* a header that can be written without changing the message's framing */
+static V fwp_p_field_ok(V name, V value) {
+    size_t nn = STR(name)->len, vn = STR(value)->len;
+    if (nn == 0) return FWP_FALSE;
+    for (size_t i = 0; i < nn; i++)
+        if (!fwp_tchar((unsigned char)STR(name)->d[i])) return FWP_FALSE;
+    for (size_t i = 0; i < vn; i++) {
+        unsigned char c = (unsigned char)STR(value)->d[i];
+        if ((c < 0x20 && c != '\t') || c == 0x7f) return FWP_FALSE;
+    }
+    return FWP_TRUE;
+}
+
+/* the body length a request declares: 0 without content-length, -1 when
+ * it is not a plain decimal number or the header is repeated */
+static V fwp_p_content_length(V hs) {
+    int64_t len = 0;
+    int seen = 0;
+    for (; hs != 0; hs = OBJ(hs)->f[1]) {
+        V h = OBJ(hs)->f[0];
+        V name = OBJ(h)->f[0], value = OBJ(h)->f[1];
+        if (STR(name)->len != 14) continue;
+        int match = 1;
+        for (size_t i = 0; i < 14; i++)
+            if (tolower((unsigned char)STR(name)->d[i]) != "content-length"[i]) match = 0;
+        if (!match) continue;
+        size_t n = STR(value)->len;
+        if (seen || n == 0 || n > 18) return (V)(int64_t)-1;
+        int64_t v = 0;
+        for (size_t i = 0; i < n; i++) {
+            char c = STR(value)->d[i];
+            if (c < '0' || c > '9') return (V)(int64_t)-1;
+            v = v * 10 + (c - '0');
+        }
+        len = v;
+        seen = 1;
+    }
+    return (V)len;
 }
 
 static V fwp_http_err(const char *m) {

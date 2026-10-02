@@ -42,6 +42,8 @@ test "url.parse" = "http://example.com:8080/a/b?x=1#frag" | url.parse | eq (Some
 test "url.parse defaults" = "HTTPS://example.com" | url.parse | option.map (both .port .path) | eq (Some (443, "/"))
 test "url.parse ipv6" = "http://[::1]:9000/" | url.parse | option.map (both .host .port) | eq (Some ("::1", 9000))
 test "url.parse invalid" = ["example.com/x", "http://:80/", "http://h:99999/"] | map url.parse | all option.is-none
+test "url.parse rejects spaces and control characters" = ["http://h/a b", "http://h/a\r\nx: y", "http://h/?q=\n", "http://h\t/", "http://h/\0"] | map url.parse | all option.is-none
+test "url.parse rejects junk after an IPv6 host" = ["http://[::1]x/", "http://[::1]x:80/", "http://[::1]:/"] | map url.parse | all option.is-none
 test "url.encode" = "a b/ü" | url.encode | eq "a%20b%2F%C3%BC"
 test "url.decode" = "a%20b%2f%C3%BC" | url.decode | eq (Some "a b/ü")
 test "url.decode malformed" = ["%zz", "%4", "%ff"] | map url.decode | all option.is-none

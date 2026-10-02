@@ -45,10 +45,13 @@ pre-empted. A native program in which every task waits forever stops with a
 ## Networking
 
 `tcp.listen`, `tcp.accept`, `tcp.accept-for`, `tcp.connect`, `tcp.read`,
-`tcp.read-for`, `tcp.write`, `tcp.close`, `udp.bind`, `udp.send-to`,
-`udp.recv-from` and `dns.resolve`. Addresses are `"host:port"` strings, and
-failures raise `Error[IoError]`. Only the calling task is suspended while a
-socket operation waits.
+`tcp.read-for`, `tcp.write`, `tcp.write-for`, `tcp.close`, `udp.bind`,
+`udp.send-to`, `udp.recv-from` and `dns.resolve`. Addresses are
+`"host:port"` strings, with a non-empty host (IPv6 in brackets) and a
+decimal port up to 65535; failures raise `Error[IoError]`. Only the calling
+task is suspended while a socket operation waits. One task may read a
+connection while another writes to it, and closing a socket wakes the
+tasks waiting on it, which then fail with a "closed" error.
 
 `signal.shutdown-requested ()` becomes true after SIGINT or SIGTERM (its
 first call installs the handlers), or after `signal.request-shutdown ()`.
@@ -77,7 +80,12 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
     taken, the server stops accepting until one frees up.
   - `max-header-bytes` (431) and `max-body-bytes` (413) bound request sizes.
   - `max-requests-per-connection` limits keep-alive reuse.
-  - `idle-timeout` applies while waiting for a request.
+  - `idle-timeout` (30 s) applies while waiting for a request.
+    `header-timeout` (10 s) bounds the time from a request's first byte to
+    the end of its head, and `body-timeout` (30 s) the time to receive its
+    body; when either passes, the client gets 408. `write-timeout` (30 s)
+    bounds writing each response (or each chunk of a streamed one), after
+    which the connection is dropped.
   - `request-timeout` bounds each handler, which runs in its own task; when
     the timeout passes, the handler is cancelled and the client gets 503.
   - On SIGINT or SIGTERM, the server stops accepting and lets in-flight
@@ -86,7 +94,14 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
   connection; responses may be chunked or sized by `content-length`.
 
 TLS, HTTP/2, HTTP/3 and WebSocket are not implemented yet. Request bodies
-with a transfer encoding are rejected with 501.
+with a transfer encoding are rejected with 501, and requests whose
+`content-length` is not a plain decimal number or appears more than once
+with 400, so that a request's length is never ambiguous. A response whose
+status is not three digits or that has a header that cannot be written as
+is (a name that is not a token, a value with CR, LF, NUL or another
+control character) is replaced by a 500. The client likewise refuses such
+methods and headers, and URLs with spaces or control characters; its
+`host` header carries the port when it is not the scheme's default.
 
 `examples/server/api.fwp` is a complete JSON API. `tests/http_server.rs`
 drives it, both interpreted and native, with curl, a concurrent keep-alive

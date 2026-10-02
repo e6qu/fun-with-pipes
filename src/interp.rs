@@ -515,6 +515,8 @@ impl<'p> Interp<'p> {
             "url.split" => Ok(crate::web::url_split(&a[0])),
             "http.parse-request-head" => Ok(crate::web::parse_request_head(&a[0])),
             "http.parse-response-head" => Ok(crate::web::parse_response_head(&a[0])),
+            "http.field-ok" => Ok(crate::web::field_ok(&a[0], &a[1])),
+            "http.content-length" => Ok(crate::web::content_length(&a[0])),
             "int.to-hex" => Ok(crate::web::to_hex(&a[0])),
             "int.parse-hex" => Ok(crate::web::parse_hex(&a[0])),
             "loop" => {
