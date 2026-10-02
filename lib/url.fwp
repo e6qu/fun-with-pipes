@@ -11,15 +11,12 @@ foreign "fwp" url.decode : String -> Option[String]
 # like url.decode, with `+` as a space (query strings and form bodies)
 foreign "fwp" form.decode : String -> Option[String]
 
-foreign "fwp" int.to-hex : I64 -> String
-foreign "fwp" int.parse-hex : String -> Option[I64]
-
 url.parse : String -> Option[Url]
 url.parse = url.split | option.map (make Url { scheme = .0, host = .1, port = .2, path = .3, query = .4 })
 
 # both present
-option.both : (Option[a], Option[b]) -> Option[(a, b)]
-option.both = match
+form.both-some : (Option[a], Option[b]) -> Option[(a, b)]
+form.both-some = match
     (Some _, Some _) -> curry Some
     _ -> const None
 
@@ -33,7 +30,7 @@ form.pair = fork form.pair-of id (string.split-once "=")
 form.pair-of : String -> Option[(String, String)] -> Option[(String, String)]
 form.pair-of = curry (match
     (_, None) -> form.decode | option.map (flip (curry id) "")
-    (_, Some _) -> const (both (.0 | form.decode) (.1 | form.decode) | option.both))
+    (_, Some _) -> const (both (.0 | form.decode) (.1 | form.decode) | form.both-some))
 
 form.encode : List[(String, String)] -> String
 form.encode = map (both (.0 | url.encode) (.1 | url.encode) | format "{}={}") | join "&"
@@ -42,10 +39,10 @@ test "url.parse" = "http://example.com:8080/a/b?x=1#frag" | url.parse | eq (Some
 test "url.parse defaults" = "HTTPS://example.com" | url.parse | option.map (both .port .path) | eq (Some (443, "/"))
 test "url.parse ipv6" = "http://[::1]:9000/" | url.parse | option.map (both .host .port) | eq (Some ("::1", 9000))
 test "url.parse invalid" = ["example.com/x", "http://:80/", "http://h:99999/"] | map url.parse | all option.is-none
+test "url.parse rejects spaces and control characters" = ["http://h/a b", "http://h/a\r\nx: y", "http://h/?q=\n", "http://h\t/", "http://h/\0"] | map url.parse | all option.is-none
+test "url.parse rejects junk after an IPv6 host" = ["http://[::1]x/", "http://[::1]x:80/", "http://[::1]:/"] | map url.parse | all option.is-none
 test "url.encode" = "a b/ü" | url.encode | eq "a%20b%2F%C3%BC"
 test "url.decode" = "a%20b%2f%C3%BC" | url.decode | eq (Some "a b/ü")
 test "url.decode malformed" = ["%zz", "%4", "%ff"] | map url.decode | all option.is-none
 test "form.parse" = "a=1&b=x+y&&c&d=%3D" | form.parse | eq [("a", "1"), ("b", "x y"), ("c", ""), ("d", "=")]
 test "form.encode" = [("q", "a b"), ("n", "1")] | form.encode | eq "q=a%20b&n=1"
-test "hex" = [255 | int.to-hex, -16 | int.to-hex] | eq ["ff", "-10"]
-test "parse-hex" = ["1A", "", "xyz"] | map int.parse-hex | eq [Some 26, None, None]

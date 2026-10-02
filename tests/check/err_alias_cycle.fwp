@@ -1,0 +1,6 @@
+# Aliases may be used before they are defined; cycles are errors.
+B = A
+A = I64
+C = List[C]
+f : B -> B
+f = add 1

@@ -47,6 +47,27 @@ pub fn valid_int(s: &str) -> bool {
     !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit())
 }
 
+/// `parse-float`'s non-finite values, in any case: `nan`, and `inf` or
+/// `infinity` with an optional sign (`show` writes `NaN`, `inf`, `-inf`).
+fn special_float(s: &str) -> Option<f64> {
+    let (neg, rest) = match s.as_bytes().first() {
+        Some(b'-') => (true, &s[1..]),
+        Some(b'+') => (false, &s[1..]),
+        _ => (false, s),
+    };
+    if rest.eq_ignore_ascii_case("inf") || rest.eq_ignore_ascii_case("infinity") {
+        Some(if neg {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        })
+    } else if s.eq_ignore_ascii_case("nan") {
+        Some(f64::NAN)
+    } else {
+        None
+    }
+}
+
 /// `[+-]?(digits(.digits?)?|.digits)([eE][+-]?digits)?`
 pub fn valid_float(s: &str) -> bool {
     let b = s.as_bytes();
@@ -111,8 +132,9 @@ impl<'p> Interp<'p> {
         params: &[MT],
         result: &MT,
     ) -> Option<R<Value>> {
-        let r: R<Value> = (|| -> R<Value> {
-            Ok(match sym {
+        // `Ok(None)`: not one of these primitives
+        let r = (|| -> R<Option<Value>> {
+            Ok(Some(match sym {
                 // ----- lists
                 "fold-right" => {
                     let f = a[0].clone();
@@ -186,8 +208,10 @@ impl<'p> Interp<'p> {
                     let ys = a[1].list_items();
                     let xs = a[2].list_items();
                     let mut out = Vec::new();
+                    // data-last: the subject's element is the last argument,
+                    // so `xs | zip-with sub ys` is x - y
                     for (x, y) in xs.into_iter().zip(ys) {
-                        out.push(self.apply(f.clone(), vec![x, y])?);
+                        out.push(self.apply(f.clone(), vec![y, x])?);
                     }
                     Value::list(out)
                 }
@@ -202,13 +226,22 @@ impl<'p> Interp<'p> {
                     Value::tuple(vec![Value::list(l), Value::list(r)])
                 }
                 "range" => {
-                    let t = &params[0];
-                    let (lo, hi) = (a[0].as_i128().unwrap(), a[1].as_i128().unwrap());
+                    // `i < hi` before each step, so `i + 1` cannot overflow
                     let mut out = Vec::new();
-                    let mut i = lo;
-                    while i < hi {
-                        out.push(checked_int(t, i).unwrap());
-                        i += 1;
+                    if let (Value::U128(lo), Value::U128(hi)) = (&a[0], &a[1]) {
+                        let mut i = *lo;
+                        while i < *hi {
+                            out.push(Value::U128(i));
+                            i += 1;
+                        }
+                    } else {
+                        let t = &params[0];
+                        let (lo, hi) = (a[0].as_i128().unwrap(), a[1].as_i128().unwrap());
+                        let mut i = lo;
+                        while i < hi {
+                            out.push(checked_int(t, i).unwrap());
+                            i += 1;
+                        }
                     }
                     Value::list(out)
                 }
@@ -408,12 +441,19 @@ impl<'p> Interp<'p> {
                 "parse-float" => {
                     let s = a[0].as_str();
                     let t = inner(result);
-                    if !valid_float(s) {
+                    if let Some(x) = special_float(s) {
+                        some(match t {
+                            MT::Con(n, _) if n == "std::F32" => Value::F32(x as f32),
+                            _ => Value::F64(x),
+                        })
+                    } else if !valid_float(s) {
                         none()
                     } else {
                         let x: f64 = s.parse().unwrap_or(f64::NAN);
                         some(match t {
-                            MT::Con(n, _) if n == "std::F32" => {
+                            MT::Con(n, _)
+                                if matches!(n.as_str(), "std::F32" | "std::F16" | "std::BF16") =>
+                            {
                                 Value::F32(s.parse().unwrap_or(f32::NAN))
                             }
                             _ => Value::F64(x),
@@ -431,6 +471,15 @@ impl<'p> Interp<'p> {
                             .collect(),
                         (v, t) => vec![display(v, t, self.prog, true)],
                     };
+                    let holes = format_placeholders(&tmpl);
+                    if holes != parts.len() {
+                        return trap(format!(
+                            "format: placeholder count ({}) does not match value count ({}) in \"{}\"",
+                            holes,
+                            parts.len(),
+                            tmpl
+                        ));
+                    }
                     let mut out = String::new();
                     let mut it = parts.into_iter();
                     let mut cs = tmpl.chars().peekable();
@@ -499,11 +548,12 @@ impl<'p> Interp<'p> {
                     Value::Bytes(Rc::from(out))
                 }
                 "trits.unpack" => {
-                    let n = int(&a[0]).max(0) as usize;
                     let bs = bytes(&a[1]);
+                    // only trits the bytes hold: none past the end
+                    let n = (int(&a[0]).max(0) as usize).min(bs.len() * 5);
                     let mut out = Vec::new();
                     for i in 0..n {
-                        let byte = *bs.get(i / 5).unwrap_or(&0) as u32;
+                        let byte = bs[i / 5] as u32;
                         let d = (byte / 3u32.pow((i % 5) as u32)) % 3;
                         out.push(Value::Trit(d as i8 - 1));
                     }
@@ -544,36 +594,41 @@ impl<'p> Interp<'p> {
                 }
                 // ----- linear algebra
                 "linalg.lu-solve" => {
-                    let n = int(&a[0]).max(0) as usize;
+                    let n = int(&a[0]);
                     let (am, bv) = (f64s(&a[1]), f64s(&a[2]));
-                    if am.len() < n * n || bv.len() < n {
-                        none()
-                    } else {
-                        opt(crate::linalg::lu_solve(n, &am, &bv).map(|x| f64_array(&x)))
-                    }
+                    la_check(sym, am.len(), n, n)?;
+                    la_check(sym, bv.len(), n, 1)?;
+                    let n = n as usize;
+                    opt(crate::linalg::lu_solve(n, &am, &bv).map(|x| f64_array(&x)))
                 }
                 "linalg.det" => {
-                    let n = int(&a[0]).max(0) as usize;
-                    Value::F64(crate::linalg::det(n, &f64s(&a[1])))
+                    let (n, am) = (int(&a[0]), f64s(&a[1]));
+                    la_check(sym, am.len(), n, n)?;
+                    Value::F64(crate::linalg::det(n as usize, &am))
                 }
                 "linalg.inverse" => {
-                    let n = int(&a[0]).max(0) as usize;
-                    opt(crate::linalg::inverse(n, &f64s(&a[1])).map(|x| f64_array(&x)))
+                    let (n, am) = (int(&a[0]), f64s(&a[1]));
+                    la_check(sym, am.len(), n, n)?;
+                    opt(crate::linalg::inverse(n as usize, &am).map(|x| f64_array(&x)))
                 }
                 "linalg.cholesky" => {
-                    let n = int(&a[0]).max(0) as usize;
-                    opt(crate::linalg::cholesky(n, &f64s(&a[1])).map(|x| f64_array(&x)))
+                    let (n, am) = (int(&a[0]), f64s(&a[1]));
+                    la_check(sym, am.len(), n, n)?;
+                    opt(crate::linalg::cholesky(n as usize, &am).map(|x| f64_array(&x)))
                 }
                 "linalg.qr" => {
-                    let (m, n) = (int(&a[0]).max(0) as usize, int(&a[1]).max(0) as usize);
-                    let (q, r) = crate::linalg::qr(m, n, &f64s(&a[2]));
+                    let (m, n, am) = (int(&a[0]), int(&a[1]), f64s(&a[2]));
+                    la_check(sym, am.len(), m, n)?;
+                    let (q, r) = crate::linalg::qr(m as usize, n as usize, &am);
                     Value::tuple(vec![f64_array(&q), f64_array(&r)])
                 }
                 "linalg.cg" => {
-                    let n = int(&a[2]).max(0) as usize;
+                    let n = int(&a[2]);
                     let tol = a[1].as_f64().unwrap_or(0.0);
-                    let x = crate::linalg::cg(int(&a[0]), tol, n, &f64s(&a[3]), &f64s(&a[4]));
-                    f64_array(&x)
+                    let (am, bv) = (f64s(&a[3]), f64s(&a[4]));
+                    la_check(sym, am.len(), n, n)?;
+                    la_check(sym, bv.len(), n, 1)?;
+                    f64_array(&crate::linalg::cg(int(&a[0]), tol, n as usize, &am, &bv))
                 }
                 "list.transpose" => {
                     let rows: Vec<Vec<Value>> =
@@ -785,31 +840,34 @@ impl<'p> Interp<'p> {
                 }
                 "read-line" => {
                     let _ = self.out.flush();
-                    let mut line = String::new();
-                    match std::io::stdin().lock().read_line(&mut line) {
+                    let mut line = Vec::new();
+                    match std::io::stdin().lock().read_until(b'\n', &mut line) {
                         Ok(0) | Err(_) => none(),
                         Ok(_) => {
-                            if line.ends_with('\n') {
+                            if line.ends_with(b"\n") {
                                 line.pop();
-                                if line.ends_with('\r') {
+                                if line.ends_with(b"\r") {
                                     line.pop();
                                 }
                             }
-                            some(Value::str(&line))
+                            some(Value::str(&lossy(&line)))
                         }
                     }
                 }
                 "read-all" | "read-lines" => {
                     let _ = self.out.flush();
-                    let mut s = String::new();
-                    let _ = std::io::stdin().lock().read_to_string(&mut s);
+                    let mut bytes = Vec::new();
+                    let _ = std::io::stdin().lock().read_to_end(&mut bytes);
+                    let s = lossy(&bytes);
                     if sym == "read-all" {
                         Value::str(&s)
                     } else {
                         Value::list(split_lines(&s).iter().map(|l| Value::str(l)).collect())
                     }
                 }
-                "env.get" => opt(std::env::var(a[0].as_str()).ok().map(|v| Value::str(&v))),
+                "env.get" => {
+                    opt(std::env::var_os(a[0].as_str()).map(|v| Value::str(&v.to_string_lossy())))
+                }
                 "time.monotonic" => duration(start_instant().elapsed().as_nanos() as i64),
                 "time.unix" => duration(
                     std::time::SystemTime::now()
@@ -817,13 +875,10 @@ impl<'p> Interp<'p> {
                         .map(|d| d.as_nanos() as i64)
                         .unwrap_or(0),
                 ),
-                _ => return Err(Ctl::Exit(i32::MIN)),
-            })
+                _ => return Ok(None),
+            }))
         })();
-        match r {
-            Err(Ctl::Exit(i32::MIN)) => None,
-            other => Some(other),
-        }
+        r.transpose()
     }
 }
 
@@ -892,6 +947,22 @@ fn simd_lane(sym: &str, x: &Value, y: &Value, vt: &MT) -> R<Value> {
     })
 }
 
+/// Traps unless an array of `len` elements holds a `rows`×`cols` matrix
+/// (as `la_check` in runtime/fwp_rt_prims.c).
+fn la_check(name: &str, len: usize, rows: i64, cols: i64) -> R<()> {
+    if rows < 0 || cols < 0 {
+        return trap(format!("{}: negative dimension", name));
+    }
+    let want = rows as i128 * cols as i128;
+    if len as i128 != want {
+        return trap(format!(
+            "{}: {} elements given for a {}x{} matrix",
+            name, len, rows, cols
+        ));
+    }
+    Ok(())
+}
+
 fn f64s(v: &Value) -> Vec<f64> {
     arr(v).iter().map(|x| x.as_f64().unwrap_or(0.0)).collect()
 }
@@ -926,4 +997,22 @@ fn bytes(v: &Value) -> Rc<[u8]> {
         Value::Bytes(b) => b.clone(),
         _ => Rc::from(Vec::new()),
     }
+}
+
+/// The number of `{}` placeholders in a `format` template (`{{` and `}}`
+/// are literal braces).
+fn format_placeholders(tmpl: &str) -> usize {
+    let b = tmpl.as_bytes();
+    let (mut i, mut n) = (0, 0);
+    while i < b.len() {
+        if i + 1 < b.len() && matches!((b[i], b[i + 1]), (b'{', b'{') | (b'}', b'}')) {
+            i += 2;
+        } else if i + 1 < b.len() && b[i] == b'{' && b[i + 1] == b'}' {
+            n += 1;
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    n
 }

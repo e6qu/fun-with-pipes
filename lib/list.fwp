@@ -17,7 +17,9 @@ foreign "fwp" take-while : (a -> Bool ! e) -> List[a] -> List[a] ! e
 foreign "fwp" drop-while : (a -> Bool ! e) -> List[a] -> List[a] ! e
 # `xs | zip ys` pairs each x with the y at the same position.
 foreign "fwp" zip : List[b] -> List[a] -> List[(a, b)]
-foreign "fwp" zip-with : (a -> b -> c ! e) -> List[b] -> List[a] -> List[c] ! e
+# `xs | zip-with f ys` is `f y x` for each pair, the subject's element last
+# as everywhere else: `xs | zip-with sub ys` is x - y, like `x | sub y`.
+foreign "fwp" zip-with : (b -> a -> c ! e) -> List[b] -> List[a] -> List[c] ! e
 foreign "fwp" unzip : List[(a, b)] -> (List[a], List[b])
 # `range 0 5` is [0, 1, 2, 3, 4].
 foreign "fwp" range : a -> a -> List[a] where Integer[a]
@@ -60,8 +62,15 @@ count = filter | flip compose length
 contains : a -> List[a] -> Bool where Eq[a]
 contains = index-of | flip compose option.is-some
 
+# (accepted, rejected), each in the original order; the predicate runs
+# once per element
 partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
-partition = fork both filter (flip compose not | filter)
+partition = flip both id | map | flip compose (fold-right list.partition-step ([], []))
+
+list.partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
+list.partition-step = curry (match
+    ((True, _), _) -> curry (both (both .0 (.1 | .0) | uncurry Cons) (.1 | .1))
+    ((False, _), _) -> curry (both (.1 | .0) (both .0 (.1 | .1) | uncurry Cons)))
 
 enumerate : List[a] -> List[(I64, a)] where Dup[a]
 enumerate = fork zip id (length | range 0)
@@ -103,6 +112,8 @@ test "take-while" = [1, 2, 5, 1] | take-while (lt 3) | eq [1, 2]
 test "drop-while" = [1, 2, 5, 1] | drop-while (lt 3) | eq [5, 1]
 test "zip" = [1, 2, 3] | zip ["a", "b"] | eq [(1, "a"), (2, "b")]
 test "zip-with" = [1, 2] | zip-with add [10, 20] | eq [11, 22]
+test "zip-with order" = [10, 20] | zip-with sub [1, 2] | eq [9, 18]
+test "zip-with pairs" = [1, 2] | zip-with (curry id) ["a", "b"] | eq [("a", 1), ("b", 2)]
 test "unzip" = [(1, "a"), (2, "b")] | unzip | eq ([1, 2], ["a", "b"])
 test "range" = range 2 5 | eq [2, 3, 4]
 test "repeat" = repeat 3 "x" | eq ["x", "x", "x"]
@@ -115,15 +126,16 @@ test "scan" = [1, 2, 3] | scan add 0 | eq [0, 1, 3, 6]
 test "chunks" = [1, 2, 3, 4, 5] | chunks 2 | eq [[1, 2], [3, 4], [5]]
 test "iterate" = 1 | iterate 4 (mul 2) | eq [1, 2, 4, 8]
 test "head" = [7, 8] | head | eq (Some 7)
-test "head of empty" = [] | the-ints | head | eq None
+test "head of empty" = [] | list.test-ints | head | eq None
 test "tail" = [7, 8] | tail | eq (Some [8])
 test "last" = [7, 8] | last | eq (Some 8)
-test "is-empty" = [] | the-ints | is-empty
+test "is-empty" = [] | list.test-ints | is-empty
 test "any" = [1, 2, 3] | any (eq 2)
 test "all" = [1, 2, 3] | all (gt 0)
 test "count" = [1, 2, 3, 4] | count (gt 2) | eq 2
 test "contains" = ["x", "y"] | contains "y"
 test "partition" = [1, 2, 3, 4] | partition (gt 2) | eq ([3, 4], [1, 2])
+test "partition runs the predicate once" = [1, 2, 3, 4] | run-state 0 (partition (tap (const (add 1) | modify) | gt 2)) | eq (([3, 4], [1, 2]), 4)
 test "enumerate" = ["a", "b"] | enumerate | eq [(0, "a"), (1, "b")]
 test "each" = [1, 2] | each (const ()) | eq ()
 test "filter-map" = ["1", "x", "3"] | filter-map parse-int | eq [1, 3]
@@ -133,5 +145,5 @@ test "singleton" = 5 | singleton | eq [5]
 test "sum" = [1, 2, 3] | sum | eq 6
 test "product" = [2, 3, 4] | product | eq 24
 
-the-ints : List[I64] -> List[I64]
-the-ints = id
+list.test-ints : List[I64] -> List[I64]
+list.test-ints = id

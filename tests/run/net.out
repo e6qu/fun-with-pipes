@@ -1,0 +1,12 @@
+Some "reader: Some \"done\", writer: Some \"wrote\""
+Some "Some \"error: connection is closed\""
+error: 127.0.0.1:65536: invalid socket address
+error: 127.0.0.1:http: invalid socket address
+error: :0: invalid socket address
+error: 127.0.0.1:+80: invalid socket address
+error: 127.0.0.1:: invalid socket address
+error: 127.0.0.1: invalid socket address
+Some True
+Some 1
+Some 7
+None

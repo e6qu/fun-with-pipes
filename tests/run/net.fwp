@@ -1,0 +1,88 @@
+# Sockets shared between tasks, closing a socket another task waits on,
+# address validation, deadlines observed by `task.cancelled`, huge channel
+# capacities and durations.
+
+the-ch : Channel[I64] -> Channel[I64]
+the-ch = id
+
+# 4 MiB: more than the socket buffers hold
+big : Bytes
+big = "x" | string.repeat 4194304 | string.to-bytes
+
+shown : Result[String, IoError] -> String
+shown = match
+    Ok _ -> id
+    Err _ -> .message | flip concat "error: "
+
+# read n bytes (or to the end of the stream); the number left unread
+read-n : I64 -> Conn -> I64 ! {Async, Network, Error[IoError]}
+read-n = curry (swap | loop read-step)
+
+read-step : (Conn, I64) -> Step[(Conn, I64), I64] ! {Async, Network, Error[IoError]}
+read-step = if (.1 | le 0) (.1 | Stop) (fork read-got id (.0 | tcp.read 65536))
+
+read-got : (Conn, I64) -> Bytes -> Step[(Conn, I64), I64]
+read-got = curry (if (.1 | bytes.length | eq 0) (.0 | .1 | Stop) (both (.0 | .0) (fork sub (.1 | bytes.length) (.0 | .1)) | Again))
+
+# a connected pair: (client end, server end)
+pair : Listener -> (Conn, Conn) ! {Async, Network, Error[IoError]}
+pair = both (tcp.local-addr | tcp.connect) tcp.accept
+
+reader : (Conn, Conn) -> String ! {Async, IO, Network, FileIO}
+reader = .0 | attempt (tcp.read 100 | string.from-bytes | option.unwrap-or "?") | shown
+
+writer : (Conn, Conn) -> String ! {Async, IO, Network, FileIO}
+writer = .0 | attempt (tcp.write big | const "wrote") | shown
+
+# the server end reads everything the writer sent, then answers the reader
+serve : Conn -> () ! {Async, Network, Error[IoError]}
+serve = tap (read-n 4194304 | ignore) | tcp.write ("done" | string.to-bytes)
+
+# One task reads a connection while another writes to it (natively, both
+# wait on the same descriptor).
+duplex : (Conn, Conn) -> (Option[String], Option[String]) ! {Async, Network, Error[IoError]}
+duplex = both (spawn-with reader) id | tap (const 20ms | task.sleep) | both (both .0 (.1 | spawn-with writer)) .1 | tap (const 50ms | task.sleep) | tap (.1 | .1 | serve) | .0 | both (.0 | task.await) (.1 | task.await)
+
+# A task waits to read while another closes the connection.
+close-wait : (Conn, Conn) -> Option[String] ! {Async, Network}
+close-wait = both (spawn-with reader) id | tap (const 20ms | task.sleep) | tap (.1 | .0 | tcp.close) | .0 | task.await
+
+guarded : (Conn, Conn) -> String ! {Async, IO, Network, FileIO}
+guarded = attempt duplex | match
+    Ok _ -> format "reader: {}, writer: {}"
+    Err _ -> .message
+
+closing : (Conn, Conn) -> String ! {Async, IO, Network, FileIO}
+closing = close-wait | format "{}"
+
+listen-error : String -> String ! {Network}
+listen-error = attempt (tcp.listen | const "listening") | shown
+
+wait-forever : () -> () ! {Async, IO, Network, FileIO}
+wait-forever = const 1 | channel.make | the-ch | channel.recv | ignore
+
+# compute (without suspending) until the deadline passes
+spin : () -> Bool ! {Async, IO, Network, FileIO}
+spin = loop (if (const () | task.cancelled) (const (Stop True)) Again)
+
+# a task whose deadline passes while it computes; its child, waiting on a
+# channel, is cancelled with it
+spin-task : () -> Bool ! {Async, IO, Network, FileIO}
+spin-task = tap (const wait-forever | task.spawn) | spin
+
+# run a function in a task with a 10 s deadline (`None` if it hangs)
+guard : ((Conn, Conn) -> String ! {Async, IO, Network, FileIO}) -> (Conn, Conn) -> Option[String] ! {Async}
+guard = curry (fork task.within (const 10s) (fork compose (.1 | const) .0))
+
+huge : Duration
+huge = 9223372036854775807 | make Duration { nanos = id }
+
+main = [
+    "127.0.0.1:0" | tcp.listen | pair | guard guarded | echo,
+    "127.0.0.1:0" | tcp.listen | pair | guard closing | echo,
+    ["127.0.0.1:65536", "127.0.0.1:http", ":0", "127.0.0.1:+80", "127.0.0.1:", "127.0.0.1"] | each (listen-error | print),
+    task.within 30ms spin-task | echo,
+    9000000000000000000 | channel.make | the-ch | tap (flip channel.send 1) | channel.recv | echo,
+    task.within huge (const 7) | echo,
+    task.within 20ms (const huge | task.sleep) | echo,
+] | ignore

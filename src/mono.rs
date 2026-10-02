@@ -126,6 +126,34 @@ fn trits_value(ts: &[i8]) -> i64 {
     ts.iter().fold(0i64, |acc, t| acc * 3 + *t as i64)
 }
 
+/// An integer literal at a primitive type, checked against its range (also
+/// for literals in generic code, which are only known here).
+fn checked_int_value(mt: &MT, neg: bool, mag: u128) -> Result<Option<Value>, String> {
+    if let MT::Con(n, a) = mt {
+        if let Some(name) = n.strip_prefix("std::") {
+            let is_int = a.is_empty()
+                && matches!(
+                    name,
+                    "I8" | "I16"
+                        | "I32"
+                        | "I64"
+                        | "I128"
+                        | "ISize"
+                        | "U8"
+                        | "U16"
+                        | "U32"
+                        | "U64"
+                        | "U128"
+                        | "USize"
+                );
+            if is_int {
+                crate::infer::check_int_range(name, neg, mag)?;
+            }
+        }
+    }
+    Ok(int_value(mt, neg, mag))
+}
+
 pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
     let v: i128 = if neg {
         (mag as i128).wrapping_neg()
@@ -141,22 +169,32 @@ pub fn int_value(mt: &MT, neg: bool, mag: u128) -> Option<Value> {
         "I16" => Value::I16(v as i16),
         "I32" => Value::I32(v as i32),
         "I64" | "ISize" => Value::I64(v as i64),
-        "I128" => Value::I128(if neg { -(mag as i128) } else { mag as i128 }),
+        "I128" => Value::I128(v),
         "U8" => Value::U8(mag as u8),
         "U16" => Value::U16(mag as u16),
         "U32" => Value::U32(mag as u32),
         "U64" | "USize" => Value::U64(mag as u64),
         "U128" => Value::U128(mag),
-        "F32" | "F16" | "BF16" => Value::F32(v as f32),
-        "F64" | "F128" => Value::F64(v as f64),
+        // from the magnitude, which may be 2^127 or more (one rounding)
+        // (an integer zero has no sign)
+        "F32" | "F16" | "BF16" => Value::F32(if neg && mag != 0 {
+            -(mag as f32)
+        } else {
+            mag as f32
+        }),
+        "F64" | "F128" => Value::F64(if neg && mag != 0 {
+            -(mag as f64)
+        } else {
+            mag as f64
+        }),
         _ => return None,
     })
 }
 
-pub fn float_value(mt: &MT, x: f64) -> Option<Value> {
+pub fn float_value(mt: &MT, x: f64, x32: f32) -> Option<Value> {
     match mt {
         MT::Con(n, _) => match n.as_str() {
-            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(x as f32)),
+            "std::F32" | "std::F16" | "std::BF16" => Some(Value::F32(x32)),
             "std::F64" | "std::F128" => Some(Value::F64(x)),
             _ => None,
         },
@@ -700,7 +738,9 @@ impl<'a> Mono<'a> {
         match &e.kind {
             ExprKind::Int { neg, mag, .. } => {
                 let mt = self.node_mt(e.id, s);
-                match int_value(&mt, *neg, *mag) {
+                match checked_int_value(&mt, *neg, *mag)
+                    .map_err(|m| Diagnostic::error(e.span, m))?
+                {
                     Some(v) => Ok(Expr::Const(v)),
                     None => {
                         let v = Value::I64(if *neg {
@@ -712,9 +752,9 @@ impl<'a> Mono<'a> {
                     }
                 }
             }
-            ExprKind::Float { value, .. } => {
+            ExprKind::Float { value, value32, .. } => {
                 let mt = self.node_mt(e.id, s);
-                match float_value(&mt, *value) {
+                match float_value(&mt, *value, *value32) {
                     Some(v) => Ok(Expr::Const(v)),
                     None => self.literal_via_trait(
                         "std::FromFloat",
@@ -948,6 +988,10 @@ impl<'a> Mono<'a> {
     }
 
     fn var(&mut self, e: &ast::Expr, s: &Subst) -> MResult<Expr> {
+        // type-level naturals can reach `TInt` through generic code
+        if let Some(w) = crate::value::too_wide_tint(&self.node_mt(e.id, s)) {
+            return Err(Diagnostic::error(e.span, crate::value::tint_width_error(w)));
+        }
         let inst = self.typed.insts[&e.id].clone();
         let types: Vec<MT> = inst.types.iter().map(|t| self.mt(t, s)).collect();
         let g = &self.env.globals[&inst.target];
@@ -1026,16 +1070,18 @@ impl<'a> Mono<'a> {
                 holes.push(l);
                 Ok(Pat::Bind(l))
             }
-            PatKind::Int { neg, mag } => match int_value(mt, *neg, *mag) {
-                Some(v) => Ok(Pat::Lit(v)),
-                None => Err(Diagnostic::error(
-                    p.span,
-                    format!(
-                        "integer patterns need a primitive numeric type, not `{}`",
-                        mt
-                    ),
-                )),
-            },
+            PatKind::Int { neg, mag } => {
+                match checked_int_value(mt, *neg, *mag).map_err(|m| Diagnostic::error(p.span, m))? {
+                    Some(v) => Ok(Pat::Lit(v)),
+                    None => Err(Diagnostic::error(
+                        p.span,
+                        format!(
+                            "integer patterns need a primitive numeric type, not `{}`",
+                            mt
+                        ),
+                    )),
+                }
+            }
             PatKind::Str(x) => Ok(Pat::Lit(Value::str(x))),
             PatKind::Unit => Ok(Pat::Wild),
             PatKind::Tuple(items) => {

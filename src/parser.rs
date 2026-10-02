@@ -491,15 +491,19 @@ impl<'a> Parser<'a> {
             }
             TypeBody::Variants(vs)
         } else if self.at_sym(Sym::LBrace) {
-            match self.ty()?.kind {
+            let t = self.ty()?;
+            let tspan = t.span;
+            match t.kind {
                 TypeKind::Record(fields, None) => TypeBody::Record(fields),
                 TypeKind::Unit => TypeBody::Record(vec![]),
-                _ => {
+                TypeKind::Record(_, Some(_)) => {
                     return Err(Diagnostic::error(
                         span,
                         "a nominal record declaration cannot have a row tail",
                     ))
                 }
+                // `{ x: I64 } -> I64`: an alias of some other type
+                kind => TypeBody::Alias(TypeExpr { span: tspan, kind }),
             }
         } else if matches!(self.peek_tok(), Tok::Ident(s) if s == "builtin") {
             self.bump();
@@ -860,7 +864,15 @@ impl<'a> Parser<'a> {
         let span = t.span;
         let kind = match t.tok {
             Tok::Int { neg, mag, suffix } => ExprKind::Int { neg, mag, suffix },
-            Tok::Float { value, suffix } => ExprKind::Float { value, suffix },
+            Tok::Float {
+                value,
+                value32,
+                suffix,
+            } => ExprKind::Float {
+                value,
+                value32,
+                suffix,
+            },
             Tok::Str(s) => ExprKind::Str(s),
             Tok::Trits(t) => ExprKind::Trits(t),
             Tok::Duration(d) => ExprKind::Duration(d),
@@ -1045,6 +1057,17 @@ impl<'a> Parser<'a> {
                 mag,
                 suffix: None,
             } => PatKind::Int { neg, mag },
+            Tok::Int {
+                suffix: Some(sfx), ..
+            } => {
+                return Err(Diagnostic::error(
+                    span,
+                    format!(
+                        "integer patterns take no suffix (`{}`); their type comes from the value matched",
+                        sfx
+                    ),
+                ))
+            }
             Tok::Str(s) => PatKind::Str(s),
             Tok::Upper(name) => PatKind::Ctor(name, None),
             Tok::Sym(Sym::LParen) => {
@@ -1061,6 +1084,9 @@ impl<'a> Parser<'a> {
                     if p.at_sym(Sym::Comma) {
                         let mut items = vec![first];
                         while p.eat_sym(Sym::Comma) {
+                            if p.at_sym(Sym::RParen) {
+                                break;
+                            }
                             items.push(p.pattern()?);
                         }
                         p.expect_sym(Sym::RParen)?;

@@ -40,17 +40,34 @@ tensor.at = match
     TScale -> mul | flip compose | compose tensor.at
     TMap -> flip (tensor.at | compose)
 
-rec tensor.length : TensorExpr[n] -> I64
+# The number of elements, or None for an expression made only of fills
+# (a fill takes the length of what it is combined with). Combining two
+# operands of different lengths is a trap.
+rec tensor.length : TensorExpr[n] -> Option[I64]
 tensor.length = match
-    TLeaf -> vector.length
-    TFill -> const 0
-    TAdd -> on max tensor.length
-    TMul -> on max tensor.length
+    TLeaf -> vector.length | Some
+    TFill -> const None
+    TAdd -> on tensor.same-length tensor.length
+    TMul -> on tensor.same-length tensor.length
     TScale -> const tensor.length
     TMap -> const tensor.length
 
+tensor.same-length : Option[I64] -> Option[I64] -> Option[I64]
+tensor.same-length = curry (match
+    (None, _) -> id
+    (Some _, None) -> Some
+    (Some _, Some _) -> curry (if (uncurry eq) (.0 | Some)
+        (format "tensor: operands have different lengths ({} and {})" | prim.trap)))
+
+# Evaluate an expression; a trap when it is made only of fills, whose
+# length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
-realize = fork array.generate tensor.length tensor.at | vector.wrap
+realize = fork array.generate tensor.realized-length tensor.at | vector.wrap
+
+tensor.realized-length : TensorExpr[n] -> I64
+tensor.realized-length = tensor.length | match
+    Some -> id
+    None -> prim.trap "tensor: cannot realize an expression of only fills (its length is unknown)"
 
 rec graph.size : TensorExpr[n] -> I64
 graph.size = match
@@ -85,5 +102,11 @@ graph.constant-fold = match
 
 test "realize" = vector [1.0, 2.0] | tensor.lazy | tensor.add (tensor.fill 10.0) | tensor.scale 2.0 | realize | vector.to-list | eq [22.0, 24.0]
 test "map" = vector [1.0, 4.0] | tensor.lazy | tensor.map sqrt | realize | vector.to-list | eq [1.0, 2.0]
+test "fill takes the other operand's length" = tensor.fill 1.0 | tensor.add (vector [1.0, 2.0, 3.0] | tensor.lazy) | realize | vector.to-list | eq [2.0, 3.0, 4.0]
+test "tensor.length" = vector [1.0, 2.0] | tensor.lazy | tensor.mul (tensor.fill 2.0) | tensor.length | eq (Some 2)
+test "tensor.length of fills" = tensor.fill 2.0 | tensor.scale 3.0 | tensor.test-te | tensor.length | eq None
 test "constant folding" = vector [1.0] | tensor.lazy | tensor.mul (tensor.fill 2.0 | tensor.add (tensor.fill 3.0)) | graph.constant-fold | graph.size | eq 3
 test "nested scale" = vector [1.0] | tensor.lazy | tensor.scale 2.0 | tensor.scale 3.0 | graph.constant-fold | match { TScale -> const, _ -> const 0.0 } | eq 6.0
+
+tensor.test-te : TensorExpr[2] -> TensorExpr[2]
+tensor.test-te = id

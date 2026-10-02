@@ -59,7 +59,8 @@ struct Loader {
     sm: SourceMap,
     next_id: NodeId,
     modules: Vec<(String, HashSet<String>, Vec<Decl>)>,
-    loaded: HashMap<String, ()>,
+    /// Imported modules and the file each was loaded from.
+    loaded: HashMap<String, Option<PathBuf>>,
     errors: Vec<Diagnostic>,
 }
 
@@ -94,13 +95,22 @@ impl Loader {
             ));
             return;
         }
-        if self.loaded.contains_key(name) {
+        let file_name = format!("{}.fwp", name.replace('.', "/"));
+        let path = dir.map(|d| d.join(&file_name));
+        let canonical = path.as_ref().and_then(|p| std::fs::canonicalize(p).ok());
+        if let Some(prev) = self.loaded.get(name) {
+            if prev.is_some() && canonical.is_some() && *prev != canonical {
+                self.errors.push(Diagnostic::error(
+                    span,
+                    format!(
+                        "module `{}` is imported from two different files; module names must be unique",
+                        name
+                    ),                ));
+            }
             return;
         }
-        self.loaded.insert(name.to_string(), ());
-        let file_name = format!("{}.fwp", name.replace('.', "/"));
-        let candidates: Vec<PathBuf> = dir.map(|d| d.join(&file_name)).into_iter().collect();
-        for path in candidates {
+        self.loaded.insert(name.to_string(), canonical);
+        if let Some(path) = path {
             if let Ok(text) = std::fs::read_to_string(&path) {
                 if let Some(m) = self.parse(&path.to_string_lossy(), &text) {
                     let sub = path.parent().map(Path::to_path_buf);
@@ -269,13 +279,17 @@ pub fn compile_source(
 
 /// Run `f` on a thread with a large stack (deeply recursive tacit code).
 pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
+    let size: usize = if cfg!(target_pointer_width = "64") {
+        4 << 30
+    } else {
+        256 << 20
+    };
     std::thread::Builder::new()
-        .stack_size(if cfg!(target_pointer_width = "64") {
-            4 << 30
-        } else {
-            256 << 20
+        .stack_size(size)
+        .spawn(move || {
+            crate::interp::set_stack_limit(size);
+            f()
         })
-        .spawn(f)
         .expect("spawn interpreter thread")
         .join()
         .expect("interpreter thread panicked")

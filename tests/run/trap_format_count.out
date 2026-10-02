@@ -1,0 +1,5 @@
+x = 2
+{} 7
+--- stderr
+fwp: trap: format: placeholder count (2) does not match value count (3) in "{} = {}"
+--- exit 101

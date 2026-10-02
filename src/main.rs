@@ -52,7 +52,11 @@ fn take_links(args: &mut Vec<String>) {
 }
 
 fn main() -> ExitCode {
-    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    // invalid UTF-8 in arguments becomes U+FFFD, as in native programs
+    let mut args: Vec<String> = std::env::args_os()
+        .skip(1)
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect();
     if args.len() > 1 {
         let mut rest = args.split_off(1);
         take_links(&mut rest);
@@ -141,7 +145,7 @@ fn run(args: &[String]) -> ExitCode {
             }
         }
     });
-    ExitCode::from(code.clamp(0, 255) as u8)
+    ExitCode::from((code & 0xff) as u8)
 }
 
 fn test(args: &[String]) -> ExitCode {
@@ -172,13 +176,20 @@ fn test(args: &[String]) -> ExitCode {
                         return 1;
                     }
                 };
-                let exe = std::env::temp_dir().join(format!("fwp-tests-{}", std::process::id()));
+                let dir = match fwp::cgen::TempDir::new("fwp-tests") {
+                    Ok(d) => d,
+                    Err(e) => {
+                        eprintln!("fwp test: {}", e);
+                        return 1;
+                    }
+                };
+                let exe = dir.join("tests");
                 if let Err(e) = fwp::cgen::compile_c(&src, &exe, "-O1") {
                     eprintln!("fwp test: {}", e);
                     return 1;
                 }
                 let status = std::process::Command::new(&exe).status();
-                let _ = std::fs::remove_file(&exe);
+                drop(dir);
                 match status {
                     Ok(s) => s.code().unwrap_or(1),
                     Err(e) => {
@@ -413,14 +424,14 @@ fn exec(args: &[String]) -> ExitCode {
             }
         }
     });
-    ExitCode::from(code.clamp(0, 255) as u8)
+    ExitCode::from((code & 0xff) as u8)
 }
 
 fn pipe(args: &[String]) -> ExitCode {
     let spec = args.join(" ");
     let exe = std::env::current_exe().unwrap_or_else(|_| "fwp".into());
     match fwp::exec::run_pipeline(&exe, &spec) {
-        Ok(code) => ExitCode::from(code.clamp(0, 255) as u8),
+        Ok(code) => ExitCode::from((code & 0xff) as u8),
         Err(e) => {
             eprintln!("fwp pipe: {}", e);
             ExitCode::from(2)

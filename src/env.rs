@@ -293,6 +293,16 @@ impl Env {
                     let map: HashMap<TV, Type> = params.iter().cloned().zip(cargs).collect();
                     return Ok(TypeTable::subst(ty, &map));
                 }
+                if canon == "std::TInt" {
+                    if let Some(Type::Nat(w)) = cargs.first() {
+                        if *w > crate::value::TINT_MAX_WIDTH {
+                            return Err(Diagnostic::error(
+                                te.span,
+                                crate::value::tint_width_error(*w),
+                            ));
+                        }
+                    }
+                }
                 Ok(Type::Con(canon, cargs))
             }
             TypeKind::Fun(a, b, eff) => {
@@ -443,17 +453,96 @@ impl Env {
                 }
             }
         }
-        // Phase 2: type bodies. Aliases first so other bodies can use them.
-        for pass in 0..2 {
-            for (m, _, decls) in &modules {
+        // Phase 2: type bodies. Aliases first, each after the aliases it
+        // mentions, so other bodies can use them; alias cycles are errors.
+        let mut aliases: Vec<(String, &TypeDecl)> = Vec::new();
+        for (m, _, decls) in &modules {
+            for d in decls {
+                if let Decl::Type(td) = d {
+                    if matches!(td.body, TypeBody::Alias(_)) {
+                        aliases.push((m.clone(), td));
+                    }
+                }
+            }
+        }
+        let index: HashMap<String, usize> = aliases
+            .iter()
+            .enumerate()
+            .map(|(i, (m, td))| (format!("{}::{}", m, td.name), i))
+            .collect();
+        let deps: Vec<Vec<usize>> = aliases
+            .iter()
+            .map(|(m, td)| {
                 let scope = Scope { module: m.clone() };
-                for d in decls {
-                    if let Decl::Type(td) = d {
-                        let is_alias = matches!(td.body, TypeBody::Alias(_));
-                        if (pass == 0) == is_alias {
-                            if let Err(e) = self.type_body(td, &scope) {
-                                self.errors.push(e);
-                            }
+                let mut names = Vec::new();
+                if let TypeBody::Alias(t) = &td.body {
+                    type_names(t, &mut names);
+                }
+                names
+                    .iter()
+                    .filter_map(|n| self.resolve_type(&scope, n))
+                    .filter_map(|c| index.get(&c).copied())
+                    .collect()
+            })
+            .collect();
+        // 0 = unvisited, 1 = in progress, 2 = done
+        let mut state = vec![0u8; aliases.len()];
+        let mut order = Vec::new();
+        fn visit(
+            i: usize,
+            deps: &[Vec<usize>],
+            state: &mut [u8],
+            order: &mut Vec<usize>,
+            cyclic: &mut Vec<usize>,
+        ) {
+            match state[i] {
+                2 => return,
+                1 => {
+                    cyclic.push(i);
+                    return;
+                }
+                _ => {}
+            }
+            state[i] = 1;
+            for &d in &deps[i] {
+                visit(d, deps, state, order, cyclic);
+            }
+            state[i] = 2;
+            order.push(i);
+        }
+        let mut cyclic = Vec::new();
+        for i in 0..aliases.len() {
+            visit(i, &deps, &mut state, &mut order, &mut cyclic);
+        }
+        cyclic.sort();
+        cyclic.dedup();
+        for &i in &cyclic {
+            let td = aliases[i].1;
+            self.errors.push(Diagnostic::error(
+                td.span,
+                format!(
+                    "type alias `{}` refers to itself; use a `type` with constructors for recursive types",
+                    td.name
+                ),
+            ));
+        }
+        for i in order {
+            if cyclic.contains(&i) {
+                continue;
+            }
+            let (m, td) = &aliases[i];
+            let scope = Scope { module: m.clone() };
+            if let Err(e) = self.type_body(td, &scope) {
+                self.errors.push(e);
+            }
+        }
+        for (m, _, decls) in &modules {
+            let scope = Scope { module: m.clone() };
+            for d in decls {
+                if let Decl::Type(td) = d {
+                    if !matches!(td.body, TypeBody::Alias(_)) {
+                        if let Err(e) = self.type_body(td, &scope) {
+                            self.errors.push(e);
                         }
                     }
                 }
@@ -1384,4 +1473,30 @@ fn heads_overlap(table: &TypeTable, a: &[Type], b: &[Type]) -> bool {
         }
     }
     a.iter().zip(b).all(|(x, y)| ov(table, x, y))
+}
+
+/// The type names mentioned in a type expression.
+fn type_names(t: &TypeExpr, out: &mut Vec<String>) {
+    match &t.kind {
+        TypeKind::Name(n, args) => {
+            out.push(n.clone());
+            for a in args {
+                type_names(a, out);
+            }
+        }
+        TypeKind::Fun(a, b, eff) => {
+            type_names(a, out);
+            type_names(b, out);
+            if let Some(e) = eff {
+                for (_, ts) in &e.labels {
+                    for t in ts {
+                        type_names(t, out);
+                    }
+                }
+            }
+        }
+        TypeKind::Tuple(ts) => ts.iter().for_each(|t| type_names(t, out)),
+        TypeKind::Record(fs, _) => fs.iter().for_each(|(_, t)| type_names(t, out)),
+        TypeKind::Unit | TypeKind::Nat(_) => {}
+    }
 }

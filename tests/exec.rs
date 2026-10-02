@@ -111,6 +111,33 @@ fn check(r: &Runner) {
             "usage: scale <I64> <I64>\n  (the last argument may instead be given as records on stdin)\ncode=2",
         ),
         ("total", &[], "1\nx\n", "total: cannot parse input `x` as I64\ncode=3"),
+        ("later", &["90min"], "", "90min\ncode=0"),
+        ("later", &["9223372036854775807ns"], "", "9223372036854775807ns\ncode=0"),
+        (
+            "later",
+            &[],
+            "9223372036854775808ns\n",
+            "later: cannot parse input `9223372036854775808ns` as Duration\ncode=3",
+        ),
+        (
+            "later",
+            &[],
+            "3000000000h\n",
+            "later: cannot parse input `3000000000h` as Duration\ncode=3",
+        ),
+        (
+            "later",
+            &[],
+            "99999999999999999999999s\n",
+            "later: cannot parse input `99999999999999999999999s` as Duration\ncode=3",
+        ),
+        ("flag", &[], "true\nFalse\n", "False\nTrue\ncode=0"),
+        (
+            "flag",
+            &["TRUE"],
+            "",
+            "flag: argument 1: cannot parse `TRUE` as Bool\ncode=2",
+        ),
     ];
     for (func, args, stdin, want) in cases {
         let got = text(r, func, args, stdin);
@@ -133,6 +160,8 @@ fn native() -> Runner {
         "shout",
         "halve",
         "safe-div",
+        "later",
+        "flag",
     ] {
         let exe = dir.join(f);
         let out = Command::new(fwp())
@@ -185,6 +214,82 @@ fn executables_behave_identically() {
     let a = run(&Runner::Interp, "pairs", &["3"], b"", true).0;
     let b = run(&n, "pairs", &["3"], b"", true).0;
     assert_eq!(a, b);
+    // malformed and invalid input is rejected identically
+    for (func, stdin, want) in malformed_inputs() {
+        for r in [&Runner::Interp, &n] {
+            let (out, err, code) = run(r, func, &[], &stdin, false);
+            let got = format!("{}{}code={}", String::from_utf8_lossy(&out), err, code);
+            assert_eq!(got, want, "{} <<< {:?}", func, stdin);
+        }
+    }
+}
+
+fn leb(mut x: u64) -> Vec<u8> {
+    let mut out = Vec::new();
+    loop {
+        let b = (x & 0x7f) as u8;
+        x >>= 7;
+        if x == 0 {
+            out.push(b);
+            return out;
+        }
+        out.push(b | 0x80);
+    }
+}
+
+fn frame(payload: &[u8]) -> Vec<u8> {
+    let mut out = vec![1u8];
+    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    out.extend_from_slice(payload);
+    out
+}
+
+/// Binary streams with corrupt lengths and text with invalid UTF-8.
+fn malformed_inputs() -> Vec<(&'static str, Vec<u8>, String)> {
+    let header = run(&Runner::Interp, "normalize", &["x"], b"", true).0;
+    let header = header[..header.len() - 7 - 5].to_vec(); // minus the "x" frame and the end
+    let stream = |payload: &[u8]| [header.clone(), frame(payload), vec![0; 5]].concat();
+    let bad = |what: &str| format!("normalize: {}\ncode=3", what);
+    let mut huge = vec![0xffu8; 9];
+    huge.push(0x01);
+    let mut overlong = vec![0xffu8; 9];
+    overlong.push(0x7f);
+    vec![
+        (
+            "normalize",
+            stream(&[leb(2), b"Hi".to_vec()].concat()),
+            "hi\ncode=0".into(),
+        ),
+        ("normalize", stream(&huge), bad("malformed value")),
+        ("normalize", stream(&overlong), bad("malformed value")),
+        ("normalize", stream(&[1, 0xff]), bad("malformed value")),
+        (
+            "normalize",
+            [header.clone(), vec![1, 2]].concat(),
+            bad("truncated frame"),
+        ),
+        (
+            "normalize",
+            [b"FWP1\x01".to_vec(), leb(0), vec![0; 16], huge.clone()].concat(),
+            bad("bad header"),
+        ),
+        (
+            "normalize",
+            [b"FWP1\x01".to_vec(), leb(1), leb(1 << 40)].concat(),
+            bad("bad header"),
+        ),
+        (
+            "normalize",
+            [b"FWP1\x01".to_vec(), leb(1)].concat(),
+            bad("truncated header"),
+        ),
+        // invalid UTF-8 in text records becomes U+FFFD
+        (
+            "normalize",
+            b"A\xffB\xe2\x82\n".to_vec(),
+            "a\u{fffd}b\u{fffd}\ncode=0".into(),
+        ),
+    ]
 }
 
 #[test]

@@ -329,6 +329,44 @@ pub fn escape_str(s: &str) -> String {
     out
 }
 
+/// Text from outside the program (stdin, arguments, the environment): each
+/// maximal invalid UTF-8 subsequence becomes U+FFFD (as `fwp_str_lossy` in
+/// the C runtime).
+pub fn lossy(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+/// The widest `TInt[N]`: values of up to 40 trits fit in an `i64`, which is
+/// how both backends store them.
+pub const TINT_MAX_WIDTH: u64 = 40;
+
+/// The error for a `TInt[n]` wider than [`TINT_MAX_WIDTH`].
+pub fn tint_width_error(n: u64) -> String {
+    format!(
+        "`TInt[{}]` is too wide: balanced ternary integers have at most {} trits",
+        n, TINT_MAX_WIDTH
+    )
+}
+
+/// The width of the first `TInt[n]` in `mt` wider than [`TINT_MAX_WIDTH`].
+pub fn too_wide_tint(mt: &MT) -> Option<u64> {
+    match mt {
+        MT::Con(n, args) => {
+            if n == "std::TInt" {
+                if let Some(MT::Nat(w)) = args.first() {
+                    if *w > TINT_MAX_WIDTH {
+                        return Some(*w);
+                    }
+                }
+            }
+            args.iter().find_map(too_wide_tint)
+        }
+        MT::Fun(a, b) => too_wide_tint(a).or_else(|| too_wide_tint(b)),
+        MT::Record(fs) => fs.iter().find_map(|(_, t)| too_wide_tint(t)),
+        MT::Nat(_) => None,
+    }
+}
+
 pub fn trits_of(mut v: i64, width: u64) -> String {
     let mut digits = Vec::new();
     for _ in 0..width {

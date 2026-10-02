@@ -1,7 +1,7 @@
 //! Type inference: Hindley–Milner with levels, rows for records and
 //! effects, explicit `rec`, pipe-mode resolution and tacit `match`.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::ast::*;
 use crate::diag::{Diagnostic, Span};
@@ -38,6 +38,16 @@ pub struct Typed {
     pub reflected: HashMap<NodeId, Type>,
 }
 
+/// A record operation (`with`, `update`) whose input type is not known yet:
+/// a nominal record input keeps its type; anything else becomes a row.
+struct FieldReq {
+    span: Span,
+    input: Type,
+    output: Type,
+    /// field name, input type, output type
+    fields: Vec<(String, Type, Type)>,
+}
+
 struct Deferred {
     node: NodeId,
     span: Span,
@@ -56,6 +66,7 @@ pub struct Infer<'a> {
     pub(crate) group: HashMap<String, Type>,
     pub(crate) current: String,
     deferred: Vec<Deferred>,
+    field_reqs: Vec<FieldReq>,
     /// Predicates required by the binding being checked.
     pub(crate) wanted: Vec<(Pred, Span)>,
     /// Unsuffixed integer literals, checked against their final type.
@@ -66,6 +77,9 @@ pub struct Infer<'a> {
     comptimes: Vec<(Row, Span)>,
     /// Applications whose argument is captured if the result is a function.
     captures: Vec<(Span, Type, Type)>,
+    /// uses of `vector`/`matrix`, and the ones sized by a literal argument
+    size_uses: Vec<(NodeId, Span, &'static str)>,
+    sized: HashSet<NodeId>,
 }
 
 /// Effects permitted at compile time.
@@ -74,6 +88,7 @@ pub const COMPTIME_EFFECTS: &[&str] = &["IO", "FileIO", "Alloc", "Error"];
 type IResult<T> = Result<T, Diagnostic>;
 
 pub fn check_program(env: &mut Env, out: &mut Typed) {
+    check_superclasses(env, out);
     let order = binding_order(env);
     for group in order {
         let mut inf = Infer {
@@ -86,14 +101,92 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             group: HashMap::new(),
             current: String::new(),
             deferred: Vec::new(),
+            field_reqs: Vec::new(),
             wanted: Vec::new(),
             int_lits: Vec::new(),
             ctxs: Vec::new(),
             comptimes: Vec::new(),
             captures: Vec::new(),
+            size_uses: Vec::new(),
+            sized: HashSet::new(),
         };
         inf.check_group(&group);
     }
+}
+
+/// Every impl must be accompanied by impls of its trait's superclasses
+/// (under the impl's own context).
+fn check_superclasses(env: &mut Env, out: &mut Typed) {
+    let mut errors = Vec::new();
+    for i in 0..env.impls.len() {
+        let imp = env.impls[i].clone();
+        let Some(tr) = env.traits.get(&imp.trait_name).cloned() else {
+            continue;
+        };
+        if tr.supers.is_empty() {
+            continue;
+        }
+        let map: HashMap<TV, Type> = tr
+            .params
+            .iter()
+            .copied()
+            .zip(imp.head.iter().cloned())
+            .collect();
+        let wanted: Vec<(Pred, Span)> = tr
+            .supers
+            .iter()
+            .map(|p| {
+                (
+                    Pred {
+                        trait_name: p.trait_name.clone(),
+                        args: p.args.iter().map(|a| TypeTable::subst(a, &map)).collect(),
+                    },
+                    imp.span,
+                )
+            })
+            .collect();
+        let mut inf = Infer {
+            env,
+            out,
+            level: 0,
+            scope: Scope {
+                module: imp.module.clone(),
+            },
+            group: HashMap::new(),
+            current: String::new(),
+            deferred: Vec::new(),
+            field_reqs: Vec::new(),
+            wanted: Vec::new(),
+            int_lits: Vec::new(),
+            ctxs: Vec::new(),
+            comptimes: Vec::new(),
+            captures: Vec::new(),
+            size_uses: Vec::new(),
+            sized: HashSet::new(),
+        };
+        let given = inf.given_closure(&imp.context);
+        match inf.solve(wanted, &given) {
+            Ok(residual) => {
+                for (p, sp) in residual {
+                    let msg = format!(
+                        "this impl of `{}` also needs an implementation of `{}` (a superclass)",
+                        display_name(&imp.trait_name),
+                        inf.show_pred(&p)
+                    );
+                    errors.push(Diagnostic::error(sp, msg));
+                }
+            }
+            Err(d) => errors.push(Diagnostic::error(
+                imp.span,
+                format!(
+                    "this impl of `{}` needs its superclasses: {}",
+                    display_name(&imp.trait_name),
+                    d.message
+                ),
+            )),
+        }
+    }
+    env.errors.extend(errors);
 }
 
 /// Free value names of an expression (unresolved source names), together
@@ -350,6 +443,7 @@ impl<'a> Infer<'a> {
         self.level = 1;
         self.group.clear();
         self.deferred.clear();
+        self.field_reqs.clear();
         self.int_lits.clear();
         self.ctxs.clear();
         self.comptimes.clear();
@@ -431,6 +525,23 @@ impl<'a> Infer<'a> {
                 Ok(r) => residual = r,
                 Err(d) => {
                     self.env.errors.push(d);
+                    failed = true;
+                }
+            }
+        }
+        if !failed {
+            let sized = std::mem::take(&mut self.sized);
+            for (id, sp, what) in std::mem::take(&mut self.size_uses) {
+                if !sized.contains(&id) {
+                    self.env.errors.push(Diagnostic::error(
+                        sp,
+                        format!(
+                            "`{}` takes its size from a list literal (`{} [...]`); for a computed list use `{}`",
+                            what,
+                            what,
+                            if what == "vector" { "vector.from-list" } else { "matrix.from-rows" }
+                        ),
+                    ));
                     failed = true;
                 }
             }
@@ -630,9 +741,85 @@ impl<'a> Infer<'a> {
         Ok(t)
     }
 
+    /// Settle a record operation: a nominal input record keeps its type
+    /// (field types must then be preserved); otherwise input and output
+    /// are rows sharing their other fields.
+    fn finish_field_req(&mut self, req: FieldReq) -> IResult<()> {
+        let input = self.env.table.resolve(&req.input);
+        let nominal = matches!(&input, Type::Con(n, _) if self.env.table.records.contains_key(n));
+        let what = "the record";
+        if nominal {
+            let mut fs: Vec<(String, Type)> = req
+                .fields
+                .iter()
+                .map(|(n, a, _)| (n.clone(), a.clone()))
+                .collect();
+            fs.sort_by(|a, b| a.0.cmp(&b.0));
+            let r = self.env.table.fresh(Kind::Row, self.level);
+            let row = Type::Record(Row {
+                fields: fs,
+                tail: Some(r),
+            });
+            self.unify(req.span, &row, &input, what)?;
+            for (_, a, b) in &req.fields {
+                self.unify(req.span, a, b, what)?;
+            }
+            self.unify(req.span, &input, &req.output, what)?;
+        } else {
+            let r = self.env.table.fresh(Kind::Row, self.level);
+            let mut rin = Row {
+                fields: req
+                    .fields
+                    .iter()
+                    .map(|(n, a, _)| (n.clone(), a.clone()))
+                    .collect(),
+                tail: Some(r),
+            };
+            rin.sort();
+            let mut rout = Row {
+                fields: req
+                    .fields
+                    .iter()
+                    .map(|(n, _, b)| (n.clone(), b.clone()))
+                    .collect(),
+                tail: Some(r),
+            };
+            rout.sort();
+            self.unify(req.span, &Type::Record(rin), &input, what)?;
+            self.unify(req.span, &Type::Record(rout), &req.output, what)?;
+        }
+        Ok(())
+    }
+
+    fn resolve_field_reqs(&mut self, force: bool) -> IResult<bool> {
+        let mut progress = false;
+        for req in std::mem::take(&mut self.field_reqs) {
+            let known = !matches!(self.env.table.resolve(&req.input), Type::Var(_))
+                || !matches!(self.env.table.resolve(&req.output), Type::Var(_));
+            if known || force {
+                // a known output (and unknown input) means the same type
+                if matches!(self.env.table.resolve(&req.input), Type::Var(_))
+                    && matches!(self.env.table.resolve(&req.output), Type::Con(..))
+                    && req.fields.iter().all(|(_, a, b)| {
+                        let (a, b) = (self.env.table.resolve(a), self.env.table.resolve(b));
+                        crate::env::types_equal(&self.env.table, &a, &b)
+                    })
+                {
+                    let (i, o) = (req.input.clone(), req.output.clone());
+                    self.unify(req.span, &i, &o, "the record")?;
+                }
+                progress = true;
+                self.finish_field_req(req)?;
+            } else {
+                self.field_reqs.push(req);
+            }
+        }
+        Ok(progress)
+    }
+
     fn resolve_deferred(&mut self) -> IResult<()> {
         loop {
-            let mut progress = false;
+            let mut progress = self.resolve_field_reqs(false)?;
             let pending = std::mem::take(&mut self.deferred);
             for d in pending {
                 let l = self.env.table.resolve(&d.lhs);
@@ -648,8 +835,12 @@ impl<'a> Infer<'a> {
                     }
                 }
             }
-            if self.deferred.is_empty() {
+            if self.deferred.is_empty() && self.field_reqs.is_empty() {
                 return Ok(());
+            }
+            if !progress && !self.field_reqs.is_empty() {
+                self.resolve_field_reqs(true)?;
+                continue;
             }
             if !progress {
                 // Default the remaining ones to application.
@@ -844,12 +1035,25 @@ impl<'a> Infer<'a> {
                 Ok(Type::con(&format!("std::{}", name)))
             }
             ExprKind::Str(_) => Ok(Type::con("std::String")),
+            ExprKind::Trits(ts) if ts.len() as u64 > crate::value::TINT_MAX_WIDTH => Err(
+                Diagnostic::error(e.span, crate::value::tint_width_error(ts.len() as u64)),
+            ),
             ExprKind::Trits(ts) => Ok(Type::Con(
                 "std::TInt".into(),
                 vec![Type::Nat(ts.len() as u64)],
             )),
             ExprKind::Duration(_) => Ok(Type::con("std::Duration")),
-            ExprKind::Var(name) => self.lookup_var(e, name),
+            ExprKind::Var(name) => {
+                let t = self.lookup_var(e, name)?;
+                let user = self.scope.module != "std";
+                match self.env.resolve_value(&self.scope, name).as_deref() {
+                    _ if !user => {}
+                    Some("std::vector") => self.size_uses.push((e.id, e.span, "vector")),
+                    Some("std::matrix") => self.size_uses.push((e.id, e.span, "matrix")),
+                    _ => {}
+                }
+                Ok(t)
+            }
             ExprKind::Ctor(name) => {
                 let (canon, t, inst) = self.lookup_ctor(e.span, name)?;
                 self.out.insts.insert(
@@ -892,6 +1096,10 @@ impl<'a> Infer<'a> {
                 let tl = self.infer(l, ctx)?;
                 let tr = self.infer(r, ctx)?;
                 let result = self.fresh();
+                // `[..] | vector` sizes the vector like `vector [..]`
+                if matches!(l.kind, ExprKind::List(_)) {
+                    self.size_literal(e, r, std::slice::from_ref(l), &result)?;
+                }
                 match self.env.table.resolve(&tl) {
                     Type::Fun(..) => self.finish_compose(e.id, e.span, &tl, &tr, &result)?,
                     Type::Var(_) => self.deferred.push(Deferred {
@@ -939,15 +1147,16 @@ impl<'a> Infer<'a> {
             ExprKind::With(fields) => {
                 let mut fs = Vec::new();
                 for (n, x) in fields {
-                    fs.push((n.clone(), self.infer(x, ctx)?));
+                    let t = self.infer(x, ctx)?;
+                    fs.push((n.clone(), t.clone(), t));
                 }
-                let r = self.env.table.fresh(Kind::Row, self.level);
-                let mut row = Row {
+                let t = self.fresh();
+                self.field_reqs.push(FieldReq {
+                    span: e.span,
+                    input: t.clone(),
+                    output: t.clone(),
                     fields: fs,
-                    tail: Some(r),
-                };
-                row.sort();
-                let t = Type::Record(row);
+                });
                 let eff = self.fresh_eff();
                 Ok(Type::fun(t.clone(), t, eff))
             }
@@ -991,17 +1200,19 @@ impl<'a> Infer<'a> {
                     ins.push((n.clone(), a));
                     outs.push((n.clone(), b));
                 }
-                let mut rin = Row {
-                    fields: ins,
-                    tail: Some(r),
-                };
-                rin.sort();
-                let mut rout = Row {
-                    fields: outs,
-                    tail: Some(r),
-                };
-                rout.sort();
-                Ok(Type::fun(Type::Record(rin), Type::Record(rout), eff))
+                let _ = r;
+                let (tin, tout) = (self.fresh(), self.fresh());
+                self.field_reqs.push(FieldReq {
+                    span: e.span,
+                    input: tin.clone(),
+                    output: tout.clone(),
+                    fields: ins
+                        .into_iter()
+                        .zip(outs)
+                        .map(|((n, a), (_, b))| (n, a, b))
+                        .collect(),
+                });
+                Ok(Type::fun(tin, tout, eff))
             }
             ExprKind::Match(arms) => self.infer_match(e, arms),
             ExprKind::Comptime(x) => {
@@ -1151,6 +1362,9 @@ impl<'a> Infer<'a> {
         let ExprKind::List(items) = &arg.kind else {
             return Ok(());
         };
+        if matches!(which.as_deref(), Some("std::vector") | Some("std::matrix")) {
+            self.sized.insert(f.id);
+        }
         match which.as_deref() {
             Some("std::vector") => {
                 let want = Type::Con(

@@ -22,6 +22,8 @@ pub enum Tok {
     },
     Float {
         value: f64,
+        /// The literal rounded once, directly to `F32` precision.
+        value32: f32,
         suffix: Option<String>,
     },
     /// Balanced ternary literal `0t+-0`, most significant trit first.
@@ -522,11 +524,26 @@ impl<'a> Lexer<'a> {
         };
         if let Some(sfx) = &suffix {
             if let Some(unit) = duration_unit(sfx) {
-                let v: f64 = digits.parse().unwrap_or(0.0);
-                let mut ns = if is_float {
-                    (v * unit as f64).round() as i128
+                if radix != 10 {
+                    return self.err(line, col, "duration literals must be decimal");
+                }
+                let ns = if is_float {
+                    let v: f64 = digits.parse().unwrap_or(f64::INFINITY);
+                    let ns = (v * unit as f64).round();
+                    (ns < i64::MAX as f64).then_some(ns as i128)
                 } else {
-                    digits.parse::<i128>().unwrap_or(0) * unit
+                    digits
+                        .parse::<i128>()
+                        .ok()
+                        .and_then(|d| d.checked_mul(unit))
+                        .filter(|ns| *ns <= i64::MAX as i128)
+                };
+                let Some(mut ns) = ns else {
+                    return self.err(
+                        line,
+                        col,
+                        "duration literal out of range (at most about 292 years)",
+                    );
                 };
                 if neg {
                     ns = -ns;
@@ -543,13 +560,19 @@ impl<'a> Lexer<'a> {
             if radix != 10 {
                 return self.err(line, col, "float literals must be decimal");
             }
-            let mut v: f64 = digits
-                .parse()
-                .map_err(|_| Diagnostic::error(self.span_from(line, col, s), "bad float"))?;
+            let bad = |_| Diagnostic::error(self.span_from(line, col, s), "bad float");
+            let mut v: f64 = digits.parse().map_err(bad)?;
+            // parsed separately: rounding the f64 again would round twice
+            let mut v32: f32 = digits.parse().map_err(bad)?;
             if neg {
                 v = -v;
+                v32 = -v32;
             }
-            return Ok(Tok::Float { value: v, suffix });
+            return Ok(Tok::Float {
+                value: v,
+                value32: v32,
+                suffix,
+            });
         }
         if let Some(sfx) = &suffix {
             if !is_int_suffix(sfx) {
@@ -684,10 +707,12 @@ mod tests {
                 },
                 Tok::Float {
                     value: 1.5,
+                    value32: 1.5,
                     suffix: Some("f32".into())
                 },
                 Tok::Float {
                     value: 2000.0,
+                    value32: 2000.0,
                     suffix: None
                 },
                 Tok::Int {

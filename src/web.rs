@@ -112,6 +112,11 @@ pub fn url_decode(s: &Value, plus: bool) -> Value {
 /// defaults to "/".
 pub fn url_split(s: &Value) -> Value {
     let s = s.as_str();
+    // no spaces or control characters anywhere: they would end up in a
+    // request line or a host header
+    if s.bytes().any(|c| c <= 0x20 || c == 0x7f) {
+        return none();
+    }
     let Some(i) = s.find("://") else {
         return none();
     };
@@ -139,6 +144,9 @@ pub fn url_split(s: &Value) -> Value {
         match stripped.find(']') {
             Some(e) => {
                 let after = &stripped[e + 1..];
+                if !after.is_empty() && !after.starts_with(':') {
+                    return none();
+                }
                 (&stripped[..e], after.strip_prefix(':'))
             }
             None => return none(),
@@ -176,6 +184,44 @@ pub fn url_split(s: &Value) -> Value {
 
 fn tchar(c: u8) -> bool {
     c.is_ascii_alphanumeric() || b"!#$%&'*+-.^_`|~".contains(&c)
+}
+
+/// `http.field-ok name value`: a header that can be written without
+/// changing the message's framing: a token as its name, and no control
+/// characters (CR, LF, NUL, ...) but tabs in its value.
+pub fn field_ok(name: &Value, value: &Value) -> Value {
+    let (n, v) = (name.as_str().as_bytes(), value.as_str().as_bytes());
+    Value::bool(
+        !n.is_empty()
+            && n.iter().all(|c| tchar(*c))
+            && !v.iter().any(|c| *c < 0x20 && *c != b'\t' || *c == 0x7f),
+    )
+}
+
+/// `http.content-length headers`: the body length a request declares; 0
+/// without a content-length header, and -1 when its value is not a plain
+/// decimal number or the header is repeated (requests whose framing is
+/// ambiguous are rejected rather than guessed at).
+pub fn content_length(headers: &Value) -> Value {
+    let mut length = None;
+    for h in headers.list_items() {
+        let Value::Record(fs) = &h else {
+            continue;
+        };
+        if !fs[0].as_str().eq_ignore_ascii_case("content-length") {
+            continue;
+        }
+        let v = fs[1].as_str();
+        if length.is_some()
+            || v.is_empty()
+            || v.len() > 18
+            || !v.bytes().all(|c| c.is_ascii_digit())
+        {
+            return Value::I64(-1);
+        }
+        length = v.parse::<i64>().ok();
+    }
+    Value::I64(length.unwrap_or(0))
 }
 
 /// Header lines after the first line: lower-cased names, trimmed values.

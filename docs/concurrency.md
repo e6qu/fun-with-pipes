@@ -6,15 +6,8 @@ Concurrency is structured. `task.spawn` starts a task as a child of the
 current one. A task finishes only after all of its children have finished,
 and a program's `main` (or a test) waits for every task it started.
 
-```
-task.spawn : (() -> a ! {Async, IO, Network, FileIO}) -> Task[a] ! {Async}
-task.await : Task[a] -> Option[a] ! {Async}      # None if it was cancelled
-task.cancel : Task[a] -> () ! {Async}
-task.within : Duration -> (() -> a ! {...}) -> Option[a] ! {Async}
-task.deadline : Duration -> a -> a ! {Async}     # also `timeout`
-task.scope : (() -> a ! {Async | e}) -> a ! {Async | e}
-task.sleep, task.yield, task.cancelled, task.map
-```
+`task.await` returns `None` for a cancelled task. The functions are
+listed in the [standard library reference](stdlib.md#tasks-and-channels).
 
 A spawned function may perform IO but must handle its own errors, because
 `Error` is not among its allowed effects. If a task fails in some other way
@@ -29,16 +22,9 @@ passes, so a deadline set on a task also applies to all of its children.
 `task.scope f` waits for the tasks that `f` started; if `f` fails, those
 tasks are cancelled first.
 
-Channels are bounded FIFO queues:
-
-```
-channel.make : I64 -> Channel[a] ! {Async}
-channel.send : Channel[a] -> a -> Bool ! {Async}   # False once closed
-channel.recv : Channel[a] -> Option[a] ! {Async}   # None once closed and empty
-channel.recv-for, channel.close
-```
-
-A sender that finds the channel full waits, which propagates backpressure.
+Channels are bounded FIFO queues: `channel.send` returns `False` once the
+channel is closed, and `channel.recv` returns `None` once it is closed and
+empty. A sender that finds the channel full waits, which propagates backpressure.
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running
@@ -59,10 +45,13 @@ pre-empted. A native program in which every task waits forever stops with a
 ## Networking
 
 `tcp.listen`, `tcp.accept`, `tcp.accept-for`, `tcp.connect`, `tcp.read`,
-`tcp.read-for`, `tcp.write`, `tcp.close`, `udp.bind`, `udp.send-to`,
-`udp.recv-from` and `dns.resolve`. Addresses are `"host:port"` strings, and
-failures raise `Error[IoError]`. Only the calling task is suspended while a
-socket operation waits.
+`tcp.read-for`, `tcp.write`, `tcp.write-for`, `tcp.close`, `udp.bind`,
+`udp.send-to`, `udp.recv-from` and `dns.resolve`. Addresses are
+`"host:port"` strings, with a non-empty host (IPv6 in brackets) and a
+decimal port up to 65535; failures raise `Error[IoError]`. Only the calling
+task is suspended while a socket operation waits. One task may read a
+connection while another writes to it, and closing a socket wakes the
+tasks waiting on it, which then fail with a "closed" error.
 
 `signal.shutdown-requested ()` becomes true after SIGINT or SIGTERM (its
 first call installs the handlers), or after `signal.request-shutdown ()`.
@@ -91,7 +80,12 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
     taken, the server stops accepting until one frees up.
   - `max-header-bytes` (431) and `max-body-bytes` (413) bound request sizes.
   - `max-requests-per-connection` limits keep-alive reuse.
-  - `idle-timeout` applies while waiting for a request.
+  - `idle-timeout` (30 s) applies while waiting for a request.
+    `header-timeout` (10 s) bounds the time from a request's first byte to
+    the end of its head, and `body-timeout` (30 s) the time to receive its
+    body; when either passes, the client gets 408. `write-timeout` (30 s)
+    bounds writing each response (or each chunk of a streamed one), after
+    which the connection is dropped.
   - `request-timeout` bounds each handler, which runs in its own task; when
     the timeout passes, the handler is cancelled and the client gets 503.
   - On SIGINT or SIGTERM, the server stops accepting and lets in-flight
@@ -100,13 +94,23 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
   connection; responses may be chunked or sized by `content-length`.
 
 TLS, HTTP/2, HTTP/3 and WebSocket are not implemented yet. Request bodies
-with a transfer encoding are rejected with 501.
+with a transfer encoding are rejected with 501, and requests whose
+`content-length` is not a plain decimal number or appears more than once
+with 400, so that a request's length is never ambiguous. A response whose
+status is not three digits or that has a header that cannot be written as
+is (a name that is not a token, a value with CR, LF, NUL or another
+control character) is replaced by a 500. The client likewise refuses such
+methods and headers, and URLs with spaces or control characters; its
+`host` header carries the port when it is not the scheme's default.
 
 `examples/server/api.fwp` is a complete JSON API. `tests/http_server.rs`
 drives it, both interpreted and native, with curl, a concurrent keep-alive
 load test, and a SIGTERM shutdown while a request is in flight.
 
 ## JSON, URLs, logs and metrics
+
+The signatures of everything below are in the
+[standard library reference](stdlib.md#http).
 
 - **JSON:** `json.parse` (errors give the byte offset), `json.encode`,
   `json.get`, `json.at` and `json.as-*`. `null` is the explicit variant

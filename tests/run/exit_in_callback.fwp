@@ -1,0 +1,12 @@
+# `exit` with i32::MIN from inside the callback of a primitive (fold-right)
+die : I64 -> I64 -> I64 ! {IO}
+die = curry (const -2147483648i32 | exit)
+
+main =
+    ["before"]
+    | each print
+    | const [1, 2]
+    | fold-right die 0
+    | echo
+    | const "after"
+    | print

@@ -1,0 +1,39 @@
+# Standard library behaviours: argument order, laziness, bounds, parsing.
+
+m = matrix [[1, 2], [3, 4]] | matrix.dyn
+
+main = [
+    # zip-with passes the subject's element last, like `x | sub y`
+    [10, 20] | zip-with sub [1, 2] | echo,
+    vector [5.0, 7.0] | vector.sub (vector [1.0, 2.0]) | echo,
+    # iter.take never forces the element after the last one taken
+    1 | iter.count-from | iter.filter (lt 4) | iter.take 3 | iter.to-list | echo,
+    1 | iter.count-from | iter.take -1 | iter.to-list | the-ints | echo,
+    # a long run of rejected elements
+    0 | iter.count-from | iter.filter (rem 300000 | eq 299999) | iter.take 1 | iter.to-list | echo,
+    [1, 2, 3, 4, 5] | partition (rem 2 | eq 1) | echo,
+    m | matrix.get 1 1 | echo,
+    m | matrix.get 0 2 | echo,
+    m | matrix.get 2 0 | echo,
+    [] | matrix.from-rows | the-im | transpose | echo,
+    ["nan", "inf", "-inf", "INF", "x"] | map parse-float | the-ofs | echo,
+    "inf" | parse-float | the-of32 | echo,
+    2s | add 250ms | echo,
+    2s | sub 250ms | echo,
+    [trit.pos, trit.neg, trit.zero, trit.pos, trit.pos] | trits.pack | trits.unpack 9 | map trit.to-int | echo,
+    "123456" | pad-left 4 "0" | echo,
+    "a\rb" | log.quote | echo,
+    vector.from-list [1.0, 2.0] | tensor.lazy | tensor.add (tensor.fill 0.5) | realize | echo,
+] | ignore
+
+the-ints : List[I64] -> List[I64]
+the-ints = id
+
+the-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
+the-im = id
+
+the-ofs : List[Option[F64]] -> List[Option[F64]]
+the-ofs = id
+
+the-of32 : Option[F32] -> Option[F32]
+the-of32 = id

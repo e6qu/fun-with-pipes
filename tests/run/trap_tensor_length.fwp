@@ -1,0 +1,5 @@
+# Tensor operands of different lengths are a trap, not silently padded.
+main = [
+    vector.from-list [1.0, 2.0] | tensor.lazy | tensor.mul (vector.from-list [3.0, 4.0] | tensor.lazy) | realize | echo,
+    vector.from-list [1.0, 2.0] | tensor.lazy | tensor.add (vector.from-list [1.0, 2.0, 3.0] | tensor.lazy) | realize | echo,
+] | ignore

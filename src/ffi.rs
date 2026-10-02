@@ -323,10 +323,15 @@ static double fwp_w2d(uint64_t w) { double d; memcpy(&d, &w, 8); return d; }
 static uint64_t fwp_f2w(float f) { uint32_t b; memcpy(&b, &f, 4); return b; }
 static uint64_t fwp_d2w(double d) { uint64_t w; memcpy(&w, &d, 8); return w; }
 static void (*fwp_host)(void *, uint32_t, const uint64_t *, uint64_t *);
-static void *fwp_host_ctx;
-void fwp_shim_set_host(void *f, void *ctx) {
+/* the innermost foreign call of this thread (interpreter tasks are
+ * threads); returns the previous one, which the caller restores when its
+ * call returns, so that nested calls (C calling fwp calling C) work */
+static _Thread_local void *fwp_host_ctx;
+void *fwp_shim_set_host(void *f, void *ctx) {
+    void *prev = fwp_host_ctx;
     fwp_host = (void (*)(void *, uint32_t, const uint64_t *, uint64_t *))f;
     fwp_host_ctx = ctx;
+    return prev;
 }
 ",
     );

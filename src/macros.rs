@@ -138,51 +138,77 @@ fn resolve_macro(
 
 /// Build the program used to run macros: macros become ordinary bindings,
 /// and declarations that still contain macro calls (or depend on ones that
-/// do) are left out.
+/// do, in any module) are left out.
 fn phase_modules(modules: &Modules) -> Modules {
-    let mut out = Vec::new();
-    for (module, imports, decls) in modules {
-        // names defined by declarations that cannot be compiled yet
-        let mut removed: HashSet<String> = HashSet::new();
-        let mut keep: Vec<bool> = decls
-            .iter()
-            .map(|d| !decl_bodies(d).into_iter().any(has_call))
-            .collect();
-        for (d, k) in decls.iter().zip(&keep) {
+    // canonical names (`module::name`) of declarations left out
+    let mut removed: HashSet<String> = HashSet::new();
+    let mut keep: Vec<Vec<bool>> = modules
+        .iter()
+        .map(|(_, _, decls)| {
+            decls
+                .iter()
+                .map(|d| !decl_bodies(d).into_iter().any(has_call))
+                .collect()
+        })
+        .collect();
+    for ((module, _, decls), ks) in modules.iter().zip(&keep) {
+        for (d, k) in decls.iter().zip(ks) {
             if !*k {
                 if let Some(n) = defines(d) {
-                    removed.insert(n.to_string());
+                    removed.insert(format!("{}::{}", module, n));
                 }
             }
         }
-        loop {
-            let mut changed = false;
+    }
+    // a name as written in `module` refers to a removed declaration
+    let refers_to_removed =
+        |removed: &HashSet<String>, module: &str, imports: &HashSet<String>, n: &str| {
+            if removed.contains(&format!("{}::{}", module, n))
+                || removed.contains(&format!("std::{}", n))
+            {
+                return true;
+            }
+            match n.rsplit_once('.') {
+                Some((m, x)) => imports.contains(m) && removed.contains(&format!("{}::{}", m, x)),
+                None => false,
+            }
+        };
+    loop {
+        let mut changed = false;
+        for (mi, (module, imports, decls)) in modules.iter().enumerate() {
             for (i, d) in decls.iter().enumerate() {
-                if !keep[i] {
+                if !keep[mi][i] {
                     continue;
                 }
                 let mut used = HashSet::new();
                 decl_bodies(d)
                     .into_iter()
                     .for_each(|b| names_in(b, &mut used));
-                if used.iter().any(|n| removed.contains(n)) {
-                    keep[i] = false;
+                if used
+                    .iter()
+                    .any(|n| refers_to_removed(&removed, module, imports, n))
+                {
+                    keep[mi][i] = false;
                     if let Some(n) = defines(d) {
-                        removed.insert(n.to_string());
+                        removed.insert(format!("{}::{}", module, n));
                     }
                     changed = true;
                 }
             }
-            if !changed {
-                break;
-            }
         }
+        if !changed {
+            break;
+        }
+    }
+    let mut out = Vec::new();
+    for ((module, imports, decls), ks) in modules.iter().zip(&keep) {
+        let gone = |n: &str| removed.contains(&format!("{}::{}", module, n));
         let mut kept = Vec::new();
-        for (d, k) in decls.iter().zip(&keep) {
+        for (d, k) in decls.iter().zip(ks) {
             match d {
                 // signatures and exports of removed bindings go too
-                Decl::Sig { sig, .. } if removed.contains(&sig.name) => {}
-                Decl::Export { name, .. } if removed.contains(name) => {}
+                Decl::Sig { sig, .. } if gone(&sig.name) => {}
+                Decl::Export { name, .. } if gone(name) => {}
                 Decl::Macro(b) if *k => kept.push(Decl::Bind(b.clone())),
                 _ if *k => kept.push(d.clone()),
                 _ => {}

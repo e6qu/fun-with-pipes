@@ -126,6 +126,16 @@ static V fwp_p_drop_while(V f, V xs) {
     return xs;
 }
 
+/* `loop`: iterate a step function in constant stack space (pure, so also
+ * available on WebAssembly) */
+static V fwp_p_loop(V f, V s) {
+    for (;;) {
+        V r = fwp_apply1(f, s);
+        if (fwp_tag(r) != 0) return OBJ(r)->f[0];
+        s = OBJ(r)->f[0];
+    }
+}
+
 static V fwp_p_zip(V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);
@@ -135,12 +145,13 @@ static V fwp_p_zip(V ys, V xs) {
     return fwp_list_from(a, k);
 }
 
+/* data-last: the subject's element is the last argument (f y x) */
 static V fwp_p_zip_with(V f, V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);
     V *b = fwp_list_items(ys, &m);
     size_t k = n < m ? n : m;
-    for (size_t i = 0; i < k; i++) a[i] = fwp_apply2(f, a[i], b[i]);
+    for (size_t i = 0; i < k; i++) a[i] = fwp_apply2(f, b[i], a[i]);
     return fwp_list_from(a, k);
 }
 
@@ -524,6 +535,38 @@ static int fwp_valid_utf8(const unsigned char *d, size_t n) {
     return 1;
 }
 
+/* text from outside the program (stdin, arguments, the environment):
+ * each maximal invalid subsequence becomes U+FFFD, exactly as Rust's
+ * String::from_utf8_lossy */
+static V fwp_str_lossy(const char *s, size_t n) {
+    const unsigned char *d = (const unsigned char *)s;
+    if (fwp_valid_utf8(d, n)) return fwp_str_new(s, n);
+    fwp_buf b = {0};
+    size_t i = 0;
+    while (i < n) {
+        unsigned char c = d[i];
+        if (c < 0x80) { buf_putc(&b, (char)c); i++; continue; }
+        int need;
+        unsigned char lo = 0x80, hi = 0xBF;
+        if (c >= 0xC2 && c <= 0xDF) need = 1;
+        else if (c >= 0xE0 && c <= 0xEF) { need = 2; if (c == 0xE0) lo = 0xA0; if (c == 0xED) hi = 0x9F; }
+        else if (c >= 0xF0 && c <= 0xF4) { need = 3; if (c == 0xF0) lo = 0x90; if (c == 0xF4) hi = 0x8F; }
+        else { buf_puts(&b, "\xEF\xBF\xBD"); i++; continue; }
+        size_t j = i + 1;
+        int k = 0;
+        while (k < need && j < n) {
+            unsigned char x = d[j];
+            if (k == 0 ? (x < lo || x > hi) : (x & 0xC0) != 0x80) break;
+            j++;
+            k++;
+        }
+        if (k == need) buf_put(&b, s + i, j - i);
+        else buf_puts(&b, "\xEF\xBF\xBD");
+        i = j;
+    }
+    return buf_to_str(&b);
+}
+
 static V fwp_p_from_bytes(V b) {
     if (!fwp_valid_utf8((const unsigned char *)STR(b)->d, STR(b)->len)) return FWP_NONE;
     return fwp_some(fwp_str_new(STR(b)->d, STR(b)->len));
@@ -581,7 +624,28 @@ static V fwp_p_parse_int(V s, int kind, int w) {
     return fwp_some(out);
 }
 
+/* ASCII case-insensitive comparison of d[0..n) with a lower-case word */
+static int fwp_word_ci(const char *d, size_t n, const char *w) {
+    size_t i = 0;
+    for (; i < n && w[i]; i++) {
+        char c = d[i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        if (c != w[i]) return 0;
+    }
+    return i == n && w[i] == 0;
+}
+
 static V fwp_p_parse_float(V s, int kind) {
+    const char *d = STR(s)->d;
+    size_t n = STR(s)->len, o = (n > 0 && (d[0] == '-' || d[0] == '+')) ? 1 : 0;
+    /* non-finite values, in any case: nan, and inf or infinity with an
+     * optional sign */
+    if (fwp_word_ci(d + o, n - o, "inf") || fwp_word_ci(d + o, n - o, "infinity")) {
+        double x = d[0] == '-' ? -INFINITY : INFINITY;
+        return fwp_some(kind == K_F32 ? fwp_from_f32((float)x) : fwp_from_f64(x));
+    }
+    if (fwp_word_ci(d, n, "nan"))
+        return fwp_some(kind == K_F32 ? fwp_from_f32(NAN) : fwp_from_f64(NAN));
     if (!fwp_valid_float(STR(s)->d, STR(s)->len)) return FWP_NONE;
     if (kind == K_F32) return fwp_some(fwp_from_f32(strtof(STR(s)->d, 0)));
     return fwp_some(fwp_from_f64(strtod(STR(s)->d, 0)));
@@ -599,9 +663,25 @@ static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
         np = 1;
         parts[0] = fwp_show(v, d);
     }
-    fwp_buf b = {0};
     const char *t = STR(tmpl)->d;
     size_t n = STR(tmpl)->len, i = 0;
+    int holes = 0;
+    while (i < n) {
+        if (i + 1 < n && ((t[i] == '{' && t[i + 1] == '{') || (t[i] == '}' && t[i + 1] == '}'))) i += 2;
+        else if (i + 1 < n && t[i] == '{' && t[i + 1] == '}') { holes++; i += 2; }
+        else i++;
+    }
+    if (holes != np) {
+        fwp_buf e = {0};
+        char num[128];
+        snprintf(num, sizeof num, "format: placeholder count (%d) does not match value count (%d) in \"", holes, np);
+        buf_puts(&e, num);
+        buf_put(&e, t, n);
+        buf_putc(&e, '"');
+        fwp_trap(STR(buf_to_str(&e))->d);
+    }
+    fwp_buf b = {0};
+    i = 0;
     int next = 0;
     while (i < n) {
         if (t[i] == '{' && i + 1 < n && t[i + 1] == '{') { buf_putc(&b, '{'); i += 2; }
@@ -891,7 +971,9 @@ static V fwp_read_stdin_all(void) {
     char tmp[65536];
     size_t n;
     while ((n = fread(tmp, 1, sizeof tmp, stdin)) > 0) buf_put(&b, tmp, n);
-    return buf_to_str(&b);
+    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    free(b.d);
+    return r;
 }
 
 static V fwp_p_read_line(void) {
@@ -905,7 +987,9 @@ static V fwp_p_read_line(void) {
     }
     if (!any) { free(b.d); return FWP_NONE; }
     if (b.len > 0 && b.d[b.len - 1] == '\r' && c == '\n') b.len--;
-    return fwp_some(buf_to_str(&b));
+    V r = fwp_str_lossy(b.d ? b.d : "", b.len);
+    free(b.d);
+    return fwp_some(r);
 }
 
 static V fwp_p_read_lines(void) {
@@ -915,13 +999,13 @@ static V fwp_p_read_lines(void) {
 
 static V fwp_p_args(void) {
     V r = 0;
-    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_cstr(fwp_argv[i]), r);
+    for (int i = fwp_argc - 1; i >= 1; i--) r = fwp_cons(fwp_str_lossy(fwp_argv[i], strlen(fwp_argv[i])), r);
     return r;
 }
 
 static V fwp_p_env_get(V name) {
     const char *v = getenv(STR(name)->d);
-    return v ? fwp_some(fwp_cstr(v)) : FWP_NONE;
+    return v ? fwp_some(fwp_str_lossy(v, strlen(v))) : FWP_NONE;
 }
 
 static struct timespec fwp_start_time;
@@ -1125,7 +1209,7 @@ static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
 /* Mirrors src/syntax.rs `show` (pretty printing of `Syntax` values). */
 
 enum { SY_NAME, SY_CTOR, SY_INT, SY_FLOAT, SY_STR, SY_SELECT, SY_APPLY, SY_PIPE, SY_UNIT,
-       SY_TUPLE, SY_LIST, SY_RECORD, SY_MATCH, SY_COMPTIME, SY_OTHER, SY_MACRO };
+       SY_TUPLE, SY_LIST, SY_RECORD, SY_MATCH, SY_COMPTIME, SY_OTHER, SY_MACRO, SY_FIELDS };
 enum { PY_HOLE, PY_INT, PY_STR, PY_CTOR, PY_BARE, PY_TUPLE, PY_UNIT };
 
 static void sy_name(fwp_buf *b, V s) {
@@ -1247,6 +1331,16 @@ static void sy_atom(fwp_buf *b, V v) {
         sy_list(b, OBJ(v)->f[1], sy_expr);
         buf_putc(b, ')');
         return;
+    case SY_FIELDS: {
+        /* kind: with, update, make, "make T", "record T" (printed `T {...}`) */
+        V k = OBJ(v)->f[0];
+        if (STR(k)->len > 7 && !memcmp(STR(k)->d, "record ", 7)) buf_put(b, STR(k)->d + 7, STR(k)->len - 7);
+        else buf_put(b, STR(k)->d, STR(k)->len);
+        buf_puts(b, " {");
+        sy_list(b, OBJ(v)->f[1], sy_field);
+        buf_putc(b, '}');
+        return;
+    }
     }
 }
 
@@ -1295,6 +1389,22 @@ static double *la_get(V arr, size_t n) {
     return d;
 }
 
+/* traps unless array `arr` holds a rows x cols matrix (as la_check in
+ * src/prims_std.rs) */
+static void la_check(const char *name, V arr, int64_t rows, int64_t cols) {
+    char msg[256];
+    if (rows < 0 || cols < 0) {
+        snprintf(msg, sizeof msg, "%s: negative dimension", name);
+        fwp_trap(msg);
+    }
+    size_t len = ARR(arr)->len;
+    if ((i128)len != (i128)rows * (i128)cols) {
+        snprintf(msg, sizeof msg, "%s: %zu elements given for a %lldx%lld matrix", name, len,
+                 (long long)rows, (long long)cols);
+        fwp_trap(msg);
+    }
+}
+
 static V la_put(const double *d, size_t n) {
     V r = fwp_arr_new(n);
     for (size_t i = 0; i < n; i++) ARR(r)->d[i] = fwp_from_f64(d[i]);
@@ -1302,8 +1412,9 @@ static V la_put(const double *d, size_t n) {
 }
 
 static V fwp_p_lu_solve(V nv, V av, V bv) {
+    la_check("linalg.lu-solve", av, (int64_t)nv, (int64_t)nv);
+    la_check("linalg.lu-solve", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
-    if (ARR(av)->len < n * n || ARR(bv)->len < n) return FWP_NONE;
     double *a = la_get(av, n * n), *x = la_get(bv, n);
     for (size_t k = 0; k < n; k++) {
         size_t p = k;
@@ -1330,6 +1441,7 @@ static V fwp_p_lu_solve(V nv, V av, V bv) {
 }
 
 static V fwp_p_det(V nv, V av) {
+    la_check("linalg.det", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n), d = 1.0;
     for (size_t k = 0; k < n; k++) {
@@ -1351,6 +1463,7 @@ static V fwp_p_det(V nv, V av) {
 }
 
 static V fwp_p_inverse(V nv, V av) {
+    la_check("linalg.inverse", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
     double *inv = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1381,6 +1494,7 @@ static V fwp_p_inverse(V nv, V av) {
 }
 
 static V fwp_p_cholesky(V nv, V av) {
+    la_check("linalg.cholesky", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
     double *l = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1400,6 +1514,7 @@ static V fwp_p_cholesky(V nv, V av) {
 }
 
 static V fwp_p_qr(V mv, V nv, V av) {
+    la_check("linalg.qr", av, (int64_t)mv, (int64_t)nv);
     size_t m = (size_t)(int64_t)mv, n = (size_t)(int64_t)nv;
     double *q = la_get(av, m * n);
     double *r = (double *)fwp_alloc((n * n + 1) * sizeof(double));
@@ -1430,6 +1545,8 @@ static double la_dot(const double *x, const double *y, size_t n) {
 static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
     int64_t maxit = (int64_t)itv;
     double tol = fwp_f64(tolv);
+    la_check("linalg.cg", av, (int64_t)nv, (int64_t)nv);
+    la_check("linalg.cg", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n), *r = la_get(bv, n), *p = la_get(bv, n);
     double *x = (double *)fwp_alloc((n + 1) * sizeof(double));
@@ -1471,6 +1588,13 @@ static V fwp_p_list_transpose(V xss) {
 }
 
 /* ----- results of foreign C functions */
+
+/* a string for C: NUL-terminated, so it must not contain NUL itself (C
+ * would see a shorter string); traps as the interpreter does */
+static const char *fwp_c_str_arg(V s) {
+    if (memchr(STR(s)->d, 0, STR(s)->len)) fwp_trap("a string passed to C contains a NUL character");
+    return (const char *)STR(s)->d;
+}
 
 static V fwp_c_string(const char *p) {
     if (!p) fwp_trap("foreign function returned a null string");

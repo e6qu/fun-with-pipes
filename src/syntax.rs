@@ -32,6 +32,7 @@ const S_MATCH: u32 = 12;
 const S_COMPTIME: u32 = 13;
 const S_OTHER: u32 = 14;
 const S_MACRO: u32 = 15;
+const S_FIELDS: u32 = 16;
 
 const P_HOLE: u32 = 0;
 const P_INT: u32 = 1;
@@ -77,6 +78,7 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
         ExprKind::Float {
             value,
             suffix: None,
+            ..
         } => c(S_FLOAT, vec![IR::Const(Value::F64(*value))]),
         ExprKind::Str(x) => c(S_STR, vec![s(x)]),
         ExprKind::Var(n) => c(S_NAME, vec![s(&cx.value_name(n))]),
@@ -137,6 +139,24 @@ pub fn quote(e: &Expr, cx: &mut dyn QuoteCtx) -> Result<IR, Diagnostic> {
                 xs.push(quote(a, cx)?);
             }
             c(S_MACRO, vec![s(n), list(xs)])
+        }
+        ExprKind::With(fs)
+        | ExprKind::Update(fs)
+        | ExprKind::Make(_, fs)
+        | ExprKind::NominalRecord(_, fs) => {
+            let kind = match &e.kind {
+                ExprKind::With(_) => "with".to_string(),
+                ExprKind::Update(_) => "update".to_string(),
+                ExprKind::Make(None, _) => "make".to_string(),
+                ExprKind::Make(Some(t), _) => format!("make {}", t),
+                ExprKind::NominalRecord(t, _) => format!("record {}", t),
+                _ => unreachable!(),
+            };
+            let mut xs = Vec::new();
+            for (n, a) in fs {
+                xs.push(IR::Record(vec![s(n), quote(a, cx)?]));
+            }
+            c(S_FIELDS, vec![s(&kind), list(xs)])
         }
         _ => c(S_OTHER, vec![s(&crate::pretty::expr(e))]),
     })
@@ -309,6 +329,7 @@ impl Builder<'_> {
             S_FLOAT => match &fs[0] {
                 Value::F64(x) => ExprKind::Float {
                     value: *x,
+                    value32: *x as f32,
                     suffix: None,
                 },
                 _ => return Err("malformed SFloat".into()),
@@ -389,6 +410,24 @@ impl Builder<'_> {
                     args.push(self.expr(&a)?);
                 }
                 ExprKind::MacroCall(Self::str_of(&fs[0])?, args)
+            }
+            S_FIELDS => {
+                let kind = Self::str_of(&fs[0])?;
+                let mut fields = Vec::new();
+                for p in fs[1].list_items() {
+                    let Value::Record(kv) = p else {
+                        return Err("malformed field syntax".into());
+                    };
+                    fields.push((Self::str_of(&kv[0])?, self.expr(&kv[1])?));
+                }
+                match kind.split_once(' ') {
+                    None if kind == "with" => ExprKind::With(fields),
+                    None if kind == "update" => ExprKind::Update(fields),
+                    None if kind == "make" => ExprKind::Make(None, fields),
+                    Some(("make", t)) => ExprKind::Make(Some(t.to_string()), fields),
+                    Some(("record", t)) => ExprKind::NominalRecord(t.to_string(), fields),
+                    _ => return Err(format!("unknown record form `{}`", kind)),
+                }
             }
             S_OTHER => {
                 let text = Self::str_of(&fs[0])?;

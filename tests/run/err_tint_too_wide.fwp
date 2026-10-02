@@ -1,0 +1,5 @@
+# TInt values are 64-bit words in both backends: at most 40 trits.
+wide : I64 -> Option[TInt[41]]
+wide = tint.of-int
+
+main = 5 | wide | echo

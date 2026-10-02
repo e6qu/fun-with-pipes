@@ -1,0 +1,4 @@
+[1000]
+--- stderr
+fwp: trap: stack overflow
+--- exit 101

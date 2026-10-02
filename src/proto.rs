@@ -138,7 +138,7 @@ impl<'a> Reader<'a> {
     }
 
     fn take(&mut self, n: usize) -> Result<&'a [u8], String> {
-        if self.pos + n > self.data.len() {
+        if n > self.data.len() - self.pos {
             return Err("truncated value".into());
         }
         let s = &self.data[self.pos..self.pos + n];
@@ -151,7 +151,8 @@ impl<'a> Reader<'a> {
         let mut shift = 0;
         loop {
             let b = self.take(1)?[0];
-            if shift >= 64 {
+            // the tenth byte holds only bit 63
+            if shift >= 64 || (shift == 63 && b & 0x7f > 1) {
                 return Err("bad LEB128".into());
             }
             x |= ((b & 0x7f) as u64) << shift;
@@ -160,6 +161,16 @@ impl<'a> Reader<'a> {
             }
             shift += 7;
         }
+    }
+
+    /// An element count: no more than the bytes of the whole value, so a
+    /// corrupt count fails fast instead of looping or allocating.
+    fn count(&mut self) -> Result<usize, String> {
+        let n = self.leb128()?;
+        if n > self.data.len() as u64 {
+            return Err("truncated value".into());
+        }
+        Ok(n as usize)
     }
 
     fn arr<const N: usize>(&mut self) -> Result<[u8; N], String> {
@@ -210,7 +221,7 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
                 Value::Bytes(std::rc::Rc::from(r.take(n)?))
             }
             "List" | "Array" => {
-                let n = r.leb128()? as usize;
+                let n = r.count()?;
                 let t = args.first().cloned().unwrap_or(MT::unit());
                 let mut items = Vec::new();
                 for _ in 0..n {
@@ -223,7 +234,7 @@ pub fn decode(r: &mut Reader, mt: &MT, prog: &Program) -> Result<Value, String> 
                 }
             }
             "Map" | "Set" => {
-                let n = r.leb128()? as usize;
+                let n = r.count()?;
                 let kt = args.first().cloned().unwrap_or(MT::unit());
                 let vt = args.get(1).cloned().unwrap_or(MT::unit());
                 let mut m = std::collections::BTreeMap::new();
@@ -392,6 +403,9 @@ pub fn end_frame() -> Vec<u8> {
     vec![0u8, 0, 0, 0, 0]
 }
 
+/// The longest capability or type name a header may carry.
+pub const MAX_HEADER_NAME: u64 = 1 << 20;
+
 /// Parsed stream header.
 pub struct Header {
     pub version: u8,
@@ -415,6 +429,9 @@ pub fn read_header(r: &mut impl std::io::Read) -> Result<Header, String> {
         loop {
             r.read_exact(&mut b)
                 .map_err(|_| "truncated header".to_string())?;
+            if shift == 63 && b[0] & 0x7f > 1 {
+                return Err("bad header".into());
+            }
             x |= ((b[0] & 0x7f) as u64) << shift;
             if b[0] & 0x80 == 0 {
                 return Ok(x);
@@ -425,11 +442,18 @@ pub fn read_header(r: &mut impl std::io::Read) -> Result<Header, String> {
             }
         }
     };
+    let name_len = |r: &mut dyn std::io::Read| -> Result<usize, String> {
+        let n = leb(r)?;
+        if n > MAX_HEADER_NAME {
+            return Err("bad header".into());
+        }
+        Ok(n as usize)
+    };
     let version = byte(r, &mut b1)?;
     let ncaps = leb(r)?;
     let mut capabilities = Vec::new();
     for _ in 0..ncaps.min(64) {
-        let n = leb(r)? as usize;
+        let n = name_len(r)?;
         let mut s = vec![0u8; n];
         r.read_exact(&mut s).map_err(|_| "truncated header")?;
         capabilities.push(String::from_utf8_lossy(&s).to_string());
@@ -437,7 +461,7 @@ pub fn read_header(r: &mut impl std::io::Read) -> Result<Header, String> {
     let mut fingerprint = [0u8; 16];
     r.read_exact(&mut fingerprint)
         .map_err(|_| "truncated header")?;
-    let n = leb(r)? as usize;
+    let n = name_len(r)?;
     let mut s = vec![0u8; n];
     r.read_exact(&mut s).map_err(|_| "truncated header")?;
     Ok(Header {

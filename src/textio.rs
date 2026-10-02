@@ -266,6 +266,13 @@ impl<'a> P<'a> {
                 "TInt" => {
                     let t = self.token();
                     let digits = t.strip_prefix("0t").ok_or("expected a ternary literal")?;
+                    let w = match arg(mt, 0) {
+                        MT::Nat(w) => w,
+                        _ => 1,
+                    };
+                    if digits.len() as u64 > w {
+                        return Err(format!("too many trits for TInt[{}]", w));
+                    }
                     let mut v: i64 = 0;
                     for c in digits.chars() {
                         v = v * 3
@@ -275,13 +282,6 @@ impl<'a> P<'a> {
                                 '0' => 0,
                                 _ => return Err("bad trit".into()),
                             };
-                    }
-                    let w = match arg(mt, 0) {
-                        MT::Nat(w) => w,
-                        _ => 1,
-                    };
-                    if digits.len() as u64 > w {
-                        return Err(format!("too many trits for TInt[{}]", w));
                     }
                     Ok(Value::TInt(v))
                 }
@@ -339,8 +339,10 @@ impl<'a> P<'a> {
                     for (u, k) in units {
                         if let Some(num) = t.strip_suffix(u) {
                             if valid_int(num) {
+                                // the count and the nanoseconds must fit in I64
                                 let x: i64 = num.parse().map_err(|_| "bad duration")?;
-                                return Ok(Value::tuple(vec![Value::I64(x * k)]));
+                                let ns = x.checked_mul(k).ok_or("duration out of range")?;
+                                return Ok(Value::tuple(vec![Value::I64(ns)]));
                             }
                         }
                     }
@@ -349,13 +351,13 @@ impl<'a> P<'a> {
                 _ => match self.prog.shapes.get(mt).cloned() {
                     Some(TypeShape::Adt(vs)) => {
                         let name = self.ident().to_string();
-                        let lower = name.to_ascii_lowercase();
                         let pos = vs.iter().position(|(c, _)| *c == name).or_else(|| {
-                            // `true`/`false` for convenience
-                            if n == "std::Bool" && top {
-                                vs.iter().position(|(c, _)| c.to_ascii_lowercase() == lower)
-                            } else {
-                                None
+                            // also `true`/`false` (exactly) at the top level,
+                            // as the native runtime
+                            match (n == "std::Bool" && top, name.as_str()) {
+                                (true, "true") => vs.iter().position(|(c, _)| c == "True"),
+                                (true, "false") => vs.iter().position(|(c, _)| c == "False"),
+                                _ => None,
                             }
                         });
                         let Some(tag) = pos else {

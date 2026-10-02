@@ -170,3 +170,25 @@ fn browser_loader() {
         std::fs::read_to_string(path.with_extension("out")).unwrap()
     );
 }
+
+#[test]
+fn webassembly_tutorial_runs_under_wasi() {
+    if !available() {
+        return;
+    }
+    let tut = Path::new(env!("CARGO_MANIFEST_DIR")).join("docs/tutorials/10-webassembly");
+    let wasm = std::env::temp_dir().join(format!("fwp-wasm-tutorial-{}.wasm", std::process::id()));
+    let b = build(&tut.join("main.fwp"), "wasm32-wasi", &wasm);
+    assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+    let out = Command::new("node")
+        .arg("--no-warnings")
+        .arg(dir().join("wasm/wasi-run.mjs"))
+        .arg(&wasm)
+        .output()
+        .unwrap();
+    let _ = std::fs::remove_file(&wasm);
+    assert_eq!(
+        String::from_utf8_lossy(&out.stdout),
+        std::fs::read_to_string(tut.join("main.out")).unwrap()
+    );
+}

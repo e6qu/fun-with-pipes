@@ -243,11 +243,42 @@ fn duration_of(v: &Value) -> Duration {
     Duration::from_nanos(nanos.max(0) as u64)
 }
 
+/// The instant a duration from now; durations too long to represent
+/// saturate (to about a century) instead of overflowing.
+fn after(d: &Value) -> Instant {
+    let now = Instant::now();
+    now.checked_add(duration_of(d))
+        .or_else(|| now.checked_add(Duration::from_secs(100 * 365 * 86400)))
+        .unwrap_or(now)
+}
+
 fn earliest(a: Option<Instant>, b: Option<Instant>) -> Option<Instant> {
     match (a, b) {
         (Some(x), Some(y)) => Some(x.min(y)),
         (x, None) => x,
         (None, y) => y,
+    }
+}
+
+/// Reject what the native runtime rejects: an empty host, or a port that
+/// is not a decimal number up to 65535 (Rust alone would accept `+80`,
+/// and look up an empty host).
+fn check_addr(addr: &str) -> Result<(), String> {
+    let ok = match addr.rsplit_once(':') {
+        Some((host, port)) => {
+            !host.is_empty()
+                && host != "[]"
+                && !port.is_empty()
+                && port.len() <= 5
+                && port.bytes().all(|c| c.is_ascii_digit())
+                && port.parse::<u32>().is_ok_and(|p| p <= 65535)
+        }
+        None => false,
+    };
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("{}: invalid socket address", addr))
     }
 }
 
@@ -305,26 +336,26 @@ impl<'p> Interp<'p> {
         }
     }
 
-    /// Wait until a socket is ready; `false` when `timeout` passes.
+    /// Wait until a socket is ready, or for one short slice (so that
+    /// cancellation is noticed promptly); `false` when `timeout` passed.
+    /// Callers retry their operation either way, and so also notice a
+    /// socket that another task closed meanwhile (whose descriptor number
+    /// may already belong to a new socket).
     fn wait_fd(&mut self, fd: i32, write: bool, timeout: Option<Instant>) -> R<bool> {
-        loop {
-            self.check_cancel()?;
-            let now = Instant::now();
-            if let Some(t) = timeout {
-                if now >= t {
-                    return Ok(false);
-                }
-            }
-            // Short slices so that cancellation is noticed promptly.
-            let mut slice = Duration::from_millis(50);
-            if let Some(u) = earliest(timeout, self.task.deadline()) {
-                slice = slice.min(u.saturating_duration_since(now));
-            }
-            let ms = slice.as_millis().max(1) as i32;
-            if self.world.blocking(|| poll_fd(fd, write, ms)) {
-                return Ok(true);
+        self.check_cancel()?;
+        let now = Instant::now();
+        if let Some(t) = timeout {
+            if now >= t {
+                return Ok(false);
             }
         }
+        let mut slice = Duration::from_millis(50);
+        if let Some(u) = earliest(timeout, self.task.deadline()) {
+            slice = slice.min(u.saturating_duration_since(now));
+        }
+        let ms = slice.as_millis().max(1) as i32;
+        self.world.blocking(|| poll_fd(fd, write, ms));
+        Ok(true)
     }
 
     /// Wait for all children of the current task. Cancellation of this task
@@ -404,6 +435,7 @@ impl<'p> Interp<'p> {
         let started = std::thread::Builder::new()
             .stack_size(256 << 20)
             .spawn(move || {
+                crate::interp::set_stack_limit(256 << 20);
                 let job = job;
                 let Baton((mut it, thunk)) = job;
                 world.acquire();
@@ -481,7 +513,8 @@ impl<'p> Interp<'p> {
         }
     }
 
-    fn tcp_write(&mut self, data: &[u8], c: &Value) -> R<()> {
+    /// Write all of `data`; a "timeout" error when `timeout` passes first.
+    fn tcp_write(&mut self, data: &[u8], c: &Value, timeout: Option<Instant>) -> R<()> {
         let mut off = 0;
         while off < data.len() {
             let fd = self.conn_fd(c)?;
@@ -493,7 +526,9 @@ impl<'p> Interp<'p> {
                 Ok(0) => return Err(self.io_err("write", "connection closed by peer")),
                 Ok(k) => off += k,
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    self.wait_fd(fd, true, None)?;
+                    if !self.wait_fd(fd, true, timeout)? {
+                        return Err(self.io_err("timeout", "write timed out"));
+                    }
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
                 Err(e) => return Err(self.io_err("write", e)),
@@ -539,15 +574,16 @@ impl<'p> Interp<'p> {
     /// `metrics`. `None` if `sym` is not one of them.
     pub(crate) fn prim_conc(&mut self, sym: &str, a: &mut [Value]) -> Option<R<Value>> {
         let now = Instant::now;
-        let r: R<Value> = (|| -> R<Value> {
-            Ok(match sym {
+        // `Ok(None)`: not one of these primitives
+        let r = (|| -> R<Option<Value>> {
+            Ok(Some(match sym {
                 // ----- tasks
                 "task.spawn" => {
                     let t = self.spawn(a[0].clone(), None);
                     wrap(Native::Task(t))
                 }
                 "task.within" => {
-                    let d = now() + duration_of(&a[0]);
+                    let d = after(&a[0]);
                     let t = self.spawn(a[1].clone(), Some(d));
                     self.await_task(&t)?
                 }
@@ -566,7 +602,7 @@ impl<'p> Interp<'p> {
                     Value::unit()
                 }
                 "task.sleep" => {
-                    let until = now() + duration_of(&a[0]);
+                    let until = after(&a[0]);
                     self.block_on(Some(until), |_| Ok(None))?;
                     Value::unit()
                 }
@@ -577,15 +613,16 @@ impl<'p> Interp<'p> {
                     Value::unit()
                 }
                 "task.deadline" => {
-                    let d = now() + duration_of(&a[0]);
+                    let d = after(&a[0]);
                     let mut cur = self.task.deadline.lock().unwrap();
                     *cur = earliest(*cur, Some(d));
                     a[1].clone()
                 }
                 "task.cancelled" => {
                     if let Some(d) = self.task.deadline() {
-                        if now() >= d {
+                        if now() >= d && !self.task.cancelled.load(AO::SeqCst) {
                             self.task.cancel();
+                            self.world.event();
                         }
                     }
                     Value::bool(self.task.cancelled.load(AO::SeqCst))
@@ -644,7 +681,7 @@ impl<'p> Interp<'p> {
                     let (ch, timeout) = if sym == "channel.recv" {
                         (a[0].clone(), None)
                     } else {
-                        (a[1].clone(), Some(now() + duration_of(&a[0])))
+                        (a[1].clone(), Some(after(&a[0])))
                     };
                     let r = self.block_on(timeout, |it| {
                         let Native::Chan(c) = native(&ch)? else {
@@ -672,6 +709,7 @@ impl<'p> Interp<'p> {
                 // ----- TCP
                 "tcp.listen" => {
                     let addr = a[0].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("listen", e))?;
                     let l = TcpListener::bind(&addr)
                         .map_err(|e| self.io_err("listen", format!("{}: {}", addr, e)))?;
                     l.set_nonblocking(true)
@@ -696,7 +734,7 @@ impl<'p> Interp<'p> {
                 }
                 "tcp.accept-for" => {
                     let l = a[1].clone();
-                    let t = now() + duration_of(&a[0]);
+                    let t = after(&a[0]);
                     opt(self.accept(&l, Some(t))?)
                 }
                 "tcp.stop" => {
@@ -707,6 +745,7 @@ impl<'p> Interp<'p> {
                 }
                 "tcp.connect" => {
                     let addr = a[0].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("connect", e))?;
                     self.check_cancel()?;
                     let r = self.world.blocking(|| TcpStream::connect(&addr));
                     let s = r.map_err(|e| self.io_err("connect", format!("{}: {}", addr, e)))?;
@@ -720,19 +759,24 @@ impl<'p> Interp<'p> {
                     self.tcp_read(n, &c, None)?.unwrap_or_else(Value::unit)
                 }
                 "tcp.read-for" => {
-                    let t = now() + duration_of(&a[0]);
+                    let t = after(&a[0]);
                     let n = a[1].as_i128().unwrap_or(0).max(1) as usize;
                     let c = a[2].clone();
                     opt(self.tcp_read(n, &c, Some(t))?)
                 }
-                "tcp.write" => {
+                "tcp.write" | "tcp.write-for" => {
+                    let (timeout, a) = if sym == "tcp.write" {
+                        (None, &a[..])
+                    } else {
+                        (Some(after(&a[0])), &a[1..])
+                    };
                     let data = match &a[0] {
                         Value::Bytes(b) => b.clone(),
                         Value::Str(s) => Rc::from(s.as_bytes()),
                         _ => Rc::from(&[][..]),
                     };
                     let c = a[1].clone();
-                    self.tcp_write(&data, &c)?;
+                    self.tcp_write(&data, &c, timeout)?;
                     Value::unit()
                 }
                 "tcp.close" => {
@@ -754,6 +798,7 @@ impl<'p> Interp<'p> {
                 // ----- UDP
                 "udp.bind" => {
                     let addr = a[0].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("bind", e))?;
                     let s = UdpSocket::bind(&addr)
                         .map_err(|e| self.io_err("bind", format!("{}: {}", addr, e)))?;
                     s.set_nonblocking(true)
@@ -772,6 +817,7 @@ impl<'p> Interp<'p> {
                 }
                 "udp.send-to" => {
                     let addr = a[0].as_str().to_string();
+                    check_addr(&addr).map_err(|e| self.io_err("send", e))?;
                     let data = match &a[1] {
                         Value::Bytes(b) => b.clone(),
                         _ => Rc::from(&[][..]),
@@ -884,13 +930,10 @@ impl<'p> Interp<'p> {
                             .collect(),
                     )
                 }
-                _ => return Err(Ctl::Exit(i32::MIN)),
-            })
+                _ => return Ok(None),
+            }))
         })();
-        match r {
-            Err(Ctl::Exit(i32::MIN)) => None,
-            other => Some(other),
-        }
+        r.transpose()
     }
 
     fn await_task(&mut self, t: &Arc<TaskShared>) -> R<Value> {

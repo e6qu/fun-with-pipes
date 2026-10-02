@@ -1,0 +1,3 @@
+--- stderr
+fwp: trap: tensor: cannot realize an expression of only fills (its length is unknown)
+--- exit 101

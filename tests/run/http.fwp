@@ -22,6 +22,15 @@ produce = flip send-parts ["one ", "two ", "three"]
 send-parts : Channel[Bytes] -> List[String] -> () ! {Async}
 send-parts = curry (fork each (.0 | channel.send | compose string.to-bytes | flip compose ignore) .1)
 
+# echoes a query parameter into a response header (a CR LF in it must not
+# split the response)
+inject : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+inject = http.query-param "v" | option.unwrap-or "" | fork http.with-header (const "x-echo") id | apply (http.text 200 "injected")
+
+# whether the client sent the port in its host header
+host : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+host = http.header "host" | option.unwrap-or "" | starts-with "127.0.0.1:" | format "host with port: {}" | http.text 200
+
 routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 routes = http.router [
     http.route "GET" "/hello" hello,
@@ -30,10 +39,12 @@ routes = http.router [
     http.route "GET" "/slow" slow,
     http.route "GET" "/secret" secret,
     http.route "GET" "/stream" stream,
+    http.route "GET" "/inject" inject,
+    http.route "GET" "/host" host,
 ]
 
 config : ServerConfig
-config = "unused" | http.config | with { max-header-bytes = 200, max-body-bytes = 64 }
+config = "unused" | http.config | with { max-header-bytes = 200, max-body-bytes = 64, header-timeout = 300ms, body-timeout = 300ms }
 
 cases : List[(String, String, String, List[(String, String)])]
 cases = [
@@ -50,6 +61,14 @@ cases = [
     ("GET", "/slow", "", []),
     ("GET", "/stream", "", []),
     ("HEAD", "/hello", "", []),
+    ("GET", "/inject?v=ok", "", []),
+    ("GET", "/inject?v=a%0d%0aset-cookie:%20x", "", []),
+    ("GET", "/host", "", []),
+    ("GET", "/hello world", "", []),
+    ("GET", "/hello\r\nx: y", "", []),
+    ("GET", "/hello", "", [("x-a", "1\r\nx-b: 2")]),
+    ("GET", "/hello", "", [("bad name", "1")]),
+    ("GET /x HTTP/1.1\r\n", "/hello", "", []),
 ]
 
 raws : List[String]
@@ -60,6 +79,13 @@ raws = [
     "GET / HTTP/1.1\r\nx: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\r\n\r\n",
     "GET /hello HTTP/1.1\r\n\r\nGET /hello/again HTTP/1.1\r\nconnection: close\r\n\r\n",
     "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n",
+    "POST /echo HTTP/1.1\r\ncontent-length: 2\r\ncontent-length: 7\r\n\r\n{}",
+    "POST /echo HTTP/1.1\r\ncontent-length: 2\r\ncontent-length: 2\r\n\r\n{}",
+    "POST /echo HTTP/1.1\r\ncontent-length: +2\r\n\r\n{}",
+    "POST /echo HTTP/1.1\r\ncontent-length: 2, 2\r\n\r\n{}",
+    "POST /echo HTTP/1.1\r\ncontent-length: 99999999999999999999\r\n\r\n{}",
+    "GET /hello HTTP/1.1\r\nhost: x\r\n",
+    "POST /echo HTTP/1.1\r\ncontent-length: 10\r\n\r\n{}",
 ]
 
 to-request : (String, (String, String, String, List[(String, String)])) -> ClientRequest

@@ -10,8 +10,9 @@ log.line-of = curry (fork concat log.fields (fork concat (.1 | .1 | log.quote) (
 log.fields : (I64, (String, String, List[(String, String)])) -> String
 log.fields = .1 | .2 | map (both .0 (.1 | log.quote) | format " {}={}") | join ""
 
+# a logfmt value: quoted, with backslashes, quotes and line breaks escaped
 log.quote : String -> String
-log.quote = replace "\\" "\\\\" | replace "\"" "\\\"" | replace "\n" "\\n" | format "\"{}\""
+log.quote = replace "\\" "\\\\" | replace "\"" "\\\"" | replace "\n" "\\n" | replace "\r" "\\r" | format "\"{}\""
 
 log.info : String -> () ! {IO}
 log.info = flip (log.event "info") []
@@ -43,4 +44,5 @@ metrics.sample : (String, String, F64) -> String
 metrics.sample = both .0 .2 | format "{} {}\n"
 
 test "log line" = ("info", "started", [("port", "8080")]) | log.line-of 5 | eq "ts=5 level=info msg=\"started\" port=\"8080\""
+test "log.quote escapes" = "a\\b\"c\r\nd" | log.quote | eq "\"a\\\\b\\\"c\\r\\nd\""
 test "metrics" = [metrics.inc "fwp_test_requests", metrics.inc "fwp_test_requests", metrics.set "fwp_test_load" 0.5, metrics.observe "fwp_test_latency" 2.0] | const () | metrics.render | eq "fwp_test_latency_count 1.0\nfwp_test_latency_sum 2.0\n# TYPE fwp_test_load gauge\nfwp_test_load 0.5\n# TYPE fwp_test_requests counter\nfwp_test_requests 2.0\n"

@@ -1,0 +1,5 @@
+# An expression of only fills has no length to realize.
+main = tensor.fill 1.0 | tensor.scale 2.0 | the-t | realize | echo
+
+the-t : TensorExpr[3] -> TensorExpr[3]
+the-t = id

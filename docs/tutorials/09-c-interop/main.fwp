@@ -1,0 +1,47 @@
+# 9. Calling C
+#
+# `foreign "C"` declares a C function with an fwp type. These come from the
+# C library, so no extra linking is needed.
+
+foreign "C" strlen : String -> USize
+foreign "C" hypot : F64 -> F64 -> F64
+
+# a struct returned by value
+repr(C) DivResult = { quot: I32, rem: I32 }
+foreign "C" div : I32 -> I32 -> DivResult
+
+# a nullable pointer: NULL is None
+foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
+
+# a callback: qsort calls back into fwp to compare two elements
+foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
+
+compare : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
+compare = curry (both (.0 | ptr.read) (.1 | ptr.read) | uncurry (flip sub))
+
+# copy a list into C memory, sort it there, read it back
+sort-in-c : List[I32] -> List[I32] ! {Unsafe}
+sort-in-c = fork sort-buffer length to-buffer
+
+to-buffer : List[I32] -> Ptr[I32] ! {Unsafe}
+to-buffer = fork write-all id (length | mul 4 | mem.alloc)
+
+write-all : List[I32] -> Ptr[I32] -> Ptr[I32] ! {Unsafe}
+write-all = curry (tap (fork each (.1 | write-at) (.0 | enumerate)) | .1)
+
+write-at : Ptr[I32] -> (I64, I32) -> () ! {Unsafe}
+write-at = curry (fork ptr.write (.1 | .1) (fork ptr.at (.1 | .0) .0))
+
+sort-buffer : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
+sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize) | uncurry qsort | apply 4usize | apply compare) | fork read-all .0 .1)
+
+read-all : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
+read-all = curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
+
+main = [
+    "hello" | strlen | echo,
+    hypot 3.0 4.0 | echo,
+    div 17 5 | echo,
+    "NO_SUCH_VARIABLE_HERE" | getenv | option.is-none | echo,
+    [5, -2, 9, 0, 3] | sort-in-c | echo,
+] | ignore

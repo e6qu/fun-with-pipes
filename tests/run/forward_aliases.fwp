@@ -1,0 +1,20 @@
+# Aliases used before their definition, function-type aliases starting
+# with a record, and one-element tuple patterns.
+Total = Amount
+Amount = I64
+Getter = { x: I64 } -> I64
+
+get : Getter
+get = .x
+
+bump : Total -> Total
+bump = add 1
+
+first = match
+  (_, ) -> id
+
+main = [
+    {x = 41} | get | bump | echo,
+    (7, ) | first | echo,
+    1500ms | echo,
+  ] | ignore

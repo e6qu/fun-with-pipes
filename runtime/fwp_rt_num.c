@@ -168,6 +168,13 @@ static V fwp_arith(int k, int op, V a, V b, const char *name, int w) {
     return 0;
 }
 
+/* floats flip the sign (so neg 0.0 is -0.0); integers are checked 0 - x */
+static V fwp_neg(int k, V v, const char *name, int w) {
+    if (k == K_F32) return fwp_from_f32(-fwp_f32(v));
+    if (k == K_F64) return fwp_from_f64(-fwp_f64(v));
+    return fwp_arith(k, OP_SUB, fwp_from_i128(k, 0, name, w), v, name, w);
+}
+
 static V fwp_checked(int k, int op, V a, V b) {
     V out;
     int err;
@@ -296,9 +303,11 @@ static V fwp_float_to_int(int ks, int kt, V v) {
     double x = fwp_as_f64(ks, v);
     V out;
     if (!isfinite(x)) return FWP_NONE;
+    /* exact bounds (as src/interp.rs): [-2^127, 2^127) converts through
+     * i128, [2^127, 2^128) only to U128 */
     double t = trunc(x);
-    if (!(t >= -1.7e38 && t <= 3.4e38)) return FWP_NONE;
-    if (t >= 0 && t > 1.7014118346046923e38) {
+    if (t < -0x1p127 || t >= 0x1p128) return FWP_NONE;
+    if (t >= 0x1p127) {
         if (kt != K_U128) return FWP_NONE;
         return fwp_some(fwp_box_u128((u128)t));
     }
@@ -341,10 +350,21 @@ static V fwp_abs(int k, V v, const char *name) {
     return v;
 }
 
+/* built from the end; the counters never step past lo or hi, so the
+ * extremes of 128-bit types do not overflow */
 static V fwp_p_range(int k, V lo, V hi) {
-    i128 a = fwp_as_i128(k, lo), b = fwp_as_i128(k, hi);
     V r = 0;
-    for (i128 i = b - 1; i >= a; i--) {
+    if (k == K_U128) {
+        u128 a = fwp_u128(lo);
+        for (u128 i = fwp_u128(hi); i > a;) {
+            i--;
+            r = fwp_cons(fwp_box_u128(i), r);
+        }
+        return r;
+    }
+    i128 a = fwp_as_i128(k, lo);
+    for (i128 i = fwp_as_i128(k, hi); i > a;) {
+        i--;
         V x;
         fwp_int_fits(i, k, 0, &x);
         r = fwp_cons(x, r);
@@ -402,11 +422,12 @@ static V fwp_p_trits_pack(V xs) {
 static V fwp_p_trits_unpack(V nv, V bs) {
     int64_t n = (int64_t)nv;
     if (n < 0) n = 0;
+    /* only trits the bytes hold: none past the end */
+    if ((uint64_t)n > STR(bs)->len * 5) n = (int64_t)(STR(bs)->len * 5);
     V *out = (V *)fwp_alloc(((size_t)n + 1) * sizeof(V));
     static const uint32_t pw[5] = {1, 3, 9, 27, 81};
     for (int64_t i = 0; i < n; i++) {
-        size_t j = (size_t)(i / 5);
-        uint32_t byte = j < STR(bs)->len ? (uint8_t)STR(bs)->d[j] : 0;
+        uint32_t byte = (uint8_t)STR(bs)->d[i / 5];
         out[i] = (V)((int64_t)((byte / pw[i % 5]) % 3) - 1);
     }
     return fwp_list_from(out, (size_t)n);

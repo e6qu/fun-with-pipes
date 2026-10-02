@@ -79,6 +79,9 @@ Syntax =
     | SOther String
     # a macro invocation `name!(args)`
     | SMacro String List[Syntax]
+    # a record form with fields: kind is "with", "update", "make",
+    # "make T", or "record T" for `T { ... }`
+    | SFields String List[(String, Syntax)]
 
 SynPat =
     | PHole
@@ -92,16 +95,16 @@ SynPat =
 foreign "fwp" syntax.show : Syntax -> String
 
 # `assert!(cond)` fails with the source text of `cond` when it is False.
-assert-template = quote (unquote!(0) | match
+assert.template = quote (unquote!(0) | match
     True -> ()
     False -> fail unquote!(1))
 
-macro assert = fork assert-template id (syntax.show | flip concat "assertion failed: " | SStr)
+macro assert = fork assert.template id (syntax.show | flip concat "assertion failed: " | SStr)
 
 # `dbg!(e)` prints `<source of e> = <value>` to stderr and returns the value.
-dbg-template = quote (unquote!(0) | tap (show | flip concat unquote!(1) | eprint))
+dbg.template = quote (unquote!(0) | tap (show | flip concat unquote!(1) | eprint))
 
-macro dbg = fork dbg-template id (syntax.show | concat " = " | SStr)
+macro dbg = fork dbg.template id (syntax.show | concat " = " | SStr)
 
 # ------------------------------------------------------------- reflection
 #
@@ -198,6 +201,9 @@ foreign "fwp" prim.zero : a
 foreign "fwp" prim.one : a
 foreign "fwp" prim.from-int : I64 -> a
 foreign "fwp" prim.from-float : F64 -> a
+# Stop the program with `fwp: trap: <message>` (exit code 101), as a failed
+# run-time check does; for library invariants, not for recoverable errors.
+foreign "fwp" prim.trap : String -> a
 
 # Explicit overflow behaviour (default arithmetic is checked and traps).
 foreign "fwp" wrapping.add : a -> a -> a where Integer[a]

@@ -15,9 +15,11 @@
  * compiling for that target */
 static void fwp_tasks_finish(void) {}
 static void fwp_tasks_abort(void) {}
+static void fwp_stack_guard_init(size_t size) { (void)size; }
 #else
 #include <ucontext.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -27,6 +29,7 @@ static void fwp_tasks_abort(void) {}
 #include <unistd.h>
 #include <signal.h>
 #include <poll.h>
+#include <limits.h>
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif
@@ -85,9 +88,12 @@ static int64_t fwp_now_ns(void) {
 
 static int64_t fwp_dur_ns(V d) { return (int64_t)OBJ(d)->f[0]; }
 
+/* the monotonic time a duration from now, saturating instead of
+ * overflowing for very long durations */
 static int64_t fwp_after(V d) {
-    int64_t n = fwp_dur_ns(d);
-    return fwp_now_ns() + (n > 0 ? n : 0);
+    int64_t n = fwp_dur_ns(d), now = fwp_now_ns();
+    if (n <= 0) return now;
+    return n > INT64_MAX - now ? INT64_MAX : now + n;
 }
 
 static fwp_task *fwp_task_new(void) {
@@ -165,6 +171,75 @@ static void fwp_wake_all(fwp_wl *wl) {
     }
 }
 
+/* ----- tasks waiting on file descriptors (epoll): per descriptor, the
+ * tasks waiting to read and to write, and the events registered for them
+ * (the union of both directions) */
+
+#ifdef __linux__
+typedef struct { fwp_wl rd, wr; uint32_t mask; } fwp_fdw;
+/* entries are allocated individually: wait lists must not move */
+static fwp_fdw **fwp_fdws = 0;
+static size_t fwp_nfdws = 0;
+
+static fwp_fdw *fwp_fdw_get(int fd) {
+    if ((size_t)fd >= fwp_nfdws) {
+        size_t n = fwp_nfdws ? fwp_nfdws : 64;
+        while (n <= (size_t)fd) n *= 2;
+        fwp_fdws = (fwp_fdw **)realloc(fwp_fdws, n * sizeof(fwp_fdw *));
+        if (!fwp_fdws) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        memset(fwp_fdws + fwp_nfdws, 0, (n - fwp_nfdws) * sizeof(fwp_fdw *));
+        fwp_nfdws = n;
+    }
+    if (!fwp_fdws[fd]) {
+        fwp_fdws[fd] = (fwp_fdw *)calloc(1, sizeof(fwp_fdw));
+        if (!fwp_fdws[fd]) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    }
+    return fwp_fdws[fd];
+}
+
+/* register the events the descriptor's waiters need; -1 if epoll refuses
+ * the descriptor */
+static int fwp_fd_sync(int fd) {
+    fwp_fdw *w = fwp_fdw_get(fd);
+    uint32_t want = (w->rd.head ? EPOLLIN | EPOLLRDHUP : 0) | (w->wr.head ? EPOLLOUT : 0);
+    if (want == w->mask) return 0;
+    struct epoll_event ev;
+    memset(&ev, 0, sizeof ev);
+    ev.events = want;
+    ev.data.fd = fd;
+    int op = !w->mask ? EPOLL_CTL_ADD : !want ? EPOLL_CTL_DEL : EPOLL_CTL_MOD;
+    int rc = epoll_ctl(fwp_epfd, op, fd, &ev);
+    if (rc != 0 && op == EPOLL_CTL_ADD && errno == EEXIST) rc = epoll_ctl(fwp_epfd, EPOLL_CTL_MOD, fd, &ev);
+    if (rc == 0 || op == EPOLL_CTL_DEL) w->mask = want;
+    return rc == 0 || op == EPOLL_CTL_DEL ? 0 : -1;
+}
+#endif
+
+static void fwp_wake_io(fwp_wl *wl) {
+    while (wl->head) {
+        fwp_task *t = wl->head;
+        t->io_ready = 1;
+        fwp_wl_remove(t);
+        fwp_make_ready(t);
+    }
+}
+
+/* A descriptor is about to be closed: unregister it and wake the tasks
+ * waiting on it (they find the socket closed and fail). Closing first
+ * would silently drop the descriptor from epoll and strand them. */
+static void fwp_fd_closing(int fd) {
+#ifdef __linux__
+    if (fd < 0 || (size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) return;
+    fwp_fdw *w = fwp_fdws[fd];
+    if (w->mask) epoll_ctl(fwp_epfd, EPOLL_CTL_DEL, fd, 0);
+    w->mask = 0;
+    fwp_wake_io(&w->rd);
+    fwp_wake_io(&w->wr);
+#else
+    (void)fd;
+#endif
+}
+
 static void fwp_cancel_tree(fwp_task *t) {
     if (t->done) return;
     t->cancelled = 1;
@@ -216,16 +291,21 @@ static void fwp_poll_events(void) {
     int timeout = -1;
     if (next >= 0) {
         int64_t d = next - now;
-        timeout = d <= 0 ? 0 : (int)((d + 999999) / 1000000);
+        int64_t ms = d <= 0 ? 0 : d / 1000000 + (d % 1000000 != 0);
+        timeout = ms > INT_MAX ? INT_MAX : (int)ms;
     }
 #ifdef __linux__
     if (fwp_io_waiting) {
         struct epoll_event evs[64];
         int n = epoll_wait(fwp_epfd, evs, 64, timeout);
         for (int i = 0; i < n; i++) {
-            fwp_task *t = (fwp_task *)evs[i].data.ptr;
-            t->io_ready = 1;
-            fwp_make_ready(t);
+            int fd = evs[i].data.fd;
+            uint32_t e = evs[i].events;
+            if ((size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) continue;
+            fwp_fdw *w = fwp_fdws[fd];
+            if (e & (EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR)) fwp_wake_io(&w->rd);
+            if (e & (EPOLLOUT | EPOLLHUP | EPOLLERR)) fwp_wake_io(&w->wr);
+            fwp_fd_sync(fd);
         }
     } else if (timeout > 0) {
         struct timespec ts = {timeout / 1000, (long)(timeout % 1000) * 1000000L};
@@ -489,9 +569,11 @@ static V fwp_p_task_scope(V body) {
 
 /* ----- channels */
 
+/* a ring buffer of `size` slots, grown on demand up to the capacity
+ * (so a huge capacity costs nothing until the channel fills up) */
 typedef struct {
     V *buf;
-    size_t cap, head, len;
+    size_t cap, size, head, len;
     int closed;
     fwp_wl recvq, sendq;
 } fwp_chan;
@@ -501,9 +583,22 @@ static V fwp_p_channel_make(V capv) {
     int64_t cap = (int64_t)capv;
     if (cap < 1) cap = 1;
     fwp_chan *c = (fwp_chan *)calloc(1, sizeof(fwp_chan));
+    if (!c) fwp_trap("out of memory");
     c->cap = (size_t)cap;
-    c->buf = (V *)malloc(c->cap * sizeof(V));
     return PTR(c);
+}
+
+static void fwp_chan_grow(fwp_chan *c) {
+    size_t n = c->size ? c->size * 2 : 16;
+    if (n < c->size || n > c->cap) n = c->cap;
+    if (n > SIZE_MAX / sizeof(V)) fwp_trap("out of memory");
+    V *b = (V *)malloc(n * sizeof(V));
+    if (!b) fwp_trap("out of memory");
+    for (size_t i = 0; i < c->len; i++) b[i] = c->buf[(c->head + i) % c->size];
+    free(c->buf);
+    c->buf = b;
+    c->size = n;
+    c->head = 0;
 }
 
 static V fwp_p_channel_send(V ch, V x) {
@@ -512,7 +607,8 @@ static V fwp_p_channel_send(V ch, V x) {
     for (;;) {
         if (c->closed) return FWP_FALSE;
         if (c->len < c->cap) {
-            c->buf[(c->head + c->len) % c->cap] = x;
+            if (c->len == c->size) fwp_chan_grow(c);
+            c->buf[(c->head + c->len) % c->size] = x;
             c->len++;
             fwp_wake_all(&c->recvq);
             return FWP_TRUE;
@@ -529,7 +625,7 @@ static V fwp_chan_recv(V ch, int64_t at) {
     for (;;) {
         if (c->len) {
             V x = c->buf[c->head];
-            c->head = (c->head + 1) % c->cap;
+            c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
             return fwp_some(x);
@@ -572,17 +668,20 @@ static int fwp_wait_fd(int fd, int write, int64_t at) {
     if (at && fwp_now_ns() >= at) return 0;
 #ifdef __linux__
     if (fwp_epfd < 0) fwp_epfd = epoll_create1(EPOLL_CLOEXEC);
-    struct epoll_event ev;
-    ev.events = (write ? EPOLLOUT : EPOLLIN) | EPOLLRDHUP;
-    ev.data.ptr = fwp_cur;
-    if (epoll_ctl(fwp_epfd, EPOLL_CTL_ADD, fd, &ev) != 0) {
-        if (errno != EEXIST || epoll_ctl(fwp_epfd, EPOLL_CTL_MOD, fd, &ev) != 0) return 1;
+    /* a reader and a writer may wait on the same descriptor (one task
+     * reading a connection while another writes to it) */
+    fwp_fdw *w = fwp_fdw_get(fd);
+    fwp_cur->io_ready = 0;
+    fwp_wl_add(write ? &w->wr : &w->rd, fwp_cur);
+    if (fwp_fd_sync(fd) != 0) {
+        fwp_wl_remove(fwp_cur);
+        fwp_fd_sync(fd);
+        return 1;
     }
     fwp_io_waiting++;
-    fwp_cur->io_ready = 0;
-    fwp_park(0, at);
+    fwp_park(0, at); /* removes the task from the wait list */
     fwp_io_waiting--;
-    epoll_ctl(fwp_epfd, EPOLL_CTL_DEL, fd, 0);
+    fwp_fd_sync(fd);
     int ready = fwp_cur->io_ready;
 #else
     /* poll fallback: re-check every 10ms */
@@ -617,14 +716,23 @@ static V fwp_sock_new(int fd, int kind) {
 
 #define SOCK(v) ((fwp_sock *)(uintptr_t)(v))
 
-/* split "host:port" (host may be bracketed IPv6) */
+/* split "host:port" (host may be bracketed IPv6); the host must not be
+ * empty and the port is a decimal number up to 65535, as in the
+ * interpreter */
 static int fwp_split_addr(const char *addr, char *host, size_t hn, char *port, size_t pn) {
     const char *colon = strrchr(addr, ':');
     if (!colon) return 0;
     size_t hl = (size_t)(colon - addr);
     const char *h = addr;
     if (hl >= 2 && h[0] == '[' && h[hl - 1] == ']') { h++; hl -= 2; }
-    if (hl >= hn || strlen(colon + 1) >= pn) return 0;
+    size_t pl = strlen(colon + 1);
+    if (hl == 0 || hl >= hn || pl == 0 || pl > 5 || pl >= pn) return 0;
+    long pv = 0;
+    for (size_t i = 0; i < pl; i++) {
+        if (colon[1 + i] < '0' || colon[1 + i] > '9') return 0;
+        pv = pv * 10 + (colon[1 + i] - '0');
+    }
+    if (pv > 65535) return 0;
     memcpy(host, h, hl);
     host[hl] = 0;
     strcpy(port, colon + 1);
@@ -642,8 +750,8 @@ static struct addrinfo *fwp_resolve(const char *addr, int socktype, int passive,
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = socktype;
-    if (passive) hints.ai_flags = AI_PASSIVE;
-    int rc = getaddrinfo(host[0] ? host : 0, port, &hints, &res);
+    hints.ai_flags = AI_NUMERICSERV | (passive ? AI_PASSIVE : 0);
+    int rc = getaddrinfo(host, port, &hints, &res);
     if (rc != 0) {
         snprintf(buf, sizeof buf, "%s: failed to lookup address information: %s", addr, gai_strerror(rc));
         fwp_io_error(kind, buf, err);
@@ -739,7 +847,12 @@ static V fwp_p_tcp_accept_for(V d, V l, const fwp_desc *err) {
 }
 
 static V fwp_p_tcp_stop(V l) {
-    if (SOCK(l)->fd >= 0) { close(SOCK(l)->fd); SOCK(l)->fd = -1; }
+    if (SOCK(l)->fd >= 0) {
+        int fd = SOCK(l)->fd;
+        SOCK(l)->fd = -1;
+        fwp_fd_closing(fd);
+        close(fd);
+    }
     return FWP_UNIT;
 }
 
@@ -804,7 +917,8 @@ static V fwp_p_tcp_read_for(V d, V n, V c, const fwp_desc *err) {
     return r ? fwp_some(r) : FWP_NONE;
 }
 
-static V fwp_p_tcp_write(V data, V c, const fwp_desc *err) {
+/* `at` = 0: no timeout; a "timeout" error when it passes first */
+static V fwp_tcp_write(V data, V c, int64_t at, const fwp_desc *err) {
     size_t off = 0, len = STR(data)->len;
     while (off < len) {
         int fd = SOCK(c)->fd;
@@ -812,7 +926,7 @@ static V fwp_p_tcp_write(V data, V c, const fwp_desc *err) {
         ssize_t k = send(fd, STR(data)->d + off, len - off, MSG_NOSIGNAL);
         if (k > 0) { off += (size_t)k; continue; }
         if (k < 0 && (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)) {
-            fwp_wait_fd(fd, 1, 0);
+            if (!fwp_wait_fd(fd, 1, at)) return fwp_io_error("timeout", "write timed out", err);
             continue;
         }
         if (k == 0) return fwp_io_error("write", "connection closed by peer", err);
@@ -821,11 +935,19 @@ static V fwp_p_tcp_write(V data, V c, const fwp_desc *err) {
     return FWP_UNIT;
 }
 
+static V fwp_p_tcp_write(V data, V c, const fwp_desc *err) { return fwp_tcp_write(data, c, 0, err); }
+
+static V fwp_p_tcp_write_for(V d, V data, V c, const fwp_desc *err) {
+    return fwp_tcp_write(data, c, fwp_after(d), err);
+}
+
 static V fwp_p_sock_close(V c) {
     if (SOCK(c)->fd >= 0) {
-        if (SOCK(c)->kind == 1) shutdown(SOCK(c)->fd, SHUT_RDWR);
-        close(SOCK(c)->fd);
+        int fd = SOCK(c)->fd;
         SOCK(c)->fd = -1;
+        fwp_fd_closing(fd);
+        if (SOCK(c)->kind == 1) shutdown(fd, SHUT_RDWR);
+        close(fd);
     }
     return FWP_UNIT;
 }
@@ -1005,13 +1127,56 @@ static V fwp_p_metrics_snapshot(void) {
     return fwp_list_from(items, fwp_nmetrics);
 }
 
-/* ----- loop */
+/* ----- stack overflow
+ * A fault next to the end of the running stack (the main thread's, of
+ * fwp_main_stack_size bytes below fwp_main_stack_top, or the current
+ * task's) is a stack overflow: it is reported as a trap, with the message
+ * and exit code of the interpreter. Other faults keep their default
+ * action. The handler runs on an alternate signal stack. */
 
-static V fwp_p_loop(V f, V s) {
-    for (;;) {
-        V r = fwp_apply1(f, s);
-        if (fwp_tag(r) != 0) return OBJ(r)->f[0];
-        s = OBJ(r)->f[0];
+static char *fwp_main_stack_top = 0;
+static size_t fwp_main_stack_size = 0;
+
+static int fwp_near(uintptr_t a, uintptr_t lo, uintptr_t hi) { return a >= lo && a < hi; }
+
+static void fwp_segv(int sig, siginfo_t *si, void *uc) {
+    (void)uc;
+    uintptr_t a = (uintptr_t)si->si_addr, slack = (uintptr_t)1 << 20;
+    int overflow = 0;
+    if (fwp_cur && fwp_cur->stack) {
+        uintptr_t lo = (uintptr_t)fwp_cur->stack;
+        overflow = fwp_near(a, lo > slack ? lo - slack : 0, lo + 4096);
+    } else if (fwp_main_stack_top) {
+        uintptr_t end = (uintptr_t)fwp_main_stack_top - fwp_main_stack_size;
+        overflow = fwp_near(a, end - slack, end + slack);
     }
+    if (!overflow) {
+        signal(sig, SIG_DFL); /* the fault repeats with the default action */
+        return;
+    }
+    fwp_flush();
+    static const char msg[] = "fwp: trap: stack overflow\n";
+    if (write(2, msg, sizeof msg - 1) < 0) { /* nothing more to do */ }
+    _exit(101);
+}
+
+/* called at the top of the main thread, whose stack has `size` bytes */
+static void fwp_stack_guard_init(size_t size) {
+    char here;
+    fwp_main_stack_top = &here;
+    fwp_main_stack_size = size;
+    static char alt[1 << 16];
+    stack_t ss;
+    ss.ss_sp = alt;
+    ss.ss_size = sizeof alt;
+    ss.ss_flags = 0;
+    if (sigaltstack(&ss, 0) != 0) return;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = fwp_segv;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, 0);
+    sigaction(SIGBUS, &sa, 0);
 }
 #endif /* __wasi__ */

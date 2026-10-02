@@ -1,0 +1,3 @@
+check/err_alias_cycle.fwp:4:1: error: type alias `C` refers to itself; use a `type` with constructors for recursive types
+4 | C = List[C]
+  | ^

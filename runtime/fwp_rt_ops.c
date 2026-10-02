@@ -122,8 +122,12 @@ static void fwp_fmt_duration(char *out, i128 ns) {
     sprintf(out, "%sns", n);
 }
 
-static void fwp_trits(char *out, int64_t v, int width) {
-    char tmp[128];
+/* balanced ternary digits of v, most significant first, as "0t..."
+ * (widths are bounded at compile time, but the buffer is sized by width) */
+static void fwp_trits(fwp_buf *b, int64_t v, int width) {
+    char *tmp = (char *)fwp_alloc((size_t)width + 3);
+    tmp[0] = '0';
+    tmp[1] = 't';
     for (int i = 0; i < width; i++) {
         int64_t r = ((v % 3) + 3) % 3;
         int carry = 0;
@@ -131,15 +135,13 @@ static void fwp_trits(char *out, int64_t v, int width) {
         if (r == 0) d = '0';
         else if (r == 1) d = '+';
         else { d = '-'; carry = 1; }
-        tmp[i] = d;
+        tmp[2 + width - 1 - i] = d;
         int64_t q = v / 3;
         if (v % 3 != 0 && v < 0) q -= 1; /* floor division */
         v = q + carry;
     }
-    out[0] = '0';
-    out[1] = 't';
-    for (int i = 0; i < width; i++) out[2 + i] = tmp[width - 1 - i];
-    out[2 + width] = 0;
+    tmp[2 + width] = 0;
+    buf_puts(b, tmp);
 }
 
 /* --------------------------------------------------------------- display */
@@ -194,7 +196,7 @@ static void fwp_write(fwp_buf *b, V v, const fwp_desc *d, int top) {
     case K_U128: fwp_fmt_u128(t, fwp_u128(v)); buf_puts(b, t); return;
     case K_F32: fwp_fmt_f32(t, fwp_f32(v)); buf_puts(b, t); return;
     case K_F64: fwp_fmt_f64(t, fwp_f64(v)); buf_puts(b, t); return;
-    case K_TINT: fwp_trits(t, (int64_t)v, d->width); buf_puts(b, t); return;
+    case K_TINT: fwp_trits(b, (int64_t)v, d->width); return;
     case K_TRIT: buf_puts(b, (int64_t)v == 1 ? "+1" : (int64_t)v == -1 ? "-1" : "0"); return;
     case K_FUN: buf_puts(b, "<function>"); return;
     case K_OPAQUE: buf_puts(b, "<opaque>"); return;
