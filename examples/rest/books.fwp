@@ -32,7 +32,7 @@ Book = {
 Filter = {
     # -a  only books by this author
     author: Option[String],
-    # only books with this tag (repeatable)
+    # only books with this tag
     tag: List[String],
     # only books at most this price
     max-price: Option[F64],

@@ -79,7 +79,7 @@
                 "type": "string"
               }
             },
-            "description": "only books with this tag (repeatable)"
+            "description": "only books with this tag"
           },
           {
             "name": "max-price",

@@ -19,6 +19,7 @@ Every module is available without an import.
 - [Networking](#networking)
 - [HTTP](#http)
 - [JSON](#json)
+- [REST endpoints and clients](#rest-endpoints-and-clients)
 - [URLs](#urls)
 - [Logs and metrics](#logs-and-metrics)
 - [Vectors, matrices and complex numbers](#vectors-matrices-and-complex-numbers)
@@ -1326,6 +1327,24 @@ json.parse : String -> Result[Json, String]
 # compact JSON text; integral numbers below 1e15 have no fraction
 json.encode : Json -> String
 
+# The JSON text of any value whose type can be encoded: records are
+# objects, lists arrays, `Option` fields are left out when `None`, enums
+# are strings and other variants `{"type": "Circle", "value": ...}`.
+# Integers are written exactly; `I128` and `U128` as strings, `Bytes` in
+# base64 and `Duration` as `"1500ms"`. See docs/rest.md for the mapping.
+json.write : a -> String where Encode[a]
+
+# A value of the expected type from JSON text. Errors give the JSON path
+# of the offending value: `$.items[2].price: expected a number, got "x"`.
+# Integers, floats and `Bool` may also be strings (`"42"`).
+json.read : String -> Result[a, String] where Decode[a]
+
+# `json.write` as a `Json` value (numbers become `F64`)
+json.encode-value : a -> Json where Encode[a]
+
+# a typed value from a `Json` value (see `json.read`)
+json.decode : Json -> Result[a, String] where Decode[a]
+
 # the value of the first pair with the given key
 json.lookup : String -> List[(String, a)] -> Option[a]
 
@@ -1342,6 +1361,214 @@ json.as-object : Json -> Option[List[(String, Json)]]
 json.int : I64 -> Json
 json.object : List[(String, Json)] -> Json
 json.strings : List[String] -> Json
+```
+
+## REST endpoints and clients
+
+`lib/rest.fwp`
+
+REST endpoints from functions. `fwp build --rest` and `fwp serve --rest`
+serve every exported function of a file as an HTTP endpoint with a JSON
+contract and an OpenAPI document (see docs/rest.md); the program they
+generate is made of these functions, which hand-written servers can use
+too:
+
+    rest.main openapi-text [rest.endpoint route function, ...]
+
+A request's path parameters, query parameters and body become the
+function's arguments, decoded with `json.read` (a decoding error is a
+400 naming the parameter: `query.limit: expected an integer, got "x"`).
+The result is written with `json.write`; a `None` result is a 404, and
+an `Err` result or an `Error` the function raises is an error response
+`{"error": ...}` whose status comes from the route.
+
+```fwp
+# Where an argument of an endpoint comes from: a path parameter, a query
+# parameter (required or not), every value of a repeated query parameter,
+# the fields of an options record from the query (with the kind of each:
+# 0 a value, 1 optional, 2 repeated, 3 a switch), the body (`True` if it
+# may be absent), or nothing (a `()` parameter).
+RestSource =
+    | RestSource.Path String
+    | RestSource.Query String Bool
+    | RestSource.Queries String
+    | RestSource.Fields List[(String, I64)]
+    | RestSource.Body Bool
+    | RestSource.Unit
+
+# An endpoint: its method and path (`/items/{id}`), the sources of the
+# function's arguments in order, the status of a success, and the status
+# of an error: by variant name, else the error's own `status` field, else
+# `error-status`.
+RestRoute = {
+    method: String,
+    path: String,
+    sources: List[RestSource],
+    status: I64,
+    error-status: I64,
+    errors: List[(String, I64)],
+}
+
+# Options of a REST server's command line.
+RestOptions = { listen: Option[String], openapi: Bool, help: Bool }
+
+# A route of `http.router` that calls a function with the arguments of a
+# request and responds with its result as JSON.
+rest.endpoint : RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+
+# `rest.endpoint` for a function returning `Option`: `None` is a 404.
+rest.endpoint-option : RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+
+# `rest.endpoint` for a function returning `Result`: `Err` is an error
+# response, like a raised `Error`.
+rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
+rest.endpoint-with : (RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+
+# `/items/{id}` as a router pattern (`/items/:id`)
+rest.pattern : String -> List[String]
+rest.handler : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Decode[a], Encode[e]
+rest.call : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> a -> Result[Response, HttpError] ! {Async, IO, Network, FileIO} where Encode[e]
+rest.finish : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Result[b, e] -> Result[Response, HttpError] where Encode[e]
+
+# The arguments of a call, decoded from a request: one argument, or a
+# tuple of several. A decoding error is a 400 naming the parameter.
+rest.decode : List[RestSource] -> Request -> a ! {Error[HttpError]} where Decode[a]
+rest.read-args : List[String] -> String -> a ! {Error[HttpError]} where Decode[a]
+rest.decoded : List[String] -> Result[a, String] -> a ! {Error[HttpError]}
+
+# The JSON text of the arguments: one, or an array of several.
+rest.arguments : List[RestSource] -> Request -> String ! {Error[HttpError]}
+rest.join-args : List[String] -> String
+rest.argument : Request -> RestSource -> String ! {Error[HttpError]}
+rest.quote : String -> String
+rest.path-arg : Request -> String -> String ! {Error[HttpError]}
+
+# every value of a query parameter
+rest.query-values : String -> Request -> List[String]
+rest.value-of : String -> (String, String) -> Option[String]
+rest.query-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
+rest.query-one : (Request, String, Bool) -> Option[String] -> String ! {Error[HttpError]}
+rest.queries-arg : Request -> String -> String
+rest.fields-arg : Request -> List[(String, I64)] -> String
+rest.field-arg : Request -> (String, I64) -> Option[String]
+
+# `"name":value`
+rest.member : String -> Option[String] -> Option[String]
+rest.field-value : I64 -> List[String] -> Option[String]
+
+# a switch: absent is false, `?name` is true
+rest.switch : Option[String] -> String
+rest.body-arg : Request -> Bool -> String ! {Error[HttpError]}
+rest.body-of : Bool -> String -> String ! {Error[HttpError]}
+rest.checked : String -> Result[Json, String] -> String ! {Error[HttpError]}
+
+# How a source is named in decoding errors.
+rest.label : RestSource -> String
+
+# `$[1].price: ...` with the label of argument 1 instead of `$[1]` (of
+# the only argument instead of `$`)
+rest.relabel : List[String] -> String -> String
+rest.relabel-one : (List[String], String) -> String
+rest.relabel-many : (List[String], String) -> String
+rest.relabel-at : List[String] -> Option[(String, String)] -> String
+rest.label-at : List[String] -> String -> String
+
+# 200 (or the route's status) with the JSON of a value; 204 has no body
+rest.success : RestRoute -> b -> Response where Encode[b]
+rest.success-option : RestRoute -> Option[b] -> Result[Response, HttpError] where Encode[b]
+rest.success-result : RestRoute -> Result[b, x] -> Result[Response, HttpError] where Encode[b], Encode[x]
+rest.no-content : Response
+rest.json-text : I64 -> String -> Response
+
+# `{"error": ...}`
+rest.error-body : String -> String
+
+# An error value as a response: `{"error": <the error as JSON>}`.
+rest.failure : RestRoute -> e -> Response where Encode[e]
+
+# the status of an error: by variant name (`errors`), else its `status`
+# field, else the route's `error-status`
+rest.error-status : RestRoute -> Json -> I64
+rest.variant-name : Json -> Option[String]
+rest.named-status : List[(String, I64)] -> Option[String] -> Option[I64]
+rest.status-field : Json -> Option[I64]
+rest.http-error : HttpError -> Response
+
+# Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
+# error responses (`{"error": "not found"}` for unknown paths). The
+# command line is `[--listen host:port] [--openapi] [--help]`; the address
+# defaults to `FWP_REST_ADDR`, else `127.0.0.1:8080`.
+rest.main : String -> List[Route] -> () ! {Async, IO, Network}
+rest.default-options : RestOptions
+rest.usage : String
+rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
+rest.run-with : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.help : String
+rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.address : Option[String] -> String ! {IO}
+rest.serve-at : (String, List[Route]) -> String -> () ! {Async, IO, Network, Error[IoError]}
+rest.serve-on : Listener -> (String, List[Route]) -> () ! {Async, IO, Network}
+rest.config : ServerConfig
+rest.stopped : Result[(), IoError] -> () ! {IO}
+
+# The handler of a server: the endpoints and `/openapi.json`, with errors
+# (unknown routes, bad arguments) as JSON.
+rest.handler-of : (String, List[Route]) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.openapi-route : String -> Route
+rest.respond : Result[Response, HttpError] -> Response
+
+# A call of a REST API, as the client functions that
+# `fwp openapi --import` generates make them: the method, the URL and the
+# JSON body.
+RestRequest = { method: String, url: String, body: Option[String] }
+
+# The URL of a call: the base URL of the server, the path template
+# (`/items/{id}`), the text of the path parameters in order, and the query
+# parameters.
+RestTarget = {
+    base: String,
+    path: String,
+    params: List[String],
+    query: List[(String, String)],
+}
+
+# A call that failed: the status of the response (0 if there was none)
+# and its body, or what went wrong.
+RestError = { status: I64, message: String }
+rest.url : RestTarget -> String
+rest.trim-slash : String -> String
+
+# `/items/{id}` with the path parameters, percent-encoded
+rest.fill : List[String] -> String -> String
+rest.fill-step : (List[String], List[String]) -> String -> (List[String], List[String])
+
+# the text of each parameter of a call
+rest.texts : List[a -> String] -> a -> List[String]
+rest.query-string : List[(String, String)] -> String
+
+# The text of a path parameter: a string as it is, other values as JSON.
+rest.param-text : a -> String where Encode[a]
+rest.unquote : String -> String
+
+# The query parameters of a record: its fields, each element of a list
+# field, and nothing for a `None` field.
+rest.query-pairs : a -> List[(String, String)] where Encode[a]
+rest.query-pair : (String, Json) -> List[(String, String)]
+rest.scalar-text : Json -> String
+
+# Call a REST API and decode the JSON of a successful response; any other
+# response is a `RestError` with its status and body.
+rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[b]
+
+# `rest.fetch`, with `None` for a 404.
+rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
+rest.exchange : RestRequest -> ClientResponse ! {Async, Network, Error[RestError]}
+rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
+rest.decode-response : ClientResponse -> b ! {Error[RestError]} where Decode[b]
+
+# an empty body is `{}` (a `()` result)
+rest.body-json : Bytes -> String
+rest.decoded-body : I64 -> Result[b, String] -> b ! {Error[RestError]}
 ```
 
 ## URLs

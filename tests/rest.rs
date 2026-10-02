@@ -672,13 +672,18 @@ fn import(spec: &Path, out: &Path) -> String {
 #[test]
 fn client_golden() {
     let dir = temp_dir("client");
+    // from the documents as `fwp openapi` prints them now
+    let api_doc = dir.join("api.json");
+    std::fs::write(&api_doc, openapi_text(&fixture("api.fwp"))).unwrap();
+    let books_doc = dir.join("books.json");
+    std::fs::write(&books_doc, openapi_text(&root().join("examples/rest/books.fwp"))).unwrap();
     let out = dir.join("apiclient.fwp");
-    let warnings = import(&fixture("api.openapi.json"), &out);
+    let warnings = import(&api_doc, &out);
     assert_eq!(warnings, "");
     golden(&fixture("apiclient.fwp"), &std::fs::read_to_string(&out).unwrap());
     // the client of the example, from the example's document
     let out = dir.join("bookclient.fwp");
-    assert_eq!(import(&fixture("books.openapi.json"), &out), "");
+    assert_eq!(import(&books_doc, &out), "");
     golden(
         &root().join("examples/rest/bookclient.fwp"),
         &std::fs::read_to_string(&out).unwrap(),

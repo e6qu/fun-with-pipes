@@ -12,7 +12,7 @@ usage:
                                  run a program's `main` (interpreter); calls
                                  to the exported functions of each module
                                  named by --service go to that service
-  fwp build <file.fwp> [-o out] [--fn name|--cli] [--emit-c] [-O0|-O1|-O2|-O3]
+  fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
             [--staticlib|--cdylib] [--link lib-or-source]...
             [--service m[=addr]]...
@@ -22,6 +22,9 @@ usage:
                                  subcommand of one executable, with flags,
                                  --help, --version, --completions
                                  bash|zsh|fish and --man (see docs/cli.md);
+                                 --rest makes every exported function an
+                                 endpoint of one HTTP server, with JSON
+                                 and an OpenAPI document (see docs/rest.md);
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
                                  --staticlib/--cdylib build a C library
@@ -35,8 +38,14 @@ usage:
   fwp serve [--service m[=addr]]... <file.fwp> <module> [--listen addr]
                                  serve a module's exported functions over
                                  gRPC with the interpreter
+  fwp serve --rest <file.fwp> [--listen addr]
+                                 serve a file's exported functions as REST
+                                 endpoints with the interpreter
   fwp proto <file.fwp> [--service m]...
                                  print the .proto file of the services
+  fwp openapi <file.fwp>         print the OpenAPI document of the endpoints
+  fwp openapi --import <spec.json> [-o client.fwp]
+                                 generate an fwp client module of an API
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
   fwp exec --cli <file.fwp> [command] [args...]
