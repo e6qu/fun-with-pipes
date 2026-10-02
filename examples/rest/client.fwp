@@ -1,0 +1,41 @@
+# Calls the bookstore's REST API (books.fwp) through bookclient.fwp, the
+# client that `fwp openapi --import` generates from its OpenAPI document:
+#
+#   fwp openapi books.fwp > books.json
+#   fwp openapi --import books.json -o bookclient.fwp
+#   fwp serve --rest books.fwp &
+#   fwp run client.fwp [http://127.0.0.1:8080]
+
+import bookclient
+
+classics : bookclient.BooksQuery
+classics = bookclient.BooksQuery {
+    author = None,
+    tag = ["classic"],
+    max-price = None,
+    in-stock = Some True,
+}
+
+order : bookclient.Order
+order = bookclient.Order {
+    lines = [bookclient.Line { book = 3, quantity = 2 }],
+    coupon = None,
+}
+
+calls : String -> () ! {Async, IO, Network, Error[RestError]}
+calls =
+    tap (fork bookclient.book id (const 1) | option.map .title | echo)
+    | tap (fork bookclient.books id (const classics) | map .title | echo)
+    | tap (fork bookclient.quote-order id (const order) | .total | echo)
+    | bookclient.health
+    | echo
+
+main =
+    ()
+    | args
+    | head
+    | option.unwrap-or "http://127.0.0.1:8080"
+    | attempt calls
+    | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit

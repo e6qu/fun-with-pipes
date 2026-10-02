@@ -676,6 +676,13 @@ fn client_golden() {
     let warnings = import(&fixture("api.openapi.json"), &out);
     assert_eq!(warnings, "");
     golden(&fixture("apiclient.fwp"), &std::fs::read_to_string(&out).unwrap());
+    // the client of the example, from the example's document
+    let out = dir.join("bookclient.fwp");
+    assert_eq!(import(&fixture("books.openapi.json"), &out), "");
+    golden(
+        &root().join("examples/rest/bookclient.fwp"),
+        &std::fs::read_to_string(&out).unwrap(),
+    );
     let out = dir.join("petstore.fwp");
     let warnings = import(&fixture("petstore.json"), &out);
     golden(&fixture("petstore.fwp"), &std::fs::read_to_string(&out).unwrap());

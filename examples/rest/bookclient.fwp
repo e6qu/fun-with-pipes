@@ -1,0 +1,103 @@
+# A client of `books` 1.0.0, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then the path parameters, a record of the query parameters and the
+# body. A response other than a success raises `Error[RestError]`.
+
+Format =
+    | Paperback
+    | Hardcover
+    | Ebook
+
+Book = {
+    id: I64,
+    title: String,
+    author: String,
+    # the price in euros
+    price: F64,
+    format: Format,
+    tags: List[String],
+    stock: I64,
+}
+
+# the query parameters of `books`
+BooksQuery = {
+    # only books by this author
+    author: Option[String],
+    # only books with this tag (repeatable)
+    tag: List[String],
+    # only books at most this price
+    max-price: Option[F64],
+    # only books in stock
+    in-stock: Option[Bool],
+}
+
+Line = { book: I64, quantity: I64 }
+
+Order = {
+    lines: List[Line],
+    # a discount code
+    coupon: Option[String],
+}
+
+QuoteLine = { title: String, quantity: I64, amount: F64 }
+
+Quote = { lines: List[QuoteLine], discount: F64, total: F64 }
+
+# A book by its id.
+# GET /books/{id}
+book : String -> I64 -> Option[Book] ! {Async, Network, Error[RestError]}
+book = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/books/{id}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch-option)
+
+# The books that match a filter, cheapest first.
+# GET /books
+books : String -> BooksQuery -> List[Book] ! {Async, Network, Error[RestError]}
+books = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/books",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    body = const None,
+} | rest.fetch)
+
+# Quote an order: the price of each line and the total, with a 10% discount
+# for the coupon `FWP10`.
+# POST /quotes
+quote-order : String -> Order -> Quote ! {Async, Network, Error[RestError]}
+quote-order = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/quotes",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# Whether the store is up.
+# GET /health
+health : String -> String ! {Async, Network, Error[RestError]}
+health = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/health",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch
