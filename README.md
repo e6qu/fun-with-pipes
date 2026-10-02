@@ -36,6 +36,9 @@ main =
 - **Many outputs.** An interpreter and native executables with identical
   output; one executable per exported function, joined by a typed pipe
   protocol; WebAssembly; fat binaries; C libraries and C interop.
+- **One program, two deployments.** The same source builds into one
+  executable or into gRPC services, one per module you name, whose calls
+  to each other go over HTTP/2.
 
 ## Quick start
 
@@ -51,6 +54,7 @@ fwp run examples/hello.fwp
 fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
 fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
+fwp build examples/services/main.fwp --service inventory -o shop   # gRPC
 fwp test --std                           # the standard library's own tests
 fwp fmt --check . && fwp lint examples   # formatting and lint checks
 fwp lsp                                  # the language server, for editors
@@ -60,11 +64,12 @@ fwp lsp                                  # the language server, for editors
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | thirteen tutorials, from pipes to WebAssembly and tooling |
+| [docs/tutorials](docs/tutorials/README.md) | fourteen tutorials, from pipes to tooling and gRPC services |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
+| [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
 | [PLAN.md](PLAN.md) | what was delivered and what comes next |
 
@@ -76,9 +81,11 @@ src/        compiler: lexer, parser, type checker, monomorphizer, optimizer,
             formatter, linter and language server
 runtime/    the C runtime embedded in native programs (and WASM helpers)
 lib/        the standard library, written in fwp (with its tests)
-examples/   a word counter, a JSON API server, executable tools
+examples/   a word counter, a JSON API server, executable tools, a shop
+            split into services
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
-            FFI, WebAssembly, fat-binary, formatter and language server tests
+            FFI, WebAssembly, fat-binary, formatter, language server and
+            services tests
 docs/       documentation and tutorials
 ```
 

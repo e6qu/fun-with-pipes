@@ -128,6 +128,7 @@ impl<'p> Interp<'p> {
             Body::Prim(sym) => self.prim(id, sym, args)?,
             Body::Ctor(tag) => Value::data(*tag, args),
             Body::ForeignC { .. } => self.call_foreign(id, args)?,
+            Body::Remote(r) => crate::services::call_remote(self, id, r, args)?,
         };
         if f.arity == 0 {
             self.cafs.borrow_mut()[id] = Some(v.clone());

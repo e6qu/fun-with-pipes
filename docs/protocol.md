@@ -76,7 +76,8 @@ end     := 0x00 0x00 0x00 0x00 0x00
 * `version` is 1. The only capability currently offered is `PIPE_V1`;
   `UDS_V1`, `SHM_V1`, `GRPC_V1`, `STREAMING`, `TLS` and `ZSTD` are reserved
   names for future transports. The transport never changes the meaning of a
-  program.
+  program. (Calls between [services](services.md) use gRPC instead, with
+  the same value encoding and fingerprints underneath.)
 * The **fingerprint** is two little-endian FNV-1a 64-bit hashes, of the
   canonical structural type string and of `"fwp:"` followed by it. The
   canonical string includes module-qualified names *and the structure* of

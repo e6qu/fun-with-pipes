@@ -135,6 +135,7 @@ fn other_examples_check() {
         "wordfreq.fwp",
         "server/api.fwp",
         "shell/tools.fwp",
+        "services/main.fwp",
     ] {
         let out = Command::new(fwp())
             .arg("check")

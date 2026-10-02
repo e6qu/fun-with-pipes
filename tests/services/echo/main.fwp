@@ -1,0 +1,3 @@
+import echo
+
+main = ["hello", "grpc", "from fwp"] | each (echo.shout | print)

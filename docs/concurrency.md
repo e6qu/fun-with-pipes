@@ -93,7 +93,8 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
 - **Client:** `http.get`, `http.post` and `http.send`. Each request uses one
   connection; responses may be chunked or sized by `content-length`.
 
-TLS, HTTP/2, HTTP/3 and WebSocket are not implemented yet. Request bodies
+TLS, HTTP/3 and WebSocket are not implemented yet; HTTP/2 is used only
+by [services](services.md), which speak gRPC. Request bodies
 with a transfer encoding are rejected with 501, and requests whose
 `content-length` is not a plain decimal number or appears more than once
 with 400, so that a request's length is never ambiguous. A response whose

@@ -1,0 +1,29 @@
+# The inventory: which products exist and how many are in stock.
+
+Item = { sku: String, name: String, stock: I64 }
+
+# why a reservation failed
+Shortage = { sku: String, wanted: I64, available: I64 }
+
+catalog : List[Item]
+catalog = [
+    Item { sku = "apple", name = "Apple", stock = 12 },
+    Item { sku = "pear", name = "Pear", stock = 3 },
+    Item { sku = "plum", name = "Plum", stock = 0 },
+]
+
+# a product by its stock-keeping unit
+export item : String -> Option[Item]
+item = eq | compose .sku | find | apply catalog
+
+# a product, or an empty placeholder for an unknown one
+stocked : String -> Item
+stocked = fork option.unwrap-or (make Item { sku = id, name = const "unknown", stock = const 0 }) item
+
+# (wanted, item) -> the stock left, or the shortage
+take-stock : (I64, Item) -> I64 ! {Error[Shortage]}
+take-stock = if (fork ge .0 (.1 | .stock)) (fork sub .0 (.1 | .stock)) (make Shortage { sku = .1 | .sku, wanted = .0, available = .1 | .stock } | fail)
+
+# reserve `n` units of a product: the stock that would be left
+export reserve : I64 -> String -> I64 ! {Error[Shortage]}
+reserve = curry (second stocked | take-stock)

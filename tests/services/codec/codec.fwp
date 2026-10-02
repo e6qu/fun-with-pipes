@@ -1,0 +1,74 @@
+# Exported functions over many types, served in a split build: every value
+# makes a round trip through protobuf.
+
+Color =
+    | Red
+    | Green
+    | Rgb U8 U8 U8
+
+Tree =
+    | Leaf
+    | Node Tree I64 Tree
+
+Sample = {
+    flag: Bool,
+    small: I8,
+    medium: I32,
+    big: I128,
+    unsigned: U64,
+    single: F32,
+    double: F64,
+    text: String,
+    raw: Bytes,
+    color: Color,
+    nothing: (),
+}
+
+Problem = { code: I64, reason: String }
+
+export sample : Sample -> Sample
+sample = update { small = neg, single = mul 2.0f32, text = upper }
+
+export nested : List[List[I64]] -> List[List[I64]]
+nested = map reverse | reverse
+
+export options : List[Option[String]] -> List[Option[String]]
+options = map (option.map (concat "!"))
+
+export maybe-list : Option[List[I64]] -> Option[Option[I64]]
+maybe-list = option.map head
+
+export table : Map[String, List[F64]] -> Map[String, F64]
+table = map.map-values sum
+
+export keys : Set[I64] -> Set[I64]
+keys = set.to-list | map (mul 10) | set.from-list
+
+export tree : Tree -> I64
+rec tree = match
+    Leaf -> 0
+    Node _ _ _ -> curry3 (fork add (.0 | tree) (fork add .1 (.2 | tree)))
+
+export grow : I64 -> Tree
+grow = fork (Node Leaf) id (const Leaf)
+
+export pair : (String, (I64, Bool)) -> (Bool, String, I64)
+pair = make { 0 = .1 | .1, 1 = .0, 2 = .1 | .0 }
+
+export unit : () -> ()
+unit = id
+
+export divide : I64 -> I64 -> I64 ! {Error[Problem]}
+divide = curry (if (.0 | eq 0) (const (Problem { code = 400, reason = "division by zero" }) | fail) (uncurry div))
+
+export colors : List[Color] -> List[Color]
+colors = reverse
+
+export bump : I64 -> I64
+bump = add 1
+
+export split-words : String -> Array[String]
+split-words = words | array.from-list
+
+export checksum : List[I64] -> I64
+checksum = sum

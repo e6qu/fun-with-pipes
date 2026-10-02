@@ -113,13 +113,16 @@ error. See [protocol.md](protocol.md).
 | executable | C compiled and linked with the runtime; the reachable standard library is included |
 | `--fn f` | the exported function `f` as a standalone executable |
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
+| `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
 | `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Async`) are compile errors |
 
 ## Not implemented
 
 - A garbage collector for native programs.
-- TLS, HTTP/2, HTTP/3, WebSocket and compression.
+- TLS, HTTP/3, WebSocket and compression. HTTP/2 exists only as the
+  cleartext gRPC transport of [services](services.md) (unary calls, no
+  streaming RPCs).
 - Preemptive scheduling.
 - GPU and distributed backends, a JIT, reverse-mode autodiff.
 - The `UDS_V1` and `SHM_V1` transports (the header reserves bits for

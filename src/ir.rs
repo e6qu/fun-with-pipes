@@ -170,6 +170,33 @@ pub enum Body {
         /// Number of fixed parameters of a variadic function.
         variadic: Option<u32>,
     },
+    /// An exported function of a module built as a separate service: the
+    /// call is a gRPC unary call (see `services.rs`).
+    Remote(Box<RemoteFn>),
+}
+
+/// The client side of a function served by another process.
+#[derive(Clone, Debug)]
+pub struct RemoteFn {
+    /// The module that serves the function.
+    pub module: String,
+    /// The function's name within the module.
+    pub method: String,
+    /// The `Error[E]` type of the function, if it has one.
+    pub error: Option<MT>,
+    /// Address used when `FWP_SERVICE_<MODULE>` is not set.
+    pub default_addr: String,
+}
+
+/// A module served as a gRPC service.
+#[derive(Clone, Debug, Default)]
+pub struct ServiceDef {
+    pub module: String,
+    /// Exported functions: name, function and `Error[E]` type.
+    pub methods: Vec<(String, FuncId, Option<MT>)>,
+    /// Address to listen on when neither `--listen` nor
+    /// `FWP_SERVICE_<MODULE>` is given.
+    pub default_addr: String,
 }
 
 #[derive(Clone, Debug)]
@@ -206,6 +233,11 @@ pub struct Program {
     pub named: Vec<(String, FuncId)>,
     /// `repr(C)` records: type name to field names in declaration order.
     pub repr_c: std::collections::BTreeMap<String, Vec<String>>,
+    /// Every nominal record: type name to field names in declaration order
+    /// (protobuf field numbers follow it).
+    pub field_order: std::collections::BTreeMap<String, Vec<String>>,
+    /// The module this program serves (`fwp serve`, split builds).
+    pub service: Option<ServiceDef>,
 }
 
 impl crate::value::Shapes for Program {
