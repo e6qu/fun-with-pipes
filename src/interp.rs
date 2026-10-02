@@ -18,6 +18,8 @@ pub enum Ctl {
     Trap(String),
     /// Process exit requested by the program.
     Exit(i32),
+    /// The current task was cancelled (or its deadline passed).
+    Cancelled,
 }
 
 pub type R<T> = Result<T, Ctl>;
@@ -28,15 +30,22 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 
 pub struct Interp<'p> {
     pub prog: &'p Program,
-    cafs: Vec<Option<Value>>,
+    /// Values of argument-less functions, shared by all tasks.
+    pub(crate) cafs: Rc<RefCell<Vec<Option<Value>>>>,
     pub(crate) state: Vec<Value>,
-    rng: u64,
+    pub(crate) rng: u64,
     pub out: Box<dyn Write + 'p>,
     pub args: Vec<String>,
+    pub(crate) world: std::sync::Arc<crate::sched::World>,
+    pub(crate) task: std::sync::Arc<crate::sched::TaskShared>,
+    /// The root task's writer, shared by every task.
+    pub(crate) root_out: *mut (dyn Write + 'p),
+    /// Tasks spawned inside each enclosing `task.scope`.
+    pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
 }
 
 impl<'p> Interp<'p> {
-    pub fn new(prog: &'p Program, out: Box<dyn Write + 'p>) -> Self {
+    pub fn new(prog: &'p Program, mut out: Box<dyn Write + 'p>) -> Self {
         let seed = std::env::var("FWP_SEED")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -46,22 +55,39 @@ impl<'p> Interp<'p> {
                     .map(|d| d.as_nanos() as u64)
                     .unwrap_or(1)
             });
+        let root_out: *mut (dyn Write + 'p) = &mut *out;
         Interp {
             prog,
-            cafs: vec![None; prog.funcs.len()],
+            cafs: Rc::new(RefCell::new(vec![None; prog.funcs.len()])),
             state: Vec::new(),
             rng: seed | 1,
             out,
             args: Vec::new(),
+            world: crate::sched::World::new(),
+            task: crate::sched::TaskShared::new(),
+            root_out,
+            scopes: Vec::new(),
         }
     }
 
     // ----- evaluation ----------------------------------------------------------
 
+    /// Call a root function (main or a test) and wait for the tasks it
+    /// started; when it failed, they are cancelled first.
+    pub fn call_root(&mut self, id: FuncId) -> R<Value> {
+        let r = self.call(id, vec![]);
+        if r.is_err() {
+            self.cancel_children();
+        } else {
+            self.join_children();
+        }
+        r
+    }
+
     pub fn call(&mut self, id: FuncId, args: Vec<Value>) -> R<Value> {
         let f = &self.prog.funcs[id];
         if f.arity == 0 {
-            if let Some(v) = &self.cafs[id] {
+            if let Some(v) = &self.cafs.borrow()[id] {
                 return Ok(v.clone());
             }
         }
@@ -75,7 +101,7 @@ impl<'p> Interp<'p> {
             Body::Ctor(tag) => Value::data(*tag, args),
         };
         if f.arity == 0 {
-            self.cafs[id] = Some(v.clone());
+            self.cafs.borrow_mut()[id] = Some(v.clone());
         }
         Ok(v)
     }
@@ -468,6 +494,33 @@ impl<'p> Interp<'p> {
                     Err(other) => Err(other),
                 }
             }
+            "json.parse" => Ok(crate::json::parse(a[0].as_str())),
+            "json.encode" => {
+                let mut out = String::new();
+                crate::json::encode(&a[0], &mut out);
+                Ok(Value::str(&out))
+            }
+            "string.split-once" => Ok(crate::web::split_once(&a[0], &a[1])),
+            "bytes.find" => Ok(crate::web::bytes_find(&a[0], &a[1])),
+            "url.encode" => Ok(crate::web::url_encode(&a[0])),
+            "url.decode" => Ok(crate::web::url_decode(&a[0], false)),
+            "form.decode" => Ok(crate::web::url_decode(&a[0], true)),
+            "url.split" => Ok(crate::web::url_split(&a[0])),
+            "http.parse-request-head" => Ok(crate::web::parse_request_head(&a[0])),
+            "http.parse-response-head" => Ok(crate::web::parse_response_head(&a[0])),
+            "int.to-hex" => Ok(crate::web::to_hex(&a[0])),
+            "int.parse-hex" => Ok(crate::web::parse_hex(&a[0])),
+            "loop" => {
+                let f = a[0].clone();
+                let mut s = a[1].clone();
+                loop {
+                    match self.apply(f.clone(), vec![s])? {
+                        Value::Data(0, fs) => s = fs[0].clone(),
+                        Value::Data(_, fs) => return Ok(fs[0].clone()),
+                        _ => return trap("internal: loop step is not a Step"),
+                    }
+                }
+            }
             "get" => Ok(self.state.last().cloned().unwrap_or_else(Value::unit)),
             "put" => {
                 if let Some(s) = self.state.last_mut() {
@@ -587,6 +640,19 @@ impl<'p> Interp<'p> {
                 match std::fs::write(&path, a[1].as_str()) {
                     Ok(()) => Ok(Value::unit()),
                     Err(e) => Err(self.io_error(id, "write", format!("{}: {}", path, e))),
+                }
+            }
+            _ if sym.starts_with("task.")
+                || sym.starts_with("channel.")
+                || sym.starts_with("tcp.")
+                || sym.starts_with("udp.")
+                || sym.starts_with("dns.")
+                || sym.starts_with("signal.")
+                || sym.starts_with("metrics.") =>
+            {
+                match self.prim_conc(sym, &mut a) {
+                    Some(r) => r,
+                    None => trap(format!("primitive `{}` is not implemented", sym)),
                 }
             }
             _ => match self.prim_std(sym, &mut a, &params, &result) {
@@ -1084,7 +1150,7 @@ pub fn run_main(prog: &Program, args: Vec<String>) -> RunResult {
         eprintln!("fwp: no `main` binding");
         return RunResult { exit_code: 2 };
     };
-    let r = it.call(main, vec![]);
+    let r = it.call_root(main);
     let _ = it.out.flush();
     let code = report(&r, prog);
     match r {
@@ -1112,5 +1178,9 @@ pub fn report(r: &R<Value>, prog: &Program) -> i32 {
             101
         }
         Err(Ctl::Exit(c)) => *c,
+        Err(Ctl::Cancelled) => {
+            eprintln!("fwp: the main task was cancelled");
+            1
+        }
     }
 }

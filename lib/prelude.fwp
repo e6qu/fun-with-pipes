@@ -142,6 +142,15 @@ foreign "fwp" curry3 : ((a, b, c) -> d ! e) -> a -> b -> c -> d ! e
 foreign "fwp" uncurry3 : (a -> b -> c -> d ! e) -> (a, b, c) -> d ! e
 foreign "fwp" tap : (a -> b ! e) -> a -> a ! e where Dup[a]
 
+# One step of `loop`: go again from a new state, or stop with a result.
+Step[S, R] =
+    | Again S
+    | Stop R
+
+# Iterate a step function from an initial state until it stops; runs in
+# constant stack space (servers and other long-running loops).
+foreign "fwp" loop : (s -> Step[s, r] ! e) -> s -> r ! e
+
 # ------------------------------------------------------------- numeric traits
 trait Add[T] =
     add : T -> T -> T

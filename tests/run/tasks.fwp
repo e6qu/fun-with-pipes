@@ -1,0 +1,37 @@
+# Structured concurrency: channels, task results, deadlines, cancellation,
+# scopes; UDP round trip.
+
+the-ch : Channel[I64] -> Channel[I64]
+the-ch = id
+
+send-all : Channel[I64] -> List[I64] -> () ! {Async}
+send-all = channel.send | flip compose ignore | each
+
+produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
+produce = flip (const (both (flip send-all (range 1 6)) channel.close | ignore))
+
+drain-step : (Channel[a], List[a]) -> Step[(Channel[a], List[a]), List[a]] ! {Async}
+drain-step = fork drain-next id (.0 | channel.recv)
+
+drain-next : (Channel[a], List[a]) -> Option[a] -> Step[(Channel[a], List[a]), List[a]]
+drain-next = curry (match
+    (_, None) -> .1 | reverse | Stop
+    (_, Some _) -> curry (both (.0 | .0) (fork Cons .1 (.0 | .1)) | Again))
+
+# sleep, then print
+later : I64 -> () -> () ! {Async, IO, Network, FileIO}
+later = curry (.0 | tap (duration.from-millis | task.sleep) | format "woke after {} ms" | print)
+
+udp-echo : UdpSocket -> String ! {Async, Network, Error[IoError]}
+udp-echo = tap (fork (flip udp.send-to ("ping" | string.to-bytes)) udp.local-addr id) | udp.recv-from 100 | .0 | string.from-bytes | option.unwrap-or "?"
+
+main = [
+    2 | channel.make | the-ch | tap (produce | task.spawn) | flip (curry id) [] | loop drain-step | echo,
+    [30, 10, 20] | task.map (tap (duration.from-millis | task.sleep)) | echo,
+    10s | flip task.within (const 5 | task.deadline 20ms | tap (const 1s | task.sleep)) | echo,
+    10s | flip task.within (const 5 | task.deadline 1s | tap (const 5ms | task.sleep)) | echo,
+    500 | later | task.spawn | tap task.cancel | task.await | echo,
+    task.scope (const [40, 20] | each (later | task.spawn | ignore)) | const "scope done" | print,
+    5 | channel.make | the-ch | channel.recv-for 20ms | echo,
+    "127.0.0.1:0" | udp.bind | udp-echo | print,
+] | ignore

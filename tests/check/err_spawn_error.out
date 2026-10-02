@@ -1,0 +1,4 @@
+check/err_spawn_error.fwp:6:19: error: type mismatch in argument 1: expected `() -> I64 ! {Async, FileIO, IO, Network}`, found `() -> I64 ! {Error[String]}`
+6 | main = task.spawn risky | task.await | echo
+  |                   ^^^^^
+  note: effect `Error` is not allowed here

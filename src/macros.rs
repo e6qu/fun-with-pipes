@@ -396,6 +396,7 @@ impl Expander<'_> {
                 Ctl::Fail(v, t) => display(&v, &t, self.prog, true),
                 Ctl::Trap(m) => format!("trap: {}", m),
                 Ctl::Exit(c) => format!("exit {}", c),
+                Ctl::Cancelled => "cancelled".to_string(),
             };
             Diagnostic::error(span, format!("macro `{}` failed: {}", name, msg))
         })?;

@@ -1,0 +1,6 @@
+# A task must handle its own errors: `Error` is not among the effects a
+# spawned function may perform.
+risky : () -> I64 ! {Error[String]}
+risky = const "boom" | fail
+
+main = task.spawn risky | task.await | echo

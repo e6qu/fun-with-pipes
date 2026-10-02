@@ -1,0 +1,34 @@
+# Networking: TCP, UDP and DNS. Socket operations suspend only the calling
+# task. Addresses are "host:port" strings.
+
+Listener = builtin
+Conn = builtin
+UdpSocket = builtin
+
+foreign "fwp" tcp.listen : String -> Listener ! {Network, Error[IoError]}
+foreign "fwp" tcp.local-addr : Listener -> String ! {Network}
+foreign "fwp" tcp.accept : Listener -> Conn ! {Async, Network, Error[IoError]}
+foreign "fwp" tcp.accept-for : Duration -> Listener -> Option[Conn] ! {Async, Network, Error[IoError]}
+# stop listening
+foreign "fwp" tcp.stop : Listener -> () ! {Network}
+foreign "fwp" tcp.connect : String -> Conn ! {Async, Network, Error[IoError]}
+# read up to n bytes; empty at end of stream
+foreign "fwp" tcp.read : I64 -> Conn -> Bytes ! {Async, Network, Error[IoError]}
+foreign "fwp" tcp.read-for : Duration -> I64 -> Conn -> Option[Bytes] ! {Async, Network, Error[IoError]}
+foreign "fwp" tcp.write : Bytes -> Conn -> () ! {Async, Network, Error[IoError]}
+foreign "fwp" tcp.close : Conn -> () ! {Network}
+foreign "fwp" tcp.peer-addr : Conn -> String ! {Network}
+
+foreign "fwp" udp.bind : String -> UdpSocket ! {Network, Error[IoError]}
+foreign "fwp" udp.local-addr : UdpSocket -> String ! {Network}
+foreign "fwp" udp.send-to : String -> Bytes -> UdpSocket -> () ! {Async, Network, Error[IoError]}
+foreign "fwp" udp.recv-from : I64 -> UdpSocket -> (Bytes, String) ! {Async, Network, Error[IoError]}
+foreign "fwp" udp.close : UdpSocket -> () ! {Network}
+
+# addresses of a host name
+foreign "fwp" dns.resolve : String -> List[String] ! {Network, Error[IoError]}
+
+# SIGINT/SIGTERM arrived (or `signal.request-shutdown` was called); the
+# first call installs the signal handlers
+foreign "fwp" signal.shutdown-requested : () -> Bool ! {Async}
+foreign "fwp" signal.request-shutdown : () -> () ! {Async}

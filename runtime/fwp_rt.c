@@ -155,7 +155,7 @@ static inline u128 fwp_u128(V v) { return *(u128 *)(uintptr_t)v; }
 enum {
     K_I8, K_I16, K_I32, K_I64, K_I128, K_U8, K_U16, K_U32, K_U64, K_U128,
     K_F32, K_F64, K_STR, K_BYTES, K_ADT, K_LIST, K_RECORD, K_ARRAY, K_MAP,
-    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE
+    K_SET, K_TINT, K_TRIT, K_FUN, K_FILE, K_OPAQUE, K_NATIVE
 };
 
 typedef struct fwp_desc fwp_desc;

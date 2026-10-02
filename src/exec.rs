@@ -190,6 +190,11 @@ pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
             } else {
                 it.apply(fv.clone(), args)
             };
+            if r.is_err() {
+                it.cancel_children();
+            } else {
+                it.join_children();
+            }
             // program output written with `print` goes before the result
             let _ = it.out.flush();
             match r {

@@ -27,6 +27,12 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/ternary.fwp", include_str!("../lib/ternary.fwp")),
     ("<std>/simd.fwp", include_str!("../lib/simd.fwp")),
     ("<std>/tensor.fwp", include_str!("../lib/tensor.fwp")),
+    ("<std>/task.fwp", include_str!("../lib/task.fwp")),
+    ("<std>/net.fwp", include_str!("../lib/net.fwp")),
+    ("<std>/json.fwp", include_str!("../lib/json.fwp")),
+    ("<std>/url.fwp", include_str!("../lib/url.fwp")),
+    ("<std>/log.fwp", include_str!("../lib/log.fwp")),
+    ("<std>/http.fwp", include_str!("../lib/http.fwp")),
 ];
 
 pub struct Compilation {
@@ -282,7 +288,7 @@ pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (us
         let mut sink = Vec::new();
         let r = {
             let mut it = Interp::new(prog, Box::new(&mut sink));
-            it.call(*id, vec![])
+            it.call_root(*id)
         };
         let status = match r {
             Ok(v) if v.as_bool() => {
@@ -307,6 +313,10 @@ pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (us
             Err(Ctl::Exit(c)) => {
                 fail += 1;
                 format!("FAILED (exit {})", c)
+            }
+            Err(Ctl::Cancelled) => {
+                fail += 1;
+                "FAILED (cancelled)".to_string()
             }
         };
         let _ = writeln!(out, "test {} ... {}", name, status);

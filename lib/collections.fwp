@@ -84,3 +84,8 @@ test "frequencies" = ["a", "b", "a"] | frequencies | map.to-list | eq [("a", 2),
 
 the-oi : Option[I64] -> Option[I64]
 the-oi = id
+
+# offset of the first occurrence of a byte sequence
+foreign "fwp" bytes.find : Bytes -> Bytes -> Option[I64]
+
+test "bytes.find" = "ab\r\n\r\ncd" | string.to-bytes | bytes.find ("\r\n\r\n" | string.to-bytes) | eq (Some 2)

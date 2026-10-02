@@ -198,6 +198,7 @@ static void fwp_write(fwp_buf *b, V v, const fwp_desc *d, int top) {
     case K_TRIT: buf_puts(b, (int64_t)v == 1 ? "+1" : (int64_t)v == -1 ? "-1" : "0"); return;
     case K_FUN: buf_puts(b, "<function>"); return;
     case K_OPAQUE: buf_puts(b, "<opaque>"); return;
+    case K_NATIVE: buf_putc(b, '<'); buf_puts(b, d->name); buf_putc(b, '>'); return;
     case K_FILE: {
         fwp_file *f = (fwp_file *)(uintptr_t)v;
         buf_puts(b, "<file ");

@@ -1,0 +1,331 @@
+//! JSON text <-> the `Json` type of the standard library. The C runtime
+//! implements the same algorithm (same results and error positions).
+//!
+//! `Json` constructors, in declaration order: Null, Bool, Num, Str, Arr, Obj.
+
+use crate::value::Value;
+
+const MAX_DEPTH: usize = 512;
+
+struct Parser<'a> {
+    s: &'a [u8],
+    p: usize,
+    depth: usize,
+}
+
+type PResult<T> = Result<T, String>;
+
+fn err<T>(what: &str, at: usize) -> PResult<T> {
+    Err(format!("{} at byte {}", what, at))
+}
+
+impl Parser<'_> {
+    fn ws(&mut self) {
+        while self.p < self.s.len() && matches!(self.s[self.p], b' ' | b'\t' | b'\n' | b'\r') {
+            self.p += 1;
+        }
+    }
+
+    fn value(&mut self) -> PResult<Value> {
+        self.ws();
+        let Some(&c) = self.s.get(self.p) else {
+            return err("unexpected end of input", self.p);
+        };
+        match c {
+            b'{' | b'[' => {
+                if self.depth >= MAX_DEPTH {
+                    return err("nesting too deep", self.p);
+                }
+                self.depth += 1;
+                let r = if c == b'{' {
+                    self.object()
+                } else {
+                    self.array()
+                };
+                self.depth -= 1;
+                r
+            }
+            b'"' => Ok(Value::data(3, vec![Value::str(&self.string()?)])),
+            b't' => self.word("true", Value::data(1, vec![Value::bool(true)])),
+            b'f' => self.word("false", Value::data(1, vec![Value::bool(false)])),
+            b'n' => self.word("null", Value::data(0, vec![])),
+            b'-' | b'0'..=b'9' => self.number(),
+            _ => err("unexpected character", self.p),
+        }
+    }
+
+    fn word(&mut self, w: &str, v: Value) -> PResult<Value> {
+        if self.s[self.p..].starts_with(w.as_bytes()) {
+            self.p += w.len();
+            Ok(v)
+        } else {
+            err("unexpected character", self.p)
+        }
+    }
+
+    fn digits(&mut self) -> usize {
+        let start = self.p;
+        while self.p < self.s.len() && self.s[self.p].is_ascii_digit() {
+            self.p += 1;
+        }
+        self.p - start
+    }
+
+    fn number(&mut self) -> PResult<Value> {
+        let start = self.p;
+        if self.s[self.p] == b'-' {
+            self.p += 1;
+        }
+        match self.s.get(self.p) {
+            Some(b'0') => self.p += 1,
+            Some(b'1'..=b'9') => {
+                self.digits();
+            }
+            _ => return err("invalid number", self.p),
+        }
+        if self.s.get(self.p) == Some(&b'.') {
+            self.p += 1;
+            if self.digits() == 0 {
+                return err("invalid number", self.p);
+            }
+        }
+        if matches!(self.s.get(self.p), Some(b'e' | b'E')) {
+            self.p += 1;
+            if matches!(self.s.get(self.p), Some(b'+' | b'-')) {
+                self.p += 1;
+            }
+            if self.digits() == 0 {
+                return err("invalid number", self.p);
+            }
+        }
+        let text = std::str::from_utf8(&self.s[start..self.p]).unwrap_or("0");
+        Ok(Value::data(
+            2,
+            vec![Value::F64(text.parse().unwrap_or(0.0))],
+        ))
+    }
+
+    fn hex4(&mut self) -> PResult<u32> {
+        let mut v = 0u32;
+        for _ in 0..4 {
+            let Some(d) = self.s.get(self.p).and_then(|c| (*c as char).to_digit(16)) else {
+                return err("invalid escape", self.p);
+            };
+            v = v * 16 + d;
+            self.p += 1;
+        }
+        Ok(v)
+    }
+
+    /// At the opening quote.
+    fn string(&mut self) -> PResult<String> {
+        self.p += 1;
+        let mut out: Vec<u8> = Vec::new();
+        loop {
+            let Some(&c) = self.s.get(self.p) else {
+                return err("unexpected end of input", self.p);
+            };
+            match c {
+                b'"' => {
+                    self.p += 1;
+                    return Ok(String::from_utf8_lossy(&out).into_owned());
+                }
+                b'\\' => {
+                    self.p += 1;
+                    let Some(&e) = self.s.get(self.p) else {
+                        return err("unexpected end of input", self.p);
+                    };
+                    let simple = match e {
+                        b'"' => Some(b'"'),
+                        b'\\' => Some(b'\\'),
+                        b'/' => Some(b'/'),
+                        b'b' => Some(8),
+                        b'f' => Some(12),
+                        b'n' => Some(b'\n'),
+                        b'r' => Some(b'\r'),
+                        b't' => Some(b'\t'),
+                        b'u' => None,
+                        _ => return err("invalid escape", self.p),
+                    };
+                    self.p += 1;
+                    if let Some(b) = simple {
+                        out.push(b);
+                        continue;
+                    }
+                    let mut code = self.hex4()?;
+                    if (0xD800..0xDC00).contains(&code) && self.s[self.p..].starts_with(b"\\u") {
+                        let save = self.p;
+                        self.p += 2;
+                        let low = self.hex4()?;
+                        if (0xDC00..0xE000).contains(&low) {
+                            code = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
+                        } else {
+                            self.p = save;
+                        }
+                    }
+                    let ch = char::from_u32(code).unwrap_or('\u{FFFD}');
+                    let mut buf = [0u8; 4];
+                    out.extend_from_slice(ch.encode_utf8(&mut buf).as_bytes());
+                }
+                0..=0x1f => return err("unexpected character", self.p),
+                _ => {
+                    out.push(c);
+                    self.p += 1;
+                }
+            }
+        }
+    }
+
+    /// After a value inside a container: `,` continues, `close` ends.
+    fn next(&mut self, close: u8) -> PResult<bool> {
+        self.ws();
+        match self.s.get(self.p) {
+            Some(b',') => {
+                self.p += 1;
+                Ok(true)
+            }
+            Some(c) if *c == close => {
+                self.p += 1;
+                Ok(false)
+            }
+            Some(_) => err("unexpected character", self.p),
+            None => err("unexpected end of input", self.p),
+        }
+    }
+
+    fn array(&mut self) -> PResult<Value> {
+        self.p += 1;
+        let mut items = Vec::new();
+        self.ws();
+        if self.s.get(self.p) == Some(&b']') {
+            self.p += 1;
+        } else {
+            loop {
+                items.push(self.value()?);
+                if !self.next(b']')? {
+                    break;
+                }
+            }
+        }
+        Ok(Value::data(4, vec![Value::list(items)]))
+    }
+
+    fn expect(&mut self, c: u8) -> PResult<()> {
+        self.ws();
+        match self.s.get(self.p) {
+            Some(x) if *x == c => Ok(()),
+            Some(_) => err("unexpected character", self.p),
+            None => err("unexpected end of input", self.p),
+        }
+    }
+
+    fn object(&mut self) -> PResult<Value> {
+        self.p += 1;
+        let mut fields = Vec::new();
+        self.ws();
+        if self.s.get(self.p) == Some(&b'}') {
+            self.p += 1;
+        } else {
+            loop {
+                self.expect(b'"')?;
+                let k = self.string()?;
+                self.expect(b':')?;
+                self.p += 1;
+                let v = self.value()?;
+                fields.push(Value::tuple(vec![Value::str(&k), v]));
+                if !self.next(b'}')? {
+                    break;
+                }
+            }
+        }
+        Ok(Value::data(5, vec![Value::list(fields)]))
+    }
+}
+
+/// `Result[Json, String]`
+pub fn parse(text: &str) -> Value {
+    let mut p = Parser {
+        s: text.as_bytes(),
+        p: 0,
+        depth: 0,
+    };
+    let r = p.value().and_then(|v| {
+        p.ws();
+        if p.p != p.s.len() {
+            err("trailing characters", p.p)
+        } else {
+            Ok(v)
+        }
+    });
+    match r {
+        Ok(v) => Value::data(0, vec![v]),
+        Err(e) => Value::data(1, vec![Value::str(&e)]),
+    }
+}
+
+fn escape(s: &str, out: &mut String) {
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{8}' => out.push_str("\\b"),
+            '\u{c}' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+}
+
+/// Numbers: integers below 1e15 without a fraction, other finite values
+/// in the shortest round-trip form, non-finite values as `null`.
+pub fn number(x: f64, out: &mut String) {
+    if !x.is_finite() {
+        out.push_str("null");
+    } else if x == x.trunc() && x.abs() < 1e15 {
+        out.push_str(&format!("{}", x as i64));
+    } else {
+        out.push_str(&crate::value::fmt_f64(x));
+    }
+}
+
+pub fn encode(v: &Value, out: &mut String) {
+    let Value::Data(tag, fs) = v else {
+        out.push_str("null");
+        return;
+    };
+    match tag {
+        1 => out.push_str(if fs[0].as_bool() { "true" } else { "false" }),
+        2 => number(fs[0].as_f64().unwrap_or(0.0), out),
+        3 => escape(fs[0].as_str(), out),
+        4 => {
+            out.push('[');
+            for (i, x) in fs[0].list_items().iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                encode(x, out);
+            }
+            out.push(']');
+        }
+        5 => {
+            out.push('{');
+            for (i, kv) in fs[0].list_items().iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                if let Value::Record(p) = kv {
+                    escape(p[0].as_str(), out);
+                    out.push(':');
+                    encode(&p[1], out);
+                }
+            }
+            out.push('}');
+        }
+        _ => out.push_str("null"),
+    }
+}
