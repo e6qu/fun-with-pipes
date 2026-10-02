@@ -137,7 +137,7 @@ fn kebab(s: &str) -> String {
         joined.push_str(p);
     }
     if !joined.starts_with(|c: char| c.is_ascii_lowercase()) {
-        joined = format!("x-{}", joined);
+        joined = format!("f{}", joined);
     }
     joined
 }
@@ -667,6 +667,8 @@ pub fn client(text: &str) -> Result<Module, String> {
     while out.ends_with("\n\n") {
         out.pop();
     }
+    // in the canonical layout of `fwp fmt`
+    let out = crate::fmt::format_source(&out).unwrap_or(out);
     Ok(Module {
         text: out,
         warnings: g.warnings,
@@ -687,7 +689,10 @@ fn operation(
         .and_then(Json::as_str)
         .map(str::to_string)
         .unwrap_or_else(|| format!("{} {}", method.to_ascii_lowercase(), path));
-    let mut name = fwp_name(&id);
+    let mut name = kebab(&id);
+    if KEYWORDS.contains(&name.as_str()) {
+        name.push_str("-op");
+    }
     if RESERVED_FUNCS.contains(&name.as_str()) {
         name.push_str("-op");
     }

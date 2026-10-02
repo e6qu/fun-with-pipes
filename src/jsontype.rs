@@ -138,7 +138,7 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                             .collect(),
                         _ => (0..fs.len()).collect(),
                     };
-                    let docs = prog.docs.fields_of(mt);
+                    let docs = field_docs(prog, mt);
                     let json = fs
                         .iter()
                         .map(|(l, _)| {
@@ -157,6 +157,18 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                 _ => Shape::Other,
             }
         }
+    }
+}
+
+/// The comments of the fields of a record type, declared in any file of
+/// the program.
+pub fn field_docs<'p>(
+    prog: &'p Program,
+    mt: &MT,
+) -> Option<&'p BTreeMap<String, crate::cli::FieldDoc>> {
+    match mt {
+        MT::Con(n, _) => prog.docs.fields.get(n.rsplit("::").next().unwrap_or(n)),
+        _ => None,
     }
 }
 

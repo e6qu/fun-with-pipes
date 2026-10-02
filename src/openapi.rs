@@ -174,7 +174,7 @@ impl Gen<'_> {
     }
 
     fn object(&mut self, mt: &MT, fs: &[(String, MT)], order: &[usize], json: &[String]) -> Json {
-        let docs = self.prog.docs.fields_of(mt).cloned();
+        let docs = jsontype::field_docs(self.prog, mt).cloned();
         let mut props = Vec::new();
         let mut required = Vec::new();
         for &i in order {
