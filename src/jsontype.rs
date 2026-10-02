@@ -435,7 +435,7 @@ pub fn unbase64(s: &str) -> Option<Vec<u8>> {
         .strip_suffix(b"==")
         .or_else(|| s.strip_suffix(b"="))
         .unwrap_or(s);
-    if body.len() % 4 == 1 || (body.len() != s.len() && s.len() % 4 != 0) {
+    if body.len() % 4 == 1 || (body.len() != s.len() && !s.len().is_multiple_of(4)) {
         return None;
     }
     let mut out = Vec::new();
@@ -532,7 +532,7 @@ fn exact_int(t: &str) -> Exact {
     while digits.len() > 1 && digits[0] == b'0' {
         digits.remove(0);
     }
-    if digits == [b'0'] {
+    if digits == b"0" {
         return Exact::Int(false, 0);
     }
     while exp < 0 {

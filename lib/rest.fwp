@@ -333,7 +333,7 @@ rest.default-options =
     RestOptions { listen = None, openapi = False, help = False }
 
 rest.usage : String
-rest.usage = "usage: [--listen host:port] [--openapi] [--help]"
+rest.usage = "usage: server [--listen host:port] [--openapi] [--help]"
 
 rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
 rest.start = curry (match
@@ -357,7 +357,7 @@ rest.run-with =
 
 rest.help : String
 rest.help =
-    "usage: [--listen host:port] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --openapi           print the OpenAPI document and exit\n  -h, --help          show this help"
+    "usage: server [--listen host:port] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
 
 rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
 rest.listen =

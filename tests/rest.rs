@@ -106,12 +106,24 @@ fn native(file: &Path, dir: &Path) -> Server {
 
 /// One request on its own connection: the status, the headers and the
 /// body of the response.
-fn http(addr: &str, method: &str, target: &str, body: Option<&str>) -> (u16, Vec<(String, String)>, String) {
+fn http(
+    addr: &str,
+    method: &str,
+    target: &str,
+    body: Option<&str>,
+) -> (u16, Vec<(String, String)>, String) {
     let mut conn = TcpStream::connect(addr).unwrap();
-    conn.set_read_timeout(Some(Duration::from_secs(30))).unwrap();
-    let mut req = format!("{} {} HTTP/1.1\r\nhost: test\r\nconnection: close\r\n", method, target);
+    conn.set_read_timeout(Some(Duration::from_secs(30)))
+        .unwrap();
+    let mut req = format!(
+        "{} {} HTTP/1.1\r\nhost: test\r\nconnection: close\r\n",
+        method, target
+    );
     if let Some(b) = body {
-        req.push_str(&format!("content-type: application/json\r\ncontent-length: {}\r\n", b.len()));
+        req.push_str(&format!(
+            "content-type: application/json\r\ncontent-length: {}\r\n",
+            b.len()
+        ));
     }
     req.push_str("\r\n");
     req.push_str(body.unwrap_or(""));
@@ -141,54 +153,194 @@ fn http(addr: &str, method: &str, target: &str, body: Option<&str>) -> (u16, Vec
 /// Requests to `tests/rest/api.fwp` and their expected responses.
 const API: &[(&str, &str, Option<&str>, u16, &str)] = &[
     // the default route, a record body
-    ("POST", "/echo-item", Some(r#"{"id":1,"name":"x","price":2,"tags":[]}"#), 200, r#"{"id":1,"name":"x","price":2.0,"tags":[]}"#),
+    (
+        "POST",
+        "/echo-item",
+        Some(r#"{"id":1,"name":"x","price":2,"tags":[]}"#),
+        200,
+        r#"{"id":1,"name":"x","price":2.0,"tags":[]}"#,
+    ),
     // a path parameter and an Option result
-    ("GET", "/items/5", None, 200, r#"{"id":5,"name":"item 5","price":7.5,"tags":["a"]}"#),
+    (
+        "GET",
+        "/items/5",
+        None,
+        200,
+        r#"{"id":5,"name":"item 5","price":7.5,"tags":["a"]}"#,
+    ),
     ("GET", "/items/500", None, 404, r#"{"error":"not found"}"#),
-    ("GET", "/items/x", None, 400, r#"{"error":"path.id: expected an integer, got \"x\""}"#),
+    (
+        "GET",
+        "/items/x",
+        None,
+        400,
+        r#"{"error":"path.id: expected an integer, got \"x\""}"#,
+    ),
     ("HEAD", "/items/5", None, 200, ""),
     // an options record from the query: a switch, a repeated field, an
     // optional and a required one
-    ("GET", "/items?prefix=p&tag=a&tag=b&desc&limit=3", None, 200, r#""Listing {desc = True, limit = Some 3, prefix = \"p\", tag = [\"a\", \"b\"]}""#),
-    ("GET", "/items?prefix=a%20b&desc=false", None, 200, r#""Listing {desc = False, limit = None, prefix = \"a b\", tag = []}""#),
-    ("GET", "/items?tag=a", None, 400, r#"{"error":"query.prefix: required field is missing"}"#),
-    ("GET", "/items?prefix=p&limit=x", None, 400, r#"{"error":"query.limit: expected an integer, got \"x\""}"#),
+    (
+        "GET",
+        "/items?prefix=p&tag=a&tag=b&desc&limit=3",
+        None,
+        200,
+        r#""Listing {desc = True, limit = Some 3, prefix = \"p\", tag = [\"a\", \"b\"]}""#,
+    ),
+    (
+        "GET",
+        "/items?prefix=a%20b&desc=false",
+        None,
+        200,
+        r#""Listing {desc = False, limit = None, prefix = \"a b\", tag = []}""#,
+    ),
+    (
+        "GET",
+        "/items?tag=a",
+        None,
+        400,
+        r#"{"error":"query.prefix: required field is missing"}"#,
+    ),
+    (
+        "GET",
+        "/items?prefix=p&limit=x",
+        None,
+        400,
+        r#"{"error":"query.limit: expected an integer, got \"x\""}"#,
+    ),
     // `# args:` names: a path parameter and an optional query parameter
-    ("GET", "/search/hello%20world?limit=4", None, 200, r#""(\"hello world\", Some 4)""#),
+    (
+        "GET",
+        "/search/hello%20world?limit=4",
+        None,
+        200,
+        r#""(\"hello world\", Some 4)""#,
+    ),
     ("GET", "/search/x", None, 200, r#""(\"x\", None)""#),
     // a path parameter and a body, with `# status: 201`
-    ("PUT", "/items/7", Some(r#"{"id":0,"name":"n","price":1,"tags":["t"],"note":"z"}"#), 201, r#"{"id":7,"name":"n","price":1.0,"tags":["t"],"note":"z"}"#),
-    ("PUT", "/items/7", Some(r#"{"id":0,"name":"n","price":"1","tags":[3]}"#), 400, r#"{"error":"$.tags[0]: expected a string, got 3"}"#),
+    (
+        "PUT",
+        "/items/7",
+        Some(r#"{"id":0,"name":"n","price":1,"tags":["t"],"note":"z"}"#),
+        201,
+        r#"{"id":7,"name":"n","price":1.0,"tags":["t"],"note":"z"}"#,
+    ),
+    (
+        "PUT",
+        "/items/7",
+        Some(r#"{"id":0,"name":"n","price":"1","tags":[3]}"#),
+        400,
+        r#"{"error":"$.tags[0]: expected a string, got 3"}"#,
+    ),
     // errors with statuses by variant, and `()` as 204
-    ("DELETE", "/items/1", None, 404, r#"{"error":{"type":"Missing","value":1}}"#),
-    ("DELETE", "/items/2", None, 422, r#"{"error":{"type":"Invalid","value":{"field":"id","reason":"protected"}}}"#),
+    (
+        "DELETE",
+        "/items/1",
+        None,
+        404,
+        r#"{"error":{"type":"Missing","value":1}}"#,
+    ),
+    (
+        "DELETE",
+        "/items/2",
+        None,
+        422,
+        r#"{"error":{"type":"Invalid","value":{"field":"id","reason":"protected"}}}"#,
+    ),
     ("DELETE", "/items/3", None, 204, ""),
     // a Result: Err without a status is a 500
     ("POST", "/check", Some(r#""bob""#), 200, r#""bob!""#),
-    ("POST", "/check", Some(r#""""#), 500, r#"{"error":{"type":"Invalid","value":{"field":"name","reason":"empty"}}}"#),
+    (
+        "POST",
+        "/check",
+        Some(r#""""#),
+        500,
+        r#"{"error":{"type":"Invalid","value":{"field":"name","reason":"empty"}}}"#,
+    ),
     // `# command:` names the route; variants in a body
-    ("POST", "/area", Some(r#"{"type":"Rect","value":[2,3]}"#), 200, "6.0"),
+    (
+        "POST",
+        "/area",
+        Some(r#"{"type":"Rect","value":[2,3]}"#),
+        200,
+        "6.0",
+    ),
     ("POST", "/area", Some(r#""Dot""#), 200, "0.0"),
-    ("POST", "/area", Some(r#"{"type":"Square"}"#), 400, r#"{"error":"$.type: expected one of \"Circle\", \"Rect\", \"Dot\", got \"Square\""}"#),
+    (
+        "POST",
+        "/area",
+        Some(r#"{"type":"Square"}"#),
+        400,
+        r#"{"error":"$.type: expected one of \"Circle\", \"Rect\", \"Dot\", got \"Square\""}"#,
+    ),
     // an error with its own status
-    ("POST", "/teapot", Some(r#""short and stout""#), 418, r#"{"error":{"status":418,"message":"short and stout"}}"#),
+    (
+        "POST",
+        "/teapot",
+        Some(r#""short and stout""#),
+        418,
+        r#"{"error":{"status":418,"message":"short and stout"}}"#,
+    ),
     // four parameters: path, path, query, body
     ("POST", "/sum/10/20?c=5", Some("[1,2,3]"), 200, "41"),
-    ("POST", "/sum/10/20", Some("[1]"), 400, r#"{"error":"missing query parameter c"}"#),
+    (
+        "POST",
+        "/sum/10/20",
+        Some("[1]"),
+        400,
+        r#"{"error":"missing query parameter c"}"#,
+    ),
     // values beyond JSON's doubles, bytes, durations, a renamed field
-    ("POST", "/big", Some(r#"{"n":9223372036854775807,"u":18446744073709551615,"wide":"-170141183460469231731687303715884105728","data":"Zm9v","timeout":"1.5s","type":"k"}"#), 200, r#"{"n":9223372036854775807,"u":18446744073709551615,"wide":"-170141183460469231731687303715884105728","data":"Zm9v","timeout":"1500ms","type":"k"}"#),
-    ("POST", "/big", Some(r#"{"type":"t","wide":"1","u":-1,"timeout":"1s","data":"","n":1}"#), 400, r#"{"error":"$.u: -1 is out of range for U64"}"#),
+    (
+        "POST",
+        "/big",
+        Some(
+            r#"{"n":9223372036854775807,"u":18446744073709551615,"wide":"-170141183460469231731687303715884105728","data":"Zm9v","timeout":"1.5s","type":"k"}"#,
+        ),
+        200,
+        r#"{"n":9223372036854775807,"u":18446744073709551615,"wide":"-170141183460469231731687303715884105728","data":"Zm9v","timeout":"1500ms","type":"k"}"#,
+    ),
+    (
+        "POST",
+        "/big",
+        Some(r#"{"type":"t","wide":"1","u":-1,"timeout":"1s","data":"","n":1}"#),
+        400,
+        r#"{"error":"$.u: -1 is out of range for U64"}"#,
+    ),
     // `()` parameters
     ("GET", "/ping", None, 200, r#""pong""#),
     ("GET", "/tags", None, 200, r#"["a","b"]"#),
     // an optional body
     ("POST", "/maybe", None, 200, "-1"),
     ("POST", "/maybe", Some("5"), 200, "5"),
-    ("POST", "/maybe", Some("5 6"), 400, r#"{"error":"invalid JSON in the request body: trailing characters at byte 2"}"#),
-    ("POST", "/echo-item", None, 400, r#"{"error":"missing request body"}"#),
+    (
+        "POST",
+        "/maybe",
+        Some("5 6"),
+        400,
+        r#"{"error":"invalid JSON in the request body: trailing characters at byte 2"}"#,
+    ),
+    (
+        "POST",
+        "/echo-item",
+        None,
+        400,
+        r#"{"error":"missing request body"}"#,
+    ),
     // the router
-    ("GET", "/check", None, 405, r#"{"error":"method not allowed"}"#),
-    ("GET", "/nothing/here", None, 404, r#"{"error":"not found"}"#),
+    (
+        "GET",
+        "/check",
+        None,
+        405,
+        r#"{"error":"method not allowed"}"#,
+    ),
+    (
+        "GET",
+        "/nothing/here",
+        None,
+        404,
+        r#"{"error":"not found"}"#,
+    ),
 ];
 
 fn exercise_api(srv: &Server) {
@@ -221,7 +373,11 @@ fn exercise_api(srv: &Server) {
 }
 
 fn openapi_text(file: &Path) -> String {
-    let out = Command::new(fwp()).arg("openapi").arg(file).output().unwrap();
+    let out = Command::new(fwp())
+        .arg("openapi")
+        .arg(file)
+        .output()
+        .unwrap();
     assert!(
         out.status.success(),
         "fwp openapi: {}",
@@ -250,7 +406,11 @@ fn exercise_books(srv: &Server) {
     let a = &srv.addr;
     let (st, _, b) = http(a, "GET", "/books?tag=classic&max-price=30", None);
     assert_eq!(st, 200);
-    assert!(b.starts_with(r#"[{"id":3,"title":"Gödel, Escher, Bach""#), "{}", b);
+    assert!(
+        b.starts_with(r#"[{"id":3,"title":"Gödel, Escher, Bach""#),
+        "{}",
+        b
+    );
     let (st, _, b) = http(a, "GET", "/books?in-stock&author=Friedman", None);
     assert_eq!((st, b.as_str()), (200, "[]"));
     let (st, _, b) = http(
@@ -303,7 +463,10 @@ fn golden(path: &Path, actual: &str) {
 
 #[test]
 fn openapi_golden() {
-    golden(&fixture("api.openapi.json"), &openapi_text(&fixture("api.fwp")));
+    golden(
+        &fixture("api.openapi.json"),
+        &openapi_text(&fixture("api.fwp")),
+    );
     golden(
         &fixture("books.openapi.json"),
         &openapi_text(&root().join("examples/rest/books.fwp")),
@@ -476,14 +639,17 @@ fn check_document(doc: &J) {
     // discriminator mappings point at components too
     for (name, s) in schemas.members() {
         assert!(
-            name.chars().all(|c| c.is_ascii_alphanumeric() || ".-_".contains(c)),
+            name.chars()
+                .all(|c| c.is_ascii_alphanumeric() || ".-_".contains(c)),
             "component name {}",
             name
         );
         if let Some(m) = s.get("discriminator").and_then(|d| d.get("mapping")) {
             for (_, target) in m.members() {
                 let t = target.str().unwrap();
-                assert!(schemas.get(t.trim_start_matches("#/components/schemas/")).is_some());
+                assert!(schemas
+                    .get(t.trim_start_matches("#/components/schemas/"))
+                    .is_some());
             }
         }
     }
@@ -497,7 +663,11 @@ fn check_document(doc: &J) {
         for (method, op) in item.members() {
             assert!(["get", "put", "post", "delete", "patch"].contains(&method.as_str()));
             let id = op.get("operationId").and_then(J::str).expect("operationId");
-            assert!(!ids.contains(&id.to_string()), "duplicate operationId {}", id);
+            assert!(
+                !ids.contains(&id.to_string()),
+                "duplicate operationId {}",
+                id
+            );
             ids.push(id.to_string());
             let params: Vec<&J> = match op.get("parameters") {
                 Some(J::Arr(ps)) => ps.iter().collect(),
@@ -505,9 +675,11 @@ fn check_document(doc: &J) {
             };
             for v in &vars {
                 assert!(
-                    params.iter().any(|p| p.get("in").and_then(J::str) == Some("path")
-                        && p.get("name").and_then(J::str) == Some(v)
-                        && p.get("required") == Some(&J::Bool(true))),
+                    params
+                        .iter()
+                        .any(|p| p.get("in").and_then(J::str) == Some("path")
+                            && p.get("name").and_then(J::str) == Some(v)
+                            && p.get("required") == Some(&J::Bool(true))),
                     "{} {}: path parameter {} is not declared",
                     method,
                     path,
@@ -542,7 +714,9 @@ fn openapi_structure() {
         check_document(&doc);
     }
     // an external validator, if one happens to be installed
-    let validator = Command::new("openapi-spec-validator").arg("--help").output();
+    let validator = Command::new("openapi-spec-validator")
+        .arg("--help")
+        .output();
     if validator.is_ok_and(|o| o.status.success()) {
         for f in ["api.openapi.json", "books.openapi.json"] {
             let out = Command::new("openapi-spec-validator")
@@ -676,11 +850,18 @@ fn client_golden() {
     let api_doc = dir.join("api.json");
     std::fs::write(&api_doc, openapi_text(&fixture("api.fwp"))).unwrap();
     let books_doc = dir.join("books.json");
-    std::fs::write(&books_doc, openapi_text(&root().join("examples/rest/books.fwp"))).unwrap();
+    std::fs::write(
+        &books_doc,
+        openapi_text(&root().join("examples/rest/books.fwp")),
+    )
+    .unwrap();
     let out = dir.join("apiclient.fwp");
     let warnings = import(&api_doc, &out);
     assert_eq!(warnings, "");
-    golden(&fixture("apiclient.fwp"), &std::fs::read_to_string(&out).unwrap());
+    golden(
+        &fixture("apiclient.fwp"),
+        &std::fs::read_to_string(&out).unwrap(),
+    );
     // the client of the example, from the example's document
     let out = dir.join("bookclient.fwp");
     assert_eq!(import(&books_doc, &out), "");
@@ -690,7 +871,10 @@ fn client_golden() {
     );
     let out = dir.join("petstore.fwp");
     let warnings = import(&fixture("petstore.json"), &out);
-    golden(&fixture("petstore.fwp"), &std::fs::read_to_string(&out).unwrap());
+    golden(
+        &fixture("petstore.fwp"),
+        &std::fs::read_to_string(&out).unwrap(),
+    );
     let spec = fixture("petstore.json").display().to_string();
     let expected: String = [
         "GET /pet/{petId}: the header parameter `X-Trace` is left out",
@@ -718,7 +902,10 @@ fn client_golden() {
 fn import_errors() {
     let dir = temp_dir("import-errors");
     for (text, msg) in [
-        ("{\"swagger\": \"2.0\"}", "Swagger 2.0 documents are not supported"),
+        (
+            "{\"swagger\": \"2.0\"}",
+            "Swagger 2.0 documents are not supported",
+        ),
         ("openapi: 3.1.0\n", "YAML is not supported"),
         ("{\"info\": {}}", "not an OpenAPI 3 document"),
     ] {
@@ -760,7 +947,11 @@ fn client_round_trip() {
         .output()
         .unwrap();
     let got = String::from_utf8_lossy(&run.stdout).into_owned();
-    assert!(run.status.success(), "{}", String::from_utf8_lossy(&run.stderr));
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
     if bless() {
         std::fs::write(fixture("roundtrip.out"), &got).unwrap();
     } else {
@@ -852,7 +1043,13 @@ fn endpoint_errors() {
                 .unwrap();
             let err = String::from_utf8_lossy(&o.stderr);
             assert_eq!(o.status.code(), Some(1), "{}: {}", src, err);
-            assert!(err.contains(msg), "{}\nexpected: {}\ngot: {}", src, msg, err);
+            assert!(
+                err.contains(msg),
+                "{}\nexpected: {}\ngot: {}",
+                src,
+                msg,
+                err
+            );
         }
     }
     // WebAssembly has no sockets
@@ -880,7 +1077,11 @@ fn cli_help_without_routes() {
     let help = String::from_utf8_lossy(&o.stdout);
     assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     assert!(help.contains("Quote an order"), "{}", help);
-    assert!(!help.contains("route:") && !help.contains("error:"), "{}", help);
+    assert!(
+        !help.contains("route:") && !help.contains("error:"),
+        "{}",
+        help
+    );
     let o = Command::new(fwp())
         .args(["exec", "--cli"])
         .arg(root().join("examples/rest/books.fwp"))
