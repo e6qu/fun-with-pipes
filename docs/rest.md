@@ -34,28 +34,35 @@ one.
 |---|---|
 | `fwp build app.fwp --rest -o server` | a native HTTP server of the exported functions |
 | `fwp serve --rest app.fwp [--listen addr]` | the same server, interpreted |
-| `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON |
+| `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API |
 
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
 `--tls-key file` (default: `FWP_TLS_CERT` and `FWP_TLS_KEY`; with both,
-it serves HTTPS, see [tls.md](tls.md#rest)), `--openapi` (print the
-document and exit) and `--help`. It writes
-`fwp: rest listening on http://host:port` (`https://` with TLS) on stderr
-once it accepts connections, and serves:
+it serves HTTPS, see [tls.md](tls.md#rest)), `--cors origins` (the
+origins that may call it from browsers, [below](#cors); default:
+`FWP_REST_CORS`), `--openapi` (print the document and exit) and `--help`.
+It writes `fwp: rest listening on http://host:port` (`https://` with TLS)
+on stderr once it accepts connections, and serves:
 
 * each endpoint, with JSON request and response bodies;
 * `GET /openapi.json`, the document `fwp openapi` prints;
+* `GET /docs`, an HTML page of the document: each operation with its
+  parameters, responses and security, and the schemas (plain HTML and CSS,
+  without scripts or anything fetched from elsewhere);
 * `{"error": "not found"}` (404) for other paths and
   `{"error": "method not allowed"}` (405) for other methods.
 
 The server is the HTTP/1.1 server of `lib/http.fwp`, with its limits and
 timeouts ([concurrency.md](concurrency.md#http)): keep-alive, bounded
-connections, request and body sizes, per-request timeouts (503), and a
-graceful shutdown on SIGINT and SIGTERM. A `HEAD` request is answered like
-a `GET`. WebAssembly targets have no sockets, so `--rest` builds native
-programs only.
+connections, request and body sizes, per-request timeouts, and a
+graceful shutdown on SIGINT and SIGTERM. The errors the server answers
+itself are JSON too: `{"error": "request timed out"}` (503),
+`{"error": "invalid request line"}` (400), `{"error": "request body too
+large"}` (413), and so on. A `HEAD` request is answered like a `GET`.
+WebAssembly targets have no sockets, so `--rest` builds native programs
+only.
 
 ## Routes
 
@@ -73,15 +80,25 @@ export book : I64 -> Option[Book]
 |---|---|
 | `# route: GET /books/{id}` | the method (`GET`, `POST`, `PUT`, `PATCH` or `DELETE`) and the path; a segment `{name}` is a path parameter |
 | `# args: id limit` | the names of the positional parameters (as for command lines) |
-| `# status: 201` | the status of a success (default 200, or 204 for a `()` result) |
+| `# status: 201` | the status of a success (default 200, or 204 for a `()` result); for a `RestReply`, the statuses it may answer with (`# status: 200, 301`), the first one the default |
 | `# error: 404` | the status of errors (default 500) |
 | `# error: NotFound 404, Invalid 422` | the status of each variant of the error type, and possibly a default |
 | `# command: name` | the name of the endpoint: its default path and its operation id |
+| `# header: X-Request-Id`, `# header: X-Request-Id -> id` | a parameter from a request header ([below](#headers-and-cookies)) |
+| `# cookie: session`, `# cookie: session -> sid` | a parameter from a cookie |
+| `# auth: bearer`, `# auth: api-key header X-API-Key`, `# auth: none` | the credentials the endpoint needs ([below](#authentication)) |
+| `# timeout: 5s` | how long a call may take, else 503 ([below](#timeouts)) |
+| `# response-header: Location the new item` | a header that a `RestReply` sets, for the document ([below](#replies-statuses-and-headers)) |
 
 The comment lines are not part of the description, which becomes the
 operation's summary and description in the OpenAPI document (and the help
 of the command). Exported constants, `version` and `defaults` are not
-endpoints.
+endpoints, and neither is `authenticate`.
+
+In the file's leading comment (the module description, separated by a
+blank line from the first declaration), `# auth:` and `# timeout:` lines
+are the defaults of every endpoint, and a `# cors:` line lists the origins
+that browsers may call the API from.
 
 ## Arguments
 
@@ -109,6 +126,10 @@ Each parameter of the function comes from somewhere in the request:
    their names (`# args:`, else `arg1`, `arg2`, ... by position): an
    `Option` is optional, a `List` repeated.
 
+Besides these, a parameter may come from a request header or a cookie
+([below](#headers-and-cookies)), be the whole `Request`, or be the
+principal that authentication found ([below](#authentication)).
+
 Path and query parameters must be numbers, strings, `Bool`, enums or
 `Duration` (or `Option`s and `List`s of them for query parameters); the
 body may be any type that has a JSON form. A function of another kind is
@@ -135,6 +156,165 @@ not JSON is `invalid JSON in the request body: unexpected character at
 byte 3`, a missing one `missing request body`, a missing required query
 parameter `missing query parameter c`.
 
+## Headers and cookies
+
+A function reads request headers and cookies through its parameters, so
+that they are typed, documented in the OpenAPI document (`in: header`,
+`in: cookie`) and generated in clients:
+
+```fwp
+# A greeting for the caller.
+# route: GET /hello
+# header: X-Name -> name
+# cookie: session -> session
+export hello : String -> Option[String] -> String
+```
+
+* `# header: Name -> param` binds a request header to the parameter
+  `param` (named by `# args:`); without `-> param`, the parameter is the
+  header's name in lower case. Without `# args:`, path parameters and then
+  the headers and cookies, in the order of their lines, name the
+  positional parameters in order, as path parameters do.
+* `# cookie: name -> param` does the same with a cookie of the `Cookie`
+  header (percent-decoded).
+* A field comment `header: X-Trace-Id` or `cookie: theme` in an options
+  record reads that field from a header or cookie instead of the query:
+
+  ```fwp
+  Seen = {
+      # header: X-Trace-Id
+      trace: Option[String],
+      # cookie: theme
+      theme: Option[String],
+      limit: Option[I64],
+  }
+  ```
+
+The types are those of query parameters: an `Option` is optional (absent
+is `None`), a `List` header takes every line of the header (one element
+per line), and other types are required: a missing one is a 400
+(`{"error": "missing header X-Name"}`), a value that does not decode too
+(`header.X-Name: ...`). Header names are case-insensitive.
+
+A parameter of type `Request` (`lib/http.fwp`) is the whole request:
+method, path, query, headers, body and the client's address
+(`http.header "x-forwarded-for"`). It is not in the document.
+
+The headers are parameters rather than a context to ask for (as
+`grpc.metadata` is for gRPC), so the document and generated clients know
+them; `Request` covers the rest.
+
+## Replies: statuses and headers
+
+A function that returns `RestReply[T]` chooses the status and the headers
+of each response; `T` is the JSON body (none for `RestReply[()]`):
+
+```
+RestReply[T] = { status: I64, headers: List[(String, String)], body: T }
+```
+
+```fwp
+# Create an item: 201 with its location.
+# route: POST /items
+# status: 201
+# response-header: Location where the item is
+export create : User -> Item -> RestReply[Item]
+create = curry (.1
+    | rest.reply 201
+    | fork
+        (rest.with-header "location")
+        (.body | .id | format "/items/{}")
+        id)
+```
+
+`rest.reply status body` makes one without headers and
+`rest.with-header name value` adds one. `# status:` lists the statuses it
+may answer with (each documented with `T`'s schema, but 204 and 304
+without a body) and `# response-header:` the headers it sets (documented
+in each of them). A status outside 100 to 599, or a header with a line
+break, is a 500.
+
+## Authentication
+
+Endpoints can require a bearer token (`Authorization: Bearer <token>`) or
+an API key, which a function of the program verifies:
+
+```fwp
+# The clerk of a bearer token: REST servers check the credentials of
+# endpoints with `# auth:` with this function.
+authenticate : String -> Result[Clerk, String]
+authenticate = match
+    "clerk-token" -> Ok Clerk { name = "clerk" }
+    _ -> const (Err "unknown token")
+```
+
+| Line | The credential |
+|---|---|
+| `# auth: bearer` | the token of `Authorization: Bearer <token>` |
+| `# auth: api-key header X-API-Key` (or `api-key X-API-Key`) | the value of a header |
+| `# auth: api-key query api_key` | the value of a query parameter |
+| `# auth: api-key cookie key` | the value of a cookie |
+| `# auth: none` | no credentials (overrides the file's default) |
+
+Several `# auth:` lines are alternatives: the first credential the request
+carries is checked. `# auth:` lines in the file's leading comment apply
+to every endpoint without its own.
+
+* **The verifier** is the function `authenticate : String -> Result[P,
+  String]` of the file, exported or not (it is not an endpoint; it may
+  perform the effects of endpoints). It gets the credential and returns
+  the principal, or why the credential is refused.
+* **Failures** are 401 with the reason as the error:
+  `{"error": "missing credentials"}`, `{"error": "unknown token"}`, with
+  `WWW-Authenticate: Bearer` for bearer tokens. An endpoint that rejects
+  a principal (an authorization decision) fails with its own error, such
+  as `http.fail 403 "admins only"`.
+* **The principal** is passed to a parameter of type `P`, when `P` is a
+  type of the program (a record or variant type) and the endpoint has a
+  parameter of that type: `export me : User -> User` with `# auth:` gets
+  the user. A parameter of type `P` in an endpoint without `# auth:` is an
+  error.
+* **The document** has `components/securitySchemes` (`bearerAuth`, of type
+  `http`, scheme `bearer`; `apiKey-X-API-Key`, of type `apiKey`) and a
+  `security` requirement per operation, and a 401 response.
+
+On the server it is `rest.secured authenticate [RestAuth.Bearer] route`
+(`lib/rest.fwp`), which can secure hand-written routes too.
+
+## CORS
+
+A `# cors:` line in the file's leading comment lets pages of other origins
+call the API from browsers:
+
+```
+# cors: https://app.example https://admin.example
+```
+
+(`*` allows any origin.) `--cors https://a.example,https://b.example` or
+`FWP_REST_CORS` replace the origins when the server starts. For a request
+with an allowed `Origin`, the server:
+
+* answers a preflight request (`OPTIONS` with
+  `Access-Control-Request-Method`) with 204, the methods of the API's
+  routes, the request headers it reads (`Content-Type`, `Authorization`
+  for bearer tokens, API key headers and header parameters) and a max age
+  of 600 seconds;
+* adds `Access-Control-Allow-Origin` (the origin), `Vary: Origin`,
+  `Access-Control-Expose-Headers` (the `# response-header:` headers) and,
+  unless any origin is allowed, `Access-Control-Allow-Credentials: true`
+  to other responses, errors included.
+
+Requests from other origins get no CORS headers (browsers then keep the
+response from the page), and their preflight requests get 405.
+
+## Timeouts
+
+`# timeout: 5s` (on an endpoint, or in the leading comment for all) gives
+each call a time limit: when it passes, the call's task is cancelled (at
+its next suspension point, as for `task.within`) and the client gets 503
+`{"error": "request timed out"}`. The HTTP server's own request timeout
+(30 seconds) applies to every request too, with the same answer.
+
 ## Results and errors
 
 | The function... | The response |
@@ -143,6 +323,7 @@ parameter `missing query parameter c`.
 | returns `()` | 204, no body |
 | returns `None` | 404 `{"error": "not found"}` |
 | returns `Some x` | `x` as a value |
+| returns a `RestReply` | its status, headers and body |
 | returns `Err e` | `{"error": e}` with the error's status |
 | raises an `Error[E]` | the same |
 | traps | the server stops, as any fwp program (`fwp: trap: ...`) |
@@ -198,6 +379,24 @@ Event = {
 }
 ```
 
+A comment line `# json: untagged` above a variant type writes a value of
+it as the value of its constructor alone (a constructor without fields is
+`null`, one with several fields an array), and reads one by trying the
+constructors in order: the first whose fields read wins. It is the JSON
+of a `oneOf` without a discriminator; clients from `fwp openapi --import`
+use it for those:
+
+```
+# json: untagged
+SessionData =
+    | SessionData.Text String
+    | SessionData.Int I64
+```
+
+Values are read leniently (`"42"` reads as an integer), so put the
+constructors whose values are strings last, or order them from the most
+to the least specific.
+
 ## OpenAPI
 
 `fwp openapi app.fwp` prints the OpenAPI 3.1 document of the endpoints
@@ -208,13 +407,19 @@ Event = {
   description.
 * An operation per endpoint, with the function's name (or `# command:`) as
   its `operationId`, the first sentence of its comment as the summary,
-  its parameters (`in: path` or `in: query`, with the field comments of an
-  options record as descriptions), its request body and its responses: the
-  success, 400 for arguments that do not decode, 404 for `Option` results,
-  and the statuses of its errors with the schema of `{"error": E}`
-  (`default` if the error has its own `status`).
+  its parameters (`in: path`, `in: query`, `in: header` or `in: cookie`,
+  with the field comments of an options record as descriptions), its
+  request body, its responses (the successes, with the headers of
+  `# response-header:`; 400 for arguments that do not decode, 401 for
+  endpoints that need credentials, 404 for `Option` results, 503 for
+  endpoints with a time limit, and the statuses of its errors with the
+  schema of `{"error": E}`, `default` if the error has its own `status`),
+  and its `security`.
 * `components/schemas`: nominal records, enums and variant types by name.
-  Generic types get names such as `ResultI64String`.
+  Generic types get names such as `ResultI64String`; and
+  `components/securitySchemes`.
+
+`fwp openapi --yaml app.fwp` prints the same document as YAML.
 
 | fwp | Schema |
 |---|---|
@@ -226,6 +431,7 @@ Event = {
 | record | `object` with `properties` in declaration order and `required` for the fields that are not `Option`s; field comments are descriptions |
 | enum | `string` with `enum` |
 | variant type | `oneOf` the constructors' schemas, with `discriminator: {propertyName: type}`; each is an object with `type` (`const`) and `value` (a tuple is `prefixItems`) |
+| variant type with `# json: untagged` | `oneOf` the schemas of the constructors' values, without a discriminator |
 | `Option[T]` | not required in an object; elsewhere `anyOf: [T, {type: null}]` |
 | `List`, `Array`; `Set` | `array`; with `uniqueItems` |
 | `Map[String, V]` | `object` with `additionalProperties` |
@@ -235,8 +441,9 @@ Event = {
 The test suite checks the documents structurally (references, parameters,
 operation ids), validates the server's responses against their schemas
 with Python's `jsonschema` when it is installed, and compares the
-documents of `tests/rest/api.fwp` and `examples/rest/books.fwp` with
-golden files.
+documents of `tests/rest/api.fwp`, `tests/rest/secure.fwp` and
+`examples/rest/books.fwp` (and the YAML of `secure.fwp`) with golden
+files.
 
 ## Calling REST APIs
 
@@ -264,7 +471,12 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
   records (properties that are not required, or nullable, are `Option`s),
   string enums whose values are constructor names variant types (other
   string enums are `String`s), a `oneOf` with the discriminator `type` in
-  fwp's form a variant type with fields, and other schemas aliases.
+  fwp's form a variant type with fields, other `oneOf`s and `anyOf`s
+  `# json: untagged` variant types with a constructor per alternative
+  (`PetOrTag.Pet Pet`, `SessionData.Text String`; a `null` alternative
+  makes it an `Option`), an `allOf` of object schemas one record with all
+  their properties (an `allOf` of one schema is that schema), and other
+  schemas aliases.
   Inline objects become records named after where they are
   (`PetOwner`). Properties that are not fwp names get one, with a
   `# json:` comment for the original. Formats follow the table above in
@@ -272,11 +484,22 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
   `duration` `Duration`, ranges of `I8`, `U8`, `I16`, `U16`, `U32`).
 * **Functions.** Each operation is a function named after its
   `operationId` in kebab case (`getPetById` is `get-pet-by-id`), of the
-  base URL of the server, then its path parameters in the order of the
-  path, then a record of its query parameters (`GetPetsQuery`), then its
-  JSON body. It returns the decoded body of the first 2xx response (`()`
-  if it has no JSON content), as an `Option` that is `None` on a 404 when
-  the operation declares a 404 response described as "not found".
+  base URL of the server, then its credential if it needs one, then its
+  path parameters in the order of the path, then records of its query,
+  header and cookie parameters (`GetPetsQuery`, `GetPetsHeaders`,
+  `GetPetsCookies`), then its body: JSON, or a record sent as a form
+  (`application/x-www-form-urlencoded`). It returns the decoded body of
+  the first 2xx response (`()` if it has no JSON content), as an `Option`
+  that is `None` on a 404 when the operation declares a 404 response
+  described as "not found".
+* **Credentials.** An operation whose `security` (or the document's)
+  requires a bearer token (`http` with scheme `bearer`, or OAuth 2 and
+  OpenID Connect, whose access tokens are bearer tokens) or an API key
+  (`apiKey` in a header, query parameter or cookie) takes the token or key
+  as a `String` after the base URL, and its comment says which
+  (`# auth: bearer (the token after the base URL)`). Of several
+  alternatives the first supported one is used; an empty requirement
+  (`{}`) means no credential is needed.
 * **Errors.** Any other response raises `Error[RestError]`, a record of
   the status and the body; a failed connection has the status 0.
 * **The client** is `rest.fetch` in `lib/rest.fwp` over `http.send`: one
@@ -284,17 +507,19 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
   server's certificate with the system's CA certificates (or
   `SSL_CERT_FILE`; see [tls.md](tls.md)).
 
-Schemas outside this subset (`allOf`, a `oneOf` other than fwp's
-variants, `not`, enums of numbers) become `Json` values, and operations
-whose body is not JSON or that need header or cookie parameters are left
-out; each is reported on stderr, as in
-`fwp openapi: spec.json: schema \`Session\`: \`allOf\` is not supported; it is a \`Json\` value`.
+Schemas outside this subset (`not`, enums of numbers, an `allOf` of
+schemas that are not all objects) become `Json` values, and operations
+whose body is neither JSON nor a form, or that only accept credentials of
+other schemes (HTTP basic authentication, mutual TLS), are left out; each
+is reported on stderr, as in
+`fwp openapi: spec.json: POST /user/logout: its security scheme \`basic\` is not supported (bearer tokens and API keys are); it is left out`.
 YAML documents and Swagger 2.0 are not read (convert them to JSON or
 OpenAPI 3 first).
 
 The round trip is tested: a client generated from the document a server
 serves calls that server, interpreted and natively, and decodes what it
-answers (`tests/rest/roundtrip.fwp`).
+answers (`tests/rest/roundtrip.fwp`; `tests/rest/secureroundtrip.fwp`
+with tokens, headers, cookies and replies).
 
 ## How it works
 
@@ -305,38 +530,52 @@ document. The second compiles the file with a generated `main` added to it:
 
 ```
 fwp-rest-main =
-    rest.main
-        "{\n  \"openapi\": \"3.1.0\", ..."
-        [
+    rest.serve RestApi {
+        openapi = "{\n  \"openapi\": \"3.1.0\", ...",
+        docs = "<!doctype html>...",
+        cors = RestCors { origins = ["http://localhost:3000"], methods = ["GET", "POST", "HEAD"], ... },
+        routes = [
             rest.endpoint-option (RestRoute { method = "GET", path = "/books/{id}", sources = [RestSource.Path "id"], ... }) book,
-            rest.endpoint (RestRoute { ... }) books,
+            rest.endpoint (RestRoute { ... }) quote-order | rest.secured authenticate [RestAuth.Bearer],
             ...
-        ]
+        ],
+    }
 ```
 
 `rest.endpoint` (`lib/rest.fwp`) makes a route of `http.router`: it
 gathers the arguments as JSON text (path and query values as strings, the
 body as it is), decodes them with `json.read` at the type of the function's
 parameters (a tuple for several), calls the function under `attempt`, and
-writes the result or the error with `json.write`. The typed codec is a
+writes the result or the error with `json.write`. `rest.secured` checks
+credentials before the endpoint's handler, `rest.within` gives it a time
+limit, and `rest.serve` adds `/openapi.json`, `/docs`, CORS
+(`rest.cors`) and JSON errors (`rest.error-response` as the server's
+`error-response`); each can be used in hand-written servers. The typed codec is a
 primitive implemented twice, in Rust (`src/jsontype.rs`) and in C over the
 type descriptors (`runtime/fwp_rt_json.c`), which carry the declaration
-order, the JSON names and flags for `Bool`, `Option`, `Json` and
-`Duration`. Everything else is fwp code, so both backends serve the same
+order, the JSON names and flags for `Bool`, `Option`, `Json`,
+`Duration` and untagged variant types. Everything else is fwp code, so both backends serve the same
 endpoints byte for byte.
 
 ## Limitations
 
-* JSON only: no content negotiation, forms, multipart bodies, headers or
-  cookies as parameters, and no streaming responses.
-* No authentication or CORS; put the server behind a proxy, or write a
-  server by hand with `rest.endpoint` and the middleware of
-  `lib/http.fwp`. TLS is built in ([tls.md](tls.md)), without client
-  certificates.
-* The status of a success is fixed per endpoint, and a function cannot set
-  response headers.
+* JSON bodies only on the server: no content negotiation, form or
+  multipart request bodies, and no streaming responses (generated clients
+  send forms).
+* Authentication is bearer tokens and API keys checked by one function;
+  no HTTP basic authentication, OAuth flows or scopes (the token of an
+  OAuth flow is a bearer token, which `authenticate` must verify itself).
+  Mutual TLS identifies clients by certificate ([tls.md](tls.md#mutual-tls)),
+  but the certificate is not an OpenAPI security scheme.
+* CORS origins are exact (no patterns), and the methods, headers and max
+  age of the policy are derived from the API rather than configured.
+* A `RestReply` result chooses its status and headers, but errors keep
+  the statuses of `# error:`, and redirects carry a body.
 * Constructor names are JSON names: enums with values that are not fwp
-  constructor names import as `String`.
+  constructor names import as `String`. Untagged variant types are read
+  by trying their constructors in order, so overlapping alternatives
+  read as the first.
 * `I64` values beyond 2^53 are exact in fwp's JSON, but JavaScript clients
   lose digits; query parameters in generated clients go through `Json`
   values (doubles).
+* HTTP/1.1 only, over TLS too: HTTP/2 is used by gRPC alone.

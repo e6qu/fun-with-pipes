@@ -47,7 +47,8 @@ usage:
                                  over TLS; see docs/tls.md)
   fwp proto <file.fwp> [--service m]...
                                  print the .proto file of the services
-  fwp openapi <file.fwp>         print the OpenAPI document of the endpoints
+  fwp openapi [--yaml] <file.fwp>
+                                 print the OpenAPI document of the endpoints
   fwp openapi --import <spec.json> [-o client.fwp]
                                  generate an fwp client module of an API
   fwp build <file.fwp> --grpc [-o out]
@@ -738,9 +739,11 @@ fn openapi(args: &[String]) -> ExitCode {
     let mut import = None;
     let mut out = None;
     let mut path = None;
+    let mut yaml = false;
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--yaml" => yaml = true,
             "--import" => {
                 i += 1;
                 import = args.get(i).cloned();
@@ -786,14 +789,18 @@ fn openapi(args: &[String]) -> ExitCode {
         };
     }
     let Some(path) = path else {
-        eprintln!("fwp openapi: usage: fwp openapi <file.fwp>\n       fwp openapi --import <spec.json> [-o client.fwp]");
+        eprintln!("fwp openapi: usage: fwp openapi [--yaml] <file.fwp>\n       fwp openapi --import <spec.json> [-o client.fwp]");
         return ExitCode::from(2);
     };
     let code = fwp::driver::with_big_stack(move || {
         match fwp::rest::describe(std::path::Path::new(&path)) {
             Ok((c, _, _, doc)) => {
                 eprint!("{}", c.render_warnings());
-                print!("{}", doc);
+                if yaml {
+                    print!("{}", fwp::openapi::yaml(&doc));
+                } else {
+                    print!("{}", doc.pretty());
+                }
                 0
             }
             Err(f) => {

@@ -112,6 +112,17 @@ fn http(
     target: &str,
     body: Option<&str>,
 ) -> (u16, Vec<(String, String)>, String) {
+    http_with(addr, method, target, &[], body)
+}
+
+/// `http` with request headers.
+fn http_with(
+    addr: &str,
+    method: &str,
+    target: &str,
+    extra: &[(&str, &str)],
+    body: Option<&str>,
+) -> (u16, Vec<(String, String)>, String) {
     let mut conn = TcpStream::connect(addr).unwrap();
     conn.set_read_timeout(Some(Duration::from_secs(30)))
         .unwrap();
@@ -119,6 +130,9 @@ fn http(
         "{} {} HTTP/1.1\r\nhost: test\r\nconnection: close\r\n",
         method, target
     );
+    for (k, v) in extra {
+        req.push_str(&format!("{}: {}\r\n", k, v));
+    }
     if let Some(b) = body {
         req.push_str(&format!(
             "content-type: application/json\r\ncontent-length: {}\r\n",
@@ -413,10 +427,12 @@ fn exercise_books(srv: &Server) {
     );
     let (st, _, b) = http(a, "GET", "/books?in-stock&author=Friedman", None);
     assert_eq!((st, b.as_str()), (200, "[]"));
-    let (st, _, b) = http(
+    let token = [("authorization", "Bearer clerk-token")];
+    let (st, _, b) = http_with(
         a,
         "POST",
         "/quotes",
+        &token,
         Some(r#"{"lines":[{"book":1,"quantity":2},{"book":3,"quantity":1}],"coupon":"FWP10"}"#),
     );
     assert_eq!(st, 200);
@@ -427,8 +443,37 @@ fn exercise_books(srv: &Server) {
         (r#"{"lines":[],"coupon":"x"}"#, 422),
         (r#"{"lines":[{"book":"one"}]}"#, 400),
     ] {
-        assert_eq!(http(a, "POST", "/quotes", Some(body)).0, status, "{}", body);
+        assert_eq!(
+            http_with(a, "POST", "/quotes", &token, Some(body)).0,
+            status,
+            "{}",
+            body
+        );
     }
+    // without a token, or from a browser page
+    let (st, _, b) = http(a, "POST", "/quotes", Some(r#"{"lines":[]}"#));
+    assert_eq!(
+        (st, b.as_str()),
+        (401, r#"{"error":"missing credentials"}"#)
+    );
+    let (st, h, _) = http_with(
+        a,
+        "OPTIONS",
+        "/quotes",
+        &[
+            ("origin", "http://localhost:3000"),
+            ("access-control-request-method", "POST"),
+            (
+                "access-control-request-headers",
+                "authorization, content-type",
+            ),
+        ],
+        None,
+    );
+    assert_eq!(st, 204);
+    assert!(h
+        .iter()
+        .any(|(k, v)| k == "access-control-allow-headers" && v == "Content-Type, Authorization"));
     assert_eq!(http(a, "GET", "/health", None).2, r#""ok""#);
     let (st, _, doc) = http(a, "GET", "/openapi.json", None);
     assert_eq!(st, 200);
@@ -442,6 +487,379 @@ fn books_example() {
     if have_cc() {
         let dir = temp_dir("books-native");
         exercise_books(&native(&file, &dir));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}
+
+/// A request to `tests/rest/secure.fwp`: method, target, headers, body;
+/// the expected status, body, and headers the response must have.
+type Case = (
+    &'static str,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+    Option<&'static str>,
+    u16,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+);
+
+const SECURE: &[Case] = &[
+    // authentication: bearer tokens and API keys, file-wide
+    (
+        "GET",
+        "/me",
+        &[],
+        None,
+        401,
+        r#"{"error":"missing credentials"}"#,
+        &[("www-authenticate", "Bearer")],
+    ),
+    (
+        "GET",
+        "/me",
+        &[("authorization", "Bearer alice")],
+        None,
+        200,
+        r#"{"name":"alice","admin":true}"#,
+        &[],
+    ),
+    (
+        "GET",
+        "/me",
+        &[("authorization", "bearer  bob ")],
+        None,
+        200,
+        r#"{"name":"bob","admin":false}"#,
+        &[],
+    ),
+    (
+        "GET",
+        "/me",
+        &[("x-api-key", "bob")],
+        None,
+        200,
+        r#"{"name":"bob","admin":false}"#,
+        &[],
+    ),
+    (
+        "GET",
+        "/me",
+        &[("authorization", "Bearer eve")],
+        None,
+        401,
+        r#"{"error":"unknown token"}"#,
+        &[],
+    ),
+    (
+        "GET",
+        "/me",
+        &[("authorization", "Basic YWxpY2U6eA==")],
+        None,
+        401,
+        r#"{"error":"missing credentials"}"#,
+        &[],
+    ),
+    ("GET", "/health", &[], None, 200, r#""ok""#, &[]),
+    // replies: statuses and headers of the function's choosing
+    (
+        "POST",
+        "/items",
+        &[("authorization", "Bearer alice")],
+        Some(r#"{"id":7,"name":"x"}"#),
+        201,
+        r#"{"id":7,"name":"x"}"#,
+        &[("location", "/items/7")],
+    ),
+    (
+        "GET",
+        "/items/1",
+        &[],
+        None,
+        301,
+        r#"{"id":2,"name":"moved"}"#,
+        &[("location", "/items/2")],
+    ),
+    (
+        "GET",
+        "/items/3",
+        &[],
+        None,
+        200,
+        r#"{"id":3,"name":"thing"}"#,
+        &[],
+    ),
+    (
+        "DELETE",
+        "/items/3",
+        &[("authorization", "Bearer alice")],
+        None,
+        204,
+        "",
+        &[],
+    ),
+    (
+        "DELETE",
+        "/items/3",
+        &[("x-api-key", "bob")],
+        None,
+        403,
+        r#"{"error":{"status":403,"message":"admins only"}}"#,
+        &[],
+    ),
+    // headers and cookies: options record fields and bound parameters
+    (
+        "GET",
+        "/seen?limit=3",
+        &[("x-trace-id", "t1"), ("cookie", "a=1; theme=\"dark\"")],
+        None,
+        200,
+        r#""Seen {limit = Some 3, theme = Some \"dark\", trace = Some \"t1\"}""#,
+        &[],
+    ),
+    (
+        "GET",
+        "/seen",
+        &[],
+        None,
+        200,
+        r#""Seen {limit = None, theme = None, trace = None}""#,
+        &[],
+    ),
+    (
+        "GET",
+        "/hello",
+        &[("X-Name", "Ann"), ("Cookie", "x=y;session=abc")],
+        None,
+        200,
+        r#""hello Ann (abc)""#,
+        &[],
+    ),
+    (
+        "GET",
+        "/hello",
+        &[],
+        None,
+        400,
+        r#"{"error":"missing header X-Name"}"#,
+        &[],
+    ),
+    // the request itself
+    (
+        "GET",
+        "/echo-request",
+        &[("x-test", "yes")],
+        None,
+        200,
+        r#""GET yes""#,
+        &[],
+    ),
+    // a time limit
+    (
+        "GET",
+        "/slow",
+        &[],
+        None,
+        503,
+        r#"{"error":"request timed out"}"#,
+        &[],
+    ),
+    // CORS: a preflight request, and a request, from an allowed origin
+    (
+        "OPTIONS",
+        "/items",
+        &[
+            ("origin", "https://app.example"),
+            ("access-control-request-method", "POST"),
+        ],
+        None,
+        204,
+        "",
+        &[
+            ("access-control-allow-origin", "https://app.example"),
+            ("access-control-allow-methods", "GET, POST, DELETE, HEAD"),
+            (
+                "access-control-allow-headers",
+                "Content-Type, Authorization, X-API-Key, X-Trace-Id, X-Name",
+            ),
+            ("access-control-allow-credentials", "true"),
+            ("access-control-max-age", "600"),
+        ],
+    ),
+    (
+        "GET",
+        "/health",
+        &[("origin", "https://app.example")],
+        None,
+        200,
+        r#""ok""#,
+        &[
+            ("access-control-allow-origin", "https://app.example"),
+            ("access-control-expose-headers", "Location"),
+            ("vary", "origin"),
+        ],
+    ),
+    // from other origins: no CORS headers, and no preflight answer
+    (
+        "OPTIONS",
+        "/items",
+        &[
+            ("origin", "https://evil.example"),
+            ("access-control-request-method", "POST"),
+        ],
+        None,
+        405,
+        r#"{"error":"method not allowed"}"#,
+        &[],
+    ),
+];
+
+fn exercise_secure(srv: &Server) {
+    for (method, target, headers, body, status, expected, want) in SECURE {
+        let (st, got_headers, got) = http_with(&srv.addr, method, target, headers, *body);
+        assert_eq!(
+            (st, got.as_str()),
+            (*status, *expected),
+            "{} {} {:?}",
+            method,
+            target,
+            headers
+        );
+        for (k, v) in *want {
+            assert!(
+                got_headers.iter().any(|(gk, gv)| gk == k && gv == v),
+                "{} {}: no `{}: {}` in {:?}",
+                method,
+                target,
+                k,
+                v,
+                got_headers
+            );
+        }
+        if headers.iter().all(|(k, _)| *k != "origin") {
+            assert!(
+                !got_headers
+                    .iter()
+                    .any(|(k, _)| k.starts_with("access-control-")),
+                "{} {}: {:?}",
+                method,
+                target,
+                got_headers
+            );
+        }
+    }
+    // the server's own errors are JSON too
+    let mut conn = TcpStream::connect(&srv.addr).unwrap();
+    conn.set_read_timeout(Some(Duration::from_secs(30)))
+        .unwrap();
+    conn.write_all(b"NONSENSE\r\n\r\n").unwrap();
+    let mut raw = String::new();
+    let _ = conn.read_to_string(&mut raw);
+    assert!(raw.starts_with("HTTP/1.1 400"), "{}", raw);
+    assert!(raw.contains("content-type: application/json"), "{}", raw);
+    assert!(
+        raw.ends_with(r#"{"error":"invalid request line"}"#),
+        "{}",
+        raw
+    );
+    // the page of the document
+    let (st, headers, page) = http(&srv.addr, "GET", "/docs", None);
+    assert_eq!(st, 200);
+    assert!(headers
+        .iter()
+        .any(|(k, v)| k == "content-type" && v.starts_with("text/html")));
+    assert!(page.starts_with("<!doctype html>"), "{}", page);
+    assert!(page.contains("<code>/items/{id}</code>"), "{}", page);
+    assert!(!page.contains("<script"), "{}", page);
+}
+
+#[test]
+fn secure_interpreted() {
+    exercise_secure(&interpreted(&fixture("secure.fwp")));
+}
+
+#[test]
+fn secure_native() {
+    if !have_cc() {
+        eprintln!("skipping: no C compiler");
+        return;
+    }
+    let dir = temp_dir("secure-native");
+    exercise_secure(&native(&fixture("secure.fwp"), &dir));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// `--cors` and `FWP_REST_CORS` replace the origins of `# cors:`.
+#[test]
+fn cors_from_the_command_line() {
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--rest"])
+        .arg(fixture("secure.fwp"))
+        .args([
+            "--listen",
+            "127.0.0.1:0",
+            "--cors",
+            "https://a.example, https://b.example",
+        ]);
+    let srv = start(cmd);
+    let allowed = |origin: &str| {
+        http_with(&srv.addr, "GET", "/health", &[("origin", origin)], None)
+            .1
+            .iter()
+            .any(|(k, v)| k == "access-control-allow-origin" && v == origin)
+    };
+    assert!(allowed("https://b.example"));
+    assert!(!allowed("https://app.example"));
+    drop(srv);
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--rest"])
+        .arg(fixture("api.fwp"))
+        .args(["--listen", "127.0.0.1:0"])
+        .env("FWP_REST_CORS", "*");
+    let srv = start(cmd);
+    let (_, headers, _) = http_with(
+        &srv.addr,
+        "GET",
+        "/ping",
+        &[("origin", "https://x.example")],
+        None,
+    );
+    assert!(headers
+        .iter()
+        .any(|(k, v)| k == "access-control-allow-origin" && v == "https://x.example"));
+    assert!(!headers
+        .iter()
+        .any(|(k, _)| k == "access-control-allow-credentials"));
+}
+
+#[test]
+fn openapi_yaml() {
+    let o = Command::new(fwp())
+        .args(["openapi", "--yaml"])
+        .arg(fixture("secure.fwp"))
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    let yaml = String::from_utf8(o.stdout).unwrap();
+    golden(&fixture("secure.openapi.yaml"), &yaml);
+    // a YAML reader, if one is installed, reads the JSON document
+    let have = Command::new("python3")
+        .args(["-c", "import yaml"])
+        .output()
+        .is_ok_and(|o| o.status.success());
+    if have {
+        let dir = temp_dir("yaml");
+        std::fs::write(dir.join("doc.yaml"), &yaml).unwrap();
+        std::fs::write(dir.join("doc.json"), openapi_text(&fixture("secure.fwp"))).unwrap();
+        let o = Command::new("python3")
+            .args([
+                "-c",
+                "import json, sys, yaml; assert yaml.safe_load(open(sys.argv[1])) == json.load(open(sys.argv[2]))",
+            ])
+            .arg(dir.join("doc.yaml"))
+            .arg(dir.join("doc.json"))
+            .output()
+            .unwrap();
+        assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -470,6 +888,10 @@ fn openapi_golden() {
     golden(
         &fixture("books.openapi.json"),
         &openapi_text(&root().join("examples/rest/books.fwp")),
+    );
+    golden(
+        &fixture("secure.openapi.json"),
+        &openapi_text(&fixture("secure.fwp")),
     );
 }
 
@@ -687,7 +1109,8 @@ fn check_document(doc: &J) {
                 );
             }
             for p in &params {
-                assert!(["path", "query"].contains(&p.get("in").and_then(J::str).unwrap()));
+                assert!(["path", "query", "header", "cookie"]
+                    .contains(&p.get("in").and_then(J::str).unwrap()));
                 assert!(p.get("schema").is_some());
             }
             let responses = op.get("responses").expect("responses");
@@ -709,7 +1132,11 @@ fn check_document(doc: &J) {
 
 #[test]
 fn openapi_structure() {
-    for file in [fixture("api.fwp"), root().join("examples/rest/books.fwp")] {
+    for file in [
+        fixture("api.fwp"),
+        fixture("secure.fwp"),
+        root().join("examples/rest/books.fwp"),
+    ] {
         let doc = parse_json(&openapi_text(&file));
         check_document(&doc);
     }
@@ -718,7 +1145,11 @@ fn openapi_structure() {
         .arg("--help")
         .output();
     if validator.is_ok_and(|o| o.status.success()) {
-        for f in ["api.openapi.json", "books.openapi.json"] {
+        for f in [
+            "api.openapi.json",
+            "books.openapi.json",
+            "secure.openapi.json",
+        ] {
             let out = Command::new("openapi-spec-validator")
                 .arg(fixture(f))
                 .output()
@@ -877,11 +1308,8 @@ fn client_golden() {
     );
     let spec = fixture("petstore.json").display().to_string();
     let expected: String = [
-        "GET /pet/{petId}: the header parameter `X-Trace` is left out",
-        "DELETE /pet/{petId}: the required header parameter `api_key` is not supported; it is left out",
-        "POST /store/order: its request body is not JSON (`application/json`); it is left out",
-        "schema `Session`: `allOf` is not supported; it is a `Json` value",
-        "schema `Session`: a `oneOf` that is not a variant type; it is a `Json` value",
+        "POST /store/order: its request body is neither JSON (`application/json`) nor a form (`application/x-www-form-urlencoded`); it is left out",
+        "POST /user/logout: its security scheme `basic` is not supported (bearer tokens and API keys are); it is left out",
     ]
     .iter()
     .map(|l| format!("fwp openapi: {}: {}\n", spec, l))
@@ -979,6 +1407,62 @@ fn client_round_trip() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// A client generated from the document of `tests/rest/secure.fwp` sends
+/// tokens, headers and cookies, and reads replies.
+#[test]
+fn secure_client_round_trip() {
+    let dir = temp_dir("secure-roundtrip");
+    let srv = interpreted(&fixture("secure.fwp"));
+    let (_, _, doc) = http(&srv.addr, "GET", "/openapi.json", None);
+    std::fs::write(dir.join("doc.json"), &doc).unwrap();
+    assert_eq!(
+        import(&dir.join("doc.json"), &dir.join("secureclient.fwp")),
+        ""
+    );
+    golden(
+        &fixture("secureclient.fwp"),
+        &std::fs::read_to_string(dir.join("secureclient.fwp")).unwrap(),
+    );
+    std::fs::copy(
+        fixture("secureroundtrip.fwp"),
+        dir.join("secureroundtrip.fwp"),
+    )
+    .unwrap();
+    let run = Command::new(fwp())
+        .arg("run")
+        .arg(dir.join("secureroundtrip.fwp"))
+        .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
+        .output()
+        .unwrap();
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    let got = String::from_utf8_lossy(&run.stdout).into_owned();
+    golden(&fixture("secureroundtrip.out"), &got);
+    drop(srv);
+    if have_cc() {
+        let srv = native(&fixture("secure.fwp"), &dir);
+        let exe = dir.join("secureroundtrip");
+        let b = Command::new(fwp())
+            .arg("build")
+            .arg(dir.join("secureroundtrip.fwp"))
+            .args(["-O1", "-o"])
+            .arg(&exe)
+            .output()
+            .unwrap();
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        let run = Command::new(&exe)
+            .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
+            .output()
+            .unwrap();
+        assert!(run.status.success());
+        assert_eq!(String::from_utf8_lossy(&run.stdout), got);
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 // ------------------------------------------------------------- errors
 
 #[test]
@@ -1028,7 +1512,39 @@ fn endpoint_errors() {
         ("f : I64 -> I64\nf = id\n", "the program exports no functions to serve"),
         (
             "# route: GET /openapi.json\nexport f : () -> I64\nf = const 1\n",
-            "`GET /openapi.json` is the route of the OpenAPI document",
+            "`GET /openapi.json` is a route of the server",
+        ),
+        (
+            "# auth: bearer\nexport f : I64 -> I64\nf = id\n",
+            "`f` needs authentication (`# auth:`), but the program has no `authenticate",
+        ),
+        (
+            "# auth: basic\nexport f : I64 -> I64\nf = id\n",
+            "invalid `# auth: basic`",
+        ),
+        (
+            "U = { n: String }\nauthenticate : String -> Result[U, String]\nauthenticate = make U { n = id } | Ok\n# auth: bearer\nexport f : U -> I64\nf = const 1\n# route: GET /g\nexport g : U -> I64\ng = const 2\n",
+            "`g` takes the principal (`U`) but needs no authentication",
+        ),
+        (
+            "authenticate : String -> Option[I64]\nauthenticate = parse-int\n# auth: bearer\nexport f : I64 -> I64\nf = id\n",
+            "`authenticate` must have type `String -> Result[P, String]`",
+        ),
+        (
+            "# header: X-Id -> id\n# args: x\nexport f : I64 -> I64\nf = id\n",
+            "the header `X-Id` of `f` binds `id`, which names no parameter (they are x)",
+        ),
+        (
+            "# route: GET /f\n# cookie: c\nexport f : List[String] -> I64\nf = length\n",
+            "the cookie `c` has type `List[String]`",
+        ),
+        (
+            "# status: 200, 201\nexport f : I64 -> I64\nf = id\n",
+            "only a `RestReply` result chooses its status",
+        ),
+        (
+            "# timeout: soon\nexport f : I64 -> I64\nf = id\n",
+            "invalid `# timeout:` line `soon`",
         ),
     ];
     for (i, (src, msg)) in cases.iter().enumerate() {

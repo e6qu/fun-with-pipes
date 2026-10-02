@@ -3,7 +3,7 @@
   "info": {
     "title": "books",
     "version": "1.0.0",
-    "description": "A small bookstore: a catalog and price quotes.\n\nThe same exported functions are a REST API, a command-line program and a\ngRPC service, with no change to this file:\n\n  fwp serve --rest books.fwp                 REST, interpreted\n  fwp build books.fwp --rest -o books-api    REST, native\n  fwp openapi books.fwp                      its OpenAPI document\n  fwp build books.fwp --cli -o books         a command-line program\n  fwp build shop.fwp --service books -o out  a gRPC service (see shop.fwp)"
+    "description": "A small bookstore: a catalog and price quotes.\n\nThe same exported functions are a REST API, a command-line program and a\ngRPC service, with no change to this file:\n\n  fwp serve --rest books.fwp                 REST, interpreted\n  fwp build books.fwp --rest -o books-api    REST, native\n  fwp openapi books.fwp                      its OpenAPI document\n  fwp build books.fwp --cli -o books         a command-line program\n  fwp build shop.fwp --service books -o out  a gRPC service (see shop.fwp)\n\nAs a REST API, quotes need a bearer token (see `authenticate`), and\npages served from http://localhost:3000 may call it from a browser."
   },
   "paths": {
     "/books/{id}": {
@@ -163,6 +163,16 @@
               }
             }
           },
+          "401": {
+            "description": "missing or refused credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "error",
             "content": {
@@ -217,7 +227,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/health": {
@@ -467,6 +482,12 @@
         "required": [
           "error"
         ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

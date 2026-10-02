@@ -1,0 +1,11 @@
+Ok (secureclient.User {admin = True, name = "alice"})
+Err (RestError {message = "{\"error\":\"unknown token\"}", status = 401})
+Ok "ok"
+Ok (secureclient.Item {id = 9, name = "nine"})
+Ok (secureclient.Item {id = 3, name = "thing"})
+Err (RestError {message = "{\"id\":2,\"name\":\"moved\"}", status = 301})
+Err (RestError {message = "{\"error\":{\"status\":403,\"message\":\"admins only\"}}", status = 403})
+Ok ()
+Ok "Seen {limit = Some 2, theme = Some \"dark; light\", trace = Some \"t-1\"}"
+Ok "hello Ann (none)"
+Ok "GET -"

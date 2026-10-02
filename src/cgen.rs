@@ -371,6 +371,13 @@ impl<'p> Gen<'p> {
                             "std::Bool" => 1,
                             "std::Option" => 2,
                             "std::Json" => 3,
+                            _ if matches!(
+                                crate::jsontype::shape(mt, self.prog),
+                                crate::jsontype::Shape::Untagged(..)
+                            ) =>
+                            {
+                                4
+                            }
                             _ => 0,
                         };
                         format!(

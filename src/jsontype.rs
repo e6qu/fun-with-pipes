@@ -70,6 +70,9 @@ pub enum Shape {
     /// A variant type whose constructors have no fields.
     Enum(String, Vec<String>),
     Adt(String, Vec<(String, Vec<MT>)>),
+    /// A variant type marked `# json: untagged`: a constructor's value
+    /// alone, read by trying the constructors in order.
+    Untagged(String, Vec<(String, Vec<MT>)>),
     /// Functions, resources and runtime handles.
     Other,
 }
@@ -149,6 +152,9 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                         .collect();
                     Shape::Record(Some(name), fs.clone(), order, json)
                 }
+                Some(TypeShape::Adt(vs)) if prog.docs.untagged.contains(&name) => {
+                    Shape::Untagged(name, vs.clone())
+                }
                 Some(TypeShape::Adt(vs)) if vs.iter().all(|(_, f)| f.is_empty()) => {
                     Shape::Enum(name, vs.iter().map(|(c, _)| c.clone()).collect())
                 }
@@ -173,22 +179,33 @@ pub fn field_docs<'p>(
 
 /// The JSON name a field comment gives a field: `# json: name`.
 pub fn json_name(doc: &str) -> Option<&str> {
-    let mut rest = doc;
-    loop {
-        let i = rest.find("json: ")?;
-        if i == 0 || rest[..i].ends_with(' ') {
-            let name = rest[i + 6..].split_whitespace().next()?;
-            return Some(name);
-        }
-        rest = &rest[i + 6..];
-    }
+    tagged(doc, "json")
 }
 
 /// A field comment without its `json: name` part.
 pub fn without_json_name(doc: &str) -> String {
-    match json_name(doc) {
+    without_tag(doc, "json")
+}
+
+/// The word after `key: ` in a field comment (`json: name`,
+/// `header: X-Name`).
+pub fn tagged<'a>(doc: &'a str, key: &str) -> Option<&'a str> {
+    let pat = format!("{}: ", key);
+    let mut rest = doc;
+    loop {
+        let i = rest.find(&pat)?;
+        if i == 0 || rest[..i].ends_with(' ') {
+            return rest[i + pat.len()..].split_whitespace().next();
+        }
+        rest = &rest[i + pat.len()..];
+    }
+}
+
+/// A field comment without its `key: word` part.
+pub fn without_tag(doc: &str, key: &str) -> String {
+    match tagged(doc, key) {
         Some(n) => doc
-            .replacen(&format!("json: {}", n), "", 1)
+            .replacen(&format!("{}: {}", key, n), "", 1)
             .split_whitespace()
             .collect::<Vec<_>>()
             .join(" "),
@@ -365,6 +382,18 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
             };
             json::escape(&names[tag], out);
         }
+        Shape::Untagged(_, vs) => {
+            let (tag, fs): (usize, &[Value]) = match v {
+                Value::Data(t, fs) => (*t as usize, fs),
+                _ => (0, &[]),
+            };
+            let fts = &vs[tag.min(vs.len() - 1)].1;
+            match fts.len() {
+                0 => out.push_str("null"),
+                1 => write_to(out, &fs[0], &fts[0], prog),
+                _ => write_items_of(out, fs, fts, prog),
+            }
+        }
         Shape::Adt(_, vs) => {
             let Value::Data(tag, fs) = v else {
                 out.push_str("null");
@@ -394,6 +423,17 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
         }
         Shape::Other => out.push_str("null"),
     }
+}
+
+fn write_items_of(out: &mut String, items: &[Value], ts: &[MT], prog: &Program) {
+    out.push('[');
+    for (i, (x, t)) in items.iter().zip(ts).enumerate() {
+        if i > 0 {
+            out.push(',');
+        }
+        write_to(out, x, t, prog);
+    }
+    out.push(']');
 }
 
 fn write_items(out: &mut String, items: &[Value], t: &MT, prog: &Program) {
@@ -886,6 +926,29 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
                 Some(t) => Value::nullary(t as u32),
                 None => return Err(expected(path, &one_of(&names), r)),
             }
+        }
+        Shape::Untagged(name, vs) => {
+            if matches!(r, Raw::Null) {
+                if let Some(t) = vs.iter().position(|(_, f)| f.is_empty()) {
+                    return Ok(Value::nullary(t as u32));
+                }
+            }
+            for (tag, (_, fts)) in vs.iter().enumerate() {
+                let mut p = path.clone();
+                let got = match fts.len() {
+                    0 => continue,
+                    1 => decode(r, &fts[0], prog, &mut p).map(|x| vec![x]),
+                    _ => decode_tuple(r, fts, prog, &mut p),
+                };
+                if let Ok(fields) = got {
+                    return Ok(Value::data(tag as u32, fields));
+                }
+            }
+            return Err(expected(
+                path,
+                &format!("a value of one of the variants of {}", name),
+                r,
+            ));
         }
         Shape::Adt(_, vs) => {
             let names: Vec<String> = vs.iter().map(|(n, _)| n.clone()).collect();

@@ -48,6 +48,12 @@ pub struct Docs {
     pub fields: BTreeMap<String, BTreeMap<String, FieldDoc>>,
     /// The `# grpc:` line of the module's comment (`src/rpc.rs`).
     pub grpc: Option<String>,
+    /// The `# auth:`, `# cors:` and `# timeout:` lines of the module's
+    /// comment, defaults of every REST endpoint (`src/rest.rs`).
+    pub http: Vec<String>,
+    /// Variant types whose comment has a line `json: untagged`: their
+    /// JSON form is the value of a constructor alone (`src/jsontype.rs`).
+    pub untagged: BTreeSet<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -57,8 +63,9 @@ pub struct FuncDoc {
     pub args: Option<Vec<String>>,
     /// The name of `# command:`.
     pub command: Option<String>,
-    /// The `# route:`, `# status:` and `# error:` lines of REST endpoints
-    /// (`src/rest.rs`), without the `#`.
+    /// The `# route:`, `# status:`, `# error:`, `# header:`, `# cookie:`,
+    /// `# auth:`, `# timeout:` and `# response-header:` lines of REST
+    /// endpoints (`src/rest.rs`), without the `#`.
     pub http: Vec<String>,
     /// The gRPC name of `# grpc:` (`src/rpc.rs`).
     pub grpc: Option<String>,
@@ -79,7 +86,28 @@ pub struct FieldDoc {
     pub requires: Vec<String>,
     /// `json: name`: the field's name in JSON (typed JSON, REST).
     pub json: Option<String>,
+    /// `header: X-Name`: a field of a REST options record read from this
+    /// request header instead of the query.
+    pub header: Option<String>,
+    /// `cookie: name`: a field read from this cookie.
+    pub cookie: Option<String>,
 }
+
+/// Comment lines of the module's description that configure its REST
+/// server.
+const MODULE_HTTP: &[&str] = &["auth:", "cors:", "timeout:"];
+
+/// Comment lines of an exported function that configure its endpoint.
+const FUNC_HTTP: &[&str] = &[
+    "route:",
+    "status:",
+    "error:",
+    "header:",
+    "cookie:",
+    "auth:",
+    "timeout:",
+    "response-header:",
+];
 
 /// The text of a comment: without the `#`, one space and trailing space.
 fn comment_text(c: &str) -> &str {
@@ -130,6 +158,12 @@ pub fn field_doc(text: &str) -> FieldDoc {
     if let Some(n) = crate::jsontype::json_name(&doc).map(str::to_string) {
         doc = crate::jsontype::without_json_name(&doc);
         d.json = Some(n);
+    }
+    for (key, slot) in [("header", &mut d.header), ("cookie", &mut d.cookie)] {
+        if let Some(n) = crate::jsontype::tagged(&doc, key).map(str::to_string) {
+            doc = crate::jsontype::without_tag(&doc, key);
+            *slot = Some(n);
+        }
     }
     let mut take = |key: &str| -> Option<String> {
         let i = doc.find(&format!("[{}:", key))?;
@@ -221,6 +255,11 @@ impl Docs {
                 if let Some(i) = block.iter().position(|l| l.starts_with("grpc:")) {
                     self.grpc = Some(block.remove(i)["grpc:".len()..].trim().to_string());
                 }
+                let (http, rest): (Vec<String>, Vec<String>) = block
+                    .into_iter()
+                    .partition(|l| MODULE_HTTP.iter().any(|p| l.starts_with(p)));
+                self.http = http;
+                block = rest;
                 self.module = trim_blank(block);
             }
         }
@@ -248,6 +287,12 @@ impl Docs {
                     }
                 }
                 Decl::Type(td) => {
+                    if doc_of(td.span.line)
+                        .iter()
+                        .any(|l| l.trim() == "json: untagged")
+                    {
+                        self.untagged.insert(td.name.clone());
+                    }
                     let TypeBody::Record(fs) = &td.body else {
                         continue;
                     };
@@ -283,10 +328,7 @@ impl Docs {
                     doc.args = Some(a.split_whitespace().map(str::to_string).collect());
                 } else if let Some(c) = t.strip_prefix("command:") {
                     doc.command = Some(c.trim().to_string());
-                } else if ["route:", "status:", "error:"]
-                    .iter()
-                    .any(|p| t.starts_with(p))
-                {
+                } else if FUNC_HTTP.iter().any(|p| t.starts_with(p)) {
                     doc.http.push(t);
                 } else if let Some(g) = t.strip_prefix("grpc:") {
                     doc.grpc = Some(g.trim().to_string());

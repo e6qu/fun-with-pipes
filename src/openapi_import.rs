@@ -223,9 +223,20 @@ struct Gen<'a> {
     used_types: BTreeSet<String>,
     decls: Vec<String>,
     warnings: Vec<String>,
+    /// Types defined as aliases of `Option`s (nullable component schemas),
+    /// which optional properties do not wrap again.
+    optional_aliases: BTreeSet<String>,
 }
 
 impl<'a> Gen<'a> {
+    /// `t` as an optional value: an `Option`, unless it is one already.
+    fn optional(&self, t: Ty) -> Ty {
+        match &t {
+            Ty::Named(n) if self.optional_aliases.contains(n) => t,
+            _ => t.optional(),
+        }
+    }
+
     fn new_type_name(&mut self, base: &str) -> String {
         let mut base = type_name(base);
         if RESERVED_TYPES.contains(&base.as_str()) {
@@ -321,13 +332,32 @@ impl<'a> Gen<'a> {
                         return t;
                     }
                 }
-                self.warn(at, format!("a `{}` that is not a variant type", key));
-                return Ty::Prim("Json");
+                if non_null.is_empty() {
+                    return Ty::Prim("Json");
+                }
+                // a nullable union is an `Option` of a variant type
+                // named after the type it is the value of
+                let (hint, name) = if non_null.len() < alts.len() {
+                    (format!("{}Value", hint), None)
+                } else {
+                    (hint.to_string(), name)
+                };
+                let t = self.untagged(s, &non_null, &hint, at, name);
+                return if non_null.len() < alts.len() {
+                    t.optional()
+                } else {
+                    t
+                };
             }
         }
         if s.get("allOf").is_some() {
-            self.warn(at, "`allOf` is not supported".into());
-            return Ty::Prim("Json");
+            return match self.all_of(s, at) {
+                Ok(merged) => self.ty_inner(&merged, hint, at, name),
+                Err(why) => {
+                    self.warn(at, why);
+                    Ty::Prim("Json")
+                }
+            };
         }
         if let Some(Json::Arr(values)) = s.get("enum") {
             let names: Vec<&str> = values.iter().filter_map(Json::as_str).collect();
@@ -500,11 +530,159 @@ impl<'a> Gen<'a> {
         Some(Ty::Named(tname))
     }
 
+    /// A schema with its `$ref` resolved (to a component schema).
+    fn resolve(&self, s: &'a Json) -> Option<&'a Json> {
+        match s.get("$ref").and_then(Json::as_str) {
+            Some(r) => self
+                .components
+                .get(r.strip_prefix("#/components/schemas/")?)
+                .copied(),
+            None => Some(s),
+        }
+    }
+
+    /// An `allOf` as one schema: the properties and required properties
+    /// of its object schemas together (and of the schema itself); or the
+    /// one member that is not only constraints (`allOf: [{$ref: ...}]`).
+    fn all_of(&self, s: &Json, at: &str) -> Result<Json, String> {
+        let _ = at;
+        let members: Vec<&Json> = s
+            .get("allOf")
+            .and_then(Json::as_array)
+            .map(|a| a.iter().collect())
+            .unwrap_or_default();
+        let typed = |m: &Json| {
+            [
+                "$ref",
+                "type",
+                "properties",
+                "allOf",
+                "oneOf",
+                "anyOf",
+                "enum",
+                "items",
+            ]
+            .iter()
+            .any(|k| m.get(k).is_some())
+        };
+        let own_props = s.get("properties").is_some();
+        let typed_members: Vec<&Json> = members.iter().copied().filter(|m| typed(m)).collect();
+        if typed_members.len() == 1 && !own_props {
+            // one schema, with constraints or a description
+            let mut m = typed_members[0].clone();
+            let is_ref = m.get("$ref").is_some();
+            if let (Some(d), Json::Obj(fs), false) = (s.get("description"), &mut m, is_ref) {
+                fs.push(("description".into(), d.clone()));
+            }
+            return Ok(m);
+        }
+        let mut props: Vec<(String, Json)> = Vec::new();
+        let mut required: Vec<Json> = Vec::new();
+        let add = |o: &Json, props: &mut Vec<(String, Json)>, required: &mut Vec<Json>| {
+            for (k, v) in o.get("properties").map(Json::members).unwrap_or(&[]) {
+                match props.iter_mut().find(|(n, _)| n == k) {
+                    Some(slot) => slot.1 = v.clone(),
+                    None => props.push((k.clone(), v.clone())),
+                }
+            }
+            for r in o.get("required").and_then(Json::as_array).unwrap_or(&[]) {
+                if !required.contains(r) {
+                    required.push(r.clone());
+                }
+            }
+        };
+        for m in &members {
+            let Some(r) = self.resolve(m) else {
+                return Err("`allOf` refers to a schema that does not exist".into());
+            };
+            let r = if r.get("allOf").is_some() {
+                self.all_of(r, at)?
+            } else {
+                r.clone()
+            };
+            let is_object =
+                r.get("properties").is_some() || Self::type_str(&r) == Some("object") || !typed(&r);
+            if !is_object {
+                return Err("an `allOf` of schemas that are not all objects".into());
+            }
+            add(&r, &mut props, &mut required);
+        }
+        add(s, &mut props, &mut required);
+        let mut out = vec![
+            ("type".to_string(), Json::str("object")),
+            ("properties".to_string(), Json::Obj(props)),
+        ];
+        if !required.is_empty() {
+            out.push(("required".into(), Json::Arr(required)));
+        }
+        if let Some(d) = s.get("description") {
+            out.push(("description".into(), d.clone()));
+        }
+        Ok(Json::Obj(out))
+    }
+
+    /// A `oneOf` or `anyOf` without fwp's discriminator: a variant type
+    /// with a constructor per alternative, marked `# json: untagged` (its
+    /// JSON is the value alone; reading tries the alternatives in order).
+    fn untagged(
+        &mut self,
+        s: &Json,
+        alts: &[&Json],
+        hint: &str,
+        at: &str,
+        name: Option<&str>,
+    ) -> Ty {
+        let tname = match name {
+            Some(n) => n.to_string(),
+            None => self.new_type_name(hint),
+        };
+        let mut ctors: Vec<String> = Vec::new();
+        let mut lines = Vec::new();
+        for a in alts {
+            let base = match a.get("$ref").and_then(Json::as_str) {
+                Some(r) => type_name(r.rsplit('/').next().unwrap_or(r)),
+                None => match Self::type_str(a) {
+                    Some("string") => "Text".into(),
+                    Some("integer") => "Int".into(),
+                    Some("number") => "Num".into(),
+                    Some("boolean") => "Flag".into(),
+                    Some("array") => "Items".into(),
+                    _ => "Object".into(),
+                },
+            };
+            let mut c = base.clone();
+            let mut k = 2;
+            while ctors.contains(&c) {
+                c = format!("{}{}", base, k);
+                k += 1;
+            }
+            ctors.push(c.clone());
+            let t = self.ty(a, &format!("{}{}", tname, c), at).spell();
+            if t.contains('[') || t.contains(' ') || t.contains(',') {
+                lines.push(format!("    | {}.{} ({})", tname, c, t));
+            } else {
+                lines.push(format!("    | {}.{} {}", tname, c, t));
+            }
+        }
+        let mut d = String::new();
+        describe(&mut d, s);
+        d.push_str("# json: untagged\n");
+        let _ = writeln!(d, "{} =", tname);
+        for l in lines {
+            let _ = writeln!(d, "{}", l);
+        }
+        self.decls.push(d);
+        Ty::Named(tname)
+    }
+
     /// Define a named type from a component schema.
     fn define(&mut self, name: &str, s: &Json, component: &str) {
         let at = format!("schema `{}`", component);
         let t = self.ty_inner(s, name, &at, Some(name));
         if t != Ty::Named(name.to_string()) {
+            if matches!(t, Ty::Option(_)) {
+                self.optional_aliases.insert(name.to_string());
+            }
             // anything else is an alias
             let mut d = String::new();
             describe(&mut d, s);
@@ -526,7 +704,7 @@ impl<'a> Gen<'a> {
             for (p, schema) in props {
                 let mut t = self.ty(schema, &format!("{}{}", name, type_name(p)), at);
                 if !required.contains(&p.as_str()) {
-                    t = t.optional();
+                    t = self.optional(t);
                 }
                 let mut label = fwp_name(p);
                 while !labels.insert(label.clone()) {
@@ -558,19 +736,84 @@ fn describe(out: &mut String, s: &Json) {
     }
 }
 
+/// How a client sends its credential.
+#[derive(Clone, Debug, PartialEq)]
+enum Credential {
+    /// `Authorization: Bearer <token>`.
+    Bearer,
+    /// An API key in a header, query parameter or cookie of a name.
+    Key { place: String, name: String },
+}
+
 /// A client function: its name, parameters and the pieces of its call.
 struct Operation {
     name: String,
     doc: String,
     method: String,
     path: String,
+    /// The credential the call sends (a parameter after the base URL).
+    credential: Option<Credential>,
     /// Path parameters, in the order of the path.
     path_params: Vec<Ty>,
-    /// The record of the query parameters.
+    /// The records of the query, header and cookie parameters.
     query: Option<String>,
+    headers: Option<String>,
+    cookies: Option<String>,
     body: Option<Ty>,
+    /// The body is a form (`application/x-www-form-urlencoded`).
+    form: bool,
     result: Ty,
     not_found: bool,
+}
+
+/// The credential an operation needs: of the first of its security
+/// requirements (else the document's) that names one supported scheme;
+/// `None` when one of them is empty (no credential needed).
+fn credential(doc: &Json, op: &Json) -> Result<Option<Credential>, String> {
+    let reqs = match op.get("security").or_else(|| doc.get("security")) {
+        Some(Json::Arr(rs)) => rs,
+        _ => return Ok(None),
+    };
+    if reqs.is_empty() || reqs.iter().any(|r| r.members().is_empty()) {
+        return Ok(None);
+    }
+    let mut names = Vec::new();
+    for r in reqs {
+        if r.members().len() != 1 {
+            continue;
+        }
+        let name = &r.members()[0].0;
+        names.push(name.clone());
+        let Some(s) = doc.at(&["components", "securitySchemes", name]) else {
+            continue;
+        };
+        let g = |k: &str| s.get(k).and_then(Json::as_str).unwrap_or("").to_string();
+        match (
+            g("type").as_str(),
+            g("scheme").to_ascii_lowercase().as_str(),
+        ) {
+            ("http", "bearer") | ("oauth2", _) | ("openIdConnect", _) => {
+                return Ok(Some(Credential::Bearer))
+            }
+            ("apiKey", _) if matches!(g("in").as_str(), "header" | "query" | "cookie") => {
+                return Ok(Some(Credential::Key {
+                    place: g("in"),
+                    name: g("name"),
+                }))
+            }
+            _ => {}
+        }
+    }
+    Err(format!(
+        "its security scheme{} {} {} not supported (bearer tokens and API keys are)",
+        if names.len() == 1 { "" } else { "s" },
+        names
+            .iter()
+            .map(|n| format!("`{}`", n))
+            .collect::<Vec<_>>()
+            .join(", "),
+        if names.len() == 1 { "is" } else { "are" }
+    ))
 }
 
 /// The JSON schema of the first successful response: `Some(None)` for a
@@ -609,6 +852,7 @@ pub fn client(text: &str) -> Result<Module, String> {
         used_types: BTreeSet::new(),
         decls: Vec::new(),
         warnings: Vec::new(),
+        optional_aliases: BTreeSet::new(),
     };
     if let Some(Json::Obj(cs)) = doc.at(&["components", "schemas"]) {
         for (k, v) in cs {
@@ -654,7 +898,7 @@ pub fn client(text: &str) -> Result<Module, String> {
         title, ver
     );
     out.push_str(
-        "#\n# Each function takes the server's base URL first (`http://host:port`),\n# then the path parameters, a record of the query parameters and the\n# body. A response other than a success raises `Error[RestError]`.\n\n",
+        "#\n# Each function takes the server's base URL first (`http://host:port`),\n# then its credential (a bearer token or an API key) if it needs one, the\n# path parameters, records of the query, header and cookie parameters,\n# and the body. A response other than a success raises\n# `Error[RestError]`.\n\n",
     );
     for d in &g.decls {
         out.push_str(d);
@@ -753,54 +997,63 @@ fn operation(
         let hint = format!("{}{}", type_name(&name), type_name(&var));
         path_params.push(g.ty(&schema, &hint, &at));
     }
-    let mut fields = String::new();
-    let mut labels = BTreeSet::new();
+    let credential = credential(doc, op)?;
+    // the fields of the records of query, header and cookie parameters
+    let places = ["query", "header", "cookie"];
+    let mut fields = [String::new(), String::new(), String::new()];
+    let mut labels = [BTreeSet::new(), BTreeSet::new(), BTreeSet::new()];
     for p in &params {
         let (place, pname) = (str_of(p, "in"), str_of(p, "name"));
         let required = p.get("required") == Some(&Json::Bool(true));
-        match place.as_str() {
-            "query" => {
-                let schema = p.get("schema").cloned().unwrap_or(Json::Obj(vec![]));
-                let hint = format!("{}{}", type_name(&name), type_name(&pname));
-                let mut t = g.ty(&schema, &hint, &at);
-                if !required && !matches!(t, Ty::List(_)) {
-                    t = t.optional();
-                }
-                let mut label = fwp_name(&pname);
-                while !labels.insert(label.clone()) {
-                    label.push_str("-2");
-                }
-                if let Some(d) = p.get("description").and_then(Json::as_str) {
-                    comment(&mut fields, &one_line(d), "    ");
-                }
-                if label != pname {
-                    let _ = writeln!(fields, "    # json: {}", pname);
-                }
-                let _ = writeln!(fields, "    {}: {},", label, t.spell());
+        let Some(k) = places.iter().position(|q| *q == place) else {
+            if place != "path" {
+                return Err(format!("the parameter `{}` is in `{}`", pname, place));
             }
-            "path" => {}
-            _ if required => {
-                return Err(format!(
-                    "the required {} parameter `{}` is not supported",
-                    place, pname
-                ))
-            }
-            _ => g.warnings.push(format!(
-                "{} {}: the {} parameter `{}` is left out",
-                method, path, place, pname
-            )),
+            continue;
+        };
+        if place == "header"
+            && ["accept", "content-type", "authorization"]
+                .contains(&pname.to_ascii_lowercase().as_str())
+            && !(pname.eq_ignore_ascii_case("authorization") && credential.is_none())
+        {
+            // set by the client itself
+            continue;
         }
+        let schema = p.get("schema").cloned().unwrap_or(Json::Obj(vec![]));
+        let hint = format!("{}{}", type_name(&name), type_name(&pname));
+        let mut t = g.ty(&schema, &hint, &at);
+        if !required && !matches!(t, Ty::List(_)) {
+            t = g.optional(t);
+        }
+        let mut label = fwp_name(&pname);
+        while !labels[k].insert(label.clone()) {
+            label.push_str("-2");
+        }
+        if let Some(d) = p.get("description").and_then(Json::as_str) {
+            comment(&mut fields[k], &one_line(d), "    ");
+        }
+        if label != pname {
+            let _ = writeln!(fields[k], "    # json: {}", pname);
+        }
+        let _ = writeln!(fields[k], "    {}: {},", label, t.spell());
     }
-    let query = if fields.is_empty() {
-        None
-    } else {
-        let qname = g.new_type_name(&format!("{}Query", type_name(&name)));
-        g.decls.push(format!(
-            "# the query parameters of `{}`\n{} = {{\n{}}}\n",
-            name, qname, fields
-        ));
-        Some(qname)
-    };
+    let mut records: Vec<Option<String>> = Vec::new();
+    for (k, suffix) in ["Query", "Headers", "Cookies"].iter().enumerate() {
+        records.push(if fields[k].is_empty() {
+            None
+        } else {
+            let rname = g.new_type_name(&format!("{}{}", type_name(&name), suffix));
+            g.decls.push(format!(
+                "# the {} parameters of `{}`\n{} = {{\n{}}}\n",
+                places[k], name, rname, fields[k]
+            ));
+            Some(rname)
+        });
+    }
+    let cookies = records.pop().unwrap();
+    let headers = records.pop().unwrap();
+    let query = records.pop().unwrap();
+    let mut form = false;
     let body = match op.get("requestBody") {
         None => None,
         Some(b) => {
@@ -811,10 +1064,20 @@ fn operation(
                     .ok_or_else(|| format!("there is no request body `{}`", r))?,
                 None => b,
             };
-            let schema = b
-                .at(&["content", "application/json", "schema"])
-                .ok_or("its request body is not JSON (`application/json`)")?;
+            let schema = match b.at(&["content", "application/json", "schema"]) {
+                Some(s) => s,
+                None => {
+                    form = true;
+                    b.at(&["content", "application/x-www-form-urlencoded", "schema"])
+                        .ok_or("its request body is neither JSON (`application/json`) nor a form (`application/x-www-form-urlencoded`)")?
+                }
+            };
             let t = g.ty(schema, &format!("{}Body", type_name(&name)), &at);
+            if form
+                && !matches!(&t, Ty::Named(n) if g.decls.iter().any(|d| d.contains(&format!("{} = {{", n))))
+            {
+                return Err("its form body is not an object".into());
+            }
             Some(if b.get("required") == Some(&Json::Bool(true)) {
                 t
             } else {
@@ -836,9 +1099,13 @@ fn operation(
         doc: doc_text,
         method: method.to_string(),
         path: path.to_string(),
+        credential,
         path_params,
         query,
+        headers,
+        cookies,
         body,
+        form,
         result,
         not_found,
     })
@@ -863,11 +1130,32 @@ fn function_text(o: &Operation) -> String {
         comment(&mut out, &o.doc, "");
     }
     let _ = writeln!(out, "# {} {}", o.method, o.path);
-    let mut params = vec!["String".to_string()];
-    params.extend(o.path_params.iter().map(Ty::spell));
-    if let Some(q) = &o.query {
-        params.push(q.clone());
+    match &o.credential {
+        Some(Credential::Bearer) => out.push_str("# auth: bearer (the token after the base URL)\n"),
+        Some(Credential::Key { place, name }) => {
+            let _ = writeln!(
+                out,
+                "# auth: api-key {} {} (the key after the base URL)",
+                place, name
+            );
+        }
+        None => {}
     }
+    let mut params = vec!["String".to_string()];
+    if o.credential.is_some() {
+        params.push("String".into());
+    }
+    let first_path = params.len();
+    params.extend(o.path_params.iter().map(Ty::spell));
+    let at = |t: &Option<String>, params: &mut Vec<String>| {
+        t.as_ref().map(|q| {
+            params.push(q.clone());
+            params.len() - 1
+        })
+    };
+    let query_at = at(&o.query, &mut params);
+    let headers_at = at(&o.headers, &mut params);
+    let cookies_at = at(&o.cookies, &mut params);
     if let Some(b) = &o.body {
         params.push(b.spell());
     }
@@ -885,15 +1173,65 @@ fn function_text(o: &Operation) -> String {
         result
     );
     let texts: Vec<String> = (0..o.path_params.len())
-        .map(|i| format!("{} | rest.param-text", arg(i + 1, n)))
+        .map(|i| format!("{} | rest.param-text", arg(first_path + i, n)))
         .collect();
-    let query = match &o.query {
-        Some(_) => format!("{} | rest.query-pairs", arg(1 + o.path_params.len(), n)),
-        None => "const []".into(),
+    let token = arg(1, n);
+    let pairs = |items: Vec<String>| match items.len() {
+        0 => "const []".to_string(),
+        1 => items.into_iter().next().unwrap(),
+        _ => format!("rest.pairs [{}]", items.join(", ")),
+    };
+    let mut query = Vec::new();
+    if let Some(i) = query_at {
+        query.push(format!("{} | rest.query-pairs", arg(i, n)));
+    }
+    let mut headers = Vec::new();
+    let mut cookies = Vec::new();
+    match &o.credential {
+        Some(Credential::Bearer) => headers.push(format!("{} | rest.bearer", token)),
+        Some(Credential::Key { place, name }) => {
+            let pair = format!(
+                "{} | curry id {} | singleton",
+                token,
+                crate::rest::fwp_string(&if place == "header" {
+                    name.to_ascii_lowercase()
+                } else {
+                    name.clone()
+                })
+            );
+            match place.as_str() {
+                "query" => query.push(pair),
+                "cookie" => cookies.push(pair),
+                _ => headers.push(pair),
+            }
+        }
+        None => {}
+    }
+    if let Some(i) = headers_at {
+        headers.push(format!("{} | rest.query-pairs", arg(i, n)));
+    }
+    if let Some(i) = cookies_at {
+        cookies.push(format!("{} | rest.query-pairs", arg(i, n)));
+    }
+    if !cookies.is_empty() {
+        let c = pairs(cookies);
+        headers.push(if c.starts_with("rest.pairs") {
+            format!("({}) | rest.cookie-header", c)
+        } else {
+            format!("{} | rest.cookie-header", c)
+        });
+    }
+    if o.form {
+        headers.push("const [(\"content-type\", \"application/x-www-form-urlencoded\")]".into());
+    }
+    let encode = if o.form {
+        "rest.form-body"
+    } else {
+        "json.write"
     };
     let body = match &o.body {
-        Some(Ty::Option(_)) => format!("{} | option.map json.write", arg(n - 1, n)),
-        Some(_) => format!("{} | json.write | Some", arg(n - 1, n)),
+        Some(Ty::Option(_)) => format!("{} | option.map {}", arg(n - 1, n), encode),
+        Some(_) => format!("{} | {} | Some", arg(n - 1, n), encode),
         None => "const None".into(),
     };
     let fetch = if o.not_found {
@@ -902,12 +1240,13 @@ fn function_text(o: &Operation) -> String {
         "rest.fetch"
     };
     let mut expr = format!(
-        "make RestRequest {{\n    method = const {},\n    url = make RestTarget {{\n        base = {},\n        path = const {},\n        params = rest.texts [{}],\n        query = {},\n    }} | rest.url,\n    body = {},\n}} | {}",
+        "make RestRequest {{\n    method = const {},\n    url = make RestTarget {{\n        base = {},\n        path = const {},\n        params = rest.texts [{}],\n        query = {},\n    }} | rest.url,\n    headers = {},\n    body = {},\n}} | {}",
         crate::rest::fwp_string(&o.method),
         arg(0, n),
         crate::rest::fwp_string(&o.path),
         texts.join(", "),
-        query,
+        pairs(query),
+        pairs(headers),
         body,
         fetch
     );

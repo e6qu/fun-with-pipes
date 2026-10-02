@@ -1,0 +1,182 @@
+# A client of `secure` 0.1.0, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
+
+User = { name: String, admin: Bool }
+
+Item = { id: I64, name: String }
+
+# the query parameters of `seen`
+SeenQuery = { limit: Option[I64] }
+
+# the header parameters of `seen`
+SeenHeaders = {
+    # json: X-Trace-Id
+    x-trace-id: Option[String],
+}
+
+# the cookie parameters of `seen`
+SeenCookies = { theme: Option[String] }
+
+# the header parameters of `hello`
+HelloHeaders = {
+    # json: X-Name
+    x-name: String,
+}
+
+# the cookie parameters of `hello`
+HelloCookies = { session: Option[String] }
+
+# Who is calling.
+# GET /me
+# auth: bearer (the token after the base URL)
+me : String -> String -> User ! {Async, Network, Error[RestError]}
+me = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/me",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = .1 | rest.bearer,
+    body = const None,
+} | rest.fetch)
+
+# A public health check.
+# GET /health
+health : String -> String ! {Async, Network, Error[RestError]}
+health = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/health",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch
+
+# Create an item: 201 with its location.
+# POST /items
+# auth: bearer (the token after the base URL)
+create : String -> String -> Item -> Item ! {Async, Network, Error[RestError]}
+create = curry (curry
+    (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/items",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | rest.bearer,
+        body = .1 | json.write | Some,
+    } | rest.fetch))
+
+# An item, or a redirect to its new id.
+# GET /items/{id}
+item : String -> I64 -> Item ! {Async, Network, Error[RestError]}
+item = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/items/{id}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch)
+
+# Delete an item: an empty reply.
+# DELETE /items/{id}
+# auth: bearer (the token after the base URL)
+delete : String -> String -> I64 -> () ! {Async, Network, Error[RestError]}
+delete = curry (curry
+    (make RestRequest {
+        method = const "DELETE",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/items/{id}",
+            params = rest.texts [.1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | rest.bearer,
+        body = const None,
+    } | rest.fetch))
+
+# Headers, a cookie and a query parameter through an options record.
+# GET /seen
+seen : String -> SeenQuery -> SeenHeaders -> SeenCookies -> String ! {Async, Network, Error[RestError]}
+seen = curry (curry
+    (curry
+        (make RestRequest {
+            method = const "GET",
+            url = make RestTarget {
+                base = .0 | .0 | .0,
+                path = const "/seen",
+                params = rest.texts [],
+                query = .0 | .0 | .1 | rest.query-pairs,
+            } | rest.url,
+            headers = rest.pairs [
+                .0 | .1 | rest.query-pairs,
+                .1 | rest.query-pairs | rest.cookie-header,
+            ],
+            body = const None,
+        } | rest.fetch)))
+
+# A required header and an optional cookie bound to parameters.
+# GET /hello
+hello : String -> HelloHeaders -> HelloCookies -> String ! {Async, Network, Error[RestError]}
+hello = curry (curry
+    (make RestRequest {
+        method = const "GET",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/hello",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = rest.pairs [
+            .0 | .1 | rest.query-pairs,
+            .1 | rest.query-pairs | rest.cookie-header,
+        ],
+        body = const None,
+    } | rest.fetch))
+
+# The request itself.
+# GET /echo-request
+echo-request : String -> String ! {Async, Network, Error[RestError]}
+echo-request = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/echo-request",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch
+
+# Too slow for its time limit.
+# GET /slow
+slow : String -> String ! {Async, Network, Error[RestError]}
+slow = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/slow",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch

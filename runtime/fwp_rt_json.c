@@ -366,6 +366,7 @@ static V fwp_p_json_encode(V v) {
 #define FWP_ADT_BOOL 1
 #define FWP_ADT_OPTION 2
 #define FWP_ADT_JSON 3
+#define FWP_ADT_UNTAGGED 4 /* `# json: untagged`: a constructor's value alone */
 #define FWP_REC_DURATION 2
 
 static int fwp_jt_is_option(const fwp_desc *d) { return d->kind == K_ADT && d->width == FWP_ADT_OPTION; }
@@ -509,6 +510,20 @@ static void fwp_jt_write(fwp_buf *b, V v, const fwp_desc *d) {
             if (nest) buf_putc(b, '[');
             fwp_jt_write(b, OBJ(v)->f[0], inner);
             if (nest) buf_putc(b, ']');
+            return;
+        }
+        if (d->width == FWP_ADT_UNTAGGED) {
+            int n = d->arity[tag];
+            if (n == 0) buf_puts(b, "null");
+            if (n == 1) fwp_jt_write(b, OBJ(v)->f[0], d->vfields[tag][0]);
+            if (n > 1) {
+                buf_putc(b, '[');
+                for (int i = 0; i < n; i++) {
+                    if (i) buf_putc(b, ',');
+                    fwp_jt_write(b, OBJ(v)->f[i], d->vfields[tag][i]);
+                }
+                buf_putc(b, ']');
+            }
             return;
         }
         if (fwp_jt_is_enum(d)) { fwp_jescape_n(b, d->names[tag], strlen(d->names[tag])); return; }
@@ -873,6 +888,26 @@ static int fwp_jt_tuple(fwp_jt *c, const fwp_jr *r, int n, const fwp_desc *const
     return 1;
 }
 
+/* an untagged variant: the first constructor whose fields read */
+static int fwp_jt_untagged(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
+    if (r->t == 0)
+        for (int t = 0; t < d->n; t++)
+            if (d->arity[t] == 0) { *out = (V)(intptr_t)t; return 1; }
+    size_t path = c->path.len, err = c->err.len;
+    for (int t = 0; t < d->n; t++) {
+        int n = d->arity[t];
+        if (n == 0) continue;
+        V *fs = (V *)fwp_alloc((size_t)n * sizeof(V));
+        int ok = n == 1 ? fwp_jt_read(c, r, d->vfields[t][0], &fs[0]) : fwp_jt_tuple(c, r, n, d->vfields[t], fs);
+        fwp_jt_pop(c, path);
+        c->err.len = err;
+        if (ok) { *out = fwp_data((uint32_t)t, (uint32_t)n, fs); return 1; }
+    }
+    char what[300];
+    snprintf(what, sizeof what, "a value of one of the variants of %s", d->name);
+    return fwp_jt_expected(c, what, r);
+}
+
 static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
     switch (d->kind) {
     case K_I8: return fwp_jt_int(c, r, K_I8, "I8", out);
@@ -1039,6 +1074,7 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             *out = fwp_some(x);
             return 1;
         }
+        if (d->width == FWP_ADT_UNTAGGED) return fwp_jt_untagged(c, r, d, out);
         if (fwp_jt_is_enum(d)) {
             int t = r->t == 3 ? fwp_jt_ctor(d, r) : -1;
             if (t < 0) return fwp_jt_expected_one_of(c, d, r);
