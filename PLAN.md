@@ -36,12 +36,19 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
 
 ## Next
 
-1. **Tooling.** `fwp fmt` (a formatter that keeps comments), `fwp lint`,
+1. **Tooling** (done). `fwp fmt` (a formatter that keeps comments), `fwp lint`,
    and `fwp lsp` (diagnostics, hover, go to definition, symbols,
    formatting, completion), with a parser that recovers from errors.
-2. **fwp in the browser.** The compiler and interpreter built for
-   WebAssembly, and a playground page that checks and runs programs
-   without a server.
+2. **fwp in the browser** (done). The compiler and interpreter build for
+   `wasm32-wasip1`; the playground in `web/` checks, formats, tests and runs
+   programs in a web worker, through a small WASI in JavaScript with an
+   in-memory file system, without a server. Programs with tasks, sockets
+   or foreign C functions are rejected there, as for the `wasm32-wasi`
+   target. See [the reference](docs/reference.md#fwp-in-the-browser) and
+   [tutorial 15](docs/tutorials/15-browser/README.md).
+3. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+   not need threads, for example with the WebAssembly stack switching
+   proposal once browsers ship it.
 
 ## Later
 

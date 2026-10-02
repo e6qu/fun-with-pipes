@@ -218,7 +218,7 @@ impl<'p> Interp<'p> {
                 "unzip" => {
                     let (mut l, mut r) = (Vec::new(), Vec::new());
                     for p in a[0].list_items() {
-                        if let Value::Record(fs) = p {
+                        if let Value::Record(fs) = &p {
                             l.push(fs[0].clone());
                             r.push(fs[1].clone());
                         }
@@ -741,7 +741,7 @@ impl<'p> Interp<'p> {
                 "map.from-list" => {
                     let mut m = BTreeMap::new();
                     for p in a[0].list_items() {
-                        if let Value::Record(fs) = p {
+                        if let Value::Record(fs) = &p {
                             m.insert(fs[0].clone(), fs[1].clone());
                         }
                     }

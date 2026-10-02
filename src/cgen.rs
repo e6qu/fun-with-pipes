@@ -1955,26 +1955,41 @@ impl Target {
     }
 }
 
+/// The first primitive of `prog` that performs an effect WebAssembly does
+/// not provide (tasks, channels and signals: `Async`; sockets and DNS:
+/// `Network`), with that effect.
+pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
+    prog.funcs.iter().find_map(|f| {
+        let Body::Prim(sym) = &f.body else {
+            return None;
+        };
+        if ["tcp.", "udp.", "dns."].iter().any(|p| sym.starts_with(p)) {
+            Some(("Network", sym.as_str()))
+        } else if ["task.", "channel.", "signal."]
+            .iter()
+            .any(|p| sym.starts_with(p))
+        {
+            Some(("Async", sym.as_str()))
+        } else {
+            None
+        }
+    })
+}
+
+/// Whether `prog` calls services (gRPC), or is one.
+pub fn uses_services(prog: &Program) -> bool {
+    prog.service.is_some() || prog.funcs.iter().any(|f| matches!(f.body, Body::Remote(_)))
+}
+
 /// Effects a target does not provide, by the primitives that perform them.
 pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     if !target.is_wasm() {
         return Ok(());
     }
-    if prog.service.is_some() || prog.funcs.iter().any(|f| matches!(f.body, Body::Remote(_))) {
+    if uses_services(prog) {
         return Err("services (gRPC calls) need the native target".into());
     }
-    for f in &prog.funcs {
-        let Body::Prim(sym) = &f.body else { continue };
-        let effect = if ["tcp.", "udp.", "dns."].iter().any(|p| sym.starts_with(p)) {
-            "Network"
-        } else if ["task.", "channel.", "signal."]
-            .iter()
-            .any(|p| sym.starts_with(p))
-        {
-            "Async"
-        } else {
-            continue;
-        };
+    if let Some((effect, sym)) = wasm_missing_effect(prog) {
         return Err(format!(
             "the WebAssembly target does not provide the `{}` effect (used by `{}`)",
             effect, sym
@@ -1992,12 +2007,17 @@ pub struct TempDir {
 
 impl TempDir {
     pub fn new(prefix: &str) -> Result<TempDir, String> {
+        #[cfg(unix)]
         use std::os::unix::fs::DirBuilderExt;
         let base = std::env::temp_dir();
         let mut last = String::new();
         for attempt in 0..16u32 {
             let path = base.join(format!("{}-{}", prefix, random_suffix(attempt)));
-            match std::fs::DirBuilder::new().mode(0o700).create(&path) {
+            #[cfg_attr(not(unix), allow(unused_mut))]
+            let mut builder = std::fs::DirBuilder::new();
+            #[cfg(unix)]
+            builder.mode(0o700);
+            match builder.create(&path) {
                 Ok(()) => return Ok(TempDir { path }),
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
                     last = e.to_string();

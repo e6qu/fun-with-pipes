@@ -21,6 +21,7 @@ checks the code shown in each README against the program.
 | 12 | [Numerics](12-numerics/README.md) | matrices, complex numbers, automatic differentiation |
 | 13 | [Tooling](13-tooling/README.md) | `fwp fmt`, `fwp lint`, the language server |
 | 14 | [Services](14-services/README.md) | one program as one executable or as gRPC services |
+| 15 | [fwp in the browser](15-browser/README.md) | `wasm32-browser`, fwp itself as WebAssembly, the playground |
 
 Start with the first, which introduces the notation the others rely on.
 After that, the tutorials stand alone. The [language

@@ -36,6 +36,8 @@ main =
 - **Many outputs.** An interpreter and native executables with identical
   output; one executable per exported function, joined by a typed pipe
   protocol; WebAssembly; fat binaries; C libraries and C interop.
+- **In the browser.** The compiler and interpreter build for WebAssembly;
+  a playground page checks, formats and runs programs without a server.
 - **One program, two deployments.** The same source builds into one
   executable or into gRPC services, one per module you name, whose calls
   to each other go over HTTP/2.
@@ -60,11 +62,20 @@ fwp fmt --check . && fwp lint examples   # formatting and lint checks
 fwp lsp                                  # the language server, for editors
 ```
 
+fwp itself also runs in the browser. The playground in `web/` checks,
+formats and runs programs with no server (needs
+`rustup target add wasm32-wasip1`):
+
+```
+scripts/build-playground.sh             # builds web/fwp.wasm
+python3 -m http.server -d web 8000      # open http://localhost:8000
+```
+
 ## Documentation
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | fourteen tutorials, from pipes to tooling and gRPC services |
+| [docs/tutorials](docs/tutorials/README.md) | fifteen tutorials, from pipes to gRPC services and fwp in the browser |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
@@ -80,12 +91,14 @@ src/        compiler: lexer, parser, type checker, monomorphizer, optimizer,
             interpreter, C code generator, protocol, FFI, scheduler;
             formatter, linter and language server
 runtime/    the C runtime embedded in native programs (and WASM helpers)
+web/        the playground: fwp.wasm in a page, with a small WASI in JavaScript
+scripts/    build-playground.sh
 lib/        the standard library, written in fwp (with its tests)
 examples/   a word counter, a JSON API server, executable tools, a shop
             split into services
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
-            FFI, WebAssembly, fat-binary, formatter, language server and
-            services tests
+            FFI, WebAssembly, fat-binary, formatter, language server,
+            services and browser (fwp.wasm) tests
 docs/       documentation and tutorials
 ```
 

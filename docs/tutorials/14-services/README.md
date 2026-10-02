@@ -186,4 +186,4 @@ splits into two services, one of which calls the other.
 
 ---
 
-Previous: [Tooling](../13-tooling/README.md) · [All tutorials](../README.md)
+Previous: [Tooling](../13-tooling/README.md) · Next: [fwp in the browser](../15-browser/README.md) · [All tutorials](../README.md)

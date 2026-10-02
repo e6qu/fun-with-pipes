@@ -40,6 +40,52 @@ pub enum Value {
     Native(Rc<crate::sched::Native>),
 }
 
+/// Dropping a value frees what only it refers to. A long list is a chain
+/// of `Cons` cells, so the default recursive drop would use stack in
+/// proportion to its length; this drop moves the children of uniquely
+/// owned cells to a work list instead. (Native fwp has a deep stack, but
+/// the WebAssembly build is limited by the engine's.)
+impl Drop for Value {
+    fn drop(&mut self) {
+        let mut work = Vec::new();
+        take_children(self, &mut work);
+        while let Some(mut v) = work.pop() {
+            take_children(&mut v, &mut work);
+        }
+    }
+}
+
+/// Move the children of `v` that own other values to `work`, if `v` is
+/// the only reference to them.
+fn take_children(v: &mut Value, work: &mut Vec<Value>) {
+    fn owns(v: &Value) -> bool {
+        matches!(
+            v,
+            Value::Data(..) | Value::Record(_) | Value::Closure(_) | Value::Array(_)
+        )
+    }
+    let fields: &mut [Value] = match v {
+        Value::Data(_, fs) | Value::Record(fs) => match Rc::get_mut(fs) {
+            Some(fs) => fs,
+            None => return,
+        },
+        Value::Closure(c) => match Rc::get_mut(c) {
+            Some(c) => &mut c.args,
+            None => return,
+        },
+        Value::Array(a) => match Rc::get_mut(a) {
+            Some(a) => a,
+            None => return,
+        },
+        _ => return,
+    };
+    for f in fields {
+        if owns(f) {
+            work.push(std::mem::replace(f, Value::I8(0)));
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Closure {
     pub func: FuncId,

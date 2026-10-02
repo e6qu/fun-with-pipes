@@ -52,7 +52,34 @@ usage:
                                  silences a rule in it
   fwp lsp                        run the language server on stdin/stdout
   fwp help                       show this message
+
+A file argument of `-` reads the program from standard input (run, test,
+check, exec, fmt, lint).
 ";
+
+/// The WebAssembly build of fwp (`--target wasm32-wasip1`) has no C
+/// compiler, processes, threads, sockets or `dlopen`.
+const IN_WASM: bool = cfg!(target_family = "wasm");
+
+/// Report a command or option that the WebAssembly build of fwp lacks.
+fn not_in_wasm(what: &str) -> ExitCode {
+    eprintln!(
+        "fwp: {} is not available in the WebAssembly build of fwp",
+        what
+    );
+    ExitCode::from(2)
+}
+
+/// In the WebAssembly build: why the interpreter cannot run `prog`
+/// (reported like a compile error, before it starts).
+fn host_unsupported(cmd: &str, prog: &fwp::ir::Program) -> Option<i32> {
+    if !IN_WASM {
+        return None;
+    }
+    let why = fwp::driver::wasm_host_unsupported(prog)?;
+    eprintln!("fwp {}: {}", cmd, why);
+    Some(1)
+}
 
 /// Remove `--link <item>` options (C libraries, sources and objects for
 /// foreign functions) from the arguments before the program file.
@@ -63,7 +90,7 @@ fn take_links(args: &mut Vec<String>) {
         if args[i] == "--link" && i + 1 < args.len() {
             links.push(args.remove(i + 1));
             args.remove(i);
-        } else if args[i].ends_with(".fwp") {
+        } else if args[i].ends_with(".fwp") || args[i] == "-" {
             break;
         } else {
             i += 1;
@@ -83,12 +110,16 @@ fn main() -> ExitCode {
         take_links(&mut rest);
         args.extend(rest);
     }
+    if IN_WASM && !fwp::ffi::links().is_empty() {
+        return not_in_wasm("`--link` (C code for foreign functions)");
+    }
     match args.first().map(String::as_str) {
         Some("check") => check(&args[1..]),
         Some("run") => run(&args[1..]),
         Some("test") => test(&args[1..]),
         Some("build") => build(&args[1..]),
         Some("exec") => exec(&args[1..]),
+        Some("pipe") if IN_WASM => not_in_wasm("`fwp pipe` (it starts processes)"),
         Some("pipe") => pipe(&args[1..]),
         Some("fmt") => fmt(&args[1..]),
         Some("lint") => lint(&args[1..]),
@@ -98,6 +129,7 @@ fn main() -> ExitCode {
             });
             ExitCode::from(code as u8)
         }
+        Some("serve") if IN_WASM => not_in_wasm("`fwp serve` (it needs sockets)"),
         Some("serve") => serve(&args[1..]),
         Some("proto") => proto(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
@@ -118,7 +150,8 @@ fn check(args: &[String]) -> ExitCode {
         return ExitCode::from(2);
     };
     if !parse_only {
-        return match fwp::driver::check_file(std::path::Path::new(path)) {
+        let path = path.clone();
+        return fwp::driver::with_big_stack(move || match fwp::driver::check_input(&path) {
             Ok(c) => {
                 eprint!("{}", c.render_warnings());
                 print!("{}", fwp::driver::signatures(&c));
@@ -128,17 +161,17 @@ fn check(args: &[String]) -> ExitCode {
                 eprint!("{}", f.rendered);
                 ExitCode::from(1)
             }
-        };
+        });
     }
-    let text = match std::fs::read_to_string(path) {
+    let (path, text) = match read_input(path) {
         Ok(t) => t,
         Err(e) => {
-            eprintln!("fwp: cannot read {}: {}", path, e);
+            eprintln!("fwp: {}", e);
             return ExitCode::from(2);
         }
     };
     let mut sm = SourceMap::default();
-    let file = sm.add(path.clone(), text.clone());
+    let file = sm.add(path, text.clone());
     let mut next_id = 0;
     match parse_module(&text, file, &mut next_id) {
         Ok(m) => {
@@ -173,7 +206,7 @@ fn take_services(args: &mut Vec<String>) -> Vec<(String, String)> {
         } else if let Some(s) = args[i].strip_prefix("--service=") {
             out.push(service_spec(s));
             args.remove(i);
-        } else if args[i].ends_with(".fwp") {
+        } else if args[i].ends_with(".fwp") || args[i] == "-" {
             break;
         } else {
             i += 1;
@@ -195,18 +228,20 @@ fn run(args: &[String]) -> ExitCode {
         remote,
         ..Default::default()
     };
-    let code = fwp::driver::with_big_stack(move || {
-        match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
+    let code =
+        fwp::driver::with_big_stack(move || match fwp::driver::compile_input(&path, roots) {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
+                if let Some(code) = host_unsupported("run", &prog) {
+                    return code;
+                }
                 fwp::interp::run_main(&prog, prog_args).exit_code
             }
             Err(f) => {
                 eprint!("{}", f.rendered);
                 1
             }
-        }
-    });
+        });
     ExitCode::from((code & 0xff) as u8)
 }
 
@@ -218,6 +253,9 @@ fn test(args: &[String]) -> ExitCode {
         eprintln!("fwp test: missing file (or --std)");
         return ExitCode::from(2);
     }
+    if native && IN_WASM {
+        return not_in_wasm("`fwp test --native` (it needs a C compiler)");
+    }
     let roots = fwp::mono::Roots {
         tests: true,
         std_tests,
@@ -225,7 +263,7 @@ fn test(args: &[String]) -> ExitCode {
     };
     let code = fwp::driver::with_big_stack(move || {
         let compiled = match &path {
-            Some(p) => fwp::driver::compile_file(std::path::Path::new(p), roots),
+            Some(p) => fwp::driver::compile_input(p, roots),
             None => fwp::driver::compile_source("<empty>", "", roots),
         };
         match compiled {
@@ -262,6 +300,9 @@ fn test(args: &[String]) -> ExitCode {
             }
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
+                if let Some(code) = host_unsupported("test", &prog) {
+                    return code;
+                }
                 let mut out = std::io::stdout();
                 let (pass, fail) = fwp::driver::run_tests(&prog, &mut out);
                 println!("\n{} passed, {} failed", pass, fail);
@@ -341,6 +382,11 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: missing file");
         return ExitCode::from(2);
     };
+    if IN_WASM && !emit_c {
+        return not_in_wasm(
+            "compiling with `fwp build` (it needs a C compiler; `--emit-c` writes the C source)",
+        );
+    }
     let src = std::path::PathBuf::from(&path);
     if !services.is_empty() {
         if func.is_some() || lib.is_some() || target.is_wasm() {
@@ -681,10 +727,13 @@ fn exec(args: &[String]) -> ExitCode {
         exports: true,
         ..Default::default()
     };
-    let code = fwp::driver::with_big_stack(move || {
-        match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
+    let code =
+        fwp::driver::with_big_stack(move || match fwp::driver::compile_input(&path, roots) {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
+                if let Some(code) = host_unsupported("exec", &prog) {
+                    return code;
+                }
                 match prog.exports.iter().find(|(n, _)| *n == name) {
                     Some((_, fid)) => fwp::exec::exec(&prog, *fid, &name, &fargs),
                     None => {
@@ -707,8 +756,7 @@ fn exec(args: &[String]) -> ExitCode {
                 eprint!("{}", f.rendered);
                 1
             }
-        }
-    });
+        });
     ExitCode::from((code & 0xff) as u8)
 }
 
@@ -752,7 +800,7 @@ fn source_files(args: &[String]) -> Vec<std::path::PathBuf> {
     };
     for a in paths {
         let p = std::path::PathBuf::from(a);
-        if p.is_dir() {
+        if a != "-" && p.is_dir() {
             walk(&p, &mut out);
         } else {
             out.push(p);
@@ -761,15 +809,27 @@ fn source_files(args: &[String]) -> Vec<std::path::PathBuf> {
     out
 }
 
+/// The display name and text of a source file; `-` is standard input.
+fn read_input(path: &str) -> Result<(String, String), String> {
+    if path == "-" {
+        return fwp::driver::read_stdin()
+            .map(|t| (fwp::driver::STDIN_NAME.to_string(), t))
+            .map_err(|e| format!("cannot read standard input: {}", e));
+    }
+    std::fs::read_to_string(path)
+        .map(|t| (path.to_string(), t))
+        .map_err(|e| format!("cannot read {}: {}", path, e))
+}
+
 fn fmt(args: &[String]) -> ExitCode {
     let check = args.iter().any(|a| a == "--check");
     let paths: Vec<String> = args.iter().filter(|a| *a != "--check").cloned().collect();
     let mut code = ExitCode::SUCCESS;
     for path in source_files(&paths) {
-        let text = match std::fs::read_to_string(&path) {
+        let (name, text) = match read_input(&path.to_string_lossy()) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("fwp fmt: cannot read {}: {}", path.display(), e);
+                eprintln!("fwp fmt: {}", e);
                 code = ExitCode::from(2);
                 continue;
             }
@@ -778,17 +838,22 @@ fn fmt(args: &[String]) -> ExitCode {
             Ok(f) => f,
             Err(d) => {
                 let mut sm = SourceMap::default();
-                sm.add(path.display().to_string(), text);
+                sm.add(name, text);
                 eprint!("{}", d.render(&sm));
                 code = ExitCode::from(1);
                 continue;
             }
         };
+        if path.as_os_str() == "-" && !check {
+            // standard input: the formatted text goes to standard output
+            print!("{}", formatted);
+            continue;
+        }
         if formatted == text {
             continue;
         }
         if check {
-            println!("{}", path.display());
+            println!("{}", name);
             code = ExitCode::from(1);
         } else if let Err(e) = std::fs::write(&path, formatted) {
             eprintln!("fwp fmt: cannot write {}: {}", path.display(), e);
@@ -801,16 +866,16 @@ fn fmt(args: &[String]) -> ExitCode {
 fn lint(args: &[String]) -> ExitCode {
     let mut code = ExitCode::SUCCESS;
     for path in source_files(args) {
-        let text = match std::fs::read_to_string(&path) {
+        let (name, text) = match read_input(&path.to_string_lossy()) {
             Ok(t) => t,
             Err(e) => {
-                eprintln!("fwp lint: cannot read {}: {}", path.display(), e);
+                eprintln!("fwp lint: {}", e);
                 code = ExitCode::from(2);
                 continue;
             }
         };
         let mut sm = SourceMap::default();
-        let file = sm.add(path.display().to_string(), text.clone());
+        let file = sm.add(name, text.clone());
         let diags = match fwp::lint::lint_source(&text, file) {
             Ok(ws) => ws.into_iter().map(|w| w.diag).collect(),
             Err(errors) => errors,

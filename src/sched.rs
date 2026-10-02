@@ -188,8 +188,10 @@ impl Native {
 /// Process-wide: a shutdown signal (SIGINT/SIGTERM) arrived, or the
 /// program requested a graceful shutdown.
 static SHUTDOWN: AtomicBool = AtomicBool::new(false);
+#[cfg(not(target_family = "wasm"))]
 static SIGNALS: std::sync::Once = std::sync::Once::new();
 
+#[cfg(not(target_family = "wasm"))]
 extern "C" fn on_signal(_: i32) {
     SHUTDOWN.store(true, AO::SeqCst);
 }
@@ -208,6 +210,7 @@ type NFds = std::ffi::c_uint;
 
 extern "C" {
     fn poll(fds: *mut PollFd, n: NFds, timeout: i32) -> i32;
+    #[cfg(not(target_family = "wasm"))]
     fn signal(sig: i32, handler: extern "C" fn(i32)) -> usize;
 }
 
@@ -401,6 +404,14 @@ impl<'p> Interp<'p> {
     }
 
     fn spawn(&mut self, thunk: Value, deadline: Option<Instant>) -> Arc<TaskShared> {
+        if cfg!(target_family = "wasm") {
+            // No threads. `fwp run` rejects programs with tasks before they
+            // start (`driver::wasm_host_unsupported`); this is the last
+            // line of defense (a task started by `comptime` code).
+            let _ = self.out.flush();
+            eprintln!("fwp: trap: tasks are not available in the WebAssembly build of fwp");
+            std::process::exit(101);
+        }
         let task = TaskShared::new();
         *task.deadline.lock().unwrap() = deadline;
         if self.task.cancelled.load(AO::SeqCst) {
@@ -889,6 +900,8 @@ impl<'p> Interp<'p> {
                 }
                 // ----- signals
                 "signal.shutdown-requested" => {
+                    // WebAssembly has no signals: only a requested shutdown
+                    #[cfg(not(target_family = "wasm"))]
                     SIGNALS.call_once(|| unsafe {
                         signal(2, on_signal);
                         signal(15, on_signal);
