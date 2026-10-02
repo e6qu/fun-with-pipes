@@ -13,25 +13,56 @@ health = const (json.object [("status", Json.Str "ok")]) | json.response
 
 # GET /items/:id
 item : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-item = http.param "id" | option.and-then parse-int | or-fail { status = 404, message = "no such item" } | item-json | json.response
+item =
+    http.param "id"
+    | option.and-then parse-int
+    | or-fail { status = 404, message = "no such item" }
+    | item-json
+    | json.response
 
 item-json : I64 -> Json
-item-json = both (json.int | curry id "id") (format "item {}" | Json.Str | curry id "name") | fork Cons .0 (.1 | singleton) | json.object
+item-json =
+    both
+        (json.int | curry id "id")
+        (format "item {}" | Json.Str | curry id "name")
+    | fork Cons .0 (.1 | singleton)
+    | json.object
 
 # POST /items {"name": ...} (needs `Authorization: Bearer secret`)
 create : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-create = auth.bearer "secret" | http.json-body | json.get "name" | option.and-then json.as-string | or-fail { status = 422, message = "name is required" } | Json.Str | curry id "name" | singleton | Cons ("id", json.int 1) | json.object | http.json 201
+create =
+    auth.bearer "secret"
+    | http.json-body
+    | json.get "name"
+    | option.and-then json.as-string
+    | or-fail { status = 422, message = "name is required" }
+    | Json.Str
+    | curry id "name"
+    | singleton
+    | Cons ("id", json.int 1)
+    | json.object
+    | http.json 201
 
 # GET /slow?ms=N
 slow : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-slow = http.query-param "ms" | option.and-then parse-int | option.unwrap-or 100 | tap (duration.from-millis | task.sleep) | format "slept {} ms" | http.text 200
+slow =
+    http.query-param "ms"
+    | option.and-then parse-int
+    | option.unwrap-or 100
+    | tap (duration.from-millis | task.sleep)
+    | format "slept {} ms"
+    | http.text 200
 
 # GET /stream: five lines, one chunk each
 stream : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 stream = const count-to-five | http.stream 200 "text/plain"
 
 count-to-five : Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
-count-to-five = channel.send | compose (format "line {}\n" | string.to-bytes) | flip compose ignore | flip each (range 1 6)
+count-to-five =
+    channel.send
+    | compose (format "line {}\n" | string.to-bytes)
+    | flip compose ignore
+    | flip each (range 1 6)
 
 # GET /metrics (Prometheus text format)
 metrics : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
@@ -53,4 +84,12 @@ handler = http.count | timeout 5s | routes
 config : ServerConfig
 config = "unused" | http.config | with { shutdown-grace = 3s }
 
-main = "FWP_ADDR" | env.get | option.unwrap-or "127.0.0.1:8080" | tcp.listen | tap (tcp.local-addr | format "listening on http://{}" | eprint) | flip http.serve-on (config, handler) | const "stopped" | eprint
+main =
+    "FWP_ADDR"
+    | env.get
+    | option.unwrap-or "127.0.0.1:8080"
+    | tcp.listen
+    | tap (tcp.local-addr | format "listening on http://{}" | eprint)
+    | flip http.serve-on (config, handler)
+    | const "stopped"
+    | eprint

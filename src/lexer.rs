@@ -212,9 +212,23 @@ struct Lexer<'a> {
     file: u32,
     toks: Vec<Token>,
     line_has_token: bool,
+    comments: Vec<Comment>,
+}
+
+/// A `#` comment: where it starts and its text (including the `#`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Comment {
+    pub line: u32,
+    pub col: u32,
+    pub text: String,
 }
 
 pub fn lex(text: &str, file: u32) -> DResult<Vec<Token>> {
+    lex_with_comments(text, file).map(|(t, _)| t)
+}
+
+/// Tokens and the comments between them (for tools such as the formatter).
+pub fn lex_with_comments(text: &str, file: u32) -> DResult<(Vec<Token>, Vec<Comment>)> {
     let mut lx = Lexer {
         src: text.as_bytes(),
         text,
@@ -224,9 +238,10 @@ pub fn lex(text: &str, file: u32) -> DResult<Vec<Token>> {
         file,
         toks: Vec::new(),
         line_has_token: false,
+        comments: Vec::new(),
     };
     lx.run()?;
-    Ok(lx.toks)
+    Ok((lx.toks, lx.comments))
 }
 
 fn is_ident_start(c: u8) -> bool {
@@ -314,9 +329,12 @@ impl<'a> Lexer<'a> {
                 continue;
             }
             if c == b'#' {
+                let (line, col, start) = (self.line, self.col, self.pos);
                 while self.peek() != b'\n' && self.peek() != 0 {
                     self.bump();
                 }
+                let text = self.text[start..self.pos].trim_end().to_string();
+                self.comments.push(Comment { line, col, text });
                 continue;
             }
             let (line, col, start) = (self.line, self.col, self.pos);

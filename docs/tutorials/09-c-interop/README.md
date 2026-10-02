@@ -79,10 +79,15 @@ write-at : Ptr[I32] -> (I64, I32) -> () ! {Unsafe}
 write-at = curry (fork ptr.write (.1 | .1) (fork ptr.at (.1 | .0) .0))
 
 sort-buffer : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
-sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize) | uncurry qsort | apply 4usize | apply compare) | fork read-all .0 .1)
+sort-buffer = curry (tap (both .1 (.0 | int.convert | option.unwrap-or 0usize)
+        | uncurry qsort
+        | apply 4usize
+        | apply compare)
+    | fork read-all .0 .1)
 
 read-all : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
-read-all = curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
+read-all =
+    curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
 
 main = [
     "hello" | strlen | echo,

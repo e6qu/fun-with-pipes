@@ -6,10 +6,17 @@ squares = comptime (range 0 10 | map (fork mul id id))
 
 # Even functions can be built at compile time: a dispatch table.
 commands : Map[String, String -> String]
-commands = comptime ([("shout", upper), ("reverse", string.reverse), ("size", string.length | show)] | map.from-list)
+commands = comptime ([
+    ("shout", upper),
+    ("reverse", string.reverse),
+    ("size", string.length | show),
+] | map.from-list)
 
 run : String -> String -> String
-run = curry (fork apply .1 (.0 | flip map.get commands | option.unwrap-or (const "unknown command")))
+run = curry (fork
+    apply
+    .1
+    (.0 | flip map.get commands | option.unwrap-or (const "unknown command")))
 
 # `type[T]` describes a type; here it becomes a list of field names.
 Order = { id: I64, item: String, quantity: U32 }

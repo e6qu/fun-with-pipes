@@ -49,11 +49,22 @@ so that it can call itself with the HTTP client and then stop.
 # calls it with the built-in client, and shuts it down again.
 
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-hello = http.param "name" | option.unwrap-or "world" | format "hello, {}" | http.text 200
+hello =
+    http.param "name"
+    | option.unwrap-or "world"
+    | format "hello, {}"
+    | http.text 200
 
 # POST /sum with a JSON array of numbers
 sum-numbers : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-sum-numbers = http.json-body | json.as-array | or-fail { status = 400, message = "expected an array" } | filter-map json.as-number | sum | Json.Num | json.response
+sum-numbers =
+    http.json-body
+    | json.as-array
+    | or-fail { status = 400, message = "expected an array" }
+    | filter-map json.as-number
+    | sum
+    | Json.Num
+    | json.response
 
 admin : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 admin = auth.bearer "secret" | const "welcome" | http.text 200
@@ -82,22 +93,34 @@ calls = [
 ]
 
 call : (String, (String, String, String, List[(String, String)])) -> String ! {Async, Network}
-call = make ClientRequest {
-    method = .1 | .0,
-    url = fork concat (.1 | .1) .0,
-    body = .1 | .2 | string.to-bytes,
-    headers = .1 | .3,
-} | attempt http.send | match
-    Ok _ -> both .status (.body | string.from-bytes | option.unwrap-or "") | format "{} {}"
-    Err _ -> .message
+call =
+    make ClientRequest {
+        method = .1 | .0,
+        url = fork concat (.1 | .1) .0,
+        body = .1 | .2 | string.to-bytes,
+        headers = .1 | .3,
+    }
+    | attempt http.send
+    | match
+        Ok _ ->
+            both .status (.body | string.from-bytes | option.unwrap-or "")
+            | format "{} {}"
+        Err _ -> .message
 
 run-calls : String -> () ! {Async, IO, Network}
 run-calls = format "http://{}" | curry id | flip map calls | each (call | print)
 
-main = "127.0.0.1:0" | tcp.listen
-    | both (both id (const (http.config "unused", handler)) | spawn-with (uncurry http.serve-on)) (tcp.local-addr | run-calls)
+main =
+    "127.0.0.1:0"
+    | tcp.listen
+    | both
+        (both id (const (http.config "unused", handler))
+            | spawn-with (uncurry http.serve-on))
+        (tcp.local-addr | run-calls)
     | tap (const () | signal.request-shutdown)
-    | .0 | task.await | ignore
+    | .0
+    | task.await
+    | ignore
 ```
 
 Run it with `fwp run docs/tutorials/08-http-server/main.fwp`, or compile it with

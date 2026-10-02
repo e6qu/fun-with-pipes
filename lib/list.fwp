@@ -101,7 +101,8 @@ test "filter" = [1, 2, 3, 4] | filter (rem 2 | eq 0) | eq [2, 4]
 test "fold" = [1, 2, 3] | fold (flip sub) 10 | eq 4
 test "fold-right" = ["a", "b", "c"] | fold-right concat "" | eq "cba"
 test "sort" = [3, 1, 2] | sort | eq [1, 2, 3]
-test "sort-by" = ["ccc", "a", "bb"] | sort-by string.length | eq ["a", "bb", "ccc"]
+test "sort-by" =
+    ["ccc", "a", "bb"] | sort-by string.length | eq ["a", "bb", "ccc"]
 test "length" = [1, 2, 3] | length | eq 3
 test "reverse" = [1, 2, 3] | reverse | eq [3, 2, 1]
 test "append" = [1, 2] | append [3] | eq [1, 2, 3]

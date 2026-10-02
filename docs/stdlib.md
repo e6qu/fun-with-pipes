@@ -957,7 +957,13 @@ http.chunk-frame : Bytes -> Bytes
 http.head-bytes : Out -> Bytes
 http.head-parts : List[Out -> String]
 http.framing : Body -> String
-ClientRequest = { method: String, url: String, headers: List[(String, String)], body: Bytes }
+
+ClientRequest = {
+    method: String,
+    url: String,
+    headers: List[(String, String)],
+    body: Bytes,
+}
 ClientResponse = { status: I64, headers: List[(String, String)], body: Bytes }
 http.get : String -> ClientResponse ! {Async, Network, Error[IoError]}
 http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}

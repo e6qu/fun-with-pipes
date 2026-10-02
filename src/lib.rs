@@ -13,6 +13,7 @@ pub mod exec;
 pub mod exhaust;
 pub mod ffi;
 pub mod ffi_interp;
+pub mod fmt;
 pub mod infer;
 pub mod interp;
 pub mod ir;

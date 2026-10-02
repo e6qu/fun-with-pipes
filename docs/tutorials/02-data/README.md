@@ -69,7 +69,11 @@ shift-right = update { x = add 1.0 }
 area : Shape -> F64
 area = match
     Circle _ _ -> const (fork mul id id | mul 3.14159)
-    Rect _ _ -> curry (both (fork sub (.0 | .x) (.1 | .x)) (fork sub (.0 | .y) (.1 | .y)) | uncurry mul | abs)
+    Rect _ _ -> curry (both
+            (fork sub (.0 | .x) (.1 | .x))
+            (fork sub (.0 | .y) (.1 | .y))
+        | uncurry mul
+        | abs)
 
 origin : Point
 origin = { x = 0.0, y = 0.0 }
