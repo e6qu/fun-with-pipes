@@ -1,0 +1,2 @@
+foreign "fwp" write-line : File -> String -> () ! {FileIO}
+writer = make { write = write-line }

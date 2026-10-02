@@ -1,0 +1,26 @@
+div-or-fail : I64 -> I64 -> I64 ! {Error[String]}
+div-or-fail = curry (match
+    (0, _) -> const (fail "division by zero")
+    _ -> uncurry div)
+
+# `attempt` handles Error[String], so the result is pure.
+safe-div = div-or-fail | attempt
+
+halve = safe-div 2
+
+# `try` turns a Result back into the Error effect: monadic bind in a pipe.
+unwrap-all = map try
+
+first-or-fail = match
+    Cons -> const
+    Nil -> fail "empty list"
+
+count-up = run-state 0 (const (add 1) | modify)
+
+roll = random.f64 | mul 6.0
+
+shout-file = file.read | upper | print
+
+copy-upper = flip file.with (file.read-all | first upper | uncurry file.write | curry id ())
+
+main = 3 | halve | show | print

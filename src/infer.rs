@@ -56,7 +56,16 @@ pub struct Infer<'a> {
     pub(crate) wanted: Vec<(Pred, Span)>,
     /// Unsuffixed integer literals, checked against their final type.
     pub(crate) int_lits: Vec<(Span, Type, bool, u128)>,
+    /// Effects performed while evaluating each binding's body.
+    ctxs: Vec<(String, Row, Span)>,
+    /// Effects performed by `comptime` expressions.
+    comptimes: Vec<(Row, Span)>,
+    /// Applications whose argument is captured if the result is a function.
+    captures: Vec<(Span, Type, Type)>,
 }
+
+/// Effects permitted at compile time.
+pub const COMPTIME_EFFECTS: &[&str] = &["IO", "FileIO", "Alloc", "Error"];
 
 type IResult<T> = Result<T, Diagnostic>;
 
@@ -75,6 +84,9 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             deferred: Vec::new(),
             wanted: Vec::new(),
             int_lits: Vec::new(),
+            ctxs: Vec::new(),
+            comptimes: Vec::new(),
+            captures: Vec::new(),
         };
         inf.check_group(&group);
     }
@@ -330,6 +342,9 @@ impl<'a> Infer<'a> {
         self.group.clear();
         self.deferred.clear();
         self.int_lits.clear();
+        self.ctxs.clear();
+        self.comptimes.clear();
+        self.captures.clear();
         for &i in group {
             let b = &self.env.bindings[i];
             if !b.annotated {
@@ -400,6 +415,12 @@ impl<'a> Infer<'a> {
                 failed = true;
             }
         }
+        if !failed {
+            if let Err(d) = self.check_effects(group) {
+                self.env.errors.push(d);
+                failed = true;
+            }
+        }
         self.level = 0;
         for &i in group {
             let b = self.env.bindings[i].clone();
@@ -424,6 +445,109 @@ impl<'a> Infer<'a> {
                 g.scheme = Some(scheme);
             }
         }
+    }
+
+    /// Effect rules: definitions are pure (except `main` and tests), only
+    /// the final arrow of a binding may be effectful, `comptime` code is
+    /// capability-restricted, and resources are not captured in closures.
+    fn check_effects(&mut self, group: &[usize]) -> IResult<()> {
+        for (name, ctx, span) in std::mem::take(&mut self.ctxs) {
+            let labels = self.effect_labels(&ctx);
+            let is_test = name.contains("::test#");
+            if name == "main::main" {
+                if labels.iter().any(|l| l == "State") {
+                    return Err(Diagnostic::error(
+                        span,
+                        "`main` performs the `State` effect without a handler",
+                    )
+                    .with_note("wrap the stateful part with `run-state`"));
+                }
+            } else if !is_test && !labels.is_empty() {
+                return Err(Diagnostic::error(
+                    span,
+                    format!(
+                        "`{}` performs effects ({}) while being defined",
+                        display_name(&name),
+                        labels.join(", ")
+                    ),
+                )
+                .with_note(
+                    "effects may only happen when a function is called, or in `main`; \
+                     make this a function (for example by composing with `|`)",
+                ));
+            }
+        }
+        for (row, span) in std::mem::take(&mut self.comptimes) {
+            for l in self.effect_labels(&row) {
+                if !COMPTIME_EFFECTS.contains(&l.as_str()) {
+                    return Err(Diagnostic::error(
+                        span,
+                        format!("`comptime` code may not perform the `{}` effect", l),
+                    )
+                    .with_note(format!(
+                        "compile-time effects are limited to {}",
+                        COMPTIME_EFFECTS.join(", ")
+                    )));
+                }
+            }
+        }
+        for &i in group {
+            let b = &self.env.bindings[i];
+            let t = match &self.env.globals[&b.name].scheme {
+                Some(s) if b.annotated => s.ty.clone(),
+                _ => self.group.get(&b.name).cloned().unwrap_or(Type::unit()),
+            };
+            let mut t = self.env.table.resolve(&t);
+            while let Type::Fun(_, r, e) = t.clone() {
+                let r = self.env.table.resolve(&r);
+                if matches!(r, Type::Fun(..)) {
+                    let labels = self.effect_labels(&e);
+                    if !labels.is_empty() {
+                        return Err(Diagnostic::error(
+                            b.span,
+                            format!(
+                                "`{}` performs effects ({}) before receiving all of its arguments",
+                                display_name(&b.name),
+                                labels.join(", ")
+                            ),
+                        )
+                        .with_note("effects may only occur on the final arrow of a function"));
+                    }
+                }
+                t = r;
+            }
+        }
+        for (span, arg, result) in std::mem::take(&mut self.captures) {
+            if matches!(self.env.table.resolve(&result), Type::Fun(..)) {
+                let p = Pred {
+                    trait_name: "std::Dup".into(),
+                    args: vec![arg.clone()],
+                };
+                if self.solve(vec![(p, span)], &[]).is_err() {
+                    return Err(Diagnostic::error(
+                        span,
+                        format!(
+                            "a resource of type `{}` would be captured by a partial application",
+                            self.show(&arg)
+                        ),
+                    )
+                    .with_note(
+                        "resources may be used at most once; pass them as the last argument",
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn effect_labels(&self, r: &Row) -> Vec<String> {
+        self.env
+            .table
+            .flatten_row(r)
+            .fields
+            .iter()
+            .map(|(l, _)| l.clone())
+            .collect()
     }
 
     fn generalize(&mut self, t: &Type, residual: &[(Pred, Span)]) -> Scheme {
@@ -459,6 +583,7 @@ impl<'a> Infer<'a> {
 
     fn check_binding(&mut self, b: &BindingInfo) -> IResult<Type> {
         let ctx = self.fresh_eff();
+        self.ctxs.push((b.name.clone(), ctx.clone(), b.body.span));
         let t = self.infer(&b.body, &ctx)?;
         let expected = if b.annotated {
             self.env.globals[&b.name]
@@ -521,6 +646,7 @@ impl<'a> Infer<'a> {
         ctx: &Row,
     ) -> IResult<()> {
         self.out.pipe_modes.insert(node, PipeMode::Apply);
+        self.captures.push((span, lhs.clone(), result.clone()));
         let rr = self.env.table.resolve(rhs);
         if let Type::Fun(param, _, _) = &rr {
             let param = (**param).clone();
@@ -555,6 +681,7 @@ impl<'a> Infer<'a> {
             unreachable!()
         };
         let c = self.fresh();
+        self.captures.push((span, (*b).clone(), c.clone()));
         let g = Type::fun((*b).clone(), c.clone(), e.clone());
         match self.env.table.resolve(rhs) {
             Type::Fun(..) | Type::Var(_) | Type::App(..) => {}
@@ -757,6 +884,7 @@ impl<'a> Infer<'a> {
                             return Err(Diagnostic::error(arg.span, what));
                         }
                     }
+                    self.captures.push((arg.span, ta.clone(), r.clone()));
                     let want = Type::fun(ta, r.clone(), ctx.clone());
                     self.unify(e.span, &want, &tf, "application")?;
                     tf = r;
@@ -835,6 +963,7 @@ impl<'a> Infer<'a> {
                     let out = self.fresh();
                     let want = Type::fun(input.clone(), out.clone(), eff.clone());
                     self.unify(x.span, &want, &tf, &format!("field `{}` of `make`", n))?;
+                    self.captures.push((x.span, input.clone(), out.clone()));
                     fs.push((n.clone(), out));
                 }
                 if fields.len() > 1 {
@@ -880,6 +1009,7 @@ impl<'a> Infer<'a> {
             ExprKind::Match(arms) => self.infer_match(e, arms),
             ExprKind::Comptime(x) => {
                 let cctx = self.fresh_eff();
+                self.comptimes.push((cctx.clone(), e.span));
                 self.infer(x, &cctx)
             }
             ExprKind::Quote(_) => Ok(Type::con("std::Syntax")),

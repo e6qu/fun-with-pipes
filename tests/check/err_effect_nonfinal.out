@@ -1,0 +1,4 @@
+check/err_effect_nonfinal.fwp:3:1: error: `noisy` performs effects (IO) before receiving all of its arguments
+3 | noisy = match
+  | ^^^^^
+  note: effects may only occur on the final arrow of a function
