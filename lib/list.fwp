@@ -65,7 +65,8 @@ contains = index-of | flip compose option.is-some
 # (accepted, rejected), each in the original order; the predicate runs
 # once per element
 partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
-partition = flip both id | map | flip compose (fold-right list.partition-step ([], []))
+partition =
+    flip both id | map | flip compose (fold-right list.partition-step ([], []))
 
 list.partition-step : (Bool, a) -> (List[a], List[a]) -> (List[a], List[a])
 list.partition-step = curry (match
@@ -114,7 +115,8 @@ test "drop-while" = [1, 2, 5, 1] | drop-while (lt 3) | eq [5, 1]
 test "zip" = [1, 2, 3] | zip ["a", "b"] | eq [(1, "a"), (2, "b")]
 test "zip-with" = [1, 2] | zip-with add [10, 20] | eq [11, 22]
 test "zip-with order" = [10, 20] | zip-with sub [1, 2] | eq [9, 18]
-test "zip-with pairs" = [1, 2] | zip-with (curry id) ["a", "b"] | eq [("a", 1), ("b", 2)]
+test "zip-with pairs" =
+    [1, 2] | zip-with (curry id) ["a", "b"] | eq [("a", 1), ("b", 2)]
 test "unzip" = [(1, "a"), (2, "b")] | unzip | eq ([1, 2], ["a", "b"])
 test "range" = range 2 5 | eq [2, 3, 4]
 test "repeat" = repeat 3 "x" | eq ["x", "x", "x"]
@@ -136,7 +138,10 @@ test "all" = [1, 2, 3] | all (gt 0)
 test "count" = [1, 2, 3, 4] | count (gt 2) | eq 2
 test "contains" = ["x", "y"] | contains "y"
 test "partition" = [1, 2, 3, 4] | partition (gt 2) | eq ([3, 4], [1, 2])
-test "partition runs the predicate once" = [1, 2, 3, 4] | run-state 0 (partition (tap (const (add 1) | modify) | gt 2)) | eq (([3, 4], [1, 2]), 4)
+test "partition runs the predicate once" =
+    [1, 2, 3, 4]
+    | run-state 0 (partition (tap (const (add 1) | modify) | gt 2))
+    | eq (([3, 4], [1, 2]), 4)
 test "enumerate" = ["a", "b"] | enumerate | eq [(0, "a"), (1, "b")]
 test "each" = [1, 2] | each (const ()) | eq ()
 test "filter-map" = ["1", "x", "3"] | filter-map parse-int | eq [1, 3]

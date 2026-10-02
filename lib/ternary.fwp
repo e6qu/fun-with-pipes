@@ -30,7 +30,8 @@ trit.negate = trit.to-int | neg | trit.from-sign
 PackedTrits[N] = { count: I64, bytes: Bytes }
 
 packed.from-tint : TInt[n] -> PackedTrits[n]
-packed.from-tint = tint.trits | make PackedTrits { count = length, bytes = trits.pack }
+packed.from-tint =
+    tint.trits | make PackedTrits { count = length, bytes = trits.pack }
 
 packed.to-tint : PackedTrits[n] -> Option[TInt[n]]
 packed.to-tint = both .count .bytes | uncurry trits.unpack | tint.from-trits
@@ -41,15 +42,25 @@ packed.trits = both .count .bytes | uncurry trits.unpack
 test "tint round trip" = 0t+-0 | tint.to-int | tint.of-int | eq (Some 0t+-0)
 test "tint value" = 0t+-0 | tint.to-int | eq 6
 test "tint trits" = 0t+-0 | tint.trits | map trit.to-int | eq [1, -1, 0]
-test "tint from trits" = [trit.pos, trit.neg, trit.zero] | tint.from-trits | eq (Some 0t+-0)
+test "tint from trits" =
+    [trit.pos, trit.neg, trit.zero] | tint.from-trits | eq (Some 0t+-0)
 test "tint of-int range" = 14 | tint.of-int | tint.test-t2 | eq None
 test "tint arithmetic" = 0t+- | add 0t0+ | eq 0t+0
-test "trit order" = [trit.pos, trit.neg, trit.zero] | sort | map trit.to-int | eq [-1, 0, 1]
+test "trit order" =
+    [trit.pos, trit.neg, trit.zero] | sort | map trit.to-int | eq [-1, 0, 1]
 test "trit negate" = trit.pos | trit.negate | eq trit.neg
-test "packing" = 0t+-0-+0+-0-+ | packed.from-tint | packed.to-tint | eq (Some 0t+-0-+0+-0-+)
-test "unpack stops at the end of the bytes" = [trit.pos, trit.zero, trit.neg, trit.pos, trit.pos] | trits.pack | trits.unpack 12 | map trit.to-int | eq [1, 0, -1, 1, 1]
+test "packing" =
+    0t+-0-+0+-0-+ | packed.from-tint | packed.to-tint | eq (Some 0t+-0-+0+-0-+)
+test "unpack stops at the end of the bytes" = [
+    trit.pos,
+    trit.zero,
+    trit.neg,
+    trit.pos,
+    trit.pos,
+] | trits.pack | trits.unpack 12 | map trit.to-int | eq [1, 0, -1, 1, 1]
 test "unpack negative count" = [trit.pos] | trits.pack | trits.unpack -1 | eq []
-test "packed size" = 0t+-0-+0+-0-+ | packed.from-tint | .bytes | bytes.length | eq 3
+test "packed size" =
+    0t+-0-+0+-0-+ | packed.from-tint | .bytes | bytes.length | eq 3
 
 tint.test-t2 : Option[TInt[2]] -> Option[TInt[2]]
 tint.test-t2 = id

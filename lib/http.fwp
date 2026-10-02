@@ -77,23 +77,37 @@ http.config = make ServerConfig {
 
 # a response with a status, a content type and a body
 http.respond : I64 -> String -> Bytes -> Response
-http.respond = curry3 (make Response { status = .0, headers = .1 | curry id "content-type" | singleton, body = .2 | Body.Full })
+http.respond = curry3 (make Response {
+    status = .0,
+    headers = .1 | curry id "content-type" | singleton,
+    body = .2 | Body.Full,
+})
 
 http.text : I64 -> String -> Response
-http.text = curry (both .0 (.1 | string.to-bytes) | uncurry (flip http.respond "text/plain; charset=utf-8"))
+http.text = curry (both .0 (.1 | string.to-bytes)
+    | uncurry (flip http.respond "text/plain; charset=utf-8"))
 
 http.json : I64 -> Json -> Response
-http.json = curry (both .0 (.1 | json.encode | string.to-bytes) | uncurry (flip http.respond "application/json"))
+http.json = curry (both .0 (.1 | json.encode | string.to-bytes)
+    | uncurry (flip http.respond "application/json"))
 
 json.response : Json -> Response
 json.response = http.json 200
 
 http.stream : I64 -> String -> (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Response
-http.stream = curry3 (make Response { status = .0, headers = .1 | curry id "content-type" | singleton, body = .2 | Body.Stream })
+http.stream = curry3 (make Response {
+    status = .0,
+    headers = .1 | curry id "content-type" | singleton,
+    body = .2 | Body.Stream,
+})
 
 # add a header
 http.with-header : String -> String -> Response -> Response
-http.with-header = curry3 (make Response { status = .2 | .status, headers = fork Cons (both .0 .1) (.2 | .headers), body = .2 | .body })
+http.with-header = curry3 (make Response {
+    status = .2 | .status,
+    headers = fork Cons (both .0 .1) (.2 | .headers),
+    body = .2 | .body,
+})
 
 # abort the handler with an error response
 http.fail : I64 -> String -> a ! {Error[HttpError]}
@@ -163,7 +177,13 @@ timeout = task.deadline
 
 # require `Authorization: Bearer <token>`
 auth.bearer : String -> Request -> Request ! {Error[HttpError]}
-auth.bearer = curry (if (fork eq (.0 | format "Bearer {}") (.1 | http.header "authorization" | option.unwrap-or "")) .1 (const "missing or invalid bearer token" | http.fail 401))
+auth.bearer = curry (if
+    (fork
+        eq
+        (.0 | format "Bearer {}")
+        (.1 | http.header "authorization" | option.unwrap-or ""))
+    .1
+    (const "missing or invalid bearer token" | http.fail 401))
 
 # count requests by method in the `http_requests_total` metric
 http.count : Request -> Request ! {IO}
@@ -179,7 +199,11 @@ Route = {
 
 # `http.route "GET" "/users/:id" handler`; method "*" matches any method
 http.route : String -> String -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Route
-http.route = curry3 (make Route { method = .0, pattern = .1 | http.segments, handler = .2 })
+http.route = curry3 (make Route {
+    method = .0,
+    pattern = .1 | http.segments,
+    handler = .2,
+})
 
 http.segments : String -> List[String]
 http.segments = split "/" | filter (string.is-empty | not)
@@ -195,21 +219,39 @@ http.route-match : Request -> Route -> Option[(Route, List[(String, String)])]
 http.route-match = curry (if http.method-ok http.path-params (const None))
 
 http.method-ok : (Request, Route) -> Bool
-http.method-ok = fork or (fork eq (.0 | .method | http.head-as-get) (.1 | .method)) (.1 | .method | eq "*")
+http.method-ok =
+    fork
+        or
+        (fork eq (.0 | .method | http.head-as-get) (.1 | .method))
+        (.1 | .method | eq "*")
 
 # HEAD requests are routed like GET (the server omits the body)
 http.head-as-get : String -> String
 http.head-as-get = if (eq "HEAD") (const "GET") id
 
 http.path-params : (Request, Route) -> Option[(Route, List[(String, String)])]
-http.path-params = fork option.map (.1 | curry id) (fork http.match-path (.1 | .pattern) (.0 | .path | http.segments))
+http.path-params =
+    fork
+        option.map
+        (.1 | curry id)
+        (fork http.match-path (.1 | .pattern) (.0 | .path | http.segments))
 
 # bindings of `:name` segments if a pattern matches a path
 http.match-path : List[String] -> List[String] -> Option[List[(String, String)]]
-http.match-path = curry (if (both (.0 | length) (.1 | length) | uncurry eq) (uncurry (flip zip) | map http.seg-match | http.all-some | option.map (filter-map id)) (const None))
+http.match-path = curry (if
+    (both (.0 | length) (.1 | length) | uncurry eq)
+    (uncurry (flip zip)
+        | map http.seg-match
+        | http.all-some
+        | option.map (filter-map id))
+    (const None))
 
 http.seg-match : (String, String) -> Option[Option[(String, String)]]
-http.seg-match = if (.0 | starts-with ":") (both (.0 | string.slice 1 1000000) .1 | Some | Some) (if (uncurry eq) (const (Some None)) (const None))
+http.seg-match =
+    if
+        (.0 | starts-with ":")
+        (both (.0 | string.slice 1 1000000) .1 | Some | Some)
+        (if (uncurry eq) (const (Some None)) (const None))
 
 # all present
 http.all-some : List[Option[a]] -> Option[List[a]]
@@ -223,7 +265,10 @@ http.all-some-step = curry (match
 http.dispatch : (List[Route], Request) -> Option[(Route, List[(String, String)])] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 http.dispatch = curry (match
     (_, None) -> http.missing
-    (_, Some _) -> curry (fork apply (fork http.set-params (.1 | .1) (.0 | .1)) (.1 | .0 | .handler)))
+    (_, Some _) -> curry (fork
+        apply
+        (fork http.set-params (.1 | .1) (.0 | .1))
+        (.1 | .0 | .handler)))
 
 http.set-params : List[(String, String)] -> Request -> Request
 http.set-params = curry (make Request {
@@ -238,10 +283,15 @@ http.set-params = curry (make Request {
 })
 
 http.missing : (List[Route], Request) -> Response ! {Error[HttpError]}
-http.missing = if (fork any (.1 | .path | http.segments | http.matches-path) .0) (const "method not allowed" | http.fail 405) (const "not found" | http.fail 404)
+http.missing =
+    if
+        (fork any (.1 | .path | http.segments | http.matches-path) .0)
+        (const "method not allowed" | http.fail 405)
+        (const "not found" | http.fail 404)
 
 http.matches-path : List[String] -> Route -> Bool
-http.matches-path = flip http.match-path | flip compose option.is-some | compose .pattern
+http.matches-path =
+    flip http.match-path | flip compose option.is-some | compose .pattern
 
 # ------------------------------------------------------------- server
 
@@ -254,7 +304,13 @@ Server = {
 
 # `until`: the monotonic time by which the current request's head (and
 # then its body) must have arrived
-ConnState = { server: Server, conn: Conn, buffer: Bytes, served: I64, until: Duration }
+ConnState = {
+    server: Server,
+    conn: Conn,
+    buffer: Bytes,
+    served: I64,
+    until: Duration,
+}
 
 Head =
     | Head.Closed
@@ -277,7 +333,13 @@ BodyEnd =
 
 Exchange = { st: ConnState, request: Request, keep: Bool }
 
-Out = { conn: Conn, keep: Bool, head-only: Bool, response: Response, timeout: Duration }
+Out = {
+    conn: Conn,
+    keep: Bool,
+    head-only: Bool,
+    response: Response,
+    timeout: Duration,
+}
 
 http.no-bytes : Bytes
 http.no-bytes = "" | string.to-bytes
@@ -306,78 +368,164 @@ http.serve-on : Listener -> (ServerConfig, Request -> Response ! {Async, IO, Net
 http.serve-on = curry (spawn-with http.accept-main | task.await | ignore)
 
 http.accept-main : (Listener, (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]})) -> () ! {Async, IO, Network, FileIO}
-http.accept-main = fork http.make-server id (.1 | .0 | .max-connections | channel.make) | tap (loop http.accept-step) | tap (.listener | tcp.stop) | fork task.deadline (.config | .shutdown-grace) id | ignore
+http.accept-main =
+    fork http.make-server id (.1 | .0 | .max-connections | channel.make)
+    | tap (loop http.accept-step)
+    | tap (.listener | tcp.stop)
+    | fork task.deadline (.config | .shutdown-grace) id
+    | ignore
 
 http.make-server : (Listener, (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]})) -> Channel[()] -> Server
-http.make-server = curry (make Server { listener = .0 | .0, config = .0 | .1 | .0, handler = .0 | .1 | .1, slots = .1 })
+http.make-server = curry (make Server {
+    listener = .0 | .0,
+    config = .0 | .1 | .0,
+    handler = .0 | .1 | .1,
+    slots = .1,
+})
 
 http.accept-step : Server -> Step[Server, ()] ! {Async, IO, Network, FileIO}
-http.accept-step = if (const () | signal.shutdown-requested) (const (Stop ())) http.accept-one
+http.accept-step =
+    if (const () | signal.shutdown-requested) (const (Stop ())) http.accept-one
 
 # take a connection slot (waits while all are in use), then accept
 http.accept-one : Server -> Step[Server, ()] ! {Async, IO, Network, FileIO}
-http.accept-one = tap (fork channel.send .slots (const ())) | fork http.accepted id (attempt (fork tcp.accept-for (const 100ms) .listener))
+http.accept-one =
+    tap (fork channel.send .slots (const ()))
+    | fork
+        http.accepted
+        id
+        (attempt (fork tcp.accept-for (const 100ms) .listener))
 
 http.accepted : Server -> Result[Option[Conn], IoError] -> Step[Server, ()] ! {Async, IO, Network, FileIO}
 http.accepted = curry (match
     (_, Ok None) -> http.release | Again
     (_, Ok (Some _)) -> curry (tap (spawn-with http.conn-main) | .0 | Again)
-    (_, Err _) -> curry (tap (.1 | .message | flip concat "accept failed: " | log.error) | tap (const 10ms | task.sleep) | .0 | http.release | Again))
+    (_, Err _) -> curry (tap
+            (.1 | .message | flip concat "accept failed: " | log.error)
+        | tap (const 10ms | task.sleep)
+        | .0
+        | http.release
+        | Again))
 
 http.release : Server -> Server ! {Async}
 http.release = tap (.slots | channel.recv)
 
 http.conn-main : (Server, Conn) -> () ! {Async, IO, Network, FileIO}
-http.conn-main = tap (attempt http.serve-conn) | tap (.1 | tcp.close) | .0 | http.release | ignore
+http.conn-main =
+    tap (attempt http.serve-conn)
+    | tap (.1 | tcp.close)
+    | .0
+    | http.release
+    | ignore
 
 http.serve-conn : (Server, Conn) -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-http.serve-conn = make ConnState { server = .0, conn = .1, buffer = const http.no-bytes, served = const 0, until = const 0s } | loop http.conn-step
+http.serve-conn = make ConnState {
+    server = .0,
+    conn = .1,
+    buffer = const http.no-bytes,
+    served = const 0,
+    until = const 0s,
+} | loop http.conn-step
 
 http.conn-step : ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.conn-step = http.head-deadline | loop http.head-step | http.on-head
 
 # a monotonic deadline a duration from now (capped at about a century)
 http.later : Duration -> Duration ! {IO}
-http.later = .nanos | min 3153600000000000000 | fork add id (const () | time.monotonic | .nanos) | make Duration { nanos = id }
+http.later =
+    .nanos
+    | min 3153600000000000000
+    | fork add id (const () | time.monotonic | .nanos)
+    | make Duration { nanos = id }
 
 # the time left until a deadline (negative once it passed)
 http.left : Duration -> Duration ! {IO}
-http.left = fork sub (const () | time.monotonic | .nanos) .nanos | make Duration { nanos = id }
+http.left =
+    fork sub (const () | time.monotonic | .nanos) .nanos
+    | make Duration { nanos = id }
 
 http.with-until : Duration -> ConnState -> ConnState
-http.with-until = curry (make ConnState { server = .1 | .server, conn = .1 | .conn, buffer = .1 | .buffer, served = .1 | .served, until = .0 })
+http.with-until = curry (make ConnState {
+    server = .1 | .server,
+    conn = .1 | .conn,
+    buffer = .1 | .buffer,
+    served = .1 | .served,
+    until = .0,
+})
 
 http.head-deadline : ConnState -> ConnState ! {IO}
-http.head-deadline = fork http.with-until (.server | .config | .header-timeout | http.later) id
+http.head-deadline =
+    fork http.with-until (.server | .config | .header-timeout | http.later) id
 
 http.head-step : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
 http.head-step = fork http.head-found id (.buffer | bytes.find http.crlf2)
 
 http.head-found : ConnState -> Option[I64] -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
 http.head-found = curry (match
-    (_, Some _) -> curry (if (fork gt (.0 | .server | .config | .max-header-bytes) .1) (.0 | Head.Bad | apply 431 | apply "request header too large" | Stop) (fork Head.Got (fork http.bytes-take .1 (.0 | .buffer)) (fork http.with-buffer (fork http.bytes-drop (.1 | add 4) (.0 | .buffer)) .0) | Stop))
+    (_, Some _) -> curry (if
+        (fork gt (.0 | .server | .config | .max-header-bytes) .1)
+        (.0 | Head.Bad | apply 431 | apply "request header too large" | Stop)
+        (fork
+                Head.Got
+                (fork http.bytes-take .1 (.0 | .buffer))
+                (fork
+                    http.with-buffer
+                    (fork http.bytes-drop (.1 | add 4) (.0 | .buffer))
+                    .0)
+            | Stop))
     (_, None) -> http.head-more)
 
 http.head-more : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
-http.head-more = if (fork gt (.server | .config | .max-header-bytes) (.buffer | bytes.length)) (Head.Bad | apply 431 | apply "request header too large" | Stop) (fork http.head-read id (both http.head-wait .conn | uncurry (flip tcp.read-for 16384)))
+http.head-more =
+    if
+        (fork
+            gt
+            (.server | .config | .max-header-bytes)
+            (.buffer | bytes.length))
+        (Head.Bad | apply 431 | apply "request header too large" | Stop)
+        (fork
+            http.head-read
+            id
+            (both http.head-wait .conn | uncurry (flip tcp.read-for 16384)))
 
 # before the first byte of a request: the idle timeout; after it, what is
 # left of the header timeout (a client trickling bytes cannot hold the
 # connection forever)
 http.head-wait : ConnState -> Duration ! {IO}
-http.head-wait = if (.buffer | bytes.length | eq 0) (.server | .config | .idle-timeout) (.until | http.left)
+http.head-wait =
+    if
+        (.buffer | bytes.length | eq 0)
+        (.server | .config | .idle-timeout)
+        (.until | http.left)
 
 http.head-read : ConnState -> Option[Bytes] -> Step[ConnState, Head] ! {IO}
 http.head-read = curry (match
-    (_, None) -> if (.buffer | bytes.length | eq 0) (const (Stop Head.Closed)) (Head.Bad | apply 408 | apply "request header timeout" | Stop)
-    (_, Some _) -> curry (if (.1 | bytes.length | eq 0) (const (Stop Head.Closed)) (fork http.with-buffer (fork bytes.append .1 (.0 | .buffer)) (.0 | http.first-byte) | Again)))
+    (_, None) ->
+        if
+            (.buffer | bytes.length | eq 0)
+            (const (Stop Head.Closed))
+            (Head.Bad | apply 408 | apply "request header timeout" | Stop)
+    (_, Some _) -> curry (if
+        (.1 | bytes.length | eq 0)
+        (const (Stop Head.Closed))
+        (fork
+                http.with-buffer
+                (fork bytes.append .1 (.0 | .buffer))
+                (.0 | http.first-byte)
+            | Again)))
 
 # the header timeout counts from the first byte of the request
 http.first-byte : ConnState -> ConnState ! {IO}
 http.first-byte = if (.buffer | bytes.length | eq 0) http.head-deadline id
 
 http.with-buffer : Bytes -> ConnState -> ConnState
-http.with-buffer = curry (make ConnState { server = .1 | .server, conn = .1 | .conn, buffer = .0, served = .1 | .served, until = .1 | .until })
+http.with-buffer = curry (make ConnState {
+    server = .1 | .server,
+    conn = .1 | .conn,
+    buffer = .0,
+    served = .1 | .served,
+    until = .1 | .until,
+})
 
 http.on-head : Head -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.on-head = match
@@ -387,7 +535,13 @@ http.on-head = match
 
 # answer with an error and close the connection
 http.error-stop : I64 -> (ConnState, String) -> Step[ConnState, ()] ! {Async, Network, Error[IoError]}
-http.error-stop = curry (make Out { conn = .1 | .0 | .conn, keep = const False, head-only = const False, response = both .0 (.1 | .1) | uncurry http.text, timeout = .1 | .0 | .server | .config | .write-timeout } | http.write-out | const (Stop ()))
+http.error-stop = curry (make Out {
+    conn = .1 | .0 | .conn,
+    keep = const False,
+    head-only = const False,
+    response = both .0 (.1 | .1) | uncurry http.text,
+    timeout = .1 | .0 | .server | .config | .write-timeout,
+} | http.write-out | const (Stop ()))
 
 http.on-request : Bytes -> ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.on-request = curry (fork http.on-parsed .1 (.0 | http.parse-request-head))
@@ -405,7 +559,19 @@ http.on-parsed = curry (match
     } | http.check-body))
 
 http.check-body : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.check-body = if (.headers | json.lookup "transfer-encoding" | option.is-some) (http.pending-error 501 "request bodies with a transfer encoding are not supported") (if (.length | lt 0) (http.pending-error 400 "invalid content-length") (if (fork gt (.st | .server | .config | .max-body-bytes) .length) (http.pending-error 413 "request body too large") http.read-body))
+http.check-body =
+    if
+        (.headers | json.lookup "transfer-encoding" | option.is-some)
+        (http.pending-error
+            501
+            "request bodies with a transfer encoding are not supported")
+        (if
+            (.length | lt 0)
+            (http.pending-error 400 "invalid content-length")
+            (if
+                (fork gt (.st | .server | .config | .max-body-bytes) .length)
+                (http.pending-error 413 "request body too large")
+                http.read-body))
 
 http.pending-error : I64 -> String -> Pending -> Step[ConnState, ()] ! {Async, Network, Error[IoError]}
 http.pending-error = curry3 (fork http.error-stop .0 (both (.2 | .st) .1))
@@ -415,15 +581,33 @@ http.read-body = http.body-deadline | loop http.body-step | http.on-body
 
 # the whole body must arrive within the body timeout
 http.body-deadline : Pending -> Pending ! {IO}
-http.body-deadline = fork http.pending-st (fork http.with-until (.st | .server | .config | .body-timeout | http.later) .st) id
+http.body-deadline =
+    fork
+        http.pending-st
+        (fork
+            http.with-until
+            (.st | .server | .config | .body-timeout | http.later)
+            .st)
+        id
 
 http.body-step : Pending -> Step[Pending, BodyEnd] ! {Async, IO, Network, Error[IoError]}
-http.body-step = if (fork ge .length (.st | .buffer | bytes.length)) (BodyEnd.Done | Stop) (fork http.body-read id (both (.st | .until | http.left) (.st | .conn) | uncurry (flip tcp.read-for 65536)))
+http.body-step =
+    if
+        (fork ge .length (.st | .buffer | bytes.length))
+        (BodyEnd.Done | Stop)
+        (fork
+            http.body-read
+            id
+            (both (.st | .until | http.left) (.st | .conn)
+                | uncurry (flip tcp.read-for 65536)))
 
 http.body-read : Pending -> Option[Bytes] -> Step[Pending, BodyEnd]
 http.body-read = curry (match
     (_, None) -> BodyEnd.Late | Stop
-    (_, Some _) -> curry (if (.1 | bytes.length | eq 0) (const (Stop BodyEnd.Closed)) (swap | uncurry http.pending-append | Again)))
+    (_, Some _) -> curry (if
+        (.1 | bytes.length | eq 0)
+        (const (Stop BodyEnd.Closed))
+        (swap | uncurry http.pending-append | Again)))
 
 http.pending-st : ConnState -> Pending -> Pending
 http.pending-st = curry (make Pending {
@@ -436,7 +620,13 @@ http.pending-st = curry (make Pending {
 })
 
 http.pending-append : Bytes -> Pending -> Pending
-http.pending-append = curry (fork http.pending-st (fork http.with-buffer (fork bytes.append .0 (.1 | .st | .buffer)) (.1 | .st)) .1)
+http.pending-append = curry (fork
+    http.pending-st
+    (fork
+        http.with-buffer
+        (fork bytes.append .0 (.1 | .st | .buffer))
+        (.1 | .st))
+    .1)
 
 http.on-body : BodyEnd -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.on-body = match
@@ -445,13 +635,19 @@ http.on-body = match
     BodyEnd.Done _ -> http.respond-to
 
 http.respond-to : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.respond-to = make Exchange { st = fork http.with-buffer (fork http.bytes-drop .length (.st | .buffer)) .st, request = http.request-of, keep = http.keep-alive } | http.exchange
+http.respond-to = make Exchange {
+    st =
+        fork http.with-buffer (fork http.bytes-drop .length (.st | .buffer)) .st,
+    request = http.request-of,
+    keep = http.keep-alive,
+} | http.exchange
 
 http.request-of : Pending -> Request ! {Network}
 http.request-of = make Request {
     method = .method,
     path = .target | http.path-of,
-    query = .target | string.split-once "?" | option.map .1 | option.unwrap-or "",
+    query =
+        .target | string.split-once "?" | option.map .1 | option.unwrap-or "",
     version = .version,
     headers = .headers,
     body = fork http.bytes-take .length (.st | .buffer),
@@ -463,14 +659,44 @@ http.path-of : String -> String
 http.path-of = fork option.unwrap-or id (string.split-once "?" | option.map .0)
 
 http.keep-alive : Pending -> Bool ! {Async}
-http.keep-alive = fork and (.version | eq "HTTP/1.1") (fork and (.headers | json.lookup "connection" | option.map lower | eq (Some "close") | not) (fork and (fork gt (.st | .served | add 1) (.st | .server | .config | .max-requests-per-connection)) (const () | signal.shutdown-requested | not)))
+http.keep-alive =
+    fork
+        and
+        (.version | eq "HTTP/1.1")
+        (fork
+            and
+            (.headers
+                | json.lookup "connection"
+                | option.map lower
+                | eq (Some "close")
+                | not)
+            (fork
+                and
+                (fork
+                    gt
+                    (.st | .served | add 1)
+                    (.st | .server | .config | .max-requests-per-connection))
+                (const () | signal.shutdown-requested | not)))
 
 http.exchange : Exchange -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.exchange = tap (make Out { conn = .st | .conn, keep = .keep, head-only = .request | .method | eq "HEAD", response = http.run-handler, timeout = .st | .server | .config | .write-timeout } | http.write-out) | if .keep (.st | http.next-served | Again) (const (Stop ()))
+http.exchange =
+    tap (make Out {
+        conn = .st | .conn,
+        keep = .keep,
+        head-only = .request | .method | eq "HEAD",
+        response = http.run-handler,
+        timeout = .st | .server | .config | .write-timeout,
+    } | http.write-out)
+    | if .keep (.st | http.next-served | Again) (const (Stop ()))
 
 # the handler in its own task, with the request timeout
 http.run-handler : Exchange -> Response ! {Async}
-http.run-handler = fork task.within (.st | .server | .config | .request-timeout) (fork compose (.request | const) (.st | .server | .handler | attempt)) | http.outcome
+http.run-handler =
+    fork
+        task.within
+        (.st | .server | .config | .request-timeout)
+        (fork compose (.request | const) (.st | .server | .handler | attempt))
+    | http.outcome
 
 http.outcome : Option[Result[Response, HttpError]] -> Response
 http.outcome = match
@@ -479,7 +705,13 @@ http.outcome = match
     Some (Err _) -> both .status .message | uncurry http.text
 
 http.next-served : ConnState -> ConnState
-http.next-served = make ConnState { server = .server, conn = .conn, buffer = .buffer, served = .served | add 1, until = .until }
+http.next-served = make ConnState {
+    server = .server,
+    conn = .conn,
+    buffer = .buffer,
+    served = .served | add 1,
+    until = .until,
+}
 
 http.write-out : Out -> () ! {Async, Network, Error[IoError]}
 http.write-out = http.checked | fork http.send-body id (.response | .body)
@@ -487,32 +719,65 @@ http.write-out = http.checked | fork http.send-body id (.response | .body)
 # A response that cannot be written as is (a header with CR or LF would
 # let a handler's input split the response) is replaced by a 500.
 http.checked : Out -> Out
-http.checked = if (.response | http.response-ok) id (make Out { conn = .conn, keep = .keep, head-only = .head-only, response = const (http.text 500 "invalid response header"), timeout = .timeout })
+http.checked =
+    if
+        (.response | http.response-ok)
+        id
+        (make Out {
+            conn = .conn,
+            keep = .keep,
+            head-only = .head-only,
+            response = const (http.text 500 "invalid response header"),
+            timeout = .timeout,
+        })
 
 http.response-ok : Response -> Bool
-http.response-ok = fork and (.status | fork and (ge 100) (le 999)) (.headers | all (uncurry http.field-ok))
+http.response-ok =
+    fork
+        and
+        (.status | fork and (ge 100) (le 999))
+        (.headers | all (uncurry http.field-ok))
 
 # write with the write timeout
 http.put : Out -> Bytes -> () ! {Async, Network, Error[IoError]}
-http.put = curry (fork apply (.0 | .conn) (both (.0 | .timeout) .1 | uncurry tcp.write-for))
+http.put = curry (fork
+    apply
+    (.0 | .conn)
+    (both (.0 | .timeout) .1 | uncurry tcp.write-for))
 
 http.send-body : Out -> Body -> () ! {Async, Network, Error[IoError]}
 http.send-body = curry (match
-    (_, Body.Full _) -> curry (fork http.put .0 (fork bytes.append (if (.0 | .head-only) (const http.no-bytes) .1) (.0 | http.head-bytes)))
-    (_, Body.Stream _) -> curry (tap (fork http.put .0 (.0 | http.head-bytes)) | if (.0 | .head-only) (const ()) http.stream-body))
+    (_, Body.Full _) -> curry (fork
+        http.put
+        .0
+        (fork
+            bytes.append
+            (if (.0 | .head-only) (const http.no-bytes) .1)
+            (.0 | http.head-bytes)))
+    (_, Body.Stream _) -> curry (tap (fork http.put .0 (.0 | http.head-bytes))
+        | if (.0 | .head-only) (const ()) http.stream-body))
 
 http.stream-body : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, Network, Error[IoError]}
 http.stream-body = fork http.stream-start id (const 8 | channel.make)
 
 http.stream-start : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, Network, Error[IoError]}
-http.stream-start = curry (fork http.stream-run id (fork spawn-with (.0 | .1 | http.closing) .1))
+http.stream-start = curry (fork
+    http.stream-run
+    id
+    (fork spawn-with (.0 | .1 | http.closing) .1))
 
 http.stream-run : ((Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}), Channel[Bytes]) -> Task[()] -> () ! {Async, Network, Error[IoError]}
-http.stream-run = curry (fork http.stream-finish id (both (.0 | .0 | .0) (.0 | .1) | attempt (loop http.chunk-step)))
+http.stream-run = curry (fork
+    http.stream-finish
+    id
+    (both (.0 | .0 | .0) (.0 | .1) | attempt (loop http.chunk-step)))
 
 # the client is done (or gone): stop the producer
 http.stream-finish : (((Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}), Channel[Bytes]), Task[()]) -> Result[(), IoError] -> () ! {Async, Error[IoError]}
-http.stream-finish = curry (tap (.0 | .0 | .1 | channel.close) | tap (.0 | .1 | task.cancel) | .1 | try)
+http.stream-finish = curry (tap (.0 | .0 | .1 | channel.close)
+    | tap (.0 | .1 | task.cancel)
+    | .1
+    | try)
 
 # run a producer, then close its channel
 http.closing : (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
@@ -524,14 +789,26 @@ http.chunk-step = fork http.chunk-got id (.1 | channel.recv)
 http.chunk-got : (Out, Channel[Bytes]) -> Option[Bytes] -> Step[(Out, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
 http.chunk-got = curry (match
     (_, None) -> .0 | flip http.put http.last-chunk | Stop
-    (_, Some _) -> curry (tap (fork http.put (.0 | .0) (.1 | http.chunk-frame)) | .0 | Again))
+    (_, Some _) -> curry (tap (fork http.put (.0 | .0) (.1 | http.chunk-frame))
+        | .0
+        | Again))
 
 # chunk sizes: lower-case hexadecimal (negative numbers with a sign)
 foreign "fwp" http.to-hex : I64 -> String = "int.to-hex"
 foreign "fwp" http.parse-hex : String -> Option[I64] = "int.parse-hex"
 
 http.chunk-frame : Bytes -> Bytes
-http.chunk-frame = if (bytes.length | eq 0) (const http.no-bytes) (fork bytes.append (const http.crlf) (fork bytes.append id (bytes.length | http.to-hex | concat "\r\n" | string.to-bytes)))
+http.chunk-frame =
+    if
+        (bytes.length | eq 0)
+        (const http.no-bytes)
+        (fork
+            bytes.append
+            (const http.crlf)
+            (fork
+                bytes.append
+                id
+                (bytes.length | http.to-hex | concat "\r\n" | string.to-bytes)))
 
 http.head-bytes : Out -> Bytes
 http.head-bytes = apply | flip map http.head-parts | join "" | string.to-bytes
@@ -541,7 +818,10 @@ http.head-parts = [
     .response | .status | both id http.reason | format "HTTP/1.1 {} {}\r\n",
     .response | .headers | map (format "{}: {}\r\n") | join "",
     .response | .body | http.framing,
-    if .keep (const "connection: keep-alive\r\n") (const "connection: close\r\n"),
+    if
+        .keep
+        (const "connection: keep-alive\r\n")
+        (const "connection: close\r\n"),
     const "\r\n",
 ]
 
@@ -552,24 +832,49 @@ http.framing = match
 
 # ------------------------------------------------------------- client
 
-ClientRequest = { method: String, url: String, headers: List[(String, String)], body: Bytes }
+ClientRequest = {
+    method: String,
+    url: String,
+    headers: List[(String, String)],
+    body: Bytes,
+}
 
 ClientResponse = { status: I64, headers: List[(String, String)], body: Bytes }
 
 http.get : String -> ClientResponse ! {Async, Network, Error[IoError]}
-http.get = make ClientRequest { method = const "GET", url = id, headers = const [], body = const http.no-bytes } | http.send
+http.get = make ClientRequest {
+    method = const "GET",
+    url = id,
+    headers = const [],
+    body = const http.no-bytes,
+} | http.send
 
 http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}
-http.post = curry (make ClientRequest { method = const "POST", url = .0, headers = const [], body = .1 } | http.send)
+http.post = curry (make ClientRequest {
+    method = const "POST",
+    url = .0,
+    headers = const [],
+    body = .1,
+} | http.send)
 
 # send a request (one connection per request) and read the whole response
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send = http.check-request | fork http.send-to id (.url | url.parse | http.require-url)
+http.send =
+    http.check-request
+    | fork http.send-to id (.url | url.parse | http.require-url)
 
 # refuse a method or header that would not make one well-formed request
 # (URLs with spaces or control characters do not parse)
 http.check-request : ClientRequest -> ClientRequest ! {Error[IoError]}
-http.check-request = if (fork and (fork http.field-ok .method (const "")) (.headers | all (uncurry http.field-ok))) id (const { kind = "http", message = "invalid request method or header" } | fail)
+http.check-request =
+    if
+        (fork
+            and
+            (fork http.field-ok .method (const ""))
+            (.headers | all (uncurry http.field-ok)))
+        id
+        (const { kind = "http", message = "invalid request method or header" }
+            | fail)
 
 http.require-url : Option[Url] -> Url ! {Error[IoError]}
 http.require-url = match
@@ -577,7 +882,11 @@ http.require-url = match
     None -> fail { kind = "url", message = "invalid URL" }
 
 http.send-to : ClientRequest -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send-to = curry (both id (.1 | http.host-port | tcp.connect) | tap (fork tcp.write (.0 | http.request-bytes) .1) | both (.1 | http.read-all) (.1 | tcp.close) | .0 | http.parse-client)
+http.send-to = curry (both id (.1 | http.host-port | tcp.connect)
+    | tap (fork tcp.write (.0 | http.request-bytes) .1)
+    | both (.1 | http.read-all) (.1 | tcp.close)
+    | .0
+    | http.parse-client)
 
 http.host-port : Url -> String
 http.host-port = both http.host-name .port | format "{}:{}"
@@ -588,7 +897,11 @@ http.host-name = .host | if (string.contains ":") (format "[{}]") id
 
 # the host header: with the port when it is not the scheme's default
 http.host-header : Url -> String
-http.host-header = if (fork eq .port (.scheme | http.default-port)) http.host-name http.host-port
+http.host-header =
+    if
+        (fork eq .port (.scheme | http.default-port))
+        http.host-name
+        http.host-port
 
 http.default-port : String -> I64
 http.default-port = match
@@ -599,7 +912,11 @@ http.default-port = match
     _ -> const 0
 
 http.request-bytes : (ClientRequest, Url) -> Bytes
-http.request-bytes = fork bytes.append (.0 | .body) (apply | flip map http.request-parts | join "" | string.to-bytes)
+http.request-bytes =
+    fork
+        bytes.append
+        (.0 | .body)
+        (apply | flip map http.request-parts | join "" | string.to-bytes)
 
 http.request-parts : List[(ClientRequest, Url) -> String]
 http.request-parts = [
@@ -612,7 +929,8 @@ http.request-parts = [
 ]
 
 http.target-of : Url -> String
-http.target-of = if (.query | string.is-empty) .path (both .path .query | format "{}?{}")
+http.target-of =
+    if (.query | string.is-empty) .path (both .path .query | format "{}?{}")
 
 http.read-all : Conn -> Bytes ! {Async, Network, Error[IoError]}
 http.read-all = both id (const http.no-bytes) | loop http.read-all-step
@@ -621,7 +939,10 @@ http.read-all-step : (Conn, Bytes) -> Step[(Conn, Bytes), Bytes] ! {Async, Netwo
 http.read-all-step = fork http.read-all-got id (.0 | tcp.read 65536)
 
 http.read-all-got : (Conn, Bytes) -> Bytes -> Step[(Conn, Bytes), Bytes]
-http.read-all-got = curry (if (.1 | bytes.length | eq 0) (.0 | .1 | Stop) (both (.0 | .0) (fork bytes.append .1 (.0 | .1)) | Again))
+http.read-all-got = curry (if
+    (.1 | bytes.length | eq 0)
+    (.0 | .1 | Stop)
+    (both (.0 | .0) (fork bytes.append .1 (.0 | .1)) | Again))
 
 http.parse-client : Bytes -> ClientResponse ! {Error[IoError]}
 http.parse-client = fork http.client-split id (bytes.find http.crlf2)
@@ -629,15 +950,34 @@ http.parse-client = fork http.client-split id (bytes.find http.crlf2)
 http.client-split : Bytes -> Option[I64] -> ClientResponse ! {Error[IoError]}
 http.client-split = curry (match
     (_, None) -> const (fail { kind = "http", message = "malformed response" })
-    (_, Some _) -> curry (fork http.client-head (fork http.bytes-drop (.1 | add 4) .0) (fork http.bytes-take .1 .0 | http.parse-response-head)))
+    (_, Some _) -> curry (fork
+        http.client-head
+        (fork http.bytes-drop (.1 | add 4) .0)
+        (fork http.bytes-take .1 .0 | http.parse-response-head)))
 
 http.client-head : Bytes -> Result[(String, I64, String, List[(String, String)]), String] -> ClientResponse ! {Error[IoError]}
 http.client-head = curry (match
-    (_, Err _) -> curry (.1 | make IoError { kind = const "http", message = id } | fail)
-    (_, Ok _) -> curry (make ClientResponse { status = .1 | .1, headers = .1 | .3, body = http.client-body }))
+    (_, Err _) ->
+        curry (.1 | make IoError { kind = const "http", message = id } | fail)
+    (_, Ok _) -> curry (make ClientResponse {
+        status = .1 | .1,
+        headers = .1 | .3,
+        body = http.client-body,
+    }))
 
 http.client-body : (Bytes, (String, I64, String, List[(String, String)])) -> Bytes ! {Error[IoError]}
-http.client-body = if (.1 | .3 | json.lookup "transfer-encoding" | option.map lower | eq (Some "chunked")) (.0 | http.dechunk) (fork http.take-length (.1 | .3 | json.lookup "content-length" | option.and-then parse-int) .0)
+http.client-body =
+    if
+        (.1
+            | .3
+            | json.lookup "transfer-encoding"
+            | option.map lower
+            | eq (Some "chunked"))
+        (.0 | http.dechunk)
+        (fork
+            http.take-length
+            (.1 | .3 | json.lookup "content-length" | option.and-then parse-int)
+            .0)
 
 http.take-length : Option[I64] -> Bytes -> Bytes
 http.take-length = curry (match
@@ -652,23 +992,43 @@ http.dechunk-step = fork http.dechunk-line id (.0 | bytes.find http.crlf)
 
 http.dechunk-line : (Bytes, Bytes) -> Option[I64] -> Step[(Bytes, Bytes), Bytes] ! {Error[IoError]}
 http.dechunk-line = curry (match
-    (_, None) -> const (fail { kind = "http", message = "malformed chunked body" })
-    (_, Some _) -> curry (fork http.dechunk-size id (fork http.bytes-take .1 (.0 | .0) | string.from-bytes | option.unwrap-or "" | http.chunk-size)))
+    (_, None) ->
+        const (fail { kind = "http", message = "malformed chunked body" })
+    (_, Some _) -> curry (fork
+        http.dechunk-size
+        id
+        (fork http.bytes-take .1 (.0 | .0)
+            | string.from-bytes
+            | option.unwrap-or ""
+            | http.chunk-size)))
 
 http.chunk-size : String -> Option[I64]
-http.chunk-size = fork option.unwrap-or id (string.split-once ";" | option.map .0) | trim | http.parse-hex
+http.chunk-size =
+    fork option.unwrap-or id (string.split-once ";" | option.map .0)
+    | trim
+    | http.parse-hex
 
 http.dechunk-size : ((Bytes, Bytes), I64) -> Option[I64] -> Step[(Bytes, Bytes), Bytes] ! {Error[IoError]}
 http.dechunk-size = curry (match
-    (_, None) -> const (fail { kind = "http", message = "malformed chunked body" })
+    (_, None) ->
+        const (fail { kind = "http", message = "malformed chunked body" })
     (_, Some 0) -> .0 | .1 | Stop
     (_, Some _) -> curry (both http.chunk-rest http.chunk-acc | Again))
 
 http.chunk-rest : (((Bytes, Bytes), I64), I64) -> Bytes
-http.chunk-rest = fork http.bytes-drop (fork add (.0 | .1) (.1 | add 4)) (.0 | .0 | .0)
+http.chunk-rest =
+    fork http.bytes-drop (fork add (.0 | .1) (.1 | add 4)) (.0 | .0 | .0)
 
 http.chunk-acc : (((Bytes, Bytes), I64), I64) -> Bytes
-http.chunk-acc = fork bytes.append (fork apply (.0 | .0 | .0) (both (.0 | .1 | add 2) .1 | uncurry bytes.slice)) (.0 | .0 | .1)
+http.chunk-acc =
+    fork
+        bytes.append
+        (fork
+            apply
+            (.0 | .0 | .0)
+            (both (.0 | .1 | add 2) .1 | uncurry bytes.slice))
+        (.0 | .0 | .1)
 
 test "hex" = [255 | http.to-hex, -16 | http.to-hex] | eq ["ff", "-10"]
-test "parse-hex" = ["1A", "", "xyz"] | map http.parse-hex | eq [Some 26, None, None]
+test "parse-hex" =
+    ["1A", "", "xyz"] | map http.parse-hex | eq [Some 26, None, None]

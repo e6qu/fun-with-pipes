@@ -55,32 +55,84 @@ test "array.from-list" = [1, 2] | array.from-list | array.to-list | eq [1, 2]
 test "array.length" = [1, 2, 3] | array.from-list | array.length | eq 3
 test "array.get" = [5, 6] | array.from-list | array.get 1 | eq (Some 6)
 test "array.get out of range" = [5, 6] | array.from-list | array.get 9 | eq None
-test "array.set" = [5, 6] | array.from-list | array.set 0 9 | option.map array.to-list | eq (Some [9, 6])
+test "array.set" =
+    [5, 6]
+    | array.from-list
+    | array.set 0 9
+    | option.map array.to-list
+    | eq (Some [9, 6])
 test "array.push" = array.make 2 0 | array.push 1 | array.to-list | eq [0, 0, 1]
-test "array.generate" = array.generate 4 (mul 10) | array.to-list | eq [0, 10, 20, 30]
-test "array.map" = [1, 2] | array.from-list | array.map (add 1) | array.to-list | eq [2, 3]
+test "array.generate" =
+    array.generate 4 (mul 10) | array.to-list | eq [0, 10, 20, 30]
+test "array.map" =
+    [1, 2] | array.from-list | array.map (add 1) | array.to-list | eq [2, 3]
 test "array.fold" = [1, 2, 3] | array.from-list | array.fold add 0 | eq 6
-test "array.slice" = [1, 2, 3, 4] | array.from-list | array.slice 1 2 | array.to-list | eq [2, 3]
-test "array.append" = [1] | array.from-list | array.append (array.make 1 2) | array.to-list | eq [1, 2]
-test "array.sort" = [3, 1, 2] | array.from-list | array.sort | array.to-list | eq [1, 2, 3]
-test "map.insert and get" = map.empty | map.insert "a" 1 | map.get "a" | eq (Some 1)
-test "map.remove" = map.empty | map.insert "a" 1 | map.remove "a" | map.get "a" | map.test-oi | eq None
+test "array.slice" =
+    [1, 2, 3, 4] | array.from-list | array.slice 1 2 | array.to-list | eq [2, 3]
+test "array.append" =
+    [1]
+    | array.from-list
+    | array.append (array.make 1 2)
+    | array.to-list
+    | eq [1, 2]
+test "array.sort" =
+    [3, 1, 2] | array.from-list | array.sort | array.to-list | eq [1, 2, 3]
+test "map.insert and get" =
+    map.empty | map.insert "a" 1 | map.get "a" | eq (Some 1)
+test "map.remove" =
+    map.empty
+    | map.insert "a" 1
+    | map.remove "a"
+    | map.get "a"
+    | map.test-oi
+    | eq None
 test "map.contains" = map.empty | map.insert 3 "x" | map.contains 3
-test "map.size" = [(1, "a"), (2, "b"), (1, "c")] | map.from-list | map.size | eq 2
+test "map.size" =
+    [(1, "a"), (2, "b"), (1, "c")] | map.from-list | map.size | eq 2
 test "map.keys" = [(2, "b"), (1, "a")] | map.from-list | map.keys | eq [1, 2]
-test "map.values" = [(2, "b"), (1, "a")] | map.from-list | map.values | eq ["a", "b"]
-test "map.to-list" = [(2, "b"), (1, "a")] | map.from-list | map.to-list | eq [(1, "a"), (2, "b")]
-test "map.update" = map.empty | map.update "k" (add 1) 0 | map.update "k" (add 1) 0 | map.get "k" | eq (Some 2)
-test "map.map-values" = [(1, 2)] | map.from-list | map.map-values (mul 3) | map.to-list | eq [(1, 6)]
-test "set operations" = [1, 2, 3] | set.from-list | set.intersect (set.from-list [2, 3, 4]) | set.to-list | eq [2, 3]
-test "set.union" = [1] | set.from-list | set.union (set.from-list [2]) | set.to-list | eq [1, 2]
-test "set.diff" = [1, 2] | set.from-list | set.diff (set.from-list [2]) | set.to-list | eq [1]
+test "map.values" =
+    [(2, "b"), (1, "a")] | map.from-list | map.values | eq ["a", "b"]
+test "map.to-list" =
+    [(2, "b"), (1, "a")] | map.from-list | map.to-list | eq [(1, "a"), (2, "b")]
+test "map.update" =
+    map.empty
+    | map.update "k" (add 1) 0
+    | map.update "k" (add 1) 0
+    | map.get "k"
+    | eq (Some 2)
+test "map.map-values" =
+    [(1, 2)]
+    | map.from-list
+    | map.map-values (mul 3)
+    | map.to-list
+    | eq [(1, 6)]
+test "set operations" =
+    [1, 2, 3]
+    | set.from-list
+    | set.intersect (set.from-list [2, 3, 4])
+    | set.to-list
+    | eq [2, 3]
+test "set.union" =
+    [1]
+    | set.from-list
+    | set.union (set.from-list [2])
+    | set.to-list
+    | eq [1, 2]
+test "set.diff" =
+    [1, 2] | set.from-list | set.diff (set.from-list [2]) | set.to-list | eq [1]
 test "set.insert" = set.empty | set.insert 5 | set.insert 5 | set.size | eq 1
 test "set.remove" = [1, 2] | set.from-list | set.remove 1 | set.contains 1 | not
-test "bytes" = [104u8, 105] | bytes.from-list | bytes.append (bytes.from-list [33u8]) | bytes.to-list | eq [104u8, 105, 33]
+test "bytes" =
+    [104u8, 105]
+    | bytes.from-list
+    | bytes.append (bytes.from-list [33u8])
+    | bytes.to-list
+    | eq [104u8, 105, 33]
 test "bytes.get" = [1u8, 2] | bytes.from-list | bytes.get 1 | eq (Some 2u8)
-test "bytes.slice" = [1u8, 2, 3] | bytes.from-list | bytes.slice 1 1 | bytes.length | eq 1
-test "frequencies" = ["a", "b", "a"] | frequencies | map.to-list | eq [("a", 2), ("b", 1)]
+test "bytes.slice" =
+    [1u8, 2, 3] | bytes.from-list | bytes.slice 1 1 | bytes.length | eq 1
+test "frequencies" =
+    ["a", "b", "a"] | frequencies | map.to-list | eq [("a", 2), ("b", 1)]
 
 map.test-oi : Option[I64] -> Option[I64]
 map.test-oi = id
@@ -88,4 +140,8 @@ map.test-oi = id
 # offset of the first occurrence of a byte sequence
 foreign "fwp" bytes.find : Bytes -> Bytes -> Option[I64]
 
-test "bytes.find" = "ab\r\n\r\ncd" | string.to-bytes | bytes.find ("\r\n\r\n" | string.to-bytes) | eq (Some 2)
+test "bytes.find" =
+    "ab\r\n\r\ncd"
+    | string.to-bytes
+    | bytes.find ("\r\n\r\n" | string.to-bytes)
+    | eq (Some 2)

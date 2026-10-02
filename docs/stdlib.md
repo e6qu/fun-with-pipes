@@ -835,7 +835,13 @@ Server = {
 
 # `until`: the monotonic time by which the current request's head (and
 # then its body) must have arrived
-ConnState = { server: Server, conn: Conn, buffer: Bytes, served: I64, until: Duration }
+ConnState = {
+    server: Server,
+    conn: Conn,
+    buffer: Bytes,
+    served: I64,
+    until: Duration,
+}
 
 Head =
     | Head.Closed
@@ -856,7 +862,14 @@ BodyEnd =
     | BodyEnd.Late Pending
     | BodyEnd.Done Pending
 Exchange = { st: ConnState, request: Request, keep: Bool }
-Out = { conn: Conn, keep: Bool, head-only: Bool, response: Response, timeout: Duration }
+
+Out = {
+    conn: Conn,
+    keep: Bool,
+    head-only: Bool,
+    response: Response,
+    timeout: Duration,
+}
 http.no-bytes : Bytes
 http.crlf : Bytes
 http.crlf2 : Bytes

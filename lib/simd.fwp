@@ -25,10 +25,25 @@ simd.mul-add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
 simd.mul-add = simd.mul | then2 id simd.add
 
 test "splat and sum" = 2.5 | simd.splat | simd.test-v4 | simd.sum | eq 10.0
-test "lane-wise" = [1.0, 2.0, 3.0, 4.0] | array.from-list | simd.from-array | simd.test-ov4 | option.map (fork simd.mul id id | simd.to-array | array.to-list) | eq (Some [1.0, 4.0, 9.0, 16.0])
-test "wrong length" = [1.0] | array.from-list | simd.from-array | simd.test-ov4 | eq None
-test "wrapping lanes" = 2147483647i32 | simd.splat | simd.test-i4 | simd.add (simd.splat 1i32) | simd.to-array | array.to-list | eq (repeat 4 -2147483648i32)
-test "wrapping sum" = 2147483647i32 | simd.splat | simd.test-i4 | simd.sum | eq -4i32
+test "lane-wise" =
+    [1.0, 2.0, 3.0, 4.0]
+    | array.from-list
+    | simd.from-array
+    | simd.test-ov4
+    | option.map (fork simd.mul id id | simd.to-array | array.to-list)
+    | eq (Some [1.0, 4.0, 9.0, 16.0])
+test "wrong length" =
+    [1.0] | array.from-list | simd.from-array | simd.test-ov4 | eq None
+test "wrapping lanes" =
+    2147483647i32
+    | simd.splat
+    | simd.test-i4
+    | simd.add (simd.splat 1i32)
+    | simd.to-array
+    | array.to-list
+    | eq (repeat 4 -2147483648i32)
+test "wrapping sum" =
+    2147483647i32 | simd.splat | simd.test-i4 | simd.sum | eq -4i32
 test "dot" = 3 | simd.splat | simd.test-iv8 | simd.dot (simd.splat 2) | eq 48
 
 simd.test-v4 : Vec[4, F64] -> Vec[4, F64]
