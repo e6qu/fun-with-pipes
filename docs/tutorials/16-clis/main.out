@@ -1,0 +1,10 @@
+hi-hi-there-there
+Ok 4
+Err "cannot divide by zero"
+["a", "b"]
+Ok (Options {sep = " ", times = 2, upper = True}, ["hi", "-x"])
+Err "option `--times`: cannot parse `many` as I64"
+command  arguments
+say      WORDS...
+divide   N D
+("docs", "md")

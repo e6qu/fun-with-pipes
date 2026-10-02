@@ -46,7 +46,15 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    or foreign C functions are rejected there, as for the `wasm32-wasi`
    target. See [the reference](docs/reference.md#fwp-in-the-browser) and
    [tutorial 15](docs/tutorials/15-browser/README.md).
-3. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+3. **Command-line programs** (done). Any exported function is a CLI:
+   flags from a record parameter (with short flags, typed defaults and
+   `--no-` switches), `--help` from the doc comments, `--version`,
+   multi-command executables (`fwp build --cli`, `fwp exec --cli`),
+   `Result` and `Option` results, and a standard library for files,
+   directories, paths, processes (the `Process` effect), the
+   environment, terminals and tables. See [docs/cli.md](docs/cli.md) and
+   [tutorial 16](docs/tutorials/16-clis/README.md).
+4. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

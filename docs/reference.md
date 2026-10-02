@@ -151,7 +151,8 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
 | Effect | Performed by |
 |---|---|
 | `IO` | console, environment, clocks, logs, metrics |
-| `FileIO` | files |
+| `FileIO` | files and directories |
+| `Process` | running other programs |
 | `Network` | sockets, DNS |
 | `Async` | tasks, channels, sleeping |
 | `Random` | random numbers |
@@ -214,13 +215,18 @@ foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "sn
 
 ## The `fwp` command
 
+Exported functions also run as command-line programs, with flags, help
+and subcommands: see [cli.md](cli.md).
+
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
                                               run main (interpreter)
 fwp build file.fwp [options]                  compile
     -o out           output path
     -O0..-O3         C optimization level
-    --fn name        an exported function as an executable (see protocol.md)
+    --fn name        an exported function as an executable (see cli.md)
+    --cli            every exported function as a subcommand of one
+                     executable (see cli.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
@@ -233,6 +239,7 @@ fwp serve [--service M]... file.fwp module [--listen A]
                                               serve a module over gRPC (interpreter)
 fwp proto file.fwp [--service M]...           print the .proto of the services
 fwp exec file.fwp fn [args...]                run an exported function
+fwp exec --cli file.fwp [command] [args...]   run the file as `--cli` builds it
 fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes
 fwp test file.fwp [--native]                  run test declarations
 fwp test --std [--native]                     the standard library's tests
@@ -250,11 +257,13 @@ Exit codes:
 |---|---|
 | 0 | success |
 | 1 | uncaught error, or the main task was cancelled |
-| 2 | usage error, or an executable function's argument cannot be parsed |
+| 2 | usage error, or an executable function's argument or flag cannot be parsed |
 | 3 | malformed input to an executable function |
 | 101 | trap: overflow, division by zero, deadlock, or stack overflow (`fwp: trap: stack overflow`) |
 
-When `main` has type `I32`, its value is the exit code. `exit n` exits with `n` modulo 256 (`exit 259` is 3, `exit -1` is 255),
+An exported function run as a program exits with 1 when it returns
+`Err` or raises an uncaught `Error`, and prints the error as
+`name: message` ([cli.md](cli.md)). When `main` has type `I32`, its value is the exit code. `exit n` exits with `n` modulo 256 (`exit 259` is 3, `exit -1` is 255),
 as the operating system reports it, in both backends.
 
 Text from outside the program, that is, standard input (`read-line`,
@@ -271,7 +280,7 @@ rejected otherwise.
 | Target | Output | Runtime |
 |---|---|---|
 | native | an executable | all features |
-| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no tasks or sockets, and programs that use them are rejected at compile time; files only in preopened directories |
+| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no tasks, sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 
@@ -309,7 +318,8 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 - `run`, `check`, `test`, `exec`, `fmt`, `lint`, `proto` and `lsp` work.
   `build --emit-c` writes C; other builds need a C compiler.
 - A program that uses tasks or channels (`Async`), sockets or DNS
-  (`Network`), services or foreign C functions is rejected before it
+  (`Network`), other programs (`Process`), services or foreign C
+  functions is rejected before it
   starts, with the effect or function named:
   ``fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.spawn`)``.
   These are the effects the `wasm32-wasi` target rejects. (Running tasks
