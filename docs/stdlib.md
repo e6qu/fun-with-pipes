@@ -20,6 +20,8 @@ Every module is available without an import.
 - [HTTP](#http)
 - [JSON](#json)
 - [REST endpoints and clients](#rest-endpoints-and-clients)
+- [gRPC](#grpc)
+- [Protobuf](#protobuf)
 - [URLs](#urls)
 - [Logs and metrics](#logs-and-metrics)
 - [Vectors, matrices and complex numbers](#vectors-matrices-and-complex-numbers)
@@ -931,6 +933,9 @@ channel.recv : Channel[a] -> Option[a] ! {Async}
 channel.recv-for : Duration -> Channel[a] -> Option[a] ! {Async}
 channel.close : Channel[a] -> () ! {Async}
 
+# every value received from a channel until it is closed and drained
+channel.drain : Channel[a] -> List[a] ! {Async}
+
 # run tasks for every element and collect their results in order
 task.map : (a -> b ! {Async, IO, Network, FileIO}) -> List[a] -> List[Option[b]] ! {Async}
 spawn-with : (a -> b ! {Async, IO, Network, FileIO}) -> a -> Task[b] ! {Async}
@@ -1279,6 +1284,232 @@ rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[
 
 # `rest.fetch`, with `None` for a 404.
 rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
+```
+
+## gRPC
+
+`lib/grpc.fwp`
+
+gRPC: calling and serving gRPC services (docs/grpc.md).
+
+Exported functions become gRPC services with `fwp build --grpc` (or
+`--service` for a module of a larger program), with no code: their
+messages come from their types. This module is for what remains: the
+metadata and deadlines of calls, statuses (`GrpcError`), and the calls
+and handlers that code generated from a `.proto` file (`fwp proto
+--import`) is made of. Calls and servers run on the task scheduler: a
+call waits only in its own task, and a server runs calls concurrently.
+
+```fwp
+# a failed call: a status code (`grpc.not-found`, ...) and a message. A
+# served function that fails with `Error[GrpcError]` answers with that
+# status; calls fail with it.
+GrpcError = { code: I64, message: String }
+
+# one side of a call: the client's, or the server's
+GrpcStream = builtin
+
+# a method served by `grpc.serve`: its path (`/package.Service/Method`) and
+# the function that handles a call
+GrpcRoute = {
+    handler: GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
+    path: String,
+}
+
+# the status codes
+grpc.ok : I64
+grpc.cancelled : I64
+grpc.unknown : I64
+grpc.invalid-argument : I64
+grpc.deadline-exceeded : I64
+grpc.not-found : I64
+grpc.already-exists : I64
+grpc.permission-denied : I64
+grpc.resource-exhausted : I64
+grpc.failed-precondition : I64
+grpc.aborted : I64
+grpc.out-of-range : I64
+grpc.unimplemented : I64
+grpc.internal : I64
+grpc.unavailable : I64
+grpc.data-loss : I64
+grpc.unauthenticated : I64
+
+# the name of a status code: `grpc.code-name 5` is "NOT_FOUND"
+grpc.code-name : I64 -> String
+
+# fail with a status: `grpc.fail grpc.not-found "no such book"`
+grpc.fail : I64 -> String -> a ! {Error[GrpcError]}
+
+# the metadata (request headers, with lower-case names) of the call the
+# current task serves; empty outside a call
+grpc.metadata : () -> List[(String, String)] ! {Network}
+
+# one metadata value of the call being served
+grpc.header : String -> Option[String] ! {Network}
+
+# run a function whose calls send this metadata as well
+grpc.with-metadata : List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# run a function whose calls must finish within a duration, or fail with
+# `grpc.deadline-exceeded`. (A task's deadline, `task.deadline` or
+# `task.within`, also applies to its calls, and cancels the task.)
+grpc.with-deadline : Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# `grpc.unary encode decode path address request`: a unary call
+grpc.unary : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> a -> b ! {Network, Error[GrpcError]}
+
+# a server-streaming call: each response goes to the channel
+grpc.server-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> a -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
+
+# a client-streaming call: the requests are the iterator's elements
+grpc.client-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> b ! {Network, Error[GrpcError]}
+
+# a bidirectional call: it sends the requests, then each response goes to
+# the channel
+grpc.bidi-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
+
+# Lower level: start a call (`grpc.open address path`), send messages,
+# end the requests, and receive messages (`None` at the end). A failed call
+# fails with its status.
+grpc.open : String -> String -> GrpcStream ! {Network, Error[GrpcError]}
+grpc.send : Bytes -> GrpcStream -> () ! {Network, Error[GrpcError]}
+grpc.close-send : GrpcStream -> () ! {Network}
+grpc.recv : GrpcStream -> Option[Bytes] ! {Network, Error[GrpcError]}
+grpc.cancel : GrpcStream -> () ! {Network}
+
+# serve routes on an address ("127.0.0.1:50051"; port 0 picks a free
+# port, reported on standard error), with health checking
+# (`grpc.health.v1.Health`), until the task is cancelled
+grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+
+# a route from a path and a handler
+grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
+
+# handlers of methods from a request decoder, a response encoder and a
+# function; a request that cannot be decoded fails with
+# `grpc.invalid-argument`
+grpc.unary-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc.server-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc.client-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
+grpc.bidi-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
+```
+
+## Protobuf
+
+`lib/protobuf.fwp`
+
+The protobuf wire format, for code generated from `.proto` files with
+`fwp proto --import` (docs/grpc.md). A message is written from a list of
+field writers (`pb.encode`) and read into a record with `make` and field
+readers (`pb.get`); a `PbCodec` describes one protobuf type.
+
+(Functions exported over gRPC with `fwp build --grpc` or `--service`
+need none of this: their messages are derived from their types.)
+
+```fwp
+# a field as it is on the wire: its number, its wire type (0 varint,
+# 1 64-bit, 2 length-delimited, 5 32-bit), and its bits or bytes
+PbField = { bits: U64, data: Bytes, num: I64, wire: I64 }
+
+# how values of one protobuf type are written and read
+PbCodec[T] = {
+    default: T,
+    from-wire: (U64, Bytes) -> T ! {Error[GrpcError]},
+    is-default: T -> Bool,
+    to-wire: T -> (U64, Bytes),
+    wire: I64,
+}
+
+# the fields of a message; `None` when it is malformed
+pb.parse : Bytes -> Option[List[PbField]]
+
+# a message of fields
+pb.write : List[PbField] -> Bytes
+
+# an integer as another integer type, truncating or sign-extending as a
+# cast does (int32 values travel as 64-bit varints)
+pb.cast : a -> b where Integer[a], Integer[b]
+
+# zigzag encoding of sint32 and sint64
+pb.zigzag : I64 -> U64
+pb.unzigzag : U64 -> I64
+pb.f32-bits : F32 -> U64
+pb.f32-from-bits : U64 -> F32
+pb.f64-bits : F64 -> U64
+pb.f64-from-bits : U64 -> F64
+
+# packed repeated numbers of a wire type; `None` when malformed
+pb.unpack : I64 -> Bytes -> Option[List[U64]]
+pb.pack : I64 -> List[U64] -> Bytes
+pb.int32 : PbCodec[I32]
+pb.int64 : PbCodec[I64]
+pb.uint32 : PbCodec[U32]
+pb.uint64 : PbCodec[U64]
+pb.sint32 : PbCodec[I32]
+pb.sint64 : PbCodec[I64]
+pb.fixed32 : PbCodec[U32]
+pb.fixed64 : PbCodec[U64]
+pb.sfixed32 : PbCodec[I32]
+pb.sfixed64 : PbCodec[I64]
+pb.float : PbCodec[F32]
+pb.double : PbCodec[F64]
+pb.bool : PbCodec[Bool]
+pb.string : PbCodec[String]
+pb.bytes : PbCodec[Bytes]
+
+# an enum from its conversions to and from numbers, and its default (the
+# value numbered 0); unknown numbers read as the default
+pb.enum : (I64 -> a ! {Error[GrpcError]}) -> (a -> I64) -> a -> PbCodec[a] where Eq[a], Dup[a]
+
+# a message type from its encoder, decoder and default value
+pb.message : (a -> Bytes) -> (Bytes -> a ! {Error[GrpcError]}) -> a -> PbCodec[a] where Dup[a]
+
+# `google.protobuf.Empty` (and any message without fields) as `()`
+pb.empty : PbCodec[()]
+
+# the entries of a map field: messages of a key (1) and a value (2)
+pb.entry : PbCodec[k] -> PbCodec[v] -> PbCodec[(k, v)] where Dup[k], Dup[v]
+
+# a singular field, written unless it holds the default value
+pb.field : I64 -> PbCodec[a] -> a -> List[PbField] where Dup[a]
+
+# a field written even when it holds the default value (a member of a
+# `oneof`)
+pb.always : I64 -> PbCodec[a] -> a -> List[PbField] where Dup[a]
+
+# an `optional` field, written when present
+pb.optional : I64 -> PbCodec[a] -> Option[a] -> List[PbField] where Dup[a]
+
+# a `repeated` field; numbers are packed
+pb.repeated : I64 -> PbCodec[a] -> List[a] -> List[PbField] where Dup[a]
+
+# a `map<K, V>` field
+pb.map : I64 -> PbCodec[k] -> PbCodec[v] -> Map[k, v] -> List[PbField] where Dup[k], Dup[v]
+
+# a field holding a value of a `oneof`, when it is set
+pb.oneof : (a -> List[PbField]) -> Option[a] -> List[PbField]
+
+# a message from the writers of its fields
+pb.encode : List[a -> List[PbField]] -> a -> Bytes
+
+# the fields of a message
+pb.decode : Bytes -> List[PbField] ! {Error[GrpcError]}
+
+# a singular field: its default when absent
+pb.get : I64 -> PbCodec[a] -> List[PbField] -> a ! {Error[GrpcError]} where Dup[a]
+
+# an `optional` field (or a member of a `oneof`)
+pb.get-optional : I64 -> PbCodec[a] -> List[PbField] -> Option[a] ! {Error[GrpcError]} where Dup[a]
+
+# a `repeated` field, packed or not
+pb.get-repeated : I64 -> PbCodec[a] -> List[PbField] -> List[a] ! {Error[GrpcError]} where Dup[a]
+
+# a `map<K, V>` field
+pb.get-map : I64 -> PbCodec[k] -> PbCodec[v] -> List[PbField] -> Map[k, v] ! {Error[GrpcError]} where Ord[k], Dup[k], Dup[v]
+
+# the member of a `oneof` that is set, from readers of each member
+pb.first-of : List[x -> Option[a] ! e] -> x -> Option[a] ! e
 ```
 
 ## URLs

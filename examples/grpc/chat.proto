@@ -1,0 +1,25 @@
+// A chat room. `fwp proto --import chat.proto -o chat.fwp` makes the fwp
+// module of its messages, client functions and server routes; see
+// chat-server.fwp and chat-client.fwp.
+syntax = "proto3";
+
+package chat;
+
+// Messages posted to the room go to everyone subscribed.
+service Room {
+  // Post a message to the room.
+  rpc Post(Message) returns (Posted);
+  // The messages of the room from now on, starting with a greeting.
+  rpc Subscribe(Join) returns (stream Message);
+}
+
+message Join {
+  string user = 1;
+}
+
+message Message {
+  string user = 1;
+  string text = 2;
+}
+
+message Posted {}

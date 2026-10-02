@@ -1,0 +1,8 @@
+Ok (Note {id = 2, tags = ["fwp"], text = "types are contracts"})
+Err (GrpcError {code = 5, message = "no note 9"})
+["pipes compose", "types are contracts"]
+["reminder 1", "reminder 2", "reminder 3"]
+5
+nobody
+[[8, 1, 18, 13, 112, 105, 112, 101, 115, 32, 99, 111, 109, 112, 111, 115, 101, 26, 3, 102, 119, 112, 26, 5, 115, 116, 121, 108, 101]]
+True

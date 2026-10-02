@@ -73,7 +73,19 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    modules from OpenAPI documents. See [docs/rest.md](docs/rest.md),
    [docs/interfaces.md](docs/interfaces.md) and
    [tutorial 17](docs/tutorials/17-rest-and-openapi/README.md).
-6. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+6. **gRPC** (done). Any exported function is a gRPC method
+   (`fwp build --grpc`, `fwp serve --grpc`, `fwp proto --grpc`, with
+   `# grpc:` names), with server, client and bidirectional streams decided
+   by `Iterator` and `Channel` types, deadlines through the task
+   machinery (`grpc-timeout`, `grpc.with-deadline`), metadata, statuses
+   from `Error[GrpcError]`, server reflection and health checking. The
+   HTTP/2 transport runs on the task scheduler in both backends: servers
+   run calls concurrently and clients multiplex calls on one connection,
+   waiting only in the calling task. `fwp proto --import` turns `.proto`
+   files into fwp types, codecs (`lib/protobuf.fwp`), clients and server
+   routes (`lib/grpc.fwp`). See [docs/grpc.md](docs/grpc.md) and
+   [tutorial 18](docs/tutorials/18-grpc/README.md).
+7. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

@@ -25,6 +25,7 @@ GrpcRoute = {
 
 # ----------------------------------------------------------- status codes
 
+# the status codes
 grpc.ok : I64
 grpc.ok = 0
 
@@ -172,8 +173,9 @@ grpc.bidi-streaming-handler = grpc._bidi-streaming-handler grpc._iter
 foreign "fwp" grpc._client-streaming-handler : (GrpcCell[a] -> Iterator[a]) -> (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
 foreign "fwp" grpc._bidi-streaming-handler : (GrpcCell[a] -> Iterator[a]) -> (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
 
-# internal: a received stream as a lazy iterator. Forcing a position
-# receives the message there, once.
+# a received stream as a lazy iterator: forcing a position receives the
+# message there, once
+# internal
 GrpcCell[a] = builtin
 foreign "fwp" grpc._force : GrpcCell[a] -> Option[(a, GrpcCell[a])]
 

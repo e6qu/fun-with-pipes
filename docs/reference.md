@@ -217,9 +217,9 @@ foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "sn
 
 Exported functions also run as command-line programs, with flags, help,
 subcommands, environment variables, shell completion and man pages
-([cli.md](cli.md)), and as REST endpoints with a JSON contract and an
-OpenAPI document ([rest.md](rest.md)); [interfaces.md](interfaces.md)
-compares these with gRPC services.
+([cli.md](cli.md)), as REST endpoints with a JSON contract and an
+OpenAPI document ([rest.md](rest.md)), and as gRPC methods
+([grpc.md](grpc.md)); [interfaces.md](interfaces.md) compares them.
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
@@ -232,6 +232,8 @@ fwp build file.fwp [options]                  compile
                      executable (see cli.md)
     --rest           every exported function as an endpoint of one HTTP
                      server, with /openapi.json (see rest.md)
+    --grpc           every exported function as a method of one gRPC
+                     server, with reflection (see grpc.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
@@ -243,7 +245,10 @@ fwp build file.fwp [options]                  compile
 fwp serve [--service M]... file.fwp module [--listen A]
                                               serve a module over gRPC (interpreter)
 fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints (interpreter)
+fwp serve --grpc file.fwp [--listen A]        serve the exported functions over gRPC (interpreter)
 fwp proto file.fwp [--service M]...           print the .proto of the services
+fwp proto --grpc file.fwp                     print the .proto of the exported functions
+fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes of a .proto file
 fwp openapi file.fwp                          print the OpenAPI document of the REST endpoints
 fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI document
 fwp exec file.fwp fn [args...]                run an exported function

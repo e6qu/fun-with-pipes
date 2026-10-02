@@ -602,3 +602,94 @@ fn grpcurl_interoperates() {
         expect_file(&dir().join("grpcurl.out"), &out, "grpcurl");
     }
 }
+
+// ------------------------------------------------------------------ examples
+
+/// examples/grpc: the chat room (a service from chat.proto with a hub
+/// task) and the weather service (exported functions), interpreted and
+/// native.
+#[test]
+fn examples_run() {
+    let ex = root().join("examples/grpc");
+    let native = have_cc();
+    let d = scratch("examples");
+    // chat.fwp is what `fwp proto --import` makes of chat.proto
+    let mut cmd = Command::new(fwp());
+    cmd.args(["proto", "--import", "chat.proto"])
+        .current_dir(&ex);
+    let o = run(cmd, 60);
+    expect_file(
+        &ex.join("chat.fwp"),
+        &String::from_utf8_lossy(&o.stdout),
+        "chat.fwp",
+    );
+    let mut servers = Vec::new();
+    let mut cmd = Command::new(fwp());
+    cmd.args(["run", "chat-server.fwp", "127.0.0.1:0"])
+        .current_dir(&ex);
+    servers.push(start(cmd));
+    if native {
+        build(
+            &[
+                "chat-server.fwp",
+                "-o",
+                d.join("chat-server").to_str().unwrap(),
+            ],
+            &ex,
+        );
+        build(
+            &[
+                "chat-client.fwp",
+                "-o",
+                d.join("chat-client").to_str().unwrap(),
+            ],
+            &ex,
+        );
+        let mut cmd = Command::new(d.join("chat-server"));
+        cmd.arg("127.0.0.1:0");
+        servers.push(start(cmd));
+    }
+    let expected = "room: ada joined\nada: hello\nada: bye\n";
+    for s in &servers {
+        let mut cmd = Command::new(fwp());
+        cmd.args(["run", "chat-client.fwp", &s.addr])
+            .current_dir(&ex);
+        assert_eq!(render(&run(cmd, 60)), expected);
+        if native {
+            let mut cmd = Command::new(d.join("chat-client"));
+            cmd.arg(&s.addr);
+            assert_eq!(render(&run(cmd, 60)), expected);
+        }
+        assert!(s.wait_log("cancelled by the client (in chat.Room/Subscribe)"));
+    }
+    // the weather client prints the same with the service local or remote
+    let mut cmd = Command::new(fwp());
+    cmd.args(["run", "forecast-client.fwp"]).current_dir(&ex);
+    let local = render(&run(cmd, 60));
+    assert!(local.contains("Atlantis is not a known place"), "{}", local);
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
+        .current_dir(&ex);
+    let mut servers = vec![start(cmd)];
+    if native {
+        build(
+            &[
+                "weather.fwp",
+                "--grpc",
+                "-o",
+                d.join("weather").to_str().unwrap(),
+            ],
+            &ex,
+        );
+        let mut cmd = Command::new(d.join("weather"));
+        cmd.args(["--listen", "127.0.0.1:0"]);
+        servers.push(start(cmd));
+    }
+    for s in &servers {
+        let mut cmd = Command::new(fwp());
+        cmd.args(["run", "--service", "weather", "forecast-client.fwp"])
+            .env("FWP_SERVICE_WEATHER", &s.addr)
+            .current_dir(&ex);
+        assert_eq!(render(&run(cmd, 60)), local);
+    }
+}

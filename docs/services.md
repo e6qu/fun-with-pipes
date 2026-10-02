@@ -71,6 +71,12 @@ inventory server. Splitting a subset is fine: with only
 | `fwp serve --service n... app.fwp m [--listen addr]` | serves module `m` with the interpreter; its calls to the modules named by `--service` are remote |
 | `fwp proto app.fwp [--service m]...` | prints the `.proto` file of the named services (by default, of every imported module that exports functions) |
 
+To serve the exported functions of a file on their own, without a program
+around them, use `fwp build --grpc` or `fwp serve --grpc`
+([grpc.md](grpc.md)); a split build's servers and clients are the same
+gRPC servers and clients, with the streaming, deadlines, metadata,
+reflection and health checking that page describes.
+
 A server executable takes one option, `--listen host:port`. It prints
 `fwp: service m listening on host:port` on stderr once it accepts
 connections; with port 0 the system picks a free port, which the line
@@ -113,12 +119,11 @@ process:
   still a network call when split. It cannot fail with an `Error`, so a
   transport failure is a trap; if a caller must survive a service outage,
   give the function an `Error` effect and handle it.
-- **Concurrency.** A remote call blocks the calling thread until the
-  response arrives: in a native client, other tasks do not run meanwhile,
-  and deadlines are not checked during the call. A server runs one call at
-  a time (it reads requests on all connections and streams while it
-  waits), so two services must not call each other in a cycle during one
-  request.
+- **Concurrency.** A remote call waits only in the calling task: other
+  tasks run meanwhile, many calls share a connection, and the task's
+  deadline and cancellation apply to the call (and travel to the server
+  as `grpc-timeout`). A server runs each call in a task of its own, so
+  calls run concurrently, and services may call each other in a cycle.
 - **`comptime`.** Compile-time code that calls a split module's exported
   function would call the service while compiling; keep such calls out of
   `comptime`.
@@ -129,9 +134,11 @@ A function can be served when it is exported, has a monomorphic type and
 at least one parameter, and every parameter, its result and its `Error`
 type can be encoded: numbers, `Bool`, `String`, `Bytes`, `Duration`,
 records, tuples, `()`, variants, `List`, `Array`, `Set`, `Map` and
-`Option`, in any combination. Functions, resources (`File`), and runtime
-handles (`Task`, `Channel`, sockets) cannot cross a process boundary; a
-split build that would send one is a compile error naming the function:
+`Option`, in any combination. An `Iterator` result or parameter and a
+final `Channel` parameter are streams ([grpc.md](grpc.md#streaming)).
+Other functions, resources (`File`), and runtime handles (`Task`,
+`Channel`, sockets) cannot cross a process boundary; a split build that
+would send one is a compile error naming the function:
 
 ```
 $ fwp build main.fwp --service lib -o out
@@ -145,19 +152,22 @@ names (`price-of` and `price.of` would both be `PriceOf`).
 
 ## The wire format
 
-Calls are [gRPC](https://grpc.io/docs/what-is-grpc/) unary calls over
-HTTP/2 cleartext with prior knowledge (h2c): any gRPC client and server
-can take part, given the `.proto` file.
+Calls are [gRPC](https://grpc.io/docs/what-is-grpc/) calls over HTTP/2
+cleartext with prior knowledge (h2c): any gRPC client and server can take
+part, given the `.proto` file (or server reflection).
 
 - **Names.** The package is `fwp`, a module `inventory` is the service
   `Inventory` (`shop.inventory` is `ShopInventory`), and a function
   `unit-price` is the method `UnitPrice`. The path of a call is
-  `/fwp.Inventory/UnitPrice`.
+  `/fwp.Inventory/UnitPrice`. `# grpc:` lines in the module change them
+  ([grpc.md](grpc.md#names)).
 - **Requests.** The arguments of a curried function form its request
-  message: `arg1 = 1`, `arg2 = 2`, ...
-- **Responses.** The result is `value = 1` of the response message. A
-  function with an `Error[E]` effect responds with
-  `oneof result { T value = 1; E error = 2; }`.
+  message: `arg1 = 1`, `arg2 = 2`, ... (a `()` argument has no field). A
+  single argument of a nominal record type is the request message itself.
+- **Responses.** The result is `value = 1` of the response message, or
+  the message itself for a nominal record. A function with an `Error[E]`
+  effect responds with `oneof result { T value = 1; E error = 2; }`;
+  with `Error[GrpcError]`, errors are statuses instead.
 - **Metadata.** fwp clients send `fwp-fingerprint` (below). Responses
   carry `grpc-status` and, on failure, `grpc-message`.
 
@@ -245,14 +255,17 @@ generated from the same schema.
 | `grpc-status` | Meaning |
 |---|---|
 | 0 `OK` | the call returned, or raised its `Error` (in the response's `error` field) |
+| the error's code | the function raised `Error[GrpcError]` |
 | 3 `INVALID_ARGUMENT` | the request could not be decoded |
+| 4 `DEADLINE_EXCEEDED` | the call's deadline passed |
 | 9 `FAILED_PRECONDITION` | the caller was built against a different interface (fingerprint) |
 | 12 `UNIMPLEMENTED` | no such method |
 | 13 `INTERNAL` | the function trapped (`grpc-message: trap: ...`) |
 
 Any other failure (a refused connection, a reset stream, an HTTP error)
 makes the calling fwp program trap with a message naming the service, the
-address and the cause.
+address and the cause, unless the function's error type is `GrpcError`:
+then every failure is raised as one ([grpc.md](grpc.md#errors-and-status-codes)).
 
 ## Versioning
 
@@ -285,29 +298,31 @@ they are deployed separately, and an old client can meet a new server.
   encodes headers as literals without indexing, which every decoder
   accepts and which needs no encoder state.
 - Messages are uncompressed; a compressed message is rejected.
-- A client keeps one connection per address and reuses it for later
-  calls. If a reused connection turns out to be closed before the server
-  saw the request (a GOAWAY, a refused stream, or a write that fails), the
-  call is retried once on a new connection.
-- A server handles any number of connections and streams on one thread:
-  it reads frames from every connection as they arrive, runs each call as
-  soon as its request is complete, and sends responses within the flow
-  control windows.
+- A client keeps one connection per address and multiplexes calls on it,
+  one stream per call. If a reused connection turns out to be closed
+  before the server saw the request (a GOAWAY, a refused stream, or a
+  connection closed before any response), a unary call is retried once on
+  a new connection.
+- Each connection has a reader task, which parses frames and wakes the
+  tasks waiting for them, and a writer task, which sends the frames they
+  queue. A server starts a task per call as soon as its headers arrive,
+  so calls run concurrently and a call reads its requests as they come;
+  responses are sent within the flow control windows.
 - There is no TLS; put services on a private network or behind a proxy
   that terminates TLS.
 
 The implementation is written from scratch, in Rust for the interpreter
-(`src/h2.rs`) and in C for native programs (`runtime/fwp_rt_h2.c`, which
-is included only in programs that call or serve services). The test suite
+(`src/h2.rs`, `src/grpc.rs`) and in C for native programs
+(`runtime/fwp_rt_h2.c`, `runtime/fwp_rt_grpc.c`, which are included only
+in programs that use gRPC). The test suite
 checks HPACK against the examples of RFC 7541 and the protobuf transcoder
 against golden bytes in both languages, and talks to curl's HTTP/2 client
 and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- Unary calls only: no streaming RPCs, deadlines, cancellation or
-  metadata other than the fingerprint.
-- No TLS and no compression.
+- No TLS and no compression; see [grpc.md](grpc.md#limitations) for the
+  limits of the gRPC implementation.
 - Native servers allocate from the bump heap and never free (see
   [design](design.md)), so a long-running native service grows with the
   data it handles. Interpreted servers free memory.

@@ -209,17 +209,10 @@ fn valid_full(s: &str) -> bool {
     s.split('.').all(valid_ident)
 }
 
-/// The text after `grpc:` in a list of comment lines.
-fn annotation(lines: &[String]) -> Option<String> {
-    lines
-        .iter()
-        .find_map(|l| l.trim().strip_prefix("grpc:").map(|a| a.trim().to_string()))
-}
-
 /// The default service of a program served with `--grpc`: the root
 /// file's `# grpc: pkg.Service` header annotation, else `fwp.<Stem>`.
 pub fn default_service(docs: &crate::cli::Docs, stem: &str) -> Result<(String, String), String> {
-    match annotation(&docs.module) {
+    match docs.grpc.clone() {
         Some(a) => {
             if !valid_full(&a) {
                 return Err(format!(
@@ -251,7 +244,7 @@ pub fn function_path(
         service: default.1.clone(),
         method: protobuf::method_name(local),
     };
-    if let Some(a) = docs.funcs.get(local).and_then(|d| annotation(&d.lines)) {
+    if let Some(a) = docs.funcs.get(local).and_then(|d| d.grpc.clone()) {
         let bad = || {
             format!(
                 "`# grpc: {}` above `{}`: expected `Method`, `Service/Method` or `package.Service/Method`",
