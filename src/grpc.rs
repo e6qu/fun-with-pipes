@@ -979,12 +979,11 @@ pub enum Encoder {
     Fwp(Value),
 }
 
+/// A decoded message: its value, or the error it carries and its type.
+type Decoded = Result<Value, (Value, MT)>;
+
 /// The decoded value of a message: the value, or the error it carries.
-fn decode_msg(
-    it: &mut Interp,
-    dec: &Decoder,
-    msg: &[u8],
-) -> R<Result<Result<Value, (Value, MT)>, String>> {
+fn decode_msg(it: &mut Interp, dec: &Decoder, msg: &[u8]) -> R<Result<Decoded, String>> {
     match dec {
         Decoder::Native {
             schema,
@@ -1143,9 +1142,8 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
         break (conn, stream, first);
     };
     let bad = |e: String| Ctl::Trap(format!("bad response from {} ({}): {}", what, addr, e));
-    let decode = |it: &mut Interp, msg: &[u8]| -> R<Result<Value, (Value, MT)>> {
-        decode_msg(it, &dec, msg)?.map_err(bad)
-    };
+    let decode =
+        |it: &mut Interp, msg: &[u8]| -> R<Decoded> { decode_msg(it, &dec, msg)?.map_err(bad) };
     match &shape.output {
         Output::Value(_) => {
             let msg = match first.unwrap() {
@@ -1176,11 +1174,10 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
                 match recv(it, &conn, &stream, deadline)? {
                     Got::Msg(m) => match decode(it, &m)? {
                         Ok(v) => {
-                            if let Some(r) = it.prim_conc("channel.send", &mut [ch.clone(), v]) {
-                                if let Err(e) = r {
-                                    reset_stream(it, &conn, &stream, 8);
-                                    return Err(e);
-                                }
+                            if let Some(Err(e)) = it.prim_conc("channel.send", &mut [ch.clone(), v])
+                            {
+                                reset_stream(it, &conn, &stream, 8);
+                                return Err(e);
                             }
                         }
                         Err((e, t)) => {
