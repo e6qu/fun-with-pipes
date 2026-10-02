@@ -96,10 +96,13 @@ pub struct TaskCtx {
     tls: Option<Rc<ClientTls>>,
     /// The response metadata of the calls made, collected
     /// (`grpc.with-response-metadata`).
-    capture: Option<Rc<RefCell<Vec<(String, String)>>>>,
+    capture: Option<Captured>,
     /// The calls made compress their requests (`grpc.with-gzip`).
     gzip: bool,
 }
+
+/// Response metadata collected by `grpc.with-response-metadata`.
+type Captured = Rc<RefCell<Vec<(String, String)>>>;
 
 /// Response headers and trailers that are not metadata.
 const NOT_RESPONSE_METADATA: &[&str] = &[
@@ -2904,7 +2907,7 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
         }
         "grpc.with-response-metadata" => {
             let cap = Rc::new(RefCell::new(Vec::new()));
-            let saved = std::mem::replace(&mut it.grpc.capture, Some(cap.clone()));
+            let saved = it.grpc.capture.replace(cap.clone());
             let r = it.apply(a[0].clone(), vec![Value::unit()]);
             it.grpc.capture = saved;
             let v = r?;
@@ -2934,7 +2937,7 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
                 cert: text("cert-file"),
                 key: text("key-file"),
             };
-            let saved = std::mem::replace(&mut it.grpc.tls, Some(Rc::new(t)));
+            let saved = it.grpc.tls.replace(Rc::new(t));
             let r = it.apply(a[1].clone(), vec![Value::unit()]);
             it.grpc.tls = saved;
             r
