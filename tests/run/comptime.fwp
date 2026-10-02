@@ -1,0 +1,48 @@
+# Compile-time evaluation: tables, routing and schema generation.
+
+square = fork mul id id
+squares = comptime (range 0 8 | map square)
+
+# A route table compiled at compile time into a dispatch map whose values
+# are handler functions (closures are compile-time constants too).
+Handler = String -> String
+
+route-spec : List[(String, Handler)]
+route-spec = [
+    ("/hello", const "hello, world"),
+    ("/shout", upper),
+    ("/len", string.length | show),
+]
+
+routes = comptime (route-spec | map.from-list)
+
+dispatch : String -> String -> String
+dispatch = curry (both (.1 | flip map.get routes) .0 | match
+    (Some _, _) -> id
+    (None, _) -> const "404 not found")
+
+# A JSON schema generated from a type at compile time.
+User = { name: String, age: U8, admin: Bool }
+
+json-type = match
+    "String" -> "string"
+    "Bool" -> "boolean"
+    _ -> const "integer"
+
+field-schema = both .name (.ty | json-type) | format "\"{}\": {{\"type\": \"{}\"}}"
+
+json-schema = .shape | match
+    ShapeRecord -> map field-schema | join ", " | format "{{\"type\": \"object\", \"properties\": {{{}}}}}"
+    _ -> const "{}"
+
+user-schema = comptime (type[User] | json-schema)
+
+main = [
+    squares | echo,
+    "/hello" | dispatch "anyone" | print,
+    "/shout" | dispatch "quiet please" | print,
+    "/len" | dispatch "four" | print,
+    "/missing" | dispatch "x" | print,
+    user-schema | print,
+    routes | map.keys | echo,
+] | ignore

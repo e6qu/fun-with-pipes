@@ -115,10 +115,6 @@ impl<'a> Parser<'a> {
         self.peek().span
     }
 
-    fn prev_span(&self) -> Span {
-        self.toks[self.pos.saturating_sub(1)].span
-    }
-
     fn bump(&mut self) -> Token {
         let t = self.toks[self.pos].clone();
         if self.pos + 1 < self.toks.len() {
@@ -990,7 +986,9 @@ impl<'a> Parser<'a> {
                 args.push(self.pat_atom()?);
             }
             let args = if args.is_empty() { None } else { Some(args) };
+            let id = self.new_id();
             return Ok(Pattern {
+                id,
                 span,
                 kind: PatKind::Ctor(name, args),
             });
@@ -1013,7 +1011,9 @@ impl<'a> Parser<'a> {
             Tok::Sym(Sym::LParen) => {
                 return self.with_layout(0, |p| {
                     if p.eat_sym(Sym::RParen) {
+                        let id = p.new_id();
                         return Ok(Pattern {
+                            id,
                             span,
                             kind: PatKind::Unit,
                         });
@@ -1025,7 +1025,9 @@ impl<'a> Parser<'a> {
                             items.push(p.pattern()?);
                         }
                         p.expect_sym(Sym::RParen)?;
+                        let id = p.new_id();
                         Ok(Pattern {
+                            id,
                             span,
                             kind: PatKind::Tuple(items),
                         })
@@ -1042,7 +1044,7 @@ impl<'a> Parser<'a> {
                 ))
             }
         };
-        let _ = self.prev_span();
-        Ok(Pattern { span, kind })
+        let id = self.new_id();
+        Ok(Pattern { id, span, kind })
     }
 }

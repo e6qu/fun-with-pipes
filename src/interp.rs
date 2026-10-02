@@ -448,6 +448,7 @@ impl<'p> Interp<'p> {
             "upper" => Ok(Value::str(&a[0].as_str().to_ascii_uppercase())),
             "concat" => Ok(Value::str(&format!("{}{}", a[1].as_str(), a[0].as_str()))),
             "show" => Ok(Value::str(&self.show(&a[0], &params[0]))),
+            "syntax.show" => Ok(Value::str(&crate::syntax::show(&a[0]))),
             "print" => {
                 let line = format!("{}\n", a[0].as_str());
                 self.write_out(&line)?;

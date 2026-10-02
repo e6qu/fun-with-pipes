@@ -1,0 +1,7 @@
+[0, 1, 4, 9, 16, 25, 36, 49]
+hello, world
+QUIET PLEASE
+4
+404 not found
+{"type": "object", "properties": {"admin": {"type": "boolean"}, "age": {"type": "integer"}, "name": {"type": "string"}}}
+["/hello", "/len", "/shout"]

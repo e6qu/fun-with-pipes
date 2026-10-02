@@ -1,0 +1,4 @@
+twice : Syntax -> Syntax
+template : Syntax -> Syntax -> Syntax
+shout : String -> String
+info : TypeInfo

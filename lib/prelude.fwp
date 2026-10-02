@@ -29,8 +29,6 @@ TInt[N] = builtin
 Array[T] = builtin
 Map[K, V] = builtin
 Set[T] = builtin
-Syntax = builtin
-TypeInfo = builtin
 
 Duration = { nanos: I64 }
 
@@ -55,6 +53,73 @@ Result[T, E] =
 List[T] =
     | Nil
     | Cons T List[T]
+
+# ------------------------------------------------------------- syntax
+#
+# Program syntax as ordinary values (homoiconicity). `quote e` is the
+# syntax of `e`; `unquote!(s)` inside a quote splices a `Syntax` value.
+# Macros are functions from syntax to syntax, run at compile time.
+
+Syntax =
+    | SName String
+    | SCtor String
+    | SInt I64
+    | SFloat F64
+    | SStr String
+    | SSelect List[String]
+    | SApply Syntax List[Syntax]
+    | SPipe Syntax Syntax
+    | SUnit
+    | STuple List[Syntax]
+    | SList List[Syntax]
+    | SRecord List[(String, Syntax)]
+    | SMatch List[(SynPat, Syntax)]
+    | SComptime Syntax
+    # any other construct, as source text
+    | SOther String
+    # a macro invocation `name!(args)`
+    | SMacro String List[Syntax]
+
+SynPat =
+    | PHole
+    | PInt I64
+    | PStr String
+    | PCtor String List[SynPat]
+    | PBare String
+    | PTuple List[SynPat]
+    | PUnit
+
+foreign "fwp" syntax.show : Syntax -> String
+
+# `assert!(cond)` fails with the source text of `cond` when it is False.
+assert-template = quote (unquote!(0) | match
+    True -> ()
+    False -> fail unquote!(1))
+
+macro assert = fork assert-template id (syntax.show | flip concat "assertion failed: " | SStr)
+
+# `dbg!(e)` prints `<source of e> = <value>` to stderr and returns the value.
+dbg-template = quote (unquote!(0) | tap (show | flip concat unquote!(1) | eprint))
+
+macro dbg = fork dbg-template id (syntax.show | concat " = " | SStr)
+
+# ------------------------------------------------------------- reflection
+#
+# `type[T]` describes a type at compile time (and is a constant at run
+# time): its name, type arguments and structure.
+
+TypeInfo = { name: String, args: List[String], shape: TypeShape }
+
+TypeShape =
+    | ShapePrim
+    | ShapeFunction
+    | ShapeTuple List[String]
+    | ShapeRecord List[FieldInfo]
+    | ShapeVariants List[VariantInfo]
+
+FieldInfo = { name: String, ty: String }
+
+VariantInfo = { name: String, fields: List[String] }
 
 # ------------------------------------------------------------- combinators
 foreign "fwp" id : a -> a

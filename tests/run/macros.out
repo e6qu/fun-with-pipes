@@ -1,0 +1,12 @@
+HEY!!
+-7
+4
+10
+105
+10
+42
+map (add 1) [1, 2]
+--- stderr
+6 | mul 7 = 42
+error: assertion failed: [1, 2] | length | eq 3
+--- exit 1

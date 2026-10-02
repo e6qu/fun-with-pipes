@@ -195,8 +195,7 @@ fn int_lit(neg: bool, mag: u128) -> String {
 }
 
 pub fn float_lit(v: f64) -> String {
-    let s = format!("{:?}", v);
-    s
+    crate::value::fmt_f64(v)
 }
 
 pub fn trits(ts: &[i8]) -> String {
@@ -263,7 +262,7 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Float { value, suffix } => {
             format!("{}{}", float_lit(*value), suffix.as_deref().unwrap_or(""))
         }
-        ExprKind::Str(s) => format!("{:?}", s),
+        ExprKind::Str(s) => crate::value::escape_str(s),
         ExprKind::Trits(t) => trits(t),
         ExprKind::Duration(ns) => duration(*ns),
         ExprKind::Var(v) => v.clone(),
@@ -307,7 +306,7 @@ pub fn pattern(p: &Pattern) -> String {
     match &p.kind {
         PatKind::Hole => "_".into(),
         PatKind::Int { neg, mag } => int_lit(*neg, *mag),
-        PatKind::Str(s) => format!("{:?}", s),
+        PatKind::Str(s) => crate::value::escape_str(s),
         PatKind::Ctor(n, None) => n.clone(),
         PatKind::Ctor(n, Some(args)) => {
             let mut s = n.clone();

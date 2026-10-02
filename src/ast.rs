@@ -67,6 +67,7 @@ pub struct Arm {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Pattern {
+    pub id: NodeId,
     pub span: Span,
     pub kind: PatKind,
 }

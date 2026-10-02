@@ -1,0 +1,4 @@
+# A macro defined in a module; `helper` is this module's binding.
+helper = add 100
+
+macro plus-helper = quote (unquote!(0) | helper)

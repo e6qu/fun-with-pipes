@@ -1,0 +1,33 @@
+import mods.macrolib
+
+# The user's own `helper` must not capture the macro's.
+helper = mul 2
+
+macro twice = quote (unquote!(0) | unquote!(0))
+macro swap-args = quote (flip unquote!(0))
+
+# A macro whose result contains another macro call.
+macro quad = quote (twice!(twice!(unquote!(0))))
+
+# Building syntax directly as data.
+macro const-sum = match
+    SList -> map (match { SInt -> id, _ -> const 0 }) | sum | SInt
+    _ -> const (SInt 0)
+
+shout = twice!(upper | concat "!")
+minus = swap-args!(sub)
+inc4 = quad!(add 1)
+
+main = [
+    "hey" | shout | print,
+    10 | minus 3 | echo,
+    0 | inc4 | echo,
+    const-sum!([1, 2, 3, 4]) | echo,
+    5 | mods.macrolib.plus-helper!(id) | echo,
+    5 | helper | echo,
+    dbg!(6 | mul 7) | echo,
+    quote (map (add 1) [1, 2]) | syntax.show | print,
+    assert!(2 | add 2 | eq 4),
+    assert!([1, 2] | length | eq 3),
+    print "not reached",
+] | ignore

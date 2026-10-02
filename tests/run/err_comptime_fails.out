@@ -1,0 +1,5 @@
+--- stderr
+err_comptime_fails.fwp:2:5: error: `comptime` evaluation failed: boom
+2 | n = comptime (Err "boom" | attempt try | try)
+  |     ^^^^^^^^
+--- exit 1

@@ -188,6 +188,10 @@ impl Env {
     }
 
     pub fn resolve_value(&self, scope: &Scope, name: &str) -> Option<String> {
+        // `::module::name` is an absolute (hygienic) reference
+        if let Some(abs) = name.strip_prefix("::") {
+            return self.globals.contains_key(abs).then(|| abs.to_string());
+        }
         self.candidates(scope, name)
             .into_iter()
             .find(|c| self.globals.contains_key(c))
@@ -200,6 +204,12 @@ impl Env {
     }
 
     pub fn resolve_ctor(&self, scope: &Scope, name: &str) -> Result<String, String> {
+        if let Some(abs) = name.strip_prefix("::") {
+            if self.ctors.contains_key(abs) {
+                return Ok(abs.to_string());
+            }
+            return Err(format!("unknown constructor `{}`", abs));
+        }
         for c in self.candidates(scope, name) {
             if self.ctors.contains_key(&c) {
                 return Ok(c);
@@ -1241,8 +1251,21 @@ pub fn renumber(e: &Expr, next: &mut NodeId) -> Expr {
             | ExprKind::With(fs)
             | ExprKind::Make(_, fs)
             | ExprKind::Update(fs) => fs.iter_mut().for_each(|(_, a)| go(a, next)),
-            ExprKind::Match(arms) => arms.iter_mut().for_each(|a| go(&mut a.body, next)),
+            ExprKind::Match(arms) => arms.iter_mut().for_each(|a| {
+                pat(&mut a.pat, next);
+                go(&mut a.body, next)
+            }),
             ExprKind::Comptime(x) | ExprKind::Quote(x) => go(x, next),
+            _ => {}
+        }
+    }
+    fn pat(p: &mut Pattern, next: &mut NodeId) {
+        p.id = *next;
+        *next += 1;
+        match &mut p.kind {
+            PatKind::Ctor(_, Some(args)) | PatKind::Tuple(args) => {
+                args.iter_mut().for_each(|a| pat(a, next))
+            }
             _ => {}
         }
     }

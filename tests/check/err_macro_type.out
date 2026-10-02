@@ -1,0 +1,3 @@
+check/err_macro_type.fwp:2:5: error: macro `count` must be a function from `Syntax` arguments to `Syntax`, but has type `Syntax -> String`
+2 | x = count!(a)
+  |     ^^^^^^^

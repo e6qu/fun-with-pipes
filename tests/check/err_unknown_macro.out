@@ -1,0 +1,3 @@
+check/err_unknown_macro.fwp:1:5: error: unknown macro `nope`
+1 | x = nope!(1)
+  |     ^^^^^^

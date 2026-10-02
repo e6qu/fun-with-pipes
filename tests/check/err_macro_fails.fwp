@@ -1,0 +1,2 @@
+macro bad = fail
+x = bad!(oops)

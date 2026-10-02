@@ -15,13 +15,15 @@ type Subst = HashMap<TV, MT>;
 type MResult<T> = Result<T, Diagnostic>;
 
 /// Which entry points to compile.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Roots {
     pub main: bool,
     pub tests: bool,
     pub exports: bool,
     /// Run the standard library's own tests.
     pub std_tests: bool,
+    /// Bindings to compile by canonical name (used for macros).
+    pub names: Vec<String>,
 }
 
 pub struct Mono<'a> {
@@ -33,8 +35,12 @@ pub struct Mono<'a> {
     generated: HashMap<String, FuncId>,
     match_funcs: HashMap<(NodeId, Vec<(TV, MT)>), FuncId>,
     work: Vec<(FuncId, usize, Subst)>,
-    match_work: Vec<(FuncId, NodeId, Subst)>,
+    match_work: Vec<(FuncId, NodeId, Subst, String)>,
     matches: HashMap<NodeId, &'a ast::Expr>,
+    /// Module of the code being lowered (for hygienic quotes).
+    cur_module: String,
+    /// Functions whose bodies are being lowered right now.
+    in_progress: std::collections::HashSet<FuncId>,
 }
 
 /// Function-local builder state.
@@ -171,6 +177,8 @@ impl<'a> Mono<'a> {
             work: Vec::new(),
             match_work: Vec::new(),
             matches: index_matches(env),
+            cur_module: "main".into(),
+            in_progress: Default::default(),
         }
     }
 
@@ -485,6 +493,16 @@ impl<'a> Mono<'a> {
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
+        for name in &roots.names {
+            if let Some(GlobalKind::Binding(i)) = env.globals.get(name).map(|g| &g.kind) {
+                let b = &env.bindings[*i];
+                // macros are functions of syntax: free type variables are
+                // syntax too
+                let key = vec![MT::con("std::Syntax"); b.mono_vars.len()];
+                let id = self.binding_instance(*i, key, b.span)?;
+                self.prog.named.push((name.clone(), id));
+            }
+        }
         for (i, b) in env.bindings.iter().enumerate() {
             if b.module != "main" && b.module != "std" {
                 continue;
@@ -533,6 +551,8 @@ impl<'a> Mono<'a> {
         loop {
             if let Some((id, idx, s)) = self.work.pop() {
                 let b = &self.env.bindings[idx];
+                let saved = std::mem::replace(&mut self.cur_module, b.module.clone());
+                self.in_progress.insert(id);
                 let arity = self.prog.funcs[id].arity;
                 let mut fb = FB { nlocals: arity };
                 let e = self.expr(&b.body, &s, &mut fb)?;
@@ -541,14 +561,111 @@ impl<'a> Mono<'a> {
                 let f = &mut self.prog.funcs[id];
                 f.body = Body::Expr(body);
                 f.nlocals = fb.nlocals;
+                self.in_progress.remove(&id);
+                self.cur_module = saved;
                 continue;
             }
-            if let Some((id, node, s)) = self.match_work.pop() {
+            if let Some((id, node, s, module)) = self.match_work.pop() {
+                let saved = std::mem::replace(&mut self.cur_module, module);
+                self.in_progress.insert(id);
                 self.lower_match(id, node, &s)?;
+                self.in_progress.remove(&id);
+                self.cur_module = saved;
                 continue;
             }
             return Ok(());
         }
+    }
+
+    /// Evaluate `x` at compile time and return its value as a constant.
+    fn comptime(&mut self, e: &ast::Expr, x: &ast::Expr, s: &Subst) -> MResult<Expr> {
+        let mt = self.node_mt(e.id, s);
+        let mut fb = FB { nlocals: 0 };
+        let body = self.expr(x, s, &mut fb)?;
+        let tmp = self.new_func("comptime".into(), 0, mt, Body::Expr(body));
+        self.prog.funcs[tmp].nlocals = fb.nlocals;
+        self.drain()?;
+        // the expression must not depend on code that is still being lowered
+        let mut seen = std::collections::HashSet::new();
+        let mut stack = vec![tmp];
+        while let Some(f) = stack.pop() {
+            if !seen.insert(f) {
+                continue;
+            }
+            if self.in_progress.contains(&f) {
+                return Err(Diagnostic::error(
+                    e.span,
+                    format!(
+                        "`comptime` expression depends on `{}`, which is still being compiled",
+                        self.prog.funcs[f].name
+                    ),
+                ));
+            }
+            if let Body::Expr(b) = &self.prog.funcs[f].body {
+                funcs_in(b, &mut stack);
+            }
+        }
+        let result = {
+            let mut it = crate::interp::Interp::new(&self.prog, Box::new(std::io::stderr()));
+            let r = it.call(tmp, vec![]);
+            r.map_err(|c| match c {
+                crate::interp::Ctl::Fail(v, t) => format!(
+                    "`comptime` evaluation failed: {}",
+                    crate::value::display(&v, &t, &self.prog, true)
+                ),
+                crate::interp::Ctl::Trap(m) => format!("`comptime` evaluation trapped: {}", m),
+                crate::interp::Ctl::Exit(c) => format!("`comptime` evaluation exited with {}", c),
+            })
+        };
+        match result {
+            Ok(v) => Ok(Expr::Const(v)),
+            Err(m) => Err(Diagnostic::error(e.span, m)),
+        }
+    }
+
+    /// `TypeInfo` value describing a concrete type.
+    fn type_info(&mut self, mt: &MT) -> Value {
+        self.register_shapes(mt);
+        let strs = |xs: Vec<String>| Value::list(xs.iter().map(|x| Value::str(x)).collect());
+        let (name, args) = match mt {
+            MT::Con(n, a) => (MT::short_name(n), a.iter().map(|t| t.to_string()).collect()),
+            MT::Fun(..) => ("fn".to_string(), vec![]),
+            other => (other.to_string(), vec![]),
+        };
+        // TypeShape: ShapePrim | ShapeFunction | ShapeTuple | ShapeRecord | ShapeVariants
+        let shape = match mt {
+            MT::Fun(..) => Value::nullary(1),
+            MT::Record(fs)
+                if fs.len() > 1 && fs.iter().enumerate().all(|(i, (l, _))| *l == i.to_string()) =>
+            {
+                Value::data(
+                    2,
+                    vec![strs(fs.iter().map(|(_, t)| t.to_string()).collect())],
+                )
+            }
+            MT::Record(fs) => Value::data(3, vec![field_infos(fs)]),
+            MT::Con(..) => match self.prog.shapes.get(mt).cloned() {
+                Some(TypeShape::Record(fs)) => Value::data(3, vec![field_infos(&fs)]),
+                Some(TypeShape::Adt(vs)) => Value::data(
+                    4,
+                    vec![Value::list(
+                        vs.iter()
+                            .map(|(n, fs)| {
+                                // VariantInfo fields in label order: fields, name
+                                Value::tuple(vec![
+                                    strs(fs.iter().map(|t| t.to_string()).collect()),
+                                    Value::str(n),
+                                ])
+                            })
+                            .collect(),
+                    )],
+                ),
+                _ => Value::nullary(0),
+            },
+            MT::Nat(_) => Value::nullary(0),
+        };
+        // TypeInfo fields in label order: args, name, shape
+        Value::tuple(vec![strs(args), Value::str(&name), shape])
     }
 
     // ----- expressions -----------------------------------------------------------
@@ -758,16 +875,46 @@ impl<'a> Mono<'a> {
                     Body::Expr(Expr::Const(Value::unit())),
                 );
                 self.match_funcs.insert((e.id, key), id);
-                self.match_work.push((id, e.id, s.clone()));
+                self.match_work
+                    .push((id, e.id, s.clone(), self.cur_module.clone()));
                 Ok(Expr::Func(id))
             }
-            ExprKind::Comptime(x) => self.expr(x, s, fb),
-            ExprKind::Quote(_) | ExprKind::TypeOf(_) | ExprKind::MacroCall(..) => {
-                Err(Diagnostic::error(
-                    e.span,
-                    "quotation, reflection and macros are not supported by this backend yet",
-                ))
+            ExprKind::Comptime(x) => self.comptime(e, x, s),
+            ExprKind::Quote(x) => {
+                let holes = crate::syntax::hole_count(x);
+                if holes == 0 {
+                    let mut cx = QuoteCx { mono: self, s, fb };
+                    return crate::syntax::quote(x, &mut cx);
+                }
+                // a syntax template: a function of its positional holes
+                let mut tfb = FB { nlocals: holes };
+                let body = {
+                    let mut cx = QuoteCx {
+                        mono: self,
+                        s,
+                        fb: &mut tfb,
+                    };
+                    crate::syntax::quote(x, &mut cx)?
+                };
+                let mt = self.node_mt(e.id, s);
+                let id = self.new_func("quote".into(), holes, mt, Body::Expr(body));
+                self.prog.funcs[id].nlocals = tfb.nlocals;
+                Ok(Expr::Func(id))
             }
+            ExprKind::TypeOf(_) => {
+                let t = self
+                    .typed
+                    .reflected
+                    .get(&e.id)
+                    .cloned()
+                    .unwrap_or(Type::unit());
+                let mt = self.mt(&t, s);
+                Ok(Expr::Const(self.type_info(&mt)))
+            }
+            ExprKind::MacroCall(name, _) => Err(Diagnostic::error(
+                e.span,
+                format!("unknown macro `{}`", name),
+            )),
         }
     }
 
@@ -896,9 +1043,81 @@ impl<'a> Mono<'a> {
     fn resolve_pattern_ctor(&self, p: &ast::Pattern, name: &str) -> MResult<String> {
         self.typed
             .pattern_ctors
-            .get(&(p.span.file, p.span.line, p.span.col))
+            .get(&p.id)
             .cloned()
             .ok_or_else(|| Diagnostic::error(p.span, format!("unknown constructor `{}`", name)))
+    }
+}
+
+/// Hygienic quoting in the module being lowered.
+struct QuoteCx<'m, 'a, 's, 'f> {
+    mono: &'m mut Mono<'a>,
+    s: &'s Subst,
+    fb: &'f mut FB,
+}
+
+impl crate::syntax::QuoteCtx for QuoteCx<'_, '_, '_, '_> {
+    fn value_name(&self, n: &str) -> String {
+        let scope = Scope {
+            module: self.mono.cur_module.clone(),
+        };
+        match self.mono.env.resolve_value(&scope, n) {
+            Some(c) => format!("::{}", c),
+            None => n.to_string(),
+        }
+    }
+
+    fn ctor_name(&self, n: &str) -> String {
+        let scope = Scope {
+            module: self.mono.cur_module.clone(),
+        };
+        match self.mono.env.resolve_ctor(&scope, n) {
+            Ok(c) => format!("::{}", c),
+            Err(_) => n.to_string(),
+        }
+    }
+
+    fn unquote(&mut self, x: &ast::Expr) -> Result<Expr, Diagnostic> {
+        self.mono.expr(x, self.s, self.fb)
+    }
+}
+
+fn field_infos(fs: &[(String, MT)]) -> Value {
+    // FieldInfo fields in label order: name, ty
+    Value::list(
+        fs.iter()
+            .map(|(l, t)| Value::tuple(vec![Value::str(l), Value::str(&t.to_string())]))
+            .collect(),
+    )
+}
+
+/// Functions referenced by an expression.
+fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
+    match e {
+        Expr::Func(f) => out.push(*f),
+        Expr::Call(f, a) => {
+            out.push(*f);
+            a.iter().for_each(|x| funcs_in(x, out));
+        }
+        Expr::Apply(f, a) => {
+            funcs_in(f, out);
+            a.iter().for_each(|x| funcs_in(x, out));
+        }
+        Expr::Construct(_, a) | Expr::Record(a) => a.iter().for_each(|x| funcs_in(x, out)),
+        Expr::Field(r, _) => funcs_in(r, out),
+        Expr::SetFields(r, s) => {
+            funcs_in(r, out);
+            s.iter().for_each(|(_, x)| funcs_in(x, out));
+        }
+        Expr::Let(_, v, b) => {
+            funcs_in(v, out);
+            funcs_in(b, out);
+        }
+        Expr::Match(sc, arms) => {
+            funcs_in(sc, out);
+            arms.iter().for_each(|(_, b)| funcs_in(b, out));
+        }
+        Expr::Local(_) | Expr::Const(_) => {}
     }
 }
 
