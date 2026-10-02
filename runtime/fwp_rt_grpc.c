@@ -69,6 +69,7 @@ typedef struct g_msg { struct g_msg *next; size_t n; unsigned char d[]; } g_msg;
 struct g_stream {
     uint32_t id;
     h2_hdrs headers, trailers;
+    h2_hdrs out_headers, out_trailers; /* a server's response metadata */
     int got_headers, got_data, remote_end, local_end, sent_headers, retry, listed;
     h2_buf data;
     g_msg *mhead, *mtail;
@@ -109,6 +110,7 @@ typedef struct g_serving {
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
     char *peer;                /* the subject of the client's certificate, or 0 */
+    g_stream *s;               /* the call's stream */
 } g_serving;
 
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
@@ -127,6 +129,7 @@ typedef struct {
     int64_t deadline;
     g_serving *serving;
     const g_tls *tls;
+    h2_hdrs *capture;          /* response metadata collected, or 0 */
 } g_ctx;
 
 static g_ctx g_empty_ctx;
@@ -196,6 +199,8 @@ static void g_stream_final(void *p) {
     g_stream *s = (g_stream *)p;
     h2_hdrs_free(&s->headers);
     h2_hdrs_free(&s->trailers);
+    h2_hdrs_free(&s->out_headers);
+    h2_hdrs_free(&s->out_trailers);
     h2b_free(&s->data);
     while (s->mhead) {
         g_msg *m = s->mhead;
@@ -213,6 +218,7 @@ static void g_conn_final(void *p) {
     h2b_free(&c->out);
     h2b_free(&c->cont_buf);
     free(c->dead);
+    free(c->tlskey);
 }
 
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
@@ -674,6 +680,8 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2_buf blk = {0};
         h2_hpack_lit(&blk, ":status", "200");
         h2_hpack_lit(&blk, "content-type", "application/grpc");
+        for (size_t i = 0; i < s->out_headers.n; i++)
+            h2_hpack_lit(&blk, s->out_headers.v[i].name, s->out_headers.v[i].value);
         h2_header_frames(&c->out, s->id, &blk, 0, c->peer.max_frame);
         h2b_free(&blk);
     }
@@ -733,6 +741,28 @@ static void g_deadline_passed(int64_t call) {
     fwp_check_cancel();
 }
 
+/* response headers and trailers that are not metadata */
+static int g_not_response_metadata(const char *k) {
+    static const char *const no[] = {"content-type", "grpc-status", "grpc-message", "grpc-encoding",
+                                     "grpc-accept-encoding"};
+    if (k[0] == ':') return 1;
+    for (size_t i = 0; i < sizeof no / sizeof no[0]; i++)
+        if (strcmp(k, no[i]) == 0) return 1;
+    return 0;
+}
+
+static V g_pairs_value(const h2_hdrs *h);
+
+/* the metadata of a response (headers, then trailers) added to `out` */
+static void g_metadata_into(const g_stream *s, h2_hdrs *out) {
+    for (int t = 0; t < 2; t++) {
+        const h2_hdrs *h = t ? &s->trailers : &s->headers;
+        for (size_t i = 0; i < h->n; i++)
+            if (!g_not_response_metadata(h->v[i].name))
+                h2_hdrs_add(out, h->v[i].name, strlen(h->v[i].name), h->v[i].value, strlen(h->v[i].value));
+    }
+}
+
 /* wait for the next message of a stream; cancellation of the task resets
  * a client's stream, and `deadline` (a call's) ends it with
  * DEADLINE_EXCEEDED */
@@ -749,6 +779,7 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
         if (s->bad) { g->kind = G_LOST; g->text = strdup(s->bad); return; }
         if (s->remote_end) {
             if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(""); return; }
+            if (g_ctx_of()->capture) g_metadata_into(s, g_ctx_of()->capture);
             g_status_of(c, s, g);
             g_unlink(c, s);
             if (g->code == GRPC_DEADLINE_EXCEEDED) g_deadline_passed(deadline);
@@ -1027,6 +1058,7 @@ typedef struct {
     g_codec dec;
     const char *what;          /* the call, for messages (client side) */
     int64_t deadline;
+    int results;               /* elements are Result[R, GrpcError] (client side) */
 } g_incoming;
 
 /* a position in a received stream (GrpcCell): forcing it receives the
@@ -1054,12 +1086,50 @@ typedef struct { int code; char *text; } g_failure;
 
 /* Option[(a, GrpcCell[a])]: the next element; with `first`, failures go
  * to *f or *err_desc (the cell stays unforced) instead of trapping */
+/* `Some((Err (GrpcError code text), <the end>))` */
+static V g_err_element(g_incoming *src, int code, const char *text) {
+    g_cell *last = (g_cell *)fwp_mem_alloc(sizeof *last);
+    last->src = src;
+    last->forced = 1;
+    last->memo = FWP_NONE;
+    V f[2] = {(V)(int64_t)code, fwp_cstr(text)};
+    V e = fwp_record(2, f);
+    return fwp_some(fwp_tuple2(fwp_data(1, 1, &e), PTR(last)));
+}
+
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
     if (cell->forced) return cell->memo;
     g_incoming *src = cell->src;
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
     V r = FWP_NONE;
+    if (src->results) {
+        /* a failure is an `Err` element, then the end */
+        if (g.kind == G_MSG) {
+            V x;
+            char *why = 0;
+            int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
+            free(g.m);
+            if (k == G_DEC_OK) {
+                g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
+                next->src = src;
+                r = fwp_some(fwp_tuple2(fwp_data(0, 1, &x), PTR(next)));
+            } else {
+                char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
+                                         : strdup("unexpected error in a response");
+                r = g_err_element(src, GRPC_INTERNAL, t);
+                free(t);
+            }
+        } else if (g.kind == G_END && g.code == 0) {
+            r = FWP_NONE;
+        } else {
+            r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
+        }
+        free(g.text);
+        cell->forced = 1;
+        cell->memo = r;
+        return r;
+    }
     if (g.kind == G_MSG) {
         V x;
         char *why = 0;
@@ -1245,6 +1315,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     src->dec = dec;
     src->what = g_strdupf("%s (%s)", r->what, addr);
     src->deadline = deadline;
+    src->results = r->m.output == 3;
     g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
     cell->src = src;
     g_failure f = {0, 0};
@@ -1345,6 +1416,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.headers = &s->headers;
     j->sv.code = -1;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
+    j->sv.s = s;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
@@ -1355,6 +1427,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
 static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
     if (c->dead || s->reset || s->local_end) { g_unlink(c, s); return; }
     h2_buf blk = {0};
+    int headers_too = !s->sent_headers;
     if (!s->sent_headers) {
         h2_hpack_lit(&blk, ":status", "200");
         h2_hpack_lit(&blk, "content-type", "application/grpc");
@@ -1368,6 +1441,11 @@ static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
         h2_hpack_lit(&blk, "grpc-message", (const char *)m.d);
         h2b_free(&m);
     }
+    if (headers_too)
+        for (size_t i = 0; i < s->out_headers.n; i++)
+            h2_hpack_lit(&blk, s->out_headers.v[i].name, s->out_headers.v[i].value);
+    for (size_t i = 0; i < s->out_trailers.n; i++)
+        h2_hpack_lit(&blk, s->out_trailers.v[i].name, s->out_trailers.v[i].value);
     h2_header_frames(&c->out, s->id, &blk, 1, c->peer.max_frame);
     h2b_free(&blk);
     s->local_end = 1;
@@ -1527,7 +1605,7 @@ static int g_run_method(g_job *j, char **msg) {
         g_encode(&enc, v, m->error != 0, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
         h2b_free(&b);
-    } else if (m->output == 1) {
+    } else if (m->output == 1 || m->output == 3) {
         /* forcing the iterator may trap */
         jmp_buf *saved = fwp_cur->trap_jb;
         jmp_buf tj;
@@ -1546,6 +1624,16 @@ static int g_run_method(g_job *j, char **msg) {
             fwp_cur->trap_jb = saved;
             if (!more) break;
             cur = next;
+            if (m->output == 3) {
+                /* a stream of results ends at an `Err`, with its status */
+                if (fwp_tag(x) == 1) {
+                    V e = OBJ(x)->f[0];
+                    int64_t code = (int64_t)OBJ(e)->f[0];
+                    *msg = strdup(STR(OBJ(e)->f[1])->d);
+                    return code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
+                }
+                x = OBJ(x)->f[0];
+            }
             h2_buf b = {0};
             g_encode(&enc, x, m->error != 0, &b);
             int ok = g_send_msg(j->c, j->s, b.d, b.len, 0);
@@ -1966,6 +2054,14 @@ static V fwp_p_grpc_cancel(V call) {
     return FWP_UNIT;
 }
 
+static V fwp_p_grpc_response_metadata(V call) {
+    h2_hdrs md = {0};
+    g_metadata_into(GCALL(call)->s, &md);
+    V r = g_pairs_value(&md);
+    h2_hdrs_free(&md);
+    return r;
+}
+
 static int g_not_metadata(const char *k) {
     static const char *const no[] = {"content-type", "te", "grpc-timeout", "grpc-encoding", "grpc-accept-encoding",
                                      "fwp-fingerprint"};
@@ -2035,6 +2131,45 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
     ctx->n = k;
     return g_with_ctx(ctx, f);
 }
+
+static V g_pairs_value(const h2_hdrs *h) {
+    V *items = (V *)fwp_alloc((h->n + 1) * sizeof(V));
+    for (size_t i = 0; i < h->n; i++) items[i] = fwp_tuple2(fwp_cstr(h->v[i].name), fwp_cstr(h->v[i].value));
+    return fwp_list_from(items, h->n);
+}
+
+/* a response header (0) or trailer (1) of the call the task serves */
+static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
+    g_serving *sv = g_ctx_of()->serving;
+    fwp_str *k = STR(name), *v = STR(value);
+    if (!sv || !sv->s || k->len == 0 || k->d[0] == ':') return FWP_UNIT;
+    char *lk = (char *)malloc(k->len + 1), *lv = (char *)malloc(v->len + 1);
+    for (size_t i = 0; i < k->len; i++) lk[i] = (char)tolower((unsigned char)k->d[i]);
+    for (size_t i = 0; i < v->len; i++) lv[i] = v->d[i] == '\r' || v->d[i] == '\n' ? ' ' : v->d[i];
+    h2_hdrs_add(trailer ? &sv->s->out_trailers : &sv->s->out_headers, lk, k->len, lv, v->len);
+    free(lk);
+    free(lv);
+    return FWP_UNIT;
+}
+
+static V fwp_p_grpc_with_response_metadata(V f) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    h2_hdrs *cap = (h2_hdrs *)calloc(1, sizeof *cap);
+    ctx->capture = cap;
+    V r = g_with_ctx(ctx, f);
+    if (cur->capture)
+        for (size_t i = 0; i < cap->n; i++)
+            h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
+                        strlen(cap->v[i].value));
+    V md = g_pairs_value(cap);
+    h2_hdrs_free(cap);
+    free(cap);
+    return fwp_tuple2(r, md);
+}
+
+static V fwp_p_grpc_response_metadata(V call);
 
 static V fwp_p_grpc_peer_subject(void) {
     g_serving *sv = g_ctx_of()->serving;

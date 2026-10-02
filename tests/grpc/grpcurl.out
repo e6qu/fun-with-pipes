@@ -18,6 +18,18 @@ $ grpcurl -d {"arg1": 3} test.Greeter/Count
 {
   "value": "3"
 }
+$ grpcurl -d {"arg1": 2} test.Greeter/Countdown
+{
+  "value": "2"
+}
+{
+  "value": "1"
+}
+--- stderr
+ERROR:
+  Code: OutOfRange
+  Message: lift off
+--- exit 75
 $ grpcurl -d {"arg1": 1} {"arg1": 2} test.Greeter/Total
 {
   "value": "3"
@@ -33,6 +45,26 @@ $ grpcurl -H x-user: grpcurl test.Greeter/Whoami
 {
   "value": "grpcurl"
 }
+$ grpcurl -v -d {"arg1": "Ann"} test.Greeter/Tagged
+
+Resolved method descriptor:
+rpc Tagged ( .test.TaggedRequest ) returns ( .test.TaggedResponse );
+
+Request metadata to send:
+(empty)
+
+Response headers received:
+content-type: application/grpc
+x-served-by: greeter
+
+Response contents:
+{
+  "value": "tagged Ann"
+}
+
+Response trailers received:
+x-length: 3
+Sent 1 request and received 1 response
 $ grpcurl -d {"arg1": "ghost"} test.Greeter/Find
 --- stderr
 ERROR:

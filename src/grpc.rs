@@ -94,6 +94,39 @@ pub struct TaskCtx {
     serving: Option<Rc<Serving>>,
     /// How the calls made connect over TLS (`grpc.with-tls`).
     tls: Option<Rc<ClientTls>>,
+    /// The response metadata of the calls made, collected
+    /// (`grpc.with-response-metadata`).
+    capture: Option<Rc<RefCell<Vec<(String, String)>>>>,
+}
+
+/// Response headers and trailers that are not metadata.
+const NOT_RESPONSE_METADATA: &[&str] = &[
+    "content-type",
+    "grpc-status",
+    "grpc-message",
+    "grpc-encoding",
+    "grpc-accept-encoding",
+];
+
+/// The metadata of a response: its headers and trailers but the
+/// pseudo-headers and those of the protocol.
+fn response_metadata(s: &Stream) -> Vec<(String, String)> {
+    s.headers
+        .iter()
+        .chain(&s.trailers)
+        .filter(|(k, _)| !k.starts_with(':') && !NOT_RESPONSE_METADATA.contains(&k.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// A metadata pair as a header: a lower-case name, a value without line
+/// breaks; `None` for names that cannot be metadata.
+fn metadata_pair(k: &str, v: &str) -> Option<(String, String)> {
+    let k = k.to_ascii_lowercase();
+    if k.is_empty() || k.starts_with(':') {
+        return None;
+    }
+    Some((k, v.replace(['\r', '\n'], " ")))
 }
 
 /// The TLS options of a client's calls: a CA file ("" for the system's),
@@ -144,6 +177,8 @@ pub struct Serving {
     headers: Vec<(String, String)>,
     /// The subject of the client's certificate (mutual TLS).
     peer: Option<String>,
+    /// The call's stream (for its response metadata).
+    stream: StreamRef,
     task: Arc<TaskShared>,
     /// The status to answer with when the task is cancelled for a bad
     /// request message.
@@ -192,6 +227,11 @@ struct Stream {
     window: i64,
     sent_headers: bool,
     local_end: bool,
+    /// A server's response metadata: headers sent with the first message,
+    /// and trailers sent with the status (`grpc.set-header`,
+    /// `grpc.set-trailer`).
+    out_headers: Vec<(String, String)>,
+    out_trailers: Vec<(String, String)>,
     bad: Option<String>,
     /// The task serving the call.
     task: Option<Arc<TaskShared>>,
@@ -769,7 +809,12 @@ fn send_msg(it: &mut Interp, c: &ConnRef, s: &StreamRef, msg: &[u8], end: bool) 
         let mut sb = s.borrow_mut();
         if cb.server.is_some() && !sb.sent_headers && cb.dead.is_none() && sb.reset.is_none() {
             sb.sent_headers = true;
-            let b = hpack::encode(&[(":status", "200"), ("content-type", "application/grpc")]);
+            let mut hs: Vec<(&str, &str)> =
+                vec![(":status", "200"), ("content-type", "application/grpc")];
+            for (k, v) in &sb.out_headers {
+                hs.push((k, v));
+            }
+            let b = hpack::encode(&hs);
             let max = cb.peer.max_frame;
             cb.out.extend(h2::header_frames(sb.id, &b, false, max));
         }
@@ -847,6 +892,9 @@ fn recv(it: &mut Interp, c: &ConnRef, s: &StreamRef, deadline: Option<Instant>) 
                 let cb = c.borrow();
                 if cb.server.is_some() {
                     return Ok(Got::End(Status::new(OK, "")));
+                }
+                if let Some(cap) = &it.grpc.capture {
+                    cap.borrow_mut().extend(response_metadata(&sb));
                 }
                 let st = status_of(&cb.authority, &sb);
                 drop(cb);
@@ -1211,8 +1259,7 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
     // task gives its own
     let saved_tls = it.grpc.tls.clone();
     if saved_tls.is_none() {
-        it.grpc.tls =
-            ClientTls::from_env(&crate::protobuf::env_var(&r.module)).map(Rc::new);
+        it.grpc.tls = ClientTls::from_env(&crate::protobuf::env_var(&r.module)).map(Rc::new);
     }
     let r = call_remote_at(it, id, r, args, &shape, &what, &addr);
     it.grpc.tls = saved_tls;
@@ -1360,6 +1407,7 @@ fn call_remote_at(
                 dec: dec.clone(),
                 what: format!("{} ({})", what, addr),
                 deadline,
+                results: shape.results.is_some(),
             });
             let cell = Rc::new(StreamCell {
                 src: inc,
@@ -1409,6 +1457,9 @@ pub struct Incoming {
     /// The call, for messages (client side).
     what: String,
     deadline: Option<Instant>,
+    /// Elements are `Result[R, GrpcError]`: a failure ends the stream
+    /// with an `Err` (client side).
+    results: bool,
 }
 
 /// A position in a received stream; forcing it receives the message
@@ -1449,6 +1500,44 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
     }
     let src = cell.src.clone();
     let got = recv(it, &src.conn, &src.stream, src.deadline)?;
+    if src.results {
+        // an `Err` element, then the end
+        let err = |code: u32, msg: &str| {
+            let last = Rc::new(StreamCell {
+                src: src.clone(),
+                memo: RefCell::new(Some(opt(None))),
+            });
+            let e = Value::data(
+                1,
+                vec![Value::tuple(vec![Value::I64(code as i64), Value::str(msg)])],
+            );
+            opt(Some(Value::tuple(vec![
+                e,
+                wrap(Native::Grpc(Obj::Cell(last))),
+            ])))
+        };
+        let v = match got {
+            Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
+                Ok(Ok(x)) => {
+                    let next = Rc::new(StreamCell {
+                        src: src.clone(),
+                        memo: RefCell::new(None),
+                    });
+                    opt(Some(Value::tuple(vec![
+                        Value::data(0, vec![x]),
+                        wrap(Native::Grpc(Obj::Cell(next))),
+                    ])))
+                }
+                Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
+                Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
+            },
+            Got::End(st) if st.code == OK => opt(None),
+            Got::End(st) => err(st.code, &st.message),
+            Got::Lost(m, _) => err(UNAVAILABLE, &m),
+        };
+        *cell.memo.borrow_mut() = Some(v.clone());
+        return Ok(v);
+    }
     let failed = |f: Failure| -> CellErr {
         if src.server {
             return CellErr::Ctl(Ctl::Cancelled);
@@ -1662,6 +1751,7 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
     let serving = Rc::new(Serving {
         headers: headers.clone(),
         peer,
+        stream: s.clone(),
         task: it.task.clone(),
         status: RefCell::new(None),
     });
@@ -1670,6 +1760,7 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
         deadline: None,
         serving: Some(serving.clone()),
         tls: None,
+        capture: None,
     };
     let what = route_name(&server, &path);
     // calls of the program's functions (not of reflection and health
@@ -1741,6 +1832,15 @@ fn finish(it: &mut Interp, c: &ConnRef, s: &StreamRef, status: Option<Status>) {
         None => ("0".to_string(), None),
     };
     let mut hs: Vec<(&str, &str)> = Vec::new();
+    let extra: Vec<(String, String)> = if sb.sent_headers {
+        sb.out_trailers.clone()
+    } else {
+        sb.out_headers
+            .iter()
+            .chain(&sb.out_trailers)
+            .cloned()
+            .collect()
+    };
     if !sb.sent_headers {
         hs.push((":status", "200"));
         hs.push(("content-type", "application/grpc"));
@@ -1748,6 +1848,9 @@ fn finish(it: &mut Interp, c: &ConnRef, s: &StreamRef, status: Option<Status>) {
     hs.push(("grpc-status", &code));
     if let Some(m) = &msg {
         hs.push(("grpc-message", m));
+    }
+    for (k, v) in &extra {
+        hs.push((k, v));
     }
     let b = hpack::encode(&hs);
     let max = cb.peer.max_frame;
@@ -1897,6 +2000,7 @@ fn run_method(
                 },
                 what: what.to_string(),
                 deadline: None,
+                results: false,
             });
             let cell = Rc::new(StreamCell {
                 src: inc,
@@ -1957,6 +2061,14 @@ fn run_method(
                 };
                 let Some((x, rest)) = next else {
                     break;
+                };
+                // a stream of results ends at an `Err`, with its status
+                let x = match (&m.shape.results, &x) {
+                    (Some(_), Value::Data(1, e)) => {
+                        return Ok(Err(status_of_error(&e[0])));
+                    }
+                    (Some(_), Value::Data(0, v)) => v[0].clone(),
+                    _ => x,
                 };
                 let msg = encode_msg(it, &enc, &x)?;
                 if !send_msg(it, c, s, &msg, false)? {
@@ -2357,6 +2469,14 @@ pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFile
 
 // ============================================================= primitives
 
+fn pairs_value(md: &[(String, String)]) -> Value {
+    Value::list(
+        md.iter()
+            .map(|(k, v)| Value::tuple(vec![Value::str(k), Value::str(v)]))
+            .collect(),
+    )
+}
+
 fn bytes_of(v: &Value) -> Rc<[u8]> {
     match v {
         Value::Bytes(b) => b.clone(),
@@ -2629,6 +2749,37 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             .as_ref()
             .and_then(|s| s.peer.clone())
             .map(|p| Value::str(&p)))),
+        "grpc.set-header" | "grpc.set-trailer" => {
+            if let (Some(sv), Some(p)) = (
+                it.grpc.serving.clone(),
+                metadata_pair(a[0].as_str(), a[1].as_str()),
+            ) {
+                let mut sb = sv.stream.borrow_mut();
+                if sym == "grpc.set-header" {
+                    sb.out_headers.push(p);
+                } else {
+                    sb.out_trailers.push(p);
+                }
+            }
+            Ok(Value::unit())
+        }
+        "grpc.with-response-metadata" => {
+            let cap = Rc::new(RefCell::new(Vec::new()));
+            let saved = std::mem::replace(&mut it.grpc.capture, Some(cap.clone()));
+            let r = it.apply(a[0].clone(), vec![Value::unit()]);
+            it.grpc.capture = saved;
+            let v = r?;
+            let md = cap.borrow().clone();
+            if let Some(outer) = &it.grpc.capture {
+                outer.borrow_mut().extend(md.iter().cloned());
+            }
+            Ok(Value::tuple(vec![v, pairs_value(&md)]))
+        }
+        "grpc.response-metadata" => {
+            let call = the_call(&a[0])?;
+            let md = response_metadata(&call.stream.borrow());
+            Ok(pairs_value(&md))
+        }
         "grpc.with-tls" => {
             // TlsOptions: alpn, ca-file, cert-file, insecure, key-file,
             // server-name
@@ -2842,6 +2993,7 @@ fn typed_handler(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
             dec: Decoder::Fwp(dec.clone()),
             what: String::new(),
             deadline: None,
+            results: false,
         });
         let cell = wrap(Native::Grpc(Obj::Cell(Rc::new(StreamCell {
             src: inc,

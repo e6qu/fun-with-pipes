@@ -1427,6 +1427,13 @@ impl<'p> Gen<'p> {
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
                     ("grpc.peer-subject", "fwp_p_grpc_peer_subject()"),
+                    ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
+                    ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
+                    (
+                        "grpc.with-response-metadata",
+                        "fwp_p_grpc_with_response_metadata(l0)",
+                    ),
+                    ("grpc.response-metadata", "fwp_p_grpc_response_metadata(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("pb.parse", "fwp_p_pb_parse(l0)"),
                     ("pb.write", "fwp_p_pb_write(l0)"),
@@ -1489,6 +1496,7 @@ impl<'p> Gen<'p> {
             input: shape.client_streaming() as u8,
             output: match shape.output {
                 crate::rpc::Output::Value(_) => 0,
+                crate::rpc::Output::Iter(_) if shape.results.is_some() => 3,
                 crate::rpc::Output::Iter(_) => 1,
                 crate::rpc::Output::Chan(_) => 2,
             },

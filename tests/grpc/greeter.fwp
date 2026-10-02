@@ -58,6 +58,23 @@ boom = div 0
 export divide : I64 -> I64 -> I64 ! {Error[String]}
 divide = curry (if (.1 | eq 0) (const "division by zero" | fail) (uncurry div))
 
+# n, ..., 1, then a status: a stream of results ends with its first `Err`
+export countdown : I64 -> Iterator[Result[I64, GrpcError]]
+countdown =
+    add 1
+    | range 1
+    | reverse
+    | map Ok
+    | append [Err GrpcError { code = 11, message = "lift off" }, Ok 0]
+    | iter.from-list
+
+# a greeting with response metadata: a header and a trailer
+export tagged : String -> String ! {Network}
+tagged =
+    tap (const "greeter" | grpc.set-header "X-Served-By")
+    | tap (string.length | show | grpc.set-trailer "x-length")
+    | flip concat "tagged "
+
 # sleep for n milliseconds; deadlines are statuses
 export nap : I64 -> I64 ! {Async, Error[GrpcError]}
 nap = slow

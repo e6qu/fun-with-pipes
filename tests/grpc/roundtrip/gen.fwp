@@ -67,6 +67,44 @@ count-response.codec =
         count-response.decode
         count-response.default
 
+CountdownRequest = { arg1: I64 }
+
+countdown-request.default : CountdownRequest
+countdown-request.default = CountdownRequest { arg1 = 0 }
+
+rec countdown-request.encode : CountdownRequest -> Bytes
+countdown-request.encode = pb.encode [.arg1 | pb.field 1 pb.sint64]
+
+rec countdown-request.decode : Bytes -> CountdownRequest ! {Error[GrpcError]}
+countdown-request.decode =
+    pb.decode | make CountdownRequest { arg1 = pb.get 1 pb.sint64 }
+
+rec countdown-request.codec : PbCodec[CountdownRequest]
+countdown-request.codec =
+    pb.message
+        countdown-request.encode
+        countdown-request.decode
+        countdown-request.default
+
+CountdownResponse = { value: I64 }
+
+countdown-response.default : CountdownResponse
+countdown-response.default = CountdownResponse { value = 0 }
+
+rec countdown-response.encode : CountdownResponse -> Bytes
+countdown-response.encode = pb.encode [.value | pb.field 1 pb.sint64]
+
+rec countdown-response.decode : Bytes -> CountdownResponse ! {Error[GrpcError]}
+countdown-response.decode =
+    pb.decode | make CountdownResponse { value = pb.get 1 pb.sint64 }
+
+rec countdown-response.codec : PbCodec[CountdownResponse]
+countdown-response.codec =
+    pb.message
+        countdown-response.encode
+        countdown-response.decode
+        countdown-response.default
+
 DivideRequest = { arg1: I64, arg2: I64 }
 
 divide-request.default : DivideRequest
@@ -275,6 +313,44 @@ slow-response.decode =
 rec slow-response.codec : PbCodec[SlowResponse]
 slow-response.codec =
     pb.message slow-response.encode slow-response.decode slow-response.default
+
+TaggedRequest = { arg1: String }
+
+tagged-request.default : TaggedRequest
+tagged-request.default = TaggedRequest { arg1 = "" }
+
+rec tagged-request.encode : TaggedRequest -> Bytes
+tagged-request.encode = pb.encode [.arg1 | pb.field 1 pb.string]
+
+rec tagged-request.decode : Bytes -> TaggedRequest ! {Error[GrpcError]}
+tagged-request.decode =
+    pb.decode | make TaggedRequest { arg1 = pb.get 1 pb.string }
+
+rec tagged-request.codec : PbCodec[TaggedRequest]
+tagged-request.codec =
+    pb.message
+        tagged-request.encode
+        tagged-request.decode
+        tagged-request.default
+
+TaggedResponse = { value: String }
+
+tagged-response.default : TaggedResponse
+tagged-response.default = TaggedResponse { value = "" }
+
+rec tagged-response.encode : TaggedResponse -> Bytes
+tagged-response.encode = pb.encode [.value | pb.field 1 pb.string]
+
+rec tagged-response.decode : Bytes -> TaggedResponse ! {Error[GrpcError]}
+tagged-response.decode =
+    pb.decode | make TaggedResponse { value = pb.get 1 pb.string }
+
+rec tagged-response.codec : PbCodec[TaggedResponse]
+tagged-response.codec =
+    pb.message
+        tagged-response.encode
+        tagged-response.decode
+        tagged-response.default
 
 TicksRequest = { arg1: I64 }
 
@@ -509,6 +585,36 @@ greeter.divide.route =
     grpc.unary-handler divide-request.decode divide-response.encode
     | grpc.route "/test.Greeter/Divide"
 
+# rpc Countdown(CountdownRequest) returns (stream CountdownResponse): a call to the service at an address
+greeter.countdown : String -> CountdownRequest -> Channel[CountdownResponse] -> () ! {Async, Network, Error[GrpcError]}
+greeter.countdown =
+    grpc.server-streaming
+        countdown-request.encode
+        countdown-response.decode
+        "/test.Greeter/Countdown"
+
+# the route serving `Countdown` with a function
+greeter.countdown.route : (CountdownRequest -> Channel[CountdownResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
+greeter.countdown.route =
+    grpc.server-streaming-handler
+        countdown-request.decode
+        countdown-response.encode
+    | grpc.route "/test.Greeter/Countdown"
+
+# rpc Tagged(TaggedRequest) returns (TaggedResponse): a call to the service at an address
+greeter.tagged : String -> TaggedRequest -> TaggedResponse ! {Network, Error[GrpcError]}
+greeter.tagged =
+    grpc.unary
+        tagged-request.encode
+        tagged-response.decode
+        "/test.Greeter/Tagged"
+
+# the route serving `Tagged` with a function
+greeter.tagged.route : (TaggedRequest -> TaggedResponse ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
+greeter.tagged.route =
+    grpc.unary-handler tagged-request.decode tagged-response.encode
+    | grpc.route "/test.Greeter/Tagged"
+
 # rpc Nap(NapRequest) returns (NapResponse): a call to the service at an address
 greeter.nap : String -> NapRequest -> NapResponse ! {Network, Error[GrpcError]}
 greeter.nap =
@@ -532,6 +638,8 @@ GreeterServer = {
     whoami: WhoamiRequest -> WhoamiResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
     boom: BoomRequest -> BoomResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
     divide: DivideRequest -> DivideResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
+    countdown: CountdownRequest -> Channel[CountdownResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
+    tagged: TaggedRequest -> TaggedResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
     nap: NapRequest -> NapResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
 }
 
@@ -570,5 +678,14 @@ greeter.routes =
                                             (.divide | greeter.divide.route)
                                             (fork
                                                 Cons
-                                                (.nap | greeter.nap.route)
-                                                (const Nil)))))))))))
+                                                (.countdown
+                                                    | greeter.countdown.route)
+                                                (fork
+                                                    Cons
+                                                    (.tagged
+                                                        | greeter.tagged.route)
+                                                    (fork
+                                                        Cons
+                                                        (.nap
+                                                            | greeter.nap.route)
+                                                        (const Nil)))))))))))))

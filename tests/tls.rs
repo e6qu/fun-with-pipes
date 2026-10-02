@@ -698,7 +698,12 @@ fn rest_with_client_certificates() {
     cmd.args(["serve", "--rest"])
         .arg(&app)
         .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
-        .args(["--tls-key", &file("server.key"), "--tls-client-ca", &file("ca.pem")]);
+        .args([
+            "--tls-key",
+            &file("server.key"),
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ]);
     servers.push(start(cmd));
     if have_cc() {
         let exe = d.join("server");
@@ -746,7 +751,12 @@ fn rest_with_client_certificates() {
     let o = Command::new(fwp())
         .args(["serve", "--rest"])
         .arg(&app)
-        .args(["--listen", "127.0.0.1:0", "--tls-client-ca", &file("ca.pem")])
+        .args([
+            "--listen",
+            "127.0.0.1:0",
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ])
         .env_remove("FWP_TLS_CERT")
         .env_remove("FWP_TLS_KEY")
         .output()
@@ -797,7 +807,12 @@ fn grpc_with_client_certificates() {
     cmd.args(["serve", "--grpc"])
         .arg(&app)
         .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
-        .args(["--tls-key", &file("server.key"), "--tls-client-ca", &file("ca.pem")]);
+        .args([
+            "--tls-key",
+            &file("server.key"),
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ]);
     servers.push(start(cmd));
     let mut clients = vec![{
         let mut c = Command::new(fwp());
@@ -866,7 +881,12 @@ fn grpc_with_client_certificates() {
     );
     let mut cmd = Command::new(fwp());
     cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
-        .args(["--tls-cert", &file("server.pem"), "--tls-key", &file("server.key")])
+        .args([
+            "--tls-cert",
+            &file("server.pem"),
+            "--tls-key",
+            &file("server.key"),
+        ])
         .args(["--tls-client-ca", &file("ca.pem")])
         .current_dir(&ex);
     let srv = start(cmd);
@@ -875,7 +895,10 @@ fn grpc_with_client_certificates() {
         c.args(["run", "--service", "weather", "forecast-client.fwp"])
             .current_dir(&ex)
             .env_remove("SSL_CERT_FILE")
-            .env("FWP_SERVICE_WEATHER", format!("tls://localhost:{}", srv.port()))
+            .env(
+                "FWP_SERVICE_WEATHER",
+                format!("tls://localhost:{}", srv.port()),
+            )
             .env("FWP_SERVICE_WEATHER_CA", file("ca.pem"));
         if cert {
             c.env("FWP_SERVICE_WEATHER_CERT", file("client.pem"))

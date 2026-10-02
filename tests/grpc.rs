@@ -565,6 +565,7 @@ fn grpcurl_interoperates() {
                 vec!["test.Greeter/SayHello"],
             ),
             (vec!["-d", r#"{"arg1": 3}"#], vec!["test.Greeter/Count"]),
+            (vec!["-d", r#"{"arg1": 2}"#], vec!["test.Greeter/Countdown"]),
             (
                 vec!["-d", r#"{"arg1": 1} {"arg1": 2}"#],
                 vec!["test.Greeter/Total"],
@@ -574,6 +575,10 @@ fn grpcurl_interoperates() {
                 vec!["test.Greeter/Shout"],
             ),
             (vec!["-H", "x-user: grpcurl"], vec!["test.Greeter/Whoami"]),
+            (
+                vec!["-v", "-d", r#"{"arg1": "Ann"}"#],
+                vec!["test.Greeter/Tagged"],
+            ),
             (
                 vec!["-d", r#"{"arg1": "ghost"}"#],
                 vec!["test.Greeter/Find"],

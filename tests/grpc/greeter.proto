@@ -16,6 +16,8 @@ service Greeter {
   rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
   rpc Boom(BoomRequest) returns (BoomResponse);
   rpc Divide(DivideRequest) returns (DivideResponse);
+  rpc Countdown(CountdownRequest) returns (stream CountdownResponse);
+  rpc Tagged(TaggedRequest) returns (TaggedResponse);
   rpc Nap(NapRequest) returns (NapResponse);
 }
 
@@ -96,6 +98,22 @@ message DivideResponse {
     sint64 value = 1;
     string error = 2;
   }
+}
+
+message CountdownRequest {
+  sint64 arg1 = 1;
+}
+
+message CountdownResponse {
+  sint64 value = 1;
+}
+
+message TaggedRequest {
+  string arg1 = 1;
+}
+
+message TaggedResponse {
+  string value = 1;
 }
 
 message NapRequest {

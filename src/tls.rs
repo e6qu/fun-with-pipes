@@ -835,10 +835,7 @@ pub fn server_files(args: &mut Vec<String>) -> Result<Option<ServerFiles>, Strin
                 return Err(format!("{} needs a file", a));
             }
             (a.clone(), args.remove(i + 1))
-        } else if let Some((n, v)) = a
-            .split_once('=')
-            .filter(|(n, _)| names.contains(n))
-        {
+        } else if let Some((n, v)) = a.split_once('=').filter(|(n, _)| names.contains(n)) {
             (n.to_string(), v.to_string())
         } else {
             i += 1;

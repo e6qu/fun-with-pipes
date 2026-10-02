@@ -6,6 +6,7 @@ import greeter
 main = [
     greeter.HelloRequest { name = "Ada", times = 1 } | greeter.say-hello | echo,
     5 | greeter.count | iter.to-list | echo,
+    3 | greeter.countdown | iter.to-list | echo,
     100
     | channel.make
     | tap (greeter.ticks 3)
@@ -17,6 +18,7 @@ main = [
     "Bob" | attempt greeter.lookup | echo,
     "ghost" | attempt greeter.lookup | echo,
     grpc.with-metadata [("X-User", "carol")] greeter.whoami | echo,
+    grpc.with-response-metadata (const "Ann" | greeter.tagged) | echo,
     () | greeter.whoami | echo,
     2 | attempt (greeter.divide 8) | echo,
     0 | attempt (greeter.divide 8) | echo,
