@@ -219,13 +219,39 @@ foreign "fwp" int.to-float : a -> b where Integer[a], Float[b]
 foreign "fwp" float.to-int : a -> Option[b] where Float[a], Integer[b]
 foreign "fwp" float.convert : a -> b where Float[a], Float[b]
 
-# Floating point.
-foreign "fwp" sqrt : a -> a where Float[a]
-foreign "fwp" exp : a -> a where Float[a]
-foreign "fwp" ln : a -> a where Float[a]
-foreign "fwp" sin : a -> a where Float[a]
-foreign "fwp" cos : a -> a where Float[a]
-foreign "fwp" tan : a -> a where Float[a]
+# Floating point. The elementary functions are methods of `Floating`, so
+# generic numeric code also works for dual and complex numbers.
+trait Floating[T] =
+    sqrt : T -> T
+    exp : T -> T
+    ln : T -> T
+    sin : T -> T
+    cos : T -> T
+    tan : T -> T
+
+foreign "fwp" prim.sqrt : a -> a where Float[a] = "sqrt"
+foreign "fwp" prim.exp : a -> a where Float[a] = "exp"
+foreign "fwp" prim.ln : a -> a where Float[a] = "ln"
+foreign "fwp" prim.sin : a -> a where Float[a] = "sin"
+foreign "fwp" prim.cos : a -> a where Float[a] = "cos"
+foreign "fwp" prim.tan : a -> a where Float[a] = "tan"
+
+impl Floating[F64] =
+    sqrt = prim.sqrt
+    exp = prim.exp
+    ln = prim.ln
+    sin = prim.sin
+    cos = prim.cos
+    tan = prim.tan
+
+impl Floating[F32] =
+    sqrt = prim.sqrt
+    exp = prim.exp
+    ln = prim.ln
+    sin = prim.sin
+    cos = prim.cos
+    tan = prim.tan
+
 foreign "fwp" pow : a -> a -> a where Float[a]
 foreign "fwp" floor : a -> a where Float[a]
 foreign "fwp" ceil : a -> a where Float[a]

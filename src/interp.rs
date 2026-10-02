@@ -895,7 +895,7 @@ macro_rules! wrap_cases {
     };
 }
 
-fn wrapping(op: Op, a: &Value, b: &Value) -> R<Value> {
+pub(crate) fn wrapping(op: Op, a: &Value, b: &Value) -> R<Value> {
     let r = match op {
         Op::Add => wrap_cases!(
             a,

@@ -1,0 +1,28 @@
+# Balanced ternary and portable SIMD on both backends.
+
+v4 : Option[Vec[4, F64]] -> Option[Vec[4, F64]]
+v4 = id
+
+i4 : Array[I32] -> Option[Vec[4, I32]]
+i4 = simd.from-array
+
+t2 : Option[TInt[2]] -> Option[TInt[2]]
+t2 = id
+
+half : Vec[4, F64] -> Vec[4, F64]
+half = simd.div (simd.splat 2.0)
+
+main = [
+    [1.5, -2.0, 3.0, 4.25] | array.from-list | simd.from-array | v4
+      | option.map (simd.max (simd.splat 0.0) | half | simd.to-array | array.to-list) | echo,
+    [5i32, -7i32, 9i32, 1i32] | array.from-list | i4
+      | option.map (simd.min (simd.splat 2i32) | simd.sum) | echo,
+    [2147483647i32, 1i32, 0i32, 0i32] | array.from-list | i4 | option.map simd.sum | echo,
+    0t+- | tint.trits | map trit.to-int | echo,
+    0t+- | tint.to-int | echo,
+    [trit.neg, trit.neg] | tint.from-trits | t2 | echo,
+    [trit.pos, trit.pos, trit.pos] | tint.from-trits | t2 | echo,
+    -4 | tint.of-int | t2 | echo,
+    0t+-0-+0+-0-+ | packed.from-tint | .bytes | bytes.to-list | echo,
+    0t+-0-+0+-0-+ | packed.from-tint | packed.to-tint | echo,
+] | ignore

@@ -15,6 +15,7 @@ pub mod infer;
 pub mod interp;
 pub mod ir;
 pub mod lexer;
+pub mod linalg;
 pub mod macros;
 pub mod mono;
 pub mod opt;

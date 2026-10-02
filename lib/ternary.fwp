@@ -1,0 +1,51 @@
+# Balanced ternary: trits (-1, 0, +1), fixed-width balanced ternary
+# integers TInt[N] (literals like 0t+-0, checked arithmetic), and dense
+# packing of trits, five per byte.
+
+foreign "fwp" trit.from-sign : I64 -> Trit
+foreign "fwp" trit.to-int : Trit -> I64
+foreign "fwp" tint.to-int : TInt[n] -> I64
+foreign "fwp" tint.of-int : I64 -> Option[TInt[n]]
+# most significant trit first
+foreign "fwp" tint.trits : TInt[n] -> List[Trit]
+foreign "fwp" tint.from-trits : List[Trit] -> Option[TInt[n]]
+foreign "fwp" trits.pack : List[Trit] -> Bytes
+foreign "fwp" trits.unpack : I64 -> Bytes -> List[Trit]
+
+trit.pos : Trit
+trit.pos = trit.from-sign 1
+
+trit.zero : Trit
+trit.zero = trit.from-sign 0
+
+trit.neg : Trit
+trit.neg = trit.from-sign -1
+
+trit.negate : Trit -> Trit
+trit.negate = trit.to-int | neg | trit.from-sign
+
+# N trits stored densely
+PackedTrits[N] = { count: I64, bytes: Bytes }
+
+packed.from-tint : TInt[n] -> PackedTrits[n]
+packed.from-tint = tint.trits | make PackedTrits { count = length, bytes = trits.pack }
+
+packed.to-tint : PackedTrits[n] -> Option[TInt[n]]
+packed.to-tint = both .count .bytes | uncurry trits.unpack | tint.from-trits
+
+packed.trits : PackedTrits[n] -> List[Trit]
+packed.trits = both .count .bytes | uncurry trits.unpack
+
+test "tint round trip" = 0t+-0 | tint.to-int | tint.of-int | eq (Some 0t+-0)
+test "tint value" = 0t+-0 | tint.to-int | eq 6
+test "tint trits" = 0t+-0 | tint.trits | map trit.to-int | eq [1, -1, 0]
+test "tint from trits" = [trit.pos, trit.neg, trit.zero] | tint.from-trits | eq (Some 0t+-0)
+test "tint of-int range" = 14 | tint.of-int | the-t2 | eq None
+test "tint arithmetic" = 0t+- | add 0t0+ | eq 0t+0
+test "trit order" = [trit.pos, trit.neg, trit.zero] | sort | map trit.to-int | eq [-1, 0, 1]
+test "trit negate" = trit.pos | trit.negate | eq trit.neg
+test "packing" = 0t+-0-+0+-0-+ | packed.from-tint | packed.to-tint | eq (Some 0t+-0-+0+-0-+)
+test "packed size" = 0t+-0-+0+-0-+ | packed.from-tint | .bytes | bytes.length | eq 3
+
+the-t2 : Option[TInt[2]] -> Option[TInt[2]]
+the-t2 = id

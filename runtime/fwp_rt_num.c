@@ -355,3 +355,124 @@ static V fwp_p_range(int k, V lo, V hi) {
 static int fwp_str_eq(V a, V b) {
     return STR(a)->len == STR(b)->len && memcmp(STR(a)->d, STR(b)->d, STR(a)->len) == 0;
 }
+
+/* ----- balanced ternary */
+
+static V fwp_p_tint_trits(V v, int w) {
+    int64_t x = (int64_t)v;
+    V *ds = (V *)fwp_alloc((size_t)(w + 1) * sizeof(V));
+    for (int i = w - 1; i >= 0; i--) {
+        int64_t r = ((x % 3) + 3) % 3;
+        int64_t d = r == 2 ? -1 : r;
+        ds[i] = (V)d;
+        x = (x - d) / 3;
+    }
+    return fwp_list_from(ds, (size_t)w);
+}
+
+static V fwp_p_tint_from_trits(V xs, int w) {
+    size_t n;
+    V *ts = fwp_list_items(xs, &n);
+    if (n > (size_t)w) return FWP_NONE;
+    i128 acc = 0;
+    for (size_t i = 0; i < n; i++) acc = acc * 3 + (int64_t)ts[i];
+    V out;
+    return fwp_int_fits(acc, K_TINT, w, &out) ? fwp_some(out) : FWP_NONE;
+}
+
+static V fwp_p_tint_of_int(V x, int w) {
+    V out;
+    return fwp_int_fits((int64_t)x, K_TINT, w, &out) ? fwp_some(out) : FWP_NONE;
+}
+
+static V fwp_p_trits_pack(V xs) {
+    size_t n;
+    V *ts = fwp_list_items(xs, &n);
+    size_t nb = (n + 4) / 5;
+    char *b = (char *)fwp_alloc(nb + 1);
+    for (size_t c = 0; c < nb; c++) {
+        uint32_t byte = 0, p = 1;
+        for (size_t k = 0; k < 5 && c * 5 + k < n; k++, p *= 3)
+            byte += (uint32_t)((int64_t)ts[c * 5 + k] + 1) * p;
+        b[c] = (char)(uint8_t)byte;
+    }
+    return fwp_str_new(b, nb);
+}
+
+static V fwp_p_trits_unpack(V nv, V bs) {
+    int64_t n = (int64_t)nv;
+    if (n < 0) n = 0;
+    V *out = (V *)fwp_alloc(((size_t)n + 1) * sizeof(V));
+    static const uint32_t pw[5] = {1, 3, 9, 27, 81};
+    for (int64_t i = 0; i < n; i++) {
+        size_t j = (size_t)(i / 5);
+        uint32_t byte = j < STR(bs)->len ? (uint8_t)STR(bs)->d[j] : 0;
+        out[i] = (V)((int64_t)((byte / pw[i % 5]) % 3) - 1);
+    }
+    return fwp_list_from(out, (size_t)n);
+}
+
+/* ----- portable SIMD: a vector is a one-field record holding an array of
+ * lanes. Fixed-width loops over uniform words; the C compiler vectorizes
+ * them where the lane kind allows. */
+
+static V fwp_simd_wrap(V arr) { return fwp_record(1, &arr); }
+#define LANES(v) ARR(OBJ(v)->f[0])
+
+static V fwp_p_simd_splat(V x, size_t n) {
+    V a = fwp_arr_new(n);
+    for (size_t i = 0; i < n; i++) ARR(a)->d[i] = x;
+    return fwp_simd_wrap(a);
+}
+
+static V fwp_p_simd_from_array(V a, size_t n) {
+    if (ARR(a)->len != n) return FWP_NONE;
+    return fwp_some(fwp_simd_wrap(a));
+}
+
+static int fwp_num_lt(int k, V a, V b) {
+    if (k == K_F32 || k == K_F64) return fwp_as_f64(k, a) < fwp_as_f64(k, b);
+    if (k == K_U128) return fwp_u128(a) < fwp_u128(b);
+    if (k == K_I128) return fwp_i128(a) < fwp_i128(b);
+    return fwp_as_i128(k, a) < fwp_as_i128(k, b);
+}
+
+/* op: OP_ADD/OP_SUB/OP_MUL/OP_DIV, 5 = min, 6 = max; `subj` op `arg` */
+static V fwp_p_simd_op(int k, int op, V subj, V arg, const char *name, int w) {
+    fwp_arr *xs = LANES(subj), *ys = LANES(arg);
+    size_t n = xs->len < ys->len ? xs->len : ys->len;
+    int fl = k == K_F32 || k == K_F64;
+    V r = fwp_arr_new(n);
+    V *out = ARR(r)->d;
+    if (k == K_F64 && op <= OP_DIV) {
+        for (size_t i = 0; i < n; i++) {
+            double x = fwp_f64(xs->d[i]), y = fwp_f64(ys->d[i]), z;
+            switch (op) {
+            case OP_ADD: z = x + y; break;
+            case OP_SUB: z = x - y; break;
+            case OP_MUL: z = x * y; break;
+            default: z = x / y;
+            }
+            out[i] = fwp_from_f64(z);
+        }
+        return fwp_simd_wrap(r);
+    }
+    for (size_t i = 0; i < n; i++) {
+        V x = xs->d[i], y = ys->d[i];
+        if (op == 5) out[i] = fwp_num_lt(k, y, x) ? y : x;
+        else if (op == 6) out[i] = fwp_num_lt(k, x, y) ? y : x;
+        else if (!fl && op != OP_DIV) out[i] = fwp_wrapping(k, op, x, y);
+        else out[i] = fwp_arith(k, op, x, y, name, w);
+    }
+    return fwp_simd_wrap(r);
+}
+
+static V fwp_p_simd_sum(int k, V v, const char *name, int w) {
+    fwp_arr *xs = LANES(v);
+    if (xs->len == 0) return fwp_from_i128(k, 0, name, w);
+    int fl = k == K_F32 || k == K_F64;
+    V acc = xs->d[0];
+    for (size_t i = 1; i < xs->len; i++)
+        acc = fl ? fwp_arith(k, OP_ADD, acc, xs->d[i], name, w) : fwp_wrapping(k, OP_ADD, acc, xs->d[i]);
+    return acc;
+}

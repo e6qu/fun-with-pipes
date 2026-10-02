@@ -72,6 +72,26 @@ impl<'a> Infer<'a> {
             if out.contains(&p) {
                 continue;
             }
+            // conversions from literals entail the literal classes
+            let implied: &[&str] = match p.trait_name.as_str() {
+                "std::FromFloat" => &["std::FloatLit"],
+                "std::FromInt" => &["std::IntLit"],
+                "std::Float" => &[
+                    "std::FloatLit",
+                    "std::IntLit",
+                    "std::Numeric",
+                    "std::Signed",
+                ],
+                "std::Integer" => &["std::IntLit", "std::Numeric"],
+                "std::Signed" | "std::Numeric" => &["std::IntLit"],
+                _ => &[],
+            };
+            for c in implied {
+                work.push(Pred {
+                    trait_name: c.to_string(),
+                    args: p.args.clone(),
+                });
+            }
             if let Some(t) = self.env.traits.get(&p.trait_name) {
                 let map: HashMap<TV, Type> = t
                     .params
@@ -306,10 +326,12 @@ impl<'a> Infer<'a> {
                     return fail(self, what);
                 }
                 let def = &self.env.types[n];
+                let used = self.used_params(n);
                 let subs = args
                     .iter()
                     .enumerate()
                     .filter(|(i, _)| def.param_kinds.get(*i).copied().unwrap_or(0) == 0)
+                    .filter(|(i, _)| used.get(*i).copied().unwrap_or(true))
                     .map(|(_, a)| Pred {
                         trait_name: class.to_string(),
                         args: vec![a.clone()],
@@ -318,6 +340,30 @@ impl<'a> Infer<'a> {
                 Outcome::Solved(subs)
             }
         }
+    }
+
+    /// Which parameters of a named type occur in its fields (phantom
+    /// parameters, like the size of a vector, do not need structural
+    /// classes).
+    fn used_params(&self, name: &str) -> Vec<bool> {
+        let def = &self.env.types[name];
+        let fields: Vec<Type> = match &def.kind {
+            TypeDefKind::Opaque | TypeDefKind::Alias { .. } => return vec![true; def.arity],
+            TypeDefKind::Record { .. } => self.env.table.records[name]
+                .fields
+                .iter()
+                .map(|(_, t)| t.clone())
+                .collect(),
+            TypeDefKind::Adt { ctors } => ctors
+                .iter()
+                .flat_map(|c| self.env.ctors[c].fields.clone())
+                .collect(),
+        };
+        let mut fv = Vec::new();
+        for f in &fields {
+            self.env.table.free_vars(f, &mut fv);
+        }
+        def.params.iter().map(|p| fv.contains(p)).collect()
     }
 
     /// Whether a named type supports a structural class, assuming its type
@@ -422,14 +468,29 @@ impl<'a> Infer<'a> {
     }
 
     /// Solve the constraints of a binding with a signature.
+    /// Returns the `Dup` constraints on signature variables that the body
+    /// needs: `Dup` is inferred and added to the signature implicitly, so
+    /// it is checked wherever the function is used at concrete types.
     pub(crate) fn solve_annotated(
         &mut self,
         wanted: Vec<(Pred, Span)>,
         given: &[Pred],
-    ) -> IResult<()> {
+    ) -> IResult<Vec<Pred>> {
         let given = self.given_closure(given);
         let mut residual = self.solve(wanted, &given)?;
+        let mut implicit: Vec<Pred> = Vec::new();
         loop {
+            residual.retain(|(p, _)| {
+                let rigid_dup = p.trait_name == "std::Dup"
+                    && matches!(self.env.table.resolve(&p.args[0]), Type::Var(v) if self.env.table.is_rigid(v));
+                if rigid_dup {
+                    let z = self.zonk_pred(p);
+                    if !implicit.contains(&z) {
+                        implicit.push(z);
+                    }
+                }
+                !rigid_dup
+            });
             for (p, span) in &residual {
                 if self.has_rigid_vars(p) && !self.has_flexible_vars(p) {
                     return Err(Diagnostic::error(
@@ -444,7 +505,7 @@ impl<'a> Infer<'a> {
                 }
             }
             if residual.is_empty() {
-                return Ok(());
+                return Ok(implicit);
             }
             if !self.apply_defaults(&residual)? {
                 let (p, span) = &residual[0];

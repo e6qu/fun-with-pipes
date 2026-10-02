@@ -1,0 +1,4 @@
+check/err_matmul_shape.fwp:2:13: error: type mismatch in pipe input: expected `Matrix[I64, 2, 2]`, found `Matrix[I64, 2, 3]`
+2 | product = a | matmul a
+  |             ^
+  note: `2` is not compatible with `3`

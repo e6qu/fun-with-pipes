@@ -6,7 +6,7 @@ use std::io::{BufRead, Read, Write};
 use std::rc::Rc;
 use std::sync::OnceLock;
 
-use crate::interp::{checked_int, Ctl, Interp, R};
+use crate::interp::{arith, checked_int, wrapping, Ctl, Interp, Op, R};
 use crate::ir::MT;
 use crate::value::*;
 
@@ -456,6 +456,135 @@ impl<'p> Interp<'p> {
                     }
                     Value::str(&out)
                 }
+                // ----- balanced ternary
+                "trit.from-sign" => Value::Trit(int(&a[0]).signum() as i8),
+                "trit.to-int" => Value::I64(a[0].as_i128().unwrap_or(0) as i64),
+                "tint.to-int" => Value::I64(a[0].as_i128().unwrap_or(0) as i64),
+                "tint.of-int" => opt(checked_int(&inner(result), int(&a[0]) as i128)),
+                "tint.trits" => {
+                    let w = nat_arg(&params[0]);
+                    Value::list(
+                        tint_digits(int(&a[0]), w)
+                            .into_iter()
+                            .map(Value::Trit)
+                            .collect(),
+                    )
+                }
+                "tint.from-trits" => {
+                    let t = inner(result);
+                    let items = a[0].list_items();
+                    if items.len() as u64 > nat_arg(&t) {
+                        none()
+                    } else {
+                        let v = items
+                            .iter()
+                            .fold(0i128, |acc, x| acc * 3 + x.as_i128().unwrap_or(0));
+                        opt(checked_int(&t, v))
+                    }
+                }
+                "trits.pack" => {
+                    let ts: Vec<i64> = a[0]
+                        .list_items()
+                        .iter()
+                        .map(|x| x.as_i128().unwrap_or(0) as i64)
+                        .collect();
+                    let mut out = Vec::new();
+                    for chunk in ts.chunks(5) {
+                        let mut b: u32 = 0;
+                        for (k, t) in chunk.iter().enumerate() {
+                            b += ((t + 1) as u32) * 3u32.pow(k as u32);
+                        }
+                        out.push(b as u8);
+                    }
+                    Value::Bytes(Rc::from(out))
+                }
+                "trits.unpack" => {
+                    let n = int(&a[0]).max(0) as usize;
+                    let bs = bytes(&a[1]);
+                    let mut out = Vec::new();
+                    for i in 0..n {
+                        let byte = *bs.get(i / 5).unwrap_or(&0) as u32;
+                        let d = (byte / 3u32.pow((i % 5) as u32)) % 3;
+                        out.push(Value::Trit(d as i8 - 1));
+                    }
+                    Value::list(out)
+                }
+                // ----- portable SIMD (lanes in a one-field record)
+                "simd.splat" => {
+                    let n = nat_arg(result) as usize;
+                    Value::tuple(vec![Value::Array(Rc::new(vec![a[0].clone(); n]))])
+                }
+                "simd.from-array" => {
+                    let n = nat_arg(&inner(result)) as usize;
+                    let v = arr(&a[0]);
+                    opt((v.len() == n).then(|| Value::tuple(vec![Value::Array(v)])))
+                }
+                "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max" => {
+                    let (ys, xs) = (lanes(&a[0]), lanes(&a[1]));
+                    let mut out = Vec::new();
+                    for (x, y) in xs.iter().zip(ys.iter()) {
+                        out.push(simd_lane(sym, x, y, &params[0])?);
+                    }
+                    Value::tuple(vec![Value::Array(Rc::new(out))])
+                }
+                "simd.sum" => {
+                    let xs = lanes(&a[0]);
+                    let mut acc = match xs.first() {
+                        Some(x) => x.clone(),
+                        None => crate::interp::zero_of(result)?,
+                    };
+                    for x in xs.iter().skip(1) {
+                        acc = if x.as_f64().is_some() {
+                            arith(Op::Add, &acc, x, result)?
+                        } else {
+                            wrapping(Op::Add, &acc, x)?
+                        };
+                    }
+                    acc
+                }
+                // ----- linear algebra
+                "linalg.lu-solve" => {
+                    let n = int(&a[0]).max(0) as usize;
+                    let (am, bv) = (f64s(&a[1]), f64s(&a[2]));
+                    if am.len() < n * n || bv.len() < n {
+                        none()
+                    } else {
+                        opt(crate::linalg::lu_solve(n, &am, &bv).map(|x| f64_array(&x)))
+                    }
+                }
+                "linalg.det" => {
+                    let n = int(&a[0]).max(0) as usize;
+                    Value::F64(crate::linalg::det(n, &f64s(&a[1])))
+                }
+                "linalg.inverse" => {
+                    let n = int(&a[0]).max(0) as usize;
+                    opt(crate::linalg::inverse(n, &f64s(&a[1])).map(|x| f64_array(&x)))
+                }
+                "linalg.cholesky" => {
+                    let n = int(&a[0]).max(0) as usize;
+                    opt(crate::linalg::cholesky(n, &f64s(&a[1])).map(|x| f64_array(&x)))
+                }
+                "linalg.qr" => {
+                    let (m, n) = (int(&a[0]).max(0) as usize, int(&a[1]).max(0) as usize);
+                    let (q, r) = crate::linalg::qr(m, n, &f64s(&a[2]));
+                    Value::tuple(vec![f64_array(&q), f64_array(&r)])
+                }
+                "linalg.cg" => {
+                    let n = int(&a[2]).max(0) as usize;
+                    let tol = a[1].as_f64().unwrap_or(0.0);
+                    let x = crate::linalg::cg(int(&a[0]), tol, n, &f64s(&a[3]), &f64s(&a[4]));
+                    f64_array(&x)
+                }
+                "list.transpose" => {
+                    let rows: Vec<Vec<Value>> =
+                        a[0].list_items().iter().map(|r| r.list_items()).collect();
+                    let nc = rows.iter().map(|r| r.len()).min().unwrap_or(0);
+                    Value::list(
+                        (0..nc)
+                            .map(|j| Value::list(rows.iter().map(|r| r[j].clone()).collect()))
+                            .collect(),
+                    )
+                }
                 // ----- arrays
                 "array.from-list" => Value::Array(Rc::new(a[0].list_items())),
                 "array.to-list" => match &a[0] {
@@ -696,6 +825,79 @@ impl<'p> Interp<'p> {
             other => Some(other),
         }
     }
+}
+
+fn nat_arg(mt: &MT) -> u64 {
+    match mt {
+        MT::Con(_, args) => args
+            .iter()
+            .find_map(|a| match a {
+                MT::Nat(n) => Some(*n),
+                _ => None,
+            })
+            .unwrap_or(0),
+        _ => 0,
+    }
+}
+
+/// Balanced ternary digits, most significant first.
+fn tint_digits(mut v: i64, width: u64) -> Vec<i8> {
+    let mut ds = Vec::new();
+    for _ in 0..width {
+        let r = v.rem_euclid(3);
+        let (d, carry) = if r == 2 { (-1, 1) } else { (r as i8, 0) };
+        ds.push(d);
+        v = v.div_euclid(3) + carry;
+    }
+    ds.reverse();
+    ds
+}
+
+fn lanes(v: &Value) -> Rc<Vec<Value>> {
+    match v {
+        Value::Record(fs) => arr(&fs[0]),
+        _ => Rc::new(vec![]),
+    }
+}
+
+/// One SIMD lane: `x` is the subject, `y` the argument (data-last).
+fn simd_lane(sym: &str, x: &Value, y: &Value, vt: &MT) -> R<Value> {
+    let elem = match vt {
+        MT::Con(_, args) => args.get(1).cloned().unwrap_or(MT::unit()),
+        _ => MT::unit(),
+    };
+    let float = x.as_f64().is_some();
+    Ok(match sym {
+        "simd.add" if !float => wrapping(Op::Add, x, y)?,
+        "simd.sub" if !float => wrapping(Op::Sub, x, y)?,
+        "simd.mul" if !float => wrapping(Op::Mul, x, y)?,
+        "simd.add" => arith(Op::Add, x, y, &elem)?,
+        "simd.sub" => arith(Op::Sub, x, y, &elem)?,
+        "simd.mul" => arith(Op::Mul, x, y, &elem)?,
+        "simd.div" => arith(Op::Div, x, y, &elem)?,
+        "simd.min" => {
+            if y < x && !float || float && y.as_f64() < x.as_f64() {
+                y.clone()
+            } else {
+                x.clone()
+            }
+        }
+        _ => {
+            if y > x && !float || float && y.as_f64() > x.as_f64() {
+                y.clone()
+            } else {
+                x.clone()
+            }
+        }
+    })
+}
+
+fn f64s(v: &Value) -> Vec<f64> {
+    arr(v).iter().map(|x| x.as_f64().unwrap_or(0.0)).collect()
+}
+
+fn f64_array(xs: &[f64]) -> Value {
+    Value::Array(Rc::new(xs.iter().map(|x| Value::F64(*x)).collect()))
 }
 
 fn arr(v: &Value) -> Rc<Vec<Value>> {

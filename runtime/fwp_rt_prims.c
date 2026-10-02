@@ -1285,3 +1285,187 @@ static V fwp_p_syntax_show(V v) {
     sy_expr(&b, v);
     return buf_to_str(&b);
 }
+
+/* ------------------------------------------------------- linear algebra */
+/* Same algorithms and operation order as src/linalg.rs. */
+
+static double *la_get(V arr, size_t n) {
+    double *d = (double *)fwp_alloc((n + 1) * sizeof(double));
+    for (size_t i = 0; i < n; i++) d[i] = fwp_f64(ARR(arr)->d[i]);
+    return d;
+}
+
+static V la_put(const double *d, size_t n) {
+    V r = fwp_arr_new(n);
+    for (size_t i = 0; i < n; i++) ARR(r)->d[i] = fwp_from_f64(d[i]);
+    return r;
+}
+
+static V fwp_p_lu_solve(V nv, V av, V bv) {
+    size_t n = (size_t)(int64_t)nv;
+    if (ARR(av)->len < n * n || ARR(bv)->len < n) return FWP_NONE;
+    double *a = la_get(av, n * n), *x = la_get(bv, n);
+    for (size_t k = 0; k < n; k++) {
+        size_t p = k;
+        for (size_t i = k + 1; i < n; i++)
+            if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
+        if (a[p * n + k] == 0.0) return FWP_NONE;
+        if (p != k) {
+            for (size_t j = 0; j < n; j++) { double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t; }
+            double t = x[k]; x[k] = x[p]; x[p] = t;
+        }
+        for (size_t i = k + 1; i < n; i++) {
+            double f = a[i * n + k] / a[k * n + k];
+            for (size_t j = k; j < n; j++) a[i * n + j] -= f * a[k * n + j];
+            x[i] -= f * x[k];
+        }
+    }
+    for (size_t ii = n; ii > 0; ii--) {
+        size_t i = ii - 1;
+        double s = x[i];
+        for (size_t j = i + 1; j < n; j++) s -= a[i * n + j] * x[j];
+        x[i] = s / a[i * n + i];
+    }
+    return fwp_some(la_put(x, n));
+}
+
+static V fwp_p_det(V nv, V av) {
+    size_t n = (size_t)(int64_t)nv;
+    double *a = la_get(av, n * n), d = 1.0;
+    for (size_t k = 0; k < n; k++) {
+        size_t p = k;
+        for (size_t i = k + 1; i < n; i++)
+            if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
+        if (a[p * n + k] == 0.0) return fwp_from_f64(0.0);
+        if (p != k) {
+            for (size_t j = 0; j < n; j++) { double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t; }
+            d = -d;
+        }
+        d *= a[k * n + k];
+        for (size_t i = k + 1; i < n; i++) {
+            double f = a[i * n + k] / a[k * n + k];
+            for (size_t j = k; j < n; j++) a[i * n + j] -= f * a[k * n + j];
+        }
+    }
+    return fwp_from_f64(d);
+}
+
+static V fwp_p_inverse(V nv, V av) {
+    size_t n = (size_t)(int64_t)nv;
+    double *a = la_get(av, n * n);
+    double *inv = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    for (size_t i = 0; i < n * n; i++) inv[i] = 0.0;
+    for (size_t i = 0; i < n; i++) inv[i * n + i] = 1.0;
+    for (size_t k = 0; k < n; k++) {
+        size_t p = k;
+        for (size_t i = k + 1; i < n; i++)
+            if (fabs(a[i * n + k]) > fabs(a[p * n + k])) p = i;
+        if (a[p * n + k] == 0.0) return FWP_NONE;
+        if (p != k)
+            for (size_t j = 0; j < n; j++) {
+                double t = a[k * n + j]; a[k * n + j] = a[p * n + j]; a[p * n + j] = t;
+                t = inv[k * n + j]; inv[k * n + j] = inv[p * n + j]; inv[p * n + j] = t;
+            }
+        double d = a[k * n + k];
+        for (size_t j = 0; j < n; j++) { a[k * n + j] /= d; inv[k * n + j] /= d; }
+        for (size_t i = 0; i < n; i++) {
+            if (i == k) continue;
+            double f = a[i * n + k];
+            for (size_t j = 0; j < n; j++) {
+                a[i * n + j] -= f * a[k * n + j];
+                inv[i * n + j] -= f * inv[k * n + j];
+            }
+        }
+    }
+    return fwp_some(la_put(inv, n * n));
+}
+
+static V fwp_p_cholesky(V nv, V av) {
+    size_t n = (size_t)(int64_t)nv;
+    double *a = la_get(av, n * n);
+    double *l = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    for (size_t i = 0; i < n * n; i++) l[i] = 0.0;
+    for (size_t i = 0; i < n; i++)
+        for (size_t j = 0; j <= i; j++) {
+            double s = a[i * n + j];
+            for (size_t k = 0; k < j; k++) s -= l[i * n + k] * l[j * n + k];
+            if (i == j) {
+                if (s <= 0.0) return FWP_NONE;
+                l[i * n + j] = sqrt(s);
+            } else {
+                l[i * n + j] = s / l[j * n + j];
+            }
+        }
+    return fwp_some(la_put(l, n * n));
+}
+
+static V fwp_p_qr(V mv, V nv, V av) {
+    size_t m = (size_t)(int64_t)mv, n = (size_t)(int64_t)nv;
+    double *q = la_get(av, m * n);
+    double *r = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    for (size_t i = 0; i < n * n; i++) r[i] = 0.0;
+    for (size_t j = 0; j < n; j++) {
+        for (size_t i = 0; i < j; i++) {
+            double d = 0.0;
+            for (size_t k = 0; k < m; k++) d += q[k * n + i] * q[k * n + j];
+            r[i * n + j] = d;
+            for (size_t k = 0; k < m; k++) q[k * n + j] -= d * q[k * n + i];
+        }
+        double s = 0.0;
+        for (size_t k = 0; k < m; k++) s += q[k * n + j] * q[k * n + j];
+        double norm = sqrt(s);
+        r[j * n + j] = norm;
+        if (norm != 0.0)
+            for (size_t k = 0; k < m; k++) q[k * n + j] /= norm;
+    }
+    return fwp_tuple2(la_put(q, m * n), la_put(r, n * n));
+}
+
+static double la_dot(const double *x, const double *y, size_t n) {
+    double s = 0.0;
+    for (size_t i = 0; i < n; i++) s += x[i] * y[i];
+    return s;
+}
+
+static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
+    int64_t maxit = (int64_t)itv;
+    double tol = fwp_f64(tolv);
+    size_t n = (size_t)(int64_t)nv;
+    double *a = la_get(av, n * n), *r = la_get(bv, n), *p = la_get(bv, n);
+    double *x = (double *)fwp_alloc((n + 1) * sizeof(double));
+    double *ap = (double *)fwp_alloc((n + 1) * sizeof(double));
+    for (size_t i = 0; i < n; i++) x[i] = 0.0;
+    double rs = la_dot(r, r, n);
+    for (int64_t it = 0; it < maxit; it++) {
+        if (sqrt(rs) <= tol) break;
+        for (size_t i = 0; i < n; i++) {
+            double s = 0.0;
+            for (size_t j = 0; j < n; j++) s += a[i * n + j] * p[j];
+            ap[i] = s;
+        }
+        double alpha = rs / la_dot(p, ap, n);
+        for (size_t i = 0; i < n; i++) { x[i] += alpha * p[i]; r[i] -= alpha * ap[i]; }
+        double rs_new = la_dot(r, r, n);
+        double beta = rs_new / rs;
+        for (size_t i = 0; i < n; i++) p[i] = r[i] + beta * p[i];
+        rs = rs_new;
+    }
+    return la_put(x, n);
+}
+
+static V fwp_p_list_transpose(V xss) {
+    size_t nr;
+    V *rows = fwp_list_items(xss, &nr);
+    size_t nc = 0;
+    for (size_t i = 0; i < nr; i++) { size_t l = fwp_list_len(rows[i]); if (i == 0 || l < nc) nc = l; }
+    if (nr == 0) return 0;
+    V *cols = (V *)fwp_alloc((nc + 1) * sizeof(V));
+    V **items = (V **)fwp_alloc((nr + 1) * sizeof(V *));
+    for (size_t i = 0; i < nr; i++) { size_t l; items[i] = fwp_list_items(rows[i], &l); }
+    V *col = (V *)fwp_alloc((nr + 1) * sizeof(V));
+    for (size_t j = 0; j < nc; j++) {
+        for (size_t i = 0; i < nr; i++) col[i] = items[i][j];
+        cols[j] = fwp_list_from(col, nr);
+    }
+    return fwp_list_from(cols, nc);
+}
