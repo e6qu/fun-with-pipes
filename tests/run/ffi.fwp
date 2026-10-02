@@ -1,0 +1,56 @@
+# Calling C (here the C library): scalars, strings, a struct returned by
+# value, nullable pointers, raw memory, a callback and a variadic function.
+
+foreign "C" c-abs : I32 -> I32 = "abs"
+foreign "C" strlen : String -> USize
+foreign "C" hypot : F64 -> F64 -> F64
+foreign "C" atof : String -> F64
+foreign "C" toupper : I32 -> I32
+
+repr(C) DivResult = { quot: I32, rem: I32 }
+foreign "C" div : I32 -> I32 -> DivResult
+
+foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
+foreign "C" strchr : String -> I32 -> Option[Ptr[U8]]
+
+foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
+foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> String -> I32 ! {Unsafe} = "snprintf" variadic 3
+
+compare : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
+compare = curry (both (.0 | ptr.read) (.1 | ptr.read) | uncurry (flip sub))
+
+# write a list of ints into fresh memory
+fill : List[I32] -> Ptr[I32] ! {Unsafe}
+fill = fork fill-from id (length | mul 4 | mem.alloc)
+
+fill-from : List[I32] -> Ptr[I32] -> Ptr[I32] ! {Unsafe}
+fill-from = curry (tap (fork each (.1 | write-at) (.0 | enumerate)) | .1)
+
+write-at : Ptr[I32] -> (I64, I32) -> () ! {Unsafe}
+write-at = curry (fork ptr.write (.1 | .1) (fork ptr.at (.1 | .0) .0))
+
+read-ints : I64 -> Ptr[I32] -> List[I32] ! {Unsafe}
+read-ints = curry (fork map (.1 | flip ptr.at | flip compose ptr.read) (.0 | range 0))
+
+sorted : List[I32] -> List[I32] ! {Unsafe}
+sorted = fork sort-at (length | int.convert | option.unwrap-or 0usize) fill
+
+sort-at : USize -> Ptr[I32] -> List[I32] ! {Unsafe}
+sort-at = curry (tap (both .1 .0 | uncurry qsort | apply 4usize | apply compare) | fork read-ints (.0 | int.convert | option.unwrap-or 0) .1)
+
+formatted : () -> String ! {Unsafe}
+formatted = const 64 | mem.alloc | tap (snprintf | apply 64usize | apply "%lld-%s" | apply 42 | apply "x") | ptr.read-string
+
+main = [
+    -5 | c-abs | echo,
+    "hello" | strlen | echo,
+    3.0 | hypot 4.0 | echo,
+    "2.5" | atof | echo,
+    97 | toupper | echo,
+    div 17 5 | echo,
+    "FWP_SEED" | getenv | option.map ptr.read-string | echo,
+    "FWP_NO_SUCH_VARIABLE" | getenv | option.is-none | echo,
+    strchr "hello" 108 | option.map ptr.read-string | echo,
+    [5, -2, 9, 0, 3] | sorted | echo,
+    () | formatted | print,
+] | ignore

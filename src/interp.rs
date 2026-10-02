@@ -42,6 +42,8 @@ pub struct Interp<'p> {
     pub(crate) root_out: *mut (dyn Write + 'p),
     /// Tasks spawned inside each enclosing `task.scope`.
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
+    /// The foreign function shim, loaded on the first foreign C call.
+    pub(crate) ffi: Rc<RefCell<Option<Rc<crate::ffi_interp::FfiLib>>>>,
 }
 
 impl<'p> Interp<'p> {
@@ -67,6 +69,7 @@ impl<'p> Interp<'p> {
             task: crate::sched::TaskShared::new(),
             root_out,
             scopes: Vec::new(),
+            ffi: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -99,6 +102,7 @@ impl<'p> Interp<'p> {
             }
             Body::Prim(sym) => self.prim(id, sym, args)?,
             Body::Ctor(tag) => Value::data(*tag, args),
+            Body::ForeignC { .. } => self.call_foreign(id, args)?,
         };
         if f.arity == 0 {
             self.cafs.borrow_mut()[id] = Some(v.clone());
@@ -493,6 +497,9 @@ impl<'p> Interp<'p> {
                     }
                     Err(other) => Err(other),
                 }
+            }
+            _ if sym.starts_with("ptr.") || sym.starts_with("mem.") => {
+                crate::ffi_interp::pointer_prim(sym, &a, &params, &result)
             }
             "json.parse" => Ok(crate::json::parse(a[0].as_str())),
             "json.encode" => {

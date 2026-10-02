@@ -1,0 +1,35 @@
+# 3. Types and traits
+
+# Signatures are optional; types are inferred. Lower-case type names are
+# type variables.
+pair-up : a -> (a, a) where Dup[a]
+pair-up = both id id
+
+# A trait is a set of functions that types implement.
+trait Describe[T] =
+    describe : T -> String
+
+Temperature = { celsius: F64 }
+
+impl Describe[Temperature] =
+    describe = .celsius | format "{} °C"
+
+impl Describe[Bool] =
+    describe = match
+        True -> "yes"
+        False -> "no"
+
+# Generic code works for every type with an implementation.
+shout : a -> String where Describe[a]
+shout = describe | upper
+
+# Numeric literals adapt to the type they are used at.
+half : F32 -> F32
+half = div 2
+
+main = [
+    7 | pair-up | echo,
+    21.5 | make Temperature { celsius = id } | describe | print,
+    True | shout | print,
+    3 | half | echo,
+] | ignore

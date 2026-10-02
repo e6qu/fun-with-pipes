@@ -1,19 +1,86 @@
 # fwp ("foop")
 
-fwp is a tacit, curried, pipe-oriented language with static, strong types.
-It is based on the *Pipe Language Compact Specification*:
+fwp is a tacit, curried, pipe-oriented programming language. It has static
+types, tracked effects, structured concurrency, and two execution engines:
+an interpreter and native code through C. It implements the *Pipe Language
+Compact Specification*.
+
+```fwp
+# Count the most common words on stdin.
+main =
+    ()
+    | read-all
+    | words
+    | map lower
+    | frequencies
+    | map.to-list
+    | sort-by (.1 | neg)
+    | take 5
+    | each (format "{}: {}" | print)
+```
+
+## Highlights
+
+- **Tacit, data-last, curried.** `x | f` applies a function to a value, and
+  `f | g` composes two functions. `match` passes the `_` holes of a pattern
+  to its arm. `make`, `update` and `with` build and modify records.
+- **Types:**
+  - Hindley–Milner inference with records, rows and variants;
+  - traits with superclasses, default methods and higher-kinded parameters;
+  - compiler-derived `Eq`, `Ord`, `Hash`, `Display` and `Encode`;
+  - sized numbers that trap on overflow, and type-level naturals for
+    matrix shapes;
+  - exhaustive pattern matching, with the missing case named.
+- **Effects:**
+  - `IO`, `Error[E]`, `State[S]`, `Async`, `Network` and more, in function
+    types;
+  - pure definitions, handlers (`attempt`, `try`, `run-state`) and affine
+    resources.
+- **Compile time:** `comptime` evaluation, syntax as data, hygienic macros,
+  and `type[T]` reflection.
+- **Numerics:**
+  - sized vectors and matrices with LU, QR, Cholesky and CG;
+  - complex numbers and forward-mode autodiff;
+  - balanced ternary, portable SIMD and tensor graphs.
+- **Concurrency and the web:**
+  - tasks, channels, cancellation and deadlines;
+  - TCP, UDP and DNS;
+  - an HTTP/1.1 server and client, where middleware is plain composition;
+  - JSON, URLs, logs and Prometheus metrics.
+- **Backends:**
+  - an interpreter, and native executables via C, with identical output;
+  - exported functions as standalone executables connected by a typed
+    binary pipe protocol;
+  - WebAssembly (WASI and browser), fat binaries with per-CPU variants, and
+    C interop in both directions (`foreign "C"`, static and shared
+    libraries).
+
+## Quick start
+
+Requirements: Rust (stable) and a C compiler. Optionally, for WebAssembly:
+clang with a WASI sysroot (Debian/Ubuntu: `wasi-libc`,
+`libclang-rt-18-dev-wasm32`, `lld`) and node.
 
 ```
-users
-| filter .active
-| map .name
-| sort
+cargo build --release
+export PATH=$PWD/target/release:$PATH
+
+fwp run examples/hello.fwp
+fwp build examples/tutorial/02-data.fwp -o data && ./data
+fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
+fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
+fwp test --std                           # the standard library's own tests
 ```
 
-See [PLAN.md](PLAN.md) for the language design decisions and the
-implementation roadmap, [docs/protocol.md](docs/protocol.md) for the typed
-process protocol and [docs/concurrency.md](docs/concurrency.md) for tasks,
-networking and the HTTP server.
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/tutorial.md](docs/tutorial.md) | a tour, from pipes to tasks |
+| [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop |
+| [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
+| [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
+| [PLAN.md](PLAN.md) | the design decisions and the 12-PR implementation plan |
 
 ## Status
 
@@ -30,19 +97,26 @@ networking and the HTTP server.
 | Comptime evaluation, `Syntax` values, hygienic macros, `type[T]` reflection | done |
 | Linear algebra (sized vectors/matrices), complex numbers, autodiff, balanced ternary, SIMD, tensor graphs | done |
 | Structured concurrency (tasks, channels, deadlines), TCP/UDP/DNS, HTTP/1.1 server and client, JSON, URLs, logs, metrics | done |
-| FFI, WASM, fat binaries | planned |
+| C FFI (`foreign "C"`, `repr(C)`, pointers, callbacks, variadics), static/shared libraries, WebAssembly (WASI, browser), fat binaries | done |
 
-## Usage
+Not yet implemented, and deferred in the roadmap of [PLAN.md](PLAN.md):
+
+- a garbage collector (native programs never free memory);
+- TLS, HTTP/2 and HTTP/3;
+- preemptive scheduling;
+- GPU and distributed backends.
+
+## Layout
 
 ```
-cargo build --release
-./target/release/fwp run examples/hello.fwp            # run main (interpreter)
-./target/release/fwp build examples/hello.fwp -o hello # native executable via C
-./target/release/fwp build tools.fwp --fn scale        # an exported function as an executable
-./target/release/fwp test some-file.fwp                # run test declarations
-./target/release/fwp test --std                        # run the standard library's tests
-./target/release/fwp check examples/hello.fwp          # print inferred types
-./target/release/fwp check --parse examples/hello.fwp  # print the syntax tree
+src/        compiler: lexer, parser, type checker, monomorphizer, optimizer,
+            interpreter, C code generator, protocol, FFI, scheduler
+runtime/    the C runtime embedded in native programs (and WASM helpers)
+lib/        the standard library, written in fwp (with its tests)
+examples/   tutorial programs, a JSON API server, executable tools
+tests/      golden programs, type-check snapshots, protocol, HTTP, FFI,
+            WebAssembly and fat-binary tests
+docs/       documentation
 ```
 
 ## Development
@@ -50,6 +124,6 @@ cargo build --release
 ```
 cargo fmt --all
 cargo clippy --all-targets -- -D warnings
-cargo test
-FWP_BLESS=1 cargo test   # regenerate snapshot files after an intended change
+cargo test                 # interpreter and native for every golden program
+FWP_BLESS=1 cargo test     # regenerate snapshot files after an intended change
 ```

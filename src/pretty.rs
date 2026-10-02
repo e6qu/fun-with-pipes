@@ -19,7 +19,13 @@ pub fn decl(d: &Decl) -> String {
         Decl::Type(t) => {
             let head = format!(
                 "{}{}{}",
-                if t.resource { "resource " } else { "" },
+                if t.repr_c {
+                    "repr(C) "
+                } else if t.resource {
+                    "resource "
+                } else {
+                    ""
+                },
                 t.name,
                 params(&t.params)
             );
@@ -70,6 +76,7 @@ pub fn decl(d: &Decl) -> String {
             abi,
             name,
             symbol,
+            variadic,
             ty: t,
             constraints: cs,
             ..
@@ -79,7 +86,19 @@ pub fn decl(d: &Decl) -> String {
             } else {
                 format!(" where {}", constraints(cs))
             };
-            format!("foreign {:?} {} : {}{} = {:?}", abi, name, ty(t), w, symbol)
+            let v = match variadic {
+                Some(n) => format!(" variadic {}", n),
+                None => String::new(),
+            };
+            format!(
+                "foreign {:?} {} : {}{} = {:?}{}",
+                abi,
+                name,
+                ty(t),
+                w,
+                symbol,
+                v
+            )
         }
         Decl::Test { name, body, .. } => format!("test {:?} = {}", name, expr(body)),
     }

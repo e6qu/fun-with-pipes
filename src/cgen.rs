@@ -28,6 +28,10 @@ struct Gen<'p> {
     consts: Vec<String>,
     const_init: String,
     used_closures: Vec<bool>,
+    /// Declarations for foreign C functions: structs, prototypes,
+    /// converters and callback trampolines.
+    ffi_decls: String,
+    ffi_structs: Vec<String>,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -160,6 +164,7 @@ impl<'p> Gen<'p> {
                     "std::String" => return simple("K_STR", "String"),
                     "std::Bytes" => return simple("K_BYTES", "Bytes"),
                     "std::File" => return simple("K_FILE", "File"),
+                    "std::Ptr" => return simple("K_U64", "Ptr"),
                     "std::Task" => return simple("K_NATIVE", "task"),
                     "std::Channel" => return simple("K_NATIVE", "channel"),
                     "std::Listener" => return simple("K_NATIVE", "listener"),
@@ -589,6 +594,34 @@ impl<'p> Gen<'p> {
                 rw
             ),
             "prim.from-float" => format!("return fwp_float_of({}, fwp_f64(l0));", rk),
+            "mem.alloc" => "size_t n = (int64_t)l0 > 0 ? (size_t)(int64_t)l0 : 1;\n    void *p = calloc(n, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    return (V)(uintptr_t)p;".into(),
+            "mem.free" => "free((void *)(uintptr_t)l0);\n    return FWP_UNIT;".into(),
+            "mem.string" => "size_t n = STR(l0)->len;\n    char *p = (char *)calloc(n + 1, 1);\n    if (!p) fwp_trap(\"out of memory\");\n    memcpy(p, STR(l0)->d, n);\n    return (V)(uintptr_t)p;".into(),
+            "ptr.cast" | "ptr.address" => "return l0;".into(),
+            "ptr.at" => {
+                let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
+                format!(
+                    "return (V)((int64_t)l1 + (int64_t)l0 * (int64_t)sizeof({}));",
+                    crate::ffi::c_name(&t)
+                )
+            }
+            "ptr.read" => {
+                let t = crate::ffi::classify_scalar(&result);
+                format!(
+                    "{} x;\n    memcpy(&x, (void *)(uintptr_t)l0, sizeof x);\n    return {};",
+                    crate::ffi::c_name(&t),
+                    ffi_from_c(&t, "x")
+                )
+            }
+            "ptr.write" => {
+                let t = crate::ffi::classify_scalar(&p(0));
+                format!(
+                    "{} x = {};\n    memcpy((void *)(uintptr_t)l1, &x, sizeof x);\n    return FWP_UNIT;",
+                    crate::ffi::c_name(&t),
+                    ffi_to_c(&t, "l0")
+                )
+            }
+            "ptr.read-string" => "if (!l0) fwp_trap(\"reading a string at a null pointer\");\n    return fwp_c_string((const char *)(uintptr_t)l0);".into(),
             "trit.from-sign" => {
                 "return (V)(int64_t)(((int64_t)l0 > 0) - ((int64_t)l0 < 0));".into()
             }
@@ -1013,6 +1046,11 @@ impl<'p> Gen<'p> {
                 let s = self.prim(&func, &sym)?;
                 let _ = writeln!(out, "    {}", s);
             }
+            Body::ForeignC { symbol, variadic } => {
+                let (symbol, variadic, func) = (symbol.clone(), *variadic, f.clone());
+                let s = self.foreign_c(id, &func, &symbol, variadic)?;
+                out.push_str(&s);
+            }
             Body::Ctor(tag) => {
                 let args: Vec<String> = (0..f.arity).map(|i| format!("l{}", i)).collect();
                 if args.is_empty() {
@@ -1047,12 +1085,290 @@ impl<'p> Gen<'p> {
     }
 }
 
+/// A C value from a word.
+fn ffi_to_c(t: &crate::ffi::CType, v: &str) -> String {
+    use crate::ffi::CType;
+    match t {
+        CType::Int { .. } => format!("({})(int64_t)({})", crate::ffi::c_name(t), v),
+        CType::F32 => format!("fwp_f32({})", v),
+        CType::F64 => format!("fwp_f64({})", v),
+        CType::Bool => format!("(({}) == FWP_TRUE)", v),
+        CType::Str => format!("((const char *)STR({})->d)", v),
+        CType::Bytes => format!("((const uint8_t *)STR({})->d)", v),
+        CType::Ptr | CType::Callback { .. } => format!("((void *)(uintptr_t)({}))", v),
+        CType::OptPtr => format!(
+            "(({v}) ? (void *)(uintptr_t)OBJ({v})->f[0] : (void *)0)",
+            v = v
+        ),
+        CType::Struct { name, .. } => format!("fwp_v2s_{}({})", name, v),
+        CType::Void => "0".into(),
+    }
+}
+
+/// A word from a C value.
+fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
+    use crate::ffi::CType;
+    match t {
+        CType::Int { signed: true, .. } => format!("(V)(int64_t)({})", e),
+        CType::Int { signed: false, .. } => format!("(V)({})", e),
+        CType::F32 => format!("fwp_from_f32({})", e),
+        CType::F64 => format!("fwp_from_f64({})", e),
+        CType::Bool => format!("(({}) ? FWP_TRUE : FWP_FALSE)", e),
+        CType::Str => format!("fwp_c_string({})", e),
+        CType::Ptr | CType::Bytes | CType::Callback { .. } => format!("(V)(uintptr_t)({})", e),
+        CType::OptPtr => format!("fwp_c_optptr({})", e),
+        CType::Struct { name, .. } => format!("fwp_s2v_{}({})", name, e),
+        CType::Void => "FWP_UNIT".into(),
+    }
+}
+
+impl Gen<'_> {
+    /// Struct definitions and converters for the structs among `types`.
+    fn ffi_structs(&mut self, types: &[crate::ffi::CType]) {
+        use crate::ffi::CType;
+        for t in types {
+            match t {
+                CType::Struct { name, fields } if !self.ffi_structs.contains(name) => {
+                    self.ffi_structs.push(name.clone());
+                    let mut d = String::new();
+                    crate::ffi::struct_defs(std::slice::from_ref(t), &mut d, &mut Vec::new());
+                    let _ = writeln!(
+                        d,
+                        "static struct fwp_c_{n} fwp_v2s_{n}(V v) {{\n    struct fwp_c_{n} s;",
+                        n = name
+                    );
+                    for (f, idx, ft) in fields {
+                        let _ = writeln!(
+                            d,
+                            "    s.{} = {};",
+                            f,
+                            ffi_to_c(ft, &format!("OBJ(v)->f[{}]", idx))
+                        );
+                    }
+                    d.push_str("    return s;\n}\n");
+                    let _ = writeln!(
+                        d,
+                        "static V fwp_s2v_{n}(struct fwp_c_{n} s) {{\n    V f[{k}];",
+                        n = name,
+                        k = fields.len()
+                    );
+                    for (f, idx, ft) in fields {
+                        let _ = writeln!(
+                            d,
+                            "    f[{}] = {};",
+                            idx,
+                            ffi_from_c(ft, &format!("s.{}", f))
+                        );
+                    }
+                    let _ = writeln!(d, "    return fwp_record({}, f);\n}}", fields.len());
+                    self.ffi_decls.push_str(&d);
+                }
+                CType::Callback { params, ret } => {
+                    let mut inner = params.clone();
+                    inner.push((**ret).clone());
+                    self.ffi_structs(&inner);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Body of a foreign C function instance (callbacks are kept in
+    /// per-parameter slots, so C code may not call them after returning).
+    fn foreign_c(
+        &mut self,
+        id: FuncId,
+        f: &Func,
+        symbol: &str,
+        variadic: Option<u32>,
+    ) -> Result<String, String> {
+        use crate::ffi::{self, CType};
+        let (params, ret) = ffi::signature(self.prog, f)
+            .map_err(|e| format!("foreign function `{}`: {}", symbol, e))?;
+        let mut all: Vec<CType> = params.iter().map(|(_, c)| c.clone()).collect();
+        all.push(ret.clone());
+        self.ffi_structs(&all);
+        let ctypes: Vec<CType> = params.iter().map(|(_, c)| c.clone()).collect();
+        let cname = format!("fwp_ffi_{}", id);
+        self.ffi_decls
+            .push_str(&ffi::prototype(&cname, symbol, &ctypes, &ret, variadic));
+        let pmts: Vec<MT> =
+            f.ty.params(f.arity as usize)
+                .0
+                .into_iter()
+                .cloned()
+                .collect();
+        let mut body = String::new();
+        let mut args = Vec::new();
+        for (k, (i, c)) in params.iter().enumerate() {
+            if let CType::Callback {
+                params: cps,
+                ret: cr,
+            } = c
+            {
+                // trampoline: C arguments to words, apply the closure
+                let _ = writeln!(self.ffi_decls, "static V fwp_cbslot_{}_{};", id, k);
+                let decl: Vec<String> = cps
+                    .iter()
+                    .enumerate()
+                    .map(|(j, p)| format!("{} a{}", ffi::c_name(p), j))
+                    .collect();
+                let _ = writeln!(
+                    self.ffi_decls,
+                    "static {} fwp_cb_{}_{}({}) {{",
+                    ffi::c_name(cr),
+                    id,
+                    k,
+                    if decl.is_empty() {
+                        "void".into()
+                    } else {
+                        decl.join(", ")
+                    }
+                );
+                // the closure's own parameters, unit ones included
+                let mut cargs = Vec::new();
+                let mut cur = &pmts[*i];
+                let mut j = 0;
+                while let MT::Fun(a, b) = cur {
+                    if ffi::classify(self.prog, a).ok() == Some(CType::Void) {
+                        cargs.push("FWP_UNIT".to_string());
+                    } else {
+                        cargs.push(ffi_from_c(&cps[j], &format!("a{}", j)));
+                        j += 1;
+                    }
+                    cur = b;
+                }
+                let _ = writeln!(
+                    self.ffi_decls,
+                    "    V a[{}] = {{{}}};\n    V r = fwp_apply(fwp_cbslot_{}_{}, {}, a);",
+                    cargs.len().max(1),
+                    if cargs.is_empty() {
+                        "0".into()
+                    } else {
+                        cargs.join(", ")
+                    },
+                    id,
+                    k,
+                    cargs.len()
+                );
+                if **cr == CType::Void {
+                    self.ffi_decls.push_str("    (void)r;\n}\n");
+                } else {
+                    let _ = writeln!(self.ffi_decls, "    return {};\n}}", ffi_to_c(cr, "r"));
+                }
+                let _ = writeln!(body, "    fwp_cbslot_{}_{} = l{};", id, k, i);
+                args.push(format!("(void *)fwp_cb_{}_{}", id, k));
+            } else {
+                args.push(ffi_to_c(c, &format!("l{}", i)));
+            }
+        }
+        let call = format!("{}({})", cname, args.join(", "));
+        if ret == CType::Void {
+            let _ = writeln!(body, "    {};\n    return FWP_UNIT;", call);
+        } else {
+            let _ = writeln!(body, "    return {};", ffi_from_c(&ret, &call));
+        }
+        Ok(body)
+    }
+}
+
 /// What the generated executable runs.
 enum Mode<'a> {
     Main,
     Tests,
     /// An exported function as a standalone executable.
     Exec(FuncId, &'a str),
+    /// Exported functions as C functions of a library.
+    Library,
+}
+
+/// The C name of an exported function.
+pub fn c_export_name(name: &str) -> String {
+    name.chars()
+        .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
+        .collect()
+}
+
+/// C signatures of the exported functions: (name, function, parameters
+/// with their positions, result).
+type ExportSig = (
+    String,
+    FuncId,
+    Vec<(usize, crate::ffi::CType)>,
+    crate::ffi::CType,
+);
+
+fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
+    let mut out = Vec::new();
+    for (name, fid) in &prog.exports {
+        let (params, ret) = crate::ffi::signature(prog, &prog.funcs[*fid])
+            .map_err(|e| format!("exported function `{}`: {}", name, e))?;
+        if params
+            .iter()
+            .any(|(_, c)| matches!(c, crate::ffi::CType::Callback { .. }))
+            || matches!(ret, crate::ffi::CType::Callback { .. })
+        {
+            return Err(format!(
+                "exported function `{}`: functions cannot cross the C boundary as values",
+                name
+            ));
+        }
+        out.push((c_export_name(name), *fid, params, ret));
+    }
+    Ok(out)
+}
+
+/// A C library of the exported functions: its source and its header.
+pub fn generate_library(prog: &Program, lib_name: &str) -> Result<(String, String), String> {
+    let sigs = export_sigs(prog)?;
+    if sigs.is_empty() {
+        return Err("the library exports no functions (mark them with `export`)".into());
+    }
+    let src = generate_mode(prog, Mode::Library)?;
+    let guard: String = lib_name
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() {
+                c.to_ascii_uppercase()
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    let mut h = format!(
+        "/* {name}: generated by fwp from the exported functions. */\n#ifndef FWP_{g}_H\n#define FWP_{g}_H\n\n#include <stddef.h>\n#include <stdint.h>\n\n#ifdef __cplusplus\nextern \"C\" {{\n#endif\n\n",
+        name = lib_name,
+        g = guard
+    );
+    let mut all = Vec::new();
+    for (_, _, ps, r) in &sigs {
+        all.extend(ps.iter().map(|(_, c)| c.clone()));
+        all.push(r.clone());
+    }
+    let mut seen = Vec::new();
+    crate::ffi::struct_defs(&all, &mut h, &mut seen);
+    for n in &seen {
+        let _ = writeln!(h, "typedef struct fwp_c_{n} {n};", n = n);
+    }
+    if !seen.is_empty() {
+        h.push('\n');
+    }
+    for (cname, _, ps, r) in &sigs {
+        let params: Vec<String> = ps.iter().map(|(_, c)| crate::ffi::c_name(c)).collect();
+        let _ = writeln!(
+            h,
+            "{} {}({});",
+            crate::ffi::c_name(r),
+            cname,
+            if params.is_empty() {
+                "void".into()
+            } else {
+                params.join(", ")
+            }
+        );
+    }
+    h.push_str("\n#ifdef __cplusplus\n}\n#endif\n\n#endif\n");
+    Ok((src, h))
 }
 
 /// Generate the complete C program running `main`.
@@ -1097,11 +1413,56 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         consts: Vec::new(),
         const_init: String::new(),
         used_closures: vec![false; prog.funcs.len()],
+        ffi_decls: String::new(),
+        ffi_structs: Vec::new(),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
         bodies.push_str(&g.func(id)?);
         bodies.push('\n');
+    }
+    let mut lib_defs = String::new();
+    if let Mode::Library = mode {
+        lib_defs.push_str(
+            "static int fwp_lib_ready = 0;\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+        );
+        for (cname, fid, ps, r) in export_sigs(prog)? {
+            let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
+            all.push(r.clone());
+            g.ffi_structs(&all);
+            let decl: Vec<String> = ps
+                .iter()
+                .map(|(i, c)| format!("{} a{}", crate::ffi::c_name(c), i))
+                .collect();
+            let f = &prog.funcs[fid];
+            let args: Vec<String> = (0..f.arity as usize)
+                .map(|i| match ps.iter().find(|(j, _)| *j == i) {
+                    Some((_, c)) => ffi_from_c(c, &format!("a{}", i)),
+                    None => "FWP_UNIT".into(),
+                })
+                .collect();
+            let call = if f.arity == 0 {
+                format!("caf{}()", fid)
+            } else {
+                format!("f{}({})", fid, args.join(", "))
+            };
+            let _ = writeln!(
+                lib_defs,
+                "{} {}({}) {{\n    fwp_lib_init();",
+                crate::ffi::c_name(&r),
+                cname,
+                if decl.is_empty() {
+                    "void".into()
+                } else {
+                    decl.join(", ")
+                }
+            );
+            if r == crate::ffi::CType::Void {
+                let _ = writeln!(lib_defs, "    (void){};\n}}\n", call);
+            } else {
+                let _ = writeln!(lib_defs, "    return {};\n}}\n", ffi_to_c(&r, &call));
+            }
+        }
     }
     let main_ty = match mode {
         Mode::Main => prog.funcs[main].ty.clone(),
@@ -1262,7 +1623,19 @@ static const fwp_exec_spec exec_spec = {{
         }
     }
     out.push('\n');
+    if !g.ffi_decls.is_empty() {
+        out.push_str(crate::ffi::PREAMBLE);
+        out.push_str(&g.ffi_decls);
+    }
     out.push_str(&bodies);
+    if let Mode::Library = mode {
+        let _ = write!(
+            out,
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}",
+            g.const_init, lib_defs
+        );
+        return Ok(out);
+    }
     let exit_code = matches!(&main_ty, MT::Con(n, _) if n == "std::I32");
     out.push_str(&exec_defs);
     let run = if let Mode::Exec(..) = mode {
@@ -1330,6 +1703,9 @@ int main(int argc, char **argv) {{
     clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);
     fwp_seed_rng();
     setvbuf(stdout, 0, _IOFBF, 1 << 16);
+#ifdef __wasi__
+    fwp_main_thread(0);
+#else
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -1337,6 +1713,7 @@ int main(int argc, char **argv) {{
     pthread_t t;
     if (pthread_create(&t, &attr, fwp_main_thread, 0) != 0) fwp_main_thread(0);
     else pthread_join(t, 0);
+#endif
     fflush(stdout);
     return fwp_exit_code;
 }}
@@ -1347,33 +1724,66 @@ int main(int argc, char **argv) {{
     Ok(out)
 }
 
+/// What `fwp build` produces.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Target {
+    /// An executable for the host.
+    Native,
+    /// A WebAssembly module for WASI runtimes (wasmtime, node:wasi).
+    Wasi,
+    /// A WebAssembly module plus a JavaScript loader for browsers.
+    Browser,
+}
+
+impl Target {
+    pub fn parse(s: &str) -> Option<Target> {
+        match s {
+            "native" => Some(Target::Native),
+            "wasm32-wasi" | "wasi" => Some(Target::Wasi),
+            "wasm32-browser" | "browser" => Some(Target::Browser),
+            _ => None,
+        }
+    }
+
+    pub fn is_wasm(self) -> bool {
+        self != Target::Native
+    }
+}
+
+/// Effects a target does not provide, by the primitives that perform them.
+pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
+    if !target.is_wasm() {
+        return Ok(());
+    }
+    for f in &prog.funcs {
+        let Body::Prim(sym) = &f.body else { continue };
+        let effect = if ["tcp.", "udp.", "dns."].iter().any(|p| sym.starts_with(p)) {
+            "Network"
+        } else if ["task.", "channel.", "signal."]
+            .iter()
+            .any(|p| sym.starts_with(p))
+        {
+            "Async"
+        } else {
+            continue;
+        };
+        return Err(format!(
+            "the WebAssembly target does not provide the `{}` effect (used by `{}`)",
+            effect, sym
+        ));
+    }
+    Ok(())
+}
+
 /// Compile C source to an executable with the system C compiler.
 pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<(), String> {
-    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let c_path = dir.join(format!(
-        "{}.c",
-        output
-            .file_name()
-            .map(|s| s.to_string_lossy().to_string())
-            .unwrap_or("out".into())
-    ));
-    std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
-    let res = std::process::Command::new(&cc)
-        .arg(opt)
-        .arg("-std=gnu11")
-        // no fused multiply-add: results must match the interpreter exactly
-        .arg("-ffp-contract=off")
-        .arg("-w")
-        .arg("-o")
-        .arg(output)
-        .arg(&c_path)
-        .arg("-lm")
-        .arg("-lpthread")
+    compile_for(c_source, output, opt, Target::Native)
+}
+
+fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
+    let res = cmd
         .output()
         .map_err(|e| format!("cannot run C compiler `{}`: {}", cc, e))?;
-    let _ = std::fs::remove_file(&c_path);
     if !res.status.success() {
         return Err(format!(
             "C compiler failed:\n{}",
@@ -1381,4 +1791,277 @@ pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<
         ));
     }
     Ok(())
+}
+
+/// CPU variants of a fat binary for the host architecture: name, compiler
+/// flags, and the C condition (in terms of `__builtin_cpu_supports`) under
+/// which the variant may run. The first is the baseline.
+fn fat_variants() -> Vec<(&'static str, &'static str, &'static str)> {
+    match std::env::consts::ARCH {
+        "x86_64" => vec![
+            ("x86-64", "-march=x86-64", "1"),
+            (
+                "x86-64-v2",
+                "-march=x86-64-v2",
+                "__builtin_cpu_supports(\"sse4.2\") && __builtin_cpu_supports(\"popcnt\")",
+            ),
+            (
+                "x86-64-v3",
+                "-march=x86-64-v3",
+                "__builtin_cpu_supports(\"avx2\") && __builtin_cpu_supports(\"bmi2\") && __builtin_cpu_supports(\"fma\")",
+            ),
+        ],
+        _ => vec![("baseline", "", "1")],
+    }
+}
+
+/// Compile a fat executable: the program once per CPU variant, and a
+/// dispatcher that runs the best variant the CPU supports. FWP_VARIANT
+/// selects a variant by name; FWP_VARIANT_SHOW=1 reports the choice.
+pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Result<(), String> {
+    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let c_path = dir.join("fat-program.c");
+    std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
+    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let variants = fat_variants();
+    let mut objs = Vec::new();
+    let mut result = Ok(());
+    for (i, (_, flags, _)) in variants.iter().enumerate() {
+        let obj = dir.join(format!("fat-{}.o", i));
+        let mut cmd = std::process::Command::new(&cc);
+        cmd.args([opt, "-std=gnu11", "-ffp-contract=off", "-w", "-c"])
+            .arg(format!("-Dmain=fwp_variant_{}", i));
+        if !flags.is_empty() {
+            cmd.arg(flags);
+        }
+        cmd.arg("-o").arg(&obj).arg(&c_path);
+        result = run_cc(&mut cmd, &cc);
+        objs.push(obj);
+        if result.is_err() {
+            break;
+        }
+    }
+    if result.is_ok() {
+        let mut d =
+            String::from("#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n");
+        for i in 0..variants.len() {
+            let _ = writeln!(d, "int fwp_variant_{}(int, char **);", i);
+        }
+        d.push_str("\nint main(int argc, char **argv) {\n    static const char *names[] = {");
+        for (n, _, _) in &variants {
+            let _ = write!(d, "\"{}\", ", n);
+        }
+        d.push_str("};\n    int pick = 0;\n#if defined(__x86_64__) || defined(__i386__)\n    __builtin_cpu_init();\n#endif\n");
+        for (i, (_, _, cond)) in variants.iter().enumerate().skip(1) {
+            let _ = writeln!(d, "    if ({}) pick = {};", cond, i);
+        }
+        let _ = write!(
+            d,
+            "    const char *force = getenv(\"FWP_VARIANT\");\n    if (force)\n        for (int i = 0; i < {n}; i++)\n            if (!strcmp(force, names[i])) pick = i;\n    if (getenv(\"FWP_VARIANT_SHOW\")) fprintf(stderr, \"fwp: variant %s\\n\", names[pick]);\n    switch (pick) {{\n",
+            n = variants.len()
+        );
+        for i in 0..variants.len() {
+            let _ = writeln!(d, "    case {}: return fwp_variant_{}(argc, argv);", i, i);
+        }
+        d.push_str("    }\n    return 0;\n}\n");
+        let dpath = dir.join("fat-dispatch.c");
+        std::fs::write(&dpath, d).map_err(|e| e.to_string())?;
+        result = run_cc(
+            std::process::Command::new(&cc)
+                .arg(opt)
+                .arg("-o")
+                .arg(output)
+                .arg(&dpath)
+                .args(&objs)
+                .args(crate::ffi::links())
+                .args(["-lm", "-lpthread"]),
+            &cc,
+        );
+        let _ = std::fs::remove_file(&dpath);
+    }
+    for o in &objs {
+        let _ = std::fs::remove_file(o);
+    }
+    let _ = std::fs::remove_file(&c_path);
+    result
+}
+
+/// A static (`.a`) or shared (`.so`) library.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LibKind {
+    Static,
+    Shared,
+}
+
+/// Compile a library and write its header next to it (`libx.a` and
+/// `libx.h`).
+pub fn compile_library(
+    c_source: &str,
+    header: &str,
+    output: &std::path::Path,
+    opt: &str,
+    kind: LibKind,
+) -> Result<(), String> {
+    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let c_path = dir.join("library.c");
+    let obj = dir.join("library.o");
+    std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
+    std::fs::write(output.with_extension("h"), header).map_err(|e| e.to_string())?;
+    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let mut result = run_cc(
+        std::process::Command::new(&cc)
+            .args([
+                opt,
+                "-std=gnu11",
+                "-ffp-contract=off",
+                "-w",
+                "-fPIC",
+                "-c",
+                "-o",
+            ])
+            .arg(&obj)
+            .arg(&c_path),
+        &cc,
+    );
+    if result.is_ok() {
+        result = match kind {
+            LibKind::Static => {
+                let _ = std::fs::remove_file(output);
+                let ar = std::env::var("AR").unwrap_or_else(|_| "ar".into());
+                run_cc(
+                    std::process::Command::new(&ar)
+                        .arg("rcs")
+                        .arg(output)
+                        .arg(&obj),
+                    &ar,
+                )
+            }
+            LibKind::Shared => run_cc(
+                std::process::Command::new(&cc)
+                    .arg("-shared")
+                    .arg("-o")
+                    .arg(output)
+                    .arg(&obj)
+                    .args(crate::ffi::links())
+                    .args(["-lm", "-lpthread"]),
+                &cc,
+            ),
+        };
+    }
+    let _ = std::fs::remove_file(&obj);
+    let _ = std::fs::remove_file(&c_path);
+    result
+}
+
+/// The JavaScript loader for the browser target: a minimal WASI layer
+/// (stdout/stderr to the console or a callback, clocks, random numbers).
+pub const BROWSER_LOADER: &str = include_str!("../runtime/wasm/loader.js");
+
+/// Compile C source for a target.
+pub fn compile_for(
+    c_source: &str,
+    output: &std::path::Path,
+    opt: &str,
+    target: Target,
+) -> Result<(), String> {
+    let dir = std::env::temp_dir().join(format!("fwp-build-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let stem = output
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or("out".into());
+    let c_path = dir.join(format!("{}.c", stem));
+    std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
+    let result = if target.is_wasm() {
+        let cc = std::env::var("FWP_WASM_CC").unwrap_or_else(|_| "clang".into());
+        let obj = dir.join(format!("{}.o", stem));
+        let lj_src = dir.join("fwp-longjmp.S");
+        let lj_obj = dir.join("fwp-longjmp.o");
+        let sj_src = dir.join("fwp-sjlj.c");
+        let sj_obj = dir.join("fwp-sjlj.o");
+        std::fs::write(&lj_src, include_str!("../runtime/wasm/longjmp.S"))
+            .map_err(|e| e.to_string())?;
+        std::fs::write(&sj_src, include_str!("../runtime/wasm/sjlj.c"))
+            .map_err(|e| e.to_string())?;
+        let target_flag = "--target=wasm32-wasi";
+        let result = run_cc(
+            std::process::Command::new(&cc)
+                .args([target_flag, opt, "-std=gnu11", "-ffp-contract=off", "-w"])
+                .args(["-mllvm", "-wasm-enable-sjlj", "-c", "-o"])
+                .arg(&obj)
+                .arg(&c_path),
+            &cc,
+        )
+        .and_then(|_| {
+            run_cc(
+                std::process::Command::new(&cc)
+                    .args([target_flag, "-mexception-handling", "-c", "-o"])
+                    .arg(&lj_obj)
+                    .arg(&lj_src),
+                &cc,
+            )
+        })
+        .and_then(|_| {
+            run_cc(
+                std::process::Command::new(&cc)
+                    .args([target_flag, "-O2", "-c", "-o"])
+                    .arg(&sj_obj)
+                    .arg(&sj_src),
+                &cc,
+            )
+        })
+        .and_then(|_| {
+            run_cc(
+                std::process::Command::new(&cc)
+                    .arg(target_flag)
+                    .arg("-o")
+                    .arg(output)
+                    .arg(&obj)
+                    .arg(&lj_obj)
+                    .arg(&sj_obj)
+                    .args(crate::ffi::links())
+                    .args(["-lm", "-Wl,-z,stack-size=33554432"]),
+                &cc,
+            )
+        })
+        .and_then(|_| {
+            if target == Target::Browser {
+                let js = output.with_extension("js");
+                let wasm_name = output
+                    .file_name()
+                    .map(|s| s.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                std::fs::write(&js, BROWSER_LOADER.replace("__FWP_WASM__", &wasm_name))
+                    .map_err(|e| e.to_string())?;
+            }
+            Ok(())
+        });
+        let _ = std::fs::remove_file(&obj);
+        let _ = std::fs::remove_file(&lj_src);
+        let _ = std::fs::remove_file(&lj_obj);
+        let _ = std::fs::remove_file(&sj_src);
+        let _ = std::fs::remove_file(&sj_obj);
+        result
+    } else {
+        let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+        run_cc(
+            std::process::Command::new(&cc)
+                .arg(opt)
+                .arg("-std=gnu11")
+                // no fused multiply-add: results must match the interpreter exactly
+                .arg("-ffp-contract=off")
+                .arg("-w")
+                .arg("-o")
+                .arg(output)
+                .arg(&c_path)
+                .args(crate::ffi::links())
+                .arg("-lm")
+                .arg("-lpthread"),
+            &cc,
+        )
+    };
+    let _ = std::fs::remove_file(&c_path);
+    result
 }

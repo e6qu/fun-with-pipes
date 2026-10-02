@@ -1,0 +1,24 @@
+# C interop: raw pointers and memory for `foreign "C"` functions.
+#
+#     foreign "C" strlen : String -> U64
+#     repr(C) DivResult = { quot: I32, rem: I32 }
+#     foreign "C" div : I32 -> I32 -> DivResult
+#
+# Pointers are only dereferenced under the `Unsafe` effect. `Option[Ptr[T]]`
+# is a nullable pointer (`None` is NULL); fwp itself has no null.
+
+Ptr[T] = builtin
+
+# zero-initialized memory
+foreign "fwp" mem.alloc : I64 -> Ptr[a] ! {Unsafe}
+foreign "fwp" mem.free : Ptr[a] -> () ! {Unsafe}
+# a NUL-terminated copy of a string, to be freed with mem.free
+foreign "fwp" mem.string : String -> Ptr[U8] ! {Unsafe}
+foreign "fwp" ptr.cast : Ptr[a] -> Ptr[b]
+# the address of the n-th element
+foreign "fwp" ptr.at : I64 -> Ptr[a] -> Ptr[a] where Numeric[a]
+foreign "fwp" ptr.read : Ptr[a] -> a ! {Unsafe} where Numeric[a]
+foreign "fwp" ptr.write : a -> Ptr[a] -> () ! {Unsafe} where Numeric[a]
+# the NUL-terminated string at a pointer
+foreign "fwp" ptr.read-string : Ptr[a] -> String ! {Unsafe}
+foreign "fwp" ptr.address : Ptr[a] -> U64

@@ -1,0 +1,28 @@
+# 1. Pipes and functions
+
+# A definition names a value. Functions are usually written without naming
+# their argument ("tacit"): `double` is "multiply by 2".
+double = mul 2
+
+# `|` feeds a value into a function...
+ten = 5 | double
+
+# ...and between two functions it composes them, left to right.
+quadruple = double | double
+
+# Functions are curried and take their data last, so a partially applied
+# function reads like an instruction: `sub 1` subtracts one.
+decrement = sub 1
+
+# Combinators route a value to several functions. `fork f g h x` is
+# `f (g x) (h x)`; `both f g x` is the pair `(f x, g x)`.
+average = fork div length sum
+
+main = [
+    ten | echo,
+    3 | quadruple | echo,
+    10 | decrement | echo,
+    [3, 5, 10] | average | echo,
+    [3, 5, 10] | both length sum | echo,
+    "pipes" | upper | concat "!" | print,
+] | ignore

@@ -10,6 +10,12 @@
  * to its base) at its next suspension point. Each task has its own Error
  * handler chain and State stack, swapped in and out with the task. */
 
+#ifdef __wasi__
+/* no tasks or sockets on WASI: programs using them are rejected when
+ * compiling for that target */
+static void fwp_tasks_finish(void) {}
+static void fwp_tasks_abort(void) {}
+#else
 #include <ucontext.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
@@ -1008,3 +1014,4 @@ static V fwp_p_loop(V f, V s) {
         s = OBJ(r)->f[0];
     }
 }
+#endif /* __wasi__ */

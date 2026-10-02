@@ -164,6 +164,12 @@ pub enum Body {
     Prim(String),
     /// ADT constructor.
     Ctor(u32),
+    /// A C function (`foreign "C"`), called through the C ABI.
+    ForeignC {
+        symbol: String,
+        /// Number of fixed parameters of a variadic function.
+        variadic: Option<u32>,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -198,6 +204,8 @@ pub struct Program {
     pub exports: Vec<(String, FuncId)>,
     /// Instances of bindings requested by canonical name (`Roots::names`).
     pub named: Vec<(String, FuncId)>,
+    /// `repr(C)` records: type name to field names in declaration order.
+    pub repr_c: std::collections::BTreeMap<String, Vec<String>>,
 }
 
 impl crate::value::Shapes for Program {

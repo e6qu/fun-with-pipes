@@ -166,10 +166,16 @@ pub fn float_value(mt: &MT, x: f64) -> Option<Value> {
 
 impl<'a> Mono<'a> {
     pub fn new(env: &'a Env, typed: &'a Typed) -> Self {
+        let mut prog = Program::default();
+        for (name, td) in &env.types {
+            if let (true, crate::env::TypeDefKind::Record { fields }) = (td.repr_c, &td.kind) {
+                prog.repr_c.insert(name.clone(), fields.clone());
+            }
+        }
         Mono {
             env,
             typed,
-            prog: Program::default(),
+            prog,
             instances: HashMap::new(),
             per_binding: HashMap::new(),
             generated: HashMap::new(),
@@ -365,6 +371,24 @@ impl<'a> Mono<'a> {
         let (arity, body) = match combinator(symbol) {
             Some((a, e)) => (a, Body::Expr(e)),
             None => (arity, Body::Prim(symbol.to_string())),
+        };
+        let id = self.new_func(symbol.to_string(), arity, ty, body);
+        self.instances.insert(k, id);
+        id
+    }
+
+    /// A `foreign "C"` function at a monomorphic type.
+    fn c_instance(&mut self, canon: &str, symbol: &str, variadic: Option<u32>, ty: MT) -> FuncId {
+        let k = (format!("cforeign:{}", canon), vec![ty.clone()]);
+        if let Some(id) = self.instances.get(&k) {
+            return *id;
+        }
+        self.register_shapes(&ty);
+        let scheme = self.env.globals[canon].scheme.clone().unwrap();
+        let arity = spine_arity(&self.env.table, &scheme.ty);
+        let body = Body::ForeignC {
+            symbol: symbol.to_string(),
+            variadic,
         };
         let id = self.new_func(symbol.to_string(), arity, ty, body);
         self.instances.insert(k, id);
@@ -942,9 +966,17 @@ impl<'a> Mono<'a> {
                 };
                 Ok(Expr::Func(self.binding_instance(idx, key, e.span)?))
             }
-            GlobalKind::Foreign { symbol, .. } => {
+            GlobalKind::Foreign {
+                symbol,
+                abi,
+                variadic,
+            } => {
                 let mt = self.node_mt(e.id, s);
-                let id = self.foreign_instance(&inst.target, symbol, mt);
+                let id = if abi == "C" {
+                    self.c_instance(&inst.target, symbol, *variadic, mt)
+                } else {
+                    self.foreign_instance(&inst.target, symbol, mt)
+                };
                 if self.prog.funcs[id].arity == 0 {
                     return Ok(Expr::Call(id, vec![]));
                 }

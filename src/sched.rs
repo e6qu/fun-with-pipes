@@ -394,6 +394,7 @@ impl<'p> Interp<'p> {
             task: task.clone(),
             root_out: self.root_out,
             scopes: Vec::new(),
+            ffi: self.ffi.clone(),
         };
         // The baton guarantees exclusive access; the parent outlives its
         // children because every task joins its children before finishing.

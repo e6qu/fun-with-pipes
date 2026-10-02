@@ -51,6 +51,8 @@ pub struct TypeDef {
     pub arity: usize,
     pub kind: TypeDefKind,
     pub resource: bool,
+    /// `repr(C)` record.
+    pub repr_c: bool,
     /// Parameter template variables (rigid).
     pub params: Vec<TV>,
     /// Number of type arguments each parameter takes (0 for ordinary
@@ -72,7 +74,11 @@ pub enum GlobalKind {
     /// User or stdlib binding; index into `Env::bindings`.
     Binding(usize),
     /// Runtime-provided function.
-    Foreign { abi: String, symbol: String },
+    Foreign {
+        abi: String,
+        symbol: String,
+        variadic: Option<u32>,
+    },
     /// Trait method (filled in by the trait machinery).
     Method { trait_name: String },
 }
@@ -429,6 +435,7 @@ impl Env {
                             arity: td.params.len(),
                             kind: TypeDefKind::Opaque,
                             resource: td.resource,
+                            repr_c: td.repr_c,
                             params: vec![],
                             param_kinds: decl_param_kinds(td),
                         },
@@ -533,6 +540,7 @@ impl Env {
                         abi,
                         name,
                         symbol,
+                        variadic,
                         ty,
                         constraints,
                     } => {
@@ -552,6 +560,7 @@ impl Env {
                                         kind: GlobalKind::Foreign {
                                             abi: abi.clone(),
                                             symbol: symbol.clone(),
+                                            variadic: *variadic,
                                         },
                                         span: *span,
                                         scheme: Some(scheme),

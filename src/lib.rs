@@ -11,6 +11,8 @@ pub mod driver;
 pub mod env;
 pub mod exec;
 pub mod exhaust;
+pub mod ffi;
+pub mod ffi_interp;
 pub mod infer;
 pub mod interp;
 pub mod ir;

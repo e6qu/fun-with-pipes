@@ -157,6 +157,8 @@ pub struct TypeDecl {
     pub params: Vec<String>,
     pub body: TypeBody,
     pub resource: bool,
+    /// `repr(C)`: a record with C layout (fields in declaration order).
+    pub repr_c: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -202,6 +204,8 @@ pub enum Decl {
         abi: String,
         name: String,
         symbol: String,
+        /// For C functions with `...`: the number of fixed parameters.
+        variadic: Option<u32>,
         ty: TypeExpr,
         constraints: Vec<Constraint>,
     },

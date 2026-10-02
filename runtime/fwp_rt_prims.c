@@ -1469,3 +1469,14 @@ static V fwp_p_list_transpose(V xss) {
     }
     return fwp_list_from(cols, nc);
 }
+
+/* ----- results of foreign C functions */
+
+static V fwp_c_string(const char *p) {
+    if (!p) fwp_trap("foreign function returned a null string");
+    size_t n = strlen(p);
+    if (!fwp_valid_utf8((const unsigned char *)p, n)) fwp_trap("foreign function returned a string that is not UTF-8");
+    return fwp_str_new(p, n);
+}
+
+static V fwp_c_optptr(void *p) { return p ? fwp_some((V)(uintptr_t)p) : FWP_NONE; }
