@@ -1,0 +1,27 @@
+# Nested match blocks; the trailing `| show` continues the outer pipeline.
+classify =
+    match
+        Some _ -> match
+            0 -> "zero"
+            _ -> const "many"
+        None -> "none"
+    | show
+
+# Multi-line application and a brace-form block on one line.
+sum3 = fold
+    add
+    0
+
+impl Show[Point] = { show = .x | show, debug = show }
+
+trait Monad[M] : Applicative[M] =
+    bind : (a -> M[b] ! e) -> M[a] -> M[b] ! e
+    pure : a -> M[a]
+
+run : String -> () ! {IO | e}
+run = print
+
+Shape =
+    | Circle F64
+    | Rect F64 F64
+    | Poly List[(F64, F64)]

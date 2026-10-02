@@ -1,0 +1,17 @@
+[package]
+name = "fwp"
+version = "0.1.0"
+edition = "2021"
+description = "fwp (\"foop\"): a tacit, statically typed, pipe-oriented language"
+license = "MIT"
+
+[[bin]]
+name = "fwp"
+path = "src/main.rs"
+
+[lib]
+name = "fwp"
+path = "src/lib.rs"
+
+[profile.release]
+debug = false

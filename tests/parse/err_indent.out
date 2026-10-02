@@ -1,0 +1,4 @@
+parse/err_indent.fwp:2:5: error: expected end of declaration, found `=`
+2 |   g = 2
+  |     ^
+  note: indented lines continue the previous declaration; start a new declaration in column 1

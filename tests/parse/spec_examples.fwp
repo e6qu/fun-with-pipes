@@ -1,0 +1,89 @@
+# Examples from the specification, adapted to fwp syntax decisions.
+
+inc = add 1
+
+normalize : String -> String
+normalize =
+    trim
+    | lower
+
+active-names =
+    users
+    | filter .active
+    | map .name
+    | sort
+
+Option[T] =
+    | Some T
+    | None
+
+Result[T, E] =
+    | Ok T
+    | Err E
+
+User = { name: String, age: U8, active: Bool }
+
+resource File = builtin
+
+rec factorial = match
+    0 -> 1
+    _ -> fork mul id (sub 1 | factorial)
+
+describe = match { Some -> show, None -> "nothing" }
+
+fetch : Url -> Bytes ! {IO, Network, Async, Error[HttpError]}
+
+matmul : Matrix[T, M, K] -> Matrix[T, K, N] -> Matrix[T, M, N] where Mul[T], Add[T]
+
+get-name : {name: a | r} -> a
+get-name = .name
+
+map : (a -> b ! e) -> List[a] -> List[b] ! e
+
+handler =
+    timeout 2s
+    | rate.limit policy
+    | auth.require
+    | validate schema
+    | service
+    | json.response
+
+routes =
+    comptime route-spec
+    | router.compile
+
+trait Functor[F] =
+    fmap : (a -> b) -> F[a] -> F[b]
+
+impl Functor[Option] =
+    fmap = option.map
+
+trait Ring[T] : Add[T], Mul[T], Zero[T], One[T] =
+    sum-of : List[T] -> T
+    sum-of = fold add zero
+
+macro unless = match
+    _ -> quote (not x)
+
+trits = 0t+-0-+
+
+point = { x = 1.5, y = -2.0f64 }
+older = with { age = 30u8 }
+alice = User { name = "Alice", age = 30u8, active = True }
+pair = (1, "two", [3, 4])
+unit = ()
+info = type[List[I32]]
+checked = assert!(eq 1 1, "math works")
+
+nested = match
+    Cons _ Nil -> id
+    Cons _ (Cons _ _) -> const (const (const 0))
+    Nil -> 0
+
+foreign "C" c-cos : F64 -> F64 = "cos"
+
+export shout : String -> String
+
+test "inc works" = 1 | inc | eq 2
+
+import json
