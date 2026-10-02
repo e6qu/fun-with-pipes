@@ -353,7 +353,7 @@ rest.run-with =
         (if
             (.1 | .0 | .help)
             (const rest.help | print)
-            (if (.1 | .0 | .openapi) (.0 | .0 | print) rest.listen))
+            (if (.1 | .0 | .openapi) (.0 | .0 | write) rest.listen))
 
 rest.help : String
 rest.help =

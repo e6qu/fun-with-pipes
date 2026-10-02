@@ -862,17 +862,19 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             Value::Map(Rc::new(m))
         }
         Shape::Tuple(ts) => Value::tuple(decode_tuple(r, &ts, prog, path)?),
-        Shape::Record(_, fts, _, names) => {
+        Shape::Record(_, fts, order, names) => {
             let Raw::Obj(fs) = r else {
                 return Err(expected(path, "an object", r));
             };
-            let mut out = Vec::new();
-            for ((_, t), l) in fts.iter().zip(&names) {
-                out.push(with_key(path, l, |p| match member(fs, l) {
+            // in declaration order, so that errors come in that order
+            let mut out = vec![Value::unit(); fts.len()];
+            for i in order {
+                let (t, l) = (&fts[i].1, &names[i]);
+                out[i] = with_key(path, l, |p| match member(fs, l) {
                     Some(x) => decode(x, t, prog, p),
                     None if is_option(t) => Ok(Value::nullary(0)),
                     None => Err(format!("{}: required field is missing", p)),
-                })?);
+                })?;
             }
             Value::tuple(out)
         }

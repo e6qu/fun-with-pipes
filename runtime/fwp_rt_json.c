@@ -996,7 +996,9 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             if (!fwp_jt_tuple(c, r, d->n, d->fields, fs)) return 0;
         } else {
             if (r->t != 5) return fwp_jt_expected(c, "an object", r);
-            for (int i = 0; i < d->n; i++) {
+            /* in declaration order, so that errors come in that order */
+            for (int k = 0; k < d->n; k++) {
+                int i = d->order ? d->order[k] : k;
                 size_t len = c->path.len;
                 const char *jn = d->jnames ? d->jnames[i] : d->names[i];
                 fwp_jt_push_key(c, jn, strlen(jn));
