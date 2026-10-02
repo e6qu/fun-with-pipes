@@ -35,6 +35,7 @@ _Noreturn void longjmp(jmp_buf, int);
 #include <pthread.h>
 #endif
 #include <errno.h>
+#include <stdarg.h>
 #include <ctype.h>
 
 typedef uint64_t V;

@@ -187,9 +187,9 @@ fn run_goldens(host: Host) {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    // the programs with tasks, sockets or C: nothing else
+    // the programs with tasks, sockets, processes or C: nothing else
     assert!(
-        skipped.len() <= 6,
+        skipped.len() <= 7,
         "too many programs rejected: {:?}",
         skipped
     );
@@ -218,6 +218,10 @@ fn rejections_name_what_is_missing() {
         (
             "net.fwp",
             "fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.within`)\n",
+        ),
+        (
+            "cli_process.fwp",
+            "fwp run: the WebAssembly build of fwp does not provide the `Process` effect (used by `process.call`)\n",
         ),
         (
             "ffi.fwp",

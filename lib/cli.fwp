@@ -1,0 +1,101 @@
+# Command-line programs. Exported functions become programs with flags,
+# help and subcommands without any code (see docs/cli.md); these
+# functions are for programs with a hand-written `main`, and for output to
+# terminals.
+
+# Parse command-line arguments as executables do: each field of the
+# options record is a flag (`--name value`, `--name=value`; a `Bool` field
+# is a switch, `--name` or `--no-name`; an `Option` field is optional; a
+# `List` field repeatable; a field comment `# -x ...` adds the short flag
+# `-x`); other arguments are positional, and `--` ends the flags. Fields
+# whose flags are absent keep the value they have in the first argument:
+# `args () | cli.parse defaults` is `Ok (options, positional)` or
+# `Err message`.
+foreign "fwp" cli.parse : o -> List[String] -> Result[(o, List[String]), String]
+
+# The help lines of the flags of an options record, with the defaults of
+# the given value.
+foreign "fwp" cli.help : o -> String
+
+# Report a usage error: `message | cli.usage-error usage` prints the
+# message and the usage on stderr and exits with status 2.
+cli.usage-error : String -> String -> a ! {IO}
+cli.usage-error = curry (both (.1 | eprint) (.0 | eprint) | const 2 | exit)
+
+# ---------------------------------------------------------------- terminal
+
+# Whether a standard stream (0 stdin, 1 stdout, 2 stderr) is a terminal.
+foreign "fwp" term.is-tty : I32 -> Bool ! {IO}
+
+# Whether to colour standard output: it is a terminal and `NO_COLOR` is
+# not set (see no-color.org).
+term.color : () -> Bool ! {IO}
+term.color =
+    fork
+        and
+        (const 1 | term.is-tty)
+        (const "NO_COLOR" | env.get | option.filter (ne "") | option.is-none)
+
+# `"error" | term.paint ansi.red` is red when `term.color` holds, and
+# plain text otherwise.
+term.paint : (String -> String ! {IO | e}) -> String -> String ! {IO | e}
+term.paint = flip (if (const () | term.color)) id
+
+# Text in an ANSI style: `ansi.style "1;31"` is bold red.
+ansi.style : String -> String -> String
+ansi.style = curry (format "\u{1b}[{}m{}\u{1b}[0m")
+
+ansi.bold : String -> String
+ansi.bold = ansi.style "1"
+
+ansi.dim : String -> String
+ansi.dim = ansi.style "2"
+
+ansi.underline : String -> String
+ansi.underline = ansi.style "4"
+
+ansi.red : String -> String
+ansi.red = ansi.style "31"
+
+ansi.green : String -> String
+ansi.green = ansi.style "32"
+
+ansi.yellow : String -> String
+ansi.yellow = ansi.style "33"
+
+ansi.blue : String -> String
+ansi.blue = ansi.style "34"
+
+ansi.magenta : String -> String
+ansi.magenta = ansi.style "35"
+
+ansi.cyan : String -> String
+ansi.cyan = ansi.style "36"
+
+# ------------------------------------------------------------------ tables
+
+# Rows of cells as lines of aligned columns, two spaces apart. Widths
+# count characters.
+table.lines : List[List[String]] -> List[String]
+table.lines = fork table.render table.widths id
+
+# `table.lines` as one string, each line ending in a newline.
+table.format : List[List[String]] -> String
+table.format = table.lines | map (concat "\n") | join ""
+
+table.widths : List[List[String]] -> List[I64]
+table.widths =
+    list.transpose | map (map string.length | maximum | option.unwrap-or 0)
+
+table.render : List[I64] -> List[List[String]] -> List[String]
+table.render = curry (fork map (.0 | table.row) .1)
+
+table.row : List[I64] -> List[String] -> String
+table.row = curry (uncurry (flip zip)
+    | map (uncurry (flip pad-right " "))
+    | join "  "
+    | trim-end)
+
+test "ansi.style" = "x" | ansi.bold | eq "\u{1b}[1mx\u{1b}[0m"
+test "table.format" =
+    [["a", "bb"], ["ccc", "d"]] | table.format | eq "a    bb\nccc  d\n"

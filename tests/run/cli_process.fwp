@@ -1,0 +1,20 @@
+# Running other programs: output, input, exit status and failures.
+
+main = [
+    ["echo", "hello", "world"] | process.run | echo,
+    ["tr", "a-z", "A-Z"] | process.run-input "shout\n" | .stdout | write,
+    ["sh", "-c", "echo out; echo err >&2; exit 3"] | process.run | echo,
+    ["sh", "-c", "kill -9 $$"] | process.run | .status | echo,
+    ["sh", "-c", "cat | wc -c"]
+    | process.run-input (string.repeat 100000 "x")
+    | .stdout
+    | trim
+    | print,
+    "before call" | print,
+    ["sh", "-c", "echo from the child"] | process.call | echo,
+    ["sh", "-c", "exit 7"] | process.call | echo,
+    ["no-such-program-fwp"] | attempt process.run | echo,
+    [] | attempt process.call | echo,
+    ["printf", "ok"] | attempt process.output | echo,
+    ["sh", "-c", "echo bad >&2; exit 1"] | attempt process.output | echo,
+] | ignore

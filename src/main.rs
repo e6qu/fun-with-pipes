@@ -12,12 +12,15 @@ usage:
                                  run a program's `main` (interpreter); calls
                                  to the exported functions of each module
                                  named by --service go to that service
-  fwp build <file.fwp> [-o out] [--fn name] [--emit-c] [-O0|-O1|-O2|-O3]
+  fwp build <file.fwp> [-o out] [--fn name|--cli] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
             [--staticlib|--cdylib] [--link lib-or-source]...
             [--service m[=addr]]...
                                  compile `main` (or an exported function) to a
                                  native executable or a WebAssembly module;
+                                 --cli makes every exported function a
+                                 subcommand of one executable, with flags
+                                 and --help (see docs/cli.md);
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
                                  --staticlib/--cdylib build a C library
@@ -35,6 +38,8 @@ usage:
                                  print the .proto file of the services
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
+  fwp exec --cli <file.fwp> [command] [args...]
+                                 run a file as `fwp build --cli` would
   fwp pipe '<file.fwp:fn args> | <file.fwp:fn> ...'
                                  connect exported functions with the binary
                                  typed protocol
@@ -326,6 +331,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut out = None;
     let mut emit_c = false;
     let mut func: Option<String> = None;
+    let mut cli = false;
     let mut opt = "-O2".to_string();
     let mut target = fwp::cgen::Target::Native;
     let mut fat = false;
@@ -373,6 +379,7 @@ fn build(args: &[String]) -> ExitCode {
                 i += 1;
                 func = args.get(i).cloned();
             }
+            "--cli" => cli = true,
             a if a.starts_with("-O") => opt = a.to_string(),
             a => path = Some(a.to_string()),
         }
@@ -388,8 +395,12 @@ fn build(args: &[String]) -> ExitCode {
         );
     }
     let src = std::path::PathBuf::from(&path);
+    if cli && (func.is_some() || lib.is_some()) {
+        eprintln!("fwp build: --cli builds every exported function into one executable (not with --fn, --staticlib or --cdylib)");
+        return ExitCode::from(2);
+    }
     if !services.is_empty() {
-        if func.is_some() || lib.is_some() || target.is_wasm() {
+        if cli || func.is_some() || lib.is_some() || target.is_wasm() {
             eprintln!("fwp build: --service builds native executables (not with --fn, --staticlib, --cdylib or WebAssembly)");
             return ExitCode::from(2);
         }
@@ -430,8 +441,8 @@ fn build(args: &[String]) -> ExitCode {
         _ => out,
     };
     let roots = fwp::mono::Roots {
-        main: func.is_none() && lib.is_none(),
-        exports: func.is_some() || lib.is_some(),
+        main: func.is_none() && lib.is_none() && !cli,
+        exports: func.is_some() || lib.is_some() || cli,
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
@@ -469,6 +480,11 @@ fn build(args: &[String]) -> ExitCode {
             };
         }
         let generated = match &func {
+            None if cli => {
+                let stem = out.file_stem().unwrap_or_default().to_string_lossy();
+                let name = stem.strip_suffix(".wasm").unwrap_or(&stem).to_string();
+                fwp::cgen::generate_cli(&prog, &name)
+            }
             None => fwp::cgen::generate(&prog),
             Some(name) => match prog.exports.iter().find(|(n, _)| n == name) {
                 Some((_, fid)) => fwp::cgen::generate_exec(&prog, *fid, name),
@@ -718,11 +734,18 @@ fn proto(args: &[String]) -> ExitCode {
 }
 
 fn exec(args: &[String]) -> ExitCode {
-    let (Some(path), Some(name)) = (args.first().cloned(), args.get(1).cloned()) else {
-        eprintln!("fwp exec: usage: fwp exec <file.fwp> <function> [args...]");
+    let (cli, args) = match args.first().map(String::as_str) {
+        Some("--cli") => (true, &args[1..]),
+        _ => (false, args),
+    };
+    let (Some(path), Some(name)) = (
+        args.first().cloned(),
+        args.get(1).cloned().or_else(|| cli.then(String::new)),
+    ) else {
+        eprintln!("fwp exec: usage: fwp exec <file.fwp> <function> [args...]\n       fwp exec --cli <file.fwp> [command] [args...]");
         return ExitCode::from(2);
     };
-    let fargs: Vec<String> = args[2..].to_vec();
+    let fargs: Vec<String> = args[if cli { 1 } else { 2 }..].to_vec();
     let roots = fwp::mono::Roots {
         exports: true,
         ..Default::default()
@@ -733,6 +756,9 @@ fn exec(args: &[String]) -> ExitCode {
                 eprint!("{}", c.render_warnings());
                 if let Some(code) = host_unsupported("exec", &prog) {
                     return code;
+                }
+                if cli {
+                    return fwp::exec::exec_program(&prog, &program_name(&path), &fargs);
                 }
                 match prog.exports.iter().find(|(n, _)| *n == name) {
                     Some((_, fid)) => fwp::exec::exec(&prog, *fid, &name, &fargs),
@@ -758,6 +784,18 @@ fn exec(args: &[String]) -> ExitCode {
             }
         });
     ExitCode::from((code & 0xff) as u8)
+}
+
+/// The name of a multi-command program: the file name without `.fwp`
+/// (`fwp exec --cli`), or of the executable (`fwp build --cli`).
+fn program_name(path: &str) -> String {
+    if path == "-" {
+        return "main".into();
+    }
+    std::path::Path::new(path)
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "main".into())
 }
 
 fn pipe(args: &[String]) -> ExitCode {

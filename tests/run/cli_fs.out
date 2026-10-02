@@ -1,0 +1,21 @@
+False
+True
+["one", "two", "three"]
+["l1", "l2"]
+(6, False)
+True
+True
+[0, 255, 10]
+["a", "b.bin", "z.txt"]
+["cli_fs.tmp/a/b/x.txt", "cli_fs.tmp/a/y.txt", "cli_fs.tmp/b.bin", "cli_fs.tmp/z.txt"]
+["cli_fs.tmp/a/b/x.txt", "cli_fs.tmp/a/y.txt", "cli_fs.tmp/a/z2.txt", "cli_fs.tmp/b.bin"]
+Err (IoError {kind = "remove", message = "cli_fs.tmp/a/b: Directory not empty"})
+Err (IoError {kind = "stat", message = "cli_fs.tmp/nope: No such file or directory"})
+Err (IoError {kind = "list", message = "cli_fs.tmp/nope: No such file or directory"})
+Err (IoError {kind = "remove", message = "cli_fs.tmp/nope: No such file or directory"})
+Err (IoError {kind = "create", message = "cli_fs.tmp/a: File exists"})
+Err (IoError {kind = "write", message = "cli_fs.tmp/nope/x: No such file or directory"})
+False
+[("a/c", ("a/b/..", "c")), ("/x/y", ("/../x//y", ".")), (".", (".", "")), ("../..", ("..", "..")), ("a/b/c.tar.gz", ("a/b", "c.tar.gz")), ("/", ("/", ""))]
+[("txt", "notes"), ("", ".profile"), ("", "c"), ("", "x.")]
+[("FWP_SEED", "42")]

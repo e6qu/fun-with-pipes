@@ -1,0 +1,13 @@
+# Terminal detection, ANSI styles and text tables (not a terminal here).
+
+main = [
+    [0, 1, 2, 3] | map term.is-tty | echo,
+    () | term.color | echo,
+    "plain" | term.paint ansi.red | print,
+    "x" | ansi.red | show | print,
+    "x" | ansi.style "1;4" | show | print,
+    [["name", "size"], ["a.txt", "10"], ["bbbbbb", "2"], ["ü", ""]]
+    | table.lines
+    | each print,
+    [] | table.format | show | print,
+] | ignore

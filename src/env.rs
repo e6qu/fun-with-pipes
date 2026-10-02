@@ -9,7 +9,7 @@ use crate::types::*;
 
 /// Effect labels known to the compiler.
 pub const EFFECTS: &[&str] = &[
-    "IO", "FileIO", "Network", "Async", "Random", "State", "Alloc", "Error", "Unsafe",
+    "IO", "FileIO", "Process", "Network", "Async", "Random", "State", "Alloc", "Error", "Unsafe",
 ];
 
 #[derive(Clone, Debug)]

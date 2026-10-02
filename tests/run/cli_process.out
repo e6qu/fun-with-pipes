@@ -1,0 +1,13 @@
+ProcessOutput {status = 0, stderr = "", stdout = "hello world\n"}
+SHOUT
+ProcessOutput {status = 3, stderr = "err\n", stdout = "out\n"}
+137
+100000
+before call
+from the child
+0
+7
+Err (IoError {kind = "spawn", message = "no-such-program-fwp: No such file or directory"})
+Err (IoError {kind = "spawn", message = "empty command"})
+Ok "ok"
+Err (IoError {kind = "status", message = "bad"})

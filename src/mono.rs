@@ -436,6 +436,13 @@ impl<'a> Mono<'a> {
             Some((a, e)) => (a, Body::Expr(e)),
             None => (arity, Body::Prim(symbol.to_string())),
         };
+        // the error a primitive raises (`IoError`) is displayed and
+        // encoded by its shape
+        if let Some(e) = self.error_effect(&scheme.ty) {
+            if matches!(&e, MT::Con(_, args) if args.is_empty()) {
+                self.register_shapes(&e);
+            }
+        }
         let id = self.new_func(symbol.to_string(), arity, ty, body);
         self.instances.insert(k, id);
         id

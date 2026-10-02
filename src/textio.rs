@@ -216,7 +216,10 @@ impl<'a> P<'a> {
     }
 
     fn value(&mut self, mt: &MT, top: bool) -> R<Value> {
-        self.ws();
+        // a top-level string is the text as it is, spaces included
+        if !(top && matches!(mt, MT::Con(..)) && prim(mt) == "String") {
+            self.ws();
+        }
         match mt {
             MT::Record(fs) if fs.is_empty() => {
                 self.expect("(")?;

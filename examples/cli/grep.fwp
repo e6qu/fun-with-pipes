@@ -1,0 +1,84 @@
+# Print the lines that contain a pattern.
+#
+#   fwp build examples/cli/grep.fwp --fn grep -o grep
+#   ./grep -in todo src/*.rs
+#   printf 'apple\nBanana\n' | ./grep -i an
+
+GrepOptions = {
+    # -i  ignore case
+    ignore-case: Bool,
+    # -v  print the lines that do not match
+    invert: Bool,
+    # -n  print line numbers
+    line-number: Bool,
+    # -c  print only the number of selected lines
+    count: Bool,
+}
+
+Search = { options: GrepOptions, pattern: String, names: Bool }
+
+Source = { search: Search, name: String, lines: List[String] }
+
+# Whether a line is selected: it contains the pattern, or with `invert`
+# it does not.
+selected : Search -> String -> Bool
+selected = curry (fork
+    ne
+    (.0 | .options | .invert)
+    (if
+            (.0 | .options | .ignore-case)
+            (both (.0 | .pattern | lower) (.1 | lower))
+            (both (.0 | .pattern) .1)
+        | uncurry string.contains))
+
+# The selected lines with their (zero-based) numbers.
+hits : Search -> List[String] -> List[(I64, String)]
+hits = curry (fork filter (.0 | selected | compose .1) (.1 | enumerate))
+
+# `name:` when several files are searched.
+name-prefix : Source -> String
+name-prefix = if (.search | .names) (.name | concat ":") (const "")
+
+# A selected line with its prefixes.
+hit-line : Source -> (I64, String) -> String
+hit-line = curry (both
+        (both
+                (.0 | name-prefix)
+                (if
+                    (.0 | .search | .options | .line-number)
+                    (.1 | .0 | add 1 | show | concat ":")
+                    (const ""))
+            | uncurry (flip concat))
+        (.1 | .1)
+    | uncurry (flip concat))
+
+output : Source -> List[String]
+output =
+    if
+        (.search | .options | .count)
+        (both name-prefix (both .search .lines | uncurry hits | length | show)
+            | uncurry (flip concat)
+            | singleton)
+        (fork map hit-line (both .search .lines | uncurry hits))
+
+source : Search -> (String, List[String]) -> Source
+source = curry (make Source { search = .0, name = .1 | .0, lines = .1 | .1 })
+
+# Print the lines of the FILEs (or of standard input) that contain
+# PATTERN.
+# args: PATTERN FILE...
+export grep : GrepOptions -> String -> List[String] -> List[String] ! {IO, FileIO, Error[IoError]}
+grep = curry (curry
+    (fork
+            map
+            (make Search {
+                options = .0 | .0,
+                pattern = .0 | .1,
+                names = .1 | length | gt 1,
+            } | source)
+            (.1
+                | if
+                    is-empty
+                    (const () | read-lines | both (const "-") id | singleton)
+                    (map (both id file.read-lines)))
+        | list.flat-map output))

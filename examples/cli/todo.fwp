@@ -1,0 +1,92 @@
+# A to-do list kept in a text file, one item per line.
+#
+#   fwp build examples/cli/todo.fwp --cli -o todo
+#   ./todo add buy milk
+#   ./todo list
+#   ./todo done 1
+
+export version : String
+version = "1.0.0"
+
+Store = {
+    # -f  the file that keeps the list
+    file: String,
+}
+
+# The default file of every command.
+export defaults : Store
+defaults = Store { file = "todo.txt" }
+
+Item = { done: Bool, text: String }
+
+item : String -> Item
+item = make Item {
+    done = starts-with "[x] ",
+    text = string.chars | drop 4 | join "",
+}
+
+line : Item -> String
+line =
+    both (if .done (const "[x] ") (const "[ ] ")) .text | uncurry (flip concat)
+
+items : Store -> List[Item] ! {FileIO, Error[IoError]}
+items = .file | if file.exists (file.read-lines | map item) (const [])
+
+save : Store -> List[Item] -> () ! {FileIO, Error[IoError]}
+save = curry (both (.0 | .file) (.1 | map line) | uncurry file.write-lines)
+
+numbered : List[Item] -> List[String]
+numbered =
+    enumerate
+    | map (both (.0 | add 1 | show | pad-left 3 " ") (.1 | line)
+        | format "{}. {}")
+
+mark : I64 -> List[Item] -> List[Item]
+mark = curry (fork map (.0 | mark-one) (.1 | enumerate))
+
+mark-one : I64 -> (I64, Item) -> Item
+mark-one = curry (if
+    (fork eq .0 (.1 | .0 | add 1))
+    (.1 | .1 | with { done = True })
+    (.1 | .1))
+
+# Add an item.
+# command: add
+# args: TEXT...
+export add-item : Store -> List[String] -> String ! {FileIO, Error[IoError]}
+add-item = curry (both
+        (.0 | .file)
+        (.1
+            | join " "
+            | make Item { done = const False, text = id }
+            | line
+            | concat "\n")
+    | uncurry file.append
+    | const "added")
+
+# List the items, numbered.
+# command: list
+export list-items : Store -> List[String] ! {FileIO, Error[IoError]}
+list-items = items | numbered
+
+# Mark item N as done.
+# args: N
+export done : Store -> I64 -> Result[String, String] ! {FileIO, Error[IoError]}
+done = curry (both id (.0 | items)
+    | if
+        (fork and (.0 | .1 | ge 1) (fork le (.1 | length) (.0 | .1)))
+        (both
+                (both (.0 | .0) (both (.0 | .1) .1 | uncurry mark)
+                    | uncurry save)
+                (.0 | .1 | format "item {} is done")
+            | .1
+            | Ok)
+        (.0 | .1 | format "there is no item {}" | Err))
+
+# Remove the items that are done.
+export clear : Store -> String ! {FileIO, Error[IoError]}
+clear =
+    both id items
+    | both .0 (.1 | filter (.done | not))
+    | uncurry save
+    | const "cleared"

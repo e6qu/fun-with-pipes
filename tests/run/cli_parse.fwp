@@ -1,0 +1,50 @@
+# cli.parse and cli.help: the command-line rules of executables, for a
+# hand-written `main`.
+
+Options = {
+    # -v  say more
+    verbose: Bool,
+    # -n  how many times
+    count: I64,
+    # a label
+    name: Option[String],
+    # -t  tags to add
+    tag: List[String],
+    color: Bool,
+    ratio: F64,
+}
+
+defaults : Options
+defaults = Options {
+    verbose = False,
+    count = 1,
+    name = None,
+    tag = [],
+    color = True,
+    ratio = 0.5,
+}
+
+parse : List[String] -> Result[(Options, List[String]), String]
+parse = cli.parse defaults
+
+main = [
+    [] | parse | echo,
+    ["-v", "--count", "3", "file", "--tag=a", "-t", "b", "-tc"] | parse | echo,
+    ["-vn5", "--no-color", "--name", "x y", "--ratio=-1.5", "-3"] | parse | echo,
+    ["--verbose=false", "--color=true", "--", "--count", "-v"] | parse | echo,
+    ["-", "a", "-"] | parse | echo,
+    ["--bogus"] | parse | echo,
+    ["-x"] | parse | echo,
+    ["--count"] | parse | echo,
+    ["-n"] | parse | echo,
+    ["--count", "many"] | parse | echo,
+    ["--no-count"] | parse | echo,
+    ["--verbose=maybe"] | parse | echo,
+    ["--help"] | parse | echo,
+    defaults | cli.help | write,
+    defaults
+    | with { tag = ["x", "y"], name = Some "n", verbose = True }
+    | cli.help
+    | write,
+    "unknown option" | cli.usage-error "usage: demo [options]",
+] | ignore

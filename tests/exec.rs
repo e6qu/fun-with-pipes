@@ -101,7 +101,7 @@ fn check(r: &Runner) {
         ("pairs", &["2"], "", "(0, \"x\")\n(1, \"x\")\ncode=0"),
         ("shout", &[], "hi\n", "HI\ncode=0"),
         ("halve", &["8"], "", "4\ncode=0"),
-        ("halve", &[], "6\n0\n4\n", "3\nerror: zero\ncode=1"),
+        ("halve", &[], "6\n0\n4\n", "3\nhalve: zero\ncode=1"),
         ("safe-div", &["0", "1"], "", "fwp: trap: division by zero\ncode=101"),
         ("scale", &["x"], "", "scale: argument 1: cannot parse `x` as I64\ncode=2"),
         (

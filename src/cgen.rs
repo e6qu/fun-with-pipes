@@ -14,6 +14,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
     include_str!("../runtime/fwp_rt_task.c"),
+    include_str!("../runtime/fwp_rt_sys.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
@@ -53,6 +54,9 @@ struct Gen<'p> {
     /// The protobuf schema of the services this program calls or serves.
     pb: crate::protobuf::Schema,
     remotes: Vec<RemoteSpec>,
+    /// Flag tables of options records (`cli.parse`, executables).
+    cli_defs: String,
+    cli_flags: HashMap<MT, usize>,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -133,6 +137,55 @@ fn elem(mt: &MT, i: usize) -> MT {
 
 impl<'p> Gen<'p> {
     // ----- descriptors -----------------------------------------------------------
+
+    /// The C table of an options record's flags (with the defaults of an
+    /// executable's command, as text); its name.
+    fn flag_table(&mut self, o: &crate::cli::Options, defaults: &[Option<String>]) -> String {
+        let key = if defaults.iter().all(Option::is_none) {
+            Some(o.record.clone())
+        } else {
+            None
+        };
+        if let Some(i) = key.as_ref().and_then(|k| self.cli_flags.get(k)) {
+            return format!("fwp_flags{}", i);
+        }
+        let id = self
+            .cli_defs
+            .matches("static const fwp_flag fwp_flags")
+            .count();
+        let lefts = crate::cli::help_lefts(o);
+        let mut rows = Vec::new();
+        for (k, f) in o.flags.iter().enumerate() {
+            let (left, pad) = &lefts[k];
+            rows.push(format!(
+                "    {{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}}",
+                c_string_literal(f.name.as_bytes()),
+                f.short.map(|c| c as u32).unwrap_or(0),
+                f.kind as u8,
+                f.index,
+                self.desc(&f.value_ty),
+                c_string_literal(f.value_ty.to_string().as_bytes()),
+                self.desc(&f.field_ty),
+                match defaults.get(k).cloned().flatten() {
+                    Some(d) => c_string_literal(d.as_bytes()),
+                    None => "0".into(),
+                },
+                c_string_literal(left.as_bytes()),
+                c_string_literal(pad.as_bytes()),
+                c_string_literal(f.doc.as_bytes()),
+            ));
+        }
+        let _ = writeln!(
+            self.cli_defs,
+            "static const fwp_flag fwp_flags{}[] = {{\n{}\n}};",
+            id,
+            rows.join(",\n")
+        );
+        if let Some(k) = key {
+            self.cli_flags.insert(k, id);
+        }
+        format!("fwp_flags{}", id)
+    }
 
     fn desc(&mut self, mt: &MT) -> String {
         format!("&d{}", self.desc_id(mt))
@@ -870,6 +923,52 @@ impl<'p> Gen<'p> {
                     _ => format!("return fwp_p_file_write_new(l0, l1, {});", err),
                 }
             }
+            "file.info" | "file.remove" | "dir.remove" | "file.rename" | "file.append"
+            | "file.read-bytes" | "file.write-bytes" | "dir.list" | "dir.create"
+            | "dir.create-all" | "process.run-input" | "process.call" => {
+                let err = self.desc(&MT::con("std::IoError"));
+                let (f, n) = match sym {
+                    "file.info" => ("fwp_p_file_info", 1),
+                    "file.remove" => ("fwp_p_file_remove", 1),
+                    "dir.remove" => ("fwp_p_dir_remove", 1),
+                    "file.rename" => ("fwp_p_file_rename", 2),
+                    "file.append" => ("fwp_p_file_append", 2),
+                    "file.read-bytes" => ("fwp_p_file_read", 1),
+                    "file.write-bytes" => ("fwp_p_file_write_bytes", 2),
+                    "dir.list" => ("fwp_p_dir_list", 1),
+                    "dir.create" => ("fwp_p_dir_create", 1),
+                    "dir.create-all" => ("fwp_p_dir_create_all", 1),
+                    "process.run-input" => ("fwp_p_process_run_input", 2),
+                    _ => ("fwp_p_process_call", 1),
+                };
+                let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
+                format!("return {}({}, {});", f, args.join(", "), err)
+            }
+            "cli.parse" | "cli.help" => {
+                let Some(o) = crate::cli::Options::of(&p(0), self.prog) else {
+                    // as the interpreter: not a record of options
+                    return Ok(if sym == "cli.parse" {
+                        let msg = format!("`{}` is not a record of options", p(0));
+                        format!(
+                            "return fwp_data(1, 1, (V[]){{fwp_cstr({})}});",
+                            c_string_literal(msg.as_bytes())
+                        )
+                    } else {
+                        "return fwp_cstr(\"\");".to_string()
+                    });
+                };
+                let t = self.flag_table(&o, &[]);
+                if sym == "cli.parse" {
+                    format!(
+                        "return fwp_p_cli_parse(l0, l1, {}, {}, {});",
+                        t,
+                        o.flags.len(),
+                        o.nfields
+                    )
+                } else {
+                    format!("return fwp_p_cli_help(l0, {}, {});", t, o.flags.len())
+                }
+            }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
             | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
             | "dns.resolve" => {
@@ -990,6 +1089,11 @@ impl<'p> Gen<'p> {
                     ("args", "fwp_p_args()"),
                     ("exit", "fwp_p_exit(l0)"),
                     ("env.get", "fwp_p_env_get(l0)"),
+                    ("env.vars", "fwp_p_env_vars()"),
+                    ("env.cwd", "fwp_p_env_cwd()"),
+                    ("term.is-tty", "fwp_p_term_is_tty(l0)"),
+                    ("file.exists", "fwp_p_file_exists(l0)"),
+                    ("file.is-dir", "fwp_p_file_is_dir(l0)"),
                     ("time.monotonic", "fwp_p_time_monotonic()"),
                     ("time.unix", "fwp_p_time_unix()"),
                     ("random.u64", "fwp_p_random_u64()"),
@@ -1363,8 +1467,9 @@ impl Gen<'_> {
 enum Mode<'a> {
     Main,
     Tests,
-    /// An exported function as a standalone executable.
-    Exec(FuncId, &'a str),
+    /// Exported functions as a standalone executable: one function, or
+    /// commands of a multi-command program with this name.
+    Exec(Vec<crate::cli::Command>, Option<&'a str>),
     /// Exported functions as C functions of a library.
     Library,
     /// A module's exported functions as a gRPC service.
@@ -1484,7 +1589,19 @@ pub fn generate_service(prog: &Program) -> Result<String, String> {
 
 /// Generate a standalone executable for an exported function.
 pub fn generate_exec(prog: &Program, fid: FuncId, name: &str) -> Result<String, String> {
-    generate_mode(prog, Mode::Exec(fid, name))
+    let version = crate::cli::version(prog)?;
+    let cmd = crate::cli::command(prog, fid, name, None, version)?;
+    generate_mode(prog, Mode::Exec(vec![cmd], None))
+}
+
+/// Generate a multi-command executable named `name`: every exported
+/// function is a command (`fwp build --cli`).
+pub fn generate_cli(prog: &Program, name: &str) -> Result<String, String> {
+    let cmds = crate::cli::commands(prog, Some(name))?;
+    if cmds.is_empty() {
+        return Err("the program exports no functions (mark them with `export`)".into());
+    }
+    generate_mode(prog, Mode::Exec(cmds, Some(name)))
 }
 
 fn bytes_literal(b: &[u8]) -> String {
@@ -1515,6 +1632,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         ffi_structs: Vec::new(),
         pb: crate::protobuf::Schema::default(),
         remotes: Vec::new(),
+        cli_defs: String::new(),
+        cli_flags: HashMap::new(),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
@@ -1570,72 +1689,121 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     };
     // exec mode: descriptors and protocol data for the function's interface
     let mut exec_defs = String::new();
-    if let Mode::Exec(fid, name) = &mode {
-        let f = &prog.funcs[*fid];
-        let n = f.arity as usize;
-        let (params, result) = f.ty.params(n);
-        let params: Vec<MT> = params.into_iter().cloned().collect();
-        let result = result.clone();
-        let list_elem = |t: &MT| match t {
-            MT::Con(n, a) if n == "std::List" => a.first().cloned(),
-            _ => None,
-        };
-        let out_elem = list_elem(&result).unwrap_or_else(|| result.clone());
-        let last = params.last().cloned().unwrap_or(MT::unit());
-        let in_elem = list_elem(&last).unwrap_or_else(|| last.clone());
-        let pd: Vec<String> = params.iter().map(|p| g.desc(p)).collect();
-        let pn: Vec<String> = params
-            .iter()
-            .map(|p| c_string_literal(p.to_string().as_bytes()))
-            .collect();
-        let rd = g.desc(&result);
-        let od = g.desc(&out_elem);
-        let idd = g.desc(&in_elem);
-        let header = crate::proto::header(&out_elem, prog);
-        let fp = crate::proto::fingerprint(&crate::proto::canonical_type(&in_elem, prog));
-        let usage = crate::exec::usage(name, &params);
-        let _ = write!(
-            exec_defs,
-            r#"
-static const fwp_desc *const exec_params[] = {{{pd}}};
-static const char *const exec_param_names[] = {{{pn}}};
-static const unsigned char exec_out_header[] = {header};
-static const unsigned char exec_in_fp[16] = {fp};
-static V caf_exec_entry(void) {{ return {entry}; }}
-static const fwp_exec_spec exec_spec = {{
-    {name}, {usage}, {fid}, {arity}, exec_params, exec_param_names, {rd}, {rlist},
-    {od}, exec_out_header, sizeof exec_out_header, {llist}, {idd}, {itype}, exec_in_fp}};
+    if let Mode::Exec(cmds, program) = &mode {
+        for (i, c) in cmds.iter().enumerate() {
+            let fid = c.fid;
+            let n = c.params.len();
+            let params = &c.params;
+            // the parameter stdin may give: the last positional one, or
+            // the record of a function that also takes it as before
+            let range = c.pos_range();
+            let last = if c.record_fallback {
+                params[0].clone()
+            } else if range.is_empty() {
+                MT::unit()
+            } else {
+                params[range.end - 1].clone()
+            };
+            let in_elem = crate::cli::list_elem(&last).unwrap_or_else(|| last.clone());
+            let pd: Vec<String> = params.iter().map(|p| g.desc(p)).collect();
+            let pn: Vec<String> = params
+                .iter()
+                .map(|p| c_string_literal(p.to_string().as_bytes()))
+                .collect();
+            let out = &c.output;
+            let od = g.desc(&out.elem);
+            let idd = g.desc(&in_elem);
+            let header = crate::proto::header(&out.elem, prog);
+            let fp = crate::proto::fingerprint(&crate::proto::canonical_type(&in_elem, prog));
+            let (flags, nflags, nfields) = match &c.options {
+                Some(o) => (g.flag_table(o, &c.defaults), o.flags.len(), o.nfields),
+                None => ("0".to_string(), 0, 0),
+            };
+            let velem = if c.variadic {
+                crate::cli::list_elem(&last).unwrap_or(MT::unit())
+            } else {
+                MT::unit()
+            };
+            let _ = write!(
+                exec_defs,
+                r#"
+static const fwp_desc *const exec_params{i}[] = {{{pd}}};
+static const char *const exec_param_names{i}[] = {{{pn}}};
+static const unsigned char exec_out_header{i}[] = {header};
+static const unsigned char exec_in_fp{i}[16] = {fp};
+static V exec_caf{i}(void) {{ return {entry}; }}
+static const fwp_exec_spec exec_spec{i} = {{
+    {name}, {export}, {usage}, {help}, {fid}, {arity}, exec_params{i}, exec_param_names{i},
+    {has_opts}, {fallback}, {nflags}, {nfields}, {flags}, {variadic}, {unit_last}, {vd}, {vn},
+    {err}, {ropt}, {rlist}, {od}, exec_out_header{i}, sizeof exec_out_header{i}, {llist}, {idd},
+    {itype}, exec_in_fp{i}, exec_caf{i}}};
 "#,
-            pd = if pd.is_empty() {
-                "0".into()
-            } else {
-                pd.join(", ")
-            },
-            pn = if pn.is_empty() {
-                "0".into()
-            } else {
-                pn.join(", ")
-            },
-            header = bytes_literal(&header),
-            fp = bytes_literal(&fp),
-            entry = if n == 0 {
-                format!("caf{}()", fid)
-            } else {
-                "0".into()
-            },
-            name = c_string_literal(name.as_bytes()),
-            usage = c_string_literal(usage.as_bytes()),
-            fid = fid,
-            arity = n,
-            rd = rd,
-            rlist = list_elem(&result).is_some() as u8,
-            od = od,
-            llist = list_elem(&last).is_some() as u8,
-            idd = idd,
-            itype = c_string_literal(in_elem.to_string().as_bytes()),
+                i = i,
+                pd = if pd.is_empty() {
+                    "0".into()
+                } else {
+                    pd.join(", ")
+                },
+                pn = if pn.is_empty() {
+                    "0".into()
+                } else {
+                    pn.join(", ")
+                },
+                header = bytes_literal(&header),
+                fp = bytes_literal(&fp),
+                entry = if n == 0 {
+                    format!("caf{}()", fid)
+                } else {
+                    "0".into()
+                },
+                name = c_string_literal(c.name.as_bytes()),
+                export = c_string_literal(c.command.as_bytes()),
+                usage = c_string_literal(c.usage.as_bytes()),
+                help = c_string_literal(c.help.as_bytes()),
+                fid = fid,
+                arity = n,
+                has_opts = c.options.is_some() as u8,
+                fallback = c.record_fallback as u8,
+                nflags = nflags,
+                nfields = nfields,
+                flags = flags,
+                variadic = c.variadic as u8,
+                unit_last = c.unit_last as u8,
+                vd = g.desc(&velem),
+                vn = c_string_literal(velem.to_string().as_bytes()),
+                err = match &out.error {
+                    Some(e) => g.desc(e),
+                    None => "0".into(),
+                },
+                ropt = out.option as u8,
+                rlist = out.list as u8,
+                od = od,
+                llist = crate::cli::list_elem(&last).is_some() as u8,
+                idd = idd,
+                itype = c_string_literal(in_elem.to_string().as_bytes()),
+            );
+        }
+        let version = crate::cli::version(prog)?;
+        let _ = writeln!(
+            exec_defs,
+            "static const char *const exec_version = {};",
+            match &version {
+                Some(v) => c_string_literal(v.as_bytes()),
+                None => "0".into(),
+            }
         );
-    } else {
-        exec_defs.push_str("static V caf_exec_entry(void) { return 0; }\n");
+        if let Some(name) = program {
+            let list: Vec<String> = (0..cmds.len())
+                .map(|i| format!("&exec_spec{}", i))
+                .collect();
+            let _ = writeln!(
+                exec_defs,
+                "static const fwp_exec_spec *const exec_cmds[] = {{{}}};\nstatic const char exec_program_help[] = {};\nstatic const char exec_program_usage[] = {};",
+                list.join(", "),
+                c_string_literal(crate::cli::program_help(name, cmds, prog).as_bytes()),
+                c_string_literal(crate::cli::program_usage(name).as_bytes()),
+            );
+        }
     }
     // services: the schema, the client stubs and the served methods
     let mut service_defs = String::new();
@@ -1820,6 +1988,7 @@ static const fwp_exec_spec exec_spec = {{
         out.push_str(&g.ffi_decls);
     }
     out.push_str(&remote_defs);
+    out.push_str(&g.cli_defs);
     out.push_str(&bodies);
     if let Mode::Library = mode {
         let _ = write!(
@@ -1833,8 +2002,15 @@ static const fwp_exec_spec exec_spec = {{
     out.push_str(&exec_defs);
     let run = if let Mode::Service = mode {
         "    fwp_exit_code = fwp_serve(&fwp_svc, fwp_argc, fwp_argv);".to_string()
-    } else if let Mode::Exec(..) = mode {
-        "    fwp_exit_code = fwp_exec(&exec_spec, fwp_argc, fwp_argv);".to_string()
+    } else if let Mode::Exec(cmds, program) = &mode {
+        match program {
+            None => "    fwp_cli_version = exec_version;\n    fwp_exit_code = fwp_exec(&exec_spec0, fwp_argc, fwp_argv);".to_string(),
+            Some(name) => format!(
+                "    fwp_cli_version = exec_version;\n    fwp_exit_code = fwp_exec_program({}, exec_cmds, {}, exec_program_help, exec_program_usage, fwp_argc, fwp_argv);",
+                c_string_literal(name.as_bytes()),
+                cmds.len()
+            ),
+        }
     } else if tests {
         let mut r = String::from("    int pass = 0, fail = 0;\n");
         for (name, id) in &prog.tests {
@@ -1957,7 +2133,7 @@ impl Target {
 
 /// The first primitive of `prog` that performs an effect WebAssembly does
 /// not provide (tasks, channels and signals: `Async`; sockets and DNS:
-/// `Network`), with that effect.
+/// `Network`; other programs: `Process`), with that effect.
 pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
     prog.funcs.iter().find_map(|f| {
         let Body::Prim(sym) = &f.body else {
@@ -1965,6 +2141,8 @@ pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
         };
         if ["tcp.", "udp.", "dns."].iter().any(|p| sym.starts_with(p)) {
             Some(("Network", sym.as_str()))
+        } else if sym.starts_with("process.") {
+            Some(("Process", sym.as_str()))
         } else if ["task.", "channel.", "signal."]
             .iter()
             .any(|p| sym.starts_with(p))

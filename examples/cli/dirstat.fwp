@@ -1,0 +1,54 @@
+# Summarize the files below a directory: how many files of each extension
+# there are and how many bytes they take, largest first.
+
+# fwp build examples/cli/dirstat.fwp --fn dirstat -o dirstat
+# ./dirstat -n 3 src
+
+StatOptions = {
+    # -n  show at most this many extensions
+    top: I64,
+    # -a  include hidden files (a name in the path starts with `.`)
+    all: Bool,
+}
+
+export dirstat.defaults : {top: I64}
+dirstat.defaults = { top = 10 }
+
+Entry = { ext: String, size: I64 }
+
+entry : String -> Entry ! {FileIO, Error[IoError]}
+entry = make Entry {
+    ext = path.extension | if (eq "") (const "(none)") id,
+    size = file.info | .size,
+}
+
+# Whether a path below `dir` has no hidden component.
+visible : String -> String -> Bool
+visible = curry (both (.0 | string.length) (.1 | string.chars)
+    | uncurry drop
+    | join ""
+    | split "/"
+    | any (starts-with ".")
+    | not)
+
+keep : (StatOptions, String) -> String -> Bool
+keep = curry (fork or (.0 | .0 | .all) (both (.0 | .1) .1 | uncurry visible))
+
+summary : (String, List[Entry]) -> List[String]
+summary =
+    singleton | list.ap [.0, .1 | length | show, .1 | map .size | sum | show]
+
+# Count the files below DIR by extension.
+# args: DIR
+export dirstat : StatOptions -> String -> List[String] ! {FileIO, Error[IoError]}
+dirstat = curry (both
+        (.0 | .top)
+        (fork filter keep (.1 | dir.walk)
+            | map entry
+            | group-by .ext
+            | map.to-list
+            | sort-by (.1 | map .size | sum | neg))
+    | uncurry take
+    | map summary
+    | Cons ["extension", "files", "bytes"]
+    | table.lines)

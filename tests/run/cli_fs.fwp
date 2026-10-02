@@ -1,0 +1,43 @@
+# Files, directories and paths (in a scratch directory next to this file).
+
+dir = "cli_fs.tmp"
+
+main = [
+    dir | file.exists | echo,
+    dir | path.join "a/b" | dir.create-all,
+    dir | path.join "a/b" | dir.create-all,
+    dir | path.join "a/b" | file.is-dir | echo,
+    "one\ntwo\n" | file.write-new "cli_fs.tmp/a/b/x.txt",
+    "three\n" | file.append "cli_fs.tmp/a/b/x.txt",
+    "cli_fs.tmp/a/b/x.txt" | file.read-lines | echo,
+    ["l1", "l2"] | file.write-lines "cli_fs.tmp/a/y.txt",
+    "cli_fs.tmp/a/y.txt" | file.read | lines | echo,
+    "cli_fs.tmp/a/y.txt" | file.copy "cli_fs.tmp/z.txt",
+    "cli_fs.tmp/z.txt" | file.info | both .size .is-dir | echo,
+    dir | file.info | .is-dir | echo,
+    "cli_fs.tmp/z.txt" | file.info | .modified | gt 0s | echo,
+    bytes.from-list [0u8, 255u8, 10u8] | file.write-bytes "cli_fs.tmp/b.bin",
+    "cli_fs.tmp/b.bin" | file.read-bytes | bytes.to-list | echo,
+    dir | dir.list | echo,
+    dir | dir.walk | echo,
+    "cli_fs.tmp/z.txt" | file.rename "cli_fs.tmp/a/z2.txt",
+    dir | dir.walk | echo,
+    "cli_fs.tmp/a/b" | attempt dir.remove | echo,
+    "cli_fs.tmp/nope" | attempt file.info | echo,
+    "cli_fs.tmp/nope" | attempt dir.list | echo,
+    "cli_fs.tmp/nope" | attempt file.remove | echo,
+    "cli_fs.tmp/a" | attempt dir.create | echo,
+    "x" | attempt (file.append "cli_fs.tmp/nope/x") | echo,
+    dir | dir.walk | each file.remove,
+    "cli_fs.tmp/a/b" | dir.remove,
+    "cli_fs.tmp/a" | dir.remove,
+    dir | dir.remove,
+    dir | file.exists | echo,
+    ["a/b/../c", "/../x//y/.", "", "../..", "a/b/c.tar.gz", "/"]
+    | map (both path.normalize (both path.dirname path.basename))
+    | echo,
+    ["notes.txt", ".profile", "a.b/c", "x."]
+    | map (both path.extension path.stem)
+    | echo,
+    () | env.vars | filter (.0 | eq "FWP_SEED") | echo,
+] | ignore
