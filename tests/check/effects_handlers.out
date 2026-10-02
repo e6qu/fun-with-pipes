@@ -1,0 +1,10 @@
+div-or-fail : I64 -> I64 -> I64 ! {Error[String]}
+safe-div : I64 -> I64 -> Result[I64, String]
+halve : I64 -> Result[I64, String]
+unwrap-all : List[Result[a, b]] -> List[a] ! {Error[b]}
+first-or-fail : List[a] -> a ! {Error[String]}
+count-up : a -> ((), b) where Add[b], IntLit[b]
+roll : () -> F64 ! {Random}
+shout-file : String -> () ! {Error[IoError], FileIO, IO}
+copy-upper : String -> () ! {Error[IoError], FileIO}
+main : ()

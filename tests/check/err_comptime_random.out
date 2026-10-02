@@ -1,0 +1,4 @@
+check/err_comptime_random.fwp:1:8: error: `comptime` code may not perform the `Random` effect
+1 | seed = comptime (random.u64 ())
+  |        ^^^^^^^^
+  note: compile-time effects are limited to IO, FileIO, Alloc, Error

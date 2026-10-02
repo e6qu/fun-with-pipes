@@ -1,0 +1,4 @@
+check/err_main_state.fwp:1:32: error: `main` performs the `State` effect without a handler
+1 | main = () | get | add 1 | show | print
+  |                                ^
+  note: wrap the stateful part with `run-state`

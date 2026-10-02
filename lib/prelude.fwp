@@ -250,6 +250,52 @@ impl Applicative[Option] =
 impl Monad[Option] =
     bind = option.and-then
 
+# ------------------------------------------------------------- effects
+#
+# Effects run in direct style; sequencing in a pipeline is monadic bind.
+# `Error[x]` aborts to the nearest `attempt`, which turns it back into a
+# `Result`. `try` goes the other way.
+
+foreign "fwp" fail : x -> a ! {Error[x]}
+foreign "fwp" attempt : (a -> b ! {Error[x] | e}) -> a -> Result[b, x] ! e
+
+try : Result[a, x] -> a ! {Error[x]}
+try = match
+    Ok -> id
+    Err -> fail
+
+or-fail : x -> Option[a] -> a ! {Error[x]}
+or-fail = curry (match
+    (_, Some _) -> const id
+    (_, None) -> fail)
+
+foreign "fwp" get : () -> s ! {State[s]}
+foreign "fwp" put : s -> () ! {State[s]}
+foreign "fwp" modify : (s -> s) -> () ! {State[s]}
+foreign "fwp" run-state : s -> (a -> b ! {State[s] | e}) -> a -> (b, s) ! e
+
+foreign "fwp" random.u64 : () -> U64 ! {Random}
+foreign "fwp" random.f64 : () -> F64 ! {Random}
+
+# ------------------------------------------------------------- resources
+#
+# Resources are affine: they cannot be duplicated (no `Dup`) or captured by
+# a partial application. Operations thread the resource through and return
+# it; scoped helpers guarantee cleanup.
+
+resource File = builtin
+
+IoError = { kind: String, message: String }
+
+foreign "fwp" file.open : String -> File ! {FileIO, Error[IoError]}
+foreign "fwp" file.create : String -> File ! {FileIO, Error[IoError]}
+foreign "fwp" file.close : File -> () ! {FileIO}
+foreign "fwp" file.read-all : File -> (String, File) ! {FileIO, Error[IoError]}
+foreign "fwp" file.write : String -> File -> File ! {FileIO, Error[IoError]}
+foreign "fwp" file.with : String -> (File -> (a, File) ! {FileIO, Error[IoError] | e}) -> a ! {FileIO, Error[IoError] | e}
+foreign "fwp" file.read : String -> String ! {FileIO, Error[IoError]}
+foreign "fwp" file.write-new : String -> String -> () ! {FileIO, Error[IoError]}
+
 # ------------------------------------------------------------- strings, io
 foreign "fwp" trim : String -> String
 foreign "fwp" lower : String -> String

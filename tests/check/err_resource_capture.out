@@ -1,0 +1,4 @@
+check/err_resource_capture.fwp:2:25: error: a resource of type `File` would be captured by a partial application
+2 | writer = make { write = write-line }
+  |                         ^^^^^^^^^^
+  note: resources may be used at most once; pass them as the last argument

@@ -1,0 +1,3 @@
+both-errors = match
+    0 -> fail "zero"
+    _ -> fail 42

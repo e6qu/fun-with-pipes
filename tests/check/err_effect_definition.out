@@ -1,0 +1,4 @@
+check/err_effect_definition.fwp:1:12: error: `greeting` performs effects (IO) while being defined
+1 | greeting = print "hello"
+  |            ^^^^^
+  note: effects may only happen when a function is called, or in `main`; make this a function (for example by composing with `|`)

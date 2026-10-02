@@ -1,0 +1,3 @@
+check/err_resource_dup.fwp:1:21: error: values of type `File` cannot be duplicated because they are resources (`Dup` is required)
+1 | twice = file.open | dup
+  |                     ^^^

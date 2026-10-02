@@ -1,0 +1,4 @@
+# The arm prints when chosen, then returns a function: the effect happens
+# on the first arrow of a two-argument function.
+noisy = match
+    _ -> print "chose" | const (const id)
