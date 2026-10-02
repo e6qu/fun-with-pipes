@@ -318,7 +318,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 - `fwp build` (without `--emit-c`), `fwp test --native`, `fwp pipe`,
   `fwp serve` and `--link` exit with status 2 and
   `fwp: … is not available in the WebAssembly build of fwp`.
-- The interpreter's stack is 256 MiB (a linker argument in
+- The interpreter's stack is 512 MiB (a linker argument in
   `.cargo/config.toml`), but WebAssembly frames also use the engine's
   native stack, which a browser keeps small: a few hundred to a few
   thousand nested non-tail calls. Running out of either is the trap
