@@ -37,6 +37,7 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/url.fwp", include_str!("../lib/url.fwp")),
     ("<std>/log.fwp", include_str!("../lib/log.fwp")),
     ("<std>/http.fwp", include_str!("../lib/http.fwp")),
+    ("<std>/rest.fwp", include_str!("../lib/rest.fwp")),
     ("<std>/ffi.fwp", include_str!("../lib/ffi.fwp")),
 ];
 
@@ -175,6 +176,18 @@ fn canonical_path(p: &Path) -> Option<PathBuf> {
 
 /// Type-check a root source text.
 pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compilation, Failure> {
+    check_source_with(name, text, dir, None)
+}
+
+/// Type-check a root source text with generated declarations added to
+/// its module (`extra`: a file name and its text, such as the `main` of a
+/// REST server, `src/rest.rs`).
+pub fn check_source_with(
+    name: &str,
+    text: &str,
+    dir: Option<&Path>,
+    extra: Option<(&str, &str)>,
+) -> Result<Compilation, Failure> {
     let mut ld = Loader {
         sm: SourceMap::default(),
         next_id: 0,
@@ -194,7 +207,12 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
     }
     ld.modules.push(("std".into(), HashSet::new(), std_decls));
     let root = ld.sm.files.len() as u32;
-    if let Some(m) = ld.parse(name, text) {
+    if let Some(mut m) = ld.parse(name, text) {
+        if let Some((xname, xtext)) = extra {
+            if let Some(x) = ld.parse(xname, xtext) {
+                m.decls.extend(x.decls);
+            }
+        }
         ld.add_module("main", m, dir);
     }
     if !ld.errors.is_empty() {

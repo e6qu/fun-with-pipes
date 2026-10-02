@@ -1,0 +1,118 @@
+[{"name":"pen","price":1.5,"tags":["office"],"color":"Red"},{"name":"cup \"x\"\n","price":3.0,"tags":[],"note":"é","color":"Blue"}]
+Ok [Item {color = Red, name = "pen", note = None, price = 1.5, tags = ["office"]}, Item {color = Blue, name = "cup \"x\"\n", note = Some "é", price = 3.0, tags = []}]
+[{"type":"Circle","value":1.0},{"type":"Rect","value":[2.0,3.5]},{"type":"Dot"}]
+Ok [Circle 1.0, Rect 2.0 3.5, Dot]
+[9223372036854775807,"-170141183460469231731687303715884105728"]
+["340282366920938463463374607431768211455",255,-1]
+[0.1,-0.0,1e+300,1.0,1.2345678901234568e+17]
+["Infinity","-Infinity","NaN"]
+[0.1,3.4e+38]
+"héllo\u0001\t\"\\"
+["Zm9vYmFy","Zm8="]
+["1500ms","2min","7ns","-3s"]
+[{"a":1,"b":2},["Red","Blue"]]
+[[1,"one"],[2,"two"]]
+[[1],[null],null]
+{"type":"Node","value":[{"type":"Node","value":[{"type":"Leaf"},1,{"type":"Leaf"}]},2,{"type":"Leaf"}]}
+[{},{"y":2,"x":1},{"a":"x","b":1}]
+[{"type":"Ok","value":1},{"type":"Err","value":"no"},"Equal"]
+{"a":[1,2.5,true,null]}
+[6,-1,[1,2]]
+Ok [Item {color = Red, name = "pen", note = None, price = 1.5, tags = ["office"]}, Item {color = Blue, name = "cup \"x\"\n", note = Some "é", price = 3.0, tags = []}]
+Ok (Order {id = 1, items = [], shipped = False})
+Ok (Order {id = 18446744073709551615, items = [], shipped = True})
+Ok (Order {id = 1000, items = [], shipped = False})
+Ok (Order {id = 1, items = [Item {color = Green, name = "a", note = None, price = 1.0, tags = []}], shipped = True})
+Err "$.id: -1 is out of range for U64"
+Err "$.id: expected an integer, got 1.5"
+Err "$.id: 18446744073709551616 is out of range for U64"
+Err "$.id: required field is missing"
+Err "$.items[0].price: expected a number, got \"x\""
+Err "$.items[0].tags[0]: expected a string, got 3"
+Err "$.items[0].color: expected one of \"Red\", \"Green\", \"Blue\", got \"Purple\""
+Err "$.items: expected an array, got an object"
+Err "$.shipped: expected true or false, got null"
+Err "unexpected end of input at byte 5"
+Err "trailing characters at byte 10"
+Err "unexpected end of input at byte 0"
+Ok 127
+Ok (-128)
+Err "$: 128 is out of range for I8"
+Err "$: -129 is out of range for I8"
+Ok 12
+Err "$: expected an integer, got \"12x\""
+Ok 100
+Ok 0
+Err "$: expected an integer, got true"
+Ok 18446744073709551615
+Ok 0
+Ok 10000000000000000000
+Err "$: 1e20 is out of range for U64"
+Ok 9223372036854775807
+Ok (-9223372036854775808)
+Err "$: -9223372036854775809 is out of range for I64"
+Ok (-170141183460469231731687303715884105728)
+Err "$: 17014118346046923173168730371588... is out of range for I128"
+Ok 340282366920938463463374607431768211455
+Err "$: \"34028236692093846346337460743176...\" is out of range for U128"
+Ok 0.1
+Ok 2.5
+Ok NaN
+Ok (-inf)
+Ok inf
+Err "$: expected a number, got \"x\""
+Err "$: expected a number, got null"
+Ok 0.1
+Ok 16777216.0
+Ok 0.0
+Ok True
+Ok False
+Err "$: expected true or false, got 1"
+Err "$: expected true or false, got \"yes\""
+Ok [Rect 1.0 2.0, Dot, Dot]
+Err "$[0].type: required field is missing"
+Err "$[0].type: expected one of \"Circle\", \"Rect\", \"Dot\", got \"Square\""
+Err "$[0].value: required field is missing"
+Err "$[0].value: expected an array of 2 elements, got 1"
+Err "$[0]: expected an object with a \"type\", got \"Circle\""
+Err "$[0]: expected an object with a \"type\", got 3"
+Ok set{Red, Blue}
+Err "$[0]: expected one of \"Red\", \"Green\", \"Blue\", got \"red\""
+Ok map{"a": 1, "b": 3}
+Err "$[\"weird key\"]: expected an integer, got \"x\""
+Err "$: expected an object, got an array"
+Ok map{1: "one", 2: "two"}
+Err "$[0]: expected a [key, value] pair, got an array"
+Err "$: expected an array of [key, value] pairs, got an object"
+Ok ("a", 1, True)
+Err "$: expected an array of 3 elements, got 2"
+Err "$: expected an array of 3 elements, got an object"
+Ok bytes[102, 111, 111, 98, 97, 114]
+Ok bytes[102, 111]
+Ok bytes[102, 111]
+Err "$: expected a base64 string, got \"Z\""
+Err "$: expected a base64 string, got \"a b\""
+Ok 1500ms
+Ok 1500ms
+Ok -2min
+Ok 1us
+Err "$: expected a duration, got \"1.5ns\""
+Err "$: expected a duration, got \"5 days\""
+Ok [Some (Some 1), Some None, None]
+Err "$[0]: expected null or a one-element array, got 1"
+Ok (Node Leaf 1 Leaf)
+Err "$.value[1]: expected an integer, got \"x\""
+Ok ()
+Ok ()
+Ok ()
+Err "$: expected {}, got an array"
+Ok map{"a": Obj [("b", Arr [Num 1.0, Num 2.5])], "c": Null}
+Ok (-1, 0t+++)
+Err "$[0]: 2 is out of range for Trit"
+Err "$[1]: 14 is out of range for TInt[3]"
+Ok array[Point {x = 1, y = 2}]
+Err "$[0].y: required field is missing"
+Err "$: expected an integer, got \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\""
+[{"type":"login","userId":7,"at":"1500ms"}]
+Ok [Event {at = 1500ms, kind = "login", user-id = 7}]
+Err "$[0].userId: required field is missing"

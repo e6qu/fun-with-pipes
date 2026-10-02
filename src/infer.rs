@@ -591,7 +591,7 @@ impl<'a> Infer<'a> {
         for (name, ctx, span) in std::mem::take(&mut self.ctxs) {
             let labels = self.effect_labels(&ctx);
             let is_test = name.contains("::test#");
-            if name == "main::main" {
+            if name == "main::main" || name == crate::rest::ENTRY {
                 if labels.iter().any(|l| l == "State") {
                     return Err(Diagnostic::error(
                         span,

@@ -1,0 +1,120 @@
+# A client of `Petstore` 1.0.7, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then the path parameters, a record of the query parameters and the
+# body. A response other than a success raises `Error[RestError]`.
+
+Category = { id: Option[I64], name: Option[String] }
+
+Tag = { id: Option[I64], name: Option[String] }
+
+PetOwner = {
+    first-name: Option[String],
+    # json: 2nd
+    f2nd: Option[Bool],
+}
+
+# A pet for sale.
+Pet = {
+    id: Option[I64],
+    name: String,
+    category: Option[Category],
+    photoUrls: List[String],
+    tags: Option[List[Tag]],
+    # pet status in the store
+    status: Option[String],
+    birth_date: Option[String],
+    owner: Option[PetOwner],
+}
+
+# the query parameters of `find-pets-by-status`
+FindPetsByStatusQuery = { status: List[String], maxResults: Option[I32] }
+
+Kind =
+    | Admin
+    | Guest
+
+# the query parameters of `login-user`
+LoginUserQuery = {
+    username: Option[String],
+    # json: type
+    type-field: Option[Kind],
+}
+
+Session = {
+    token: String,
+    expires: Option[Duration],
+    extra: Option[Json],
+    data: Option[Json],
+    # json: match
+    match-field: Option[String],
+}
+
+# Find a pet by its id
+# GET /pet/{petId}
+get-pet-by-id : String -> I64 -> Option[Pet] ! {Async, Network, Error[RestError]}
+get-pet-by-id = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/pet/{petId}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch-option)
+
+# POST /pet
+add-pet : String -> Pet -> Pet ! {Async, Network, Error[RestError]}
+add-pet = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/pet",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# Multiple status values can be provided
+# with comma separated strings.
+# GET /pet/findByStatus
+find-pets-by-status : String -> FindPetsByStatusQuery -> List[Pet] ! {Async, Network, Error[RestError]}
+find-pets-by-status = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/pet/findByStatus",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    body = const None,
+} | rest.fetch)
+
+# GET /store/inventory
+get-inventory : String -> Map[String, I32] ! {Async, Network, Error[RestError]}
+get-inventory = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/store/inventory",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch
+
+# GET /user/login
+login-user : String -> LoginUserQuery -> Session ! {Async, Network, Error[RestError]}
+login-user = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/user/login",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    body = const None,
+} | rest.fetch)

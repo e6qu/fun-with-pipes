@@ -87,7 +87,10 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   no free variables, so every function value can be serialized, which is
   how `comptime` results become static data.
 - A type descriptor per monomorphic type drives equality, ordering,
-  hashing, `Display`, text parsing and the binary protocol in C.
+  hashing, `Display`, text parsing, typed JSON and the binary protocol in
+  C. For JSON, nominal records also carry their declaration order and the
+  JSON names of renamed fields, and the descriptors of `Bool`, `Option`,
+  `Json` and `Duration` are flagged.
 - Floats print in the shortest form that reads back exactly.
 - Native tasks are green threads (`ucontext`) on an event loop: epoll on
   Linux, poll elsewhere. Interpreter tasks are OS threads that pass a
@@ -119,6 +122,7 @@ error. See [protocol.md](protocol.md).
 | executable | C compiled and linked with the runtime; the reachable standard library is included |
 | `--fn f` | the exported function `f` as a standalone executable |
 | `--cli` | every exported function as a subcommand of one executable. `src/cli.rs` computes the command line of each function (flags from an options record, positional arguments, defaults evaluated with the interpreter at build time) and its help and usage texts once; the C runtime (`runtime/fwp_rt_exec.c`) gets them as static data and parses arguments with the same rules as `src/exec.rs`. See [cli.md](cli.md) |
+| `--rest` | every exported function as an endpoint of one HTTP server. `src/rest.rs` computes the endpoints from the types and doc comments (routes, where each argument comes from, statuses) and `src/openapi.rs` the OpenAPI document; the file is then compiled again with a generated `main` (`Roots::entry`) that serves `rest.endpoint`s of `lib/rest.fwp` over the HTTP server of `lib/http.fwp`. Arguments and results go through the typed JSON codec (`json.read`, `json.write`), a primitive written twice: `src/jsontype.rs` over types, `runtime/fwp_rt_json.c` over type descriptors. See [rest.md](rest.md) |
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
@@ -128,7 +132,10 @@ error. See [protocol.md](protocol.md).
 ## Not implemented
 
 - A garbage collector for native programs.
-- TLS, HTTP/3, WebSocket and compression. HTTP/2 exists only as the
+- TLS, HTTP/3, WebSocket and compression. REST endpoints speak JSON
+  only (no content negotiation, forms or header parameters), and
+  `fwp openapi --import` reads JSON documents of OpenAPI 3.0 and 3.1, not
+  YAML or Swagger 2.0. HTTP/2 exists only as the
   cleartext gRPC transport of [services](services.md) (unary calls, no
   streaming RPCs).
 - Preemptive scheduling.

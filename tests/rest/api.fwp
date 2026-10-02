@@ -1,0 +1,140 @@
+# A REST API that exercises every way an argument can arrive and a result
+# can leave (tests/rest.rs).
+
+Item = {
+    id: I64,
+    name: String,
+    price: F64,
+    tags: List[String],
+    note: Option[String],
+}
+
+Listing = {
+    # -l  the most items
+    limit: Option[I64],
+    # a tag to keep (repeatable)
+    tag: List[String],
+    # newest first
+    desc: Bool,
+    prefix: String,
+}
+
+Shape =
+    | Circle F64
+    | Rect F64 F64
+    | Dot
+
+Problem =
+    | Missing I64
+    | Invalid {field: String, reason: String}
+
+Big = {
+    n: I64,
+    u: U64,
+    wide: I128,
+    data: Bytes,
+    timeout: Duration,
+    # json: type
+    kind: String,
+}
+
+# Echo an item.
+export echo-item : Item -> Item
+echo-item = id
+
+# An item by its id.
+# route: GET /items/{id}
+export item : I64 -> Option[Item]
+item =
+    if
+        (lt 100)
+        (make Item {
+            id = id,
+            name = format "item {}",
+            price = int.to-float | mul 1.5,
+            tags = const ["a"],
+            note = const None,
+        } | Some)
+        (const None)
+
+# The listing options, as the function saw them.
+# route: GET /items
+export items : Listing -> String
+items = show
+
+# Search by a term in the path and an optional limit.
+# route: GET /search/{term}
+# args: term limit
+export search : String -> Option[I64] -> String
+search = curry show
+
+# Store an item.
+# route: PUT /items/{id}
+# status: 201
+export put-item : I64 -> Item -> Item
+put-item = curry (make Item {
+    id = .0,
+    name = .1 | .name,
+    price = .1 | .price,
+    tags = .1 | .tags,
+    note = .1 | .note,
+})
+
+# Delete an item: 1 is missing, 2 is invalid.
+# route: DELETE /items/{id}
+# error: Missing 404, Invalid 422
+export delete-item : I64 -> () ! {Error[Problem]}
+delete-item = match
+    1 -> fail (Missing 1)
+    2 -> fail (Invalid ({ field = "id", reason = "protected" }))
+    _ -> const ()
+
+# Check a name: a `Result`, without a status for its error.
+# route: POST /check
+export check : String -> Result[String, Problem]
+check =
+    if
+        string.is-empty
+        (const (Err (Invalid ({ field = "name", reason = "empty" }))))
+        (concat "!" | Ok)
+
+# The area of a shape.
+# command: area
+export shape-area : Shape -> F64
+shape-area = match
+    Circle _ -> fork mul id id | mul 3.0
+    Rect _ _ -> mul
+    Dot -> 0.0
+
+# Fail with an HTTP status of our choosing.
+export teapot : String -> String ! {Error[HttpError]}
+teapot = make HttpError { status = const 418, message = id } | fail
+
+# Four parameters: two from the path, one from the query, the body.
+# route: POST /sum/{a}/{b}
+# args: a b c xs
+export sum4 : I64 -> I64 -> I64 -> List[I64] -> I64
+sum4 = curry (curry
+    (curry
+        (fork
+            add
+            (.1 | sum)
+            (fork add (.0 | .1) (fork add (.0 | .0 | .1) (.0 | .0 | .0))))))
+
+# Large and unusual values, echoed.
+export big : Big -> Big
+big = id
+
+# No parameters.
+# route: GET /ping
+export ping : () -> String
+ping = const "pong"
+
+# A set of tags.
+# route: GET /tags
+export tags : () -> Set[String]
+tags = const (set.from-list ["b", "a", "b"])
+
+# An optional body.
+export maybe : Option[I64] -> I64
+maybe = option.unwrap-or -1

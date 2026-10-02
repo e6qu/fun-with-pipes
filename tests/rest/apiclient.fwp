@@ -1,0 +1,250 @@
+# A client of `api` 0.1.0, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then the path parameters, a record of the query parameters and the
+# body. A response other than a success raises `Error[RestError]`.
+
+Item = {
+    id: I64,
+    name: String,
+    price: F64,
+    tags: List[String],
+    note: Option[String],
+}
+
+# the query parameters of `items`
+ItemsQuery = {
+    # the most items
+    limit: Option[I64],
+    # a tag to keep (repeatable)
+    tag: List[String],
+    # newest first
+    desc: Option[Bool],
+    prefix: String,
+}
+
+# the query parameters of `search`
+SearchQuery = { limit: Option[I64] }
+
+Shape =
+    | Circle F64
+    | Rect F64 F64
+    | Dot
+
+# the query parameters of `sum4`
+Sum4Query = { c: I64 }
+
+Big = {
+    n: I64,
+    u: U64,
+    wide: I128,
+    data: Bytes,
+    timeout: Duration,
+    # json: type
+    type-field: String,
+}
+
+# Echo an item.
+# POST /echo-item
+echo-item : String -> Item -> Item ! {Async, Network, Error[RestError]}
+echo-item = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/echo-item",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# An item by its id.
+# GET /items/{id}
+item : String -> I64 -> Option[Item] ! {Async, Network, Error[RestError]}
+item = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/items/{id}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch-option)
+
+# Store an item.
+# PUT /items/{id}
+put-item : String -> I64 -> Item -> Item ! {Async, Network, Error[RestError]}
+put-item = curry (curry
+    (make RestRequest {
+        method = const "PUT",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/items/{id}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        body = .1 | json.write | Some,
+    } | rest.fetch))
+
+# Delete an item: 1 is missing, 2 is invalid.
+# DELETE /items/{id}
+delete-item : String -> I64 -> () ! {Async, Network, Error[RestError]}
+delete-item = curry (make RestRequest {
+    method = const "DELETE",
+    url = make RestTarget {
+        base = .0,
+        path = const "/items/{id}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch)
+
+# The listing options, as the function saw them.
+# GET /items
+items : String -> ItemsQuery -> String ! {Async, Network, Error[RestError]}
+items = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/items",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    body = const None,
+} | rest.fetch)
+
+# Search by a term in the path and an optional limit.
+# GET /search/{term}
+search : String -> String -> SearchQuery -> String ! {Async, Network, Error[RestError]}
+search = curry (curry
+    (make RestRequest {
+        method = const "GET",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/search/{term}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = .1 | rest.query-pairs,
+        } | rest.url,
+        body = const None,
+    } | rest.fetch))
+
+# Check a name: a `Result`, without a status for its error.
+# POST /check
+check : String -> String -> String ! {Async, Network, Error[RestError]}
+check = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/check",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# The area of a shape.
+# POST /area
+area : String -> Shape -> F64 ! {Async, Network, Error[RestError]}
+area = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/area",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# Fail with an HTTP status of our choosing.
+# POST /teapot
+teapot : String -> String -> String ! {Async, Network, Error[RestError]}
+teapot = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/teapot",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# Four parameters: two from the path, one from the query, the body.
+# POST /sum/{a}/{b}
+sum4 : String -> I64 -> I64 -> Sum4Query -> List[I64] -> I64 ! {Async, Network, Error[RestError]}
+sum4 = curry (curry
+    (curry
+        (curry
+            (make RestRequest {
+                method = const "POST",
+                url = make RestTarget {
+                    base = .0 | .0 | .0 | .0,
+                    path = const "/sum/{a}/{b}",
+                    params = rest.texts [
+                        .0 | .0 | .0 | .1 | rest.param-text,
+                        .0 | .0 | .1 | rest.param-text,
+                    ],
+                    query = .0 | .1 | rest.query-pairs,
+                } | rest.url,
+                body = .1 | json.write | Some,
+            } | rest.fetch))))
+
+# Large and unusual values, echoed.
+# POST /big
+big : String -> Big -> Big ! {Async, Network, Error[RestError]}
+big = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/big",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# No parameters.
+# GET /ping
+ping : String -> String ! {Async, Network, Error[RestError]}
+ping = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/ping",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch
+
+# A set of tags.
+# GET /tags
+tags : String -> Set[String] ! {Async, Network, Error[RestError]}
+tags = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/tags",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = const None,
+} | rest.fetch
+
+# An optional body.
+# POST /maybe
+maybe : String -> Option[I64] -> I64 ! {Async, Network, Error[RestError]}
+maybe = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/maybe",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    body = .1 | option.map json.write,
+} | rest.fetch)

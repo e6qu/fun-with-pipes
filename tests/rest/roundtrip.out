@@ -1,0 +1,19 @@
+Ok (apiclient.Item {id = 1, name = "pen \"fine\"", note = Some "blue", price = 2.5, tags = ["office", "é"]})
+Ok (Some (apiclient.Item {id = 5, name = "item 5", note = None, price = 7.5, tags = ["a"]}))
+Ok None
+Ok "Listing {desc = True, limit = Some 3, prefix = \"x/y\", tag = [\"a b\", \"c&d\"]}"
+Ok "(\"a/b c\", None)"
+Ok (apiclient.Item {id = 7, name = "pen \"fine\"", note = Some "blue", price = 2.5, tags = ["office", "é"]})
+Ok ()
+Err (RestError {message = "{\"error\":{\"type\":\"Missing\",\"value\":1}}", status = 404})
+Ok "bob!"
+Err (RestError {message = "{\"error\":{\"type\":\"Invalid\",\"value\":{\"field\":\"name\",\"reason\":\"empty\"}}}", status = 500})
+Ok 6.0
+Ok 0.0
+Err (RestError {message = "{\"error\":{\"status\":418,\"message\":\"short\"}}", status = 418})
+Ok 41
+Ok (apiclient.Big {data = bytes[102, 119, 112], n = -9223372036854775808, timeout = 2min, type-field = "big", u = 18446744073709551615, wide = 170141183460469231731687303715884105727})
+Ok "pong"
+Ok set{"a", "b"}
+Ok (-1)
+Ok 4

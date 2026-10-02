@@ -1,0 +1,696 @@
+# REST endpoints from functions. `fwp build --rest` and `fwp serve --rest`
+# serve every exported function of a file as an HTTP endpoint with a JSON
+# contract and an OpenAPI document (see docs/rest.md); the program they
+# generate is made of these functions, which hand-written servers can use
+# too:
+#
+#     rest.main openapi-text [rest.endpoint route function, ...]
+#
+# A request's path parameters, query parameters and body become the
+# function's arguments, decoded with `json.read` (a decoding error is a
+# 400 naming the parameter: `query.limit: expected an integer, got "x"`).
+# The result is written with `json.write`; a `None` result is a 404, and
+# an `Err` result or an `Error` the function raises is an error response
+# `{"error": ...}` whose status comes from the route.
+
+# Where an argument of an endpoint comes from: a path parameter, a query
+# parameter (required or not), every value of a repeated query parameter,
+# the fields of an options record from the query (with the kind of each:
+# 0 a value, 1 optional, 2 repeated, 3 a switch), the body (`True` if it
+# may be absent), or nothing (a `()` parameter).
+RestSource =
+    | RestSource.Path String
+    | RestSource.Query String Bool
+    | RestSource.Queries String
+    | RestSource.Fields List[(String, I64)]
+    | RestSource.Body Bool
+    | RestSource.Unit
+
+# An endpoint: its method and path (`/items/{id}`), the sources of the
+# function's arguments in order, the status of a success, and the status
+# of an error: by variant name, else the error's own `status` field, else
+# `error-status`.
+RestRoute = {
+    method: String,
+    path: String,
+    sources: List[RestSource],
+    status: I64,
+    error-status: I64,
+    errors: List[(String, I64)],
+}
+
+# Options of a REST server's command line.
+# internal
+RestOptions = { listen: Option[String], openapi: Bool, help: Bool }
+
+# A route of `http.router` that calls a function with the arguments of a
+# request and responds with its result as JSON.
+rest.endpoint : RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+rest.endpoint = rest.endpoint-with (then2 rest.success Ok)
+
+# `rest.endpoint` for a function returning `Option`: `None` is a 404.
+rest.endpoint-option : RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+rest.endpoint-option = rest.endpoint-with rest.success-option
+
+# `rest.endpoint` for a function returning `Result`: `Err` is an error
+# response, like a raised `Error`.
+rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
+rest.endpoint-result = rest.endpoint-with rest.success-result
+
+# internal
+rest.endpoint-with : (RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-with = curry3 (make Route {
+    method = .1 | .method,
+    pattern = .1 | .path | rest.pattern,
+    handler = rest.handler,
+})
+
+# `/items/{id}` as a router pattern (`/items/:id`)
+# internal
+rest.pattern : String -> List[String]
+rest.pattern =
+    http.segments
+    | map (if (starts-with "{") (replace "{" ":" | replace "}" "") id)
+
+# internal
+rest.handler : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Decode[a], Encode[e]
+rest.handler = curry (fork
+        rest.call
+        .0
+        (fork rest.decode (.0 | .1 | .sources) .1)
+    | rest.respond)
+
+# internal
+rest.call : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> a -> Result[Response, HttpError] ! {Async, IO, Network, FileIO} where Encode[e]
+rest.call = curry (fork rest.finish .0 (fork apply .1 (.0 | .2 | attempt)))
+
+# internal
+rest.finish : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Result[b, e] -> Result[Response, HttpError] where Encode[e]
+rest.finish = curry (match
+    (_, Ok _) -> curry (fork apply .1 (.0 | fork apply .1 .0))
+    (_, Err _) -> curry (fork rest.failure (.0 | .1) .1 | Ok))
+
+# --------------------------------------------------------------- arguments
+
+# The arguments of a call, decoded from a request: one argument, or a
+# tuple of several. A decoding error is a 400 naming the parameter.
+# internal
+rest.decode : List[RestSource] -> Request -> a ! {Error[HttpError]} where Decode[a]
+rest.decode =
+    curry (fork rest.read-args (.0 | map rest.label) (uncurry rest.arguments))
+
+# internal
+rest.read-args : List[String] -> String -> a ! {Error[HttpError]} where Decode[a]
+rest.read-args = curry (fork rest.decoded .0 (.1 | json.read))
+
+# internal
+rest.decoded : List[String] -> Result[a, String] -> a ! {Error[HttpError]}
+rest.decoded = curry (match
+    (_, Ok _) -> const id
+    (_, Err _) -> then2 rest.relabel (http.fail 400))
+
+# The JSON text of the arguments: one, or an array of several.
+# internal
+rest.arguments : List[RestSource] -> Request -> String ! {Error[HttpError]}
+rest.arguments = curry (fork map (.1 | rest.argument) .0 | rest.join-args)
+
+# internal
+rest.join-args : List[String] -> String
+rest.join-args =
+    if (length | eq 1) (join "") (join "," | concat "]" | flip concat "[")
+
+# internal
+rest.argument : Request -> RestSource -> String ! {Error[HttpError]}
+rest.argument = curry (match
+    (_, RestSource.Path _) -> rest.path-arg
+    (_, RestSource.Query _ _) -> rest.query-arg
+    (_, RestSource.Queries _) -> rest.queries-arg
+    (_, RestSource.Fields _) -> rest.fields-arg
+    (_, RestSource.Body _) -> rest.body-arg
+    (_, RestSource.Unit) -> const "{}")
+
+# internal
+rest.quote : String -> String
+rest.quote = json.write
+
+# internal
+rest.path-arg : Request -> String -> String ! {Error[HttpError]}
+rest.path-arg =
+    then2
+        (flip http.param)
+        (option.and-then url.decode
+            | option.map rest.quote
+            | or-fail { status = 400, message = "invalid path parameter" })
+
+# every value of a query parameter
+# internal
+rest.query-values : String -> Request -> List[String]
+rest.query-values =
+    curry (fork filter-map (.0 | rest.value-of) (.1 | .query | form.parse))
+
+# internal
+rest.value-of : String -> (String, String) -> Option[String]
+rest.value-of = curry (if (fork eq .0 (.1 | .0)) (.1 | .1 | Some) (const None))
+
+# internal
+rest.query-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
+rest.query-arg = curry3 (fork
+    rest.query-one
+    id
+    (both .1 .0 | uncurry rest.query-values | last))
+
+# internal
+rest.query-one : (Request, String, Bool) -> Option[String] -> String ! {Error[HttpError]}
+rest.query-one = curry (match
+    (_, Some _) -> const rest.quote
+    (_, None) ->
+        if
+            .2
+            (.1 | flip concat "missing query parameter " | http.fail 400)
+            (const "null"))
+
+# internal
+rest.queries-arg : Request -> String -> String
+rest.queries-arg = then2 (flip rest.query-values) json.write
+
+# internal
+rest.fields-arg : Request -> List[(String, I64)] -> String
+rest.fields-arg = curry (fork filter-map (.0 | rest.field-arg) .1
+    | join ","
+    | concat "}"
+    | flip concat "{")
+
+# internal
+rest.field-arg : Request -> (String, I64) -> Option[String]
+rest.field-arg = curry (fork
+    rest.member
+    (.1 | .0)
+    (fork
+        rest.field-value
+        (.1 | .1)
+        (both (.1 | .0) .0 | uncurry rest.query-values)))
+
+# `"name":value`
+# internal
+rest.member : String -> Option[String] -> Option[String]
+rest.member =
+    curry (fork option.map (.0 | rest.quote | concat ":" | flip concat) .1)
+
+# internal
+rest.field-value : I64 -> List[String] -> Option[String]
+rest.field-value = curry (match
+    (2, _) -> json.write | Some
+    (3, _) -> last | rest.switch | Some
+    _ -> .1 | last | option.map rest.quote)
+
+# a switch: absent is false, `?name` is true
+# internal
+rest.switch : Option[String] -> String
+rest.switch = match
+    None -> "false"
+    Some "" -> "true"
+    Some _ -> rest.quote
+
+# internal
+rest.body-arg : Request -> Bool -> String ! {Error[HttpError]}
+rest.body-arg = curry (fork rest.body-of .1 (.0 | http.body-text))
+
+# internal
+rest.body-of : Bool -> String -> String ! {Error[HttpError]}
+rest.body-of = curry (if
+    (.1 | trim | string.is-empty)
+    (if .0 (const "null") (const "missing request body" | http.fail 400))
+    (.1 | fork rest.checked id json.parse))
+
+# internal
+rest.checked : String -> Result[Json, String] -> String ! {Error[HttpError]}
+rest.checked = curry (match
+    (_, Ok _) -> const
+    (_, Err _) ->
+        const (flip concat "invalid JSON in the request body: " | http.fail 400))
+
+# How a source is named in decoding errors.
+# internal
+rest.label : RestSource -> String
+rest.label = match
+    RestSource.Path _ -> flip concat "path."
+    RestSource.Query _ _ -> flip concat "query." | const
+    RestSource.Queries _ -> flip concat "query."
+    RestSource.Fields _ -> const "query"
+    RestSource.Body _ -> const "$"
+    RestSource.Unit -> "$"
+
+# `$[1].price: ...` with the label of argument 1 instead of `$[1]` (of
+# the only argument instead of `$`)
+# internal
+rest.relabel : List[String] -> String -> String
+rest.relabel =
+    curry (if (.0 | length | eq 1) rest.relabel-one rest.relabel-many)
+
+# internal
+rest.relabel-one : (List[String], String) -> String
+rest.relabel-one =
+    if
+        (.1 | starts-with "$")
+        (fork
+            concat
+            (.1 | string.slice 1 1000000000)
+            (.0 | head | option.unwrap-or "$"))
+        .1
+
+# internal
+rest.relabel-many : (List[String], String) -> String
+rest.relabel-many =
+    if
+        (.1 | starts-with "$[")
+        (fork rest.relabel-at .0 (.1 | string.split-once "]"))
+        .1
+
+# internal
+rest.relabel-at : List[String] -> Option[(String, String)] -> String
+rest.relabel-at = curry (match
+    (_, Some _) ->
+        curry (fork concat (.1 | .1) (fork rest.label-at .0 (.1 | .0)))
+    (_, None) -> const "invalid arguments")
+
+# internal
+rest.label-at : List[String] -> String -> String
+rest.label-at = curry (fork
+        option.and-then
+        (.0 | flip nth)
+        (.1 | string.slice 2 100 | parse-int)
+    | option.unwrap-or "$")
+
+# --------------------------------------------------------------- responses
+
+# 200 (or the route's status) with the JSON of a value; 204 has no body
+rest.success : RestRoute -> b -> Response where Encode[b]
+rest.success = curry (if
+    (.0 | .status | eq 204)
+    (const rest.no-content)
+    (fork rest.json-text (.0 | .status) (.1 | json.write)))
+
+# internal
+rest.success-option : RestRoute -> Option[b] -> Result[Response, HttpError] where Encode[b]
+rest.success-option = curry (match
+    (_, Some _) -> then2 rest.success Ok
+    (_, None) -> const (Err HttpError { status = 404, message = "not found" }))
+
+# internal
+rest.success-result : RestRoute -> Result[b, x] -> Result[Response, HttpError] where Encode[b], Encode[x]
+rest.success-result = curry (match
+    (_, Ok _) -> then2 rest.success Ok
+    (_, Err _) -> then2 rest.failure Ok)
+
+# internal
+rest.no-content : Response
+rest.no-content =
+    Response { status = 204, headers = [], body = Body.Full http.no-bytes }
+
+# a response with a status and a JSON text
+rest.json-text : I64 -> String -> Response
+rest.json-text = curry (both .0 (.1 | string.to-bytes)
+    | uncurry (flip http.respond "application/json"))
+
+# `{"error": ...}`
+# internal
+rest.error-body : String -> String
+rest.error-body = flip concat "{\"error\":" | concat "}"
+
+# An error value as a response: `{"error": <the error as JSON>}`.
+rest.failure : RestRoute -> e -> Response where Encode[e]
+rest.failure = curry (fork
+    rest.json-text
+    (fork rest.error-status .0 (.1 | json.encode-value))
+    (.1 | json.write | rest.error-body))
+
+# the status of an error: by variant name (`errors`), else its `status`
+# field, else the route's `error-status`
+# internal
+rest.error-status : RestRoute -> Json -> I64
+rest.error-status = curry (fork
+    option.unwrap-or
+    (.0 | .error-status)
+    (fork
+        option.or-else
+        (.1 | rest.status-field)
+        (fork rest.named-status (.0 | .errors) (.1 | rest.variant-name))))
+
+# internal
+rest.variant-name : Json -> Option[String]
+rest.variant-name = match
+    Json.Str _ -> Some
+    Json.Obj _ -> json.lookup "type" | option.and-then json.as-string
+    _ -> const None
+
+# internal
+rest.named-status : List[(String, I64)] -> Option[String] -> Option[I64]
+rest.named-status = curry (fork option.and-then (.0 | flip json.lookup) .1)
+
+# internal
+rest.status-field : Json -> Option[I64]
+rest.status-field =
+    json.get "status"
+    | option.and-then json.as-number
+    | option.and-then float.to-int
+
+# internal
+rest.http-error : HttpError -> Response
+rest.http-error =
+    fork rest.json-text .status (.message | json.write | rest.error-body)
+
+# ------------------------------------------------------------------ server
+
+# Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
+# error responses (`{"error": "not found"}` for unknown paths). The
+# command line is `[--listen host:port] [--openapi] [--help]`; the address
+# defaults to `FWP_REST_ADDR`, else `127.0.0.1:8080`.
+rest.main : String -> List[Route] -> () ! {Async, IO, Network}
+rest.main = curry (fork
+    rest.start
+    id
+    (const () | args | cli.parse rest.default-options))
+
+# internal
+rest.default-options : RestOptions
+rest.default-options =
+    RestOptions { listen = None, openapi = False, help = False }
+
+# internal
+rest.usage : String
+rest.usage = "usage: server [--listen host:port] [--openapi] [--help]"
+
+# internal
+rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
+rest.start = curry (match
+    (_, Ok _) -> curry rest.run-with
+    (_, Err _) -> const (cli.usage-error rest.usage))
+
+# internal
+rest.run-with : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.run-with =
+    if
+        (.1 | .1 | is-empty | not)
+        (.1
+            | .1
+            | head
+            | option.unwrap-or ""
+            | format "unexpected argument `{}`"
+            | cli.usage-error rest.usage)
+        (if
+            (.1 | .0 | .help)
+            (const rest.help | print)
+            (if (.1 | .0 | .openapi) (.0 | .0 | write) rest.listen))
+
+# internal
+rest.help : String
+rest.help =
+    "usage: server [--listen host:port] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
+
+# internal
+rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.listen =
+    attempt (fork rest.serve-at .0 (.1 | .0 | .listen | rest.address))
+    | rest.stopped
+
+# internal
+rest.address : Option[String] -> String ! {IO}
+rest.address =
+    if
+        option.is-some
+        (option.unwrap-or "")
+        (const "FWP_REST_ADDR" | env.get | option.unwrap-or "127.0.0.1:8080")
+
+# internal
+rest.serve-at : (String, List[Route]) -> String -> () ! {Async, IO, Network, Error[IoError]}
+rest.serve-at = curry (fork
+    rest.serve-on
+    (.1
+        | tcp.listen
+        | tap (tcp.local-addr
+            | format "fwp: rest listening on http://{}"
+            | eprint))
+    .0)
+
+# internal
+rest.serve-on : Listener -> (String, List[Route]) -> () ! {Async, IO, Network}
+rest.serve-on = curry (fork
+    http.serve-on
+    .0
+    (both (const rest.config) (.1 | rest.handler-of)))
+
+# internal
+rest.config : ServerConfig
+rest.config = "unused" | http.config
+
+# internal
+rest.stopped : Result[(), IoError] -> () ! {IO}
+rest.stopped = match
+    Ok _ -> id
+    Err _ -> .message | flip concat "fwp: " | eprint | const 1 | exit
+
+# The handler of a server: the endpoints and `/openapi.json`, with errors
+# (unknown routes, bad arguments) as JSON.
+rest.handler-of : (String, List[Route]) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.handler-of = curry (fork
+        apply
+        .1
+        (.0 | fork Cons (.0 | rest.openapi-route) .1 | http.router | attempt)
+    | rest.respond)
+
+# internal
+rest.openapi-route : String -> Route
+rest.openapi-route =
+    rest.json-text 200 | const | http.route "GET" "/openapi.json"
+
+# a response, or the JSON of an `HttpError`
+rest.respond : Result[Response, HttpError] -> Response
+rest.respond = match
+    Ok _ -> id
+    Err _ -> rest.http-error
+
+# ------------------------------------------------------------------ client
+
+# A call of a REST API, as the client functions that
+# `fwp openapi --import` generates make them: the method, the URL and the
+# JSON body.
+RestRequest = { method: String, url: String, body: Option[String] }
+
+# The URL of a call: the base URL of the server, the path template
+# (`/items/{id}`), the text of the path parameters in order, and the query
+# parameters.
+RestTarget = {
+    base: String,
+    path: String,
+    params: List[String],
+    query: List[(String, String)],
+}
+
+# A call that failed: the status of the response (0 if there was none)
+# and its body, or what went wrong.
+RestError = { status: I64, message: String }
+
+# the URL of a call
+rest.url : RestTarget -> String
+rest.url =
+    fork
+        concat
+        (.query | rest.query-string)
+        (fork concat (fork rest.fill .params .path) (.base | rest.trim-slash))
+
+# internal
+rest.trim-slash : String -> String
+rest.trim-slash =
+    if
+        (ends-with "/")
+        (fork apply id (string.length | sub 1 | string.slice 0))
+        id
+
+# `/items/{id}` with the path parameters, percent-encoded
+# internal
+rest.fill : List[String] -> String -> String
+rest.fill = curry (fork
+        (fold rest.fill-step)
+        (both .0 (const []))
+        (.1 | split "/")
+    | .1
+    | reverse
+    | join "/")
+
+# internal
+rest.fill-step : (List[String], List[String]) -> String -> (List[String], List[String])
+rest.fill-step = curry (if
+    (.1 | starts-with "{")
+    (both
+        (.0 | .0 | drop 1)
+        (fork
+            Cons
+            (.0 | .0 | head | option.unwrap-or "" | url.encode)
+            (.0 | .1)))
+    (both (.0 | .0) (fork Cons .1 (.0 | .1))))
+
+# the text of each parameter of a call
+rest.texts : List[a -> String] -> a -> List[String]
+rest.texts = curry (fork map (.1 | apply) .0)
+
+# internal
+rest.query-string : List[(String, String)] -> String
+rest.query-string = if is-empty (const "") (form.encode | flip concat "?")
+
+# The text of a path parameter: a string as it is, other values as JSON.
+rest.param-text : a -> String where Encode[a]
+rest.param-text = json.write | rest.unquote
+
+# internal
+rest.unquote : String -> String
+rest.unquote = fork option.unwrap-or id (json.parse
+    | result.to-option
+    | option.and-then json.as-string)
+
+# The query parameters of a record: its fields, each element of a list
+# field, and nothing for a `None` field.
+rest.query-pairs : a -> List[(String, String)] where Encode[a]
+rest.query-pairs =
+    json.encode-value
+    | json.as-object
+    | option.unwrap-or []
+    | list.flat-map rest.query-pair
+
+# internal
+rest.query-pair : (String, Json) -> List[(String, String)]
+rest.query-pair = match
+    (_, Json.Arr _) ->
+        curry (fork map (.0 | curry id) (.1 | map rest.scalar-text))
+    (_, Json.Null) -> const []
+    (_, _) -> curry (both .0 (.1 | rest.scalar-text) | singleton)
+
+# internal
+rest.scalar-text : Json -> String
+rest.scalar-text = match
+    Json.Str _ -> id
+    Json.Bool _ -> if id (const "true") (const "false")
+    _ -> json.encode
+
+# Call a REST API and decode the JSON of a successful response; any other
+# response is a `RestError` with its status and body.
+rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[b]
+rest.fetch = rest.exchange | rest.decode-response
+
+# `rest.fetch`, with `None` for a 404.
+rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
+rest.fetch-option =
+    rest.exchange
+    | if (.status | eq 404) (const None) (rest.decode-response | Some)
+
+# internal
+rest.exchange : RestRequest -> ClientResponse ! {Async, Network, Error[RestError]}
+rest.exchange =
+    attempt (make ClientRequest {
+        method = .method,
+        url = .url,
+        headers = const [
+            ("accept", "application/json"),
+            ("content-type", "application/json"),
+        ],
+        body = .body | option.unwrap-or "" | string.to-bytes,
+    } | http.send)
+    | rest.sent
+
+# internal
+rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
+rest.sent = match
+    Ok _ -> id
+    Err _ -> make RestError { status = const 0, message = .message } | fail
+
+# internal
+rest.decode-response : ClientResponse -> b ! {Error[RestError]} where Decode[b]
+rest.decode-response =
+    if
+        (fork and (.status | ge 200) (.status | lt 300))
+        (fork rest.decoded-body .status (.body | rest.body-json | json.read))
+        (make RestError {
+            status = .status,
+            message = .body | string.from-bytes | option.unwrap-or "",
+        } | fail)
+
+# an empty body is `{}` (a `()` result)
+# internal
+rest.body-json : Bytes -> String
+rest.body-json =
+    string.from-bytes
+    | option.unwrap-or ""
+    | if (trim | string.is-empty) (const "{}") id
+
+# internal
+rest.decoded-body : I64 -> Result[b, String] -> b ! {Error[RestError]}
+rest.decoded-body = curry (match
+    (_, Ok _) -> const id
+    (_, Err _) -> curry (make RestError {
+        status = .0,
+        message = .1 | flip concat "invalid response: ",
+    } | fail))
+
+test "rest.pattern" = "/items/{id}/x" | rest.pattern | eq ["items", ":id", "x"]
+test "rest.relabel one" = "$.a: bad" | rest.relabel ["$"] | eq "$.a: bad"
+test "rest.relabel path" =
+    "$: expected an integer, got \"x\""
+    | rest.relabel ["path.id"]
+    | eq "path.id: expected an integer, got \"x\""
+test "rest.relabel many" =
+    "$[1].price: expected a number, got \"x\""
+    | rest.relabel ["path.id", "$"]
+    | eq "$.price: expected a number, got \"x\""
+test "rest.relabel query" =
+    "$[0].limit: expected an integer, got \"x\""
+    | rest.relabel ["query", "$"]
+    | eq "query.limit: expected an integer, got \"x\""
+test "rest.join-args" = [
+    ["1"] | rest.join-args,
+    ["1", "\"a\""] | rest.join-args,
+] | eq ["1", "[1,\"a\"]"]
+test "rest.switch" =
+    [None, Some "", Some "false"]
+    | map rest.switch
+    | eq ["false", "true", "\"false\""]
+test "rest.error-status" =
+    [
+        Json.Str "NotFound",
+        "{\"type\": \"Bad\", \"value\": 1}"
+        | json.parse
+        | result.unwrap-or Json.Null,
+        "{\"status\": 409, \"message\": \"x\"}"
+        | json.parse
+        | result.unwrap-or Json.Null,
+        Json.Null,
+    ]
+    | map (rest.error-status RestRoute {
+        method = "GET",
+        path = "/",
+        sources = [],
+        status = 200,
+        error-status = 500,
+        errors = [("NotFound", 404), ("Bad", 422)],
+    })
+    | eq [404, 422, 409, 500]
+test "rest.fill" =
+    "/items/{id}/parts/{part}"
+    | rest.fill ["a b", "7"]
+    | eq "/items/a%20b/parts/7"
+test "rest.url" = RestTarget {
+    base = "http://localhost:8080/",
+    path = "/books",
+    params = [],
+    query = [("tag", "a&b"), ("tag", "c")],
+} | rest.url | eq "http://localhost:8080/books?tag=a%26b&tag=c"
+test "rest.query-pairs" =
+    { author = Some "x y", tag = ["a", "b"], max = None, n = 3, ok = True }
+    | rest.query-pairs
+    | eq [
+        ("author", "x y"),
+        ("n", "3"),
+        ("ok", "true"),
+        ("tag", "a"),
+        ("tag", "b"),
+    ]
+test "rest.param-text" =
+    [42 | rest.param-text, "a/b" | rest.param-text] | eq ["42", "a/b"]

@@ -62,7 +62,18 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    from the syntax tree, and a library for CSV, prompts, progress lines,
    terminal width and streaming standard input. See
    [docs/cli.md](docs/cli.md#what-was-missing-and-what-was-added).
-5. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+5. **REST and OpenAPI** (done). Any exported function is a REST endpoint:
+   `fwp build --rest` and `fwp serve --rest` serve a file's functions over
+   the HTTP server of `lib/http.fwp`, with routes, path and query
+   parameters and statuses from doc comments (`# route:`, `# status:`,
+   `# error:`), a typed JSON codec for every encodable type in both
+   backends (`json.write`, `json.read`, with JSON paths in errors), and
+   the OpenAPI 3.1 document derived from the types (`fwp openapi`,
+   `/openapi.json`). `fwp openapi --import` generates typed client
+   modules from OpenAPI documents. See [docs/rest.md](docs/rest.md),
+   [docs/interfaces.md](docs/interfaces.md) and
+   [tutorial 17](docs/tutorials/17-rest-and-openapi/README.md).
+6. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

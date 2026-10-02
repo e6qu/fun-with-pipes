@@ -55,6 +55,9 @@ pub struct FuncDoc {
     pub args: Option<Vec<String>>,
     /// The name of `# command:`.
     pub command: Option<String>,
+    /// The `# route:`, `# status:` and `# error:` lines of REST endpoints
+    /// (`src/rest.rs`), without the `#`.
+    pub http: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -70,6 +73,8 @@ pub struct FieldDoc {
     pub conflicts: Vec<String>,
     /// `[requires: a]`: options that must be given with this one.
     pub requires: Vec<String>,
+    /// `json: name`: the field's name in JSON (typed JSON, REST).
+    pub json: Option<String>,
 }
 
 /// The text of a comment: without the `#`, one space and trailing space.
@@ -108,6 +113,20 @@ pub fn field_doc(text: &str) -> FieldDoc {
         }
     }
     let mut doc = rest.to_string();
+    let names = |v: Option<String>| -> Vec<String> {
+        v.map(|v| {
+            v.split([',', ' '])
+                .map(|n| n.trim_start_matches('-').to_string())
+                .filter(|n| !n.is_empty())
+                .collect()
+        })
+        .unwrap_or_default()
+    };
+    // `json: name` (a line of its own, as `# json: type`)
+    if let Some(n) = crate::jsontype::json_name(&doc).map(str::to_string) {
+        doc = crate::jsontype::without_json_name(&doc);
+        d.json = Some(n);
+    }
     let mut take = |key: &str| -> Option<String> {
         let i = doc.find(&format!("[{}:", key))?;
         let j = doc[i..].find(']')?;
@@ -120,15 +139,6 @@ pub fn field_doc(text: &str) -> FieldDoc {
             (false, false) => format!("{} {}", before, after),
         };
         (!value.is_empty()).then_some(value)
-    };
-    let names = |v: Option<String>| -> Vec<String> {
-        v.map(|v| {
-            v.split([',', ' '])
-                .map(|n| n.trim_start_matches('-').to_string())
-                .filter(|n| !n.is_empty())
-                .collect()
-        })
-        .unwrap_or_default()
     };
     d.env = take("env");
     d.conflicts = names(take("conflicts"));
@@ -266,6 +276,11 @@ impl Docs {
                     doc.args = Some(a.split_whitespace().map(str::to_string).collect());
                 } else if let Some(c) = t.strip_prefix("command:") {
                     doc.command = Some(c.trim().to_string());
+                } else if ["route:", "status:", "error:"]
+                    .iter()
+                    .any(|p| t.starts_with(p))
+                {
+                    doc.http.push(t);
                 } else if !t.starts_with("fwp:allow") {
                     doc.lines.push(t);
                 }

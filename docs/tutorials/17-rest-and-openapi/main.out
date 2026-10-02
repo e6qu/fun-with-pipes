@@ -1,0 +1,12 @@
+Some (Carrier {base = 9.0, countries = ["FR", "DE"], days = 1, name = "swift", per-kg = 2.0})
+Ok [Rate {carrier = "steady", days = 4, price = 7.0}, Rate {carrier = "swift", days = 1, price = 15.0}]
+[{"carrier":"steady","price":7.0,"days":4},{"carrier":"swift","price":15.0,"days":1}]
+{"type":"TooHeavy","value":40.0}
+Ok (Parcel {size = Medium, to = "IT", weight = 2.0})
+Err "$.size: expected one of \"Small\", \"Medium\", \"Large\", got \"Tiny\""
+200 {"name":"swift","base":9.0,"per-kg":2.0,"days":1,"countries":["FR","DE"]}
+404 {"error":"not found"}
+200 [{"carrier":"swift","price":11.0,"days":1}]
+400 {"error":"query.max-days: expected an integer, got \"x\""}
+422 {"error":{"type":"TooHeavy","value":40.0}}
+404 {"error":{"type":"NoRoute","value":"JP"}}

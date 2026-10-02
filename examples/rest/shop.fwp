@@ -1,0 +1,37 @@
+# The bookstore of books.fwp as one program, or with the store deployed as
+# a gRPC service, with no change to either file (see docs/interfaces.md):
+#
+#   fwp run shop.fwp                               calls books directly
+#   fwp build shop.fwp --service books -o out      out/books, out/shop
+#   out/books --listen 127.0.0.1:50051 &           the gRPC server
+#   out/shop                                       its calls are gRPC
+
+import books
+
+cheap : books.Filter
+cheap = books.Filter {
+    author = None,
+    tag = [],
+    max-price = Some 30.0,
+    in-stock = False,
+}
+
+order : books.Order
+order = books.Order {
+    lines = [books.Line { book = 1, quantity = 1 }],
+    coupon = Some "FWP10",
+}
+
+too-many : books.Order
+too-many = books.Order {
+    lines = [books.Line { book = 1, quantity = 9 }],
+    coupon = None,
+}
+
+main = [
+    3 | books.book | option.map .title | echo,
+    cheap | books.books | map .title | echo,
+    order | attempt books.quote-order | result.map .total | echo,
+    too-many | attempt books.quote-order | echo,
+    () | books.health | echo,
+] | ignore

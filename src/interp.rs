@@ -541,6 +541,19 @@ impl<'p> Interp<'p> {
                 crate::json::encode(&a[0], &mut out);
                 Ok(Value::str(&out))
             }
+            "json.write" => Ok(Value::str(&crate::jsontype::write(
+                &a[0], &params[0], self.prog,
+            ))),
+            "json.read" => {
+                let t = match &result {
+                    MT::Con(_, args) => args.first().cloned().unwrap_or(MT::unit()),
+                    _ => MT::unit(),
+                };
+                Ok(match crate::jsontype::read(a[0].as_str(), &t, self.prog) {
+                    Ok(v) => Value::data(0, vec![v]),
+                    Err(e) => Value::data(1, vec![Value::str(&e)]),
+                })
+            }
             "string.split-once" => Ok(crate::web::split_once(&a[0], &a[1])),
             "bytes.find" => Ok(crate::web::bytes_find(&a[0], &a[1])),
             "url.encode" => Ok(crate::web::url_encode(&a[0])),

@@ -24,6 +24,7 @@ const MODULES: &[(&str, &str)] = &[
     ("net", "Networking"),
     ("http", "HTTP"),
     ("json", "JSON"),
+    ("rest", "REST endpoints and clients"),
     ("url", "URLs"),
     ("log", "Logs and metrics"),
     ("numeric", "Vectors, matrices and complex numbers"),

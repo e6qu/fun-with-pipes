@@ -1,0 +1,82 @@
+# Calls the API of api.fwp through apiclient.fwp, the client that
+# `fwp openapi --import` generates from its OpenAPI document
+# (tests/rest.rs). The server's address is in FWP_TEST_BASE.
+
+import apiclient
+
+# call a function with the base URL and show what it returned
+call : (String -> a ! {Async, IO, Network, Error[RestError]}) -> String -> () ! {Async, IO, Network} where Display[a]
+call = attempt | flip compose echo
+
+pen : apiclient.Item
+pen = apiclient.Item {
+    id = 1,
+    name = "pen \"fine\"",
+    price = 2.5,
+    tags = ["office", "é"],
+    note = Some "blue",
+}
+
+listing : apiclient.ItemsQuery
+listing = apiclient.ItemsQuery {
+    limit = Some 3,
+    tag = ["a b", "c&d"],
+    desc = Some True,
+    prefix = "x/y",
+}
+
+huge : apiclient.Big
+huge = apiclient.Big {
+    n = -9223372036854775808,
+    u = 18446744073709551615u64,
+    wide = 170141183460469231731687303715884105727i128,
+    data = "fwp" | string.to-bytes,
+    timeout = 2min,
+    type-field = "big",
+}
+
+search-ab : String -> String ! {Async, Network, Error[RestError]}
+search-ab =
+    fork
+        apply
+        (const { limit = None })
+        (fork apiclient.search id (const "a/b c"))
+
+put-pen : String -> apiclient.Item ! {Async, Network, Error[RestError]}
+put-pen = fork apply (const pen) (fork apiclient.put-item id (const 7))
+
+sum-all : String -> I64 ! {Async, Network, Error[RestError]}
+sum-all =
+    fork
+        apply
+        (const [1, 2, 3])
+        (fork
+            apply
+            (const { c = 5 })
+            (fork apply (const 20) (fork apiclient.sum4 id (const 10))))
+
+calls : String -> () ! {Async, IO, Network}
+calls =
+    tap (call (flip apiclient.echo-item pen))
+    | tap (call (flip apiclient.item 5))
+    | tap (call (flip apiclient.item 500))
+    | tap (call (flip apiclient.items listing))
+    | tap (call search-ab)
+    | tap (call put-pen)
+    | tap (call (flip apiclient.delete-item 3))
+    | tap (call (flip apiclient.delete-item 1))
+    | tap (call (flip apiclient.check "bob"))
+    | tap (call (flip apiclient.check ""))
+    | tap (call (flip apiclient.area (apiclient.Rect 2.0 3.0)))
+    | tap (call (flip apiclient.area apiclient.Dot))
+    | tap (call (flip apiclient.teapot "short"))
+    | tap (call sum-all)
+    | tap (call (flip apiclient.big huge))
+    | tap (call apiclient.ping)
+    | tap (call apiclient.tags)
+    | tap (call (flip apiclient.maybe None))
+    | tap (call (flip apiclient.maybe (Some 4)))
+    | ignore
+
+main =
+    "FWP_TEST_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080" | calls

@@ -31,6 +31,10 @@ pub struct Roots {
     /// addresses. A call from another module to one of their exported
     /// functions becomes a remote call.
     pub remote: Vec<(String, String)>,
+    /// A binding of the main module (canonical name) compiled as the
+    /// program's entry point instead of `main` (the generated `main` of a
+    /// REST server).
+    pub entry: Option<String>,
 }
 
 /// The address a service listens on, and its clients call, when nothing
@@ -616,6 +620,8 @@ impl<'a> Mono<'a> {
             }
             let root = if b.module == "std" {
                 roots.std_tests && b.test_name.is_some()
+            } else if roots.entry.as_deref() == Some(b.name.as_str()) {
+                true
             } else if b.name == "main::main" {
                 roots.main
             } else if b.test_name.is_some() {
@@ -627,10 +633,12 @@ impl<'a> Mono<'a> {
                 continue;
             }
             let scheme = env.globals[&b.name].scheme.clone().unwrap();
+            let is_entry = roots.entry.as_deref() == Some(b.name.as_str());
             if roots.exports
                 && !scheme.vars.is_empty()
                 && b.test_name.is_none()
                 && b.name != "main::main"
+                && !is_entry
             {
                 return Err(Diagnostic::error(
                     b.span,
@@ -642,11 +650,19 @@ impl<'a> Mono<'a> {
             }
             let key = vec![MT::unit(); b.mono_vars.len()];
             let id = self.binding_instance(i, key, b.span)?;
-            if b.name == "main::main" {
+            if b.name == "main::main" || is_entry {
                 self.prog.main = Some(id);
             } else if let Some(t) = &b.test_name {
                 self.prog.tests.push((t.clone(), id));
             } else {
+                let error = self.error_effect(&scheme.ty);
+                if let Some(e) = &error {
+                    self.register_shapes(e);
+                }
+                let labels = self.effect_labels(&scheme.ty);
+                self.prog
+                    .export_effects
+                    .insert(display_name(&b.name), (error, labels));
                 self.prog.exports.push((display_name(&b.name), id));
             }
         }
@@ -668,6 +684,26 @@ impl<'a> Mono<'a> {
             .iter()
             .find(|(l, _)| l == "Error" || l.ends_with("::Error"))
             .map(|(_, t)| self.mt(t, &Subst::new()))
+    }
+
+    /// The effects of a function's final arrow, by name (`IO`, `Error`).
+    fn effect_labels(&self, t: &Type) -> Vec<String> {
+        let table = &self.env.table;
+        let mut t = table.resolve(t);
+        let mut last = None;
+        while let Type::Fun(_, r, row) = t {
+            last = Some(row);
+            t = table.resolve(&r);
+        }
+        let Some(row) = last else {
+            return vec![];
+        };
+        table
+            .flatten_row(&row)
+            .fields
+            .iter()
+            .map(|(l, _)| display_name(l))
+            .collect()
     }
 
     fn default_addr(&self, module: &str) -> String {
