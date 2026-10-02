@@ -319,31 +319,50 @@ impl<'p> Gen<'p> {
                         )
                     }
                     Some(TypeShape::Record(fs)) => {
-                        let mut d = self.record_desc(id, Some(&short), &fs, false);
-                        // typed JSON writes nominal records in declaration
-                        // order; `Duration` is a string
+                        let d = self.record_desc(id, Some(&short), &fs, false);
+                        // typed JSON (runtime/fwp_rt_json.c): `Duration` is
+                        // a string; nominal records are written in
+                        // declaration order, with the JSON names that field
+                        // comments give
+                        let mut pre = String::new();
+                        let mut extra = String::new();
                         if n == "std::Duration" {
-                            d = d.replace(".width = 0}", ".width = 2}");
-                        } else if let Some(names) = self.prog.field_order.get(n) {
-                            let order: Vec<String> = names
-                                .iter()
-                                .filter_map(|l| fs.iter().position(|(f, _)| f == l))
-                                .map(|i| i.to_string())
-                                .collect();
-                            if order.len() == fs.len() && !fs.is_empty() {
-                                d = d.replace(
-                                    ".width = 0}",
-                                    &format!(".width = 0, .order = d{}_o}}", id),
-                                );
-                                d = format!(
-                                    "static const int d{}_o[] = {{{}}};\n{}",
-                                    id,
-                                    order.join(", "),
-                                    d
-                                );
+                            return d.replace(".width = 0}", ".width = 2}");
+                        } else {
+                            if let crate::jsontype::Shape::Record(_, _, _, json) =
+                                crate::jsontype::shape(mt, self.prog)
+                            {
+                                if json.iter().zip(&fs).any(|(j, (l, _))| j != l) {
+                                    let names: Vec<String> =
+                                        json.iter().map(|j| Self::cstr(j)).collect();
+                                    let _ = writeln!(
+                                        pre,
+                                        "static const char *const d{}_j[] = {{{}}};",
+                                        id,
+                                        names.join(", ")
+                                    );
+                                    let _ = write!(extra, ", .jnames = d{}_j", id);
+                                }
+                            }
+                            if let Some(names) = self.prog.field_order.get(n) {
+                                let order: Vec<String> = names
+                                    .iter()
+                                    .filter_map(|l| fs.iter().position(|(f, _)| f == l))
+                                    .map(|i| i.to_string())
+                                    .collect();
+                                if order.len() == fs.len() && !fs.is_empty() {
+                                    let _ = writeln!(
+                                        pre,
+                                        "static const int d{}_o[] = {{{}}};",
+                                        id,
+                                        order.join(", ")
+                                    );
+                                    let _ = write!(extra, ", .order = d{}_o", id);
+                                }
                             }
                         }
-                        d
+                        let d = d.replace(".width = 0}", &format!(".width = 0{}}}", extra));
+                        format!("{}{}", pre, d)
                     }
                     _ => simple("K_OPAQUE", &short),
                 }

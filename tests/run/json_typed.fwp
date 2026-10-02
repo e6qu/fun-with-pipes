@@ -23,6 +23,18 @@ Item = {
 
 Order = { id: U64, items: List[Item], shipped: Bool }
 
+# field comments `json: name` give JSON names that are not fwp names
+Event = {
+    # the kind of event
+    # json: type
+    kind: String,
+    user-id: I64, # json: userId
+    at: Duration,
+}
+
+read-events : String -> Result[List[Event], String]
+read-events = json.read
+
 Tree =
     | Leaf
     | Node Tree I64 Tree
@@ -290,6 +302,14 @@ main =
     | const (range 0 40 | map (const "a") | join "")
     | format "\"{}\""
     | read-i8
+    | echo
+    | const [Event { kind = "login", user-id = 7, at = 1500ms }]
+    | json.write
+    | tap print
+    | read-events
+    | echo
+    | const "[{\"type\": \"x\", \"at\": \"1s\"}]"
+    | read-events
     | echo
 
 read-back : Result[List[Item], String] -> () ! {IO}

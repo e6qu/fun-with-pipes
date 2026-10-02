@@ -55,6 +55,9 @@ pub struct FuncDoc {
     pub args: Option<Vec<String>>,
     /// The name of `# command:`.
     pub command: Option<String>,
+    /// The `# route:`, `# status:` and `# error:` lines of REST endpoints
+    /// (`src/rest.rs`), without the `#`.
+    pub http: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -266,6 +269,8 @@ impl Docs {
                     doc.args = Some(a.split_whitespace().map(str::to_string).collect());
                 } else if let Some(c) = t.strip_prefix("command:") {
                     doc.command = Some(c.trim().to_string());
+                } else if ["route:", "status:", "error:"].iter().any(|p| t.starts_with(p)) {
+                    doc.http.push(t);
                 } else if !t.starts_with("fwp:allow") {
                     doc.lines.push(t);
                 }

@@ -1,0 +1,161 @@
+# A small bookstore: a catalog and price quotes.
+#
+# The same exported functions are a REST API, a command-line program and a
+# gRPC service, with no change to this file:
+#
+#   fwp serve --rest books.fwp                 REST, interpreted
+#   fwp build books.fwp --rest -o books-api    REST, native
+#   fwp openapi books.fwp                      its OpenAPI document
+#   fwp build books.fwp --cli -o books         a command-line program
+#   fwp build shop.fwp --service books -o out  a gRPC service (see shop.fwp)
+
+export version : String
+version = "1.0.0"
+
+Format =
+    | Paperback
+    | Hardcover
+    | Ebook
+
+Book = {
+    id: I64,
+    title: String,
+    author: String,
+    # the price in euros
+    price: F64,
+    format: Format,
+    tags: List[String],
+    stock: I64,
+}
+
+# what to list
+Filter = {
+    # -a  only books by this author
+    author: Option[String],
+    # only books with this tag (repeatable)
+    tag: List[String],
+    # only books at most this price
+    max-price: Option[F64],
+    # only books in stock
+    in-stock: Bool,
+}
+
+Line = { book: I64, quantity: I64 }
+
+Order = {
+    lines: List[Line],
+    # a discount code
+    coupon: Option[String],
+}
+
+QuoteLine = { title: String, quantity: I64, amount: F64 }
+
+Quote = { lines: List[QuoteLine], discount: F64, total: F64 }
+
+# why an order cannot be quoted
+OrderError =
+    | UnknownBook I64
+    | OutOfStock {book: I64, wanted: I64, available: I64}
+    | BadCoupon String
+
+catalog : List[Book]
+catalog = [
+    Book {
+        id = 1,
+        title = "Structure and Interpretation of Computer Programs",
+        author = "Abelson",
+        price = 45.0,
+        format = Hardcover,
+        tags = ["programming", "classic"],
+        stock = 3,
+    },
+    Book {
+        id = 2,
+        title = "The Little Schemer",
+        author = "Friedman",
+        price = 30.5,
+        format = Paperback,
+        tags = ["programming"],
+        stock = 0,
+    },
+    Book {
+        id = 3,
+        title = "Gödel, Escher, Bach",
+        author = "Hofstadter",
+        price = 22.0,
+        format = Ebook,
+        tags = ["classic", "mind"],
+        stock = 10,
+    },
+]
+
+# A book by its id.
+# route: GET /books/{id}
+export book : I64 -> Option[Book]
+book = eq | compose .id | find | apply catalog
+
+# The books that match a filter, cheapest first.
+# route: GET /books
+export books : Filter -> List[Book]
+books = matches | filter | apply catalog | sort-by .price
+
+matches : Filter -> Book -> Bool
+matches = curry (fork
+    and
+    (fork
+        and
+        (fork option-ok (.0 | .author) (.1 | .author | eq))
+        (fork option-ok (.0 | .max-price) (.1 | .price | ge)))
+    (fork
+        and
+        (fork all (.1 | .tags | flip contains) (.0 | .tag))
+        (if (.0 | .in-stock) (.1 | .stock | gt 0) (const True))))
+
+# an absent criterion matches everything
+option-ok : Option[a] -> (a -> Bool) -> Bool
+option-ok = curry (match
+    (None, _) -> const True
+    (Some _, _) -> apply)
+
+# Quote an order: the price of each line and the total, with a 10%
+# discount for the coupon `FWP10`.
+# route: POST /quotes
+# error: UnknownBook 404, OutOfStock 409, BadCoupon 422
+export quote-order : Order -> Quote ! {Error[OrderError]}
+quote-order =
+    both (.lines | map priced) (.coupon | discount)
+    | make Quote {
+        lines = .0,
+        discount = .1,
+        total = fork mul (.1 | flip sub 1.0) (.0 | map .amount | sum),
+    }
+
+discount : Option[String] -> F64 ! {Error[OrderError]}
+discount = match
+    None -> 0.0
+    Some "FWP10" -> 0.1
+    Some _ -> BadCoupon | fail
+
+priced : Line -> QuoteLine ! {Error[OrderError]}
+priced = fork line-price id (.book | book)
+
+line-price : Line -> Option[Book] -> QuoteLine ! {Error[OrderError]}
+line-price = curry (match
+    (_, None) -> .book | UnknownBook | fail
+    (_, Some _) -> curry (if
+        (fork gt (.1 | .stock) (.0 | .quantity))
+        (make {
+            book = .1 | .id,
+            wanted = .0 | .quantity,
+            available = .1 | .stock,
+        } | OutOfStock | fail)
+        (make QuoteLine {
+            title = .1 | .title,
+            quantity = .0 | .quantity,
+            amount = fork mul (.0 | .quantity | int.to-float) (.1 | .price),
+        })))
+
+# Whether the store is up.
+# route: GET /health
+export health : () -> String
+health = const "ok"

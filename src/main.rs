@@ -140,6 +140,7 @@ fn main() -> ExitCode {
         Some("serve") if IN_WASM => not_in_wasm("`fwp serve` (it needs sockets)"),
         Some("serve") => serve(&args[1..]),
         Some("proto") => proto(&args[1..]),
+        Some("openapi") => openapi(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS
@@ -335,6 +336,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut emit_c = false;
     let mut func: Option<String> = None;
     let mut cli = false;
+    let mut rest = false;
     let mut opt = "-O2".to_string();
     let mut target = fwp::cgen::Target::Native;
     let mut fat = false;
@@ -383,6 +385,7 @@ fn build(args: &[String]) -> ExitCode {
                 func = args.get(i).cloned();
             }
             "--cli" => cli = true,
+            "--rest" => rest = true,
             a if a.starts_with("-O") => opt = a.to_string(),
             a => path = Some(a.to_string()),
         }
@@ -398,6 +401,14 @@ fn build(args: &[String]) -> ExitCode {
         );
     }
     let src = std::path::PathBuf::from(&path);
+    if rest && (cli || func.is_some() || lib.is_some() || !services.is_empty()) {
+        eprintln!("fwp build: --rest builds every exported function into one server (not with --cli, --fn, --staticlib, --cdylib or --service)");
+        return ExitCode::from(2);
+    }
+    if rest && target.is_wasm() {
+        eprintln!("fwp build: --rest builds a native server: WebAssembly targets have no sockets (the `Network` effect)");
+        return ExitCode::from(2);
+    }
     if cli && (func.is_some() || lib.is_some()) {
         eprintln!("fwp build: --cli builds every exported function into one executable (not with --fn, --staticlib or --cdylib)");
         return ExitCode::from(2);
@@ -449,7 +460,12 @@ fn build(args: &[String]) -> ExitCode {
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
-        let (c, prog) = match fwp::driver::compile_file(&src, roots) {
+        let compiled = if rest {
+            fwp::rest::compile(&src)
+        } else {
+            fwp::driver::compile_file(&src, roots)
+        };
+        let (c, prog) = match compiled {
             Ok(r) => r,
             Err(f) => {
                 eprint!("{}", f.rendered);
@@ -605,6 +621,9 @@ fn build_split(
 }
 
 fn serve(args: &[String]) -> ExitCode {
+    if args.first().map(String::as_str) == Some("--rest") {
+        return serve_rest(&args[1..]);
+    }
     let mut args = args.to_vec();
     let mut remote = take_services(&mut args);
     let mut listen = None;
@@ -653,6 +672,102 @@ fn serve(args: &[String]) -> ExitCode {
         }
     });
     ExitCode::from(code.clamp(0, 255) as u8)
+}
+
+/// `fwp serve --rest file.fwp [--listen addr] [--openapi]`: the REST
+/// server of a file, interpreted.
+fn serve_rest(args: &[String]) -> ExitCode {
+    let Some(path) = args.iter().find(|a| a.ends_with(".fwp")).cloned() else {
+        eprintln!("fwp serve: usage: fwp serve --rest <file.fwp> [--listen host:port]");
+        return ExitCode::from(2);
+    };
+    let server_args: Vec<String> = args.iter().filter(|a| **a != path).cloned().collect();
+    let code = fwp::driver::with_big_stack(move || {
+        match fwp::rest::compile(std::path::Path::new(&path)) {
+            Ok((c, prog)) => {
+                eprint!("{}", c.render_warnings());
+                fwp::interp::run_main(&prog, server_args).exit_code
+            }
+            Err(f) => {
+                eprint!("{}", f.rendered);
+                1
+            }
+        }
+    });
+    ExitCode::from((code & 0xff) as u8)
+}
+
+/// `fwp openapi file.fwp`: the OpenAPI document of a file's endpoints;
+/// `fwp openapi --import spec.json [-o out.fwp]`: an fwp client module.
+fn openapi(args: &[String]) -> ExitCode {
+    let mut import = None;
+    let mut out = None;
+    let mut path = None;
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--import" => {
+                i += 1;
+                import = args.get(i).cloned();
+            }
+            "-o" => {
+                i += 1;
+                out = args.get(i).cloned();
+            }
+            a => path = Some(a.to_string()),
+        }
+        i += 1;
+    }
+    if let Some(spec) = import {
+        let text = match std::fs::read_to_string(&spec) {
+            Ok(t) => t,
+            Err(e) => {
+                eprintln!("fwp openapi: cannot read {}: {}", spec, e);
+                return ExitCode::from(2);
+            }
+        };
+        let module = match fwp::openapi_import::client(&text) {
+            Ok(m) => m,
+            Err(e) => {
+                eprintln!("fwp openapi: {}: {}", spec, e);
+                return ExitCode::from(1);
+            }
+        };
+        for w in &module.warnings {
+            eprintln!("fwp openapi: {}: {}", spec, w);
+        }
+        return match out {
+            Some(o) => match std::fs::write(&o, &module.text) {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(e) => {
+                    eprintln!("fwp openapi: cannot write {}: {}", o, e);
+                    ExitCode::from(1)
+                }
+            },
+            None => {
+                print!("{}", module.text);
+                ExitCode::SUCCESS
+            }
+        };
+    }
+    let Some(path) = path else {
+        eprintln!("fwp openapi: usage: fwp openapi <file.fwp>\n       fwp openapi --import <spec.json> [-o client.fwp]");
+        return ExitCode::from(2);
+    };
+    let code = fwp::driver::with_big_stack(move || {
+        match fwp::rest::describe(std::path::Path::new(&path)) {
+            Ok((c, _, _, doc)) => {
+                eprint!("{}", c.render_warnings());
+                print!("{}", doc);
+                0
+            }
+            Err(f) => {
+                eprint!("{}", f.rendered);
+                1
+            }
+        }
+    });
+    ExitCode::from(code)
 }
 
 fn proto(args: &[String]) -> ExitCode {

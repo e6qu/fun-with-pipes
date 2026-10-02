@@ -185,6 +185,7 @@ struct fwp_desc {
     int width;              /* TInt width; 1 if record is a tuple; typed JSON
                                flags (Bool, Option, Json, Duration) */
     const int *order;       /* nominal record: fields in declaration order */
+    const char *const *jnames; /* record: JSON names of the fields, if renamed */
 };
 
 static int fwp_is_signed_kind(int k) { return k == K_I8 || k == K_I16 || k == K_I32 || k == K_I64; }

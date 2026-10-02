@@ -113,3 +113,6 @@ Err "$[1]: 14 is out of range for TInt[3]"
 Ok array[Point {x = 1, y = 2}]
 Err "$[0].y: required field is missing"
 Err "$: expected an integer, got \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\""
+[{"type":"login","userId":7,"at":"1500ms"}]
+Ok [Event {at = 1500ms, kind = "login", user-id = 7}]
+Err "$[0].userId: required field is missing"

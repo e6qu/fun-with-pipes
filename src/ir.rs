@@ -241,6 +241,9 @@ pub struct Program {
     pub docs: crate::cli::Docs,
     /// The module this program serves (`fwp serve`, split builds).
     pub service: Option<ServiceDef>,
+    /// Exported functions: the `Error[E]` type and the effects (by name)
+    /// of their final arrow (for REST endpoints).
+    pub export_effects: std::collections::BTreeMap<String, (Option<MT>, Vec<String>)>,
 }
 
 impl crate::value::Shapes for Program {

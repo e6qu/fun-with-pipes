@@ -485,6 +485,52 @@ impl std::fmt::Display for Json {
 }
 
 impl Json {
+    /// The text with two-space indentation, one member per line.
+    pub fn pretty(&self) -> String {
+        let mut out = String::new();
+        self.write_pretty(&mut out, 0);
+        out.push('\n');
+        out
+    }
+
+    fn write_pretty(&self, out: &mut String, depth: usize) {
+        let pad = |out: &mut String, d: usize| {
+            out.push('\n');
+            for _ in 0..d {
+                out.push_str("  ");
+            }
+        };
+        match self {
+            Json::Arr(xs) if !xs.is_empty() => {
+                out.push('[');
+                for (i, x) in xs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    pad(out, depth + 1);
+                    x.write_pretty(out, depth + 1);
+                }
+                pad(out, depth);
+                out.push(']');
+            }
+            Json::Obj(fs) if !fs.is_empty() => {
+                out.push('{');
+                for (i, (k, v)) in fs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    pad(out, depth + 1);
+                    escape(k, out);
+                    out.push_str(": ");
+                    v.write_pretty(out, depth + 1);
+                }
+                pad(out, depth);
+                out.push('}');
+            }
+            _ => self.write(out),
+        }
+    }
+
     fn write(&self, out: &mut String) {
         match self {
             Json::Null => out.push_str("null"),

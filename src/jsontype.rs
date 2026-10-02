@@ -63,9 +63,10 @@ pub enum Shape {
     Map(MT, MT),
     Tuple(Vec<MT>),
     /// A record: its name (nominal records), its fields in canonical
-    /// order, and the order in which they are written (declaration order
-    /// for nominal records).
-    Record(Option<String>, Vec<(String, MT)>, Vec<usize>),
+    /// order, the order in which they are written (declaration order for
+    /// nominal records), and the JSON name of each field (its own name,
+    /// unless a field comment `json: name` gives another).
+    Record(Option<String>, Vec<(String, MT)>, Vec<usize>, Vec<String>),
     /// A variant type whose constructors have no fields.
     Enum(String, Vec<String>),
     Adt(String, Vec<(String, Vec<MT>)>),
@@ -90,7 +91,12 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
     match mt {
         MT::Record(fs) if fs.is_empty() => Shape::Unit,
         MT::Record(fs) if is_tuple(fs) => Shape::Tuple(fs.iter().map(|(_, t)| t.clone()).collect()),
-        MT::Record(fs) => Shape::Record(None, fs.clone(), (0..fs.len()).collect()),
+        MT::Record(fs) => Shape::Record(
+            None,
+            fs.clone(),
+            (0..fs.len()).collect(),
+            fs.iter().map(|(l, _)| l.clone()).collect(),
+        ),
         MT::Fun(..) | MT::Nat(_) => Shape::Other,
         MT::Con(n, args) => {
             let short = n.strip_prefix("std::").unwrap_or(n);
@@ -132,7 +138,17 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                             .collect(),
                         _ => (0..fs.len()).collect(),
                     };
-                    Shape::Record(Some(name), fs.clone(), order)
+                    let docs = prog.docs.fields_of(mt);
+                    let json = fs
+                        .iter()
+                        .map(|(l, _)| {
+                            docs.and_then(|d| d.get(l))
+                                .and_then(|d| json_name(&d.doc))
+                                .unwrap_or(l)
+                                .to_string()
+                        })
+                        .collect();
+                    Shape::Record(Some(name), fs.clone(), order, json)
                 }
                 Some(TypeShape::Adt(vs)) if vs.iter().all(|(_, f)| f.is_empty()) => {
                     Shape::Enum(name, vs.iter().map(|(c, _)| c.clone()).collect())
@@ -144,7 +160,32 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
     }
 }
 
-fn is_option(mt: &MT) -> bool {
+/// The JSON name a field comment gives a field: `# json: name`.
+pub fn json_name(doc: &str) -> Option<&str> {
+    let mut rest = doc;
+    loop {
+        let i = rest.find("json: ")?;
+        if i == 0 || rest[..i].ends_with(' ') {
+            let name = rest[i + 6..].split_whitespace().next()?;
+            return Some(name);
+        }
+        rest = &rest[i + 6..];
+    }
+}
+
+/// A field comment without its `json: name` part.
+pub fn without_json_name(doc: &str) -> String {
+    match json_name(doc) {
+        Some(n) => doc
+            .replacen(&format!("json: {}", n), "", 1)
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" "),
+        None => doc.to_string(),
+    }
+}
+
+pub fn is_option(mt: &MT) -> bool {
     matches!(mt, MT::Con(n, _) if n == "std::Option")
 }
 
@@ -284,7 +325,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
             }
             out.push(']');
         }
-        Shape::Record(_, fts, order) => {
+        Shape::Record(_, fts, order, names) => {
             let Value::Record(fs) = v else {
                 out.push_str("{}");
                 return;
@@ -292,7 +333,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
             out.push('{');
             let mut first = true;
             for i in order {
-                let (l, t) = &fts[i];
+                let t = &fts[i].1;
                 if is_option(t) && matches!(fs[i], Value::Data(0, _)) {
                     continue;
                 }
@@ -300,7 +341,7 @@ fn write_to(out: &mut String, v: &Value, mt: &MT, prog: &Program) {
                     out.push(',');
                 }
                 first = false;
-                json::escape(l, out);
+                json::escape(&names[i], out);
                 out.push(':');
                 write_to(out, &fs[i], t, prog);
             }
@@ -809,12 +850,12 @@ fn decode(r: &Raw, mt: &MT, prog: &Program, path: &mut String) -> Result<Value, 
             Value::Map(Rc::new(m))
         }
         Shape::Tuple(ts) => Value::tuple(decode_tuple(r, &ts, prog, path)?),
-        Shape::Record(_, fts, _) => {
+        Shape::Record(_, fts, _, names) => {
             let Raw::Obj(fs) = r else {
                 return Err(expected(path, "an object", r));
             };
             let mut out = Vec::new();
-            for (l, t) in &fts {
+            for ((_, t), l) in fts.iter().zip(&names) {
                 out.push(with_key(path, l, |p| match member(fs, l) {
                     Some(x) => decode(x, t, prog, p),
                     None if is_option(t) => Ok(Value::nullary(0)),

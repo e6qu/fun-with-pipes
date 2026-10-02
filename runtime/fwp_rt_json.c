@@ -490,7 +490,8 @@ static void fwp_jt_write(fwp_buf *b, V v, const fwp_desc *d) {
             if (fwp_jt_is_option(d->fields[i]) && x == FWP_NONE) continue;
             if (!first) buf_putc(b, ',');
             first = 0;
-            fwp_jescape_n(b, d->names[i], strlen(d->names[i]));
+            const char *jn = d->jnames ? d->jnames[i] : d->names[i];
+            fwp_jescape_n(b, jn, strlen(jn));
             buf_putc(b, ':');
             fwp_jt_write(b, x, d->fields[i]);
         }
@@ -997,8 +998,9 @@ static int fwp_jt_read(fwp_jt *c, const fwp_jr *r, const fwp_desc *d, V *out) {
             if (r->t != 5) return fwp_jt_expected(c, "an object", r);
             for (int i = 0; i < d->n; i++) {
                 size_t len = c->path.len;
-                fwp_jt_push_key(c, d->names[i], strlen(d->names[i]));
-                const fwp_jr *x = fwp_jt_member(r, d->names[i]);
+                const char *jn = d->jnames ? d->jnames[i] : d->names[i];
+                fwp_jt_push_key(c, jn, strlen(jn));
+                const fwp_jr *x = fwp_jt_member(r, jn);
                 if (!x) {
                     if (!fwp_jt_is_option(d->fields[i])) return fwp_jt_missing(c);
                     fs[i] = FWP_NONE;
