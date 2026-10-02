@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fwp playground</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --panel: #ffffff;
+    --text: #1c1917;
+    --muted: #78716c;
+    --border: #d6d3d1;
+    --accent: #2563eb;
+    --accent-text: #ffffff;
+    --error: #b91c1c;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1917;
+      --panel: #292524;
+      --text: #f5f5f4;
+      --muted: #a8a29e;
+      --border: #44403c;
+      --accent: #60a5fa;
+      --accent-text: #0c0a09;
+      --error: #f87171;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1917;
+    --panel: #292524;
+    --text: #f5f5f4;
+    --muted: #a8a29e;
+    --border: #44403c;
+    --accent: #60a5fa;
+    --accent-text: #0c0a09;
+    --error: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 { font-size: 17px; margin: 0 8px 0 0; }
+  h1 span { color: var(--muted); font-weight: normal; }
+  .spacer { flex: 1; }
+  select, button {
+    font: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px;
+    height: calc(100vh - 58px);
+  }
+  .column { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  label { font-size: 13px; color: var(--muted); }
+  textarea, pre {
+    font: 14px/1.5 var(--mono);
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin: 0;
+    tab-size: 4;
+  }
+  textarea { resize: none; width: 100%; }
+  #source { flex: 1; min-height: 240px; white-space: pre; overflow: auto; }
+  #stdin { height: 80px; }
+  #output { flex: 1; overflow: auto; white-space: pre-wrap; word-break: break-word; min-height: 160px; }
+  #output .err { color: var(--error); }
+  #output .note { color: var(--muted); }
+  #status { font-size: 13px; color: var(--muted); }
+  @media (max-width: 760px) {
+    main { grid-template-columns: minmax(0, 1fr); height: auto; }
+    #source { min-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>fwp <span>playground</span></h1>
+  <select id="examples" aria-label="Example program"></select>
+  <button id="run" class="primary" title="Run main (Ctrl+Enter)">Run</button>
+  <button id="check" title="Type-check and show the inferred types">Check</button>
+  <button id="format" title="Format the program">Format</button>
+  <button id="test" title="Run the test declarations">Test</button>
+  <button id="stop" title="Stop the running program" disabled>Stop</button>
+  <span class="spacer"></span>
+  <span id="status">loading fwp.wasm…</span>
+</header>
+<main>
+  <div class="column">
+    <label for="source">main.fwp</label>
+    <textarea id="source" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+    <label for="stdin">standard input</label>
+    <textarea id="stdin" spellcheck="false"></textarea>
+  </div>
+  <div class="column">
+    <label for="output">output</label>
+    <pre id="output" aria-live="polite"></pre>
+  </div>
+</main>
+<script type="module" src="playground.js"></script>
+</body>
+</html>

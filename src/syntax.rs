@@ -376,7 +376,7 @@ impl Builder<'_> {
             S_RECORD => {
                 let mut fields = Vec::new();
                 for p in fs[0].list_items() {
-                    let Value::Record(kv) = p else {
+                    let Value::Record(kv) = &p else {
                         return Err("malformed record syntax".into());
                     };
                     fields.push((Self::str_of(&kv[0])?, self.expr(&kv[1])?));
@@ -390,7 +390,7 @@ impl Builder<'_> {
             S_MATCH => {
                 let mut arms = Vec::new();
                 for p in fs[0].list_items() {
-                    let Value::Record(kv) = p else {
+                    let Value::Record(kv) = &p else {
                         return Err("malformed match syntax".into());
                     };
                     arms.push(Arm {
@@ -415,7 +415,7 @@ impl Builder<'_> {
                 let kind = Self::str_of(&fs[0])?;
                 let mut fields = Vec::new();
                 for p in fs[1].list_items() {
-                    let Value::Record(kv) = p else {
+                    let Value::Record(kv) = &p else {
                         return Err("malformed field syntax".into());
                     };
                     fields.push((Self::str_of(&kv[0])?, self.expr(&kv[1])?));

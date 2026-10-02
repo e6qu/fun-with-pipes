@@ -116,7 +116,7 @@ impl Loader {
         }
         let file_name = format!("{}.fwp", name.replace('.', "/"));
         let path = dir.map(|d| d.join(&file_name));
-        let canonical = path.as_ref().and_then(|p| std::fs::canonicalize(p).ok());
+        let canonical = path.as_deref().and_then(canonical_path);
         if let Some(prev) = self.loaded.get(name) {
             if prev.is_some() && canonical.is_some() && *prev != canonical {
                 self.errors.push(Diagnostic::error(
@@ -143,6 +143,30 @@ impl Loader {
             format!("cannot find module `{}` (looked for `{}`)", name, file_name),
         ));
     }
+}
+
+/// The canonical form of an existing file's path. WASI has no `realpath`
+/// (nor symbolic links in the playground), so there `.` and `..` are
+/// resolved by hand.
+fn canonical_path(p: &Path) -> Option<PathBuf> {
+    if let Ok(c) = std::fs::canonicalize(p) {
+        return Some(c);
+    }
+    if !cfg!(target_family = "wasm") || !p.exists() {
+        return None;
+    }
+    let abs = std::env::current_dir().ok()?.join(p);
+    let mut out = PathBuf::new();
+    for c in abs.components() {
+        match c {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                out.pop();
+            }
+            c => out.push(c),
+        }
+    }
+    Some(out)
 }
 
 /// Type-check a root source text.
@@ -285,14 +309,102 @@ pub fn compile_source(
     text: &str,
     roots: crate::mono::Roots,
 ) -> Result<(Compilation, crate::ir::Program), Failure> {
-    let c = check_source(name, text, None)?;
+    compile_source_in(name, text, None, roots)
+}
+
+/// Check and lower source text whose imports are found in `dir`.
+pub fn compile_source_in(
+    name: &str,
+    text: &str,
+    dir: Option<&Path>,
+    roots: crate::mono::Roots,
+) -> Result<(Compilation, crate::ir::Program), Failure> {
+    let c = check_source(name, text, dir)?;
     match crate::mono::lower(&c.env, &c.typed, roots) {
         Ok(p) => Ok((c, p)),
         Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
     }
 }
 
+/// The file name of a program read from standard input (`fwp run -`).
+pub const STDIN_NAME: &str = "<stdin>";
+
+/// Read a program from standard input.
+pub fn read_stdin() -> std::io::Result<String> {
+    use std::io::Read;
+    let mut buf = Vec::new();
+    std::io::stdin().lock().read_to_end(&mut buf)?;
+    Ok(String::from_utf8_lossy(&buf).into_owned())
+}
+
+/// Type-check the program at `path`, or standard input when `path` is
+/// `-` (its imports are then found in the current directory).
+pub fn check_input(path: &str) -> Result<Compilation, Failure> {
+    if path != "-" {
+        return check_file(Path::new(path));
+    }
+    let text = read_stdin().map_err(|e| {
+        let d = Diagnostic::error(Span::DUMMY, format!("cannot read standard input: {}", e));
+        Failure::new(vec![d], &SourceMap::default(), u32::MAX)
+    })?;
+    check_source(STDIN_NAME, &text, Some(Path::new(".")))
+}
+
+/// Check and lower the program at `path` (`-`: standard input) to IR.
+pub fn compile_input(
+    path: &str,
+    roots: crate::mono::Roots,
+) -> Result<(Compilation, crate::ir::Program), Failure> {
+    let c = check_input(path)?;
+    match crate::mono::lower(&c.env, &c.typed, roots) {
+        Ok(p) => Ok((c, p)),
+        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
+    }
+}
+
+/// Why the interpreter of the WebAssembly build of fwp cannot run `prog`:
+/// it has no threads (so no tasks), no sockets, no processes and no
+/// `dlopen` (so no foreign C functions). These are the effects the
+/// `wasm32-wasi` target rejects too, checked when the program is lowered,
+/// before it starts.
+pub fn wasm_host_unsupported(prog: &crate::ir::Program) -> Option<String> {
+    const BUILD: &str = "the WebAssembly build of fwp";
+    if crate::cgen::uses_services(prog) {
+        return Some(format!(
+            "services (gRPC calls) are not available in {}",
+            BUILD
+        ));
+    }
+    if let Some((effect, sym)) = crate::cgen::wasm_missing_effect(prog) {
+        return Some(format!(
+            "{} does not provide the `{}` effect (used by `{}`)",
+            BUILD, effect, sym
+        ));
+    }
+    prog.funcs.iter().find_map(|f| match &f.body {
+        crate::ir::Body::ForeignC { symbol, .. } => Some(format!(
+            "foreign C functions are not available in {} (`{}`)",
+            BUILD, symbol
+        )),
+        _ => None,
+    })
+}
+
+/// The stack of the WebAssembly build of fwp, in bytes. It must match the
+/// `-zstack-size` linker argument in `.cargo/config.toml`.
+pub const WASM_STACK_SIZE: usize = 512 << 20;
+
 /// Run `f` on a thread with a large stack (deeply recursive tacit code).
+/// WebAssembly has no threads: `f` runs on the main stack, whose size is
+/// set at link time ([`WASM_STACK_SIZE`]).
+#[cfg(target_family = "wasm")]
+pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
+    crate::interp::set_stack_limit(WASM_STACK_SIZE);
+    f()
+}
+
+/// Run `f` on a thread with a large stack (deeply recursive tacit code).
+#[cfg(not(target_family = "wasm"))]
 pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
     let size: usize = if cfg!(target_pointer_width = "64") {
         4 << 30

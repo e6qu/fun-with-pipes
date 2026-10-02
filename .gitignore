@@ -1,3 +1,5 @@
 /target
 *.fwp.c
 /out
+/web/fwp.wasm
+/web/examples/

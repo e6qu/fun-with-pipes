@@ -13,6 +13,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+          # fwp itself as WebAssembly (tests/browser.rs, the playground)
+          targets: wasm32-wasip1
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -22,5 +24,7 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
+      - name: clippy (WebAssembly build)
+        run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: test
         run: cargo test --all-targets

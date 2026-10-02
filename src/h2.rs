@@ -1350,7 +1350,7 @@ const POLLOUT: i16 = 4;
 /// Serve gRPC calls on `listener` forever. `handler` gets the path, the
 /// request headers and the request message.
 pub fn serve(listener: TcpListener, handler: &mut Handler) -> std::io::Result<()> {
-    use std::os::unix::io::AsRawFd;
+    use std::os::fd::AsRawFd;
     listener.set_nonblocking(true)?;
     let mut conns: Vec<SConn> = Vec::new();
     loop {

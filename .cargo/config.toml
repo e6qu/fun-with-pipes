@@ -1,0 +1,5 @@
+# The WebAssembly build of fwp (`cargo build --target wasm32-wasip1`) has
+# no threads, so the interpreter runs on the main stack: give it 512 MiB
+# (`driver::WASM_STACK_SIZE` must match).
+[target.wasm32-wasip1]
+rustflags = ["-C", "link-arg=-zstack-size=536870912"]

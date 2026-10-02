@@ -116,6 +116,7 @@ error. See [protocol.md](protocol.md).
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
 | `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Async`) are compile errors |
+| fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Async`, `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
 ## Not implemented
 
@@ -124,6 +125,9 @@ error. See [protocol.md](protocol.md).
   cleartext gRPC transport of [services](services.md) (unary calls, no
   streaming RPCs).
 - Preemptive scheduling.
+- Tasks, sockets and foreign C functions in the WebAssembly build of fwp
+  (the playground): tasks would need a scheduler that can suspend the
+  interpreter, and a browser has neither sockets nor a C compiler.
 - GPU and distributed backends, a JIT, reverse-mode autodiff.
 - The `UDS_V1` and `SHM_V1` transports (the header reserves bits for
   them), the WebAssembly component model and `wasm64`.

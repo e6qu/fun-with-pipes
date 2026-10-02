@@ -211,13 +211,13 @@ impl<'p> Interp<'p> {
                 }
                 Ok(Value::tuple(vs))
             }
-            Expr::Field(r, i) => match self.eval(r, locals)? {
+            Expr::Field(r, i) => match &self.eval(r, locals)? {
                 Value::Record(fs) => Ok(fs[*i as usize].clone()),
                 other => trap(format!("internal: field of non-record {:?}", other)),
             },
             Expr::SetFields(r, sets) => {
                 let rv = self.eval(r, locals)?;
-                let Value::Record(fs) = rv else {
+                let Value::Record(fs) = &rv else {
                     return trap("internal: update of non-record");
                 };
                 let mut fs: Vec<Value> = fs.to_vec();
@@ -558,7 +558,7 @@ impl<'p> Interp<'p> {
                 let f = a[0].clone();
                 let mut s = a[1].clone();
                 loop {
-                    match self.apply(f.clone(), vec![s])? {
+                    match &self.apply(f.clone(), vec![s])? {
                         Value::Data(0, fs) => s = fs[0].clone(),
                         Value::Data(_, fs) => return Ok(fs[0].clone()),
                         _ => return trap("internal: loop step is not a Step"),
@@ -667,10 +667,11 @@ impl<'p> Interp<'p> {
                 if let Value::File(f) = &handle {
                     f.borrow_mut().file = None;
                 }
-                match r? {
-                    Value::Record(fs) => Ok(fs[0].clone()),
-                    other => Ok(other),
+                let v = r?;
+                if let Value::Record(fs) = &v {
+                    return Ok(fs[0].clone());
                 }
+                Ok(v)
             }
             "file.read" => {
                 let path = a[0].as_str().to_string();
@@ -1187,6 +1188,12 @@ pub struct RunResult {
 /// Run `main` and report uncaught failures on stderr.
 pub fn run_main(prog: &Program, args: Vec<String>) -> RunResult {
     let stdout = std::io::stdout();
+    // In WebAssembly a deep recursion can exhaust the engine's own stack,
+    // which ends the module at once: write each line as it is complete so
+    // that the output before such a failure is kept.
+    #[cfg(target_family = "wasm")]
+    let out = std::io::LineWriter::new(stdout.lock());
+    #[cfg(not(target_family = "wasm"))]
     let out = std::io::BufWriter::new(stdout.lock());
     let mut it = Interp::new(prog, Box::new(out));
     it.args = args;

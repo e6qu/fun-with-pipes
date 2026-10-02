@@ -242,6 +242,8 @@ fwp lint [paths...]                           warn about likely mistakes (see be
 fwp lsp                                       the language server, on stdin/stdout
 ```
 
+A file argument of `-` reads the program from standard input.
+
 Exit codes:
 
 | Code | Meaning |
@@ -270,12 +272,58 @@ rejected otherwise.
 |---|---|---|
 | native | an executable | all features |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no tasks or sockets, and programs that use them are rejected at compile time; files only in preopened directories |
-| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, args, env, stdin })`) | standard streams, clocks and random numbers |
+| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 
 The interpreter and every compiled target produce the same output for the
 same program, including float formatting and trap messages. The test suite
 checks this.
+
+### fwp in the browser
+
+fwp itself, the compiler and the interpreter, builds for WebAssembly:
+`cargo build --release --target wasm32-wasip1` makes `fwp.wasm`, a WASI
+command module that takes the same arguments as `fwp`. The playground in
+`web/` runs it in a page:
+
+```
+rustup target add wasm32-wasip1
+scripts/build-playground.sh              # web/fwp.wasm and web/examples/
+python3 -m http.server -d web 8000       # any static file server works
+```
+
+| File | Role |
+|---|---|
+| `web/index.html`, `web/playground.js` | the editor, standard input, examples, and Run (`fwp run`), Check (`fwp check`), Format (`fwp fmt -`), Test (`fwp test`) and Stop |
+| `web/fwp-worker.js` | runs `fwp.wasm` in a web worker, so a long program can be stopped |
+| `web/wasi.js` | a small WASI preview 1 in JavaScript: arguments, environment, clocks, random numbers, standard streams and an in-memory file system preopened as `.` and `/`. Other calls (sockets, links) return `ENOSYS`. It works in browsers and in node (`runWasi(module, { args, env, stdin, fs, stdout, stderr })`) |
+
+`fwp.wasm` also runs under other WASI runtimes, with files in preopened
+directories. A file argument of `-` reads the program from standard input
+(`fwp run -`, `fwp check -`, `fwp fmt -`, which prints the formatted text);
+this works in every build. `tests/wasm/fwp-run.mjs` runs `fwp.wasm` under
+node with node's WASI or with `web/wasi.js`.
+
+The WebAssembly build has no threads, sockets, processes or `dlopen`:
+
+- `run`, `check`, `test`, `exec`, `fmt`, `lint`, `proto` and `lsp` work.
+  `build --emit-c` writes C; other builds need a C compiler.
+- A program that uses tasks or channels (`Async`), sockets or DNS
+  (`Network`), services or foreign C functions is rejected before it
+  starts, with the effect or function named:
+  ``fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.spawn`)``.
+  These are the effects the `wasm32-wasi` target rejects. (Running tasks
+  without threads would need a scheduler that can suspend the
+  interpreter's Rust stack, which WebAssembly cannot do yet.)
+- `fwp build` (without `--emit-c`), `fwp test --native`, `fwp pipe`,
+  `fwp serve` and `--link` exit with status 2 and
+  `fwp: … is not available in the WebAssembly build of fwp`.
+- The interpreter's stack is 512 MiB (a linker argument in
+  `.cargo/config.toml`), but WebAssembly frames also use the engine's
+  native stack, which a browser keeps small: a few hundred to a few
+  thousand nested non-tail calls. Running out of either is the trap
+  `fwp: trap: stack overflow` (exit code 101), with the output written
+  before it kept. Iteration, `loop` and long lists are not limited.
 
 ### Environment variables
 
