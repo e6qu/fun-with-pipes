@@ -82,20 +82,20 @@ static V fwp_p_dir_list(V path, const fwp_desc *err) {
     DIR *d = opendir(STR(path)->d);
     if (!d) return fwp_io_error_path("list", STR(path)->d, err);
     size_t n = 0, cap = 16;
-    V *names = (V *)malloc(cap * sizeof(V));
+    V *names = (V *)fwp_mem_alloc(cap * sizeof(V));
     struct dirent *e;
     errno = 0;
     while ((e = readdir(d)) != 0) {
         if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0) continue;
-        if (n == cap) { cap *= 2; names = (V *)realloc(names, cap * sizeof(V)); }
+        if (n == cap) { cap *= 2; names = (V *)fwp_mem_realloc(names, cap / 2 * sizeof(V), cap * sizeof(V)); }
         names[n++] = fwp_str_lossy(e->d_name, strlen(e->d_name));
     }
     int failed = errno != 0;
     closedir(d);
-    if (failed) { free(names); return fwp_io_error_path("list", STR(path)->d, err); }
+    if (failed) { fwp_mem_free(names); return fwp_io_error_path("list", STR(path)->d, err); }
     qsort(names, n, sizeof(V), fwp_cmp_cstr);
     V r = fwp_list_from(names, n);
-    free(names);
+    fwp_mem_free(names);
     return r;
 }
 
@@ -107,7 +107,7 @@ static V fwp_p_dir_create(V path, const fwp_desc *err) {
 static V fwp_p_dir_create_all(V path, const fwp_desc *err) {
     const char *p = STR(path)->d;
     size_t len = STR(path)->len;
-    char *buf = (char *)fwp_alloc(len + 1);
+    char *buf = (char *)fwp_alloc_leaf(len + 1);
     struct stat st;
     for (size_t i = 1; i <= len; i++) {
         if (i < len && p[i] != '/') continue;
@@ -129,7 +129,7 @@ static int fwp_cmp_env(const void *a, const void *b) {
 static V fwp_p_env_vars(void) {
     size_t n = 0;
     for (char **e = environ; e && *e; e++) n++;
-    V *items = (V *)malloc((n + 1) * sizeof(V));
+    V *items = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
     size_t k = 0;
     for (char **e = environ; e && *e; e++) {
         const char *eq = strchr(*e, '=');
@@ -139,7 +139,7 @@ static V fwp_p_env_vars(void) {
     }
     qsort(items, k, sizeof(V), fwp_cmp_env);
     V r = fwp_list_from(items, k);
-    free(items);
+    fwp_mem_free(items);
     return r;
 }
 

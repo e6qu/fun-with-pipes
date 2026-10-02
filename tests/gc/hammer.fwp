@@ -1,0 +1,27 @@
+# Calls greeter.fwp (copied next to it) N times over one connection
+# (tests/gc.rs).
+
+import greeter
+
+call : I64 -> I64
+call =
+    fork
+        add
+        (show
+            | make greeter.HelloRequest { name = id, times = const 1 }
+            | greeter.say-hello
+            | .message
+            | string.length)
+        (const 3 | greeter.count | iter.to-list | sum)
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork add .1 (.0 | call)) | Again)
+
+main =
+    (env.get "N" | option.and-then parse-int | option.unwrap-or 1000, 0)
+    | loop step
+    | echo

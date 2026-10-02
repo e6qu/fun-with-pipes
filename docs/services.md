@@ -331,9 +331,6 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 - No compression; see [grpc.md](grpc.md#limitations) for the limits of
   the gRPC implementation, and [tls.md](tls.md#limitations) for those of
   TLS.
-- Native servers allocate from the bump heap and never free (see
-  [design](design.md)), so a long-running native service grows with the
-  data it handles. Interpreted servers free memory.
 - A trap inside a task spawned by a served function stops the server (a
   trap in the function itself is reported to the caller).
 - Services need the native target; WebAssembly programs cannot call them.

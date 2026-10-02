@@ -10,6 +10,7 @@ use crate::value::Value;
 
 const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt.c"),
+    include_str!("../runtime/fwp_rt_gc.c"),
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
@@ -2415,6 +2416,7 @@ static size_t fwp_main_stack = (size_t)1 << 30;
 
 static void *fwp_main_thread(void *arg) {{
     (void)arg;
+    fwp_gc_start(__builtin_frame_address(0));
     fwp_stack_guard_init(fwp_main_stack);
     fwp_init_consts();
 {run}

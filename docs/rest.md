@@ -340,5 +340,3 @@ endpoints byte for byte.
 * `I64` values beyond 2^53 are exact in fwp's JSON, but JavaScript clients
   lose digits; query parameters in generated clients go through `Json`
   values (doubles).
-* Native servers allocate from a bump heap that is never freed (see
-  [design.md](design.md)), like every native fwp program.

@@ -20,7 +20,7 @@ lex → parse (offside layout) → macro expansion → name collection
 | Interpreter | Runs the same typed IR. It powers `fwp run`, `fwp test`, `comptime` and macros, and it is the oracle the native backend is tested against |
 | Primitives | A fixed set of primitives, implemented twice: in Rust (`src/prims_std.rs`, `src/web.rs`, `src/linalg.rs`, …) and in C (`runtime/fwp_rt*.c`). Everything else in the standard library is fwp code in `lib/` |
 | Polymorphism | Whole-program monomorphization. Traits resolve statically; there is no dictionary passing. Polymorphic recursion is rejected |
-| Memory | Native programs allocate from a bump heap and never free. The interpreter uses Rust reference counting. A collector is on the roadmap |
+| Memory | Native programs have a non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -92,6 +92,31 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   JSON names of renamed fields, and the descriptors of `Bool`, `Option`,
   `Json` and `Duration` are flagged.
 - Floats print in the shortest form that reads back exactly.
+- Native memory is collected by a non-moving mark-and-sweep collector
+  (`runtime/fwp_rt_gc.c`). The heap is one reserved region of 64 KiB
+  chunks; a chunk holds objects of one size class (16 bytes to 16 KiB)
+  and one kind, or is part of one big object, and its class and mark bits
+  are kept out of line, so any word can be tested for pointing into an
+  object. Leaf objects (strings, bytes, boxed 128-bit integers, byte and
+  float buffers) are never scanned; everything else is scanned
+  conservatively, word by word, including the runtime structures that
+  hold values (tasks, channels, gRPC connections and streams, temporary
+  arrays). Roots are found conservatively: the registers (spilled to the
+  stack), the running stack, the stack of every suspended task from its
+  saved stack pointer, and the program's writable data segments, where
+  static constants, CAFs and runtime globals live. Pointers into the middle
+  of an object keep it alive, and from a stack so do pointers just past
+  its end. A collection starts when the bytes allocated since the last one
+  exceed twice the live heap (8 MiB at least); free chunks beyond a
+  reserve are given back to the system. `FWP_GC=off` disables it,
+  `FWP_GC_STATS=1` prints statistics at exit and `FWP_GC_STRESS=n`
+  collects at every n-th allocation, which `tests/gc.rs` uses to run every
+  golden program with a collection at each allocation. WebAssembly keeps
+  a bump allocator that never frees, because values in WebAssembly locals
+  are invisible to a stack scan; libraries (`--staticlib`, `--cdylib`)
+  use the collector's allocator but never collect, since the host's
+  stacks are unknown. The collector needs Linux (`dl_iterate_phdr`) to
+  find the data segments; elsewhere it never collects.
 - Native tasks are green threads (`ucontext`) on an event loop: epoll on
   Linux, poll elsewhere. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time and scheduling is the same.
@@ -132,7 +157,6 @@ error. See [protocol.md](protocol.md).
 
 ## Not implemented
 
-- A garbage collector for native programs.
 - HTTP/3, WebSocket and compression. REST endpoints speak JSON
   only (no content negotiation, forms or header parameters), and
   `fwp openapi --import` reads JSON documents of OpenAPI 3.0 and 3.1, not

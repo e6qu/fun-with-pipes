@@ -71,6 +71,11 @@ struct fwp_task {
     fwp_task *tprev, *tnext;    /* timer list */
     fwp_wl *wl;                 /* list this task is parked on */
     fwp_task *wprev, *wnext;
+    /* tasks with a stack, whose stacks hold roots for the collector
+     * (runtime/fwp_rt_gc.c): scanned from the stack pointer saved when
+     * the task was switched out */
+    char *gc_sp;
+    fwp_task *gc_prev, *gc_next;
 };
 
 typedef struct fwp_scope {
@@ -102,11 +107,20 @@ static int64_t fwp_after(V d) {
     return n > INT64_MAX - now ? INT64_MAX : now + n;
 }
 
-static fwp_task *fwp_task_new(void) {
-    fwp_task *t = (fwp_task *)calloc(1, sizeof(fwp_task));
-    if (!t) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
-    return t;
+/* a task is collected once it finished and nothing refers to it */
+static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fwp_task)); }
+
+static fwp_task *fwp_gc_tasks = 0;
+
+#if FWP_GC
+static void fwp_gc_scan_stacks(char *sp) {
+    char *top = fwp_cur && fwp_cur->stack ? fwp_cur->stack + fwp_cur->stack_size : fwp_gc.main_top;
+    fwp_gc_scan_root(sp, top);
+    for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
+        if (t != fwp_cur && t->stack && t->gc_sp) fwp_gc_scan_root(t->gc_sp, t->stack + t->stack_size);
+    if (fwp_root && fwp_cur != fwp_root && fwp_root->gc_sp) fwp_gc_scan_root(fwp_root->gc_sp, fwp_gc.main_top);
 }
+#endif
 
 static void fwp_tasks_init(void) {
     if (fwp_cur) return;
@@ -191,15 +205,11 @@ static fwp_fdw *fwp_fdw_get(int fd) {
     if ((size_t)fd >= fwp_nfdws) {
         size_t n = fwp_nfdws ? fwp_nfdws : 64;
         while (n <= (size_t)fd) n *= 2;
-        fwp_fdws = (fwp_fdw **)realloc(fwp_fdws, n * sizeof(fwp_fdw *));
-        if (!fwp_fdws) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        fwp_fdws = (fwp_fdw **)fwp_mem_realloc(fwp_fdws, fwp_nfdws * sizeof(fwp_fdw *), n * sizeof(fwp_fdw *));
         memset(fwp_fdws + fwp_nfdws, 0, (n - fwp_nfdws) * sizeof(fwp_fdw *));
         fwp_nfdws = n;
     }
-    if (!fwp_fdws[fd]) {
-        fwp_fdws[fd] = (fwp_fdw *)calloc(1, sizeof(fwp_fdw));
-        if (!fwp_fdws[fd]) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
-    }
+    if (!fwp_fdws[fd]) fwp_fdws[fd] = (fwp_fdw *)fwp_mem_alloc(sizeof(fwp_fdw));
     return fwp_fdws[fd];
 }
 
@@ -264,6 +274,10 @@ static void fwp_free_zombie(void) {
         if (fwp_stack_pool_n < 64) fwp_stack_pool[fwp_stack_pool_n++] = fwp_zombie->stack;
         else munmap(fwp_zombie->stack, fwp_zombie->stack_size);
         fwp_zombie->stack = 0;
+        if (fwp_zombie->gc_prev) fwp_zombie->gc_prev->gc_next = fwp_zombie->gc_next;
+        else fwp_gc_tasks = fwp_zombie->gc_next;
+        if (fwp_zombie->gc_next) fwp_zombie->gc_next->gc_prev = fwp_zombie->gc_prev;
+        fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;
         fwp_zombie = 0;
     }
 }
@@ -280,6 +294,9 @@ static void fwp_switch(fwp_task *to) {
     fwp_state = to->st;
     fwp_state_len = to->st_len;
     fwp_state_cap = to->st_cap;
+#if FWP_GC
+    from->gc_sp = fwp_gc_sp();
+#endif
     swapcontext(&from->ctx, &to->ctx);
     fwp_free_zombie();
 }
@@ -451,8 +468,9 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     }
     if (s) {
         if (s->n == s->cap) {
+            size_t old = s->cap;
             s->cap = s->cap ? s->cap * 2 : 8;
-            s->tasks = (fwp_task **)realloc(s->tasks, s->cap * sizeof(fwp_task *));
+            s->tasks = (fwp_task **)fwp_mem_realloc(s->tasks, old * sizeof(fwp_task *), s->cap * sizeof(fwp_task *));
         }
         s->tasks[s->n++] = t;
     }
@@ -465,6 +483,9 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         if (t->stack == MAP_FAILED) fwp_trap("cannot allocate a task stack");
         mprotect(t->stack, 4096, PROT_NONE); /* guard page */
     }
+    t->gc_next = fwp_gc_tasks;
+    if (fwp_gc_tasks) fwp_gc_tasks->gc_prev = t;
+    fwp_gc_tasks = t;
     getcontext(&t->ctx);
     t->ctx.uc_stack.ss_sp = t->stack;
     t->ctx.uc_stack.ss_size = t->stack_size;
@@ -588,7 +609,7 @@ static V fwp_p_task_scope(V body) {
         }
     }
     t->unwinding = was;
-    free(s.tasks);
+    fwp_mem_free(s.tasks);
     if (failed) fwp_fail(h.value, h.desc);
     fwp_check_cancel();
     return r;
@@ -613,8 +634,7 @@ static V fwp_p_channel_make(V capv) {
     fwp_tasks_init();
     int64_t cap = (int64_t)capv;
     if (cap < 1) cap = 1;
-    fwp_chan *c = (fwp_chan *)calloc(1, sizeof(fwp_chan));
-    if (!c) fwp_trap("out of memory");
+    fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));
     c->cap = (size_t)cap;
     return PTR(c);
 }
@@ -623,10 +643,9 @@ static void fwp_chan_grow(fwp_chan *c) {
     size_t n = c->size ? c->size * 2 : 16;
     if (n < c->size || n > c->cap) n = c->cap;
     if (n > SIZE_MAX / sizeof(V)) fwp_trap("out of memory");
-    V *b = (V *)malloc(n * sizeof(V));
-    if (!b) fwp_trap("out of memory");
+    V *b = (V *)fwp_mem_alloc(n * sizeof(V));
     for (size_t i = 0; i < c->len; i++) b[i] = c->buf[(c->head + i) % c->size];
-    free(c->buf);
+    fwp_mem_free(c->buf);
     c->buf = b;
     c->size = n;
     c->head = 0;
@@ -657,6 +676,7 @@ static V fwp_chan_recv(V ch, int64_t at) {
     for (;;) {
         if (c->len) {
             V x = c->buf[c->head];
+            c->buf[c->head] = 0; /* not kept alive by the channel */
             c->head = (c->head + 1) % c->size;
             c->len--;
             fwp_wake_all(&c->sendq);
@@ -753,7 +773,7 @@ static void fwp_nonblock(int fd) {
 }
 
 static V fwp_sock_new(int fd, int kind) {
-    fwp_sock *s = (fwp_sock *)malloc(sizeof(fwp_sock));
+    fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
     s->tls = 0;

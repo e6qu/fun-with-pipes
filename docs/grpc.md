@@ -392,8 +392,5 @@ HPACK implementation.
 * Clients retry a call only when a reused connection turns out to be
   closed before the server saw the request; there is no retry policy, no
   keepalive pinging and no load balancing.
-* Native servers allocate from the bump heap and never free (see
-  [design](design.md)), so a long-running native server grows with the
-  data it handles.
 * WebAssembly targets have no sockets: programs that use gRPC are
   rejected for `wasm32-wasi` and `wasm32-browser`.

@@ -125,7 +125,7 @@ static void fwp_fmt_duration(char *out, i128 ns) {
 /* balanced ternary digits of v, most significant first, as "0t..."
  * (widths are bounded at compile time, but the buffer is sized by width) */
 static void fwp_trits(fwp_buf *b, int64_t v, int width) {
-    char *tmp = (char *)fwp_alloc((size_t)width + 3);
+    char *tmp = (char *)fwp_alloc_leaf((size_t)width + 3);
     tmp[0] = '0';
     tmp[1] = 't';
     for (int i = 0; i < width; i++) {

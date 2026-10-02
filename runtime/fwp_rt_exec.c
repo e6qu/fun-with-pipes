@@ -110,7 +110,7 @@ static int tp_atom(fwp_tp *p, const fwp_desc *d, V *out) {
 
 static int tp_record_body(fwp_tp *p, const fwp_desc *d, V *out) {
     V *vals = (V *)fwp_alloc((size_t)(d->n + 1) * sizeof(V));
-    char *have = (char *)fwp_alloc((size_t)d->n + 1);
+    char *have = (char *)fwp_alloc_leaf((size_t)d->n + 1);
     memset(have, 0, (size_t)d->n + 1);
     if (!tp_eat(p, "{")) return 0;
     if (!tp_eat(p, "}")) {
@@ -174,8 +174,9 @@ typedef struct { const fwp_desc *d, *d2; V *items; size_t n, cap; int is_set; } 
 
 static void tp_push(tp_coll *c, V v) {
     if (c->n == c->cap) {
+        size_t old = c->cap;
         c->cap = c->cap ? c->cap * 2 : 8;
-        c->items = (V *)realloc(c->items, c->cap * sizeof(V));
+        c->items = (V *)fwp_mem_realloc(c->items, old * sizeof(V), c->cap * sizeof(V));
     }
     c->items[c->n++] = v;
 }
@@ -228,10 +229,10 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
         return tp_quoted(p, out);
     case K_BYTES: {
         tp_coll c = {0};
-        if (!tp_eat(p, "bytes") || !tp_list_of(p, "[", "]", tp_byte_item, &c)) { free(c.items); return 0; }
+        if (!tp_eat(p, "bytes") || !tp_list_of(p, "[", "]", tp_byte_item, &c)) { fwp_mem_free(c.items); return 0; }
         fwp_buf b = {0};
         for (size_t i = 0; i < c.n; i++) buf_putc(&b, (char)(uint8_t)c.items[i]);
-        free(c.items);
+        fwp_mem_free(c.items);
         *out = buf_to_str(&b);
         return 1;
     }
@@ -260,9 +261,9 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
     case K_LIST: case K_ARRAY: {
         tp_coll c = {d->elem};
         if (d->kind == K_ARRAY && !tp_eat(p, "array")) return 0;
-        if (!tp_list_of(p, "[", "]", tp_elem_item, &c)) { free(c.items); return 0; }
+        if (!tp_list_of(p, "[", "]", tp_elem_item, &c)) { fwp_mem_free(c.items); return 0; }
         V l = fwp_list_from(c.items, c.n);
-        free(c.items);
+        fwp_mem_free(c.items);
         *out = d->kind == K_ARRAY ? fwp_p_array_from_list(l) : l;
         return 1;
     }
@@ -270,10 +271,10 @@ static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
         tp_coll c = {d->elem, d->elem2};
         c.is_set = d->kind == K_SET;
         if (!tp_eat(p, c.is_set ? "set" : "map")) return 0;
-        if (!tp_list_of(p, "{", "}", tp_kv_item, &c)) { free(c.items); return 0; }
+        if (!tp_list_of(p, "{", "}", tp_kv_item, &c)) { fwp_mem_free(c.items); return 0; }
         V m = FWP_EMPTY_MAP;
         for (size_t i = 0; i < c.n; i += 2) m = fwp_p_map_insert(c.items[i], c.items[i + 1], m, d->elem);
-        free(c.items);
+        fwp_mem_free(c.items);
         *out = m;
         return 1;
     }
@@ -487,7 +488,7 @@ static V fwp_strf(const char *fmt, ...) {
     va_start(ap, fmt);
     int n = vsnprintf(0, 0, fmt, ap);
     va_end(ap);
-    char *buf = (char *)fwp_alloc((size_t)n + 1);
+    char *buf = (char *)fwp_alloc_leaf((size_t)n + 1);
     va_start(ap, fmt);
     vsnprintf(buf, (size_t)n + 1, fmt, ap);
     va_end(ap);
@@ -715,7 +716,7 @@ static int fwp_flag_env(const fwp_flag *f, V *out, V *err) {
 static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals, const char *state,
                           const V *defs, const char *have_def, int env, V *out, V *err) {
     V *fs = (V *)fwp_alloc((size_t)(nfields + 1) * sizeof(V));
-    char *present = (char *)fwp_alloc((size_t)nf + 1);
+    char *present = (char *)fwp_alloc_leaf((size_t)nf + 1);
     for (int k = 0; k < nf; k++) {
         const fwp_flag *f = &fl[k];
         V v;
@@ -811,8 +812,8 @@ static V fwp_p_cli_parse(V defs, V args, const fwp_flag *fl, int nf, int nfields
     for (V l = args; l; l = OBJ(l)->f[1]) argv[n++] = OBJ(l)->f[0];
     V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
     V *dv = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-    char *state = (char *)fwp_alloc((size_t)nf + 1);
-    char *have = (char *)fwp_alloc((size_t)nf + 1);
+    char *state = (char *)fwp_alloc_leaf((size_t)nf + 1);
+    char *have = (char *)fwp_alloc_leaf((size_t)nf + 1);
     V *pos = (V *)fwp_alloc((n + 1) * sizeof(V));
     int npos;
     V err = 0, rec;
@@ -1114,7 +1115,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     int flags_mode = s->has_options && (!s->record_fallback || (na > 0 && STR(av[0])->d[0] == '-'));
     int nf = flags_mode ? s->nflags : 0;
     V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-    char *state = (char *)fwp_alloc((size_t)nf + 1);
+    char *state = (char *)fwp_alloc_leaf((size_t)nf + 1);
     V *pos = (V *)fwp_alloc((size_t)(na + 1) * sizeof(V));
     int k;
     V err = 0;
@@ -1131,7 +1132,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     int first = 0;
     if (flags_mode) {
         V *defs = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
-        char *have = (char *)fwp_alloc((size_t)nf + 1);
+        char *have = (char *)fwp_alloc_leaf((size_t)nf + 1);
         for (int j = 0; j < nf; j++) {
             const fwp_flag *f = &s->flags[j];
             have[j] = f->def != 0;
@@ -1189,7 +1190,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             }
             if (!fwp_read_exact(fp, 16)) goto bad_header;
             if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
-            char *tname = (char *)fwp_alloc((size_t)l + 1);
+            char *tname = (char *)fwp_alloc_leaf((size_t)l + 1);
             if (l && !fwp_read_exact((unsigned char *)tname, (size_t)l)) goto bad_header;
             tname[l] = 0;
             if (ver != 1) {
@@ -1202,7 +1203,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             }
         }
         size_t cap = 16, cnt = 0;
-        V *items = s->last_is_list ? (V *)malloc(cap * sizeof(V)) : 0;
+        V *items = s->last_is_list ? (V *)fwp_mem_alloc(cap * sizeof(V)) : 0;
         fwp_buf line = {0};
         for (;;) {
             V v;
@@ -1211,7 +1212,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 if (!fwp_read_exact(hdr, 1)) break;
                 if (!fwp_read_exact(hdr + 1, 4)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 size_t len = (size_t)hdr[1] | ((size_t)hdr[2] << 8) | ((size_t)hdr[3] << 16) | ((size_t)hdr[4] << 24);
-                unsigned char *pl = (unsigned char *)fwp_alloc(len + 1);
+                unsigned char *pl = (unsigned char *)fwp_alloc_leaf(len + 1);
                 if (len && !fwp_read_exact(pl, len)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 if (hdr[0] == 0) break;
                 fwp_rd rd = {pl, len, 0};
@@ -1227,7 +1228,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 }
             }
             if (s->last_is_list) {
-                if (cnt == cap) { cap *= 2; items = (V *)realloc(items, cap * sizeof(V)); }
+                if (cnt == cap) { cap *= 2; items = (V *)fwp_mem_realloc(items, cap / 2 * sizeof(V), cap * sizeof(V)); }
                 items[cnt++] = v;
             } else {
                 args[m - 1] = v;
@@ -1247,7 +1248,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             if (failed) code = 1;
             else if ((code = fwp_emit_result(s, r)) < 0) code = 1;
         }
-        free(items);
+        fwp_mem_free(items);
         free(line.d);
     }
     if (fwp_exec_binary_out) {
@@ -1375,7 +1376,7 @@ static V fwp_p_csv_decode(V rows, const fwp_desc *d, const char *const *tnames, 
         V *hs = (V *)fwp_alloc((hn + 1) * sizeof(V));
         size_t k = 0;
         for (V l = header; l; l = OBJ(l)->f[1]) hs[k++] = fwp_csv_column(OBJ(l)->f[0]);
-        int *cols = (int *)fwp_alloc((size_t)(nf + 1) * sizeof(int));
+        int *cols = (int *)fwp_alloc_leaf((size_t)(nf + 1) * sizeof(int));
         for (int j = 0; j < nf; j++) {
             cols[j] = -1;
             for (size_t c = 0; c < hn && cols[j] < 0; c++)

@@ -83,7 +83,7 @@ static int fwp_jstring(fwp_jp *j, const char **s, size_t *len) {
         unsigned char c = j->s[j->p];
         if (c == '"') {
             j->p++;
-            char *r = (char *)fwp_alloc(b.len + 1);
+            char *r = (char *)fwp_alloc_leaf(b.len + 1);
             if (b.len) memcpy(r, b.d, b.len);
             r[b.len] = 0;
             *s = r;
@@ -149,8 +149,8 @@ static int fwp_jexpect(fwp_jp *j, char c) {
 static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
     j->p++;
     size_t n = 0, cap = 8;
-    fwp_jr *items = (fwp_jr *)malloc(cap * sizeof(fwp_jr));
-    const char **keys = obj ? (const char **)malloc(cap * sizeof(char *)) : 0;
+    fwp_jr *items = (fwp_jr *)fwp_mem_alloc(cap * sizeof(fwp_jr));
+    const char **keys = obj ? (const char **)fwp_mem_alloc(cap * sizeof(char *)) : 0;
     size_t *klens = obj ? (size_t *)malloc(cap * sizeof(size_t)) : 0;
     int ok = 1;
     fwp_jws(j);
@@ -161,9 +161,9 @@ static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
         for (;;) {
             if (n == cap) {
                 cap *= 2;
-                items = (fwp_jr *)realloc(items, cap * sizeof(fwp_jr));
+                items = (fwp_jr *)fwp_mem_realloc(items, cap / 2 * sizeof(fwp_jr), cap * sizeof(fwp_jr));
                 if (obj) {
-                    keys = (const char **)realloc(keys, cap * sizeof(char *));
+                    keys = (const char **)fwp_mem_realloc(keys, cap / 2 * sizeof(char *), cap * sizeof(char *));
                     klens = (size_t *)realloc(klens, cap * sizeof(size_t));
                 }
             }
@@ -186,15 +186,15 @@ static int fwp_jcontainer(fwp_jp *j, fwp_jr *out, int obj) {
         if (n) memcpy(out->items, items, n * sizeof(fwp_jr));
         if (obj) {
             out->keys = (const char **)fwp_alloc((n + 1) * sizeof(char *));
-            out->klens = (size_t *)fwp_alloc((n + 1) * sizeof(size_t));
+            out->klens = (size_t *)fwp_alloc_leaf((n + 1) * sizeof(size_t));
             if (n) {
                 memcpy(out->keys, keys, n * sizeof(char *));
                 memcpy(out->klens, klens, n * sizeof(size_t));
             }
         }
     }
-    free(items);
-    free(keys);
+    fwp_mem_free(items);
+    fwp_mem_free(keys);
     free(klens);
     return ok;
 }
@@ -764,7 +764,7 @@ static int fwp_jt_unb64(const char *s, size_t n, V *out) {
     if (body >= 2 && s[body - 1] == '=' && s[body - 2] == '=') body -= 2;
     else if (body >= 1 && s[body - 1] == '=') body -= 1;
     if (body % 4 == 1 || (body != n && n % 4 != 0)) return 0;
-    char *o = (char *)fwp_alloc(body * 3 / 4 + 1);
+    char *o = (char *)fwp_alloc_leaf(body * 3 / 4 + 1);
     size_t on = 0;
     uint32_t acc = 0;
     int bits = 0;

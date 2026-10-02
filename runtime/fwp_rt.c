@@ -45,23 +45,14 @@ typedef unsigned __int128 u128;
 
 /* ------------------------------------------------------------------ alloc */
 
-static char *fwp_heap_cur = 0, *fwp_heap_end = 0;
-
-static void *fwp_alloc(size_t n) {
-    n = (n + 15) & ~(size_t)15;
-    if ((size_t)(fwp_heap_end - fwp_heap_cur) < n) {
-        size_t chunk = n > (1 << 20) ? n : (1 << 20);
-        fwp_heap_cur = (char *)malloc(chunk);
-        if (!fwp_heap_cur) {
-            fprintf(stderr, "fwp: out of memory\n");
-            exit(102);
-        }
-        fwp_heap_end = fwp_heap_cur + chunk;
-    }
-    void *p = fwp_heap_cur;
-    fwp_heap_cur += n;
-    return p;
-}
+/* runtime/fwp_rt_gc.c: the collected heap */
+static void *fwp_alloc(size_t n);      /* zeroed; scanned for values */
+static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
+/* runtime memory that may hold values (explicitly freed, or collected) */
+static void *fwp_mem_alloc(size_t n);
+static void *fwp_mem_realloc(void *p, size_t old, size_t n);
+static void fwp_mem_free(void *p);
+static void fwp_gc_start(void *top);
 
 /* ---------------------------------------------------------------- objects */
 
@@ -99,7 +90,7 @@ static V fwp_record(uint32_t n, const V *f) {
 static V fwp_tuple2(V a, V b) { V f[2] = {a, b}; return fwp_record(2, f); }
 
 static V fwp_str_new(const char *s, size_t len) {
-    fwp_str *r = (fwp_str *)fwp_alloc(sizeof(fwp_str) + len + 1);
+    fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + len + 1);
     r->len = len;
     memcpy(r->d, s, len);
     r->d[len] = 0;
@@ -151,13 +142,13 @@ static inline V fwp_from_f32(float x) { uint32_t b; memcpy(&b, &x, 4); return (V
 static inline float fwp_f32(V v) { uint32_t b = (uint32_t)v; float x; memcpy(&x, &b, 4); return x; }
 
 static V fwp_box_i128(i128 x) {
-    i128 *p = (i128 *)fwp_alloc(sizeof(i128));
+    i128 *p = (i128 *)fwp_alloc_leaf(sizeof(i128));
     *p = x;
     return PTR(p);
 }
 static inline i128 fwp_i128(V v) { return *(i128 *)(uintptr_t)v; }
 static V fwp_box_u128(u128 x) {
-    u128 *p = (u128 *)fwp_alloc(sizeof(u128));
+    u128 *p = (u128 *)fwp_alloc_leaf(sizeof(u128));
     *p = x;
     return PTR(p);
 }
@@ -257,8 +248,9 @@ static void fwp_fail(V value, const fwp_desc *d) {
 
 static void fwp_state_push(V s) {
     if (fwp_state_len == fwp_state_cap) {
+        size_t old = fwp_state_cap;
         fwp_state_cap = fwp_state_cap ? fwp_state_cap * 2 : 16;
-        fwp_state = (V *)realloc(fwp_state, fwp_state_cap * sizeof(V));
+        fwp_state = (V *)fwp_mem_realloc(fwp_state, old * sizeof(V), fwp_state_cap * sizeof(V));
     }
     fwp_state[fwp_state_len++] = s;
 }
