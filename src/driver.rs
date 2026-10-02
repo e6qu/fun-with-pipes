@@ -11,8 +11,18 @@ use crate::infer::{check_program, Typed};
 use crate::parser::parse_module;
 
 /// Embedded standard library sources, all forming the `std` module.
-pub const STD_SOURCES: &[(&str, &str)] =
-    &[("<std>/prelude.fwp", include_str!("../lib/prelude.fwp"))];
+pub const STD_SOURCES: &[(&str, &str)] = &[
+    ("<std>/prelude.fwp", include_str!("../lib/prelude.fwp")),
+    ("<std>/list.fwp", include_str!("../lib/list.fwp")),
+    ("<std>/option.fwp", include_str!("../lib/option.fwp")),
+    ("<std>/string.fwp", include_str!("../lib/string.fwp")),
+    (
+        "<std>/collections.fwp",
+        include_str!("../lib/collections.fwp"),
+    ),
+    ("<std>/iter.fwp", include_str!("../lib/iter.fwp")),
+    ("<std>/io.fwp", include_str!("../lib/io.fwp")),
+];
 
 pub struct Compilation {
     pub sm: SourceMap,
@@ -214,6 +224,21 @@ pub fn compile_file(
     roots: crate::mono::Roots,
 ) -> Result<(Compilation, crate::ir::Program), Failure> {
     let c = check_file(path)?;
+    match crate::mono::lower(&c.env, &c.typed, roots) {
+        Ok(p) => Ok((c, p)),
+        Err(d) => Err(Failure {
+            rendered: d.render(&c.sm),
+        }),
+    }
+}
+
+/// Check and lower source text to IR.
+pub fn compile_source(
+    name: &str,
+    text: &str,
+    roots: crate::mono::Roots,
+) -> Result<(Compilation, crate::ir::Program), Failure> {
+    let c = check_source(name, text, None)?;
     match crate::mono::lower(&c.env, &c.typed, roots) {
         Ok(p) => Ok((c, p)),
         Err(d) => Err(Failure {

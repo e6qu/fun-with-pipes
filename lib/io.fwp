@@ -1,0 +1,22 @@
+# Console, environment and time.
+
+foreign "fwp" write : String -> () ! {IO}
+foreign "fwp" eprint : String -> () ! {IO}
+foreign "fwp" read-line : () -> Option[String] ! {IO}
+foreign "fwp" read-all : () -> String ! {IO}
+foreign "fwp" read-lines : () -> List[String] ! {IO}
+foreign "fwp" env.get : String -> Option[String] ! {IO}
+foreign "fwp" time.monotonic : () -> Duration ! {IO}
+foreign "fwp" time.unix : () -> Duration ! {IO}
+
+duration.nanos : Duration -> I64
+duration.nanos = .nanos
+
+duration.millis : Duration -> I64
+duration.millis = .nanos | div 1000000
+
+duration.from-millis : I64 -> Duration
+duration.from-millis = mul 1000000 | make Duration { nanos = id }
+
+test "duration.millis" = 1500ms | duration.millis | eq 1500
+test "duration.from-millis" = 2000 | duration.from-millis | eq 2s

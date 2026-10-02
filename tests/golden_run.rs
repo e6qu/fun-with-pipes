@@ -22,13 +22,21 @@ fn render(stdout: &[u8], stderr: &[u8], code: i32) -> String {
 }
 
 fn run(path: &Path) -> String {
-    let out = Command::new(fwp())
+    use std::io::Write;
+    use std::process::Stdio;
+    let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
+    let mut child = Command::new(fwp())
         .arg("run")
         .arg(path.file_name().unwrap())
         .current_dir(path.parent().unwrap())
         .env("FWP_SEED", "42")
-        .output()
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
         .unwrap();
+    child.stdin.take().unwrap().write_all(&input).unwrap();
+    let out = child.wait_with_output().unwrap();
     render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1))
 }
 

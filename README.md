@@ -22,7 +22,7 @@ implementation roadmap.
 | Traits (HKT, superclasses, defaults), sized numerics, literal and structural classes | done |
 | Effect rows, handlers (`attempt`, `try`, `run-state`), effect rules, affine resources | done |
 | Monomorphization, typed IR, interpreter (`fwp run`, `fwp test`) | done |
-| Standard library | planned |
+| Standard library: lists, Option/Result, strings, arrays, maps, sets, bytes, lazy iterators, IO | done |
 | Native AOT (C backend), executables, pipe protocol | planned |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |
 
@@ -32,6 +32,7 @@ implementation roadmap.
 cargo build --release
 ./target/release/fwp run examples/hello.fwp            # run main
 ./target/release/fwp test some-file.fwp                # run test declarations
+./target/release/fwp test --std                        # run the standard library's tests
 ./target/release/fwp check examples/hello.fwp          # print inferred types
 ./target/release/fwp check --parse examples/hello.fwp  # print the syntax tree
 ```

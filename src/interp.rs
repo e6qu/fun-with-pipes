@@ -29,7 +29,7 @@ fn trap<T>(msg: impl Into<String>) -> R<T> {
 pub struct Interp<'p> {
     pub prog: &'p Program,
     cafs: Vec<Option<Value>>,
-    state: Vec<Value>,
+    pub(crate) state: Vec<Value>,
     rng: u64,
     pub out: Box<dyn Write + 'p>,
     pub args: Vec<String>,
@@ -588,11 +588,14 @@ impl<'p> Interp<'p> {
                     Err(e) => Err(self.io_error(id, "write", format!("{}: {}", path, e))),
                 }
             }
-            _ => trap(format!(
-                "primitive `{}` is not implemented (at type {})",
-                sym,
-                self.ty(id)
-            )),
+            _ => match self.prim_std(sym, &mut a, &params, &result) {
+                Some(r) => r,
+                None => trap(format!(
+                    "primitive `{}` is not implemented (at type {})",
+                    sym,
+                    self.ty(id)
+                )),
+            },
         }
     }
 }
@@ -697,7 +700,7 @@ pub fn from_i128(mt: &MT, x: i128) -> R<Value> {
     }
 }
 
-fn checked_int(mt: &MT, x: i128) -> Option<Value> {
+pub(crate) fn checked_int(mt: &MT, x: i128) -> Option<Value> {
     Some(match prim_name(mt) {
         "I8" => Value::I8(i8::try_from(x).ok()?),
         "I16" => Value::I16(i16::try_from(x).ok()?),

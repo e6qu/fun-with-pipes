@@ -50,6 +50,10 @@ pub fn encode(out: &mut Vec<u8>, v: &Value, mt: &MT, prog: &Program) {
             leb128(out, s.len() as u64);
             out.extend_from_slice(s.as_bytes());
         }
+        Value::Bytes(b) => {
+            leb128(out, b.len() as u64);
+            out.extend_from_slice(b);
+        }
         Value::Record(fs) => {
             let types: Vec<MT> = match mt {
                 MT::Record(ts) => ts.iter().map(|(_, t)| t.clone()).collect(),
