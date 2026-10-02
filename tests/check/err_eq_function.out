@@ -1,0 +1,3 @@
+check/err_eq_function.fwp:1:8: error: values of type `a -> a` cannot be compared for equality (`Eq` is required)
+1 | same = eq id id
+  |        ^^

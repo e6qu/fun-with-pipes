@@ -109,6 +109,10 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
             std_decls.extend(m.decls);
         }
     }
+    let generated = crate::stdgen::numeric_impls();
+    if let Some(m) = ld.parse("<std>/numeric-impls.fwp", &generated) {
+        std_decls.extend(m.decls);
+    }
     ld.modules.push(("std".into(), HashSet::new(), std_decls));
     if let Some(m) = ld.parse(name, text) {
         ld.add_module("main", m, dir);
@@ -118,7 +122,10 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
             rendered: render_all(&ld.errors, &ld.sm),
         });
     }
-    let mut env = Env::default();
+    let mut env = Env {
+        next_node_id: ld.next_id,
+        ..Env::default()
+    };
     env.collect(ld.modules);
     let mut typed = Typed::default();
     if env.errors.is_empty() {
@@ -155,13 +162,48 @@ pub fn signatures(c: &Compilation) -> String {
         let b = &c.env.bindings[i];
         let g = &c.env.globals[&b.name];
         if let Some(s) = &g.scheme {
-            let mut p = crate::types::Printer::new(&c.env.table);
             out.push_str(&format!(
                 "{} : {}\n",
                 crate::types::display_name(&b.name),
-                p.show(&s.ty)
+                show_scheme(&c.env, s)
             ));
         }
+    }
+    out
+}
+
+/// Render a scheme as `type where C[a], ...`.
+pub fn show_scheme(env: &Env, s: &crate::env::Scheme) -> String {
+    let mut p = crate::types::Printer::new(&env.table);
+    let mut all: Vec<&crate::types::Type> = vec![&s.ty];
+    for pr in &s.preds {
+        all.extend(pr.args.iter());
+    }
+    p.prepare(&all);
+    let mut out = p.show(&s.ty);
+    if !s.preds.is_empty() {
+        let rank = |n: &str| match n {
+            "std::IntLit" | "std::FloatLit" => 3,
+            "std::Dup" => 4,
+            n if crate::solve::STRUCTURAL.contains(&n) => 2,
+            n if crate::env::BUILTIN_CLASSES.contains(&n.trim_start_matches("std::")) => 1,
+            _ => 0,
+        };
+        let mut preds = s.preds.clone();
+        preds.sort_by_key(|p| rank(&p.trait_name));
+        let ps: Vec<String> = preds
+            .iter()
+            .map(|pr| {
+                let args: Vec<String> = pr.args.iter().map(|a| p.show(a)).collect();
+                format!(
+                    "{}[{}]",
+                    crate::types::display_name(&pr.trait_name),
+                    args.join(", ")
+                )
+            })
+            .collect();
+        out.push_str(" where ");
+        out.push_str(&ps.join(", "));
     }
     out
 }

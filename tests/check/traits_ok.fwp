@@ -1,0 +1,85 @@
+# User-defined traits, HKT, superclasses, default methods and a Dual-number
+# type that gets integer literals through FromInt.
+
+trait MyFunctor[F] =
+    my-map : (a -> b) -> F[a] -> F[b]
+
+impl MyFunctor[List] =
+    my-map = map
+
+Box[T] = | Box T
+
+unbox = match
+    Box -> id
+
+impl MyFunctor[Box] =
+    my-map = compose unbox | flip compose Box
+
+inc-all = my-map (add 1)
+
+# The prelude's Functor/Monad over Option and List.
+halve-even = match
+    0 -> Some 0
+    _ -> const None
+monadic = Some 4 | bind halve-even | fmap (add 1)
+pairs = [1, 2] | bind (flip Cons Nil) | fmap show
+
+trait Describe[T] =
+    name : T -> String
+    describe : T -> String
+    describe = name | concat "!"
+
+impl Describe[Bool] =
+    name = match
+        True -> "yes"
+        False -> "no"
+
+shout-bool : Bool -> String
+shout-bool = describe
+
+ring-thing : a -> a where Ring[a]
+ring-thing = mul one | add zero
+
+Dual = { re: F64, eps: F64 }
+
+dual-add : Dual -> Dual -> Dual
+dual-add = curry (make Dual {
+    re = both (.0 | .re) (.1 | .re) | uncurry add,
+    eps = both (.0 | .eps) (.1 | .eps) | uncurry add,
+})
+
+# Product rule: (a + a'e)(b + b'e) = ab + (ab' + a'b)e
+dual-mul : Dual -> Dual -> Dual
+dual-mul = curry (make Dual {
+    re = both (.0 | .re) (.1 | .re) | uncurry mul,
+    eps = both
+        (both (.0 | .re) (.1 | .eps) | uncurry mul)
+        (both (.0 | .eps) (.1 | .re) | uncurry mul)
+        | uncurry add,
+})
+
+impl Add[Dual] =
+    add = dual-add
+
+impl Mul[Dual] =
+    mul = dual-mul
+
+impl FromInt[Dual] =
+    from-int = int.to-float | make Dual { re = id, eps = const 0.0 }
+
+# Generic code instantiated at Dual: d/dx (x^2 + 3) at x.
+poly = fork add (fork mul id id) (const 3)
+poly-dual : Dual -> Dual
+poly-dual = poly
+derivative-at = make Dual { re = id, eps = const 1.0 } | poly-dual | .eps
+
+birthday = update { age = add 1 }
+square = fork mul id id
+square-dual : Dual -> Dual
+square-dual = square
+
+twice-int = mul 2
+x = 3 | twice-int | show
+y = 2.5 | mul 2 | show
+bits = 12u8 | wrapping.add 250
+checked = 200u8 | checked.add 100

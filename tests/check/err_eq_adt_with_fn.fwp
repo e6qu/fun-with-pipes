@@ -1,0 +1,2 @@
+Handler = | Handler (I64 -> I64)
+same = eq (Handler id) (Handler id)

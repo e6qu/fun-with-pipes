@@ -32,3 +32,6 @@ foreign "C" c-cos : F64 -> F64 = "cos"
 export shout : String -> String
 test "inc works" = 1 | inc | eq 2
 import json
+dual-of = make Dual {re = id, eps = const 0.0}
+stats = make {total = sum, count = length}
+birthday = update {age = add 1, name = upper}

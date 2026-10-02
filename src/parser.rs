@@ -63,6 +63,8 @@ fn can_start_atom(t: &Tok) -> bool {
             | Tok::Keyword(Kw::Match)
             | Tok::Keyword(Kw::Quote)
             | Tok::Keyword(Kw::With)
+            | Tok::Keyword(Kw::Make)
+            | Tok::Keyword(Kw::Update)
             | Tok::Keyword(Kw::Type)
             | Tok::Keyword(Kw::Comptime)
     )
@@ -304,6 +306,7 @@ impl<'a> Parser<'a> {
                 let (name, sp) = self.ident("foreign function name")?;
                 self.expect_sym(Sym::Colon)?;
                 let ty = self.ty()?;
+                let constraints = self.where_clause()?;
                 let symbol = if self.eat_sym(Sym::Eq) {
                     self.string_lit("symbol name")?
                 } else {
@@ -315,6 +318,7 @@ impl<'a> Parser<'a> {
                     name,
                     symbol,
                     ty,
+                    constraints,
                 })
             }
             Tok::Keyword(Kw::Resource) => {
@@ -889,6 +893,29 @@ impl<'a> Parser<'a> {
                     return Err(Diagnostic::error(span, "`with` needs at least one field"));
                 }
                 ExprKind::With(fs)
+            }
+            Tok::Keyword(Kw::Make) => {
+                let nominal = match self.peek_tok().clone() {
+                    Tok::Upper(n) => {
+                        self.bump();
+                        Some(n)
+                    }
+                    _ => None,
+                };
+                self.expect_sym(Sym::LBrace)?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                if fs.is_empty() && nominal.is_none() {
+                    return Err(Diagnostic::error(span, "`make` needs at least one field"));
+                }
+                ExprKind::Make(nominal, fs)
+            }
+            Tok::Keyword(Kw::Update) => {
+                self.expect_sym(Sym::LBrace)?;
+                let fs = self.with_layout(0, |p| p.fields(Sym::RBrace))?;
+                if fs.is_empty() {
+                    return Err(Diagnostic::error(span, "`update` needs at least one field"));
+                }
+                ExprKind::Update(fs)
             }
             Tok::Keyword(Kw::Quote) => {
                 let e = self.atom()?;

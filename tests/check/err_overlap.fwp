@@ -1,0 +1,6 @@
+trait Size[T] =
+    size : T -> I64
+impl Size[List[a]] =
+    size = length
+impl Size[List[I64]] =
+    size = const 0

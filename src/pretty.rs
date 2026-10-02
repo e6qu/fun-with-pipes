@@ -71,8 +71,16 @@ pub fn decl(d: &Decl) -> String {
             name,
             symbol,
             ty: t,
+            constraints: cs,
             ..
-        } => format!("foreign {:?} {} : {} = {:?}", abi, name, ty(t), symbol),
+        } => {
+            let w = if cs.is_empty() {
+                String::new()
+            } else {
+                format!(" where {}", constraints(cs))
+            };
+            format!("foreign {:?} {} : {}{} = {:?}", abi, name, ty(t), w, symbol)
+        }
         Decl::Test { name, body, .. } => format!("test {:?} = {}", name, expr(body)),
     }
 }
@@ -274,6 +282,9 @@ pub fn atom(e: &Expr) -> String {
         ExprKind::Record(fs) => format!("{{{}}}", fields(fs)),
         ExprKind::NominalRecord(n, fs) => format!("{} {{{}}}", n, fields(fs)),
         ExprKind::With(fs) => format!("with {{{}}}", fields(fs)),
+        ExprKind::Make(None, fs) => format!("make {{{}}}", fields(fs)),
+        ExprKind::Make(Some(n), fs) => format!("make {} {{{}}}", n, fields(fs)),
+        ExprKind::Update(fs) => format!("update {{{}}}", fields(fs)),
         ExprKind::Match(arms) => {
             let arms: Vec<String> = arms
                 .iter()

@@ -44,6 +44,11 @@ pub enum ExprKind {
     NominalRecord(String, Vec<(String, Expr)>),
     /// Record update function `with { a = 1 }`.
     With(Vec<(String, Expr)>),
+    /// Record builder `make { a = f, b = g }`: applies every field function
+    /// to the same input. With a type name, builds a nominal record.
+    Make(Option<String>, Vec<(String, Expr)>),
+    /// Field-wise update `update { a = f }`: applies `f` to field `a`.
+    Update(Vec<(String, Expr)>),
     /// Tacit case function.
     Match(Vec<Arm>),
     Comptime(Box<Expr>),
@@ -197,6 +202,7 @@ pub enum Decl {
         name: String,
         symbol: String,
         ty: TypeExpr,
+        constraints: Vec<Constraint>,
     },
     Test {
         span: Span,

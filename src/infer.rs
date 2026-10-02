@@ -46,12 +46,16 @@ struct Deferred {
 pub struct Infer<'a> {
     pub env: &'a mut Env,
     pub out: &'a mut Typed,
-    level: u32,
-    scope: Scope,
+    pub(crate) level: u32,
+    pub(crate) scope: Scope,
     /// Monomorphic types of the unannotated bindings in the current group.
-    group: HashMap<String, Type>,
-    current: String,
+    pub(crate) group: HashMap<String, Type>,
+    pub(crate) current: String,
     deferred: Vec<Deferred>,
+    /// Predicates required by the binding being checked.
+    pub(crate) wanted: Vec<(Pred, Span)>,
+    /// Unsuffixed integer literals, checked against their final type.
+    pub(crate) int_lits: Vec<(Span, Type, bool, u128)>,
 }
 
 type IResult<T> = Result<T, Diagnostic>;
@@ -69,6 +73,8 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             group: HashMap::new(),
             current: String::new(),
             deferred: Vec::new(),
+            wanted: Vec::new(),
+            int_lits: Vec::new(),
         };
         inf.check_group(&group);
     }
@@ -90,9 +96,11 @@ fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
         ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
             xs.iter().for_each(|a| free_names(a, out))
         }
-        ExprKind::Record(fs) | ExprKind::NominalRecord(_, fs) | ExprKind::With(fs) => {
-            fs.iter().for_each(|(_, a)| free_names(a, out))
-        }
+        ExprKind::Record(fs)
+        | ExprKind::NominalRecord(_, fs)
+        | ExprKind::With(fs)
+        | ExprKind::Make(_, fs)
+        | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| free_names(a, out)),
         ExprKind::Match(arms) => arms.iter().for_each(|a| free_names(&a.body, out)),
         ExprKind::Comptime(x) => free_names(x, out),
         _ => {}
@@ -216,7 +224,7 @@ impl<'a> Infer<'a> {
         self.out.node_types.insert(e.id, t.clone());
     }
 
-    fn show(&self, t: &Type) -> String {
+    pub(crate) fn show(&self, t: &Type) -> String {
         Printer::new(&self.env.table).show(t)
     }
 
@@ -227,7 +235,13 @@ impl<'a> Infer<'a> {
     }
 
     /// Unify with a located, explained error.
-    fn unify(&mut self, span: Span, expected: &Type, found: &Type, what: &str) -> IResult<()> {
+    pub(crate) fn unify(
+        &mut self,
+        span: Span,
+        expected: &Type,
+        found: &Type,
+        what: &str,
+    ) -> IResult<()> {
         match self.env.table.unify(expected, found) {
             Ok(()) => Ok(()),
             Err(err) => {
@@ -315,6 +329,7 @@ impl<'a> Infer<'a> {
         self.level = 1;
         self.group.clear();
         self.deferred.clear();
+        self.int_lits.clear();
         for &i in group {
             let b = &self.env.bindings[i];
             if !b.annotated {
@@ -324,12 +339,14 @@ impl<'a> Infer<'a> {
             }
         }
         let mut failed = false;
+        let mut wanted_per: Vec<(usize, Vec<(Pred, Span)>)> = Vec::new();
         for &i in group {
             let b = self.env.bindings[i].clone();
             self.scope = Scope {
                 module: b.module.clone(),
             };
             self.current = b.name.clone();
+            self.wanted.clear();
             match self.check_binding(&b) {
                 Ok(_) => {}
                 Err(d) => {
@@ -337,10 +354,51 @@ impl<'a> Infer<'a> {
                     failed = true;
                 }
             }
+            wanted_per.push((i, std::mem::take(&mut self.wanted)));
         }
-        if let Err(d) = self.resolve_deferred() {
-            self.env.errors.push(d);
-            failed = true;
+        if !failed {
+            if let Err(d) = self.resolve_deferred() {
+                self.env.errors.push(d);
+                failed = true;
+            }
+        }
+        // Constraints of annotated bindings are checked one by one against
+        // their signature; unannotated ones are solved for the group.
+        let mut group_wanted = Vec::new();
+        if !failed {
+            for (i, w) in wanted_per {
+                let b = &self.env.bindings[i];
+                if b.annotated {
+                    let given = self.env.globals[&b.name]
+                        .scheme
+                        .as_ref()
+                        .unwrap()
+                        .preds
+                        .clone();
+                    if let Err(d) = self.solve_annotated(w, &given) {
+                        self.env.errors.push(d);
+                        failed = true;
+                    }
+                } else {
+                    group_wanted.extend(w);
+                }
+            }
+        }
+        let mut residual = Vec::new();
+        if !failed {
+            match self.solve_group(group, group_wanted) {
+                Ok(r) => residual = r,
+                Err(d) => {
+                    self.env.errors.push(d);
+                    failed = true;
+                }
+            }
+        }
+        if !failed {
+            if let Err(d) = self.check_int_literals() {
+                self.env.errors.push(d);
+                failed = true;
+            }
         }
         self.level = 0;
         for &i in group {
@@ -359,7 +417,7 @@ impl<'a> Infer<'a> {
                     ty: Type::Var(v),
                 }
             } else {
-                self.generalize(&t)
+                self.generalize(&t, &residual)
             };
             self.env.bindings[i].mono_vars = scheme.vars.clone();
             if let Some(g) = self.env.globals.get_mut(&b.name) {
@@ -368,7 +426,7 @@ impl<'a> Infer<'a> {
         }
     }
 
-    fn generalize(&mut self, t: &Type) -> Scheme {
+    fn generalize(&mut self, t: &Type, residual: &[(Pred, Span)]) -> Scheme {
         let mut fv = Vec::new();
         self.env.table.free_vars(t, &mut fv);
         let vars: Vec<TV> = fv
@@ -378,9 +436,23 @@ impl<'a> Infer<'a> {
                 info.level > self.level && info.rigid.is_none()
             })
             .collect();
+        let mut preds: Vec<Pred> = Vec::new();
+        for (p, _) in residual {
+            let p = Pred {
+                trait_name: p.trait_name.clone(),
+                args: p.args.iter().map(|a| self.env.table.zonk(a)).collect(),
+            };
+            let mut pv = Vec::new();
+            for a in &p.args {
+                self.env.table.free_vars(a, &mut pv);
+            }
+            if pv.iter().all(|v| vars.contains(v)) && !preds.contains(&p) {
+                preds.push(p);
+            }
+        }
         Scheme {
             vars,
-            preds: vec![],
+            preds,
             ty: self.env.table.zonk(t),
         }
     }
@@ -531,7 +603,10 @@ impl<'a> Infer<'a> {
                 format!("`{}` is used before its type is known", name),
             ));
         };
-        let (t, inst, _preds) = self.instantiate(&scheme);
+        let (t, inst, preds) = self.instantiate(&scheme);
+        for p in preds {
+            self.wanted.push((p, e.span));
+        }
         self.out.insts.insert(
             e.id,
             Inst {
@@ -569,6 +644,19 @@ impl<'a> Infer<'a> {
         Ok(Type::con(&format!("std::{}", name)))
     }
 
+    fn int_literal(&mut self, span: Span, neg: bool, mag: u128) -> Type {
+        let t = self.fresh();
+        self.wanted.push((
+            Pred {
+                trait_name: "std::IntLit".into(),
+                args: vec![t.clone()],
+            },
+            span,
+        ));
+        self.int_lits.push((span, t.clone(), neg, mag));
+        t
+    }
+
     pub fn infer(&mut self, e: &Expr, ctx: &Row) -> IResult<Type> {
         let t = self.infer_inner(e, ctx)?;
         self.record(e, &t);
@@ -577,7 +665,23 @@ impl<'a> Infer<'a> {
 
     fn infer_inner(&mut self, e: &Expr, ctx: &Row) -> IResult<Type> {
         match &e.kind {
+            ExprKind::Int {
+                neg,
+                mag,
+                suffix: None,
+            } => Ok(self.int_literal(e.span, *neg, *mag)),
             ExprKind::Int { neg, mag, suffix } => self.int_type(e.span, *neg, *mag, suffix),
+            ExprKind::Float { suffix: None, .. } => {
+                let t = self.fresh();
+                self.wanted.push((
+                    Pred {
+                        trait_name: "std::FloatLit".into(),
+                        args: vec![t.clone()],
+                    },
+                    e.span,
+                ));
+                Ok(t)
+            }
             ExprKind::Float { suffix, .. } => {
                 let name = match suffix.as_deref() {
                     None => "F64".to_string(),
@@ -701,50 +805,11 @@ impl<'a> Infer<'a> {
                 Ok(Type::Record(Row::closed(fs)))
             }
             ExprKind::NominalRecord(name, fields) => {
-                let Some(canon) = self.env.resolve_type(&self.scope, name) else {
-                    return Err(Diagnostic::error(
-                        e.span,
-                        format!("unknown type `{}`", name),
-                    ));
-                };
-                let def = self.env.types[&canon].clone();
-                let TypeDefKind::Record { fields: declared } = &def.kind else {
-                    return Err(Diagnostic::error(
-                        e.span,
-                        format!("`{}` is not a record type", name),
-                    ));
-                };
-                for (n, _) in fields {
-                    if !declared.contains(n) {
-                        return Err(Diagnostic::error(
-                            e.span,
-                            format!("record `{}` has no field `{}`", name, n),
-                        ));
-                    }
-                }
-                for d in declared {
-                    if !fields.iter().any(|(n, _)| n == d) {
-                        return Err(Diagnostic::error(
-                            e.span,
-                            format!("missing field `{}` for record `{}`", d, name),
-                        ));
-                    }
-                }
-                let args: Vec<Type> = (0..def.arity).map(|_| self.fresh()).collect();
-                let row = self.env.table.expand_record(&canon, &args).unwrap();
+                let mut fs = Vec::new();
                 for (n, x) in fields {
-                    let t = self.infer(x, ctx)?;
-                    let want = row.fields.iter().find(|(l, _)| l == n).unwrap().1.clone();
-                    self.unify(x.span, &want, &t, &format!("field `{}`", n))?;
+                    fs.push((n.clone(), self.infer(x, ctx)?));
                 }
-                self.out.insts.insert(
-                    e.id,
-                    Inst {
-                        target: canon.clone(),
-                        types: args.clone(),
-                    },
-                );
-                Ok(Type::Con(canon, args))
+                self.nominal_record_type(e, name, &fs)
             }
             ExprKind::With(fields) => {
                 let mut fs = Vec::new();
@@ -760,6 +825,57 @@ impl<'a> Infer<'a> {
                 let t = Type::Record(row);
                 let eff = self.fresh_eff();
                 Ok(Type::fun(t.clone(), t, eff))
+            }
+            ExprKind::Make(nominal, fields) => {
+                let input = self.fresh();
+                let eff = self.fresh_eff();
+                let mut fs = Vec::new();
+                for (n, x) in fields {
+                    let tf = self.infer(x, ctx)?;
+                    let out = self.fresh();
+                    let want = Type::fun(input.clone(), out.clone(), eff.clone());
+                    self.unify(x.span, &want, &tf, &format!("field `{}` of `make`", n))?;
+                    fs.push((n.clone(), out));
+                }
+                if fields.len() > 1 {
+                    self.wanted.push((
+                        Pred {
+                            trait_name: "std::Dup".into(),
+                            args: vec![input.clone()],
+                        },
+                        e.span,
+                    ));
+                }
+                let result = match nominal {
+                    None => Type::Record(Row::closed(fs)),
+                    Some(name) => self.nominal_record_type(e, name, &fs)?,
+                };
+                Ok(Type::fun(input, result, eff))
+            }
+            ExprKind::Update(fields) => {
+                let eff = self.fresh_eff();
+                let r = self.env.table.fresh(Kind::Row, self.level);
+                let mut ins = Vec::new();
+                let mut outs = Vec::new();
+                for (n, x) in fields {
+                    let tf = self.infer(x, ctx)?;
+                    let (a, b) = (self.fresh(), self.fresh());
+                    let want = Type::fun(a.clone(), b.clone(), eff.clone());
+                    self.unify(x.span, &want, &tf, &format!("field `{}` of `update`", n))?;
+                    ins.push((n.clone(), a));
+                    outs.push((n.clone(), b));
+                }
+                let mut rin = Row {
+                    fields: ins,
+                    tail: Some(r),
+                };
+                rin.sort();
+                let mut rout = Row {
+                    fields: outs,
+                    tail: Some(r),
+                };
+                rout.sort();
+                Ok(Type::fun(Type::Record(rin), Type::Record(rout), eff))
             }
             ExprKind::Match(arms) => self.infer_match(e, arms),
             ExprKind::Comptime(x) => {
@@ -778,6 +894,59 @@ impl<'a> Infer<'a> {
                 format!("unknown macro `{}`", name),
             )),
         }
+    }
+
+    /// Check field names/types for a nominal record construction and return
+    /// the record type.
+    fn nominal_record_type(
+        &mut self,
+        e: &Expr,
+        name: &str,
+        fields: &[(String, Type)],
+    ) -> IResult<Type> {
+        let Some(canon) = self.env.resolve_type(&self.scope, name) else {
+            return Err(Diagnostic::error(
+                e.span,
+                format!("unknown type `{}`", name),
+            ));
+        };
+        let def = self.env.types[&canon].clone();
+        let TypeDefKind::Record { fields: declared } = &def.kind else {
+            return Err(Diagnostic::error(
+                e.span,
+                format!("`{}` is not a record type", name),
+            ));
+        };
+        for (n, _) in fields {
+            if !declared.contains(n) {
+                return Err(Diagnostic::error(
+                    e.span,
+                    format!("record `{}` has no field `{}`", name, n),
+                ));
+            }
+        }
+        for d in declared {
+            if !fields.iter().any(|(n, _)| n == d) {
+                return Err(Diagnostic::error(
+                    e.span,
+                    format!("missing field `{}` for record `{}`", d, name),
+                ));
+            }
+        }
+        let args: Vec<Type> = (0..def.arity).map(|_| self.fresh()).collect();
+        let row = self.env.table.expand_record(&canon, &args).unwrap();
+        for (n, t) in fields {
+            let want = row.fields.iter().find(|(l, _)| l == n).unwrap().1.clone();
+            self.unify(e.span, &want, t, &format!("field `{}`", n))?;
+        }
+        self.out.insts.insert(
+            e.id,
+            Inst {
+                target: canon.clone(),
+                types: args.clone(),
+            },
+        );
+        Ok(Type::Con(canon, args))
     }
 
     fn infer_match(&mut self, e: &Expr, arms: &[Arm]) -> IResult<Type> {
@@ -836,7 +1005,14 @@ impl<'a> Infer<'a> {
                 Ok(exhaust::Pat::Wild)
             }
             PatKind::Int { neg, mag } => {
-                let t = self.int_type(p.span, *neg, *mag, &None)?;
+                let t = self.int_literal(p.span, *neg, *mag);
+                self.wanted.push((
+                    Pred {
+                        trait_name: "std::Eq".into(),
+                        args: vec![t.clone()],
+                    },
+                    p.span,
+                ));
                 self.unify(p.span, expected, &t, "pattern")?;
                 Ok(exhaust::Pat::Lit(format!(
                     "{}{}",
@@ -947,7 +1123,10 @@ pub fn check_int_range(ty: &str, neg: bool, mag: u128) -> Result<(), String> {
 /// Collect names of bindings in a module (for reporting).
 pub fn module_bindings(env: &Env, module: &str) -> Vec<usize> {
     let mut v: Vec<usize> = (0..env.bindings.len())
-        .filter(|&i| env.bindings[i].module == module && env.bindings[i].test_name.is_none())
+        .filter(|&i| {
+            let b = &env.bindings[i];
+            b.module == module && b.test_name.is_none() && !b.name.contains('[')
+        })
         .collect();
     v.sort_by_key(|&i| (env.bindings[i].span.line, env.bindings[i].span.col));
     v

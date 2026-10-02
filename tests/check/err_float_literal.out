@@ -1,0 +1,3 @@
+check/err_float_literal.fwp:2:5: error: a float literal cannot have integer type `I32`
+2 | n = 1.5
+  |     ^^^

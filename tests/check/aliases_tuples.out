@@ -1,4 +1,4 @@
 origin : (I64, I64)
 swap-pair : (a, a) -> (a, a)
-classify : (I64, I64) -> String
+classify : (a, b) -> String where Eq[b], Eq[a], IntLit[b], IntLit[a]
 nothing : Json

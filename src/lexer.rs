@@ -52,6 +52,8 @@ pub enum Kw {
     With,
     Type,
     Test,
+    Make,
+    Update,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -109,6 +111,8 @@ impl Kw {
             Kw::With => "with",
             Kw::Type => "type",
             Kw::Test => "test",
+            Kw::Make => "make",
+            Kw::Update => "update",
         }
     }
 
@@ -129,6 +133,8 @@ impl Kw {
             "with" => Kw::With,
             "type" => Kw::Type,
             "test" => Kw::Test,
+            "make" => Kw::Make,
+            "update" => Kw::Update,
             _ => return None,
         })
     }
