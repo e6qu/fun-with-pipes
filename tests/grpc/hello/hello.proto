@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package helloworld;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// The greeting service.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc Watch (HelloRequest) returns (stream HelloReply);
+  rpc Collect (stream HelloRequest) returns (HelloReply);
+  rpc Chat (stream HelloRequest) returns (stream HelloReply);
+  rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+enum Mood {
+  MOOD_UNKNOWN = 0;
+  MOOD_HAPPY = 1;
+  MOOD_GRUMPY = 2;
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+  int32 times = 2;
+  repeated string tags = 3;
+  map<string, int64> counts = 4;
+  optional Mood mood = 5;
+  oneof extra {
+    string note = 6;
+    Point at = 7;
+  }
+  message Point { double x = 1; double y = 2; }
+  google.protobuf.Timestamp when = 8;
+  Tree tree = 9;
+  bytes blob = 10;
+  sint64 delta = 11;
+  fixed32 f32 = 12;
+  float ratio = 13;
+}
+
+message Tree { Tree left = 1; int32 value = 2; repeated Tree kids = 3; }
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}

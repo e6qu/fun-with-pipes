@@ -993,21 +993,30 @@ fn decode_msg(
             error,
         } => {
             let prog = it.prog;
+            // the details of malformed messages differ between the
+            // backends: a message names none
+            let bad = || Ok(Err("malformed message".to_string()));
             let canon = match schema.decode(*node, msg) {
                 Ok(c) => c,
-                Err(e) => return Ok(Err(e)),
+                Err(_) => return bad(),
             };
             let mut rd = Reader::new(&canon);
             if let Some(et) = error {
                 match rd.leb128() {
                     Ok(1) => {
-                        return Ok(proto::decode(&mut rd, et, prog).map(|e| Err((e, et.clone()))))
+                        return match proto::decode(&mut rd, et, prog) {
+                            Ok(e) => Ok(Ok(Err((e, et.clone())))),
+                            Err(_) => bad(),
+                        }
                     }
                     Ok(_) => {}
-                    Err(e) => return Ok(Err(e)),
+                    Err(_) => return bad(),
                 }
             }
-            Ok(proto::decode(&mut rd, ty, prog).map(Ok))
+            match proto::decode(&mut rd, ty, prog) {
+                Ok(v) => Ok(Ok(Ok(v))),
+                Err(_) => bad(),
+            }
         }
         Decoder::Fwp(f) => {
             let b = Value::Bytes(Rc::from(msg));
@@ -1696,13 +1705,23 @@ fn run_method(
             };
             let canon = match m.schema.decode(m.ms.request, &msg) {
                 Ok(x) => x,
-                Err(e) => return Ok(Err(Status::new(INVALID_ARGUMENT, e))),
+                Err(_) => {
+                    return Ok(Err(Status::new(
+                        INVALID_ARGUMENT,
+                        "malformed request message",
+                    )))
+                }
             };
             let mut rd = Reader::new(&canon);
             for t in ps {
                 match proto::decode(&mut rd, t, prog) {
                     Ok(v) => args.push(v),
-                    Err(e) => return Ok(Err(Status::new(INVALID_ARGUMENT, e))),
+                    Err(_) => {
+                        return Ok(Err(Status::new(
+                            INVALID_ARGUMENT,
+                            "malformed request message",
+                        )))
+                    }
                 }
             }
         }
@@ -1975,7 +1994,12 @@ pub fn reflection_response(refl: &rpc::Reflection, req: &[u8]) -> Vec<u8> {
     match req_field {
         Some(f) if f.0 == 7 => {
             let mut l = Vec::new();
-            for s in refl.services.iter().map(|s| s.as_str()).chain(["grpc.health.v1.Health"]) {
+            for s in refl
+                .services
+                .iter()
+                .map(|s| s.as_str())
+                .chain(["grpc.health.v1.Health"])
+            {
                 let mut sr = Vec::new();
                 put_bytes(&mut sr, 1, s.as_bytes());
                 put_bytes(&mut l, 1, &sr);

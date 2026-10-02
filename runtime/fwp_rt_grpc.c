@@ -820,26 +820,28 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
         *why = strdup(STR(OBJ(h.value)->f[1])->d);
         return G_DEC_BAD;
     }
+    /* the details of malformed messages differ between the backends: a
+     * message names none */
     h2_buf canon = {0};
     if (!pb_decode(k->schema, k->node, msg, n, &canon)) {
         h2b_free(&canon);
-        *why = strdup(h2_err);
+        *why = strdup("malformed message");
         return G_DEC_BAD;
     }
     fwp_rd rd = {canon.d, canon.len, 0};
     if (k->error) {
         uint64_t tag;
-        if (!rd_leb(&rd, &tag)) { h2b_free(&canon); *why = strdup("truncated value"); return G_DEC_BAD; }
+        if (!rd_leb(&rd, &tag)) { h2b_free(&canon); *why = strdup("malformed message"); return G_DEC_BAD; }
         if (tag == 1) {
             int ok = fwp_decode(&rd, k->error, out);
             h2b_free(&canon);
-            if (!ok) { *why = strdup("truncated value"); return G_DEC_BAD; }
+            if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
             return G_DEC_ERROR;
         }
     }
     int ok = fwp_decode(&rd, k->ty, out);
     h2b_free(&canon);
-    if (!ok) { *why = strdup("truncated value"); return G_DEC_BAD; }
+    if (!ok) { *why = strdup("malformed message"); return G_DEC_BAD; }
     return G_DEC_OK;
 }
 
@@ -1316,7 +1318,7 @@ static int g_run_method(g_job *j, char **msg) {
         if (!pb_decode(m->schema, m->req_node, req->d, req->n, &canon)) {
             h2b_free(&canon);
             free(req);
-            *msg = strdup(h2_err);
+            *msg = strdup("malformed request message");
             return GRPC_INVALID_ARGUMENT;
         }
         free(req);
@@ -1324,7 +1326,7 @@ static int g_run_method(g_job *j, char **msg) {
         for (int i = 0; i < m->nreq; i++)
             if (!fwp_decode(&rd, m->req[i], &args[na++])) {
                 h2b_free(&canon);
-                *msg = strdup("truncated value");
+                *msg = strdup("malformed request message");
                 return GRPC_INVALID_ARGUMENT;
             }
         h2b_free(&canon);

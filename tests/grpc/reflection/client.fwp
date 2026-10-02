@@ -1,0 +1,91 @@
+# A server reflection client (grpc.reflection.v1), written with the module
+# that `fwp proto --import reflection.proto` generates (tests/grpc.rs): it
+# lists the services of a server and describes the files that define them.
+
+import gen
+
+ask : gen.ServerReflectionRequestMessageRequest -> gen.ServerReflectionRequest
+ask =
+    make gen.ServerReflectionRequest { host = const "", message-request = Some }
+
+requests : List[gen.ServerReflectionRequest]
+requests = [
+    gen.ServerReflectionRequestMessageRequest.ListServices "" | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "test.Greeter"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileByFilename
+        "grpc/health/v1/health.proto"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "nope.Nothing"
+    | ask,
+]
+
+method-shape : gen.ProtobufMethodDescriptorProto -> String
+method-shape =
+    make { 0 = .name, 1 = .client-streaming, 2 = .server-streaming } | show
+
+describe-service : gen.ProtobufServiceDescriptorProto -> String
+describe-service =
+    fork
+        concat
+        (.method | map method-shape | join ", " | flip concat " (" | concat ")")
+        .name
+
+describe-file : gen.ProtobufFileDescriptorProto -> String
+describe-file =
+    fork Cons .name (fork
+        Cons
+        .package
+        (fork
+            Cons
+            (.message-type | map .name | join ",")
+            (fork Cons (.service | map describe-service | join ",") (const Nil))))
+    | join " | "
+
+drained : (Channel[a] -> () ! {Async, Network, Error[GrpcError]}) -> List[a] ! {Async, Network, Error[GrpcError]}
+drained =
+    fork apply (const 100 | channel.make) tap
+    | tap channel.close
+    | channel.drain
+
+describe : gen.ServerReflectionResponseMessageResponse -> String ! {Error[GrpcError]}
+describe = match
+    gen.ServerReflectionResponseMessageResponse.FileDescriptorResponse _ ->
+        .file-descriptor-proto
+        | map (gen.protobuf-file-descriptor-proto.decode | describe-file)
+        | join "; "
+    gen.ServerReflectionResponseMessageResponse.AllExtensionNumbersResponse _ ->
+        .base-type-name
+    gen.ServerReflectionResponseMessageResponse.ListServicesResponse _ ->
+        .service | map .name | join ", "
+    gen.ServerReflectionResponseMessageResponse.ErrorResponse _ ->
+        fork concat .error-message (.error-code
+            | show
+            | flip concat "error "
+            | concat ": ")
+
+responses : String -> List[gen.ServerReflectionResponse] ! {Async, Network, Error[GrpcError]}
+responses =
+    flip gen.server-reflection.server-reflection-info (iter.from-list requests)
+    | drained
+
+# a health check with the lower-level calls: the response's bytes
+health : String -> List[U8] ! {Network, Error[GrpcError]}
+health =
+    flip (grpc.unary id id "/grpc.health.v1.Health/Check") (bytes.from-list [])
+    | bytes.to-list
+
+main =
+    args ()
+    | head
+    | option.unwrap-or "127.0.0.1:50051"
+    | both
+        (responses
+            | map (.message-response
+                | option.map describe
+                | option.unwrap-or "nothing")
+            | each print)
+        (health | echo)
+    | ignore

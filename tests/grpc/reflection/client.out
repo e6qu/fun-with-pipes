@@ -1,0 +1,5 @@
+test.Greeter, grpc.health.v1.Health
+greeter.proto | test | HelloRequest,HelloReply,CountRequest,CountResponse,TicksRequest,TicksResponse,TotalRequest,TotalResponse,ShoutRequest,ShoutResponse,FindRequest,SlowRequest,SlowResponse,WhoamiRequest,WhoamiResponse,BoomRequest,BoomResponse,DivideRequest,DivideResponse,NapRequest,NapResponse | Greeter (("SayHello", False, False), ("Count", False, True), ("Ticks", False, True), ("Total", True, False), ("Shout", True, True), ("Find", False, False), ("Slow", False, False), ("Whoami", False, False), ("Boom", False, False), ("Divide", False, False), ("Nap", False, False))
+grpc/health/v1/health.proto | grpc.health.v1 | HealthCheckRequest,HealthCheckResponse | Health (("Check", False, False), ("Watch", False, True))
+error 5: unknown symbol nope.Nothing
+[8, 1]

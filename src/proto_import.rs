@@ -560,7 +560,10 @@ impl<'a> Parser<'a> {
             return self.err(format!("field `{}` has an invalid number {}", name, number));
         }
         if matches!(ty, FType::Map(..)) && label != Label::Singular {
-            return self.err(format!("map field `{}` cannot be repeated or optional", name));
+            return self.err(format!(
+                "map field `{}` cannot be repeated or optional",
+                name
+            ));
         }
         m.fields.push(Field {
             name,
@@ -935,7 +938,10 @@ impl Gen {
         if full == EMPTY {
             return Ok(("()".into(), "pb.empty".into()));
         }
-        Ok((self.names[&full].clone(), format!("{}.codec", self.prefix(&full))))
+        Ok((
+            self.names[&full].clone(),
+            format!("{}.codec", self.prefix(&full)),
+        ))
     }
 
     fn default_of(&self, ty: &str, scope: &str) -> Result<String, String> {
@@ -1217,7 +1223,11 @@ impl Gen {
             let _ = writeln!(o, "    {} = {},", c.name, c.default);
         }
         o.push_str("}\n\n");
-        let _ = writeln!(o, "rec {}.encode : {} -> Bytes\n{}.encode = pb.encode [", p, t, p);
+        let _ = writeln!(
+            o,
+            "rec {}.encode : {} -> Bytes\n{}.encode = pb.encode [",
+            p, t, p
+        );
         for c in &cols {
             let _ = writeln!(o, "    {},", c.writer);
         }
@@ -1388,7 +1398,12 @@ pub fn generate(path: &Path) -> Result<String, String> {
         .messages
         .iter()
         .map(|m| (m.full.clone(), m.package.clone()))
-        .chain(g.defs.enums.iter().map(|e| (e.full.clone(), e.package.clone())))
+        .chain(
+            g.defs
+                .enums
+                .iter()
+                .map(|e| (e.full.clone(), e.package.clone())),
+        )
         .collect();
     for (full, pkg) in &fulls {
         let rel = if pkg.is_empty() {
