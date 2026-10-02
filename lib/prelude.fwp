@@ -303,3 +303,14 @@ foreign "fwp" upper : String -> String
 foreign "fwp" concat : String -> String -> String
 foreign "fwp" show : a -> String where Display[a]
 foreign "fwp" print : String -> () ! {IO}
+foreign "fwp" args : () -> List[String] ! {IO}
+foreign "fwp" exit : I32 -> a ! {IO}
+
+# Print any displayable value on its own line: `x | echo`.
+echo : a -> () ! {IO} where Display[a]
+echo = show | print
+
+# Discard a value. Effects in a list or tuple happen left to right, so
+# `[print "a", print "b"] | ignore` sequences them.
+ignore : a -> ()
+ignore = const ()

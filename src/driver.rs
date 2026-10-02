@@ -207,3 +207,67 @@ pub fn show_scheme(env: &Env, s: &crate::env::Scheme) -> String {
     }
     out
 }
+
+/// Check and lower a file to IR.
+pub fn compile_file(
+    path: &Path,
+    roots: crate::mono::Roots,
+) -> Result<(Compilation, crate::ir::Program), Failure> {
+    let c = check_file(path)?;
+    match crate::mono::lower(&c.env, &c.typed, roots) {
+        Ok(p) => Ok((c, p)),
+        Err(d) => Err(Failure {
+            rendered: d.render(&c.sm),
+        }),
+    }
+}
+
+/// Run `f` on a thread with a large stack (deeply recursive tacit code).
+pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
+    std::thread::Builder::new()
+        .stack_size(1 << 30)
+        .spawn(f)
+        .expect("spawn interpreter thread")
+        .join()
+        .expect("interpreter thread panicked")
+}
+
+/// Run the tests of a program; returns (passed, failed).
+pub fn run_tests(prog: &crate::ir::Program, out: &mut dyn std::io::Write) -> (usize, usize) {
+    use crate::interp::{Ctl, Interp};
+    let (mut pass, mut fail) = (0, 0);
+    for (name, id) in &prog.tests {
+        let mut sink = Vec::new();
+        let r = {
+            let mut it = Interp::new(prog, Box::new(&mut sink));
+            it.call(*id, vec![])
+        };
+        let status = match r {
+            Ok(v) if v.as_bool() => {
+                pass += 1;
+                "ok".to_string()
+            }
+            Ok(_) => {
+                fail += 1;
+                "FAILED".to_string()
+            }
+            Err(Ctl::Fail(v, mt)) => {
+                fail += 1;
+                format!(
+                    "FAILED (error: {})",
+                    crate::value::display(&v, &mt, prog, true)
+                )
+            }
+            Err(Ctl::Trap(m)) => {
+                fail += 1;
+                format!("FAILED (trap: {})", m)
+            }
+            Err(Ctl::Exit(c)) => {
+                fail += 1;
+                format!("FAILED (exit {})", c)
+            }
+        };
+        let _ = writeln!(out, "test {} ... {}", name, status);
+    }
+    (pass, fail)
+}

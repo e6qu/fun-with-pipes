@@ -1,0 +1,43 @@
+main = [
+    7 | div 2 | echo,
+    -7 | div 2 | echo,
+    -7 | rem 2 | echo,
+    7.0 | div 2.0 | echo,
+    0.1 | add 0.2 | echo,
+    1.0e21 | echo,
+    1.5f32 | mul 3.0 | echo,
+    170141183460469231731687303715884105727i128 | echo,
+    340282366920938463463374607431768211455u128 | echo,
+    300 | int.convert | the-u8 | echo,
+    200 | int.convert | the-u8 | echo,
+    3 | int.to-float | the-f64 | div 2.0 | echo,
+    2.9 | float.to-int | the-i32 | echo,
+    -1.0e300 | float.to-int | the-i32 | echo,
+    16.0 | sqrt | echo,
+    2.0 | pow 10.0 | echo,
+    -3.5 | abs | echo,
+    0b1010 | bit.and 0b0110 | echo,
+    1u32 | bit.shl 31 | echo,
+    0xff | echo,
+    [3, 1, 2] | sort | echo,
+    [3.5, -1.0, 2.25] | sort | echo,
+    "b" | lt "a" | echo,
+    3 | compare 5 | echo,
+    [1, 2, 3, 4] | sum | echo,
+    [1.5, 2.5] | product | echo,
+    2s | echo,
+    0t+-0 | echo,
+    0t0+- | add 0t00+ | echo,
+    0t000+ | mul 0t00+- | echo,
+    "hash" | hash | echo,
+    0t++++ | mul 0t00+- | echo,
+] | ignore
+
+the-u8 : Option[U8] -> Option[U8]
+the-u8 = id
+
+the-f64 : F64 -> F64
+the-f64 = id
+
+the-i32 : Option[I32] -> Option[I32]
+the-i32 = id

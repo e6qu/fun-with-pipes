@@ -21,7 +21,8 @@ implementation roadmap.
 | Type inference (HM, rows, ADTs, records, `rec`, pipe modes, exhaustiveness) | done |
 | Traits (HKT, superclasses, defaults), sized numerics, literal and structural classes | done |
 | Effect rows, handlers (`attempt`, `try`, `run-state`), effect rules, affine resources | done |
-| Interpreter, stdlib | planned |
+| Monomorphization, typed IR, interpreter (`fwp run`, `fwp test`) | done |
+| Standard library | planned |
 | Native AOT (C backend), executables, pipe protocol | planned |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |
 
@@ -29,6 +30,8 @@ implementation roadmap.
 
 ```
 cargo build --release
+./target/release/fwp run examples/hello.fwp            # run main
+./target/release/fwp test some-file.fwp                # run test declarations
 ./target/release/fwp check examples/hello.fwp          # print inferred types
 ./target/release/fwp check --parse examples/hello.fwp  # print the syntax tree
 ```

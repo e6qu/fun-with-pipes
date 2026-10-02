@@ -1,0 +1,62 @@
+Dual = { re: F64, eps: F64 }
+
+dual-add : Dual -> Dual -> Dual
+dual-add = curry (make Dual {
+    re = both (.0 | .re) (.1 | .re) | uncurry add,
+    eps = both (.0 | .eps) (.1 | .eps) | uncurry add,
+})
+
+dual-mul : Dual -> Dual -> Dual
+dual-mul = curry (make Dual {
+    re = both (.0 | .re) (.1 | .re) | uncurry mul,
+    eps = both
+        (both (.0 | .re) (.1 | .eps) | uncurry mul)
+        (both (.0 | .eps) (.1 | .re) | uncurry mul)
+        | uncurry add,
+})
+
+impl Add[Dual] =
+    add = dual-add
+
+impl Mul[Dual] =
+    mul = dual-mul
+
+impl FromInt[Dual] =
+    from-int = int.to-float | make Dual { re = id, eps = const 0.0 }
+
+# f(x) = x^3 + 2x + 1, written once, generic over Ring-like types.
+f = fork add (fork mul id (fork mul id id)) (fork add (mul 2) (const 1))
+
+derivative : (Dual -> Dual) -> F64 -> F64
+derivative = flip compose .eps | compose (make Dual { re = id, eps = const 1.0 })
+
+trait Shape[T] =
+    area : T -> F64
+    describe : T -> String
+    describe = area | show | concat " square units"
+
+Circle = { radius: F64 }
+Square = { side: F64 }
+
+impl Shape[Circle] =
+    area = .radius | fork mul id id | mul 3.0
+
+impl Shape[Square] =
+    area = .side | fork mul id id
+    describe = area | show | concat " (a square)"
+
+halve-even = match
+    0 -> Some 0
+    _ -> const None
+
+main = [
+    3.0 | f | echo,
+    3.0 | derivative f | echo,
+    Circle { radius = 2.0 } | describe | print,
+    Square { side = 3.0 } | describe | print,
+    Some 4 | bind halve-even | echo,
+    Some 0 | bind halve-even | fmap (add 1) | echo,
+    [1, 2, 3] | bind (fork Cons id (const Nil) | flip Cons Nil | bind id) | echo,
+    [1, 2] | fmap show | echo,
+    Some 41 | ap (Some (add 1)) | echo,
+] | ignore

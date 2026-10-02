@@ -1,0 +1,12 @@
+["Ada", "Grace"]
+2432902008176640000
+42 found
+nothing
+["origin", "y-axis", "x-axis", "plane"]
+hello world
+[46, 37, 26]
+{x = 1.5, y = -2.0}
+(1, "two", [3.0])
+[{adult = True, who = "Grace"}, {adult = True, who = "Ada"}, {adult = True, who = "Bob"}]
+Some (Some (-1))
+[Ok 1, Err "bad"]

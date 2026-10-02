@@ -1,0 +1,7 @@
+main = [
+    250u8 | wrapping.add 10 | echo,
+    250u8 | saturating.add 10 | echo,
+    250u8 | checked.add 10 | echo,
+    250u8 | overflowing.add 10 | echo,
+    250u8 | add 10 | echo,
+] | ignore

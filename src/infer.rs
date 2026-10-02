@@ -32,6 +32,8 @@ pub struct Typed {
     pub node_types: HashMap<NodeId, Type>,
     pub insts: HashMap<NodeId, Inst>,
     pub pipe_modes: HashMap<NodeId, PipeMode>,
+    /// Canonical constructor of each constructor pattern, by position.
+    pub pattern_ctors: HashMap<(u32, u32, u32), String>,
 }
 
 struct Deferred {
@@ -1169,6 +1171,9 @@ impl<'a> Infer<'a> {
             }
             PatKind::Ctor(name, args) => {
                 let (canon, _t, inst) = self.lookup_ctor(p.span, name)?;
+                self.out
+                    .pattern_ctors
+                    .insert((p.span.file, p.span.line, p.span.col), canon.clone());
                 let def = self.env.ctors[&canon].clone();
                 let map: HashMap<TV, Type> = def
                     .scheme

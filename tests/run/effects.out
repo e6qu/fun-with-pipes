@@ -1,0 +1,9 @@
+Ok 5
+Err "division by zero"
+Ok [1, 2]
+Err "second"
+([(), (), ()], 3)
+Err "missing"
+--- stderr
+error: division by zero
+--- exit 1
