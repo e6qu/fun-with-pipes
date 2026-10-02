@@ -8,7 +8,7 @@ use crate::ast::{Decl, Module, NodeId};
 use crate::diag::{render_all, Diagnostic, SourceMap, Span};
 use crate::env::Env;
 use crate::infer::{check_program, Typed};
-use crate::parser::parse_module;
+use crate::parser::parse_module_recover;
 
 /// Embedded standard library sources, all forming the `std` module.
 pub const STD_SOURCES: &[(&str, &str)] = &[
@@ -38,6 +38,8 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
 
 pub struct Compilation {
     pub sm: SourceMap,
+    /// The file id of the root source in `sm`.
+    pub root: u32,
     pub env: Env,
     pub typed: Typed,
     pub warnings: Vec<Diagnostic>,
@@ -49,10 +51,28 @@ impl Compilation {
     }
 }
 
-/// Front-end failure with rendered diagnostics.
+/// Front-end failure: the diagnostics (errors, and the warnings found
+/// before them), rendered and as data.
 #[derive(Debug)]
 pub struct Failure {
     pub rendered: String,
+    pub diagnostics: Vec<Diagnostic>,
+    /// The files the diagnostics' spans refer to.
+    pub sm: SourceMap,
+    /// The file id of the root source in `sm` (`u32::MAX` if it was not
+    /// loaded).
+    pub root: u32,
+}
+
+impl Failure {
+    fn new(diagnostics: Vec<Diagnostic>, sm: &SourceMap, root: u32) -> Failure {
+        Failure {
+            rendered: render_all(&diagnostics, sm),
+            diagnostics,
+            sm: sm.clone(),
+            root,
+        }
+    }
 }
 
 struct Loader {
@@ -65,15 +85,14 @@ struct Loader {
 }
 
 impl Loader {
+    /// Parse a file, recording every syntax error. Returns the
+    /// declarations that parsed when there was no error.
     fn parse(&mut self, name: &str, text: &str) -> Option<Module> {
         let file = self.sm.add(name.to_string(), text.to_string());
-        match parse_module(text, file, &mut self.next_id) {
-            Ok(m) => Some(m),
-            Err(d) => {
-                self.errors.push(d);
-                None
-            }
-        }
+        let (m, errors) = parse_module_recover(text, file, &mut self.next_id);
+        let ok = errors.is_empty();
+        self.errors.extend(errors);
+        ok.then_some(m)
     }
 
     fn add_module(&mut self, module: &str, m: Module, dir: Option<&Path>) {
@@ -146,21 +165,16 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
         std_decls.extend(m.decls);
     }
     ld.modules.push(("std".into(), HashSet::new(), std_decls));
+    let root = ld.sm.files.len() as u32;
     if let Some(m) = ld.parse(name, text) {
         ld.add_module("main", m, dir);
     }
     if !ld.errors.is_empty() {
-        return Err(Failure {
-            rendered: render_all(&ld.errors, &ld.sm),
-        });
+        return Err(Failure::new(ld.errors, &ld.sm, root));
     }
     let modules = match crate::macros::expand(ld.modules, &mut ld.next_id, &ld.sm) {
         Ok(m) => m,
-        Err(errs) => {
-            return Err(Failure {
-                rendered: render_all(&errs, &ld.sm),
-            })
-        }
+        Err(errs) => return Err(Failure::new(errs, &ld.sm, root)),
     };
     let mut env = Env {
         next_node_id: ld.next_id,
@@ -176,12 +190,13 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
         let mut errs = std::mem::take(&mut env.errors);
         errs.sort_by_key(|d| (d.span.file, d.span.line, d.span.col));
         errs.dedup_by(|a, b| a.span == b.span && a.message == b.message);
-        let mut rendered = render_all(&warnings, &ld.sm);
-        rendered.push_str(&render_all(&errs, &ld.sm));
-        return Err(Failure { rendered });
+        let mut all = warnings;
+        all.extend(errs);
+        return Err(Failure::new(all, &ld.sm, root));
     }
     Ok(Compilation {
         sm: ld.sm,
+        root,
         env,
         typed,
         warnings,
@@ -189,8 +204,12 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
 }
 
 pub fn check_file(path: &Path) -> Result<Compilation, Failure> {
-    let text = std::fs::read_to_string(path).map_err(|e| Failure {
-        rendered: format!("error: cannot read {}: {}\n", path.display(), e),
+    let text = std::fs::read_to_string(path).map_err(|e| {
+        let d = Diagnostic::error(
+            Span::DUMMY,
+            format!("cannot read {}: {}", path.display(), e),
+        );
+        Failure::new(vec![d], &SourceMap::default(), u32::MAX)
     })?;
     check_source(&path.to_string_lossy(), &text, path.parent())
 }
@@ -256,9 +275,7 @@ pub fn compile_file(
     let c = check_file(path)?;
     match crate::mono::lower(&c.env, &c.typed, roots) {
         Ok(p) => Ok((c, p)),
-        Err(d) => Err(Failure {
-            rendered: d.render(&c.sm),
-        }),
+        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
     }
 }
 
@@ -271,9 +288,7 @@ pub fn compile_source(
     let c = check_source(name, text, None)?;
     match crate::mono::lower(&c.env, &c.typed, roots) {
         Ok(p) => Ok((c, p)),
-        Err(d) => Err(Failure {
-            rendered: d.render(&c.sm),
-        }),
+        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
     }
 }
 

@@ -19,9 +19,29 @@ pub struct Parser<'a> {
 }
 
 /// Parse a whole source file. `next_id` supplies unique node ids across
-/// files.
+/// files. Fails with the first syntax error.
 pub fn parse_module(text: &str, file: u32, next_id: &mut NodeId) -> DResult<Module> {
-    let toks = lex(text, file)?;
+    let (m, mut errors) = parse_module_recover(text, file, next_id);
+    if errors.is_empty() {
+        Ok(m)
+    } else {
+        Err(errors.swap_remove(0))
+    }
+}
+
+/// Parse a whole source file, recovering from syntax errors at
+/// declaration boundaries: after an error, parsing resumes at the next
+/// line that starts a declaration in column 1. Returns the declarations
+/// that parsed and every error, in source order.
+pub fn parse_module_recover(
+    text: &str,
+    file: u32,
+    next_id: &mut NodeId,
+) -> (Module, Vec<Diagnostic>) {
+    let toks = match lex(text, file) {
+        Ok(t) => t,
+        Err(d) => return (Module::default(), vec![d]),
+    };
     let mut p = Parser {
         toks,
         pos: 0,
@@ -200,30 +220,73 @@ impl<'a> Parser<'a> {
 
     // ----- module / declarations ----------------------------------------
 
-    fn module(&mut self) -> DResult<Module> {
+    fn module(&mut self) -> (Module, Vec<Diagnostic>) {
         let mut decls = Vec::new();
+        let mut errors = Vec::new();
         while !self.at(&Tok::Eof) {
-            let t = self.peek();
-            if t.span.col != 1 {
-                return Err(Diagnostic::error(
-                    t.span,
-                    "top-level declarations must start in column 1",
-                ));
-            }
-            let d = self.decl()?;
-            decls.push(d);
-            if !self.at(&Tok::Eof) && !self.at_boundary_strict() {
-                let mut d = self.unexpected::<()>("end of declaration").unwrap_err();
-                if matches!(self.peek_tok(), Tok::Sym(Sym::Eq) | Tok::Sym(Sym::Colon)) {
-                    d = d.with_note(
-                        "indented lines continue the previous declaration; \
-                         start a new declaration in column 1",
-                    );
+            let start = self.pos;
+            match self.top_decl() {
+                Ok(d) => decls.push(d),
+                Err(e) => {
+                    errors.push(e);
+                    self.recover(start);
                 }
-                return Err(d);
             }
         }
-        Ok(Module { decls })
+        (Module { decls }, errors)
+    }
+
+    fn top_decl(&mut self) -> DResult<Decl> {
+        let t = self.peek();
+        if t.span.col != 1 {
+            return Err(Diagnostic::error(
+                t.span,
+                "top-level declarations must start in column 1",
+            ));
+        }
+        let d = self.decl()?;
+        if !self.at(&Tok::Eof) && !self.at_boundary_strict() {
+            let mut d = self.unexpected::<()>("end of declaration").unwrap_err();
+            if matches!(self.peek_tok(), Tok::Sym(Sym::Eq) | Tok::Sym(Sym::Colon)) {
+                d = d.with_note(
+                    "indented lines continue the previous declaration; \
+                     start a new declaration in column 1",
+                );
+            }
+            return Err(d);
+        }
+        Ok(d)
+    }
+
+    /// Skip to the first token after `start` that begins a line in column 1
+    /// and can begin a declaration.
+    fn recover(&mut self, start: usize) {
+        self.layout.truncate(1);
+        self.pos = start + 1;
+        while self.pos < self.toks.len() - 1 {
+            let t = &self.toks[self.pos];
+            let starts_decl = matches!(
+                t.tok,
+                Tok::Ident(_)
+                    | Tok::Upper(_)
+                    | Tok::Keyword(
+                        Kw::Import
+                            | Kw::Export
+                            | Kw::Test
+                            | Kw::Macro
+                            | Kw::Foreign
+                            | Kw::Resource
+                            | Kw::Trait
+                            | Kw::Impl
+                            | Kw::Rec
+                    )
+            );
+            if t.bol && t.span.col == 1 && starts_decl {
+                return;
+            }
+            self.pos += 1;
+        }
+        self.pos = self.toks.len() - 1;
     }
 
     fn ident(&mut self, what: &str) -> DResult<(String, Span)> {

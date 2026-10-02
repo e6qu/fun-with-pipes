@@ -1,0 +1,6 @@
+check/err_syntax_two.fwp:5:1: error: expected an expression, found identifier `main`
+5 | main = [1, 2, 3] | map double | echo
+  | ^^^^
+check/err_syntax_two.fwp:9:8: error: expected `)`, found `=`
+9 | triple = mul 3
+  |        ^
