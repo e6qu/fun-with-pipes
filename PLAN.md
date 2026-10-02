@@ -28,16 +28,18 @@ A review pass then fixed the problems found across the compiler, runtime
 and standard library, and moved the tutorials to
 [docs/tutorials](docs/tutorials/README.md).
 
+**Services** followed: one program built either as a single executable,
+where modules call each other directly, or as separate executables that
+talk gRPC, with no change to the program (`fwp build --service`,
+`fwp serve`, `fwp proto`). It brought HTTP/2 (h2c), HPACK and protobuf,
+written from scratch for both backends. See [docs/services.md](docs/services.md).
+
 ## Next
 
 1. **Tooling.** `fwp fmt` (a formatter that keeps comments), `fwp lint`,
    and `fwp lsp` (diagnostics, hover, go to definition, symbols,
    formatting, completion), with a parser that recovers from errors.
-2. **Services.** One program built either as a single executable, where
-   modules call each other directly, or as separate executables that talk
-   gRPC, with no change to the program. Includes HTTP/2, HPACK, protobuf
-   encoding and `.proto` generation.
-3. **fwp in the browser.** The compiler and interpreter built for
+2. **fwp in the browser.** The compiler and interpreter built for
    WebAssembly, and a playground page that checks and runs programs
    without a server.
 

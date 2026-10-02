@@ -120,4 +120,4 @@ Run it with `fwp run docs/tutorials/13-tooling/main.fwp`, or compile it with
 
 ---
 
-Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md)
+Previous: [Numerics](../12-numerics/README.md) · [All tutorials](../README.md) · Next: [Services](../14-services/README.md)

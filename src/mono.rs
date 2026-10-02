@@ -24,7 +24,18 @@ pub struct Roots {
     pub std_tests: bool,
     /// Bindings to compile by canonical name (used for macros).
     pub names: Vec<String>,
+    /// Serve the exported functions of this module (`fwp serve`, the
+    /// service executables of a split build).
+    pub service: Option<String>,
+    /// Modules deployed as separate services, with their default
+    /// addresses. A call from another module to one of their exported
+    /// functions becomes a remote call.
+    pub remote: Vec<(String, String)>,
 }
+
+/// The address a service listens on, and its clients call, when nothing
+/// else is configured.
+pub const DEFAULT_SERVICE_ADDR: &str = "127.0.0.1:50051";
 
 pub struct Mono<'a> {
     env: &'a Env,
@@ -41,6 +52,8 @@ pub struct Mono<'a> {
     cur_module: String,
     /// Functions whose bodies are being lowered right now.
     in_progress: std::collections::HashSet<FuncId>,
+    /// Modules deployed as separate services (`Roots::remote`).
+    remote: Vec<(String, String)>,
 }
 
 /// Function-local builder state.
@@ -110,6 +123,15 @@ fn combinator(symbol: &str) -> Option<(u32, Expr)> {
         ),
         _ => return None,
     })
+}
+
+/// A binding's name within its module (`inventory::item` is `item`).
+fn local_name(canon: &str) -> String {
+    canon
+        .split_once("::")
+        .map(|(_, n)| n)
+        .unwrap_or(canon)
+        .to_string()
 }
 
 fn spine_arity(table: &TypeTable, t: &Type) -> u32 {
@@ -206,8 +228,11 @@ impl<'a> Mono<'a> {
     pub fn new(env: &'a Env, typed: &'a Typed) -> Self {
         let mut prog = Program::default();
         for (name, td) in &env.types {
-            if let (true, crate::env::TypeDefKind::Record { fields }) = (td.repr_c, &td.kind) {
-                prog.repr_c.insert(name.clone(), fields.clone());
+            if let crate::env::TypeDefKind::Record { fields } = &td.kind {
+                if td.repr_c {
+                    prog.repr_c.insert(name.clone(), fields.clone());
+                }
+                prog.field_order.insert(name.clone(), fields.clone());
             }
         }
         Mono {
@@ -223,6 +248,7 @@ impl<'a> Mono<'a> {
             matches: index_matches(env),
             cur_module: "main".into(),
             in_progress: Default::default(),
+            remote: Vec::new(),
         }
     }
 
@@ -555,6 +581,18 @@ impl<'a> Mono<'a> {
 
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
+        self.remote = roots.remote.clone();
+        for (m, _) in &roots.remote {
+            if !env.modules.contains_key(m) || m == "main" || m == "std" {
+                return Err(Diagnostic::error(
+                    Span::default(),
+                    format!("`{}` is not an imported module", m),
+                ));
+            }
+        }
+        if let Some(module) = &roots.service {
+            self.service_roots(module)?;
+        }
         for name in &roots.names {
             if let Some(GlobalKind::Binding(i)) = env.globals.get(name).map(|g| &g.kind) {
                 let b = &env.bindings[*i];
@@ -607,6 +645,138 @@ impl<'a> Mono<'a> {
         }
         self.drain()?;
         Ok(self.prog)
+    }
+
+    /// The `Error[E]` type of a function's final arrow, if any.
+    fn error_effect(&self, t: &Type) -> Option<MT> {
+        let table = &self.env.table;
+        let mut t = table.resolve(t);
+        let mut last = None;
+        while let Type::Fun(_, r, row) = t {
+            last = Some(row);
+            t = table.resolve(&r);
+        }
+        let row = table.flatten_row(&last?);
+        row.fields
+            .iter()
+            .find(|(l, _)| l == "Error" || l.ends_with("::Error"))
+            .map(|(_, t)| self.mt(t, &Subst::new()))
+    }
+
+    fn default_addr(&self, module: &str) -> String {
+        self.remote
+            .iter()
+            .find(|(m, _)| m == module)
+            .map(|(_, a)| a.clone())
+            .unwrap_or_else(|| DEFAULT_SERVICE_ADDR.to_string())
+    }
+
+    /// The scheme of an exported binding served by its module, checked to
+    /// be callable remotely: monomorphic, a function, and made of types
+    /// that can be encoded. `None` for constants, which stay local.
+    fn service_signature(&mut self, idx: usize) -> MResult<Option<(MT, u32, Option<MT>)>> {
+        let b = &self.env.bindings[idx];
+        let scheme = self.env.globals[&b.name].scheme.clone().unwrap();
+        let arity = spine_arity(&self.env.table, &scheme.ty);
+        if arity == 0 {
+            return Ok(None);
+        }
+        let name = local_name(&b.name);
+        if !scheme.vars.is_empty() || !scheme.preds.is_empty() {
+            return Err(Diagnostic::error(
+                b.span,
+                format!(
+                    "`{}` is served by module `{}` and must have a monomorphic type",
+                    name, b.module
+                ),
+            ));
+        }
+        let ty = self.mt(&scheme.ty, &Subst::new());
+        let error = self.error_effect(&scheme.ty);
+        self.register_shapes(&ty);
+        if let Some(e) = &error {
+            self.register_shapes(e);
+        }
+        let (params, result) = ty.params(arity as usize);
+        let mut parts: Vec<MT> = params.into_iter().cloned().collect();
+        parts.push(result.clone());
+        parts.extend(error.iter().cloned());
+        for t in &parts {
+            if let Err(m) = crate::protobuf::check_encodable(&self.prog, t) {
+                return Err(Diagnostic::error(
+                    b.span,
+                    format!("`{}` is served by module `{}`, but {}", name, b.module, m),
+                ));
+            }
+        }
+        Ok(Some((ty, arity, error)))
+    }
+
+    /// Root the exported functions of a module served as a service.
+    fn service_roots(&mut self, module: &str) -> MResult<()> {
+        if !self.env.modules.contains_key(module) || module == "main" || module == "std" {
+            return Err(Diagnostic::error(
+                Span::default(),
+                format!("`{}` is not an imported module", module),
+            ));
+        }
+        let mut def = crate::ir::ServiceDef {
+            module: module.to_string(),
+            methods: Vec::new(),
+            default_addr: self.default_addr(module),
+        };
+        let env = self.env;
+        for (i, b) in env.bindings.iter().enumerate() {
+            if b.module != module || b.test_name.is_some() || !env.globals[&b.name].exported {
+                continue;
+            }
+            let Some((_, _, error)) = self.service_signature(i)? else {
+                continue;
+            };
+            let saved = std::mem::replace(&mut self.cur_module, module.to_string());
+            let id = self.binding_instance(i, vec![MT::unit(); b.mono_vars.len()], b.span);
+            self.cur_module = saved;
+            def.methods.push((local_name(&b.name), id?, error));
+        }
+        if def.methods.is_empty() {
+            return Err(Diagnostic::error(
+                Span::default(),
+                format!("module `{}` exports no functions to serve", module),
+            ));
+        }
+        self.prog.service = Some(def);
+        Ok(())
+    }
+
+    /// A call from another module to an exported function of a module
+    /// deployed as a separate service becomes a client stub.
+    fn remote_stub(&mut self, idx: usize) -> MResult<Option<FuncId>> {
+        let b = &self.env.bindings[idx];
+        if b.module == self.cur_module
+            || b.test_name.is_some()
+            || !self.env.globals[&b.name].exported
+            || !self.remote.iter().any(|(m, _)| *m == b.module)
+        {
+            return Ok(None);
+        }
+        let key = (format!("remote:{}", b.name), vec![]);
+        if let Some(id) = self.instances.get(&key) {
+            return Ok(Some(*id));
+        }
+        let (module, name) = (b.module.clone(), display_name(&b.name));
+        let method = local_name(&b.name);
+        let Some((ty, arity, error)) = self.service_signature(idx)? else {
+            return Ok(None);
+        };
+        let body = Body::Remote(Box::new(crate::ir::RemoteFn {
+            default_addr: self.default_addr(&module),
+            module,
+            method,
+            error,
+        }));
+        let id = self.new_func(name, arity, ty, body);
+        self.instances.insert(key, id);
+        Ok(Some(id))
     }
 
     fn drain(&mut self) -> MResult<()> {
@@ -998,6 +1168,12 @@ impl<'a> Mono<'a> {
         match &g.kind {
             GlobalKind::Binding(idx) => {
                 let idx = *idx;
+                if let Some(id) = self.remote_stub(idx).map_err(|mut d| {
+                    d.span = e.span;
+                    d
+                })? {
+                    return Ok(Expr::Func(id));
+                }
                 let key = if inst.types.is_empty() {
                     // reference within a recursive group: same type variables
                     self.env.bindings[idx]

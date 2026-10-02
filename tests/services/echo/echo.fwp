@@ -1,0 +1,4 @@
+# A one-function service; tests/services/interop.go implements it in Go.
+
+export shout : String -> String
+shout = upper | concat "!"

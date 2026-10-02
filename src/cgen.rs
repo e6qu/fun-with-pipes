@@ -19,6 +19,24 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_exec.c"),
 ];
 
+/// Runtime parts embedded only in programs that call or serve services.
+const SERVICES_RUNTIME: &[&str] = &[
+    include_str!("../runtime/fwp_rt_h2.c"),
+    include_str!("../runtime/fwp_rt_grpc.c"),
+];
+
+/// A client stub: its function, its request and response nodes, and the
+/// C expressions of its descriptors.
+struct RemoteSpec {
+    id: FuncId,
+    remote: RemoteFn,
+    schema: crate::protobuf::MethodSchema,
+    params: Vec<String>,
+    result: String,
+    error: Option<String>,
+    fingerprint: String,
+}
+
 struct Gen<'p> {
     prog: &'p Program,
     descs: HashMap<MT, usize>,
@@ -32,6 +50,9 @@ struct Gen<'p> {
     /// converters and callback trampolines.
     ffi_decls: String,
     ffi_structs: Vec<String>,
+    /// The protobuf schema of the services this program calls or serves.
+    pb: crate::protobuf::Schema,
+    remotes: Vec<RemoteSpec>,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -1064,6 +1085,41 @@ impl<'p> Gen<'p> {
                 let s = self.foreign_c(id, &func, &symbol, variadic)?;
                 out.push_str(&s);
             }
+            Body::Remote(r) => {
+                let (remote, func) = ((**r).clone(), f.clone());
+                let n = func.arity as usize;
+                let (params, result) = func.ty.params(n);
+                let params: Vec<MT> = params.into_iter().cloned().collect();
+                let result = result.clone();
+                let schema = self.pb.method(
+                    self.prog,
+                    &remote.method,
+                    &params,
+                    &result,
+                    remote.error.as_ref(),
+                )?;
+                let spec = RemoteSpec {
+                    id,
+                    params: params.iter().map(|p| self.desc(p)).collect(),
+                    result: self.desc(&result),
+                    error: remote.error.as_ref().map(|e| self.desc(e)),
+                    fingerprint: crate::protobuf::fingerprint(
+                        self.prog,
+                        &func.ty,
+                        remote.error.as_ref(),
+                    ),
+                    remote,
+                    schema,
+                };
+                self.remotes.push(spec);
+                let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
+                let _ = writeln!(
+                    out,
+                    "    V a[] = {{{}}};\n    return fwp_remote_call(&rs{}, a);",
+                    args.join(", "),
+                    id
+                );
+            }
             Body::Ctor(tag) => {
                 let args: Vec<String> = (0..f.arity).map(|i| format!("l{}", i)).collect();
                 if args.is_empty() {
@@ -1311,6 +1367,8 @@ enum Mode<'a> {
     Exec(FuncId, &'a str),
     /// Exported functions as C functions of a library.
     Library,
+    /// A module's exported functions as a gRPC service.
+    Service,
 }
 
 /// The C name of an exported function.
@@ -1415,6 +1473,15 @@ pub fn generate_tests(prog: &Program) -> Result<String, String> {
     generate_mode(prog, Mode::Tests)
 }
 
+/// Generate the executable of a service: the program's `service` module
+/// served over gRPC.
+pub fn generate_service(prog: &Program) -> Result<String, String> {
+    if prog.service.is_none() {
+        return Err("no service to generate".into());
+    }
+    generate_mode(prog, Mode::Service)
+}
+
 /// Generate a standalone executable for an exported function.
 pub fn generate_exec(prog: &Program, fid: FuncId, name: &str) -> Result<String, String> {
     generate_mode(prog, Mode::Exec(fid, name))
@@ -1446,6 +1513,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         used_closures: vec![false; prog.funcs.len()],
         ffi_decls: String::new(),
         ffi_structs: Vec::new(),
+        pb: crate::protobuf::Schema::default(),
+        remotes: Vec::new(),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
@@ -1568,6 +1637,92 @@ static const fwp_exec_spec exec_spec = {{
     } else {
         exec_defs.push_str("static V caf_exec_entry(void) { return 0; }\n");
     }
+    // services: the schema, the client stubs and the served methods
+    let mut service_defs = String::new();
+    if let (Mode::Service, Some(svc)) = (&mode, &prog.service) {
+        let mut methods = Vec::new();
+        for (name, fid, error) in &svc.methods {
+            let f = &prog.funcs[*fid];
+            let n = f.arity as usize;
+            let (params, result) = f.ty.params(n);
+            let params: Vec<MT> = params.into_iter().cloned().collect();
+            let result = result.clone();
+            let ms = g.pb.method(prog, name, &params, &result, error.as_ref())?;
+            let pd: Vec<String> = params.iter().map(|p| g.desc(p)).collect();
+            let rd = g.desc(&result);
+            let ed = error.as_ref().map(|e| g.desc(e));
+            methods.push((name.clone(), *fid, n, ms, pd, rd, ed, error.clone()));
+        }
+        let (_, offs) = g.pb.flatten();
+        let mut entries = Vec::new();
+        for (i, (name, fid, n, ms, pd, rd, ed, error)) in methods.iter().enumerate() {
+            let _ = writeln!(
+                service_defs,
+                "static const fwp_desc *const sm{}_p[] = {{{}}};",
+                i,
+                pd.join(", ")
+            );
+            entries.push(format!(
+                "    {{{}, {}, {}, {}, {}, sm{}_p, {}, {}, {}, {}}}",
+                c_string_literal(name.as_bytes()),
+                c_string_literal(crate::protobuf::path(&svc.module, name).as_bytes()),
+                c_string_literal(
+                    crate::protobuf::fingerprint(prog, &prog.funcs[*fid].ty, error.as_ref())
+                        .as_bytes()
+                ),
+                fid,
+                n,
+                i,
+                rd,
+                ed.clone().unwrap_or_else(|| "0".into()),
+                offs[ms.request],
+                offs[ms.response]
+            ));
+        }
+        let _ = write!(
+            service_defs,
+            "static const fwp_method fwp_svc_methods[] = {{\n{}\n}};\nstatic const fwp_service fwp_svc = {{{}, {}, {}, fwp_pb_schema, {}, fwp_svc_methods}};\n",
+            entries.join(",\n"),
+            c_string_literal(svc.module.as_bytes()),
+            c_string_literal(crate::protobuf::env_var(&svc.module).as_bytes()),
+            c_string_literal(svc.default_addr.as_bytes()),
+            methods.len()
+        );
+    }
+    let uses_services = !g.remotes.is_empty() || matches!(mode, Mode::Service);
+    let mut remote_defs = String::new();
+    if uses_services {
+        let (flat, offs) = g.pb.flatten();
+        let nums: Vec<String> = flat.iter().map(|x| x.to_string()).collect();
+        let _ = writeln!(
+            remote_defs,
+            "static const int fwp_pb_schema[] = {{{}}};",
+            if nums.is_empty() {
+                "0".into()
+            } else {
+                nums.join(", ")
+            }
+        );
+        for r in &g.remotes {
+            let _ = writeln!(
+                remote_defs,
+                "static const fwp_desc *const rs{id}_p[] = {{{p}}};\nstatic const fwp_remote rs{id} = {{{what}, {path}, {env}, {addr}, {fp}, {n}, rs{id}_p, {rd}, {ed}, fwp_pb_schema, {req}, {resp}}};",
+                id = r.id,
+                p = r.params.join(", "),
+                what = c_string_literal(format!("{}.{}", r.remote.module, r.remote.method).as_bytes()),
+                path = c_string_literal(crate::protobuf::path(&r.remote.module, &r.remote.method).as_bytes()),
+                env = c_string_literal(crate::protobuf::env_var(&r.remote.module).as_bytes()),
+                addr = c_string_literal(r.remote.default_addr.as_bytes()),
+                fp = c_string_literal(r.fingerprint.as_bytes()),
+                n = r.params.len(),
+                rd = r.result,
+                ed = r.error.clone().unwrap_or_else(|| "0".into()),
+                req = offs[r.schema.request],
+                resp = offs[r.schema.response],
+            );
+        }
+        remote_defs.push_str(&service_defs);
+    }
     let main_desc = g.desc(&main_ty);
     // IoError is always available for uncaught IO failures.
     g.desc(&MT::con("std::IoError"));
@@ -1577,6 +1732,12 @@ static const fwp_exec_spec exec_spec = {{
     for part in RUNTIME {
         out.push_str(part);
         out.push('\n');
+    }
+    if uses_services {
+        for part in SERVICES_RUNTIME {
+            out.push_str(part);
+            out.push('\n');
+        }
     }
     out.push_str("\n/* ---- program ---- */\n\n");
     // tentative declarations, so descriptors can refer to each other
@@ -1658,6 +1819,7 @@ static const fwp_exec_spec exec_spec = {{
         out.push_str(crate::ffi::PREAMBLE);
         out.push_str(&g.ffi_decls);
     }
+    out.push_str(&remote_defs);
     out.push_str(&bodies);
     if let Mode::Library = mode {
         let _ = write!(
@@ -1669,7 +1831,9 @@ static const fwp_exec_spec exec_spec = {{
     }
     let exit_code = matches!(&main_ty, MT::Con(n, _) if n == "std::I32");
     out.push_str(&exec_defs);
-    let run = if let Mode::Exec(..) = mode {
+    let run = if let Mode::Service = mode {
+        "    fwp_exit_code = fwp_serve(&fwp_svc, fwp_argc, fwp_argv);".to_string()
+    } else if let Mode::Exec(..) = mode {
         "    fwp_exit_code = fwp_exec(&exec_spec, fwp_argc, fwp_argv);".to_string()
     } else if tests {
         let mut r = String::from("    int pass = 0, fail = 0;\n");
@@ -1795,6 +1959,9 @@ impl Target {
 pub fn check_target(prog: &Program, target: Target) -> Result<(), String> {
     if !target.is_wasm() {
         return Ok(());
+    }
+    if prog.service.is_some() || prog.funcs.iter().any(|f| matches!(f.body, Body::Remote(_))) {
+        return Err("services (gRPC calls) need the native target".into());
     }
     for f in &prog.funcs {
         let Body::Prim(sym) = &f.body else { continue };

@@ -1,0 +1,27 @@
+# A small shop, written as one program in three modules.
+#
+#   fwp run main.fwp                      calls inventory and pricing directly
+#   fwp build main.fwp -o shop            one executable, the same calls
+#   fwp build main.fwp --service inventory --service pricing -o out
+#                                         out/main, out/inventory and
+#                                         out/pricing: the calls become gRPC
+#
+# The source is the same in every build; see docs/services.md.
+
+import inventory
+import pricing
+
+order : List[(String, I64)]
+order = [("apple", 4), ("pear", 2)]
+
+main = [
+    "pear" | inventory.item | echo,
+    "kiwi" | inventory.item | echo,
+    "pear" | attempt (inventory.reserve 2) | echo,
+    "pear" | attempt (inventory.reserve 5) | echo,
+    order | attempt (pricing.quote-order False) | echo,
+    order | attempt (pricing.quote-order True) | echo,
+    [("plum", 1)] | attempt (pricing.quote-order True) | echo,
+    ["apple", "pear", "plum"] | map pricing.unit-price | echo,
+    ["apple", "pear", "plum"] | pricing.average-price | echo,
+] | ignore

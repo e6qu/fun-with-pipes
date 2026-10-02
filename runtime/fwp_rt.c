@@ -207,7 +207,18 @@ static void fwp_flush(void) {
     fflush(stdout);
 }
 
+/* A service executable recovers from a trap in the call it is serving
+ * (runtime/fwp_rt_grpc.c): it sets the jump target and the predicate that
+ * says whether the trap happened where it can be recovered. */
+static jmp_buf *fwp_trap_jb = 0;
+static int (*fwp_trap_recover)(void) = 0;
+static char fwp_trap_msg[1024];
+
 static void fwp_trap(const char *msg) {
+    if (fwp_trap_jb && fwp_trap_recover && fwp_trap_recover()) {
+        snprintf(fwp_trap_msg, sizeof fwp_trap_msg, "%s", msg);
+        longjmp(*fwp_trap_jb, 1);
+    }
     fwp_flush();
     fprintf(stderr, "fwp: trap: %s\n", msg);
     exit(101);

@@ -1,0 +1,22 @@
+import codec
+
+main = [
+    codec.Sample { flag = True, small = 5i8, medium = -70000i32, big = -170141183460469231731687303715884105728i128, unsigned = 18446744073709551615u64, single = 1.5f32, double = -0.0, text = "héllo", raw = string.to-bytes "\u{0}\u{1}", color = codec.Rgb 1u8 2u8 255u8, nothing = () } | codec.sample | echo,
+    [[1, 2], [], [3]] | codec.nested | echo,
+    [Some "a", None, Some ""] | codec.options | echo,
+    Some [7, 8] | codec.maybe-list | echo,
+    Some [] | codec.maybe-list | echo,
+    None | codec.maybe-list | echo,
+    [("x", [1.5, 2.5]), ("y", [])] | map.from-list | codec.table | echo,
+    [3, 1, 2] | set.from-list | codec.keys | echo,
+    7 | codec.grow | codec.tree | echo,
+    ("s", (-4, False)) | codec.pair | echo,
+    () | codec.unit | echo,
+    12 | attempt (codec.divide 4) | echo,
+    12 | attempt (codec.divide 0) | echo,
+    [codec.Red, codec.Green, codec.Rgb 0u8 0u8 0u8] | codec.colors | echo,
+    "split  these words" | codec.split-words | echo,
+    range 0 100000 | codec.checksum | echo,
+    41 | codec.bump | echo,
+    9223372036854775807 | codec.bump | echo,
+] | ignore

@@ -8,10 +8,14 @@ const USAGE: &str = "\
 fwp - the fwp (\"foop\") language
 
 usage:
-  fwp run <file.fwp> [args...]   run a program's `main` (interpreter)
+  fwp run [--service m[=addr]]... <file.fwp> [args...]
+                                 run a program's `main` (interpreter); calls
+                                 to the exported functions of each module
+                                 named by --service go to that service
   fwp build <file.fwp> [-o out] [--fn name] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
             [--staticlib|--cdylib] [--link lib-or-source]...
+            [--service m[=addr]]...
                                  compile `main` (or an exported function) to a
                                  native executable or a WebAssembly module;
                                  --fat builds one variant per CPU feature
@@ -19,7 +23,16 @@ usage:
                                  --staticlib/--cdylib build a C library
                                  (and header) of the exported functions;
                                  --link adds C code for foreign functions
-                                 (also accepted by run, test and exec)
+                                 (also accepted by run, test and exec);
+                                 --service splits the program: -o names a
+                                 directory that receives the main executable
+                                 and one gRPC server per named module
+                                 (see docs/services.md)
+  fwp serve [--service m[=addr]]... <file.fwp> <module> [--listen addr]
+                                 serve a module's exported functions over
+                                 gRPC with the interpreter
+  fwp proto <file.fwp> [--service m]...
+                                 print the .proto file of the services
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
   fwp pipe '<file.fwp:fn args> | <file.fwp:fn> ...'
@@ -85,6 +98,8 @@ fn main() -> ExitCode {
             });
             ExitCode::from(code as u8)
         }
+        Some("serve") => serve(&args[1..]),
+        Some("proto") => proto(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS
@@ -139,7 +154,37 @@ fn check(args: &[String]) -> ExitCode {
     }
 }
 
+/// A `--service m[=addr]` option: the module and its default address.
+fn service_spec(s: &str) -> (String, String) {
+    match s.split_once('=') {
+        Some((m, a)) => (m.to_string(), a.to_string()),
+        None => (s.to_string(), fwp::mono::DEFAULT_SERVICE_ADDR.to_string()),
+    }
+}
+
+/// Remove `--service m[=addr]` options before the program file.
+fn take_services(args: &mut Vec<String>) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--service" && i + 1 < args.len() {
+            out.push(service_spec(&args.remove(i + 1)));
+            args.remove(i);
+        } else if let Some(s) = args[i].strip_prefix("--service=") {
+            out.push(service_spec(s));
+            args.remove(i);
+        } else if args[i].ends_with(".fwp") {
+            break;
+        } else {
+            i += 1;
+        }
+    }
+    out
+}
+
 fn run(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    let remote = take_services(&mut args);
     let Some(path) = args.first().cloned() else {
         eprintln!("fwp run: missing file");
         return ExitCode::from(2);
@@ -147,6 +192,7 @@ fn run(args: &[String]) -> ExitCode {
     let prog_args: Vec<String> = args[1..].to_vec();
     let roots = fwp::mono::Roots {
         main: true,
+        remote,
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
@@ -243,9 +289,17 @@ fn build(args: &[String]) -> ExitCode {
     let mut target = fwp::cgen::Target::Native;
     let mut fat = false;
     let mut lib: Option<fwp::cgen::LibKind> = None;
+    let mut services: Vec<(String, String)> = Vec::new();
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--service" => {
+                i += 1;
+                if let Some(s) = args.get(i) {
+                    services.push(service_spec(s));
+                }
+            }
+            a if a.starts_with("--service=") => services.push(service_spec(&a[10..])),
             "-o" => {
                 i += 1;
                 out = args.get(i).cloned();
@@ -288,6 +342,14 @@ fn build(args: &[String]) -> ExitCode {
         return ExitCode::from(2);
     };
     let src = std::path::PathBuf::from(&path);
+    if !services.is_empty() {
+        if func.is_some() || lib.is_some() || target.is_wasm() {
+            eprintln!("fwp build: --service builds native executables (not with --fn, --staticlib, --cdylib or WebAssembly)");
+            return ExitCode::from(2);
+        }
+        let dir = std::path::PathBuf::from(out.unwrap_or_else(|| ".".into()));
+        return build_split(src, dir, services, &opt, fat, emit_c);
+    }
     let out = out.map(std::path::PathBuf::from).unwrap_or_else(|| {
         let stem = match &func {
             Some(f) => f.clone(),
@@ -395,6 +457,213 @@ fn build(args: &[String]) -> ExitCode {
             Ok(()) => 0,
             Err(e) => {
                 eprintln!("fwp build: {}", e);
+                1
+            }
+        }
+    });
+    ExitCode::from(code)
+}
+
+/// A split build: the main executable, whose calls to the named modules'
+/// exported functions are gRPC calls, and one server per named module.
+fn build_split(
+    src: std::path::PathBuf,
+    dir: std::path::PathBuf,
+    services: Vec<(String, String)>,
+    opt: &str,
+    fat: bool,
+    emit_c: bool,
+) -> ExitCode {
+    let opt = opt.to_string();
+    let code = fwp::driver::with_big_stack(move || {
+        if let Err(e) = std::fs::create_dir_all(&dir) {
+            eprintln!("fwp build: cannot create {}: {}", dir.display(), e);
+            return 1;
+        }
+        let stem = src
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
+        let mut outputs: Vec<(Option<String>, std::path::PathBuf)> = vec![(None, dir.join(&stem))];
+        for (m, _) in &services {
+            if services.iter().filter(|(n, _)| n == m).count() > 1 {
+                eprintln!("fwp build: service `{}` is named twice", m);
+                return 2;
+            }
+            outputs.push((Some(m.clone()), dir.join(m.replace('.', "-"))));
+        }
+        for (service, exe) in outputs {
+            let roots = fwp::mono::Roots {
+                main: service.is_none(),
+                service: service.clone(),
+                remote: services.clone(),
+                ..Default::default()
+            };
+            let (c, prog) = match fwp::driver::compile_file(&src, roots) {
+                Ok(r) => r,
+                Err(f) => {
+                    eprint!("{}", f.rendered);
+                    return 1;
+                }
+            };
+            if service.is_none() {
+                eprint!("{}", c.render_warnings());
+            }
+            let generated = match &service {
+                None => fwp::cgen::generate(&prog),
+                Some(_) => fwp::services::check_service(&prog)
+                    .and_then(|_| fwp::cgen::generate_service(&prog)),
+            };
+            let csrc = match generated {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("fwp build: {}", e);
+                    return 1;
+                }
+            };
+            let done = if emit_c {
+                std::fs::write(exe.with_extension("c"), &csrc).map_err(|e| e.to_string())
+            } else if fat {
+                fwp::cgen::compile_fat(&csrc, &exe, &opt)
+            } else {
+                fwp::cgen::compile_c(&csrc, &exe, &opt)
+            };
+            if let Err(e) = done {
+                eprintln!("fwp build: {}", e);
+                return 1;
+            }
+        }
+        0
+    });
+    ExitCode::from(code)
+}
+
+fn serve(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    let mut remote = take_services(&mut args);
+    let mut listen = None;
+    let mut pos = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--listen" && i + 1 < args.len() {
+            listen = Some(args[i + 1].clone());
+            i += 2;
+            continue;
+        }
+        if args[i] == "--service" && i + 1 < args.len() {
+            remote.push(service_spec(&args[i + 1]));
+            i += 2;
+            continue;
+        }
+        if let Some(a) = args[i].strip_prefix("--listen=") {
+            listen = Some(a.to_string());
+        } else {
+            pos.push(args[i].clone());
+        }
+        i += 1;
+    }
+    let [path, module] = &pos[..] else {
+        eprintln!(
+            "fwp serve: usage: fwp serve [--service m]... <file.fwp> <module> [--listen host:port]"
+        );
+        return ExitCode::from(2);
+    };
+    let (path, module) = (path.clone(), module.clone());
+    let code = fwp::driver::with_big_stack(move || {
+        let roots = fwp::mono::Roots {
+            service: Some(module),
+            remote,
+            ..Default::default()
+        };
+        match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
+            Ok((c, prog)) => {
+                eprint!("{}", c.render_warnings());
+                fwp::services::serve(&prog, listen)
+            }
+            Err(f) => {
+                eprint!("{}", f.rendered);
+                1
+            }
+        }
+    });
+    ExitCode::from(code.clamp(0, 255) as u8)
+}
+
+fn proto(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    let mut services: Vec<String> = take_services(&mut args).into_iter().map(|s| s.0).collect();
+    let mut path = None;
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--service" && i + 1 < args.len() {
+            services.push(service_spec(&args[i + 1]).0);
+            i += 2;
+            continue;
+        }
+        path = Some(args[i].clone());
+        i += 1;
+    }
+    let Some(path) = path else {
+        eprintln!("fwp proto: usage: fwp proto <file.fwp> [--service module]...");
+        return ExitCode::from(2);
+    };
+    let code = fwp::driver::with_big_stack(move || {
+        let src = std::path::PathBuf::from(&path);
+        if services.is_empty() {
+            // every imported module with exported functions
+            let c = match fwp::driver::check_file(&src) {
+                Ok(c) => c,
+                Err(f) => {
+                    eprint!("{}", f.rendered);
+                    return 1;
+                }
+            };
+            let mut mods: Vec<String> = c
+                .env
+                .bindings
+                .iter()
+                .filter(|b| {
+                    b.module != "main"
+                        && b.module != "std"
+                        && b.test_name.is_none()
+                        && c.env.globals[&b.name].exported
+                })
+                .map(|b| b.module.clone())
+                .collect();
+            mods.sort();
+            mods.dedup();
+            services = mods;
+        }
+        let mut progs = Vec::new();
+        for m in &services {
+            let roots = fwp::mono::Roots {
+                service: Some(m.clone()),
+                ..Default::default()
+            };
+            match fwp::driver::compile_file(&src, roots) {
+                Ok((_, p)) => progs.push(p),
+                Err(f) => {
+                    eprint!("{}", f.rendered);
+                    return 1;
+                }
+            }
+        }
+        if progs.is_empty() {
+            eprintln!("fwp proto: no imported module exports functions");
+            return 1;
+        }
+        let name = src
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default();
+        match fwp::services::proto_text(&progs, &name) {
+            Ok(t) => {
+                print!("{}", t);
+                0
+            }
+            Err(e) => {
+                eprintln!("fwp proto: {}", e);
                 1
             }
         }

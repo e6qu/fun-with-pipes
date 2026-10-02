@@ -1,0 +1,45 @@
+# 14. Services
+#
+# `book` and `borrow` are written as a service interface: exported,
+# monomorphic functions whose arguments and results can be encoded. Moved
+# into a module of their own, they can be linked into their callers or
+# served over gRPC, without changing a line (see the README).
+
+Book = { isbn: String, title: String, copies: I64 }
+
+Loan = { isbn: String, left: I64 }
+
+NotAvailable = { isbn: String, reason: String }
+
+shelf : List[Book]
+shelf = [
+    Book { isbn = "978-0", title = "Pipes", copies = 2 },
+    Book { isbn = "978-1", title = "Types", copies = 0 },
+]
+
+# a book by its ISBN
+export book : String -> Option[Book]
+book = eq | compose .isbn | find | apply shelf
+
+unknown : String -> NotAvailable
+unknown = make NotAvailable { isbn = id, reason = const "no such book" }
+
+lend : Book -> Loan ! {Error[NotAvailable]}
+lend =
+    if
+        (.copies | gt 0)
+        (make Loan { isbn = .isbn, left = .copies | sub 1 })
+        (make NotAvailable { isbn = .isbn, reason = const "all copies are out" }
+            | fail)
+
+# borrow a copy: how many are left, or why not
+export borrow : String -> Loan ! {Error[NotAvailable]}
+borrow = fork or-fail unknown book | lend
+
+main = [
+    "978-0" | book | echo,
+    "978-9" | book | echo,
+    "978-0" | attempt borrow | echo,
+    "978-1" | attempt borrow | echo,
+    "978-9" | attempt borrow | echo,
+] | ignore

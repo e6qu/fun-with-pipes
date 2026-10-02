@@ -1,0 +1,53 @@
+# Pricing: unit prices, discounts and quotes. A quote checks the stock
+# with the inventory, so in a split build this service calls another one.
+
+import inventory
+
+Line = { sku: String, quantity: I64, cents: I64 }
+
+Discount =
+    | NoDiscount
+    | Percent I64
+
+Quote = { lines: List[Line], subtotal: I64, discount: Discount, total: I64 }
+
+# the unit price of a product, in cents
+export unit-price : String -> I64
+unit-price = match
+    "apple" -> 40
+    "pear" -> 75
+    _ -> const 100
+
+priced : (String, I64) -> Line
+priced =
+    make Line { sku = .0, quantity = .1, cents = fork mul .1 (.0 | unit-price) }
+
+subtotal : List[(String, I64)] -> I64
+subtotal = map priced | map .cents | sum
+
+discount-for : Bool -> Discount
+discount-for = if id (const (Percent 10)) (const NoDiscount)
+
+# cents after a discount
+discounted : Discount -> I64 -> I64
+discounted = match
+    NoDiscount -> id
+    Percent _ -> curry (fork sub (uncurry mul | div 100) .1)
+
+reserve-line : (String, I64) -> () ! {Error[inventory.Shortage]}
+reserve-line = uncurry (flip inventory.reserve) | ignore
+
+# a quote for an order of (product, quantity) pairs; members get 10% off
+export quote-order : Bool -> List[(String, I64)] -> Quote ! {Error[inventory.Shortage]}
+quote-order = curry (tap (.1 | each reserve-line)
+    | make Quote {
+        lines = .1 | map priced,
+        subtotal = .1 | subtotal,
+        discount = .0 | discount-for,
+        total = fork discounted (.0 | discount-for) (.1 | subtotal),
+    })
+
+# the average unit price of some products
+export average-price : List[String] -> F64
+average-price =
+    fork div (length | int.to-float) (map unit-price | sum | int.to-float)

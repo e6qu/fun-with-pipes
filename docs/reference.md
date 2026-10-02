@@ -215,7 +215,8 @@ foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "sn
 ## The `fwp` command
 
 ```
-fwp run [--link X]... file.fwp [args...]      run main (interpreter)
+fwp run [--link X]... [--service M]... file.fwp [args...]
+                                              run main (interpreter)
 fwp build file.fwp [options]                  compile
     -o out           output path
     -O0..-O3         C optimization level
@@ -226,6 +227,11 @@ fwp build file.fwp [options]                  compile
     --cdylib         lib<name>.so and lib<name>.h
     --link X         C code or libraries for foreign functions
     --emit-c         write the generated C instead of compiling it
+    --service M[=A]  split M into a gRPC service (repeatable); -o is then
+                     a directory for the main and server executables
+fwp serve [--service M]... file.fwp module [--listen A]
+                                              serve a module over gRPC (interpreter)
+fwp proto file.fwp [--service M]...           print the .proto of the services
 fwp exec file.fwp fn [args...]                run an exported function
 fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes
 fwp test file.fwp [--native]                  run test declarations
@@ -277,6 +283,7 @@ checks this.
 |---|---|
 | `FWP_SEED` | fixes the seed of `random.*` |
 | `FWP_OUT=bin` | makes executable functions write the binary protocol |
+| `FWP_SERVICE_<M>` | the `host:port` of service `M` (see [services](services.md)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `CC` | the C compiler for native builds |
 | `AR` | the archiver for `--staticlib` |
