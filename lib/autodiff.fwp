@@ -1,0 +1,121 @@
+# Forward-mode automatic differentiation with dual numbers.
+#
+# Write numeric code once, generically (for example with `where Field[a],
+# Floating[a]`); evaluating it at `Dual` computes derivatives. Nesting
+# duals (Dual[Dual[F64]]) gives second derivatives.
+
+Dual[T] = { re: T, eps: T }
+
+dual : t -> t -> Dual[t]
+dual = curry (make Dual { re = .0, eps = .1 })
+
+# a constant (zero derivative) and a variable (unit derivative)
+dual.const : t -> Dual[t] where Zero[t]
+dual.const = make Dual { re = id, eps = const zero }
+
+dual.var : t -> Dual[t] where One[t]
+dual.var = make Dual { re = id, eps = const one }
+
+# Treat a value as a constant: its derivative is dropped.
+stop-gradient : Dual[t] -> Dual[t] where Zero[t]
+stop-gradient = update { eps = const zero }
+
+dual.re2 = both (.0 | .re) (.1 | .re)
+dual.eps2 = both (.0 | .eps) (.1 | .eps)
+
+impl Add[Dual[t]] where Add[t] =
+    add = curry (make Dual { re = dual.re2 | uncurry add, eps = dual.eps2 | uncurry add })
+
+impl Sub[Dual[t]] where Sub[t] =
+    sub = curry (make Dual { re = dual.re2 | uncurry sub, eps = dual.eps2 | uncurry sub })
+
+# product rule
+impl Mul[Dual[t]] where Ring[t], Dup[t] =
+    mul = curry (make Dual {
+        re = dual.re2 | uncurry mul,
+        eps = both (both (.0 | .re) (.1 | .eps) | uncurry mul) (both (.0 | .eps) (.1 | .re) | uncurry mul)
+            | uncurry add,
+    })
+
+# quotient rule (data-last: `y | div x` is y / x)
+impl Div[Dual[t]] where Field[t], Dup[t] =
+    div = curry (make Dual {
+        re = dual.re2 | uncurry div,
+        eps = both
+            (.0 | .re | fork mul id id)
+            (both (both (.1 | .re) (.0 | .eps) | uncurry mul) (both (.1 | .eps) (.0 | .re) | uncurry mul)
+                | uncurry sub)
+            | uncurry div,
+    })
+
+impl Neg[Dual[t]] where Neg[t] =
+    neg = update { re = neg, eps = neg }
+
+impl Zero[Dual[t]] where Zero[t] =
+    zero = Dual { re = zero, eps = zero }
+
+impl One[Dual[t]] where Zero[t], One[t] =
+    one = Dual { re = one, eps = zero }
+
+impl FromInt[Dual[t]] where FromInt[t], Zero[t] =
+    from-int = from-int | dual.const
+
+impl FromFloat[Dual[t]] where FromFloat[t], Zero[t] =
+    from-float = from-float | dual.const
+
+impl Ring[Dual[t]] where Ring[t], Dup[t] = {}
+
+impl Field[Dual[t]] where Field[t], Dup[t] = {}
+
+# chain rule: f(a + a'e) = f(a) + f'(a)·a'e
+dual.chain : (t -> t) -> (t -> t) -> Dual[t] -> Dual[t] where Mul[t], Dup[t]
+dual.chain = curry3 (make Dual {
+    re = both .0 (.2 | .re) | uncurry id,
+    eps = both (both .1 (.2 | .re) | uncurry id) (.2 | .eps) | uncurry mul,
+})
+
+impl Floating[Dual[t]] where Floating[t], Field[t], Neg[t], Dup[t] =
+    sqrt = dual.chain sqrt (sqrt | mul (add one one) | flip div one)
+    exp = dual.chain exp exp
+    ln = dual.chain ln (flip div one)
+    sin = dual.chain sin cos
+    cos = dual.chain cos (sin | neg)
+    tan = dual.chain tan (cos | fork mul id id | flip div one)
+
+# d/dx f at x
+derivative : (Dual[t] -> Dual[t]) -> t -> t where One[t]
+derivative = flip compose .eps | compose dual.var
+
+# seed input i of a point: x_i gets derivative 1, the others 0
+dual.seed-one : I64 -> (I64, t) -> Dual[t] where Zero[t], One[t]
+dual.seed-one = curry (make Dual {
+    re = .1 | .1,
+    eps = both .0 (.1 | .0) | uncurry eq | bool.to-num,
+})
+
+dual.seed : I64 -> List[t] -> List[Dual[t]] where Zero[t], One[t], Dup[t]
+dual.seed = curry (both (.0 | dual.seed-one) (.1 | enumerate) | uncurry map)
+
+# all partial derivatives of a scalar function at a point
+gradient : (List[Dual[t]] -> Dual[t]) -> List[t] -> List[t] where Zero[t], One[t], Dup[t]
+gradient = curry (both
+    (both (.1 | flip dual.seed) (.0 | flip compose .eps) | uncurry compose)
+    (.1 | length | range 0)
+    | uncurry map)
+
+# rows are outputs, columns are inputs
+jacobian : (List[Dual[t]] -> List[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
+jacobian = curry (both
+    (both (.1 | flip dual.seed) (.0 | flip compose (map .eps)) | uncurry compose)
+    (.1 | length | range 0)
+    | uncurry map | list.transpose)
+
+# second derivatives of a scalar function (nested duals)
+hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
+hessian = gradient | jacobian
+
+test "derivative of x^2" = 3.0 | derivative (fork mul id id) | eq 6.0
+test "derivative of sin at 0" = 0.0 | derivative sin | eq 1.0
+test "quotient rule" = 2.0 | derivative (fork div id (add 1.0)) | eq -0.25
+test "stop-gradient" = 2.0 | derivative (fork mul id (stop-gradient)) | eq 2.0
+test "gradient" = [1.0, 2.0] | gradient (fork mul (nth 0 | option.unwrap-or zero) (nth 1 | option.unwrap-or zero)) | eq [2.0, 1.0]

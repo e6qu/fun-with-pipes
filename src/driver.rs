@@ -22,6 +22,11 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ),
     ("<std>/iter.fwp", include_str!("../lib/iter.fwp")),
     ("<std>/io.fwp", include_str!("../lib/io.fwp")),
+    ("<std>/numeric.fwp", include_str!("../lib/numeric.fwp")),
+    ("<std>/autodiff.fwp", include_str!("../lib/autodiff.fwp")),
+    ("<std>/ternary.fwp", include_str!("../lib/ternary.fwp")),
+    ("<std>/simd.fwp", include_str!("../lib/simd.fwp")),
+    ("<std>/tensor.fwp", include_str!("../lib/tensor.fwp")),
 ];
 
 pub struct Compilation {

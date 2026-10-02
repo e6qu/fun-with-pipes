@@ -1,0 +1,89 @@
+# Lazy tensor expressions. Building an expression does no work; `realize`
+# evaluates the whole graph in one pass over the elements (the operations
+# are fused: no intermediate arrays are allocated). Graph passes rewrite
+# expressions before they are realized.
+
+TensorExpr[N] =
+    | TLeaf Vector[F64, N]
+    | TFill F64
+    | TAdd TensorExpr[N] TensorExpr[N]
+    | TMul TensorExpr[N] TensorExpr[N]
+    | TScale F64 TensorExpr[N]
+    | TMap (F64 -> F64) TensorExpr[N]
+
+tensor.lazy : Vector[F64, n] -> TensorExpr[n]
+tensor.lazy = TLeaf
+
+tensor.fill : F64 -> TensorExpr[n]
+tensor.fill = TFill
+
+# data-last builders: `x | tensor.add y`
+tensor.add : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+tensor.add = flip TAdd
+
+tensor.mul : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+tensor.mul = flip TMul
+
+tensor.scale : F64 -> TensorExpr[n] -> TensorExpr[n]
+tensor.scale = TScale
+
+tensor.map : (F64 -> F64) -> TensorExpr[n] -> TensorExpr[n]
+tensor.map = TMap
+
+# element i of an expression
+rec tensor.at : TensorExpr[n] -> I64 -> F64
+tensor.at = match
+    TLeaf -> curry (both .1 (.0 | .data) | uncurry array.get | option.unwrap-or 0.0)
+    TFill -> const
+    TAdd -> on (fork add) tensor.at
+    TMul -> on (fork mul) tensor.at
+    TScale -> mul | flip compose | compose tensor.at
+    TMap -> flip (tensor.at | compose)
+
+rec tensor.length : TensorExpr[n] -> I64
+tensor.length = match
+    TLeaf -> vector.length
+    TFill -> const 0
+    TAdd -> on max tensor.length
+    TMul -> on max tensor.length
+    TScale -> const tensor.length
+    TMap -> const tensor.length
+
+realize : TensorExpr[n] -> Vector[F64, n]
+realize = fork array.generate tensor.length tensor.at | vector.wrap
+
+rec graph.size : TensorExpr[n] -> I64
+graph.size = match
+    TLeaf -> const 1
+    TFill -> const 1
+    TAdd -> on add graph.size | then2 id (add 1)
+    TMul -> on add graph.size | then2 id (add 1)
+    TScale -> const (graph.size | add 1)
+    TMap -> const (graph.size | add 1)
+
+graph.fold-add = curry (match
+    (TFill _, TFill _) -> then2 add TFill
+    _ -> uncurry TAdd)
+
+graph.fold-mul = curry (match
+    (TFill _, TFill _) -> then2 mul TFill
+    _ -> uncurry TMul)
+
+graph.fold-scale = curry (match
+    (_, TFill _) -> then2 mul TFill
+    (_, TScale _ _) -> curry3 (both (both .0 .1 | uncurry mul) .2 | uncurry TScale)
+    _ -> uncurry TScale)
+
+# Constant folding: combine constants and nested scalings.
+rec graph.constant-fold : TensorExpr[n] -> TensorExpr[n]
+graph.constant-fold = match
+    TAdd -> on graph.fold-add graph.constant-fold
+    TMul -> on graph.fold-mul graph.constant-fold
+    TScale -> graph.fold-scale | compose graph.constant-fold
+    TMap -> TMap | compose graph.constant-fold
+    _ -> id
+
+test "realize" = vector [1.0, 2.0] | tensor.lazy | tensor.add (tensor.fill 10.0) | tensor.scale 2.0 | realize | vector.to-list | eq [22.0, 24.0]
+test "map" = vector [1.0, 4.0] | tensor.lazy | tensor.map sqrt | realize | vector.to-list | eq [1.0, 2.0]
+test "constant folding" = vector [1.0] | tensor.lazy | tensor.mul (tensor.fill 2.0 | tensor.add (tensor.fill 3.0)) | graph.constant-fold | graph.size | eq 3
+test "nested scale" = vector [1.0] | tensor.lazy | tensor.scale 2.0 | tensor.scale 3.0 | graph.constant-fold | match { TScale -> const, _ -> const 0.0 } | eq 6.0

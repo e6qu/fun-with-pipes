@@ -26,7 +26,8 @@ implementation roadmap.
 | IR optimizer, native AOT via C (`fwp build`), differential testing | done |
 | Standalone function executables, typed pipe protocol (`PIPE_V1`), `fwp pipe` | done |
 | Comptime evaluation, `Syntax` values, hygienic macros, `type[T]` reflection | done |
-| Numerics, networking, FFI, WASM | planned |
+| Linear algebra (sized vectors/matrices), complex numbers, autodiff, balanced ternary, SIMD, tensor graphs | done |
+| Concurrency, networking, FFI, WASM | planned |
 
 ## Usage
 

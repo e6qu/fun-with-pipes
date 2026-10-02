@@ -62,6 +62,8 @@ struct Opt<'p> {
     funcs: &'p [Func],
     current: FuncId,
     nlocals: u32,
+    /// Remaining number of IR nodes this function may grow by inlining.
+    budget: isize,
 }
 
 impl<'p> Opt<'p> {
@@ -186,14 +188,17 @@ impl<'p> Opt<'p> {
         let Body::Expr(body) = &callee.body else {
             return Expr::Call(id, args);
         };
+        let body_size = size(body);
         if id == self.current
             || depth > 8
-            || size(body) > INLINE_SIZE
+            || body_size > INLINE_SIZE
+            || self.budget < body_size as isize
             || calls(body, id)
             || args.len() != callee.arity as usize
         {
             return Expr::Call(id, args);
         }
+        self.budget -= body_size as isize;
         let body = body.clone();
         let arity = callee.arity;
         let nlocals = callee.nlocals;
@@ -286,6 +291,7 @@ pub fn optimize(prog: &mut Program) {
                 funcs: &snapshot,
                 current: id,
                 nlocals: prog.funcs[id].nlocals,
+                budget: 600,
             };
             let new = o.expr(body.clone(), 0);
             let f = &mut prog.funcs[id];

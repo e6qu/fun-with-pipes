@@ -1,0 +1,44 @@
+# Portable SIMD: Vec[N, T] holds N lanes. Lane-wise operations lower to
+# GCC/Clang vector extensions in native code (and from there to SSE, AVX,
+# NEON or WASM SIMD). Integer lanes wrap on overflow, as in hardware.
+
+Vec[N, T] = { lanes: Array[T] }
+
+foreign "fwp" simd.splat : t -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.from-array : Array[t] -> Option[Vec[n, t]] where Numeric[t]
+foreign "fwp" simd.add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.sub : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.mul : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.div : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.min : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.max : Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+foreign "fwp" simd.sum : Vec[n, t] -> t where Numeric[t]
+
+simd.to-array : Vec[n, t] -> Array[t]
+simd.to-array = .lanes
+
+simd.dot : Vec[n, t] -> Vec[n, t] -> t where Numeric[t]
+simd.dot = simd.mul | flip compose simd.sum
+
+# `c | simd.mul-add a b` is a·b + c (rounded after each step)
+simd.mul-add : Vec[n, t] -> Vec[n, t] -> Vec[n, t] -> Vec[n, t] where Numeric[t]
+simd.mul-add = simd.mul | then2 id simd.add
+
+test "splat and sum" = 2.5 | simd.splat | the-v4 | simd.sum | eq 10.0
+test "lane-wise" = [1.0, 2.0, 3.0, 4.0] | array.from-list | simd.from-array | the-ov4 | option.map (fork simd.mul id id | simd.to-array | array.to-list) | eq (Some [1.0, 4.0, 9.0, 16.0])
+test "wrong length" = [1.0] | array.from-list | simd.from-array | the-ov4 | eq None
+test "wrapping lanes" = 2147483647i32 | simd.splat | the-i4 | simd.add (simd.splat 1i32) | simd.to-array | array.to-list | eq (repeat 4 -2147483648i32)
+test "wrapping sum" = 2147483647i32 | simd.splat | the-i4 | simd.sum | eq -4i32
+test "dot" = 3 | simd.splat | the-iv8 | simd.dot (simd.splat 2) | eq 48
+
+the-v4 : Vec[4, F64] -> Vec[4, F64]
+the-v4 = id
+
+the-ov4 : Option[Vec[4, F64]] -> Option[Vec[4, F64]]
+the-ov4 = id
+
+the-i4 : Vec[4, I32] -> Vec[4, I32]
+the-i4 = id
+
+the-iv8 : Vec[8, I64] -> Vec[8, I64]
+the-iv8 = id

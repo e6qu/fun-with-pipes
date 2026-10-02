@@ -55,6 +55,20 @@ fn num_kind(mt: &MT) -> Option<(&'static str, String, u64)> {
     Some((k, short.to_string(), w))
 }
 
+/// Lane count and lane type of a `Vec[n, t]`.
+fn vec_shape(mt: &MT) -> (u64, MT) {
+    match mt {
+        MT::Con(_, args) => (
+            match args.first() {
+                Some(MT::Nat(n)) => *n,
+                _ => 0,
+            },
+            args.get(1).cloned().unwrap_or(MT::unit()),
+        ),
+        _ => (0, MT::unit()),
+    }
+}
+
 fn c_string_literal(bytes: &[u8]) -> String {
     let mut s = String::from("\"");
     for &b in bytes {
@@ -567,6 +581,47 @@ impl<'p> Gen<'p> {
                 rw
             ),
             "prim.from-float" => format!("return fwp_float_of({}, fwp_f64(l0));", rk),
+            "trit.from-sign" => {
+                "return (V)(int64_t)(((int64_t)l0 > 0) - ((int64_t)l0 < 0));".into()
+            }
+            "trit.to-int" | "tint.to-int" => "return l0;".into(),
+            "tint.of-int" => format!("return fwp_p_tint_of_int(l0, {});", nk(&elem(&result, 0)).2),
+            "tint.trits" => format!("return fwp_p_tint_trits(l0, {});", nk(&p(0)).2),
+            "tint.from-trits" => format!(
+                "return fwp_p_tint_from_trits(l0, {});",
+                nk(&elem(&result, 0)).2
+            ),
+            "trits.pack" => "return fwp_p_trits_pack(l0);".into(),
+            "trits.unpack" => "return fwp_p_trits_unpack(l0, l1);".into(),
+            "simd.splat" => format!("return fwp_p_simd_splat(l0, {});", vec_shape(&result).0),
+            "simd.from-array" => format!(
+                "return fwp_p_simd_from_array(l0, {});",
+                vec_shape(&elem(&result, 0)).0
+            ),
+            "simd.add" | "simd.sub" | "simd.mul" | "simd.div" | "simd.min" | "simd.max" => {
+                let (k, name, w) = nk(&vec_shape(&p(0)).1);
+                let op = match sym {
+                    "simd.add" => "OP_ADD",
+                    "simd.sub" => "OP_SUB",
+                    "simd.mul" => "OP_MUL",
+                    "simd.div" => "OP_DIV",
+                    "simd.min" => "5",
+                    _ => "6",
+                };
+                format!(
+                    "return fwp_p_simd_op({}, {}, l1, l0, {}, {});",
+                    k,
+                    op,
+                    Self::cstr(&name),
+                    w
+                )
+            }
+            "simd.sum" => format!(
+                "return fwp_p_simd_sum({}, l0, {}, {});",
+                rk,
+                Self::cstr(&rname),
+                rw
+            ),
             "wrapping.add" | "wrapping.sub" | "wrapping.mul" => {
                 format!("return fwp_wrapping({}, {}, l1, l0);", rk, op_code(sym))
             }
@@ -827,6 +882,13 @@ impl<'p> Gen<'p> {
                     ("bytes.slice", "fwp_p_bytes_slice(l0, l1, l2)"),
                     ("bytes.append", "fwp_p_concat(l0, l1)"),
                     ("print", "fwp_p_print(l0)"),
+                    ("linalg.lu-solve", "fwp_p_lu_solve(l0, l1, l2)"),
+                    ("linalg.det", "fwp_p_det(l0, l1)"),
+                    ("linalg.inverse", "fwp_p_inverse(l0, l1)"),
+                    ("linalg.cholesky", "fwp_p_cholesky(l0, l1)"),
+                    ("linalg.qr", "fwp_p_qr(l0, l1, l2)"),
+                    ("linalg.cg", "fwp_p_cg(l0, l1, l2, l3, l4)"),
+                    ("list.transpose", "fwp_p_list_transpose(l0)"),
                     ("syntax.show", "fwp_p_syntax_show(l0)"),
                     ("write", "fwp_p_write(l0)"),
                     ("eprint", "fwp_p_eprint(l0)"),
@@ -1231,6 +1293,8 @@ pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<
     let res = std::process::Command::new(&cc)
         .arg(opt)
         .arg("-std=gnu11")
+        // no fused multiply-add: results must match the interpreter exactly
+        .arg("-ffp-contract=off")
         .arg("-w")
         .arg("-o")
         .arg(output)

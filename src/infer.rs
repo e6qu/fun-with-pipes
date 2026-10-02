@@ -399,9 +399,26 @@ impl<'a> Infer<'a> {
                         .unwrap()
                         .preds
                         .clone();
-                    if let Err(d) = self.solve_annotated(w, &given) {
-                        self.env.errors.push(d);
-                        failed = true;
+                    match self.solve_annotated(w, &given) {
+                        Ok(implicit) => {
+                            let name = self.env.bindings[i].name.clone();
+                            if let Some(sc) = self
+                                .env
+                                .globals
+                                .get_mut(&name)
+                                .and_then(|g| g.scheme.as_mut())
+                            {
+                                for p in implicit {
+                                    if !sc.preds.contains(&p) {
+                                        sc.preds.push(p);
+                                    }
+                                }
+                            }
+                        }
+                        Err(d) => {
+                            self.env.errors.push(d);
+                            failed = true;
+                        }
                     }
                 } else {
                     group_wanted.extend(w);
@@ -867,38 +884,9 @@ impl<'a> Infer<'a> {
                 Ok(result.unwrap())
             }
             ExprKind::App(f, args) => {
-                let mut tf = self.infer(f, ctx)?;
-                for (i, arg) in args.iter().enumerate() {
-                    let ta = self.infer(arg, ctx)?;
-                    let r = self.fresh();
-                    match self.env.table.resolve(&tf) {
-                        Type::Fun(p, _, _) => {
-                            self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
-                        }
-                        Type::Var(_) | Type::App(..) => {}
-                        other => {
-                            let what = if i == 0 {
-                                format!(
-                                    "`{}` is not a function (it has type `{}`) and cannot be applied",
-                                    crate::pretty::atom(f),
-                                    self.show(&other)
-                                )
-                            } else {
-                                format!(
-                                    "too many arguments: after {} argument(s) the result has type `{}`, which is not a function",
-                                    i,
-                                    self.show(&other)
-                                )
-                            };
-                            return Err(Diagnostic::error(arg.span, what));
-                        }
-                    }
-                    self.captures.push((arg.span, ta.clone(), r.clone()));
-                    let want = Type::fun(ta, r.clone(), ctx.clone());
-                    self.unify(e.span, &want, &tf, "application")?;
-                    tf = r;
-                }
-                Ok(tf)
+                let t = self.infer_app(e, f, args, ctx)?;
+                self.size_literal(e, f, args, &t)?;
+                Ok(t)
             }
             ExprKind::Pipe(l, r) => {
                 let tl = self.infer(l, ctx)?;
@@ -1116,6 +1104,93 @@ impl<'a> Infer<'a> {
             },
         );
         Ok(Type::Con(canon, args))
+    }
+
+    fn infer_app(&mut self, e: &Expr, f: &Expr, args: &[Expr], ctx: &Row) -> IResult<Type> {
+        let mut tf = self.infer(f, ctx)?;
+        for (i, arg) in args.iter().enumerate() {
+            let ta = self.infer(arg, ctx)?;
+            let r = self.fresh();
+            match self.env.table.resolve(&tf) {
+                Type::Fun(p, _, _) => {
+                    self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
+                }
+                Type::Var(_) | Type::App(..) => {}
+                other => {
+                    let what = if i == 0 {
+                        format!(
+                            "`{}` is not a function (it has type `{}`) and cannot be applied",
+                            crate::pretty::atom(f),
+                            self.show(&other)
+                        )
+                    } else {
+                        format!(
+                            "too many arguments: after {} argument(s) the result has type `{}`, which is not a function",
+                            i,
+                            self.show(&other)
+                        )
+                    };
+                    return Err(Diagnostic::error(arg.span, what));
+                }
+            }
+            self.captures.push((arg.span, ta.clone(), r.clone()));
+            let want = Type::fun(ta, r.clone(), ctx.clone());
+            self.unify(e.span, &want, &tf, "application")?;
+            tf = r;
+        }
+        Ok(tf)
+    }
+
+    /// `vector [...]` and `matrix [[...]]` take their sizes from the literal.
+    fn size_literal(&mut self, e: &Expr, f: &Expr, args: &[Expr], t: &Type) -> IResult<()> {
+        let ExprKind::Var(name) = &f.kind else {
+            return Ok(());
+        };
+        let which = self.env.resolve_value(&self.scope, name);
+        let [arg] = args else { return Ok(()) };
+        let ExprKind::List(items) = &arg.kind else {
+            return Ok(());
+        };
+        match which.as_deref() {
+            Some("std::vector") => {
+                let want = Type::Con(
+                    "std::Vector".into(),
+                    vec![self.fresh(), Type::Nat(items.len() as u64)],
+                );
+                self.unify(e.span, &want, t, "vector literal")
+            }
+            Some("std::matrix") => {
+                let mut cols = None;
+                for row in items {
+                    let ExprKind::List(r) = &row.kind else {
+                        return Err(Diagnostic::error(
+                            row.span,
+                            "matrix rows must be list literals (use matrix.from-rows for computed rows)",
+                        ));
+                    };
+                    match cols {
+                        None => cols = Some(r.len()),
+                        Some(c) if c != r.len() => {
+                            return Err(Diagnostic::error(
+                                row.span,
+                                format!("matrix rows must all have {} elements", c),
+                            ))
+                        }
+                        _ => {}
+                    }
+                }
+                let want = Type::Con(
+                    "std::Matrix".into(),
+                    vec![
+                        self.fresh(),
+                        Type::Nat(items.len() as u64),
+                        Type::Nat(cols.unwrap_or(0) as u64),
+                    ],
+                );
+                self.unify(e.span, &want, t, "matrix literal")
+            }
+            _ => Ok(()),
+        }
     }
 
     fn infer_match(&mut self, e: &Expr, arms: &[Arm]) -> IResult<Type> {

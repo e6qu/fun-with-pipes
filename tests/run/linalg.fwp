@@ -1,0 +1,54 @@
+# Statically sized linear algebra, complex numbers and autodiff.
+
+a = matrix [[4.0, 1.0], [1.0, 3.0]]
+b = vector [1.0, 2.0]
+m23 = matrix [[1, 2, 3], [4, 5, 6]]
+m32 = matrix [[7, 8], [9, 10], [11, 12]]
+
+# Newton's method using the derivative of a generic function.
+f : a -> a where Ring[a], FromFloat[a]
+f = fork mul id id | sub 2.0
+
+newton-step : F64 -> F64
+newton-step = fork sub (fork div (derivative f) f) id
+
+# A function of two variables, written generically.
+g : List[a] -> a where Ring[a], Floating[a], FromFloat[a]
+g = fork mul (nth 0 | option.unwrap-or zero | sin) (nth 1 | option.unwrap-or zero | fork mul id id)
+
+# h2 [x, y] = [x·y, x]
+h2 : List[a] -> List[a] where Ring[a]
+h2 = fork Cons
+    (both (nth 0 | option.unwrap-or zero) (nth 1 | option.unwrap-or zero) | uncurry mul)
+    (nth 0 | option.unwrap-or zero | singleton)
+
+poly : List[a] -> a where Ring[a]
+poly = fork mul (nth 0 | option.unwrap-or zero | fork mul id id) (nth 1 | option.unwrap-or zero)
+
+z1 = complex 1.0 2.0
+z2 = complex 3.0 -1.0
+
+main = [
+    m23 | matmul m32 | echo,
+    a | transpose | echo,
+    b | dot b | echo,
+    b | norm | echo,
+    a | matrix.apply b | echo,
+    b | solve a | echo,
+    a | determinant | echo,
+    a | inverse | echo,
+    a | cholesky | echo,
+    a | qr | echo,
+    b | cg 50 1e-12 a | echo,
+    2 | identity | the-imatrix | echo,
+    z1 | mul z2 | echo,
+    z2 | div z1 | echo,
+    complex 3.0 4.0 | complex.abs | echo,
+    1.0 | iterate 6 newton-step | last | echo,
+    [0.5, 2.0] | gradient g | echo,
+    [3.0, 2.0] | jacobian h2 | echo,
+    [3.0, 2.0] | hessian poly | echo,
+] | ignore
+
+the-imatrix : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
+the-imatrix = id
