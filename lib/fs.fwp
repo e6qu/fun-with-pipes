@@ -124,8 +124,8 @@ path.stem =
         id
         (split "." | reverse | drop 1 | reverse | join ".")
 
-path.normalize-step : List[String] -> String -> List[String]
-path.normalize-step = curry (match
+path._normalize-step : List[String] -> String -> List[String]
+path._normalize-step = curry (match
     (_, "") -> id
     (_, ".") -> id
     (_, "..") -> match
@@ -137,15 +137,15 @@ path.normalize-step = curry (match
 # Remove `.` components, empty components and `x/..` pairs:
 # `"a/./b/../c/"` is `"a/c"`, `"/../x"` is `"/x"` and `""` is `"."`.
 path.normalize : String -> String
-path.normalize = fork path.normalize-with path.is-absolute id
+path.normalize = fork path._normalize-with path.is-absolute id
 
-path.normalize-with : Bool -> String -> String
-path.normalize-with = curry (match
-    (True, _) -> path.parts | drop-while (eq "..") | join "/" | flip concat "/"
-    (False, _) -> path.parts | join "/" | if (eq "") (const ".") id)
+path._normalize-with : Bool -> String -> String
+path._normalize-with = curry (match
+    (True, _) -> path._parts | drop-while (eq "..") | join "/" | flip concat "/"
+    (False, _) -> path._parts | join "/" | if (eq "") (const ".") id)
 
-path.parts : String -> List[String]
-path.parts = split "/" | fold path.normalize-step [] | reverse
+path._parts : String -> List[String]
+path._parts = split "/" | fold path._normalize-step [] | reverse
 
 test "path.join" = "src" | path.join "main.fwp" | eq "src/main.fwp"
 test "path.join slash" = "src/" | path.join "a" | eq "src/a"

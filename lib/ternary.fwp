@@ -44,7 +44,7 @@ test "tint value" = 0t+-0 | tint.to-int | eq 6
 test "tint trits" = 0t+-0 | tint.trits | map trit.to-int | eq [1, -1, 0]
 test "tint from trits" =
     [trit.pos, trit.neg, trit.zero] | tint.from-trits | eq (Some 0t+-0)
-test "tint of-int range" = 14 | tint.of-int | tint.test-t2 | eq None
+test "tint of-int range" = 14 | tint.of-int | tint._test-t2 | eq None
 test "tint arithmetic" = 0t+- | add 0t0+ | eq 0t+0
 test "trit order" =
     [trit.pos, trit.neg, trit.zero] | sort | map trit.to-int | eq [-1, 0, 1]
@@ -62,5 +62,5 @@ test "unpack negative count" = [trit.pos] | trits.pack | trits.unpack -1 | eq []
 test "packed size" =
     0t+-0-+0+-0-+ | packed.from-tint | .bytes | bytes.length | eq 3
 
-tint.test-t2 : Option[TInt[2]] -> Option[TInt[2]]
-tint.test-t2 = id
+tint._test-t2 : Option[TInt[2]] -> Option[TInt[2]]
+tint._test-t2 = id

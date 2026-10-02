@@ -10,7 +10,7 @@ version = "0.3.0"
 Options = {
     # -u  in capitals
     upper: Bool,
-    # -n  how many copies of each word
+    # -n <N>  how many copies of each word [env: WORDS_TIMES]
     times: I64,
     # what goes between the words
     sep: String,
@@ -45,6 +45,28 @@ divide = curry (match
 export non-blank : String -> Option[String]
 non-blank = if (trim | eq "") (const None) Some
 
+# How loud `shout` is.
+Volume =
+    | Quiet
+    | Normal
+    | Loud
+
+# Say a word, normally unless VOLUME says otherwise.
+# args: WORD VOLUME
+export shout : String -> Option[Volume] -> String
+shout = curry (match
+    (_, Some Quiet) -> lower
+    (_, Some Loud) -> upper | concat "!"
+    (_, Some Normal) -> id
+    (_, None) -> id)
+
+# The words that contain TEXT; the exit status is 1 when there are none.
+# args: TEXT WORDS...
+export containing : String -> List[String] -> Outcome[List[String]]
+containing =
+    curry (fork filter (.0 | string.contains) .1)
+    | then2 id (outcome.fail-if is-empty)
+
 main = [
     ["hi", "there"]
     | say Options { upper = False, times = 2, sep = "-" }
@@ -52,6 +74,9 @@ main = [
     divide 9 2 | echo,
     divide 9 0 | echo,
     ["a", " ", "b"] | filter-map non-blank | echo,
+    shout "hey" (Some Loud) | print,
+    ["apple", "fig"] | containing "pp" | echo,
+    ["fig"] | containing "pp" | .status | echo,
     ["-u", "--times=2", "hi", "--", "-x"]
     | cli.parse Options { upper = False, times = 1, sep = " " }
     | echo,

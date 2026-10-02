@@ -54,7 +54,15 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    directories, paths, processes (the `Process` effect), the
    environment, terminals and tables. See [docs/cli.md](docs/cli.md) and
    [tutorial 16](docs/tutorials/16-clis/README.md).
-4. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+4. **Complete command-line programs** (done). Choices from
+   enumerations, environment variables for flags (`[env: VAR]`), value
+   names, optional and defaulted positional arguments, exit statuses
+   (`Outcome`), `[requires: ...]`/`[conflicts: ...]`, shell completion
+   (`--completions bash|zsh|fish`) and man pages (`--man`), doc comments
+   from the syntax tree, and a library for CSV, prompts, progress lines,
+   terminal width and streaming standard input. See
+   [docs/cli.md](docs/cli.md#what-was-missing-and-what-was-added).
+5. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

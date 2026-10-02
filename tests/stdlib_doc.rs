@@ -1,7 +1,9 @@
 //! `docs/stdlib.md` is generated from `lib/*.fwp`: each module's leading
 //! comment, then its types, traits and signatures with the comments above
-//! them. Definitions, tests and names starting with `_` are left out. The
-//! test fails when the file is stale; `FWP_BLESS=1` regenerates it.
+//! them. Definitions, tests and internal names are left out: a name with a
+//! part that starts with `_` (`_helper`, `table._row`), or a declaration
+//! with a comment line `# internal` above it. The test fails when the
+//! file is stale; `FWP_BLESS=1` regenerates it.
 
 use std::path::Path;
 
@@ -17,6 +19,7 @@ const MODULES: &[(&str, &str)] = &[
     ("fs", "Files, directories and paths"),
     ("process", "Processes"),
     ("cli", "Command-line programs and terminals"),
+    ("csv", "CSV"),
     ("task", "Tasks and channels"),
     ("net", "Networking"),
     ("http", "HTTP"),
@@ -91,7 +94,10 @@ fn module_doc(text: &str) -> (String, String) {
             continue;
         }
         match summary_name(l) {
-            Some(name) if !name.starts_with('_') => {
+            Some(name)
+                if !name.split('.').any(|part| part.starts_with('_'))
+                    && !pending.iter().any(|c| c.trim() == "# internal") =>
+            {
                 let block = l.trim_end().ends_with(['=', '{', '[', '(']);
                 if !body.is_empty() && (!pending.is_empty() || block) {
                     body.push('\n');

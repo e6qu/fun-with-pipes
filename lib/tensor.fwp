@@ -48,13 +48,13 @@ rec tensor.length : TensorExpr[n] -> Option[I64]
 tensor.length = match
     TLeaf -> vector.length | Some
     TFill -> const None
-    TAdd -> on tensor.same-length tensor.length
-    TMul -> on tensor.same-length tensor.length
+    TAdd -> on tensor._same-length tensor.length
+    TMul -> on tensor._same-length tensor.length
     TScale -> const tensor.length
     TMap -> const tensor.length
 
-tensor.same-length : Option[I64] -> Option[I64] -> Option[I64]
-tensor.same-length = curry (match
+tensor._same-length : Option[I64] -> Option[I64] -> Option[I64]
+tensor._same-length = curry (match
     (None, _) -> id
     (Some _, None) -> Some
     (Some _, Some _) -> curry (if
@@ -66,10 +66,10 @@ tensor.same-length = curry (match
 # Evaluate an expression; a trap when it is made only of fills, whose
 # length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
-realize = fork array.generate tensor.realized-length tensor.at | vector.wrap
+realize = fork array.generate tensor._realized-length tensor.at | vector.wrap
 
-tensor.realized-length : TensorExpr[n] -> I64
-tensor.realized-length = tensor.length | match
+tensor._realized-length : TensorExpr[n] -> I64
+tensor._realized-length = tensor.length | match
     Some -> id
     None ->
         prim.trap
@@ -137,7 +137,7 @@ test "tensor.length" =
 test "tensor.length of fills" =
     tensor.fill 2.0
     | tensor.scale 3.0
-    | tensor.test-te
+    | tensor._test-te
     | tensor.length
     | eq None
 test "constant folding" =
@@ -158,5 +158,5 @@ test "nested scale" =
         _ -> const 0.0)
     | eq 6.0
 
-tensor.test-te : TensorExpr[2] -> TensorExpr[2]
-tensor.test-te = id
+tensor._test-te : TensorExpr[2] -> TensorExpr[2]
+tensor._test-te = id

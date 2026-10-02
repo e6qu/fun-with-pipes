@@ -1,0 +1,60 @@
+# A program to test enumerations, environment variables, optional
+# arguments and exit statuses (tests/cli.rs).
+
+Format =
+    | Plain
+    | Json
+    | CsvLines
+
+Options = {
+    # -f <FORMAT>  how to write the result [env: FEATURES_FORMAT]
+    format: Format,
+    # -n <COUNT>  how many copies [env: FEATURES_COUNT]
+    count: I64,
+    # -q  say less [env: FEATURES_QUIET]
+    quiet: Bool,
+    # -o <FILE>  where to write [conflicts: quiet]
+    output: Option[String],
+    # -a  add to the end of the file [requires: output]
+    append: Bool,
+}
+
+export defaults : {format: Format, count: I64}
+defaults = { format = Plain, count = 1 }
+
+export render.defaults : {dir: String}
+render.defaults = { dir = "." }
+
+# Show the options and the arguments.
+# args: WORD DIR
+export render : Options -> String -> String -> String
+render = curry3 (make {
+    0 = .0 | .format | show,
+    1 = .0 | .count | show,
+    2 = .0 | .quiet | show,
+    3 = .0 | .output | show,
+    4 = .1,
+    5 = .2,
+} | format "{} {} {} {} {} {}")
+
+# A format, or none.
+# args: NAME FORMAT
+export pick : String -> Option[Format] -> String
+pick = curry (both .0 (.1 | show) | format "{}: {}")
+
+# The words that contain PATTERN; the exit status is 1 when there are
+# none.
+# args: PATTERN WORDS...
+export search : String -> List[String] -> Outcome[List[String]]
+search =
+    curry (fork filter (.0 | string.contains) .1)
+    | then2 id (outcome.fail-if is-empty)
+
+# Exit with STATUS (modulo 256), after writing `bye`.
+# args: STATUS
+export leave : I32 -> Outcome[String]
+leave = flip outcome.exit "bye"
+
+# A number, and the status 3 for a negative one.
+export check : I64 -> Outcome[I64]
+check = outcome.of (if (lt 0) (const 3) (const 0))

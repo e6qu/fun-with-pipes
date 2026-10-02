@@ -200,20 +200,20 @@ cholesky =
 # a = Q·R with orthonormal columns in Q (m×n) and upper-triangular R (n×n)
 qr : Matrix[F64, m, n] -> (Matrix[F64, m, n], Matrix[F64, n, n])
 qr = make {
-    0 = make Matrix { rows = .rows, cols = .cols, data = qr.raw | .0 },
-    1 = make Matrix { rows = .cols, cols = .cols, data = qr.raw | .1 },
+    0 = make Matrix { rows = .rows, cols = .cols, data = qr._raw | .0 },
+    1 = make Matrix { rows = .cols, cols = .cols, data = qr._raw | .1 },
 }
 
-qr.raw : Matrix[F64, m, n] -> (Array[F64], Array[F64])
-qr.raw = both (both .rows .cols | uncurry linalg.qr) .data | uncurry id
+qr._raw : Matrix[F64, m, n] -> (Array[F64], Array[F64])
+qr._raw = both (both .rows .cols | uncurry linalg.qr) .data | uncurry id
 
 # `b | cg iterations tolerance a`: conjugate gradient for symmetric
 # positive-definite a
 cg : I64 -> F64 -> Matrix[F64, n, n] -> Vector[F64, n] -> Vector[F64, n]
-cg = curry3 (cg.raw | vector.via)
+cg = curry3 (cg._raw | vector.via)
 
-cg.raw : (I64, F64, Matrix[F64, n, n]) -> Array[F64] -> Array[F64]
-cg.raw =
+cg._raw : (I64, F64, Matrix[F64, n, n]) -> Array[F64] -> Array[F64]
+cg._raw =
     both
         (both (both .0 .1 | uncurry linalg.cg) (.2 | .rows) | uncurry id)
         (.2 | .data)
@@ -329,20 +329,20 @@ test "matrix.get negative" = matrix [[1, 2], [3, 4]] | matrix.get -1 1 | eq None
 test "empty matrix" =
     []
     | matrix.from-rows
-    | matrix.test-im
+    | matrix._test-im
     | both matrix.rows-of (transpose | matrix.rows-of)
     | eq ([], [])
 test "empty matrix get" =
-    [] | matrix.from-rows | matrix.test-im | matrix.get 0 0 | eq None
+    [] | matrix.from-rows | matrix._test-im | matrix.get 0 0 | eq None
 test "empty matrix product" =
     []
     | matrix.from-rows
-    | matrix.test-im
+    | matrix._test-im
     | matmul ([] | matrix.from-rows)
     | matrix.rows-of
     | eq []
 test "matrix with empty rows" =
-    [[], []] | matrix.from-rows | matrix.test-im | matrix.rows-of | eq [[], []]
+    [[], []] | matrix.from-rows | matrix._test-im | matrix.rows-of | eq [[], []]
 test "transpose" =
     matrix [[1, 2, 3], [4, 5, 6]]
     | transpose
@@ -364,7 +364,7 @@ test "matrix.apply" =
     | vector.to-list
     | eq [3, 7]
 test "identity" =
-    2 | identity | matrix.test-im | matrix.rows-of | eq [[1, 0], [0, 1]]
+    2 | identity | matrix._test-im | matrix.rows-of | eq [[1, 0], [0, 1]]
 test "solve" =
     vector [3.0, 5.0]
     | solve (matrix [[2.0, 0.0], [0.0, 4.0]])
@@ -418,5 +418,5 @@ test "complex.conj" = complex 1.0 2.0 | complex.conj | eq (complex 1.0 -2.0)
 test "complex.abs" = complex 3.0 4.0 | complex.abs | eq 5.0
 test "complex from-int" = 3 | from-int | eq (complex 3.0 0.0)
 
-matrix.test-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
-matrix.test-im = id
+matrix._test-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
+matrix._test-im = id

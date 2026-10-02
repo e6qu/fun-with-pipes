@@ -3,16 +3,25 @@
 
 # fwp build examples/cli/dirstat.fwp --fn dirstat -o dirstat
 # ./dirstat -n 3 src
+# ./dirstat --sort files
+
+# What to sort the extensions by.
+SortKey =
+    | Bytes
+    | Files
+    | Name
 
 StatOptions = {
-    # -n  show at most this many extensions
+    # -n <N>  show at most this many extensions
     top: I64,
     # -a  include hidden files (a name in the path starts with `.`)
     all: Bool,
+    # -s <KEY>  sort by bytes or files (largest first) or by name
+    sort: SortKey,
 }
 
-export dirstat.defaults : {top: I64}
-dirstat.defaults = { top = 10 }
+export dirstat.defaults : {top: I64, sort: SortKey, dir: String}
+dirstat.defaults = { top = 10, sort = Bytes, dir = "." }
 
 Entry = { ext: String, size: I64 }
 
@@ -34,20 +43,29 @@ visible = curry (both (.0 | string.length) (.1 | string.chars)
 keep : (StatOptions, String) -> String -> Bool
 keep = curry (fork or (.0 | .0 | .all) (both (.0 | .1) .1 | uncurry visible))
 
+order : SortKey -> List[(String, List[Entry])] -> List[(String, List[Entry])]
+order = curry (match
+    (Bytes, _) -> sort-by (.1 | map .size | sum | neg)
+    (Files, _) -> sort-by (.1 | length | neg)
+    (Name, _) -> sort-by .0)
+
 summary : (String, List[Entry]) -> List[String]
 summary =
     singleton | list.ap [.0, .1 | length | show, .1 | map .size | sum | show]
 
-# Count the files below DIR by extension.
+# Count the files below DIR (the current directory by default) by
+# extension.
 # args: DIR
 export dirstat : StatOptions -> String -> List[String] ! {FileIO, Error[IoError]}
 dirstat = curry (both
         (.0 | .top)
-        (fork filter keep (.1 | dir.walk)
-            | map entry
-            | group-by .ext
-            | map.to-list
-            | sort-by (.1 | map .size | sum | neg))
+        (fork
+            order
+            (.0 | .sort)
+            (fork filter keep (.1 | dir.walk)
+                | map entry
+                | group-by .ext
+                | map.to-list))
     | uncurry take
     | map summary
     | Cons ["extension", "files", "bytes"]

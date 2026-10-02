@@ -1,7 +1,10 @@
 //! Command-line programs: `tests/cli/app.fwp` built as a multi-command
-//! executable (`fwp build --cli`) and as single functions (`--fn`), and
-//! the CLIs of `examples/cli`. Every scenario runs with the interpreter
-//! (`fwp exec`) and natively, with identical output and exit codes.
+//! executable (`fwp build --cli`) and as single functions (`--fn`),
+//! `tests/cli/features.fwp` (enumerations, environment variables,
+//! optional arguments, exit statuses, completion scripts and man pages),
+//! `tests/cli/docs.fwp` (doc comments) and the CLIs of `examples/cli`.
+//! Every scenario runs with the interpreter (`fwp exec`) and natively,
+//! with identical output and exit codes.
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -34,13 +37,32 @@ fn scratch(name: &str) -> PathBuf {
 
 /// Run a command line with stdin in `dir`; stdout, stderr and the exit
 /// code as one string.
-fn run(mut cmd: Command, args: &[&str], stdin: &str, dir: &Path) -> String {
+fn run(cmd: Command, args: &[&str], stdin: &str, dir: &Path) -> String {
+    run_env(cmd, args, stdin, &[], dir)
+}
+
+/// `run` with environment variables.
+fn run_env(
+    mut cmd: Command,
+    args: &[&str],
+    stdin: &str,
+    env: &[(&str, &str)],
+    dir: &Path,
+) -> String {
     use std::io::Write;
+    for v in [
+        "FWP_OUT",
+        "NO_COLOR",
+        "FEATURES_FORMAT",
+        "FEATURES_COUNT",
+        "FEATURES_QUIET",
+    ] {
+        cmd.env_remove(v);
+    }
     let mut child = cmd
         .args(args)
+        .envs(env.iter().copied())
         .current_dir(dir)
-        .env_remove("FWP_OUT")
-        .env_remove("NO_COLOR")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -120,8 +142,10 @@ commands:
   help       show the help of a command
 
 options:
-  -h, --help     show this help
-      --version  show the version
+  -h, --help                 show this help
+      --version              show the version
+      --completions <SHELL>  print a completion script for bash, zsh or fish
+      --man                  print a man page
 
 Run `app help <command>` for the arguments of a command.
 ";
@@ -292,6 +316,473 @@ fn multi_command_program() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+const RENDER_HELP: &str = "\
+usage: features render [options] WORD [DIR]
+
+Show the options and the arguments.
+
+arguments:
+  WORD  String
+  DIR   String, default: \".\"
+
+options:
+  -f, --format <FORMAT>  how to write the result (one of: plain, json, csv-lines; default: plain; env: FEATURES_FORMAT)
+  -n, --count <COUNT>    how many copies (default: 1; env: FEATURES_COUNT)
+  -q, --quiet            say less (env: FEATURES_QUIET)
+  -o, --output <FILE>    where to write (not with --quiet)
+  -a, --append           add to the end of the file (requires --output)
+  -h, --help             show this help
+";
+
+const RENDER_USAGE: &str = "usage: features render [options] WORD [DIR]\n";
+
+const PICK_HELP: &str = "\
+usage: features pick NAME [FORMAT]
+
+A format, or none.
+
+arguments:
+  NAME    String
+  FORMAT  Format, one of: plain, json, csv-lines, optional
+
+options:
+  -h, --help  show this help
+";
+
+type FeatureCase = (
+    Vec<&'static str>,
+    &'static str,
+    Vec<(&'static str, &'static str)>,
+    String,
+);
+
+/// (arguments, stdin, environment, expected) of `tests/cli/features.fwp`.
+fn feature_cases() -> Vec<FeatureCase> {
+    let c = |args: &[&'static str], env: &[(&'static str, &'static str)], want: &str| {
+        (args.to_vec(), "", env.to_vec(), want.to_string())
+    };
+    vec![
+        c(&["help", "render"], &[], &format!("{}code=0", RENDER_HELP)),
+        c(&["pick", "-h"], &[], &format!("{}code=0", PICK_HELP)),
+        // enumerations: any case, kebab-case or not; defaults
+        c(&["render", "w"], &[], "Plain 1 False None w .\ncode=0"),
+        c(&["render", "w", "-f", "json", "/tmp"], &[], "Json 1 False None w /tmp\ncode=0"),
+        c(
+            &["render", "w", "-f", "CSV_LINES", "-n", "2", "-o", "out.txt", "d"],
+            &[],
+            "CsvLines 2 False Some \"out.txt\" w d\ncode=0",
+        ),
+        c(
+            &["render", "w", "--format=csvlines"],
+            &[],
+            "CsvLines 1 False None w .\ncode=0",
+        ),
+        c(
+            &["render", "w", "-f", "xml"],
+            &[],
+            &format!(
+                "features render: option `--format`: `xml` is not one of plain, json, csv-lines\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        // environment variables: flag > environment > default
+        c(
+            &["render", "w"],
+            &[("FEATURES_FORMAT", "json"), ("FEATURES_COUNT", "7"), ("FEATURES_QUIET", "1")],
+            "Json 7 True None w .\ncode=0",
+        ),
+        c(
+            &["render", "w", "-f", "plain", "--no-quiet"],
+            &[("FEATURES_FORMAT", "json"), ("FEATURES_QUIET", "true")],
+            "Plain 1 False None w .\ncode=0",
+        ),
+        c(&["render", "w"], &[("FEATURES_COUNT", "")], "Plain 1 False None w .\ncode=0"),
+        c(
+            &["render", "w"],
+            &[("FEATURES_COUNT", "many")],
+            &format!(
+                "features render: environment variable `FEATURES_COUNT`: cannot parse `many` as I64\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w"],
+            &[("FEATURES_FORMAT", "xml")],
+            &format!(
+                "features render: environment variable `FEATURES_FORMAT`: `xml` is not one of plain, json, csv-lines\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        // options that conflict or go together
+        c(
+            &["render", "w", "-q", "-o", "f"],
+            &[],
+            &format!(
+                "features render: option `--output` cannot be used with `--quiet`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-o", "f"],
+            &[("FEATURES_QUIET", "true")],
+            &format!(
+                "features render: option `--output` cannot be used with `--quiet`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-a"],
+            &[],
+            &format!(
+                "features render: option `--append` needs `--output`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-ao", "f"],
+            &[],
+            "Plain 1 False Some \"f\" w .\ncode=0",
+        ),
+        // optional arguments: none of them comes from stdin
+        c(&["render"], &[], &format!("{}code=2", RENDER_USAGE)),
+        c(&["render", "a", "b", "c"], &[], &format!("{}code=2", RENDER_USAGE)),
+        c(&["pick", "x"], &[], "x: None\ncode=0"),
+        c(&["pick", "x", "JSON"], &[], "x: Some Json\ncode=0"),
+        c(
+            &["pick", "x", "json-lines"],
+            &[],
+            "features pick: argument 2: `json-lines` is not one of plain, json, csv-lines\ncode=2",
+        ),
+        // exit statuses
+        c(&["search", "a"], &[], "code=1"),
+        c(&["search", "a", "ab", "b", "ca"], &[], "ab\nca\ncode=0"),
+        c(&["leave", "300"], &[], "bye\ncode=44"),
+        c(&["leave", "-1"], &[], "bye\ncode=255"),
+        (vec!["check"], "1\n-2\n3\n", vec![], "1\n-2\n3\ncode=3".into()),
+        (vec!["check"], "4\n", vec![], "4\ncode=0".into()),
+        // completion scripts and the man page
+        c(
+            &["--completions"],
+            &[],
+            "features: option `--completions` needs a value (bash, zsh or fish)\ncode=2",
+        ),
+        c(
+            &["--completions", "tcsh"],
+            &[],
+            "features: unknown shell `tcsh` (bash, zsh or fish)\ncode=2",
+        ),
+        c(&["render", "--man"], &[], &format!("features render: unknown option `--man`\n{}code=2", RENDER_USAGE)),
+    ]
+}
+
+fn features() -> PathBuf {
+    root().join("tests/cli/features.fwp")
+}
+
+/// The output of a program (its stdout), which must succeed.
+fn output(mut cmd: Command, args: &[&str]) -> String {
+    let o = cmd.args(args).env_remove("FWP_OUT").output().unwrap();
+    assert!(
+        o.status.success(),
+        "{:?}: {}",
+        args,
+        String::from_utf8_lossy(&o.stderr)
+    );
+    String::from_utf8(o.stdout).unwrap()
+}
+
+#[test]
+fn enumerations_environment_and_statuses() {
+    let interp = Runner::Interp(vec!["--cli".into(), features().to_string_lossy().into()]);
+    let mut runners = vec![interp];
+    let dir = scratch("features");
+    if have_cc() {
+        let exe = dir.join("features");
+        build(&features(), &["--cli"], &exe);
+        runners.push(Runner::Native(exe));
+    }
+    let mut texts = Vec::new();
+    for r in &runners {
+        for (args, stdin, env, want) in feature_cases() {
+            let got = run_env(r.command(), &args, stdin, &env, &root());
+            assert_eq!(
+                got, want,
+                "features {:?} <<< {:?} with {:?}",
+                args, stdin, env
+            );
+        }
+        // the generated texts are the same in both backends
+        let mut t = Vec::new();
+        for args in [
+            &["--completions", "bash"][..],
+            &["--completions=zsh"],
+            &["--completions", "fish"],
+            &["--man"],
+        ] {
+            t.push(output(r.command(), args));
+        }
+        texts.push(t);
+    }
+    if texts.len() == 2 {
+        assert_eq!(
+            texts[0], texts[1],
+            "completion scripts and man pages differ"
+        );
+    }
+    let man = &texts[0][3];
+    assert!(man.starts_with(".TH FEATURES 1 "), "{}", man);
+    for part in [
+        ".SH COMMANDS",
+        ".SS features render [options] WORD [DIR]",
+        ".SH ENVIRONMENT",
+        "FEATURES_COUNT",
+    ] {
+        assert!(man.contains(part), "man page without {:?}", part);
+    }
+    check_bash(&texts[0][0], &dir);
+    check_other_shells(&texts[0][1], &texts[0][2], &dir);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The bash script parses, and completes like bash would with the words
+/// of a command line (`COMP_WORDS`; bash splits `--opt=value` in three).
+fn check_bash(script: &str, dir: &Path) {
+    let Ok(v) = Command::new("bash").arg("--version").output() else {
+        return;
+    };
+    if !v.status.success() {
+        return;
+    }
+    let file = dir.join("features.bash");
+    std::fs::write(&file, script).unwrap();
+    let o = Command::new("bash").arg("-n").arg(&file).output().unwrap();
+    assert!(
+        o.status.success(),
+        "bash -n: {}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+    std::fs::create_dir_all(dir.join("cdir/sub")).unwrap();
+    std::fs::write(dir.join("cdir/file.txt"), "").unwrap();
+    let cases: &[(&[&str], &str)] = &[
+        (&["features", ""], "render pick search leave check help"),
+        (&["features", "re"], "render"),
+        (&["features", "--c"], "--completions"),
+        (&["features", "--completions", ""], "bash zsh fish"),
+        (&["features", "help", "p"], "pick"),
+        (&["features", "render", "--f"], "--format"),
+        (
+            &["features", "render", "--format", ""],
+            "plain json csv-lines",
+        ),
+        (&["features", "render", "-f", "c"], "csv-lines"),
+        (&["features", "render", "--format", "=", "j"], "json"),
+        (&["features", "render", "-o", "cdir/f"], "cdir/file.txt"),
+        (&["features", "render", "w", "cdir/s"], "cdir/sub"),
+        (&["features", "render", "-n", "3", "w", "cdir/"], "cdir/sub"),
+        (
+            &["features", "render", "--count", "=", "3", "w", "cdir/s"],
+            "cdir/sub",
+        ),
+        (&["features", "render", ""], ""),
+        (&["features", "pick", "a", "c"], "csv-lines"),
+        (&["features", "search", "-"], "--help -h"),
+    ];
+    let mut sim = format!("source {}\n", file.display());
+    sim.push_str("c() { COMP_WORDS=(\"$@\"); COMP_CWORD=$((${#COMP_WORDS[@]} - 1)); COMPREPLY=(); _fwp_features; echo \"${COMPREPLY[*]}\"; }\n");
+    for (words, _) in cases {
+        let quoted: Vec<String> = words.iter().map(|w| format!("'{}'", w)).collect();
+        sim.push_str(&format!("c {}\n", quoted.join(" ")));
+    }
+    let o = Command::new("bash")
+        .arg("-c")
+        .arg(&sim)
+        .current_dir(dir)
+        .output()
+        .unwrap();
+    let got = String::from_utf8_lossy(&o.stdout);
+    let lines: Vec<&str> = got.lines().collect();
+    assert_eq!(
+        lines.len(),
+        cases.len(),
+        "{}{}",
+        got,
+        String::from_utf8_lossy(&o.stderr)
+    );
+    for ((words, want), line) in cases.iter().zip(lines) {
+        let mut g: Vec<&str> = line.split_whitespace().collect();
+        let mut w: Vec<&str> = want.split_whitespace().collect();
+        g.sort();
+        w.sort();
+        assert_eq!(g, w, "completing {:?}", words);
+    }
+}
+
+/// The zsh and fish scripts parse, when those shells are installed.
+fn check_other_shells(zsh: &str, fish: &str, dir: &Path) {
+    for (shell, script, check) in [("zsh", zsh, "-n"), ("fish", fish, "--no-execute")] {
+        if Command::new(shell).arg("--version").output().is_err() {
+            continue;
+        }
+        let file = dir.join(format!("features.{}", shell));
+        std::fs::write(&file, script).unwrap();
+        let o = Command::new(shell).arg(check).arg(&file).output().unwrap();
+        assert!(
+            o.status.success(),
+            "{} {}: {}",
+            shell,
+            check,
+            String::from_utf8_lossy(&o.stderr)
+        );
+    }
+}
+
+/// `process.call` writes on stderr when the program's output is the
+/// binary protocol (`FWP_OUT=bin`).
+#[test]
+fn called_programs_keep_the_protocol_clean() {
+    let src = root().join("tests/cli/relay.fwp");
+    let mut runners = vec![Runner::Interp(vec![
+        src.to_string_lossy().into(),
+        "relay".into(),
+    ])];
+    let dir = scratch("relay");
+    if have_cc() {
+        let exe = dir.join("relay");
+        build(&src, &["--fn", "relay"], &exe);
+        runners.push(Runner::Native(exe));
+    }
+    for r in &runners {
+        let o = r
+            .command()
+            .args(["echo", "called"])
+            .env("FWP_OUT", "bin")
+            .output()
+            .unwrap();
+        assert!(o.status.success());
+        assert!(o.stdout.starts_with(b"FWP1"));
+        assert!(!String::from_utf8_lossy(&o.stdout).contains("called"));
+        assert_eq!(String::from_utf8_lossy(&o.stderr), "called\n");
+        let o = r
+            .command()
+            .args(["echo", "called"])
+            .env_remove("FWP_OUT")
+            .output()
+            .unwrap();
+        assert_eq!(String::from_utf8_lossy(&o.stdout), "called\n0\n");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Mistakes in a command's declaration are reported when the program is
+/// run or built.
+#[test]
+fn declaration_errors() {
+    let dir = scratch("decl");
+    let cases = [
+        (
+            "O = {\n    # -a  a [requires: nope]\n    a: Bool,\n}\n\nexport g : O -> I64\ng = const 1\n",
+            "g",
+            "`[requires: nope]` of the option `--a`: `O` has no option `--nope`",
+        ),
+        (
+            "export f.defaults : { x: I64 }\nf.defaults = { x = 1 }\n\n# args: X Y\nexport f : I64 -> I64 -> I64\nf = curry (uncurry add)\n",
+            "f",
+            "the argument `X` of `f` has a default, but `Y` after it is required",
+        ),
+        (
+            "export f.defaults : { x: String }\nf.defaults = { x = \"a\" }\n\n# args: X\nexport f : I64 -> I64\nf = id\n",
+            "f",
+            "`f.defaults`: the field `x` is a `String`, but the argument `X` is a `I64`",
+        ),
+    ];
+    for (i, (src, f, msg)) in cases.iter().enumerate() {
+        let file = dir.join(format!("decl{}.fwp", i));
+        std::fs::write(&file, src).unwrap();
+        let o = Command::new(fwp())
+            .arg("exec")
+            .arg(&file)
+            .arg(f)
+            .output()
+            .unwrap();
+        assert_eq!(o.status.code(), Some(1));
+        assert_eq!(
+            String::from_utf8_lossy(&o.stderr),
+            format!("fwp exec: {}\n", msg)
+        );
+        let o = Command::new(fwp())
+            .arg("build")
+            .arg(&file)
+            .args(["--cli", "--emit-c", "-o"])
+            .arg(dir.join("out.c"))
+            .output()
+            .unwrap();
+        assert_eq!(
+            String::from_utf8_lossy(&o.stderr),
+            format!("fwp build: {}\n", msg)
+        );
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+const COUNT_HELP: &str = "\
+usage: docs count-words [options] [WORDS...]
+
+Count words.
+
+The signature spans several lines.
+
+arguments:
+  WORDS...  String, any number
+
+options:
+  -m, --limit <LIMIT>  stop at this many words (env: DOCS_LIMIT)
+  -u, --unique         count each word once
+  -h, --help           show this help
+";
+
+/// Doc comments come from the syntax tree: signatures on several lines,
+/// `rec` signatures exported later, records declared after their use or
+/// in other modules.
+#[test]
+fn doc_comments() {
+    let src = root().join("tests/cli/docs.fwp");
+    let mut runners = vec![Runner::Interp(vec![
+        "--cli".into(),
+        src.to_string_lossy().into(),
+    ])];
+    let dir = scratch("docs");
+    if have_cc() {
+        let exe = dir.join("docs");
+        build(&src, &["--cli"], &exe);
+        runners.push(Runner::Native(exe));
+    }
+    let cases: Vec<(Vec<&str>, String)> = vec![
+        (vec!["help", "count-words"], format!("{}code=0", COUNT_HELP)),
+        (vec!["count-words", "-u", "a", "b", "a"], "2\ncode=0".into()),
+        (
+            vec!["help", "countdown"],
+            "usage: docs countdown N\n\nCount down from N.\n\narguments:\n  N  I64, or one per line of standard input\n\noptions:\n  -h, --help  show this help\ncode=0".into(),
+        ),
+        (
+            vec!["help", "say"],
+            "usage: docs say [options] [WORD]\n\nSay something in a style.\n\narguments:\n  WORD  String, default: \"hello\"\n\noptions:\n  -l, --loud  in capitals\n  -h, --help  show this help\ncode=0".into(),
+        ),
+        (vec!["say", "-l"], "HELLO\ncode=0".into()),
+        (vec!["say", "bye"], "bye\ncode=0".into()),
+    ];
+    for r in &runners {
+        for (args, want) in &cases {
+            assert_eq!(
+                &run(r.command(), args, "", &root()),
+                want,
+                "docs {:?}",
+                args
+            );
+        }
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn single_function_executables() {
     let cases: Vec<(&str, Vec<&str>, &str, String)> = vec![
@@ -350,6 +841,30 @@ fn single_function_executables() {
             assert_eq!(&got, want, "native {} {:?}", f, args);
         }
     }
+    // a single command has completion scripts and a man page too
+    let interp = Runner::Interp(vec![app().to_string_lossy().into(), "repeat-word".into()]);
+    let bash = output(interp.command(), &["--completions", "bash"]);
+    assert!(
+        bash.contains("complete -o filenames -F _fwp_repeat 'repeat'"),
+        "{}",
+        bash
+    );
+    assert!(
+        bash.contains("'--verbose -v --times -n --label --extra -e --sep --help -h --version'"),
+        "{}",
+        bash
+    );
+    let man = output(interp.command(), &["--man"]);
+    assert!(
+        man.starts_with(".TH REPEAT 1 \"\" \"repeat 2.1.0\""),
+        "{}",
+        man
+    );
+    if native {
+        let exe = dir.join("repeat-word");
+        assert_eq!(output(Command::new(&exe), &["--completions", "bash"]), bash);
+        assert_eq!(output(Command::new(&exe), &["--man"]), man);
+    }
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -366,6 +881,11 @@ fn example_clis() {
     std::fs::write(dir.join("tree/sub/y.rs"), "1234567890\n").unwrap();
     std::fs::write(dir.join("tree/sub/notes.md"), "# notes\n").unwrap();
     std::fs::write(dir.join("tree/.hidden/z.rs"), "hidden\n").unwrap();
+    std::fs::write(
+        dir.join("people.csv"),
+        "name,city,age\nAnn,Paris,31\n\"Bob, Jr\",Oslo,45\nCid,\"New\nYork\",28\n",
+    )
+    .unwrap();
     let ex = |f: &str| root().join("examples/cli").join(f);
     // (file, --fn or None for --cli, arguments, stdin, expected)
     type Case = (
@@ -426,11 +946,74 @@ fn example_clis() {
             "2\ncode=0",
         ),
         (
+            "grep.fwp",
+            Some("grep"),
+            vec!["zzz", "a.txt"],
+            "",
+            "code=1",
+        ),
+        (
+            "grep.fwp",
+            Some("grep"),
+            vec!["-c", "zzz", "a.txt"],
+            "",
+            "0\ncode=1",
+        ),
+        (
             "dirstat.fwp",
             Some("dirstat"),
             vec!["tree"],
             "",
             "extension  files  bytes\nrs         2      24\nmd         1      8\ncode=0",
+        ),
+        (
+            "dirstat.fwp",
+            Some("dirstat"),
+            vec!["--sort", "name", "tree"],
+            "",
+            "extension  files  bytes\nmd         1      8\nrs         2      24\ncode=0",
+        ),
+        (
+            "dirstat.fwp",
+            Some("dirstat"),
+            vec!["-s", "Files", "-n", "2"],
+            "",
+            "extension  files  bytes\nrs         2      24\ntxt        2      37\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["columns", "people.csv"],
+            "",
+            "  1  name\n  2  city\n  3  age\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["show", "-n", "2", "people.csv"],
+            "",
+            "name     city   age\nAnn      Paris  31\nBob, Jr  Oslo   45\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["cut", "-c", "city", "-c", "name", "--format", "csv"],
+            "name,city\nAnn,Paris\n\"Bob, Jr\",Oslo\n",
+            "city,name\nParis,Ann\nOslo,\"Bob, Jr\"\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["cut", "-c", "zip", "people.csv"],
+            "",
+            "csvtool cut: there is no column `zip`\ncode=1",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["show", "-f", "xml"],
+            "",
+            "csvtool show: option `--format`: `xml` is not one of table, csv, tsv\nusage: csvtool show [options] [FILE]\ncode=2",
         ),
         ("todo.fwp", None, vec!["list"], "", "code=0"),
         (
@@ -499,15 +1082,20 @@ fn example_clis() {
         let _ = std::fs::remove_file(dir.join("todo.txt"));
         for (file, func, args, stdin, want) in &cases {
             let r = if runner_native {
-                let name = func.unwrap_or("todo");
-                let exe = dir.join(format!("{}-exe", name));
+                // a multi-command program is named after its file
+                let stem = file.trim_end_matches(".fwp");
+                let name = func.unwrap_or(stem);
+                // in a hidden directory, which `dirstat` skips
+                let bin = dir.join(".bin");
+                let exe = bin.join(format!("{}-exe", name));
                 if !exe.exists() {
+                    std::fs::create_dir_all(&bin).unwrap();
                     match func {
                         Some(f) => build(&ex(file), &["--fn", f], &exe),
-                        None => build(&ex(file), &["--cli"], &dir.join("todo")),
+                        None => build(&ex(file), &["--cli"], &bin.join(stem)),
                     }
                     if func.is_none() {
-                        std::fs::rename(dir.join("todo"), &exe).unwrap();
+                        std::fs::rename(bin.join(stem), &exe).unwrap();
                     }
                 }
                 Runner::Native(exe)
@@ -522,6 +1110,23 @@ fn example_clis() {
             let got = run(r.command(), args, stdin, &dir);
             assert_eq!(&got, want, "round {}: {} {:?}", round, file, args);
         }
+        // the file of `todo` from the environment
+        let todo = if runner_native {
+            Runner::Native(dir.join(".bin/todo-exe"))
+        } else {
+            Runner::Interp(vec![
+                "--cli".into(),
+                ex("todo.fwp").to_string_lossy().into(),
+            ])
+        };
+        let env = [("TODO_FILE", "env.txt")];
+        let got = run_env(todo.command(), &["add", "from", "env"], "", &env, &dir);
+        assert_eq!(got, "added\ncode=0");
+        let got = run_env(todo.command(), &["list"], "", &env, &dir);
+        assert_eq!(got, "  1. [ ] from env\ncode=0");
+        let got = run_env(todo.command(), &["list", "-f", "todo.txt"], "", &env, &dir);
+        assert_eq!(got, "  1. [ ] write docs\ncode=0");
+        let _ = std::fs::remove_file(dir.join("env.txt"));
     }
     let _ = std::fs::remove_dir_all(&dir);
 }

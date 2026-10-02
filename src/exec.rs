@@ -56,14 +56,20 @@ impl Emitter<'_> {
     }
 
     /// Write a result: an `Err` is returned, `None` writes nothing and a
-    /// list is one record per element.
+    /// list is one record per element. The exit status of an `Outcome`
+    /// (else 0).
     fn emit_result(
         &mut self,
         v: &Value,
         out: &cli::Output,
         prog: &Program,
-    ) -> Result<(), (Value, MT)> {
+    ) -> Result<i32, (Value, MT)> {
         let mut v = v.clone();
+        let mut status = 0;
+        if let (Some((o, st)), Value::Record(fs)) = (out.outcome, &v) {
+            status = fs[st].as_i128().unwrap_or(0).rem_euclid(256) as i32;
+            v = fs[o].clone();
+        }
         if let Some(e) = &out.error {
             match &v {
                 Value::Data(0, fs) => v = fs[0].clone(),
@@ -74,7 +80,7 @@ impl Emitter<'_> {
         if out.option {
             match &v {
                 Value::Data(1, fs) => v = fs[0].clone(),
-                _ => return Ok(()),
+                _ => return Ok(status),
             }
         }
         if out.list {
@@ -84,7 +90,7 @@ impl Emitter<'_> {
         } else {
             let _ = self.emit(&v, prog);
         }
-        Ok(())
+        Ok(status)
     }
 }
 
@@ -176,7 +182,57 @@ pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
             return 1;
         }
     };
+    let own = |n: &str| cli::has_flag(&cmd, n);
+    if let Some(code) = generated(argv, std::slice::from_ref(&cmd), None, prog, &own) {
+        return code;
+    }
     exec_command(prog, &cmd, argv)
+}
+
+/// `--completions SHELL` and `--man` as the first argument (unless the
+/// command has flags of these names, `own`): print the script or the
+/// page. The exit status, or `None` for other arguments.
+fn generated(
+    argv: &[String],
+    cmds: &[cli::Command],
+    multi: Option<&str>,
+    prog: &Program,
+    own: &dyn Fn(&str) -> bool,
+) -> Option<i32> {
+    let first = argv.first()?;
+    let name = match multi {
+        Some(n) => n.to_string(),
+        None => cmds.first().map(|c| c.name.clone()).unwrap_or_default(),
+    };
+    if first == "--man" && !own("man") {
+        print!(
+            "{}",
+            crate::cli_gen::man_page(cmds, multi, &prog.docs.module)
+        );
+        return Some(0);
+    }
+    let shell = match first.strip_prefix("--completions") {
+        Some("") if !own("completions") => argv.get(1).cloned(),
+        Some(s) if s.starts_with('=') && !own("completions") => Some(s[1..].to_string()),
+        _ => return None,
+    };
+    let Some(shell) = shell else {
+        eprintln!(
+            "{}: option `--completions` needs a value (bash, zsh or fish)",
+            name
+        );
+        return Some(2);
+    };
+    match crate::cli_gen::completions(&shell, cmds, multi) {
+        Some(text) => {
+            print!("{}", text);
+            Some(0)
+        }
+        None => {
+            eprintln!("{}: unknown shell `{}` (bash, zsh or fish)", name, shell);
+            Some(2)
+        }
+    }
 }
 
 /// Run a multi-command program (`fwp build --cli`): the first argument
@@ -196,6 +252,9 @@ pub fn exec_program(prog: &Program, name: &str, argv: &[String]) -> i32 {
     };
     if let Some(c) = find(first) {
         return exec_command(prog, c, &argv[1..]);
+    }
+    if let Some(code) = generated(argv, &cmds, Some(name), prog, &|_| false) {
+        return code;
     }
     let version = cmds.first().and_then(|c| c.version.clone());
     match first.as_str() {
@@ -277,66 +336,50 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
         Ok(cli::Parsed::Args(v, p)) => (v, p),
     };
     let mut args = Vec::new();
-    let mut first = 0;
     if let (true, Some(o)) = (flags_mode, &cmd.options) {
         let defaults = cli::default_values(cmd, prog);
-        match cli::build_record(o, vals, &defaults) {
+        let env = |var: &str| std::env::var_os(var).map(|v| v.to_string_lossy().into_owned());
+        match cli::build_record(o, vals, &defaults, &env, prog) {
             Ok(r) => args.push(r),
             Err(m) => return usage_error(Some(m)),
         }
-        first = 1;
     }
     let end = n - cmd.unit_last as usize;
-    let pos_types = &params[first..end];
-    let m = pos_types.len();
-    let k = pos.len();
-    let variadic = cmd.variadic;
-    let parse_arg = |i: usize, a: &str, t: &MT| {
-        crate::textio::parse(a, t, prog).map_err(|_| {
-            eprintln!(
-                "{}: argument {}: cannot parse `{}` as {}",
-                name,
-                i + 1,
-                a,
-                t
-            );
-            2
-        })
-    };
-    let from_stdin = if variadic {
-        if k + 1 < m {
-            return usage_error(None);
+    let from_stdin = if !flags_mode && cmd.record_fallback {
+        // the record as an argument or from stdin, as before
+        match pos.len() {
+            0 => true,
+            1 => match crate::textio::parse(&pos[0], &params[0], prog) {
+                Ok(v) => {
+                    args.push(v);
+                    false
+                }
+                Err(_) => {
+                    eprintln!(
+                        "{}: argument 1: cannot parse `{}` as {}",
+                        name, pos[0], params[0]
+                    );
+                    return 2;
+                }
+            },
+            _ => return usage_error(None),
         }
-        for (i, a) in pos.iter().enumerate().take(m - 1) {
-            match parse_arg(i, a, &pos_types[i]) {
-                Ok(v) => args.push(v),
-                Err(c) => return c,
-            }
-        }
-        let elem = cli::list_elem(&pos_types[m - 1]).unwrap_or_else(MT::unit);
-        let mut rest = Vec::new();
-        for (i, a) in pos.iter().enumerate().skip(m - 1) {
-            match parse_arg(i, a, &elem) {
-                Ok(v) => rest.push(v),
-                Err(c) => return c,
-            }
-        }
-        args.push(Value::list(rest));
-        false
     } else {
-        if k > m || k + 1 < m {
-            return usage_error(None);
-        }
-        for (i, a) in pos.iter().enumerate() {
-            match parse_arg(i, a, &pos_types[i]) {
-                Ok(v) => args.push(v),
-                Err(c) => return c,
+        match cli::bind_positional(cmd, &pos, prog) {
+            Ok((vs, stdin)) => {
+                args.extend(vs);
+                stdin
+            }
+            Err(cli::ArgError::Usage) => return usage_error(None),
+            Err(cli::ArgError::Value(m)) => {
+                eprintln!("{}: {}", name, m);
+                return 2;
             }
         }
-        k < m
     };
     let output = &cmd.output;
     let binary = std::env::var("FWP_OUT").is_ok_and(|v| v == "bin");
+    crate::sys::OUTPUT_TO_STDERR.store(binary, std::sync::atomic::Ordering::Relaxed);
     let stdout = std::io::stdout();
     let mut lock = std::io::BufWriter::new(stdout.lock());
     if binary {
@@ -360,7 +403,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
             binary,
             elem: output.elem.clone(),
         };
-        let run = |it: &mut Interp, mut args: Vec<Value>, em: &mut Emitter| -> Result<(), i32> {
+        let run = |it: &mut Interp, mut args: Vec<Value>, em: &mut Emitter| -> Result<i32, i32> {
             if cmd.unit_last {
                 args.push(Value::unit());
             }
@@ -381,7 +424,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                     let res = em.emit_result(&v, output, prog);
                     let _ = em.out.flush();
                     match res {
-                        Ok(()) => Ok(()),
+                        Ok(status) => Ok(status),
                         Err((e, mt)) => {
                             eprintln!("{}: {}", name, error_text(&e, &mt, prog));
                             Err(1)
@@ -407,9 +450,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
         };
         let mut code = 0;
         if !from_stdin {
-            if let Err(c) = run(&mut it, args, &mut em) {
-                code = c;
-            }
+            code = run(&mut it, args, &mut em).unwrap_or_else(|c| c);
         } else {
             let last = params[end - 1].clone();
             let (collect, elem) = match list_elem(&last) {
@@ -432,9 +473,12 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                                 } else {
                                     let mut a = args.clone();
                                     a.push(v);
-                                    if let Err(c) = run(&mut it, a, &mut em) {
-                                        code = c;
-                                        break;
+                                    match run(&mut it, a, &mut em) {
+                                        Ok(st) => code = code.max(st),
+                                        Err(c) => {
+                                            code = c;
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -449,9 +493,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
                     if collect && code == 0 {
                         let mut a = args.clone();
                         a.push(Value::list(items));
-                        if let Err(c) = run(&mut it, a, &mut em) {
-                            code = c;
-                        }
+                        code = run(&mut it, a, &mut em).unwrap_or_else(|c| c);
                     }
                 }
             }

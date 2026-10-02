@@ -1,0 +1,7 @@
+# Types of tests/cli/docs.fwp, in another module.
+
+CountOptions = {
+    # -m <LIMIT>  stop at this many words [env: DOCS_LIMIT]
+    limit: Option[I64],
+    unique: Bool, # -u  count each word once
+}

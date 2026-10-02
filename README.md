@@ -83,7 +83,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
-| [docs/cli.md](docs/cli.md) | any function as a command-line program: flags, help, subcommands, exit statuses |
+| [docs/cli.md](docs/cli.md) | any function as a command-line program: flags, choices, environment variables, help, subcommands, exit statuses, shell completion, man pages |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
 | [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |

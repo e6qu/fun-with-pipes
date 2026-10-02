@@ -1,0 +1,12 @@
+Some "Ann"
+True
+False
+Some "secret"
+True
+[###       ]  30%
+A
+B
+None
+False
+--- stderr
+Name: Sure? [y/N] Again? [y/N] Password: Again? [y/N] 

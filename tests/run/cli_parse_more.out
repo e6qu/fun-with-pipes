@@ -1,0 +1,13 @@
+Ok (Options {anonymous = False, key = [Low], level = Medium, next = Some VeryHigh, password = None, user = None}, [])
+Ok (Options {anonymous = False, key = [VeryHigh, Medium], level = VeryHigh, next = Some Low, password = None, user = None}, [])
+Err "option `--level`: `extreme` is not one of low, medium, very-high"
+Err "option `--user` needs `--password`"
+Ok (Options {anonymous = False, key = [Low], level = Medium, next = Some VeryHigh, password = Some "x", user = Some "ann"}, [])
+Err "option `--anonymous` cannot be used with `--password`"
+Ok (Options {anonymous = True, key = [Low], level = Medium, next = Some VeryHigh, password = None, user = None}, [])
+  -l, --level <LEVEL>      how much (one of: low, medium, very-high; default: medium)
+      --next <Level>       the next level (one of: low, medium, very-high; default: very-high)
+  -k, --key <KEY>          keys (one of: low, medium, very-high; repeatable; default: [Low])
+  -u, --user <USER>        log in as (requires --password)
+  -p, --password <SECRET>  the password
+  -a, --anonymous          anonymously (not with --user, --password)
