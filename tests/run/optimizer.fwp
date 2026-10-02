@@ -1,0 +1,25 @@
+# Inlining must keep evaluation order and effects.
+
+loud = tap print
+
+rec count-down = match
+    0 -> 0
+    _ -> sub 1 | count-down | add 1
+
+pipeline = add 1 | mul 2 | flip sub 100 | show
+
+main = [
+    # fork evaluates f before g, then combines: concat (f x) (g x)
+    "x" | fork concat (concat "1" | loud) (concat "2" | loud) | print,
+    # arguments are evaluated even when a combinator drops them
+    const 1 (print "dropped but evaluated") | echo,
+    # closures stored in data and applied later
+    [add 1, mul 2, sub 3] | map (apply 10) | echo,
+    7 | pipeline | print,
+    # partial application of a composed function
+    [1, 2, 3] | map (add 1 | mul 2) | sum | echo,
+    # deep (non-tail) recursion
+    100000 | count-down | echo,
+    # curry/uncurry/swap round trips
+    (1, 2) | swap | uncurry (curry id) | echo,
+] | ignore

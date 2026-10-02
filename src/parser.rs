@@ -14,6 +14,8 @@ pub struct Parser<'a> {
     pos: usize,
     layout: Vec<u32>,
     next_id: &'a mut NodeId,
+    /// Names whose signature was written with `rec`.
+    rec_sigs: Vec<String>,
 }
 
 /// Parse a whole source file. `next_id` supplies unique node ids across
@@ -25,6 +27,7 @@ pub fn parse_module(text: &str, file: u32, next_id: &mut NodeId) -> DResult<Modu
         pos: 0,
         layout: vec![1],
         next_id,
+        rec_sigs: Vec::new(),
     };
     p.module()
 }
@@ -37,6 +40,7 @@ pub fn parse_expr_text(text: &str, file: u32, next_id: &mut NodeId) -> DResult<E
         pos: 0,
         layout: vec![0],
         next_id,
+        rec_sigs: Vec::new(),
     };
     let e = p.expr()?;
     if !p.at(&Tok::Eof) {
@@ -330,6 +334,14 @@ impl<'a> Parser<'a> {
             Tok::Upper(_) => Ok(Decl::Type(self.type_decl()?)),
             Tok::Keyword(Kw::Trait) => self.trait_decl(),
             Tok::Keyword(Kw::Impl) => self.impl_decl(),
+            Tok::Keyword(Kw::Rec) if matches!(self.peek_at(2), Tok::Sym(Sym::Colon)) => {
+                // `rec name : T` marks the following binding as recursive.
+                self.bump();
+                let (name, sp) = self.ident("name")?;
+                self.rec_sigs.push(name.clone());
+                let sig = self.sig_rest(name, sp)?;
+                Ok(Decl::Sig { sig, export: false })
+            }
             Tok::Keyword(Kw::Rec) => Ok(Decl::Bind(self.binding()?)),
             Tok::Ident(_) => {
                 if matches!(self.peek_at(1), Tok::Sym(Sym::Colon)) {
@@ -390,6 +402,7 @@ impl<'a> Parser<'a> {
         let (name, sp) = self.ident("binding name")?;
         self.expect_sym(Sym::Eq)?;
         let body = self.expr()?;
+        let rec = rec || self.rec_sigs.contains(&name);
         Ok(Binding {
             name,
             span: sp,

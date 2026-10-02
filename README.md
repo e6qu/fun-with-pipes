@@ -23,14 +23,16 @@ implementation roadmap.
 | Effect rows, handlers (`attempt`, `try`, `run-state`), effect rules, affine resources | done |
 | Monomorphization, typed IR, interpreter (`fwp run`, `fwp test`) | done |
 | Standard library: lists, Option/Result, strings, arrays, maps, sets, bytes, lazy iterators, IO | done |
-| Native AOT (C backend), executables, pipe protocol | planned |
+| IR optimizer, native AOT via C (`fwp build`), differential testing | done |
+| Standalone function executables, typed pipe protocol | planned |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |
 
 ## Usage
 
 ```
 cargo build --release
-./target/release/fwp run examples/hello.fwp            # run main
+./target/release/fwp run examples/hello.fwp            # run main (interpreter)
+./target/release/fwp build examples/hello.fwp -o hello # native executable via C
 ./target/release/fwp test some-file.fwp                # run test declarations
 ./target/release/fwp test --std                        # run the standard library's tests
 ./target/release/fwp check examples/hello.fwp          # print inferred types
