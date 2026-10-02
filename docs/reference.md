@@ -364,6 +364,9 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
+| `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |
+| `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |
+| `FWP_GC_STRESS=n` | native programs: collect at every n-th allocation (`1`: at every one), to find bugs in the runtime |
 | `CC` | the C compiler for native builds |
 | `AR` | the archiver for `--staticlib` |
 | `FWP_WASM_CC` | the C compiler for WebAssembly builds |

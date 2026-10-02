@@ -94,7 +94,15 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    connection's own task. `lib/tls.fwp` has connections with
    verification, SNI and ALPN. See [docs/tls.md](docs/tls.md) and
    [tutorial 19](docs/tutorials/19-tls/README.md).
-8. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+8. **A garbage collector for native programs** (done). A non-moving
+   mark-and-sweep collector with size-segregated chunks, leaf objects
+   that are never scanned, and conservative roots: registers, the running
+   stack, every suspended task's stack and the program's writable data.
+   Long-running native servers (HTTP, REST, gRPC) and long loops now run
+   in bounded memory; `FWP_GC_STRESS` runs the golden suite with a
+   collection at every allocation. WebAssembly builds keep the bump
+   allocator. See [the design](docs/design.md#runtime).
+9. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 
