@@ -359,4 +359,4 @@ is checked; the shell sessions above show them as programs.
 
 ---
 
-Previous: [fwp in the browser](../15-browser/README.md) · [All tutorials](../README.md)
+Previous: [fwp in the browser](../15-browser/README.md) · Next: [REST APIs and OpenAPI](../17-rest-and-openapi/README.md) · [All tutorials](../README.md)

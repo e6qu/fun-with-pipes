@@ -18,7 +18,8 @@ inventory  pricing  shop
 ```
 
 [Tutorial 14](tutorials/14-services/README.md) walks through a small
-example. The shop in [`examples/services`](../examples/services/main.fwp)
+example. The same exported functions can also be command-line programs
+and REST endpoints; [interfaces.md](interfaces.md) compares the three. The shop in [`examples/services`](../examples/services/main.fwp)
 splits into two services, one of which calls the other.
 
 ## The method

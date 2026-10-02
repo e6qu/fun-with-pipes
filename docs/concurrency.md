@@ -115,7 +115,11 @@ The signatures of everything below are in the
 
 - **JSON:** `json.parse` (errors give the byte offset), `json.encode`,
   `json.get`, `json.at` and `json.as-*`. `null` is the explicit variant
-  `Json.Null`.
+  `Json.Null`. `json.write` and `json.read` convert values of any
+  encodable type to JSON text and back, with errors that name the JSON
+  path (`$.items[2].price: expected a number, got "x"`); the mapping is in
+  [rest.md](rest.md#json). Exported functions can be served as REST
+  endpoints without a handler ([rest.md](rest.md)).
 - **URLs:** `url.parse`, `url.encode`, `url.decode`, `form.parse` and
   `form.encode`.
 - **Logs:** `log.info`, `log.warn`, `log.error` and

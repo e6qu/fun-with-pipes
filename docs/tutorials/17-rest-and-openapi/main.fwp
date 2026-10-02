@@ -1,0 +1,207 @@
+# 17. REST APIs and OpenAPI
+#
+# Exported functions are REST endpoints: `fwp serve --rest` serves them
+# with JSON bodies, and their OpenAPI document is derived from their types.
+
+export version : String
+version = "1.0.0"
+
+Size =
+    | Small
+    | Medium
+    | Large
+
+Parcel = { weight: F64, size: Size, to: String }
+
+Carrier = {
+    name: String,
+    base: F64,
+    per-kg: F64,
+    days: I64,
+    countries: List[String],
+}
+
+Rate = { carrier: String, price: F64, days: I64 }
+
+Options = {
+    # only carriers that deliver within two days
+    express: Bool,
+    # at most this many days
+    max-days: Option[I64],
+}
+
+# why a parcel cannot be shipped
+Problem =
+    | TooHeavy F64
+    | NoRoute String
+
+carriers : List[Carrier]
+carriers = [
+    Carrier {
+        name = "swift",
+        base = 9.0,
+        per-kg = 2.0,
+        days = 1,
+        countries = ["FR", "DE"],
+    },
+    Carrier {
+        name = "steady",
+        base = 4.0,
+        per-kg = 1.0,
+        days = 4,
+        countries = ["FR", "DE", "IT"],
+    },
+]
+
+# A carrier by its name.
+# route: GET /carriers/{name}
+export carrier : String -> Option[Carrier]
+carrier = eq | compose .name | find | apply carriers
+
+# The rates for a parcel, cheapest first.
+# route: POST /rates
+# error: TooHeavy 422, NoRoute 404
+export rates : Options -> Parcel -> List[Rate] ! {Error[Problem]}
+rates = curry (tap (.1 | check-weight) | fork offers .0 (.1 | routes))
+
+check-weight : Parcel -> () ! {Error[Problem]}
+check-weight = if (.weight | gt 30.0) (.weight | TooHeavy | fail) (const ())
+
+serving : String -> List[Carrier]
+serving = contains | compose .countries | filter | apply carriers
+
+routes : Parcel -> List[Rate] ! {Error[Problem]}
+routes =
+    if
+        (.to | serving | is-empty)
+        (.to | NoRoute | fail)
+        (fork map rate (.to | serving))
+
+factor : Size -> F64
+factor = match
+    Small -> 1.0
+    Medium -> 1.5
+    Large -> 2.5
+
+rate : Parcel -> Carrier -> Rate
+rate = curry (make Rate {
+    carrier = .1 | .name,
+    price =
+        fork
+            add
+            (.1 | .base)
+            (fork mul (.1 | .per-kg) (.0 | fork mul .weight (.size | factor))),
+    days = .1 | .days,
+})
+
+offers : Options -> List[Rate] -> List[Rate]
+offers = curry (fork filter (.0 | keep) .1 | sort-by .price)
+
+keep : Options -> Rate -> Bool
+keep = curry (fork
+    and
+    (if (.0 | .express) (.1 | .days | le 2) (const True))
+    (fork within (.0 | .max-days) (.1 | .days)))
+
+within : Option[I64] -> I64 -> Bool
+within = curry (match
+    (None, _) -> const True
+    (Some _, _) -> le)
+
+parcel : Parcel
+parcel = Parcel { weight = 2.0, size = Medium, to = "FR" }
+
+anything : Options
+anything = Options { express = False, max-days = None }
+
+read-parcel : String -> Result[Parcel, String]
+read-parcel = json.read
+
+# The endpoints as `fwp serve --rest` builds them, called in-process.
+api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+api = http.router [
+    rest.endpoint-option
+        RestRoute {
+            method = "GET",
+            path = "/carriers/{name}",
+            sources = [RestSource.Path "name"],
+            status = 200,
+            error-status = 500,
+            errors = [],
+        }
+        carrier,
+    rest.endpoint
+        RestRoute {
+            method = "POST",
+            path = "/rates",
+            sources = [
+                RestSource.Fields [("express", 3), ("max-days", 1)],
+                RestSource.Body False,
+            ],
+            status = 200,
+            error-status = 500,
+            errors = [("TooHeavy", 422), ("NoRoute", 404)],
+        }
+        (uncurry rates),
+]
+
+request : (String, String, String, String) -> Request
+request = make Request {
+    method = .0,
+    path = .1,
+    query = .2,
+    version = const "HTTP/1.1",
+    headers = const [],
+    body = .3 | string.to-bytes,
+    params = const [],
+    remote = const "test",
+}
+
+body-text : Body -> String
+body-text = match
+    Body.Full _ -> string.from-bytes | option.unwrap-or ""
+    Body.Stream _ -> const ""
+
+call : (String, String, String, String) -> () ! {Async, IO, Network, FileIO}
+call =
+    request
+    | attempt api
+    | rest.respond
+    | both .status (.body | body-text)
+    | format "{} {}"
+    | print
+
+main = [
+    "swift" | carrier | echo,
+    parcel | attempt (rates anything) | echo,
+    parcel | rates anything | json.write | print,
+    TooHeavy 40.0 | json.write | print,
+    "{\"weight\": 2, \"size\": \"Medium\", \"to\": \"IT\"}" | read-parcel | echo,
+    "{\"weight\": 2, \"size\": \"Tiny\", \"to\": \"IT\"}" | read-parcel | echo,
+    ("GET", "/carriers/swift", "", "") | call,
+    ("GET", "/carriers/zippy", "", "") | call,
+    (
+        "POST",
+        "/rates",
+        "express",
+        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"DE\"}",
+    ) | call,
+    (
+        "POST",
+        "/rates",
+        "max-days=x",
+        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"DE\"}",
+    ) | call,
+    (
+        "POST",
+        "/rates",
+        "",
+        "{\"weight\": 40, \"size\": \"Small\", \"to\": \"DE\"}",
+    ) | call,
+    (
+        "POST",
+        "/rates",
+        "",
+        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"JP\"}",
+    ) | call,
+] | ignore

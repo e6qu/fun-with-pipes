@@ -216,8 +216,10 @@ foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "sn
 ## The `fwp` command
 
 Exported functions also run as command-line programs, with flags, help,
-subcommands, environment variables, shell completion and man pages: see
-[cli.md](cli.md).
+subcommands, environment variables, shell completion and man pages
+([cli.md](cli.md)), and as REST endpoints with a JSON contract and an
+OpenAPI document ([rest.md](rest.md)); [interfaces.md](interfaces.md)
+compares these with gRPC services.
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
@@ -228,6 +230,8 @@ fwp build file.fwp [options]                  compile
     --fn name        an exported function as an executable (see cli.md)
     --cli            every exported function as a subcommand of one
                      executable (see cli.md)
+    --rest           every exported function as an endpoint of one HTTP
+                     server, with /openapi.json (see rest.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
@@ -238,7 +242,10 @@ fwp build file.fwp [options]                  compile
                      a directory for the main and server executables
 fwp serve [--service M]... file.fwp module [--listen A]
                                               serve a module over gRPC (interpreter)
+fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints (interpreter)
 fwp proto file.fwp [--service M]...           print the .proto of the services
+fwp openapi file.fwp                          print the OpenAPI document of the REST endpoints
+fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI document
 fwp exec file.fwp fn [args...]                run an exported function
 fwp exec --cli file.fwp [command] [args...]   run the file as `--cli` builds it
 fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes
@@ -343,6 +350,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_SEED` | fixes the seed of `random.*` |
 | `FWP_OUT=bin` | makes executable functions write the binary protocol |
 | `FWP_SERVICE_<M>` | the `host:port` of service `M` (see [services](services.md)) |
+| `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `CC` | the C compiler for native builds |
 | `AR` | the archiver for `--staticlib` |
