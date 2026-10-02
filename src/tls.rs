@@ -82,6 +82,19 @@ struct Lib {
     ssl_get0_alpn_selected: unsafe extern "C" fn(Ptr, *mut *const u8, *mut u32),
     ssl_get_verify_result: unsafe extern "C" fn(Ptr) -> c_long,
     x509_verify_cert_error_string: unsafe extern "C" fn(c_long) -> *const c_char,
+    ctx_set_client_ca_list: unsafe extern "C" fn(Ptr, Ptr),
+    load_client_ca_file: unsafe extern "C" fn(*const c_char) -> Ptr,
+    ssl_use_certificate_chain_file: unsafe extern "C" fn(Ptr, *const c_char) -> c_int,
+    ssl_use_private_key_file: unsafe extern "C" fn(Ptr, *const c_char, c_int) -> c_int,
+    ssl_check_private_key: unsafe extern "C" fn(Ptr) -> c_int,
+    ssl_get1_peer_certificate: unsafe extern "C" fn(Ptr) -> Ptr,
+    x509_get_subject_name: unsafe extern "C" fn(Ptr) -> Ptr,
+    x509_name_print_ex: unsafe extern "C" fn(Ptr, Ptr, c_int, u64) -> c_int,
+    x509_free: unsafe extern "C" fn(Ptr),
+    bio_s_mem: unsafe extern "C" fn() -> Ptr,
+    bio_new: unsafe extern "C" fn(Ptr) -> Ptr,
+    bio_ctrl: unsafe extern "C" fn(Ptr, c_int, c_long, Ptr) -> c_long,
+    bio_free: unsafe extern "C" fn(Ptr) -> c_int,
     err_get_error: unsafe extern "C" fn() -> u64,
     err_reason_error_string: unsafe extern "C" fn(u64) -> *const c_char,
     err_clear_error: unsafe extern "C" fn(),
@@ -95,6 +108,10 @@ unsafe impl Sync for Lib {}
 const SSL_FILETYPE_PEM: c_int = 1;
 const SSL_VERIFY_NONE: c_int = 0;
 const SSL_VERIFY_PEER: c_int = 1;
+const SSL_VERIFY_FAIL_IF_NO_PEER_CERT: c_int = 2;
+/// XN_FLAG_RFC2253: names as `CN=alice,O=Example`.
+const XN_FLAG_RFC2253: u64 = 0x317 | 0x10000 | 0x100000 | 0x1000000;
+const BIO_CTRL_INFO: c_int = 3;
 const SSL_ERROR_SSL: c_int = 1;
 const SSL_ERROR_WANT_READ: c_int = 2;
 const SSL_ERROR_WANT_WRITE: c_int = 3;
@@ -191,6 +208,19 @@ fn load() -> Result<Lib, String> {
         ssl_get0_alpn_selected: f!(ssl, "SSL_get0_alpn_selected"),
         ssl_get_verify_result: f!(ssl, "SSL_get_verify_result"),
         x509_verify_cert_error_string: f!(crypto, "X509_verify_cert_error_string"),
+        ctx_set_client_ca_list: f!(ssl, "SSL_CTX_set_client_CA_list"),
+        load_client_ca_file: f!(ssl, "SSL_load_client_CA_file"),
+        ssl_use_certificate_chain_file: f!(ssl, "SSL_use_certificate_chain_file"),
+        ssl_use_private_key_file: f!(ssl, "SSL_use_PrivateKey_file"),
+        ssl_check_private_key: f!(ssl, "SSL_check_private_key"),
+        ssl_get1_peer_certificate: f!(ssl, "SSL_get1_peer_certificate"),
+        x509_get_subject_name: f!(crypto, "X509_get_subject_name"),
+        x509_name_print_ex: f!(crypto, "X509_NAME_print_ex"),
+        x509_free: f!(crypto, "X509_free"),
+        bio_s_mem: f!(crypto, "BIO_s_mem"),
+        bio_new: f!(crypto, "BIO_new"),
+        bio_ctrl: f!(crypto, "BIO_ctrl"),
+        bio_free: f!(crypto, "BIO_free"),
         err_get_error: f!(crypto, "ERR_get_error"),
         err_reason_error_string: f!(crypto, "ERR_reason_error_string"),
         err_clear_error: f!(crypto, "ERR_clear_error"),
@@ -351,11 +381,16 @@ unsafe extern "C" fn alpn_select(
 }
 
 /// A server context with a certificate chain and its private key (PEM
-/// files), offering the protocols `alpn`.
-pub fn server_ctx(cert: &str, key: &str, alpn: &[String]) -> Result<Ctx, String> {
+/// files), offering the protocols `alpn`; with a CA file (`client_ca`,
+/// "" for none), it requires clients to present a certificate that the
+/// CA signed (mutual TLS).
+pub fn server_ctx(cert: &str, key: &str, alpn: &[String], client_ca: &str) -> Result<Ctx, String> {
     let l = lib()?;
     readable(cert)?;
     readable(key)?;
+    if !client_ca.is_empty() {
+        readable(client_ca)?;
+    }
     unsafe { (l.err_clear_error)() };
     let ptr = new_ctx(l, true)?;
     let ctx = Ctx {
@@ -389,6 +424,27 @@ pub fn server_ctx(cert: &str, key: &str, alpn: &[String]) -> Result<Ctx, String>
         if !ctx.alpn.0.is_empty() {
             let arg = &*ctx.alpn as *const AlpnList as Ptr;
             (l.ctx_set_alpn_select_cb)(ptr, alpn_select, arg);
+        }
+        if !client_ca.is_empty() {
+            let c = CString::new(client_ca).map_err(|_| format!("{}: invalid path", client_ca))?;
+            if (l.ctx_load_verify_locations)(ptr, c.as_ptr(), std::ptr::null()) != 1 {
+                return Err(format!(
+                    "{}: cannot load CA certificates: {}",
+                    client_ca,
+                    reason(l)
+                ));
+            }
+            // the CAs the client is asked for
+            let names = (l.load_client_ca_file)(c.as_ptr());
+            if !names.is_null() {
+                (l.ctx_set_client_ca_list)(ptr, names);
+            }
+            (l.err_clear_error)();
+            (l.ctx_set_verify)(
+                ptr,
+                SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                std::ptr::null_mut(),
+            );
         }
     }
     Ok(ctx)
@@ -463,6 +519,10 @@ pub struct ClientOpts<'a> {
     pub verify: bool,
     pub name: &'a str,
     pub alpn: &'a [String],
+    /// A client certificate chain and its key (PEM files; "" for none),
+    /// for servers that require one.
+    pub cert: &'a str,
+    pub key: &'a str,
 }
 
 fn is_ip(s: &str) -> bool {
@@ -476,6 +536,10 @@ impl Session {
         let l = lib()?;
         unsafe { (l.err_clear_error)() };
         let ctx = client_ctx(l, o.ca, o.verify)?;
+        if !o.cert.is_empty() {
+            readable(o.cert)?;
+            readable(if o.key.is_empty() { o.cert } else { o.key })?;
+        }
         let ssl = unsafe { (l.ssl_new)(ctx) };
         if ssl.is_null() {
             return Err(format!("cannot create a TLS session: {}", reason(l)));
@@ -508,8 +572,68 @@ impl Session {
             if !w.is_empty() {
                 (l.ssl_set_alpn_protos)(ssl, w.as_ptr(), w.len() as u32);
             }
+            if !o.cert.is_empty() {
+                let key = if o.key.is_empty() { o.cert } else { o.key };
+                let c = CString::new(o.cert).map_err(|_| format!("{}: invalid path", o.cert))?;
+                let k = CString::new(key).map_err(|_| format!("{}: invalid path", key))?;
+                if (l.ssl_use_certificate_chain_file)(ssl, c.as_ptr()) != 1 {
+                    return Err(format!(
+                        "{}: cannot load the certificate: {}",
+                        o.cert,
+                        reason(l)
+                    ));
+                }
+                if (l.ssl_use_private_key_file)(ssl, k.as_ptr(), SSL_FILETYPE_PEM) != 1 {
+                    return Err(format!(
+                        "{}: cannot load the private key: {}",
+                        key,
+                        reason(l)
+                    ));
+                }
+                if (l.ssl_check_private_key)(ssl) != 1 {
+                    (l.err_clear_error)();
+                    return Err(format!(
+                        "{}: the private key does not match the certificate",
+                        key
+                    ));
+                }
+            }
         }
         Ok(s)
+    }
+
+    /// The subject of the peer's certificate (RFC 2253: `CN=alice,O=Example`),
+    /// if it presented one; a server that requires client certificates has
+    /// verified it.
+    pub fn peer_subject(&self) -> Option<String> {
+        let l = lib().ok()?;
+        if !self.handshaken() {
+            return None;
+        }
+        unsafe {
+            let cert = (l.ssl_get1_peer_certificate)(self.ssl);
+            if cert.is_null() {
+                return None;
+            }
+            let name = (l.x509_get_subject_name)(cert);
+            let bio = (l.bio_new)((l.bio_s_mem)());
+            let mut out = None;
+            if !bio.is_null() && !name.is_null() {
+                (l.x509_name_print_ex)(bio, name, 0, XN_FLAG_RFC2253);
+                let mut p: *mut c_char = std::ptr::null_mut();
+                let n = (l.bio_ctrl)(bio, BIO_CTRL_INFO, 0, &mut p as *mut *mut c_char as Ptr);
+                if n >= 0 && !p.is_null() {
+                    let b = std::slice::from_raw_parts(p as *const u8, n as usize);
+                    out = Some(String::from_utf8_lossy(b).into_owned());
+                }
+            }
+            if !bio.is_null() {
+                (l.bio_free)(bio);
+            }
+            (l.x509_free)(cert);
+            (l.err_clear_error)();
+            out
+        }
     }
 
     /// A server session on an accepted socket.
@@ -686,35 +810,44 @@ pub fn host_of(addr: &str) -> &str {
         .unwrap_or(host)
 }
 
-/// The certificate and key files of a server: `--tls-cert`/`--tls-key`
-/// (taken out of `args`), else `FWP_TLS_CERT`/`FWP_TLS_KEY`; both or
-/// neither.
-pub fn server_files(args: &mut Vec<String>) -> Result<Option<(String, String)>, String> {
+/// The TLS files of a server: its certificate and key, and the CA of the
+/// client certificates it requires ("" for none).
+#[derive(Clone, Debug)]
+pub struct ServerFiles {
+    pub cert: String,
+    pub key: String,
+    pub client_ca: String,
+}
+
+/// The TLS files of a server: `--tls-cert`/`--tls-key` (taken out of
+/// `args`), else `FWP_TLS_CERT`/`FWP_TLS_KEY`, both or neither; and
+/// `--tls-client-ca`, else `FWP_TLS_CLIENT_CA`, which needs them.
+pub fn server_files(args: &mut Vec<String>) -> Result<Option<ServerFiles>, String> {
     let mut cert = None;
     let mut key = None;
+    let mut ca = None;
     let mut i = 0;
     while i < args.len() {
         let a = args[i].clone();
-        let (slot, value) = if a == "--tls-cert" || a == "--tls-key" {
+        let names = ["--tls-cert", "--tls-key", "--tls-client-ca"];
+        let (k, value) = if names.contains(&a.as_str()) {
             if i + 1 >= args.len() {
                 return Err(format!("{} needs a file", a));
             }
-            let v = args.remove(i + 1);
-            (
-                if a == "--tls-cert" {
-                    &mut cert
-                } else {
-                    &mut key
-                },
-                v,
-            )
-        } else if let Some(v) = a.strip_prefix("--tls-cert=") {
-            (&mut cert, v.to_string())
-        } else if let Some(v) = a.strip_prefix("--tls-key=") {
-            (&mut key, v.to_string())
+            (a.clone(), args.remove(i + 1))
+        } else if let Some((n, v)) = a
+            .split_once('=')
+            .filter(|(n, _)| names.contains(n))
+        {
+            (n.to_string(), v.to_string())
         } else {
             i += 1;
             continue;
+        };
+        let slot = match k.as_str() {
+            "--tls-cert" => &mut cert,
+            "--tls-key" => &mut key,
+            _ => &mut ca,
         };
         *slot = Some(value);
         args.remove(i);
@@ -722,8 +855,16 @@ pub fn server_files(args: &mut Vec<String>) -> Result<Option<(String, String)>, 
     let env = |k: &str| std::env::var(k).ok().filter(|v| !v.is_empty());
     let cert = cert.or_else(|| env("FWP_TLS_CERT"));
     let key = key.or_else(|| env("FWP_TLS_KEY"));
+    let ca = ca.or_else(|| env("FWP_TLS_CLIENT_CA"));
     match (cert, key) {
-        (Some(c), Some(k)) => Ok(Some((c, k))),
+        (Some(cert), Some(key)) => Ok(Some(ServerFiles {
+            cert,
+            key,
+            client_ca: ca.unwrap_or_default(),
+        })),
+        (None, None) if ca.is_some() => Err(
+            "client certificates (--tls-client-ca or FWP_TLS_CLIENT_CA) need a server certificate and key (--tls-cert and --tls-key)".into(),
+        ),
         (None, None) => Ok(None),
         (Some(_), None) => Err("a TLS certificate needs a key (--tls-key or FWP_TLS_KEY)".into()),
         (None, Some(_)) => Err("a TLS key needs a certificate (--tls-cert or FWP_TLS_CERT)".into()),

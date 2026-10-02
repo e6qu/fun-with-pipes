@@ -1,0 +1,31 @@
+# Who the client is, by its certificate (mutual TLS), over REST and gRPC
+# (tests/tls.rs).
+#
+# auth: client-cert
+
+Who = { subject: String }
+
+# Clients of the test CA, but not its rogue ones.
+authenticate : String -> Result[Who, String]
+authenticate =
+    if
+        (string.contains "rogue")
+        (const (Err "not welcome"))
+        (make Who { subject = id } | Ok)
+
+# The subject of the client's certificate, through authentication.
+# route: GET /whoami
+export whoami : Who -> String
+whoami = .subject
+
+# The subject of the client's certificate, from the request.
+# route: GET /peer
+# auth: none
+export peer : Request -> String
+peer = http.peer-subject | option.unwrap-or "none"
+
+# The subject of the client's certificate of a gRPC call.
+# route: GET /grpc-peer
+# auth: none
+export grpc-peer : () -> String ! {Network}
+grpc-peer = grpc.peer-subject | option.unwrap-or "none"

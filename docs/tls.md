@@ -48,6 +48,7 @@ server and client of `lib/http.fwp` are such code). `tls.read`,
 | `tls.accept`, `tls.accept-for` | accept a connection; its handshake happens on its first read or write |
 | `tls.handshake conn` | finish an accepted connection's handshake now |
 | `tls.alpn conn` | the protocol chosen with ALPN (`""` for none) |
+| `tls.peer-subject conn` | the subject of the certificate the peer presented (`Some "CN=fwp client,O=fwp"`, as RFC 2253 writes names), after the handshake |
 | `tls.secure conn` | `True` for a TLS connection, `False` for a plain one (or a closed one) |
 | `tls.available ()` | OpenSSL can be used |
 
@@ -65,12 +66,15 @@ TlsOptions = {
     insecure: Bool,              # do not verify the server's certificate
     server-name: Option[String], # the name to verify and send (default: the host)
     alpn: List[String],          # protocols to offer
+    cert-file: Option[String],   # a client certificate chain (PEM), for mutual TLS
+    key-file: Option[String],    # and its private key (else in cert-file)
 }
 ```
 
 `tls.options` verifies with the system's CA certificates, offers no
-protocols and takes the server name from the address. Change it with
-`with` or `tls.with-ca`:
+protocols, presents no certificate and takes the server name from the
+address. Change it with `with`, `tls.with-ca` or
+`tls.with-cert "client.pem" "client.key"`:
 `tls.options | with { server-name = Some "api.internal", alpn = ["h2"] }`.
 
 * **Verification** is on by default: the chain must lead to a trusted CA,
@@ -91,13 +95,48 @@ protocols and takes the server name from the address. Change it with
 ### Servers
 
 ```
-TlsServer = { cert-file: String, key-file: String, alpn: List[String] }
+TlsServer = {
+    cert-file: String,
+    key-file: String,
+    alpn: List[String],
+    client-ca: Option[String],
+}
 ```
 
 `cert-file` is a PEM certificate chain (the server's certificate first,
 then intermediates), `key-file` its private key (PEM, unencrypted). Both
 are loaded by `tls.listen`, which fails if they cannot be read or do not
-match. Client certificates are not requested.
+match. Without `client-ca`, client certificates are not requested.
+
+### Mutual TLS
+
+`tls.server "server.pem" "server.key" | tls.with-client-ca "ca.pem"` is a
+server that requires a client certificate signed by the CA certificates
+of `ca.pem`: a client without one, or with one of another CA, fails the
+handshake (the server's `tls.handshake`, or first read, fails with
+`TLS handshake failed: ...`; the client sees an `IoError` of kind `"tls"`
+when it reads). After the handshake `tls.peer-subject conn` is the
+client's verified subject, which the server can use to authorize it.
+Clients present a certificate with `tls.with-cert`:
+
+```
+server = tls.server "server.pem" "server.key" | tls.with-client-ca "ca.pem"
+client = tls.options | tls.with-ca "ca.pem" | tls.with-cert "client.pem" "client.key"
+```
+
+* **HTTPS**: a `ServerConfig` whose `tls` has `client-ca` requires client
+  certificates; `http.peer-subject request` is the client's subject.
+* **REST**: `--tls-client-ca ca.pem` (or `FWP_TLS_CLIENT_CA`), and
+  `# auth: client-cert` authenticates clients by their subject
+  ([rest.md](rest.md#authentication)); the OpenAPI document declares a
+  `mutualTLS` security scheme.
+* **gRPC**: `--tls-client-ca ca.pem` (or `FWP_TLS_CLIENT_CA`) for
+  `--grpc` and `--service` servers, `tls.with-client-ca` in the
+  `TlsServer` of `grpc.serve-tls`; `grpc.peer-subject ()` is the subject
+  of the call's client. Clients present certificates with
+  `grpc.with-tls` or `FWP_SERVICE_<M>_CERT` ([below](#grpc)).
+
+`tests/tls/mutual.fwp` is an example.
 
 ### Errors
 
@@ -201,6 +240,23 @@ TLS, as every gRPC implementation does). Cleartext h2c stays the default.
   `SSL_CERT_FILE` and `SSL_CERT_DIR` replace, and must be for `host`. A
   failure is `UNAVAILABLE`:
   `cannot connect to localhost:50051: certificate verify failed: unable to get local issuer certificate`.
+* **Per-address options**: `grpc.with-tls options f` makes the calls of
+  `f` connect with `TlsOptions`: a CA file, `insecure`, a server name, a
+  client certificate and key (connections are pooled per address and
+  options). The stubs of split builds read them for a service `m` from
+  `FWP_SERVICE_<M>_CA`, `FWP_SERVICE_<M>_INSECURE` (`1`),
+  `FWP_SERVICE_<M>_SERVER_NAME`, `FWP_SERVICE_<M>_CERT` and
+  `FWP_SERVICE_<M>_KEY`, unless the calling task has `grpc.with-tls`.
+
+  ```fwp
+  # a call with TLS options
+  call : (TlsOptions, String) -> String ! {Network, Error[GrpcError]}
+  call =
+      fork
+          grpc.with-tls
+          .0
+          (.1 | iter.later (flip whoamigen.whoami.grpc-peer () | .value))
+  ```
 
 Calls over TLS send `:scheme https`. Connections are pooled per address,
 as for h2c.
@@ -228,7 +284,9 @@ for `localhost` and `127.0.0.1`, and clients trust `ca.pem`
 `tests/tls.rs` runs, on both backends: TLS connections with verification
 and its failures (an untrusted CA, a wrong name), ALPN, plain clients of
 TLS servers and TLS clients of plain servers, stalled handshakes
-(`tests/tls/streams.fwp`); `examples/server/api.fwp` over HTTPS queried
+(`tests/tls/streams.fwp`); mutual TLS (`tests/tls/mutual.fwp`), REST and
+gRPC servers that require client certificates (`tests/tls/whoami.fwp`,
+with curl, grpcurl, `grpc.with-tls` and `FWP_SERVICE_<M>_CERT`); `examples/server/api.fwp` over HTTPS queried
 by curl and by fwp clients while other clients stall in their
 handshakes; fwp clients of `openssl s_server`; a REST server over HTTPS
 with the generated OpenAPI client; and the weather service over TLS
@@ -237,11 +295,12 @@ needs the `openssl` command and skips without it.
 
 ## Limitations
 
-* No client certificates (mutual TLS), no encrypted private keys, no
-  certificate reloading, no session resumption settings, no cipher or
-  version settings, no OCSP or certificate revocation lists.
-* gRPC clients have no per-address CA or insecure mode: they trust the
-  system's CA certificates or `SSL_CERT_FILE`/`SSL_CERT_DIR`.
+* No encrypted private keys, no certificate reloading, no session
+  resumption settings, no cipher or version settings, no OCSP or
+  certificate revocation lists. A server's client certificates are
+  verified against one CA file, and the handler sees only the subject.
+* Clients generated by `fwp openapi --import` (`rest.fetch`) present no
+  client certificates; use `http.send-with` with `tls.with-cert` by hand.
 * HTTPS is HTTP/1.1; HTTP/2 is used only by gRPC.
 * No DTLS (TLS over UDP) and no QUIC.
 * OpenSSL 3 only, found under its usual names (`libssl.so.3`, then

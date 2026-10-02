@@ -171,6 +171,12 @@ http.query-param = json.lookup | compose (.query | form.parse)
 http.param : String -> Request -> Option[String]
 http.param = json.lookup | compose .params
 
+# the subject of the client's certificate (`CN=alice,O=Example`), when the
+# server requires client certificates (mutual TLS: `client-ca` in its
+# `TlsServer`), which it has then verified
+http.peer-subject : Request -> Option[String]
+http.peer-subject = http.param ":tls-peer"
+
 http.body-text : Request -> String
 http.body-text = .body | string.from-bytes | option.unwrap-or ""
 
@@ -318,7 +324,7 @@ http.dispatch = curry (match
     (_, None) -> http.missing
     (_, Some _) -> curry (fork
         apply
-        (fork http.set-params (.1 | .1) (.0 | .1))
+        (fork http.set-params (fork append (.1 | .1) (.0 | .1 | .params)) (.0 | .1))
         (.1 | .0 | .handler)))
 
 # internal
@@ -448,6 +454,7 @@ http.tls-server = make TlsServer {
     cert-file = .cert-file,
     key-file = .key-file,
     alpn = const ["http/1.1"],
+    client-ca = .client-ca,
 }
 
 # Serve on a listener (for example one bound to port 0; a listener from
@@ -783,7 +790,12 @@ http.request-of = make Request {
     version = .version,
     headers = .headers,
     body = fork http.bytes-take .length (.st | .buffer),
-    params = const [],
+    params =
+        .st
+        | .conn
+        | tls.peer-subject
+        | option.map (curry id ":tls-peer")
+        | option.to-list,
     remote = .st | .conn | tcp.peer-addr,
 }
 
@@ -1078,6 +1090,8 @@ http.tls-client = make TlsOptions {
     insecure = .insecure,
     server-name = .server-name,
     alpn = const ["http/1.1"],
+    cert-file = .cert-file,
+    key-file = .key-file,
 }
 
 # internal

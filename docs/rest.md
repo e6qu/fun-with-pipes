@@ -40,7 +40,9 @@ one.
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
 `--tls-key file` (default: `FWP_TLS_CERT` and `FWP_TLS_KEY`; with both,
-it serves HTTPS, see [tls.md](tls.md#rest)), `--cors origins` (the
+it serves HTTPS, see [tls.md](tls.md#rest)), `--tls-client-ca file`
+(default: `FWP_TLS_CLIENT_CA`: require client certificates signed by
+these CAs, [tls.md](tls.md#mutual-tls)), `--cors origins` (the
 origins that may call it from browsers, [below](#cors); default:
 `FWP_REST_CORS`), `--openapi` (print the document and exit) and `--help`.
 It writes `fwp: rest listening on http://host:port` (`https://` with TLS)
@@ -254,6 +256,7 @@ authenticate = match
 | `# auth: api-key header X-API-Key` (or `api-key X-API-Key`) | the value of a header |
 | `# auth: api-key query api_key` | the value of a query parameter |
 | `# auth: api-key cookie key` | the value of a cookie |
+| `# auth: client-cert` | the subject of the client's certificate (`CN=alice,O=Example`), on a server that requires client certificates (`--tls-client-ca`, [tls.md](tls.md#mutual-tls)) |
 | `# auth: none` | no credentials (overrides the file's default) |
 
 Several `# auth:` lines are alternatives: the first credential the request
@@ -565,8 +568,8 @@ endpoints byte for byte.
 * Authentication is bearer tokens and API keys checked by one function;
   no HTTP basic authentication, OAuth flows or scopes (the token of an
   OAuth flow is a bearer token, which `authenticate` must verify itself).
-  Mutual TLS identifies clients by certificate ([tls.md](tls.md#mutual-tls)),
-  but the certificate is not an OpenAPI security scheme.
+  Generated clients do not send client certificates (operations that
+  require `mutualTLS` are left out of them).
 * CORS origins are exact (no patterns), and the methods, headers and max
   age of the policy are derived from the API rather than configured.
 * A `RestReply` result chooses its status and headers, but errors keep

@@ -98,6 +98,7 @@ struct g_conn {
     int preface, goaway;
     char *dead;
     fwp_wl writer_wl, space_wl;
+    char *tlskey;              /* a client's TLS options (g_tls key), or 0 */
     g_conn *next_pool;
 };
 
@@ -107,7 +108,16 @@ typedef struct g_serving {
     fwp_task *task;
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
+    char *peer;                /* the subject of the client's certificate, or 0 */
 } g_serving;
+
+/* how a client's calls connect over TLS (`grpc.with-tls`, or the
+ * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
+ * `key` tells connections with these options apart in the pool */
+typedef struct {
+    char *ca, *name, *cert, *keyfile, *key;
+    int insecure;
+} g_tls;
 
 /* a task's gRPC context: metadata and deadline of the calls it makes, and
  * the call it serves */
@@ -116,6 +126,7 @@ typedef struct {
     size_t n;
     int64_t deadline;
     g_serving *serving;
+    const g_tls *tls;
 } g_ctx;
 
 static g_ctx g_empty_ctx;
@@ -761,7 +772,48 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 
 /* ------------------------------------------------------------------ client */
 
-static g_conn *g_connect(const char *given, char **err) {
+static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
+    g_tls *t = (g_tls *)calloc(1, sizeof *t);
+    t->ca = strdup(ca);
+    t->insecure = insecure;
+    t->name = strdup(name);
+    t->cert = strdup(cert);
+    t->keyfile = strdup(key);
+    t->key = g_strdupf("%s|%d|%s|%s|%s", ca, insecure, name, cert, key);
+    return t;
+}
+
+/* the TLS options of a service's variables (FWP_SERVICE_<M>_CA,
+ * _INSECURE, _SERVER_NAME, _CERT, _KEY), or 0; read once per service */
+static const g_tls *g_env_tls(const char *var) {
+    static struct g_env_tls { const char *var; const g_tls *tls; struct g_env_tls *next; } *known = 0;
+    for (struct g_env_tls *k = known; k; k = k->next)
+        if (strcmp(k->var, var) == 0) return k->tls;
+    const char *v[5];
+    static const char *const sfx[5] = {"CA", "INSECURE", "SERVER_NAME", "CERT", "KEY"};
+    for (int i = 0; i < 5; i++) {
+        char name[300];
+        snprintf(name, sizeof name, "%s_%s", var, sfx[i]);
+        v[i] = getenv(name);
+        if (v[i] && !*v[i]) v[i] = 0;
+    }
+    int insecure = v[1] && strcmp(v[1], "0") != 0 && strcmp(v[1], "false") != 0;
+    struct g_env_tls *k = (struct g_env_tls *)calloc(1, sizeof *k);
+    k->var = strdup(var);
+    k->tls = v[0] || insecure || v[2] || v[3] || v[4]
+                 ? g_tls_new(v[0] ? v[0] : "", insecure, v[2] ? v[2] : "", v[3] ? v[3] : "", v[4] ? v[4] : "")
+                 : 0;
+    k->next = known;
+    known = k;
+    return k->tls;
+}
+
+static int g_same_tls(const char *a, const g_tls *t) {
+    if (!t) return a == 0;
+    return a && strcmp(a, t->key) == 0;
+}
+
+static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     char host[256], port[32], addr[300];
     int tls;
     g_addr(given, &tls, addr, sizeof addr);
@@ -805,8 +857,10 @@ static g_conn *g_connect(const char *given, char **err) {
     SSL *ssl = 0;
     if (tls) {
         /* verified with the system's CA certificates (SSL_CERT_FILE,
-         * SSL_CERT_DIR), offering h2 */
-        ssl = fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3);
+         * SSL_CERT_DIR) unless the options say otherwise, offering h2 */
+        ssl = opts ? fwp_tls_client_new(fd, opts->ca, !opts->insecure, *opts->name ? opts->name : host,
+                                        (const unsigned char *)"\x02h2", 3, opts->cert, opts->keyfile)
+                   : fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3, "", "");
         if (!ssl || !fwp_tls_finish(ssl, fd, 0)) {
             *err = g_strdupf("cannot connect to %s: %s", addr, fwp_tls_err);
             if (ssl) SSL_free(ssl);
@@ -816,6 +870,7 @@ static g_conn *g_connect(const char *given, char **err) {
     }
     g_conn *c = g_conn_new(fd, given, 0);
     c->ssl = ssl;
+    c->tlskey = opts ? strdup(opts->key) : 0;
     c->refs = 2;
     fwp_spawn_task(0, g_reader, c, 0, 1);
     fwp_spawn_task(0, g_writer, c, 0, 1);
@@ -837,18 +892,22 @@ static void g_timeout_header(int64_t deadline, char *out, size_t n) {
     }
 }
 
-/* start a call: 0 and the error in *err on a transport failure */
-static g_stream *g_open(const char *addr, const char *path, const char *fp, g_conn **cp, int *reused, char **err) {
+/* start a call: 0 and the error in *err on a transport failure; with the
+ * TLS options of the task's context, else `dflt` */
+static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, g_conn **cp, int *reused, char **err,
+                            const g_tls *dflt) {
     fwp_tasks_init();
     fwp_check_cancel();
+    const g_tls *opts = g_ctx_of()->tls ? g_ctx_of()->tls : dflt;
     g_conn *c = 0;
     for (g_conn *p = g_pool; p; p = p->next_pool)
-        if (strcmp(p->authority, addr) == 0 && !p->dead && !p->goaway && p->next_stream < 0x7fff0000u) {
+        if (strcmp(p->authority, addr) == 0 && g_same_tls(p->tlskey, opts) && !p->dead && !p->goaway &&
+            p->next_stream < 0x7fff0000u) {
             c = p;
             break;
         }
     *reused = c != 0;
-    if (!c) c = g_connect(addr, err);
+    if (!c) c = g_connect(addr, opts, err);
     if (!c) return 0;
     g_ctx *ctx = g_ctx_of();
     int64_t deadline = g_earliest(ctx->deadline, fwp_cur->deadline);
@@ -1109,7 +1168,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     for (int attempt = 0;; attempt++) {
         int reused = 0;
         char *err = 0;
-        s = g_open(addr, r->m.path, r->m.fingerprint, &c, &reused, &err);
+        s = g_open_tls(addr, r->m.path, r->m.fingerprint, &c, &reused, &err, g_env_tls(r->env));
         if (!s) g_stub_fail(r, addr, -1, err);
         if (r->m.input == 0) {
             h2_buf req = {0};
@@ -1285,6 +1344,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
         snprintf(j->what, sizeof j->what, "%s", path[0] == '/' ? path + 1 : path);
     j->sv.headers = &s->headers;
     j->sv.code = -1;
+    j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
@@ -1728,12 +1788,20 @@ static const char *const g_builtin_paths[4] = {
 /* the TLS context of a server with a certificate and key (`--tls-cert`,
  * `--tls-key`, else FWP_TLS_CERT and FWP_TLS_KEY); 0 without them, and
  * -1 (reported) on errors */
-static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
+static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, int *failed) {
     *failed = 0;
     if (!cert || !*cert) cert = getenv("FWP_TLS_CERT");
     if (!key || !*key) key = getenv("FWP_TLS_KEY");
+    if (!ca || !*ca) ca = getenv("FWP_TLS_CLIENT_CA");
     if (cert && !*cert) cert = 0;
     if (key && !*key) key = 0;
+    if (!ca) ca = "";
+    if (!cert && !key && *ca) {
+        fprintf(stderr, "fwp serve: client certificates (--tls-client-ca or FWP_TLS_CLIENT_CA) need a server "
+                        "certificate and key (--tls-cert and --tls-key)\n");
+        *failed = 1;
+        return 0;
+    }
     if (!cert && !key) return 0;
     if (!cert || !key) {
         fprintf(stderr, "fwp serve: %s\n",
@@ -1742,7 +1810,7 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
         *failed = 1;
         return 0;
     }
-    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3);
+    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3, ca);
     if (!ctx) {
         fprintf(stderr, "fwp serve: %s\n", fwp_tls_err);
         *failed = 1;
@@ -1751,7 +1819,7 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
 }
 
 static int fwp_serve(const fwp_service *s, int argc, char **argv) {
-    const char *listen_at = 0, *cert = 0, *key = 0;
+    const char *listen_at = 0, *cert = 0, *key = 0, *ca = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--listen") == 0 && i + 1 < argc) listen_at = argv[++i];
         else if (strncmp(argv[i], "--listen=", 9) == 0) listen_at = argv[i] + 9;
@@ -1759,13 +1827,17 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
         else if (strncmp(argv[i], "--tls-cert=", 11) == 0) cert = argv[i] + 11;
         else if (strcmp(argv[i], "--tls-key") == 0 && i + 1 < argc) key = argv[++i];
         else if (strncmp(argv[i], "--tls-key=", 10) == 0) key = argv[i] + 10;
+        else if (strcmp(argv[i], "--tls-client-ca") == 0 && i + 1 < argc) ca = argv[++i];
+        else if (strncmp(argv[i], "--tls-client-ca=", 16) == 0) ca = argv[i] + 16;
         else {
-            fprintf(stderr, "usage: %s [--listen host:port] [--tls-cert file --tls-key file]\n", argv[0]);
+            fprintf(stderr,
+                    "usage: %s [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]]\n",
+                    argv[0]);
             return 2;
         }
     }
     int failed;
-    SSL_CTX *tls = g_server_tls(cert, key, &failed);
+    SSL_CTX *tls = g_server_tls(cert, key, ca, &failed);
     if (failed) return 1;
     if (!listen_at) {
         listen_at = getenv(s->env);
@@ -1838,7 +1910,7 @@ static V fwp_p_grpc_open(V addr, V path, const fwp_desc *gerr) {
     int reused;
     char *err = 0;
     int64_t deadline = g_ctx_of()->deadline;
-    g_stream *s = g_open(STR(addr)->d, STR(path)->d, 0, &c, &reused, &err);
+    g_stream *s = g_open_tls(STR(addr)->d, STR(path)->d, 0, &c, &reused, &err, 0);
     if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
     return g_call_value(c, s, 0, deadline);
 }
@@ -1964,6 +2036,27 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
     return g_with_ctx(ctx, f);
 }
 
+static V fwp_p_grpc_peer_subject(void) {
+    g_serving *sv = g_ctx_of()->serving;
+    if (!sv || !sv->peer) return FWP_NONE;
+    return fwp_some(fwp_cstr(sv->peer));
+}
+
+/* the text of an `Option[String]` field ("" for None) */
+static const char *g_opt_text(V o) { return o == FWP_NONE ? "" : STR(OBJ(o)->f[0])->d; }
+
+/* TlsOptions, with the indices of its fields ca-file, insecure,
+ * server-name, cert-file and key-file */
+static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, int ikey) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    V *fs = OBJ(o)->f;
+    ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
+                         g_opt_text(fs[ikey]));
+    return g_with_ctx(ctx, f);
+}
+
 static V fwp_p_grpc_with_deadline(V d, V f) {
     g_ctx *cur = g_ctx_of();
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
@@ -2014,9 +2107,11 @@ static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_des
     return g_serve_routes(0, addr, routes, ioerr, gerr);
 }
 
-/* certificate, key (PEM files), address, routes */
-static V fwp_p_grpc_serve_tls(V cert, V key, V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
-    SSL_CTX *tls = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3);
+/* certificate, key (PEM files), client CA ("" for none), address, routes */
+static V fwp_p_grpc_serve_tls(V cert, V key, V client_ca, V addr, V routes, const fwp_desc *ioerr,
+                              const fwp_desc *gerr) {
+    SSL_CTX *tls =
+        fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3, STR(client_ca)->d);
     if (!tls) return fwp_io_error("tls", fwp_tls_err, ioerr);
     return g_serve_routes(tls, addr, routes, ioerr, gerr);
 }
@@ -2031,7 +2126,7 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
         g_conn *c = 0;
         int reused;
         char *err = 0;
-        g_stream *s = g_open(STR(a[3])->d, STR(a[2])->d, 0, &c, &reused, &err);
+        g_stream *s = g_open_tls(STR(a[3])->d, STR(a[2])->d, 0, &c, &reused, &err, 0);
         if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
         /* a failure (an error of the encoder or decoder) resets the stream */
         fwp_handler h;

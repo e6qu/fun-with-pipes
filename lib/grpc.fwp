@@ -115,6 +115,16 @@ foreign "fwp" grpc.metadata : () -> List[(String, String)] ! {Network}
 grpc.header : String -> Option[String] ! {Network}
 grpc.header = fork json.lookup id (const () | grpc.metadata)
 
+# the subject of the client's certificate (`CN=alice,O=Example`) of the
+# call the current task serves, when the server requires client
+# certificates (mutual TLS); `None` otherwise
+foreign "fwp" grpc.peer-subject : () -> Option[String] ! {Network}
+
+# run a function whose calls connect over TLS with these options: a CA
+# file, no verification, a server name, a client certificate (ALPN is h2).
+# Connections are kept per address and options.
+foreign "fwp" grpc.with-tls : TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
 # run a function whose calls send this metadata as well
 foreign "fwp" grpc.with-metadata : List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}
 
@@ -153,14 +163,18 @@ foreign "fwp" grpc.cancel : GrpcStream -> () ! {Network}
 # port, reported on standard error), with health checking
 # (`grpc.health.v1.Health`), until the task is cancelled
 foreign "fwp" grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-# certificate, key, address, routes
-foreign "fwp" grpc._serve-tls : String -> String -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+# certificate, key, client CA ("" for none), address, routes
+foreign "fwp" grpc._serve-tls : String -> String -> String -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
 # serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
-# certificate chain and private key (`tls.server "cert.pem" "key.pem"`);
+# certificate chain and private key (`tls.server "cert.pem" "key.pem"`,
+# and `tls.with-client-ca "ca.pem"` to require client certificates);
 # clients call `tls://host:port`
 grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-grpc.serve-tls = fork apply .key-file (.cert-file | grpc._serve-tls)
+grpc.serve-tls = fork
+    apply
+    (.client-ca | option.unwrap-or "")
+    (fork apply .key-file (.cert-file | grpc._serve-tls))
 
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute

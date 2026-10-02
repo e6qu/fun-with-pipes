@@ -127,6 +127,8 @@ pub enum Auth {
     /// An API key in a header, query parameter or cookie (the place) of a
     /// name.
     ApiKey { place: String, name: String },
+    /// The subject of the client's certificate (mutual TLS).
+    ClientCert,
 }
 
 impl Auth {
@@ -134,6 +136,7 @@ impl Auth {
     pub fn scheme_name(&self) -> String {
         match self {
             Auth::Bearer => "bearerAuth".into(),
+            Auth::ClientCert => "mutualTLS".into(),
             Auth::ApiKey { name, .. } => {
                 let clean: String = name
                     .chars()
@@ -380,6 +383,7 @@ fn parse_auth(s: &str) -> Result<Option<Auth>, String> {
     match words[..] {
         ["none"] => Ok(None),
         ["bearer"] => Ok(Some(Auth::Bearer)),
+        ["client-cert"] => Ok(Some(Auth::ClientCert)),
         ["api-key", name] => Ok(Some(Auth::ApiKey {
             place: "header".into(),
             name: name.to_string(),
@@ -392,7 +396,7 @@ fn parse_auth(s: &str) -> Result<Option<Auth>, String> {
         }
         _ => {
             Err(format!(
-            "invalid `# auth:{}` (it is `bearer`, `api-key [header|query|cookie] name` or `none`)",
+            "invalid `# auth:{}` (it is `bearer`, `api-key [header|query|cookie] name`, `client-cert` or `none`)",
             if s.is_empty() { String::new() } else { format!(" {}", s.trim()) }
         ))
         }
@@ -1017,6 +1021,7 @@ fn source_expr(s: &Source) -> String {
 fn auth_expr(a: &Auth) -> String {
     match a {
         Auth::Bearer => "RestAuth.Bearer".into(),
+        Auth::ClientCert => "RestAuth.ClientCert".into(),
         Auth::ApiKey { place, name } => {
             format!("RestAuth.ApiKey {} {}", fwp_string(place), fwp_string(name))
         }

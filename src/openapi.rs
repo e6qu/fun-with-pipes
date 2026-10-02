@@ -660,6 +660,7 @@ fn security_scheme(a: &Auth) -> Json {
             ("in", Json::str(place)),
             ("name", Json::str(name)),
         ]),
+        Auth::ClientCert => obj(vec![("type", Json::str("mutualTLS"))]),
     }
 }
 

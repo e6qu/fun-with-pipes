@@ -47,11 +47,13 @@ RestPlace =
     | RestPlace.Header String
     | RestPlace.Cookie String
 
-# A security scheme: `Authorization: Bearer <token>`, or an API key in a
-# place ("header", "query" or "cookie") under a name.
+# A security scheme: `Authorization: Bearer <token>`, an API key in a
+# place ("header", "query" or "cookie") under a name, or the subject of
+# the client's certificate (mutual TLS, `http.peer-subject`).
 RestAuth =
     | RestAuth.Bearer
     | RestAuth.ApiKey String String
+    | RestAuth.ClientCert
 
 # Cross-origin requests (CORS): the origins allowed (`*` for any; none
 # allows no cross-origin request), the methods and request headers they
@@ -96,6 +98,7 @@ RestOptions = {
     listen: Option[String],
     tls-cert: Option[String],
     tls-key: Option[String],
+    tls-client-ca: Option[String],
     cors: Option[String],
     openapi: Bool,
     help: Bool,
@@ -579,7 +582,8 @@ rest.credential = curry (fork filter-map (.1 | rest.credential-of) .0 | head)
 rest.credential-of : Request -> RestAuth -> Option[String]
 rest.credential-of = curry (match
     (_, RestAuth.Bearer) -> rest.bearer-token
-    (_, RestAuth.ApiKey _ _) -> curry3 rest.api-key)
+    (_, RestAuth.ApiKey _ _) -> curry3 rest.api-key
+    (_, RestAuth.ClientCert) -> http.peer-subject)
 
 # the token of `Authorization: Bearer <token>`
 rest.bearer-token : Request -> Option[String]
@@ -786,7 +790,8 @@ rest.main = curry (make RestApi {
 # Serve a REST API: its routes, `/openapi.json`, `/docs`, and CORS, with
 # JSON error responses (`{"error": "not found"}` for unknown paths, and
 # for the server's own errors, such as timeouts). The command line is
-# `[--listen host:port] [--tls-cert file --tls-key file] [--cors origins]
+# `[--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca
+# file]] [--cors origins]
 # [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
 # `127.0.0.1:8080`, the certificate and key (PEM files, for HTTPS) to
 # `FWP_TLS_CERT` and `FWP_TLS_KEY`, and the allowed origins (separated by
@@ -801,6 +806,7 @@ rest.default-options = RestOptions {
     listen = None,
     tls-cert = None,
     tls-key = None,
+    tls-client-ca = None,
     cors = None,
     openapi = False,
     help = False,
@@ -809,7 +815,7 @@ rest.default-options = RestOptions {
 # internal
 rest.usage : String
 rest.usage =
-    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--cors origins] [--openapi] [--help]"
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]] [--cors origins] [--openapi] [--help]"
 
 # internal
 rest.start : RestApi -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
@@ -836,7 +842,7 @@ rest.run-with =
 # internal
 rest.help : String
 rest.help =
-    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--cors origins] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, their\nOpenAPI document at /openapi.json and its page at /docs.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --tls-cert file     serve HTTPS with this certificate chain (PEM; default: $FWP_TLS_CERT)\n  --tls-key file      and this private key (PEM; default: $FWP_TLS_KEY)\n  --cors origins      allow cross-origin requests from these origins, separated by\n                      commas, or * for any (default: $FWP_REST_CORS, else `# cors:`)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]] [--cors origins] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, their\nOpenAPI document at /openapi.json and its page at /docs.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --tls-cert file     serve HTTPS with this certificate chain (PEM; default: $FWP_TLS_CERT)\n  --tls-key file      and this private key (PEM; default: $FWP_TLS_KEY)\n  --tls-client-ca file  require client certificates signed by these CA certificates\n                      (PEM; default: $FWP_TLS_CLIENT_CA)\n  --cors origins      allow cross-origin requests from these origins, separated by\n                      commas, or * for any (default: $FWP_REST_CORS, else `# cors:`)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
 
 # internal
 rest.listen : (RestApi, (RestOptions, List[String])) -> () ! {Async, IO, Network}
@@ -894,10 +900,24 @@ rest.open =
     fork
         rest.open-with
         (fork
-            rest.tls-files
-            (.tls-cert | rest.or-env "FWP_TLS_CERT")
-            (.tls-key | rest.or-env "FWP_TLS_KEY"))
+            rest.client-ca
+            (.tls-client-ca | rest.or-env "FWP_TLS_CLIENT_CA")
+            (fork
+                rest.tls-files
+                (.tls-cert | rest.or-env "FWP_TLS_CERT")
+                (.tls-key | rest.or-env "FWP_TLS_KEY")))
         (.listen | rest.address)
+
+# require client certificates
+# internal
+rest.client-ca : Option[String] -> Option[TlsServer] -> Option[TlsServer] ! {Error[IoError]}
+rest.client-ca = curry (match
+    (None, _) -> id
+    (Some _, None) -> const (fail {
+        kind = "tls",
+        message = "--tls-client-ca needs --tls-cert and --tls-key",
+    })
+    (Some _, Some _) -> curry (uncurry tls.with-client-ca | Some))
 
 # internal
 rest.or-env : String -> Option[String] -> Option[String] ! {IO}

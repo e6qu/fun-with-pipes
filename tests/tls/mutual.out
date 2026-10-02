@@ -1,0 +1,15 @@
+without a certificate
+client: tls error
+server: handshake failed
+with a certificate
+client: read "hi" from CN=localhost
+server: client CN=fwp client,O=fwp
+with a certificate in one file
+client: read "hi" from CN=localhost
+server: client CN=fwp client,O=fwp
+with a certificate of another CA
+client: tls error
+server: handshake failed
+with a missing certificate
+client: tls error
+server: handshake failed
