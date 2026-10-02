@@ -56,6 +56,8 @@ typedef struct {
     int nservices;
     const char *const *services;       /* full service names */
     const fwp_desc *grpc_error;
+    const unsigned char *health;       /* the health service's descriptor */
+    size_t health_len;
 } fwp_service;
 
 /* ------------------------------------------------------------------- state */
@@ -1468,9 +1470,10 @@ static void g_reflection_response(const g_server *srv, const unsigned char *req,
     int ok = 0;
     if (kind.num == 7) {
         h2_buf l = {0};
-        for (int k = 0; k < svc->nservices; k++) {
+        for (int k = 0; k <= svc->nservices; k++) {
+            const char *name = k < svc->nservices ? svc->services[k] : "grpc.health.v1.Health";
             h2_buf sr = {0};
-            g_put_bytes(&sr, 1, svc->services[k], strlen(svc->services[k]));
+            g_put_bytes(&sr, 1, name, strlen(name));
             g_put_bytes(&l, 1, sr.d, sr.len);
             h2b_free(&sr);
         }
@@ -1483,6 +1486,14 @@ static void g_reflection_response(const g_server *srv, const unsigned char *req,
         g_put_bytes(&e, 1, kind.p, kind.n);
         g_put_bytes(out, 5, e.d, e.len);
         h2b_free(&e);
+        return;
+    }
+    if ((kind.num == 3 && strcmp(text, "grpc/health/v1/health.proto") == 0) ||
+        (kind.num == 4 && strncmp(text, "grpc.health.v1.", 15) == 0)) {
+        h2_buf d = {0};
+        g_put_bytes(&d, 1, svc->health, svc->health_len);
+        g_put_bytes(out, 4, d.d, d.len);
+        h2b_free(&d);
         return;
     }
     if (kind.num == 3) ok = strcmp(text, svc->file) == 0;
@@ -1537,6 +1548,9 @@ static void g_handle(void *arg, int cancelled) {
     g_job *j = (g_job *)arg;
     int code = -1;
     char *msg = 0;
+    /* calls of the program's functions (not of reflection and health
+     * checking) are logged when they are cancelled */
+    int logged = j->route && (j->route->kind == G_ROUTE_METHOD || j->route->kind == G_ROUTE_FWP);
     if (!cancelled) {
         const char *path = h2_get(&j->s->headers, ":path");
         if (!j->route) {
@@ -1556,10 +1570,10 @@ static void g_handle(void *arg, int cancelled) {
         msg = j->sv.msg;
     } else if (j->s->reset || j->c->dead) {
         fflush(fwp_prog_out);
-        fprintf(stderr, "fwp: call cancelled by the client (in %s)\n", j->what);
+        if (logged) fprintf(stderr, "fwp: call cancelled by the client (in %s)\n", j->what);
     } else if (fwp_cur->deadline && fwp_now_ns() >= fwp_cur->deadline) {
         fflush(fwp_prog_out);
-        fprintf(stderr, "fwp: deadline exceeded (in %s)\n", j->what);
+        if (logged) fprintf(stderr, "fwp: deadline exceeded (in %s)\n", j->what);
         code = GRPC_DEADLINE_EXCEEDED;
         msg = strdup("deadline exceeded");
     } else {

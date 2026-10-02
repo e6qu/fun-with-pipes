@@ -689,6 +689,72 @@ pub fn file_descriptor(
     Ok(out)
 }
 
+/// The file of the health checking service (`grpc.health.v1.Health`).
+pub const HEALTH_FILE: &str = "grpc/health/v1/health.proto";
+
+/// The serialized `FileDescriptorProto` of the health checking service.
+pub fn health_descriptor() -> Vec<u8> {
+    let field = |name: &str, num: u64, ty: u64, type_name: Option<&str>| {
+        let mut f = Vec::new();
+        put_str(&mut f, 1, name);
+        put_int(&mut f, 3, num);
+        put_int(&mut f, 4, 1);
+        put_int(&mut f, 5, ty);
+        if let Some(t) = type_name {
+            put_str(&mut f, 6, t);
+        }
+        put_str(&mut f, 10, name);
+        f
+    };
+    let mut out = Vec::new();
+    put_str(&mut out, 1, HEALTH_FILE);
+    put_str(&mut out, 2, "grpc.health.v1");
+    let mut req = Vec::new();
+    put_str(&mut req, 1, "HealthCheckRequest");
+    put_bytes(&mut req, 2, &field("service", 1, 9, None));
+    put_bytes(&mut out, 4, &req);
+    let mut resp = Vec::new();
+    put_str(&mut resp, 1, "HealthCheckResponse");
+    put_bytes(
+        &mut resp,
+        2,
+        &field(
+            "status",
+            1,
+            14,
+            Some(".grpc.health.v1.HealthCheckResponse.ServingStatus"),
+        ),
+    );
+    let mut e = Vec::new();
+    put_str(&mut e, 1, "ServingStatus");
+    for (i, v) in ["UNKNOWN", "SERVING", "NOT_SERVING", "SERVICE_UNKNOWN"]
+        .iter()
+        .enumerate()
+    {
+        let mut ev = Vec::new();
+        put_str(&mut ev, 1, v);
+        put_int(&mut ev, 2, i as u64);
+        put_bytes(&mut e, 2, &ev);
+    }
+    put_bytes(&mut resp, 4, &e);
+    put_bytes(&mut out, 4, &resp);
+    let mut svc = Vec::new();
+    put_str(&mut svc, 1, "Health");
+    for (name, stream) in [("Check", false), ("Watch", true)] {
+        let mut m = Vec::new();
+        put_str(&mut m, 1, name);
+        put_str(&mut m, 2, ".grpc.health.v1.HealthCheckRequest");
+        put_str(&mut m, 3, ".grpc.health.v1.HealthCheckResponse");
+        if stream {
+            put_int(&mut m, 6, 1);
+        }
+        put_bytes(&mut svc, 2, &m);
+    }
+    put_bytes(&mut out, 6, &svc);
+    put_str(&mut out, 12, "proto3");
+    out
+}
+
 /// What reflection needs: the descriptor, the file name, the package and
 /// the full service names.
 #[derive(Clone, Debug, Default)]

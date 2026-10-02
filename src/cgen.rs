@@ -2181,9 +2181,10 @@ static const fwp_exec_spec exec_spec{i} = {{
                 .collect();
             let _ = write!(
                 remote_defs,
-                "static const fwp_rpc fwp_svc_methods[] = {{\n{}\n}};\nstatic const unsigned char fwp_svc_descriptor[] = {};\nstatic const char *const fwp_svc_services[] = {{{}}};\nstatic const fwp_service fwp_svc = {{{}, {}, {}, {}, fwp_svc_methods, fwp_svc_descriptor, {}, {}, {}, {}, fwp_svc_services, {}}};\n",
+                "static const fwp_rpc fwp_svc_methods[] = {{\n{}\n}};\nstatic const unsigned char fwp_svc_descriptor[] = {};\nstatic const unsigned char fwp_svc_health[] = {};\nstatic const char *const fwp_svc_services[] = {{{}}};\nstatic const fwp_service fwp_svc = {{{}, {}, {}, {}, fwp_svc_methods, fwp_svc_descriptor, {}, {}, {}, {}, fwp_svc_services, {}, fwp_svc_health, sizeof fwp_svc_health}};\n",
                 entries.join(",\n"),
                 bytes_literal(&refl.descriptor),
+                bytes_literal(&crate::rpc::health_descriptor()),
                 if names.is_empty() { "0".to_string() } else { names.join(", ") },
                 c_string_literal(svc.module.as_bytes()),
                 c_string_literal(crate::protobuf::env_var(&svc.module).as_bytes()),

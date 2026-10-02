@@ -1504,6 +1504,12 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
         serving: Some(serving.clone()),
     };
     let what = route_name(&server, &path);
+    // calls of the program's functions (not of reflection and health
+    // checking) are logged when they are cancelled
+    let logged = matches!(
+        server.routes.get(&path),
+        Some(Route::Method(_)) | Some(Route::Fwp(_))
+    );
     let r = match server.routes.get(&path) {
         None => Ok(Err(Status::new(
             UNIMPLEMENTED,
@@ -1525,10 +1531,14 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
             if let Some(st) = over {
                 Some(st)
             } else if s.borrow().reset.is_some() || c.borrow().dead.is_some() {
-                eprintln!("fwp: call cancelled by the client (in {})", what);
+                if logged {
+                    eprintln!("fwp: call cancelled by the client (in {})", what);
+                }
                 None
             } else if it.task.deadline().is_some_and(|d| Instant::now() >= d) {
-                eprintln!("fwp: deadline exceeded (in {})", what);
+                if logged {
+                    eprintln!("fwp: deadline exceeded (in {})", what);
+                }
                 Some(Status::new(DEADLINE_EXCEEDED, "deadline exceeded"))
             } else {
                 Some(Status::new(CANCELLED, "cancelled"))
@@ -1956,11 +1966,16 @@ pub fn reflection_response(refl: &rpc::Reflection, req: &[u8]) -> Vec<u8> {
             .any(|s| sym == s || sym.starts_with(&format!("{}.", s)))
             || (!refl.package.is_empty() && sym.starts_with(&format!("{}.", refl.package)))
     };
+    let health = |out: &mut Vec<u8>| {
+        let mut f = Vec::new();
+        put_bytes(&mut f, 1, &rpc::health_descriptor());
+        put_bytes(out, 4, &f);
+    };
     let req_field = fields.iter().find(|f| (3..=7).contains(&f.0) && f.1 == 2);
     match req_field {
         Some(f) if f.0 == 7 => {
             let mut l = Vec::new();
-            for s in &refl.services {
+            for s in refl.services.iter().map(|s| s.as_str()).chain(["grpc.health.v1.Health"]) {
                 let mut sr = Vec::new();
                 put_bytes(&mut sr, 1, s.as_bytes());
                 put_bytes(&mut l, 1, &sr);
@@ -1968,7 +1983,9 @@ pub fn reflection_response(refl: &rpc::Reflection, req: &[u8]) -> Vec<u8> {
             put_bytes(&mut out, 6, &l);
         }
         Some(f) if f.0 == 3 => {
-            if text(f) == refl.file {
+            if text(f) == rpc::HEALTH_FILE {
+                health(&mut out);
+            } else if text(f) == refl.file {
                 file(&mut out);
             } else {
                 error(
@@ -1979,7 +1996,9 @@ pub fn reflection_response(refl: &rpc::Reflection, req: &[u8]) -> Vec<u8> {
             }
         }
         Some(f) if f.0 == 4 => {
-            if known(&text(f)) {
+            if text(f).starts_with("grpc.health.v1.") {
+                health(&mut out);
+            } else if known(&text(f)) {
                 file(&mut out);
             } else {
                 error(
