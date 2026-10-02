@@ -1034,16 +1034,6 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
 }
-http.parse-request-head : Bytes -> Result[(String, String, String, List[(String, String)]), String]
-http.parse-response-head : Bytes -> Result[(String, I64, String, List[(String, String)]), String]
-
-# a header that can be written as is: a token as its name, and no control
-# characters (CR, LF, NUL, ...) but tabs in its value
-http.field-ok : String -> String -> Bool
-
-# the body length request headers declare: 0 without content-length, -1
-# when it is not a plain decimal number or the header is repeated
-http.content-length : List[(String, String)] -> I64
 http.config : String -> ServerConfig
 
 # a response with a status, a content type and a body
@@ -1090,174 +1080,15 @@ Route = {
 
 # `http.route "GET" "/users/:id" handler`; method "*" matches any method
 http.route : String -> String -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Route
-http.segments : String -> List[String]
 
 # dispatch to the first matching route; 404 or 405 otherwise
 http.router : List[Route] -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-http.find-route : List[Route] -> Request -> Option[(Route, List[(String, String)])]
-http.route-match : Request -> Route -> Option[(Route, List[(String, String)])]
-http.method-ok : (Request, Route) -> Bool
-
-# HEAD requests are routed like GET (the server omits the body)
-http.head-as-get : String -> String
-http.path-params : (Request, Route) -> Option[(Route, List[(String, String)])]
-
-# bindings of `:name` segments if a pattern matches a path
-http.match-path : List[String] -> List[String] -> Option[List[(String, String)]]
-http.seg-match : (String, String) -> Option[Option[(String, String)]]
-
-# all present
-http.all-some : List[Option[a]] -> Option[List[a]]
-http.all-some-step : Option[List[a]] -> Option[a] -> Option[List[a]]
-http.dispatch : (List[Route], Request) -> Option[(Route, List[(String, String)])] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-http.set-params : List[(String, String)] -> Request -> Request
-http.missing : (List[Route], Request) -> Response ! {Error[HttpError]}
-http.matches-path : List[String] -> Route -> Bool
-
-Server = {
-    listener: Listener,
-    config: ServerConfig,
-    handler: Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]},
-    slots: Channel[()],
-}
-
-# `until`: the monotonic time by which the current request's head (and
-# then its body) must have arrived
-ConnState = {
-    server: Server,
-    conn: Conn,
-    buffer: Bytes,
-    served: I64,
-    until: Duration,
-}
-
-Head =
-    | Head.Closed
-    | Head.Bad ConnState I64 String
-    | Head.Got Bytes ConnState
-
-Pending = {
-    st: ConnState,
-    method: String,
-    target: String,
-    version: String,
-    headers: List[(String, String)],
-    length: I64,
-}
-
-BodyEnd =
-    | BodyEnd.Closed
-    | BodyEnd.Late Pending
-    | BodyEnd.Done Pending
-Exchange = { st: ConnState, request: Request, keep: Bool }
-
-Out = {
-    conn: Conn,
-    keep: Bool,
-    head-only: Bool,
-    response: Response,
-    timeout: Duration,
-}
-http.no-bytes : Bytes
-http.crlf : Bytes
-http.crlf2 : Bytes
-http.last-chunk : Bytes
-http.bytes-take : I64 -> Bytes -> Bytes
-http.bytes-drop : I64 -> Bytes -> Bytes
 
 # Listen on `addr` and serve until a shutdown signal.
 http.serve : ServerConfig -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network, Error[IoError]}
 
 # Serve on a listener (for example one bound to port 0).
 http.serve-on : Listener -> (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network}
-http.accept-main : (Listener, (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]})) -> () ! {Async, IO, Network, FileIO}
-http.make-server : (Listener, (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]})) -> Channel[()] -> Server
-http.accept-step : Server -> Step[Server, ()] ! {Async, IO, Network, FileIO}
-
-# take a connection slot (waits while all are in use), then accept
-http.accept-one : Server -> Step[Server, ()] ! {Async, IO, Network, FileIO}
-http.accepted : Server -> Result[Option[Conn], IoError] -> Step[Server, ()] ! {Async, IO, Network, FileIO}
-http.release : Server -> Server ! {Async}
-http.conn-main : (Server, Conn) -> () ! {Async, IO, Network, FileIO}
-http.serve-conn : (Server, Conn) -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-http.conn-step : ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-
-# a monotonic deadline a duration from now (capped at about a century)
-http.later : Duration -> Duration ! {IO}
-
-# the time left until a deadline (negative once it passed)
-http.left : Duration -> Duration ! {IO}
-http.with-until : Duration -> ConnState -> ConnState
-http.head-deadline : ConnState -> ConnState ! {IO}
-http.head-step : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
-http.head-found : ConnState -> Option[I64] -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
-http.head-more : ConnState -> Step[ConnState, Head] ! {Async, IO, Network, Error[IoError]}
-
-# before the first byte of a request: the idle timeout; after it, what is
-# left of the header timeout (a client trickling bytes cannot hold the
-# connection forever)
-http.head-wait : ConnState -> Duration ! {IO}
-http.head-read : ConnState -> Option[Bytes] -> Step[ConnState, Head] ! {IO}
-
-# the header timeout counts from the first byte of the request
-http.first-byte : ConnState -> ConnState ! {IO}
-http.with-buffer : Bytes -> ConnState -> ConnState
-http.on-head : Head -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-
-# answer with an error and close the connection
-http.error-stop : I64 -> (ConnState, String) -> Step[ConnState, ()] ! {Async, Network, Error[IoError]}
-http.on-request : Bytes -> ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.on-parsed : ConnState -> Result[(String, String, String, List[(String, String)]), String] -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.check-body : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.pending-error : I64 -> String -> Pending -> Step[ConnState, ()] ! {Async, Network, Error[IoError]}
-http.read-body : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-
-# the whole body must arrive within the body timeout
-http.body-deadline : Pending -> Pending ! {IO}
-http.body-step : Pending -> Step[Pending, BodyEnd] ! {Async, IO, Network, Error[IoError]}
-http.body-read : Pending -> Option[Bytes] -> Step[Pending, BodyEnd]
-http.pending-st : ConnState -> Pending -> Pending
-http.pending-append : Bytes -> Pending -> Pending
-http.on-body : BodyEnd -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.respond-to : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.request-of : Pending -> Request ! {Network}
-http.path-of : String -> String
-http.keep-alive : Pending -> Bool ! {Async}
-http.exchange : Exchange -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-
-# the handler in its own task, with the request timeout
-http.run-handler : Exchange -> Response ! {Async}
-http.outcome : Option[Result[Response, HttpError]] -> Response
-http.next-served : ConnState -> ConnState
-http.write-out : Out -> () ! {Async, Network, Error[IoError]}
-
-# A response that cannot be written as is (a header with CR or LF would
-# let a handler's input split the response) is replaced by a 500.
-http.checked : Out -> Out
-http.response-ok : Response -> Bool
-
-# write with the write timeout
-http.put : Out -> Bytes -> () ! {Async, Network, Error[IoError]}
-http.send-body : Out -> Body -> () ! {Async, Network, Error[IoError]}
-http.stream-body : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, Network, Error[IoError]}
-http.stream-start : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, Network, Error[IoError]}
-http.stream-run : ((Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}), Channel[Bytes]) -> Task[()] -> () ! {Async, Network, Error[IoError]}
-
-# the client is done (or gone): stop the producer
-http.stream-finish : (((Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}), Channel[Bytes]), Task[()]) -> Result[(), IoError] -> () ! {Async, Error[IoError]}
-
-# run a producer, then close its channel
-http.closing : (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
-http.chunk-step : (Out, Channel[Bytes]) -> Step[(Out, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
-http.chunk-got : (Out, Channel[Bytes]) -> Option[Bytes] -> Step[(Out, Channel[Bytes]), ()] ! {Async, Network, Error[IoError]}
-
-# chunk sizes: lower-case hexadecimal (negative numbers with a sign)
-http.to-hex : I64 -> String = "int.to-hex"
-http.parse-hex : String -> Option[I64] = "int.parse-hex"
-http.chunk-frame : Bytes -> Bytes
-http.head-bytes : Out -> Bytes
-http.head-parts : List[Out -> String]
-http.framing : Body -> String
 
 ClientRequest = {
     method: String,
@@ -1271,38 +1102,6 @@ http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}
 
 # send a request (one connection per request) and read the whole response
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
-
-# refuse a method or header that would not make one well-formed request
-# (URLs with spaces or control characters do not parse)
-http.check-request : ClientRequest -> ClientRequest ! {Error[IoError]}
-http.require-url : Option[Url] -> Url ! {Error[IoError]}
-http.send-to : ClientRequest -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
-http.host-port : Url -> String
-
-# IPv6 literals in brackets
-http.host-name : Url -> String
-
-# the host header: with the port when it is not the scheme's default
-http.host-header : Url -> String
-http.default-port : String -> I64
-http.request-bytes : (ClientRequest, Url) -> Bytes
-http.request-parts : List[(ClientRequest, Url) -> String]
-http.target-of : Url -> String
-http.read-all : Conn -> Bytes ! {Async, Network, Error[IoError]}
-http.read-all-step : (Conn, Bytes) -> Step[(Conn, Bytes), Bytes] ! {Async, Network, Error[IoError]}
-http.read-all-got : (Conn, Bytes) -> Bytes -> Step[(Conn, Bytes), Bytes]
-http.parse-client : Bytes -> ClientResponse ! {Error[IoError]}
-http.client-split : Bytes -> Option[I64] -> ClientResponse ! {Error[IoError]}
-http.client-head : Bytes -> Result[(String, I64, String, List[(String, String)]), String] -> ClientResponse ! {Error[IoError]}
-http.client-body : (Bytes, (String, I64, String, List[(String, String)])) -> Bytes ! {Error[IoError]}
-http.take-length : Option[I64] -> Bytes -> Bytes
-http.dechunk : Bytes -> Bytes ! {Error[IoError]}
-http.dechunk-step : (Bytes, Bytes) -> Step[(Bytes, Bytes), Bytes] ! {Error[IoError]}
-http.dechunk-line : (Bytes, Bytes) -> Option[I64] -> Step[(Bytes, Bytes), Bytes] ! {Error[IoError]}
-http.chunk-size : String -> Option[I64]
-http.dechunk-size : ((Bytes, Bytes), I64) -> Option[I64] -> Step[(Bytes, Bytes), Bytes] ! {Error[IoError]}
-http.chunk-rest : (((Bytes, Bytes), I64), I64) -> Bytes
-http.chunk-acc : (((Bytes, Bytes), I64), I64) -> Bytes
 ```
 
 ## JSON
@@ -1409,9 +1208,6 @@ RestRoute = {
     errors: List[(String, I64)],
 }
 
-# Options of a REST server's command line.
-RestOptions = { listen: Option[String], openapi: Bool, help: Bool }
-
 # A route of `http.router` that calls a function with the arguments of a
 # request and responds with its result as JSON.
 rest.endpoint : RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
@@ -1422,99 +1218,27 @@ rest.endpoint-option : RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileI
 # `rest.endpoint` for a function returning `Result`: `Err` is an error
 # response, like a raised `Error`.
 rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
-rest.endpoint-with : (RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
-
-# `/items/{id}` as a router pattern (`/items/:id`)
-rest.pattern : String -> List[String]
-rest.handler : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Decode[a], Encode[e]
-rest.call : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> a -> Result[Response, HttpError] ! {Async, IO, Network, FileIO} where Encode[e]
-rest.finish : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Result[b, e] -> Result[Response, HttpError] where Encode[e]
-
-# The arguments of a call, decoded from a request: one argument, or a
-# tuple of several. A decoding error is a 400 naming the parameter.
-rest.decode : List[RestSource] -> Request -> a ! {Error[HttpError]} where Decode[a]
-rest.read-args : List[String] -> String -> a ! {Error[HttpError]} where Decode[a]
-rest.decoded : List[String] -> Result[a, String] -> a ! {Error[HttpError]}
-
-# The JSON text of the arguments: one, or an array of several.
-rest.arguments : List[RestSource] -> Request -> String ! {Error[HttpError]}
-rest.join-args : List[String] -> String
-rest.argument : Request -> RestSource -> String ! {Error[HttpError]}
-rest.quote : String -> String
-rest.path-arg : Request -> String -> String ! {Error[HttpError]}
-
-# every value of a query parameter
-rest.query-values : String -> Request -> List[String]
-rest.value-of : String -> (String, String) -> Option[String]
-rest.query-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
-rest.query-one : (Request, String, Bool) -> Option[String] -> String ! {Error[HttpError]}
-rest.queries-arg : Request -> String -> String
-rest.fields-arg : Request -> List[(String, I64)] -> String
-rest.field-arg : Request -> (String, I64) -> Option[String]
-
-# `"name":value`
-rest.member : String -> Option[String] -> Option[String]
-rest.field-value : I64 -> List[String] -> Option[String]
-
-# a switch: absent is false, `?name` is true
-rest.switch : Option[String] -> String
-rest.body-arg : Request -> Bool -> String ! {Error[HttpError]}
-rest.body-of : Bool -> String -> String ! {Error[HttpError]}
-rest.checked : String -> Result[Json, String] -> String ! {Error[HttpError]}
-
-# How a source is named in decoding errors.
-rest.label : RestSource -> String
-
-# `$[1].price: ...` with the label of argument 1 instead of `$[1]` (of
-# the only argument instead of `$`)
-rest.relabel : List[String] -> String -> String
-rest.relabel-one : (List[String], String) -> String
-rest.relabel-many : (List[String], String) -> String
-rest.relabel-at : List[String] -> Option[(String, String)] -> String
-rest.label-at : List[String] -> String -> String
 
 # 200 (or the route's status) with the JSON of a value; 204 has no body
 rest.success : RestRoute -> b -> Response where Encode[b]
-rest.success-option : RestRoute -> Option[b] -> Result[Response, HttpError] where Encode[b]
-rest.success-result : RestRoute -> Result[b, x] -> Result[Response, HttpError] where Encode[b], Encode[x]
-rest.no-content : Response
-rest.json-text : I64 -> String -> Response
 
-# `{"error": ...}`
-rest.error-body : String -> String
+# a response with a status and a JSON text
+rest.json-text : I64 -> String -> Response
 
 # An error value as a response: `{"error": <the error as JSON>}`.
 rest.failure : RestRoute -> e -> Response where Encode[e]
-
-# the status of an error: by variant name (`errors`), else its `status`
-# field, else the route's `error-status`
-rest.error-status : RestRoute -> Json -> I64
-rest.variant-name : Json -> Option[String]
-rest.named-status : List[(String, I64)] -> Option[String] -> Option[I64]
-rest.status-field : Json -> Option[I64]
-rest.http-error : HttpError -> Response
 
 # Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
 # error responses (`{"error": "not found"}` for unknown paths). The
 # command line is `[--listen host:port] [--openapi] [--help]`; the address
 # defaults to `FWP_REST_ADDR`, else `127.0.0.1:8080`.
 rest.main : String -> List[Route] -> () ! {Async, IO, Network}
-rest.default-options : RestOptions
-rest.usage : String
-rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
-rest.run-with : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
-rest.help : String
-rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
-rest.address : Option[String] -> String ! {IO}
-rest.serve-at : (String, List[Route]) -> String -> () ! {Async, IO, Network, Error[IoError]}
-rest.serve-on : Listener -> (String, List[Route]) -> () ! {Async, IO, Network}
-rest.config : ServerConfig
-rest.stopped : Result[(), IoError] -> () ! {IO}
 
 # The handler of a server: the endpoints and `/openapi.json`, with errors
 # (unknown routes, bad arguments) as JSON.
 rest.handler-of : (String, List[Route]) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-rest.openapi-route : String -> Route
+
+# a response, or the JSON of an `HttpError`
 rest.respond : Result[Response, HttpError] -> Response
 
 # A call of a REST API, as the client functions that
@@ -1535,26 +1259,19 @@ RestTarget = {
 # A call that failed: the status of the response (0 if there was none)
 # and its body, or what went wrong.
 RestError = { status: I64, message: String }
-rest.url : RestTarget -> String
-rest.trim-slash : String -> String
 
-# `/items/{id}` with the path parameters, percent-encoded
-rest.fill : List[String] -> String -> String
-rest.fill-step : (List[String], List[String]) -> String -> (List[String], List[String])
+# the URL of a call
+rest.url : RestTarget -> String
 
 # the text of each parameter of a call
 rest.texts : List[a -> String] -> a -> List[String]
-rest.query-string : List[(String, String)] -> String
 
 # The text of a path parameter: a string as it is, other values as JSON.
 rest.param-text : a -> String where Encode[a]
-rest.unquote : String -> String
 
 # The query parameters of a record: its fields, each element of a list
 # field, and nothing for a `None` field.
 rest.query-pairs : a -> List[(String, String)] where Encode[a]
-rest.query-pair : (String, Json) -> List[(String, String)]
-rest.scalar-text : Json -> String
 
 # Call a REST API and decode the JSON of a successful response; any other
 # response is a `RestError` with its status and body.
@@ -1562,13 +1279,6 @@ rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[
 
 # `rest.fetch`, with `None` for a 404.
 rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
-rest.exchange : RestRequest -> ClientResponse ! {Async, Network, Error[RestError]}
-rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
-rest.decode-response : ClientResponse -> b ! {Error[RestError]} where Decode[b]
-
-# an empty body is `{}` (a `()` result)
-rest.body-json : Bytes -> String
-rest.decoded-body : I64 -> Result[b, String] -> b ! {Error[RestError]}
 ```
 
 ## URLs

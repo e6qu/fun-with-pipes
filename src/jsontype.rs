@@ -143,9 +143,8 @@ pub fn shape(mt: &MT, prog: &Program) -> Shape {
                         .iter()
                         .map(|(l, _)| {
                             docs.and_then(|d| d.get(l))
-                                .and_then(|d| json_name(&d.doc))
-                                .unwrap_or(l)
-                                .to_string()
+                                .and_then(|d| d.json.clone())
+                                .unwrap_or_else(|| l.clone())
                         })
                         .collect();
                     Shape::Record(Some(name), fs.clone(), order, json)
