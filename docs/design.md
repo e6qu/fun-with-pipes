@@ -152,8 +152,8 @@ error. See [protocol.md](protocol.md).
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
-| `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Async`, `Process`) are compile errors |
-| fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Async`, `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
+| `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Process`) are compile errors. Tasks are fibers (`FWP_FIBERS` in `runtime/fwp_rt_task.c`): the scheduler is the native one, but `swapcontext` becomes a call to a hook that the JavaScript host installs in the function table (`web/fibers.js`), which suspends the calling fiber with JavaScript Promise Integration and resumes the next one; each task has its own 1 MiB region of linear memory for C's stack, and the stack pointer is saved and restored around each switch. Waiting for a timer with every task parked is another hook, a JavaScript timer |
+| fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Tasks run on fibers (`src/fiber.rs`, with the same hooks as compiled programs): `World::park` switches to the next ready fiber instead of handing a baton between threads, in the same order, and traps on a deadlock. The interpreter's frames in linear memory are large (about a kilobyte per call), so the fibers of tasks share one 32 MiB stack region: a fiber that suspends copies out the part it uses, and copies it back when it resumes. Without JSPI, a program that uses tasks is rejected before it runs. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
 ## Not implemented
 
@@ -170,9 +170,10 @@ error. See [protocol.md](protocol.md).
   implemented.
 - Server reflection for `grpc.serve` routes made from `.proto` files.
 - Preemptive scheduling.
-- Tasks, sockets and foreign C functions in the WebAssembly build of fwp
-  (the playground): tasks would need a scheduler that can suspend the
-  interpreter, and a browser has neither sockets nor a C compiler.
+- Sockets and foreign C functions in the WebAssembly build of fwp (the
+  playground): a browser has neither sockets nor a C compiler. Tasks on
+  WebAssembly need JavaScript Promise Integration; there is no fallback
+  for engines without it (Safari), nor for other WASI runtimes.
 - GPU and distributed backends, a JIT, reverse-mode autodiff.
 - The `UDS_V1` and `SHM_V1` transports (the header reserves bits for
   them), the WebAssembly component model and `wasm64`.

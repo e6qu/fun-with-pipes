@@ -1,5 +1,16 @@
 # The WebAssembly build of fwp (`cargo build --target wasm32-wasip1`) has
 # no threads, so the interpreter runs on the main stack: give it 512 MiB
-# (`driver::WASM_STACK_SIZE` must match).
+# (`driver::WASM_STACK_SIZE` must match). Tasks run on fibers that the
+# JavaScript host switches (src/fiber.rs, web/fibers.js), which needs the
+# fiber functions, the stack pointer and a growable function table
+# exported.
 [target.wasm32-wasip1]
-rustflags = ["-C", "link-arg=-zstack-size=536870912"]
+rustflags = [
+    "-C", "link-arg=-zstack-size=536870912",
+    "-C", "link-arg=--export=fwp_fiber_hooks",
+    "-C", "link-arg=--export=fwp_fiber_stack",
+    "-C", "link-arg=--export=fwp_fiber_entry",
+    "-C", "link-arg=--export=__stack_pointer",
+    "-C", "link-arg=--export-table",
+    "-C", "link-arg=--growable-table",
+]

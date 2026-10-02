@@ -8,14 +8,17 @@
  * Tasks form a tree: a task finishes only after its children finished, and
  * cancelling a task cancels its subtree. A cancelled task unwinds (longjmp
  * to its base) at its next suspension point. Each task has its own Error
- * handler chain and State stack, swapped in and out with the task. */
+ * handler chain and State stack, swapped in and out with the task.
+ *
+ * On WebAssembly (FWP_FIBERS) there is no ucontext: each task is a fiber
+ * whose stack the JavaScript host suspends and resumes with JavaScript
+ * Promise Integration (web/fibers.js). The scheduler below is the same;
+ * only switching, task stacks and waiting for timers differ, and there
+ * are no sockets or signal handlers. */
 
+#include <limits.h>
 #ifdef __wasi__
-/* no tasks or sockets on WASI: programs using them are rejected when
- * compiling for that target */
-static void fwp_tasks_finish(void) {}
-static void fwp_tasks_abort(void) {}
-static void fwp_stack_guard_init(size_t size) { (void)size; }
+#define FWP_FIBERS 1
 #else
 #include <ucontext.h>
 #include <sys/mman.h>
@@ -29,13 +32,13 @@ static void fwp_stack_guard_init(size_t size) { (void)size; }
 #include <unistd.h>
 #include <signal.h>
 #include <poll.h>
-#include <limits.h>
 #ifdef __linux__
 #include <sys/epoll.h>
 #endif
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+#endif /* __wasi__ */
 
 typedef struct fwp_task fwp_task;
 
@@ -43,7 +46,9 @@ typedef struct fwp_task fwp_task;
 typedef struct { fwp_task *head; } fwp_wl;
 
 struct fwp_task {
+#ifndef FWP_FIBERS
     ucontext_t ctx;
+#endif
     char *stack;
     size_t stack_size;
     fwp_task *parent;
@@ -88,7 +93,11 @@ static fwp_task *fwp_cur = 0, *fwp_root = 0, *fwp_zombie = 0;
 static fwp_task *fwp_ready_head = 0, *fwp_ready_tail = 0;
 static fwp_task *fwp_timers = 0;
 static int fwp_epfd = -1, fwp_io_waiting = 0;
+#ifdef FWP_FIBERS
+static volatile int fwp_shutdown = 0;
+#else
 static volatile sig_atomic_t fwp_shutdown = 0;
+#endif
 static int fwp_signals_installed = 0;
 
 static int64_t fwp_now_ns(void) {
@@ -127,6 +136,43 @@ static void fwp_tasks_init(void) {
     fwp_root = fwp_task_new();
     fwp_cur = fwp_root;
 }
+
+#ifdef FWP_FIBERS
+/* The fiber interface of web/fibers.js. The host writes the table slots of
+ * its hooks into fwp_fiber_hooks (the stack pointer hook is not needed
+ * here); they stay 0 in hosts without JSPI, where starting a task traps.
+ * Fiber 0 is the root task (the one running _start); the others are
+ * numbered by their task's address. The exports exist only in programs
+ * that use tasks (FWP_ASYNC), so that the others run without JSPI, on the
+ * engine's ordinary stack. */
+#ifdef FWP_ASYNC
+#define FWP_EXPORT(name) __attribute__((export_name(name)))
+#else
+#define FWP_EXPORT(name)
+#endif
+typedef struct { uint32_t sw, idle, sp; } fwp_fiber_hooks_t;
+static fwp_fiber_hooks_t fwp_hooks;
+FWP_EXPORT("fwp_fiber_hooks") fwp_fiber_hooks_t *fwp_fiber_hooks(void) { return &fwp_hooks; }
+static int fwp_fiber_id(fwp_task *t) { return t == fwp_root ? 0 : (int)(uintptr_t)t; }
+static fwp_task *fwp_fiber_task(int id) { return id == 0 ? fwp_root : (fwp_task *)(uintptr_t)id; }
+/* the initial stack pointer of a task's fiber */
+FWP_EXPORT("fwp_fiber_stack") uint32_t fwp_fiber_stack(int id) {
+    fwp_task *t = fwp_fiber_task(id);
+    return (uint32_t)((uintptr_t)(t->stack + t->stack_size) & ~(uintptr_t)15);
+}
+/* for the host, after the engine's stack ran out in a fiber: what the
+ * program printed so far, before it reports the stack overflow */
+FWP_EXPORT("fwp_fiber_flush") void fwp_fiber_flush(void) { fwp_flush(); }
+/* suspend the program for `ms` (every task waits for a timer) */
+static void fwp_fiber_idle(int ms) {
+    if (fwp_hooks.idle) {
+        ((int (*)(double))(uintptr_t)fwp_hooks.idle)((double)ms);
+    } else {
+        struct timespec ts = {ms / 1000, (long)(ms % 1000) * 1000000L};
+        nanosleep(&ts, 0);
+    }
+}
+#endif
 
 /* ----- wait lists and timers */
 
@@ -272,7 +318,11 @@ static int fwp_stack_pool_n = 0;
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
         if (fwp_stack_pool_n < 64) fwp_stack_pool[fwp_stack_pool_n++] = fwp_zombie->stack;
+#ifdef FWP_FIBERS
+        else free(fwp_zombie->stack);
+#else
         else munmap(fwp_zombie->stack, fwp_zombie->stack_size);
+#endif
         fwp_zombie->stack = 0;
         if (fwp_zombie->gc_prev) fwp_zombie->gc_prev->gc_next = fwp_zombie->gc_next;
         else fwp_gc_tasks = fwp_zombie->gc_next;
@@ -282,6 +332,15 @@ static void fwp_free_zombie(void) {
     }
 }
 
+/* make `to` the current task, with its runtime state */
+static void fwp_enter(fwp_task *to) {
+    fwp_cur = to;
+    fwp_handlers = to->handlers;
+    fwp_state = to->st;
+    fwp_state_len = to->st_len;
+    fwp_state_cap = to->st_cap;
+}
+
 static void fwp_switch(fwp_task *to) {
     fwp_task *from = fwp_cur;
     if (to == from) return;
@@ -289,15 +348,15 @@ static void fwp_switch(fwp_task *to) {
     from->st = fwp_state;
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
-    fwp_cur = to;
-    fwp_handlers = to->handlers;
-    fwp_state = to->st;
-    fwp_state_len = to->st_len;
-    fwp_state_cap = to->st_cap;
+    fwp_enter(to);
 #if FWP_GC
     from->gc_sp = fwp_gc_sp();
 #endif
+#ifdef FWP_FIBERS
+    ((int (*)(int))(uintptr_t)fwp_hooks.sw)(fwp_fiber_id(to));
+#else
     swapcontext(&from->ctx, &to->ctx);
+#endif
     fwp_free_zombie();
 }
 
@@ -317,7 +376,9 @@ static void fwp_poll_events(void) {
         int64_t ms = d <= 0 ? 0 : d / 1000000 + (d % 1000000 != 0);
         timeout = ms > INT_MAX ? INT_MAX : (int)ms;
     }
-#ifdef __linux__
+#if defined(FWP_FIBERS)
+    if (timeout > 0) fwp_fiber_idle(timeout);
+#elif defined(__linux__)
     if (fwp_io_waiting) {
         struct epoll_event evs[64];
         int n = epoll_wait(fwp_epfd, evs, 64, timeout);
@@ -414,7 +475,12 @@ static void fwp_join_children(void) {
     t->unwinding = was;
 }
 
+#ifdef FWP_FIBERS
+FWP_EXPORT("fwp_fiber_entry") int fwp_fiber_entry(int id) {
+    (void)id; /* the task was entered by the switch that started it */
+#else
 static void fwp_task_main(void) {
+#endif
     fwp_free_zombie();
     fwp_task *t = fwp_cur;
     if (setjmp(t->base) == 0) {
@@ -441,7 +507,16 @@ static void fwp_task_main(void) {
     fwp_zombie = t;
     for (;;) {
         fwp_task *n = fwp_dequeue();
+#ifdef FWP_FIBERS
+        /* return to the host, which resumes `n`; this fiber's stack is
+         * freed (or kept for reuse) by the next one */
+        if (n && n != t) {
+            fwp_enter(n);
+            return fwp_fiber_id(n);
+        }
+#else
         if (n && n != t) fwp_switch(n);
+#endif
         else if (!n) fwp_poll_events();
     }
 }
@@ -474,6 +549,19 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         }
         s->tasks[s->n++] = t;
     }
+#ifdef FWP_FIBERS
+    if (!fwp_hooks.sw)
+        fwp_trap("tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), such as the fwp loader in a recent browser");
+    /* WebAssembly keeps most locals off this stack (in the engine's own,
+     * which the host gives each fiber), so it can be small */
+    t->stack_size = (size_t)1 << 20;
+    if (fwp_stack_pool_n > 0) {
+        t->stack = fwp_stack_pool[--fwp_stack_pool_n];
+    } else {
+        t->stack = (char *)malloc(t->stack_size);
+        if (!t->stack) fwp_trap("cannot allocate a task stack");
+    }
+#else
     t->stack_size = (size_t)256 << 20;
     if (fwp_stack_pool_n > 0) {
         t->stack = fwp_stack_pool[--fwp_stack_pool_n];
@@ -483,14 +571,17 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         if (t->stack == MAP_FAILED) fwp_trap("cannot allocate a task stack");
         mprotect(t->stack, 4096, PROT_NONE); /* guard page */
     }
+#endif
     t->gc_next = fwp_gc_tasks;
     if (fwp_gc_tasks) fwp_gc_tasks->gc_prev = t;
     fwp_gc_tasks = t;
+#ifndef FWP_FIBERS
     getcontext(&t->ctx);
     t->ctx.uc_stack.ss_sp = t->stack;
     t->ctx.uc_stack.ss_size = t->stack_size;
     t->ctx.uc_link = 0;
     makecontext(&t->ctx, fwp_task_main, 0);
+#endif
     fwp_make_ready(t);
     return t;
 }
@@ -702,6 +793,7 @@ static V fwp_p_channel_close(V ch) {
 }
 
 /* ----- sockets */
+#ifndef FWP_FIBERS
 
 /* kind: 0 listener, 1 conn, 2 udp; tls: a listener's TLS context, a
  * connection's TLS session (fwp_rt_tls.c), or 0 */
@@ -1140,8 +1232,13 @@ static V fwp_p_dns_resolve(V host, const fwp_desc *err) {
     return fwp_list_from(items, n);
 }
 
-/* ----- signals */
+#endif /* !FWP_FIBERS */
 
+/* ----- signals (WebAssembly has none: only a requested shutdown) */
+
+#ifdef FWP_FIBERS
+static V fwp_p_shutdown_requested(void) { return fwp_shutdown ? FWP_TRUE : FWP_FALSE; }
+#else
 static void fwp_on_signal(int sig) {
     (void)sig;
     fwp_shutdown = 1;
@@ -1155,6 +1252,7 @@ static V fwp_p_shutdown_requested(void) {
     }
     return fwp_shutdown ? FWP_TRUE : FWP_FALSE;
 }
+#endif
 
 static V fwp_p_request_shutdown(void) {
     fwp_shutdown = 1;
@@ -1220,7 +1318,13 @@ static V fwp_p_metrics_snapshot(void) {
     return fwp_list_from(items, fwp_nmetrics);
 }
 
-/* ----- stack overflow
+/* ----- stack overflow */
+
+#ifdef FWP_FIBERS
+/* the engine reports an exhausted stack (web/fibers.js and the loaders) */
+static void fwp_stack_guard_init(size_t size) { (void)size; }
+#else
+/*
  * A fault next to the end of the running stack (the main thread's, of
  * fwp_main_stack_size bytes below fwp_main_stack_top, or the current
  * task's) is a stack overflow: it is reported as a trap, with the message
@@ -1272,4 +1376,4 @@ static void fwp_stack_guard_init(size_t size) {
     sigaction(SIGSEGV, &sa, 0);
     sigaction(SIGBUS, &sa, 0);
 }
-#endif /* __wasi__ */
+#endif /* FWP_FIBERS */

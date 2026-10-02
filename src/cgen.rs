@@ -30,6 +30,24 @@ const TLS_RUNTIME: &str = include_str!("../runtime/fwp_rt_tls.c");
 /// `-lssl -lcrypto`).
 const TLS_MARK: &str = "#define FWP_TLS 1\n";
 
+/// The line that marks generated C that uses tasks or channels: compiled
+/// for WebAssembly, it exports the fiber interface of web/fibers.js.
+const ASYNC_MARK: &str = "#define FWP_ASYNC 1\n";
+
+/// Linker arguments for WebAssembly: the fiber interface needs the stack
+/// pointer and a growable function table (web/fibers.js).
+fn wasm_links(c_source: &str) -> &'static [&'static str] {
+    if c_source.contains(ASYNC_MARK) {
+        &[
+            "-Wl,--export=__stack_pointer",
+            "-Wl,--export-table",
+            "-Wl,--growable-table",
+        ]
+    } else {
+        &[]
+    }
+}
+
 /// Libraries to link generated C with.
 fn tls_links(c_source: &str) -> &'static [&'static str] {
     if c_source.contains(TLS_MARK) {
@@ -2280,6 +2298,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     if tls {
         out.push_str(TLS_MARK);
     }
+    if uses_async(prog) {
+        out.push_str(ASYNC_MARK);
+    }
     for part in RUNTIME {
         out.push_str(part);
         out.push('\n');
@@ -2520,9 +2541,23 @@ impl Target {
     }
 }
 
+/// Whether `prog` uses tasks or channels.
+pub fn uses_async(prog: &Program) -> bool {
+    async_prim(prog).is_some()
+}
+
+/// The first task or channel primitive of `prog`.
+pub fn async_prim(prog: &Program) -> Option<&str> {
+    prog.funcs.iter().find_map(|f| match &f.body {
+        Body::Prim(p) if p.starts_with("task.") || p.starts_with("channel.") => Some(p.as_str()),
+        _ => None,
+    })
+}
+
 /// The first primitive of `prog` that performs an effect WebAssembly does
-/// not provide (tasks, channels and signals: `Async`; sockets and DNS:
-/// `Network`; other programs: `Process`), with that effect.
+/// not provide (sockets and DNS: `Network`; other programs: `Process`),
+/// with that effect. Tasks and channels (`Async`) run as fibers, which
+/// the JavaScript host switches (web/fibers.js).
 pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
     prog.funcs.iter().find_map(|f| {
         let Body::Prim(sym) = &f.body else {
@@ -2535,11 +2570,6 @@ pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
             Some(("Network", sym.as_str()))
         } else if sym.starts_with("process.") {
             Some(("Process", sym.as_str()))
-        } else if ["task.", "channel.", "signal."]
-            .iter()
-            .any(|p| sym.starts_with(p))
-        {
-            Some(("Async", sym.as_str()))
         } else {
             None
         }
@@ -2863,7 +2893,13 @@ pub fn compile_library(
 
 /// The JavaScript loader for the browser target: a minimal WASI layer
 /// (stdout/stderr to the console or a callback, clocks, random numbers).
-pub const BROWSER_LOADER: &str = include_str!("../runtime/wasm/loader.js");
+/// It includes web/fibers.js, which runs tasks with JavaScript Promise
+/// Integration.
+pub const BROWSER_LOADER: &str = concat!(
+    include_str!("../runtime/wasm/loader.js"),
+    "\n",
+    include_str!("../web/fibers.js")
+);
 
 /// Compile C source for a target.
 pub fn compile_for(
@@ -2927,6 +2963,7 @@ pub fn compile_for(
                     .arg(&lj_obj)
                     .arg(&sj_obj)
                     .args(crate::ffi::links())
+                    .args(wasm_links(c_source))
                     .args(["-lm", "-Wl,-z,stack-size=33554432"]),
                 &cc,
             )

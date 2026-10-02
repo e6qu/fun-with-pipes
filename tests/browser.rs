@@ -4,7 +4,9 @@
 //!
 //! * the golden programs of tests/run must print their `.out` files, except
 //!   the programs that the WebAssembly build rejects before they start
-//!   (tasks, sockets, foreign C functions: see `rejected`);
+//!   (sockets, processes, foreign C functions: see `rejected`); programs
+//!   with tasks run as fibers, with JavaScript Promise Integration
+//!   (web/fibers.js), and are rejected only by an engine without it;
 //! * `fwp check`, `fwp fmt` and `fwp lint` must behave as the native build;
 //! * the tutorials must run through the playground's WASI with a stack as
 //!   small as a browser's;
@@ -117,7 +119,21 @@ fn output(mut cmd: Command, dir: &Path, stdin: &[u8]) -> Run {
 
 /// Run fwp.wasm with `args` in `dir`.
 fn wasm(wasm: &Path, host: Host, dir: &Path, args: &[&str], stdin: &[u8]) -> Run {
+    wasm_env(wasm, host, dir, args, stdin, &[])
+}
+
+/// Run fwp.wasm with `args` in `dir`, and environment variables for
+/// tests/wasm/fwp-run.mjs.
+fn wasm_env(
+    wasm: &Path,
+    host: Host,
+    dir: &Path,
+    args: &[&str],
+    stdin: &[u8],
+    env: &[(&str, &str)],
+) -> Run {
     let mut cmd = Command::new("node");
+    cmd.envs(env.iter().copied());
     cmd.arg("--no-warnings")
         .arg(root().join("tests/wasm/fwp-run.mjs"));
     match host {
@@ -187,12 +203,19 @@ fn run_goldens(host: Host) {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    // the programs with tasks, sockets, processes or C: nothing else
+    // the programs with sockets, processes or C: nothing else
     assert!(
-        skipped.len() <= 7,
+        skipped.len() <= 6,
         "too many programs rejected: {:?}",
         skipped
     );
+    for tasks in ["tasks_local.fwp", "trap_stack_overflow.fwp"] {
+        assert!(
+            !skipped.iter().any(|s| s == tasks),
+            "{} was rejected",
+            tasks
+        );
+    }
     assert!(ran >= 25, "only {} programs ran", ran);
 }
 
@@ -217,7 +240,7 @@ fn rejections_name_what_is_missing() {
         ),
         (
             "net.fwp",
-            "fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.within`)\n",
+            "fwp run: the WebAssembly build of fwp does not provide the `Network` effect (used by `tcp.listen`)\n",
         ),
         (
             "cli_process.fwp",
@@ -231,6 +254,62 @@ fn rejections_name_what_is_missing() {
         let r = wasm(w, Host::NodeWasi, &dir, &["run", file], b"");
         assert_eq!((r.stderr.as_str(), r.code), (message, 1), "{}", file);
     }
+    // tasks, in an engine without JavaScript Promise Integration
+    for host in [Host::NodeWasi, Host::Playground(1)] {
+        let r = wasm_env(
+            w,
+            host,
+            &dir,
+            &["run", "tasks_local.fwp"],
+            b"",
+            &[("FWP_NO_JSPI", "1")],
+        );
+        assert_eq!(
+            (r.stdout.as_str(), r.stderr.as_str(), r.code),
+            (
+                "",
+                "fwp run: the WebAssembly build of fwp does not provide the `Async` effect \
+                 (used by `task.yield`) in this host: tasks need a WebAssembly host with \
+                 JavaScript Promise Integration (JSPI)\n",
+                1
+            )
+        );
+    }
+}
+
+/// Tasks as fibers: thousands of them, waiting at once; sleeping with the
+/// host's timer; and a deadlock, which traps as in native programs (the
+/// native interpreter would wait forever).
+#[test]
+fn tasks_as_fibers() {
+    let Some(w) = fwp_wasm() else { return };
+    let dir = std::env::temp_dir().join(format!("fwp-browser-tasks-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("many.fwp"),
+        "main = range 1 3001 | task.map (tap (const 20ms | task.sleep)) \
+         | map (option.unwrap-or 0) | sum | echo\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("deadlock.fwp"),
+        "the-ch : Channel[I64] -> Channel[I64]\nthe-ch = id\n\n\
+         main = [print \"waiting\", 1 | channel.make | the-ch | channel.recv | echo] | ignore\n",
+    )
+    .unwrap();
+    for host in [Host::NodeWasi, Host::Playground(1)] {
+        let started = std::time::Instant::now();
+        let r = wasm(w, host, &dir, &["run", "many.fwp"], b"");
+        assert_eq!(r.render(), "4501500\n");
+        // 3000 tasks sleep 20 ms at the same time
+        assert!(started.elapsed() < std::time::Duration::from_secs(30));
+        let r = wasm(w, host, &dir, &["run", "deadlock.fwp"], b"");
+        assert_eq!(
+            r.render(),
+            "waiting\n--- stderr\nfwp: trap: deadlock: every task is waiting\n--- exit 101\n"
+        );
+    }
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 /// Deep recursion still traps as fwp does when the engine's stack, not
@@ -269,6 +348,8 @@ fn tutorials_in_the_playground() {
     for dir in tutorials {
         let got = wasm(w, Host::Playground(1), &dir, &["run", "main.fwp"], b"");
         if rejected(&got) {
+            // tasks run (with JavaScript Promise Integration)
+            assert!(!dir.ends_with("06-tasks-and-channels"), "{}", got.render());
             continue;
         }
         let want = std::fs::read_to_string(dir.join("main.out")).unwrap();

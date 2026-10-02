@@ -50,6 +50,18 @@ pub fn set_stack_limit(size: usize) {
     STACK_LIMIT.with(|l| l.set(limit));
 }
 
+/// The stack limit of this thread (or WebAssembly fiber), for switching
+/// fibers (`fiber.rs`).
+#[cfg(target_family = "wasm")]
+pub(crate) fn stack_limit() -> usize {
+    STACK_LIMIT.with(|l| l.get())
+}
+
+#[cfg(target_family = "wasm")]
+pub(crate) fn set_raw_stack_limit(limit: usize) {
+    STACK_LIMIT.with(|l| l.set(limit));
+}
+
 pub struct Interp<'p> {
     pub prog: &'p Program,
     /// Values of argument-less functions, shared by all tasks.

@@ -395,9 +395,23 @@ pub fn compile_input(
     lower(c, roots)
 }
 
+/// Why tasks cannot run in a WebAssembly host without fibers.
+pub const WASM_NO_TASKS: &str =
+    "tasks need a WebAssembly host with JavaScript Promise Integration (JSPI)";
+
+/// Whether this build of fwp can run tasks: natively always; in
+/// WebAssembly when the host switches fibers (web/fibers.js).
+pub fn tasks_available() -> bool {
+    #[cfg(target_family = "wasm")]
+    return crate::fiber::available();
+    #[cfg(not(target_family = "wasm"))]
+    true
+}
+
 /// Why the interpreter of the WebAssembly build of fwp cannot run `prog`:
-/// it has no threads (so no tasks), no sockets, no processes and no
-/// `dlopen` (so no foreign C functions). These are the effects the
+/// it has no sockets, no processes and no `dlopen` (so no foreign C
+/// functions), and tasks only where the host provides fibers (with
+/// JavaScript Promise Integration). These are the effects the
 /// `wasm32-wasi` target rejects too, checked when the program is lowered,
 /// before it starts.
 pub fn wasm_host_unsupported(prog: &crate::ir::Program) -> Option<String> {
@@ -413,6 +427,14 @@ pub fn wasm_host_unsupported(prog: &crate::ir::Program) -> Option<String> {
             "{} does not provide the `{}` effect (used by `{}`)",
             BUILD, effect, sym
         ));
+    }
+    if let Some(sym) = crate::cgen::async_prim(prog) {
+        if !tasks_available() {
+            return Some(format!(
+                "{} does not provide the `Async` effect (used by `{}`) in this host: {}",
+                BUILD, sym, WASM_NO_TASKS
+            ));
+        }
     }
     prog.funcs.iter().find_map(|f| match &f.body {
         crate::ir::Body::ForeignC { symbol, .. } => Some(format!(

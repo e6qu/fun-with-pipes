@@ -23,8 +23,9 @@ mkdir -p "$out"
 for dir in docs/tutorials/*/; do
     name=$(basename "$dir")
     [ -f "$dir/main.fwp" ] || continue
-    # what the WebAssembly build of fwp cannot run: tasks, sockets, C
-    if grep -qE '(task|channel|tcp|udp|http)\.|foreign "C"' "$dir/main.fwp"; then
+    # what the WebAssembly build of fwp cannot run: sockets, processes, C
+    # (tasks run where the browser has JavaScript Promise Integration)
+    if grep -qE '(tcp|udp|http|grpc|tls|dns|process)\.|foreign "C"' "$dir/main.fwp"; then
         continue
     fi
     cp "$dir/main.fwp" "$out/$name.fwp"

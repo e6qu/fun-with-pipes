@@ -1,0 +1,54 @@
+# Tasks and channels without sockets, as they also run on WebAssembly:
+# many tasks, a pipeline with backpressure, results, deadlines,
+# cancellation, scopes and recursion inside tasks.
+
+the-ch : Channel[I64] -> Channel[I64]
+the-ch = id
+
+send-all : Channel[I64] -> List[I64] -> () ! {Async}
+send-all = channel.send | flip compose ignore | each
+
+# send 1..100 into a channel, then close it
+produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
+produce =
+    flip (const (both (flip send-all (range 1 101)) channel.close | ignore))
+
+rec down : I64 -> I64
+down = match
+    0 -> 0
+    _ -> sub 1 | down | add 1
+
+# sleep, then print
+later : I64 -> () -> () ! {Async, IO, Network, FileIO}
+later = curry (.0
+    | tap (duration.from-millis | task.sleep)
+    | format "woke after {} ms"
+    | print)
+
+main = [
+    range 1 2001
+    | task.map (fork mul id id)
+    | map (option.unwrap-or 0)
+    | sum
+    | echo,
+    1
+    | channel.make
+    | the-ch
+    | tap (produce | task.spawn)
+    | channel.drain
+    | sum
+    | echo,
+    [30, 10, 20] | task.map (tap (duration.from-millis | task.sleep)) | echo,
+    10s
+    | flip
+        task.within
+        (const 5 | task.deadline 20ms | tap (const 1s | task.sleep))
+    | echo,
+    500 | later | task.spawn | tap task.cancel | task.await | echo,
+    task.scope (const [40, 20] | each (later | task.spawn | ignore))
+    | const "scope done"
+    | print,
+    5 | channel.make | the-ch | channel.recv-for 20ms | echo,
+    [3000, 2000] | task.map down | echo,
+    task.yield () | const (task.cancelled ()) | echo,
+] | ignore

@@ -27,8 +27,9 @@ fwp build main.fwp --target wasm32-browser -o palindromes.wasm   # also palindro
 fetches the `.wasm` file, for example with `python3 -m http.server`. The
 program gets standard streams, clocks and random numbers; there are no
 files. As in [tutorial 10](../10-webassembly/README.md), programs with
-`Async` or `Network` are rejected when they are compiled, and compiling
-needs clang with a WASI sysroot.
+`Network` are rejected when they are compiled, tasks need a browser with
+JavaScript Promise Integration (Chrome and Edge 137 and later), and
+compiling needs clang with a WASI sysroot.
 
 ## fwp itself, in the browser
 
@@ -59,10 +60,13 @@ A file name of `-` reads the program from standard input. That is
 convenient for hosts that have no file system to offer.
 
 This build has the limits of the `wasm32-wasi` target, and for the same
-reasons. WebAssembly has no threads, so there are no tasks. It has no
-sockets, it cannot start processes, and it cannot load C code. A program
-that needs tasks, sockets or foreign C functions is rejected before it
-starts, with an error that names what is missing. `fwp build` (except
+reasons. WebAssembly has no threads, so tasks run as fibers that the
+browser suspends and resumes with JavaScript Promise Integration: the
+example menu includes [tutorial 6](../06-tasks-and-channels/README.md),
+which runs in Chrome and Edge 137 and later. It has no sockets, it cannot
+start processes, and it cannot load C code. A program that needs sockets
+or foreign C functions (or tasks, in a browser without JSPI) is rejected
+before it starts, with an error that names what is missing. `fwp build` (except
 `--emit-c`), `fwp pipe` and `fwp serve` say that they are not available.
 Deep recursion is limited by the engine's stack, which in a browser is a
 few hundred to a few thousand nested calls; beyond that, the program traps

@@ -1,7 +1,9 @@
 // Loader for an fwp program compiled with `fwp build --target wasm32-browser`.
 // It provides the small part of WASI that fwp programs use: standard
 // streams, arguments, environment, clocks and random numbers. Files and
-// sockets are not available.
+// sockets are not available. Tasks run where the engine has JavaScript
+// Promise Integration (JSPI: Chrome and Edge 137 and later); the fiber
+// switching that this needs (web/fibers.js) is appended to this file.
 //
 //   <script type="module">
 //     import { run } from "./program.js";
@@ -139,12 +141,22 @@ export async function run(opts = {}) {
 
   const { instance } = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: wasi });
   memory = instance.exports.memory;
+  const start = await fibers(instance);
   let code = 0;
   try {
-    instance.exports._start();
+    await start();
   } catch (e) {
-    if (!(e instanceof Exit)) throw e;
-    code = e.code;
+    if (e instanceof RangeError) {
+      // the engine's stack ran out: a trap, as in native programs
+      instance.exports.fwp_fiber_flush?.();
+      emit(1, true);
+      sinks[2]("fwp: trap: stack overflow");
+      code = 101;
+    } else if (e instanceof Exit) {
+      code = e.code;
+    } else {
+      throw e;
+    }
   }
   emit(1, true);
   emit(2, true);

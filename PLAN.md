@@ -116,9 +116,18 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    (mutual TLS) for servers and clients, and per-call options for gRPC
    clients. See [docs/rest.md](docs/rest.md), [docs/grpc.md](docs/grpc.md)
    and [docs/tls.md](docs/tls.md).
-10. **Tasks in the browser.** A scheduler for the WebAssembly build that does
-   not need threads, for example with the WebAssembly stack switching
-   proposal once browsers ship it.
+10. **Tasks in the browser** (done where the engine has JavaScript Promise
+    Integration). Tasks and channels run on WebAssembly, both in programs
+    built with `--target wasm32-wasi` or `wasm32-browser` and in fwp.wasm
+    (the playground runs tutorial 6): each task is a fiber, which the
+    JavaScript host suspends and resumes with JSPI (`web/fibers.js`), while
+    the scheduling stays in the native runtime and the interpreter.
+    Sleeping uses a JavaScript timer; a deadlock traps. This works in
+    Chrome and Edge 137 and later and in node 22 with
+    `--experimental-wasm-jspi`; other engines and WASI runtimes run
+    programs without tasks only (a program that starts one traps, or in
+    fwp.wasm is rejected before it starts). Sockets stay unavailable. See
+    [the reference](docs/reference.md#tasks-on-webassembly).
 
 ## Later
 

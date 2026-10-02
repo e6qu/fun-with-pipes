@@ -1,9 +1,11 @@
 //! WebAssembly: every golden run test is compiled with
 //! `--target wasm32-wasi` and run under node's WASI; the output must match
-//! the `.out` file. Programs using effects WASI does not provide (tasks,
-//! sockets) must be rejected at compile time. The browser target is run
-//! through its JavaScript loader. Skipped when clang cannot target WASI or
-//! node is missing.
+//! the `.out` file. Programs using effects WASI does not provide (sockets,
+//! processes) must be rejected at compile time. Tasks run as fibers, which
+//! the JavaScript host switches with JavaScript Promise Integration
+//! (web/fibers.js; node 22 has it behind a flag, which the runners set).
+//! The browser target is run through its JavaScript loader. Skipped when
+//! clang cannot target WASI or node is missing.
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -64,7 +66,7 @@ fn golden_programs_under_wasi() {
     if !available() {
         return;
     }
-    let mut ran = 0;
+    let mut ran = Vec::new();
     let mut failures = Vec::new();
     let mut entries: Vec<_> = std::fs::read_dir(dir().join("run"))
         .unwrap()
@@ -114,7 +116,7 @@ fn golden_programs_under_wasi() {
         let out = child.wait_with_output().unwrap();
         let _ = std::fs::remove_file(&wasm);
         let got = render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1));
-        ran += 1;
+        ran.push(path.file_name().unwrap().to_string_lossy().to_string());
         if got != expected {
             failures.push(format!(
                 "{}:\n--- expected\n{}--- got\n{}",
@@ -125,7 +127,69 @@ fn golden_programs_under_wasi() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    assert!(ran >= 10, "only {} programs ran", ran);
+    assert!(ran.len() >= 10, "only {} programs ran", ran.len());
+    for tasks in ["tasks_local.fwp", "trap_stack_overflow.fwp"] {
+        assert!(ran.iter().any(|r| r == tasks), "{} did not run", tasks);
+    }
+}
+
+fn run_wasi(wasm: &Path, env: &[(&str, &str)]) -> String {
+    let out = Command::new("node")
+        .arg("--no-warnings")
+        .arg(dir().join("wasm/wasi-run.mjs"))
+        .arg(wasm)
+        .envs(env.iter().copied())
+        .stdin(Stdio::null())
+        .output()
+        .unwrap();
+    render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1))
+}
+
+/// Tasks as fibers: thousands waiting at once, a deadlock (which traps as
+/// in native programs), and a host without JavaScript Promise Integration
+/// (where starting a task traps).
+#[test]
+fn tasks_as_fibers() {
+    if !available() {
+        return;
+    }
+    let tmp = std::env::temp_dir().join(format!("fwp-wasm-tasks-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).unwrap();
+    let wasm = |name: &str, src: &str| {
+        let path = tmp.join(format!("{}.fwp", name));
+        std::fs::write(&path, src).unwrap();
+        let wasm = tmp.join(format!("{}.wasm", name));
+        let b = build(&path, "wasm32-wasi", &wasm);
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        wasm
+    };
+    let many = wasm(
+        "many",
+        "main = range 1 3001 | task.map (tap (const 20ms | task.sleep)) \
+         | map (option.unwrap-or 0) | sum | echo\n",
+    );
+    assert_eq!(run_wasi(&many, &[]), "4501500\n");
+    let deadlock = wasm(
+        "deadlock",
+        "the-ch : Channel[I64] -> Channel[I64]\nthe-ch = id\n\n\
+         main = [print \"waiting\", 1 | channel.make | the-ch | channel.recv | echo] | ignore\n",
+    );
+    assert_eq!(
+        run_wasi(&deadlock, &[]),
+        "waiting\n--- stderr\nfwp: trap: deadlock: every task is waiting\n--- exit 101\n"
+    );
+    // without fibers: sleeping works, starting a task traps
+    let sleep = wasm(
+        "sleep",
+        "main = [task.sleep 10ms, print \"slept\", task.within 1s (const 1) | echo] | ignore\n",
+    );
+    assert_eq!(
+        run_wasi(&sleep, &[("FWP_NO_JSPI", "1")]),
+        "slept\n--- stderr\nfwp: trap: tasks need a WebAssembly host with JavaScript Promise \
+         Integration (JSPI), such as the fwp loader in a recent browser\n--- exit 101\n"
+    );
+    assert_eq!(run_wasi(&sleep, &[]), "slept\nSome 1\n");
+    let _ = std::fs::remove_dir_all(&tmp);
 }
 
 #[test]
@@ -161,7 +225,13 @@ fn browser_loader() {
     if !available() {
         return;
     }
-    let path = dir().join("run/basics.fwp");
+    for name in ["basics", "tasks_local"] {
+        browser_loader_runs(&dir().join(format!("run/{}.fwp", name)));
+    }
+}
+
+fn browser_loader_runs(path: &Path) {
+    let path = path.to_path_buf();
     let wasm = std::env::temp_dir().join(format!("fwp-browser-{}.wasm", std::process::id()));
     let b = build(&path, "wasm32-browser", &wasm);
     assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
