@@ -1,1 +1,40 @@
-# fun-with-pipes
+# fwp ("foop")
+
+fwp is a tacit, curried, pipe-oriented language with static, strong types.
+It is based on the *Pipe Language Compact Specification*:
+
+```
+users
+| filter .active
+| map .name
+| sort
+```
+
+See [PLAN.md](PLAN.md) for the language design decisions and the
+implementation roadmap.
+
+## Status
+
+| Area | State |
+|---|---|
+| Lexer, parser, layout rule, diagnostics | done |
+| Type inference, traits, effects | planned |
+| Interpreter, stdlib | planned |
+| Native AOT (C backend), executables, pipe protocol | planned |
+| Comptime, macros, numerics, networking, FFI, WASM | planned |
+
+## Usage
+
+```
+cargo build --release
+./target/release/fwp check --parse examples/hello.fwp
+```
+
+## Development
+
+```
+cargo fmt --all
+cargo clippy --all-targets -- -D warnings
+cargo test
+FWP_BLESS=1 cargo test   # regenerate snapshot files after an intended change
+```
