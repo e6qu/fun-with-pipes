@@ -992,6 +992,7 @@ impl<'p> Gen<'p> {
                     ("http.parse-response-head", "fwp_p_parse_response_head(l0)"),
                     ("http.field-ok", "fwp_p_field_ok(l0, l1)"),
                     ("http.content-length", "fwp_p_content_length(l0)"),
+                    ("prim.trap", "fwp_p_trap(l0)"),
                     ("int.to-hex", "fwp_p_to_hex(l0)"),
                     ("int.parse-hex", "fwp_p_parse_hex(l0)"),
                     ("task.spawn", "fwp_p_task_spawn(l0)"),

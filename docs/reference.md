@@ -20,7 +20,8 @@ library is listed in [stdlib.md](stdlib.md).
   `f64`, `f128`. `F16` and `BF16` are computed at `F32` precision and
   `F128` at `F64` precision.
 - **Duration literals:** `500ns`, `20us`, `250ms`, `2s`, `1.5s`, `5min`,
-  `1h`. They are decimal and at most about 292 years.
+  `1h`. They are decimal and at most about 292 years. Durations implement
+  `Add`, `Sub` and `Zero` (`2s | add 500ms`).
 - **Balanced ternary literals:** `0t+-0` (`TInt[3]`, one trit per digit).
 - **Strings:** `"..."`, with the escapes `\n \t \r \0 \\ \"` and
   `\u{1F600}`.

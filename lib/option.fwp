@@ -82,28 +82,28 @@ result.from-option = curry (match
 
 test "option.map" = Some 2 | option.map (add 1) | eq (Some 3)
 test "option.map none" = None | option.map (add 1) | eq None
-test "option.and-then" = Some 2 | option.and-then (const None) | the-opt | eq None
+test "option.and-then" = Some 2 | option.and-then (const None) | option.test-opt | eq None
 test "option.ap" = Some 2 | option.ap (Some (mul 5)) | eq (Some 10)
 test "option.unwrap-or" = None | option.unwrap-or 7 | eq 7
 test "option.or-else" = None | option.or-else (Some 1) | eq (Some 1)
 test "option.is-some" = Some 1 | option.is-some
-test "option.is-none" = None | the-opt | option.is-none
+test "option.is-none" = None | option.test-opt | option.is-none
 test "option.to-list" = Some 4 | option.to-list | eq [4]
 test "option.filter" = Some 4 | option.filter (gt 3) | eq (Some 4)
 test "option.filter rejects" = Some 2 | option.filter (gt 3) | eq None
-test "result.map" = Ok 2 | the-res | result.map (add 1) | eq (Ok 3)
-test "result.map-err" = Err "x" | result.map-err upper | the-res-s | eq (Err "X")
-test "result.and-then" = Ok 1 | the-res | result.and-then (const (Err "no")) | the-res | eq (Err "no")
+test "result.map" = Ok 2 | result.test-res | result.map (add 1) | eq (Ok 3)
+test "result.map-err" = Err "x" | result.map-err upper | result.test-res-s | eq (Err "X")
+test "result.and-then" = Ok 1 | result.test-res | result.and-then (const (Err "no")) | result.test-res | eq (Err "no")
 test "result.unwrap-or" = Err "bad" | result.unwrap-or 0 | eq 0
-test "result.is-ok" = Ok 1 | the-res | result.is-ok
-test "result.to-option" = Ok 1 | the-res | result.to-option | eq (Some 1)
-test "result.from-option" = None | result.from-option "none" | the-res | eq (Err "none")
+test "result.is-ok" = Ok 1 | result.test-res | result.is-ok
+test "result.to-option" = Ok 1 | result.test-res | result.to-option | eq (Some 1)
+test "result.from-option" = None | result.from-option "none" | result.test-res | eq (Err "none")
 
-the-opt : Option[I64] -> Option[I64]
-the-opt = id
+option.test-opt : Option[I64] -> Option[I64]
+option.test-opt = id
 
-the-res : Result[I64, String] -> Result[I64, String]
-the-res = id
+result.test-res : Result[I64, String] -> Result[I64, String]
+result.test-res = id
 
-the-res-s : Result[String, String] -> Result[String, String]
-the-res-s = id
+result.test-res-s : Result[String, String] -> Result[String, String]
+result.test-res-s = id

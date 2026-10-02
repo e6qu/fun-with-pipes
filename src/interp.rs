@@ -550,6 +550,7 @@ impl<'p> Interp<'p> {
             "http.parse-response-head" => Ok(crate::web::parse_response_head(&a[0])),
             "http.field-ok" => Ok(crate::web::field_ok(&a[0], &a[1])),
             "http.content-length" => Ok(crate::web::content_length(&a[0])),
+            "prim.trap" => trap(a[0].as_str()),
             "int.to-hex" => Ok(crate::web::to_hex(&a[0])),
             "int.parse-hex" => Ok(crate::web::parse_hex(&a[0])),
             "loop" => {

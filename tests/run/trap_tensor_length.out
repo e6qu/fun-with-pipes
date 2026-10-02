@@ -1,0 +1,4 @@
+Vector {data = array[3.0, 8.0]}
+--- stderr
+fwp: trap: tensor: operands have different lengths (2 and 3)
+--- exit 101

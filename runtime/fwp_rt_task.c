@@ -1127,16 +1127,6 @@ static V fwp_p_metrics_snapshot(void) {
     return fwp_list_from(items, fwp_nmetrics);
 }
 
-/* ----- loop */
-
-static V fwp_p_loop(V f, V s) {
-    for (;;) {
-        V r = fwp_apply1(f, s);
-        if (fwp_tag(r) != 0) return OBJ(r)->f[0];
-        s = OBJ(r)->f[0];
-    }
-}
-
 /* ----- stack overflow
  * A fault next to the end of the running stack (the main thread's, of
  * fwp_main_stack_size bytes below fwp_main_stack_top, or the current

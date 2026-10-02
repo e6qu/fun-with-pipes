@@ -213,6 +213,12 @@ static void fwp_trap(const char *msg) {
     exit(101);
 }
 
+/* `prim.trap`: stop the program with a message (like a failed check) */
+static V fwp_p_trap(V msg) {
+    fwp_trap(STR(msg)->d);
+    return 0;
+}
+
 static void fwp_trap_overflow(const char *ty) {
     char buf[96];
     snprintf(buf, sizeof buf, "arithmetic overflow in %s", ty);

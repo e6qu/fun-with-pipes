@@ -18,5 +18,19 @@ duration.millis = .nanos | div 1000000
 duration.from-millis : I64 -> Duration
 duration.from-millis = mul 1000000 | make Duration { nanos = id }
 
+# Durations add and subtract (checked: overflow traps): `2s | add 500ms`,
+# `t1 | sub t0`; `zero` makes `sum` work on lists of durations.
+impl Add[Duration] =
+    add = curry (make Duration { nanos = both (.0 | .nanos) (.1 | .nanos) | uncurry add })
+
+impl Sub[Duration] =
+    sub = curry (make Duration { nanos = both (.0 | .nanos) (.1 | .nanos) | uncurry sub })
+
+impl Zero[Duration] =
+    zero = Duration { nanos = 0 }
+
+test "duration add" = 2s | add 500ms | eq 2500ms
+test "duration sub" = 2s | sub 500ms | eq 1500ms
+test "duration sum" = [1s, 250ms, 750ms] | sum | eq 2s
 test "duration.millis" = 1500ms | duration.millis | eq 1500
 test "duration.from-millis" = 2000 | duration.from-millis | eq 2s

@@ -1,0 +1,6 @@
+# `format` traps when placeholders and values do not match.
+main = [
+    ("x", 2) | format "{} = {}" | print,
+    7 | format "{{}} {}" | print,
+    ("x", 2, 3) | format "{} = {}" | print,
+] | ignore

@@ -34,18 +34,31 @@ rec iter.map = curry (match
         (both .0 .1 | uncurry id)
         (both .2 (.0 | iter.map) | uncurry compose)))
 
+# Rejected elements are skipped in a `loop`, so long runs of them run in
+# constant stack space.
 iter.filter : (a -> Bool) -> Iterator[a] -> Iterator[a] where Dup[a]
-rec iter.filter = curry (match
-    (_, Done) -> const Done
-    (_, Yield _ _) -> curry3 (if (both .0 .1 | uncurry id)
-        (fork Yield .1 (both .2 (.0 | iter.filter) | uncurry compose))
-        (both .0 (.2 | apply ()) | uncurry iter.filter)))
+rec iter.filter = curry (loop iter.filter-step)
 
+# one step over (predicate, iterator): stop at the next accepted element
+rec iter.filter-step : (a -> Bool, Iterator[a]) -> Step[(a -> Bool, Iterator[a]), Iterator[a]] where Dup[a]
+iter.filter-step = match
+    (_, Done) -> const (Stop Done)
+    (_, Yield _ _) -> curry3 (if (both .0 .1 | uncurry id)
+        (fork Yield .1 (both .2 (.0 | iter.filter) | uncurry compose) | Stop)
+        (both .0 (.2 | apply ()) | Again))
+
+# `iter.take n` is the first n elements (none when n <= 0). The element
+# after the n-th is never forced.
 iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
-rec iter.take = curry (match
-    (0, _) -> const Done
+rec iter.take = curry (if (.0 | lt 1) (const Done) (uncurry iter.take-some))
+
+# n >= 1
+rec iter.take-some : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
+iter.take-some = curry (match
     (_, Done) -> const Done
-    (_, Yield _ _) -> curry3 (fork Yield .1 (both .2 (.0 | sub 1 | iter.take) | uncurry compose)))
+    (_, Yield _ _) -> curry3 (fork Yield .1 (if (.0 | eq 1)
+        (const (const Done))
+        (both .2 (.0 | sub 1 | iter.take) | uncurry compose))))
 
 # `iter.iterate f x` is x, f x, f (f x), ...
 iter.iterate : (a -> a) -> a -> Iterator[a] where Dup[a]
@@ -56,4 +69,11 @@ test "iter.count-from" = 5 | iter.count-from | iter.take 3 | iter.to-list | eq [
 test "iter.map" = 0 | iter.count-from | iter.map (mul 2) | iter.take 3 | iter.to-list | eq [0, 2, 4]
 test "iter.filter" = 1 | iter.count-from | iter.filter (rem 3 | eq 0) | iter.take 2 | iter.to-list | eq [3, 6]
 test "iter.later is lazy" = const True (iter.later fail "boom")
+# forcing the second element would divide by zero
+test "iter.take forces no extra element" = Yield 1 (fork Yield (const 1 | div 0) (const (const Done))) | iter.take 1 | iter.to-list | eq [1]
+test "iter.take negative" = 1 | iter.count-from | iter.take -3 | iter.to-list | eq []
+test "iter.take zero" = 1 | iter.count-from | iter.take 0 | iter.to-list | eq []
+test "iter.take past the end" = [1, 2] | iter.from-list | iter.take 5 | iter.to-list | eq [1, 2]
+test "iter.filter finite matches" = 1 | iter.count-from | iter.filter (lt 3) | iter.take 2 | iter.to-list | eq [1, 2]
+test "iter.filter long rejected run" = 0 | iter.count-from | iter.filter (gt 300000) | iter.take 1 | iter.to-list | eq [300001]
 test "iter.iterate" = 1 | iter.iterate (mul 3) | iter.take 4 | iter.to-list | eq [1, 3, 9, 27]

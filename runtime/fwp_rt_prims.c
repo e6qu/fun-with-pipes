@@ -126,6 +126,16 @@ static V fwp_p_drop_while(V f, V xs) {
     return xs;
 }
 
+/* `loop`: iterate a step function in constant stack space (pure, so also
+ * available on WebAssembly) */
+static V fwp_p_loop(V f, V s) {
+    for (;;) {
+        V r = fwp_apply1(f, s);
+        if (fwp_tag(r) != 0) return OBJ(r)->f[0];
+        s = OBJ(r)->f[0];
+    }
+}
+
 static V fwp_p_zip(V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);
@@ -135,12 +145,13 @@ static V fwp_p_zip(V ys, V xs) {
     return fwp_list_from(a, k);
 }
 
+/* data-last: the subject's element is the last argument (f y x) */
 static V fwp_p_zip_with(V f, V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);
     V *b = fwp_list_items(ys, &m);
     size_t k = n < m ? n : m;
-    for (size_t i = 0; i < k; i++) a[i] = fwp_apply2(f, a[i], b[i]);
+    for (size_t i = 0; i < k; i++) a[i] = fwp_apply2(f, b[i], a[i]);
     return fwp_list_from(a, k);
 }
 
@@ -613,7 +624,28 @@ static V fwp_p_parse_int(V s, int kind, int w) {
     return fwp_some(out);
 }
 
+/* ASCII case-insensitive comparison of d[0..n) with a lower-case word */
+static int fwp_word_ci(const char *d, size_t n, const char *w) {
+    size_t i = 0;
+    for (; i < n && w[i]; i++) {
+        char c = d[i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        if (c != w[i]) return 0;
+    }
+    return i == n && w[i] == 0;
+}
+
 static V fwp_p_parse_float(V s, int kind) {
+    const char *d = STR(s)->d;
+    size_t n = STR(s)->len, o = (n > 0 && (d[0] == '-' || d[0] == '+')) ? 1 : 0;
+    /* non-finite values, in any case: nan, and inf or infinity with an
+     * optional sign */
+    if (fwp_word_ci(d + o, n - o, "inf") || fwp_word_ci(d + o, n - o, "infinity")) {
+        double x = d[0] == '-' ? -INFINITY : INFINITY;
+        return fwp_some(kind == K_F32 ? fwp_from_f32((float)x) : fwp_from_f64(x));
+    }
+    if (fwp_word_ci(d, n, "nan"))
+        return fwp_some(kind == K_F32 ? fwp_from_f32(NAN) : fwp_from_f64(NAN));
     if (!fwp_valid_float(STR(s)->d, STR(s)->len)) return FWP_NONE;
     if (kind == K_F32) return fwp_some(fwp_from_f32(strtof(STR(s)->d, 0)));
     return fwp_some(fwp_from_f64(strtod(STR(s)->d, 0)));
@@ -631,9 +663,25 @@ static V fwp_p_format(V tmpl, V v, const fwp_desc *d) {
         np = 1;
         parts[0] = fwp_show(v, d);
     }
-    fwp_buf b = {0};
     const char *t = STR(tmpl)->d;
     size_t n = STR(tmpl)->len, i = 0;
+    int holes = 0;
+    while (i < n) {
+        if (i + 1 < n && ((t[i] == '{' && t[i + 1] == '{') || (t[i] == '}' && t[i + 1] == '}'))) i += 2;
+        else if (i + 1 < n && t[i] == '{' && t[i + 1] == '}') { holes++; i += 2; }
+        else i++;
+    }
+    if (holes != np) {
+        fwp_buf e = {0};
+        char num[128];
+        snprintf(num, sizeof num, "format: placeholder count (%d) does not match value count (%d) in \"", holes, np);
+        buf_puts(&e, num);
+        buf_put(&e, t, n);
+        buf_putc(&e, '"');
+        fwp_trap(STR(buf_to_str(&e))->d);
+    }
+    fwp_buf b = {0};
+    i = 0;
     int next = 0;
     while (i < n) {
         if (t[i] == '{' && i + 1 < n && t[i + 1] == '{') { buf_putc(&b, '{'); i += 2; }

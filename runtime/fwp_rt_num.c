@@ -422,11 +422,12 @@ static V fwp_p_trits_pack(V xs) {
 static V fwp_p_trits_unpack(V nv, V bs) {
     int64_t n = (int64_t)nv;
     if (n < 0) n = 0;
+    /* only trits the bytes hold: none past the end */
+    if ((uint64_t)n > STR(bs)->len * 5) n = (int64_t)(STR(bs)->len * 5);
     V *out = (V *)fwp_alloc(((size_t)n + 1) * sizeof(V));
     static const uint32_t pw[5] = {1, 3, 9, 27, 81};
     for (int64_t i = 0; i < n; i++) {
-        size_t j = (size_t)(i / 5);
-        uint32_t byte = j < STR(bs)->len ? (uint8_t)STR(bs)->d[j] : 0;
+        uint32_t byte = (uint8_t)STR(bs)->d[i / 5];
         out[i] = (V)((int64_t)((byte / pw[i % 5]) % 3) - 1);
     }
     return fwp_list_from(out, (size_t)n);

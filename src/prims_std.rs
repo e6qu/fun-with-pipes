@@ -47,6 +47,27 @@ pub fn valid_int(s: &str) -> bool {
     !d.is_empty() && d.bytes().all(|b| b.is_ascii_digit())
 }
 
+/// `parse-float`'s non-finite values, in any case: `nan`, and `inf` or
+/// `infinity` with an optional sign (`show` writes `NaN`, `inf`, `-inf`).
+fn special_float(s: &str) -> Option<f64> {
+    let (neg, rest) = match s.as_bytes().first() {
+        Some(b'-') => (true, &s[1..]),
+        Some(b'+') => (false, &s[1..]),
+        _ => (false, s),
+    };
+    if rest.eq_ignore_ascii_case("inf") || rest.eq_ignore_ascii_case("infinity") {
+        Some(if neg {
+            f64::NEG_INFINITY
+        } else {
+            f64::INFINITY
+        })
+    } else if s.eq_ignore_ascii_case("nan") {
+        Some(f64::NAN)
+    } else {
+        None
+    }
+}
+
 /// `[+-]?(digits(.digits?)?|.digits)([eE][+-]?digits)?`
 pub fn valid_float(s: &str) -> bool {
     let b = s.as_bytes();
@@ -187,8 +208,10 @@ impl<'p> Interp<'p> {
                     let ys = a[1].list_items();
                     let xs = a[2].list_items();
                     let mut out = Vec::new();
+                    // data-last: the subject's element is the last argument,
+                    // so `xs | zip-with sub ys` is x - y
                     for (x, y) in xs.into_iter().zip(ys) {
-                        out.push(self.apply(f.clone(), vec![x, y])?);
+                        out.push(self.apply(f.clone(), vec![y, x])?);
                     }
                     Value::list(out)
                 }
@@ -418,7 +441,12 @@ impl<'p> Interp<'p> {
                 "parse-float" => {
                     let s = a[0].as_str();
                     let t = inner(result);
-                    if !valid_float(s) {
+                    if let Some(x) = special_float(s) {
+                        some(match t {
+                            MT::Con(n, _) if n == "std::F32" => Value::F32(x as f32),
+                            _ => Value::F64(x),
+                        })
+                    } else if !valid_float(s) {
                         none()
                     } else {
                         let x: f64 = s.parse().unwrap_or(f64::NAN);
@@ -443,6 +471,15 @@ impl<'p> Interp<'p> {
                             .collect(),
                         (v, t) => vec![display(v, t, self.prog, true)],
                     };
+                    let holes = format_placeholders(&tmpl);
+                    if holes != parts.len() {
+                        return trap(format!(
+                            "format: placeholder count ({}) does not match value count ({}) in \"{}\"",
+                            holes,
+                            parts.len(),
+                            tmpl
+                        ));
+                    }
                     let mut out = String::new();
                     let mut it = parts.into_iter();
                     let mut cs = tmpl.chars().peekable();
@@ -511,11 +548,12 @@ impl<'p> Interp<'p> {
                     Value::Bytes(Rc::from(out))
                 }
                 "trits.unpack" => {
-                    let n = int(&a[0]).max(0) as usize;
                     let bs = bytes(&a[1]);
+                    // only trits the bytes hold: none past the end
+                    let n = (int(&a[0]).max(0) as usize).min(bs.len() * 5);
                     let mut out = Vec::new();
                     for i in 0..n {
-                        let byte = *bs.get(i / 5).unwrap_or(&0) as u32;
+                        let byte = bs[i / 5] as u32;
                         let d = (byte / 3u32.pow((i % 5) as u32)) % 3;
                         out.push(Value::Trit(d as i8 - 1));
                     }
@@ -959,4 +997,22 @@ fn bytes(v: &Value) -> Rc<[u8]> {
         Value::Bytes(b) => b.clone(),
         _ => Rc::from(Vec::new()),
     }
+}
+
+/// The number of `{}` placeholders in a `format` template (`{{` and `}}`
+/// are literal braces).
+fn format_placeholders(tmpl: &str) -> usize {
+    let b = tmpl.as_bytes();
+    let (mut i, mut n) = (0, 0);
+    while i < b.len() {
+        if i + 1 < b.len() && matches!((b[i], b[i + 1]), (b'{', b'{') | (b'}', b'}')) {
+            i += 2;
+        } else if i + 1 < b.len() && b[i] == b'{' && b[i + 1] == b'}' {
+            n += 1;
+            i += 2;
+        } else {
+            i += 1;
+        }
+    }
+    n
 }

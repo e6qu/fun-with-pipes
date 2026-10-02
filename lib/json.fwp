@@ -15,13 +15,13 @@ foreign "fwp" json.parse : String -> Result[Json, String]
 foreign "fwp" json.encode : Json -> String
 
 # the value of the first pair with the given key
-lookup : String -> List[(String, a)] -> Option[a]
-lookup = eq | compose .0 | find | flip compose (option.map .1)
+json.lookup : String -> List[(String, a)] -> Option[a]
+json.lookup = eq | compose .0 | find | flip compose (option.map .1)
 
 # field of an object
 json.get : String -> Json -> Option[Json]
 json.get = curry (match
-    (_, Json.Obj _) -> lookup
+    (_, Json.Obj _) -> json.lookup
     _ -> const None)
 
 # element of an array
