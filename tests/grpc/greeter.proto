@@ -11,6 +11,7 @@ service Greeter {
   rpc Ticks(TicksRequest) returns (stream TicksResponse);
   rpc Total(stream TotalRequest) returns (TotalResponse);
   rpc Shout(stream ShoutRequest) returns (stream ShoutResponse);
+  rpc Firsts(stream FirstsRequest) returns (stream FirstsResponse);
   rpc Find(FindRequest) returns (HelloReply);
   rpc Slow(SlowRequest) returns (SlowResponse);
   rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
@@ -60,6 +61,14 @@ message ShoutRequest {
 
 message ShoutResponse {
   string value = 1;
+}
+
+message FirstsRequest {
+  sint64 arg1 = 1;
+}
+
+message FirstsResponse {
+  sint64 value = 1;
 }
 
 message FindRequest {

@@ -33,6 +33,11 @@ total = iter.to-list | sum
 export shout : Iterator[String] -> Iterator[String]
 shout = iter.map upper
 
+# the first three numbers of a stream, answered as they arrive (the
+# stream may be infinite: the call ends after three)
+export firsts : Iterator[I64] -> Iterator[I64]
+firsts = iter.take 3 | iter.map (mul 10)
+
 # a status: NOT_FOUND for "ghost"
 # grpc: Find
 export lookup : String -> HelloReply ! {Error[GrpcError]}

@@ -4,6 +4,7 @@ greeter.HelloReply {message = "hello, Ada"}
 ["tick 1", "tick 2", "tick 3"]
 10
 ["A", "B"]
+[10, 20, 30]
 Ok (greeter.HelloReply {message = "Bob"})
 Err (GrpcError {code = 5, message = "ghost"})
 carol

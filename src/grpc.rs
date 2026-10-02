@@ -1123,6 +1123,9 @@ fn stub_failure(shape: &Shape, what: &str, addr: &str, f: Failure) -> Ctl {
             Ctl::Trap(st.message["trap: ".len()..].to_string())
         }
         Failure::Status(st) if shape.status_errors => grpc_error(st.code, &st.message),
+        Failure::Transport(m) if m.starts_with("trap: ") => {
+            Ctl::Trap(m["trap: ".len()..].to_string())
+        }
         Failure::Transport(m) if shape.status_errors => grpc_error(UNAVAILABLE, &m),
         Failure::Status(st) => Ctl::Trap(format!(
             "service call {} ({}) failed: gRPC status {}: {}",
@@ -1237,6 +1240,67 @@ fn encode_msg(it: &mut Interp, enc: &Encoder, v: &Value) -> R<Vec<u8>> {
     }
 }
 
+/// A task that sends the requests of a bidirectional call while its
+/// caller receives the responses: the elements of `iter`, encoded, then
+/// the end of the stream. A failure (a trap while forcing or encoding)
+/// resets the stream and is kept for the caller.
+struct Sender {
+    task: Arc<TaskShared>,
+    failed: Rc<RefCell<Option<Ctl>>>,
+}
+
+fn spawn_sender(it: &mut Interp, c: &ConnRef, s: &StreamRef, iter: Value, enc: Encoder) -> Sender {
+    let failed = Rc::new(RefCell::new(None));
+    let job = crate::sched::Baton((c.clone(), s.clone(), iter, enc, failed.clone()));
+    let task = it.spawn_rust(
+        Box::new(move |it| {
+            let job = job;
+            let crate::sched::Baton((c, s, mut cur, enc, failed)) = job;
+            let r = (|| -> R<()> {
+                loop {
+                    if s.borrow().remote_end {
+                        return Ok(());
+                    }
+                    let Some((x, rest)) = iter_next(it, cur)? else {
+                        break;
+                    };
+                    let msg = encode_msg(it, &enc, &x)?;
+                    if !send_msg(it, &c, &s, &msg, false)? {
+                        return Ok(());
+                    }
+                    cur = rest;
+                }
+                send_data(it, &c, &s, &[], true)?;
+                Ok(())
+            })();
+            if let Err(e) = r {
+                if !matches!(e, Ctl::Cancelled) {
+                    if let Ctl::Trap(m) = &e {
+                        let mut sb = s.borrow_mut();
+                        if sb.reset.is_none() {
+                            sb.reset = Some(format!("trap: {}", m));
+                        }
+                    }
+                    *failed.borrow_mut() = Some(e);
+                    reset_stream(it, &c, &s, 8);
+                }
+            }
+        }),
+        None,
+        true,
+    );
+    Sender { task, failed }
+}
+
+impl Sender {
+    /// Stop sending (the call is over), and the sender's failure, if any.
+    fn finish(self, it: &mut Interp) -> Option<Ctl> {
+        self.task.cancel();
+        it.world.event();
+        self.failed.borrow_mut().take()
+    }
+}
+
 /// The values of an `Iterator`, forced one at a time.
 fn iter_next(it: &mut Interp, v: Value) -> R<Option<(Value, Value)>> {
     match &v {
@@ -1303,6 +1367,8 @@ fn call_remote_at(
     // the request; a unary call is retried once on a fresh connection when
     // a pooled one turns out to be closed before the server saw it
     let mut attempt = 0;
+    // the requests of a bidirectional call are sent as responses arrive
+    let mut sender: Option<Sender> = None;
     let (conn, stream, first) = loop {
         let (conn, stream, reused) = match open_call(it, &addr, &path, &[("fwp-fingerprint", fp)])?
         {
@@ -1314,6 +1380,15 @@ fn call_remote_at(
                 Input::Args(_) => {
                     let req = encode_req(it, &args[..req_types.len()])?;
                     send_msg(it, &conn, &stream, &req, true)?;
+                }
+                Input::Stream(t) if !matches!(shape.output, Output::Value(_)) => {
+                    let enc = Encoder::Native {
+                        schema: schema.clone(),
+                        node: ms.request,
+                        ty: t.clone(),
+                        error_tag: false,
+                    };
+                    sender = Some(spawn_sender(it, &conn, &stream, args[0].clone(), enc));
                 }
                 Input::Stream(_) => {
                     let mut cur = args[0].clone();
@@ -1376,26 +1451,33 @@ fn call_remote_at(
         }
         Output::Chan(_) => {
             let ch = args.last().cloned().unwrap_or_else(Value::unit);
-            loop {
-                match recv(it, &conn, &stream, deadline)? {
-                    Got::Msg(m) => match decode(it, &m)? {
-                        Ok(v) => {
-                            if let Some(Err(e)) = it.prim_conc("channel.send", &mut [ch.clone(), v])
-                            {
-                                reset_stream(it, &conn, &stream, 8);
-                                return Err(e);
+            let r = (|| -> R<Value> {
+                loop {
+                    match recv(it, &conn, &stream, deadline)? {
+                        Got::Msg(m) => match decode(it, &m)? {
+                            Ok(v) => {
+                                if let Some(Err(e)) =
+                                    it.prim_conc("channel.send", &mut [ch.clone(), v])
+                                {
+                                    reset_stream(it, &conn, &stream, 8);
+                                    return Err(e);
+                                }
                             }
-                        }
-                        Err((e, t)) => {
-                            reset_stream(it, &conn, &stream, 8);
-                            return Err(Ctl::Fail(e, t));
-                        }
-                    },
-                    Got::End(st) if st.code == OK => return Ok(Value::unit()),
-                    Got::End(st) => return Err(fail(Failure::Status(st))),
-                    Got::Lost(m, _) => return Err(fail(Failure::Transport(m))),
+                            Err((e, t)) => {
+                                reset_stream(it, &conn, &stream, 8);
+                                return Err(Ctl::Fail(e, t));
+                            }
+                        },
+                        Got::End(st) if st.code == OK => return Ok(Value::unit()),
+                        Got::End(st) => return Err(fail(Failure::Status(st))),
+                        Got::Lost(m, _) => return Err(fail(Failure::Transport(m))),
+                    }
                 }
+            })();
+            if let Some(e) = sender.take().and_then(|s| s.finish(it)) {
+                return Err(e);
             }
+            r
         }
         Output::Iter(_) => {
             // the first element now, so that a failure before it is raised
@@ -2918,8 +3000,34 @@ fn typed_call(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
         Ok((c, s, _)) => (c, s),
         Err(e) => return Err(grpc_error(UNAVAILABLE, &e)),
     };
+    if sym == "grpc.bidi-streaming" {
+        // requests are sent as responses arrive
+        let sender = spawn_sender(it, &c, &s, a[4].clone(), Encoder::Fwp(enc.clone()));
+        let ch = a[5].clone();
+        let r = (|| -> R<Value> {
+            loop {
+                match recv(it, &c, &s, deadline)? {
+                    Got::Msg(m) => {
+                        let v = it.apply(dec.clone(), vec![Value::Bytes(Rc::from(m))])?;
+                        if let Some(r) = it.prim_conc("channel.send", &mut [ch.clone(), v]) {
+                            r?;
+                        }
+                    }
+                    Got::End(st) if st.code == OK => return Ok(Value::unit()),
+                    g => return Err(got_error(g)),
+                }
+            }
+        })();
+        if let Some(e) = sender.finish(it) {
+            return Err(e);
+        }
+        if r.is_err() {
+            reset_stream(it, &c, &s, 8);
+        }
+        return r;
+    }
     let r = (|| -> R<Value> {
-        let streaming_in = sym == "grpc.client-streaming" || sym == "grpc.bidi-streaming";
+        let streaming_in = sym == "grpc.client-streaming";
         if streaming_in {
             let mut cur = a[4].clone();
             while let Some((x, rest)) = iter_next(it, cur)? {

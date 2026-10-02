@@ -3,6 +3,7 @@ hello, Ada
 ["tick 1", "tick 2"]
 7
 ["X", "Y"]
+[10, 20, 30]
 Err (GrpcError {code = 5, message = "ghost"})
 nobody
 Some (Error "division by zero")

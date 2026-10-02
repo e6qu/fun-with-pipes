@@ -1207,10 +1207,80 @@ static int g_iter_next(V *cur, V *x) {
     return 1;
 }
 
+/* ---------------------------------------------------------------- senders */
+
+static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
+
+/* a task that sends the requests of a bidirectional call while its caller
+ * receives the responses: the elements of an iterator, encoded by `enc`
+ * (an fwp function) or as requests of `r`, then the end of the stream. It
+ * stops when the call is over; a trap resets the stream with the reason
+ * `trap: ...`, which the caller raises. Allocated in the fwp heap: it holds
+ * values. */
+typedef struct {
+    g_conn *c;
+    g_stream *s;
+    V cur, enc;
+    const fwp_remote *r;
+} g_sender;
+
+static void g_send_all(void *arg, int cancelled) {
+    g_sender *x = (g_sender *)arg;
+    if (cancelled) return;
+    jmp_buf tj;
+    jmp_buf *saved = fwp_cur->trap_jb;
+    if (setjmp(tj) != 0) {
+        fwp_cur->trap_jb = saved;
+        char *why = g_strdupf("trap: %s", fwp_trap_msg);
+        g_set_reset(x->s, why);
+        free(why);
+        g_reset(x->c, x->s, 8);
+        fwp_wake_all(&x->s->waiters);
+        return;
+    }
+    fwp_cur->trap_jb = &tj;
+    V v;
+    for (;;) {
+        if (!x->s->listed || x->s->remote_end) break;
+        V cur = x->cur;
+        if (!g_iter_next(&cur, &v)) {
+            g_send_data(x->c, x->s, 0, 0, 1);
+            break;
+        }
+        x->cur = cur;
+        int ok;
+        if (x->r) {
+            h2_buf req = {0};
+            g_encode_request(x->r, &v, &req);
+            ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
+            h2b_free(&req);
+        } else {
+            V b = fwp_apply1(x->enc, v);
+            ok = g_send_msg(x->c, x->s, (const unsigned char *)STR(b)->d, STR(b)->len, 0);
+        }
+        if (!ok) break;
+        /* let the connection's reader see the end of the call (an
+         * iterator may be infinite, and the windows may stay open) */
+        fwp_park(0, fwp_now_ns() + 1);
+        fwp_check_cancel();
+    }
+    fwp_cur->trap_jb = saved;
+}
+
+static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remote *r) {
+    g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
+    x->c = c;
+    x->s = s;
+    x->cur = iter;
+    x->enc = enc;
+    x->r = r;
+    fwp_spawn_task(0, g_send_all, x, 0, 1);
+}
+
 /* ------------------------------------------------------------- client stubs */
 
 static void g_stub_fail(const fwp_remote *r, const char *addr, int code, const char *text) {
-    if (code == GRPC_INTERNAL && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
+    if ((code == GRPC_INTERNAL || code < 0) && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
     if (r->m.status_errors) g_grpc_error(code < 0 ? GRPC_UNAVAILABLE : code, text, r->m.grpc_error);
     if (code >= 0) g_trapf("service call %s (%s) failed: gRPC status %d: %s", r->what, addr, code, text);
     g_trapf("service call %s (%s) failed: %s", r->what, addr, text);
@@ -1245,6 +1315,9 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             g_encode_request(r, args, &req);
             g_send_msg(c, s, req.d, req.len, 1);
             h2b_free(&req);
+        } else if (r->m.output != 0) {
+            /* requests are sent as responses arrive */
+            g_spawn_sender(c, s, args[0], 0, r);
         } else {
             V cur = args[0], x;
             while (g_iter_next(&cur, &x)) {
@@ -2275,7 +2348,10 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
             fwp_fail(h.value, h.desc);
         }
         V result = FWP_UNIT;
-        if (kind == 2 || kind == 3) {
+        if (kind == 3) {
+            /* requests are sent as responses arrive */
+            g_spawn_sender(c, s, a[4], enc, 0);
+        } else if (kind == 2) {
             V cur = a[4], x;
             while (g_iter_next(&cur, &x)) {
                 V b = fwp_apply1(enc, x);
@@ -2314,6 +2390,7 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
                     fwp_p_channel_send(ch, v);
                     continue;
                 }
+                if (g.kind == G_LOST && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
                 if (g.kind == G_LOST) g_grpc_error(GRPC_UNAVAILABLE, g.text, gerr);
                 if (g.code != 0) g_grpc_error(g.code, g.text, gerr);
                 break;

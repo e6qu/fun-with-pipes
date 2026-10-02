@@ -180,6 +180,44 @@ rec find-request.codec : PbCodec[FindRequest]
 find-request.codec =
     pb.message find-request.encode find-request.decode find-request.default
 
+FirstsRequest = { arg1: I64 }
+
+firsts-request.default : FirstsRequest
+firsts-request.default = FirstsRequest { arg1 = 0 }
+
+rec firsts-request.encode : FirstsRequest -> Bytes
+firsts-request.encode = pb.encode [.arg1 | pb.field 1 pb.sint64]
+
+rec firsts-request.decode : Bytes -> FirstsRequest ! {Error[GrpcError]}
+firsts-request.decode =
+    pb.decode | make FirstsRequest { arg1 = pb.get 1 pb.sint64 }
+
+rec firsts-request.codec : PbCodec[FirstsRequest]
+firsts-request.codec =
+    pb.message
+        firsts-request.encode
+        firsts-request.decode
+        firsts-request.default
+
+FirstsResponse = { value: I64 }
+
+firsts-response.default : FirstsResponse
+firsts-response.default = FirstsResponse { value = 0 }
+
+rec firsts-response.encode : FirstsResponse -> Bytes
+firsts-response.encode = pb.encode [.value | pb.field 1 pb.sint64]
+
+rec firsts-response.decode : Bytes -> FirstsResponse ! {Error[GrpcError]}
+firsts-response.decode =
+    pb.decode | make FirstsResponse { value = pb.get 1 pb.sint64 }
+
+rec firsts-response.codec : PbCodec[FirstsResponse]
+firsts-response.codec =
+    pb.message
+        firsts-response.encode
+        firsts-response.decode
+        firsts-response.default
+
 HelloReply = { message: String }
 
 hello-reply.default : HelloReply
@@ -524,6 +562,20 @@ greeter.shout.route =
     grpc.bidi-streaming-handler shout-request.decode shout-response.encode
     | grpc.route "/test.Greeter/Shout"
 
+# rpc Firsts(stream FirstsRequest) returns (stream FirstsResponse): a call to the service at an address
+greeter.firsts : String -> Iterator[FirstsRequest] -> Channel[FirstsResponse] -> () ! {Async, Network, Error[GrpcError]}
+greeter.firsts =
+    grpc.bidi-streaming
+        firsts-request.encode
+        firsts-response.decode
+        "/test.Greeter/Firsts"
+
+# the route serving `Firsts` with a function
+greeter.firsts.route : (Iterator[FirstsRequest] -> Channel[FirstsResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
+greeter.firsts.route =
+    grpc.bidi-streaming-handler firsts-request.decode firsts-response.encode
+    | grpc.route "/test.Greeter/Firsts"
+
 # rpc Find(FindRequest) returns (HelloReply): a call to the service at an address
 greeter.find : String -> FindRequest -> HelloReply ! {Network, Error[GrpcError]}
 greeter.find =
@@ -633,6 +685,7 @@ GreeterServer = {
     ticks: TicksRequest -> Channel[TicksResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
     total: Iterator[TotalRequest] -> TotalResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
     shout: Iterator[ShoutRequest] -> Channel[ShoutResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
+    firsts: Iterator[FirstsRequest] -> Channel[FirstsResponse] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
     find: FindRequest -> HelloReply ! {Async, IO, Network, FileIO, Error[GrpcError]},
     slow: SlowRequest -> SlowResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
     whoami: WhoamiRequest -> WhoamiResponse ! {Async, IO, Network, FileIO, Error[GrpcError]},
@@ -663,29 +716,32 @@ greeter.routes =
                         (.shout | greeter.shout.route)
                         (fork
                             Cons
-                            (.find | greeter.find.route)
+                            (.firsts | greeter.firsts.route)
                             (fork
                                 Cons
-                                (.slow | greeter.slow.route)
+                                (.find | greeter.find.route)
                                 (fork
                                     Cons
-                                    (.whoami | greeter.whoami.route)
+                                    (.slow | greeter.slow.route)
                                     (fork
                                         Cons
-                                        (.boom | greeter.boom.route)
+                                        (.whoami | greeter.whoami.route)
                                         (fork
                                             Cons
-                                            (.divide | greeter.divide.route)
+                                            (.boom | greeter.boom.route)
                                             (fork
                                                 Cons
-                                                (.countdown
-                                                    | greeter.countdown.route)
+                                                (.divide | greeter.divide.route)
                                                 (fork
                                                     Cons
-                                                    (.tagged
-                                                        | greeter.tagged.route)
+                                                    (.countdown
+                                                        | greeter.countdown.route)
                                                     (fork
                                                         Cons
-                                                        (.nap
-                                                            | greeter.nap.route)
-                                                        (const Nil)))))))))))))
+                                                        (.tagged
+                                                            | greeter.tagged.route)
+                                                        (fork
+                                                            Cons
+                                                            (.nap
+                                                                | greeter.nap.route)
+                                                            (const Nil))))))))))))))
