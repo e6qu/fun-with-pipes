@@ -1,0 +1,23 @@
+# 4. Effects
+
+# A function's type says which effects it may perform. `Error[E]` aborts
+# to the nearest `attempt`, which turns the failure into a `Result`.
+parse-age : String -> I64 ! {Error[String]}
+parse-age = parse-int | or-fail "not a number"
+
+check-age : I64 -> I64 ! {Error[String]}
+check-age = if (lt 0) (const "negative" | fail) id
+
+age : String -> I64 ! {Error[String]}
+age = parse-age | check-age
+
+# `run-state` gives a function a piece of mutable state.
+count-long : List[String] -> I64
+count-long = run-state 0 (each (if (string.length | gt 3) (const (add 1) | modify) (const ()))) | .1
+
+main = [
+    "42" | attempt age | echo,
+    "-1" | attempt age | echo,
+    "abc" | attempt age | echo,
+    ["a", "long", "words", "x"] | count-long | echo,
+] | ignore

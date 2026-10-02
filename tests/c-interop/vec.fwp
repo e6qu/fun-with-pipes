@@ -1,0 +1,20 @@
+# Foreign C functions from tests/c-interop/vec.c: structs by value, callbacks,
+# strings and nullable pointers.
+
+repr(C) Vec2 = { x: F64, y: F64 }
+
+foreign "C" vec2-add : Vec2 -> Vec2 -> Vec2 = "vec2_add"
+foreign "C" vec2-dot : Vec2 -> Vec2 -> F64 = "vec2_dot"
+foreign "C" apply-twice : (I64 -> I64) -> I64 -> I64 = "apply_twice"
+foreign "C" fold-range : I64 -> (F64 -> I64 -> F64) -> F64 -> F64 = "fold_range"
+foreign "C" describe : I32 -> String
+foreign "C" maybe-null : Bool -> Option[Ptr[I32]] = "maybe_null"
+
+main = [
+    vec2-add { x = 1.0, y = 2.0 } { x = 10.0, y = 20.0 } | echo,
+    vec2-dot { x = 1.0, y = 2.0 } { x = 3.0, y = 4.0 } | echo,
+    apply-twice (mul 3) 7 | echo,
+    fold-range 5 (curry (both .0 (.1 | int.to-float) | uncurry add)) 0.5 | echo,
+    [0, 1] | map describe | echo,
+    [True, False] | map (maybe-null | option.is-some) | echo,
+] | ignore

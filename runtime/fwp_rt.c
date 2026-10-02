@@ -19,16 +19,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __wasi__
+/* setjmp/longjmp are lowered to WebAssembly exception handling
+ * (-mllvm -wasm-enable-sjlj); the helpers are in the WASI section below
+ * and runtime/wasm/longjmp.S. */
+typedef long jmp_buf[4];
+int setjmp(jmp_buf) __attribute__((returns_twice));
+_Noreturn void longjmp(jmp_buf, int);
+#else
 #include <setjmp.h>
+#endif
 #include <math.h>
 #include <time.h>
+#ifndef __wasi__
 #include <pthread.h>
+#endif
 #include <errno.h>
 #include <ctype.h>
 
 typedef uint64_t V;
 typedef __int128 i128;
 typedef unsigned __int128 u128;
+
 
 /* ------------------------------------------------------------------ alloc */
 

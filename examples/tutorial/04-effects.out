@@ -1,0 +1,4 @@
+Ok 42
+Err "negative"
+Err "not a number"
+2

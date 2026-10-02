@@ -312,14 +312,52 @@ impl<'a> Parser<'a> {
                 } else {
                     name.clone()
                 };
+                let variadic = if matches!(self.peek_tok(), Tok::Ident(s) if s == "variadic")
+                    && !self.at_boundary_strict()
+                {
+                    self.bump();
+                    match self.peek_tok().clone() {
+                        Tok::Int { mag, .. } => {
+                            self.bump();
+                            Some(mag as u32)
+                        }
+                        _ => {
+                            return Err(Diagnostic::error(
+                                self.span(),
+                                "expected the number of fixed parameters after `variadic`",
+                            ))
+                        }
+                    }
+                } else {
+                    None
+                };
                 Ok(Decl::Foreign {
                     span: sp,
                     abi,
                     name,
                     symbol,
+                    variadic,
                     ty,
                     constraints,
                 })
+            }
+            Tok::Ident(s) if s == "repr" => {
+                self.bump();
+                self.expect_sym(Sym::LParen)?;
+                let (r, rsp) = self.upper("representation (`C`)")?;
+                if r != "C" {
+                    return Err(Diagnostic::error(rsp, "only `repr(C)` is supported"));
+                }
+                self.expect_sym(Sym::RParen)?;
+                let mut td = self.type_decl()?;
+                if !matches!(td.body, TypeBody::Record(_)) {
+                    return Err(Diagnostic::error(
+                        td.span,
+                        "`repr(C)` applies to record types",
+                    ));
+                }
+                td.repr_c = true;
+                Ok(Decl::Type(td))
             }
             Tok::Keyword(Kw::Resource) => {
                 self.bump();
@@ -475,6 +513,7 @@ impl<'a> Parser<'a> {
             params,
             body,
             resource: false,
+            repr_c: false,
         })
     }
 

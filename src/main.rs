@@ -10,8 +10,16 @@ fwp - the fwp (\"foop\") language
 usage:
   fwp run <file.fwp> [args...]   run a program's `main` (interpreter)
   fwp build <file.fwp> [-o out] [--fn name] [--emit-c] [-O0|-O1|-O2|-O3]
+            [--target native|wasm32-wasi|wasm32-browser] [--fat]
+            [--staticlib|--cdylib] [--link lib-or-source]...
                                  compile `main` (or an exported function) to a
-                                 native executable
+                                 native executable or a WebAssembly module;
+                                 --fat builds one variant per CPU feature
+                                 level and picks the best at startup;
+                                 --staticlib/--cdylib build a C library
+                                 (and header) of the exported functions;
+                                 --link adds C code for foreign functions
+                                 (also accepted by run, test and exec)
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
   fwp pipe '<file.fwp:fn args> | <file.fwp:fn> ...'
@@ -25,8 +33,31 @@ usage:
   fwp help                       show this message
 ";
 
+/// Remove `--link <item>` options (C libraries, sources and objects for
+/// foreign functions) from the arguments before the program file.
+fn take_links(args: &mut Vec<String>) {
+    let mut links = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == "--link" && i + 1 < args.len() {
+            links.push(args.remove(i + 1));
+            args.remove(i);
+        } else if args[i].ends_with(".fwp") {
+            break;
+        } else {
+            i += 1;
+        }
+    }
+    fwp::ffi::set_links(links);
+}
+
 fn main() -> ExitCode {
-    let args: Vec<String> = std::env::args().skip(1).collect();
+    let mut args: Vec<String> = std::env::args().skip(1).collect();
+    if args.len() > 1 {
+        let mut rest = args.split_off(1);
+        take_links(&mut rest);
+        args.extend(rest);
+    }
     match args.first().map(String::as_str) {
         Some("check") => check(&args[1..]),
         Some("run") => run(&args[1..]),
@@ -182,6 +213,9 @@ fn build(args: &[String]) -> ExitCode {
     let mut emit_c = false;
     let mut func: Option<String> = None;
     let mut opt = "-O2".to_string();
+    let mut target = fwp::cgen::Target::Native;
+    let mut fat = false;
+    let mut lib: Option<fwp::cgen::LibKind> = None;
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
@@ -190,6 +224,29 @@ fn build(args: &[String]) -> ExitCode {
                 out = args.get(i).cloned();
             }
             "--emit-c" => emit_c = true,
+            "--fat" => fat = true,
+            "--staticlib" => lib = Some(fwp::cgen::LibKind::Static),
+            "--cdylib" => lib = Some(fwp::cgen::LibKind::Shared),
+            "--link" => {
+                i += 1;
+                if let Some(l) = args.get(i) {
+                    let mut links = fwp::ffi::links();
+                    links.push(l.clone());
+                    fwp::ffi::set_links(links);
+                }
+            }
+            "--target" => {
+                i += 1;
+                match args.get(i).and_then(|t| fwp::cgen::Target::parse(t)) {
+                    Some(t) => target = t,
+                    None => {
+                        eprintln!(
+                            "fwp build: unknown target (native, wasm32-wasi, wasm32-browser)"
+                        );
+                        return ExitCode::from(2);
+                    }
+                }
+            }
             "--fn" => {
                 i += 1;
                 func = args.get(i).cloned();
@@ -213,11 +270,33 @@ fn build(args: &[String]) -> ExitCode {
                 .to_string_lossy()
                 .to_string(),
         };
+        let stem = if target.is_wasm() {
+            format!("{}.wasm", stem)
+        } else {
+            stem
+        };
         std::path::PathBuf::from(stem)
     });
+    let out = match lib {
+        Some(kind) if !out.to_string_lossy().contains('.') => {
+            let stem = out.to_string_lossy().to_string();
+            let ext = if kind == fwp::cgen::LibKind::Static {
+                "a"
+            } else {
+                "so"
+            };
+            let name = if stem.starts_with("lib") {
+                stem
+            } else {
+                format!("lib{}", stem)
+            };
+            std::path::PathBuf::from(format!("{}.{}", name, ext))
+        }
+        _ => out,
+    };
     let roots = fwp::mono::Roots {
-        main: func.is_none(),
-        exports: func.is_some(),
+        main: func.is_none() && lib.is_none(),
+        exports: func.is_some() || lib.is_some(),
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
@@ -229,6 +308,31 @@ fn build(args: &[String]) -> ExitCode {
             }
         };
         eprint!("{}", c.render_warnings());
+        if let Err(e) = fwp::cgen::check_target(&prog, target) {
+            eprintln!("fwp build: {}", e);
+            return 1;
+        }
+        if let Some(kind) = lib {
+            let name = out
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
+            let built = fwp::cgen::generate_library(&prog, &name).and_then(|(c, h)| {
+                if emit_c {
+                    std::fs::write(out.with_extension("c"), c).map_err(|e| e.to_string())?;
+                    std::fs::write(out.with_extension("h"), h).map_err(|e| e.to_string())
+                } else {
+                    fwp::cgen::compile_library(&c, &h, &out, &opt, kind)
+                }
+            });
+            return match built {
+                Ok(()) => 0,
+                Err(e) => {
+                    eprintln!("fwp build: {}", e);
+                    1
+                }
+            };
+        }
         let generated = match &func {
             None => fwp::cgen::generate(&prog),
             Some(name) => match prog.exports.iter().find(|(n, _)| n == name) {
@@ -251,7 +355,16 @@ fn build(args: &[String]) -> ExitCode {
             }
             return 0;
         }
-        match fwp::cgen::compile_c(&csrc, &out, &opt) {
+        if fat && target.is_wasm() {
+            eprintln!("fwp build: --fat applies to native executables only");
+            return 2;
+        }
+        let compiled = if fat {
+            fwp::cgen::compile_fat(&csrc, &out, &opt)
+        } else {
+            fwp::cgen::compile_for(&csrc, &out, &opt, target)
+        };
+        match compiled {
             Ok(()) => 0,
             Err(e) => {
                 eprintln!("fwp build: {}", e);

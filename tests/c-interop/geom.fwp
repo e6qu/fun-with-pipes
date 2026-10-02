@@ -1,0 +1,21 @@
+# A C library written in fwp (`fwp build --staticlib` / `--cdylib`); it
+# calls the C library itself.
+
+repr(C) Point = { x: F64, y: F64 }
+
+foreign "C" hypot : F64 -> F64 -> F64
+
+export norm : Point -> F64
+norm = both .x .y | uncurry hypot
+
+export scale : F64 -> Point -> Point
+scale = curry (make Point { x = both .0 (.1 | .x) | uncurry mul, y = both .0 (.1 | .y) | uncurry mul })
+
+export add-ints : I64 -> I64 -> I64
+add-ints = add
+
+export greet : String -> String
+greet = format "hello, {}!"
+
+export word-count : String -> I64
+word-count = words | length
