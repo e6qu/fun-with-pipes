@@ -136,6 +136,10 @@ fn other_examples_check() {
         "server/api.fwp",
         "shell/tools.fwp",
         "services/main.fwp",
+        "cli/wc.fwp",
+        "cli/grep.fwp",
+        "cli/todo.fwp",
+        "cli/dirstat.fwp",
     ] {
         let out = Command::new(fwp())
             .arg("check")

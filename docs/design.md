@@ -99,6 +99,12 @@ Each exported function can be built as its own executable. Arguments fill
 the leading parameters, parsed by type; the last parameter comes from
 stdin, per line or frame for `T` and all at once for `List[T]`.
 
+A first parameter that is a record becomes flags, and the doc comments
+above an `export` become its `--help`; `fwp build --cli` puts all the
+exported functions into one executable with subcommands
+([cli.md](cli.md)). The comments are read from the source text after
+parsing (`cli::Docs`), so they need no syntax of their own.
+
 Between fwp executables, values travel in the `PIPE_V1` binary protocol: a
 header with the magic `FWP1`, a version, capabilities, a 128-bit type
 fingerprint and the canonical type string, then frames of
@@ -112,10 +118,11 @@ error. See [protocol.md](protocol.md).
 |---|---|
 | executable | C compiled and linked with the runtime; the reachable standard library is included |
 | `--fn f` | the exported function `f` as a standalone executable |
+| `--cli` | every exported function as a subcommand of one executable. `src/cli.rs` computes the command line of each function (flags from an options record, positional arguments, defaults evaluated with the interpreter at build time) and its help and usage texts once; the C runtime (`runtime/fwp_rt_exec.c`) gets them as static data and parses arguments with the same rules as `src/exec.rs`. See [cli.md](cli.md) |
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
-| `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Async`) are compile errors |
+| `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Async`, `Process`) are compile errors |
 | fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Async`, `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
 ## Not implemented

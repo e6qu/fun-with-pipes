@@ -1,0 +1,31 @@
+# Running other programs. A command is a list: the program, found on the
+# `PATH` like a shell does, and its arguments, passed as they are (there is
+# no shell, so no quoting, globbing or redirection). Starting a program
+# that does not exist is an `IoError` (`kind = "spawn"`).
+
+# What a finished program wrote, and its exit status (128 plus the signal
+# number when a signal ended it).
+ProcessOutput = { status: I32, stdout: String, stderr: String }
+
+# `["git", "status", "--short"] | process.run` runs a program with empty
+# input and collects its output.
+process.run : List[String] -> ProcessOutput ! {Process, Error[IoError]}
+process.run = process.run-input ""
+
+# `cmd | process.run-input text` gives the program `text` as its standard
+# input.
+foreign "fwp" process.run-input : String -> List[String] -> ProcessOutput ! {Process, Error[IoError]}
+
+# Run a program on the program's own standard input, output and error;
+# its exit status.
+foreign "fwp" process.call : List[String] -> I32 ! {Process, Error[IoError]}
+
+# The standard output of a program that must succeed; otherwise an
+# `IoError` with its standard error (`kind = "status"`).
+process.output : List[String] -> String ! {Process, Error[IoError]}
+process.output =
+    process.run
+    | if
+        (.status | eq 0)
+        .stdout
+        (make IoError { kind = const "status", message = .stderr | trim } | fail)

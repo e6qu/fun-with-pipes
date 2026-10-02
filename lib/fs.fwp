@@ -1,0 +1,169 @@
+# Files, directories and paths. Paths are strings with `/` separators;
+# the `path.*` functions only compute with them and touch no file.
+# Failures are `IoError`s whose message names the path, as in
+# `missing.txt: No such file or directory`.
+
+FileInfo = { size: I64, modified: Duration, is-dir: Bool }
+
+# Whether a file or directory exists.
+foreign "fwp" file.exists : String -> Bool ! {FileIO}
+foreign "fwp" file.is-dir : String -> Bool ! {FileIO}
+# Size, modification time (since the Unix epoch) and kind of a file.
+foreign "fwp" file.info : String -> FileInfo ! {FileIO, Error[IoError]}
+foreign "fwp" file.remove : String -> () ! {FileIO, Error[IoError]}
+# `"old.txt" | file.rename "new.txt"` moves a file.
+foreign "fwp" file.rename : String -> String -> () ! {FileIO, Error[IoError]}
+# `text | file.append "log.txt"` adds to the end of a file (creating it).
+foreign "fwp" file.append : String -> String -> () ! {FileIO, Error[IoError]}
+foreign "fwp" file.read-bytes : String -> Bytes ! {FileIO, Error[IoError]}
+foreign "fwp" file.write-bytes : String -> Bytes -> () ! {FileIO, Error[IoError]}
+
+# The names in a directory (without `.` and `..`), sorted.
+foreign "fwp" dir.list : String -> List[String] ! {FileIO, Error[IoError]}
+foreign "fwp" dir.create : String -> () ! {FileIO, Error[IoError]}
+# Create a directory and its missing parents (`mkdir -p`).
+foreign "fwp" dir.create-all : String -> () ! {FileIO, Error[IoError]}
+# Remove an empty directory.
+foreign "fwp" dir.remove : String -> () ! {FileIO, Error[IoError]}
+
+# The lines of a file.
+file.read-lines : String -> List[String] ! {FileIO, Error[IoError]}
+file.read-lines = file.read | lines
+
+# `lines | file.write-lines "out.txt"` writes each line and a newline.
+file.write-lines : String -> List[String] -> () ! {FileIO, Error[IoError]}
+file.write-lines =
+    curry (second (map (concat "\n") | join "") | uncurry file.write-new)
+
+# `"a.txt" | file.copy "b.txt"` copies a file.
+file.copy : String -> String -> () ! {FileIO, Error[IoError]}
+file.copy = curry (second file.read-bytes | uncurry file.write-bytes)
+
+# Every file below a directory (not the directories), as paths that start
+# with it, in name order.
+rec dir.walk : String -> List[String] ! {FileIO, Error[IoError]}
+dir.walk =
+    fork map (flip path.join) dir.list
+    | list.flat-map (if file.is-dir dir.walk singleton)
+
+# ------------------------------------------------------------------ paths
+
+# `dir | path.join name` is `dir/name`, or `name` when it is absolute.
+path.join : String -> String -> String
+path.join = curry (if
+    (.0 | starts-with "/")
+    .0
+    (if
+        (.1 | eq "")
+        .0
+        (if
+            (.1 | ends-with "/")
+            (uncurry concat)
+            (second (concat "/") | uncurry concat))))
+
+# Whether a path starts at the root.
+path.is-absolute : String -> Bool
+path.is-absolute = starts-with "/"
+
+# A path without its trailing slashes (except a lone `/`).
+path.strip-slashes : String -> String
+path.strip-slashes =
+    if
+        (fork or (eq "/") (eq ""))
+        id
+        (string.chars
+            | reverse
+            | drop-while (eq "/")
+            | reverse
+            | join ""
+            | if (eq "") (const "/") id)
+
+# The last component: `"src/main.fwp" | path.basename` is `"main.fwp"`.
+path.basename : String -> String
+path.basename =
+    path.strip-slashes
+    | if (eq "/") (const "") (split "/" | last | option.unwrap-or "")
+
+# All but the last component: `"src/main.fwp"` gives `"src"`, `"main.fwp"`
+# gives `"."` and `"/etc"` gives `"/"`.
+path.dirname : String -> String
+path.dirname =
+    path.strip-slashes
+    | if
+        (eq "/")
+        id
+        (split "/"
+            | if
+                (length | eq 1)
+                (const ".")
+                (reverse
+                    | drop 1
+                    | reverse
+                    | join "/"
+                    | if (eq "") (const "/") id))
+
+# The extension of the last component without the dot (`"txt"` for
+# `"notes.txt"`), or `""`. A leading dot (`.profile`) is not one.
+path.extension : String -> String
+path.extension =
+    path.basename
+    | string.chars
+    | drop-while (eq ".")
+    | join ""
+    | split "."
+    | drop 1
+    | last
+    | option.unwrap-or ""
+
+# The last component without its extension.
+path.stem : String -> String
+path.stem =
+    path.basename
+    | if
+        (path.extension | eq "")
+        id
+        (split "." | reverse | drop 1 | reverse | join ".")
+
+path.normalize-step : List[String] -> String -> List[String]
+path.normalize-step = curry (match
+    (_, "") -> id
+    (_, ".") -> id
+    (_, "..") -> match
+        Cons ".." _ -> Cons ".." | Cons ".."
+        Cons _ _ -> const id
+        Nil -> [".."]
+    (_, _) -> flip Cons)
+
+# Remove `.` components, empty components and `x/..` pairs:
+# `"a/./b/../c/"` is `"a/c"`, `"/../x"` is `"/x"` and `""` is `"."`.
+path.normalize : String -> String
+path.normalize = fork path.normalize-with path.is-absolute id
+
+path.normalize-with : Bool -> String -> String
+path.normalize-with = curry (match
+    (True, _) -> path.parts | drop-while (eq "..") | join "/" | flip concat "/"
+    (False, _) -> path.parts | join "/" | if (eq "") (const ".") id)
+
+path.parts : String -> List[String]
+path.parts = split "/" | fold path.normalize-step [] | reverse
+
+test "path.join" = "src" | path.join "main.fwp" | eq "src/main.fwp"
+test "path.join slash" = "src/" | path.join "a" | eq "src/a"
+test "path.join absolute" = "src" | path.join "/etc" | eq "/etc"
+test "path.join empty" = "" | path.join "a" | eq "a"
+test "path.basename" = "a/b/c.txt" | path.basename | eq "c.txt"
+test "path.basename slash" = "a/b/" | path.basename | eq "b"
+test "path.basename root" = "/" | path.basename | eq ""
+test "path.dirname" = "a/b/c.txt" | path.dirname | eq "a/b"
+test "path.dirname file" = "c.txt" | path.dirname | eq "."
+test "path.dirname root" = "/etc" | path.dirname | eq "/"
+test "path.dirname empty" = "" | path.dirname | eq "."
+test "path.extension" = "a/b.tar.gz" | path.extension | eq "gz"
+test "path.extension none" = "a.d/b" | path.extension | eq ""
+test "path.extension dotfile" = ".profile" | path.extension | eq ""
+test "path.stem" = "a/notes.txt" | path.stem | eq "notes"
+test "path.stem none" = "README" | path.stem | eq "README"
+test "path.normalize" = "a/./b/../c/" | path.normalize | eq "a/c"
+test "path.normalize root" = "/../x//y" | path.normalize | eq "/x/y"
+test "path.normalize up" = "../a/../../b" | path.normalize | eq "../../b"
+test "path.normalize empty" = "" | path.normalize | eq "."

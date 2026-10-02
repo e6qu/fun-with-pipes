@@ -11,6 +11,9 @@ Every module is available without an import.
 - [Arrays, maps, sets and bytes](#arrays-maps-sets-and-bytes)
 - [Iterators](#iterators)
 - [Console, environment and time](#console-environment-and-time)
+- [Files, directories and paths](#files-directories-and-paths)
+- [Processes](#processes)
+- [Command-line programs and terminals](#command-line-programs-and-terminals)
 - [Tasks and channels](#tasks-and-channels)
 - [Networking](#networking)
 - [HTTP](#http)
@@ -528,6 +531,10 @@ bytes.append : Bytes -> Bytes -> Bytes
 
 # Count occurrences: `["a", "b", "a"] | frequencies`.
 frequencies : List[a] -> Map[a, I64] where Ord[a]
+
+# The elements by key, in their original order:
+# `[1, 2, 3, 4] | group-by (rem 2)` is `map {0: [2, 4], 1: [1, 3]}`.
+group-by : (a -> k ! e) -> List[a] -> Map[k, List[a]] ! e where Ord[k]
 map.test-oi : Option[I64] -> Option[I64]
 
 # offset of the first occurrence of a byte sequence
@@ -591,11 +598,195 @@ read-line : () -> Option[String] ! {IO}
 read-all : () -> String ! {IO}
 read-lines : () -> List[String] ! {IO}
 env.get : String -> Option[String] ! {IO}
+
+# All environment variables, sorted by name.
+env.vars : () -> List[(String, String)] ! {IO}
+
+# The current working directory.
+env.cwd : () -> String ! {IO}
 time.monotonic : () -> Duration ! {IO}
 time.unix : () -> Duration ! {IO}
+
+# The user's home directory (`HOME`).
+env.home : () -> Option[String] ! {IO}
 duration.nanos : Duration -> I64
 duration.millis : Duration -> I64
 duration.from-millis : I64 -> Duration
+```
+
+## Files, directories and paths
+
+`lib/fs.fwp`
+
+Files, directories and paths. Paths are strings with `/` separators;
+the `path.*` functions only compute with them and touch no file.
+Failures are `IoError`s whose message names the path, as in
+`missing.txt: No such file or directory`.
+
+```fwp
+FileInfo = { size: I64, modified: Duration, is-dir: Bool }
+
+# Whether a file or directory exists.
+file.exists : String -> Bool ! {FileIO}
+file.is-dir : String -> Bool ! {FileIO}
+
+# Size, modification time (since the Unix epoch) and kind of a file.
+file.info : String -> FileInfo ! {FileIO, Error[IoError]}
+file.remove : String -> () ! {FileIO, Error[IoError]}
+
+# `"old.txt" | file.rename "new.txt"` moves a file.
+file.rename : String -> String -> () ! {FileIO, Error[IoError]}
+
+# `text | file.append "log.txt"` adds to the end of a file (creating it).
+file.append : String -> String -> () ! {FileIO, Error[IoError]}
+file.read-bytes : String -> Bytes ! {FileIO, Error[IoError]}
+file.write-bytes : String -> Bytes -> () ! {FileIO, Error[IoError]}
+
+# The names in a directory (without `.` and `..`), sorted.
+dir.list : String -> List[String] ! {FileIO, Error[IoError]}
+dir.create : String -> () ! {FileIO, Error[IoError]}
+
+# Create a directory and its missing parents (`mkdir -p`).
+dir.create-all : String -> () ! {FileIO, Error[IoError]}
+
+# Remove an empty directory.
+dir.remove : String -> () ! {FileIO, Error[IoError]}
+
+# The lines of a file.
+file.read-lines : String -> List[String] ! {FileIO, Error[IoError]}
+
+# `lines | file.write-lines "out.txt"` writes each line and a newline.
+file.write-lines : String -> List[String] -> () ! {FileIO, Error[IoError]}
+
+# `"a.txt" | file.copy "b.txt"` copies a file.
+file.copy : String -> String -> () ! {FileIO, Error[IoError]}
+
+# Every file below a directory (not the directories), as paths that start
+# with it, in name order.
+rec dir.walk : String -> List[String] ! {FileIO, Error[IoError]}
+
+# `dir | path.join name` is `dir/name`, or `name` when it is absolute.
+path.join : String -> String -> String
+
+# Whether a path starts at the root.
+path.is-absolute : String -> Bool
+
+# A path without its trailing slashes (except a lone `/`).
+path.strip-slashes : String -> String
+
+# The last component: `"src/main.fwp" | path.basename` is `"main.fwp"`.
+path.basename : String -> String
+
+# All but the last component: `"src/main.fwp"` gives `"src"`, `"main.fwp"`
+# gives `"."` and `"/etc"` gives `"/"`.
+path.dirname : String -> String
+
+# The extension of the last component without the dot (`"txt"` for
+# `"notes.txt"`), or `""`. A leading dot (`.profile`) is not one.
+path.extension : String -> String
+
+# The last component without its extension.
+path.stem : String -> String
+path.normalize-step : List[String] -> String -> List[String]
+
+# Remove `.` components, empty components and `x/..` pairs:
+# `"a/./b/../c/"` is `"a/c"`, `"/../x"` is `"/x"` and `""` is `"."`.
+path.normalize : String -> String
+path.normalize-with : Bool -> String -> String
+path.parts : String -> List[String]
+```
+
+## Processes
+
+`lib/process.fwp`
+
+Running other programs. A command is a list: the program, found on the
+`PATH` like a shell does, and its arguments, passed as they are (there is
+no shell, so no quoting, globbing or redirection). Starting a program
+that does not exist is an `IoError` (`kind = "spawn"`).
+
+```fwp
+# What a finished program wrote, and its exit status (128 plus the signal
+# number when a signal ended it).
+ProcessOutput = { status: I32, stdout: String, stderr: String }
+
+# `["git", "status", "--short"] | process.run` runs a program with empty
+# input and collects its output.
+process.run : List[String] -> ProcessOutput ! {Process, Error[IoError]}
+
+# `cmd | process.run-input text` gives the program `text` as its standard
+# input.
+process.run-input : String -> List[String] -> ProcessOutput ! {Process, Error[IoError]}
+
+# Run a program on the program's own standard input, output and error;
+# its exit status.
+process.call : List[String] -> I32 ! {Process, Error[IoError]}
+
+# The standard output of a program that must succeed; otherwise an
+# `IoError` with its standard error (`kind = "status"`).
+process.output : List[String] -> String ! {Process, Error[IoError]}
+```
+
+## Command-line programs and terminals
+
+`lib/cli.fwp`
+
+Command-line programs. Exported functions become programs with flags,
+help and subcommands without any code (see docs/cli.md); these
+functions are for programs with a hand-written `main`, and for output to
+terminals.
+
+```fwp
+# Parse command-line arguments as executables do: each field of the
+# options record is a flag (`--name value`, `--name=value`; a `Bool` field
+# is a switch, `--name` or `--no-name`; an `Option` field is optional; a
+# `List` field repeatable; a field comment `# -x ...` adds the short flag
+# `-x`); other arguments are positional, and `--` ends the flags. Fields
+# whose flags are absent keep the value they have in the first argument:
+# `args () | cli.parse defaults` is `Ok (options, positional)` or
+# `Err message`.
+cli.parse : o -> List[String] -> Result[(o, List[String]), String]
+
+# The help lines of the flags of an options record, with the defaults of
+# the given value.
+cli.help : o -> String
+
+# Report a usage error: `message | cli.usage-error usage` prints the
+# message and the usage on stderr and exits with status 2.
+cli.usage-error : String -> String -> a ! {IO}
+
+# Whether a standard stream (0 stdin, 1 stdout, 2 stderr) is a terminal.
+term.is-tty : I32 -> Bool ! {IO}
+
+# Whether to colour standard output: it is a terminal and `NO_COLOR` is
+# not set (see no-color.org).
+term.color : () -> Bool ! {IO}
+
+# `"error" | term.paint ansi.red` is red when `term.color` holds, and
+# plain text otherwise.
+term.paint : (String -> String ! {IO | e}) -> String -> String ! {IO | e}
+
+# Text in an ANSI style: `ansi.style "1;31"` is bold red.
+ansi.style : String -> String -> String
+ansi.bold : String -> String
+ansi.dim : String -> String
+ansi.underline : String -> String
+ansi.red : String -> String
+ansi.green : String -> String
+ansi.yellow : String -> String
+ansi.blue : String -> String
+ansi.magenta : String -> String
+ansi.cyan : String -> String
+
+# Rows of cells as lines of aligned columns, two spaces apart. Widths
+# count characters.
+table.lines : List[List[String]] -> List[String]
+
+# `table.lines` as one string, each line ending in a newline.
+table.format : List[List[String]] -> String
+table.widths : List[List[String]] -> List[I64]
+table.render : List[I64] -> List[List[String]] -> List[String]
+table.row : List[I64] -> List[String] -> String
 ```
 
 ## Tasks and channels

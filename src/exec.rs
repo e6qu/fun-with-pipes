@@ -3,18 +3,23 @@
 //! or the binary typed protocol. The C runtime implements the same
 //! behaviour for native builds (runtime/fwp_rt_exec.c).
 //!
+//! * Flags fill an options record (the first parameter), as `src/cli.rs`
+//!   describes; `--help` and `--version` print the help and the version.
 //! * `k` command-line arguments fill the first `k` parameters, parsed by
 //!   type from the canonical text format (top-level strings are raw).
 //! * With all `n` parameters given, the function runs once.
 //! * With `n - 1` given, the last parameter comes from stdin: a `List[T]`
 //!   parameter receives all input records; any other type is applied to
 //!   each record in turn (streaming).
-//! * A `List[T]` result is emitted as one record per element.
+//! * A `Result` result is its `Ok` value, or an error (exit status 1); an
+//!   `Option` result is its value or nothing; a `List[T]` result is
+//!   emitted as one record per element.
 //! * Input in the binary protocol is detected by its magic bytes; output is
 //!   binary when `FWP_OUT=bin`. Text records are lines.
 
 use std::io::{BufRead, Write};
 
+use crate::cli;
 use crate::interp::{report, Ctl, Interp};
 use crate::ir::{FuncId, Program, MT};
 use crate::proto;
@@ -50,26 +55,50 @@ impl Emitter<'_> {
         }
     }
 
-    fn emit_result(&mut self, v: &Value, result: &MT, prog: &Program) -> std::io::Result<()> {
-        if list_elem(result).is_some() {
-            for x in v.list_items() {
-                self.emit(&x, prog)?;
+    /// Write a result: an `Err` is returned, `None` writes nothing and a
+    /// list is one record per element.
+    fn emit_result(
+        &mut self,
+        v: &Value,
+        out: &cli::Output,
+        prog: &Program,
+    ) -> Result<(), (Value, MT)> {
+        let mut v = v.clone();
+        if let Some(e) = &out.error {
+            match &v {
+                Value::Data(0, fs) => v = fs[0].clone(),
+                Value::Data(_, fs) => return Err((fs[0].clone(), e.clone())),
+                _ => {}
             }
-            Ok(())
-        } else {
-            self.emit(v, prog)
         }
+        if out.option {
+            match &v {
+                Value::Data(1, fs) => v = fs[0].clone(),
+                _ => return Ok(()),
+            }
+        }
+        if out.list {
+            for x in v.list_items() {
+                let _ = self.emit(&x, prog);
+            }
+        } else {
+            let _ = self.emit(&v, prog);
+        }
+        Ok(())
     }
 }
 
-/// Usage line for a function.
-pub fn usage(name: &str, params: &[MT]) -> String {
-    let ps: Vec<String> = params.iter().map(|p| format!("<{}>", p)).collect();
-    format!(
-        "usage: {} {}\n  (the last argument may instead be given as records on stdin)",
-        name,
-        ps.join(" ")
-    )
+/// An error as a command reports it: an `IoError` by its message, other
+/// values as `show` displays them (strings unquoted).
+pub fn error_text(v: &Value, mt: &MT, prog: &Program) -> String {
+    if matches!(mt, MT::Con(n, a) if n == "std::IoError" && a.is_empty()) {
+        if let Value::Record(fs) = v {
+            if let Some(Value::Str(m)) = fs.get(1) {
+                return m.to_string();
+            }
+        }
+    }
+    display(v, mt, prog, true)
 }
 
 /// Input records from stdin, in text or binary form.
@@ -137,39 +166,181 @@ impl Input {
     }
 }
 
-/// Run function `fid` as an executable. Returns the exit code.
+/// Run function `fid` as an executable named `name`. Returns the exit
+/// code.
 pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
-    let f = &prog.funcs[fid];
-    let n = f.arity as usize;
-    let (params, result) = f.ty.params(n);
-    let params: Vec<MT> = params.into_iter().cloned().collect();
-    let result = result.clone();
-    if argv.len() > n || argv.len() + 1 < n {
-        eprintln!("{}", usage(name, &params));
+    let cmd = match cli::version(prog).and_then(|v| cli::command(prog, fid, name, None, v)) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("fwp exec: {}", e);
+            return 1;
+        }
+    };
+    exec_command(prog, &cmd, argv)
+}
+
+/// Run a multi-command program (`fwp build --cli`): the first argument
+/// names the exported function. Returns the exit code.
+pub fn exec_program(prog: &Program, name: &str, argv: &[String]) -> i32 {
+    let cmds = match cli::commands(prog, Some(name)) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("fwp exec: {}", e);
+            return 1;
+        }
+    };
+    let find = |n: &str| cmds.iter().find(|c| c.command == n);
+    let Some(first) = argv.first() else {
+        eprint!("{}", cli::program_help(name, &cmds, prog));
         return 2;
+    };
+    if let Some(c) = find(first) {
+        return exec_command(prog, c, &argv[1..]);
     }
-    let mut args = Vec::new();
-    for (i, a) in argv.iter().enumerate() {
-        match crate::textio::parse(a, &params[i], prog) {
-            Ok(v) => args.push(v),
-            Err(_) => {
-                eprintln!(
-                    "{}: argument {}: cannot parse `{}` as {}",
-                    name,
-                    i + 1,
-                    a,
-                    params[i]
-                );
-                return 2;
+    let version = cmds.first().and_then(|c| c.version.clone());
+    match first.as_str() {
+        "--help" | "-h" => {
+            print!("{}", cli::program_help(name, &cmds, prog));
+            0
+        }
+        "--version" if version.is_some() => {
+            println!("{} {}", name, version.unwrap_or_default());
+            0
+        }
+        "help" => match argv.get(1) {
+            None => {
+                print!("{}", cli::program_help(name, &cmds, prog));
+                0
             }
+            Some(n) => match find(n) {
+                Some(c) => {
+                    print!("{}", c.help);
+                    0
+                }
+                None => {
+                    eprintln!(
+                        "{}: unknown command `{}`\n{}",
+                        name,
+                        n,
+                        cli::program_usage(name)
+                    );
+                    2
+                }
+            },
+        },
+        _ => {
+            eprintln!(
+                "{}: unknown command `{}`\n{}",
+                name,
+                first,
+                cli::program_usage(name)
+            );
+            2
         }
     }
+}
+
+/// Run a command with its command line. Returns the exit code.
+pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 {
+    let name = cmd.name.as_str();
+    let fid = cmd.fid;
+    let n = cmd.params.len();
+    let params = &cmd.params;
+    // flags, unless a record parameter is given as before (on stdin or as
+    // a record argument)
+    let flags_mode = cmd.options.is_some()
+        && (!cmd.record_fallback || argv.first().is_some_and(|a| a.starts_with('-')));
+    let flags = if flags_mode {
+        cmd.options.as_ref().map(|o| o.flags.as_slice())
+    } else {
+        None
+    };
+    let usage_error = |msg: Option<String>| {
+        if let Some(m) = msg {
+            eprintln!("{}: {}", name, m);
+        }
+        eprintln!("{}", cmd.usage);
+        2
+    };
+    let (vals, pos) = match cli::parse_args(flags, argv, true, cmd.version.is_some(), prog) {
+        Err(m) => return usage_error(Some(m)),
+        Ok(cli::Parsed::Help) => {
+            print!("{}", cmd.help);
+            let _ = std::io::stdout().flush();
+            return 0;
+        }
+        Ok(cli::Parsed::Version) => {
+            let program = name.split(' ').next().unwrap_or(name);
+            println!("{} {}", program, cmd.version.clone().unwrap_or_default());
+            return 0;
+        }
+        Ok(cli::Parsed::Args(v, p)) => (v, p),
+    };
+    let mut args = Vec::new();
+    let mut first = 0;
+    if let (true, Some(o)) = (flags_mode, &cmd.options) {
+        let defaults = cli::default_values(cmd, prog);
+        match cli::build_record(o, vals, &defaults) {
+            Ok(r) => args.push(r),
+            Err(m) => return usage_error(Some(m)),
+        }
+        first = 1;
+    }
+    let end = n - cmd.unit_last as usize;
+    let pos_types = &params[first..end];
+    let m = pos_types.len();
+    let k = pos.len();
+    let variadic = cmd.variadic;
+    let parse_arg = |i: usize, a: &str, t: &MT| {
+        crate::textio::parse(a, t, prog).map_err(|_| {
+            eprintln!(
+                "{}: argument {}: cannot parse `{}` as {}",
+                name,
+                i + 1,
+                a,
+                t
+            );
+            2
+        })
+    };
+    let from_stdin = if variadic {
+        if k + 1 < m {
+            return usage_error(None);
+        }
+        for (i, a) in pos.iter().enumerate().take(m - 1) {
+            match parse_arg(i, a, &pos_types[i]) {
+                Ok(v) => args.push(v),
+                Err(c) => return c,
+            }
+        }
+        let elem = cli::list_elem(&pos_types[m - 1]).unwrap_or_else(MT::unit);
+        let mut rest = Vec::new();
+        for (i, a) in pos.iter().enumerate().skip(m - 1) {
+            match parse_arg(i, a, &elem) {
+                Ok(v) => rest.push(v),
+                Err(c) => return c,
+            }
+        }
+        args.push(Value::list(rest));
+        false
+    } else {
+        if k > m || k + 1 < m {
+            return usage_error(None);
+        }
+        for (i, a) in pos.iter().enumerate() {
+            match parse_arg(i, a, &pos_types[i]) {
+                Ok(v) => args.push(v),
+                Err(c) => return c,
+            }
+        }
+        k < m
+    };
+    let output = &cmd.output;
     let binary = std::env::var("FWP_OUT").is_ok_and(|v| v == "bin");
-    let out_elem = list_elem(&result).unwrap_or_else(|| result.clone());
     let stdout = std::io::stdout();
     let mut lock = std::io::BufWriter::new(stdout.lock());
     if binary {
-        let _ = lock.write_all(&proto::header(&out_elem, prog));
+        let _ = lock.write_all(&proto::header(&output.elem, prog));
     }
     let code = {
         // In binary mode the program's own output goes to stderr so that it
@@ -187,9 +358,12 @@ pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
         let mut em = Emitter {
             out: &mut lock,
             binary,
-            elem: out_elem.clone(),
+            elem: output.elem.clone(),
         };
-        let run = |it: &mut Interp, args: Vec<Value>, em: &mut Emitter| -> Result<(), i32> {
+        let run = |it: &mut Interp, mut args: Vec<Value>, em: &mut Emitter| -> Result<(), i32> {
+            if cmd.unit_last {
+                args.push(Value::unit());
+            }
             let r = if n == 0 {
                 it.call(fid, vec![])
             } else {
@@ -204,9 +378,20 @@ pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
             let _ = it.out.flush();
             match r {
                 Ok(v) => {
-                    let _ = em.emit_result(&v, &result, prog);
+                    let res = em.emit_result(&v, output, prog);
                     let _ = em.out.flush();
-                    Ok(())
+                    match res {
+                        Ok(()) => Ok(()),
+                        Err((e, mt)) => {
+                            eprintln!("{}: {}", name, error_text(&e, &mt, prog));
+                            Err(1)
+                        }
+                    }
+                }
+                Err(Ctl::Fail(e, mt)) => {
+                    let _ = em.out.flush();
+                    eprintln!("{}: {}", name, error_text(&e, &mt, prog));
+                    Err(1)
                 }
                 Err(e) => {
                     let _ = em.out.flush();
@@ -221,12 +406,12 @@ pub fn exec(prog: &Program, fid: FuncId, name: &str, argv: &[String]) -> i32 {
             }
         };
         let mut code = 0;
-        if argv.len() == n {
+        if !from_stdin {
             if let Err(c) = run(&mut it, args, &mut em) {
                 code = c;
             }
         } else {
-            let last = params[n - 1].clone();
+            let last = params[end - 1].clone();
             let (collect, elem) = match list_elem(&last) {
                 Some(e) => (true, e),
                 None => (false, last.clone()),

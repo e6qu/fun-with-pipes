@@ -22,13 +22,19 @@ $ printf '1\n2\n3\n' | ./scale 10
 ```
 
 `fwp exec tools.fwp scale 3 14` runs the same function with the interpreter
-and behaves identically.
+and behaves identically. This page describes the arguments, input and
+output of such executables, and the binary protocol between them;
+[cli.md](cli.md) describes how they work as command-line programs: flags
+from a record parameter, `--help`, `--version`, `# args:` names,
+multi-command executables (`--cli`) and exit statuses.
 
 ## Arguments and input
 
 For a function with `n` curried parameters:
 
-* `k` command-line arguments fill the first `k` parameters. Each argument is
+* `k` command-line arguments fill the first `k` parameters (after the
+  flags of an options record, see [cli.md](cli.md); a final `()`
+  parameter is given implicitly). Each argument is
   parsed from the canonical text format of its type (the format `show`
   produces), except that a top-level `String` is taken verbatim.
   A top-level `Bool` may also be written `true` or `false` (in exactly
@@ -49,17 +55,20 @@ detected by its magic bytes.
 
 ## Output
 
-* A `List[T]` result is written as one record per element; any other
-  result is one record. `()` results produce no text records.
+* A `Result[T, E]` result writes `T`, or reports the error and exits with
+  1; an `Option[T]` result writes the value or nothing (the records are
+  then `T`s); a `List[T]` result is written as one record per element;
+  any other result is one record. `()` results produce no text records.
 * Text records are the canonical text of the value followed by a newline
   (strings unquoted at the top level).
 * With `FWP_OUT=bin` the output is a binary stream (below). The function's
   own `print` output then goes to **stderr**, which is reserved for
   diagnostics, so it cannot corrupt the stream.
 
-Exit codes: 0 success, 1 an uncaught `Error` (reported as `error: ...`),
-2 usage or argument errors, 3 input errors (including a type mismatch),
-101 a runtime trap.
+Exit codes: 0 success, 1 an `Err` result or an uncaught `Error` (reported
+on stderr as `name: error`, an `IoError` by its message), 2 usage or
+argument errors, 3 input errors (including a type mismatch), 101 a
+runtime trap.
 
 ## Binary stream (`PIPE_V1`)
 

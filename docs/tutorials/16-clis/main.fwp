@@ -1,0 +1,65 @@
+# 16. Command-line programs
+#
+# Exported functions are command-line programs: a first parameter that is
+# a record becomes flags, comments become the help, and
+# `fwp build --cli` puts every command in one executable.
+
+export version : String
+version = "0.3.0"
+
+Options = {
+    # -u  in capitals
+    upper: Bool,
+    # -n  how many copies of each word
+    times: I64,
+    # what goes between the words
+    sep: String,
+}
+
+# Defaults for the flags of every command.
+export defaults : {times: I64, sep: String}
+defaults = { times = 1, sep = " " }
+
+# The words, each `times` times, between copies of `sep`.
+repeated : Options -> List[String] -> String
+repeated = curry (both
+        (.0 | .sep)
+        (fork list.flat-map (.0 | .times | repeat) .1)
+    | uncurry join)
+
+# Repeat words.
+#
+# Each word is written `--times` times.
+# args: WORDS...
+export say : Options -> List[String] -> String
+say = curry (both (.0 | .upper) (uncurry repeated) | if .0 (.1 | upper) .1)
+
+# Divide N by D.
+# args: N D
+export divide : I64 -> I64 -> Result[I64, String]
+divide = curry (match
+    (_, 0) -> const (Err "cannot divide by zero")
+    (_, _) -> curry (swap | uncurry div | Ok))
+
+# Keep the lines that are not blank.
+export non-blank : String -> Option[String]
+non-blank = if (trim | eq "") (const None) Some
+
+main = [
+    ["hi", "there"]
+    | say Options { upper = False, times = 2, sep = "-" }
+    | print,
+    divide 9 2 | echo,
+    divide 9 0 | echo,
+    ["a", " ", "b"] | filter-map non-blank | echo,
+    ["-u", "--times=2", "hi", "--", "-x"]
+    | cli.parse Options { upper = False, times = 1, sep = " " }
+    | echo,
+    ["--times", "many"]
+    | cli.parse Options { upper = False, times = 1, sep = " " }
+    | echo,
+    [["command", "arguments"], ["say", "WORDS..."], ["divide", "N D"]]
+    | table.lines
+    | each print,
+    "docs/cli.md" | both path.dirname path.extension | echo,
+] | ignore

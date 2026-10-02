@@ -1,0 +1,77 @@
+# Count the lines, words and bytes of files, or of standard input.
+#
+#   fwp build examples/cli/wc.fwp --fn wc -o wc
+#   ./wc -l README.md docs/cli.md
+#   printf 'one two\nthree\n' | ./wc
+
+WcOptions = {
+    # -l  count lines
+    lines: Bool,
+    # -w  count words
+    words: Bool,
+    # -c  count bytes
+    bytes: Bool,
+}
+
+Counts = { lines: I64, words: I64, bytes: I64 }
+
+count-text : String -> Counts
+count-text = make Counts {
+    lines = lines | length,
+    words = words | length,
+    bytes = string.byte-length,
+}
+
+# With no column chosen, all three are shown.
+columns : WcOptions -> WcOptions
+columns =
+    if
+        (fork or .lines (fork or .words .bytes))
+        id
+        (const WcOptions { lines = True, words = True, bytes = True })
+
+# The chosen counts, right-aligned, then the name.
+row : WcOptions -> (String, Counts) -> String
+row = curry (both
+        (singleton
+            | list.ap [
+                both (.0 | .lines) (.1 | .1 | .lines),
+                both (.0 | .words) (.1 | .1 | .words),
+                both (.0 | .bytes) (.1 | .1 | .bytes),
+            ]
+            | filter .0
+            | map (.1 | show | pad-left 7 " ")
+            | join "")
+        (.1 | .0)
+    | format "{} {}"
+    | trim-end)
+
+total : List[(String, Counts)] -> List[(String, Counts)]
+total =
+    if
+        (length | gt 1)
+        (fork
+            (flip append)
+            id
+            (map .1
+                | make Counts {
+                    lines = map .lines | sum,
+                    words = map .words | sum,
+                    bytes = map .bytes | sum,
+                }
+                | both (const "total") id
+                | singleton))
+        id
+
+# Count the lines, words and bytes of each FILE, or of standard input when
+# there is none, with a total for several files.
+# args: FILE...
+export wc : WcOptions -> List[String] -> List[String] ! {IO, FileIO, Error[IoError]}
+wc = curry (fork
+    map
+    (.0 | columns | row)
+    (.1
+        | if
+            is-empty
+            (const () | read-all | count-text | both (const "") id | singleton)
+            (map (both id (file.read | count-text)) | total)))

@@ -236,6 +236,9 @@ pub struct Program {
     /// Every nominal record: type name to field names in declaration order
     /// (protobuf field numbers follow it).
     pub field_order: std::collections::BTreeMap<String, Vec<String>>,
+    /// Doc comments of the exported functions and record fields (for the
+    /// help of command-line programs).
+    pub docs: crate::cli::Docs,
     /// The module this program serves (`fwp serve`, split builds).
     pub service: Option<ServiceDef>,
 }

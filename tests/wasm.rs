@@ -144,6 +144,16 @@ fn unavailable_effects_are_rejected() {
         String::from_utf8_lossy(&out.stderr),
         "fwp build: the WebAssembly target does not provide the `Network` effect (used by `tcp.listen`)\n"
     );
+    let out = build(
+        &dir().join("run/cli_process.fwp"),
+        "wasm32-wasi",
+        &std::env::temp_dir().join("fwp-wasm-reject.wasm"),
+    );
+    assert!(!out.status.success());
+    assert_eq!(
+        String::from_utf8_lossy(&out.stderr),
+        "fwp build: the WebAssembly target does not provide the `Process` effect (used by `process.call`)\n"
+    );
 }
 
 #[test]

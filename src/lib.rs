@@ -6,6 +6,7 @@
 
 pub mod ast;
 pub mod cgen;
+pub mod cli;
 pub mod diag;
 pub mod driver;
 pub mod env;
@@ -36,6 +37,7 @@ pub mod services;
 pub mod solve;
 pub mod stdgen;
 pub mod syntax;
+pub mod sys;
 pub mod textio;
 pub mod types;
 pub mod value;

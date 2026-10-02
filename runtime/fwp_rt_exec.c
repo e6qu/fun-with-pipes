@@ -211,7 +211,8 @@ static int tp_kv_item(fwp_tp *p, void *ctx) {
 }
 
 static int tp_value(fwp_tp *p, const fwp_desc *d, int top, V *out) {
-    tp_ws(p);
+    /* a top-level string is the text as it is, spaces included */
+    if (!(top && d->kind == K_STR)) tp_ws(p);
     switch (d->kind) {
     case K_I8: case K_I16: case K_I32: case K_I64: case K_I128:
     case K_U8: case K_U16: case K_U32: case K_U64: case K_U128:
@@ -456,17 +457,268 @@ static int fwp_decode(fwp_rd *r, const fwp_desc *d, V *out) {
     }
 }
 
+/* ------------------------------------------------------------------ flags */
+/* Command lines as src/cli.rs parses them: flags from the fields of an
+ * options record, positional arguments, `--help` and `--version`. */
+
+enum { FL_SWITCH, FL_SINGLE, FL_OPTIONAL, FL_REPEATED };
+
+typedef struct {
+    const char *name;      /* the field, which is the long flag */
+    int shrt;              /* the short flag, or 0 */
+    int kind;
+    int index;             /* the field's position in the record */
+    const fwp_desc *value; /* one value on the command line */
+    const char *value_name;
+    const fwp_desc *field; /* the field */
+    const char *def;       /* canonical text of the default, or 0 */
+    const char *left;      /* help: "  -v, --verbose" */
+    const char *pad;       /* help: spaces up to the description */
+    const char *doc;
+} fwp_flag;
+
+static V fwp_strf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+static V fwp_strf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int n = vsnprintf(0, 0, fmt, ap);
+    va_end(ap);
+    char *buf = (char *)fwp_alloc((size_t)n + 1);
+    va_start(ap, fmt);
+    vsnprintf(buf, (size_t)n + 1, fmt, ap);
+    va_end(ap);
+    return fwp_str_new(buf, (size_t)n);
+}
+
+static int fwp_flag_by_name(const fwp_flag *fl, int nf, const char *n, size_t len) {
+    for (int k = 0; k < nf; k++)
+        if (strlen(fl[k].name) == len && memcmp(fl[k].name, n, len) == 0) return k;
+    return -1;
+}
+
+static int fwp_flag_by_short(const fwp_flag *fl, int nf, int c) {
+    for (int k = 0; k < nf; k++)
+        if (fl[k].shrt == c) return k;
+    return -1;
+}
+
+/* a flag's value: parsed into vals[k] (a reversed list for repeatable
+ * flags); 0 with *err set when it does not parse */
+static int fwp_flag_set(const fwp_flag *f, int k, const char *t, size_t n, V *vals, char *state, V *err) {
+    V v;
+    if (!fwp_parse_text(t, n, f->value, &v)) {
+        *err = fwp_strf("option `--%s`: cannot parse `%.*s` as %s", f->name, (int)n, t, f->value_name);
+        return 0;
+    }
+    if (f->kind == FL_REPEATED) {
+        vals[k] = fwp_cons(v, state[k] ? vals[k] : 0);
+    } else {
+        vals[k] = v;
+    }
+    state[k] = 1;
+    return 1;
+}
+
+static int fwp_is_number_arg(const char *a) {
+    return a[0] == '-' && ((a[1] >= '0' && a[1] <= '9') || a[1] == '.');
+}
+
+/* Parse arguments (strings) with the flags `fl` (0: none). Returns 0 with
+ * the values and the positional arguments, 1 for `--help`, 2 for
+ * `--version`, or -1 with *err. */
+static int fwp_cli_parse(const fwp_flag *fl, int nf, int special, int version, int argc, const V *argv,
+                         V *vals, char *state, V *pos, int *npos, V *err) {
+    int done = 0;
+    *npos = 0;
+    for (int k = 0; k < nf; k++) { vals[k] = 0; state[k] = 0; }
+    for (int i = 0; i < argc;) {
+        V av = argv[i++];
+        const char *a = STR(av)->d;
+        size_t alen = STR(av)->len;
+        if (done || alen < 2 || a[0] != '-' || fwp_is_number_arg(a)) { pos[(*npos)++] = av; continue; }
+        if (alen == 2 && a[1] == '-') { done = 1; continue; }
+        if (a[1] == '-') {
+            const char *body = a + 2;
+            size_t blen = alen - 2;
+            const char *eq = memchr(body, '=', blen);
+            size_t nlen = eq ? (size_t)(eq - body) : blen;
+            int k = fl ? fwp_flag_by_name(fl, nf, body, nlen) : -1;
+            if (special && !eq && k < 0) {
+                if (nlen == 4 && memcmp(body, "help", 4) == 0) return 1;
+                if (version && nlen == 7 && memcmp(body, "version", 7) == 0) return 2;
+            }
+            if (!fl) { pos[(*npos)++] = av; continue; }
+            if (k < 0) {
+                int neg = nlen > 3 && memcmp(body, "no-", 3) == 0 ? fwp_flag_by_name(fl, nf, body + 3, nlen - 3) : -1;
+                if (neg >= 0 && fl[neg].kind == FL_SWITCH && !eq) {
+                    vals[neg] = FWP_FALSE;
+                    state[neg] = 1;
+                    continue;
+                }
+                *err = fwp_strf("unknown option `--%.*s`", (int)nlen, body);
+                return -1;
+            }
+            if (fl[k].kind == FL_SWITCH) {
+                const char *t = eq ? eq + 1 : "true";
+                size_t tn = eq ? blen - nlen - 1 : 4;
+                if (!fwp_flag_set(&fl[k], k, t, tn, vals, state, err)) return -1;
+                continue;
+            }
+            if (eq) {
+                if (!fwp_flag_set(&fl[k], k, eq + 1, blen - nlen - 1, vals, state, err)) return -1;
+            } else if (i < argc) {
+                V t = argv[i++];
+                if (!fwp_flag_set(&fl[k], k, STR(t)->d, STR(t)->len, vals, state, err)) return -1;
+            } else {
+                *err = fwp_strf("option `--%.*s` needs a value", (int)nlen, body);
+                return -1;
+            }
+            continue;
+        }
+        /* short flags: -v, -iv, -n 5, -n5 */
+        if (special && alen == 2 && a[1] == 'h' && (!fl || fwp_flag_by_short(fl, nf, 'h') < 0)) return 1;
+        if (!fl) { pos[(*npos)++] = av; continue; }
+        for (size_t j = 1; j < alen;) {
+            unsigned char c = (unsigned char)a[j++];
+            int k = fwp_flag_by_short(fl, nf, c);
+            if (k < 0) {
+                /* the whole character, as Rust reports it */
+                size_t st = j - 1, e = j;
+                while (e < alen && ((unsigned char)a[e] & 0xC0) == 0x80) e++;
+                *err = fwp_strf("unknown option `-%.*s`", (int)(e - st), a + st);
+                return -1;
+            }
+            if (fl[k].kind == FL_SWITCH) {
+                if (!fwp_flag_set(&fl[k], k, "true", 4, vals, state, err)) return -1;
+                continue;
+            }
+            if (j < alen) {
+                if (!fwp_flag_set(&fl[k], k, a + j, alen - j, vals, state, err)) return -1;
+                j = alen;
+            } else if (i < argc) {
+                V t = argv[i++];
+                if (!fwp_flag_set(&fl[k], k, STR(t)->d, STR(t)->len, vals, state, err)) return -1;
+            } else {
+                *err = fwp_strf("option `--%s` needs a value", fl[k].name);
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/* The options record from parsed values and defaults (have_def[k]: defs[k]
+ * is the default). 0 with *err for a missing required flag. */
+static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals, const char *state,
+                          const V *defs, const char *have_def, V *out, V *err) {
+    V *fs = (V *)fwp_alloc((size_t)(nfields + 1) * sizeof(V));
+    for (int k = 0; k < nf; k++) {
+        const fwp_flag *f = &fl[k];
+        V v;
+        if (state[k]) {
+            if (f->kind == FL_OPTIONAL) { V x[1] = {vals[k]}; v = fwp_data(1, 1, x); }
+            else if (f->kind == FL_REPEATED) v = fwp_p_reverse(vals[k]);
+            else v = vals[k];
+        } else if (have_def[k]) {
+            v = defs[k];
+        } else if (f->kind == FL_SINGLE) {
+            *err = fwp_strf("missing option `--%s`", f->name);
+            return 0;
+        } else {
+            v = 0; /* False, None, [] */
+        }
+        fs[f->index] = v;
+    }
+    *out = fwp_record((uint32_t)nfields, fs);
+    return 1;
+}
+
+/* help text of a default value (as src/cli.rs default_note), or 0 */
+static V fwp_flag_default_note(const fwp_flag *f, V v) {
+    fwp_buf b = {0};
+    switch (f->kind) {
+    case FL_SWITCH: if (v == FWP_FALSE) return 0; fwp_write(&b, v, f->field, 0); break;
+    case FL_OPTIONAL: if (v == FWP_NONE) return 0; fwp_write(&b, OBJ(v)->f[0], f->value, 0); break;
+    case FL_REPEATED: if (v == 0) return 0; fwp_write(&b, v, f->field, 0); break;
+    default: fwp_write(&b, v, f->field, 0);
+    }
+    return buf_to_str(&b);
+}
+
+/* the help line of a flag, with its default note (src/cli.rs rows) */
+static void fwp_flag_help(fwp_buf *b, const fwp_flag *f, V note) {
+    fwp_buf t = {0};
+    buf_puts(&t, f->doc);
+    if (note || f->kind == FL_REPEATED) {
+        if (t.len) buf_putc(&t, ' ');
+        if (f->kind == FL_REPEATED) buf_puts(&t, note ? "(repeatable; default: " : "(repeatable");
+        else buf_puts(&t, "(default: ");
+        if (note) buf_put(&t, STR(note)->d, STR(note)->len);
+        buf_putc(&t, ')');
+    }
+    buf_puts(b, f->left);
+    if (t.len) {
+        buf_puts(b, f->pad);
+        buf_put(b, t.d, t.len);
+    }
+    buf_putc(b, '\n');
+    free(t.d);
+}
+
+/* cli.parse: the options record (every field with the default of `defs`)
+ * and the positional arguments, or an error message. */
+static V fwp_p_cli_parse(V defs, V args, const fwp_flag *fl, int nf, int nfields) {
+    size_t n = 0;
+    for (V l = args; l; l = OBJ(l)->f[1]) n++;
+    V *argv = (V *)fwp_alloc((n + 1) * sizeof(V));
+    n = 0;
+    for (V l = args; l; l = OBJ(l)->f[1]) argv[n++] = OBJ(l)->f[0];
+    V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
+    V *dv = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
+    char *state = (char *)fwp_alloc((size_t)nf + 1);
+    char *have = (char *)fwp_alloc((size_t)nf + 1);
+    V *pos = (V *)fwp_alloc((n + 1) * sizeof(V));
+    int npos;
+    V err = 0, rec;
+    for (int k = 0; k < nf; k++) { dv[k] = OBJ(defs)->f[fl[k].index]; have[k] = 1; }
+    if (fwp_cli_parse(fl, nf, 0, 0, (int)n, argv, vals, state, pos, &npos, &err) != 0 ||
+        !fwp_cli_record(fl, nf, nfields, vals, state, dv, have, &rec, &err)) {
+        V e[1] = {err};
+        return fwp_data(1, 1, e);
+    }
+    V t[2] = {rec, fwp_list_from(pos, (size_t)npos)};
+    V ok[1] = {fwp_record(2, t)};
+    return fwp_data(0, 1, ok);
+}
+
+/* cli.help: the help lines of the flags with the defaults of `defs` */
+static V fwp_p_cli_help(V defs, const fwp_flag *fl, int nf) {
+    fwp_buf b = {0};
+    for (int k = 0; k < nf; k++) fwp_flag_help(&b, &fl[k], fwp_flag_default_note(&fl[k], OBJ(defs)->f[fl[k].index]));
+    return buf_to_str(&b);
+}
+
 /* ------------------------------------------------------------------ exec */
 
 typedef struct {
-    const char *name;
+    const char *name;   /* in messages: "grep", or "tools grep" */
+    const char *export_name;
     const char *usage;
+    const char *help;
     uint32_t fn;
     int arity;
     const fwp_desc *const *params;
     const char *const *param_names;   /* displayed parameter types */
-    const fwp_desc *result;
-    int result_is_list;
+    /* the options record */
+    int has_options, record_fallback, nflags, nfields;
+    const fwp_flag *flags;
+    int variadic;
+    int unit_last; /* the last parameter is (), given implicitly */
+    const fwp_desc *variadic_elem;
+    const char *variadic_name;
+    /* the result: Result[_, E] (its error), Option, List */
+    const fwp_desc *res_err;
+    int res_option, res_list;
     const fwp_desc *out_elem;
     const unsigned char *out_header;
     size_t out_header_len;
@@ -474,9 +726,11 @@ typedef struct {
     const fwp_desc *in_elem;
     const char *in_type;
     const unsigned char *in_fp;
+    V (*caf)(void);
 } fwp_exec_spec;
 
 static int fwp_exec_binary_out = 0;
+static const char *fwp_cli_version = 0;
 
 static void fwp_emit(const fwp_exec_spec *s, V v) {
     if (fwp_exec_binary_out) {
@@ -493,15 +747,36 @@ static void fwp_emit(const fwp_exec_spec *s, V v) {
     }
 }
 
-static void fwp_emit_result(const fwp_exec_spec *s, V v) {
-    if (s->result_is_list) {
+/* an error as a command reports it: an IoError by its message */
+static void fwp_exec_error(const fwp_exec_spec *s, V v, const fwp_desc *d) {
+    fflush(stdout);
+    fprintf(stderr, "%s: ", s->name);
+    if (d->kind == K_RECORD && d->name && strcmp(d->name, "IoError") == 0 && d->n == 2) {
+        V m = OBJ(v)->f[1];
+        fwrite(STR(m)->d, 1, STR(m)->len, stderr);
+    } else {
+        fwp_display_top(v, d, stderr);
+    }
+    fprintf(stderr, "\n");
+}
+
+/* write a result; 0 when it is an Err (reported) */
+static int fwp_emit_result(const fwp_exec_spec *s, V v) {
+    if (s->res_err) {
+        if (fwp_tag(v) != 0) { fwp_exec_error(s, OBJ(v)->f[0], s->res_err); return 0; }
+        v = OBJ(v)->f[0];
+    }
+    if (s->res_option) {
+        if (v == FWP_NONE) return 1;
+        v = OBJ(v)->f[0];
+    }
+    if (s->res_list) {
         for (; v != 0; v = OBJ(v)->f[1]) fwp_emit(s, OBJ(v)->f[0]);
     } else {
         fwp_emit(s, v);
     }
+    return 1;
 }
-
-static V caf_exec_entry(void);
 
 /* Call the function; an uncaught Error is reported and returns 0 with
  * *failed set. */
@@ -511,7 +786,7 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     h.state_depth = fwp_state_len;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
-        V r = n == 0 ? caf_exec_entry() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);
+        V r = n == 0 ? s->caf() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);
         fwp_handlers = h.prev;
         fwp_tasks_finish();
         *failed = 0;
@@ -520,9 +795,7 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     fwp_handlers = h.prev;
     fwp_tasks_abort();
     fwp_flush();
-    fprintf(stderr, "error: ");
-    fwp_display_top(h.value, h.desc, stderr);
-    fprintf(stderr, "\n");
+    fwp_exec_error(s, h.value, h.desc);
     *failed = 1;
     return 0;
 }
@@ -582,32 +855,81 @@ static int fwp_read_text_line(fwp_buf *b) {
     return 1;
 }
 
+static int fwp_usage_error(const fwp_exec_spec *s, V msg) {
+    if (msg) fprintf(stderr, "%s: %.*s\n", s->name, (int)STR(msg)->len, STR(msg)->d);
+    fprintf(stderr, "%s\n", s->usage);
+    return 2;
+}
+
+static int fwp_parse_arg(const fwp_exec_spec *s, int i, V a, const fwp_desc *d, const char *dname, V *out) {
+    if (fwp_parse_text(STR(a)->d, STR(a)->len, d, out)) return 1;
+    fprintf(stderr, "%s: argument %d: cannot parse `%s` as %s\n", s->name, i + 1, STR(a)->d, dname);
+    return 0;
+}
+
 static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
-    int k = argc - 1;
     int n = s->arity;
-    if (k > n || k + 1 < n) {
-        fprintf(stderr, "%s\n", s->usage);
-        return 2;
+    int na = argc - 1;
+    V *av = (V *)fwp_alloc((size_t)(na + 1) * sizeof(V));
+    for (int i = 0; i < na; i++) av[i] = fwp_str_lossy(argv[i + 1], strlen(argv[i + 1]));
+    /* flags, unless a record parameter is given as before */
+    int flags_mode = s->has_options && (!s->record_fallback || (na > 0 && STR(av[0])->d[0] == '-'));
+    int nf = flags_mode ? s->nflags : 0;
+    V *vals = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
+    char *state = (char *)fwp_alloc((size_t)nf + 1);
+    V *pos = (V *)fwp_alloc((size_t)(na + 1) * sizeof(V));
+    int k;
+    V err = 0;
+    int r = fwp_cli_parse(flags_mode ? s->flags : 0, nf, 1, fwp_cli_version != 0, na, av, vals, state, pos, &k, &err);
+    if (r < 0) return fwp_usage_error(s, err);
+    if (r == 1) { fputs(s->help, stdout); fflush(stdout); return 0; }
+    if (r == 2) {
+        const char *sp = strchr(s->name, ' ');
+        printf("%.*s %s\n", sp ? (int)(sp - s->name) : (int)strlen(s->name), s->name, fwp_cli_version);
+        fflush(stdout);
+        return 0;
     }
     V *args = (V *)fwp_alloc((size_t)(n + 1) * sizeof(V));
-    for (int i = 0; i < k; i++) {
-        V a = fwp_str_lossy(argv[i + 1], strlen(argv[i + 1]));
-        if (!fwp_parse_text(STR(a)->d, STR(a)->len, s->params[i], &args[i])) {
-            fprintf(stderr, "%s: argument %d: cannot parse `%s` as %s\n", s->name, i + 1, STR(a)->d,
-                    s->param_names[i]);
-            return 2;
+    int first = 0;
+    if (flags_mode) {
+        V *defs = (V *)fwp_alloc((size_t)(nf + 1) * sizeof(V));
+        char *have = (char *)fwp_alloc((size_t)nf + 1);
+        for (int j = 0; j < nf; j++) {
+            const fwp_flag *f = &s->flags[j];
+            have[j] = f->def != 0;
+            if (f->def && !fwp_parse_text(f->def, strlen(f->def), f->field, &defs[j])) have[j] = 0;
         }
+        if (!fwp_cli_record(s->flags, nf, s->nfields, vals, state, defs, have, &args[0], &err))
+            return fwp_usage_error(s, err);
+        first = 1;
+    }
+    int m = n - first - s->unit_last;
+    int from_stdin = 0;
+    if (s->unit_last) args[n - 1] = FWP_UNIT;
+    if (s->variadic) {
+        if (k + 1 < m) return fwp_usage_error(s, 0);
+        for (int i = 0; i < m - 1; i++)
+            if (!fwp_parse_arg(s, i, pos[i], s->params[first + i], s->param_names[first + i], &args[first + i])) return 2;
+        V *rest = (V *)fwp_alloc((size_t)(k + 1) * sizeof(V));
+        for (int i = m - 1; i < k; i++)
+            if (!fwp_parse_arg(s, i, pos[i], s->variadic_elem, s->variadic_name, &rest[i - (m - 1)])) return 2;
+        args[first + m - 1] = fwp_list_from(rest, (size_t)(k - (m - 1)));
+    } else {
+        if (k > m || k + 1 < m) return fwp_usage_error(s, 0);
+        for (int i = 0; i < k; i++)
+            if (!fwp_parse_arg(s, i, pos[i], s->params[first + i], s->param_names[first + i], &args[first + i])) return 2;
+        from_stdin = k < m;
     }
     const char *outv = getenv("FWP_OUT");
     fwp_exec_binary_out = outv && strcmp(outv, "bin") == 0;
     fwp_prog_out = fwp_exec_binary_out ? stderr : stdout;
     if (fwp_exec_binary_out) fwrite(s->out_header, 1, s->out_header_len, stdout);
     int code = 0, failed = 0, ok = 1;
-    if (k == n) {
+    if (!from_stdin) {
         V r = fwp_exec_call(s, args, n, &failed);
         fflush(fwp_prog_out);
         if (failed) code = 1;
-        else fwp_emit_result(s, r);
+        else if (!fwp_emit_result(s, r)) code = 1;
     } else {
         /* input records from stdin; binary input starts with the magic */
         int binary = 0;
@@ -659,8 +981,8 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 unsigned char *pl = (unsigned char *)fwp_alloc(len + 1);
                 if (len && !fwp_read_exact(pl, len)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 if (hdr[0] == 0) break;
-                fwp_rd r = {pl, len, 0};
-                if (!fwp_decode(&r, s->in_elem, &v)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
+                fwp_rd rd = {pl, len, 0};
+                if (!fwp_decode(&rd, s->in_elem, &v)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
             } else {
                 if (!fwp_read_text_line(&line)) break;
                 V t = fwp_str_lossy(line.d ? line.d : "", line.len);
@@ -675,20 +997,20 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 if (cnt == cap) { cap *= 2; items = (V *)realloc(items, cap * sizeof(V)); }
                 items[cnt++] = v;
             } else {
-                args[n - 1] = v;
+                args[first + m - 1] = v;
                 V r = fwp_exec_call(s, args, n, &failed);
                 fflush(fwp_prog_out);
                 if (failed) { code = 1; break; }
-                fwp_emit_result(s, r);
+                if (!fwp_emit_result(s, r)) { code = 1; break; }
                 fflush(stdout);
             }
         }
         if (s->last_is_list && code == 0) {
-            args[n - 1] = fwp_list_from(items, cnt);
+            args[first + m - 1] = fwp_list_from(items, cnt);
             V r = fwp_exec_call(s, args, n, &failed);
             fflush(fwp_prog_out);
             if (failed) code = 1;
-            else fwp_emit_result(s, r);
+            else if (!fwp_emit_result(s, r)) code = 1;
         }
         free(items);
         free(line.d);
@@ -707,4 +1029,24 @@ header_error:
 bad_header:
     fprintf(stderr, "%s: truncated header\n", s->name);
     return 3;
+}
+
+/* A multi-command program: the first argument names the command. */
+static int fwp_exec_program(const char *name, const fwp_exec_spec *const *cmds, int ncmds, const char *help,
+                            const char *usage, int argc, char **argv) {
+    if (argc < 2) { fputs(help, stderr); return 2; }
+    const char *first = argv[1];
+    for (int i = 0; i < ncmds; i++)
+        if (strcmp(cmds[i]->export_name, first) == 0) return fwp_exec(cmds[i], argc - 1, argv + 1);
+    if (strcmp(first, "--help") == 0 || strcmp(first, "-h") == 0) { fputs(help, stdout); return 0; }
+    if (strcmp(first, "--version") == 0 && fwp_cli_version) { printf("%s %s\n", name, fwp_cli_version); return 0; }
+    if (strcmp(first, "help") == 0) {
+        if (argc < 3) { fputs(help, stdout); return 0; }
+        for (int i = 0; i < ncmds; i++)
+            if (strcmp(cmds[i]->export_name, argv[2]) == 0) { fputs(cmds[i]->help, stdout); return 0; }
+        first = argv[2];
+    }
+    V f = fwp_str_lossy(first, strlen(first));
+    fprintf(stderr, "%s: unknown command `%.*s`\n%s\n", name, (int)STR(f)->len, STR(f)->d, usage);
+    return 2;
 }

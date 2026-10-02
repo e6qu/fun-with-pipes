@@ -6,8 +6,16 @@ foreign "fwp" read-line : () -> Option[String] ! {IO}
 foreign "fwp" read-all : () -> String ! {IO}
 foreign "fwp" read-lines : () -> List[String] ! {IO}
 foreign "fwp" env.get : String -> Option[String] ! {IO}
+# All environment variables, sorted by name.
+foreign "fwp" env.vars : () -> List[(String, String)] ! {IO}
+# The current working directory.
+foreign "fwp" env.cwd : () -> String ! {IO}
 foreign "fwp" time.monotonic : () -> Duration ! {IO}
 foreign "fwp" time.unix : () -> Duration ! {IO}
+
+# The user's home directory (`HOME`).
+env.home : () -> Option[String] ! {IO}
+env.home = const "HOME" | env.get
 
 duration.nanos : Duration -> I64
 duration.nanos = .nanos

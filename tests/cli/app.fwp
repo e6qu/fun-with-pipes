@@ -1,0 +1,96 @@
+# A program to test command-line executables (tests/cli.rs).
+
+export version : String
+version = "2.1.0"
+
+Options = {
+    # -v  say what is repeated
+    verbose: Bool,
+    # -n  how many times
+    times: I64,
+    # a label for the output
+    label: Option[String],
+    # -e  extra words
+    extra: List[String],
+    # the separator
+    sep: String,
+}
+
+# The separator of every command.
+export defaults : {sep: String, colour: Bool}
+defaults = { sep = ",", colour = True }
+
+export repeat-word.defaults : {times: I64}
+repeat-word.defaults = { times = 2 }
+
+# Repeat a word. Then stop.
+#
+# The word is repeated `--times` times, followed by the extra words.
+# command: repeat
+# args: WORD
+export repeat-word : Options -> String -> String
+repeat-word = curry (both
+        (both (.0 | .verbose) (.0 | .label) | match
+            (True, Some _) -> concat ": "
+            (True, None) -> "repeating: "
+            (False, _) -> const "")
+        (both
+                (.0 | .sep)
+                (fork
+                    (flip append)
+                    (both (.0 | .times) .1 | uncurry repeat)
+                    (.0 | .extra))
+            | uncurry join)
+    | uncurry (flip concat))
+
+# Add numbers given as arguments.
+# args: NUMBERS...
+export add-all : List[I64] -> I64
+add-all = sum
+
+# Divide the second number by the first.
+# args: DIVISOR N
+export divide : I64 -> I64 -> Result[I64, String]
+divide = curry (match
+    (0, _) -> const (Err "division by zero")
+    (_, _) -> curry (uncurry div | Ok))
+
+# Keep the even numbers.
+export even : I64 -> Option[I64]
+even = if (rem 2 | eq 0) Some (const None)
+
+export shout : String -> String ! {Error[String]}
+shout = if (eq "") (const "nothing to shout" | fail) upper
+
+Point = { x: F64, y: F64 }
+
+# The length of a vector, given as flags or as a record.
+# fwp:allow(shadows-std)
+export norm : Point -> F64
+norm = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
+
+Greeting = {
+    # -s  in capitals
+    shout-it: Bool,
+    # who to greet
+    name: String,
+}
+
+export greet : Greeting -> String
+greet = both (.name | flip concat "hello, ") .shout-it | match
+    (_, True) -> upper
+    (_, False) -> id
+
+# Exit with a status.
+export status : I32 -> () ! {IO}
+status = exit
+
+# Say hello (a final `()` parameter is not an argument).
+export hello : () -> String
+hello = const "hello"
+
+export noop : I64 -> ()
+noop = const ()
+
+export read-text : String -> String ! {FileIO, Error[IoError]}
+read-text = file.read

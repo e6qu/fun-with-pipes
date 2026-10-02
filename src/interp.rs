@@ -610,7 +610,11 @@ impl<'p> Interp<'p> {
                         path,
                         file: Some(f),
                     })))),
-                    Err(e) => Err(self.io_error(id, "open", format!("{}: {}", path, e))),
+                    Err(e) => Err(self.io_error(
+                        id,
+                        "open",
+                        format!("{}: {}", path, crate::h2::io_msg(&e)),
+                    )),
                 }
             }
             "file.close" => {
@@ -630,7 +634,7 @@ impl<'p> Interp<'p> {
                 };
                 match res {
                     Ok(()) => Ok(Value::tuple(vec![Value::str(&s), a[0].clone()])),
-                    Err(e) => Err(self.io_error(id, "read", e.to_string())),
+                    Err(e) => Err(self.io_error(id, "read", crate::h2::io_msg(&e))),
                 }
             }
             "file.write" => {
@@ -643,7 +647,7 @@ impl<'p> Interp<'p> {
                 };
                 match res {
                     Ok(()) => Ok(a[1].clone()),
-                    Err(e) => Err(self.io_error(id, "write", e.to_string())),
+                    Err(e) => Err(self.io_error(id, "write", crate::h2::io_msg(&e))),
                 }
             }
             "file.with" => {
@@ -659,7 +663,13 @@ impl<'p> Interp<'p> {
                         path: path.clone(),
                         file: Some(f),
                     }))),
-                    Err(e) => return Err(self.io_error(id, "open", format!("{}: {}", path, e))),
+                    Err(e) => {
+                        return Err(self.io_error(
+                            id,
+                            "open",
+                            format!("{}: {}", path, crate::h2::io_msg(&e)),
+                        ))
+                    }
                 };
                 let handle = file.clone();
                 let r = self.apply(a[1].clone(), vec![file]);
@@ -677,14 +687,22 @@ impl<'p> Interp<'p> {
                 let path = a[0].as_str().to_string();
                 match std::fs::read_to_string(&path) {
                     Ok(s) => Ok(Value::str(&s)),
-                    Err(e) => Err(self.io_error(id, "read", format!("{}: {}", path, e))),
+                    Err(e) => Err(self.io_error(
+                        id,
+                        "read",
+                        format!("{}: {}", path, crate::h2::io_msg(&e)),
+                    )),
                 }
             }
             "file.write-new" => {
                 let path = a[0].as_str().to_string();
                 match std::fs::write(&path, a[1].as_str()) {
                     Ok(()) => Ok(Value::unit()),
-                    Err(e) => Err(self.io_error(id, "write", format!("{}: {}", path, e))),
+                    Err(e) => Err(self.io_error(
+                        id,
+                        "write",
+                        format!("{}: {}", path, crate::h2::io_msg(&e)),
+                    )),
                 }
             }
             _ if sym.starts_with("task.")
@@ -700,6 +718,29 @@ impl<'p> Interp<'p> {
                     None => trap(format!("primitive `{}` is not implemented", sym)),
                 }
             }
+            _ if crate::sys::handles(sym) => crate::sys::prim(sym, &a, &mut *self.out),
+            "cli.parse" => {
+                let argv: Vec<String> = a[1]
+                    .list_items()
+                    .iter()
+                    .map(|v| v.as_str().to_string())
+                    .collect();
+                Ok(
+                    match crate::cli::parse_with(&params[0], &a[0], &argv, self.prog) {
+                        Ok((rec, pos)) => Value::data(
+                            0,
+                            vec![Value::tuple(vec![
+                                rec,
+                                Value::list(pos.iter().map(|p| Value::str(p)).collect()),
+                            ])],
+                        ),
+                        Err(m) => Value::data(1, vec![Value::str(&m)]),
+                    },
+                )
+            }
+            "cli.help" => Ok(Value::str(&crate::cli::options_help(
+                &params[0], &a[0], self.prog,
+            ))),
             _ => match self.prim_std(sym, &mut a, &params, &result) {
                 Some(r) => r,
                 None => trap(format!(

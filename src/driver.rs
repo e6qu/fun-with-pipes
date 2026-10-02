@@ -22,6 +22,9 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ),
     ("<std>/iter.fwp", include_str!("../lib/iter.fwp")),
     ("<std>/io.fwp", include_str!("../lib/io.fwp")),
+    ("<std>/fs.fwp", include_str!("../lib/fs.fwp")),
+    ("<std>/process.fwp", include_str!("../lib/process.fwp")),
+    ("<std>/cli.fwp", include_str!("../lib/cli.fwp")),
     ("<std>/numeric.fwp", include_str!("../lib/numeric.fwp")),
     ("<std>/autodiff.fwp", include_str!("../lib/autodiff.fwp")),
     ("<std>/ternary.fwp", include_str!("../lib/ternary.fwp")),
@@ -291,16 +294,27 @@ pub fn show_scheme(env: &Env, s: &crate::env::Scheme) -> String {
     out
 }
 
+/// Lower a checked program to IR, with the doc comments of its files.
+pub fn lower(
+    c: Compilation,
+    roots: crate::mono::Roots,
+) -> Result<(Compilation, crate::ir::Program), Failure> {
+    match crate::mono::lower(&c.env, &c.typed, roots) {
+        Ok(mut p) => {
+            p.docs = crate::cli::Docs::from_sources(&c.sm, c.root);
+            Ok((c, p))
+        }
+        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
+    }
+}
+
 /// Check and lower a file to IR.
 pub fn compile_file(
     path: &Path,
     roots: crate::mono::Roots,
 ) -> Result<(Compilation, crate::ir::Program), Failure> {
     let c = check_file(path)?;
-    match crate::mono::lower(&c.env, &c.typed, roots) {
-        Ok(p) => Ok((c, p)),
-        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
-    }
+    lower(c, roots)
 }
 
 /// Check and lower source text to IR.
@@ -320,10 +334,7 @@ pub fn compile_source_in(
     roots: crate::mono::Roots,
 ) -> Result<(Compilation, crate::ir::Program), Failure> {
     let c = check_source(name, text, dir)?;
-    match crate::mono::lower(&c.env, &c.typed, roots) {
-        Ok(p) => Ok((c, p)),
-        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
-    }
+    lower(c, roots)
 }
 
 /// The file name of a program read from standard input (`fwp run -`).
@@ -356,10 +367,7 @@ pub fn compile_input(
     roots: crate::mono::Roots,
 ) -> Result<(Compilation, crate::ir::Program), Failure> {
     let c = check_input(path)?;
-    match crate::mono::lower(&c.env, &c.typed, roots) {
-        Ok(p) => Ok((c, p)),
-        Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),
-    }
+    lower(c, roots)
 }
 
 /// Why the interpreter of the WebAssembly build of fwp cannot run `prog`:
