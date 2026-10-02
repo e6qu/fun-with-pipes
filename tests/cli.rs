@@ -673,6 +673,57 @@ fn called_programs_keep_the_protocol_clean() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// Mistakes in a command's declaration are reported when the program is
+/// run or built.
+#[test]
+fn declaration_errors() {
+    let dir = scratch("decl");
+    let cases = [
+        (
+            "O = {\n    # -a  a [requires: nope]\n    a: Bool,\n}\n\nexport g : O -> I64\ng = const 1\n",
+            "g",
+            "`[requires: nope]` of the option `--a`: `O` has no option `--nope`",
+        ),
+        (
+            "export f.defaults : { x: I64 }\nf.defaults = { x = 1 }\n\n# args: X Y\nexport f : I64 -> I64 -> I64\nf = curry (uncurry add)\n",
+            "f",
+            "the argument `X` of `f` has a default, but `Y` after it is required",
+        ),
+        (
+            "export f.defaults : { x: String }\nf.defaults = { x = \"a\" }\n\n# args: X\nexport f : I64 -> I64\nf = id\n",
+            "f",
+            "`f.defaults`: the field `x` is a `String`, but the argument `X` is a `I64`",
+        ),
+    ];
+    for (i, (src, f, msg)) in cases.iter().enumerate() {
+        let file = dir.join(format!("decl{}.fwp", i));
+        std::fs::write(&file, src).unwrap();
+        let o = Command::new(fwp())
+            .arg("exec")
+            .arg(&file)
+            .arg(f)
+            .output()
+            .unwrap();
+        assert_eq!(o.status.code(), Some(1));
+        assert_eq!(
+            String::from_utf8_lossy(&o.stderr),
+            format!("fwp exec: {}\n", msg)
+        );
+        let o = Command::new(fwp())
+            .arg("build")
+            .arg(&file)
+            .args(["--cli", "--emit-c", "-o"])
+            .arg(dir.join("out.c"))
+            .output()
+            .unwrap();
+        assert_eq!(
+            String::from_utf8_lossy(&o.stderr),
+            format!("fwp build: {}\n", msg)
+        );
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 const COUNT_HELP: &str = "\
 usage: docs count-words [options] [WORDS...]
 

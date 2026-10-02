@@ -1666,3 +1666,41 @@ pub fn help_lefts(o: &Options) -> Vec<(String, String)> {
         .map(|l| (format!("  {}", l), " ".repeat(w - l.chars().count() + 2)))
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn field_comments() {
+        let d = field_doc("-n, --count <N>  how many [env: COUNT]");
+        assert_eq!(d.short, Some('n'));
+        assert_eq!(d.placeholder.as_deref(), Some("N"));
+        assert_eq!(d.env.as_deref(), Some("COUNT"));
+        assert_eq!(d.doc, "how many");
+        let d = field_doc("<FILE> where [requires: a, --b] to write [conflicts: c]");
+        assert_eq!(d.short, None);
+        assert_eq!(d.placeholder.as_deref(), Some("FILE"));
+        assert_eq!(d.doc, "where to write");
+        assert_eq!(d.requires, vec!["a", "b"]);
+        assert_eq!(d.conflicts, vec!["c"]);
+        let d = field_doc("-v  say more");
+        assert_eq!((d.short, d.doc.as_str()), (Some('v'), "say more"));
+        // not annotations
+        let d = field_doc("-1 is a number, <not a name>");
+        assert_eq!((d.short, d.placeholder), (None, None));
+    }
+
+    #[test]
+    fn names() {
+        assert_eq!(kebab("JsonLines"), "json-lines");
+        assert_eq!(kebab("Http2"), "http2");
+        assert_eq!(loose("CSV_lines"), loose("csv-lines"));
+        let s = MT::con("std::String");
+        assert_eq!(path_kind("FILE", &s), Some(PathKind::File));
+        assert_eq!(path_kind("config-file", &s), Some(PathKind::File));
+        assert_eq!(path_kind("DIR", &s), Some(PathKind::Dir));
+        assert_eq!(path_kind("NAME", &s), None);
+        assert_eq!(path_kind("FILE", &MT::con("std::I64")), None);
+    }
+}

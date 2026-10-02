@@ -56,6 +56,10 @@ string is taken as it is and a `Bool` may also be `true` or `false`.
 * A final `()` parameter is not an argument: `tracked : () -> List[String]`
   runs with no arguments.
 
+An argument that starts with `-` followed by a digit is a number, not a
+flag: `scale -3 14` works. `--` ends the flags; everything after it is
+positional.
+
 A command with optional arguments (below) never reads its last argument
 from standard input.
 
@@ -90,10 +94,6 @@ export render : Options -> String -> String -> String
   default when there is none.
 * The usage shows them in brackets: `usage: features render [options]
   WORD [DIR]`.
-
-An argument that starts with `-` followed by a digit is a number, not a
-flag: `scale -3 14` works. `--` ends the flags; everything after it is
-positional.
 
 ### Names and the remaining arguments
 
