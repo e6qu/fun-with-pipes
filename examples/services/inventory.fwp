@@ -18,11 +18,20 @@ item = eq | compose .sku | find | apply catalog
 
 # a product, or an empty placeholder for an unknown one
 stocked : String -> Item
-stocked = fork option.unwrap-or (make Item { sku = id, name = const "unknown", stock = const 0 }) item
+stocked =
+    fork
+        option.unwrap-or
+        (make Item { sku = id, name = const "unknown", stock = const 0 })
+        item
 
 # (wanted, item) -> the stock left, or the shortage
 take-stock : (I64, Item) -> I64 ! {Error[Shortage]}
-take-stock = if (fork ge .0 (.1 | .stock)) (fork sub .0 (.1 | .stock)) (make Shortage { sku = .1 | .sku, wanted = .0, available = .1 | .stock } | fail)
+take-stock =
+    if
+        (fork ge .0 (.1 | .stock))
+        (fork sub .0 (.1 | .stock))
+        (make Shortage { sku = .1 | .sku, wanted = .0, available = .1 | .stock }
+            | fail)
 
 # reserve `n` units of a product: the stock that would be left
 export reserve : I64 -> String -> I64 ! {Error[Shortage]}

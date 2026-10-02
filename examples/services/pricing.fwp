@@ -19,7 +19,8 @@ unit-price = match
     _ -> const 100
 
 priced : (String, I64) -> Line
-priced = make Line { sku = .0, quantity = .1, cents = fork mul .1 (.0 | unit-price) }
+priced =
+    make Line { sku = .0, quantity = .1, cents = fork mul .1 (.0 | unit-price) }
 
 subtotal : List[(String, I64)] -> I64
 subtotal = map priced | map .cents | sum
@@ -38,13 +39,15 @@ reserve-line = uncurry (flip inventory.reserve) | ignore
 
 # a quote for an order of (product, quantity) pairs; members get 10% off
 export quote-order : Bool -> List[(String, I64)] -> Quote ! {Error[inventory.Shortage]}
-quote-order = curry (tap (.1 | each reserve-line) | make Quote {
-    lines = .1 | map priced,
-    subtotal = .1 | subtotal,
-    discount = .0 | discount-for,
-    total = fork discounted (.0 | discount-for) (.1 | subtotal),
-})
+quote-order = curry (tap (.1 | each reserve-line)
+    | make Quote {
+        lines = .1 | map priced,
+        subtotal = .1 | subtotal,
+        discount = .0 | discount-for,
+        total = fork discounted (.0 | discount-for) (.1 | subtotal),
+    })
 
 # the average unit price of some products
 export average-price : List[String] -> F64
-average-price = fork div (length | int.to-float) (map unit-price | sum | int.to-float)
+average-price =
+    fork div (length | int.to-float) (map unit-price | sum | int.to-float)

@@ -25,7 +25,12 @@ unknown : String -> NotAvailable
 unknown = make NotAvailable { isbn = id, reason = const "no such book" }
 
 lend : Book -> Loan ! {Error[NotAvailable]}
-lend = if (.copies | gt 0) (make Loan { isbn = .isbn, left = .copies | sub 1 }) (make NotAvailable { isbn = .isbn, reason = const "all copies are out" } | fail)
+lend =
+    if
+        (.copies | gt 0)
+        (make Loan { isbn = .isbn, left = .copies | sub 1 })
+        (make NotAvailable { isbn = .isbn, reason = const "all copies are out" }
+            | fail)
 
 # borrow a copy: how many are left, or why not
 export borrow : String -> Loan ! {Error[NotAvailable]}
