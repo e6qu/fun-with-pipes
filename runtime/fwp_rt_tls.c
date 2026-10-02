@@ -91,9 +91,13 @@ static int fwp_alpn_select(SSL *ssl, const unsigned char **out, unsigned char *o
 }
 
 /* a server context; 0 with the reason in fwp_tls_err. Contexts live as
- * long as the program (they are few: one per listener). */
-static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned char *alpn, unsigned alpn_n) {
+ * long as the program (they are few: one per listener). With a CA file
+ * (`client_ca`, "" for none), clients must present a certificate that the
+ * CA signed (mutual TLS). */
+static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned char *alpn, unsigned alpn_n,
+                                   const char *client_ca) {
     if (!fwp_tls_readable(cert) || !fwp_tls_readable(key)) return 0;
+    if (*client_ca && !fwp_tls_readable(client_ca)) return 0;
     ERR_clear_error();
     SSL_CTX *ctx = fwp_tls_ctx_new(1);
     if (!ctx) return 0;
@@ -119,7 +123,45 @@ static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned c
         a->n = alpn_n;
         SSL_CTX_set_alpn_select_cb(ctx, fwp_alpn_select, a);
     }
+    if (*client_ca) {
+        if (SSL_CTX_load_verify_locations(ctx, client_ca, 0) != 1) {
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: cannot load CA certificates: %s", client_ca,
+                     fwp_tls_reason());
+            SSL_CTX_free(ctx);
+            return 0;
+        }
+        /* the CAs the client is asked for */
+        STACK_OF(X509_NAME) *names = SSL_load_client_CA_file(client_ca);
+        if (names) SSL_CTX_set_client_CA_list(ctx, names);
+        ERR_clear_error();
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0);
+    }
     return ctx;
+}
+
+/* the subject of the peer's certificate (RFC 2253: `CN=alice,O=Example`),
+ * malloc'ed, or 0 if it presented none */
+static char *fwp_tls_peer_subject(SSL *ssl) {
+    if (!ssl || !SSL_is_init_finished(ssl)) return 0;
+    X509 *cert = SSL_get1_peer_certificate(ssl);
+    if (!cert) return 0;
+    char *out = 0;
+    BIO *bio = BIO_new(BIO_s_mem());
+    X509_NAME *name = X509_get_subject_name(cert);
+    if (bio && name) {
+        X509_NAME_print_ex(bio, name, 0, XN_FLAG_RFC2253);
+        char *p = 0;
+        long n = BIO_get_mem_data(bio, &p);
+        if (n >= 0 && p) {
+            out = (char *)malloc((size_t)n + 1);
+            memcpy(out, p, (size_t)n);
+            out[n] = 0;
+        }
+    }
+    if (bio) BIO_free(bio);
+    X509_free(cert);
+    ERR_clear_error();
+    return out;
 }
 
 /* client contexts by CA file ("" for the system's) and verification, made
@@ -164,12 +206,18 @@ static int fwp_is_ip(const char *s) {
 
 /* a client session on a connected socket (the handshake is still to be
  * done): the CA file ("" for the system's), verification, the server name
- * (SNI and verification; "" for none) and the protocols to offer */
+ * (SNI and verification; "" for none), the protocols to offer, and a
+ * client certificate chain and key ("" for none; the key may be in the
+ * certificate's file) */
 static SSL *fwp_tls_client_new(int fd, const char *ca, int verify, const char *name, const unsigned char *alpn,
-                               unsigned alpn_n) {
+                               unsigned alpn_n, const char *cert, const char *key) {
     ERR_clear_error();
     SSL_CTX *ctx = fwp_tls_client_ctx(ca, verify);
     if (!ctx) return 0;
+    if (*cert) {
+        if (!*key) key = cert;
+        if (!fwp_tls_readable(cert) || !fwp_tls_readable(key)) return 0;
+    }
     SSL *ssl = SSL_new(ctx);
     if (!ssl) {
         snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot create a TLS session: %s", fwp_tls_reason());
@@ -186,6 +234,24 @@ static SSL *fwp_tls_client_new(int fd, const char *ca, int verify, const char *n
     }
     if (!verify) SSL_set_verify(ssl, SSL_VERIFY_NONE, 0);
     if (alpn_n) SSL_set_alpn_protos(ssl, alpn, alpn_n);
+    if (*cert) {
+        const char *why = 0;
+        if (SSL_use_certificate_chain_file(ssl, cert) != 1)
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: cannot load the certificate: %s", cert,
+                     why = fwp_tls_reason());
+        else if (SSL_use_PrivateKey_file(ssl, key, SSL_FILETYPE_PEM) != 1)
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: cannot load the private key: %s", key,
+                     why = fwp_tls_reason());
+        else if (SSL_check_private_key(ssl) != 1) {
+            ERR_clear_error();
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: the private key does not match the certificate",
+                     why = key);
+        }
+        if (why) {
+            SSL_free(ssl);
+            return 0;
+        }
+    }
     return ssl;
 }
 
@@ -326,15 +392,17 @@ static void fwp_host_of(const char *addr, char *out, size_t n) {
 
 /* ------------------------------------------------------------ primitives */
 
-/* CA file, insecure, server name ("" for the host), protocols, address */
-static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V addr, const fwp_desc *err) {
+/* CA file, insecure, server name ("" for the host), protocols, client
+ * certificate and key ("" for none), address */
+static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V addr, const fwp_desc *err) {
     V c = fwp_p_tcp_connect(addr, err);
     char host[256];
     if (STR(name)->len) snprintf(host, sizeof host, "%s", STR(name)->d);
     else fwp_host_of(STR(addr)->d, host, sizeof host);
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
-    SSL *ssl = fwp_tls_client_new(SOCK(c)->fd, STR(ca)->d, insecure == FWP_FALSE, host, alpn, alpn_n);
+    SSL *ssl = fwp_tls_client_new(SOCK(c)->fd, STR(ca)->d, insecure == FWP_FALSE, host, alpn, alpn_n, STR(cert)->d,
+                                  STR(key)->d);
     free(alpn);
     if (ssl) {
         SOCK(c)->tls = ssl;
@@ -346,11 +414,11 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V addr, const fwp
     return fwp_io_error("tls", msg, err);
 }
 
-/* certificate, key, protocols, address */
-static V fwp_p_tls_listen(V cert, V key, V protos, V addr, const fwp_desc *err) {
+/* certificate, key, protocols, client CA ("" for none), address */
+static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fwp_desc *err) {
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
-    SSL_CTX *ctx = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, alpn, alpn_n);
+    SSL_CTX *ctx = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, alpn, alpn_n, STR(client_ca)->d);
     if (!ctx) {
         free(alpn);
         return fwp_io_error("tls", fwp_tls_err, err);
@@ -375,3 +443,12 @@ static V fwp_p_tls_alpn(V c) {
 }
 
 static V fwp_p_tls_secure(V c) { return SOCK(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
+
+static V fwp_p_tls_peer_subject(V c) {
+    if (!SOCK(c)->tls || SOCK(c)->kind != 1) return FWP_NONE;
+    char *s = fwp_tls_peer_subject((SSL *)SOCK(c)->tls);
+    if (!s) return FWP_NONE;
+    V v = fwp_cstr(s);
+    free(s);
+    return fwp_some(v);
+}

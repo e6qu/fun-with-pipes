@@ -34,6 +34,12 @@ calls = [
     | drained
     | map .value
     | echo,
+    flip
+        gen.greeter.firsts
+        (1 | iter.count-from | iter.map (make gen.FirstsRequest { arg1 = id }))
+    | drained
+    | map .value
+    | echo,
     attempt (flip gen.greeter.find gen.FindRequest { arg1 = "ghost" }) | echo,
     flip gen.greeter.whoami () | .value | echo,
     flip gen.greeter.divide gen.DivideRequest { arg1 = 8, arg2 = 0 }

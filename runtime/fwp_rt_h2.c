@@ -900,4 +900,296 @@ static int pb_decode(const int *S, int node, const unsigned char *pb, size_t n, 
     return pb_dec_body(S, node, pb, n, out);
 }
 
+/* ------------------------------------------------------------------ gzip */
+
+/* gzip (RFC 1952) over DEFLATE (RFC 1951) for gRPC message compression;
+ * mirrors src/gzip.rs: a complete decoder, and an encoder of one
+ * fixed-Huffman block with a greedy LZ77 search. */
+
+#define H2_GZIP_MAX ((size_t)64 << 20)
+
+static uint32_t h2_crc32(const unsigned char *d, size_t n) {
+    static uint32_t t[256];
+    static int ready = 0;
+    if (!ready) {
+        for (uint32_t i = 0; i < 256; i++) {
+            uint32_t c = i;
+            for (int k = 0; k < 8; k++) c = c & 1 ? 0xedb88320u ^ (c >> 1) : c >> 1;
+            t[i] = c;
+        }
+        ready = 1;
+    }
+    uint32_t c = 0xffffffffu;
+    for (size_t i = 0; i < n; i++) c = t[(c ^ d[i]) & 0xff] ^ (c >> 8);
+    return c ^ 0xffffffffu;
+}
+
+static const uint16_t z_len_base[29] = {3,  4,  5,  6,  7,  8,  9,  10, 11,  13,  15,  17,  19,  23, 27,
+                                        31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258};
+static const uint8_t z_len_extra[29] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2,
+                                        2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
+static const uint16_t z_dist_base[30] = {1,   2,   3,    4,    5,    7,    9,    13,    17,    25,
+                                         33,  49,  65,   97,   129,  193,  257,  385,   513,   769,
+                                         1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
+static const uint8_t z_dist_extra[30] = {0, 0, 0, 0, 1, 1, 2, 2,  3,  3,  4,  4,  5,  5,  6,
+                                         6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13};
+
+typedef struct { const unsigned char *d; size_t n, pos; uint32_t bit, nbits; } z_bits;
+
+static int z_need(z_bits *b, uint32_t n) {
+    while (b->nbits < n) {
+        if (b->pos >= b->n) return h2_fail("truncated compressed data");
+        b->bit |= (uint32_t)b->d[b->pos++] << b->nbits;
+        b->nbits += 8;
+    }
+    return 1;
+}
+
+/* n bits into *v */
+static int z_get(z_bits *b, uint32_t n, uint32_t *v) {
+    if (n == 0) { *v = 0; return 1; }
+    if (!z_need(b, n)) return 0;
+    *v = b->bit & ((1u << n) - 1);
+    b->bit >>= n;
+    b->nbits -= n;
+    return 1;
+}
+
+typedef struct { uint16_t count[16]; uint16_t symbol[320]; } z_huff;
+
+static int z_huff_new(z_huff *h, const uint8_t *len, int n) {
+    memset(h->count, 0, sizeof h->count);
+    for (int i = 0; i < n; i++) h->count[len[i]]++;
+    h->count[0] = 0;
+    int left = 1;
+    for (int i = 1; i < 16; i++) {
+        left = left * 2 - h->count[i];
+        if (left < 0) return h2_fail("bad Huffman code");
+    }
+    uint16_t offs[16] = {0};
+    for (int i = 1; i < 15; i++) offs[i + 1] = (uint16_t)(offs[i] + h->count[i]);
+    for (int s = 0; s < n; s++)
+        if (len[s]) h->symbol[offs[len[s]]++] = (uint16_t)s;
+    return 1;
+}
+
+static int z_decode(const z_huff *h, z_bits *b, int *sym) {
+    int code = 0, first = 0, index = 0;
+    for (int len = 1; len < 16; len++) {
+        uint32_t x;
+        if (!z_get(b, 1, &x)) return 0;
+        code |= (int)x;
+        int count = h->count[len];
+        if (code - count < first) { *sym = h->symbol[index + (code - first)]; return 1; }
+        index += count;
+        first += count;
+        first <<= 1;
+        code <<= 1;
+    }
+    return h2_fail("bad Huffman code");
+}
+
+static int z_codes(z_bits *b, h2_buf *out, const z_huff *lit, const z_huff *dist, size_t max) {
+    for (;;) {
+        int sym;
+        if (!z_decode(lit, b, &sym)) return 0;
+        if (sym < 256) {
+            if (out->len >= max) return h2_fail("decompressed message too large");
+            h2b_byte(out, (unsigned)sym);
+        } else if (sym == 256) {
+            return 1;
+        } else if (sym <= 285) {
+            int i = sym - 257;
+            uint32_t e, de;
+            if (!z_get(b, z_len_extra[i], &e)) return 0;
+            size_t len = z_len_base[i] + e;
+            int d;
+            if (!z_decode(dist, b, &d)) return 0;
+            if (d >= 30) return h2_fail("bad distance");
+            if (!z_get(b, z_dist_extra[d], &de)) return 0;
+            size_t dd = z_dist_base[d] + de;
+            if (dd > out->len) return h2_fail("distance too far back");
+            if (out->len + len > max) return h2_fail("decompressed message too large");
+            h2b_reserve(out, len);
+            size_t start = out->len - dd;
+            for (size_t k = 0; k < len; k++) out->d[out->len++] = out->d[start + k];
+        } else {
+            return h2_fail("bad length code");
+        }
+    }
+}
+
+static const unsigned char z_cl_order[19] = {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15};
+
+/* raw DEFLATE data into out; *used: the bytes it took */
+static int h2_inflate(const unsigned char *d, size_t n, h2_buf *out, size_t max, size_t *used) {
+    z_bits b = {d, n, 0, 0, 0};
+    for (;;) {
+        uint32_t last, type;
+        if (!z_get(&b, 1, &last) || !z_get(&b, 2, &type)) return 0;
+        if (type == 0) {
+            b.bit = b.nbits = 0;
+            size_t p = b.pos;
+            if (p + 4 > n) return h2_fail("truncated compressed data");
+            size_t len = d[p] | (size_t)d[p + 1] << 8, nlen = d[p + 2] | (size_t)d[p + 3] << 8;
+            if (len != (~nlen & 0xffff)) return h2_fail("bad stored block");
+            if (p + 4 + len > n) return h2_fail("truncated compressed data");
+            if (out->len + len > max) return h2_fail("decompressed message too large");
+            h2b_put(out, d + p + 4, len);
+            b.pos = p + 4 + len;
+        } else if (type == 1) {
+            uint8_t l[288], dl[30];
+            for (int i = 0; i < 288; i++) l[i] = i < 144 ? 8 : i < 256 ? 9 : i < 280 ? 7 : 8;
+            for (int i = 0; i < 30; i++) dl[i] = 5;
+            z_huff lit, dist;
+            z_huff_new(&lit, l, 288);
+            z_huff_new(&dist, dl, 30);
+            if (!z_codes(&b, out, &lit, &dist, max)) return 0;
+        } else if (type == 2) {
+            uint32_t hl, hd, hc;
+            if (!z_get(&b, 5, &hl) || !z_get(&b, 5, &hd) || !z_get(&b, 4, &hc)) return 0;
+            int nlen = (int)hl + 257, ndist = (int)hd + 1, ncode = (int)hc + 4;
+            if (nlen > 286 || ndist > 30) return h2_fail("bad block header");
+            uint8_t cl[19] = {0};
+            for (int i = 0; i < ncode; i++) {
+                uint32_t x;
+                if (!z_get(&b, 3, &x)) return 0;
+                cl[z_cl_order[i]] = (uint8_t)x;
+            }
+            z_huff clh;
+            if (!z_huff_new(&clh, cl, 19)) return 0;
+            uint8_t lens[320] = {0};
+            int i = 0;
+            while (i < nlen + ndist) {
+                int sym;
+                if (!z_decode(&clh, &b, &sym)) return 0;
+                uint8_t val = 0;
+                uint32_t rep = 1, x;
+                if (sym < 16) {
+                    val = (uint8_t)sym;
+                } else if (sym == 16) {
+                    if (i == 0) return h2_fail("bad code lengths");
+                    val = lens[i - 1];
+                    if (!z_get(&b, 2, &x)) return 0;
+                    rep = 3 + x;
+                } else if (sym == 17) {
+                    if (!z_get(&b, 3, &x)) return 0;
+                    rep = 3 + x;
+                } else {
+                    if (!z_get(&b, 7, &x)) return 0;
+                    rep = 11 + x;
+                }
+                if (i + (int)rep > nlen + ndist) return h2_fail("bad code lengths");
+                while (rep--) lens[i++] = val;
+            }
+            if (lens[256] == 0) return h2_fail("no end-of-block code");
+            z_huff lit, dist;
+            if (!z_huff_new(&lit, lens, nlen) || !z_huff_new(&dist, lens + nlen, ndist)) return 0;
+            if (!z_codes(&b, out, &lit, &dist, max)) return 0;
+        } else {
+            return h2_fail("bad block type");
+        }
+        if (last) { *used = b.pos; return 1; }
+    }
+}
+
+/* gzip data (one member) into out, checking its CRC and length */
+static int h2_gunzip(const unsigned char *d, size_t n, h2_buf *out, size_t max) {
+    if (n < 18 || d[0] != 0x1f || d[1] != 0x8b || d[2] != 8) return h2_fail("not gzip data");
+    unsigned flags = d[3];
+    size_t p = 10;
+    if (flags & 4) {
+        if (p + 2 > n) return h2_fail("truncated gzip header");
+        p += 2 + (d[p] | (size_t)d[p + 1] << 8);
+    }
+    for (unsigned f = 8; f <= 16; f += 8)
+        if (flags & f) {
+            while (p < n && d[p]) p++;
+            p++;
+        }
+    if (flags & 2) p += 2;
+    if (p > n) return h2_fail("truncated gzip header");
+    size_t used = 0, start = out->len;
+    if (!h2_inflate(d + p, n - p, out, max, &used)) return 0;
+    size_t t = p + used;
+    if (t + 8 > n) return h2_fail("truncated gzip data");
+    uint32_t crc = d[t] | (uint32_t)d[t + 1] << 8 | (uint32_t)d[t + 2] << 16 | (uint32_t)d[t + 3] << 24;
+    uint32_t size = d[t + 4] | (uint32_t)d[t + 5] << 8 | (uint32_t)d[t + 6] << 16 | (uint32_t)d[t + 7] << 24;
+    if (crc != h2_crc32(out->d + start, out->len - start) || size != (uint32_t)(out->len - start))
+        return h2_fail("gzip checksum mismatch");
+    return 1;
+}
+
+typedef struct { h2_buf *b; uint32_t bit, nbits; } z_out;
+
+static void z_put(z_out *o, uint32_t v, uint32_t n) {
+    o->bit |= v << o->nbits;
+    o->nbits += n;
+    while (o->nbits >= 8) {
+        h2b_byte(o->b, o->bit & 0xff);
+        o->bit >>= 8;
+        o->nbits -= 8;
+    }
+}
+
+static void z_code(z_out *o, uint32_t code, uint32_t len) {
+    uint32_t r = 0;
+    for (uint32_t i = 0; i < len; i++) r |= ((code >> i) & 1) << (len - 1 - i);
+    z_put(o, r, len);
+}
+
+static void z_lit(z_out *o, uint32_t s) {
+    if (s <= 143) z_code(o, 0x30 + s, 8);
+    else if (s <= 255) z_code(o, 0x190 + s - 144, 9);
+    else if (s <= 279) z_code(o, s - 256, 7);
+    else z_code(o, 0xc0 + s - 280, 8);
+}
+
+/* gzip data of `d`: one fixed-Huffman block */
+static void h2_gzip(const unsigned char *d, size_t n, h2_buf *out) {
+    static const unsigned char head[10] = {0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255};
+    h2b_put(out, head, 10);
+    z_out o = {out, 0, 0};
+    z_put(&o, 1, 1);
+    z_put(&o, 1, 2);
+    enum { HASH = 1 << 15, WINDOW = 32768 };
+    size_t *headt = (size_t *)malloc(HASH * sizeof(size_t));
+    for (size_t i = 0; i < HASH; i++) headt[i] = (size_t)-1;
+#define Z_HASH(i) ((((size_t)d[i] << 10) ^ ((size_t)d[(i) + 1] << 5) ^ d[(i) + 2]) & (HASH - 1))
+    size_t i = 0;
+    while (i < n) {
+        size_t len = 0, dist = 0;
+        if (i + 3 <= n) {
+            size_t h = Z_HASH(i), cand = headt[h];
+            headt[h] = i;
+            if (cand != (size_t)-1 && i - cand <= WINDOW) {
+                size_t max = n - i < 258 ? n - i : 258, l = 0;
+                while (l < max && d[cand + l] == d[i + l]) l++;
+                if (l >= 3) { len = l; dist = i - cand; }
+            }
+        }
+        if (len == 0) { z_lit(&o, d[i]); i++; continue; }
+        int li = 28;
+        while (z_len_base[li] > len) li--;
+        z_lit(&o, 257 + (uint32_t)li);
+        z_put(&o, (uint32_t)(len - z_len_base[li]), z_len_extra[li]);
+        int di = 29;
+        while (z_dist_base[di] > dist) di--;
+        z_code(&o, (uint32_t)di, 5);
+        z_put(&o, (uint32_t)(dist - z_dist_base[di]), z_dist_extra[di]);
+        size_t end = i + len < (n >= 2 ? n - 2 : 0) ? i + len : (n >= 2 ? n - 2 : 0);
+        for (size_t k = i + 1; k < end; k++) headt[Z_HASH(k)] = k;
+        i += len;
+    }
+#undef Z_HASH
+    free(headt);
+    z_lit(&o, 256);
+    if (o.nbits) h2b_byte(out, o.bit & 0xff);
+    uint32_t crc = h2_crc32(d, n), sz = (uint32_t)n;
+    unsigned char t[8] = {(unsigned char)crc, (unsigned char)(crc >> 8), (unsigned char)(crc >> 16),
+                          (unsigned char)(crc >> 24), (unsigned char)sz, (unsigned char)(sz >> 8),
+                          (unsigned char)(sz >> 16), (unsigned char)(sz >> 24)};
+    h2b_put(out, t, 8);
+}
+
 #endif /* __wasi__ */

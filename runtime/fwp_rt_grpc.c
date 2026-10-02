@@ -69,6 +69,8 @@ typedef struct g_msg { struct g_msg *next; size_t n; unsigned char d[]; } g_msg;
 struct g_stream {
     uint32_t id;
     h2_hdrs headers, trailers;
+    h2_hdrs out_headers, out_trailers; /* a server's response metadata */
+    int gzip;                  /* messages sent are compressed with gzip */
     int got_headers, got_data, remote_end, local_end, sent_headers, retry, listed;
     h2_buf data;
     g_msg *mhead, *mtail;
@@ -98,6 +100,7 @@ struct g_conn {
     int preface, goaway;
     char *dead;
     fwp_wl writer_wl, space_wl;
+    char *tlskey;              /* a client's TLS options (g_tls key), or 0 */
     g_conn *next_pool;
 };
 
@@ -107,7 +110,17 @@ typedef struct g_serving {
     fwp_task *task;
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
+    char *peer;                /* the subject of the client's certificate, or 0 */
+    g_stream *s;               /* the call's stream */
 } g_serving;
+
+/* how a client's calls connect over TLS (`grpc.with-tls`, or the
+ * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
+ * `key` tells connections with these options apart in the pool */
+typedef struct {
+    char *ca, *name, *cert, *keyfile, *key;
+    int insecure;
+} g_tls;
 
 /* a task's gRPC context: metadata and deadline of the calls it makes, and
  * the call it serves */
@@ -116,6 +129,9 @@ typedef struct {
     size_t n;
     int64_t deadline;
     g_serving *serving;
+    const g_tls *tls;
+    h2_hdrs *capture;          /* response metadata collected, or 0 */
+    int gzip;                  /* the calls made compress their requests */
 } g_ctx;
 
 static g_ctx g_empty_ctx;
@@ -185,6 +201,8 @@ static void g_stream_final(void *p) {
     g_stream *s = (g_stream *)p;
     h2_hdrs_free(&s->headers);
     h2_hdrs_free(&s->trailers);
+    h2_hdrs_free(&s->out_headers);
+    h2_hdrs_free(&s->out_trailers);
     h2b_free(&s->data);
     while (s->mhead) {
         g_msg *m = s->mhead;
@@ -202,6 +220,7 @@ static void g_conn_final(void *p) {
     h2b_free(&c->out);
     h2b_free(&c->cont_buf);
     free(c->dead);
+    free(c->tlskey);
 }
 
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
@@ -297,15 +316,32 @@ static void g_split(g_stream *s) {
     while (s->data.len >= 5) {
         size_t n = h2_rd32(s->data.d + 1);
         if (s->data.len < 5 + n) break;
+        const unsigned char *src = s->data.d + 5;
+        h2_buf plain = {0};
         if (s->data.d[0] != 0) {
-            if (!s->bad) s->bad = strdup("compressed gRPC messages are not supported");
-            s->data.len = 0;
-            return;
+            /* compressed with the stream's grpc-encoding */
+            const char *enc = h2_get(&s->headers, "grpc-encoding");
+            if (!enc || strcmp(enc, "gzip") != 0) {
+                if (!s->bad)
+                    s->bad = enc ? g_strdupf("unsupported grpc-encoding `%s`", enc)
+                                 : strdup("a compressed message without grpc-encoding");
+                s->data.len = 0;
+                return;
+            }
+            if (!h2_gunzip(src, n, &plain, H2_GZIP_MAX)) {
+                if (!s->bad) s->bad = g_strdupf("bad compressed message: %s", h2_err);
+                h2b_free(&plain);
+                s->data.len = 0;
+                return;
+            }
+            src = plain.d;
         }
-        g_msg *m = (g_msg *)malloc(sizeof(g_msg) + n + 1);
+        size_t mn = s->data.d[0] != 0 ? plain.len : n;
+        g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);
         m->next = 0;
-        m->n = n;
-        memcpy(m->d, s->data.d + 5, n);
+        m->n = mn;
+        if (mn) memcpy(m->d, src, mn);
+        h2b_free(&plain);
         if (s->mtail) s->mtail->next = m;
         else s->mhead = m;
         s->mtail = m;
@@ -663,11 +699,25 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2_buf blk = {0};
         h2_hpack_lit(&blk, ":status", "200");
         h2_hpack_lit(&blk, "content-type", "application/grpc");
+        h2_hpack_lit(&blk, "grpc-accept-encoding", "gzip");
+        if (s->gzip) h2_hpack_lit(&blk, "grpc-encoding", "gzip");
+        for (size_t i = 0; i < s->out_headers.n; i++)
+            h2_hpack_lit(&blk, s->out_headers.v[i].name, s->out_headers.v[i].value);
         h2_header_frames(&c->out, s->id, &blk, 0, c->peer.max_frame);
         h2b_free(&blk);
     }
     h2_buf b = {0};
-    h2_grpc_frame(&b, msg, n);
+    if (s->gzip && n >= 64) {
+        /* compressed (messages shorter than 64 bytes are sent as they are) */
+        h2_buf z = {0};
+        h2_gzip(msg, n, &z);
+        h2b_byte(&b, 1);
+        h2b_be32(&b, (uint32_t)z.len);
+        h2b_put(&b, z.d, z.len);
+        h2b_free(&z);
+    } else {
+        h2_grpc_frame(&b, msg, n);
+    }
     int r = g_send_data(c, s, b.d, b.len, end);
     h2b_free(&b);
     return r;
@@ -722,6 +772,28 @@ static void g_deadline_passed(int64_t call) {
     fwp_check_cancel();
 }
 
+/* response headers and trailers that are not metadata */
+static int g_not_response_metadata(const char *k) {
+    static const char *const no[] = {"content-type", "grpc-status", "grpc-message", "grpc-encoding",
+                                     "grpc-accept-encoding"};
+    if (k[0] == ':') return 1;
+    for (size_t i = 0; i < sizeof no / sizeof no[0]; i++)
+        if (strcmp(k, no[i]) == 0) return 1;
+    return 0;
+}
+
+static V g_pairs_value(const h2_hdrs *h);
+
+/* the metadata of a response (headers, then trailers) added to `out` */
+static void g_metadata_into(const g_stream *s, h2_hdrs *out) {
+    for (int t = 0; t < 2; t++) {
+        const h2_hdrs *h = t ? &s->trailers : &s->headers;
+        for (size_t i = 0; i < h->n; i++)
+            if (!g_not_response_metadata(h->v[i].name))
+                h2_hdrs_add(out, h->v[i].name, strlen(h->v[i].name), h->v[i].value, strlen(h->v[i].value));
+    }
+}
+
 /* wait for the next message of a stream; cancellation of the task resets
  * a client's stream, and `deadline` (a call's) ends it with
  * DEADLINE_EXCEEDED */
@@ -738,6 +810,7 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
         if (s->bad) { g->kind = G_LOST; g->text = strdup(s->bad); return; }
         if (s->remote_end) {
             if (c->server) { g->kind = G_END; g->code = 0; g->text = strdup(""); return; }
+            if (g_ctx_of()->capture) g_metadata_into(s, g_ctx_of()->capture);
             g_status_of(c, s, g);
             g_unlink(c, s);
             if (g->code == GRPC_DEADLINE_EXCEEDED) g_deadline_passed(deadline);
@@ -761,7 +834,48 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 
 /* ------------------------------------------------------------------ client */
 
-static g_conn *g_connect(const char *given, char **err) {
+static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
+    g_tls *t = (g_tls *)calloc(1, sizeof *t);
+    t->ca = strdup(ca);
+    t->insecure = insecure;
+    t->name = strdup(name);
+    t->cert = strdup(cert);
+    t->keyfile = strdup(key);
+    t->key = g_strdupf("%s|%d|%s|%s|%s", ca, insecure, name, cert, key);
+    return t;
+}
+
+/* the TLS options of a service's variables (FWP_SERVICE_<M>_CA,
+ * _INSECURE, _SERVER_NAME, _CERT, _KEY), or 0; read once per service */
+static const g_tls *g_env_tls(const char *var) {
+    static struct g_env_tls { const char *var; const g_tls *tls; struct g_env_tls *next; } *known = 0;
+    for (struct g_env_tls *k = known; k; k = k->next)
+        if (strcmp(k->var, var) == 0) return k->tls;
+    const char *v[5];
+    static const char *const sfx[5] = {"CA", "INSECURE", "SERVER_NAME", "CERT", "KEY"};
+    for (int i = 0; i < 5; i++) {
+        char name[300];
+        snprintf(name, sizeof name, "%s_%s", var, sfx[i]);
+        v[i] = getenv(name);
+        if (v[i] && !*v[i]) v[i] = 0;
+    }
+    int insecure = v[1] && strcmp(v[1], "0") != 0 && strcmp(v[1], "false") != 0;
+    struct g_env_tls *k = (struct g_env_tls *)calloc(1, sizeof *k);
+    k->var = strdup(var);
+    k->tls = v[0] || insecure || v[2] || v[3] || v[4]
+                 ? g_tls_new(v[0] ? v[0] : "", insecure, v[2] ? v[2] : "", v[3] ? v[3] : "", v[4] ? v[4] : "")
+                 : 0;
+    k->next = known;
+    known = k;
+    return k->tls;
+}
+
+static int g_same_tls(const char *a, const g_tls *t) {
+    if (!t) return a == 0;
+    return a && strcmp(a, t->key) == 0;
+}
+
+static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     char host[256], port[32], addr[300];
     int tls;
     g_addr(given, &tls, addr, sizeof addr);
@@ -805,8 +919,10 @@ static g_conn *g_connect(const char *given, char **err) {
     SSL *ssl = 0;
     if (tls) {
         /* verified with the system's CA certificates (SSL_CERT_FILE,
-         * SSL_CERT_DIR), offering h2 */
-        ssl = fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3);
+         * SSL_CERT_DIR) unless the options say otherwise, offering h2 */
+        ssl = opts ? fwp_tls_client_new(fd, opts->ca, !opts->insecure, *opts->name ? opts->name : host,
+                                        (const unsigned char *)"\x02h2", 3, opts->cert, opts->keyfile)
+                   : fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3, "", "");
         if (!ssl || !fwp_tls_finish(ssl, fd, 0)) {
             *err = g_strdupf("cannot connect to %s: %s", addr, fwp_tls_err);
             if (ssl) SSL_free(ssl);
@@ -816,6 +932,7 @@ static g_conn *g_connect(const char *given, char **err) {
     }
     g_conn *c = g_conn_new(fd, given, 0);
     c->ssl = ssl;
+    c->tlskey = opts ? strdup(opts->key) : 0;
     c->refs = 2;
     fwp_spawn_task(0, g_reader, c, 0, 1);
     fwp_spawn_task(0, g_writer, c, 0, 1);
@@ -837,18 +954,22 @@ static void g_timeout_header(int64_t deadline, char *out, size_t n) {
     }
 }
 
-/* start a call: 0 and the error in *err on a transport failure */
-static g_stream *g_open(const char *addr, const char *path, const char *fp, g_conn **cp, int *reused, char **err) {
+/* start a call: 0 and the error in *err on a transport failure; with the
+ * TLS options of the task's context, else `dflt` */
+static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, g_conn **cp, int *reused, char **err,
+                            const g_tls *dflt) {
     fwp_tasks_init();
     fwp_check_cancel();
+    const g_tls *opts = g_ctx_of()->tls ? g_ctx_of()->tls : dflt;
     g_conn *c = 0;
     for (g_conn *p = g_pool; p; p = p->next_pool)
-        if (strcmp(p->authority, addr) == 0 && !p->dead && !p->goaway && p->next_stream < 0x7fff0000u) {
+        if (strcmp(p->authority, addr) == 0 && g_same_tls(p->tlskey, opts) && !p->dead && !p->goaway &&
+            p->next_stream < 0x7fff0000u) {
             c = p;
             break;
         }
     *reused = c != 0;
-    if (!c) c = g_connect(addr, err);
+    if (!c) c = g_connect(addr, opts, err);
     if (!c) return 0;
     g_ctx *ctx = g_ctx_of();
     int64_t deadline = g_earliest(ctx->deadline, fwp_cur->deadline);
@@ -864,6 +985,8 @@ static g_stream *g_open(const char *addr, const char *path, const char *fp, g_co
     h2_hpack_lit(&blk, ":authority", authority);
     h2_hpack_lit(&blk, "content-type", "application/grpc");
     h2_hpack_lit(&blk, "te", "trailers");
+    h2_hpack_lit(&blk, "grpc-accept-encoding", "gzip");
+    if (ctx->gzip) h2_hpack_lit(&blk, "grpc-encoding", "gzip");
     if (deadline) {
         char t[32];
         g_timeout_header(deadline, t, sizeof t);
@@ -874,6 +997,7 @@ static g_stream *g_open(const char *addr, const char *path, const char *fp, g_co
     h2_header_frames(&c->out, id, &blk, 0, c->peer.max_frame);
     h2b_free(&blk);
     g_stream *s = g_stream_new(c, id);
+    s->gzip = ctx->gzip;
     fwp_wake_all(&c->writer_wl);
     *cp = c;
     return s;
@@ -968,6 +1092,7 @@ typedef struct {
     g_codec dec;
     const char *what;          /* the call, for messages (client side) */
     int64_t deadline;
+    int results;               /* elements are Result[R, GrpcError] (client side) */
 } g_incoming;
 
 /* a position in a received stream (GrpcCell): forcing it receives the
@@ -995,12 +1120,50 @@ typedef struct { int code; char *text; } g_failure;
 
 /* Option[(a, GrpcCell[a])]: the next element; with `first`, failures go
  * to *f or *err_desc (the cell stays unforced) instead of trapping */
+/* `Some((Err (GrpcError code text), <the end>))` */
+static V g_err_element(g_incoming *src, int code, const char *text) {
+    g_cell *last = (g_cell *)fwp_mem_alloc(sizeof *last);
+    last->src = src;
+    last->forced = 1;
+    last->memo = FWP_NONE;
+    V f[2] = {(V)(int64_t)code, fwp_cstr(text)};
+    V e = fwp_record(2, f);
+    return fwp_some(fwp_tuple2(fwp_data(1, 1, &e), PTR(last)));
+}
+
 static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_desc **err_desc) {
     if (cell->forced) return cell->memo;
     g_incoming *src = cell->src;
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
     V r = FWP_NONE;
+    if (src->results) {
+        /* a failure is an `Err` element, then the end */
+        if (g.kind == G_MSG) {
+            V x;
+            char *why = 0;
+            int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
+            free(g.m);
+            if (k == G_DEC_OK) {
+                g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
+                next->src = src;
+                r = fwp_some(fwp_tuple2(fwp_data(0, 1, &x), PTR(next)));
+            } else {
+                char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
+                                         : strdup("unexpected error in a response");
+                r = g_err_element(src, GRPC_INTERNAL, t);
+                free(t);
+            }
+        } else if (g.kind == G_END && g.code == 0) {
+            r = FWP_NONE;
+        } else {
+            r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
+        }
+        free(g.text);
+        cell->forced = 1;
+        cell->memo = r;
+        return r;
+    }
     if (g.kind == G_MSG) {
         V x;
         char *why = 0;
@@ -1078,10 +1241,80 @@ static int g_iter_next(V *cur, V *x) {
     return 1;
 }
 
+/* ---------------------------------------------------------------- senders */
+
+static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out);
+
+/* a task that sends the requests of a bidirectional call while its caller
+ * receives the responses: the elements of an iterator, encoded by `enc`
+ * (an fwp function) or as requests of `r`, then the end of the stream. It
+ * stops when the call is over; a trap resets the stream with the reason
+ * `trap: ...`, which the caller raises. Allocated in the fwp heap: it holds
+ * values. */
+typedef struct {
+    g_conn *c;
+    g_stream *s;
+    V cur, enc;
+    const fwp_remote *r;
+} g_sender;
+
+static void g_send_all(void *arg, int cancelled) {
+    g_sender *x = (g_sender *)arg;
+    if (cancelled) return;
+    jmp_buf tj;
+    jmp_buf *saved = fwp_cur->trap_jb;
+    if (setjmp(tj) != 0) {
+        fwp_cur->trap_jb = saved;
+        char *why = g_strdupf("trap: %s", fwp_trap_msg);
+        g_set_reset(x->s, why);
+        free(why);
+        g_reset(x->c, x->s, 8);
+        fwp_wake_all(&x->s->waiters);
+        return;
+    }
+    fwp_cur->trap_jb = &tj;
+    V v;
+    for (;;) {
+        if (!x->s->listed || x->s->remote_end) break;
+        V cur = x->cur;
+        if (!g_iter_next(&cur, &v)) {
+            g_send_data(x->c, x->s, 0, 0, 1);
+            break;
+        }
+        x->cur = cur;
+        int ok;
+        if (x->r) {
+            h2_buf req = {0};
+            g_encode_request(x->r, &v, &req);
+            ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
+            h2b_free(&req);
+        } else {
+            V b = fwp_apply1(x->enc, v);
+            ok = g_send_msg(x->c, x->s, (const unsigned char *)STR(b)->d, STR(b)->len, 0);
+        }
+        if (!ok) break;
+        /* let the connection's reader see the end of the call (an
+         * iterator may be infinite, and the windows may stay open) */
+        fwp_park(0, fwp_now_ns() + 1);
+        fwp_check_cancel();
+    }
+    fwp_cur->trap_jb = saved;
+}
+
+static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remote *r) {
+    g_sender *x = (g_sender *)fwp_alloc(sizeof *x);
+    x->c = c;
+    x->s = s;
+    x->cur = iter;
+    x->enc = enc;
+    x->r = r;
+    fwp_spawn_task(0, g_send_all, x, 0, 1);
+}
+
 /* ------------------------------------------------------------- client stubs */
 
 static void g_stub_fail(const fwp_remote *r, const char *addr, int code, const char *text) {
-    if (code == GRPC_INTERNAL && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
+    if ((code == GRPC_INTERNAL || code < 0) && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
     if (r->m.status_errors) g_grpc_error(code < 0 ? GRPC_UNAVAILABLE : code, text, r->m.grpc_error);
     if (code >= 0) g_trapf("service call %s (%s) failed: gRPC status %d: %s", r->what, addr, code, text);
     g_trapf("service call %s (%s) failed: %s", r->what, addr, text);
@@ -1109,13 +1342,16 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     for (int attempt = 0;; attempt++) {
         int reused = 0;
         char *err = 0;
-        s = g_open(addr, r->m.path, r->m.fingerprint, &c, &reused, &err);
+        s = g_open_tls(addr, r->m.path, r->m.fingerprint, &c, &reused, &err, g_env_tls(r->env));
         if (!s) g_stub_fail(r, addr, -1, err);
         if (r->m.input == 0) {
             h2_buf req = {0};
             g_encode_request(r, args, &req);
             g_send_msg(c, s, req.d, req.len, 1);
             h2b_free(&req);
+        } else if (r->m.output != 0) {
+            /* requests are sent as responses arrive */
+            g_spawn_sender(c, s, args[0], 0, r);
         } else {
             V cur = args[0], x;
             while (g_iter_next(&cur, &x)) {
@@ -1186,6 +1422,7 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     src->dec = dec;
     src->what = g_strdupf("%s (%s)", r->what, addr);
     src->deadline = deadline;
+    src->results = r->m.output == 3;
     g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
     cell->src = src;
     g_failure f = {0, 0};
@@ -1285,6 +1522,11 @@ static void g_start_call(g_conn *c, g_stream *s) {
         snprintf(j->what, sizeof j->what, "%s", path[0] == '/' ? path + 1 : path);
     j->sv.headers = &s->headers;
     j->sv.code = -1;
+    j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
+    j->sv.s = s;
+    /* responses are compressed like the requests */
+    const char *enc = h2_get(&s->headers, "grpc-encoding");
+    s->gzip = enc && strcmp(enc, "gzip") == 0;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
@@ -1295,6 +1537,7 @@ static void g_start_call(g_conn *c, g_stream *s) {
 static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
     if (c->dead || s->reset || s->local_end) { g_unlink(c, s); return; }
     h2_buf blk = {0};
+    int headers_too = !s->sent_headers;
     if (!s->sent_headers) {
         h2_hpack_lit(&blk, ":status", "200");
         h2_hpack_lit(&blk, "content-type", "application/grpc");
@@ -1308,6 +1551,11 @@ static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
         h2_hpack_lit(&blk, "grpc-message", (const char *)m.d);
         h2b_free(&m);
     }
+    if (headers_too)
+        for (size_t i = 0; i < s->out_headers.n; i++)
+            h2_hpack_lit(&blk, s->out_headers.v[i].name, s->out_headers.v[i].value);
+    for (size_t i = 0; i < s->out_trailers.n; i++)
+        h2_hpack_lit(&blk, s->out_trailers.v[i].name, s->out_trailers.v[i].value);
     h2_header_frames(&c->out, s->id, &blk, 1, c->peer.max_frame);
     h2b_free(&blk);
     s->local_end = 1;
@@ -1467,7 +1715,7 @@ static int g_run_method(g_job *j, char **msg) {
         g_encode(&enc, v, m->error != 0, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
         h2b_free(&b);
-    } else if (m->output == 1) {
+    } else if (m->output == 1 || m->output == 3) {
         /* forcing the iterator may trap */
         jmp_buf *saved = fwp_cur->trap_jb;
         jmp_buf tj;
@@ -1486,6 +1734,16 @@ static int g_run_method(g_job *j, char **msg) {
             fwp_cur->trap_jb = saved;
             if (!more) break;
             cur = next;
+            if (m->output == 3) {
+                /* a stream of results ends at an `Err`, with its status */
+                if (fwp_tag(x) == 1) {
+                    V e = OBJ(x)->f[0];
+                    int64_t code = (int64_t)OBJ(e)->f[0];
+                    *msg = strdup(STR(OBJ(e)->f[1])->d);
+                    return code >= 1 && code <= 16 ? (int)code : GRPC_UNKNOWN;
+                }
+                x = OBJ(x)->f[0];
+            }
             h2_buf b = {0};
             g_encode(&enc, x, m->error != 0, &b);
             int ok = g_send_msg(j->c, j->s, b.d, b.len, 0);
@@ -1728,12 +1986,20 @@ static const char *const g_builtin_paths[4] = {
 /* the TLS context of a server with a certificate and key (`--tls-cert`,
  * `--tls-key`, else FWP_TLS_CERT and FWP_TLS_KEY); 0 without them, and
  * -1 (reported) on errors */
-static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
+static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, int *failed) {
     *failed = 0;
     if (!cert || !*cert) cert = getenv("FWP_TLS_CERT");
     if (!key || !*key) key = getenv("FWP_TLS_KEY");
+    if (!ca || !*ca) ca = getenv("FWP_TLS_CLIENT_CA");
     if (cert && !*cert) cert = 0;
     if (key && !*key) key = 0;
+    if (!ca) ca = "";
+    if (!cert && !key && *ca) {
+        fprintf(stderr, "fwp serve: client certificates (--tls-client-ca or FWP_TLS_CLIENT_CA) need a server "
+                        "certificate and key (--tls-cert and --tls-key)\n");
+        *failed = 1;
+        return 0;
+    }
     if (!cert && !key) return 0;
     if (!cert || !key) {
         fprintf(stderr, "fwp serve: %s\n",
@@ -1742,7 +2008,7 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
         *failed = 1;
         return 0;
     }
-    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3);
+    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3, ca);
     if (!ctx) {
         fprintf(stderr, "fwp serve: %s\n", fwp_tls_err);
         *failed = 1;
@@ -1751,7 +2017,7 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, int *failed) {
 }
 
 static int fwp_serve(const fwp_service *s, int argc, char **argv) {
-    const char *listen_at = 0, *cert = 0, *key = 0;
+    const char *listen_at = 0, *cert = 0, *key = 0, *ca = 0;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--listen") == 0 && i + 1 < argc) listen_at = argv[++i];
         else if (strncmp(argv[i], "--listen=", 9) == 0) listen_at = argv[i] + 9;
@@ -1759,13 +2025,17 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
         else if (strncmp(argv[i], "--tls-cert=", 11) == 0) cert = argv[i] + 11;
         else if (strcmp(argv[i], "--tls-key") == 0 && i + 1 < argc) key = argv[++i];
         else if (strncmp(argv[i], "--tls-key=", 10) == 0) key = argv[i] + 10;
+        else if (strcmp(argv[i], "--tls-client-ca") == 0 && i + 1 < argc) ca = argv[++i];
+        else if (strncmp(argv[i], "--tls-client-ca=", 16) == 0) ca = argv[i] + 16;
         else {
-            fprintf(stderr, "usage: %s [--listen host:port] [--tls-cert file --tls-key file]\n", argv[0]);
+            fprintf(stderr,
+                    "usage: %s [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]]\n",
+                    argv[0]);
             return 2;
         }
     }
     int failed;
-    SSL_CTX *tls = g_server_tls(cert, key, &failed);
+    SSL_CTX *tls = g_server_tls(cert, key, ca, &failed);
     if (failed) return 1;
     if (!listen_at) {
         listen_at = getenv(s->env);
@@ -1838,7 +2108,7 @@ static V fwp_p_grpc_open(V addr, V path, const fwp_desc *gerr) {
     int reused;
     char *err = 0;
     int64_t deadline = g_ctx_of()->deadline;
-    g_stream *s = g_open(STR(addr)->d, STR(path)->d, 0, &c, &reused, &err);
+    g_stream *s = g_open_tls(STR(addr)->d, STR(path)->d, 0, &c, &reused, &err, 0);
     if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
     return g_call_value(c, s, 0, deadline);
 }
@@ -1892,6 +2162,14 @@ static V fwp_p_grpc_cancel(V call) {
     g_call *k = GCALL(call);
     if (!k->server) g_reset(k->c, k->s, 8);
     return FWP_UNIT;
+}
+
+static V fwp_p_grpc_response_metadata(V call) {
+    h2_hdrs md = {0};
+    g_metadata_into(GCALL(call)->s, &md);
+    V r = g_pairs_value(&md);
+    h2_hdrs_free(&md);
+    return r;
 }
 
 static int g_not_metadata(const char *k) {
@@ -1964,6 +2242,74 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
     return g_with_ctx(ctx, f);
 }
 
+static V g_pairs_value(const h2_hdrs *h) {
+    V *items = (V *)fwp_alloc((h->n + 1) * sizeof(V));
+    for (size_t i = 0; i < h->n; i++) items[i] = fwp_tuple2(fwp_cstr(h->v[i].name), fwp_cstr(h->v[i].value));
+    return fwp_list_from(items, h->n);
+}
+
+/* a response header (0) or trailer (1) of the call the task serves */
+static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
+    g_serving *sv = g_ctx_of()->serving;
+    fwp_str *k = STR(name), *v = STR(value);
+    if (!sv || !sv->s || k->len == 0 || k->d[0] == ':') return FWP_UNIT;
+    char *lk = (char *)malloc(k->len + 1), *lv = (char *)malloc(v->len + 1);
+    for (size_t i = 0; i < k->len; i++) lk[i] = (char)tolower((unsigned char)k->d[i]);
+    for (size_t i = 0; i < v->len; i++) lv[i] = v->d[i] == '\r' || v->d[i] == '\n' ? ' ' : v->d[i];
+    h2_hdrs_add(trailer ? &sv->s->out_trailers : &sv->s->out_headers, lk, k->len, lv, v->len);
+    free(lk);
+    free(lv);
+    return FWP_UNIT;
+}
+
+static V fwp_p_grpc_with_gzip(V f) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    ctx->gzip = 1;
+    return g_with_ctx(ctx, f);
+}
+
+static V fwp_p_grpc_with_response_metadata(V f) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    h2_hdrs *cap = (h2_hdrs *)calloc(1, sizeof *cap);
+    ctx->capture = cap;
+    V r = g_with_ctx(ctx, f);
+    if (cur->capture)
+        for (size_t i = 0; i < cap->n; i++)
+            h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
+                        strlen(cap->v[i].value));
+    V md = g_pairs_value(cap);
+    h2_hdrs_free(cap);
+    free(cap);
+    return fwp_tuple2(r, md);
+}
+
+static V fwp_p_grpc_response_metadata(V call);
+
+static V fwp_p_grpc_peer_subject(void) {
+    g_serving *sv = g_ctx_of()->serving;
+    if (!sv || !sv->peer) return FWP_NONE;
+    return fwp_some(fwp_cstr(sv->peer));
+}
+
+/* the text of an `Option[String]` field ("" for None) */
+static const char *g_opt_text(V o) { return o == FWP_NONE ? "" : STR(OBJ(o)->f[0])->d; }
+
+/* TlsOptions, with the indices of its fields ca-file, insecure,
+ * server-name, cert-file and key-file */
+static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, int ikey) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    V *fs = OBJ(o)->f;
+    ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
+                         g_opt_text(fs[ikey]));
+    return g_with_ctx(ctx, f);
+}
+
 static V fwp_p_grpc_with_deadline(V d, V f) {
     g_ctx *cur = g_ctx_of();
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
@@ -2014,9 +2360,11 @@ static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_des
     return g_serve_routes(0, addr, routes, ioerr, gerr);
 }
 
-/* certificate, key (PEM files), address, routes */
-static V fwp_p_grpc_serve_tls(V cert, V key, V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
-    SSL_CTX *tls = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3);
+/* certificate, key (PEM files), client CA ("" for none), address, routes */
+static V fwp_p_grpc_serve_tls(V cert, V key, V client_ca, V addr, V routes, const fwp_desc *ioerr,
+                              const fwp_desc *gerr) {
+    SSL_CTX *tls =
+        fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3, STR(client_ca)->d);
     if (!tls) return fwp_io_error("tls", fwp_tls_err, ioerr);
     return g_serve_routes(tls, addr, routes, ioerr, gerr);
 }
@@ -2031,7 +2379,7 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
         g_conn *c = 0;
         int reused;
         char *err = 0;
-        g_stream *s = g_open(STR(a[3])->d, STR(a[2])->d, 0, &c, &reused, &err);
+        g_stream *s = g_open_tls(STR(a[3])->d, STR(a[2])->d, 0, &c, &reused, &err, 0);
         if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
         /* a failure (an error of the encoder or decoder) resets the stream */
         fwp_handler h;
@@ -2045,7 +2393,10 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
             fwp_fail(h.value, h.desc);
         }
         V result = FWP_UNIT;
-        if (kind == 2 || kind == 3) {
+        if (kind == 3) {
+            /* requests are sent as responses arrive */
+            g_spawn_sender(c, s, a[4], enc, 0);
+        } else if (kind == 2) {
             V cur = a[4], x;
             while (g_iter_next(&cur, &x)) {
                 V b = fwp_apply1(enc, x);
@@ -2084,6 +2435,7 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
                     fwp_p_channel_send(ch, v);
                     continue;
                 }
+                if (g.kind == G_LOST && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
                 if (g.kind == G_LOST) g_grpc_error(GRPC_UNAVAILABLE, g.text, gerr);
                 if (g.code != 0) g_grpc_error(g.code, g.text, gerr);
                 break;

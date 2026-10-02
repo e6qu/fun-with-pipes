@@ -102,7 +102,21 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    in bounded memory; `FWP_GC_STRESS` runs the golden suite with a
    collection at every allocation. WebAssembly builds keep the bump
    allocator. See [the design](docs/design.md#runtime).
-9. **Tasks in the browser.** A scheduler for the WebAssembly build that does
+9. **Production interfaces** (done). REST endpoints read headers and
+   cookies as parameters (`# header:`, `# cookie:`) or the whole
+   `Request`, choose their status and headers (`RestReply`), require
+   bearer tokens, API keys or client certificates verified by
+   `authenticate` (`# auth:`, OpenAPI security schemes), answer CORS
+   (`# cors:`), have time limits (`# timeout:`), JSON server errors, a
+   `/docs` page and YAML documents; the importer reads `allOf`, untagged
+   `oneOf`s (`# json: untagged`), header and cookie parameters, security
+   requirements and form bodies. gRPC has response metadata, streams of
+   results that end with a status, interleaved bidirectional clients and
+   gzip (DEFLATE written from scratch). TLS has client certificates
+   (mutual TLS) for servers and clients, and per-call options for gRPC
+   clients. See [docs/rest.md](docs/rest.md), [docs/grpc.md](docs/grpc.md)
+   and [docs/tls.md](docs/tls.md).
+10. **Tasks in the browser.** A scheduler for the WebAssembly build that does
    not need threads, for example with the WebAssembly stack switching
    proposal once browsers ship it.
 

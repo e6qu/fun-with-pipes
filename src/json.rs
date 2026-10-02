@@ -461,6 +461,14 @@ impl Json {
         }
     }
 
+    /// The members of an object (none for other values).
+    pub fn members(&self) -> &[(String, Json)] {
+        match self {
+            Json::Obj(fs) => fs,
+            _ => &[],
+        }
+    }
+
     /// An object from key-value pairs.
     pub fn obj(fields: Vec<(&str, Json)>) -> Json {
         Json::Obj(

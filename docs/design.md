@@ -147,7 +147,7 @@ error. See [protocol.md](protocol.md).
 | executable | C compiled and linked with the runtime; the reachable standard library is included. Programs whose reachable code uses TLS (a `tls.*` primitive) or services also get `runtime/fwp_rt_tls.c` and are linked with `-lssl -lcrypto`; the interpreter reaches the same OpenSSL through `dlopen` (`src/tls.rs`), so the compiler links no TLS library. See [tls.md](tls.md) |
 | `--fn f` | the exported function `f` as a standalone executable |
 | `--cli` | every exported function as a subcommand of one executable. `src/cli.rs` computes the command line of each function (flags from an options record, positional arguments, defaults evaluated with the interpreter at build time) and its help and usage texts once; the C runtime (`runtime/fwp_rt_exec.c`) gets them as static data and parses arguments with the same rules as `src/exec.rs`. See [cli.md](cli.md) |
-| `--rest` | every exported function as an endpoint of one HTTP server. `src/rest.rs` computes the endpoints from the types and doc comments (routes, where each argument comes from, statuses) and `src/openapi.rs` the OpenAPI document; the file is then compiled again with a generated `main` (`Roots::entry`) that serves `rest.endpoint`s of `lib/rest.fwp` over the HTTP server of `lib/http.fwp`. Arguments and results go through the typed JSON codec (`json.read`, `json.write`), a primitive written twice: `src/jsontype.rs` over types, `runtime/fwp_rt_json.c` over type descriptors. See [rest.md](rest.md) |
+| `--rest` | every exported function as an endpoint of one HTTP server. `src/rest.rs` computes the endpoints from the types and doc comments (routes, where each argument comes from, statuses) and `src/openapi.rs` the OpenAPI document; the file is then compiled again with a generated `main` (`Roots::entry`) that serves `rest.endpoint`s of `lib/rest.fwp` over the HTTP server of `lib/http.fwp`, with authentication (`rest.secured` and the file's `authenticate`, compiled by name: `Roots::names`), time limits, CORS and an HTML page of the document, all in fwp. Arguments and results go through the typed JSON codec (`json.read`, `json.write`), a primitive written twice: `src/jsontype.rs` over types, `runtime/fwp_rt_json.c` over type descriptors. See [rest.md](rest.md) |
 | `--grpc` | every exported function as a gRPC method. `src/rpc.rs` derives each method's messages and streams from its type (`Iterator`, `Channel`), its path from `# grpc:` lines, the `.proto` text and the reflection descriptor; the program is compiled as a service of its root module (`Roots::service`). The transport runs on the task scheduler: `src/grpc.rs` for the interpreter, `runtime/fwp_rt_grpc.c` natively. See [grpc.md](grpc.md) |
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
@@ -157,14 +157,18 @@ error. See [protocol.md](protocol.md).
 
 ## Not implemented
 
-- HTTP/3, WebSocket and compression. REST endpoints speak JSON
-  only (no content negotiation, forms or header parameters), and
+- HTTP/3, WebSocket, and compression outside gRPC (which has gzip, with
+  DEFLATE of its own). REST endpoints take JSON bodies only (no content
+  negotiation or forms; headers and cookies are parameters), and
   `fwp openapi --import` reads JSON documents of OpenAPI 3.0 and 3.1, not
-  YAML or Swagger 2.0. HTTP/2 exists only as the gRPC transport of
-  [gRPC services](grpc.md) (h2c, or over TLS).
+  YAML or Swagger 2.0 (`fwp openapi --yaml` writes YAML). HTTP/2 exists
+  only as the gRPC transport of [gRPC services](grpc.md) (h2c, or over
+  TLS).
 - TLS of fwp's own: TLS uses the system's OpenSSL 3 ([tls.md](tls.md)),
   which native programs that use it link and the interpreter loads at run
-  time. Client certificates, DTLS and QUIC are not implemented.
+  time, with client certificates (mutual TLS). DTLS and QUIC are not
+  implemented.
+- Server reflection for `grpc.serve` routes made from `.proto` files.
 - Preemptive scheduling.
 - Tasks, sockets and foreign C functions in the WebAssembly build of fwp
   (the playground): tasks would need a scheduler that can suspend the

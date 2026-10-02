@@ -17,7 +17,11 @@
 # parameter (required or not), every value of a repeated query parameter,
 # the fields of an options record from the query (with the kind of each:
 # 0 a value, 1 optional, 2 repeated, 3 a switch), the body (`True` if it
-# may be absent), or nothing (a `()` parameter).
+# may be absent), nothing (a `()` parameter), a request header (required
+# or not), every line of a repeated header, a cookie (required or not),
+# the whole `Request`, the principal that authentication found
+# (`rest.secured`), or the fields of an options record from the query,
+# headers and cookies.
 RestSource =
     | RestSource.Path String
     | RestSource.Query String Bool
@@ -25,6 +29,55 @@ RestSource =
     | RestSource.Fields List[(String, I64)]
     | RestSource.Body Bool
     | RestSource.Unit
+    | RestSource.Header String Bool
+    | RestSource.Headers String
+    | RestSource.Cookie String Bool
+    | RestSource.Request
+    | RestSource.Principal
+    | RestSource.Options List[RestField]
+
+# A field of an options record: its JSON name, its kind (0 a value, 1
+# optional, 2 repeated, 3 a switch) and where it is read.
+RestField = { name: String, kind: I64, place: RestPlace }
+
+# Where a field of an options record is read: the query parameter of its
+# name, a request header, or a cookie.
+RestPlace =
+    | RestPlace.Query
+    | RestPlace.Header String
+    | RestPlace.Cookie String
+
+# A security scheme: `Authorization: Bearer <token>`, an API key in a
+# place ("header", "query" or "cookie") under a name, or the subject of
+# the client's certificate (mutual TLS, `http.peer-subject`).
+RestAuth =
+    | RestAuth.Bearer
+    | RestAuth.ApiKey String String
+    | RestAuth.ClientCert
+
+# Cross-origin requests (CORS): the origins allowed (`*` for any; none
+# allows no cross-origin request), the methods and request headers they
+# may use, the response headers they may read, and how long (in seconds)
+# browsers may keep the answer to a preflight request.
+RestCors = {
+    origins: List[String],
+    methods: List[String],
+    headers: List[String],
+    expose: List[String],
+    max-age: I64,
+}
+
+# A REST server: the OpenAPI document (served at `/openapi.json`), an HTML
+# page that presents it (served at `/docs` unless empty), the routes, and
+# what cross-origin requests it allows.
+RestApi = { openapi: String, docs: String, routes: List[Route], cors: RestCors }
+
+# A response of the endpoint's choosing: its status, headers to add, and
+# the body (no body for `()`). An endpoint whose function returns a
+# `RestReply[T]` sets them per call (`rest.reply 201 item | rest.with-header
+# "location" "/items/7"`); its `# status:` line lists the statuses it may
+# answer with.
+RestReply[T] = { status: I64, headers: List[(String, String)], body: T }
 
 # An endpoint: its method and path (`/items/{id}`), the sources of the
 # function's arguments in order, the status of a success, and the status
@@ -45,6 +98,8 @@ RestOptions = {
     listen: Option[String],
     tls-cert: Option[String],
     tls-key: Option[String],
+    tls-client-ca: Option[String],
+    cors: Option[String],
     openapi: Bool,
     help: Bool,
 }
@@ -62,6 +117,15 @@ rest.endpoint-option = rest.endpoint-with rest.success-option
 # response, like a raised `Error`.
 rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
 rest.endpoint-result = rest.endpoint-with rest.success-result
+
+# `rest.endpoint` for a function returning `RestReply`: its status and
+# headers, and its body as JSON.
+rest.endpoint-reply : RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+rest.endpoint-reply = rest.endpoint-with rest.success-reply
+
+# `rest.endpoint-reply` for a `RestReply[()]`: no body.
+rest.endpoint-reply-empty : RestRoute -> (a -> RestReply[()] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-reply-empty = rest.endpoint-with rest.success-empty
 
 # internal
 rest.endpoint-with : (RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
@@ -131,9 +195,16 @@ rest.argument = curry (match
     (_, RestSource.Path _) -> rest.path-arg
     (_, RestSource.Query _ _) -> rest.query-arg
     (_, RestSource.Queries _) -> rest.queries-arg
-    (_, RestSource.Fields _) -> rest.fields-arg
+    (_, RestSource.Fields _) ->
+        curry (fork rest.fields-arg .0 (.1 | map rest.query-field))
+    (_, RestSource.Options _) -> rest.fields-arg
     (_, RestSource.Body _) -> rest.body-arg
-    (_, RestSource.Unit) -> const "{}")
+    (_, RestSource.Unit) -> const "{}"
+    (_, RestSource.Header _ _) -> rest.header-arg
+    (_, RestSource.Headers _) -> rest.headers-arg
+    (_, RestSource.Cookie _ _) -> rest.cookie-arg
+    (_, RestSource.Request) -> json.write
+    (_, RestSource.Principal) -> rest.principal-arg)
 
 # internal
 rest.quote : String -> String
@@ -161,40 +232,94 @@ rest.value-of = curry (if (fork eq .0 (.1 | .0)) (.1 | .1 | Some) (const None))
 # internal
 rest.query-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
 rest.query-arg = curry3 (fork
-    rest.query-one
+    (rest.present "query parameter")
     id
     (both .1 .0 | uncurry rest.query-values | last))
 
+# a value as JSON; a missing one is `null`, or a 400 if it is required
 # internal
-rest.query-one : (Request, String, Bool) -> Option[String] -> String ! {Error[HttpError]}
-rest.query-one = curry (match
-    (_, Some _) -> const rest.quote
-    (_, None) ->
-        if
-            .2
-            (.1 | flip concat "missing query parameter " | http.fail 400)
-            (const "null"))
+rest.present : String -> (Request, String, Bool) -> Option[String] -> String ! {Error[HttpError]}
+rest.present = curry3 (if
+    (.2 | option.is-some)
+    (.2 | option.unwrap-or "" | rest.quote)
+    (if
+        (.1 | .2)
+        (fork concat (.1 | .1) (.0 | flip concat "missing " | concat " ")
+            | http.fail 400)
+        (const "null")))
+
+# every line of a request header
+# internal
+rest.header-values : String -> Request -> List[String]
+rest.header-values =
+    curry (fork filter-map (.0 | lower | rest.value-of) (.1 | .headers))
+
+# internal
+rest.header-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
+rest.header-arg = curry3 (fork
+    (rest.present "header")
+    id
+    (both .1 .0 | uncurry rest.header-values | head))
+
+# internal
+rest.headers-arg : Request -> String -> String
+rest.headers-arg = then2 (flip rest.header-values) json.write
+
+# every value of a cookie, percent-decoded
+# internal
+rest.cookie-values : String -> Request -> List[String]
+rest.cookie-values = curry (fork
+        filter-map
+        (.0 | rest.value-of)
+        (.1 | http.cookies)
+    | map (fork option.unwrap-or id url.decode))
+
+# internal
+rest.cookie-arg : Request -> String -> Bool -> String ! {Error[HttpError]}
+rest.cookie-arg = curry3 (fork
+    (rest.present "cookie")
+    id
+    (both .1 .0 | uncurry rest.cookie-values | head))
+
+# the principal `rest.secured` found, as JSON
+# internal
+rest.principal-arg : Request -> String
+rest.principal-arg = http.param ":principal" | option.unwrap-or "null"
 
 # internal
 rest.queries-arg : Request -> String -> String
 rest.queries-arg = then2 (flip rest.query-values) json.write
 
 # internal
-rest.fields-arg : Request -> List[(String, I64)] -> String
+rest.query-field : (String, I64) -> RestField
+rest.query-field =
+    make RestField { name = .0, kind = .1, place = const RestPlace.Query }
+
+# internal
+rest.fields-arg : Request -> List[RestField] -> String
 rest.fields-arg = curry (fork filter-map (.0 | rest.field-arg) .1
     | join ","
     | concat "}"
     | flip concat "{")
 
 # internal
-rest.field-arg : Request -> (String, I64) -> Option[String]
+rest.field-arg : Request -> RestField -> Option[String]
 rest.field-arg = curry (fork
     rest.member
-    (.1 | .0)
+    (.1 | .name)
     (fork
         rest.field-value
-        (.1 | .1)
-        (both (.1 | .0) .0 | uncurry rest.query-values)))
+        (.1 | .kind)
+        (fork rest.place-values (.1 | .place) (both (.1 | .name) .0))))
+
+# the values of a field: of the query parameter of its name, or of its
+# header or cookie
+# internal
+rest.place-values : RestPlace -> (String, Request) -> List[String]
+rest.place-values = curry (match
+    (RestPlace.Query, _) -> uncurry rest.query-values
+    (RestPlace.Header _, _) -> curry (fork rest.header-values .0 (.1 | .1))
+    (RestPlace.Cookie _, _) -> curry (fork rest.cookie-values .0 (.1 | .1)))
 
 # `"name":value`
 # internal
@@ -243,8 +368,14 @@ rest.label = match
     RestSource.Query _ _ -> flip concat "query." | const
     RestSource.Queries _ -> flip concat "query."
     RestSource.Fields _ -> const "query"
+    RestSource.Options _ -> const "query"
     RestSource.Body _ -> const "$"
     RestSource.Unit -> "$"
+    RestSource.Header _ _ -> flip concat "header." | const
+    RestSource.Headers _ -> flip concat "header."
+    RestSource.Cookie _ _ -> flip concat "cookie." | const
+    RestSource.Request -> "request"
+    RestSource.Principal -> "principal"
 
 # `$[1].price: ...` with the label of argument 1 instead of `$[1]` (of
 # the only argument instead of `$`)
@@ -309,6 +440,66 @@ rest.success-result = curry (match
     (_, Err _) -> then2 rest.failure Ok)
 
 # internal
+rest.success-reply : RestRoute -> RestReply[b] -> Result[Response, HttpError] where Encode[b]
+rest.success-reply = curry (.1
+    | fork
+        rest.add-headers
+        .headers
+        (fork rest.json-text .status (.body | json.write))
+    | rest.valid)
+
+# internal
+rest.success-empty : RestRoute -> RestReply[()] -> Result[Response, HttpError]
+rest.success-empty = curry (.1
+    | fork rest.add-headers .headers (.status | rest.empty)
+    | rest.valid)
+
+# a response without a body
+# internal
+rest.empty : I64 -> Response
+rest.empty = make Response {
+    status = id,
+    headers = const [],
+    body = const (Body.Full http.no-bytes),
+}
+
+# headers added to a response
+rest.add-headers : List[(String, String)] -> Response -> Response
+rest.add-headers = curry (make Response {
+    status = .1 | .status,
+    headers = fork append .0 (.1 | .headers),
+    body = .1 | .body,
+})
+
+# a response that can be written: a status from 100 to 599, and headers
+# without line breaks
+# internal
+rest.valid : Response -> Result[Response, HttpError]
+rest.valid =
+    if
+        (fork and (.status | fork and (ge 100) (le 599)) http.response-ok)
+        Ok
+        (const
+            (Err HttpError {
+                status = 500,
+                message = "invalid response status or header",
+            }))
+
+# `rest.reply 201 item`: a reply with a status, the value as its body and
+# no headers
+rest.reply : I64 -> b -> RestReply[b]
+rest.reply =
+    curry (make RestReply { status = .0, headers = const [], body = .1 })
+
+# add a header to a reply: `rest.with-header "location" "/items/7"`
+rest.with-header : String -> String -> RestReply[b] -> RestReply[b]
+rest.with-header = curry3 (make RestReply {
+    status = .2 | .status,
+    headers = fork append (both .0 .1 | singleton) (.2 | .headers),
+    body = .2 | .body,
+})
+
+# internal
 rest.no-content : Response
 rest.no-content =
     Response { status = 204, headers = [], body = Body.Full http.no-bytes }
@@ -365,19 +556,249 @@ rest.http-error : HttpError -> Response
 rest.http-error =
     fork rest.json-text .status (.message | json.write | rest.error-body)
 
+# ---------------------------------------------- authentication, timeouts
+
+# Require credentials for a route: the first credential of the schemes
+# that the request carries is passed to `verify`, whose `Ok` value is the
+# principal of the call (the parameter `RestSource.Principal`). A request
+# without credentials, or whose credential `verify` refuses, gets 401
+# `{"error": ...}` (with `WWW-Authenticate: Bearer` for bearer tokens).
+rest.secured : (String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}) -> List[RestAuth] -> Route -> Route where Encode[p]
+rest.secured = curry3 (make Route {
+    method = .2 | .method,
+    pattern = .2 | .pattern,
+    handler = rest.guard,
+})
+
+# internal
+rest.guard : (String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}, List[RestAuth], Route) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Encode[p]
+rest.guard = curry (fork rest.verified id (fork rest.credential (.0 | .1) .1))
+
+# the first credential of the schemes that a request carries
+rest.credential : List[RestAuth] -> Request -> Option[String]
+rest.credential = curry (fork filter-map (.1 | rest.credential-of) .0 | head)
+
+# internal
+rest.credential-of : Request -> RestAuth -> Option[String]
+rest.credential-of = curry (match
+    (_, RestAuth.Bearer) -> rest.bearer-token
+    (_, RestAuth.ApiKey _ _) -> curry3 rest.api-key
+    (_, RestAuth.ClientCert) -> http.peer-subject)
+
+# the token of `Authorization: Bearer <token>`
+rest.bearer-token : Request -> Option[String]
+rest.bearer-token =
+    http.header "authorization"
+    | option.and-then (trim | string.split-once " ")
+    | option.filter (.0 | lower | eq "bearer")
+    | option.map (.1 | trim)
+    | option.filter (string.is-empty | not)
+
+# internal
+rest.api-key : (Request, String, String) -> Option[String]
+rest.api-key =
+    if
+        (.1 | eq "query")
+        (both .2 .0 | uncurry rest.query-values | head)
+        (if
+            (.1 | eq "cookie")
+            (both .2 .0 | uncurry rest.cookie-values | head)
+            (both .2 .0 | uncurry rest.header-values | head))
+
+# internal
+rest.verified : ((String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}, List[RestAuth], Route), Request) -> Option[String] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Encode[p]
+rest.verified = curry (match
+    (_, None) -> rest.challenge "missing credentials"
+    (_, Some _) -> curry (fork rest.admit .0 (fork apply .1 (.0 | .0 | .0))))
+
+# internal
+rest.admit : ((String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}, List[RestAuth], Route), Request) -> Result[p, String] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Encode[p]
+rest.admit = curry (match
+    (_, Ok _) -> curry (fork
+        apply
+        (fork rest.with-principal (.1 | json.write) (.0 | .1))
+        (.0 | .0 | .2 | .handler))
+    (_, Err _) -> curry (fork rest.challenge .1 .0))
+
+# internal
+rest.with-principal : String -> Request -> Request
+rest.with-principal = curry (fork
+    http.set-params
+    (fork Cons (.0 | curry id ":principal") (.1 | .params))
+    .1)
+
+# a 401 with a message
+# internal
+rest.challenge : String -> ((String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}, List[RestAuth], Route), Request) -> Response
+rest.challenge = curry (fork
+    rest.with-challenge
+    (.1 | .0 | .1)
+    (.0 | json.write | rest.error-body | rest.json-text 401))
+
+# internal
+rest.with-challenge : List[RestAuth] -> Response -> Response
+rest.with-challenge = curry (if
+    (.0 | contains RestAuth.Bearer)
+    (.1 | http.with-header "www-authenticate" "Bearer")
+    .1)
+
+# Give a route's calls a time limit: a call still running then is
+# cancelled, and the client gets 503 `{"error": "request timed out"}`.
+rest.within : Duration -> Route -> Route
+rest.within = curry (make Route {
+    method = .1 | .method,
+    pattern = .1 | .pattern,
+    handler = rest.timed,
+})
+
+# internal
+rest.timed : (Duration, Route) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.timed = curry (fork
+        task.within
+        (.0 | .0)
+        (fork compose (.1 | const) (.0 | .1 | .handler | attempt))
+    | rest.in-time)
+
+# internal
+rest.in-time : Option[Result[Response, HttpError]] -> Response ! {Error[HttpError]}
+rest.in-time =
+    option.unwrap-or
+        (Err HttpError { status = 503, message = "request timed out" })
+    | try
+
+# -------------------------------------------------------------------- CORS
+
+# Answer cross-origin requests: a preflight request (`OPTIONS` with
+# `Access-Control-Request-Method`) from an allowed origin gets 204 with
+# the methods, headers and lifetime of the policy; other requests from an
+# allowed origin get `Access-Control-Allow-Origin` (and
+# `Access-Control-Allow-Credentials` unless any origin is allowed) on
+# their response. Requests from other origins are served as they are, and
+# browsers keep their responses from the page that made them.
+rest.cors : RestCors -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.cors = curry3 (fork
+    rest.cors-for
+    id
+    (both .0 (.2 | http.header "origin") | uncurry rest.allowed-origin))
+
+# the origin of a request, if the policy allows it
+rest.allowed-origin : RestCors -> Option[String] -> Option[String]
+rest.allowed-origin =
+    curry (fork option.filter (.0 | .origins | rest.origin-ok) .1)
+
+# internal
+rest.origin-ok : List[String] -> String -> Bool
+rest.origin-ok = curry (fork or (.0 | contains "*") (uncurry (flip contains)))
+
+# internal
+rest.cors-for : (RestCors, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}, Request) -> Option[String] -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.cors-for = curry (match
+    (_, None) -> fork apply .2 .1
+    (_, Some _) -> curry (if
+        (.0 | .2 | rest.preflight)
+        rest.preflight-response
+        rest.cors-response))
+
+# internal
+rest.preflight : Request -> Bool
+rest.preflight =
+    fork
+        and
+        (.method | eq "OPTIONS")
+        (http.header "access-control-request-method" | option.is-some)
+
+# internal
+rest.preflight-response : ((RestCors, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}, Request), String) -> Response
+rest.preflight-response =
+    fork
+        rest.add-headers
+        (fork
+            append
+            (.0 | .0 | rest.preflight-headers)
+            (fork rest.origin-headers (.0 | .0) .1))
+        (const 204 | rest.empty)
+
+# internal
+rest.preflight-headers : RestCors -> List[(String, String)]
+rest.preflight-headers =
+    fork
+        Cons
+        (.methods | join ", " | curry id "access-control-allow-methods")
+        (fork
+            Cons
+            (.headers | join ", " | curry id "access-control-allow-headers")
+            (.max-age | show | curry id "access-control-max-age" | singleton))
+
+# internal
+rest.origin-headers : RestCors -> String -> List[(String, String)]
+rest.origin-headers = curry (fork
+    Cons
+    (.1 | curry id "access-control-allow-origin")
+    (fork
+        Cons
+        (const ("vary", "origin"))
+        (if
+            (.0 | .origins | contains "*")
+            (const [])
+            (const [("access-control-allow-credentials", "true")]))))
+
+# internal
+rest.cors-response : ((RestCors, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}, Request), String) -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.cors-response =
+    fork
+        rest.add-headers
+        (fork
+            append
+            (.0 | .0 | rest.expose-headers)
+            (fork rest.origin-headers (.0 | .0) .1))
+        (.0 | fork apply .2 .1)
+
+# internal
+rest.expose-headers : RestCors -> List[(String, String)]
+rest.expose-headers =
+    if
+        (.expose | is-empty)
+        (const [])
+        (.expose
+            | join ", "
+            | curry id "access-control-expose-headers"
+            | singleton)
+
+# no cross-origin requests
+rest.no-cors : RestCors
+rest.no-cors = RestCors {
+    origins = [],
+    methods = [],
+    headers = [],
+    expose = [],
+    max-age = 600,
+}
+
 # ------------------------------------------------------------------ server
 
 # Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
-# error responses (`{"error": "not found"}` for unknown paths). The
-# command line is `[--listen host:port] [--tls-cert file --tls-key file]
-# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
-# `127.0.0.1:8080`, and the certificate and key (PEM files, for HTTPS) to
-# `FWP_TLS_CERT` and `FWP_TLS_KEY`.
+# error responses (`{"error": "not found"}` for unknown paths): `rest.serve`
+# with no `/docs` page and no cross-origin requests.
 rest.main : String -> List[Route] -> () ! {Async, IO, Network}
-rest.main = curry (fork
-    rest.start
-    id
-    (const () | args | cli.parse rest.default-options))
+rest.main = curry (make RestApi {
+    openapi = .0,
+    docs = const "",
+    routes = .1,
+    cors = const rest.no-cors,
+} | rest.serve)
+
+# Serve a REST API: its routes, `/openapi.json`, `/docs`, and CORS, with
+# JSON error responses (`{"error": "not found"}` for unknown paths, and
+# for the server's own errors, such as timeouts). The command line is
+# `[--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca
+# file]] [--cors origins]
+# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
+# `127.0.0.1:8080`, the certificate and key (PEM files, for HTTPS) to
+# `FWP_TLS_CERT` and `FWP_TLS_KEY`, and the allowed origins (separated by
+# commas; they replace the API's) to `FWP_REST_CORS`.
+rest.serve : RestApi -> () ! {Async, IO, Network}
+rest.serve =
+    fork rest.start id (const () | args | cli.parse rest.default-options)
 
 # internal
 rest.default-options : RestOptions
@@ -385,6 +806,8 @@ rest.default-options = RestOptions {
     listen = None,
     tls-cert = None,
     tls-key = None,
+    tls-client-ca = None,
+    cors = None,
     openapi = False,
     help = False,
 }
@@ -392,16 +815,16 @@ rest.default-options = RestOptions {
 # internal
 rest.usage : String
 rest.usage =
-    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--openapi] [--help]"
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]] [--cors origins] [--openapi] [--help]"
 
 # internal
-rest.start : (String, List[Route]) -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
+rest.start : RestApi -> Result[(RestOptions, List[String]), String] -> () ! {Async, IO, Network}
 rest.start = curry (match
     (_, Ok _) -> curry rest.run-with
     (_, Err _) -> const (cli.usage-error rest.usage))
 
 # internal
-rest.run-with : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.run-with : (RestApi, (RestOptions, List[String])) -> () ! {Async, IO, Network}
 rest.run-with =
     if
         (.1 | .1 | is-empty | not)
@@ -414,16 +837,49 @@ rest.run-with =
         (if
             (.1 | .0 | .help)
             (const rest.help | print)
-            (if (.1 | .0 | .openapi) (.0 | .0 | write) rest.listen))
+            (if (.1 | .0 | .openapi) (.0 | .openapi | write) rest.listen))
 
 # internal
 rest.help : String
 rest.help =
-    "usage: server [--listen host:port] [--tls-cert file --tls-key file] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, and their\nOpenAPI document at /openapi.json.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --tls-cert file     serve HTTPS with this certificate chain (PEM; default: $FWP_TLS_CERT)\n  --tls-key file      and this private key (PEM; default: $FWP_TLS_KEY)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
+    "usage: server [--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca file]] [--cors origins] [--openapi] [--help]\n\nServe the exported functions of the program as REST endpoints, their\nOpenAPI document at /openapi.json and its page at /docs.\n\noptions:\n  --listen host:port  the address (default: $FWP_REST_ADDR, else 127.0.0.1:8080)\n  --tls-cert file     serve HTTPS with this certificate chain (PEM; default: $FWP_TLS_CERT)\n  --tls-key file      and this private key (PEM; default: $FWP_TLS_KEY)\n  --tls-client-ca file  require client certificates signed by these CA certificates\n                      (PEM; default: $FWP_TLS_CLIENT_CA)\n  --cors origins      allow cross-origin requests from these origins, separated by\n                      commas, or * for any (default: $FWP_REST_CORS, else `# cors:`)\n  --openapi           print the OpenAPI document and exit\n  --help              show this help"
 
 # internal
-rest.listen : ((String, List[Route]), (RestOptions, List[String])) -> () ! {Async, IO, Network}
-rest.listen = attempt (fork rest.serve-at .0 (.1 | .0)) | rest.stopped
+rest.listen : (RestApi, (RestOptions, List[String])) -> () ! {Async, IO, Network}
+rest.listen =
+    attempt (fork rest.serve-at (fork rest.configure .0 (.1 | .0)) (.1 | .0))
+    | rest.stopped
+
+# the API with the origins of `--cors` or `FWP_REST_CORS`
+# internal
+rest.configure : RestApi -> RestOptions -> RestApi ! {IO}
+rest.configure =
+    curry (fork rest.with-origins (.1 | .cors | rest.or-env "FWP_REST_CORS") .0)
+
+# internal
+rest.with-origins : Option[String] -> RestApi -> RestApi
+rest.with-origins = curry (match
+    (None, _) -> id
+    (Some _, _) -> curry (make RestApi {
+        openapi = .1 | .openapi,
+        docs = .1 | .docs,
+        routes = .1 | .routes,
+        cors =
+            fork
+                rest.set-origins
+                (.0 | split "," | map trim | filter (string.is-empty | not))
+                (.1 | .cors),
+    }))
+
+# internal
+rest.set-origins : List[String] -> RestCors -> RestCors
+rest.set-origins = curry (make RestCors {
+    origins = .0,
+    methods = .1 | .methods,
+    headers = .1 | .headers,
+    expose = .1 | .expose,
+    max-age = .1 | .max-age,
+})
 
 # internal
 rest.address : Option[String] -> String ! {IO}
@@ -434,7 +890,7 @@ rest.address =
         (const "FWP_REST_ADDR" | env.get | option.unwrap-or "127.0.0.1:8080")
 
 # internal
-rest.serve-at : (String, List[Route]) -> RestOptions -> () ! {Async, IO, Network, Error[IoError]}
+rest.serve-at : RestApi -> RestOptions -> () ! {Async, IO, Network, Error[IoError]}
 rest.serve-at = curry (fork rest.serve-on (.1 | rest.open) .0)
 
 # listen, with TLS when there is a certificate and key
@@ -444,10 +900,24 @@ rest.open =
     fork
         rest.open-with
         (fork
-            rest.tls-files
-            (.tls-cert | rest.or-env "FWP_TLS_CERT")
-            (.tls-key | rest.or-env "FWP_TLS_KEY"))
+            rest.client-ca
+            (.tls-client-ca | rest.or-env "FWP_TLS_CLIENT_CA")
+            (fork
+                rest.tls-files
+                (.tls-cert | rest.or-env "FWP_TLS_CERT")
+                (.tls-key | rest.or-env "FWP_TLS_KEY")))
         (.listen | rest.address)
+
+# require client certificates
+# internal
+rest.client-ca : Option[String] -> Option[TlsServer] -> Option[TlsServer] ! {Error[IoError]}
+rest.client-ca = curry (match
+    (None, _) -> id
+    (Some _, None) -> const (fail {
+        kind = "tls",
+        message = "--tls-client-ca needs --tls-cert and --tls-key",
+    })
+    (Some _, Some _) -> curry (uncurry tls.with-client-ca | Some))
 
 # internal
 rest.or-env : String -> Option[String] -> Option[String] ! {IO}
@@ -483,21 +953,48 @@ rest.announce = curry (both .0 (.1 | tcp.local-addr)
     | eprint)
 
 # internal
-rest.serve-on : Listener -> (String, List[Route]) -> () ! {Async, IO, Network}
+rest.serve-on : Listener -> RestApi -> () ! {Async, IO, Network}
 rest.serve-on = curry (fork
     http.serve-on
     .0
-    (both (const rest.config) (.1 | rest.handler-of)))
+    (both (const rest.config) (.1 | rest.api-handler)))
 
+# the configuration of a REST server: JSON errors
 # internal
 rest.config : ServerConfig
-rest.config = "unused" | http.config
+rest.config =
+    "unused" | http.config | with { error-response = rest.error-response }
+
+# an error the server answers itself, as JSON
+rest.error-response : I64 -> String -> Response
+rest.error-response =
+    curry (fork rest.json-text .0 (.1 | json.write | rest.error-body))
 
 # internal
 rest.stopped : Result[(), IoError] -> () ! {IO}
 rest.stopped = match
     Ok _ -> id
     Err _ -> .message | flip concat "fwp: " | eprint | const 1 | exit
+
+# The handler of an API: its routes, `/openapi.json` and `/docs`, with
+# errors as JSON and its CORS policy.
+rest.api-handler : RestApi -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.api-handler = fork rest.cors .cors (both
+        .openapi
+        (fork append .routes (.docs | rest.docs-routes))
+    | rest.handler-of)
+
+# internal
+rest.docs-routes : String -> List[Route]
+rest.docs-routes =
+    if
+        string.is-empty
+        (const [])
+        (string.to-bytes
+            | http.respond 200 "text/html; charset=utf-8"
+            | const
+            | http.route "GET" "/docs"
+            | singleton)
 
 # The handler of a server: the endpoints and `/openapi.json`, with errors
 # (unknown routes, bad arguments) as JSON.
@@ -522,9 +1019,15 @@ rest.respond = match
 # ------------------------------------------------------------------ client
 
 # A call of a REST API, as the client functions that
-# `fwp openapi --import` generates make them: the method, the URL and the
-# JSON body.
-RestRequest = { method: String, url: String, body: Option[String] }
+# `fwp openapi --import` generates make them: the method, the URL, headers
+# (besides `Accept: application/json`, and `Content-Type:
+# application/json` unless they have one) and the body.
+RestRequest = {
+    method: String,
+    url: String,
+    headers: List[(String, String)],
+    body: Option[String],
+}
 
 # The URL of a call: the base URL of the server, the path template
 # (`/items/{id}`), the text of the path parameters in order, and the query
@@ -583,6 +1086,30 @@ rest.fill-step = curry (if
 rest.texts : List[a -> String] -> a -> List[String]
 rest.texts = curry (fork map (.1 | apply) .0)
 
+# the pairs (headers, query parameters) that functions of a call's
+# arguments give, together
+rest.pairs : List[a -> List[(String, String)]] -> a -> List[(String, String)]
+rest.pairs = curry (fork map (.1 | apply) .0 | flatten)
+
+# `Authorization: Bearer <token>`
+rest.bearer : String -> List[(String, String)]
+rest.bearer = flip concat "Bearer " | curry id "authorization" | singleton
+
+# one `Cookie` header of cookies (none without cookies)
+rest.cookie-header : List[(String, String)] -> List[(String, String)]
+rest.cookie-header =
+    if
+        is-empty
+        (const [])
+        (map (both .0 (.1 | url.encode) | format "{}={}")
+            | join "; "
+            | curry id "cookie"
+            | singleton)
+
+# a form body (`application/x-www-form-urlencoded`) of a record's fields
+rest.form-body : a -> String where Encode[a]
+rest.form-body = rest.query-pairs | form.encode
+
 # internal
 rest.query-string : List[(String, String)] -> String
 rest.query-string = if is-empty (const "") (form.encode | flip concat "?")
@@ -638,13 +1165,20 @@ rest.exchange =
     attempt (make ClientRequest {
         method = .method,
         url = .url,
-        headers = const [
-            ("accept", "application/json"),
-            ("content-type", "application/json"),
-        ],
+        headers = .headers | rest.request-headers,
         body = .body | option.unwrap-or "" | string.to-bytes,
     } | http.send)
     | rest.sent
+
+# internal
+rest.request-headers : List[(String, String)] -> List[(String, String)]
+rest.request-headers = fork append id (if
+    (map (.0 | lower) | contains "content-type")
+    (const [("accept", "application/json")])
+    (const [
+        ("accept", "application/json"),
+        ("content-type", "application/json"),
+    ]))
 
 # internal
 rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
@@ -744,3 +1278,73 @@ test "rest.query-pairs" =
     ]
 test "rest.param-text" =
     [42 | rest.param-text, "a/b" | rest.param-text] | eq ["42", "a/b"]
+
+# internal
+rest.test-request : List[(String, String)] -> Request
+rest.test-request = make Request {
+    method = const "GET",
+    path = const "/x",
+    query = const "key=q1",
+    version = const "HTTP/1.1",
+    headers = id,
+    body = const http.no-bytes,
+    params = const [],
+    remote = const "",
+}
+
+test "rest.credential" = [
+    [("authorization", "Bearer  abc ")]
+    | rest.test-request
+    | rest.credential [RestAuth.Bearer],
+    [("authorization", "Basic abc")]
+    | rest.test-request
+    | rest.credential [RestAuth.Bearer],
+    [("x-key", "k1"), ("cookie", "key=c1")]
+    | rest.test-request
+    | rest.credential [
+        RestAuth.ApiKey "cookie" "key",
+        RestAuth.ApiKey "header" "X-Key",
+    ],
+    []
+    | rest.test-request
+    | rest.credential [RestAuth.Bearer, RestAuth.ApiKey "query" "key"],
+] | eq [Some "abc", None, Some "c1", Some "q1"]
+test "rest.allowed-origin" = [
+    Some "https://a.example"
+    | rest.allowed-origin
+        (rest.no-cors | with { origins = ["https://a.example"] }),
+    Some "https://b.example"
+    | rest.allowed-origin
+        (rest.no-cors | with { origins = ["https://a.example"] }),
+    Some "https://b.example"
+    | rest.allowed-origin (rest.no-cors | with { origins = ["*"] }),
+    None | rest.allowed-origin (rest.no-cors | with { origins = ["*"] }),
+] | eq [Some "https://a.example", None, Some "https://b.example", None]
+test "rest.reply" =
+    { id = 7 }
+    | rest.reply 201
+    | rest.with-header "location" "/items/7"
+    | fork
+        rest.success-reply
+        (const RestRoute {
+            method = "POST",
+            path = "/items",
+            sources = [],
+            status = 200,
+            error-status = 500,
+            errors = [],
+        })
+        id
+    | result.map (both .status .headers)
+    | eq (Ok (
+        201,
+        [("content-type", "application/json"), ("location", "/items/7")],
+    ))
+test "rest.cookie-header" = [
+    [("a", "1"), ("b", "x y")] | rest.cookie-header,
+    [] | rest.cookie-header,
+] | eq [[("cookie", "a=1; b=x%20y")], []]
+test "rest.request-headers" = [
+    [] | rest.request-headers | length,
+    [("Content-Type", "text/plain")] | rest.request-headers | length,
+] | eq [2, 2]

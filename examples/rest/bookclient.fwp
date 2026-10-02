@@ -2,8 +2,10 @@
 # `fwp openapi --import`.
 #
 # Each function takes the server's base URL first (`http://host:port`),
-# then the path parameters, a record of the query parameters and the
-# body. A response other than a success raises `Error[RestError]`.
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
 
 Format =
     | Paperback
@@ -56,6 +58,7 @@ book = curry (make RestRequest {
         params = rest.texts [.1 | rest.param-text],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch-option)
 
@@ -70,23 +73,27 @@ books = curry (make RestRequest {
         params = rest.texts [],
         query = .1 | rest.query-pairs,
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch)
 
 # Quote an order: the price of each line and the total, with a 10% discount
 # for the coupon `FWP10`.
 # POST /quotes
-quote-order : String -> Order -> Quote ! {Async, Network, Error[RestError]}
-quote-order = curry (make RestRequest {
-    method = const "POST",
-    url = make RestTarget {
-        base = .0,
-        path = const "/quotes",
-        params = rest.texts [],
-        query = const [],
-    } | rest.url,
-    body = .1 | json.write | Some,
-} | rest.fetch)
+# auth: bearer (the token after the base URL)
+quote-order : String -> String -> Order -> Quote ! {Async, Network, Error[RestError]}
+quote-order = curry (curry
+    (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/quotes",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | rest.bearer,
+        body = .1 | json.write | Some,
+    } | rest.fetch))
 
 # Whether the store is up.
 # GET /health
@@ -99,5 +106,6 @@ health = make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch

@@ -371,6 +371,13 @@ impl<'p> Gen<'p> {
                             "std::Bool" => 1,
                             "std::Option" => 2,
                             "std::Json" => 3,
+                            _ if matches!(
+                                crate::jsontype::shape(mt, self.prog),
+                                crate::jsontype::Shape::Untagged(..)
+                            ) =>
+                            {
+                                4
+                            }
                             _ => 0,
                         };
                         format!(
@@ -1191,7 +1198,7 @@ impl<'p> Gen<'p> {
                     "grpc.send" => format!("return fwp_p_grpc_send(l0, l1, {});", gerr),
                     "grpc.recv" => format!("return fwp_p_grpc_recv(l0, {});", gerr),
                     "grpc._serve-tls" => format!(
-                        "return fwp_p_grpc_serve_tls(l0, l1, l2, l3, {}, {});",
+                        "return fwp_p_grpc_serve_tls(l0, l1, l2, l3, l4, {}, {});",
                         self.desc(&MT::con("std::IoError")),
                         gerr
                     ),
@@ -1202,14 +1209,30 @@ impl<'p> Gen<'p> {
                     ),
                 }
             }
+            "grpc.with-tls" => {
+                let idx = |n: &str| match self.prog.shapes.get(&MT::con("std::TlsOptions")) {
+                    Some(TypeShape::Record(fs)) => fs.iter().position(|(l, _)| l == n).unwrap_or(0),
+                    _ => 0,
+                };
+                format!(
+                    "return fwp_p_grpc_with_tls(l0, l1, {}, {}, {}, {}, {});",
+                    idx("ca-file"),
+                    idx("insecure"),
+                    idx("server-name"),
+                    idx("cert-file"),
+                    idx("key-file")
+                )
+            }
             "tls._connect" | "tls._listen" | "tls.handshake" => {
                 let err = self.desc(&MT::con("std::IoError"));
                 match sym {
                     "tls._connect" => format!(
-                        "return fwp_p_tls_connect(l0, l1, l2, l3, l4, {});",
+                        "return fwp_p_tls_connect(l0, l1, l2, l3, l4, l5, l6, {});",
                         err
                     ),
-                    "tls._listen" => format!("return fwp_p_tls_listen(l0, l1, l2, l3, {});", err),
+                    "tls._listen" => {
+                        format!("return fwp_p_tls_listen(l0, l1, l2, l3, l4, {});", err)
+                    }
                     _ => format!("return fwp_p_tls_handshake(l0, {});", err),
                 }
             }
@@ -1390,6 +1413,7 @@ impl<'p> Gen<'p> {
                     ("udp.close", "fwp_p_sock_close(l0)"),
                     ("tls.alpn", "fwp_p_tls_alpn(l0)"),
                     ("tls.secure", "fwp_p_tls_secure(l0)"),
+                    ("tls.peer-subject", "fwp_p_tls_peer_subject(l0)"),
                     ("tls.available", "FWP_TRUE"),
                     ("signal.shutdown-requested", "fwp_p_shutdown_requested()"),
                     ("signal.request-shutdown", "fwp_p_request_shutdown()"),
@@ -1402,6 +1426,15 @@ impl<'p> Gen<'p> {
                     ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
+                    ("grpc.peer-subject", "fwp_p_grpc_peer_subject()"),
+                    ("grpc.set-header", "fwp_p_grpc_set_meta(0, l0, l1)"),
+                    ("grpc.set-trailer", "fwp_p_grpc_set_meta(1, l0, l1)"),
+                    (
+                        "grpc.with-response-metadata",
+                        "fwp_p_grpc_with_response_metadata(l0)",
+                    ),
+                    ("grpc.response-metadata", "fwp_p_grpc_response_metadata(l0)"),
+                    ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("pb.parse", "fwp_p_pb_parse(l0)"),
                     ("pb.write", "fwp_p_pb_write(l0)"),
@@ -1464,6 +1497,7 @@ impl<'p> Gen<'p> {
             input: shape.client_streaming() as u8,
             output: match shape.output {
                 crate::rpc::Output::Value(_) => 0,
+                crate::rpc::Output::Iter(_) if shape.results.is_some() => 3,
                 crate::rpc::Output::Iter(_) => 1,
                 crate::rpc::Output::Chan(_) => 2,
             },

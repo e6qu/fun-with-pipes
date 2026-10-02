@@ -11,11 +11,14 @@ service Greeter {
   rpc Ticks(TicksRequest) returns (stream TicksResponse);
   rpc Total(stream TotalRequest) returns (TotalResponse);
   rpc Shout(stream ShoutRequest) returns (stream ShoutResponse);
+  rpc Firsts(stream FirstsRequest) returns (stream FirstsResponse);
   rpc Find(FindRequest) returns (HelloReply);
   rpc Slow(SlowRequest) returns (SlowResponse);
   rpc Whoami(WhoamiRequest) returns (WhoamiResponse);
   rpc Boom(BoomRequest) returns (BoomResponse);
   rpc Divide(DivideRequest) returns (DivideResponse);
+  rpc Countdown(CountdownRequest) returns (stream CountdownResponse);
+  rpc Tagged(TaggedRequest) returns (TaggedResponse);
   rpc Nap(NapRequest) returns (NapResponse);
 }
 
@@ -60,6 +63,14 @@ message ShoutResponse {
   string value = 1;
 }
 
+message FirstsRequest {
+  sint64 arg1 = 1;
+}
+
+message FirstsResponse {
+  sint64 value = 1;
+}
+
 message FindRequest {
   string arg1 = 1;
 }
@@ -96,6 +107,22 @@ message DivideResponse {
     sint64 value = 1;
     string error = 2;
   }
+}
+
+message CountdownRequest {
+  sint64 arg1 = 1;
+}
+
+message CountdownResponse {
+  sint64 value = 1;
+}
+
+message TaggedRequest {
+  string arg1 = 1;
+}
+
+message TaggedResponse {
+  string value = 1;
 }
 
 message NapRequest {

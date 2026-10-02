@@ -52,6 +52,10 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
+    # the response to an error the server answers itself (a malformed
+    # request, a body too large, a request timeout): its status and
+    # message; `http.text` by default (REST servers answer JSON)
+    error-response: I64 -> String -> Response,
 }
 
 # internal
@@ -83,6 +87,7 @@ http.config = make ServerConfig {
     request-timeout = const 30s,
     shutdown-grace = const 5s,
     tls = const None,
+    error-response = const http.text,
 }
 
 # a response with a status, a content type and a body
@@ -166,11 +171,42 @@ http.query-param = json.lookup | compose (.query | form.parse)
 http.param : String -> Request -> Option[String]
 http.param = json.lookup | compose .params
 
+# the subject of the client's certificate (`CN=alice,O=Example`), when the
+# server requires client certificates (mutual TLS: `client-ca` in its
+# `TlsServer`), which it has then verified
+http.peer-subject : Request -> Option[String]
+http.peer-subject = http.param ":tls-peer"
+
 http.body-text : Request -> String
 http.body-text = .body | string.from-bytes | option.unwrap-or ""
 
 http.form : Request -> List[(String, String)]
 http.form = http.body-text | form.parse
+
+# the cookies of a request (`Cookie: a=1; b=2`), as name and value pairs
+# (a value in double quotes without them)
+http.cookies : Request -> List[(String, String)]
+http.cookies =
+    .headers
+    | filter (.0 | eq "cookie")
+    | list.flat-map (.1 | split ";")
+    | filter-map (trim | string.split-once "=")
+    | map (both (.0 | trim) (.1 | trim | http.unquote))
+
+# a cookie of a request
+http.cookie : String -> Request -> Option[String]
+http.cookie = json.lookup | compose http.cookies
+
+# internal
+http.unquote : String -> String
+http.unquote =
+    if
+        (fork
+            and
+            (fork and (starts-with "\"") (ends-with "\""))
+            (string.length | ge 2))
+        (fork apply id (string.length | sub 2 | string.slice 1))
+        id
 
 # the body as JSON; 400 if it is not
 http.json-body : Request -> Json ! {Error[HttpError]}
@@ -288,7 +324,10 @@ http.dispatch = curry (match
     (_, None) -> http.missing
     (_, Some _) -> curry (fork
         apply
-        (fork http.set-params (.1 | .1) (.0 | .1))
+        (fork
+            http.set-params
+            (fork append (.1 | .1) (.0 | .1 | .params))
+            (.0 | .1))
         (.1 | .0 | .handler)))
 
 # internal
@@ -418,6 +457,7 @@ http.tls-server = make TlsServer {
     cert-file = .cert-file,
     key-file = .key-file,
     alpn = const ["http/1.1"],
+    client-ca = .client-ca,
 }
 
 # Serve on a listener (for example one bound to port 0; a listener from
@@ -619,9 +659,18 @@ http.error-stop = curry (make Out {
     conn = .1 | .0 | .conn,
     keep = const False,
     head-only = const False,
-    response = both .0 (.1 | .1) | uncurry http.text,
+    response = http.error-of,
     timeout = .1 | .0 | .server | .config | .write-timeout,
 } | http.write-out | const (Stop ()))
+
+# the response to an error, by the server's `error-response`
+# internal
+http.error-of : (I64, (ConnState, String)) -> Response
+http.error-of =
+    fork
+        apply
+        (both .0 (.1 | .1))
+        (.1 | .0 | .server | .config | .error-response | uncurry)
 
 # internal
 http.on-request : Bytes -> ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
@@ -744,7 +793,12 @@ http.request-of = make Request {
     version = .version,
     headers = .headers,
     body = fork http.bytes-take .length (.st | .buffer),
-    params = const [],
+    params =
+        .st
+        | .conn
+        | tls.peer-subject
+        | option.map (curry id ":tls-peer")
+        | option.to-list,
     remote = .st | .conn | tcp.peer-addr,
 }
 
@@ -790,17 +844,23 @@ http.exchange =
 http.run-handler : Exchange -> Response ! {Async}
 http.run-handler =
     fork
-        task.within
-        (.st | .server | .config | .request-timeout)
-        (fork compose (.request | const) (.st | .server | .handler | attempt))
-    | http.outcome
+        http.outcome
+        (.st | .server | .config | .error-response)
+        (fork
+            task.within
+            (.st | .server | .config | .request-timeout)
+            (fork
+                compose
+                (.request | const)
+                (.st | .server | .handler | attempt)))
 
 # internal
-http.outcome : Option[Result[Response, HttpError]] -> Response
-http.outcome = match
-    None -> http.text 503 "request timed out"
-    Some (Ok _) -> id
-    Some (Err _) -> both .status .message | uncurry http.text
+http.outcome : (I64 -> String -> Response) -> Option[Result[Response, HttpError]] -> Response
+http.outcome = curry (match
+    (_, None) -> apply 503 | apply "request timed out"
+    (_, Some (Ok _)) -> const id
+    (_, Some (Err _)) ->
+        curry (fork apply (.1 | .message) (fork apply (.1 | .status) .0)))
 
 # internal
 http.next-served : ConnState -> ConnState
@@ -1033,6 +1093,8 @@ http.tls-client = make TlsOptions {
     insecure = .insecure,
     server-name = .server-name,
     alpn = const ["http/1.1"],
+    cert-file = .cert-file,
+    key-file = .key-file,
 }
 
 # internal
@@ -1201,3 +1263,16 @@ http.chunk-acc =
 test "hex" = [255 | http.to-hex, -16 | http.to-hex] | eq ["ff", "-10"]
 test "parse-hex" =
     ["1A", "", "xyz"] | map http.parse-hex | eq [Some 26, None, None]
+test "http.cookies" =
+    Request {
+        method = "GET",
+        path = "/",
+        query = "",
+        version = "HTTP/1.1",
+        headers = [("cookie", "a=1; b=\"two words\""), ("cookie", "c=")],
+        body = http.no-bytes,
+        params = [],
+        remote = "",
+    }
+    | both (http.cookie "b") http.cookies
+    | eq (Some "two words", [("a", "1"), ("b", "two words"), ("c", "")])

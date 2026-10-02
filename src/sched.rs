@@ -957,8 +957,9 @@ impl<'p> Interp<'p> {
                 }
                 // ----- TLS
                 "tls._connect" => {
-                    // CA file, insecure, server name, protocols, address
-                    let addr = a[4].as_str().to_string();
+                    // CA file, insecure, server name, protocols, client
+                    // certificate and key, address
+                    let addr = a[6].as_str().to_string();
                     check_addr(&addr).map_err(|e| self.io_err("connect", e))?;
                     crate::tls::check().map_err(|e| self.io_err("tls", e))?;
                     self.check_cancel()?;
@@ -982,6 +983,8 @@ impl<'p> Interp<'p> {
                             verify: !a[1].as_bool(),
                             name: &name,
                             alpn: &alpn,
+                            cert: a[4].as_str(),
+                            key: a[5].as_str(),
                         },
                     )
                     .map_err(|e| self.io_err("tls", format!("{}: {}", addr, e)))?;
@@ -993,15 +996,16 @@ impl<'p> Interp<'p> {
                     c
                 }
                 "tls._listen" => {
-                    // certificate, key, protocols, address
+                    // certificate, key, protocols, client CA, address
                     let alpn: Vec<String> = a[2]
                         .list_items()
                         .iter()
                         .map(|v| v.as_str().to_string())
                         .collect();
-                    let ctx = crate::tls::server_ctx(a[0].as_str(), a[1].as_str(), &alpn)
-                        .map_err(|e| self.io_err("tls", e))?;
-                    let addr = a[3].as_str().to_string();
+                    let ctx =
+                        crate::tls::server_ctx(a[0].as_str(), a[1].as_str(), &alpn, a[3].as_str())
+                            .map_err(|e| self.io_err("tls", e))?;
+                    let addr = a[4].as_str().to_string();
                     check_addr(&addr).map_err(|e| self.io_err("listen", e))?;
                     let l = TcpListener::bind(&addr)
                         .map_err(|e| self.io_err("listen", format!("{}: {}", addr, e)))?;
@@ -1022,6 +1026,13 @@ impl<'p> Interp<'p> {
                     Value::str(&s)
                 }
                 "tls.secure" => Value::bool(self.conn_tls(&a[0])?.1.borrow().is_some()),
+                "tls.peer-subject" => {
+                    let s = match self.conn_tls(&a[0])?.1.borrow().as_ref() {
+                        Some(s) => s.peer_subject(),
+                        None => None,
+                    };
+                    opt(s.map(|s| Value::str(&s)))
+                }
                 "tls.available" => Value::bool(crate::tls::available()),
                 // ----- UDP
                 "udp.bind" => {

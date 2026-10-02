@@ -1,0 +1,42 @@
+# Calls the API of secure.fwp through secureclient.fwp, the client that
+# `fwp openapi --import` generates from its OpenAPI document: bearer
+# tokens, headers, cookies and replies (tests/rest.rs). The server's
+# address is in FWP_TEST_BASE.
+
+import secureclient
+
+# call a function with the base URL and show what it returned
+call : (String -> a ! {Async, IO, Network, Error[RestError]}) -> String -> () ! {Async, IO, Network} where Display[a]
+call = attempt | flip compose echo
+
+thing : secureclient.Item
+thing = secureclient.Item { id = 9, name = "nine" }
+
+calls : String -> () ! {Async, IO, Network}
+calls =
+    tap (call (flip secureclient.me "alice"))
+    | tap (call (flip secureclient.me "eve"))
+    | tap (call secureclient.health)
+    | tap (call (fork apply (const thing) (flip secureclient.create "alice")))
+    | tap (call (flip secureclient.item 3))
+    | tap (call (flip secureclient.item 1))
+    | tap (call (fork apply (const 3) (flip secureclient.delete "bob")))
+    | tap (call (fork apply (const 3) (flip secureclient.delete "alice")))
+    | tap (call
+        (fork
+            apply
+            (const { theme = Some "dark; light" })
+            (fork
+                apply
+                (const { x-trace-id = Some "t-1" })
+                (flip secureclient.seen { limit = Some 2 }))))
+    | tap (call
+        (fork
+            apply
+            (const { session = None })
+            (flip secureclient.hello { x-name = "Ann" })))
+    | tap (call secureclient.echo-request)
+    | ignore
+
+main =
+    "FWP_TEST_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080" | calls

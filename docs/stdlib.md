@@ -1008,17 +1008,28 @@ mismatch`, ...).
 # `SSL_CERT_DIR` override them) or those in `ca-file` (PEM), and it must be
 # for `server-name`, by default the host of the address (sent with SNI
 # unless it is an IP address). `alpn`: the protocols to offer
-# (`tls.alpn` tells the one chosen).
+# (`tls.alpn` tells the one chosen). `cert-file` and `key-file`: a client
+# certificate chain and its private key (PEM), for servers that require
+# one (mutual TLS); the key may be in the certificate's file.
 TlsOptions = {
     ca-file: Option[String],
     insecure: Bool,
     server-name: Option[String],
     alpn: List[String],
+    cert-file: Option[String],
+    key-file: Option[String],
 }
 
-# A server's certificate chain and private key (PEM files), and the
-# protocols it accepts (ALPN), in its order of preference.
-TlsServer = { cert-file: String, key-file: String, alpn: List[String] }
+# A server's certificate chain and private key (PEM files), the protocols
+# it accepts (ALPN), in its order of preference, and the CA certificates
+# (PEM) of the client certificates it requires (mutual TLS; `None`: it
+# does not ask clients for certificates).
+TlsServer = {
+    cert-file: String,
+    key-file: String,
+    alpn: List[String],
+    client-ca: Option[String],
+}
 
 # finish the handshake now (for an accepted connection: its handshake
 # otherwise happens on its first read or write); nothing for a plain
@@ -1030,6 +1041,12 @@ tls.alpn : Conn -> String ! {Network}
 
 # a TLS connection (not a plain TCP one)
 tls.secure : Conn -> Bool ! {Network}
+
+# the subject of the certificate the peer presented
+# (`CN=alice,O=Example`, as RFC 2253 writes names), after the handshake:
+# the client's for a server that requires client certificates, the
+# server's for a client; `None` for a plain connection
+tls.peer-subject : Conn -> Option[String] ! {Network}
 
 # OpenSSL can be used (the interpreter loads it when a program first uses
 # TLS; native programs that use TLS are linked with it)
@@ -1053,8 +1070,16 @@ tls.options : TlsOptions
 # trust the CA certificates of a PEM file
 tls.with-ca : String -> TlsOptions -> TlsOptions
 
+# present a client certificate chain and its private key (PEM files):
+# `tls.options | tls.with-cert "client.pem" "client.key"`
+tls.with-cert : String -> String -> TlsOptions -> TlsOptions
+
 # a server with a certificate chain and key (PEM files), without protocols
 tls.server : String -> String -> TlsServer
+
+# require client certificates signed by the CA certificates of a PEM file
+# (mutual TLS): a client without one fails its handshake
+tls.with-client-ca : String -> TlsServer -> TlsServer
 
 # connect to "host:port" and finish the handshake
 tls.connect : String -> Conn ! {Async, Network, Error[IoError]}
@@ -1121,6 +1146,10 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
+    # the response to an error the server answers itself (a malformed
+    # request, a body too large, a request timeout): its status and
+    # message; `http.text` by default (REST servers answer JSON)
+    error-response: I64 -> String -> Response,
 }
 http.config : String -> ServerConfig
 
@@ -1144,8 +1173,20 @@ http.query-param : String -> Request -> Option[String]
 
 # a path parameter bound by the router (`/users/:id`)
 http.param : String -> Request -> Option[String]
+
+# the subject of the client's certificate (`CN=alice,O=Example`), when the
+# server requires client certificates (mutual TLS: `client-ca` in its
+# `TlsServer`), which it has then verified
+http.peer-subject : Request -> Option[String]
 http.body-text : Request -> String
 http.form : Request -> List[(String, String)]
+
+# the cookies of a request (`Cookie: a=1; b=2`), as name and value pairs
+# (a value in double quotes without them)
+http.cookies : Request -> List[(String, String)]
+
+# a cookie of a request
+http.cookie : String -> Request -> Option[String]
 
 # the body as JSON; 400 if it is not
 http.json-body : Request -> Json ! {Error[HttpError]}
@@ -1285,7 +1326,11 @@ an `Err` result or an `Error` the function raises is an error response
 # parameter (required or not), every value of a repeated query parameter,
 # the fields of an options record from the query (with the kind of each:
 # 0 a value, 1 optional, 2 repeated, 3 a switch), the body (`True` if it
-# may be absent), or nothing (a `()` parameter).
+# may be absent), nothing (a `()` parameter), a request header (required
+# or not), every line of a repeated header, a cookie (required or not),
+# the whole `Request`, the principal that authentication found
+# (`rest.secured`), or the fields of an options record from the query,
+# headers and cookies.
 RestSource =
     | RestSource.Path String
     | RestSource.Query String Bool
@@ -1293,6 +1338,55 @@ RestSource =
     | RestSource.Fields List[(String, I64)]
     | RestSource.Body Bool
     | RestSource.Unit
+    | RestSource.Header String Bool
+    | RestSource.Headers String
+    | RestSource.Cookie String Bool
+    | RestSource.Request
+    | RestSource.Principal
+    | RestSource.Options List[RestField]
+
+# A field of an options record: its JSON name, its kind (0 a value, 1
+# optional, 2 repeated, 3 a switch) and where it is read.
+RestField = { name: String, kind: I64, place: RestPlace }
+
+# Where a field of an options record is read: the query parameter of its
+# name, a request header, or a cookie.
+RestPlace =
+    | RestPlace.Query
+    | RestPlace.Header String
+    | RestPlace.Cookie String
+
+# A security scheme: `Authorization: Bearer <token>`, an API key in a
+# place ("header", "query" or "cookie") under a name, or the subject of
+# the client's certificate (mutual TLS, `http.peer-subject`).
+RestAuth =
+    | RestAuth.Bearer
+    | RestAuth.ApiKey String String
+    | RestAuth.ClientCert
+
+# Cross-origin requests (CORS): the origins allowed (`*` for any; none
+# allows no cross-origin request), the methods and request headers they
+# may use, the response headers they may read, and how long (in seconds)
+# browsers may keep the answer to a preflight request.
+RestCors = {
+    origins: List[String],
+    methods: List[String],
+    headers: List[String],
+    expose: List[String],
+    max-age: I64,
+}
+
+# A REST server: the OpenAPI document (served at `/openapi.json`), an HTML
+# page that presents it (served at `/docs` unless empty), the routes, and
+# what cross-origin requests it allows.
+RestApi = { openapi: String, docs: String, routes: List[Route], cors: RestCors }
+
+# A response of the endpoint's choosing: its status, headers to add, and
+# the body (no body for `()`). An endpoint whose function returns a
+# `RestReply[T]` sets them per call (`rest.reply 201 item | rest.with-header
+# "location" "/items/7"`); its `# status:` line lists the statuses it may
+# answer with.
+RestReply[T] = { status: I64, headers: List[(String, String)], body: T }
 
 # An endpoint: its method and path (`/items/{id}`), the sources of the
 # function's arguments in order, the status of a success, and the status
@@ -1318,8 +1412,25 @@ rest.endpoint-option : RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileI
 # response, like a raised `Error`.
 rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
 
+# `rest.endpoint` for a function returning `RestReply`: its status and
+# headers, and its body as JSON.
+rest.endpoint-reply : RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
+
+# `rest.endpoint-reply` for a `RestReply[()]`: no body.
+rest.endpoint-reply-empty : RestRoute -> (a -> RestReply[()] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+
 # 200 (or the route's status) with the JSON of a value; 204 has no body
 rest.success : RestRoute -> b -> Response where Encode[b]
+
+# headers added to a response
+rest.add-headers : List[(String, String)] -> Response -> Response
+
+# `rest.reply 201 item`: a reply with a status, the value as its body and
+# no headers
+rest.reply : I64 -> b -> RestReply[b]
+
+# add a header to a reply: `rest.with-header "location" "/items/7"`
+rest.with-header : String -> String -> RestReply[b] -> RestReply[b]
 
 # a response with a status and a JSON text
 rest.json-text : I64 -> String -> Response
@@ -1327,13 +1438,60 @@ rest.json-text : I64 -> String -> Response
 # An error value as a response: `{"error": <the error as JSON>}`.
 rest.failure : RestRoute -> e -> Response where Encode[e]
 
+# Require credentials for a route: the first credential of the schemes
+# that the request carries is passed to `verify`, whose `Ok` value is the
+# principal of the call (the parameter `RestSource.Principal`). A request
+# without credentials, or whose credential `verify` refuses, gets 401
+# `{"error": ...}` (with `WWW-Authenticate: Bearer` for bearer tokens).
+rest.secured : (String -> Result[p, String] ! {Async, IO, Network, FileIO, Error[HttpError]}) -> List[RestAuth] -> Route -> Route where Encode[p]
+
+# the first credential of the schemes that a request carries
+rest.credential : List[RestAuth] -> Request -> Option[String]
+
+# the token of `Authorization: Bearer <token>`
+rest.bearer-token : Request -> Option[String]
+
+# Give a route's calls a time limit: a call still running then is
+# cancelled, and the client gets 503 `{"error": "request timed out"}`.
+rest.within : Duration -> Route -> Route
+
+# Answer cross-origin requests: a preflight request (`OPTIONS` with
+# `Access-Control-Request-Method`) from an allowed origin gets 204 with
+# the methods, headers and lifetime of the policy; other requests from an
+# allowed origin get `Access-Control-Allow-Origin` (and
+# `Access-Control-Allow-Credentials` unless any origin is allowed) on
+# their response. Requests from other origins are served as they are, and
+# browsers keep their responses from the page that made them.
+rest.cors : RestCors -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+
+# the origin of a request, if the policy allows it
+rest.allowed-origin : RestCors -> Option[String] -> Option[String]
+
+# no cross-origin requests
+rest.no-cors : RestCors
+
 # Serve endpoints, and the OpenAPI document at `/openapi.json`, with JSON
-# error responses (`{"error": "not found"}` for unknown paths). The
-# command line is `[--listen host:port] [--tls-cert file --tls-key file]
-# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
-# `127.0.0.1:8080`, and the certificate and key (PEM files, for HTTPS) to
-# `FWP_TLS_CERT` and `FWP_TLS_KEY`.
+# error responses (`{"error": "not found"}` for unknown paths): `rest.serve`
+# with no `/docs` page and no cross-origin requests.
 rest.main : String -> List[Route] -> () ! {Async, IO, Network}
+
+# Serve a REST API: its routes, `/openapi.json`, `/docs`, and CORS, with
+# JSON error responses (`{"error": "not found"}` for unknown paths, and
+# for the server's own errors, such as timeouts). The command line is
+# `[--listen host:port] [--tls-cert file --tls-key file [--tls-client-ca
+# file]] [--cors origins]
+# [--openapi] [--help]`; the address defaults to `FWP_REST_ADDR`, else
+# `127.0.0.1:8080`, the certificate and key (PEM files, for HTTPS) to
+# `FWP_TLS_CERT` and `FWP_TLS_KEY`, and the allowed origins (separated by
+# commas; they replace the API's) to `FWP_REST_CORS`.
+rest.serve : RestApi -> () ! {Async, IO, Network}
+
+# an error the server answers itself, as JSON
+rest.error-response : I64 -> String -> Response
+
+# The handler of an API: its routes, `/openapi.json` and `/docs`, with
+# errors as JSON and its CORS policy.
+rest.api-handler : RestApi -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 
 # The handler of a server: the endpoints and `/openapi.json`, with errors
 # (unknown routes, bad arguments) as JSON.
@@ -1343,9 +1501,15 @@ rest.handler-of : (String, List[Route]) -> Request -> Response ! {Async, IO, Net
 rest.respond : Result[Response, HttpError] -> Response
 
 # A call of a REST API, as the client functions that
-# `fwp openapi --import` generates make them: the method, the URL and the
-# JSON body.
-RestRequest = { method: String, url: String, body: Option[String] }
+# `fwp openapi --import` generates make them: the method, the URL, headers
+# (besides `Accept: application/json`, and `Content-Type:
+# application/json` unless they have one) and the body.
+RestRequest = {
+    method: String,
+    url: String,
+    headers: List[(String, String)],
+    body: Option[String],
+}
 
 # The URL of a call: the base URL of the server, the path template
 # (`/items/{id}`), the text of the path parameters in order, and the query
@@ -1366,6 +1530,19 @@ rest.url : RestTarget -> String
 
 # the text of each parameter of a call
 rest.texts : List[a -> String] -> a -> List[String]
+
+# the pairs (headers, query parameters) that functions of a call's
+# arguments give, together
+rest.pairs : List[a -> List[(String, String)]] -> a -> List[(String, String)]
+
+# `Authorization: Bearer <token>`
+rest.bearer : String -> List[(String, String)]
+
+# one `Cookie` header of cookies (none without cookies)
+rest.cookie-header : List[(String, String)] -> List[(String, String)]
+
+# a form body (`application/x-www-form-urlencoded`) of a record's fields
+rest.form-body : a -> String where Encode[a]
 
 # The text of a path parameter: a string as it is, other values as JSON.
 rest.param-text : a -> String where Encode[a]
@@ -1444,6 +1621,36 @@ grpc.metadata : () -> List[(String, String)] ! {Network}
 # one metadata value of the call being served
 grpc.header : String -> Option[String] ! {Network}
 
+# add a header to the response of the call the current task serves: sent
+# with its first message (so set it before sending any)
+grpc.set-header : String -> String -> () ! {Network}
+
+# add a trailer to the response of the call the current task serves: sent
+# with its status
+grpc.set-trailer : String -> String -> () ! {Network}
+
+# run a function whose calls compress their messages with gzip
+# (`grpc-encoding: gzip`; servers then compress their responses too).
+# Compressed messages are always accepted.
+grpc.with-gzip : (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# run a function, and collect the response metadata (headers and
+# trailers, with lower-case names) of the calls it makes that end
+grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}
+
+# the response metadata (headers and trailers) a call has received so far
+grpc.response-metadata : GrpcStream -> List[(String, String)] ! {Network}
+
+# the subject of the client's certificate (`CN=alice,O=Example`) of the
+# call the current task serves, when the server requires client
+# certificates (mutual TLS); `None` otherwise
+grpc.peer-subject : () -> Option[String] ! {Network}
+
+# run a function whose calls connect over TLS with these options: a CA
+# file, no verification, a server name, a client certificate (ALPN is h2).
+# Connections are kept per address and options.
+grpc.with-tls : TlsOptions -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
 # run a function whose calls send this metadata as well
 grpc.with-metadata : List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}
 
@@ -1461,8 +1668,9 @@ grpc.server-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> Str
 # a client-streaming call: the requests are the iterator's elements
 grpc.client-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> b ! {Network, Error[GrpcError]}
 
-# a bidirectional call: it sends the requests, then each response goes to
-# the channel
+# a bidirectional call: a task of its own sends the requests while each
+# response goes to the channel (the requests may be infinite: the call
+# ends when the server ends it)
 grpc.bidi-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
 
 # Lower level: start a call (`grpc.open address path`), send messages,
@@ -1480,7 +1688,8 @@ grpc.cancel : GrpcStream -> () ! {Network}
 grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
 # serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
-# certificate chain and private key (`tls.server "cert.pem" "key.pem"`);
+# certificate chain and private key (`tls.server "cert.pem" "key.pem"`,
+# and `tls.with-client-ca "ca.pem"` to require client certificates);
 # clients call `tls://host:port`
 grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 

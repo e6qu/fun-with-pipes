@@ -2,8 +2,10 @@
 # `fwp openapi --import`.
 #
 # Each function takes the server's base URL first (`http://host:port`),
-# then the path parameters, a record of the query parameters and the
-# body. A response other than a success raises `Error[RestError]`.
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
 
 Item = {
     id: I64,
@@ -56,6 +58,7 @@ echo-item = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | json.write | Some,
 } | rest.fetch)
 
@@ -70,6 +73,7 @@ item = curry (make RestRequest {
         params = rest.texts [.1 | rest.param-text],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch-option)
 
@@ -85,6 +89,7 @@ put-item = curry (curry
             params = rest.texts [.0 | .1 | rest.param-text],
             query = const [],
         } | rest.url,
+        headers = const [],
         body = .1 | json.write | Some,
     } | rest.fetch))
 
@@ -99,6 +104,7 @@ delete-item = curry (make RestRequest {
         params = rest.texts [.1 | rest.param-text],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch)
 
@@ -113,6 +119,7 @@ items = curry (make RestRequest {
         params = rest.texts [],
         query = .1 | rest.query-pairs,
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch)
 
@@ -128,6 +135,7 @@ search = curry (curry
             params = rest.texts [.0 | .1 | rest.param-text],
             query = .1 | rest.query-pairs,
         } | rest.url,
+        headers = const [],
         body = const None,
     } | rest.fetch))
 
@@ -142,6 +150,7 @@ check = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | json.write | Some,
 } | rest.fetch)
 
@@ -156,6 +165,7 @@ area = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | json.write | Some,
 } | rest.fetch)
 
@@ -170,6 +180,7 @@ teapot = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | json.write | Some,
 } | rest.fetch)
 
@@ -190,6 +201,7 @@ sum4 = curry (curry
                     ],
                     query = .0 | .1 | rest.query-pairs,
                 } | rest.url,
+                headers = const [],
                 body = .1 | json.write | Some,
             } | rest.fetch))))
 
@@ -204,6 +216,7 @@ big = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | json.write | Some,
 } | rest.fetch)
 
@@ -218,6 +231,7 @@ ping = make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch
 
@@ -232,6 +246,7 @@ tags = make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch
 
@@ -246,5 +261,6 @@ maybe = curry (make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = .1 | option.map json.write,
 } | rest.fetch)

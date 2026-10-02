@@ -63,8 +63,11 @@ fn openssl(args: &[&str], dir: &Path) -> bool {
 }
 
 /// A directory with ca.pem (a CA), server.pem and server.key (a
-/// certificate for localhost and 127.0.0.1 that it signed) and other.key
-/// (an unrelated key); `None`, and the tests skip, without `openssl`.
+/// certificate for localhost and 127.0.0.1 that it signed), other.key
+/// (an unrelated key), client.pem and client.key (a client certificate
+/// that the CA signed; both.pem has both), and rogue.pem and rogue.key (a
+/// self-signed client certificate); `None`, and the tests skip, without
+/// `openssl`.
 fn certs() -> Option<&'static Path> {
     static DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
     DIR.get_or_init(|| {
@@ -99,7 +102,41 @@ fn certs() -> Option<&'static Path> {
                 ],
                 &d,
             )
-        } && openssl(&["genrsa", "-out", "other.key", "2048"], &d);
+        } && openssl(&["genrsa", "-out", "other.key", "2048"], &d)
+            && openssl(
+                &[
+                    "req", "-newkey", "rsa:2048", "-nodes", "-keyout", "client.key", "-out",
+                    "client.csr", "-subj", "/O=fwp/CN=fwp client",
+                ],
+                &d,
+            )
+            && {
+                std::fs::write(
+                    d.join("client.cnf"),
+                    "basicConstraints=CA:FALSE\nextendedKeyUsage=clientAuth\n",
+                )
+                .unwrap();
+                openssl(
+                    &[
+                        "x509", "-req", "-in", "client.csr", "-CA", "ca.pem", "-CAkey", "ca.key",
+                        "-CAcreateserial", "-out", "client.pem", "-days", "2", "-extfile",
+                        "client.cnf",
+                    ],
+                    &d,
+                )
+            }
+            && openssl(
+                &[
+                    "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", "rogue.key",
+                    "-out", "rogue.pem", "-days", "2", "-subj", "/CN=rogue",
+                ],
+                &d,
+            )
+            && {
+                let both = std::fs::read_to_string(d.join("client.pem")).unwrap()
+                    + &std::fs::read_to_string(d.join("client.key")).unwrap();
+                std::fs::write(d.join("both.pem"), both).is_ok()
+            };
         if !ok {
             eprintln!("skipping: openssl could not make the test certificates");
             return None;
@@ -253,6 +290,38 @@ fn streams() {
     let file = root().join("tests/tls/streams.fwp");
     let expected = root().join("tests/tls/streams.out");
     for (i, mut cmd) in both_ways(&file, &d, "streams").into_iter().enumerate() {
+        cmd.current_dir(certs);
+        let o = run(cmd, 120);
+        let got = text(&o);
+        assert!(
+            o.status.success(),
+            "{}{}",
+            got,
+            String::from_utf8_lossy(&o.stderr)
+        );
+        if bless() && i == 0 {
+            std::fs::write(&expected, &got).unwrap();
+        }
+        let want = std::fs::read_to_string(&expected).unwrap_or_default();
+        assert_eq!(
+            got,
+            want,
+            "{} differs",
+            if i == 0 { "interpreted" } else { "native" }
+        );
+    }
+}
+
+/// Mutual TLS in one program, interpreted and native: a server that
+/// requires client certificates and clients with and without one
+/// (`tests/tls/mutual.out`).
+#[test]
+fn mutual_tls() {
+    let Some(certs) = certs() else { return };
+    let d = scratch("mutual");
+    let file = root().join("tests/tls/mutual.fwp");
+    let expected = root().join("tests/tls/mutual.out");
+    for (i, mut cmd) in both_ways(&file, &d, "mutual").into_iter().enumerate() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
         let got = text(&o);
@@ -615,7 +684,231 @@ fn rest_over_https() {
     );
 }
 
+/// A REST server that requires client certificates (`--tls-client-ca`,
+/// FWP_TLS_CLIENT_CA natively) authenticates its clients by their subject
+/// (`# auth: client-cert`) and gives it to endpoints.
+#[test]
+fn rest_with_client_certificates() {
+    let Some(certs) = certs() else { return };
+    let d = scratch("rest-mtls");
+    let app = root().join("tests/tls/whoami.fwp");
+    let file = |n: &str| certs.join(n).to_str().unwrap().to_string();
+    let mut servers = Vec::new();
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--rest"])
+        .arg(&app)
+        .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
+        .args([
+            "--tls-key",
+            &file("server.key"),
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ]);
+    servers.push(start(cmd));
+    if have_cc() {
+        let exe = d.join("server");
+        build(
+            &[app.to_str().unwrap(), "--rest", "-o", exe.to_str().unwrap()],
+            &root(),
+        );
+        let mut cmd = Command::new(&exe);
+        cmd.args(["--listen", "127.0.0.1:0"])
+            .env("FWP_TLS_CERT", file("server.pem"))
+            .env("FWP_TLS_KEY", file("server.key"))
+            .env("FWP_TLS_CLIENT_CA", file("ca.pem"));
+        servers.push(start(cmd));
+    }
+    if !have("curl", "--version") {
+        return;
+    }
+    for srv in &servers {
+        let base = format!("https://localhost:{}", srv.port());
+        let with = |path: &str, cert: &str, key: &str| {
+            curl(&[
+                "--cacert",
+                &file("ca.pem"),
+                "--cert",
+                &file(cert),
+                "--key",
+                &file(key),
+                &format!("{}{}", base, path),
+            ])
+        };
+        let me = "\"CN=fwp client,O=fwp\" [200]";
+        assert_eq!(with("/whoami", "client.pem", "client.key"), (0, me.into()));
+        assert_eq!(with("/peer", "client.pem", "client.key"), (0, me.into()));
+        assert_eq!(
+            with("/grpc-peer", "client.pem", "client.key"),
+            (0, "\"none\" [200]".into())
+        );
+        // no certificate, or one the CA did not sign: no handshake
+        let (code, _) = curl(&["--cacert", &file("ca.pem"), &format!("{}/peer", base)]);
+        assert_ne!(code, 0);
+        let (code, _) = with("/whoami", "rogue.pem", "rogue.key");
+        assert_ne!(code, 0);
+    }
+    // client certificates need a server certificate
+    let o = Command::new(fwp())
+        .args(["serve", "--rest"])
+        .arg(&app)
+        .args([
+            "--listen",
+            "127.0.0.1:0",
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ])
+        .env_remove("FWP_TLS_CERT")
+        .env_remove("FWP_TLS_KEY")
+        .output()
+        .unwrap();
+    assert_eq!(o.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8_lossy(&o.stderr),
+        "fwp: --tls-client-ca needs --tls-cert and --tls-key\n"
+    );
+}
+
 // ------------------------------------------------------------ gRPC
+
+/// gRPC servers that require client certificates (`--tls-client-ca`,
+/// FWP_TLS_CLIENT_CA natively), called by clients that present one with
+/// `grpc.with-tls` (an imported client) or FWP_SERVICE_<M>_CERT (a split
+/// build, which also trusts the CA of FWP_SERVICE_<M>_CA), and by grpcurl.
+#[test]
+fn grpc_with_client_certificates() {
+    let Some(certs) = certs() else { return };
+    let d = scratch("grpc-mtls");
+    let app = root().join("tests/tls/whoami.fwp");
+    let file = |n: &str| certs.join(n).to_str().unwrap().to_string();
+    // the client of the imported .proto, in the certificates' directory
+    let proto = run(
+        {
+            let mut c = Command::new(fwp());
+            c.args(["proto", "--grpc"]).arg(&app);
+            c
+        },
+        60,
+    );
+    assert!(proto.status.success());
+    std::fs::write(d.join("whoami.proto"), text(&proto)).unwrap();
+    let o = Command::new(fwp())
+        .args(["proto", "--import", "whoami.proto", "-o", "whoamigen.fwp"])
+        .current_dir(&d)
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    std::fs::copy(
+        root().join("tests/tls/whoamiclient.fwp"),
+        d.join("whoamiclient.fwp"),
+    )
+    .unwrap();
+    let mut servers = Vec::new();
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--grpc"])
+        .arg(&app)
+        .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
+        .args([
+            "--tls-key",
+            &file("server.key"),
+            "--tls-client-ca",
+            &file("ca.pem"),
+        ]);
+    servers.push(start(cmd));
+    let mut clients = vec![{
+        let mut c = Command::new(fwp());
+        c.arg("run").arg(d.join("whoamiclient.fwp"));
+        c
+    }];
+    if have_cc() {
+        let exe = d.join("server");
+        build(
+            &[app.to_str().unwrap(), "--grpc", "-o", exe.to_str().unwrap()],
+            &root(),
+        );
+        let mut cmd = Command::new(&exe);
+        cmd.args(["--listen", "127.0.0.1:0"])
+            .env("FWP_TLS_CERT", file("server.pem"))
+            .env("FWP_TLS_KEY", file("server.key"))
+            .env("FWP_TLS_CLIENT_CA", file("ca.pem"));
+        servers.push(start(cmd));
+        let exe = d.join("whoamiclient");
+        build(
+            &[
+                d.join("whoamiclient.fwp").to_str().unwrap(),
+                "-o",
+                exe.to_str().unwrap(),
+            ],
+            &d,
+        );
+        clients.push(Command::new(exe));
+    }
+    let expected = "with a certificate\n  CN=fwp client,O=fwp\nwithout a certificate\n  UNAVAILABLE\nwith the certificate again\n  CN=fwp client,O=fwp\n";
+    for srv in &servers {
+        assert!(srv.addr.starts_with("tls://"), "{}", srv.addr);
+        for c in &clients {
+            let mut c2 = Command::new(c.get_program());
+            c2.args(c.get_args())
+                .arg(format!("tls://localhost:{}", srv.port()))
+                .current_dir(certs);
+            let o = run(c2, 120);
+            assert_eq!(text(&o), expected, "{}", String::from_utf8_lossy(&o.stderr));
+        }
+        if have("grpcurl", "-version") {
+            let o = Command::new("grpcurl")
+                .args(["-cacert", &file("ca.pem"), "-cert", &file("client.pem")])
+                .args(["-key", &file("client.key")])
+                .arg(format!("localhost:{}", srv.port()))
+                .arg("fwp.Whoami/GrpcPeer")
+                .output()
+                .unwrap();
+            assert_eq!(
+                text(&o),
+                "{\n  \"value\": \"CN=fwp client,O=fwp\"\n}\n",
+                "{}",
+                String::from_utf8_lossy(&o.stderr)
+            );
+        }
+    }
+    // a split build's client: the CA and the certificate of FWP_SERVICE_<M>_*
+    let ex = root().join("examples/grpc");
+    let local = run(
+        {
+            let mut c = Command::new(fwp());
+            c.args(["run", "forecast-client.fwp"]).current_dir(&ex);
+            c
+        },
+        120,
+    );
+    let mut cmd = Command::new(fwp());
+    cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
+        .args([
+            "--tls-cert",
+            &file("server.pem"),
+            "--tls-key",
+            &file("server.key"),
+        ])
+        .args(["--tls-client-ca", &file("ca.pem")])
+        .current_dir(&ex);
+    let srv = start(cmd);
+    let client = |cert: bool| {
+        let mut c = Command::new(fwp());
+        c.args(["run", "--service", "weather", "forecast-client.fwp"])
+            .current_dir(&ex)
+            .env_remove("SSL_CERT_FILE")
+            .env(
+                "FWP_SERVICE_WEATHER",
+                format!("tls://localhost:{}", srv.port()),
+            )
+            .env("FWP_SERVICE_WEATHER_CA", file("ca.pem"));
+        if cert {
+            c.env("FWP_SERVICE_WEATHER_CERT", file("client.pem"))
+                .env("FWP_SERVICE_WEATHER_KEY", file("client.key"));
+        }
+        run(c, 120)
+    };
+    assert_eq!(text(&client(true)), text(&local));
+    assert!(!text(&client(false)).contains("Lisbon"));
+}
 
 /// The weather service of examples/grpc over TLS: interpreted and native
 /// servers (flags, environment variables) called by interpreted and native

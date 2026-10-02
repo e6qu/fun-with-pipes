@@ -14,23 +14,34 @@
 # `SSL_CERT_DIR` override them) or those in `ca-file` (PEM), and it must be
 # for `server-name`, by default the host of the address (sent with SNI
 # unless it is an IP address). `alpn`: the protocols to offer
-# (`tls.alpn` tells the one chosen).
+# (`tls.alpn` tells the one chosen). `cert-file` and `key-file`: a client
+# certificate chain and its private key (PEM), for servers that require
+# one (mutual TLS); the key may be in the certificate's file.
 TlsOptions = {
     ca-file: Option[String],
     insecure: Bool,
     server-name: Option[String],
     alpn: List[String],
+    cert-file: Option[String],
+    key-file: Option[String],
 }
 
-# A server's certificate chain and private key (PEM files), and the
-# protocols it accepts (ALPN), in its order of preference.
-TlsServer = { cert-file: String, key-file: String, alpn: List[String] }
+# A server's certificate chain and private key (PEM files), the protocols
+# it accepts (ALPN), in its order of preference, and the CA certificates
+# (PEM) of the client certificates it requires (mutual TLS; `None`: it
+# does not ask clients for certificates).
+TlsServer = {
+    cert-file: String,
+    key-file: String,
+    alpn: List[String],
+    client-ca: Option[String],
+}
 
 # CA file ("" for the system's), insecure, server name ("" for the host),
-# protocols, address
-foreign "fwp" tls._connect : String -> Bool -> String -> List[String] -> String -> Conn ! {Async, Network, Error[IoError]}
-# certificate, key, protocols, address
-foreign "fwp" tls._listen : String -> String -> List[String] -> String -> Listener ! {Network, Error[IoError]}
+# protocols, client certificate and key ("" for none), address
+foreign "fwp" tls._connect : String -> Bool -> String -> List[String] -> String -> String -> String -> Conn ! {Async, Network, Error[IoError]}
+# certificate, key, protocols, client CA ("" for none), address
+foreign "fwp" tls._listen : String -> String -> List[String] -> String -> String -> Listener ! {Network, Error[IoError]}
 
 # finish the handshake now (for an accepted connection: its handshake
 # otherwise happens on its first read or write); nothing for a plain
@@ -40,6 +51,11 @@ foreign "fwp" tls.handshake : Conn -> () ! {Async, Network, Error[IoError]}
 foreign "fwp" tls.alpn : Conn -> String ! {Network}
 # a TLS connection (not a plain TCP one)
 foreign "fwp" tls.secure : Conn -> Bool ! {Network}
+# the subject of the certificate the peer presented
+# (`CN=alice,O=Example`, as RFC 2253 writes names), after the handshake:
+# the client's for a server that requires client certificates, the
+# server's for a client; `None` for a plain connection
+foreign "fwp" tls.peer-subject : Conn -> Option[String] ! {Network}
 # OpenSSL can be used (the interpreter loads it when a program first uses
 # TLS; native programs that use TLS are linked with it)
 foreign "fwp" tls.available : () -> Bool ! {Network}
@@ -63,6 +79,8 @@ tls.options = TlsOptions {
     insecure = False,
     server-name = None,
     alpn = [],
+    cert-file = None,
+    key-file = None,
 }
 
 # trust the CA certificates of a PEM file
@@ -76,12 +94,40 @@ tls._set-ca = make TlsOptions {
     insecure = .1 | .insecure,
     server-name = .1 | .server-name,
     alpn = .1 | .alpn,
+    cert-file = .1 | .cert-file,
+    key-file = .1 | .key-file,
 }
+
+# present a client certificate chain and its private key (PEM files):
+# `tls.options | tls.with-cert "client.pem" "client.key"`
+tls.with-cert : String -> String -> TlsOptions -> TlsOptions
+tls.with-cert = curry3 (make TlsOptions {
+    ca-file = .2 | .ca-file,
+    insecure = .2 | .insecure,
+    server-name = .2 | .server-name,
+    alpn = .2 | .alpn,
+    cert-file = .0 | Some,
+    key-file = .1 | Some,
+})
 
 # a server with a certificate chain and key (PEM files), without protocols
 tls.server : String -> String -> TlsServer
-tls.server =
-    curry (make TlsServer { cert-file = .0, key-file = .1, alpn = const [] })
+tls.server = curry (make TlsServer {
+    cert-file = .0,
+    key-file = .1,
+    alpn = const [],
+    client-ca = const None,
+})
+
+# require client certificates signed by the CA certificates of a PEM file
+# (mutual TLS): a client without one fails its handshake
+tls.with-client-ca : String -> TlsServer -> TlsServer
+tls.with-client-ca = curry (make TlsServer {
+    cert-file = .1 | .cert-file,
+    key-file = .1 | .key-file,
+    alpn = .1 | .alpn,
+    client-ca = .0 | Some,
+})
 
 # connect to "host:port" and finish the handshake
 tls.connect : String -> Conn ! {Async, Network, Error[IoError]}
@@ -92,10 +138,23 @@ tls.connect-with = curry (fork apply .1 (.0 | tls._connector))
 
 # internal
 tls._connector : TlsOptions -> String -> Conn ! {Async, Network, Error[IoError]}
-tls._connector = fork apply .alpn (fork
-    apply
-    (.server-name | option.unwrap-or "")
-    (fork apply .insecure (.ca-file | option.unwrap-or "" | tls._connect)))
+tls._connector =
+    fork
+        apply
+        (.key-file | option.unwrap-or "")
+        (fork
+            apply
+            (.cert-file | option.unwrap-or "")
+            (fork
+                apply
+                .alpn
+                (fork
+                    apply
+                    (.server-name | option.unwrap-or "")
+                    (fork
+                        apply
+                        .insecure
+                        (.ca-file | option.unwrap-or "" | tls._connect)))))
 
 # listen on "host:port"; connections accepted from it are TLS connections
 tls.listen : TlsServer -> String -> Listener ! {Network, Error[IoError]}
@@ -104,7 +163,10 @@ tls.listen = curry (fork apply .1 (.0 | tls._listener))
 # internal
 tls._listener : TlsServer -> String -> Listener ! {Network, Error[IoError]}
 tls._listener =
-    fork apply .alpn (fork apply .key-file (.cert-file | tls._listen))
+    fork
+        apply
+        (.client-ca | option.unwrap-or "")
+        (fork apply .alpn (fork apply .key-file (.cert-file | tls._listen)))
 
 test "tls.options" = tls.options | .insecure | not
 test "tls.with-ca" =

@@ -1,0 +1,98 @@
+# Mutual TLS (lib/tls.fwp) on both backends, run by tests/tls.rs in the
+# directory of streams.fwp, which also has a client certificate signed by
+# the CA (client.pem, client.key) and one that is not (rogue.pem,
+# rogue.key): a server that requires client certificates, and clients
+# with and without one. Each connection's outcome is reported by both
+# sides.
+
+# the server: require certificates signed by ca.pem
+server : TlsServer
+server = tls.server "server.pem" "server.key" | tls.with-client-ca "ca.pem"
+
+# a connection's handshake, the client's subject, and an answer
+answer : Conn -> String ! {Async, Network, Error[IoError]}
+answer =
+    tap tls.handshake
+    | tap (tcp.write ("hi" | string.to-bytes))
+    | both
+        (tls.peer-subject | option.unwrap-or "none" | format "client {}")
+        tcp.close
+    | .0
+
+served : Result[String, IoError] -> String
+served = match
+    Ok _ -> format "server: {}"
+    Err _ -> .message | const "server: handshake failed"
+
+# accept `n` connections, each in its own task
+serve-step : (Listener, Channel[String], I64) -> Step[(Listener, Channel[String], I64), ()] ! {Async, IO, Network}
+serve-step =
+    if
+        (.2 | le 0)
+        (const (Stop ()))
+        (tap (attempt
+                (both (.0 | tcp.accept) .1
+                    | spawn-with
+                        (fork channel.send .1 (.0 | attempt answer | served))))
+            | make { 0 = .0, 1 = .1, 2 = .2 | sub 1 }
+            | Again)
+
+# a client: its options, what it read, and the server's subject
+talk : (TlsOptions, String) -> String ! {Async, Network, Error[IoError]}
+talk =
+    uncurry tls.connect-with
+    | both
+        (both
+            (tls.read 100 | string.from-bytes | option.unwrap-or "?")
+            (tls.peer-subject | option.unwrap-or "none"))
+        tcp.close
+    | .0
+    | format "read \"{}\" from {}"
+
+said : Result[String, IoError] -> String
+said = match
+    Ok _ -> format "client: {}"
+    Err _ -> .kind | format "client: {} error"
+
+trusted : TlsOptions
+trusted = tls.options | tls.with-ca "ca.pem"
+
+clients : List[(String, TlsOptions)]
+clients = [
+    ("without a certificate", trusted),
+    ("with a certificate", trusted | tls.with-cert "client.pem" "client.key"),
+    ("with a certificate in one file", trusted | tls.with-cert "both.pem" ""),
+    (
+        "with a certificate of another CA",
+        trusted | tls.with-cert "rogue.pem" "rogue.key",
+    ),
+    (
+        "with a missing certificate",
+        trusted | tls.with-cert "nope.pem" "client.key",
+    ),
+]
+
+# one client after the other, each followed by what the server saw
+run-client : (String, Channel[String]) -> (String, TlsOptions) -> () ! {Async, IO, Network}
+run-client = curry (tap (.1 | .0 | print)
+    | tap (both (.1 | .1) (.0 | .0) | attempt talk | said | print)
+    | .0
+    | .1
+    | channel.recv-for 5s
+    | option.unwrap-or "server: (nothing)"
+    | print)
+
+port-of : String -> String
+port-of = split ":" | last | option.unwrap-or ""
+
+# start the server; its address for clients and the channel of its reports
+start : () -> (String, Channel[String]) ! {Async, IO, Network, Error[IoError]}
+start =
+    const "127.0.0.1:0"
+    | tls.listen server
+    | both id (const 16 | channel.make)
+    | tap (make { 0 = .0, 1 = .1, 2 = const (length clients) }
+        | spawn-with (loop serve-step))
+    | both (.0 | tls.local-addr | port-of | flip concat "localhost:") .1
+
+main = () | start | fork each run-client (const clients)

@@ -1,11 +1,16 @@
 greeter.HelloReply {message = "hello, Ada"}
 [1, 2, 3, 4, 5]
+[Ok 3, Ok 2, Ok 1, Err (GrpcError {code = 11, message = "lift off"})]
 ["tick 1", "tick 2", "tick 3"]
 10
 ["A", "B"]
+[10, 20, 30]
 Ok (greeter.HelloReply {message = "Bob"})
 Err (GrpcError {code = 5, message = "ghost"})
 carol
+("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])
+(1207, "hello, Ada Ada")
+["X", "Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y"]
 nobody
 Ok 0
 Err "division by zero"

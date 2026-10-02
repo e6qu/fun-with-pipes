@@ -19,6 +19,7 @@ pub mod ffi_interp;
 pub mod fmt;
 pub mod grpc;
 pub mod grpc_cli;
+pub mod gzip;
 pub mod h2;
 pub mod infer;
 pub mod interp;

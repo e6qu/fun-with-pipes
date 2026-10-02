@@ -92,11 +92,98 @@ pub struct TaskCtx {
     deadline: Option<Instant>,
     /// The call this task serves.
     serving: Option<Rc<Serving>>,
+    /// How the calls made connect over TLS (`grpc.with-tls`).
+    tls: Option<Rc<ClientTls>>,
+    /// The response metadata of the calls made, collected
+    /// (`grpc.with-response-metadata`).
+    capture: Option<Captured>,
+    /// The calls made compress their requests (`grpc.with-gzip`).
+    gzip: bool,
+}
+
+/// Response metadata collected by `grpc.with-response-metadata`.
+type Captured = Rc<RefCell<Vec<(String, String)>>>;
+
+/// Response headers and trailers that are not metadata.
+const NOT_RESPONSE_METADATA: &[&str] = &[
+    "content-type",
+    "grpc-status",
+    "grpc-message",
+    "grpc-encoding",
+    "grpc-accept-encoding",
+];
+
+/// The metadata of a response: its headers and trailers but the
+/// pseudo-headers and those of the protocol.
+fn response_metadata(s: &Stream) -> Vec<(String, String)> {
+    s.headers
+        .iter()
+        .chain(&s.trailers)
+        .filter(|(k, _)| !k.starts_with(':') && !NOT_RESPONSE_METADATA.contains(&k.as_str()))
+        .cloned()
+        .collect()
+}
+
+/// A metadata pair as a header: a lower-case name, a value without line
+/// breaks; `None` for names that cannot be metadata.
+fn metadata_pair(k: &str, v: &str) -> Option<(String, String)> {
+    let k = k.to_ascii_lowercase();
+    if k.is_empty() || k.starts_with(':') {
+        return None;
+    }
+    Some((k, v.replace(['\r', '\n'], " ")))
+}
+
+/// The TLS options of a client's calls: a CA file ("" for the system's),
+/// no verification, the server name ("" for the host), a client
+/// certificate and key ("" for none).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ClientTls {
+    ca: String,
+    insecure: bool,
+    name: String,
+    cert: String,
+    key: String,
+}
+
+impl ClientTls {
+    /// The options of `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`,
+    /// `_CERT` and `_KEY` for the clients of a service, if any is set.
+    pub fn from_env(var: &str) -> Option<ClientTls> {
+        let get = |k: &str| {
+            std::env::var(format!("{}_{}", var, k))
+                .ok()
+                .filter(|v| !v.is_empty())
+        };
+        let t = ClientTls {
+            ca: get("CA").unwrap_or_default(),
+            insecure: get("INSECURE").is_some_and(|v| v != "0" && v != "false"),
+            name: get("SERVER_NAME").unwrap_or_default(),
+            cert: get("CERT").unwrap_or_default(),
+            key: get("KEY").unwrap_or_default(),
+        };
+        (t != ClientTls::default()).then_some(t)
+    }
+
+    /// The key of connections with these options in the pool.
+    fn pool_key(this: &Option<Rc<ClientTls>>, addr: &str) -> String {
+        match this {
+            None => addr.to_string(),
+            Some(t) => format!(
+                "{}\u{0}{}\u{0}{}\u{0}{}\u{0}{}\u{0}{}",
+                addr, t.ca, t.insecure, t.name, t.cert, t.key
+            ),
+        }
+    }
 }
 
 /// The call a server task is running.
 pub struct Serving {
     headers: Vec<(String, String)>,
+    /// The subject of the client's certificate (mutual TLS).
+    peer: Option<String>,
+    /// The call's stream (for its response metadata).
+    stream: StreamRef,
     task: Arc<TaskShared>,
     /// The status to answer with when the task is cancelled for a bad
     /// request message.
@@ -145,6 +232,13 @@ struct Stream {
     window: i64,
     sent_headers: bool,
     local_end: bool,
+    /// A server's response metadata: headers sent with the first message,
+    /// and trailers sent with the status (`grpc.set-header`,
+    /// `grpc.set-trailer`).
+    out_headers: Vec<(String, String)>,
+    out_trailers: Vec<(String, String)>,
+    /// Messages sent are compressed with gzip.
+    gzip: bool,
     bad: Option<String>,
     /// The task serving the call.
     task: Option<Arc<TaskShared>>,
@@ -221,9 +315,25 @@ fn split_messages(s: &mut Stream) {
             break;
         }
         if s.data[0] != 0 {
-            s.bad = Some("compressed gRPC messages are not supported".into());
-            s.data.clear();
-            return;
+            // compressed with the stream's `grpc-encoding`
+            if header(&s.headers, "grpc-encoding") != Some("gzip") {
+                s.bad = Some(match header(&s.headers, "grpc-encoding") {
+                    Some(e) => format!("unsupported grpc-encoding `{}`", e),
+                    None => "a compressed message without grpc-encoding".into(),
+                });
+                s.data.clear();
+                return;
+            }
+            match crate::gzip::gunzip(&s.data[5..5 + n], crate::gzip::MAX_OUTPUT) {
+                Ok(m) => s.msgs.push_back(m),
+                Err(e) => {
+                    s.bad = Some(format!("bad compressed message: {}", e));
+                    s.data.clear();
+                    return;
+                }
+            }
+            s.data.drain(..5 + n);
+            continue;
         }
         s.msgs.push_back(s.data[5..5 + n].to_vec());
         s.data.drain(..5 + n);
@@ -722,13 +832,37 @@ fn send_msg(it: &mut Interp, c: &ConnRef, s: &StreamRef, msg: &[u8], end: bool) 
         let mut sb = s.borrow_mut();
         if cb.server.is_some() && !sb.sent_headers && cb.dead.is_none() && sb.reset.is_none() {
             sb.sent_headers = true;
-            let b = hpack::encode(&[(":status", "200"), ("content-type", "application/grpc")]);
+            let mut hs: Vec<(&str, &str)> = vec![
+                (":status", "200"),
+                ("content-type", "application/grpc"),
+                ("grpc-accept-encoding", "gzip"),
+            ];
+            if sb.gzip {
+                hs.push(("grpc-encoding", "gzip"));
+            }
+            for (k, v) in &sb.out_headers {
+                hs.push((k, v));
+            }
+            let b = hpack::encode(&hs);
             let max = cb.peer.max_frame;
             cb.out.extend(h2::header_frames(sb.id, &b, false, max));
         }
     }
-    send_data(it, c, s, &h2::grpc_frame(msg), end)
+    let gzip = s.borrow().gzip;
+    let frame = if gzip && msg.len() >= GZIP_MIN {
+        let z = crate::gzip::gzip(msg);
+        let mut f = vec![1];
+        f.extend_from_slice(&(z.len() as u32).to_be_bytes());
+        f.extend(z);
+        f
+    } else {
+        h2::grpc_frame(msg)
+    };
+    send_data(it, c, s, &frame, end)
 }
+
+/// Messages shorter than this are sent uncompressed (their flag says so).
+const GZIP_MIN: usize = 64;
 
 /// What a wait for the next message found.
 enum Got {
@@ -801,6 +935,9 @@ fn recv(it: &mut Interp, c: &ConnRef, s: &StreamRef, deadline: Option<Instant>) 
                 if cb.server.is_some() {
                     return Ok(Got::End(Status::new(OK, "")));
                 }
+                if let Some(cap) = &it.grpc.capture {
+                    cap.borrow_mut().extend(response_metadata(&sb));
+                }
                 let st = status_of(&cb.authority, &sb);
                 drop(cb);
                 let id = sb.id;
@@ -837,8 +974,9 @@ fn recv(it: &mut Interp, c: &ConnRef, s: &StreamRef, deadline: Option<Instant>) 
 
 // ================================================================= client
 
-fn connect(it: &mut Interp, given: &str) -> R<Result<ConnRef, String>> {
+fn connect(it: &mut Interp, given: &str, key: &str) -> R<Result<ConnRef, String>> {
     it.check_cancel()?;
+    let opts = it.grpc.tls.clone().unwrap_or_default();
     let (secure, addr) = tls::grpc_addr(given);
     let a = addr.to_string();
     let r = it.world.blocking(move || TcpStream::connect(&a));
@@ -862,10 +1000,16 @@ fn connect(it: &mut Interp, given: &str) -> R<Result<ConnRef, String>> {
         match tls::Session::client(
             sock.as_raw_fd(),
             &tls::ClientOpts {
-                ca: "",
-                verify: true,
-                name: tls::host_of(addr),
+                ca: &opts.ca,
+                verify: !opts.insecure,
+                name: if opts.name.is_empty() {
+                    tls::host_of(addr)
+                } else {
+                    &opts.name
+                },
                 alpn: &["h2".to_string()],
+                cert: &opts.cert,
+                key: &opts.key,
             },
         ) {
             Ok(s) => Some(s),
@@ -890,7 +1034,7 @@ fn connect(it: &mut Interp, given: &str) -> R<Result<ConnRef, String>> {
         .unwrap()
         .0
         .pool
-        .insert(given.to_string(), c.clone());
+        .insert(key.to_string(), c.clone());
     Ok(Ok(c))
 }
 
@@ -908,9 +1052,10 @@ fn open_call(
     extra: &[(&str, &str)],
 ) -> R<Result<(ConnRef, StreamRef, bool), String>> {
     it.check_cancel()?;
+    let key = ClientTls::pool_key(&it.grpc.tls, addr);
     let pooled = {
         let sh = it.world.grpc.lock().unwrap();
-        sh.0.pool.get(addr).cloned()
+        sh.0.pool.get(&key).cloned()
     };
     let pooled = pooled.filter(|c| {
         let cb = c.borrow();
@@ -919,7 +1064,7 @@ fn open_call(
     let reused = pooled.is_some();
     let c = match pooled {
         Some(c) => c,
-        None => match connect(it, addr)? {
+        None => match connect(it, addr, &key)? {
             Ok(c) => c,
             Err(e) => return Ok(Err(e)),
         },
@@ -927,6 +1072,7 @@ fn open_call(
     let timeout =
         call_deadline(it).map(|d| rpc::timeout_header(d.saturating_duration_since(Instant::now())));
     let md = it.grpc.metadata.clone();
+    let gzip = it.grpc.gzip;
     let s = {
         let mut cb = c.borrow_mut();
         let id = cb.next_stream;
@@ -940,7 +1086,11 @@ fn open_call(
             (":authority", &authority),
             ("content-type", "application/grpc"),
             ("te", "trailers"),
+            ("grpc-accept-encoding", "gzip"),
         ];
+        if gzip {
+            hs.push(("grpc-encoding", "gzip"));
+        }
         if let Some(t) = &timeout {
             hs.push(("grpc-timeout", t));
         }
@@ -954,6 +1104,7 @@ fn open_call(
         let s = Rc::new(RefCell::new(Stream {
             id,
             window: cb.peer.init_window,
+            gzip,
             ..Default::default()
         }));
         cb.streams.insert(id, s.clone());
@@ -1020,6 +1171,9 @@ fn stub_failure(shape: &Shape, what: &str, addr: &str, f: Failure) -> Ctl {
             Ctl::Trap(st.message["trap: ".len()..].to_string())
         }
         Failure::Status(st) if shape.status_errors => grpc_error(st.code, &st.message),
+        Failure::Transport(m) if m.starts_with("trap: ") => {
+            Ctl::Trap(m["trap: ".len()..].to_string())
+        }
         Failure::Transport(m) if shape.status_errors => grpc_error(UNAVAILABLE, &m),
         Failure::Status(st) => Ctl::Trap(format!(
             "service call {} ({}) failed: gRPC status {}: {}",
@@ -1134,6 +1288,67 @@ fn encode_msg(it: &mut Interp, enc: &Encoder, v: &Value) -> R<Vec<u8>> {
     }
 }
 
+/// A task that sends the requests of a bidirectional call while its
+/// caller receives the responses: the elements of `iter`, encoded, then
+/// the end of the stream. A failure (a trap while forcing or encoding)
+/// resets the stream and is kept for the caller.
+struct Sender {
+    task: Arc<TaskShared>,
+    failed: Rc<RefCell<Option<Ctl>>>,
+}
+
+fn spawn_sender(it: &mut Interp, c: &ConnRef, s: &StreamRef, iter: Value, enc: Encoder) -> Sender {
+    let failed = Rc::new(RefCell::new(None));
+    let job = crate::sched::Baton((c.clone(), s.clone(), iter, enc, failed.clone()));
+    let task = it.spawn_rust(
+        Box::new(move |it| {
+            let job = job;
+            let crate::sched::Baton((c, s, mut cur, enc, failed)) = job;
+            let r = (|| -> R<()> {
+                loop {
+                    if s.borrow().remote_end {
+                        return Ok(());
+                    }
+                    let Some((x, rest)) = iter_next(it, cur)? else {
+                        break;
+                    };
+                    let msg = encode_msg(it, &enc, &x)?;
+                    if !send_msg(it, &c, &s, &msg, false)? {
+                        return Ok(());
+                    }
+                    cur = rest;
+                }
+                send_data(it, &c, &s, &[], true)?;
+                Ok(())
+            })();
+            if let Err(e) = r {
+                if !matches!(e, Ctl::Cancelled) {
+                    if let Ctl::Trap(m) = &e {
+                        let mut sb = s.borrow_mut();
+                        if sb.reset.is_none() {
+                            sb.reset = Some(format!("trap: {}", m));
+                        }
+                    }
+                    *failed.borrow_mut() = Some(e);
+                    reset_stream(it, &c, &s, 8);
+                }
+            }
+        }),
+        None,
+        true,
+    );
+    Sender { task, failed }
+}
+
+impl Sender {
+    /// Stop sending (the call is over), and the sender's failure, if any.
+    fn finish(self, it: &mut Interp) -> Option<Ctl> {
+        self.task.cancel();
+        it.world.event();
+        self.failed.borrow_mut().take()
+    }
+}
+
 /// The values of an `Iterator`, forced one at a time.
 fn iter_next(it: &mut Interp, v: Value) -> R<Option<(Value, Value)>> {
     match &v {
@@ -1150,12 +1365,35 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
     let prog = it.prog;
     let f = &prog.funcs[id];
     let shape = rpc::shape(&f.ty, f.arity as usize, r.error.as_ref());
-    let c = stub(prog, id, r, &shape)?;
-    let (schema, ms, fp) = (&c.0, c.1, &c.2);
     let what = format!("{}.{}", r.module, r.method);
     let addr = crate::services::address(&r.module, &r.default_addr);
+    // the TLS options of the service's environment variables, unless the
+    // task gives its own
+    let saved_tls = it.grpc.tls.clone();
+    if saved_tls.is_none() {
+        it.grpc.tls = ClientTls::from_env(&crate::protobuf::env_var(&r.module)).map(Rc::new);
+    }
+    let r = call_remote_at(it, id, r, args, &shape, &what, &addr);
+    it.grpc.tls = saved_tls;
+    r
+}
+
+#[allow(clippy::too_many_arguments)]
+fn call_remote_at(
+    it: &mut Interp,
+    id: FuncId,
+    r: &RemoteFn,
+    args: Vec<Value>,
+    shape: &Shape,
+    what: &str,
+    addr: &str,
+) -> R<Value> {
+    let prog = it.prog;
+    let c = stub(prog, id, r, shape)?;
+    let (schema, ms, fp) = (&c.0, c.1, &c.2);
+    let (what, addr) = (what.to_string(), addr.to_string());
     let path = r.path.clone();
-    let fail = |f: Failure| stub_failure(&shape, &what, &addr, f);
+    let fail = |f: Failure| stub_failure(shape, &what, &addr, f);
     let deadline = it.grpc.deadline;
     let req_types = shape.request_params();
     let encode_req = |it: &mut Interp, vals: &[Value]| -> R<Vec<u8>> {
@@ -1177,6 +1415,8 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
     // the request; a unary call is retried once on a fresh connection when
     // a pooled one turns out to be closed before the server saw it
     let mut attempt = 0;
+    // the requests of a bidirectional call are sent as responses arrive
+    let mut sender: Option<Sender> = None;
     let (conn, stream, first) = loop {
         let (conn, stream, reused) = match open_call(it, &addr, &path, &[("fwp-fingerprint", fp)])?
         {
@@ -1188,6 +1428,15 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
                 Input::Args(_) => {
                     let req = encode_req(it, &args[..req_types.len()])?;
                     send_msg(it, &conn, &stream, &req, true)?;
+                }
+                Input::Stream(t) if !matches!(shape.output, Output::Value(_)) => {
+                    let enc = Encoder::Native {
+                        schema: schema.clone(),
+                        node: ms.request,
+                        ty: t.clone(),
+                        error_tag: false,
+                    };
+                    sender = Some(spawn_sender(it, &conn, &stream, args[0].clone(), enc));
                 }
                 Input::Stream(_) => {
                     let mut cur = args[0].clone();
@@ -1250,26 +1499,33 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
         }
         Output::Chan(_) => {
             let ch = args.last().cloned().unwrap_or_else(Value::unit);
-            loop {
-                match recv(it, &conn, &stream, deadline)? {
-                    Got::Msg(m) => match decode(it, &m)? {
-                        Ok(v) => {
-                            if let Some(Err(e)) = it.prim_conc("channel.send", &mut [ch.clone(), v])
-                            {
-                                reset_stream(it, &conn, &stream, 8);
-                                return Err(e);
+            let r = (|| -> R<Value> {
+                loop {
+                    match recv(it, &conn, &stream, deadline)? {
+                        Got::Msg(m) => match decode(it, &m)? {
+                            Ok(v) => {
+                                if let Some(Err(e)) =
+                                    it.prim_conc("channel.send", &mut [ch.clone(), v])
+                                {
+                                    reset_stream(it, &conn, &stream, 8);
+                                    return Err(e);
+                                }
                             }
-                        }
-                        Err((e, t)) => {
-                            reset_stream(it, &conn, &stream, 8);
-                            return Err(Ctl::Fail(e, t));
-                        }
-                    },
-                    Got::End(st) if st.code == OK => return Ok(Value::unit()),
-                    Got::End(st) => return Err(fail(Failure::Status(st))),
-                    Got::Lost(m, _) => return Err(fail(Failure::Transport(m))),
+                            Err((e, t)) => {
+                                reset_stream(it, &conn, &stream, 8);
+                                return Err(Ctl::Fail(e, t));
+                            }
+                        },
+                        Got::End(st) if st.code == OK => return Ok(Value::unit()),
+                        Got::End(st) => return Err(fail(Failure::Status(st))),
+                        Got::Lost(m, _) => return Err(fail(Failure::Transport(m))),
+                    }
                 }
+            })();
+            if let Some(e) = sender.take().and_then(|s| s.finish(it)) {
+                return Err(e);
             }
+            r
         }
         Output::Iter(_) => {
             // the first element now, so that a failure before it is raised
@@ -1281,6 +1537,7 @@ pub fn call_remote(it: &mut Interp, id: FuncId, r: &RemoteFn, args: Vec<Value>) 
                 dec: dec.clone(),
                 what: format!("{} ({})", what, addr),
                 deadline,
+                results: shape.results.is_some(),
             });
             let cell = Rc::new(StreamCell {
                 src: inc,
@@ -1330,6 +1587,9 @@ pub struct Incoming {
     /// The call, for messages (client side).
     what: String,
     deadline: Option<Instant>,
+    /// Elements are `Result[R, GrpcError]`: a failure ends the stream
+    /// with an `Err` (client side).
+    results: bool,
 }
 
 /// A position in a received stream; forcing it receives the message
@@ -1370,6 +1630,44 @@ fn force_cell(it: &mut Interp, cell: &Rc<StreamCell>, first: bool) -> Result<Val
     }
     let src = cell.src.clone();
     let got = recv(it, &src.conn, &src.stream, src.deadline)?;
+    if src.results {
+        // an `Err` element, then the end
+        let err = |code: u32, msg: &str| {
+            let last = Rc::new(StreamCell {
+                src: src.clone(),
+                memo: RefCell::new(Some(opt(None))),
+            });
+            let e = Value::data(
+                1,
+                vec![Value::tuple(vec![Value::I64(code as i64), Value::str(msg)])],
+            );
+            opt(Some(Value::tuple(vec![
+                e,
+                wrap(Native::Grpc(Obj::Cell(last))),
+            ])))
+        };
+        let v = match got {
+            Got::Msg(m) => match decode_msg(it, &src.dec, &m)? {
+                Ok(Ok(x)) => {
+                    let next = Rc::new(StreamCell {
+                        src: src.clone(),
+                        memo: RefCell::new(None),
+                    });
+                    opt(Some(Value::tuple(vec![
+                        Value::data(0, vec![x]),
+                        wrap(Native::Grpc(Obj::Cell(next))),
+                    ])))
+                }
+                Ok(Err(_)) => err(INTERNAL, "unexpected error in a response"),
+                Err(e) => err(INTERNAL, &format!("bad response from {}: {}", src.what, e)),
+            },
+            Got::End(st) if st.code == OK => opt(None),
+            Got::End(st) => err(st.code, &st.message),
+            Got::Lost(m, _) => err(UNAVAILABLE, &m),
+        };
+        *cell.memo.borrow_mut() = Some(v.clone());
+        return Ok(v);
+    }
     let failed = |f: Failure| -> CellErr {
         if src.server {
             return CellErr::Ctl(Ctl::Cancelled);
@@ -1579,8 +1877,11 @@ fn route_name(server: &Server, path: &str) -> String {
 fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
     let headers = s.borrow().headers.clone();
     let path = header(&headers, ":path").unwrap_or("").to_string();
+    let peer = c.borrow().tls.as_ref().and_then(|t| t.peer_subject());
     let serving = Rc::new(Serving {
         headers: headers.clone(),
+        peer,
+        stream: s.clone(),
         task: it.task.clone(),
         status: RefCell::new(None),
     });
@@ -1588,7 +1889,15 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
         metadata: Rc::new(Vec::new()),
         deadline: None,
         serving: Some(serving.clone()),
+        tls: None,
+        capture: None,
+        gzip: false,
     };
+    // responses are compressed like the requests
+    {
+        let mut sb = s.borrow_mut();
+        sb.gzip = header(&sb.headers, "grpc-encoding") == Some("gzip");
+    }
     let what = route_name(&server, &path);
     // calls of the program's functions (not of reflection and health
     // checking) are logged when they are cancelled
@@ -1659,6 +1968,15 @@ fn finish(it: &mut Interp, c: &ConnRef, s: &StreamRef, status: Option<Status>) {
         None => ("0".to_string(), None),
     };
     let mut hs: Vec<(&str, &str)> = Vec::new();
+    let extra: Vec<(String, String)> = if sb.sent_headers {
+        sb.out_trailers.clone()
+    } else {
+        sb.out_headers
+            .iter()
+            .chain(&sb.out_trailers)
+            .cloned()
+            .collect()
+    };
     if !sb.sent_headers {
         hs.push((":status", "200"));
         hs.push(("content-type", "application/grpc"));
@@ -1666,6 +1984,9 @@ fn finish(it: &mut Interp, c: &ConnRef, s: &StreamRef, status: Option<Status>) {
     hs.push(("grpc-status", &code));
     if let Some(m) = &msg {
         hs.push(("grpc-message", m));
+    }
+    for (k, v) in &extra {
+        hs.push((k, v));
     }
     let b = hpack::encode(&hs);
     let max = cb.peer.max_frame;
@@ -1815,6 +2136,7 @@ fn run_method(
                 },
                 what: what.to_string(),
                 deadline: None,
+                results: false,
             });
             let cell = Rc::new(StreamCell {
                 src: inc,
@@ -1875,6 +2197,14 @@ fn run_method(
                 };
                 let Some((x, rest)) = next else {
                     break;
+                };
+                // a stream of results ends at an `Err`, with its status
+                let x = match (&m.shape.results, &x) {
+                    (Some(_), Value::Data(1, e)) => {
+                        return Ok(Err(status_of_error(&e[0])));
+                    }
+                    (Some(_), Value::Data(0, v)) => v[0].clone(),
+                    _ => x,
                 };
                 let msg = encode_msg(it, &enc, &x)?;
                 if !send_msg(it, c, s, &msg, false)? {
@@ -2214,19 +2544,19 @@ fn serve_conn(it: &mut Interp, c: ConnRef) {
     conn_dead(it, &c, &why);
 }
 
-/// A server's TLS context (offering h2), from its certificate and key.
-fn server_tls(files: Option<(String, String)>) -> Result<Option<Rc<tls::Ctx>>, String> {
+/// A server's TLS context (offering h2), from its certificate and key
+/// (and the CA of the client certificates it requires).
+fn server_tls(files: Option<tls::ServerFiles>) -> Result<Option<Rc<tls::Ctx>>, String> {
     match files {
-        Some((cert, key)) => {
-            tls::server_ctx(&cert, &key, &["h2".to_string()]).map(|c| Some(Rc::new(c)))
-        }
+        Some(f) => tls::server_ctx(&f.cert, &f.key, &["h2".to_string()], &f.client_ca)
+            .map(|c| Some(Rc::new(c))),
         None => Ok(None),
     }
 }
 
 /// Serve the program's service with the interpreter (`fwp serve`), over
 /// TLS with a certificate and key.
-pub fn serve(prog: &Program, listen: Option<String>, tls: Option<(String, String)>) -> i32 {
+pub fn serve(prog: &Program, listen: Option<String>, tls: Option<tls::ServerFiles>) -> i32 {
     let server = match compiled_server(prog) {
         Ok(s) => Rc::new(s),
         Err(e) => {
@@ -2274,6 +2604,14 @@ pub fn serve(prog: &Program, listen: Option<String>, tls: Option<(String, String
 }
 
 // ============================================================= primitives
+
+fn pairs_value(md: &[(String, String)]) -> Value {
+    Value::list(
+        md.iter()
+            .map(|(k, v)| Value::tuple(vec![Value::str(k), Value::str(v)]))
+            .collect(),
+    )
+}
 
 fn bytes_of(v: &Value) -> Rc<[u8]> {
     match v {
@@ -2541,6 +2879,69 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             it.grpc.metadata = saved;
             r
         }
+        "grpc.peer-subject" => Ok(opt(it
+            .grpc
+            .serving
+            .as_ref()
+            .and_then(|s| s.peer.clone())
+            .map(|p| Value::str(&p)))),
+        "grpc.set-header" | "grpc.set-trailer" => {
+            if let (Some(sv), Some(p)) = (
+                it.grpc.serving.clone(),
+                metadata_pair(a[0].as_str(), a[1].as_str()),
+            ) {
+                let mut sb = sv.stream.borrow_mut();
+                if sym == "grpc.set-header" {
+                    sb.out_headers.push(p);
+                } else {
+                    sb.out_trailers.push(p);
+                }
+            }
+            Ok(Value::unit())
+        }
+        "grpc.with-gzip" => {
+            let saved = std::mem::replace(&mut it.grpc.gzip, true);
+            let r = it.apply(a[0].clone(), vec![Value::unit()]);
+            it.grpc.gzip = saved;
+            r
+        }
+        "grpc.with-response-metadata" => {
+            let cap = Rc::new(RefCell::new(Vec::new()));
+            let saved = it.grpc.capture.replace(cap.clone());
+            let r = it.apply(a[0].clone(), vec![Value::unit()]);
+            it.grpc.capture = saved;
+            let v = r?;
+            let md = cap.borrow().clone();
+            if let Some(outer) = &it.grpc.capture {
+                outer.borrow_mut().extend(md.iter().cloned());
+            }
+            Ok(Value::tuple(vec![v, pairs_value(&md)]))
+        }
+        "grpc.response-metadata" => {
+            let call = the_call(&a[0])?;
+            let md = response_metadata(&call.stream.borrow());
+            Ok(pairs_value(&md))
+        }
+        "grpc.with-tls" => {
+            // TlsOptions: alpn, ca-file, cert-file, insecure, key-file,
+            // server-name
+            let o = &a[0];
+            let text = |name: &str| match field(it.prog, o, "std::TlsOptions", name) {
+                Value::Data(1, ref fs) if !fs.is_empty() => fs[0].as_str().to_string(),
+                _ => String::new(),
+            };
+            let t = ClientTls {
+                ca: text("ca-file"),
+                insecure: field(it.prog, o, "std::TlsOptions", "insecure").as_bool(),
+                name: text("server-name"),
+                cert: text("cert-file"),
+                key: text("key-file"),
+            };
+            let saved = it.grpc.tls.replace(Rc::new(t));
+            let r = it.apply(a[1].clone(), vec![Value::unit()]);
+            it.grpc.tls = saved;
+            r
+        }
         "grpc.with-deadline" => {
             let nanos = match &a[0] {
                 Value::Record(fs) => fs[0].as_i128().unwrap_or(0).max(0) as u64,
@@ -2561,8 +2962,12 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             // certificate and key first for TLS
             let (files, a) = if sym == "grpc._serve-tls" {
                 (
-                    Some((a[0].as_str().to_string(), a[1].as_str().to_string())),
-                    &a[2..],
+                    Some(tls::ServerFiles {
+                        cert: a[0].as_str().to_string(),
+                        key: a[1].as_str().to_string(),
+                        client_ca: a[2].as_str().to_string(),
+                    }),
+                    &a[3..],
                 )
             } else {
                 (None, &a[..])
@@ -2655,8 +3060,34 @@ fn typed_call(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
         Ok((c, s, _)) => (c, s),
         Err(e) => return Err(grpc_error(UNAVAILABLE, &e)),
     };
+    if sym == "grpc.bidi-streaming" {
+        // requests are sent as responses arrive
+        let sender = spawn_sender(it, &c, &s, a[4].clone(), Encoder::Fwp(enc.clone()));
+        let ch = a[5].clone();
+        let r = (|| -> R<Value> {
+            loop {
+                match recv(it, &c, &s, deadline)? {
+                    Got::Msg(m) => {
+                        let v = it.apply(dec.clone(), vec![Value::Bytes(Rc::from(m))])?;
+                        if let Some(r) = it.prim_conc("channel.send", &mut [ch.clone(), v]) {
+                            r?;
+                        }
+                    }
+                    Got::End(st) if st.code == OK => return Ok(Value::unit()),
+                    g => return Err(got_error(g)),
+                }
+            }
+        })();
+        if let Some(e) = sender.finish(it) {
+            return Err(e);
+        }
+        if r.is_err() {
+            reset_stream(it, &c, &s, 8);
+        }
+        return r;
+    }
     let r = (|| -> R<Value> {
-        let streaming_in = sym == "grpc.client-streaming" || sym == "grpc.bidi-streaming";
+        let streaming_in = sym == "grpc.client-streaming";
         if streaming_in {
             let mut cur = a[4].clone();
             while let Some((x, rest)) = iter_next(it, cur)? {
@@ -2730,6 +3161,7 @@ fn typed_handler(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
             dec: Decoder::Fwp(dec.clone()),
             what: String::new(),
             deadline: None,
+            results: false,
         });
         let cell = wrap(Native::Grpc(Obj::Cell(Rc::new(StreamCell {
             src: inc,

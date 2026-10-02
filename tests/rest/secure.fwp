@@ -1,0 +1,99 @@
+# Headers, cookies, authentication, CORS, replies and timeouts
+# (tests/rest.rs).
+#
+# auth: bearer
+# auth: api-key header X-API-Key
+# cors: https://app.example
+# timeout: 5s
+
+User = { name: String, admin: Bool }
+
+Item = { id: I64, name: String }
+
+# what a request carried, as the function saw it
+Seen = {
+    # header: X-Trace-Id
+    trace: Option[String],
+    # cookie: theme
+    theme: Option[String],
+    limit: Option[I64],
+}
+
+# Check a token or an API key: "alice" is an admin, "bob" is not.
+authenticate : String -> Result[User, String]
+authenticate = match
+    "alice" -> Ok User { name = "alice", admin = True }
+    "bob" -> Ok User { name = "bob", admin = False }
+    _ -> const (Err "unknown token")
+
+# Who is calling.
+# route: GET /me
+export me : User -> User
+me = id
+
+# A public health check.
+# route: GET /health
+# auth: none
+export health : () -> String
+health = const "ok"
+
+# Create an item: 201 with its location.
+# route: POST /items
+# status: 201
+# response-header: Location where the item is
+export create : User -> Item -> RestReply[Item]
+create = curry (.1
+    | rest.reply 201
+    | fork (rest.with-header "location") (.body | .id | format "/items/{}") id)
+
+# An item, or a redirect to its new id.
+# route: GET /items/{id}
+# status: 200, 301
+# response-header: Location the new place of a moved item
+# auth: none
+export item : I64 -> RestReply[Item]
+item =
+    if
+        (eq 1)
+        (const (rest.reply 301 Item { id = 2, name = "moved" })
+            | rest.with-header "location" "/items/2")
+        (make Item { id = id, name = const "thing" } | rest.reply 200)
+
+# Delete an item: an empty reply.
+# route: DELETE /items/{id}
+export delete : User -> I64 -> RestReply[()] ! {Error[HttpError]}
+delete = curry (if
+    (.0 | .admin)
+    (const (rest.reply 204 ()))
+    (const "admins only" | http.fail 403))
+
+# Headers, a cookie and a query parameter through an options record.
+# route: GET /seen
+# auth: none
+export seen : Seen -> String
+seen = show
+
+# A required header and an optional cookie bound to parameters.
+# route: GET /hello
+# header: X-Name -> name
+# cookie: session -> session
+# auth: none
+export hello : String -> Option[String] -> String
+hello = curry (both .0 (.1 | option.unwrap-or "none") | format "hello {} ({})")
+
+# The request itself.
+# route: GET /echo-request
+# auth: none
+export echo-request : Request -> String
+echo-request =
+    fork
+        concat
+        (http.header "x-test" | option.unwrap-or "-")
+        (.method | concat " ")
+
+# Too slow for its time limit.
+# route: GET /slow
+# timeout: 200ms
+# auth: none
+export slow : () -> String ! {Async}
+slow = const 5s | task.sleep | const "late"

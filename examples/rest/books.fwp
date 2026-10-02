@@ -8,6 +8,11 @@
 #   fwp openapi books.fwp                      its OpenAPI document
 #   fwp build books.fwp --cli -o books         a command-line program
 #   fwp build shop.fwp --service books -o out  a gRPC service (see shop.fwp)
+#
+# As a REST API, quotes need a bearer token (see `authenticate`), and
+# pages served from http://localhost:3000 may call it from a browser.
+#
+# cors: http://localhost:3000
 
 export version : String
 version = "1.0.0"
@@ -117,10 +122,21 @@ option-ok = curry (match
     (None, _) -> const True
     (Some _, _) -> apply)
 
+# A clerk, who may quote orders.
+Clerk = { name: String }
+
+# The clerk of a bearer token: REST servers check the credentials of
+# endpoints with `# auth:` with this function.
+authenticate : String -> Result[Clerk, String]
+authenticate = match
+    "clerk-token" -> Ok Clerk { name = "clerk" }
+    _ -> const (Err "unknown token")
+
 # Quote an order: the price of each line and the total, with a 10%
 # discount for the coupon `FWP10`.
 # route: POST /quotes
 # error: UnknownBook 404, OutOfStock 409, BadCoupon 422
+# auth: bearer
 export quote-order : Order -> Quote ! {Error[OrderError]}
 quote-order =
     both (.lines | map priced) (.coupon | discount)

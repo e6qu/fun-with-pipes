@@ -56,7 +56,7 @@ pub fn listen_address(prog: &Program, listen: Option<String>) -> String {
 
 /// Serve the program's service with the interpreter (`fwp serve`), over
 /// TLS with a certificate and key (PEM files).
-pub fn serve(prog: &Program, listen: Option<String>, tls: Option<(String, String)>) -> i32 {
+pub fn serve(prog: &Program, listen: Option<String>, tls: Option<crate::tls::ServerFiles>) -> i32 {
     crate::grpc::serve(prog, listen, tls)
 }
 

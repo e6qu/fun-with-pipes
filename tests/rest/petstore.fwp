@@ -2,8 +2,16 @@
 # `fwp openapi --import`.
 #
 # Each function takes the server's base URL first (`http://host:port`),
-# then the path parameters, a record of the query parameters and the
-# body. A response other than a success raises `Error[RestError]`.
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
+
+# the header parameters of `get-pet-by-id`
+GetPetByIdHeaders = {
+    # json: X-Trace
+    x-trace: Option[String],
+}
 
 Category = { id: Option[I64], name: Option[String] }
 
@@ -28,8 +36,36 @@ Pet = {
     owner: Option[PetOwner],
 }
 
+# the header parameters of `delete-pet`
+DeletePetHeaders = { api_key: String }
+
 # the query parameters of `find-pets-by-status`
 FindPetsByStatusQuery = { status: List[String], maxResults: Option[I32] }
+
+# the cookie parameters of `update-pet-with-form`
+UpdatePetWithFormCookies = { session: Option[String] }
+
+UpdatePetWithFormBody = { name: Option[String], status: Option[String] }
+
+DogOwner = {
+    first-name: Option[String],
+    # json: 2nd
+    f2nd: Option[Bool],
+}
+
+# A pet that barks.
+Dog = {
+    id: Option[I64],
+    name: String,
+    category: Option[Category],
+    photoUrls: List[String],
+    tags: Option[List[Tag]],
+    # pet status in the store
+    status: Option[String],
+    birth_date: Option[String],
+    owner: Option[DogOwner],
+    bark: Bool,
+}
 
 Kind =
     | Admin
@@ -42,41 +78,74 @@ LoginUserQuery = {
     type-field: Option[Kind],
 }
 
+# json: untagged
+OwnerValue =
+    | OwnerValue.Tag Tag
+    | OwnerValue.Text String
+
+Owner = Option[OwnerValue]
+
+# json: untagged
+SessionData =
+    | SessionData.Text String
+    | SessionData.Int I64
+
 Session = {
+    owner: Owner,
     token: String,
     expires: Option[Duration],
-    extra: Option[Json],
-    data: Option[Json],
+    extra: Option[Tag],
+    data: Option[SessionData],
     # json: match
     match-field: Option[String],
 }
 
 # Find a pet by its id
 # GET /pet/{petId}
-get-pet-by-id : String -> I64 -> Option[Pet] ! {Async, Network, Error[RestError]}
-get-pet-by-id = curry (make RestRequest {
-    method = const "GET",
-    url = make RestTarget {
-        base = .0,
-        path = const "/pet/{petId}",
-        params = rest.texts [.1 | rest.param-text],
-        query = const [],
-    } | rest.url,
-    body = const None,
-} | rest.fetch-option)
+get-pet-by-id : String -> I64 -> GetPetByIdHeaders -> Option[Pet] ! {Async, Network, Error[RestError]}
+get-pet-by-id = curry (curry
+    (make RestRequest {
+        method = const "GET",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet/{petId}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = .1 | rest.query-pairs,
+        body = const None,
+    } | rest.fetch-option))
+
+# DELETE /pet/{petId}
+delete-pet : String -> I64 -> DeletePetHeaders -> () ! {Async, Network, Error[RestError]}
+delete-pet = curry (curry
+    (make RestRequest {
+        method = const "DELETE",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet/{petId}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = .1 | rest.query-pairs,
+        body = const None,
+    } | rest.fetch))
 
 # POST /pet
-add-pet : String -> Pet -> Pet ! {Async, Network, Error[RestError]}
-add-pet = curry (make RestRequest {
-    method = const "POST",
-    url = make RestTarget {
-        base = .0,
-        path = const "/pet",
-        params = rest.texts [],
-        query = const [],
-    } | rest.url,
-    body = .1 | json.write | Some,
-} | rest.fetch)
+# auth: bearer (the token after the base URL)
+add-pet : String -> String -> Pet -> Pet ! {Async, Network, Error[RestError]}
+add-pet = curry (curry
+    (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | rest.bearer,
+        body = .1 | json.write | Some,
+    } | rest.fetch))
 
 # Multiple status values can be provided
 # with comma separated strings.
@@ -90,6 +159,7 @@ find-pets-by-status = curry (make RestRequest {
         params = rest.texts [],
         query = .1 | rest.query-pairs,
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch)
 
@@ -103,8 +173,33 @@ get-inventory = make RestRequest {
         params = rest.texts [],
         query = const [],
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch
+
+# POST /pet/{petId}/form
+# auth: api-key header X-API-Key (the key after the base URL)
+update-pet-with-form : String -> String -> I64 -> UpdatePetWithFormCookies -> Option[UpdatePetWithFormBody] -> Dog ! {Async, Network, Error[RestError]}
+update-pet-with-form = curry (curry
+    (curry
+        (curry
+            (make RestRequest {
+                method = const "POST",
+                url = make RestTarget {
+                    base = .0 | .0 | .0 | .0,
+                    path = const "/pet/{petId}/form",
+                    params = rest.texts [.0 | .0 | .1 | rest.param-text],
+                    query = const [],
+                } | rest.url,
+                headers = rest.pairs [
+                    .0 | .0 | .0 | .1 | curry id "x-api-key" | singleton,
+                    .0 | .1 | rest.query-pairs | rest.cookie-header,
+                    const [
+                        ("content-type", "application/x-www-form-urlencoded"),
+                    ],
+                ],
+                body = .1 | option.map rest.form-body,
+            } | rest.fetch))))
 
 # GET /user/login
 login-user : String -> LoginUserQuery -> Session ! {Async, Network, Error[RestError]}
@@ -116,5 +211,6 @@ login-user = curry (make RestRequest {
         params = rest.texts [],
         query = .1 | rest.query-pairs,
     } | rest.url,
+    headers = const [],
     body = const None,
 } | rest.fetch)

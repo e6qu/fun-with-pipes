@@ -46,6 +46,10 @@ pub struct Shape {
     pub output: Output,
     /// The function's error type is `GrpcError`: its errors are statuses.
     pub status_errors: bool,
+    /// An `Iterator[Result[R, GrpcError]]` result: the messages are `R`s,
+    /// and an `Err` ends the stream with its status (and a failed stream
+    /// ends the caller's iterator with an `Err`). The element type.
+    pub results: Option<MT>,
 }
 
 /// The standard library's `GrpcError` record.
@@ -71,9 +75,18 @@ pub fn shape(ty: &MT, arity: usize, error: Option<&MT>) -> Shape {
             params.pop();
         }
     }
-    if let Output::Value(r) = &output {
-        if let Some(e) = elem_of(r, "std::Iterator") {
-            output = Output::Iter(e.clone());
+    let mut results = None;
+    let iter = match &output {
+        Output::Value(r) => elem_of(r, "std::Iterator").cloned(),
+        _ => None,
+    };
+    if let Some(e) = iter {
+        output = Output::Iter(e.clone());
+        if let MT::Con(n, args) = &e {
+            if n == "std::Result" && args.len() == 2 && args[1] == grpc_error_type() {
+                output = Output::Iter(args[0].clone());
+                results = Some(e.clone());
+            }
         }
     }
     let input = match &params[..] {
@@ -87,6 +100,7 @@ pub fn shape(ty: &MT, arity: usize, error: Option<&MT>) -> Shape {
         input,
         output,
         status_errors: error == Some(&grpc_error_type()),
+        results,
     }
 }
 
@@ -137,7 +151,7 @@ impl Shape {
     pub fn iter_elem(&self, server: bool) -> Option<&MT> {
         match (server, &self.input, &self.output) {
             (true, Input::Stream(t), _) => Some(t),
-            (false, _, Output::Iter(t)) => Some(t),
+            (false, _, Output::Iter(t)) => Some(self.results.as_ref().unwrap_or(t)),
             _ => None,
         }
     }
