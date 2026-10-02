@@ -1,0 +1,19 @@
+div-or-fail : I64 -> I64 -> I64 ! {Error[String]}
+div-or-fail = curry (match
+    (0, _) -> const (fail "division by zero")
+    _ -> uncurry div)
+
+safe-div = div-or-fail | attempt
+
+count-calls = const (add 1) | modify
+
+main = [
+    10 | safe-div 2 | echo,
+    10 | safe-div 0 | echo,
+    [Ok 1, Ok 2] | attempt (map try) | echo,
+    [Ok 1, Err "second", Err "third"] | attempt (map try) | echo,
+    [1, 2, 3] | run-state 0 (map count-calls) | echo,
+    None | attempt (or-fail "missing") | echo,
+    10 | div-or-fail 0 | echo,
+    print "not reached",
+] | ignore

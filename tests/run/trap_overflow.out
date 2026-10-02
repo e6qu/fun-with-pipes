@@ -1,0 +1,7 @@
+4
+255
+None
+(4, True)
+--- stderr
+fwp: trap: arithmetic overflow in U8
+--- exit 101

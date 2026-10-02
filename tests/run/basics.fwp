@@ -1,0 +1,40 @@
+User = { name: String, age: I64, active: Bool }
+
+users = [
+    User { name = "Grace", age = 45, active = True },
+    User { name = "Ada", age = 36, active = True },
+    User { name = "Bob", age = 25, active = False },
+]
+
+rec factorial = match
+    0 -> 1
+    _ -> fork mul id (sub 1 | factorial)
+
+describe = match
+    Some -> show | concat " found"
+    None -> "nothing"
+
+classify = match
+    (0, 0) -> "origin"
+    (0, _) -> const "y-axis"
+    (_, 0) -> const "x-axis"
+    _ -> const "plane"
+
+normalize =
+    trim
+    | lower
+
+main = [
+    users | filter .active | map .name | sort | echo,
+    20 | factorial | echo,
+    Some 42 | describe | print,
+    None | describe | print,
+    [(0, 0), (0, 5), (3, 0), (1, 1)] | map classify | echo,
+    "  Hello World  " | normalize | print,
+    users | map (update { age = add 1 }) | map .age | echo,
+    { x = 1.5, y = -2.0 } | echo,
+    (1, "two", [3.0]) | echo,
+    users | map (make { who = .name, adult = .age | ge 18 }) | echo,
+    Some (Some -1) | echo,
+    [Ok 1, Err "bad"] | echo,
+] | ignore
