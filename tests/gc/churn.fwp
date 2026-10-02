@@ -1,0 +1,14 @@
+# Allocates about 1 GB in short-lived lists and strings: the native
+# collector keeps it in a few MB (tests/gc.rs).
+
+work : I64 -> I64
+work = const (range 0 1000 | map (mul 3) | map show | map string.length | sum)
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork add .1 (.0 | work)) | Again)
+
+main = (6000, 0) | loop step | echo

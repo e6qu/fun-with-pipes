@@ -409,7 +409,7 @@ static V fwp_p_trits_pack(V xs) {
     size_t n;
     V *ts = fwp_list_items(xs, &n);
     size_t nb = (n + 4) / 5;
-    char *b = (char *)fwp_alloc(nb + 1);
+    char *b = (char *)fwp_alloc_leaf(nb + 1);
     for (size_t c = 0; c < nb; c++) {
         uint32_t byte = 0, p = 1;
         for (size_t k = 0; k < 5 && c * 5 + k < n; k++, p *= 3)

@@ -277,7 +277,7 @@ static V fwp_p_case(V s, int upper) {
 }
 
 static V fwp_p_concat(V t, V s) {
-    fwp_str *r = (fwp_str *)fwp_alloc(sizeof(fwp_str) + STR(s)->len + STR(t)->len + 1);
+    fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + STR(s)->len + STR(t)->len + 1);
     r->len = STR(s)->len + STR(t)->len;
     memcpy(r->d, STR(s)->d, STR(s)->len);
     memcpy(r->d + STR(s)->len, STR(t)->d, STR(t)->len);
@@ -327,16 +327,16 @@ static V fwp_p_split(V sep, V s) {
     if (STR(sep)->len == 0) return fwp_p_chars(s);
     const char *d = STR(s)->d, *end = d + STR(s)->len;
     size_t cap = 8, k = 0;
-    V *a = (V *)malloc(cap * sizeof(V));
+    V *a = (V *)fwp_mem_alloc(cap * sizeof(V));
     for (;;) {
         const char *p = fwp_memmem(d, (size_t)(end - d), STR(sep)->d, STR(sep)->len);
-        if (k == cap) { cap *= 2; a = (V *)realloc(a, cap * sizeof(V)); }
+        if (k == cap) { cap *= 2; a = (V *)fwp_mem_realloc(a, cap / 2 * sizeof(V), cap * sizeof(V)); }
         if (!p) { a[k++] = fwp_str_new(d, (size_t)(end - d)); break; }
         a[k++] = fwp_str_new(d, (size_t)(p - d));
         d = p + STR(sep)->len;
     }
     V r = fwp_list_from(a, k);
-    free(a);
+    fwp_mem_free(a);
     return r;
 }
 
@@ -354,18 +354,18 @@ static V fwp_p_join(V sep, V xs) {
 
 static V fwp_lines_of(const char *d, size_t n) {
     size_t cap = 8, k = 0, i = 0;
-    V *a = (V *)malloc(cap * sizeof(V));
+    V *a = (V *)fwp_mem_alloc(cap * sizeof(V));
     while (i < n) {
         size_t j = i;
         while (j < n && d[j] != '\n') j++;
         size_t e = j;
         if (j < n && e > i && d[e - 1] == '\r') e--;
-        if (k == cap) { cap *= 2; a = (V *)realloc(a, cap * sizeof(V)); }
+        if (k == cap) { cap *= 2; a = (V *)fwp_mem_realloc(a, cap / 2 * sizeof(V), cap * sizeof(V)); }
         a[k++] = fwp_str_new(d + i, e - i);
         i = j + 1;
     }
     V r = fwp_list_from(a, k);
-    free(a);
+    fwp_mem_free(a);
     return r;
 }
 
@@ -374,19 +374,19 @@ static V fwp_p_lines(V s) { return fwp_lines_of(STR(s)->d, STR(s)->len); }
 static V fwp_p_words(V s) {
     const char *d = STR(s)->d;
     size_t n = STR(s)->len, i = 0, cap = 8, k = 0;
-    V *a = (V *)malloc(cap * sizeof(V));
+    V *a = (V *)fwp_mem_alloc(cap * sizeof(V));
     while (i < n) {
         while (i < n && fwp_is_space(d[i])) i++;
         size_t j = i;
         while (j < n && !fwp_is_space(d[j])) j++;
         if (j > i) {
-            if (k == cap) { cap *= 2; a = (V *)realloc(a, cap * sizeof(V)); }
+            if (k == cap) { cap *= 2; a = (V *)fwp_mem_realloc(a, cap / 2 * sizeof(V), cap * sizeof(V)); }
             a[k++] = fwp_str_new(d + i, j - i);
         }
         i = j;
     }
     V r = fwp_list_from(a, k);
-    free(a);
+    fwp_mem_free(a);
     return r;
 }
 
@@ -427,7 +427,7 @@ static V fwp_p_str_repeat(V n, V s) {
 static V fwp_p_str_reverse(V s) {
     const char *d = STR(s)->d;
     size_t n = STR(s)->len;
-    fwp_str *r = (fwp_str *)fwp_alloc(sizeof(fwp_str) + n + 1);
+    fwp_str *r = (fwp_str *)fwp_alloc_leaf(sizeof(fwp_str) + n + 1);
     r->len = n;
     size_t i = 0;
     while (i < n) {
@@ -1135,7 +1135,7 @@ static V fwp_io_error_path(const char *kind, const char *path, const fwp_desc *d
 static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
     h->f = f;
-    char *p = (char *)fwp_alloc(strlen(path) + 1);
+    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
     strcpy(p, path);
     h->path = p;
     return PTR(h);
@@ -1391,7 +1391,7 @@ static V fwp_p_syntax_show(V v) {
 /* Same algorithms and operation order as src/linalg.rs. */
 
 static double *la_get(V arr, size_t n) {
-    double *d = (double *)fwp_alloc((n + 1) * sizeof(double));
+    double *d = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
     for (size_t i = 0; i < n; i++) d[i] = fwp_f64(ARR(arr)->d[i]);
     return d;
 }
@@ -1473,7 +1473,7 @@ static V fwp_p_inverse(V nv, V av) {
     la_check("linalg.inverse", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
-    double *inv = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    double *inv = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
     for (size_t i = 0; i < n * n; i++) inv[i] = 0.0;
     for (size_t i = 0; i < n; i++) inv[i * n + i] = 1.0;
     for (size_t k = 0; k < n; k++) {
@@ -1504,7 +1504,7 @@ static V fwp_p_cholesky(V nv, V av) {
     la_check("linalg.cholesky", av, (int64_t)nv, (int64_t)nv);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n);
-    double *l = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    double *l = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
     for (size_t i = 0; i < n * n; i++) l[i] = 0.0;
     for (size_t i = 0; i < n; i++)
         for (size_t j = 0; j <= i; j++) {
@@ -1524,7 +1524,7 @@ static V fwp_p_qr(V mv, V nv, V av) {
     la_check("linalg.qr", av, (int64_t)mv, (int64_t)nv);
     size_t m = (size_t)(int64_t)mv, n = (size_t)(int64_t)nv;
     double *q = la_get(av, m * n);
-    double *r = (double *)fwp_alloc((n * n + 1) * sizeof(double));
+    double *r = (double *)fwp_alloc_leaf((n * n + 1) * sizeof(double));
     for (size_t i = 0; i < n * n; i++) r[i] = 0.0;
     for (size_t j = 0; j < n; j++) {
         for (size_t i = 0; i < j; i++) {
@@ -1556,8 +1556,8 @@ static V fwp_p_cg(V itv, V tolv, V nv, V av, V bv) {
     la_check("linalg.cg", bv, (int64_t)nv, 1);
     size_t n = (size_t)(int64_t)nv;
     double *a = la_get(av, n * n), *r = la_get(bv, n), *p = la_get(bv, n);
-    double *x = (double *)fwp_alloc((n + 1) * sizeof(double));
-    double *ap = (double *)fwp_alloc((n + 1) * sizeof(double));
+    double *x = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
+    double *ap = (double *)fwp_alloc_leaf((n + 1) * sizeof(double));
     for (size_t i = 0; i < n; i++) x[i] = 0.0;
     double rs = la_dot(r, r, n);
     for (int64_t it = 0; it < maxit; it++) {

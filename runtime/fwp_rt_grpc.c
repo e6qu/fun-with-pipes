@@ -179,9 +179,34 @@ static void g_unlink(g_conn *c, g_stream *s) {
     s->next = 0;
 }
 
+/* streams and connections are collected (runtime/fwp_rt_gc.c); their
+ * malloc'ed buffers are released then */
+static void g_stream_final(void *p) {
+    g_stream *s = (g_stream *)p;
+    h2_hdrs_free(&s->headers);
+    h2_hdrs_free(&s->trailers);
+    h2b_free(&s->data);
+    while (s->mhead) {
+        g_msg *m = s->mhead;
+        s->mhead = m->next;
+        free(m);
+    }
+    free(s->reset);
+    free(s->bad);
+}
+
+static void g_conn_final(void *p) {
+    g_conn *c = (g_conn *)p;
+    h2_hpack_free(&c->dec);
+    h2b_free(&c->in);
+    h2b_free(&c->out);
+    h2b_free(&c->cont_buf);
+    free(c->dead);
+}
+
 static g_stream *g_stream_new(g_conn *c, uint32_t id) {
-    g_stream *s = (g_stream *)calloc(1, sizeof *s);
-    if (!s) fwp_trap("out of memory");
+    g_stream *s = (g_stream *)fwp_mem_alloc(sizeof *s);
+    fwp_gc_finalizer(s, g_stream_final);
     s->id = id;
     s->window = c->peer.init_window;
     s->next = c->streams;
@@ -195,8 +220,8 @@ static void g_set_reset(g_stream *s, const char *why) {
 }
 
 static g_conn *g_conn_new(int fd, const char *authority, const g_server *server) {
-    g_conn *c = (g_conn *)calloc(1, sizeof *c);
-    if (!c) fwp_trap("out of memory");
+    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c);
+    fwp_gc_finalizer(c, g_conn_final);
     c->fd = fd;
     c->server = server;
     snprintf(c->authority, sizeof c->authority, "%s", authority);
@@ -253,8 +278,9 @@ typedef struct { g_stream **v; size_t n, cap; } g_slist;
 
 static void g_slist_add(g_slist *l, g_stream *s) {
     if (l->n == l->cap) {
+        size_t old = l->cap;
         l->cap = l->cap ? l->cap * 2 : 8;
-        l->v = (g_stream **)realloc(l->v, l->cap * sizeof *l->v);
+        l->v = (g_stream **)fwp_mem_realloc(l->v, old * sizeof *l->v, l->cap * sizeof *l->v);
     }
     l->v[l->n++] = s;
 }
@@ -517,7 +543,7 @@ static void g_reader(void *arg, int cancelled) {
             char *dead = 0;
             g_process(c, buf, (size_t)k, &fresh, &dead);
             for (size_t i = 0; i < fresh.n; i++) g_start_call(c, fresh.v[i]);
-            free(fresh.v);
+            fwp_mem_free(fresh.v);
             g_wake_conn(c);
             if (dead) {
                 /* send the GOAWAY if it can be sent now */
@@ -990,7 +1016,7 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_write(&b, x, src->dec.error, 1);
             g_trapf("service call %s failed: error: %.*s", src->what, (int)b.len, b.d ? b.d : "");
         }
-        g_cell *next = (g_cell *)calloc(1, sizeof *next);
+        g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
         next->src = src;
         r = fwp_some(fwp_tuple2(x, PTR(next)));
     } else if (g.kind == G_END && g.code == 0) {
@@ -1033,7 +1059,7 @@ static int g_sink_send(void *ctx, V x) {
 static V g_sink_value(g_conn *c, g_stream *s, g_codec enc, int tag) {
     V ch = fwp_p_channel_make((V)1);
     fwp_chan *q = (fwp_chan *)(uintptr_t)ch;
-    g_sink *k = (g_sink *)calloc(1, sizeof *k);
+    g_sink *k = (g_sink *)fwp_mem_alloc(sizeof *k);
     k->c = c;
     k->s = s;
     k->enc = enc;
@@ -1154,13 +1180,13 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     }
     /* an Iterator: the first element now, so that a failure before it is
      * raised in the caller */
-    g_incoming *src = (g_incoming *)calloc(1, sizeof *src);
+    g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
     src->c = c;
     src->s = s;
     src->dec = dec;
     src->what = g_strdupf("%s (%s)", r->what, addr);
     src->deadline = deadline;
-    g_cell *cell = (g_cell *)calloc(1, sizeof *cell);
+    g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
     cell->src = src;
     g_failure f = {0, 0};
     V ev = 0;
@@ -1246,7 +1272,7 @@ static int64_t g_parse_timeout(const char *t) {
 }
 
 static void g_start_call(g_conn *c, g_stream *s) {
-    g_job *j = (g_job *)calloc(1, sizeof *j);
+    g_job *j = (g_job *)fwp_mem_alloc(sizeof *j);
     j->c = c;
     j->s = s;
     j->srv = c->server;
@@ -1305,7 +1331,7 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     }
     g_got e;
     g_recv(j->c, j->s, 0, &e);
-    if (e.kind == G_END) return g.m;
+    if (e.kind == G_END) { free(e.text); return g.m; }
     if (e.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
     *code = GRPC_INVALID_ARGUMENT;
     *msg = e.kind == G_LOST ? e.text : strdup("expected one request message");
@@ -1405,14 +1431,14 @@ static int g_run_method(g_job *j, char **msg) {
             }
         h2b_free(&canon);
     } else {
-        g_incoming *src = (g_incoming *)calloc(1, sizeof *src);
+        g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
         src->c = j->c;
         src->s = j->s;
         src->server = 1;
         g_codec d = {0, m->schema, m->req_node, m->req[0], 0};
         src->dec = d;
         src->what = j->what;
-        g_cell *cell = (g_cell *)calloc(1, sizeof *cell);
+        g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
         cell->src = src;
         args[na++] = fwp_apply1(fwp_pap((uint32_t)m->iter_fn, 0, 0), PTR(cell));
     }
@@ -1762,9 +1788,9 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
         return 1;
     }
-    g_server *srv = (g_server *)calloc(1, sizeof *srv);
+    g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);
     srv->n = (size_t)s->n + 4;
-    srv->routes = (g_route *)calloc(srv->n, sizeof(g_route));
+    srv->routes = (g_route *)fwp_mem_alloc((srv->n) * sizeof(g_route));
     for (int i = 0; i < s->n; i++) {
         srv->routes[i].path = s->methods[i].path;
         srv->routes[i].kind = G_ROUTE_METHOD;
@@ -1796,7 +1822,7 @@ typedef struct {
 } g_call;
 
 static V g_call_value(g_conn *c, g_stream *s, int server, int64_t deadline) {
-    g_call *k = (g_call *)calloc(1, sizeof *k);
+    g_call *k = (g_call *)fwp_mem_alloc(sizeof *k);
     k->c = c;
     k->s = s;
     k->server = server;
@@ -1925,7 +1951,7 @@ static V fwp_p_grpc_with_metadata(V md, V f) {
         V kv = items[i];
         fwp_str *key = STR(OBJ(kv)->f[0]), *val = STR(OBJ(kv)->f[1]);
         if (key->len == 0 || key->d[0] == ':') continue;
-        char *lk = (char *)fwp_alloc(key->len + 1), *lv = (char *)fwp_alloc(val->len + 1);
+        char *lk = (char *)fwp_alloc_leaf(key->len + 1), *lv = (char *)fwp_alloc_leaf(val->len + 1);
         for (size_t c = 0; c < key->len; c++) lk[c] = (char)tolower((unsigned char)key->d[c]);
         lk[key->len] = 0;
         for (size_t c = 0; c < val->len; c++) lv[c] = val->d[c] == '\r' || val->d[c] == '\n' ? ' ' : val->d[c];
@@ -1954,9 +1980,9 @@ static V g_serve_routes(SSL_CTX *tls, V addr, V routes, const fwp_desc *ioerr, c
     if (fd < 0) return fwp_io_error("listen", h2_err, ioerr);
     size_t n;
     V *items = fwp_list_items(routes, &n);
-    g_server *srv = (g_server *)calloc(1, sizeof *srv);
-    srv->routes = (g_route *)calloc(n + 2, sizeof(g_route));
-    srv->services = (const char **)calloc(n + 1, sizeof(char *));
+    g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);
+    srv->routes = (g_route *)fwp_mem_alloc((n + 2) * sizeof(g_route));
+    srv->services = (const char **)fwp_mem_alloc((n + 1) * sizeof(char *));
     for (size_t i = 0; i < n; i++) {
         V r = items[i];
         g_route *rt = &srv->routes[srv->n++];
@@ -2073,14 +2099,14 @@ static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
     g_call *k = GCALL(p[3]);
     V arg;
     if (streaming_in) {
-        g_incoming *src = (g_incoming *)calloc(1, sizeof *src);
+        g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
         src->c = k->c;
         src->s = k->s;
         src->server = 1;
         g_codec d = {dec, 0, 0, 0, 0};
         src->dec = d;
         src->what = "";
-        g_cell *cell = (g_cell *)calloc(1, sizeof *cell);
+        g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
         cell->src = src;
         arg = fwp_apply1(a[0], PTR(cell));
     } else {

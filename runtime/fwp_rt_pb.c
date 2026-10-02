@@ -24,35 +24,35 @@ static void fwp_pb_put_varint(fwp_buf *b, uint64_t x) {
 static V fwp_p_pb_parse(V bytes) {
     const unsigned char *b = (const unsigned char *)STR(bytes)->d;
     size_t n = STR(bytes)->len, i = 0, cap = 16, k = 0;
-    V *items = (V *)malloc(cap * sizeof(V));
+    V *items = (V *)fwp_mem_alloc(cap * sizeof(V));
     while (i < n) {
         uint64_t key, bits = 0;
         V data = fwp_str_new("", 0);
-        if (!fwp_pb_varint(b, n, &i, &key) || (key >> 3) == 0 || (key >> 3) > 0x7fffffffu) { free(items); return FWP_NONE; }
+        if (!fwp_pb_varint(b, n, &i, &key) || (key >> 3) == 0 || (key >> 3) > 0x7fffffffu) { fwp_mem_free(items); return FWP_NONE; }
         int wire = (int)(key & 7);
         if (wire == 0) {
-            if (!fwp_pb_varint(b, n, &i, &bits)) { free(items); return FWP_NONE; }
+            if (!fwp_pb_varint(b, n, &i, &bits)) { fwp_mem_free(items); return FWP_NONE; }
         } else if (wire == 1 || wire == 5) {
             size_t w = wire == 1 ? 8 : 4;
-            if (n - i < w) { free(items); return FWP_NONE; }
+            if (n - i < w) { fwp_mem_free(items); return FWP_NONE; }
             for (size_t j = 0; j < w; j++) bits |= (uint64_t)b[i + j] << (8 * j);
             i += w;
         } else if (wire == 2) {
             uint64_t len;
-            if (!fwp_pb_varint(b, n, &i, &len) || len > n - i) { free(items); return FWP_NONE; }
+            if (!fwp_pb_varint(b, n, &i, &len) || len > n - i) { fwp_mem_free(items); return FWP_NONE; }
             bits = len;
             data = fwp_str_new((const char *)b + i, (size_t)len);
             i += (size_t)len;
         } else {
-            free(items);
+            fwp_mem_free(items);
             return FWP_NONE;
         }
-        if (k == cap) { cap *= 2; items = (V *)realloc(items, cap * sizeof(V)); }
+        if (k == cap) { cap *= 2; items = (V *)fwp_mem_realloc(items, cap / 2 * sizeof(V), cap * sizeof(V)); }
         V f[4] = {(V)bits, data, (V)(int64_t)(key >> 3), (V)(int64_t)wire};
         items[k++] = fwp_record(4, f);
     }
     V r = fwp_some(fwp_list_from(items, k));
-    free(items);
+    fwp_mem_free(items);
     return r;
 }
 
@@ -94,23 +94,23 @@ static V fwp_p_pb_unpack(V wirev, V bytes) {
     int64_t wire = (int64_t)wirev;
     const unsigned char *b = (const unsigned char *)STR(bytes)->d;
     size_t n = STR(bytes)->len, i = 0, cap = 16, k = 0;
-    V *items = (V *)malloc(cap * sizeof(V));
+    V *items = (V *)fwp_mem_alloc(cap * sizeof(V));
     while (i < n) {
         uint64_t x = 0;
         if (wire == 1 || wire == 5) {
             size_t w = wire == 1 ? 8 : 4;
-            if (n - i < w) { free(items); return FWP_NONE; }
+            if (n - i < w) { fwp_mem_free(items); return FWP_NONE; }
             for (size_t j = 0; j < w; j++) x |= (uint64_t)b[i + j] << (8 * j);
             i += w;
         } else if (!fwp_pb_varint(b, n, &i, &x)) {
-            free(items);
+            fwp_mem_free(items);
             return FWP_NONE;
         }
-        if (k == cap) { cap *= 2; items = (V *)realloc(items, cap * sizeof(V)); }
+        if (k == cap) { cap *= 2; items = (V *)fwp_mem_realloc(items, cap / 2 * sizeof(V), cap * sizeof(V)); }
         items[k++] = (V)x;
     }
     V r = fwp_some(fwp_list_from(items, k));
-    free(items);
+    fwp_mem_free(items);
     return r;
 }
 
