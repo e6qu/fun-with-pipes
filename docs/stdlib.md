@@ -900,7 +900,8 @@ cancelling a task cancels its subtree. Cancellation is observed when a
 task suspends (sleeping, waiting on a channel, another task or a socket)
 and unwinds it; `attempt` does not catch it. A deadline cancels its task
 when it passes. In the native runtime tasks are green threads on an
-event loop; the interpreter runs each task on a thread, one at a time.
+event loop; the interpreter runs each task on a thread, one at a time. On
+WebAssembly they are fibers, which need JavaScript Promise Integration.
 
 ```fwp
 Task[a] = builtin

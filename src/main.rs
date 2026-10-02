@@ -131,6 +131,8 @@ fn take_links(args: &mut Vec<String>) {
 }
 
 fn main() -> ExitCode {
+    #[cfg(target_family = "wasm")]
+    fwp::fiber::keep();
     // invalid UTF-8 in arguments becomes U+FFFD, as in native programs
     let mut args: Vec<String> = std::env::args_os()
         .skip(1)

@@ -15,7 +15,11 @@
 //
 // `module` is a WebAssembly.Module (or bytes). Each run instantiates it
 // afresh. A run that exhausts the engine's stack reports
-// `fwp: trap: stack overflow` and exit code 101, as fwp does.
+// `fwp: trap: stack overflow` and exit code 101, as fwp does. Programs with
+// tasks run where the engine has JavaScript Promise Integration
+// (fibers.js).
+
+import { fibers } from "./fibers.js";
 
 const E = {
   SUCCESS: 0,
@@ -514,9 +518,10 @@ export async function runWasi(module, opts = {}) {
 
   const instance = await WebAssembly.instantiate(module, imports);
   memory = instance.exports.memory;
+  const start = await fibers(instance);
   let code = 0;
   try {
-    instance.exports._start();
+    await start();
   } catch (e) {
     if (e instanceof Exit) {
       code = e.code;

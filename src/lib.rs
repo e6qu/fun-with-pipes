@@ -16,6 +16,8 @@ pub mod exec;
 pub mod exhaust;
 pub mod ffi;
 pub mod ffi_interp;
+#[cfg(target_family = "wasm")]
+pub mod fiber;
 pub mod fmt;
 pub mod grpc;
 pub mod grpc_cli;

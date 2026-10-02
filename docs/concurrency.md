@@ -35,12 +35,20 @@ processes.
 | | interpreter | native |
 |---|---|---|
 | task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread (`ucontext`) with its own stack, on one OS thread |
+| task, WebAssembly | a fiber that the JavaScript host switches with JavaScript Promise Integration (fwp.wasm, the playground) | a fiber, as in the interpreter (`wasm32-wasi`, `wasm32-browser`) |
 | waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets on an epoll event loop (poll elsewhere) |
 | scheduling | cooperative: tasks switch only when they suspend | cooperative, as in the interpreter |
 
 On both backends, a task that computes without ever suspending is not
 pre-empted. A native program in which every task waits forever stops with a
-`deadlock` trap.
+`deadlock` trap, as does any program on WebAssembly.
+
+On WebAssembly, which cannot switch stacks by itself, tasks need an engine
+with JavaScript Promise Integration (JSPI): Chrome and Edge 137 and later,
+or node 22 with `--experimental-wasm-jspi`. Waiting for a timer suspends
+the program on a JavaScript timer, so a page is not kept busy. Sockets
+remain unavailable there. The hosts and the details are in the
+[reference](reference.md#tasks-on-webassembly).
 
 ## Networking
 

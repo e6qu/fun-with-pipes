@@ -20,10 +20,15 @@ In a page:
 </script>
 ```
 
-WebAssembly has no threads or sockets. So programs that use `Async` or
-`Network` are rejected when they are compiled for these targets, with an
-error naming the effect. Everything else, files included (for WASI, in
-preopened directories), behaves exactly as in a native build.
+WebAssembly has no sockets, so programs that use `Network` are rejected
+when they are compiled for these targets, with an error naming the
+effect. Tasks and channels (`Async`) work where the JavaScript engine has
+JavaScript Promise Integration, which suspends a task's stack while it
+waits: Chrome and Edge 137 and later, and node 22 with
+`--experimental-wasm-jspi` (`tests/wasm/wasi-run.mjs` sets it). In
+wasmtime a program that starts a task traps. Everything else, files
+included (for WASI, in preopened directories), behaves exactly as in a
+native build.
 
 Building for WebAssembly needs clang with a WASI sysroot. On Debian or
 Ubuntu, install `clang`, `lld`, `wasi-libc` and

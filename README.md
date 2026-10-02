@@ -45,7 +45,9 @@ main =
   `fwp openapi --import` turns any API's OpenAPI document into typed
   client functions.
 - **In the browser.** The compiler and interpreter build for WebAssembly;
-  a playground page checks, formats and runs programs without a server.
+  a playground page checks, formats and runs programs without a server,
+  tasks and channels included where the browser has JavaScript Promise
+  Integration (Chrome and Edge 137 and later).
 - **gRPC.** Any exported function is also a gRPC method, with streams
   decided by its type (`Iterator` and `Channel`), deadlines, metadata and
   statuses: `fwp build --grpc` makes one server, with reflection and

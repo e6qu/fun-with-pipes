@@ -5,6 +5,10 @@
 //! use `Rc`) are never touched concurrently. A task hands the baton on
 //! whenever it blocks on a timer, a channel, another task or a socket.
 //!
+//! The WebAssembly build has no threads: there each task runs on a fiber
+//! (`fiber.rs`), and handing the baton on is switching to the next ready
+//! fiber, in the same order.
+//!
 //! Tasks form a tree. A task finishes only after its children finished;
 //! cancelling a task cancels its subtree. Cancellation is observed at
 //! suspension points and unwinds the task (`Ctl::Cancelled`), which
@@ -17,7 +21,9 @@ use std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
 use std::os::fd::AsRawFd;
 use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering as AO};
-use std::sync::{Arc, Condvar, Mutex};
+#[cfg(not(target_family = "wasm"))]
+use std::sync::Condvar;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use crate::interp::{Ctl, Interp, R};
@@ -30,17 +36,32 @@ pub struct Baton<T>(pub T);
 unsafe impl<T> Send for Baton<T> {}
 unsafe impl<T> Sync for Baton<T> {}
 
+#[cfg(not(target_family = "wasm"))]
 struct Turns {
     next: u64,
     serving: u64,
     events: u64,
 }
 
+/// The fibers of one program (WebAssembly): those ready to run, in order,
+/// and those parked until an event or an instant.
+#[cfg(target_family = "wasm")]
+#[derive(Default)]
+struct Fibers {
+    ready: VecDeque<usize>,
+    parked: Vec<(usize, Option<Instant>)>,
+}
+
 /// The threads of one program.
 pub struct World {
+    #[cfg(not(target_family = "wasm"))]
     turn: Mutex<Turns>,
+    #[cfg(not(target_family = "wasm"))]
     turn_cv: Condvar,
+    #[cfg(not(target_family = "wasm"))]
     event_cv: Condvar,
+    #[cfg(target_family = "wasm")]
+    fibers: Mutex<Fibers>,
     metrics: Mutex<BTreeMap<String, (&'static str, f64)>>,
     /// gRPC client connections, shared by the program's tasks.
     pub(crate) grpc: Mutex<Baton<crate::grpc::Shared>>,
@@ -49,18 +70,24 @@ pub struct World {
 impl World {
     pub fn new() -> Arc<World> {
         Arc::new(World {
+            #[cfg(not(target_family = "wasm"))]
             turn: Mutex::new(Turns {
                 next: 1,
                 serving: 0,
                 events: 0,
             }),
+            #[cfg(not(target_family = "wasm"))]
             turn_cv: Condvar::new(),
+            #[cfg(not(target_family = "wasm"))]
             event_cv: Condvar::new(),
+            #[cfg(target_family = "wasm")]
+            fibers: Mutex::new(Fibers::default()),
             metrics: Mutex::new(BTreeMap::new()),
             grpc: Mutex::new(Baton(Default::default())),
         })
     }
 
+    #[cfg(not(target_family = "wasm"))]
     fn acquire(&self) {
         let mut t = self.turn.lock().unwrap();
         let me = t.next;
@@ -70,6 +97,7 @@ impl World {
         }
     }
 
+    #[cfg(not(target_family = "wasm"))]
     fn release(&self) {
         let mut t = self.turn.lock().unwrap();
         t.serving += 1;
@@ -77,6 +105,7 @@ impl World {
     }
 
     /// Shared state changed: wake parked tasks so they re-check.
+    #[cfg(not(target_family = "wasm"))]
     pub(crate) fn event(&self) {
         let mut t = self.turn.lock().unwrap();
         t.events += 1;
@@ -84,6 +113,7 @@ impl World {
     }
 
     /// Hand the baton on until an event happens or `until` passes.
+    #[cfg(not(target_family = "wasm"))]
     pub(crate) fn park(&self, until: Option<Instant>) {
         let mut t = self.turn.lock().unwrap();
         let seen = t.events;
@@ -109,11 +139,70 @@ impl World {
     }
 
     /// Run `f` (which must not touch values) without the baton.
+    #[cfg(not(target_family = "wasm"))]
     pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
         self.release();
         let r = f();
         self.acquire();
         r
+    }
+
+    /// Shared state changed: parked fibers become ready, to re-check.
+    #[cfg(target_family = "wasm")]
+    pub(crate) fn event(&self) {
+        let mut f = self.fibers.lock().unwrap();
+        let parked = std::mem::take(&mut f.parked);
+        f.ready.extend(parked.into_iter().map(|(id, _)| id));
+    }
+
+    /// Switch to the next fiber until an event happens or `until` passes.
+    #[cfg(target_family = "wasm")]
+    pub(crate) fn park(&self, until: Option<Instant>) {
+        let me = crate::fiber::current();
+        self.fibers.lock().unwrap().parked.push((me, until));
+        let next = self.next_fiber();
+        crate::fiber::switch_to(next);
+    }
+
+    /// A fiber ready to run, after waiting for the earliest timer if none
+    /// is. When every fiber waits for an event, none can happen (there are
+    /// no sockets): a deadlock, which traps as in native programs.
+    #[cfg(target_family = "wasm")]
+    fn next_fiber(&self) -> usize {
+        loop {
+            let wait = {
+                let mut f = self.fibers.lock().unwrap();
+                if let Some(id) = f.ready.pop_front() {
+                    return id;
+                }
+                let now = Instant::now();
+                match f.parked.iter().filter_map(|p| p.1).min() {
+                    None => {
+                        drop(f);
+                        let _ = std::io::stdout().flush();
+                        eprintln!("fwp: trap: deadlock: every task is waiting");
+                        std::process::exit(101);
+                    }
+                    Some(t) if t <= now => {
+                        let parked = std::mem::take(&mut f.parked);
+                        let (due, rest): (Vec<_>, Vec<_>) = parked
+                            .into_iter()
+                            .partition(|p| p.1.is_some_and(|u| u <= now));
+                        f.parked = rest;
+                        f.ready.extend(due.into_iter().map(|(id, _)| id));
+                        continue;
+                    }
+                    Some(t) => t - now,
+                }
+            };
+            crate::fiber::idle(wait.as_secs_f64() * 1000.0);
+        }
+    }
+
+    /// Run `f` (WebAssembly has no sockets to wait for).
+    #[cfg(target_family = "wasm")]
+    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
+        f()
     }
 }
 
@@ -344,6 +433,36 @@ pub(crate) fn wrap(n: Native) -> Value {
     Value::Native(Rc::new(n))
 }
 
+/// Run a task's body with the baton, wait for its children and record its
+/// result; a failure that is not a cancellation ends the process.
+fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
+    let result = match body {
+        TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
+            Ok(v) => Some(v),
+            Err(Ctl::Cancelled) => None,
+            Err(e) => {
+                let _ = it.out.flush();
+                let code = crate::interp::report(&Err(e), it.prog);
+                std::process::exit(code);
+            }
+        },
+        TaskBody::Rust(f) => {
+            f(&mut it);
+            None
+        }
+    };
+    it.join_children();
+    let task = it.task.clone();
+    drop(it);
+    {
+        let mut st = task.st.lock().unwrap();
+        st.0.done = true;
+        st.0.result = result;
+    }
+    drop(task);
+    world.event();
+}
+
 impl<'p> Interp<'p> {
     /// Cancel the current task if its deadline passed; unwind if cancelled.
     pub(crate) fn check_cancel(&self) -> R<()> {
@@ -466,12 +585,13 @@ impl<'p> Interp<'p> {
         deadline: Option<Instant>,
         detached: bool,
     ) -> Arc<TaskShared> {
-        if cfg!(target_family = "wasm") {
-            // No threads. `fwp run` rejects programs with tasks before they
+        #[cfg(target_family = "wasm")]
+        if !crate::fiber::available() {
+            // No fibers: `fwp run` rejects programs with tasks before they
             // start (`driver::wasm_host_unsupported`); this is the last
             // line of defense (a task started by `comptime` code).
             let _ = self.out.flush();
-            eprintln!("fwp: trap: tasks are not available in the WebAssembly build of fwp");
+            eprintln!("fwp: trap: {}", crate::driver::WASM_NO_TASKS);
             std::process::exit(101);
         }
         let task = TaskShared::new();
@@ -508,44 +628,32 @@ impl<'p> Interp<'p> {
         let child: Interp<'static> = unsafe { std::mem::transmute(child) };
         let job = Baton((child, body));
         let world = self.world.clone();
-        let started = std::thread::Builder::new()
-            .stack_size(256 << 20)
-            .spawn(move || {
-                crate::interp::set_stack_limit(256 << 20);
-                let job = job;
-                let Baton((mut it, body)) = job;
-                world.acquire();
-                let result = match body {
-                    TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
-                        Ok(v) => Some(v),
-                        Err(Ctl::Cancelled) => None,
-                        Err(e) => {
-                            let _ = it.out.flush();
-                            let code = crate::interp::report(&Err(e), it.prog);
-                            std::process::exit(code);
-                        }
-                    },
-                    TaskBody::Rust(f) => {
-                        f(&mut it);
-                        None
-                    }
-                };
-                it.join_children();
-                let task = it.task.clone();
-                drop(it);
-                {
-                    let mut st = task.st.lock().unwrap();
-                    st.0.done = true;
-                    st.0.result = result;
-                }
-                drop(task);
-                world.event();
-                world.release();
-            });
-        if started.is_err() {
-            // Out of threads: report like a trap.
-            eprintln!("fwp: trap: cannot start a task thread");
-            std::process::exit(101);
+        #[cfg(target_family = "wasm")]
+        {
+            let id = crate::fiber::spawn(Box::new(move || {
+                let Baton((it, body)) = job;
+                run_task(it, body, &world);
+                world.next_fiber()
+            }));
+            self.world.fibers.lock().unwrap().ready.push_back(id);
+        }
+        #[cfg(not(target_family = "wasm"))]
+        {
+            let started = std::thread::Builder::new()
+                .stack_size(256 << 20)
+                .spawn(move || {
+                    crate::interp::set_stack_limit(256 << 20);
+                    let job = job;
+                    let Baton((it, body)) = job;
+                    world.acquire();
+                    run_task(it, body, &world);
+                    world.release();
+                });
+            if started.is_err() {
+                // Out of threads: report like a trap.
+                eprintln!("fwp: trap: cannot start a task thread");
+                std::process::exit(101);
+            }
         }
         task
     }

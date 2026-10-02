@@ -300,13 +300,39 @@ rejected otherwise.
 | Target | Output | Runtime |
 |---|---|---|
 | native | an executable | all features; a program that uses TLS ([tls.md](tls.md): HTTPS, HTTP clients, REST servers, gRPC) is linked with OpenSSL and depends on `libssl.so.3`, and building it needs OpenSSL's headers (`libssl-dev`) |
-| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no tasks, sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories |
-| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP |
+| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI (see below) |
+| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI (see below) |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 
 The interpreter and every compiled target produce the same output for the
 same program, including float formatting and trap messages. The test suite
 checks this.
+
+#### Tasks on WebAssembly
+
+WebAssembly cannot switch stacks by itself, so tasks and channels
+(`Async`) run there with JavaScript Promise Integration (JSPI): each task
+is a fiber whose stack the JavaScript host suspends and resumes
+(`web/fibers.js`, which the browser loader includes). The scheduler is the
+native one (or, in fwp.wasm, the interpreter's), with the same order of
+tasks; waiting for a timer suspends the program on a JavaScript timer
+rather than busy-waiting, and a program whose tasks all wait for each
+other traps with `fwp: trap: deadlock: every task is waiting`.
+
+| Host | Tasks |
+|---|---|
+| Chrome, Edge 137 and later | yes (JSPI is on by default) |
+| Firefox, Safari | once they enable JSPI by default (until then, a program with tasks is rejected or traps as below) |
+| node 22 | with `--experimental-wasm-jspi` (`tests/wasm/wasi-run.mjs` and `fwp-run.mjs` set it); later versions as they ship JSPI |
+| wasmtime and other WASI runtimes | no: a program that starts a task traps with `fwp: trap: tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), …`; `task.sleep` alone works |
+
+A module that uses tasks exports `fwp_fiber_hooks`, `fwp_fiber_stack`,
+`fwp_fiber_entry`, its stack pointer and its function table, into which
+the host installs the switching functions; it imports nothing beyond WASI,
+so it still instantiates in any WASI runtime. Programs without tasks are
+unchanged. A fiber's stack is as large as the engine makes it (in
+browsers about as large as a page's, a few thousand nested calls); running
+out is the trap `fwp: trap: stack overflow`.
 
 ### fwp in the browser
 
@@ -337,14 +363,17 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 
 - `run`, `check`, `test`, `exec`, `fmt`, `lint`, `proto` and `lsp` work.
   `build --emit-c` writes C; other builds need a C compiler.
-- A program that uses tasks or channels (`Async`), sockets or DNS
-  (`Network`), other programs (`Process`), services or foreign C
-  functions is rejected before it
+- Tasks and channels run where the engine has JavaScript Promise
+  Integration (see [Tasks on WebAssembly](#tasks-on-webassembly)): the
+  playground runs tutorial 6 in Chrome. Each task is a fiber, and
+  `web/wasi.js` switches them; fwp's own main task is one too. Elsewhere
+  a program that uses them is rejected before it starts:
+  ``fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.spawn`) in this host: tasks need a WebAssembly host with JavaScript Promise Integration (JSPI)``.
+- A program that uses sockets or DNS (`Network`), other programs
+  (`Process`), services or foreign C functions is rejected before it
   starts, with the effect or function named:
-  ``fwp run: the WebAssembly build of fwp does not provide the `Async` effect (used by `task.spawn`)``.
-  These are the effects the `wasm32-wasi` target rejects. (Running tasks
-  without threads would need a scheduler that can suspend the
-  interpreter's Rust stack, which WebAssembly cannot do yet.)
+  ``fwp run: the WebAssembly build of fwp does not provide the `Network` effect (used by `tcp.listen`)``.
+  These are the effects the `wasm32-wasi` target rejects.
 - `fwp build` (without `--emit-c`), `fwp test --native`, `fwp pipe`,
   `fwp serve` and `--link` exit with status 2 and
   `fwp: … is not available in the WebAssembly build of fwp`.
