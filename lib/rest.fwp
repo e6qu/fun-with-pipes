@@ -413,6 +413,154 @@ rest.respond = match
     Ok _ -> id
     Err _ -> rest.http-error
 
+# ------------------------------------------------------------------ client
+
+# A call of a REST API, as the client functions that
+# `fwp openapi --import` generates make them: the method, the URL and the
+# JSON body.
+RestRequest = { method: String, url: String, body: Option[String] }
+
+# The URL of a call: the base URL of the server, the path template
+# (`/items/{id}`), the text of the path parameters in order, and the query
+# parameters.
+RestTarget = {
+    base: String,
+    path: String,
+    params: List[String],
+    query: List[(String, String)],
+}
+
+# A call that failed: the status of the response (0 if there was none)
+# and its body, or what went wrong.
+RestError = { status: I64, message: String }
+
+rest.url : RestTarget -> String
+rest.url =
+    fork
+        concat
+        (.query | rest.query-string)
+        (fork concat (fork rest.fill .params .path) (.base | rest.trim-slash))
+
+rest.trim-slash : String -> String
+rest.trim-slash =
+    if
+        (ends-with "/")
+        (fork apply id (string.length | sub 1 | string.slice 0))
+        id
+
+# `/items/{id}` with the path parameters, percent-encoded
+rest.fill : List[String] -> String -> String
+rest.fill = curry (fork
+        (fold rest.fill-step)
+        (both .0 (const []))
+        (.1 | split "/")
+    | .1
+    | reverse
+    | join "/")
+
+rest.fill-step : (List[String], List[String]) -> String -> (List[String], List[String])
+rest.fill-step = curry (if
+    (.1 | starts-with "{")
+    (both
+        (.0 | .0 | drop 1)
+        (fork
+            Cons
+            (.0 | .0 | head | option.unwrap-or "" | url.encode)
+            (.0 | .1)))
+    (both (.0 | .0) (fork Cons .1 (.0 | .1))))
+
+# the text of each parameter of a call
+rest.texts : List[a -> String] -> a -> List[String]
+rest.texts = curry (fork map (.1 | apply) .0)
+
+rest.query-string : List[(String, String)] -> String
+rest.query-string = if is-empty (const "") (form.encode | flip concat "?")
+
+# The text of a path parameter: a string as it is, other values as JSON.
+rest.param-text : a -> String where Encode[a]
+rest.param-text = json.write | rest.unquote
+
+rest.unquote : String -> String
+rest.unquote = fork option.unwrap-or id (json.parse
+    | result.to-option
+    | option.and-then json.as-string)
+
+# The query parameters of a record: its fields, each element of a list
+# field, and nothing for a `None` field.
+rest.query-pairs : a -> List[(String, String)] where Encode[a]
+rest.query-pairs =
+    json.encode-value
+    | json.as-object
+    | option.unwrap-or []
+    | list.flat-map rest.query-pair
+
+rest.query-pair : (String, Json) -> List[(String, String)]
+rest.query-pair = match
+    (_, Json.Arr _) ->
+        curry (fork map (.0 | curry id) (.1 | map rest.scalar-text))
+    (_, Json.Null) -> const []
+    (_, _) -> curry (both .0 (.1 | rest.scalar-text) | singleton)
+
+rest.scalar-text : Json -> String
+rest.scalar-text = match
+    Json.Str _ -> id
+    Json.Bool _ -> if id (const "true") (const "false")
+    _ -> json.encode
+
+# Call a REST API and decode the JSON of a successful response; any other
+# response is a `RestError` with its status and body.
+rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[b]
+rest.fetch = rest.exchange | rest.decode-response
+
+# `rest.fetch`, with `None` for a 404.
+rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
+rest.fetch-option =
+    rest.exchange
+    | if (.status | eq 404) (const None) (rest.decode-response | Some)
+
+rest.exchange : RestRequest -> ClientResponse ! {Async, Network, Error[RestError]}
+rest.exchange =
+    attempt (make ClientRequest {
+        method = .method,
+        url = .url,
+        headers = const [
+            ("accept", "application/json"),
+            ("content-type", "application/json"),
+        ],
+        body = .body | option.unwrap-or "" | string.to-bytes,
+    } | http.send)
+    | rest.sent
+
+rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}
+rest.sent = match
+    Ok _ -> id
+    Err _ -> make RestError { status = const 0, message = .message } | fail
+
+rest.decode-response : ClientResponse -> b ! {Error[RestError]} where Decode[b]
+rest.decode-response =
+    if
+        (fork and (.status | ge 200) (.status | lt 300))
+        (fork rest.decoded-body .status (.body | rest.body-json | json.read))
+        (make RestError {
+            status = .status,
+            message = .body | string.from-bytes | option.unwrap-or "",
+        } | fail)
+
+# an empty body is `{}` (a `()` result)
+rest.body-json : Bytes -> String
+rest.body-json =
+    string.from-bytes
+    | option.unwrap-or ""
+    | if (trim | string.is-empty) (const "{}") id
+
+rest.decoded-body : I64 -> Result[b, String] -> b ! {Error[RestError]}
+rest.decoded-body = curry (match
+    (_, Ok _) -> const id
+    (_, Err _) -> curry (make RestError {
+        status = .0,
+        message = .1 | flip concat "invalid response: ",
+    } | fail))
+
 test "rest.pattern" = "/items/{id}/x" | rest.pattern | eq ["items", ":id", "x"]
 test "rest.relabel one" = "$.a: bad" | rest.relabel ["$"] | eq "$.a: bad"
 test "rest.relabel path" =
@@ -455,3 +603,25 @@ test "rest.error-status" =
         errors = [("NotFound", 404), ("Bad", 422)],
     })
     | eq [404, 422, 409, 500]
+test "rest.fill" =
+    "/items/{id}/parts/{part}"
+    | rest.fill ["a b", "7"]
+    | eq "/items/a%20b/parts/7"
+test "rest.url" = RestTarget {
+    base = "http://localhost:8080/",
+    path = "/books",
+    params = [],
+    query = [("tag", "a&b"), ("tag", "c")],
+} | rest.url | eq "http://localhost:8080/books?tag=a%26b&tag=c"
+test "rest.query-pairs" =
+    { author = Some "x y", tag = ["a", "b"], max = None, n = 3, ok = True }
+    | rest.query-pairs
+    | eq [
+        ("author", "x y"),
+        ("n", "3"),
+        ("ok", "true"),
+        ("tag", "a"),
+        ("tag", "b"),
+    ]
+test "rest.param-text" =
+    [42 | rest.param-text, "a/b" | rest.param-text] | eq ["42", "a/b"]
