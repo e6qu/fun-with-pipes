@@ -123,6 +123,11 @@ foreign "fwp" grpc.set-header : String -> String -> () ! {Network}
 # with its status
 foreign "fwp" grpc.set-trailer : String -> String -> () ! {Network}
 
+# run a function whose calls compress their messages with gzip
+# (`grpc-encoding: gzip`; servers then compress their responses too).
+# Compressed messages are always accepted.
+foreign "fwp" grpc.with-gzip : (() -> a ! {Network | e}) -> a ! {Network | e}
+
 # run a function, and collect the response metadata (headers and
 # trailers, with lower-case names) of the calls it makes that end
 foreign "fwp" grpc.with-response-metadata : (() -> a ! {Network | e}) -> (a, List[(String, String)]) ! {Network | e}

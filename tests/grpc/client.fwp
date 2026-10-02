@@ -20,6 +20,21 @@ main = [
     "ghost" | attempt greeter.lookup | echo,
     grpc.with-metadata [("X-User", "carol")] greeter.whoami | echo,
     grpc.with-response-metadata (const "Ann" | greeter.tagged) | echo,
+    grpc.with-gzip (const "Ada "
+        | string.repeat 300
+        | make greeter.HelloRequest { name = id, times = const 1 }
+        | greeter.say-hello)
+    | .message
+    | both string.length (string.slice 0 14)
+    | echo,
+    grpc.with-gzip (const [
+            "x",
+            "y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y y",
+        ]
+        | iter.from-list
+        | greeter.shout
+        | iter.to-list)
+    | echo,
     () | greeter.whoami | echo,
     2 | attempt (greeter.divide 8) | echo,
     0 | attempt (greeter.divide 8) | echo,

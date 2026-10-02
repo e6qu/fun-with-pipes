@@ -70,6 +70,7 @@ struct g_stream {
     uint32_t id;
     h2_hdrs headers, trailers;
     h2_hdrs out_headers, out_trailers; /* a server's response metadata */
+    int gzip;                  /* messages sent are compressed with gzip */
     int got_headers, got_data, remote_end, local_end, sent_headers, retry, listed;
     h2_buf data;
     g_msg *mhead, *mtail;
@@ -130,6 +131,7 @@ typedef struct {
     g_serving *serving;
     const g_tls *tls;
     h2_hdrs *capture;          /* response metadata collected, or 0 */
+    int gzip;                  /* the calls made compress their requests */
 } g_ctx;
 
 static g_ctx g_empty_ctx;
@@ -314,15 +316,32 @@ static void g_split(g_stream *s) {
     while (s->data.len >= 5) {
         size_t n = h2_rd32(s->data.d + 1);
         if (s->data.len < 5 + n) break;
+        const unsigned char *src = s->data.d + 5;
+        h2_buf plain = {0};
         if (s->data.d[0] != 0) {
-            if (!s->bad) s->bad = strdup("compressed gRPC messages are not supported");
-            s->data.len = 0;
-            return;
+            /* compressed with the stream's grpc-encoding */
+            const char *enc = h2_get(&s->headers, "grpc-encoding");
+            if (!enc || strcmp(enc, "gzip") != 0) {
+                if (!s->bad)
+                    s->bad = enc ? g_strdupf("unsupported grpc-encoding `%s`", enc)
+                                 : strdup("a compressed message without grpc-encoding");
+                s->data.len = 0;
+                return;
+            }
+            if (!h2_gunzip(src, n, &plain, H2_GZIP_MAX)) {
+                if (!s->bad) s->bad = g_strdupf("bad compressed message: %s", h2_err);
+                h2b_free(&plain);
+                s->data.len = 0;
+                return;
+            }
+            src = plain.d;
         }
-        g_msg *m = (g_msg *)malloc(sizeof(g_msg) + n + 1);
+        size_t mn = s->data.d[0] != 0 ? plain.len : n;
+        g_msg *m = (g_msg *)malloc(sizeof(g_msg) + mn + 1);
         m->next = 0;
-        m->n = n;
-        memcpy(m->d, s->data.d + 5, n);
+        m->n = mn;
+        if (mn) memcpy(m->d, src, mn);
+        h2b_free(&plain);
         if (s->mtail) s->mtail->next = m;
         else s->mhead = m;
         s->mtail = m;
@@ -680,13 +699,25 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2_buf blk = {0};
         h2_hpack_lit(&blk, ":status", "200");
         h2_hpack_lit(&blk, "content-type", "application/grpc");
+        h2_hpack_lit(&blk, "grpc-accept-encoding", "gzip");
+        if (s->gzip) h2_hpack_lit(&blk, "grpc-encoding", "gzip");
         for (size_t i = 0; i < s->out_headers.n; i++)
             h2_hpack_lit(&blk, s->out_headers.v[i].name, s->out_headers.v[i].value);
         h2_header_frames(&c->out, s->id, &blk, 0, c->peer.max_frame);
         h2b_free(&blk);
     }
     h2_buf b = {0};
-    h2_grpc_frame(&b, msg, n);
+    if (s->gzip && n >= 64) {
+        /* compressed (messages shorter than 64 bytes are sent as they are) */
+        h2_buf z = {0};
+        h2_gzip(msg, n, &z);
+        h2b_byte(&b, 1);
+        h2b_be32(&b, (uint32_t)z.len);
+        h2b_put(&b, z.d, z.len);
+        h2b_free(&z);
+    } else {
+        h2_grpc_frame(&b, msg, n);
+    }
     int r = g_send_data(c, s, b.d, b.len, end);
     h2b_free(&b);
     return r;
@@ -954,6 +985,8 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     h2_hpack_lit(&blk, ":authority", authority);
     h2_hpack_lit(&blk, "content-type", "application/grpc");
     h2_hpack_lit(&blk, "te", "trailers");
+    h2_hpack_lit(&blk, "grpc-accept-encoding", "gzip");
+    if (ctx->gzip) h2_hpack_lit(&blk, "grpc-encoding", "gzip");
     if (deadline) {
         char t[32];
         g_timeout_header(deadline, t, sizeof t);
@@ -964,6 +997,7 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     h2_header_frames(&c->out, id, &blk, 0, c->peer.max_frame);
     h2b_free(&blk);
     g_stream *s = g_stream_new(c, id);
+    s->gzip = ctx->gzip;
     fwp_wake_all(&c->writer_wl);
     *cp = c;
     return s;
@@ -1490,6 +1524,9 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.code = -1;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
     j->sv.s = s;
+    /* responses are compressed like the requests */
+    const char *enc = h2_get(&s->headers, "grpc-encoding");
+    s->gzip = enc && strcmp(enc, "gzip") == 0;
     j->ctx.serving = &j->sv;
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
@@ -2223,6 +2260,14 @@ static V fwp_p_grpc_set_meta(int trailer, V name, V value) {
     free(lk);
     free(lv);
     return FWP_UNIT;
+}
+
+static V fwp_p_grpc_with_gzip(V f) {
+    g_ctx *cur = g_ctx_of();
+    g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
+    *ctx = *cur;
+    ctx->gzip = 1;
+    return g_with_ctx(ctx, f);
 }
 
 static V fwp_p_grpc_with_response_metadata(V f) {

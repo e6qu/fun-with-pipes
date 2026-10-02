@@ -97,6 +97,8 @@ pub struct TaskCtx {
     /// The response metadata of the calls made, collected
     /// (`grpc.with-response-metadata`).
     capture: Option<Rc<RefCell<Vec<(String, String)>>>>,
+    /// The calls made compress their requests (`grpc.with-gzip`).
+    gzip: bool,
 }
 
 /// Response headers and trailers that are not metadata.
@@ -232,6 +234,8 @@ struct Stream {
     /// `grpc.set-trailer`).
     out_headers: Vec<(String, String)>,
     out_trailers: Vec<(String, String)>,
+    /// Messages sent are compressed with gzip.
+    gzip: bool,
     bad: Option<String>,
     /// The task serving the call.
     task: Option<Arc<TaskShared>>,
@@ -308,9 +312,25 @@ fn split_messages(s: &mut Stream) {
             break;
         }
         if s.data[0] != 0 {
-            s.bad = Some("compressed gRPC messages are not supported".into());
-            s.data.clear();
-            return;
+            // compressed with the stream's `grpc-encoding`
+            if header(&s.headers, "grpc-encoding") != Some("gzip") {
+                s.bad = Some(match header(&s.headers, "grpc-encoding") {
+                    Some(e) => format!("unsupported grpc-encoding `{}`", e),
+                    None => "a compressed message without grpc-encoding".into(),
+                });
+                s.data.clear();
+                return;
+            }
+            match crate::gzip::gunzip(&s.data[5..5 + n], crate::gzip::MAX_OUTPUT) {
+                Ok(m) => s.msgs.push_back(m),
+                Err(e) => {
+                    s.bad = Some(format!("bad compressed message: {}", e));
+                    s.data.clear();
+                    return;
+                }
+            }
+            s.data.drain(..5 + n);
+            continue;
         }
         s.msgs.push_back(s.data[5..5 + n].to_vec());
         s.data.drain(..5 + n);
@@ -809,8 +829,14 @@ fn send_msg(it: &mut Interp, c: &ConnRef, s: &StreamRef, msg: &[u8], end: bool) 
         let mut sb = s.borrow_mut();
         if cb.server.is_some() && !sb.sent_headers && cb.dead.is_none() && sb.reset.is_none() {
             sb.sent_headers = true;
-            let mut hs: Vec<(&str, &str)> =
-                vec![(":status", "200"), ("content-type", "application/grpc")];
+            let mut hs: Vec<(&str, &str)> = vec![
+                (":status", "200"),
+                ("content-type", "application/grpc"),
+                ("grpc-accept-encoding", "gzip"),
+            ];
+            if sb.gzip {
+                hs.push(("grpc-encoding", "gzip"));
+            }
             for (k, v) in &sb.out_headers {
                 hs.push((k, v));
             }
@@ -819,8 +845,21 @@ fn send_msg(it: &mut Interp, c: &ConnRef, s: &StreamRef, msg: &[u8], end: bool) 
             cb.out.extend(h2::header_frames(sb.id, &b, false, max));
         }
     }
-    send_data(it, c, s, &h2::grpc_frame(msg), end)
+    let gzip = s.borrow().gzip;
+    let frame = if gzip && msg.len() >= GZIP_MIN {
+        let z = crate::gzip::gzip(msg);
+        let mut f = vec![1];
+        f.extend_from_slice(&(z.len() as u32).to_be_bytes());
+        f.extend(z);
+        f
+    } else {
+        h2::grpc_frame(msg)
+    };
+    send_data(it, c, s, &frame, end)
 }
+
+/// Messages shorter than this are sent uncompressed (their flag says so).
+const GZIP_MIN: usize = 64;
 
 /// What a wait for the next message found.
 enum Got {
@@ -1030,6 +1069,7 @@ fn open_call(
     let timeout =
         call_deadline(it).map(|d| rpc::timeout_header(d.saturating_duration_since(Instant::now())));
     let md = it.grpc.metadata.clone();
+    let gzip = it.grpc.gzip;
     let s = {
         let mut cb = c.borrow_mut();
         let id = cb.next_stream;
@@ -1043,7 +1083,11 @@ fn open_call(
             (":authority", &authority),
             ("content-type", "application/grpc"),
             ("te", "trailers"),
+            ("grpc-accept-encoding", "gzip"),
         ];
+        if gzip {
+            hs.push(("grpc-encoding", "gzip"));
+        }
         if let Some(t) = &timeout {
             hs.push(("grpc-timeout", t));
         }
@@ -1057,6 +1101,7 @@ fn open_call(
         let s = Rc::new(RefCell::new(Stream {
             id,
             window: cb.peer.init_window,
+            gzip,
             ..Default::default()
         }));
         cb.streams.insert(id, s.clone());
@@ -1843,7 +1888,13 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
         serving: Some(serving.clone()),
         tls: None,
         capture: None,
+        gzip: false,
     };
+    // responses are compressed like the requests
+    {
+        let mut sb = s.borrow_mut();
+        sb.gzip = header(&sb.headers, "grpc-encoding") == Some("gzip");
+    }
     let what = route_name(&server, &path);
     // calls of the program's functions (not of reflection and health
     // checking) are logged when they are cancelled
@@ -2844,6 +2895,12 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
                 }
             }
             Ok(Value::unit())
+        }
+        "grpc.with-gzip" => {
+            let saved = std::mem::replace(&mut it.grpc.gzip, true);
+            let r = it.apply(a[0].clone(), vec![Value::unit()]);
+            it.grpc.gzip = saved;
+            r
         }
         "grpc.with-response-metadata" => {
             let cap = Rc::new(RefCell::new(Vec::new()));

@@ -55,6 +55,7 @@ Request metadata to send:
 
 Response headers received:
 content-type: application/grpc
+grpc-accept-encoding: gzip
 x-served-by: greeter
 
 Response contents:

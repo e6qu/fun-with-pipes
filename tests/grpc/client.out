@@ -9,6 +9,8 @@ Ok (greeter.HelloReply {message = "Bob"})
 Err (GrpcError {code = 5, message = "ghost"})
 carol
 ("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])
+(1207, "hello, Ada Ada")
+["X", "Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y Y"]
 nobody
 Ok 0
 Err "division by zero"

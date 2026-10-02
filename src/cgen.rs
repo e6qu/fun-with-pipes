@@ -1434,6 +1434,7 @@ impl<'p> Gen<'p> {
                         "fwp_p_grpc_with_response_metadata(l0)",
                     ),
                     ("grpc.response-metadata", "fwp_p_grpc_response_metadata(l0)"),
+                    ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("pb.parse", "fwp_p_pb_parse(l0)"),
                     ("pb.write", "fwp_p_pb_write(l0)"),
