@@ -4,12 +4,14 @@
 #   ./todo add buy milk
 #   ./todo list
 #   ./todo done 1
+#   TODO_FILE=~/todo.txt ./todo list
+#   source <(./todo --completions bash)
 
 export version : String
 version = "1.0.0"
 
 Store = {
-    # -f  the file that keeps the list
+    # -f <FILE>  the file that keeps the list [env: TODO_FILE]
     file: String,
 }
 

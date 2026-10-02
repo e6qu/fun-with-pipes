@@ -329,7 +329,8 @@ options:
   -f, --format <FORMAT>  how to write the result (one of: plain, json, csv-lines; default: plain; env: FEATURES_FORMAT)
   -n, --count <COUNT>    how many copies (default: 1; env: FEATURES_COUNT)
   -q, --quiet            say less (env: FEATURES_QUIET)
-  -o, --output <FILE>    where to write
+  -o, --output <FILE>    where to write (not with --quiet)
+  -a, --append           add to the end of the file (requires --output)
   -h, --help             show this help
 ";
 
@@ -367,9 +368,9 @@ fn feature_cases() -> Vec<FeatureCase> {
         c(&["render", "w"], &[], "Plain 1 False None w .\ncode=0"),
         c(&["render", "w", "-f", "json", "/tmp"], &[], "Json 1 False None w /tmp\ncode=0"),
         c(
-            &["render", "w", "-f", "CSV_LINES", "-n", "2", "-q", "-o", "out.txt", "d"],
+            &["render", "w", "-f", "CSV_LINES", "-n", "2", "-o", "out.txt", "d"],
             &[],
-            "CsvLines 2 True Some \"out.txt\" w d\ncode=0",
+            "CsvLines 2 False Some \"out.txt\" w d\ncode=0",
         ),
         c(
             &["render", "w", "--format=csvlines"],
@@ -411,6 +412,36 @@ fn feature_cases() -> Vec<FeatureCase> {
                 "features render: environment variable `FEATURES_FORMAT`: `xml` is not one of plain, json, csv-lines\n{}code=2",
                 RENDER_USAGE
             ),
+        ),
+        // options that conflict or go together
+        c(
+            &["render", "w", "-q", "-o", "f"],
+            &[],
+            &format!(
+                "features render: option `--output` cannot be used with `--quiet`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-o", "f"],
+            &[("FEATURES_QUIET", "true")],
+            &format!(
+                "features render: option `--output` cannot be used with `--quiet`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-a"],
+            &[],
+            &format!(
+                "features render: option `--append` needs `--output`\n{}code=2",
+                RENDER_USAGE
+            ),
+        ),
+        c(
+            &["render", "w", "-ao", "f"],
+            &[],
+            "Plain 1 False Some \"f\" w .\ncode=0",
         ),
         // optional arguments: none of them comes from stdin
         c(&["render"], &[], &format!("{}code=2", RENDER_USAGE)),
@@ -799,6 +830,11 @@ fn example_clis() {
     std::fs::write(dir.join("tree/sub/y.rs"), "1234567890\n").unwrap();
     std::fs::write(dir.join("tree/sub/notes.md"), "# notes\n").unwrap();
     std::fs::write(dir.join("tree/.hidden/z.rs"), "hidden\n").unwrap();
+    std::fs::write(
+        dir.join("people.csv"),
+        "name,city,age\nAnn,Paris,31\n\"Bob, Jr\",Oslo,45\nCid,\"New\nYork\",28\n",
+    )
+    .unwrap();
     let ex = |f: &str| root().join("examples/cli").join(f);
     // (file, --fn or None for --cli, arguments, stdin, expected)
     type Case = (
@@ -859,11 +895,74 @@ fn example_clis() {
             "2\ncode=0",
         ),
         (
+            "grep.fwp",
+            Some("grep"),
+            vec!["zzz", "a.txt"],
+            "",
+            "code=1",
+        ),
+        (
+            "grep.fwp",
+            Some("grep"),
+            vec!["-c", "zzz", "a.txt"],
+            "",
+            "0\ncode=1",
+        ),
+        (
             "dirstat.fwp",
             Some("dirstat"),
             vec!["tree"],
             "",
             "extension  files  bytes\nrs         2      24\nmd         1      8\ncode=0",
+        ),
+        (
+            "dirstat.fwp",
+            Some("dirstat"),
+            vec!["--sort", "name", "tree"],
+            "",
+            "extension  files  bytes\nmd         1      8\nrs         2      24\ncode=0",
+        ),
+        (
+            "dirstat.fwp",
+            Some("dirstat"),
+            vec!["-s", "Files", "-n", "2"],
+            "",
+            "extension  files  bytes\nrs         2      24\ntxt        2      37\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["columns", "people.csv"],
+            "",
+            "  1  name\n  2  city\n  3  age\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["show", "-n", "2", "people.csv"],
+            "",
+            "name     city   age\nAnn      Paris  31\nBob, Jr  Oslo   45\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["cut", "-c", "city", "-c", "name", "--format", "csv"],
+            "name,city\nAnn,Paris\n\"Bob, Jr\",Oslo\n",
+            "city,name\nParis,Ann\nOslo,\"Bob, Jr\"\ncode=0",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["cut", "-c", "zip", "people.csv"],
+            "",
+            "csvtool cut: there is no column `zip`\ncode=1",
+        ),
+        (
+            "csvtool.fwp",
+            None,
+            vec!["show", "-f", "xml"],
+            "",
+            "csvtool show: option `--format`: `xml` is not one of table, csv, tsv\nusage: csvtool show [options] [FILE]\ncode=2",
         ),
         ("todo.fwp", None, vec!["list"], "", "code=0"),
         (
@@ -932,15 +1031,20 @@ fn example_clis() {
         let _ = std::fs::remove_file(dir.join("todo.txt"));
         for (file, func, args, stdin, want) in &cases {
             let r = if runner_native {
-                let name = func.unwrap_or("todo");
-                let exe = dir.join(format!("{}-exe", name));
+                // a multi-command program is named after its file
+                let stem = file.trim_end_matches(".fwp");
+                let name = func.unwrap_or(stem);
+                // in a hidden directory, which `dirstat` skips
+                let bin = dir.join(".bin");
+                let exe = bin.join(format!("{}-exe", name));
                 if !exe.exists() {
+                    std::fs::create_dir_all(&bin).unwrap();
                     match func {
                         Some(f) => build(&ex(file), &["--fn", f], &exe),
-                        None => build(&ex(file), &["--cli"], &dir.join("todo")),
+                        None => build(&ex(file), &["--cli"], &bin.join(stem)),
                     }
                     if func.is_none() {
-                        std::fs::rename(dir.join("todo"), &exe).unwrap();
+                        std::fs::rename(bin.join(stem), &exe).unwrap();
                     }
                 }
                 Runner::Native(exe)
@@ -955,6 +1059,23 @@ fn example_clis() {
             let got = run(r.command(), args, stdin, &dir);
             assert_eq!(&got, want, "round {}: {} {:?}", round, file, args);
         }
+        // the file of `todo` from the environment
+        let todo = if runner_native {
+            Runner::Native(dir.join(".bin/todo-exe"))
+        } else {
+            Runner::Interp(vec![
+                "--cli".into(),
+                ex("todo.fwp").to_string_lossy().into(),
+            ])
+        };
+        let env = [("TODO_FILE", "env.txt")];
+        let got = run_env(todo.command(), &["add", "from", "env"], "", &env, &dir);
+        assert_eq!(got, "added\ncode=0");
+        let got = run_env(todo.command(), &["list"], "", &env, &dir);
+        assert_eq!(got, "  1. [ ] from env\ncode=0");
+        let got = run_env(todo.command(), &["list", "-f", "todo.txt"], "", &env, &dir);
+        assert_eq!(got, "  1. [ ] write docs\ncode=0");
+        let _ = std::fs::remove_file(dir.join("env.txt"));
     }
     let _ = std::fs::remove_dir_all(&dir);
 }

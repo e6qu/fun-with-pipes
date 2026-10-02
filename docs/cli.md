@@ -23,8 +23,8 @@ usage: todo <command> [arguments...]
 This page describes the mapping. [protocol.md](protocol.md) describes the
 binary protocol between fwp programs, and the
 [tutorial](tutorials/16-clis/README.md) walks through an example.
-`examples/cli/` has four complete programs: `wc.fwp`, `grep.fwp`,
-`todo.fwp` and `dirstat.fwp`.
+`examples/cli/` has five complete programs: `wc.fwp`, `grep.fwp`,
+`todo.fwp`, `dirstat.fwp` and `csvtool.fwp`.
 
 ## Building and running
 
@@ -55,6 +55,41 @@ string is taken as it is and a `Bool` may also be `true` or `false`.
 * Other counts are usage errors.
 * A final `()` parameter is not an argument: `tracked : () -> List[String]`
   runs with no arguments.
+
+A command with optional arguments (below) never reads its last argument
+from standard input.
+
+### Optional arguments
+
+The last positional parameters may be left out when they are `Option[T]`
+or have a default:
+
+```fwp
+# A format, or none.
+# args: NAME FORMAT
+export pick : String -> Option[Format] -> String
+
+export render.defaults : { dir: String }
+render.defaults = { dir = "." }
+
+# args: WORD DIR
+export render : Options -> String -> String -> String
+```
+
+* An `Option[T]` argument is written as a `T` (`pick x json`) and is
+  `None` when it is absent.
+* A default comes from a field of `f.defaults` named like the argument in
+  lower case (`dir` for `DIR`), of the parameter's type. The program's
+  `defaults` are for flags only.
+* Optional parameters must come after the required ones: a default for a
+  parameter followed by a required one is an error. (An `Option`
+  parameter followed by a required one is required, written in the text
+  format as `None` or `Some 3`.)
+* The arguments fill the required parameters, then the optional ones in
+  order; a variadic last parameter (`FILE...`) takes the rest, or its
+  default when there is none.
+* The usage shows them in brackets: `usage: features render [options]
+  WORD [DIR]`.
 
 An argument that starts with `-` followed by a digit is a number, not a
 flag: `scale -3 14` works. `--` ends the flags; everything after it is
@@ -110,9 +145,43 @@ GrepOptions = {
   `-x`; the rest of the comment describes the flag in the help. Short
   switches combine (`-iv`), and a short flag takes its value from the next
   argument or from the rest of the word (`-n 5`, `-n5`).
+* `<NAME>` after the short flag (or at the start of the comment) names
+  the value in the help: `-n, --count <N>` instead of `<I64>`.
+* Annotations in brackets, anywhere in the comment, are taken out of the
+  description:
+
+  | Annotation | Meaning |
+  |---|---|
+  | `[env: VAR]` | the environment variable `VAR` gives the value when the flag is absent |
+  | `[requires: a, b]` | the flag may only be given with `--a` and `--b` |
+  | `[conflicts: a]` | the flag may not be given with `--a` |
+
+  ```fwp
+  Options = {
+      # -f <FORMAT>  how to write the result [env: FEATURES_FORMAT]
+      format: Format,
+      # -o <FILE>  where to write [conflicts: quiet]
+      output: Option[String],
+      # -a  add to the end of the file [requires: output]
+      append: Bool,
+  }
+  ```
+
+  The comment may also be written after the field, on its line
+  (`unique: Bool, # -u  count each word once`).
 * Flags and positional arguments may be mixed; a flag given twice keeps
   the last value (a list collects them).
 * Values are parsed by the field's type, like positional arguments.
+* A value comes from the command line, else from the flag's environment
+  variable, else from its default: flag > environment > default. An
+  empty variable counts as unset, a switch's variable may also be `1` or
+  `0`, and a repeatable flag's variable is one value. A variable that
+  does not parse is a usage error that names it
+  (``environment variable `FEATURES_COUNT`: cannot parse `many` as I64``).
+* `[requires: ...]` and `[conflicts: ...]` count the flags given on the
+  command line or by their environment variable, not defaults:
+  ``option `--output` cannot be used with `--quiet` ``, ``option `--append`
+  needs `--output` ``.
 * Unknown flags, missing values and values that do not parse are usage
   errors (exit status 2), reported with the usage line:
 
@@ -121,6 +190,25 @@ $ ./grep --colour x
 grep: unknown option `--colour`
 usage: grep [options] PATTERN [FILE...]
 ```
+
+### Choices
+
+A type whose constructors all have no fields is an enumeration:
+
+```fwp
+Format =
+    | Plain
+    | Json
+    | CsvLines
+```
+
+A flag or argument of such a type (or `Option`, `List` of it) takes the
+constructor names in any case, with or without `-` or `_`: `json`,
+`JSON`, `csv-lines`, `CsvLines` and `csv_lines` all work. The help lists
+the values in kebab-case (`one of: plain, json, csv-lines`), defaults
+are shown the same way, completion scripts offer them, and another value
+is a usage error: ``option `--format`: `xml` is not one of plain, json,
+csv-lines``. `Bool` is not a choice: it stays a switch.
 
 A function whose only parameter is a record keeps its older meaning when
 its first argument does not start with `-`: `norm '{x = 3.0, y = 4.0}'`
@@ -145,6 +233,8 @@ dirstat.defaults = { top = 10 }
 * A default may be given for any field, so a switch can default to
   `True` (`--no-name` turns it off) and a list to some elements (the flag
   then replaces them).
+* `f.defaults` may also give defaults to positional arguments, which
+  makes them optional (see above).
 
 Neither value is a command, and both are computed when the program starts
 (they are pure values).
@@ -159,7 +249,7 @@ $ ./grep --help
 usage: grep [options] PATTERN [FILE...]
 
 Print the lines of the FILEs (or of standard input) that contain
-PATTERN.
+PATTERN. The exit status is 1 when no line is selected.
 
 arguments:
   PATTERN  String
@@ -174,12 +264,19 @@ options:
 ```
 
 * The description is the block of `#` comments directly above the
-  `export` (without the `# args:`, `# command:` and `# fwp:allow` lines).
-  Its first sentence is the command's summary in a multi-command help.
-* Each flag shows its value type, its comment, and `(default: ...)`,
-  `(required)` or `(repeatable)`.
-* Positional arguments show their names (or `<Type>`), their types, and
-  whether they may come from standard input.
+  `export` (without the `# args:`, `# command:` and `# fwp:allow` lines),
+  or, for a bare `export name`, above the signature or the binding of
+  `name` (so a `rec name : T` signature can carry it). Its first sentence
+  is the command's summary in a multi-command help.
+* Comments are found through the syntax tree: signatures may span
+  several lines, and the options record may be declared anywhere in the
+  file or in an imported module.
+* Each flag shows its value name (`<N>`, or its type), its comment, and
+  notes: the choices, `required`, `repeatable`, `default: ...`,
+  `requires --x`, `not with --y` and `env: VAR`.
+* Positional arguments show their names (or `<Type>`), their types, the
+  choices, whether they are optional (or their default) and whether they
+  may come from standard input.
 
 `--version` prints the program name and the exported
 `version : String`, and exists only when there is one:
@@ -201,6 +298,8 @@ tools help <command>              the help of a command
 tools <command> --help            the same
 tools --help, tools -h            the commands
 tools --version                   the version
+tools --completions SHELL         a completion script (bash, zsh, fish)
+tools --man                       a man page
 tools                             the commands, on stderr, exit status 2
 ```
 
@@ -209,6 +308,40 @@ when a blank line separates it from the first declaration. The name of
 the program is the name of the executable given with `-o` (or the file
 name), and messages of a command start with `tools command:`.
 `version`, `defaults` and `*.defaults` are not commands.
+
+## Shell completion and man pages
+
+`--completions bash`, `--completions zsh` or `--completions fish` as the
+first argument prints a completion script, and `--man` a man page in
+roff, generated from the same commands, flags and comments as the help.
+They work the same way in multi-command programs and in single-command
+executables (where they are not listed in the help, and a flag of the
+same name takes precedence), with the interpreter and in both native and
+WebAssembly builds:
+
+```
+$ source <(todo --completions bash)          # bash, for this shell
+$ todo --completions bash > ~/.local/share/bash-completion/completions/todo
+$ todo --completions zsh > ~/.zfunc/_todo    # a directory of $fpath
+$ todo --completions fish > ~/.config/fish/completions/todo.fish
+$ todo --man > todo.1 && man ./todo.1
+```
+
+The scripts complete:
+
+* the commands of a multi-command program (and `help <command>`);
+* the long and short flags of each command, and `--help`/`--version`;
+* the values of flags and arguments whose type is an enumeration;
+* file names for `String` values named `FILE`, `PATH` or ending in
+  `-file`/`_path` (and for flags named `file`, `path`...), directory
+  names for `DIR` or `DIRECTORY`; nothing for other values.
+
+The man page has the sections NAME, SYNOPSIS, DESCRIPTION, COMMANDS (or
+OPTIONS), ENVIRONMENT (the variables of `[env: ...]`) and EXIT STATUS.
+A bash script is checked with `bash -n` and by completing command lines
+in `tests/cli.rs`; zsh and fish scripts are checked when those shells are
+installed. A completion script is named after the program, so a program
+that is renamed after it is built needs its script generated again.
 
 ## Results, errors and exit statuses
 
@@ -219,6 +352,7 @@ name), and messages of a command start with `tools command:`.
 | returns `Option[T]` | writes the value, or nothing for `None` (a per-line function returning `Option` is a filter) |
 | returns `()` | writes nothing |
 | returns `Result[T, E]` | writes `T` as above, or for `Err e` writes `name: e` on stderr and exits with 1 |
+| returns `Outcome[T]` | writes its `output` as a `T` would be written, then exits with its `status` (modulo 256) |
 | raises an uncaught `Error[E]` | writes `name: e` on stderr and exits with 1 |
 | calls `exit n` | exits with `n` (modulo 256) |
 | traps (overflow, ...) | `fwp: trap: ...` on stderr, exit status 101 |
@@ -237,9 +371,31 @@ stops at the first error. The statuses are:
 
 The result of an exported function is always output, so an `I32` result
 is printed; only `main` returns its exit status as an `I32`. A command
-that wants another status calls `exit` (after its output). With
-`FWP_OUT=bin`, results are written in the binary protocol and the
-program's own `print` output goes to stderr ([protocol.md](protocol.md)).
+that chooses its status returns an `Outcome` (`lib/cli.fwp`):
+
+```fwp
+Outcome[T] = { output: T, status: I32 }
+
+# The words that contain PATTERN; the exit status is 1 when there are
+# none.
+# args: PATTERN WORDS...
+export search : String -> List[String] -> Outcome[List[String]]
+search = curry (fork filter (.0 | string.contains) .1)
+    | then2 id (outcome.fail-if is-empty)
+```
+
+* `outcome.of f` computes the status from the output, `outcome.exit n`
+  gives a fixed one and `outcome.fail-if p` is 1 when `p` holds;
+  `make Outcome { output = ..., status = ... }` builds one from anything.
+* The output may be a `Result`, an `Option` or a `List` as above: an
+  `Err` is still reported with status 1.
+* A command that runs once per line of standard input exits with the
+  highest status of its calls.
+* `exit` still works, for a status before the end.
+
+With `FWP_OUT=bin`, results are written in the binary protocol and the
+program's own `print` output goes to stderr ([protocol.md](protocol.md)),
+as does the output of the programs it runs with `process.call`.
 
 ## A hand-written `main`
 
@@ -248,7 +404,9 @@ Programs that parse their own arguments use the same rules through the
 `cli.parse defaults arguments` is `Ok (options, positional)` or
 `Err message`; a field whose flag is absent keeps its value in
 `defaults`, and `--help` is a flag like any other, so a program that
-wants it has a `help: Bool` field. `cli.help defaults` is the help lines
+wants it has a `help: Bool` field. Choices, value names and
+`[requires: ...]`/`[conflicts: ...]` work as for executables;
+environment variables do not (`cli.parse` is pure). `cli.help defaults` is the help lines
 of the flags, and `cli.usage-error usage message` prints both and exits
 with status 2:
 
@@ -304,14 +462,37 @@ options:
 | directories (`FileIO`) | `dir.list` (sorted), `dir.walk` (every file below, in order), `dir.create`, `dir.create-all`, `dir.remove` |
 | paths (pure) | `path.join`, `path.basename`, `path.dirname`, `path.extension`, `path.stem`, `path.normalize`, `path.is-absolute` |
 | processes (`Process`) | `process.run` (capture stdout, stderr and the status), `process.run-input`, `process.output`, `process.call` (shares the terminal) |
-| environment (`IO`) | `args`, `env.get`, `env.vars`, `env.cwd`, `env.home`, `exit`, `eprint`, `read-lines` |
-| terminal (`IO`) | `term.is-tty`, `term.color` (a terminal and no `NO_COLOR`), `term.paint`, `ansi.bold`, `ansi.red`... |
-| text | `table.lines`, `table.format` (aligned columns), `pad-left`, `pad-right`, `group-by` |
+| environment (`IO`) | `args`, `env.get`, `env.vars`, `env.cwd`, `env.home`, `exit`, `eprint`, `ewrite` (stderr without a newline) |
+| standard input (`IO`) | `read-line`, `read-lines`, `read-all`, `each-line` and `fold-lines` (line by line, in constant memory) |
+| terminal (`IO`) | `term.is-tty`, `term.width` (`COLUMNS` or the terminal's), `term.color` (a terminal and no `NO_COLOR`), `term.paint`, `ansi.bold`, `ansi.red`... |
+| prompts (`IO`) | `prompt.line`, `prompt.confirm` (`[y/N]`), `prompt.password` (`term.read-secret`: no echo on a terminal; WebAssembly cannot turn the echo off) |
+| progress (`IO`) | `progress.show` (a status line on stderr, only on a terminal), `progress.clear`, `progress.bar` (`[####    ]  50%`) |
+| exit statuses | `Outcome`, `outcome.of`, `outcome.exit`, `outcome.fail-if` |
+| CSV | `csv.parse`, `csv.parse-with` (another separator), `csv.decode` and `csv.parse-records` (typed records by header name), `csv.encode`, `csv.encode-with`, `csv.format-row`, `csv.field` |
+| text | `table.lines`, `table.format` (aligned columns), `table.widths`, `pad-left`, `pad-right`, `group-by` |
 
 A command is a list, the program and its arguments, and runs without a
 shell: `["git", "log", "-1"] | process.run`. `Process` is an effect of its
 own; WebAssembly targets have no processes and reject programs that use
 it at compile time, as they reject `Network` and `Async`.
+
+CSV records become typed values by the names of their columns:
+
+```fwp
+Item = { name: String, qty: I64, price: Option[F64], kind: Kind }
+
+items : String -> Result[List[Item], String]
+items = csv.parse-records
+```
+
+A header `First Name` or `first_name` is the field `first-name`; cells
+are parsed as command-line values (so `kind` may be `fruit` or `FRUIT`),
+an `Option` field is `None` for an empty cell or a missing column, and
+an error names the row and the column
+(``row 2: column `qty`: cannot parse `many` as I64``).
+
+Internal helpers of the standard library have a name part that starts
+with `_` (`table._row`) and are left out of [stdlib.md](stdlib.md).
 
 ## What was missing, and what was added
 
@@ -365,7 +546,35 @@ both backends where the operating system is needed (`src/sys.rs`,
 `runtime/fwp_rt_sys.c`) and in fwp otherwise (`lib/fs.fwp`,
 `lib/process.fwp`, `lib/cli.fwp`, `group-by`).
 
-What remains awkward:
+A second round, to make the programs complete as programs made with
+clap, cobra or click are, added:
+
+* **Choices.** Enumerations as flag and argument values, in any case,
+  listed in the help and completed by the shells.
+* **Environment variables.** `[env: VAR]` on a field, with flag >
+  environment > default.
+* **Value names.** `<N>` in a field comment, instead of the type.
+* **Optional arguments.** Trailing `Option` parameters and positional
+  defaults in `f.defaults`.
+* **Exit statuses.** `Outcome[T]`: `grep` now exits with 1 when nothing
+  matches and still returns its lines.
+* **Constraints.** `[requires: ...]` and `[conflicts: ...]` between flags.
+* **Shell completion and man pages.** `--completions bash|zsh|fish` and
+  `--man` in every program, in both backends and in WebAssembly.
+* **Doc comments from the syntax tree.** Comments were found by matching
+  lines (`export name` and `Name = {`), which missed signatures on several
+  lines, documentation on a `rec` signature and records declared in other
+  modules or with another layout. They now come from the parser's
+  declarations and the lexer's comments.
+* **The binary protocol and `process.call`.** A called program wrote on
+  the stdout of a program writing the binary protocol, corrupting it; it
+  now writes on stderr, as the program's own output does.
+* **Library.** CSV (with typed records by header), `term.width`, prompts
+  (with the echo off for passwords), progress lines, streaming standard
+  input (`each-line`, `fold-lines`), `ewrite`; standard library helpers
+  are hidden from the generated documentation.
+
+What remains:
 
 * Tacit code with several parameters needs `curry`, tuples and `.0 | .1`
   selectors, and a helper record is often clearer than a tuple
@@ -373,14 +582,17 @@ What remains awkward:
   local names), not something a CLI library can hide.
 * An effectful step before applying a function argument makes the
   argument's effect row include that effect (`term.paint` takes
-  `String -> String ! {IO | e}`).
-* There are no exit statuses other than through `exit` for exported
-  functions (`grep` cannot exit with 1 when nothing matched and still
-  return its lines); only `main` returns its status.
-* Flags have no value names beyond the type (`<I64>`), and there are no
-  positional parameters with defaults or optional positionals, and no
-  shell completion.
-* `process.call` inherits the program's stdout even when the program
-  writes the binary protocol (`FWP_OUT=bin`).
-* There is no CSV reader: `split ","` handles simple files, not quoted
-  fields.
+  `String -> String ! {IO | e}`): effect rows are unified, and a pure
+  function does not become an effectful one by subsumption.
+* No configuration files: values come from flags, the environment and
+  defaults only.
+* Environment variables apply to flags, not to positional arguments,
+  and `cli.parse` does not read them.
+* Subcommands are one level deep (`tool command`, not `tool group
+  command`).
+* Completion scripts are static: they cannot complete values that depend
+  on the program's state (the items of `todo`), and a short flag bundled
+  with its value (`-n5`) or with other switches is not taken apart when
+  counting arguments.
+* A completion script and the man page carry the name the program was
+  built with (`-o`); a renamed executable needs them generated again.

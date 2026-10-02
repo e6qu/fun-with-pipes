@@ -215,8 +215,9 @@ foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "sn
 
 ## The `fwp` command
 
-Exported functions also run as command-line programs, with flags, help
-and subcommands: see [cli.md](cli.md).
+Exported functions also run as command-line programs, with flags, help,
+subcommands, environment variables, shell completion and man pages: see
+[cli.md](cli.md).
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
@@ -263,7 +264,7 @@ Exit codes:
 
 An exported function run as a program exits with 1 when it returns
 `Err` or raises an uncaught `Error`, and prints the error as
-`name: message` ([cli.md](cli.md)). When `main` has type `I32`, its value is the exit code. `exit n` exits with `n` modulo 256 (`exit 259` is 3, `exit -1` is 255),
+`name: message` ([cli.md](cli.md)); one that returns an `Outcome` exits with its `status`. When `main` has type `I32`, its value is the exit code. `exit n` exits with `n` modulo 256 (`exit 259` is 3, `exit -1` is 255),
 as the operating system reports it, in both backends.
 
 Text from outside the program, that is, standard input (`read-line`,

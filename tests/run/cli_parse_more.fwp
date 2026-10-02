@@ -1,0 +1,48 @@
+# cli.parse and cli.help with enumerations, value names, environment
+# variables (shown by executables only) and constraints between options.
+
+Level =
+    | Low
+    | Medium
+    | VeryHigh
+
+Options = {
+    # -l <LEVEL>  how much
+    level: Level,
+    # the next level [env: DEMO_NEXT]
+    next: Option[Level],
+    # -k <KEY>  keys
+    key: List[Level],
+    # -u <USER>  log in as [requires: password]
+    user: Option[String],
+    # -p <SECRET>  the password
+    password: Option[String],
+    # -a  anonymously [conflicts: user, password]
+    anonymous: Bool,
+}
+
+defaults : Options
+defaults = Options {
+    level = Medium,
+    next = Some VeryHigh,
+    key = [Low],
+    user = None,
+    password = None,
+    anonymous = False,
+}
+
+parse : List[String] -> Result[(Options, List[String]), String]
+parse = cli.parse defaults
+
+main = [
+    [] | parse | echo,
+    ["-l", "very-high", "--next=LOW", "-k", "veryhigh", "-k", "Medium"]
+    | parse
+    | echo,
+    ["--level", "extreme"] | parse | echo,
+    ["-u", "ann"] | parse | echo,
+    ["-u", "ann", "-p", "x"] | parse | echo,
+    ["-a", "-p", "x"] | parse | echo,
+    ["-a"] | parse | echo,
+    defaults | cli.help | write,
+] | ignore

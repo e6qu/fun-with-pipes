@@ -49,11 +49,15 @@ csv._needs-quotes = curry (fork
     (.1 | flip string.contains)
     (.0 | flip Cons ["\"", "\n", "\r"]))
 
-csv._line : String -> List[String] -> String
-csv._line = curry (if
+# One record without its newline: `["a", "b c"] | csv.format-row ";"`.
+csv.format-row : String -> List[String] -> String
+csv.format-row = curry (if
     (.1 | eq [""])
-    (const "\"\"\n")
-    (fork join .0 (fork map (.0 | csv.field) .1) | concat "\n"))
+    (const "\"\"")
+    (fork join .0 (fork map (.0 | csv.field) .1)))
+
+csv._line : String -> List[String] -> String
+csv._line = then2 csv.format-row (concat "\n")
 
 test "csv.parse" =
     "name,qty\r\n\"Smith, J\",\"say \"\"hi\"\"\"\n\nx,\"a\nb\"\n"

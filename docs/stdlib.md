@@ -880,6 +880,9 @@ csv.encode-with : String -> List[List[String]] -> String
 # One field, quoted when it needs to be: `"a,b" | csv.field ","` is
 # `"\"a,b\""`.
 csv.field : String -> String -> String
+
+# One record without its newline: `["a", "b c"] | csv.format-row ";"`.
+csv.format-row : String -> List[String] -> String
 ```
 
 ## Tasks and channels

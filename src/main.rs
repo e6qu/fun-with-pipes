@@ -19,8 +19,9 @@ usage:
                                  compile `main` (or an exported function) to a
                                  native executable or a WebAssembly module;
                                  --cli makes every exported function a
-                                 subcommand of one executable, with flags
-                                 and --help (see docs/cli.md);
+                                 subcommand of one executable, with flags,
+                                 --help, --version, --completions
+                                 bash|zsh|fish and --man (see docs/cli.md);
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
                                  --staticlib/--cdylib build a C library
@@ -40,6 +41,8 @@ usage:
                                  run an exported function as an executable would
   fwp exec --cli <file.fwp> [command] [args...]
                                  run a file as `fwp build --cli` would
+                                 (`fwp exec --cli f.fwp --completions bash`
+                                 prints its completion script)
   fwp pipe '<file.fwp:fn args> | <file.fwp:fn> ...'
                                  connect exported functions with the binary
                                  typed protocol

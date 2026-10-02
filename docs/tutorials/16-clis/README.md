@@ -11,13 +11,15 @@ A first parameter that is a record is the options record: each field is a
 flag. A `Bool` field is a switch, an `Option` field is optional, a `List`
 field may be repeated, and any other field is required unless it has a
 default. The comment above a field describes the flag; when it starts
-with `-u`, the flag also has the short form `-u`:
+with `-u`, the flag also has the short form `-u`, `<N>` names its value
+in the help, and `[env: WORDS_TIMES]` lets an environment variable give
+the value when the flag is absent:
 
 ```fwp
 Options = {
     # -u  in capitals
     upper: Bool,
-    # -n  how many copies of each word
+    # -n <N>  how many copies of each word [env: WORDS_TIMES]
     times: I64,
     # what goes between the words
     sep: String,
@@ -56,6 +58,8 @@ $ ./words say -n 2 -u hi there
 HI HI THERE THERE
 $ ./words say --sep=, a b c
 a,b,c
+$ WORDS_TIMES=2 ./words say a b
+a a b b
 $ ./words help say
 usage: words say [options] [WORDS...]
 
@@ -68,7 +72,7 @@ arguments:
 
 options:
   -u, --upper         in capitals
-  -n, --times <I64>   how many copies of each word (default: 1)
+  -n, --times <N>     how many copies of each word (default: 1; env: WORDS_TIMES)
       --sep <String>  what goes between the words (default: " ")
   -h, --help          show this help
       --version       show the version
@@ -89,14 +93,18 @@ a record becomes flags, comments become the help, and
 `fwp build --cli` puts every command in one executable.
 
 commands:
-  say        Repeat words.
-  divide     Divide N by D.
-  non-blank  Keep the lines that are not blank.
-  help       show the help of a command
+  say         Repeat words.
+  divide      Divide N by D.
+  non-blank   Keep the lines that are not blank.
+  shout       Say a word, normally unless VOLUME says otherwise.
+  containing  The words that contain TEXT; the exit status is 1 when there are none.
+  help        show the help of a command
 
 options:
-  -h, --help     show this help
-      --version  show the version
+  -h, --help                 show this help
+      --version              show the version
+      --completions <SHELL>  print a completion script for bash, zsh or fish
+      --man                  print a man page
 
 Run `words help <command>` for the arguments of a command.
 ```
@@ -147,6 +155,72 @@ $ printf '10\n20\n' | ./divide 100
 5
 ```
 
+## Choices, optional arguments and exit statuses
+
+A type whose constructors have no fields is a set of choices: its values
+are written as the constructor names in any case, in kebab-case or not,
+and the help lists them. A last parameter of type `Option` (or one with
+a default in `shout.defaults`) may be left out:
+
+```fwp
+# How loud `shout` is.
+Volume =
+    | Quiet
+    | Normal
+    | Loud
+
+# Say a word, normally unless VOLUME says otherwise.
+# args: WORD VOLUME
+export shout : String -> Option[Volume] -> String
+```
+
+```
+$ ./words shout hey
+hey
+$ ./words shout hey LOUD
+HEY!
+$ ./words shout hey shouting
+words shout: argument 2: `shouting` is not one of quiet, normal, loud
+$ ./words help shout
+usage: words shout WORD [VOLUME]
+...
+arguments:
+  WORD    String
+  VOLUME  Volume, one of: quiet, normal, loud, optional
+```
+
+A command that returns an `Outcome` chooses its exit status:
+`outcome.fail-if is-empty` makes it 1 when there is no output, as `grep`
+does when nothing matches:
+
+```fwp
+# The words that contain TEXT; the exit status is 1 when there are none.
+# args: TEXT WORDS...
+export containing : String -> List[String] -> Outcome[List[String]]
+containing =
+    curry (fork filter (.0 | string.contains) .1)
+    | then2 id (outcome.fail-if is-empty)
+```
+
+```
+$ ./words containing pp apple fig
+apple
+$ ./words containing pp fig || echo none
+none
+```
+
+## Completion and man pages
+
+Every program writes completion scripts for its commands, flags and
+choices (files for arguments named `FILE` or `DIR`), and a man page:
+
+```
+$ source <(./words --completions bash)     # or zsh; fish: | source
+$ ./words sh<TAB>          # shout
+$ ./words shout hey <TAB>  # quiet normal loud
+$ ./words --man > words.1 && man ./words.1
+```
+
 `fwp exec main.fwp say -n 3 ho` runs a function with the interpreter, and
 `fwp exec --cli main.fwp divide 1 0` runs the file as the `--cli` program
 would; both behave exactly as the native programs.
@@ -157,8 +231,11 @@ The `cli` module parses arguments by the same rules for a program that
 reads `args ()` itself: `cli.parse` takes a record of defaults and the
 arguments, and returns the options and the positional arguments, or a
 message for `cli.usage-error`. The module also has `table.lines` for
-columns, `term.paint` and `ansi.*` for colours, and the `path`, `file`,
-`dir` and `process` functions that command-line programs need.
+columns, `term.paint` and `ansi.*` for colours, `prompt.line`,
+`prompt.confirm` and `prompt.password` for questions, `progress.show`
+for a status line on a terminal, and the library has `csv` for CSV files
+and the `path`, `file`, `dir` and `process` functions that command-line
+programs need.
 
 ## The program
 
@@ -177,7 +254,7 @@ version = "0.3.0"
 Options = {
     # -u  in capitals
     upper: Bool,
-    # -n  how many copies of each word
+    # -n <N>  how many copies of each word [env: WORDS_TIMES]
     times: I64,
     # what goes between the words
     sep: String,
@@ -212,6 +289,28 @@ divide = curry (match
 export non-blank : String -> Option[String]
 non-blank = if (trim | eq "") (const None) Some
 
+# How loud `shout` is.
+Volume =
+    | Quiet
+    | Normal
+    | Loud
+
+# Say a word, normally unless VOLUME says otherwise.
+# args: WORD VOLUME
+export shout : String -> Option[Volume] -> String
+shout = curry (match
+    (_, Some Quiet) -> lower
+    (_, Some Loud) -> upper | concat "!"
+    (_, Some Normal) -> id
+    (_, None) -> id)
+
+# The words that contain TEXT; the exit status is 1 when there are none.
+# args: TEXT WORDS...
+export containing : String -> List[String] -> Outcome[List[String]]
+containing =
+    curry (fork filter (.0 | string.contains) .1)
+    | then2 id (outcome.fail-if is-empty)
+
 main = [
     ["hi", "there"]
     | say Options { upper = False, times = 2, sep = "-" }
@@ -219,6 +318,9 @@ main = [
     divide 9 2 | echo,
     divide 9 0 | echo,
     ["a", " ", "b"] | filter-map non-blank | echo,
+    shout "hey" (Some Loud) | print,
+    ["apple", "fig"] | containing "pp" | echo,
+    ["fig"] | containing "pp" | .status | echo,
     ["-u", "--times=2", "hi", "--", "-x"]
     | cli.parse Options { upper = False, times = 1, sep = " " }
     | echo,
@@ -241,6 +343,9 @@ hi-hi-there-there
 Ok 4
 Err "cannot divide by zero"
 ["a", "b"]
+HEY!
+Outcome {output = ["apple"], status = 0}
+1
 Ok (Options {sep = " ", times = 2, upper = True}, ["hi", "-x"])
 Err "option `--times`: cannot parse `many` as I64"
 command  arguments

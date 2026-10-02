@@ -66,6 +66,10 @@ pub struct FieldDoc {
     /// `[env: VAR]`: the variable that gives the value when the flag is
     /// absent.
     pub env: Option<String>,
+    /// `[conflicts: a, b]`: options that cannot be given with this one.
+    pub conflicts: Vec<String>,
+    /// `[requires: a]`: options that must be given with this one.
+    pub requires: Vec<String>,
 }
 
 /// The text of a comment: without the `#`, one space and trailing space.
@@ -104,21 +108,31 @@ pub fn field_doc(text: &str) -> FieldDoc {
         }
     }
     let mut doc = rest.to_string();
-    if let Some(i) = doc.find("[env:") {
-        if let Some(j) = doc[i..].find(']') {
-            let var = doc[i + 5..i + j].trim().to_string();
-            if !var.is_empty() {
-                d.env = Some(var);
-                let before = doc[..i].trim_end();
-                let after = doc[i + j + 1..].trim_start();
-                doc = match (before.is_empty(), after.is_empty()) {
-                    (_, true) => before.to_string(),
-                    (true, false) => after.to_string(),
-                    (false, false) => format!("{} {}", before, after),
-                };
-            }
-        }
-    }
+    let mut take = |key: &str| -> Option<String> {
+        let i = doc.find(&format!("[{}:", key))?;
+        let j = doc[i..].find(']')?;
+        let value = doc[i + key.len() + 2..i + j].trim().to_string();
+        let before = doc[..i].trim_end();
+        let after = doc[i + j + 1..].trim_start();
+        doc = match (before.is_empty(), after.is_empty()) {
+            (_, true) => before.to_string(),
+            (true, false) => after.to_string(),
+            (false, false) => format!("{} {}", before, after),
+        };
+        (!value.is_empty()).then_some(value)
+    };
+    let names = |v: Option<String>| -> Vec<String> {
+        v.map(|v| {
+            v.split([',', ' '])
+                .map(|n| n.trim_start_matches('-').to_string())
+                .filter(|n| !n.is_empty())
+                .collect()
+        })
+        .unwrap_or_default()
+    };
+    d.env = take("env");
+    d.conflicts = names(take("conflicts"));
+    d.requires = names(take("requires"));
     d.doc = doc;
     d
 }
@@ -405,6 +419,12 @@ pub struct Flag {
     pub env: Option<String>,
     /// The values of an enumeration, in kebab-case.
     pub choices: Option<Vec<String>>,
+    /// The flags (their positions) that cannot be given with this one.
+    pub conflicts: Vec<usize>,
+    /// The flags (their positions) that must be given with this one.
+    pub requires: Vec<usize>,
+    /// The names of `conflicts` and `requires` as written (for errors).
+    pub constraint_names: (Vec<String>, Vec<String>),
 }
 
 /// The fields of an options record, as flags in declaration order.
@@ -501,7 +521,25 @@ impl Options {
                 value_ty,
                 doc: d.doc,
                 env: d.env,
+                conflicts: Vec::new(),
+                requires: Vec::new(),
+                constraint_names: (d.conflicts, d.requires),
             });
+        }
+        // the constraints between flags, by position
+        let pos = |n: &String| flags.iter().position(|f: &Flag| f.name == *n);
+        let resolved: Vec<(Vec<usize>, Vec<usize>)> = flags
+            .iter()
+            .map(|f| {
+                (
+                    f.constraint_names.0.iter().filter_map(pos).collect(),
+                    f.constraint_names.1.iter().filter_map(pos).collect(),
+                )
+            })
+            .collect();
+        for (f, (c, r)) in flags.iter_mut().zip(resolved) {
+            f.conflicts = c;
+            f.requires = r;
         }
         Some(Options {
             record: mt.clone(),
@@ -539,6 +577,9 @@ impl Options {
             (_, Some(d)) => notes.push(format!("default: {}", d)),
             _ => {}
         }
+        if let Some(c) = constraint_notes(f) {
+            notes.push(c);
+        }
         if let (true, Some(v)) = (env, &f.env) {
             notes.push(format!("env: {}", v));
         }
@@ -572,6 +613,21 @@ impl Options {
             _ => Some(show_value(v, &f.field_ty, prog)),
         }
     }
+}
+
+/// The help notes of `[requires: ...]` and `[conflicts: ...]`.
+pub fn constraint_notes(f: &Flag) -> Option<String> {
+    let mut notes = Vec::new();
+    for (k, word) in [
+        (&f.constraint_names.1, "requires"),
+        (&f.constraint_names.0, "not with"),
+    ] {
+        if !k.is_empty() {
+            let flags: Vec<String> = k.iter().map(|n| format!("--{}", n)).collect();
+            notes.push(format!("{} {}", word, flags.join(", ")));
+        }
+    }
+    (!notes.is_empty()).then(|| notes.join("; "))
 }
 
 /// Format rows as two aligned columns, indented by two spaces.
@@ -869,6 +925,24 @@ pub fn command(
         None => command.clone(),
     };
     let options = params.first().and_then(|p| Options::of(p, prog));
+    if let Some(o) = &options {
+        for f in &o.flags {
+            for (names, word) in [
+                (&f.constraint_names.0, "conflicts"),
+                (&f.constraint_names.1, "requires"),
+            ] {
+                if let Some(n) = names
+                    .iter()
+                    .find(|n| !o.flags.iter().any(|g| g.name == **n))
+                {
+                    return Err(format!(
+                        "`[{}: {}]` of the option `--{}`: `{}` has no option `--{}`",
+                        word, n, f.name, o.record, n
+                    ));
+                }
+            }
+        }
+    }
     let first = options.is_some() as usize;
     let unit_last = n > first && params[n - 1] == MT::unit();
     let pos_types = &params[first..n - unit_last as usize];
@@ -1407,6 +1481,7 @@ pub fn build_record(
     prog: &Program,
 ) -> Result<Value, String> {
     let mut fields = vec![Value::unit(); o.nfields];
+    let mut present = vec![false; o.flags.len()];
     for (k, (f, v)) in o.flags.iter().zip(vals).enumerate() {
         let from_env = match (&v, &f.env) {
             (FlagValue::Unset, Some(var)) => match env(var) {
@@ -1415,6 +1490,7 @@ pub fn build_record(
             },
             _ => None,
         };
+        present[k] = !matches!(v, FlagValue::Unset) || from_env.is_some();
         fields[f.index] = match v {
             FlagValue::One(x) if f.kind == FlagKind::Optional => Value::data(1, vec![x]),
             FlagValue::One(x) => x,
@@ -1432,7 +1508,31 @@ pub fn build_record(
             },
         };
     }
+    check_constraints(o, &present)?;
     Ok(Value::Record(fields.into()))
+}
+
+/// `[conflicts: ...]` and `[requires: ...]` of the flags that are given
+/// (`present`: on the command line or by their environment variable).
+fn check_constraints(o: &Options, present: &[bool]) -> Result<(), String> {
+    for (k, f) in o.flags.iter().enumerate() {
+        if !present[k] {
+            continue;
+        }
+        if let Some(c) = f.conflicts.iter().find(|c| present[**c]) {
+            return Err(format!(
+                "option `--{}` cannot be used with `--{}`",
+                f.name, o.flags[*c].name
+            ));
+        }
+        if let Some(r) = f.requires.iter().find(|r| !present[**r]) {
+            return Err(format!(
+                "option `--{}` needs `--{}`",
+                f.name, o.flags[*r].name
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// The defaults of a command as values.

@@ -3,6 +3,7 @@
 #   fwp build examples/cli/grep.fwp --fn grep -o grep
 #   ./grep -in todo src/*.rs
 #   printf 'apple\nBanana\n' | ./grep -i an
+#   ./grep -c TODO notes.txt || echo 'nothing to do'
 
 GrepOptions = {
     # -i  ignore case
@@ -65,9 +66,9 @@ source : Search -> (String, List[String]) -> Source
 source = curry (make Source { search = .0, name = .1 | .0, lines = .1 | .1 })
 
 # Print the lines of the FILEs (or of standard input) that contain
-# PATTERN.
+# PATTERN. The exit status is 1 when no line is selected.
 # args: PATTERN FILE...
-export grep : GrepOptions -> String -> List[String] -> List[String] ! {IO, FileIO, Error[IoError]}
+export grep : GrepOptions -> String -> List[String] -> Outcome[List[String]] ! {IO, FileIO, Error[IoError]}
 grep = curry (curry
     (fork
             map
@@ -81,4 +82,10 @@ grep = curry (curry
                     is-empty
                     (const () | read-lines | both (const "-") id | singleton)
                     (map (both id file.read-lines)))
-        | list.flat-map output))
+        | make Outcome {
+            output = list.flat-map output,
+            status =
+                map (both .search .lines | uncurry hits | length)
+                | sum
+                | if (eq 0) (const 1) (const 0),
+        }))

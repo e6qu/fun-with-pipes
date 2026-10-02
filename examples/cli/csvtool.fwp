@@ -1,0 +1,117 @@
+# Look at CSV files: the names of their columns, their first records as a
+# table, or some of their columns. Without a FILE, the commands read
+# standard input.
+#
+#   fwp build examples/cli/csvtool.fwp --cli -o csvtool
+#   ./csvtool columns people.csv
+#   ./csvtool show -n 3 people.csv
+#   ./csvtool cut -c name -c city --format tsv people.csv
+#   CSVTOOL_SEPARATOR=';' ./csvtool show export.csv
+#   source <(./csvtool --completions bash)
+
+export version : String
+version = "1.0.0"
+
+# How records are written.
+Format =
+    | Table
+    | Csv
+    | Tsv
+
+Input = {
+    # -d <SEP>  the separator of the input [env: CSVTOOL_SEPARATOR]
+    separator: String,
+}
+
+ShowOptions = {
+    # -n <N>  how many records [env: CSVTOOL_ROWS]
+    rows: I64,
+    # -f <FORMAT>  how to write them [env: CSVTOOL_FORMAT]
+    format: Format,
+    # -d <SEP>  the separator of the input [env: CSVTOOL_SEPARATOR]
+    separator: String,
+}
+
+CutOptions = {
+    # -c <COLUMN>  a column to keep, by name (all when there is none)
+    column: List[String],
+    # -f <FORMAT>  how to write the records [env: CSVTOOL_FORMAT]
+    format: Format,
+    # -d <SEP>  the separator of the input [env: CSVTOOL_SEPARATOR]
+    separator: String,
+}
+
+export defaults : {separator: String, format: Format, rows: I64}
+defaults = { separator = ",", format = Table, rows = 10 }
+
+# The rows of a file, or of standard input.
+read : String -> Option[String] -> List[List[String]] ! {IO, FileIO, Error[IoError]}
+read = curry (both .0 (.1
+        | if
+            option.is-some
+            (option.unwrap-or "" | file.read)
+            (const () | read-all))
+    | uncurry csv.parse-with)
+
+render : Format -> List[List[String]] -> List[String]
+render = curry (match
+    (Table, _) -> table.lines
+    (Csv, _) -> map (csv.format-row ",")
+    (Tsv, _) -> map (csv.format-row "\t"))
+
+header : List[List[String]] -> List[String]
+header = head | option.unwrap-or []
+
+# The wanted columns that the header does not have.
+missing : (List[String], List[String]) -> List[String]
+missing = fork filter (.1 | flip contains | flip compose not) .0
+
+# The positions of the wanted columns in the header.
+positions : (List[String], List[String]) -> List[I64]
+positions = fork map (.1 | flip index-of | flip compose (option.unwrap-or 0)) .0
+
+pick : List[I64] -> List[String] -> List[String]
+pick = curry (fork map (.1 | flip nth | flip compose (option.unwrap-or "")) .0)
+
+# Some columns of rows, by name; all of them for none.
+select : List[String] -> List[List[String]] -> Result[List[List[String]], String]
+select = curry (if
+    (both .0 (.1 | header) | missing | is-empty)
+    (if
+        (.0 | is-empty)
+        (.1 | Ok)
+        (fork map (both .0 (.1 | header) | positions | pick) .1 | Ok))
+    (both .0 (.1 | header)
+        | missing
+        | header-cell
+        | format "there is no column `{}`"
+        | Err))
+
+header-cell : List[String] -> String
+header-cell = head | option.unwrap-or ""
+
+# The names of the columns, numbered.
+# command: columns
+# args: FILE
+export columns-of : Input -> Option[String] -> List[String] ! {IO, FileIO, Error[IoError]}
+columns-of =
+    curry (both (.0 | .separator) .1 | uncurry read)
+    | then2 id (header
+        | enumerate
+        | map (both (.0 | add 1 | show | pad-left 3 " ") .1 | format "{}  {}"))
+
+# The header and the first records.
+# command: show
+# args: FILE
+export show-records : ShowOptions -> Option[String] -> List[String] ! {IO, FileIO, Error[IoError]}
+show-records = curry (both .0 (both (.0 | .separator) .1 | uncurry read)
+    | both (.0 | .format) (both (.0 | .rows | add 1) .1 | uncurry take)
+    | uncurry render)
+
+# Some columns of the records, by name.
+# command: cut
+# args: FILE
+export cut-columns : CutOptions -> Option[String] -> Result[List[String], String] ! {IO, FileIO, Error[IoError]}
+cut-columns = curry (both .0 (both (.0 | .separator) .1 | uncurry read)
+    | both (.0 | .format) (both (.0 | .column) .1 | uncurry select)
+    | uncurry (render | result.map))

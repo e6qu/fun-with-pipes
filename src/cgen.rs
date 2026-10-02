@@ -158,7 +158,7 @@ impl<'p> Gen<'p> {
         for (k, f) in o.flags.iter().enumerate() {
             let (left, pad) = &lefts[k];
             rows.push(format!(
-                "    {{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}}",
+                "    {{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}}}",
                 c_string_literal(f.name.as_bytes()),
                 f.short.map(|c| c as u32).unwrap_or(0),
                 f.kind as u8,
@@ -177,6 +177,12 @@ impl<'p> Gen<'p> {
                     Some(e) => c_string_literal(e.as_bytes()),
                     None => "0".into(),
                 },
+                match crate::cli::constraint_notes(f) {
+                    Some(p) => c_string_literal(p.as_bytes()),
+                    None => "0".into(),
+                },
+                int_list(&f.conflicts),
+                int_list(&f.requires),
             ));
         }
         let _ = writeln!(
@@ -1648,6 +1654,15 @@ pub fn generate_cli(prog: &Program, name: &str) -> Result<String, String> {
 
 /// The start of `main` of a command-line program: its texts.
 const CLI_INIT: &str = "    fwp_cli_version = exec_version;\n    for (int i = 0; i < 3; i++) fwp_cli_scripts[i] = exec_scripts[i];\n    fwp_cli_man = exec_man;\n";
+
+/// A list of positions as a C array literal ended by -1, or `0`.
+fn int_list(xs: &[usize]) -> String {
+    if xs.is_empty() {
+        return "0".into();
+    }
+    let items: Vec<String> = xs.iter().map(|x| x.to_string()).collect();
+    format!("(const int[]){{{}, -1}}", items.join(", "))
+}
 
 fn bytes_literal(b: &[u8]) -> String {
     let parts: Vec<String> = b.iter().map(|x| x.to_string()).collect();

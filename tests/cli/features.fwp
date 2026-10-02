@@ -13,8 +13,10 @@ Options = {
     count: I64,
     # -q  say less [env: FEATURES_QUIET]
     quiet: Bool,
-    # -o <FILE>  where to write
+    # -o <FILE>  where to write [conflicts: quiet]
     output: Option[String],
+    # -a  add to the end of the file [requires: output]
+    append: Bool,
 }
 
 export defaults : {format: Format, count: I64}

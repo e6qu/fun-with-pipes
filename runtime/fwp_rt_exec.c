@@ -476,6 +476,9 @@ typedef struct {
     const char *pad;       /* help: spaces up to the description */
     const char *doc;
     const char *env;       /* the environment variable of the value, or 0 */
+    const char *post;      /* help notes after the default ("requires --x"), or 0 */
+    const int *conflicts;  /* flags that cannot be given with it (-1 ends), or 0 */
+    const int *requires;   /* flags that must be given with it (-1 ends), or 0 */
 } fwp_flag;
 
 static V fwp_strf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
@@ -712,11 +715,13 @@ static int fwp_flag_env(const fwp_flag *f, V *out, V *err) {
 static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals, const char *state,
                           const V *defs, const char *have_def, int env, V *out, V *err) {
     V *fs = (V *)fwp_alloc((size_t)(nfields + 1) * sizeof(V));
+    char *present = (char *)fwp_alloc((size_t)nf + 1);
     for (int k = 0; k < nf; k++) {
         const fwp_flag *f = &fl[k];
         V v;
         int e = 0;
         if (!state[k] && env && (e = fwp_flag_env(f, &v, err)) < 0) return 0;
+        present[k] = state[k] || e;
         if (state[k]) {
             if (f->kind == FL_OPTIONAL) { V x[1] = {vals[k]}; v = fwp_data(1, 1, x); }
             else if (f->kind == FL_REPEATED) v = fwp_p_reverse(vals[k]);
@@ -732,6 +737,20 @@ static int fwp_cli_record(const fwp_flag *fl, int nf, int nfields, const V *vals
             v = 0; /* False, None, [] */
         }
         fs[f->index] = v;
+    }
+    /* [conflicts: ...] and [requires: ...] (src/cli.rs check_constraints) */
+    for (int k = 0; k < nf; k++) {
+        if (!present[k]) continue;
+        for (const int *c = fl[k].conflicts; c && *c >= 0; c++)
+            if (present[*c]) {
+                *err = fwp_strf("option `--%s` cannot be used with `--%s`", fl[k].name, fl[*c].name);
+                return 0;
+            }
+        for (const int *r = fl[k].requires; r && *r >= 0; r++)
+            if (!present[*r]) {
+                *err = fwp_strf("option `--%s` needs `--%s`", fl[k].name, fl[*r].name);
+                return 0;
+            }
     }
     *out = fwp_record((uint32_t)nfields, fs);
     return 1;
@@ -755,18 +774,22 @@ static void fwp_flag_help(fwp_buf *b, const fwp_flag *f, V note) {
     fwp_buf t = {0};
     buf_puts(&t, f->doc);
     int enm = fwp_is_enum(f->value);
-    if (note || f->kind == FL_REPEATED || enm) {
+    if (note || f->kind == FL_REPEATED || enm || f->post) {
         if (t.len) buf_putc(&t, ' ');
         buf_putc(&t, '(');
         if (enm) {
             V cs = fwp_choices(f->value);
             buf_puts(&t, "one of: ");
             buf_put(&t, STR(cs)->d, STR(cs)->len);
-            if (note || f->kind == FL_REPEATED) buf_puts(&t, "; ");
+            if (note || f->kind == FL_REPEATED || f->post) buf_puts(&t, "; ");
         }
         if (f->kind == FL_REPEATED) buf_puts(&t, note ? "repeatable; default: " : "repeatable");
         else if (note) buf_puts(&t, "default: ");
         if (note) buf_put(&t, STR(note)->d, STR(note)->len);
+        if (f->post) {
+            if (note || f->kind == FL_REPEATED) buf_puts(&t, "; ");
+            buf_puts(&t, f->post);
+        }
         buf_putc(&t, ')');
     }
     buf_puts(b, f->left);
