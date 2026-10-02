@@ -250,7 +250,11 @@ pub fn compile_source(
 /// Run `f` on a thread with a large stack (deeply recursive tacit code).
 pub fn with_big_stack<T: Send + 'static>(f: impl FnOnce() -> T + Send + 'static) -> T {
     std::thread::Builder::new()
-        .stack_size(1 << 30)
+        .stack_size(if cfg!(target_pointer_width = "64") {
+            4 << 30
+        } else {
+            256 << 20
+        })
         .spawn(f)
         .expect("spawn interpreter thread")
         .join()

@@ -18,3 +18,18 @@ fn std_tests_pass() {
     );
     assert!(stdout.contains("passed, 0 failed"));
 }
+
+#[test]
+fn std_tests_pass_natively() {
+    let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
+        .args(["test", "--std", "--native"])
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        out.status.success() && stdout.contains("passed, 0 failed"),
+        "native std tests failed:\n{}\n{}",
+        stdout,
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

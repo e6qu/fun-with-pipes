@@ -1039,7 +1039,11 @@ fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
     out
 }
 
-/// Lower a checked program to IR.
+/// Lower a checked program to optimized IR.
 pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
-    Mono::new(env, typed).run(roots)
+    let mut prog = Mono::new(env, typed).run(roots)?;
+    if std::env::var("FWP_NO_OPT").is_err() {
+        crate::opt::optimize(&mut prog);
+    }
+    Ok(prog)
 }

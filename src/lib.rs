@@ -5,6 +5,7 @@
 #![allow(clippy::mutable_key_type)]
 
 pub mod ast;
+pub mod cgen;
 pub mod diag;
 pub mod driver;
 pub mod env;
@@ -14,6 +15,7 @@ pub mod interp;
 pub mod ir;
 pub mod lexer;
 pub mod mono;
+pub mod opt;
 pub mod parser;
 pub mod pretty;
 pub mod prims_std;
