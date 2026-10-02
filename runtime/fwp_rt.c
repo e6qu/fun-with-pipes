@@ -24,6 +24,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>
+#include <ctype.h>
 
 typedef uint64_t V;
 typedef __int128 i128;
@@ -187,7 +188,12 @@ static fwp_handler *fwp_handlers = 0;
 static V *fwp_state = 0;
 static size_t fwp_state_len = 0, fwp_state_cap = 0;
 
-static void fwp_flush(void) { fflush(stdout); }
+static FILE *fwp_prog_out; /* where `print` writes (stderr in binary exec mode) */
+
+static void fwp_flush(void) {
+    if (fwp_prog_out) fflush(fwp_prog_out);
+    fflush(stdout);
+}
 
 static void fwp_trap(const char *msg) {
     fwp_flush();

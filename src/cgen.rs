@@ -13,6 +13,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_ops.c"),
     include_str!("../runtime/fwp_rt_num.c"),
     include_str!("../runtime/fwp_rt_prims.c"),
+    include_str!("../runtime/fwp_rt_exec.c"),
 ];
 
 struct Gen<'p> {
@@ -898,20 +899,46 @@ impl<'p> Gen<'p> {
     }
 }
 
+/// What the generated executable runs.
+enum Mode<'a> {
+    Main,
+    Tests,
+    /// An exported function as a standalone executable.
+    Exec(FuncId, &'a str),
+}
+
 /// Generate the complete C program running `main`.
 pub fn generate(prog: &Program) -> Result<String, String> {
     if prog.main.is_none() {
         return Err("no `main` binding to compile".into());
     }
-    generate_mode(prog, false)
+    generate_mode(prog, Mode::Main)
 }
 
 /// Generate a C program that runs the program's tests.
 pub fn generate_tests(prog: &Program) -> Result<String, String> {
-    generate_mode(prog, true)
+    generate_mode(prog, Mode::Tests)
 }
 
-fn generate_mode(prog: &Program, tests: bool) -> Result<String, String> {
+/// Generate a standalone executable for an exported function.
+pub fn generate_exec(prog: &Program, fid: FuncId, name: &str) -> Result<String, String> {
+    generate_mode(prog, Mode::Exec(fid, name))
+}
+
+fn bytes_literal(b: &[u8]) -> String {
+    let parts: Vec<String> = b.iter().map(|x| x.to_string()).collect();
+    format!(
+        "{{{}}}",
+        if parts.is_empty() {
+            "0".into()
+        } else {
+            parts.join(", ")
+        }
+    )
+}
+
+fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
+    let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
     let mut g = Gen {
         prog,
@@ -928,11 +955,79 @@ fn generate_mode(prog: &Program, tests: bool) -> Result<String, String> {
         bodies.push_str(&g.func(id)?);
         bodies.push('\n');
     }
-    let main_ty = if tests {
-        MT::unit()
-    } else {
-        prog.funcs[main].ty.clone()
+    let main_ty = match mode {
+        Mode::Main => prog.funcs[main].ty.clone(),
+        _ => MT::unit(),
     };
+    // exec mode: descriptors and protocol data for the function's interface
+    let mut exec_defs = String::new();
+    if let Mode::Exec(fid, name) = &mode {
+        let f = &prog.funcs[*fid];
+        let n = f.arity as usize;
+        let (params, result) = f.ty.params(n);
+        let params: Vec<MT> = params.into_iter().cloned().collect();
+        let result = result.clone();
+        let list_elem = |t: &MT| match t {
+            MT::Con(n, a) if n == "std::List" => a.first().cloned(),
+            _ => None,
+        };
+        let out_elem = list_elem(&result).unwrap_or_else(|| result.clone());
+        let last = params.last().cloned().unwrap_or(MT::unit());
+        let in_elem = list_elem(&last).unwrap_or_else(|| last.clone());
+        let pd: Vec<String> = params.iter().map(|p| g.desc(p)).collect();
+        let pn: Vec<String> = params
+            .iter()
+            .map(|p| c_string_literal(p.to_string().as_bytes()))
+            .collect();
+        let rd = g.desc(&result);
+        let od = g.desc(&out_elem);
+        let idd = g.desc(&in_elem);
+        let header = crate::proto::header(&out_elem, prog);
+        let fp = crate::proto::fingerprint(&crate::proto::canonical_type(&in_elem, prog));
+        let usage = crate::exec::usage(name, &params);
+        let _ = write!(
+            exec_defs,
+            r#"
+static const fwp_desc *const exec_params[] = {{{pd}}};
+static const char *const exec_param_names[] = {{{pn}}};
+static const unsigned char exec_out_header[] = {header};
+static const unsigned char exec_in_fp[16] = {fp};
+static V caf_exec_entry(void) {{ return {entry}; }}
+static const fwp_exec_spec exec_spec = {{
+    {name}, {usage}, {fid}, {arity}, exec_params, exec_param_names, {rd}, {rlist},
+    {od}, exec_out_header, sizeof exec_out_header, {llist}, {idd}, {itype}, exec_in_fp}};
+"#,
+            pd = if pd.is_empty() {
+                "0".into()
+            } else {
+                pd.join(", ")
+            },
+            pn = if pn.is_empty() {
+                "0".into()
+            } else {
+                pn.join(", ")
+            },
+            header = bytes_literal(&header),
+            fp = bytes_literal(&fp),
+            entry = if n == 0 {
+                format!("caf{}()", fid)
+            } else {
+                "0".into()
+            },
+            name = c_string_literal(name.as_bytes()),
+            usage = c_string_literal(usage.as_bytes()),
+            fid = fid,
+            arity = n,
+            rd = rd,
+            rlist = list_elem(&result).is_some() as u8,
+            od = od,
+            llist = list_elem(&last).is_some() as u8,
+            idd = idd,
+            itype = c_string_literal(in_elem.to_string().as_bytes()),
+        );
+    } else {
+        exec_defs.push_str("static V caf_exec_entry(void) { return 0; }\n");
+    }
     let main_desc = g.desc(&main_ty);
     // IoError is always available for uncaught IO failures.
     g.desc(&MT::con("std::IoError"));
@@ -1021,7 +1116,10 @@ fn generate_mode(prog: &Program, tests: bool) -> Result<String, String> {
     out.push('\n');
     out.push_str(&bodies);
     let exit_code = matches!(&main_ty, MT::Con(n, _) if n == "std::I32");
-    let run = if tests {
+    out.push_str(&exec_defs);
+    let run = if let Mode::Exec(..) = mode {
+        "    fwp_exit_code = fwp_exec(&exec_spec, fwp_argc, fwp_argv);".to_string()
+    } else if tests {
         let mut r = String::from("    int pass = 0, fail = 0;\n");
         for (name, id) in &prog.tests {
             let _ = write!(
@@ -1076,6 +1174,7 @@ static void *fwp_main_thread(void *arg) {{
 
 int main(int argc, char **argv) {{
     fwp_fns = fwp_fn_table;
+    fwp_prog_out = stdout;
     fwp_argc = argc;
     fwp_argv = argv;
     clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);
