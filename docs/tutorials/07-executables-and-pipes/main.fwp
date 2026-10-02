@@ -1,0 +1,27 @@
+# 7. Functions as executables
+#
+# Every `export`ed function can become a standalone program: its curried
+# parameters come from the command line, and the last one may come from
+# standard input, one record per line.
+
+export normalize : String -> String
+normalize = trim | lower
+
+export scale : I64 -> I64 -> I64
+scale = mul
+
+export total : List[I64] -> I64
+total = sum
+
+Reading = { sensor: String, celsius: F64 }
+
+export fahrenheit : Reading -> Reading
+fahrenheit = update { celsius = mul 1.8 | add 32.0 }
+
+# `main` shows the same functions called from fwp.
+main = [
+    "  Hello WORLD " | normalize | print,
+    7 | scale 6 | echo,
+    [1, 2, 3, 4] | total | echo,
+    { sensor = "roof", celsius = 21.5 } | fahrenheit | echo,
+] | ignore

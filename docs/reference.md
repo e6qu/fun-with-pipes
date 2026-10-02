@@ -3,7 +3,7 @@
 fwp is a tacit, curried, pipe-oriented language with static types, effect
 tracking, and two backends: an interpreter and native code through C. This
 page is the reference for the language as implemented. For a gentler
-introduction, see the [tutorial](tutorial.md).
+introduction, see the [tutorials](tutorials/README.md).
 
 ## Lexical structure
 

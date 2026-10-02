@@ -66,7 +66,7 @@ cargo build --release
 export PATH=$PWD/target/release:$PATH
 
 fwp run examples/hello.fwp
-fwp build examples/tutorial/02-data.fwp -o data && ./data
+fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
 fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
 fwp test --std                           # the standard library's own tests
@@ -76,7 +76,7 @@ fwp test --std                           # the standard library's own tests
 
 | Document | Contents |
 |---|---|
-| [docs/tutorial.md](docs/tutorial.md) | a tour, from pipes to tasks |
+| [docs/tutorials](docs/tutorials/README.md) | twelve tutorials, from pipes to WebAssembly |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |

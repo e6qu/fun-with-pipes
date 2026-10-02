@@ -1,0 +1,20 @@
+# 10. WebAssembly
+#
+# The same program runs in the interpreter, natively, under WASI and in a
+# browser. It only uses effects that every target provides.
+
+# the number of steps of the Collatz sequence from n down to 1
+rec collatz-length : I64 -> I64
+collatz-length = match
+    1 -> 1
+    _ -> if (rem 2 | eq 0) (div 2) (mul 3 | add 1) | collatz-length | add 1
+
+# the start below n with the longest sequence
+longest : I64 -> Option[(I64, I64)]
+longest = range 1 | map (both id collatz-length) | sort-by .1 | last
+
+main = [
+    27 | collatz-length | echo,
+    1000 | longest | echo,
+    "fwp" | string.reverse | upper | print,
+] | ignore

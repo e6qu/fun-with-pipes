@@ -79,6 +79,9 @@ Syntax =
     | SOther String
     # a macro invocation `name!(args)`
     | SMacro String List[Syntax]
+    # a record form with fields: kind is "with", "update", "make",
+    # "make T", or "record T" for `T { ... }`
+    | SFields String List[(String, Syntax)]
 
 SynPat =
     | PHole

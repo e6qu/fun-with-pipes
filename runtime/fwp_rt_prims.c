@@ -1125,7 +1125,7 @@ static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
 /* Mirrors src/syntax.rs `show` (pretty printing of `Syntax` values). */
 
 enum { SY_NAME, SY_CTOR, SY_INT, SY_FLOAT, SY_STR, SY_SELECT, SY_APPLY, SY_PIPE, SY_UNIT,
-       SY_TUPLE, SY_LIST, SY_RECORD, SY_MATCH, SY_COMPTIME, SY_OTHER, SY_MACRO };
+       SY_TUPLE, SY_LIST, SY_RECORD, SY_MATCH, SY_COMPTIME, SY_OTHER, SY_MACRO, SY_FIELDS };
 enum { PY_HOLE, PY_INT, PY_STR, PY_CTOR, PY_BARE, PY_TUPLE, PY_UNIT };
 
 static void sy_name(fwp_buf *b, V s) {
@@ -1247,6 +1247,16 @@ static void sy_atom(fwp_buf *b, V v) {
         sy_list(b, OBJ(v)->f[1], sy_expr);
         buf_putc(b, ')');
         return;
+    case SY_FIELDS: {
+        /* kind: with, update, make, "make T", "record T" (printed `T {...}`) */
+        V k = OBJ(v)->f[0];
+        if (STR(k)->len > 7 && !memcmp(STR(k)->d, "record ", 7)) buf_put(b, STR(k)->d + 7, STR(k)->len - 7);
+        else buf_put(b, STR(k)->d, STR(k)->len);
+        buf_puts(b, " {");
+        sy_list(b, OBJ(v)->f[1], sy_field);
+        buf_putc(b, '}');
+        return;
+    }
     }
 }
 
