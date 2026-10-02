@@ -1,0 +1,16 @@
+# Count word frequencies on stdin and print the most common words.
+#
+#   fwp run examples/wordfreq.fwp < some-text.txt
+
+normalize = lower | replace "," "" | replace "." ""
+
+main =
+    ()
+    | read-all
+    | words
+    | map normalize
+    | frequencies
+    | map.to-list
+    | sort-by (.1 | neg)
+    | take 5
+    | each (format "{}: {}" | print)

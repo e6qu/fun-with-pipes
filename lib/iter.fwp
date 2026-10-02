@@ -1,0 +1,59 @@
+# Lazy, pull-based iterators, written in fwp. The tail of a non-empty
+# iterator is a function that produces the rest on demand, so iterators
+# can be infinite.
+
+Iterator[T] =
+    | Done
+    | Yield T (() -> Iterator[T])
+
+# `iter.later f x` is a thunk that computes `f x` when forced. (Note that
+# `x | f | const` would compute `f x` immediately.)
+iter.later : (a -> b ! e) -> a -> () -> b ! e
+iter.later = flip compose | compose const
+
+# `iter.count-from 0` is 0, 1, 2, ...
+iter.count-from : a -> Iterator[a] where Add[a], One[a], Dup[a]
+rec iter.count-from = fork Yield id (add one | iter.later iter.count-from)
+
+iter.from-list : List[a] -> Iterator[a]
+rec iter.from-list = match
+    Nil -> Done
+    Cons -> Yield | compose (iter.later iter.from-list)
+
+iter.to-list : Iterator[a] -> List[a]
+rec iter.to-list = match
+    Done -> Nil
+    Yield -> Cons | compose (apply () | iter.to-list)
+
+# The arms below receive their holes as one tuple via `curry3` and pick
+# them apart with selectors: (f, x, rest).
+iter.map : (a -> b) -> Iterator[a] -> Iterator[b] where Dup[a]
+rec iter.map = curry (match
+    (_, Done) -> const Done
+    (_, Yield _ _) -> curry3 (fork Yield
+        (both .0 .1 | uncurry id)
+        (both .2 (.0 | iter.map) | uncurry compose)))
+
+iter.filter : (a -> Bool) -> Iterator[a] -> Iterator[a] where Dup[a]
+rec iter.filter = curry (match
+    (_, Done) -> const Done
+    (_, Yield _ _) -> curry3 (if (both .0 .1 | uncurry id)
+        (fork Yield .1 (both .2 (.0 | iter.filter) | uncurry compose))
+        (both .0 (.2 | apply ()) | uncurry iter.filter)))
+
+iter.take : I64 -> Iterator[a] -> Iterator[a] where Dup[a]
+rec iter.take = curry (match
+    (0, _) -> const Done
+    (_, Done) -> const Done
+    (_, Yield _ _) -> curry3 (fork Yield .1 (both .2 (.0 | sub 1 | iter.take) | uncurry compose)))
+
+# `iter.iterate f x` is x, f x, f (f x), ...
+iter.iterate : (a -> a) -> a -> Iterator[a] where Dup[a]
+rec iter.iterate = curry (fork Yield .1 (both .0 (uncurry id) | iter.later (uncurry iter.iterate)))
+
+test "iter round trip" = [1, 2, 3] | iter.from-list | iter.to-list | eq [1, 2, 3]
+test "iter.count-from" = 5 | iter.count-from | iter.take 3 | iter.to-list | eq [5, 6, 7]
+test "iter.map" = 0 | iter.count-from | iter.map (mul 2) | iter.take 3 | iter.to-list | eq [0, 2, 4]
+test "iter.filter" = 1 | iter.count-from | iter.filter (rem 3 | eq 0) | iter.take 2 | iter.to-list | eq [3, 6]
+test "iter.later is lazy" = const True (iter.later fail "boom")
+test "iter.iterate" = 1 | iter.iterate (mul 3) | iter.take 4 | iter.to-list | eq [1, 3, 9, 27]

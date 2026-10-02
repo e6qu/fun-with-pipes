@@ -10,6 +10,7 @@ fwp - the fwp (\"foop\") language
 usage:
   fwp run <file.fwp> [args...]   run a program's `main`
   fwp test <file.fwp>            run the `test` declarations of a file
+  fwp test --std                 run the standard library's tests
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
   fwp help                       show this message
@@ -101,16 +102,23 @@ fn run(args: &[String]) -> ExitCode {
 }
 
 fn test(args: &[String]) -> ExitCode {
-    let Some(path) = args.first().cloned() else {
-        eprintln!("fwp test: missing file");
+    let std_tests = args.iter().any(|a| a == "--std");
+    let path = args.iter().find(|a| !a.starts_with("--")).cloned();
+    if path.is_none() && !std_tests {
+        eprintln!("fwp test: missing file (or --std)");
         return ExitCode::from(2);
-    };
+    }
     let roots = fwp::mono::Roots {
         tests: true,
+        std_tests,
         ..Default::default()
     };
     let code = fwp::driver::with_big_stack(move || {
-        match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
+        let compiled = match &path {
+            Some(p) => fwp::driver::compile_file(std::path::Path::new(p), roots),
+            None => fwp::driver::compile_source("<empty>", "", roots),
+        };
+        match compiled {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
                 let mut out = std::io::stdout();

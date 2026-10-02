@@ -1,0 +1,109 @@
+# Option and Result. Multi-argument pattern functions use `curry` with a
+# tuple match: the holes of the matched tuple are passed to the arm body in
+# order.
+
+option.map : (a -> b ! e) -> Option[a] -> Option[b] ! e
+option.map = curry (match
+    (_, Some _) -> flip compose Some
+    (_, None) -> const None)
+
+option.and-then : (a -> Option[b] ! e) -> Option[a] -> Option[b] ! e
+option.and-then = curry (match
+    (_, Some _) -> id
+    (_, None) -> const None)
+
+option.ap : Option[a -> b] -> Option[a] -> Option[b]
+option.ap = curry (match
+    (Some _, Some _) -> flip compose Some
+    _ -> const None)
+
+option.unwrap-or : a -> Option[a] -> a
+option.unwrap-or = curry (match
+    (_, Some _) -> const id
+    (_, None) -> id)
+
+option.or-else : Option[a] -> Option[a] -> Option[a]
+option.or-else = curry (match
+    (_, Some _) -> const Some
+    (_, None) -> id)
+
+option.is-some : Option[a] -> Bool
+option.is-some = match
+    Some -> const True
+    None -> False
+
+option.is-none : Option[a] -> Bool
+option.is-none = option.is-some | not
+
+option.to-list : Option[a] -> List[a]
+option.to-list = match
+    Some -> flip Cons Nil
+    None -> Nil
+
+option.filter : (a -> Bool ! e) -> Option[a] -> Option[a] ! e where Dup[a]
+option.filter = curry (match
+    (_, Some _) -> flip if Some | apply (const None)
+    (_, None) -> const None)
+
+result.map : (a -> b ! e) -> Result[a, x] -> Result[b, x] ! e
+result.map = curry (match
+    (_, Ok _) -> flip compose Ok
+    (_, Err _) -> const Err)
+
+result.map-err : (x -> y ! e) -> Result[a, x] -> Result[a, y] ! e
+result.map-err = curry (match
+    (_, Ok _) -> const Ok
+    (_, Err _) -> flip compose Err)
+
+result.and-then : (a -> Result[b, x] ! e) -> Result[a, x] -> Result[b, x] ! e
+result.and-then = curry (match
+    (_, Ok _) -> id
+    (_, Err _) -> const Err)
+
+result.unwrap-or : a -> Result[a, x] -> a
+result.unwrap-or = curry (match
+    (_, Ok _) -> const id
+    (_, Err _) -> const)
+
+result.is-ok : Result[a, x] -> Bool
+result.is-ok = match
+    Ok -> const True
+    Err -> const False
+
+result.to-option : Result[a, x] -> Option[a]
+result.to-option = match
+    Ok -> Some
+    Err -> const None
+
+result.from-option : x -> Option[a] -> Result[a, x]
+result.from-option = curry (match
+    (_, Some _) -> const Ok
+    (_, None) -> Err)
+
+test "option.map" = Some 2 | option.map (add 1) | eq (Some 3)
+test "option.map none" = None | option.map (add 1) | eq None
+test "option.and-then" = Some 2 | option.and-then (const None) | the-opt | eq None
+test "option.ap" = Some 2 | option.ap (Some (mul 5)) | eq (Some 10)
+test "option.unwrap-or" = None | option.unwrap-or 7 | eq 7
+test "option.or-else" = None | option.or-else (Some 1) | eq (Some 1)
+test "option.is-some" = Some 1 | option.is-some
+test "option.is-none" = None | the-opt | option.is-none
+test "option.to-list" = Some 4 | option.to-list | eq [4]
+test "option.filter" = Some 4 | option.filter (gt 3) | eq (Some 4)
+test "option.filter rejects" = Some 2 | option.filter (gt 3) | eq None
+test "result.map" = Ok 2 | the-res | result.map (add 1) | eq (Ok 3)
+test "result.map-err" = Err "x" | result.map-err upper | the-res-s | eq (Err "X")
+test "result.and-then" = Ok 1 | the-res | result.and-then (const (Err "no")) | the-res | eq (Err "no")
+test "result.unwrap-or" = Err "bad" | result.unwrap-or 0 | eq 0
+test "result.is-ok" = Ok 1 | the-res | result.is-ok
+test "result.to-option" = Ok 1 | the-res | result.to-option | eq (Some 1)
+test "result.from-option" = None | result.from-option "none" | the-res | eq (Err "none")
+
+the-opt : Option[I64] -> Option[I64]
+the-opt = id
+
+the-res : Result[I64, String] -> Result[I64, String]
+the-res = id
+
+the-res-s : Result[String, String] -> Result[String, String]
+the-res-s = id

@@ -1,0 +1,85 @@
+# Strings are immutable UTF-8. Lengths and positions count Unicode scalar
+# values; case conversion is ASCII-only.
+
+foreign "fwp" trim : String -> String
+foreign "fwp" trim-start : String -> String
+foreign "fwp" trim-end : String -> String
+foreign "fwp" lower : String -> String
+foreign "fwp" upper : String -> String
+# `s | concat t` is s followed by t.
+foreign "fwp" concat : String -> String -> String
+foreign "fwp" string.length : String -> I64
+foreign "fwp" string.byte-length : String -> I64
+foreign "fwp" string.chars : String -> List[String]
+# `"a,b" | split ","` is ["a", "b"].
+foreign "fwp" split : String -> String -> List[String]
+# `["a", "b"] | join ", "` is "a, b".
+foreign "fwp" join : String -> List[String] -> String
+foreign "fwp" lines : String -> List[String]
+foreign "fwp" words : String -> List[String]
+foreign "fwp" string.contains : String -> String -> Bool
+foreign "fwp" starts-with : String -> String -> Bool
+foreign "fwp" ends-with : String -> String -> Bool
+# `s | replace "a" "b"` replaces every "a" by "b".
+foreign "fwp" replace : String -> String -> String -> String
+foreign "fwp" string.repeat : I64 -> String -> String
+foreign "fwp" string.reverse : String -> String
+foreign "fwp" string.slice : I64 -> I64 -> String -> String
+foreign "fwp" string.find : String -> String -> Option[I64]
+foreign "fwp" pad-left : I64 -> String -> String -> String
+foreign "fwp" pad-right : I64 -> String -> String -> String
+foreign "fwp" string.codepoints : String -> List[U32]
+foreign "fwp" string.from-codepoints : List[U32] -> Option[String]
+foreign "fwp" string.to-bytes : String -> Bytes
+foreign "fwp" string.from-bytes : Bytes -> Option[String]
+foreign "fwp" parse-int : String -> Option[a] where Integer[a]
+foreign "fwp" parse-float : String -> Option[a] where Float[a]
+
+# Fill `{}` placeholders with the fields of a tuple or record (or with the
+# value itself), displayed as by `show` but with strings unquoted:
+# `("x", 2) | format "{} = {}"` is "x = 2". `{{` and `}}` are literal braces.
+foreign "fwp" format : String -> a -> String where Display[a]
+
+string.is-empty : String -> Bool
+string.is-empty = eq ""
+
+test "trim" = " a b " | trim | eq "a b"
+test "trim-start" = "  a " | trim-start | eq "a "
+test "trim-end" = "  a " | trim-end | eq "  a"
+test "lower" = "AbC" | lower | eq "abc"
+test "upper" = "AbC" | upper | eq "ABC"
+test "concat" = "ab" | concat "cd" | eq "abcd"
+test "string.length" = "héllo" | string.length | eq 5
+test "string.byte-length" = "héllo" | string.byte-length | eq 6
+test "string.chars" = "hé" | string.chars | eq ["h", "é"]
+test "split" = "a,b,,c" | split "," | eq ["a", "b", "", "c"]
+test "join" = ["a", "b", "c"] | join "-" | eq "a-b-c"
+test "lines" = "one\ntwo\n" | lines | eq ["one", "two"]
+test "words" = " to be  or " | words | eq ["to", "be", "or"]
+test "string.contains" = "pipeline" | string.contains "line"
+test "starts-with" = "pipeline" | starts-with "pipe"
+test "ends-with" = "pipeline" | ends-with "line"
+test "replace" = "a-b-c" | replace "-" "+" | eq "a+b+c"
+test "string.repeat" = "ab" | string.repeat 3 | eq "ababab"
+test "string.reverse" = "abé" | string.reverse | eq "éba"
+test "string.slice" = "héllo" | string.slice 1 3 | eq "éll"
+test "string.find" = "hello" | string.find "ll" | eq (Some 2)
+test "pad-left" = "7" | pad-left 3 "0" | eq "007"
+test "pad-right" = "7" | pad-right 3 "." | eq "7.."
+test "string.codepoints" = "A€" | string.codepoints | eq [65u32, 8364]
+test "string.from-codepoints" = [104u32, 105] | string.from-codepoints | eq (Some "hi")
+test "bytes round trip" = "héllo" | string.to-bytes | string.from-bytes | eq (Some "héllo")
+test "parse-int" = "-42" | parse-int | eq (Some -42i32)
+test "parse-int rejects" = "4x" | parse-int | the-i64 | eq None
+test "parse-int range" = "300" | parse-int | the-u8 | eq None
+test "parse-float" = "2.5e3" | parse-float | eq (Some 2500.0)
+test "string.is-empty" = "" | string.is-empty
+test "format tuple" = ("x", 2) | format "{} = {}" | eq "x = 2"
+test "format record" = { a = 1.5, b = [1] } | format "{} and {}" | eq "1.5 and [1]"
+test "format value" = 42 | format "<{}> {{}}" | eq "<42> {}"
+
+the-i64 : Option[I64] -> Option[I64]
+the-i64 = id
+
+the-u8 : Option[U8] -> Option[U8]
+the-u8 = id

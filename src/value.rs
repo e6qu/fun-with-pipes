@@ -31,6 +31,7 @@ pub enum Value {
     Closure(Rc<Closure>),
     Array(Rc<Vec<Value>>),
     Map(Rc<BTreeMap<Value, Value>>),
+    Bytes(Rc<[u8]>),
     /// Balanced ternary integer (value; the width is in the type).
     TInt(i64),
     Trit(i8),
@@ -156,6 +157,7 @@ impl Value {
             Value::TInt(_) => 18,
             Value::Trit(_) => 19,
             Value::File(_) => 20,
+            Value::Bytes(_) => 21,
         }
     }
 }
@@ -183,6 +185,7 @@ impl Ord for Value {
             (Record(a), Record(b)) => a.iter().cmp(b.iter()),
             (Array(a), Array(b)) => a.iter().cmp(b.iter()),
             (Map(a), Map(b)) => a.iter().cmp(b.iter()),
+            (Bytes(a), Bytes(b)) => a.cmp(b),
             (TInt(a), TInt(b)) => a.cmp(b),
             (Trit(a), Trit(b)) => a.cmp(b),
             (Closure(a), Closure(b)) => Rc::as_ptr(a).cmp(&Rc::as_ptr(b)),
@@ -406,6 +409,16 @@ fn write_value(out: &mut String, v: &Value, mt: &MT, shapes: &dyn Shapes, top: b
             _ => "0",
         }),
         Value::Closure(_) => out.push_str("<function>"),
+        Value::Bytes(b) => {
+            out.push_str("bytes[");
+            for (i, x) in b.iter().enumerate() {
+                if i > 0 {
+                    out.push_str(", ");
+                }
+                out.push_str(&x.to_string());
+            }
+            out.push(']');
+        }
         Value::File(f) => out.push_str(&format!("<file {}>", f.borrow().path)),
         Value::Array(items) => {
             let elem = match mt {

@@ -72,6 +72,10 @@ foreign "fwp" swap : (a, b) -> (b, a)
 foreign "fwp" first : (a -> c ! e) -> (a, b) -> (c, b) ! e
 foreign "fwp" second : (b -> c ! e) -> (a, b) -> (a, c) ! e
 foreign "fwp" if : (a -> Bool ! e) -> (a -> b ! e) -> (a -> b ! e) -> a -> b ! e where Dup[a]
+foreign "fwp" then2 : (a -> b -> c ! e) -> (c -> d ! e) -> a -> b -> d ! e
+foreign "fwp" curry3 : ((a, b, c) -> d ! e) -> a -> b -> c -> d ! e
+foreign "fwp" uncurry3 : (a -> b -> c -> d ! e) -> (a, b, c) -> d ! e
+foreign "fwp" tap : (a -> b ! e) -> a -> a ! e where Dup[a]
 
 # ------------------------------------------------------------- numeric traits
 trait Add[T] =
@@ -178,44 +182,6 @@ foreign "fwp" not : Bool -> Bool
 foreign "fwp" and : Bool -> Bool -> Bool
 foreign "fwp" or : Bool -> Bool -> Bool
 
-# ------------------------------------------------------------- lists
-foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
-foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e
-foreign "fwp" fold : (b -> a -> b ! e) -> b -> List[a] -> b ! e
-foreign "fwp" sort : List[a] -> List[a] where Ord[a]
-foreign "fwp" length : List[a] -> I64
-
-sum : List[a] -> a where Add[a], Zero[a]
-sum = fold add zero
-
-product : List[a] -> a where Mul[a], One[a]
-product = fold mul one
-
-# ------------------------------------------------------------- options
-#
-# Multi-argument pattern functions use `curry` with a tuple match: the holes
-# of the matched tuple are passed to the arm body in order.
-
-option.map : (a -> b ! e) -> Option[a] -> Option[b] ! e
-option.map = curry (match
-    (_, Some _) -> flip compose Some
-    (_, None) -> const None)
-
-option.and-then : (a -> Option[b] ! e) -> Option[a] -> Option[b] ! e
-option.and-then = curry (match
-    (_, Some _) -> id
-    (_, None) -> const None)
-
-option.ap : Option[a -> b] -> Option[a] -> Option[b]
-option.ap = curry (match
-    (Some _, Some _) -> flip compose Some
-    _ -> const None)
-
-option.unwrap-or : a -> Option[a] -> a
-option.unwrap-or = curry (match
-    (_, Some _) -> const id
-    (_, None) -> id)
-
 # ------------------------------------------------------------- functor & monad
 trait Functor[F] =
     fmap : (a -> b ! e) -> F[a] -> F[b] ! e
@@ -296,13 +262,9 @@ foreign "fwp" file.with : String -> (File -> (a, File) ! {FileIO, Error[IoError]
 foreign "fwp" file.read : String -> String ! {FileIO, Error[IoError]}
 foreign "fwp" file.write-new : String -> String -> () ! {FileIO, Error[IoError]}
 
-# ------------------------------------------------------------- strings, io
-foreign "fwp" trim : String -> String
-foreign "fwp" lower : String -> String
-foreign "fwp" upper : String -> String
-foreign "fwp" concat : String -> String -> String
-foreign "fwp" show : a -> String where Display[a]
+# ------------------------------------------------------------- basic io
 foreign "fwp" print : String -> () ! {IO}
+foreign "fwp" show : a -> String where Display[a]
 foreign "fwp" args : () -> List[String] ! {IO}
 foreign "fwp" exit : I32 -> a ! {IO}
 

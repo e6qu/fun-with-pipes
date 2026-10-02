@@ -1,0 +1,86 @@
+# Arrays (immutable, indexed), ordered maps and sets, and byte strings.
+# Updates return new collections. Keys use the structural order (`Ord`).
+
+foreign "fwp" array.from-list : List[a] -> Array[a]
+foreign "fwp" array.to-list : Array[a] -> List[a]
+foreign "fwp" array.length : Array[a] -> I64
+foreign "fwp" array.get : I64 -> Array[a] -> Option[a]
+foreign "fwp" array.set : I64 -> a -> Array[a] -> Option[Array[a]]
+foreign "fwp" array.push : a -> Array[a] -> Array[a]
+foreign "fwp" array.make : I64 -> a -> Array[a]
+foreign "fwp" array.generate : I64 -> (I64 -> a ! e) -> Array[a] ! e
+foreign "fwp" array.map : (a -> b ! e) -> Array[a] -> Array[b] ! e
+foreign "fwp" array.fold : (b -> a -> b ! e) -> b -> Array[a] -> b ! e
+foreign "fwp" array.slice : I64 -> I64 -> Array[a] -> Array[a]
+foreign "fwp" array.append : Array[a] -> Array[a] -> Array[a]
+foreign "fwp" array.sort : Array[a] -> Array[a] where Ord[a]
+
+foreign "fwp" map.empty : Map[k, v]
+foreign "fwp" map.insert : k -> v -> Map[k, v] -> Map[k, v] where Ord[k]
+foreign "fwp" map.get : k -> Map[k, v] -> Option[v] where Ord[k]
+foreign "fwp" map.remove : k -> Map[k, v] -> Map[k, v] where Ord[k]
+foreign "fwp" map.contains : k -> Map[k, v] -> Bool where Ord[k]
+foreign "fwp" map.size : Map[k, v] -> I64
+foreign "fwp" map.keys : Map[k, v] -> List[k]
+foreign "fwp" map.values : Map[k, v] -> List[v]
+foreign "fwp" map.to-list : Map[k, v] -> List[(k, v)]
+foreign "fwp" map.from-list : List[(k, v)] -> Map[k, v] where Ord[k]
+# `m | map.update k f d` applies f to the value at k (or to d if absent).
+foreign "fwp" map.update : k -> (v -> v ! e) -> v -> Map[k, v] -> Map[k, v] ! e where Ord[k]
+foreign "fwp" map.map-values : (v -> w ! e) -> Map[k, v] -> Map[k, w] ! e
+
+foreign "fwp" set.empty : Set[a]
+foreign "fwp" set.insert : a -> Set[a] -> Set[a] where Ord[a]
+foreign "fwp" set.remove : a -> Set[a] -> Set[a] where Ord[a]
+foreign "fwp" set.contains : a -> Set[a] -> Bool where Ord[a]
+foreign "fwp" set.size : Set[a] -> I64
+foreign "fwp" set.to-list : Set[a] -> List[a]
+foreign "fwp" set.from-list : List[a] -> Set[a] where Ord[a]
+foreign "fwp" set.union : Set[a] -> Set[a] -> Set[a] where Ord[a]
+foreign "fwp" set.intersect : Set[a] -> Set[a] -> Set[a] where Ord[a]
+foreign "fwp" set.diff : Set[a] -> Set[a] -> Set[a] where Ord[a]
+
+foreign "fwp" bytes.from-list : List[U8] -> Bytes
+foreign "fwp" bytes.to-list : Bytes -> List[U8]
+foreign "fwp" bytes.length : Bytes -> I64
+foreign "fwp" bytes.get : I64 -> Bytes -> Option[U8]
+foreign "fwp" bytes.slice : I64 -> I64 -> Bytes -> Bytes
+foreign "fwp" bytes.append : Bytes -> Bytes -> Bytes
+
+# Count occurrences: `["a", "b", "a"] | frequencies`.
+frequencies : List[a] -> Map[a, I64] where Ord[a]
+frequencies = fold (flip (map.update | apply (add 1) | apply 0)) map.empty
+
+test "array.from-list" = [1, 2] | array.from-list | array.to-list | eq [1, 2]
+test "array.length" = [1, 2, 3] | array.from-list | array.length | eq 3
+test "array.get" = [5, 6] | array.from-list | array.get 1 | eq (Some 6)
+test "array.get out of range" = [5, 6] | array.from-list | array.get 9 | eq None
+test "array.set" = [5, 6] | array.from-list | array.set 0 9 | option.map array.to-list | eq (Some [9, 6])
+test "array.push" = array.make 2 0 | array.push 1 | array.to-list | eq [0, 0, 1]
+test "array.generate" = array.generate 4 (mul 10) | array.to-list | eq [0, 10, 20, 30]
+test "array.map" = [1, 2] | array.from-list | array.map (add 1) | array.to-list | eq [2, 3]
+test "array.fold" = [1, 2, 3] | array.from-list | array.fold add 0 | eq 6
+test "array.slice" = [1, 2, 3, 4] | array.from-list | array.slice 1 2 | array.to-list | eq [2, 3]
+test "array.append" = [1] | array.from-list | array.append (array.make 1 2) | array.to-list | eq [1, 2]
+test "array.sort" = [3, 1, 2] | array.from-list | array.sort | array.to-list | eq [1, 2, 3]
+test "map.insert and get" = map.empty | map.insert "a" 1 | map.get "a" | eq (Some 1)
+test "map.remove" = map.empty | map.insert "a" 1 | map.remove "a" | map.get "a" | the-oi | eq None
+test "map.contains" = map.empty | map.insert 3 "x" | map.contains 3
+test "map.size" = [(1, "a"), (2, "b"), (1, "c")] | map.from-list | map.size | eq 2
+test "map.keys" = [(2, "b"), (1, "a")] | map.from-list | map.keys | eq [1, 2]
+test "map.values" = [(2, "b"), (1, "a")] | map.from-list | map.values | eq ["a", "b"]
+test "map.to-list" = [(2, "b"), (1, "a")] | map.from-list | map.to-list | eq [(1, "a"), (2, "b")]
+test "map.update" = map.empty | map.update "k" (add 1) 0 | map.update "k" (add 1) 0 | map.get "k" | eq (Some 2)
+test "map.map-values" = [(1, 2)] | map.from-list | map.map-values (mul 3) | map.to-list | eq [(1, 6)]
+test "set operations" = [1, 2, 3] | set.from-list | set.intersect (set.from-list [2, 3, 4]) | set.to-list | eq [2, 3]
+test "set.union" = [1] | set.from-list | set.union (set.from-list [2]) | set.to-list | eq [1, 2]
+test "set.diff" = [1, 2] | set.from-list | set.diff (set.from-list [2]) | set.to-list | eq [1]
+test "set.insert" = set.empty | set.insert 5 | set.insert 5 | set.size | eq 1
+test "set.remove" = [1, 2] | set.from-list | set.remove 1 | set.contains 1 | not
+test "bytes" = [104u8, 105] | bytes.from-list | bytes.append (bytes.from-list [33u8]) | bytes.to-list | eq [104u8, 105, 33]
+test "bytes.get" = [1u8, 2] | bytes.from-list | bytes.get 1 | eq (Some 2u8)
+test "bytes.slice" = [1u8, 2, 3] | bytes.from-list | bytes.slice 1 1 | bytes.length | eq 1
+test "frequencies" = ["a", "b", "a"] | frequencies | map.to-list | eq [("a", 2), ("b", 1)]
+
+the-oi : Option[I64] -> Option[I64]
+the-oi = id

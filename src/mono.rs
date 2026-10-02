@@ -20,6 +20,8 @@ pub struct Roots {
     pub main: bool,
     pub tests: bool,
     pub exports: bool,
+    /// Run the standard library's own tests.
+    pub std_tests: bool,
 }
 
 pub struct Mono<'a> {
@@ -79,6 +81,16 @@ fn combinator(symbol: &str) -> Option<(u32, Expr)> {
         "second" => (
             2,
             Record(vec![field(l(1), 0), ap(l(0), vec![field(l(1), 1)])]),
+        ),
+        "then2" => (4, ap(l(1), vec![ap(l(0), vec![l(2), l(3)])])),
+        "curry3" => (4, ap(l(0), vec![Record(vec![l(1), l(2), l(3)])])),
+        "uncurry3" => (
+            2,
+            ap(l(0), vec![field(l(1), 0), field(l(1), 1), field(l(1), 2)]),
+        ),
+        "tap" => (
+            2,
+            Match(Box::new(ap(l(0), vec![l(1)])), vec![(Pat::Wild, l(1))]),
         ),
         "if" => (
             4,
@@ -474,10 +486,12 @@ impl<'a> Mono<'a> {
     pub fn run(mut self, roots: Roots) -> MResult<Program> {
         let env = self.env;
         for (i, b) in env.bindings.iter().enumerate() {
-            if b.module != "main" {
+            if b.module != "main" && b.module != "std" {
                 continue;
             }
-            let root = if b.name == "main::main" {
+            let root = if b.module == "std" {
+                roots.std_tests && b.test_name.is_some()
+            } else if b.name == "main::main" {
                 roots.main
             } else if b.test_name.is_some() {
                 roots.tests

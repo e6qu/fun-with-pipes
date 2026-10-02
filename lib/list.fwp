@@ -1,0 +1,137 @@
+# Lists. Functions take the list last so they compose with `|`.
+
+foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
+foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e
+foreign "fwp" fold : (b -> a -> b ! e) -> b -> List[a] -> b ! e
+foreign "fwp" fold-right : (a -> b -> b ! e) -> b -> List[a] -> b ! e
+foreign "fwp" sort : List[a] -> List[a] where Ord[a]
+foreign "fwp" sort-by : (a -> k ! e) -> List[a] -> List[a] ! e where Ord[k]
+foreign "fwp" length : List[a] -> I64
+foreign "fwp" reverse : List[a] -> List[a]
+# `xs | append ys` is xs followed by ys.
+foreign "fwp" append : List[a] -> List[a] -> List[a]
+foreign "fwp" flatten : List[List[a]] -> List[a]
+foreign "fwp" take : I64 -> List[a] -> List[a]
+foreign "fwp" drop : I64 -> List[a] -> List[a]
+foreign "fwp" take-while : (a -> Bool ! e) -> List[a] -> List[a] ! e
+foreign "fwp" drop-while : (a -> Bool ! e) -> List[a] -> List[a] ! e
+# `xs | zip ys` pairs each x with the y at the same position.
+foreign "fwp" zip : List[b] -> List[a] -> List[(a, b)]
+foreign "fwp" zip-with : (a -> b -> c ! e) -> List[b] -> List[a] -> List[c] ! e
+foreign "fwp" unzip : List[(a, b)] -> (List[a], List[b])
+# `range 0 5` is [0, 1, 2, 3, 4].
+foreign "fwp" range : a -> a -> List[a] where Integer[a]
+foreign "fwp" repeat : I64 -> a -> List[a]
+foreign "fwp" nth : I64 -> List[a] -> Option[a]
+foreign "fwp" find : (a -> Bool ! e) -> List[a] -> Option[a] ! e
+foreign "fwp" index-of : a -> List[a] -> Option[I64] where Eq[a]
+foreign "fwp" unique : List[a] -> List[a] where Ord[a]
+foreign "fwp" scan : (b -> a -> b ! e) -> b -> List[a] -> List[b] ! e
+foreign "fwp" chunks : I64 -> List[a] -> List[List[a]]
+foreign "fwp" iterate : I64 -> (a -> a ! e) -> a -> List[a] ! e
+
+head : List[a] -> Option[a]
+head = match
+    Cons -> Some | const
+    Nil -> None
+
+tail : List[a] -> Option[List[a]]
+tail = match
+    Cons -> const Some
+    Nil -> None
+
+last : List[a] -> Option[a]
+last = reverse | head
+
+is-empty : List[a] -> Bool
+is-empty = match
+    Nil -> True
+    _ -> const False
+
+any : (a -> Bool ! e) -> List[a] -> Bool ! e
+any = find | flip compose option.is-some
+
+all : (a -> Bool ! e) -> List[a] -> Bool ! e
+all = flip compose not | any | flip compose not
+
+count : (a -> Bool ! e) -> List[a] -> I64 ! e
+count = filter | flip compose length
+
+contains : a -> List[a] -> Bool where Eq[a]
+contains = index-of | flip compose option.is-some
+
+partition : (a -> Bool ! e) -> List[a] -> (List[a], List[a]) ! e where Dup[a]
+partition = fork both filter (flip compose not | filter)
+
+enumerate : List[a] -> List[(I64, a)] where Dup[a]
+enumerate = fork zip id (length | range 0)
+
+each : (a -> () ! e) -> List[a] -> () ! e
+each = map | flip compose ignore
+
+filter-map : (a -> Option[b] ! e) -> List[a] -> List[b] ! e
+filter-map = flip compose option.to-list | list.flat-map
+
+maximum : List[a] -> Option[a] where Ord[a]
+maximum = sort | last
+
+minimum : List[a] -> Option[a] where Ord[a]
+minimum = sort | head
+
+singleton : a -> List[a]
+singleton = flip Cons Nil
+
+sum : List[a] -> a where Add[a], Zero[a]
+sum = fold add zero
+
+product : List[a] -> a where Mul[a], One[a]
+product = fold mul one
+
+test "map" = [1, 2, 3] | map (mul 2) | eq [2, 4, 6]
+test "filter" = [1, 2, 3, 4] | filter (rem 2 | eq 0) | eq [2, 4]
+test "fold" = [1, 2, 3] | fold (flip sub) 10 | eq 4
+test "fold-right" = ["a", "b", "c"] | fold-right concat "" | eq "cba"
+test "sort" = [3, 1, 2] | sort | eq [1, 2, 3]
+test "sort-by" = ["ccc", "a", "bb"] | sort-by string.length | eq ["a", "bb", "ccc"]
+test "length" = [1, 2, 3] | length | eq 3
+test "reverse" = [1, 2, 3] | reverse | eq [3, 2, 1]
+test "append" = [1, 2] | append [3] | eq [1, 2, 3]
+test "flatten" = [[1], [], [2, 3]] | flatten | eq [1, 2, 3]
+test "take" = [1, 2, 3] | take 2 | eq [1, 2]
+test "drop" = [1, 2, 3] | drop 2 | eq [3]
+test "take-while" = [1, 2, 5, 1] | take-while (lt 3) | eq [1, 2]
+test "drop-while" = [1, 2, 5, 1] | drop-while (lt 3) | eq [5, 1]
+test "zip" = [1, 2, 3] | zip ["a", "b"] | eq [(1, "a"), (2, "b")]
+test "zip-with" = [1, 2] | zip-with add [10, 20] | eq [11, 22]
+test "unzip" = [(1, "a"), (2, "b")] | unzip | eq ([1, 2], ["a", "b"])
+test "range" = range 2 5 | eq [2, 3, 4]
+test "repeat" = repeat 3 "x" | eq ["x", "x", "x"]
+test "nth" = [5, 6, 7] | nth 1 | eq (Some 6)
+test "nth out of range" = [5] | nth 3 | eq None
+test "find" = [1, 4, 9] | find (gt 3) | eq (Some 4)
+test "index-of" = ["a", "b"] | index-of "b" | eq (Some 1)
+test "unique" = [3, 1, 3, 2, 1] | unique | eq [3, 1, 2]
+test "scan" = [1, 2, 3] | scan add 0 | eq [0, 1, 3, 6]
+test "chunks" = [1, 2, 3, 4, 5] | chunks 2 | eq [[1, 2], [3, 4], [5]]
+test "iterate" = 1 | iterate 4 (mul 2) | eq [1, 2, 4, 8]
+test "head" = [7, 8] | head | eq (Some 7)
+test "head of empty" = [] | the-ints | head | eq None
+test "tail" = [7, 8] | tail | eq (Some [8])
+test "last" = [7, 8] | last | eq (Some 8)
+test "is-empty" = [] | the-ints | is-empty
+test "any" = [1, 2, 3] | any (eq 2)
+test "all" = [1, 2, 3] | all (gt 0)
+test "count" = [1, 2, 3, 4] | count (gt 2) | eq 2
+test "contains" = ["x", "y"] | contains "y"
+test "partition" = [1, 2, 3, 4] | partition (gt 2) | eq ([3, 4], [1, 2])
+test "enumerate" = ["a", "b"] | enumerate | eq [(0, "a"), (1, "b")]
+test "each" = [1, 2] | each (const ()) | eq ()
+test "filter-map" = ["1", "x", "3"] | filter-map parse-int | eq [1, 3]
+test "maximum" = [3, 9, 2] | maximum | eq (Some 9)
+test "minimum" = [3, 9, 2] | minimum | eq (Some 2)
+test "singleton" = 5 | singleton | eq [5]
+test "sum" = [1, 2, 3] | sum | eq 6
+test "product" = [2, 3, 4] | product | eq 24
+
+the-ints : List[I64] -> List[I64]
+the-ints = id
