@@ -1,0 +1,4 @@
+origin : (I64, I64)
+swap-pair : (a, a) -> (a, a)
+classify : (I64, I64) -> String
+nothing : Json

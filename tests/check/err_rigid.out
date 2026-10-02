@@ -1,0 +1,4 @@
+check/err_rigid.fwp:2:8: error: type mismatch in the definition of `same`: expected `a -> b`, found `a -> a`
+2 | same = id
+  |        ^^
+  note: `b` is not compatible with `a`

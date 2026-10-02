@@ -1,0 +1,4 @@
+say : String -> () ! {IO}
+say = concat "!" | print
+greet = concat ", world" | say
+main = "hello" | greet

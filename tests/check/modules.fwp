@@ -1,0 +1,6 @@
+import mods.geo
+
+areas = [mods.geo.Circle 2, mods.geo.unit-square] | map mods.geo.area
+is-circle = match
+    mods.geo.Shape.Circle -> const True
+    mods.geo.Square -> const False

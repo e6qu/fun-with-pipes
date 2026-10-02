@@ -1,0 +1,3 @@
+f = match
+    Some (Some _) -> id
+    None -> 0

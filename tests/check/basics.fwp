@@ -1,0 +1,45 @@
+inc = add 1
+double = mul 2
+normalize =
+    trim
+    | lower
+
+User = { name: String, age: I64, active: Bool }
+
+users = [
+    User { name = "Ada", age = 36, active = True },
+    User { name = "Bob", age = 25, active = False },
+]
+
+active-names =
+    users
+    | filter .active
+    | map .name
+    | sort
+
+get-name = .name
+older = with { age = 99 }
+older-users = users | map older
+pair = (1, "two")
+second-of = .1
+city = .address.city
+
+rec factorial = match
+    0 -> 1
+    _ -> fork mul id (sub 1 | factorial)
+
+describe = match
+    Some -> show
+    None -> "nothing"
+
+first-two = match
+    Cons _ (Cons _ _) -> const (const (const True))
+    _ -> const False
+
+twice = fork compose id id
+inc-twice = twice inc
+
+shout : String -> String
+shout = upper | concat "!"
+
+main = "hello" | shout | print

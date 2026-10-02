@@ -18,7 +18,8 @@ implementation roadmap.
 | Area | State |
 |---|---|
 | Lexer, parser, layout rule, diagnostics | done |
-| Type inference, traits, effects | planned |
+| Type inference (HM, rows, ADTs, records, `rec`, pipe modes, exhaustiveness) | done |
+| Traits, effects enforcement | planned |
 | Interpreter, stdlib | planned |
 | Native AOT (C backend), executables, pipe protocol | planned |
 | Comptime, macros, numerics, networking, FFI, WASM | planned |
@@ -27,7 +28,8 @@ implementation roadmap.
 
 ```
 cargo build --release
-./target/release/fwp check --parse examples/hello.fwp
+./target/release/fwp check examples/hello.fwp          # print inferred types
+./target/release/fwp check --parse examples/hello.fwp  # print the syntax tree
 ```
 
 ## Development

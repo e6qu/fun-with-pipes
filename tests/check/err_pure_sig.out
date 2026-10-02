@@ -1,0 +1,4 @@
+check/err_pure_sig.fwp:2:7: error: type mismatch in the definition of `say`: expected `String -> ()`, found `String -> () ! {IO}`
+2 | say = print
+  |       ^^^^^
+  note: effect `IO` is not allowed here
