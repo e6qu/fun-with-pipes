@@ -1,0 +1,4 @@
+macro twice = quote (unquote!(0) | unquote!(0))
+template = quote (add unquote!(0) unquote!(1))
+shout = twice!(upper)
+info = type[(I64, String)]

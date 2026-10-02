@@ -703,10 +703,19 @@ static V fwp_p_array_sort(V a, const fwp_desc *elem) {
 static fwp_map fwp_empty_map = {0};
 #define FWP_EMPTY_MAP PTR(&fwp_empty_map)
 
+
 static V fwp_map_alloc(uint64_t len) {
     fwp_map *m = (fwp_map *)fwp_alloc(sizeof(fwp_map) + 2 * len * sizeof(V));
     m->len = len;
     return PTR(m);
+}
+
+/* a map from interleaved key/value pairs already in key order */
+static V fwp_map_from_sorted(uint64_t len, const V *kv) {
+    if (len == 0) return PTR(&fwp_empty_map);
+    V m = fwp_map_alloc(len);
+    memcpy(MAP(m)->d, kv, 2 * len * sizeof(V));
+    return m;
 }
 
 /* index of key or insertion point (found flag) */
@@ -1110,4 +1119,169 @@ static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
     fwrite(STR(s)->d, 1, STR(s)->len, f);
     fclose(f);
     return FWP_UNIT;
+}
+
+/* ------------------------------------------------------------ syntax.show */
+/* Mirrors src/syntax.rs `show` (pretty printing of `Syntax` values). */
+
+enum { SY_NAME, SY_CTOR, SY_INT, SY_FLOAT, SY_STR, SY_SELECT, SY_APPLY, SY_PIPE, SY_UNIT,
+       SY_TUPLE, SY_LIST, SY_RECORD, SY_MATCH, SY_COMPTIME, SY_OTHER, SY_MACRO };
+enum { PY_HOLE, PY_INT, PY_STR, PY_CTOR, PY_BARE, PY_TUPLE, PY_UNIT };
+
+static void sy_name(fwp_buf *b, V s) {
+    const char *d = STR(s)->d;
+    size_t n = STR(s)->len;
+    if (n >= 2 && d[0] == ':' && d[1] == ':') {
+        const char *abs = d + 2;
+        size_t an = n - 2;
+        const char *sep = 0;
+        for (size_t i = 0; i + 1 < an; i++)
+            if (abs[i] == ':' && abs[i + 1] == ':') { sep = abs + i; break; }
+        if (!sep) { buf_put(b, abs, an); return; }
+        size_t ml = (size_t)(sep - abs);
+        const char *rest = sep + 2;
+        size_t rl = an - ml - 2;
+        if ((ml == 3 && memcmp(abs, "std", 3) == 0) || (ml == 4 && memcmp(abs, "main", 4) == 0)) {
+            buf_put(b, rest, rl);
+        } else {
+            buf_put(b, abs, ml);
+            buf_putc(b, '.');
+            buf_put(b, rest, rl);
+        }
+        return;
+    }
+    buf_put(b, d, n);
+}
+
+static void sy_expr(fwp_buf *b, V v);
+static void sy_atom(fwp_buf *b, V v);
+
+/* STuple of one element and SApply without arguments stand for their
+ * single sub-expression */
+static V sy_norm(V v) {
+    for (;;) {
+        uint32_t t = fwp_tag(v);
+        if (t == SY_APPLY && OBJ(v)->f[1] == 0) { v = OBJ(v)->f[0]; continue; }
+        if (t == SY_TUPLE && OBJ(v)->f[0] != 0 && OBJ(OBJ(v)->f[0])->f[1] == 0) {
+            v = OBJ(OBJ(v)->f[0])->f[0];
+            continue;
+        }
+        return v;
+    }
+}
+
+static void sy_list(fwp_buf *b, V xs, void (*item)(fwp_buf *, V)) {
+    int first = 1;
+    for (; xs != 0; xs = OBJ(xs)->f[1]) {
+        if (!first) buf_puts(b, ", ");
+        first = 0;
+        item(b, OBJ(xs)->f[0]);
+    }
+}
+
+static void sy_pat(fwp_buf *b, V p) {
+    char t[64];
+    switch (fwp_tag(p)) {
+    case PY_HOLE: buf_putc(b, '_'); return;
+    case PY_INT: snprintf(t, sizeof t, "%lld", (long long)(int64_t)OBJ(p)->f[0]); buf_puts(b, t); return;
+    case PY_STR: fwp_escape(b, STR(OBJ(p)->f[0])->d, STR(OBJ(p)->f[0])->len); return;
+    case PY_BARE: sy_name(b, OBJ(p)->f[0]); return;
+    case PY_CTOR: {
+        sy_name(b, OBJ(p)->f[0]);
+        for (V xs = OBJ(p)->f[1]; xs != 0; xs = OBJ(xs)->f[1]) {
+            V a = OBJ(xs)->f[0];
+            buf_putc(b, ' ');
+            int paren = fwp_tag(a) == PY_CTOR && OBJ(a)->f[1] != 0;
+            if (paren) buf_putc(b, '(');
+            sy_pat(b, a);
+            if (paren) buf_putc(b, ')');
+        }
+        return;
+    }
+    case PY_TUPLE: buf_putc(b, '('); sy_list(b, OBJ(p)->f[0], sy_pat); buf_putc(b, ')'); return;
+    default: buf_puts(b, "()"); return;
+    }
+}
+
+static void sy_field(fwp_buf *b, V kv) {
+    buf_put(b, STR(OBJ(kv)->f[0])->d, STR(OBJ(kv)->f[0])->len);
+    buf_puts(b, " = ");
+    sy_expr(b, OBJ(kv)->f[1]);
+}
+
+static void sy_arm(fwp_buf *b, V pe) {
+    sy_pat(b, OBJ(pe)->f[0]);
+    buf_puts(b, " -> ");
+    sy_expr(b, OBJ(pe)->f[1]);
+}
+
+static void sy_atom(fwp_buf *b, V v) {
+    char t[512];
+    v = sy_norm(v);
+    switch (fwp_tag(v)) {
+    case SY_NAME: case SY_CTOR: sy_name(b, OBJ(v)->f[0]); return;
+    case SY_INT: snprintf(t, sizeof t, "%lld", (long long)(int64_t)OBJ(v)->f[0]); buf_puts(b, t); return;
+    case SY_FLOAT: fwp_fmt_f64(t, fwp_f64(OBJ(v)->f[0])); buf_puts(b, t); return;
+    case SY_STR: fwp_escape(b, STR(OBJ(v)->f[0])->d, STR(OBJ(v)->f[0])->len); return;
+    case SY_SELECT:
+        for (V xs = OBJ(v)->f[0]; xs != 0; xs = OBJ(xs)->f[1]) {
+            buf_putc(b, '.');
+            buf_put(b, STR(OBJ(xs)->f[0])->d, STR(OBJ(xs)->f[0])->len);
+        }
+        return;
+    case SY_APPLY: case SY_PIPE: buf_putc(b, '('); sy_expr(b, v); buf_putc(b, ')'); return;
+    case SY_UNIT: buf_puts(b, "()"); return;
+    case SY_TUPLE:
+        if (OBJ(v)->f[0] == 0) { buf_puts(b, "()"); return; }
+        buf_putc(b, '('); sy_list(b, OBJ(v)->f[0], sy_expr); buf_putc(b, ')'); return;
+    case SY_LIST: buf_putc(b, '['); sy_list(b, OBJ(v)->f[0], sy_expr); buf_putc(b, ']'); return;
+    case SY_RECORD:
+        if (OBJ(v)->f[0] == 0) { buf_puts(b, "()"); return; }
+        buf_putc(b, '{'); sy_list(b, OBJ(v)->f[0], sy_field); buf_putc(b, '}'); return;
+    case SY_MATCH: buf_puts(b, "(match {"); sy_list(b, OBJ(v)->f[0], sy_arm); buf_puts(b, "})"); return;
+    case SY_COMPTIME: buf_puts(b, "(comptime "); sy_expr(b, OBJ(v)->f[0]); buf_putc(b, ')'); return;
+    case SY_OTHER: buf_put(b, STR(OBJ(v)->f[0])->d, STR(OBJ(v)->f[0])->len); return;
+    case SY_MACRO:
+        buf_put(b, STR(OBJ(v)->f[0])->d, STR(OBJ(v)->f[0])->len);
+        buf_puts(b, "!(");
+        sy_list(b, OBJ(v)->f[1], sy_expr);
+        buf_putc(b, ')');
+        return;
+    }
+}
+
+static void sy_app(fwp_buf *b, V v) {
+    v = sy_norm(v);
+    if (fwp_tag(v) == SY_APPLY) {
+        sy_atom(b, OBJ(v)->f[0]);
+        for (V xs = OBJ(v)->f[1]; xs != 0; xs = OBJ(xs)->f[1]) {
+            buf_putc(b, ' ');
+            sy_atom(b, OBJ(xs)->f[0]);
+        }
+        return;
+    }
+    sy_atom(b, v);
+}
+
+static void sy_expr(fwp_buf *b, V v) {
+    v = sy_norm(v);
+    switch (fwp_tag(v)) {
+    case SY_PIPE:
+        sy_expr(b, OBJ(v)->f[0]);
+        buf_puts(b, " | ");
+        sy_app(b, OBJ(v)->f[1]);
+        return;
+    case SY_COMPTIME:
+        buf_puts(b, "comptime (");
+        sy_expr(b, OBJ(v)->f[0]);
+        buf_putc(b, ')');
+        return;
+    default: sy_app(b, v);
+    }
+}
+
+static V fwp_p_syntax_show(V v) {
+    fwp_buf b = {0};
+    sy_expr(&b, v);
+    return buf_to_str(&b);
 }

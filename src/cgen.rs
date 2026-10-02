@@ -318,6 +318,23 @@ impl<'p> Gen<'p> {
                     items.len()
                 )
             }
+            Value::Map(m) => {
+                let mut parts = Vec::new();
+                for (k, v) in m.iter() {
+                    parts.push(self.const_expr(k));
+                    parts.push(self.const_expr(v));
+                }
+                format!(
+                    "fwp_map_from_sorted({}, (V[]){{{}}})",
+                    m.len(),
+                    if parts.is_empty() {
+                        "0".into()
+                    } else {
+                        parts.join(", ")
+                    }
+                )
+            }
+            Value::File(_) => "0".into(),
             Value::Closure(c) => {
                 self.used_closures[c.func] = true;
                 let parts: Vec<String> = c.args.iter().map(|f| self.const_expr(f)).collect();
@@ -332,7 +349,8 @@ impl<'p> Gen<'p> {
                     )
                 }
             }
-            other => self.const_expr(other),
+            // scalars and strings are handled by `const_expr`
+            _ => "0".into(),
         }
     }
 }
@@ -809,6 +827,7 @@ impl<'p> Gen<'p> {
                     ("bytes.slice", "fwp_p_bytes_slice(l0, l1, l2)"),
                     ("bytes.append", "fwp_p_concat(l0, l1)"),
                     ("print", "fwp_p_print(l0)"),
+                    ("syntax.show", "fwp_p_syntax_show(l0)"),
                     ("write", "fwp_p_write(l0)"),
                     ("eprint", "fwp_p_eprint(l0)"),
                     ("read-line", "fwp_p_read_line()"),

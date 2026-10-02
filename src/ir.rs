@@ -196,6 +196,8 @@ pub struct Program {
     pub tests: Vec<(String, FuncId)>,
     /// Exported functions by name.
     pub exports: Vec<(String, FuncId)>,
+    /// Instances of bindings requested by canonical name (`Roots::names`).
+    pub named: Vec<(String, FuncId)>,
 }
 
 impl crate::value::Shapes for Program {

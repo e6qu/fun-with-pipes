@@ -32,8 +32,10 @@ pub struct Typed {
     pub node_types: HashMap<NodeId, Type>,
     pub insts: HashMap<NodeId, Inst>,
     pub pipe_modes: HashMap<NodeId, PipeMode>,
-    /// Canonical constructor of each constructor pattern, by position.
-    pub pattern_ctors: HashMap<(u32, u32, u32), String>,
+    /// Canonical constructor of each constructor pattern.
+    pub pattern_ctors: HashMap<NodeId, String>,
+    /// The type described by each `type[T]` node.
+    pub reflected: HashMap<NodeId, Type>,
 }
 
 struct Deferred {
@@ -117,6 +119,11 @@ fn free_names(e: &Expr, out: &mut Vec<(String, Span)>) {
         | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| free_names(a, out)),
         ExprKind::Match(arms) => arms.iter().for_each(|a| free_names(&a.body, out)),
         ExprKind::Comptime(x) => free_names(x, out),
+        ExprKind::Quote(x) => {
+            let mut us = Vec::new();
+            collect_unquotes(x, &mut us);
+            us.into_iter().for_each(|u| free_names(u, out));
+        }
         _ => {}
     }
 }
@@ -1014,11 +1021,41 @@ impl<'a> Infer<'a> {
                 self.comptimes.push((cctx.clone(), e.span));
                 self.infer(x, &cctx)
             }
-            ExprKind::Quote(_) => Ok(Type::con("std::Syntax")),
+            ExprKind::Quote(body) => {
+                // spliced parts must be syntax values; positional holes
+                // `unquote!(N)` make the quote a function of N+1 syntaxes
+                let syn = Type::con("std::Syntax");
+                let mut splices = Vec::new();
+                collect_unquotes(body, &mut splices);
+                for x in splices {
+                    if matches!(
+                        &x.kind,
+                        ExprKind::Int {
+                            neg: false,
+                            suffix: None,
+                            ..
+                        }
+                    ) {
+                        continue;
+                    }
+                    let t = self.infer(x, ctx)?;
+                    self.unify(x.span, &syn, &t, "`unquote!`")?;
+                }
+                let mut t = syn.clone();
+                for _ in 0..crate::syntax::hole_count(body) {
+                    let eff = self.fresh_eff();
+                    t = Type::fun(syn.clone(), t, eff);
+                }
+                Ok(t)
+            }
             ExprKind::TypeOf(te) => {
                 let mut vars = Vec::new();
                 let scope = self.scope.clone();
-                self.env.conv_type(te, &scope, &mut vars, true)?;
+                let t = self.env.conv_type(te, &scope, &mut vars, true)?;
+                // type variables in `type[...]` are fresh unknowns here
+                let map: HashMap<TV, Type> = vars.iter().map(|(_, v)| (*v, self.fresh())).collect();
+                let t = TypeTable::subst(&t, &map);
+                self.out.reflected.insert(e.id, t);
                 Ok(Type::con("std::TypeInfo"))
             }
             ExprKind::MacroCall(name, _) => Err(Diagnostic::error(
@@ -1171,9 +1208,7 @@ impl<'a> Infer<'a> {
             }
             PatKind::Ctor(name, args) => {
                 let (canon, _t, inst) = self.lookup_ctor(p.span, name)?;
-                self.out
-                    .pattern_ctors
-                    .insert((p.span.file, p.span.line, p.span.col), canon.clone());
+                self.out.pattern_ctors.insert(p.id, canon.clone());
                 let def = self.env.ctors[&canon].clone();
                 let map: HashMap<TV, Type> = def
                     .scheme
@@ -1224,6 +1259,32 @@ impl<'a> Infer<'a> {
                 Ok(exhaust::Pat::Ctor(canon, ps))
             }
         }
+    }
+}
+
+/// The arguments of `unquote!` inside a quoted expression.
+pub fn collect_unquotes<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
+    match &e.kind {
+        ExprKind::MacroCall(n, args) if n == "unquote" => out.extend(args.iter()),
+        ExprKind::App(f, args) => {
+            collect_unquotes(f, out);
+            args.iter().for_each(|a| collect_unquotes(a, out));
+        }
+        ExprKind::Pipe(a, b) => {
+            collect_unquotes(a, out);
+            collect_unquotes(b, out);
+        }
+        ExprKind::Tuple(xs) | ExprKind::List(xs) | ExprKind::MacroCall(_, xs) => {
+            xs.iter().for_each(|a| collect_unquotes(a, out))
+        }
+        ExprKind::Record(fs)
+        | ExprKind::NominalRecord(_, fs)
+        | ExprKind::With(fs)
+        | ExprKind::Make(_, fs)
+        | ExprKind::Update(fs) => fs.iter().for_each(|(_, a)| collect_unquotes(a, out)),
+        ExprKind::Match(arms) => arms.iter().for_each(|a| collect_unquotes(&a.body, out)),
+        ExprKind::Comptime(x) | ExprKind::Quote(x) => collect_unquotes(x, out),
+        _ => {}
     }
 }
 

@@ -1,0 +1,3 @@
+check/err_unquote_outside.fwp:2:8: error: `unquote!` can only be used inside `quote`
+2 | x = m!(unquote!(1))
+  |        ^^^^^^^^^

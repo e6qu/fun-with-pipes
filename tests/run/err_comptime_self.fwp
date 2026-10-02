@@ -1,0 +1,3 @@
+rec f : I64 -> I64
+f = comptime f
+main = 1 | f | echo

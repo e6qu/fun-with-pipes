@@ -38,14 +38,16 @@ fn run_native(path: &Path) -> String {
     ));
     let build = Command::new(fwp())
         .arg("build")
-        .arg(path)
+        .arg(path.file_name().unwrap())
+        .current_dir(path.parent().unwrap())
         .arg("-o")
         .arg(&exe)
         .arg("-O1")
         .output()
         .unwrap();
     if !build.status.success() {
-        return format!("BUILD FAILED\n{}", String::from_utf8_lossy(&build.stderr));
+        // compile errors are reported exactly as `fwp run` reports them
+        return render(b"", &build.stderr, build.status.code().unwrap_or(-1));
     }
     let out = exec(Command::new(&exe), path);
     let _ = std::fs::remove_file(&exe);

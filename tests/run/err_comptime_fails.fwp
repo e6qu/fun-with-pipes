@@ -1,0 +1,3 @@
+n : I64
+n = comptime (Err "boom" | attempt try | try)
+main = n | echo

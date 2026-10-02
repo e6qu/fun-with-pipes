@@ -1,0 +1,5 @@
+--- stderr
+err_comptime_self.fwp:2:5: error: `comptime` expression depends on `f`, which is still being compiled
+2 | f = comptime f
+  |     ^^^^^^^^
+--- exit 1

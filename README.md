@@ -25,7 +25,8 @@ implementation roadmap.
 | Standard library: lists, Option/Result, strings, arrays, maps, sets, bytes, lazy iterators, IO | done |
 | IR optimizer, native AOT via C (`fwp build`), differential testing | done |
 | Standalone function executables, typed pipe protocol (`PIPE_V1`), `fwp pipe` | done |
-| Comptime, macros, numerics, networking, FFI, WASM | planned |
+| Comptime evaluation, `Syntax` values, hygienic macros, `type[T]` reflection | done |
+| Numerics, networking, FFI, WASM | planned |
 
 ## Usage
 

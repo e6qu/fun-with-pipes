@@ -132,11 +132,19 @@ pub fn check_source(name: &str, text: &str, dir: Option<&Path>) -> Result<Compil
             rendered: render_all(&ld.errors, &ld.sm),
         });
     }
+    let modules = match crate::macros::expand(ld.modules, &mut ld.next_id, &ld.sm) {
+        Ok(m) => m,
+        Err(errs) => {
+            return Err(Failure {
+                rendered: render_all(&errs, &ld.sm),
+            })
+        }
+    };
     let mut env = Env {
         next_node_id: ld.next_id,
         ..Env::default()
     };
-    env.collect(ld.modules);
+    env.collect(modules);
     let mut typed = Typed::default();
     if env.errors.is_empty() {
         check_program(&mut env, &mut typed);
