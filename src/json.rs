@@ -20,6 +20,33 @@ fn err<T>(what: &str, at: usize) -> PResult<T> {
 }
 
 impl Parser<'_> {
+    /// A value as plain data.
+    fn json(&mut self) -> PResult<Json> {
+        fn conv(v: &Value) -> Json {
+            let Value::Data(tag, fs) = v else {
+                return Json::Null;
+            };
+            match tag {
+                1 => Json::Bool(fs[0].as_bool()),
+                2 => Json::Num(fs[0].as_f64().unwrap_or(0.0)),
+                3 => Json::Str(fs[0].as_str().to_string()),
+                4 => Json::Arr(fs[0].list_items().iter().map(conv).collect()),
+                5 => Json::Obj(
+                    fs[0]
+                        .list_items()
+                        .iter()
+                        .filter_map(|kv| match kv {
+                            Value::Record(p) => Some((p[0].as_str().to_string(), conv(&p[1]))),
+                            _ => None,
+                        })
+                        .collect(),
+                ),
+                _ => Json::Null,
+            }
+        }
+        Ok(conv(&self.value()?))
+    }
+
     fn ws(&mut self) {
         while self.p < self.s.len() && matches!(self.s[self.p], b' ' | b'\t' | b'\n' | b'\r') {
             self.p += 1;
@@ -327,5 +354,123 @@ pub fn encode(v: &Value, out: &mut String) {
             out.push('}');
         }
         _ => out.push_str("null"),
+    }
+}
+
+/// A JSON document as plain Rust data (for tools such as the language
+/// server; programs use the `Json` type of the standard library).
+#[derive(Clone, Debug, PartialEq)]
+pub enum Json {
+    Null,
+    Bool(bool),
+    Num(f64),
+    Str(String),
+    Arr(Vec<Json>),
+    Obj(Vec<(String, Json)>),
+}
+
+impl Json {
+    /// Parse a JSON text.
+    pub fn parse(text: &str) -> Result<Json, String> {
+        let mut p = Parser {
+            s: text.as_bytes(),
+            p: 0,
+            depth: 0,
+        };
+        let v = p.json()?;
+        p.ws();
+        if p.p != p.s.len() {
+            return err("trailing characters", p.p);
+        }
+        Ok(v)
+    }
+
+    /// A member of an object.
+    pub fn get(&self, key: &str) -> Option<&Json> {
+        match self {
+            Json::Obj(fs) => fs.iter().find(|(k, _)| k == key).map(|(_, v)| v),
+            _ => None,
+        }
+    }
+
+    /// The value at a path of object keys.
+    pub fn at(&self, path: &[&str]) -> Option<&Json> {
+        path.iter().try_fold(self, |v, k| v.get(k))
+    }
+
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Json::Str(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            Json::Num(n) => Some(*n),
+            _ => None,
+        }
+    }
+
+    pub fn as_array(&self) -> Option<&[Json]> {
+        match self {
+            Json::Arr(xs) => Some(xs),
+            _ => None,
+        }
+    }
+
+    /// An object from key-value pairs.
+    pub fn obj(fields: Vec<(&str, Json)>) -> Json {
+        Json::Obj(
+            fields
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v))
+                .collect(),
+        )
+    }
+
+    pub fn str(s: impl Into<String>) -> Json {
+        Json::Str(s.into())
+    }
+}
+
+impl std::fmt::Display for Json {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut out = String::new();
+        self.write(&mut out);
+        f.write_str(&out)
+    }
+}
+
+impl Json {
+    fn write(&self, out: &mut String) {
+        match self {
+            Json::Null => out.push_str("null"),
+            Json::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
+            Json::Num(n) => number(*n, out),
+            Json::Str(s) => escape(s, out),
+            Json::Arr(xs) => {
+                out.push('[');
+                for (i, x) in xs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    x.write(out);
+                }
+                out.push(']');
+            }
+            Json::Obj(fs) => {
+                out.push('{');
+                for (i, (k, v)) in fs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    escape(k, out);
+                    out.push(':');
+                    v.write(out);
+                }
+                out.push('}');
+            }
+        }
     }
 }

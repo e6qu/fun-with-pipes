@@ -37,6 +37,7 @@ usage:
                                  (exit status 1 if there are any); a comment
                                  `# fwp:allow(code)` above a declaration
                                  silences a rule in it
+  fwp lsp                        run the language server on stdin/stdout
   fwp help                       show this message
 ";
 
@@ -78,6 +79,12 @@ fn main() -> ExitCode {
         Some("pipe") => pipe(&args[1..]),
         Some("fmt") => fmt(&args[1..]),
         Some("lint") => lint(&args[1..]),
+        Some("lsp") => {
+            let code = fwp::driver::with_big_stack(|| {
+                fwp::lsp::serve(std::io::stdin().lock(), std::io::stdout())
+            });
+            ExitCode::from(code as u8)
+        }
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
             ExitCode::SUCCESS

@@ -21,6 +21,7 @@ pub mod json;
 pub mod lexer;
 pub mod linalg;
 pub mod lint;
+pub mod lsp;
 pub mod macros;
 pub mod mono;
 pub mod opt;
