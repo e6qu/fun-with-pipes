@@ -18,6 +18,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
+    include_str!("../runtime/fwp_rt_pb.c"),
 ];
 
 /// Runtime parts embedded only in programs that call or serve services.
@@ -26,16 +27,64 @@ const SERVICES_RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_grpc.c"),
 ];
 
-/// A client stub: its function, its request and response nodes, and the
-/// C expressions of its descriptors.
+/// A function's RPC (`fwp_rpc` in runtime/fwp_rt_grpc.c): its messages
+/// and the C expressions of its descriptors.
+struct RpcSpec {
+    name: String,
+    path: String,
+    fingerprint: String,
+    func: FuncId,
+    req: Vec<String>,
+    resp: String,
+    error: Option<String>,
+    input: u8,
+    output: u8,
+    status_errors: bool,
+    iter_fn: Option<FuncId>,
+    schema: crate::protobuf::MethodSchema,
+    grpc_error: String,
+}
+
+impl RpcSpec {
+    /// The definition of its request descriptors (`<prefix>_p`) and the
+    /// struct initializer.
+    fn c(&self, prefix: &str, offs: &[usize]) -> (String, String) {
+        let def = format!(
+            "static const fwp_desc *const {}_p[] = {{{}}};",
+            prefix,
+            if self.req.is_empty() {
+                "0".to_string()
+            } else {
+                self.req.join(", ")
+            }
+        );
+        let init = format!(
+            "{{{}, {}, {}, {}, {}, {}_p, {}, {}, {}, {}, {}, {}, fwp_pb_schema, {}, {}, {}}}",
+            c_string_literal(self.name.as_bytes()),
+            c_string_literal(self.path.as_bytes()),
+            c_string_literal(self.fingerprint.as_bytes()),
+            self.func,
+            self.req.len(),
+            prefix,
+            self.resp,
+            self.error.clone().unwrap_or_else(|| "0".into()),
+            self.input,
+            self.output,
+            self.status_errors as u8,
+            self.iter_fn.map(|f| f as i64).unwrap_or(-1),
+            offs[self.schema.request],
+            offs[self.schema.response],
+            self.grpc_error,
+        );
+        (def, init)
+    }
+}
+
+/// A client stub: its function and its RPC.
 struct RemoteSpec {
     id: FuncId,
     remote: RemoteFn,
-    schema: crate::protobuf::MethodSchema,
-    params: Vec<String>,
-    result: String,
-    error: Option<String>,
-    fingerprint: String,
+    rpc: RpcSpec,
 }
 
 struct Gen<'p> {
@@ -1071,6 +1120,64 @@ impl<'p> Gen<'p> {
                     format!("return fwp_p_cli_help(l0, {}, {});", t, o.flags.len())
                 }
             }
+            "pb.cast" => {
+                let name = match &result {
+                    MT::Con(n, _) => n.trim_start_matches("std::").to_string(),
+                    _ => String::new(),
+                };
+                let e = match name.as_str() {
+                    "I8" => "(V)(int64_t)(int8_t)l0",
+                    "I16" => "(V)(int64_t)(int16_t)l0",
+                    "I32" => "(V)(int64_t)(int32_t)l0",
+                    "U8" => "(V)(uint8_t)l0",
+                    "U16" => "(V)(uint16_t)l0",
+                    "U32" => "(V)(uint32_t)l0",
+                    _ => "l0",
+                };
+                format!("return {};", e)
+            }
+            "grpc.open"
+            | "grpc.send"
+            | "grpc.recv"
+            | "grpc.serve"
+            | "grpc.unary"
+            | "grpc.server-streaming"
+            | "grpc.client-streaming"
+            | "grpc.bidi-streaming"
+            | "grpc.unary-handler"
+            | "grpc.server-streaming-handler"
+            | "grpc._client-streaming-handler"
+            | "grpc._bidi-streaming-handler" => {
+                let gerr = self.desc(&crate::rpc::grpc_error_type());
+                let typed = |kind: u8, n: u32| {
+                    let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
+                    format!(
+                        "return fwp_p_grpc_typed({}, {}, (V[]){{{}}}, {});",
+                        kind,
+                        n,
+                        args.join(", "),
+                        gerr
+                    )
+                };
+                match sym {
+                    "grpc.unary" => typed(0, 5),
+                    "grpc.server-streaming" => typed(1, 6),
+                    "grpc.client-streaming" => typed(2, 5),
+                    "grpc.bidi-streaming" => typed(3, 6),
+                    "grpc.unary-handler" => typed(4, 4),
+                    "grpc.server-streaming-handler" => typed(5, 4),
+                    "grpc._client-streaming-handler" => typed(6, 5),
+                    "grpc._bidi-streaming-handler" => typed(7, 5),
+                    "grpc.open" => format!("return fwp_p_grpc_open(l0, l1, {});", gerr),
+                    "grpc.send" => format!("return fwp_p_grpc_send(l0, l1, {});", gerr),
+                    "grpc.recv" => format!("return fwp_p_grpc_recv(l0, {});", gerr),
+                    _ => format!(
+                        "return fwp_p_grpc_serve(l0, l1, {}, {});",
+                        self.desc(&MT::con("std::IoError")),
+                        gerr
+                    ),
+                }
+            }
             "tcp.listen" | "tcp.accept" | "tcp.accept-for" | "tcp.connect" | "tcp.read"
             | "tcp.read-for" | "tcp.write" | "tcp.write-for" | "udp.bind" | "udp.send-to" | "udp.recv-from"
             | "dns.resolve" => {
@@ -1252,6 +1359,22 @@ impl<'p> Gen<'p> {
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
                     ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
+                    ("grpc.close-send", "fwp_p_grpc_close_send(l0)"),
+                    ("grpc.cancel", "fwp_p_grpc_cancel(l0)"),
+                    ("grpc.metadata", "fwp_p_grpc_metadata()"),
+                    ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
+                    ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
+                    ("grpc._force", "fwp_p_grpc_force(l0)"),
+                    ("pb.parse", "fwp_p_pb_parse(l0)"),
+                    ("pb.write", "fwp_p_pb_write(l0)"),
+                    ("pb.zigzag", "fwp_p_pb_zigzag(l0)"),
+                    ("pb.unzigzag", "fwp_p_pb_unzigzag(l0)"),
+                    ("pb.f64-bits", "l0"),
+                    ("pb.f64-from-bits", "l0"),
+                    ("pb.f32-bits", "fwp_p_pb_f32_bits(l0)"),
+                    ("pb.f32-from-bits", "fwp_p_pb_f32_from_bits(l0)"),
+                    ("pb.unpack", "fwp_p_pb_unpack(l0, l1)"),
+                    ("pb.pack", "fwp_p_pb_pack(l0, l1)"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),
@@ -1265,6 +1388,52 @@ impl<'p> Gen<'p> {
             }
         };
         Ok(s)
+    }
+
+    /// The RPC of function `of` (served as `func`; `func` is 0 for a
+    /// client stub).
+    #[allow(clippy::too_many_arguments)]
+    fn rpc_spec(
+        &mut self,
+        name: &str,
+        path: String,
+        of: FuncId,
+        func: FuncId,
+        error: Option<&MT>,
+        method: &str,
+        iter_fn: Option<FuncId>,
+    ) -> Result<RpcSpec, String> {
+        let f = &self.prog.funcs[of];
+        let (ty, arity) = (f.ty.clone(), f.arity as usize);
+        let shape = crate::rpc::shape(&ty, arity, error);
+        let schema = crate::rpc::method_schema(&mut self.pb, self.prog, method, &shape, error)?;
+        let req: Vec<String> = shape
+            .request_params()
+            .iter()
+            .map(|p| self.desc(p))
+            .collect();
+        let resp = self.desc(shape.response_type());
+        let error_desc = shape.message_error(error).map(|e| self.desc(e));
+        let grpc_error = self.desc(&crate::rpc::grpc_error_type());
+        Ok(RpcSpec {
+            name: name.to_string(),
+            path,
+            fingerprint: crate::protobuf::fingerprint(self.prog, &ty, error),
+            func,
+            req,
+            resp,
+            error: error_desc,
+            input: shape.client_streaming() as u8,
+            output: match shape.output {
+                crate::rpc::Output::Value(_) => 0,
+                crate::rpc::Output::Iter(_) => 1,
+                crate::rpc::Output::Chan(_) => 2,
+            },
+            status_errors: shape.status_errors,
+            iter_fn,
+            schema,
+            grpc_error,
+        })
     }
 
     fn func(&mut self, id: FuncId) -> Result<String, String> {
@@ -1296,32 +1465,18 @@ impl<'p> Gen<'p> {
                 out.push_str(&s);
             }
             Body::Remote(r) => {
-                let (remote, func) = ((**r).clone(), f.clone());
-                let n = func.arity as usize;
-                let (params, result) = func.ty.params(n);
-                let params: Vec<MT> = params.into_iter().cloned().collect();
-                let result = result.clone();
-                let schema = self.pb.method(
-                    self.prog,
-                    &remote.method,
-                    &params,
-                    &result,
-                    remote.error.as_ref(),
-                )?;
-                let spec = RemoteSpec {
+                let remote = (**r).clone();
+                let n = f.arity as usize;
+                let rpc = self.rpc_spec(
+                    &format!("{}.{}", remote.module, remote.method),
+                    remote.path.clone(),
                     id,
-                    params: params.iter().map(|p| self.desc(p)).collect(),
-                    result: self.desc(&result),
-                    error: remote.error.as_ref().map(|e| self.desc(e)),
-                    fingerprint: crate::protobuf::fingerprint(
-                        self.prog,
-                        &func.ty,
-                        remote.error.as_ref(),
-                    ),
-                    remote,
-                    schema,
-                };
-                self.remotes.push(spec);
+                    0,
+                    remote.error.as_ref(),
+                    &remote.method,
+                    remote.iter_fn,
+                )?;
+                self.remotes.push(RemoteSpec { id, remote, rpc });
                 let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
                 let _ = writeln!(
                     out,
@@ -1960,60 +2115,34 @@ static const fwp_exec_spec exec_spec{i} = {{
         }
     }
     // services: the schema, the client stubs and the served methods
-    let mut service_defs = String::new();
+    let mut served = Vec::new();
     if let (Mode::Service, Some(svc)) = (&mode, &prog.service) {
-        let mut methods = Vec::new();
-        for (name, fid, error) in &svc.methods {
-            let f = &prog.funcs[*fid];
-            let n = f.arity as usize;
-            let (params, result) = f.ty.params(n);
-            let params: Vec<MT> = params.into_iter().cloned().collect();
-            let result = result.clone();
-            let ms = g.pb.method(prog, name, &params, &result, error.as_ref())?;
-            let pd: Vec<String> = params.iter().map(|p| g.desc(p)).collect();
-            let rd = g.desc(&result);
-            let ed = error.as_ref().map(|e| g.desc(e));
-            methods.push((name.clone(), *fid, n, ms, pd, rd, ed, error.clone()));
+        for m in &svc.methods {
+            let method = crate::rpc::Path::parse(&m.path)
+                .map(|p| p.method)
+                .unwrap_or_default();
+            let mut spec = g.rpc_spec(
+                &m.name,
+                m.path.clone(),
+                m.func,
+                m.func,
+                m.error.as_ref(),
+                &method,
+                m.iter_fn,
+            )?;
+            spec.fingerprint = svc.fingerprint(prog, m);
+            served.push(spec);
         }
-        let (_, offs) = g.pb.flatten();
-        let mut entries = Vec::new();
-        for (i, (name, fid, n, ms, pd, rd, ed, error)) in methods.iter().enumerate() {
-            let _ = writeln!(
-                service_defs,
-                "static const fwp_desc *const sm{}_p[] = {{{}}};",
-                i,
-                pd.join(", ")
-            );
-            entries.push(format!(
-                "    {{{}, {}, {}, {}, {}, sm{}_p, {}, {}, {}, {}}}",
-                c_string_literal(name.as_bytes()),
-                c_string_literal(crate::protobuf::path(&svc.module, name).as_bytes()),
-                c_string_literal(
-                    crate::protobuf::fingerprint(prog, &prog.funcs[*fid].ty, error.as_ref())
-                        .as_bytes()
-                ),
-                fid,
-                n,
-                i,
-                rd,
-                ed.clone().unwrap_or_else(|| "0".into()),
-                offs[ms.request],
-                offs[ms.response]
-            ));
-        }
-        let _ = write!(
-            service_defs,
-            "static const fwp_method fwp_svc_methods[] = {{\n{}\n}};\nstatic const fwp_service fwp_svc = {{{}, {}, {}, fwp_pb_schema, {}, fwp_svc_methods}};\n",
-            entries.join(",\n"),
-            c_string_literal(svc.module.as_bytes()),
-            c_string_literal(crate::protobuf::env_var(&svc.module).as_bytes()),
-            c_string_literal(svc.default_addr.as_bytes()),
-            methods.len()
-        );
     }
-    let uses_services = !g.remotes.is_empty() || matches!(mode, Mode::Service);
+    let uses_services = !g.remotes.is_empty()
+        || matches!(mode, Mode::Service)
+        || prog
+            .funcs
+            .iter()
+            .any(|f| matches!(&f.body, Body::Prim(p) if p.starts_with("grpc.")));
     let mut remote_defs = String::new();
     if uses_services {
+        let grpc_error = g.desc(&crate::rpc::grpc_error_type());
         let (flat, offs) = g.pb.flatten();
         let nums: Vec<String> = flat.iter().map(|x| x.to_string()).collect();
         let _ = writeln!(
@@ -2026,24 +2155,48 @@ static const fwp_exec_spec exec_spec{i} = {{
             }
         );
         for r in &g.remotes {
+            let (def, init) = r.rpc.c(&format!("rs{}", r.id), &offs);
             let _ = writeln!(
                 remote_defs,
-                "static const fwp_desc *const rs{id}_p[] = {{{p}}};\nstatic const fwp_remote rs{id} = {{{what}, {path}, {env}, {addr}, {fp}, {n}, rs{id}_p, {rd}, {ed}, fwp_pb_schema, {req}, {resp}}};",
+                "{def}\nstatic const fwp_remote rs{id} = {{{what}, {env}, {addr}, {init}}};",
                 id = r.id,
-                p = r.params.join(", "),
-                what = c_string_literal(format!("{}.{}", r.remote.module, r.remote.method).as_bytes()),
-                path = c_string_literal(crate::protobuf::path(&r.remote.module, &r.remote.method).as_bytes()),
+                what =
+                    c_string_literal(format!("{}.{}", r.remote.module, r.remote.method).as_bytes()),
                 env = c_string_literal(crate::protobuf::env_var(&r.remote.module).as_bytes()),
                 addr = c_string_literal(r.remote.default_addr.as_bytes()),
-                fp = c_string_literal(r.fingerprint.as_bytes()),
-                n = r.params.len(),
-                rd = r.result,
-                ed = r.error.clone().unwrap_or_else(|| "0".into()),
-                req = offs[r.schema.request],
-                resp = offs[r.schema.response],
             );
         }
-        remote_defs.push_str(&service_defs);
+        if let (Mode::Service, Some(svc)) = (&mode, &prog.service) {
+            let mut entries = Vec::new();
+            for (i, m) in served.iter().enumerate() {
+                let (def, init) = m.c(&format!("sm{}", i), &offs);
+                let _ = writeln!(remote_defs, "{}", def);
+                entries.push(format!("    {}", init));
+            }
+            let refl = crate::rpc::reflection(prog)?;
+            let names: Vec<String> = refl
+                .services
+                .iter()
+                .map(|s| c_string_literal(s.as_bytes()))
+                .collect();
+            let _ = write!(
+                remote_defs,
+                "static const fwp_rpc fwp_svc_methods[] = {{\n{}\n}};\nstatic const unsigned char fwp_svc_descriptor[] = {};\nstatic const unsigned char fwp_svc_health[] = {};\nstatic const char *const fwp_svc_services[] = {{{}}};\nstatic const fwp_service fwp_svc = {{{}, {}, {}, {}, fwp_svc_methods, fwp_svc_descriptor, {}, {}, {}, {}, fwp_svc_services, {}, fwp_svc_health, sizeof fwp_svc_health}};\n",
+                entries.join(",\n"),
+                bytes_literal(&refl.descriptor),
+                bytes_literal(&crate::rpc::health_descriptor()),
+                if names.is_empty() { "0".to_string() } else { names.join(", ") },
+                c_string_literal(svc.module.as_bytes()),
+                c_string_literal(crate::protobuf::env_var(&svc.module).as_bytes()),
+                c_string_literal(svc.default_addr.as_bytes()),
+                served.len(),
+                refl.descriptor.len(),
+                c_string_literal(refl.file.as_bytes()),
+                c_string_literal(refl.package.as_bytes()),
+                refl.services.len(),
+                grpc_error,
+            );
+        }
     }
     let main_desc = g.desc(&main_ty);
     // IoError is always available for uncaught IO failures.
@@ -2294,7 +2447,10 @@ pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
         let Body::Prim(sym) = &f.body else {
             return None;
         };
-        if ["tcp.", "udp.", "dns."].iter().any(|p| sym.starts_with(p)) {
+        if ["tcp.", "udp.", "dns.", "grpc."]
+            .iter()
+            .any(|p| sym.starts_with(p))
+        {
             Some(("Network", sym.as_str()))
         } else if sym.starts_with("process.") {
             Some(("Process", sym.as_str()))
@@ -2311,7 +2467,12 @@ pub fn wasm_missing_effect(prog: &Program) -> Option<(&'static str, &str)> {
 
 /// Whether `prog` calls services (gRPC), or is one.
 pub fn uses_services(prog: &Program) -> bool {
-    prog.service.is_some() || prog.funcs.iter().any(|f| matches!(f.body, Body::Remote(_)))
+    prog.service.is_some()
+        || prog.funcs.iter().any(|f| match &f.body {
+            Body::Remote(_) => true,
+            Body::Prim(p) => p.starts_with("grpc."),
+            _ => false,
+        })
 }
 
 /// Effects a target does not provide, by the primitives that perform them.

@@ -1,0 +1,44 @@
+# A chat client: it subscribes to the room of chat-server.fwp, posts two
+# messages and prints what the room sends.
+#
+#   fwp run chat-client.fwp 127.0.0.1:50051
+
+import chat
+
+ada : chat.Join
+ada = chat.Join { user = "ada" }
+
+hello : chat.Message
+hello = chat.Message { user = "ada", text = "hello" }
+
+bye : chat.Message
+bye = chat.Message { user = "ada", text = "bye" }
+
+# subscribe in a task, whose messages go to the channel (a failed call
+# ends the task)
+listen : (String, Channel[chat.Message]) -> Task[()] ! {Async}
+listen =
+    iter.later (attempt (fork (flip chat.room.subscribe ada) .0 .1) | ignore)
+    | task.spawn
+
+# print the next message of the room
+show-next : Channel[chat.Message] -> () ! {Async, IO}
+show-next =
+    channel.recv
+    | option.map (fork concat .text (.user | concat ": "))
+    | option.unwrap-or "(the room is gone)"
+    | print
+
+main =
+    args ()
+    | head
+    | option.unwrap-or "127.0.0.1:50051"
+    | make { 0 = id, 1 = const 16 | channel.make }
+    | make { 0 = .0, 1 = .1, 2 = listen }
+    | tap (.1 | show-next)
+    | tap (.0 | flip chat.room.post hello)
+    | tap (.1 | show-next)
+    | tap (.0 | flip chat.room.post bye)
+    | tap (.1 | show-next)
+    | .2
+    | task.cancel

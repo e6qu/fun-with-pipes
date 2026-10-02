@@ -1,0 +1,49 @@
+import gen
+
+ada : gen.HelloRequest
+ada =
+    gen.hello-request.default
+    | with {
+        name = "Ada",
+        times = 3,
+        tags = ["x", "y"],
+        extra = Some (gen.HelloRequestExtra.Note "hi"),
+    }
+
+drained : (Channel[gen.HelloReply] -> () ! {Async, Network, Error[GrpcError]}) -> List[String] ! {Async, Network, Error[GrpcError]}
+drained =
+    fork apply (const 100 | channel.make) tap
+    | tap channel.close
+    | channel.drain
+    | map .message
+
+calls : List[String -> () ! {Async, IO, Network, Error[GrpcError]}]
+calls = [
+    flip gen.greeter.say-hello ada | echo,
+    flip gen.greeter.watch ada | drained | echo,
+    flip gen.greeter.collect ([ada, ada] | iter.from-list) | .message | echo,
+    flip gen.greeter.chat ([ada, ada] | iter.from-list) | drained | echo,
+    flip gen.greeter.ping () | echo,
+    attempt (flip
+        (grpc.unary
+            gen.hello-request.encode
+            gen.hello-reply.decode
+            "/helloworld.Greeter/Nope")
+        ada)
+    | echo,
+    attempt (flip
+        (grpc.unary id gen.hello-reply.decode "/helloworld.Greeter/SayHello")
+        (bytes.from-list [255u8]))
+    | echo,
+]
+
+main = [
+    ada
+    | gen.hello-request.encode
+    | attempt gen.hello-request.decode
+    | eq (Ok ada)
+    | echo,
+    calls
+    | map (apply (args () | head | option.unwrap-or "127.0.0.1:50051"))
+    | ignore,
+] | ignore

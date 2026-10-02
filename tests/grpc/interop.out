@@ -1,0 +1,10 @@
+HTTP/2.0 /test.Greeter/SayHello [0a0968656c6c6f2c20676f] 0 
+HTTP/2.0 /test.Greeter/Count [0802 0804 0806] 0 
+HTTP/2.0 /test.Greeter/Total [080c] 0 
+HTTP/2.0 /test.Greeter/Shout [0a0141 0a0142] 0 
+HTTP/2.0 /test.Greeter/Whoami [0a06676f70686572] 0 
+HTTP/2.0 /test.Greeter/Nap [] 4 deadline exceeded
+HTTP/2.0 /test.Greeter/Find [] 5 ghost
+HTTP/2.0 /test.Greeter/Nope [] 12 unknown method /test.Greeter/Nope
+HTTP/2.0 /test.Greeter/SayHello [] 3 malformed request message
+HTTP/2.0 /grpc.health.v1.Health/Check [0801] 0 

@@ -25,6 +25,8 @@ const MODULES: &[(&str, &str)] = &[
     ("http", "HTTP"),
     ("json", "JSON"),
     ("rest", "REST endpoints and clients"),
+    ("grpc", "gRPC"),
+    ("protobuf", "Protobuf"),
     ("url", "URLs"),
     ("log", "Logs and metrics"),
     ("numeric", "Vectors, matrices and complex numbers"),

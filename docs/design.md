@@ -123,6 +123,7 @@ error. See [protocol.md](protocol.md).
 | `--fn f` | the exported function `f` as a standalone executable |
 | `--cli` | every exported function as a subcommand of one executable. `src/cli.rs` computes the command line of each function (flags from an options record, positional arguments, defaults evaluated with the interpreter at build time) and its help and usage texts once; the C runtime (`runtime/fwp_rt_exec.c`) gets them as static data and parses arguments with the same rules as `src/exec.rs`. See [cli.md](cli.md) |
 | `--rest` | every exported function as an endpoint of one HTTP server. `src/rest.rs` computes the endpoints from the types and doc comments (routes, where each argument comes from, statuses) and `src/openapi.rs` the OpenAPI document; the file is then compiled again with a generated `main` (`Roots::entry`) that serves `rest.endpoint`s of `lib/rest.fwp` over the HTTP server of `lib/http.fwp`. Arguments and results go through the typed JSON codec (`json.read`, `json.write`), a primitive written twice: `src/jsontype.rs` over types, `runtime/fwp_rt_json.c` over type descriptors. See [rest.md](rest.md) |
+| `--grpc` | every exported function as a gRPC method. `src/rpc.rs` derives each method's messages and streams from its type (`Iterator`, `Channel`), its path from `# grpc:` lines, the `.proto` text and the reflection descriptor; the program is compiled as a service of its root module (`Roots::service`). The transport runs on the task scheduler: `src/grpc.rs` for the interpreter, `runtime/fwp_rt_grpc.c` natively. See [grpc.md](grpc.md) |
 | `--fat` | one copy of the program per x86-64 CPU level, chosen at startup |
 | `--service m` | the program split into gRPC services: a server executable for each named module, and a main executable whose calls to those modules' exported functions are remote. The monomorphizer replaces each such call with a client stub (`Body::Remote`); see [services.md](services.md) |
 | `--staticlib`, `--cdylib` | a C library and header for the exported functions |
@@ -136,8 +137,7 @@ error. See [protocol.md](protocol.md).
   only (no content negotiation, forms or header parameters), and
   `fwp openapi --import` reads JSON documents of OpenAPI 3.0 and 3.1, not
   YAML or Swagger 2.0. HTTP/2 exists only as the
-  cleartext gRPC transport of [services](services.md) (unary calls, no
-  streaming RPCs).
+  cleartext gRPC transport of [gRPC services](grpc.md).
 - Preemptive scheduling.
 - Tasks, sockets and foreign C functions in the WebAssembly build of fwp
   (the playground): tasks would need a scheduler that can suspend the

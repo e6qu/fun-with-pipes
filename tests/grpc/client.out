@@ -1,0 +1,14 @@
+greeter.HelloReply {message = "hello, Ada"}
+[1, 2, 3, 4, 5]
+["tick 1", "tick 2", "tick 3"]
+10
+["A", "B"]
+Ok (greeter.HelloReply {message = "Bob"})
+Err (GrpcError {code = 5, message = "ghost"})
+carol
+nobody
+Ok 0
+Err "division by zero"
+Some 20
+None
+Err (GrpcError {code = 4, message = "deadline exceeded"})

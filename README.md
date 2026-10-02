@@ -46,6 +46,12 @@ main =
   client functions.
 - **In the browser.** The compiler and interpreter build for WebAssembly;
   a playground page checks, formats and runs programs without a server.
+- **gRPC.** Any exported function is also a gRPC method, with streams
+  decided by its type (`Iterator` and `Channel`), deadlines, metadata and
+  statuses: `fwp build --grpc` makes one server, with reflection and
+  health checking, and `fwp proto --import` turns any `.proto` file into
+  typed clients and server routes. Calls and servers run concurrently on
+  the task scheduler.
 - **One program, two deployments.** The same source builds into one
   executable or into gRPC services, one per module you name, whose calls
   to each other go over HTTP/2.
@@ -68,6 +74,7 @@ fwp build examples/services/main.fwp --service inventory -o shop   # gRPC
 fwp build examples/cli/todo.fwp --cli -o todo && ./todo --help    # a CLI
 fwp serve --rest examples/rest/books.fwp # a REST API with /openapi.json
 fwp openapi examples/rest/books.fwp      # its OpenAPI document
+fwp serve --grpc examples/grpc/weather.fwp   # a gRPC server, with reflection
 fwp test --std                           # the standard library's own tests
 fwp fmt --check . && fwp lint examples   # formatting and lint checks
 fwp lsp                                  # the language server, for editors
@@ -86,13 +93,14 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | seventeen tutorials, from pipes to gRPC services, fwp in the browser, command-line programs and REST APIs |
+| [docs/tutorials](docs/tutorials/README.md) | eighteen tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs and gRPC |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
 | [docs/cli.md](docs/cli.md) | any function as a command-line program: flags, choices, environment variables, help, subcommands, exit statuses, shell completion, man pages |
 | [docs/rest.md](docs/rest.md) | any function as a REST endpoint: routes, the JSON codec, OpenAPI documents and generated clients |
 | [docs/interfaces.md](docs/interfaces.md) | one function as a command, a REST endpoint and a gRPC method, compared |
+| [docs/grpc.md](docs/grpc.md) | any function as a gRPC method: streams, deadlines, metadata, statuses, reflection, and clients and servers from `.proto` files |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
 | [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
@@ -109,10 +117,11 @@ web/        the playground: fwp.wasm in a page, with a small WASI in JavaScript
 scripts/    build-playground.sh
 lib/        the standard library, written in fwp (with its tests)
 examples/   a word counter, a JSON API server, executable tools, a shop
-            split into services, command-line programs, a REST bookstore
+            split into services, command-line programs, a REST bookstore,
+            gRPC services
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
             FFI, WebAssembly, fat-binary, formatter, language server,
-            services, REST and browser (fwp.wasm) tests
+            services, REST, gRPC and browser (fwp.wasm) tests
 docs/       documentation and tutorials
 ```
 

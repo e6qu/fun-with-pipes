@@ -1,0 +1,195 @@
+# gRPC: calling and serving gRPC services (docs/grpc.md).
+#
+# Exported functions become gRPC services with `fwp build --grpc` (or
+# `--service` for a module of a larger program), with no code: their
+# messages come from their types. This module is for what remains: the
+# metadata and deadlines of calls, statuses (`GrpcError`), and the calls
+# and handlers that code generated from a `.proto` file (`fwp proto
+# --import`) is made of. Calls and servers run on the task scheduler: a
+# call waits only in its own task, and a server runs calls concurrently.
+
+# a failed call: a status code (`grpc.not-found`, ...) and a message. A
+# served function that fails with `Error[GrpcError]` answers with that
+# status; calls fail with it.
+GrpcError = { code: I64, message: String }
+
+# one side of a call: the client's, or the server's
+GrpcStream = builtin
+
+# a method served by `grpc.serve`: its path (`/package.Service/Method`) and
+# the function that handles a call
+GrpcRoute = {
+    handler: GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
+    path: String,
+}
+
+# ----------------------------------------------------------- status codes
+
+# the status codes
+grpc.ok : I64
+grpc.ok = 0
+
+grpc.cancelled : I64
+grpc.cancelled = 1
+
+grpc.unknown : I64
+grpc.unknown = 2
+
+grpc.invalid-argument : I64
+grpc.invalid-argument = 3
+
+grpc.deadline-exceeded : I64
+grpc.deadline-exceeded = 4
+
+grpc.not-found : I64
+grpc.not-found = 5
+
+grpc.already-exists : I64
+grpc.already-exists = 6
+
+grpc.permission-denied : I64
+grpc.permission-denied = 7
+
+grpc.resource-exhausted : I64
+grpc.resource-exhausted = 8
+
+grpc.failed-precondition : I64
+grpc.failed-precondition = 9
+
+grpc.aborted : I64
+grpc.aborted = 10
+
+grpc.out-of-range : I64
+grpc.out-of-range = 11
+
+grpc.unimplemented : I64
+grpc.unimplemented = 12
+
+grpc.internal : I64
+grpc.internal = 13
+
+grpc.unavailable : I64
+grpc.unavailable = 14
+
+grpc.data-loss : I64
+grpc.data-loss = 15
+
+grpc.unauthenticated : I64
+grpc.unauthenticated = 16
+
+# the name of a status code: `grpc.code-name 5` is "NOT_FOUND"
+grpc.code-name : I64 -> String
+grpc.code-name =
+    flip nth [
+        "OK",
+        "CANCELLED",
+        "UNKNOWN",
+        "INVALID_ARGUMENT",
+        "DEADLINE_EXCEEDED",
+        "NOT_FOUND",
+        "ALREADY_EXISTS",
+        "PERMISSION_DENIED",
+        "RESOURCE_EXHAUSTED",
+        "FAILED_PRECONDITION",
+        "ABORTED",
+        "OUT_OF_RANGE",
+        "UNIMPLEMENTED",
+        "INTERNAL",
+        "UNAVAILABLE",
+        "DATA_LOSS",
+        "UNAUTHENTICATED",
+    ]
+    | option.unwrap-or "UNKNOWN"
+
+# fail with a status: `grpc.fail grpc.not-found "no such book"`
+grpc.fail : I64 -> String -> a ! {Error[GrpcError]}
+grpc.fail = curry (make GrpcError { code = .0, message = .1 } | fail)
+
+# ------------------------------------------------- metadata and deadlines
+
+# the metadata (request headers, with lower-case names) of the call the
+# current task serves; empty outside a call
+foreign "fwp" grpc.metadata : () -> List[(String, String)] ! {Network}
+
+# one metadata value of the call being served
+grpc.header : String -> Option[String] ! {Network}
+grpc.header = fork json.lookup id (const () | grpc.metadata)
+
+# run a function whose calls send this metadata as well
+foreign "fwp" grpc.with-metadata : List[(String, String)] -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# run a function whose calls must finish within a duration, or fail with
+# `grpc.deadline-exceeded`. (A task's deadline, `task.deadline` or
+# `task.within`, also applies to its calls, and cancels the task.)
+foreign "fwp" grpc.with-deadline : Duration -> (() -> a ! {Network | e}) -> a ! {Network | e}
+
+# ------------------------------------------------------------------ calls
+
+# `grpc.unary encode decode path address request`: a unary call
+foreign "fwp" grpc.unary : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> a -> b ! {Network, Error[GrpcError]}
+
+# a server-streaming call: each response goes to the channel
+foreign "fwp" grpc.server-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> a -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
+
+# a client-streaming call: the requests are the iterator's elements
+foreign "fwp" grpc.client-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> b ! {Network, Error[GrpcError]}
+
+# a bidirectional call: it sends the requests, then each response goes to
+# the channel
+foreign "fwp" grpc.bidi-streaming : (a -> Bytes) -> (Bytes -> b ! {Error[GrpcError]}) -> String -> String -> Iterator[a] -> Channel[b] -> () ! {Async, Network, Error[GrpcError]}
+
+# Lower level: start a call (`grpc.open address path`), send messages,
+# end the requests, and receive messages (`None` at the end). A failed call
+# fails with its status.
+foreign "fwp" grpc.open : String -> String -> GrpcStream ! {Network, Error[GrpcError]}
+foreign "fwp" grpc.send : Bytes -> GrpcStream -> () ! {Network, Error[GrpcError]}
+foreign "fwp" grpc.close-send : GrpcStream -> () ! {Network}
+foreign "fwp" grpc.recv : GrpcStream -> Option[Bytes] ! {Network, Error[GrpcError]}
+foreign "fwp" grpc.cancel : GrpcStream -> () ! {Network}
+
+# ---------------------------------------------------------------- serving
+
+# serve routes on an address ("127.0.0.1:50051"; port 0 picks a free
+# port, reported on standard error), with health checking
+# (`grpc.health.v1.Health`), until the task is cancelled
+foreign "fwp" grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+
+# a route from a path and a handler
+grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
+grpc.route = curry (make GrpcRoute { path = .0, handler = .1 })
+
+# handlers of methods from a request decoder, a response encoder and a
+# function; a request that cannot be decoded fails with
+# `grpc.invalid-argument`
+foreign "fwp" grpc.unary-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+foreign "fwp" grpc.server-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+
+grpc.client-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
+grpc.client-streaming-handler = grpc._client-streaming-handler grpc._iter
+
+grpc.bidi-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
+grpc.bidi-streaming-handler = grpc._bidi-streaming-handler grpc._iter
+
+foreign "fwp" grpc._client-streaming-handler : (GrpcCell[a] -> Iterator[a]) -> (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+foreign "fwp" grpc._bidi-streaming-handler : (GrpcCell[a] -> Iterator[a]) -> (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+
+# a received stream as a lazy iterator: forcing a position receives the
+# message there, once
+# internal
+GrpcCell[a] = builtin
+foreign "fwp" grpc._force : GrpcCell[a] -> Option[(a, GrpcCell[a])]
+
+rec grpc._iter : GrpcCell[a] -> Iterator[a] where Dup[a]
+grpc._iter = grpc._force | match
+    None -> Done
+    Some _ -> fork Yield .0 (.1 | iter.later grpc._iter)
+
+test "grpc.code-name" =
+    [grpc.not-found, grpc.unavailable, 99]
+    | map grpc.code-name
+    | eq ["NOT_FOUND", "UNAVAILABLE", "UNKNOWN"]
+
+test "grpc.fail" =
+    "x"
+    | attempt (grpc.fail grpc.not-found)
+    | eq (Err GrpcError { code = 5, message = "x" })

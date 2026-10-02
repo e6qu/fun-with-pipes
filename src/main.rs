@@ -46,6 +46,15 @@ usage:
   fwp openapi <file.fwp>         print the OpenAPI document of the endpoints
   fwp openapi --import <spec.json> [-o client.fwp]
                                  generate an fwp client module of an API
+  fwp build <file.fwp> --grpc [-o out]
+  fwp serve --grpc <file.fwp> [--listen addr]
+  fwp proto --grpc <file.fwp>    a gRPC server of a file's exported
+                                 functions (native, interpreted) and its
+                                 .proto file; with reflection and health
+                                 checking (see docs/grpc.md)
+  fwp proto --import <file.proto> [-o out.fwp]
+                                 fwp types, clients and server routes for
+                                 the services of a .proto file
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
   fwp exec --cli <file.fwp> [command] [args...]
@@ -340,6 +349,9 @@ fn test(args: &[String]) -> ExitCode {
 }
 
 fn build(args: &[String]) -> ExitCode {
+    if args.iter().any(|a| a == "--grpc") {
+        return ExitCode::from(fwp::grpc_cli::build(args).clamp(0, 255) as u8);
+    }
     let mut path = None;
     let mut out = None;
     let mut emit_c = false;
@@ -633,6 +645,9 @@ fn serve(args: &[String]) -> ExitCode {
     if args.first().map(String::as_str) == Some("--rest") {
         return serve_rest(&args[1..]);
     }
+    if args.iter().any(|a| a == "--grpc") {
+        return ExitCode::from(fwp::grpc_cli::serve(args).clamp(0, 255) as u8);
+    }
     let mut args = args.to_vec();
     let mut remote = take_services(&mut args);
     let mut listen = None;
@@ -780,6 +795,9 @@ fn openapi(args: &[String]) -> ExitCode {
 }
 
 fn proto(args: &[String]) -> ExitCode {
+    if args.iter().any(|a| a == "--grpc" || a == "--import") {
+        return ExitCode::from(fwp::grpc_cli::proto(args).clamp(0, 255) as u8);
+    }
     let mut args = args.to_vec();
     let mut services: Vec<String> = take_services(&mut args).into_iter().map(|s| s.0).collect();
     let mut path = None;

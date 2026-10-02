@@ -34,6 +34,17 @@ foreign "fwp" channel.recv : Channel[a] -> Option[a] ! {Async}
 foreign "fwp" channel.recv-for : Duration -> Channel[a] -> Option[a] ! {Async}
 foreign "fwp" channel.close : Channel[a] -> () ! {Async}
 
+# every value received from a channel until it is closed and drained
+channel.drain : Channel[a] -> List[a] ! {Async}
+channel.drain =
+    make { 0 = id, 1 = const Nil } | loop channel._drain-step | reverse
+
+channel._drain-step : (Channel[a], List[a]) -> Step[(Channel[a], List[a]), List[a]] ! {Async}
+channel._drain-step = both (.0 | channel.recv) id | match
+    (None, _) -> .1 | Stop
+    (Some _, _) ->
+        curry (make { 0 = .1 | .0, 1 = fork Cons .0 (.1 | .1) } | Again)
+
 # run tasks for every element and collect their results in order
 task.map : (a -> b ! {Async, IO, Network, FileIO}) -> List[a] -> List[Option[b]] ! {Async}
 task.map = spawn-with | map | flip compose (map task.await)

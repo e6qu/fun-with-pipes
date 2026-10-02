@@ -46,6 +46,8 @@ pub struct Docs {
     pub funcs: BTreeMap<String, FuncDoc>,
     /// Record types by unqualified name: their fields' comments.
     pub fields: BTreeMap<String, BTreeMap<String, FieldDoc>>,
+    /// The `# grpc:` line of the module's comment (`src/rpc.rs`).
+    pub grpc: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -58,6 +60,8 @@ pub struct FuncDoc {
     /// The `# route:`, `# status:` and `# error:` lines of REST endpoints
     /// (`src/rest.rs`), without the `#`.
     pub http: Vec<String>,
+    /// The gRPC name of `# grpc:` (`src/rpc.rs`).
+    pub grpc: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -214,6 +218,9 @@ impl Docs {
                 if block.first().is_some_and(|l| l.starts_with('!')) {
                     block.remove(0); // a `#!` line
                 }
+                if let Some(i) = block.iter().position(|l| l.starts_with("grpc:")) {
+                    self.grpc = Some(block.remove(i)["grpc:".len()..].trim().to_string());
+                }
                 self.module = trim_blank(block);
             }
         }
@@ -281,6 +288,8 @@ impl Docs {
                     .any(|p| t.starts_with(p))
                 {
                     doc.http.push(t);
+                } else if let Some(g) = t.strip_prefix("grpc:") {
+                    doc.grpc = Some(g.trim().to_string());
                 } else if !t.starts_with("fwp:allow") {
                     doc.lines.push(t);
                 }

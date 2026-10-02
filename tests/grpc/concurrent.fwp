@@ -1,0 +1,19 @@
+# Concurrent calls to greeter.fwp (tests/grpc.rs): many calls at once on
+# one connection, and a fast call while a slow one is in flight.
+
+import greeter
+
+request : String -> greeter.HelloRequest
+request = make greeter.HelloRequest { name = id, times = const 0 }
+
+main = [
+    range 0 50
+    | map (show | request)
+    | task.map greeter.say-hello
+    | filter option.is-some
+    | length
+    | echo,
+    task.spawn (const 2000 | greeter.slow | show | flip concat "slow " | print)
+    | ignore,
+    request "fast" | greeter.say-hello | .message | echo,
+] | ignore

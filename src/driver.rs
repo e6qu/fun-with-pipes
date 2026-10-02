@@ -32,6 +32,8 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/simd.fwp", include_str!("../lib/simd.fwp")),
     ("<std>/tensor.fwp", include_str!("../lib/tensor.fwp")),
     ("<std>/task.fwp", include_str!("../lib/task.fwp")),
+    ("<std>/grpc.fwp", include_str!("../lib/grpc.fwp")),
+    ("<std>/protobuf.fwp", include_str!("../lib/protobuf.fwp")),
     ("<std>/net.fwp", include_str!("../lib/net.fwp")),
     ("<std>/json.fwp", include_str!("../lib/json.fwp")),
     ("<std>/url.fwp", include_str!("../lib/url.fwp")),
@@ -321,6 +323,9 @@ pub fn lower(
     match crate::mono::lower(&c.env, &c.typed, roots) {
         Ok(mut p) => {
             p.docs = crate::cli::Docs::from_sources(&c.sm, c.root);
+            if let Err(d) = crate::rpc::annotate(&mut p, &c) {
+                return Err(Failure::new(vec![d], &c.sm, c.root));
+            }
             Ok((c, p))
         }
         Err(d) => Err(Failure::new(vec![d], &c.sm, c.root)),

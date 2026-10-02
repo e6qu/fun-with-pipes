@@ -1,0 +1,28 @@
+# Calls every function of greeter.fwp; with `--service greeter` the calls
+# go to a gRPC server (tests/grpc.rs).
+
+import greeter
+
+main = [
+    greeter.HelloRequest { name = "Ada", times = 1 } | greeter.say-hello | echo,
+    5 | greeter.count | iter.to-list | echo,
+    100
+    | channel.make
+    | tap (greeter.ticks 3)
+    | tap channel.close
+    | channel.drain
+    | echo,
+    [1, 2, 3, 4] | iter.from-list | greeter.total | echo,
+    ["a", "b"] | iter.from-list | greeter.shout | iter.to-list | echo,
+    "Bob" | attempt greeter.lookup | echo,
+    "ghost" | attempt greeter.lookup | echo,
+    grpc.with-metadata [("X-User", "carol")] greeter.whoami | echo,
+    () | greeter.whoami | echo,
+    2 | attempt (greeter.divide 8) | echo,
+    0 | attempt (greeter.divide 8) | echo,
+    task.within 2s (const 20 | greeter.slow) | echo,
+    task.within 100ms (const 2000 | greeter.slow) | echo,
+    ()
+    | attempt (const (const 2000 | greeter.nap) | grpc.with-deadline 100ms)
+    | echo,
+] | ignore
