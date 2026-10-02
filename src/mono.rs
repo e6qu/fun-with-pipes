@@ -740,12 +740,9 @@ impl<'a> Mono<'a> {
         if let Some(e) = &error {
             self.register_shapes(e);
         }
-        let (params, result) = ty.params(arity as usize);
-        let mut parts: Vec<MT> = params.into_iter().cloned().collect();
-        parts.push(result.clone());
-        parts.extend(error.iter().cloned());
-        for t in &parts {
-            if let Err(m) = crate::protobuf::check_encodable(&self.prog, t) {
+        let shape = crate::rpc::shape(&ty, arity as usize, error.as_ref());
+        for t in shape.wire_types(error.as_ref()) {
+            if let Err(m) = crate::protobuf::check_encodable(&self.prog, &t) {
                 return Err(Diagnostic::error(
                     b.span,
                     format!("`{}` is served by module `{}`, but {}", name, b.module, m),
@@ -755,9 +752,24 @@ impl<'a> Mono<'a> {
         Ok(Some((ty, arity, error)))
     }
 
+    /// `std::grpc._iter` at element type `t`: received messages as a lazy
+    /// `Iterator[t]`.
+    fn grpc_iter(&mut self, t: &MT, span: Span) -> MResult<FuncId> {
+        let Some(GlobalKind::Binding(i)) = self.env.globals.get("std::grpc._iter").map(|g| &g.kind)
+        else {
+            return Err(Diagnostic::error(span, "internal: `grpc._iter` is missing"));
+        };
+        let i = *i;
+        let n = self.env.bindings[i].mono_vars.len();
+        let saved = std::mem::replace(&mut self.cur_module, "std".to_string());
+        let r = self.binding_instance(i, vec![t.clone(); n], span);
+        self.cur_module = saved;
+        r
+    }
+
     /// Root the exported functions of a module served as a service.
     fn service_roots(&mut self, module: &str) -> MResult<()> {
-        if !self.env.modules.contains_key(module) || module == "main" || module == "std" {
+        if !self.env.modules.contains_key(module) || module == "std" {
             return Err(Diagnostic::error(
                 Span::default(),
                 format!("`{}` is not an imported module", module),
@@ -767,19 +779,32 @@ impl<'a> Mono<'a> {
             module: module.to_string(),
             methods: Vec::new(),
             default_addr: self.default_addr(module),
+            root: false,
         };
         let env = self.env;
         for (i, b) in env.bindings.iter().enumerate() {
             if b.module != module || b.test_name.is_some() || !env.globals[&b.name].exported {
                 continue;
             }
-            let Some((_, _, error)) = self.service_signature(i)? else {
+            let Some((ty, arity, error)) = self.service_signature(i)? else {
                 continue;
             };
             let saved = std::mem::replace(&mut self.cur_module, module.to_string());
             let id = self.binding_instance(i, vec![MT::unit(); b.mono_vars.len()], b.span);
             self.cur_module = saved;
-            def.methods.push((local_name(&b.name), id?, error));
+            let shape = crate::rpc::shape(&ty, arity as usize, error.as_ref());
+            let iter_fn = match shape.iter_elem(true) {
+                Some(t) => Some(self.grpc_iter(t, b.span)?),
+                None => None,
+            };
+            let name = local_name(&b.name);
+            def.methods.push(crate::ir::ServedFn {
+                path: crate::protobuf::path(module, &name),
+                name,
+                func: id?,
+                error,
+                iter_fn,
+            });
         }
         if def.methods.is_empty() {
             return Err(Diagnostic::error(
@@ -811,11 +836,18 @@ impl<'a> Mono<'a> {
         let Some((ty, arity, error)) = self.service_signature(idx)? else {
             return Ok(None);
         };
+        let shape = crate::rpc::shape(&ty, arity as usize, error.as_ref());
+        let iter_fn = match shape.iter_elem(false) {
+            Some(t) => Some(self.grpc_iter(t, b.span)?),
+            None => None,
+        };
         let body = Body::Remote(Box::new(crate::ir::RemoteFn {
             default_addr: self.default_addr(&module),
+            path: crate::protobuf::path(&module, &method),
             module,
             method,
             error,
+            iter_fn,
         }));
         let id = self.new_func(name, arity, ty, body);
         self.instances.insert(key, id);

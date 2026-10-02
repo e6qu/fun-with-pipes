@@ -41,6 +41,8 @@ pub struct World {
     turn_cv: Condvar,
     event_cv: Condvar,
     metrics: Mutex<BTreeMap<String, (&'static str, f64)>>,
+    /// gRPC client connections, shared by the program's tasks.
+    pub(crate) grpc: Mutex<Baton<crate::grpc::Shared>>,
 }
 
 impl World {
@@ -54,6 +56,7 @@ impl World {
             turn_cv: Condvar::new(),
             event_cv: Condvar::new(),
             metrics: Mutex::new(BTreeMap::new()),
+            grpc: Mutex::new(Baton(Default::default())),
         })
     }
 
@@ -73,14 +76,14 @@ impl World {
     }
 
     /// Shared state changed: wake parked tasks so they re-check.
-    fn event(&self) {
+    pub(crate) fn event(&self) {
         let mut t = self.turn.lock().unwrap();
         t.events += 1;
         self.event_cv.notify_all();
     }
 
     /// Hand the baton on until an event happens or `until` passes.
-    fn park(&self, until: Option<Instant>) {
+    pub(crate) fn park(&self, until: Option<Instant>) {
         let mut t = self.turn.lock().unwrap();
         let seen = t.events;
         t.serving += 1;
@@ -105,7 +108,7 @@ impl World {
     }
 
     /// Run `f` (which must not touch values) without the baton.
-    fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
+    pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
         self.release();
         let r = f();
         self.acquire();
@@ -135,7 +138,7 @@ impl TaskShared {
         })
     }
 
-    fn cancel(&self) {
+    pub(crate) fn cancel(&self) {
         self.cancelled.store(true, AO::SeqCst);
         let children: Vec<Arc<TaskShared>> = self.st.lock().unwrap().0.children.clone();
         for c in children {
@@ -143,19 +146,38 @@ impl TaskShared {
         }
     }
 
-    fn deadline(&self) -> Option<Instant> {
+    pub(crate) fn deadline(&self) -> Option<Instant> {
         *self.deadline.lock().unwrap()
     }
 
-    fn done(&self) -> bool {
+    pub(crate) fn done(&self) -> bool {
         self.st.lock().unwrap().0.done
     }
+}
+
+enum TaskBody {
+    Thunk(Value),
+    Rust(Box<dyn for<'x> FnOnce(&mut Interp<'x>)>),
 }
 
 pub struct ChanState {
     buf: VecDeque<Value>,
     cap: usize,
     closed: bool,
+    /// A channel whose values go to a gRPC stream (a served function's
+    /// `Channel[T]` parameter).
+    pub(crate) sink: Option<Rc<crate::grpc::Sink>>,
+}
+
+impl ChanState {
+    pub(crate) fn sink(s: crate::grpc::Sink) -> ChanState {
+        ChanState {
+            buf: VecDeque::new(),
+            cap: 1,
+            closed: false,
+            sink: Some(Rc::new(s)),
+        }
+    }
 }
 
 /// Runtime objects behind opaque builtin types.
@@ -165,6 +187,8 @@ pub enum Native {
     Listener(RefCell<Option<TcpListener>>),
     Conn(RefCell<Option<TcpStream>>),
     Udp(RefCell<Option<UdpSocket>>),
+    /// A gRPC call or a position in a received stream.
+    Grpc(crate::grpc::Obj),
 }
 
 impl std::fmt::Debug for Native {
@@ -181,6 +205,7 @@ impl Native {
             Native::Listener(_) => "<listener>",
             Native::Conn(_) => "<connection>",
             Native::Udp(_) => "<udp socket>",
+            Native::Grpc(_) => "<grpc stream>",
         }
     }
 }
@@ -217,7 +242,7 @@ extern "C" {
 const POLLIN: i16 = 1;
 const POLLOUT: i16 = 4;
 
-fn poll_fd(fd: i32, write: bool, ms: i32) -> bool {
+pub(crate) fn poll_fd(fd: i32, write: bool, ms: i32) -> bool {
     let mut p = PollFd {
         fd,
         events: if write { POLLOUT } else { POLLIN },
@@ -285,27 +310,27 @@ fn check_addr(addr: &str) -> Result<(), String> {
     }
 }
 
-fn native(v: &Value) -> R<&Native> {
+pub(crate) fn native(v: &Value) -> R<&Native> {
     match v {
         Value::Native(n) => Ok(n),
         _ => Err(Ctl::Trap("internal: not a runtime object".into())),
     }
 }
 
-fn opt(v: Option<Value>) -> Value {
+pub(crate) fn opt(v: Option<Value>) -> Value {
     match v {
         Some(x) => Value::data(1, vec![x]),
         None => Value::data(0, vec![]),
     }
 }
 
-fn wrap(n: Native) -> Value {
+pub(crate) fn wrap(n: Native) -> Value {
     Value::Native(Rc::new(n))
 }
 
 impl<'p> Interp<'p> {
     /// Cancel the current task if its deadline passed; unwind if cancelled.
-    fn check_cancel(&self) -> R<()> {
+    pub(crate) fn check_cancel(&self) -> R<()> {
         if let Some(d) = self.task.deadline() {
             if Instant::now() >= d && !self.task.cancelled.load(AO::SeqCst) {
                 self.task.cancel();
@@ -404,6 +429,27 @@ impl<'p> Interp<'p> {
     }
 
     fn spawn(&mut self, thunk: Value, deadline: Option<Instant>) -> Arc<TaskShared> {
+        self.spawn_body(TaskBody::Thunk(thunk), deadline, false)
+    }
+
+    /// Start a task running Rust code (gRPC connections and calls). A
+    /// detached task is not a child of the current one: nothing waits for
+    /// it or cancels it.
+    pub(crate) fn spawn_rust(
+        &mut self,
+        body: Box<dyn for<'x> FnOnce(&mut Interp<'x>)>,
+        deadline: Option<Instant>,
+        detached: bool,
+    ) -> Arc<TaskShared> {
+        self.spawn_body(TaskBody::Rust(body), deadline, detached)
+    }
+
+    fn spawn_body(
+        &mut self,
+        body: TaskBody,
+        deadline: Option<Instant>,
+        detached: bool,
+    ) -> Arc<TaskShared> {
         if cfg!(target_family = "wasm") {
             // No threads. `fwp run` rejects programs with tasks before they
             // start (`driver::wasm_host_unsupported`); this is the last
@@ -414,16 +460,18 @@ impl<'p> Interp<'p> {
         }
         let task = TaskShared::new();
         *task.deadline.lock().unwrap() = deadline;
-        if self.task.cancelled.load(AO::SeqCst) {
-            task.cancelled.store(true, AO::SeqCst);
-        }
-        {
-            let mut st = self.task.st.lock().unwrap();
-            st.0.children.retain(|c| !c.done());
-            st.0.children.push(task.clone());
-        }
-        if let Some(frame) = self.scopes.last_mut() {
-            frame.push(task.clone());
+        if !detached {
+            if self.task.cancelled.load(AO::SeqCst) {
+                task.cancelled.store(true, AO::SeqCst);
+            }
+            {
+                let mut st = self.task.st.lock().unwrap();
+                st.0.children.retain(|c| !c.done());
+                st.0.children.push(task.clone());
+            }
+            if let Some(frame) = self.scopes.last_mut() {
+                frame.push(task.clone());
+            }
         }
         let child = Interp {
             prog: self.prog,
@@ -437,27 +485,33 @@ impl<'p> Interp<'p> {
             root_out: self.root_out,
             scopes: Vec::new(),
             ffi: self.ffi.clone(),
+            grpc: self.grpc.clone(),
         };
         // The baton guarantees exclusive access; the parent outlives its
         // children because every task joins its children before finishing.
         let child: Interp<'static> = unsafe { std::mem::transmute(child) };
-        let job = Baton((child, thunk));
+        let job = Baton((child, body));
         let world = self.world.clone();
         let started = std::thread::Builder::new()
             .stack_size(256 << 20)
             .spawn(move || {
                 crate::interp::set_stack_limit(256 << 20);
                 let job = job;
-                let Baton((mut it, thunk)) = job;
+                let Baton((mut it, body)) = job;
                 world.acquire();
-                let r = it.apply(thunk, vec![Value::unit()]);
-                let result = match r {
-                    Ok(v) => Some(v),
-                    Err(Ctl::Cancelled) => None,
-                    Err(e) => {
-                        let _ = it.out.flush();
-                        let code = crate::interp::report(&Err(e), it.prog);
-                        std::process::exit(code);
+                let result = match body {
+                    TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
+                        Ok(v) => Some(v),
+                        Err(Ctl::Cancelled) => None,
+                        Err(e) => {
+                            let _ = it.out.flush();
+                            let code = crate::interp::report(&Err(e), it.prog);
+                            std::process::exit(code);
+                        }
+                    },
+                    TaskBody::Rust(f) => {
+                        f(&mut it);
+                        None
                     }
                 };
                 it.join_children();
@@ -666,11 +720,21 @@ impl<'p> Interp<'p> {
                         buf: VecDeque::new(),
                         cap,
                         closed: false,
+                        sink: None,
                     })))
                 }
                 "channel.send" => {
                     let ch = a[0].clone();
                     let x = a[1].clone();
+                    if let Native::Chan(c) = native(&ch)? {
+                        let sink = c.borrow().sink.clone();
+                        if let Some(s) = sink {
+                            let closed = c.borrow().closed;
+                            return Ok(Some(Value::bool(
+                                !closed && crate::grpc::sink_send(self, &s, x)?,
+                            )));
+                        }
+                    }
                     let r = self.block_on(None, |it| {
                         let Native::Chan(c) = native(&ch)? else {
                             return Err(Ctl::Trap("internal: not a channel".into()));
@@ -703,7 +767,7 @@ impl<'p> Interp<'p> {
                             it.world.event();
                             return Ok(Some(opt(Some(x))));
                         }
-                        if c.closed {
+                        if c.closed || c.sink.is_some() {
                             return Ok(Some(opt(None)));
                         }
                         Ok(None)

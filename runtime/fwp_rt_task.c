@@ -60,6 +60,12 @@ struct fwp_task {
     V *st;
     size_t st_len, st_cap;
     struct fwp_scope *scope;
+    /* a task running C code (gRPC connections and calls): called with 0,
+     * then again with 1 if the task was cancelled while running it */
+    void (*cfn)(void *arg, int cancelled);
+    void *carg;
+    jmp_buf *trap_jb;           /* traps recovered here (a served call) */
+    void *gctx;                 /* gRPC context, inherited by children */
     /* links */
     fwp_task *next_ready;
     fwp_task *tprev, *tnext;    /* timer list */
@@ -395,9 +401,19 @@ static void fwp_task_main(void) {
     fwp_free_zombie();
     fwp_task *t = fwp_cur;
     if (setjmp(t->base) == 0) {
-        fwp_check_cancel();
-        t->result = fwp_apply1(t->thunk, FWP_UNIT);
-        t->has_result = 1;
+        if (t->cfn) {
+            t->cfn(t->carg, 0);
+        } else {
+            fwp_check_cancel();
+            t->result = fwp_apply1(t->thunk, FWP_UNIT);
+            t->has_result = 1;
+        }
+    } else if (t->cfn) {
+        t->unwinding = 1;
+        fwp_handlers = 0;
+        fwp_state_len = 0;
+        t->trap_jb = 0;
+        t->cfn(t->carg, 1);
     }
     t->unwinding = 1;
     fwp_handlers = 0;
@@ -413,17 +429,26 @@ static void fwp_task_main(void) {
     }
 }
 
-static fwp_task *fwp_spawn(V thunk, int64_t deadline) {
+/* Start a task running `thunk`, or `cfn(carg)` when `cfn` is set. A
+ * detached task is not a child of the current one: nothing waits for it
+ * or cancels it. */
+static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
     fwp_tasks_init();
     fwp_task *t = fwp_task_new();
     t->thunk = thunk;
+    t->cfn = cfn;
+    t->carg = carg;
     t->deadline = deadline;
-    t->parent = fwp_cur;
-    t->next_sibling = fwp_cur->first_child;
-    if (fwp_cur->first_child) fwp_cur->first_child->prev_sibling = t;
-    fwp_cur->first_child = t;
-    if (fwp_cur->cancelled) t->cancelled = 1;
-    fwp_scope *s = fwp_cur->scope;
+    t->gctx = fwp_cur->gctx;
+    fwp_scope *s = 0;
+    if (!detached) {
+        t->parent = fwp_cur;
+        t->next_sibling = fwp_cur->first_child;
+        if (fwp_cur->first_child) fwp_cur->first_child->prev_sibling = t;
+        fwp_cur->first_child = t;
+        if (fwp_cur->cancelled) t->cancelled = 1;
+        s = fwp_cur->scope;
+    }
     if (s) {
         if (s->n == s->cap) {
             s->cap = s->cap ? s->cap * 2 : 8;
@@ -448,6 +473,8 @@ static fwp_task *fwp_spawn(V thunk, int64_t deadline) {
     fwp_make_ready(t);
     return t;
 }
+
+static fwp_task *fwp_spawn(V thunk, int64_t deadline) { return fwp_spawn_task(thunk, 0, 0, deadline, 0); }
 
 static void fwp_root_cancelled(void) {
     fwp_join_children();
@@ -576,6 +603,10 @@ typedef struct {
     size_t cap, size, head, len;
     int closed;
     fwp_wl recvq, sendq;
+    /* a channel whose values go to a gRPC stream (a served function's
+     * `Channel[T]` parameter): 0 when the stream is closed */
+    int (*sink)(void *ctx, V x);
+    void *sink_ctx;
 } fwp_chan;
 
 static V fwp_p_channel_make(V capv) {
@@ -604,6 +635,7 @@ static void fwp_chan_grow(fwp_chan *c) {
 static V fwp_p_channel_send(V ch, V x) {
     fwp_tasks_init();
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
+    if (c->sink) return !c->closed && c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;
     for (;;) {
         if (c->closed) return FWP_FALSE;
         if (c->len < c->cap) {
@@ -630,7 +662,7 @@ static V fwp_chan_recv(V ch, int64_t at) {
             fwp_wake_all(&c->sendq);
             return fwp_some(x);
         }
-        if (c->closed) return FWP_NONE;
+        if (c->closed || c->sink) return FWP_NONE;
         fwp_check_cancel();
         if (at && fwp_now_ns() >= at) return FWP_NONE;
         fwp_park(&c->recvq, at);

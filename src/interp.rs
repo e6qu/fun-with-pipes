@@ -66,6 +66,9 @@ pub struct Interp<'p> {
     pub(crate) scopes: Vec<Vec<std::sync::Arc<crate::sched::TaskShared>>>,
     /// The foreign function shim, loaded on the first foreign C call.
     pub(crate) ffi: Rc<RefCell<Option<Rc<crate::ffi_interp::FfiLib>>>>,
+    /// The gRPC context of the task: outgoing metadata, call deadline and
+    /// the call being served.
+    pub(crate) grpc: crate::grpc::TaskCtx,
 }
 
 impl<'p> Interp<'p> {
@@ -92,6 +95,7 @@ impl<'p> Interp<'p> {
             root_out,
             scopes: Vec::new(),
             ffi: Rc::new(RefCell::new(None)),
+            grpc: Default::default(),
         }
     }
 
@@ -128,7 +132,7 @@ impl<'p> Interp<'p> {
             Body::Prim(sym) => self.prim(id, sym, args)?,
             Body::Ctor(tag) => Value::data(*tag, args),
             Body::ForeignC { .. } => self.call_foreign(id, args)?,
-            Body::Remote(r) => crate::services::call_remote(self, id, r, args)?,
+            Body::Remote(r) => crate::grpc::call_remote(self, id, r, args)?,
         };
         if f.arity == 0 {
             self.cafs.borrow_mut()[id] = Some(v.clone());
@@ -730,6 +734,9 @@ impl<'p> Interp<'p> {
                     Some(r) => r,
                     None => trap(format!("primitive `{}` is not implemented", sym)),
                 }
+            }
+            _ if sym.starts_with("grpc.") || sym.starts_with("pb.") => {
+                crate::grpc::prim(self, id, sym, &mut a)
             }
             _ if crate::sys::handles(sym) => crate::sys::prim(sym, &a, &mut *self.out),
             "cli.parse" => {

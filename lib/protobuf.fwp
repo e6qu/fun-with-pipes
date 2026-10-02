@@ -1,0 +1,448 @@
+# The protobuf wire format, for code generated from `.proto` files with
+# `fwp proto --import` (docs/grpc.md). A message is written from a list of
+# field writers (`pb.encode`) and read into a record with `make` and field
+# readers (`pb.get`); a `PbCodec` describes one protobuf type.
+#
+# (Functions exported over gRPC with `fwp build --grpc` or `--service`
+# need none of this: their messages are derived from their types.)
+
+# a field as it is on the wire: its number, its wire type (0 varint,
+# 1 64-bit, 2 length-delimited, 5 32-bit), and its bits or bytes
+PbField = { bits: U64, data: Bytes, num: I64, wire: I64 }
+
+# how values of one protobuf type are written and read
+PbCodec[T] = {
+    default: T,
+    from-wire: (U64, Bytes) -> T ! {Error[GrpcError]},
+    is-default: T -> Bool,
+    to-wire: T -> (U64, Bytes),
+    wire: I64,
+}
+
+# the fields of a message; `None` when it is malformed
+foreign "fwp" pb.parse : Bytes -> Option[List[PbField]]
+# a message of fields
+foreign "fwp" pb.write : List[PbField] -> Bytes
+# an integer as another integer type, truncating or sign-extending as a
+# cast does (int32 values travel as 64-bit varints)
+foreign "fwp" pb.cast : a -> b where Integer[a], Integer[b]
+# zigzag encoding of sint32 and sint64
+foreign "fwp" pb.zigzag : I64 -> U64
+foreign "fwp" pb.unzigzag : U64 -> I64
+foreign "fwp" pb.f32-bits : F32 -> U64
+foreign "fwp" pb.f32-from-bits : U64 -> F32
+foreign "fwp" pb.f64-bits : F64 -> U64
+foreign "fwp" pb.f64-from-bits : U64 -> F64
+# packed repeated numbers of a wire type; `None` when malformed
+foreign "fwp" pb.unpack : I64 -> Bytes -> Option[List[U64]]
+foreign "fwp" pb.pack : I64 -> List[U64] -> Bytes
+
+pb._none : Bytes
+pb._none = bytes.from-list []
+
+pb._bits : U64 -> (U64, Bytes)
+pb._bits = make { 0 = id, 1 = const pb._none }
+
+pb._len : Bytes -> (U64, Bytes)
+pb._len = make { 0 = const 0, 1 = id }
+
+pb._malformed : GrpcError
+pb._malformed = GrpcError { code = 13, message = "malformed protobuf message" }
+
+# ------------------------------------------------------------------ codecs
+
+pb.int32 : PbCodec[I32]
+pb.int32 = PbCodec {
+    wire = 0,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.int64 : PbCodec[I64]
+pb.int64 = PbCodec {
+    wire = 0,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.uint32 : PbCodec[U32]
+pb.uint32 = PbCodec {
+    wire = 0,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.uint64 : PbCodec[U64]
+pb.uint64 = PbCodec {
+    wire = 0,
+    to-wire = pb._bits,
+    from-wire = .0,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.sint32 : PbCodec[I32]
+pb.sint32 = PbCodec {
+    wire = 0,
+    to-wire = pb.cast | pb.zigzag | pb._bits,
+    from-wire = .0 | pb.unzigzag | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.sint64 : PbCodec[I64]
+pb.sint64 = PbCodec {
+    wire = 0,
+    to-wire = pb.zigzag | pb._bits,
+    from-wire = .0 | pb.unzigzag,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.fixed32 : PbCodec[U32]
+pb.fixed32 = PbCodec {
+    wire = 5,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.fixed64 : PbCodec[U64]
+pb.fixed64 = PbCodec {
+    wire = 1,
+    to-wire = pb._bits,
+    from-wire = .0,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.sfixed32 : PbCodec[I32]
+pb.sfixed32 = PbCodec {
+    wire = 5,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.sfixed64 : PbCodec[I64]
+pb.sfixed64 = PbCodec {
+    wire = 1,
+    to-wire = pb.cast | pb._bits,
+    from-wire = .0 | pb.cast,
+    is-default = eq 0,
+    default = 0,
+}
+
+pb.float : PbCodec[F32]
+pb.float = PbCodec {
+    wire = 5,
+    to-wire = pb.f32-bits | pb._bits,
+    from-wire = .0 | pb.f32-from-bits,
+    is-default = pb.f32-bits | eq 0,
+    default = 0.0,
+}
+
+pb.double : PbCodec[F64]
+pb.double = PbCodec {
+    wire = 1,
+    to-wire = pb.f64-bits | pb._bits,
+    from-wire = .0 | pb.f64-from-bits,
+    is-default = pb.f64-bits | eq 0,
+    default = 0.0,
+}
+
+pb.bool : PbCodec[Bool]
+pb.bool = PbCodec {
+    wire = 0,
+    to-wire = if id (const 1) (const 0) | pb._bits,
+    from-wire = .0 | ne 0,
+    is-default = not,
+    default = False,
+}
+
+pb.string : PbCodec[String]
+pb.string = PbCodec {
+    wire = 2,
+    to-wire = string.to-bytes | pb._len,
+    from-wire =
+        .1
+        | string.from-bytes
+        | or-fail GrpcError {
+            code = 13,
+            message = "invalid UTF-8 in a string field",
+        },
+    is-default = string.is-empty,
+    default = "",
+}
+
+pb.bytes : PbCodec[Bytes]
+pb.bytes = PbCodec {
+    wire = 2,
+    to-wire = pb._len,
+    from-wire = .1,
+    is-default = bytes.length | eq 0,
+    default = pb._none,
+}
+
+# an enum from its conversions to and from numbers, and its default (the
+# value numbered 0); unknown numbers read as the default
+pb.enum : (I64 -> a ! {Error[GrpcError]}) -> (a -> I64) -> a -> PbCodec[a] where Eq[a], Dup[a]
+pb.enum = curry3 (make PbCodec {
+    wire = const 0,
+    to-wire = .1 | flip compose (pb.cast | pb._bits),
+    from-wire = .0 | compose (.0 | pb.cast),
+    is-default = .2 | eq,
+    default = .2,
+})
+
+# a message type from its encoder, decoder and default value
+pb.message : (a -> Bytes) -> (Bytes -> a ! {Error[GrpcError]}) -> a -> PbCodec[a] where Dup[a]
+pb.message = curry3 (make PbCodec {
+    wire = const 2,
+    to-wire = .0 | flip compose pb._len,
+    from-wire = .1 | compose .1,
+    is-default = const (const False),
+    default = .2,
+})
+
+# `google.protobuf.Empty` (and any message without fields) as `()`
+pb.empty : PbCodec[()]
+pb.empty = PbCodec {
+    wire = 2,
+    to-wire = const (0, pb._none),
+    from-wire = const (),
+    is-default = const False,
+    default = (),
+}
+
+# the entries of a map field: messages of a key (1) and a value (2)
+pb.entry : PbCodec[k] -> PbCodec[v] -> PbCodec[(k, v)] where Dup[k], Dup[v]
+pb.entry = curry (make PbCodec {
+    wire = const 2,
+    to-wire = pb._entry-encode | flip compose pb._len,
+    from-wire = pb._entry-decode | compose (.1 | pb.decode),
+    is-default = const (const False),
+    default = make { 0 = .0 | .default, 1 = .1 | .default },
+})
+
+pb._entry-encode : (PbCodec[k], PbCodec[v]) -> (k, v) -> Bytes where Dup[k], Dup[v]
+pb._entry-encode = curry (fork
+        append
+        (fork (pb.field 2) (.0 | .1) (.1 | .1))
+        (fork (pb.field 1) (.0 | .0) (.1 | .0))
+    | pb.write)
+
+pb._entry-decode : (PbCodec[k], PbCodec[v]) -> List[PbField] -> (k, v) ! {Error[GrpcError]} where Dup[k], Dup[v]
+pb._entry-decode = curry (make {
+    0 = fork (pb.get 1) (.0 | .0) .1,
+    1 = fork (pb.get 2) (.0 | .1) .1,
+})
+
+# ------------------------------------------------------------------ writing
+
+# (number, codec, value) as a field
+pb._one : (I64, PbCodec[a], a) -> PbField where Dup[a]
+pb._one = make PbField {
+    bits = fork apply .2 (.1 | .to-wire) | .0,
+    data = fork apply .2 (.1 | .to-wire) | .1,
+    num = .0,
+    wire = .1 | .wire,
+}
+
+# a singular field, written unless it holds the default value
+pb.field : I64 -> PbCodec[a] -> a -> List[PbField] where Dup[a]
+pb.field = curry3 (if
+    (fork apply .2 (.1 | .is-default))
+    (const Nil)
+    (pb._one | singleton))
+
+# a field written even when it holds the default value (a member of a
+# `oneof`)
+pb.always : I64 -> PbCodec[a] -> a -> List[PbField] where Dup[a]
+pb.always = curry3 (pb._one | singleton)
+
+# an `optional` field, written when present
+pb.optional : I64 -> PbCodec[a] -> Option[a] -> List[PbField] where Dup[a]
+pb.optional =
+    curry3 (fork option.map (fork (curry3 pb._one) .0 .1) .2 | option.to-list)
+
+# a `repeated` field; numbers are packed
+pb.repeated : I64 -> PbCodec[a] -> List[a] -> List[PbField] where Dup[a]
+pb.repeated = curry3 (if (.1 | .wire | eq 2) pb._each pb._packed)
+
+pb._each : (I64, PbCodec[a], List[a]) -> List[PbField] where Dup[a]
+pb._each = fork map (fork (curry3 pb._one) .0 .1) .2
+
+pb._packed : (I64, PbCodec[a], List[a]) -> List[PbField] where Dup[a]
+pb._packed =
+    if
+        (.2 | is-empty)
+        (const Nil)
+        (make PbField {
+            bits = const 0,
+            data =
+                fork
+                    pb.pack
+                    (.1 | .wire)
+                    (fork map (.1 | .to-wire | flip compose .0) .2),
+            num = .0,
+            wire = const 2,
+        } | singleton)
+
+# a `map<K, V>` field
+pb.map : I64 -> PbCodec[k] -> PbCodec[v] -> Map[k, v] -> List[PbField] where Dup[k], Dup[v]
+pb.map =
+    curry3 (fork pb.repeated .0 (fork pb.entry .1 .2) | compose map.to-list)
+
+# a field holding a value of a `oneof`, when it is set
+pb.oneof : (a -> List[PbField]) -> Option[a] -> List[PbField]
+pb.oneof = option.map | flip compose (option.unwrap-or Nil)
+
+# a message from the writers of its fields
+pb.encode : List[a -> List[PbField]] -> a -> Bytes
+pb.encode = flip (apply | list.flat-map | flip compose pb.write)
+
+# ------------------------------------------------------------------ reading
+
+# the fields of a message
+pb.decode : Bytes -> List[PbField] ! {Error[GrpcError]}
+pb.decode = pb.parse | or-fail pb._malformed
+
+# the last field with a number (in protobuf, the last one wins)
+pb._last : I64 -> List[PbField] -> Option[PbField]
+pb._last = eq | compose .num | filter | flip compose last
+
+pb._value : PbCodec[a] -> PbField -> a ! {Error[GrpcError]}
+pb._value =
+    curry (fork apply (.1 | make { 0 = .bits, 1 = .data }) (.0 | .from-wire))
+
+# a singular field: its default when absent
+pb.get : I64 -> PbCodec[a] -> List[PbField] -> a ! {Error[GrpcError]} where Dup[a]
+pb.get = curry3 (fork
+    option.unwrap-or
+    (.1 | .default)
+    (fork option.map (.1 | pb._value) (fork pb._last .0 .2)))
+
+# an `optional` field (or a member of a `oneof`)
+pb.get-optional : I64 -> PbCodec[a] -> List[PbField] -> Option[a] ! {Error[GrpcError]} where Dup[a]
+pb.get-optional =
+    curry3 (fork option.map (.1 | pb._value) (fork pb._last .0 .2))
+
+# a `repeated` field, packed or not
+pb.get-repeated : I64 -> PbCodec[a] -> List[PbField] -> List[a] ! {Error[GrpcError]} where Dup[a]
+pb.get-repeated = curry3 (fork
+    list.flat-map
+    (.1 | pb._values)
+    (fork filter (.0 | eq | compose .num) .2))
+
+pb._values : PbCodec[a] -> PbField -> List[a] ! {Error[GrpcError]} where Dup[a]
+pb._values = curry (if
+    (fork and (.1 | .wire | eq 2) (.0 | .wire | ne 2))
+    pb._unpacked
+    (uncurry pb._value | singleton))
+
+pb._unpacked : (PbCodec[a], PbField) -> List[a] ! {Error[GrpcError]} where Dup[a]
+pb._unpacked =
+    fork
+        map
+        (.0 | .from-wire | compose pb._bits)
+        (fork pb.unpack (.0 | .wire) (.1 | .data) | or-fail pb._malformed)
+
+# a `map<K, V>` field
+pb.get-map : I64 -> PbCodec[k] -> PbCodec[v] -> List[PbField] -> Map[k, v] ! {Error[GrpcError]} where Ord[k], Dup[k], Dup[v]
+pb.get-map = curry3 (fork pb.get-repeated .0 (fork pb.entry .1 .2)
+    | flip compose map.from-list)
+
+# the member of a `oneof` that is set, from readers of each member
+pb.first-of : List[x -> Option[a] ! e] -> x -> Option[a] ! e
+pb.first-of = flip (apply | filter-map | flip compose head)
+
+test "pb varints and zigzag" =
+    [
+        pb.field 1 pb.int32 -1i32,
+        pb.field 2 pb.sint64 -3,
+        pb.field 3 pb.uint64 300,
+    ]
+    | flatten
+    | pb.write
+    | bytes.to-list
+    | eq [
+        8u8,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        1,
+        16,
+        5,
+        24,
+        172,
+        2,
+    ]
+
+test "pb round trip" =
+    [
+        pb.field 1 pb.string "héllo",
+        pb.repeated 2 pb.sint32 [1i32, -2, 3],
+        pb.field 3 pb.double 2.5,
+        pb.optional 4 pb.float (Some 0.0f32),
+        pb.field 5 pb.bool False,
+    ]
+    | flatten
+    | pb.write
+    | attempt (pb.decode
+        | make {
+            0 = pb.get 1 pb.string,
+            1 = pb.get-repeated 2 pb.sint32,
+            2 = pb.get 3 pb.double,
+            3 = pb.get-optional 4 pb.float,
+            4 = pb.get 5 pb.bool,
+            5 = pb.get-optional 6 pb.int64,
+        })
+    | eq (Ok ("héllo", [1i32, -2, 3], 2.5, Some 0.0f32, False, None))
+
+test "pb maps and messages" =
+    [
+        pb.map 1 pb.string pb.int64 (map.from-list [("a", 1), ("b", 0)]),
+        pb.field
+            2
+            (pb.message
+                (pb.encode [pb.field 1 pb.int64])
+                (pb.decode | pb.get 1 pb.int64)
+                0)
+            7,
+    ]
+    | flatten
+    | pb.write
+    | attempt (pb.decode
+        | make {
+            0 = pb.get-map 1 pb.string pb.int64,
+            1 = pb.get 2 (pb.message
+                (pb.encode [pb.field 1 pb.int64])
+                (pb.decode | pb.get 1 pb.int64)
+                0),
+        })
+    | eq (Ok (map.from-list [("a", 1), ("b", 0)], 7))
+
+test "pb unpacked repeated numbers are read" =
+    [pb.field 1 pb.int32 4i32, pb.field 1 pb.int32 5i32]
+    | flatten
+    | pb.write
+    | attempt (pb.decode | pb.get-repeated 1 pb.int32)
+    | eq (Ok [4i32, 5])
+
+test "pb malformed messages fail" =
+    [1u8, 2] | bytes.from-list | attempt pb.decode | result.is-ok | not

@@ -1,0 +1,63 @@
+# A service for tests/grpc.rs: every kind of call, errors, deadlines and
+# metadata.
+#
+# grpc: test.Greeter
+
+HelloRequest = { name: String, times: I64 }
+
+HelloReply = { message: String }
+
+# a greeting
+export say-hello : HelloRequest -> HelloReply
+say-hello = make HelloReply { message = .name | flip concat "hello, " }
+
+# 1, 2, ..., n, lazily
+export count : I64 -> Iterator[I64]
+count = flip iter.take (iter.count-from 1)
+
+# "tick 1" ... "tick n", sent to a channel
+export ticks : I64 -> Channel[String] -> () ! {Async}
+ticks = curry (fork
+    each
+    (.1
+        | channel.send
+        | compose (show | flip concat "tick ")
+        | flip compose ignore)
+    (.0 | add 1 | range 1))
+
+# the sum of a stream of numbers
+export total : Iterator[I64] -> I64
+total = iter.to-list | sum
+
+# each string in upper case, as it arrives
+export shout : Iterator[String] -> Iterator[String]
+shout = iter.map upper
+
+# a status: NOT_FOUND for "ghost"
+# grpc: Find
+export lookup : String -> HelloReply ! {Error[GrpcError]}
+lookup =
+    if
+        (eq "ghost")
+        (grpc.fail grpc.not-found)
+        (make HelloReply { message = id })
+
+# sleep for n milliseconds
+export slow : I64 -> I64 ! {Async}
+slow = tap (make Duration { nanos = mul 1000000 } | task.sleep)
+
+# the caller's x-user metadata
+export whoami : () -> String ! {Network}
+whoami = const "x-user" | grpc.header | option.unwrap-or "nobody"
+
+# division by zero traps
+export boom : I64 -> I64
+boom = div 0
+
+# an error in the response
+export divide : I64 -> I64 -> I64 ! {Error[String]}
+divide = curry (if (.1 | eq 0) (const "division by zero" | fail) (uncurry div))
+
+# sleep for n milliseconds; deadlines are statuses
+export nap : I64 -> I64 ! {Async, Error[GrpcError]}
+nap = slow

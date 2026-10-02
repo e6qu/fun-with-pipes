@@ -182,21 +182,50 @@ pub struct RemoteFn {
     pub module: String,
     /// The function's name within the module.
     pub method: String,
+    /// The gRPC path (`/fwp.Inventory/Item`, or a `# grpc:` annotation's).
+    pub path: String,
     /// The `Error[E]` type of the function, if it has one.
     pub error: Option<MT>,
     /// Address used when `FWP_SERVICE_<MODULE>` is not set.
     pub default_addr: String,
+    /// `std::grpc._iter` at the element type of a streamed result
+    /// (`Iterator[T]`), which turns received messages into an iterator.
+    pub iter_fn: Option<FuncId>,
 }
 
 /// A module served as a gRPC service.
 #[derive(Clone, Debug, Default)]
 pub struct ServiceDef {
     pub module: String,
-    /// Exported functions: name, function and `Error[E]` type.
-    pub methods: Vec<(String, FuncId, Option<MT>)>,
+    /// Exported functions.
+    pub methods: Vec<ServedFn>,
     /// Address to listen on when neither `--listen` nor
     /// `FWP_SERVICE_<MODULE>` is given.
     pub default_addr: String,
+    /// The root file's functions, served as module `module` (`--grpc`).
+    pub root: bool,
+}
+
+impl ServiceDef {
+    /// The fingerprint of a served function, as its callers compute it.
+    pub fn fingerprint(&self, prog: &Program, f: &ServedFn) -> String {
+        let main_as = self.root.then_some(self.module.as_str());
+        crate::protobuf::fingerprint_as(prog, &prog.funcs[f.func].ty, f.error.as_ref(), main_as)
+    }
+}
+
+/// An exported function of a served module.
+#[derive(Clone, Debug)]
+pub struct ServedFn {
+    pub name: String,
+    pub func: FuncId,
+    /// The `Error[E]` type of the function, if it has one.
+    pub error: Option<MT>,
+    /// The gRPC path (`/fwp.Inventory/Item`, or a `# grpc:` annotation's).
+    pub path: String,
+    /// `std::grpc._iter` at the element type of a streamed parameter
+    /// (`Iterator[T]`), which turns received messages into an iterator.
+    pub iter_fn: Option<FuncId>,
 }
 
 #[derive(Clone, Debug)]

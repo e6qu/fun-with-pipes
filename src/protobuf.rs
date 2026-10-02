@@ -25,7 +25,10 @@
 //! list of lists, an option in a list) is wrapped in a message with one
 //! field, `value = 1`. A function's arguments form its request message
 //! (`arg1 = 1`, ...); its result is `value = 1` of the response, which is a
-//! `oneof` of `value = 1` and `error = 2` when the function can fail.
+//! `oneof` of `value = 1` and `error = 2` when the function can fail. A
+//! single parameter of a nominal record type is the request message
+//! itself, and so is a result of such a type when the function cannot
+//! fail (or fails with `GrpcError`, a status).
 //!
 //! The same schema is flattened into an array of integers for the C
 //! runtime (`runtime/fwp_rt_h2.c`), which implements the same transcoder.
@@ -178,10 +181,39 @@ pub fn env_var(module: &str) -> String {
 /// A hex fingerprint of a function's interface (its type and error type),
 /// sent by fwp clients in the `fwp-fingerprint` header.
 pub fn fingerprint(prog: &Program, ty: &MT, error: Option<&MT>) -> String {
+    fingerprint_as(prog, ty, error, None)
+}
+
+/// The fingerprint of a function of the root file served on its own
+/// (`--grpc`), whose types are those of module `main_as` to its callers.
+pub fn fingerprint_as(
+    prog: &Program,
+    ty: &MT,
+    error: Option<&MT>,
+    main_as: Option<&str>,
+) -> String {
     let mut canon = crate::proto::canonical_type(ty, prog);
     if let Some(e) = error {
         canon.push('!');
         canon.push_str(&crate::proto::canonical_type(e, prog));
+    }
+    if let Some(m) = main_as {
+        let name_char = |c: char| c.is_alphanumeric() || c == '.' || c == '_' || c == '-';
+        let mut out = String::new();
+        let mut rest = canon.as_str();
+        while let Some(i) = rest.find("main::") {
+            let before = rest[..i].chars().last();
+            out.push_str(&rest[..i]);
+            if before.is_none_or(|c| !name_char(c)) {
+                out.push_str(m);
+                out.push_str("::");
+            } else {
+                out.push_str("main::");
+            }
+            rest = &rest[i + "main::".len()..];
+        }
+        out.push_str(rest);
+        canon = out;
     }
     crate::proto::fingerprint(&canon)
         .iter()
@@ -433,19 +465,38 @@ impl Schema {
         error: Option<&MT>,
     ) -> Result<MethodSchema, String> {
         let m = method_name(function);
-        let req_name = self.unique(format!("{}Request", m));
-        let resp_name = self.unique(format!("{}Response", m));
-        let mut fields = Vec::new();
-        for (i, p) in params.iter().enumerate() {
-            let n = self.field(prog, p)?;
-            fields.push(((i + 1) as u32, format!("arg{}", i + 1), n));
+        // a function of one record, or returning one, uses its message
+        let message = |mt: &MT| {
+            matches!(mt, MT::Con(..)) && matches!(prog.shapes.get(mt), Some(TypeShape::Record(_)))
+        };
+        let request = match params {
+            [p] if message(p) => self.field(prog, p)?,
+            _ => {
+                let req_name = self.unique(format!("{}Request", m));
+                let mut fields = Vec::new();
+                for (i, p) in params.iter().enumerate() {
+                    // `()` is encoded as nothing: no field
+                    if *p == MT::unit() {
+                        continue;
+                    }
+                    let n = self.field(prog, p)?;
+                    fields.push(((i + 1) as u32, format!("arg{}", i + 1), n));
+                }
+                self.push(Node::Msg(Msg {
+                    name: req_name,
+                    fields,
+                    map_entry: false,
+                    parent: None,
+                }))
+            }
+        };
+        if error.is_none() && message(result) {
+            return Ok(MethodSchema {
+                request,
+                response: self.field(prog, result)?,
+            });
         }
-        let request = self.push(Node::Msg(Msg {
-            name: req_name,
-            fields,
-            map_entry: false,
-            parent: None,
-        }));
+        let resp_name = self.unique(format!("{}Response", m));
         let response = match error {
             None => {
                 let n = self.field(prog, result)?;
@@ -831,7 +882,7 @@ impl Schema {
 
     // ---------------------------------------------------------- .proto text
 
-    fn type_ref(&self, id: NodeId) -> String {
+    pub fn type_ref(&self, id: NodeId) -> String {
         match &self.nodes[id] {
             Node::Bool => "bool".into(),
             Node::SInt(8) => "sint64".into(),
@@ -887,7 +938,7 @@ impl Schema {
     }
 
     /// Message nodes reachable from `roots`, in creation order.
-    fn reachable(&self, roots: &[NodeId]) -> Vec<bool> {
+    pub fn reachable(&self, roots: &[NodeId]) -> Vec<bool> {
         let mut seen = vec![false; self.nodes.len()];
         let mut stack: Vec<NodeId> = roots.to_vec();
         while let Some(id) = stack.pop() {
@@ -946,50 +997,27 @@ impl Schema {
     }
 }
 
-/// A service's methods for `.proto` generation: function name, request
-/// and response.
-pub struct ServiceText {
-    pub module: String,
-    pub methods: Vec<(String, MethodSchema)>,
-}
-
-/// The `.proto` file of a set of services sharing a schema.
-pub fn proto_file(schema: &Schema, services: &[ServiceText], source: &str) -> String {
-    let mut out = format!(
-        "// Generated by `fwp proto` from {}.\n// fwp services: gRPC over HTTP/2; see docs/services.md for the mapping.\n\nsyntax = \"proto3\";\n\npackage {};\n",
-        source, PACKAGE
-    );
-    let mut roots = Vec::new();
-    for s in services {
-        out.push_str(&format!("\nservice {} {{\n", service_name(&s.module)));
-        for (f, m) in &s.methods {
-            out.push_str(&format!(
-                "  rpc {}({}) returns ({});\n",
-                method_name(f),
-                schema.type_ref(m.request),
-                schema.type_ref(m.response)
-            ));
-            roots.push(m.request);
-            roots.push(m.response);
+impl Schema {
+    /// The message definitions reachable from `roots`, as `.proto` text.
+    pub fn messages_text(&self, roots: &[NodeId]) -> String {
+        let mut out = String::new();
+        let seen = self.reachable(roots);
+        for (id, n) in self.nodes.iter().enumerate() {
+            if !seen[id] {
+                continue;
+            }
+            let top = match n {
+                Node::Msg(m) => m.parent.is_none() && !(m.map_entry && is_map_entry_used(self, id)),
+                Node::OneOf { .. } => true,
+                _ => false,
+            };
+            if top {
+                out.push('\n');
+                self.message_text(id, 0, &mut out);
+            }
         }
-        out.push_str("}\n");
+        out
     }
-    let seen = schema.reachable(&roots);
-    for (id, n) in schema.nodes.iter().enumerate() {
-        if !seen[id] {
-            continue;
-        }
-        let top = match n {
-            Node::Msg(m) => m.parent.is_none() && !(m.map_entry && is_map_entry_used(schema, id)),
-            Node::OneOf { .. } => true,
-            _ => false,
-        };
-        if top {
-            out.push('\n');
-            schema.message_text(id, 0, &mut out);
-        }
-    }
-    out
 }
 
 /// Whether every list of this entry message is written as `map<K, V>`.
