@@ -1,0 +1,21 @@
+Point = (I64, I64)
+Pair[A] = (A, A)
+
+origin : Point
+origin = (0, 0)
+
+swap-pair : Pair[a] -> Pair[a]
+swap-pair = swap
+
+classify = match
+    (0, 0) -> "origin"
+    (0, _) -> const "y-axis"
+    (_, 0) -> const "x-axis"
+    _ -> const "plane"
+
+Json =
+    | Null
+    | Num I64
+    | Text String
+
+nothing = Json.Null

@@ -1,0 +1,3 @@
+check/err_not_rec.fwp:1:1: error: `countdown` refers to itself; recursive bindings must be declared with `rec`
+1 | countdown = match
+  | ^^^^^^^^^

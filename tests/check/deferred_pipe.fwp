@@ -1,0 +1,5 @@
+# `spin` has an unknown type when `spin | id` is first seen, so the pipe
+# mode is decided after the definition is unified with its use.
+rec spin = match
+    0 -> 0
+    _ -> spin | id

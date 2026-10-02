@@ -1,0 +1,97 @@
+# fwp standard prelude.
+#
+# Argument order convention: the "subject" of an operation comes last, so
+# that `x | sub 1` means x - 1 and `x | lt 5` means x < 5.
+
+# ---------------------------------------------------------------- primitives
+I8 = builtin
+I16 = builtin
+I32 = builtin
+I64 = builtin
+I128 = builtin
+U8 = builtin
+U16 = builtin
+U32 = builtin
+U64 = builtin
+U128 = builtin
+ISize = builtin
+USize = builtin
+F16 = builtin
+BF16 = builtin
+F32 = builtin
+F64 = builtin
+F128 = builtin
+String = builtin
+Bytes = builtin
+Trit = builtin
+TInt[N] = builtin
+Array[T] = builtin
+Map[K, V] = builtin
+Set[T] = builtin
+Syntax = builtin
+TypeInfo = builtin
+
+Duration = { nanos: I64 }
+
+# ------------------------------------------------------------- core data
+Bool =
+    | False
+    | True
+
+Ordering =
+    | Less
+    | Equal
+    | Greater
+
+Option[T] =
+    | None
+    | Some T
+
+Result[T, E] =
+    | Ok T
+    | Err E
+
+List[T] =
+    | Nil
+    | Cons T List[T]
+
+# ------------------------------------------------------------- combinators
+foreign "fwp" id : a -> a
+foreign "fwp" const : a -> b -> a
+foreign "fwp" flip : (a -> b -> c ! e) -> b -> a -> c ! e
+foreign "fwp" compose : (a -> b ! e) -> (b -> c ! e) -> a -> c ! e
+foreign "fwp" apply : a -> (a -> b ! e) -> b ! e
+foreign "fwp" fork : (b -> c -> d ! e) -> (a -> b ! e) -> (a -> c ! e) -> a -> d ! e
+foreign "fwp" both : (a -> b ! e) -> (a -> c ! e) -> a -> (b, c) ! e
+foreign "fwp" dup : a -> (a, a)
+foreign "fwp" on : (b -> b -> c ! e) -> (a -> b ! e) -> a -> a -> c ! e
+foreign "fwp" uncurry : (a -> b -> c ! e) -> (a, b) -> c ! e
+foreign "fwp" curry : ((a, b) -> c ! e) -> a -> b -> c ! e
+foreign "fwp" swap : (a, b) -> (b, a)
+foreign "fwp" first : (a -> c ! e) -> (a, b) -> (c, b) ! e
+foreign "fwp" second : (b -> c ! e) -> (a, b) -> (a, c) ! e
+foreign "fwp" if : (a -> Bool ! e) -> (a -> b ! e) -> (a -> b ! e) -> a -> b ! e
+
+# ------------------------------------------------------------- arithmetic
+foreign "fwp" add : I64 -> I64 -> I64
+foreign "fwp" sub : I64 -> I64 -> I64
+foreign "fwp" mul : I64 -> I64 -> I64
+foreign "fwp" div : I64 -> I64 -> I64
+foreign "fwp" eq : a -> a -> Bool
+foreign "fwp" lt : I64 -> I64 -> Bool
+foreign "fwp" not : Bool -> Bool
+
+# ------------------------------------------------------------- lists
+foreign "fwp" map : (a -> b ! e) -> List[a] -> List[b] ! e
+foreign "fwp" filter : (a -> Bool ! e) -> List[a] -> List[a] ! e
+foreign "fwp" fold : (b -> a -> b ! e) -> b -> List[a] -> b ! e
+foreign "fwp" sort : List[a] -> List[a]
+foreign "fwp" length : List[a] -> I64
+
+# ------------------------------------------------------------- strings, io
+foreign "fwp" trim : String -> String
+foreign "fwp" lower : String -> String
+foreign "fwp" upper : String -> String
+foreign "fwp" concat : String -> String -> String
+foreign "fwp" show : a -> String
+foreign "fwp" print : String -> () ! {IO}

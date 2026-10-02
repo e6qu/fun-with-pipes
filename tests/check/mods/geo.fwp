@@ -1,0 +1,10 @@
+# A helper module used by modules.fwp.
+Shape =
+    | Circle I64
+    | Square I64
+
+area = match
+    Circle -> fork mul id (mul 3)
+    Square -> fork mul id id
+
+unit-square = Square 1

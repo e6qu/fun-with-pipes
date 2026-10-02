@@ -1,0 +1,3 @@
+check/err_ctor_arity.fwp:2:5: error: constructor `Some` has 1 field(s), but the pattern gives 2
+2 |     Some _ _ -> const 1
+  |     ^^^^

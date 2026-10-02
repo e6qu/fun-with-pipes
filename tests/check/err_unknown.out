@@ -1,0 +1,3 @@
+check/err_unknown.fwp:1:5: error: unknown name `mapp`
+1 | f = mapp inc
+  |     ^^^^

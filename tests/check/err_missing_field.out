@@ -1,0 +1,4 @@
+check/err_missing_field.fwp:2:31: error: type mismatch in pipe input: expected `{age: a | r}`, found `User`
+2 | get-age = User { name = "x" } | .age
+  |                               ^
+  note: field `age` is missing on one side

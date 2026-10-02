@@ -1,0 +1,18 @@
+inc : I64 -> I64
+double : I64 -> I64
+normalize : String -> String
+users : List[User]
+active-names : List[String]
+get-name : {name: a | r} -> a
+older : {age: I64 | r} -> {age: I64 | r}
+older-users : List[{active: Bool, age: I64, name: String}]
+pair : (I64, String)
+second-of : {1: a | r} -> a
+city : {address: {city: a | r} | r1} -> a
+factorial : I64 -> I64
+describe : Option[a] -> String
+first-two : List[a] -> Bool
+twice : (a -> a ! e) -> a -> a ! e
+inc-twice : I64 -> I64
+shout : String -> String
+main : ()

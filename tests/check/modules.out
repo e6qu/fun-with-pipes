@@ -1,0 +1,2 @@
+areas : List[I64]
+is-circle : mods.geo.Shape -> Bool

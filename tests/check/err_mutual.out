@@ -1,0 +1,3 @@
+check/err_mutual.fwp:4:1: error: `is-odd` is mutually recursive with `is-even`; recursive bindings must be declared with `rec`
+4 | is-odd = match
+  | ^^^^^^

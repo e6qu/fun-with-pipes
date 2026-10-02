@@ -1,0 +1,3 @@
+countdown = match
+    0 -> 0
+    _ -> sub 1 | countdown

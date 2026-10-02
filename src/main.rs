@@ -8,6 +8,7 @@ const USAGE: &str = "\
 fwp - the fwp (\"foop\") language
 
 usage:
+  fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
   fwp help                       show this message
 ";
@@ -33,6 +34,19 @@ fn check(args: &[String]) -> ExitCode {
         eprintln!("fwp check: missing file");
         return ExitCode::from(2);
     };
+    if !parse_only {
+        return match fwp::driver::check_file(std::path::Path::new(path)) {
+            Ok(c) => {
+                eprint!("{}", c.render_warnings());
+                print!("{}", fwp::driver::signatures(&c));
+                ExitCode::SUCCESS
+            }
+            Err(f) => {
+                eprint!("{}", f.rendered);
+                ExitCode::from(1)
+            }
+        };
+    }
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) => {

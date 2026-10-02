@@ -1,0 +1,4 @@
+check/err_occurs.fwp:1:25: error: type mismatch in argument 3: expected `(a -> b ! e) -> a ! e`, found `(a -> b ! e) -> a -> b ! e`
+1 | self-apply = fork id id id
+  |                         ^^
+  note: `a` would have to contain itself (`a -> b`); the type would be infinite

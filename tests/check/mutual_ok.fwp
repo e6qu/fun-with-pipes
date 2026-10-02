@@ -1,0 +1,6 @@
+rec is-even = match
+    0 -> True
+    _ -> sub 1 | is-odd
+rec is-odd = match
+    0 -> False
+    _ -> sub 1 | is-even
