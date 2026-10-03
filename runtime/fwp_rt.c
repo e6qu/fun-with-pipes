@@ -59,7 +59,20 @@ static void fwp_gc_start(void *top);
  * one unit of the running task's slice. */
 static int32_t fwp_budget = 0;
 static void fwp_preempt(void);
+#ifdef FWP_ASYNCIFY
+/* WebAssembly with Asyncify: a task's C stack (linear memory) is checked
+ * here, since the engine's stack, on which its calls run, is much larger */
+static uintptr_t fwp_stack_low = 0;
+static void fwp_trap(const char *msg);
+#define FWP_TICK()                                                                              \
+    do {                                                                                        \
+        volatile char fwp_sp_;                                                                  \
+        if (__builtin_expect((uintptr_t)&fwp_sp_ < fwp_stack_low, 0)) fwp_trap("stack overflow"); \
+        if (__builtin_expect(--fwp_budget <= 0, 0)) fwp_preempt();                              \
+    } while (0)
+#else
 #define FWP_TICK() do { if (__builtin_expect(--fwp_budget <= 0, 0)) fwp_preempt(); } while (0)
+#endif
 
 /* ---------------------------------------------------------------- objects */
 

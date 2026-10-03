@@ -352,3 +352,97 @@ fn command_line_program_under_wasi() {
     }
     let _ = std::fs::remove_dir_all(&tmp);
 }
+
+/// Tasks without JavaScript Promise Integration: built with
+/// `--wasm-async=asyncify` (binaryen's wasm-opt), they run in node without
+/// the JSPI flag, with the same output, preemption, cancellation and
+/// stack overflow trap. Skipped without wasm-opt.
+#[test]
+fn tasks_with_asyncify() {
+    if !available() {
+        return;
+    }
+    if fwp::asyncify::wasm_opt().is_none() {
+        eprintln!("skipping: no wasm-opt (binaryen)");
+        return;
+    }
+    let tmp = std::env::temp_dir().join(format!("fwp-wasm-asyncify-{}", std::process::id()));
+    std::fs::create_dir_all(&tmp).unwrap();
+    let no_jspi = [("FWP_NO_JSPI", "1"), ("FWP_SEED", "42")];
+    for name in ["preempt", "tasks_local", "trap_stack_overflow"] {
+        let path = dir().join(format!("run/{}.fwp", name));
+        let wasm = tmp.join(format!("{}.wasm", name));
+        let b = Command::new(fwp())
+            .arg("build")
+            .arg(&path)
+            .args([
+                "--target",
+                "wasm32-wasi",
+                "--wasm-async=asyncify",
+                "-O1",
+                "-o",
+            ])
+            .arg(&wasm)
+            .output()
+            .unwrap();
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        let out = Command::new("node")
+            .arg("--no-warnings")
+            .arg(dir().join("wasm/wasi-run.mjs"))
+            .arg(&wasm)
+            .envs(no_jspi)
+            .current_dir(path.parent().unwrap())
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        let got = render(&out.stdout, &out.stderr, out.status.code().unwrap_or(-1));
+        assert_eq!(
+            got,
+            std::fs::read_to_string(path.with_extension("out")).unwrap(),
+            "{}",
+            name
+        );
+    }
+    // many tasks waiting at once, and the browser loader
+    let many = tmp.join("many.fwp");
+    std::fs::write(
+        &many,
+        "main = range 1 2001 | task.map (tap (const 20ms | task.sleep)) \
+         | map (option.unwrap-or 0) | sum | echo\n",
+    )
+    .unwrap();
+    let wasm = tmp.join("many.wasm");
+    let b = Command::new(fwp())
+        .arg("build")
+        .arg(&many)
+        .args([
+            "--target",
+            "wasm32-browser",
+            "--wasm-async",
+            "asyncify",
+            "-o",
+        ])
+        .arg(&wasm)
+        .output()
+        .unwrap();
+    assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+    let out = Command::new("node")
+        .arg("--no-warnings")
+        .arg(dir().join("wasm/browser-run.mjs"))
+        .arg(wasm.with_extension("js"))
+        .output()
+        .unwrap();
+    assert_eq!(String::from_utf8_lossy(&out.stdout), "2001000\n");
+    // a program without tasks needs no wasm-opt
+    let plain = tmp.join("plain.wasm");
+    let b = Command::new(fwp())
+        .arg("build")
+        .arg(dir().join("run/basics.fwp"))
+        .args(["--target", "wasm32-wasi", "--wasm-async=asyncify", "-o"])
+        .arg(&plain)
+        .env("FWP_WASM_OPT", "/nonexistent/wasm-opt")
+        .output()
+        .unwrap();
+    assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+    let _ = std::fs::remove_dir_all(&tmp);
+}

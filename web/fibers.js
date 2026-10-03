@@ -136,17 +136,125 @@ export function jspi() {
   return null;
 }
 
+// The hook module for Asyncify: switch, idle and sp call the JavaScript
+// functions it imports.
+function plainHookModule() {
+  const types = [functype([I32], [I32]), functype([F64], [I32]), functype([], [I32])];
+  const imp = (field, t) => [...name("fwp"), ...name(field), 0, ...leb(t)];
+  const body = (code) => {
+    const b = [0, ...code, END];
+    return [...leb(b.length), ...b];
+  };
+  const exp = (field, i) => [...name(field), 0, ...leb(i)];
+  return new Uint8Array([
+    0, 0x61, 0x73, 0x6d, 1, 0, 0, 0,
+    ...section(1, vec(types)),
+    ...section(2, vec([imp("switch", 0), imp("idle", 1), imp("sp", 2)])),
+    ...section(3, vec([0, 1, 2].map(leb))),
+    ...section(7, vec([exp("switch", 3), exp("idle", 4), exp("sp", 5)])),
+    ...section(10, vec([body([LOCAL_GET, 0, CALL, 0]), body([LOCAL_GET, 0, CALL, 1]), body([CALL, 2])])),
+  ]);
+}
+
+// Fibers for a module transformed by binaryen's Asyncify (`fwp build
+// --wasm-async=asyncify`), which runs in any engine: a fiber that
+// switches unwinds its WebAssembly stack into a buffer (whose contents are
+// kept here until it resumes) and returns to the loop below, which rewinds
+// the fiber it switches to. Each fiber's stack pointer is saved and
+// restored around this, since rewinding does not run the code that set it.
+async function asyncifyFibers(instance) {
+  const ex = instance.exports;
+  // the unwind buffer, in pages added to the end of linear memory (the
+  // module's allocator takes later pages for itself)
+  const SIZE = 16 << 20;
+  const base = ex.memory.grow(SIZE / 65536 + 1) * 65536;
+  const saved = new Map(); // fiber -> { data, sp }
+  let request = null; // what the fiber that unwinds asked for
+  const view = () => new DataView(ex.memory.buffer);
+  const unwind = (r) => {
+    if (ex.asyncify_get_state() === 2) {
+      // resumed: this call returns now
+      ex.asyncify_stop_rewind();
+      return 0;
+    }
+    request = { ...r, sp: ex.__stack_pointer.value };
+    const v = view();
+    v.setUint32(base, base + 8, true);
+    v.setUint32(base + 4, base + SIZE, true);
+    ex.asyncify_start_unwind(base);
+    return 0;
+  };
+  const { instance: hooks } = await WebAssembly.instantiate(plainHookModule(), {
+    fwp: {
+      switch: (to) => unwind({ to }),
+      idle: (ms) => unwind({ ms }),
+      sp: () => ex.__stack_pointer.value,
+    },
+  });
+  const table = ex.__indirect_function_table;
+  const slot = table.grow(3);
+  table.set(slot, hooks.exports.switch);
+  table.set(slot + 1, hooks.exports.idle);
+  table.set(slot + 2, hooks.exports.sp);
+  const at = ex.fwp_fiber_hooks();
+  const v = view();
+  v.setUint32(at, slot, true);
+  v.setUint32(at + 4, slot + 1, true);
+  v.setUint32(at + 8, slot + 2, true);
+  const sleep = (ms) => new Promise((wake) => setTimeout(wake, Math.min(Math.max(0, ms), 2 ** 31 - 1)));
+  return async () => {
+    let fiber = 0;
+    for (;;) {
+      const s = saved.get(fiber);
+      if (s) {
+        saved.delete(fiber);
+        new Uint8Array(ex.memory.buffer, base + 8, s.data.length).set(s.data);
+        const v = view();
+        v.setUint32(base, base + 8 + s.data.length, true);
+        v.setUint32(base + 4, base + SIZE, true);
+        ex.__stack_pointer.value = s.sp;
+        ex.asyncify_start_rewind(base);
+      } else if (fiber !== 0) {
+        ex.__stack_pointer.value = ex.fwp_fiber_stack(fiber);
+      }
+      let next;
+      try {
+        next = fiber === 0 ? ex._start() : ex.fwp_fiber_entry(fiber);
+      } catch (e) {
+        // a stack too deep for the unwind buffer: a stack overflow
+        if (e instanceof WebAssembly.RuntimeError && ex.asyncify_get_state() === 1) throw new RangeError("stack overflow");
+        throw e;
+      }
+      if (ex.asyncify_get_state() === 1) {
+        ex.asyncify_stop_unwind();
+        const end = view().getUint32(base, true);
+        const data = new Uint8Array(ex.memory.buffer, base + 8, end - base - 8).slice();
+        saved.set(fiber, { data, sp: request.sp });
+        if (request.to === undefined) await sleep(request.ms);
+        else fiber = request.to;
+        continue;
+      }
+      // _start returned: the program is done; a task returned: the
+      // fiber to resume next
+      if (fiber === 0) return;
+      fiber = next;
+    }
+  };
+}
+
 // Prepare `instance` (a WASI command whose memory the WASI layer already
 // knows) and return a function that runs its _start, resolving when it
 // returns and rejecting with what it throws (proc_exit's exception, a
 // trap), in whichever fiber that happens.
 export async function fibers(instance) {
   const ex = instance.exports;
-  const kind = jspi();
   const direct = async () => {
     ex._start();
   };
-  if (!kind || !ex.fwp_fiber_hooks || !ex.__indirect_function_table || !ex.__stack_pointer) return direct;
+  if (!ex.fwp_fiber_hooks || !ex.__indirect_function_table || !ex.__stack_pointer) return direct;
+  if (ex.asyncify_start_unwind) return asyncifyFibers(instance);
+  const kind = jspi();
+  if (!kind) return direct;
   const explicit = kind === "explicit";
 
   let current = 0;

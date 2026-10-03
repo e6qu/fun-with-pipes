@@ -146,6 +146,21 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     [docs/concurrency.md](docs/concurrency.md#http2) and
     [tutorial 20](docs/tutorials/20-websockets-and-http2/README.md).
 
+12. **Preemption, faster pipes, tasks without JSPI** (done). Tasks are
+    preempted after a slice of 10000 safe points (function entries and
+    `loop` iterations), counted alike by the interpreter and native
+    programs, so busy tasks no longer starve others, deadlines and
+    cancellation interrupt them, and the interleaving stays deterministic
+    and identical between the backends. Between fwp executables on Linux,
+    the binary pipe protocol moves to a Unix domain socket (`UDS_V1`) or a
+    lock-free ring in shared memory (`SHM_V1`) after its header, with the
+    same bytes and a fallback to the pipe. `--wasm-async=asyncify` runs
+    the tasks of compiled WebAssembly programs in engines without JSPI,
+    through binaryen's Asyncify. See
+    [docs/concurrency.md](docs/concurrency.md#preemption),
+    [docs/protocol.md](docs/protocol.md#transports) and
+    [the reference](docs/reference.md#tasks-on-webassembly).
+
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).

@@ -83,7 +83,8 @@ first runs them).
 
 On WebAssembly, which cannot switch stacks by itself, tasks need an engine
 with JavaScript Promise Integration (JSPI): Chrome and Edge 137 and later,
-or node 22 with `--experimental-wasm-jspi`. Waiting for a timer suspends
+or node 22 with `--experimental-wasm-jspi`; compiled programs built with
+`--wasm-async=asyncify` run their tasks in any JavaScript engine. Waiting for a timer suspends
 the program on a JavaScript timer, so a page is not kept busy. Sockets
 remain unavailable there. The hosts and the details are in the
 [reference](reference.md#tasks-on-webassembly).

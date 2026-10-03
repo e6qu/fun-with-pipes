@@ -339,6 +339,9 @@ static void fwp_free_zombie(void) {
 /* make `to` the current task, with its runtime state */
 static void fwp_enter(fwp_task *to) {
     fwp_cur = to;
+#ifdef FWP_ASYNCIFY
+    fwp_stack_low = to->stack ? (uintptr_t)to->stack + 65536 : 0;
+#endif
     fwp_handlers = to->handlers;
     fwp_state = to->st;
     fwp_state_len = to->st_len;

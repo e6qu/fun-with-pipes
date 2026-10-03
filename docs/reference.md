@@ -240,6 +240,7 @@ fwp build file.fwp [options]                  compile
                      server, with reflection (see grpc.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
+    --wasm-async A   jspi (default) or asyncify: how tasks switch on WebAssembly
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
     --cdylib         lib<name>.so and lib<name>.h
     --link X         C code or libraries for foreign functions
@@ -302,8 +303,8 @@ rejected otherwise.
 | Target | Output | Runtime |
 |---|---|---|
 | native | an executable | all features; a program that uses TLS ([tls.md](tls.md): HTTPS, HTTP clients, REST servers, gRPC) is linked with OpenSSL and depends on `libssl.so.3`, and building it needs OpenSSL's headers (`libssl-dev`) |
-| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI (see below) |
-| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI (see below) |
+| `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
+| `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 
 The interpreter and every compiled target produce the same output for the
@@ -326,7 +327,7 @@ each switch at the end of a slice is a JSPI suspension.
 | Host | Tasks |
 |---|---|
 | Chrome, Edge 137 and later | yes (JSPI is on by default) |
-| Firefox, Safari | once they enable JSPI by default (until then, a program with tasks is rejected or traps as below) |
+| Firefox, Safari | with `--wasm-async=asyncify` (below); otherwise once they enable JSPI by default (until then, a program with tasks is rejected or traps as below) |
 | node 22 | with `--experimental-wasm-jspi` (`tests/wasm/wasi-run.mjs` and `fwp-run.mjs` set it); later versions as they ship JSPI |
 | wasmtime and other WASI runtimes | no: a program that starts a task traps with `fwp: trap: tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), …`; `task.sleep` alone works |
 
@@ -337,6 +338,27 @@ so it still instantiates in any WASI runtime. Programs without tasks are
 unchanged. A fiber's stack is as large as the engine makes it (in
 browsers about as large as a page's, a few thousand nested calls); running
 out is the trap `fwp: trap: stack overflow`.
+
+`fwp build --target wasm32-wasi|wasm32-browser --wasm-async=asyncify`
+builds a program with tasks for engines without JSPI: binaryen's Asyncify
+pass (`wasm-opt --asyncify`) rewrites the module so that its call stack
+can be unwound into memory and rewound later, and `web/fibers.js` then
+switches fibers by unwinding the one that suspends and rewinding the next
+(the module exports `asyncify_*`, which the loader recognizes). It runs in
+any JavaScript engine (Firefox, Safari, node without flags), with the same
+output, preemption and cancellation; not in WASI runtimes without a
+JavaScript host. wasm-opt is an optional tool, needed only for this
+option and only by programs with tasks: it comes with binaryen (`npm
+install -g binaryen`, or a system package); `FWP_WASM_OPT` names the
+executable. The cost: the module is about 7% larger, calls are about 40%
+slower (`fib 35` in two tasks: 1.84 s against 1.3 s with JSPI in node
+22), and a task's own stack in linear memory is checked at each call,
+since its calls run on the engine's main stack. The default stays
+`--wasm-async=jspi`. The same works for fwp.wasm itself:
+`scripts/build-playground.sh --asyncify` applies Asyncify to it, so the
+playground runs tasks without JSPI too (the module grows from 4.3 to
+5.1 MB, and a run in node takes about four times as long, much of it
+compiling the larger module).
 
 ### fwp in the browser
 
@@ -412,6 +434,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `CC` | the C compiler for native builds |
 | `AR` | the archiver for `--staticlib` |
 | `FWP_WASM_CC` | the C compiler for WebAssembly builds |
+| `FWP_WASM_OPT` | binaryen's `wasm-opt`, for `--wasm-async=asyncify` (default: `wasm-opt` on the `PATH`) |
 | `FWP_BLESS=1` | regenerates the expected outputs of the test suite |
 
 ## Formatting, linting and editors

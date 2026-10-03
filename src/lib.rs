@@ -5,6 +5,7 @@
 #![allow(clippy::mutable_key_type)]
 
 pub mod ast;
+pub mod asyncify;
 pub mod cgen;
 pub mod cli;
 pub mod cli_gen;

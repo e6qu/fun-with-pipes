@@ -137,7 +137,12 @@ export async function run(opts = {}) {
       throw new Exit(code);
     },
   };
-  const wasi = new Proxy(impl, { get: (t, k) => t[k] || (() => ENOSYS) });
+  // pointers and sizes are unsigned (memory may grow beyond 2 GiB, where
+  // i32 arguments arrive negative)
+  const unsigned = (f) => (...args) => f(...args.map((a) => (typeof a === "number" && a < 0 ? a >>> 0 : a)));
+  const wasi = new Proxy(impl, {
+    get: (t, k) => (t[k] ? (k === "proc_exit" ? t[k] : unsigned(t[k])) : () => ENOSYS),
+  });
 
   const { instance } = await WebAssembly.instantiate(bytes, { wasi_snapshot_preview1: wasi });
   memory = instance.exports.memory;
