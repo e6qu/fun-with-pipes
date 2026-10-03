@@ -3270,6 +3270,42 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Whether the C compiler is GCC (`cc --version`), asked once per compiler.
+fn is_gcc(cc: &str) -> bool {
+    static SEEN: std::sync::Mutex<Vec<(String, bool)>> = std::sync::Mutex::new(Vec::new());
+    let mut seen = SEEN.lock().unwrap();
+    if let Some((_, g)) = seen.iter().find(|(c, _)| c == cc) {
+        return *g;
+    }
+    let g = std::process::Command::new(cc)
+        .arg("--version")
+        .output()
+        .is_ok_and(|o| {
+            let v = String::from_utf8_lossy(&o.stdout);
+            v.contains("Free Software Foundation") || v.contains("gcc")
+        });
+    seen.push((cc.to_string(), g));
+    g
+}
+
+/// GCC options that generate the code of a large program in parallel:
+/// link-time optimization splits it into partitions, compiled on all the
+/// cores (a REST server's 75 000 lines of C take half the time on four).
+/// Small programs, `-O0`, other compilers and `FWP_LTO=0` compile as one
+/// unit; `FWP_LTO=1` asks for it whatever the size.
+fn parallel_codegen(cc: &str, opt: &str, c_source: &str) -> &'static [&'static str] {
+    let large = match std::env::var("FWP_LTO").as_deref() {
+        Ok("0") => return &[],
+        Ok("1") => true,
+        _ => c_source.len() > 1_000_000,
+    };
+    if large && opt != "-O0" && is_gcc(cc) {
+        &["-flto=auto", "-flto-partition=balanced"]
+    } else {
+        &[]
+    }
+}
+
 /// CPU variants of a fat binary for the host architecture: name, compiler
 /// flags, and the C condition (in terms of `__builtin_cpu_supports`) under
 /// which the variant may run. The first is the baseline.
@@ -3555,6 +3591,7 @@ pub fn compile_for(
         run_cc(
             std::process::Command::new(&cc)
                 .arg(opt)
+                .args(parallel_codegen(&cc, opt, c_source))
                 .arg("-std=gnu11")
                 // no fused multiply-add: results must match the interpreter exactly
                 .arg("-ffp-contract=off")

@@ -309,6 +309,7 @@ and warnings are reported as before.
 | `FWP_CACHE_MAX` | how many executables it keeps, the least recently used going first (256) |
 | `fwp cache dir`, `fwp cache clean` | print its directory, empty it |
 | `CC` | the C compiler (`cc`) |
+| `FWP_LTO` | with GCC, a large program (over 1 MB of C, such as a REST or HTTP server with its standard library) is compiled with `-flto=auto`, which generates its code on all cores: a REST server's first start takes about half as long on four. `FWP_LTO=0` compiles it as one unit, `FWP_LTO=1` uses LTO for any size |
 
 Without a C compiler a program is interpreted, with a note on standard
 error (none when `FWP_RUN` is set). The WebAssembly build of fwp always
