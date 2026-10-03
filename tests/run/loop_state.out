@@ -1,0 +1,10 @@
+5000050000
+1001
+{log = "xxx", n = 3}
+1
+Err "three"
+Ok 3
+171700
+--- stderr
+fwp: trap: arithmetic overflow in I64
+--- exit 101

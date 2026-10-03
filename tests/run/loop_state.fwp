@@ -1,0 +1,44 @@
+# `loop` with a known step function runs as a C loop in native code, its
+# state in locals and no `Step` allocated (`loop_shape` in src/cgen.rs).
+# Each shape must give what the interpreter gives.
+
+# a record state, read field by field and rebuilt: kept as two locals
+sum-to : (I64, I64) -> Step[(I64, I64), I64]
+sum-to = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add .0 .1) | Again)
+
+# a single value as the state
+count-up : I64 -> Step[I64, I64]
+count-up = if (lt 1000) (add 7 | Again) Stop
+
+# the state used whole (shown), so it stays one value
+Acc = { n: I64, log: String }
+
+grow : Acc -> Step[Acc, String]
+grow = if (.n | ge 3) (show | Stop) (update { n = add 1, log = concat "x" } | Again)
+
+# a step whose results are not literal `Again` and `Stop`: the generic loop
+halve : I64 -> Step[I64, I64]
+halve = if (le 1) Stop next-half
+
+next-half : I64 -> Step[I64, I64]
+next-half = div 2 | Again
+
+# a failure inside the step
+checked : (I64, I64) -> Step[(I64, I64), I64] ! {Error[String]}
+checked = if (.0 | eq 0) (.1 | Stop) (if (.0 | eq 3) (const "three" | fail) (both (.0 | sub 1) (fork add .0 .1) | Again))
+
+# a loop inside the step of another
+outer : (I64, I64) -> Step[(I64, I64), I64]
+outer = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add (.0 | both id (const 0) | loop sum-to) .1) | Again)
+
+# overflow in the step traps as in the interpreter, after the output so far
+main = [
+    (100000, 0) | loop sum-to | echo,
+    0 | loop count-up | echo,
+    { n = 0, log = "" } | loop grow | echo,
+    1000000 | loop halve | echo,
+    (10, 0) | attempt (loop checked) | echo,
+    (2, 0) | attempt (loop checked) | echo,
+    (100, 0) | loop outer | echo,
+    (9223372036854775807, 9223372036854775807) | loop sum-to | echo,
+] | ignore

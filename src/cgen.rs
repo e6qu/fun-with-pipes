@@ -198,6 +198,10 @@ struct Gen<'p> {
     /// Whether functions are safe points for preemption (programs with
     /// tasks): their entries spend the running task's budget.
     ticks: bool,
+    /// Step functions of `loop`s compiled to C loops with their state in
+    /// locals (`loop_shape`), with whether the state is a record kept
+    /// field by field.
+    loops: Vec<(FuncId, Option<usize>)>,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -805,6 +809,82 @@ struct FnGen<'g, 'p> {
     tmp: usize,
     label: usize,
     indent: usize,
+    /// Generating the step of a specialized loop (`Gen::loop_def`).
+    in_loop: Option<LoopGen>,
+}
+
+/// A loop's step function generated with its state in arrays: its results
+/// (`Again s` and `Stop r` in tail position) write the next state or the
+/// result instead of being allocated.
+struct LoopGen {
+    tails: std::collections::HashSet<*const Expr>,
+    record: bool,
+}
+
+/// The tail positions of an expression: what it can evaluate to last.
+fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
+    match e {
+        Expr::Let(_, _, body) => tails(body, out),
+        Expr::Match(_, arms) => {
+            for (_, b) in arms {
+                tails(b, out);
+            }
+        }
+        _ => out.push(e),
+    }
+}
+
+/// Whether local 0 is used only as `Field(Local(0), _)`.
+fn state_by_fields(e: &Expr) -> bool {
+    match e {
+        Expr::Local(0) => false,
+        Expr::Field(r, _) if matches!(**r, Expr::Local(0)) => true,
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => true,
+        Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => {
+            xs.iter().all(state_by_fields)
+        }
+        Expr::Apply(f, xs) => state_by_fields(f) && xs.iter().all(state_by_fields),
+        Expr::Field(r, _) => state_by_fields(r),
+        Expr::SetFields(r, sets) => {
+            state_by_fields(r) && sets.iter().all(|(_, x)| state_by_fields(x))
+        }
+        Expr::Let(_, v, b) => state_by_fields(v) && state_by_fields(b),
+        Expr::Match(s, arms) => state_by_fields(s) && arms.iter().all(|(_, b)| state_by_fields(b)),
+    }
+}
+
+/// How a `loop` with this step function can run in C: `None` if it
+/// cannot (it is not a known one-argument function whose every result is
+/// a literal `Again x` or `Stop x`); `Some(Some(n))` when the state is a
+/// record of n fields that the step reads only field by field and always
+/// rebuilds, so it lives in n locals; `Some(None)` when the state stays
+/// one value. Either way, no `Step` is allocated.
+fn loop_shape(f: &Func) -> Option<Option<usize>> {
+    let Body::Expr(e) = &f.body else { return None };
+    if f.arity != 1 {
+        return None;
+    }
+    let mut ts = Vec::new();
+    tails(e, &mut ts);
+    let mut fields = None;
+    let mut all_records = true;
+    for t in &ts {
+        match t {
+            Expr::Construct(0, xs) if xs.len() == 1 => match &xs[0] {
+                Expr::Record(fs) if !fs.is_empty() && fields.is_none_or(|n| n == fs.len()) => {
+                    fields = Some(fs.len())
+                }
+                _ => all_records = false,
+            },
+            Expr::Construct(1, xs) if xs.len() == 1 => {}
+            _ => return None,
+        }
+    }
+    if all_records && fields.is_some() && state_by_fields(e) {
+        Some(fields)
+    } else {
+        Some(None)
+    }
 }
 
 impl<'g, 'p> FnGen<'g, 'p> {
@@ -843,6 +923,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let Body::Prim(sym) = &self.g.prog.funcs[id].body else {
             return None;
         };
+        if sym == "loop" {
+            if let Some(Expr::Func(g)) = args.first() {
+                let g = *g;
+                if let Some(shape) = loop_shape(&self.g.prog.funcs[g]) {
+                    if !self.g.loops.iter().any(|(s, _)| *s == g) {
+                        self.g.loops.push((g, shape));
+                    }
+                    let s = self.expr(&args[1]);
+                    return Some(format!("fwp_loop{}({})", g, s));
+                }
+            }
+        }
         let (k, arity) = match sym.as_str() {
             "map" => ("fwp_k_map", 1),
             "filter" => ("fwp_k_filter", 1),
@@ -866,6 +958,30 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn expr(&mut self, e: &Expr) -> String {
+        if let Some(lg) = &self.in_loop {
+            let record = lg.record;
+            match e {
+                Expr::Field(r, i) if record && matches!(**r, Expr::Local(0)) => {
+                    return format!("st[{}]", i);
+                }
+                Expr::Construct(tag, xs) if lg.tails.contains(&(e as *const Expr)) => {
+                    if *tag == 1 {
+                        let x = self.expr(&xs[0]);
+                        self.line(&format!("*out = {};", x));
+                        return "(V)1".into();
+                    }
+                    let parts: Vec<String> = match (&xs[0], record) {
+                        (Expr::Record(fs), true) => self.args(fs),
+                        _ => vec![self.expr(&xs[0])],
+                    };
+                    for (i, p) in parts.iter().enumerate() {
+                        self.line(&format!("nx[{}] = {};", i, p));
+                    }
+                    return "(V)0".into();
+                }
+                _ => {}
+            }
+        }
         match e {
             Expr::Local(i) => format!("l{}", i),
             Expr::Const(v) => self.g.const_expr(v),
@@ -1837,6 +1953,87 @@ impl<'p> Gen<'p> {
         })
     }
 
+    /// A `loop` whose step is `step`, as a C loop (see `loop_shape`): the
+    /// step's body reads the state from `st` and writes the next one to
+    /// `nx`, or its result to `out` (and returns 1). Safe points are those
+    /// of the generic loop: one per iteration, and the step's own.
+    fn loop_def(&mut self, step: FuncId, record: Option<usize>) -> String {
+        let f = self.prog.funcs[step].clone();
+        let Body::Expr(e) = &f.body else {
+            unreachable!()
+        };
+        let n = record.unwrap_or(1);
+        let mut ts = Vec::new();
+        tails(e, &mut ts);
+        let lg = LoopGen {
+            tails: ts.iter().map(|t| *t as *const Expr).collect(),
+            record: record.is_some(),
+        };
+        let mut out = format!(
+            "/* loop of {} : {}, the state in locals */
+static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
+",
+            f.name, f.ty, step
+        );
+        if record.is_none() {
+            out.push_str(
+                "    V l0 = st[0];
+",
+            );
+        }
+        for i in 1..f.nlocals {
+            let _ = writeln!(out, "    V l{} = 0;", i);
+        }
+        if self.ticks {
+            out.push_str(
+                "    FWP_TICK();
+",
+            );
+        }
+        let mut fg = FnGen {
+            g: self,
+            out: String::new(),
+            tmp: 0,
+            label: 0,
+            indent: 1,
+            in_loop: Some(lg),
+        };
+        let r = fg.expr(e);
+        out.push_str(&fg.out);
+        let _ = writeln!(
+            out,
+            "    return (int)({});
+}}
+",
+            r
+        );
+        let load = if record.is_some() {
+            (0..n)
+                .map(|i| format!("st[{}] = OBJ(s)->f[{}];", i, i))
+                .collect::<Vec<_>>()
+                .join(" ")
+        } else {
+            "st[0] = s;".into()
+        };
+        let _ = write!(
+            out,
+            "static V fwp_loop{id}(V s) {{
+    V st[{n}], nx[{n}], out = 0;
+    {load}
+    for (;;) {{
+        FWP_TICK();
+        if (fs{id}(st, nx, &out)) return out;
+        for (int i = 0; i < {n}; i++) st[i] = nx[i];
+    }}
+}}
+",
+            id = step,
+            n = n,
+            load = load
+        );
+        out
+    }
+
     fn func(&mut self, id: FuncId) -> Result<String, String> {
         let f = &self.prog.funcs[id];
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
@@ -1911,6 +2108,7 @@ impl<'p> Gen<'p> {
                     tmp: 0,
                     label: 0,
                     indent: 1,
+                    in_loop: None,
                 };
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -2312,11 +2510,20 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         cli_defs: String::new(),
         cli_flags: HashMap::new(),
         ticks: uses_async(prog) || uses_services(prog),
+        loops: Vec::new(),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
         bodies.push_str(&g.func(id)?);
         bodies.push('\n');
+    }
+    // the specialized loops, which may use others
+    let mut li = 0;
+    while li < g.loops.len() {
+        let (step, record) = g.loops[li];
+        bodies.push_str(&g.loop_def(step, record));
+        bodies.push('\n');
+        li += 1;
     }
     let mut lib_defs = String::new();
     if let Mode::Library = mode {
@@ -2674,6 +2881,9 @@ static const fwp_exec_spec exec_spec{i} = {{
                 params.join(", ")
             }
         );
+    }
+    for (step, _) in &g.loops {
+        let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
     }
     // constant applicative forms
     for (id, f) in prog.funcs.iter().enumerate() {
