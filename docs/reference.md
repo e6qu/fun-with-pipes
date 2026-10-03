@@ -511,6 +511,8 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |
+| `FWP_GC=full` | native programs: every collection is a major one (no generations) |
+| `FWP_GC_VERIFY=1` | native programs: check each minor collection against a full trace, and abort at the first object it missed (for testing the runtime) |
 | `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |
 | `FWP_GC_STRESS=n` | native programs: collect at every n-th allocation (`1`: at every one), to find bugs in the runtime |
 | `CC` | the C compiler for native builds |

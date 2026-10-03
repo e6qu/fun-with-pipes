@@ -20,14 +20,35 @@
  * anywhere inside an object keeps it alive; from a stack, a word pointing
  * just past the end of an object too (compilers keep such pointers).
  *
- * A collection starts when the bytes allocated since the last one exceed
- * twice the live heap (8 MiB at least). Slots freed by a collection go to free
- * lists; empty chunks are reused for any class, and their memory is given
- * back to the system beyond a reserve.
+ * Collections are generational, with the marks kept from one collection
+ * to the next ("sticky" mark bits): an object that survived a collection
+ * is old and stays marked. A minor collection marks from the roots without
+ * tracing into old objects, so its cost is that of the young survivors,
+ * and frees only young garbage; a major one clears the marks and traces
+ * everything. This is sound because old objects do not point to young
+ * ones, with one exception that is scanned: objects of the third kind.
+ * There are three kinds of non-big objects:
  *
- * FWP_GC=off disables collection, FWP_GC_STATS=1 prints statistics at
- * exit and FWP_GC_STRESS=n collects at every n-th allocation (1: every
- * one), to find missing roots.
+ *   0  values complete when allocated (fwp_alloc_init: records, variants,
+ *      list cells), never written again;
+ *   1  leaves (fwp_alloc_leaf), which hold no values;
+ *   2  memory filled after it is allocated (fwp_alloc: arrays, maps,
+ *      partial applications, temporary arrays, runtime structures), which
+ *      may come to point to younger objects: every old one is scanned by
+ *      every minor collection.
+ *
+ * A collection starts when the bytes allocated since the last one exceed
+ * twice the live heap (8 MiB at least); it is major when the heap kept
+ * since the last major collection has grown past twice its size then (and
+ * 16 MiB). Slots freed by a collection go to free lists; empty chunks are
+ * reused for any class, and their memory is given back to the system
+ * beyond a reserve.
+ *
+ * FWP_GC=off disables collection, FWP_GC=full makes every collection a
+ * major one, FWP_GC_STATS=1 prints statistics at exit and FWP_GC_STRESS=n
+ * collects at every n-th allocation (1: every one), to find missing roots.
+ * FWP_GC_VERIFY=1 checks each minor collection against a full trace and
+ * stops at the first object it missed.
  *
  * WebAssembly keeps a bump allocator that never frees: the stack lives
  * partly in WebAssembly locals, which cannot be scanned. Libraries
@@ -101,7 +122,7 @@ static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)f
 enum { GC_FREE = 0, GC_SMALL, GC_BIG, GC_BIG_TAIL };
 
 typedef struct {
-    uint8_t type, leaf, cls, mark; /* mark: big objects */
+    uint8_t type, leaf, cls, mark; /* leaf: the kind (0, 1, 2); mark: big objects */
     uint8_t dirty;                 /* free, but its memory not given back */
     uint32_t slot, nslots;
     uint32_t head;                 /* big: number of chunks; tail: its head */
@@ -117,10 +138,12 @@ typedef struct { void *obj; void (*fn)(void *); } gc_fin;
  * data for roots can skip it. */
 static struct {
     intptr_t budget;          /* bytes until the next collection */
-    gc_list lists[2][GC_NCLS]; /* [leaf][class] */
+    gc_list lists[3][GC_NCLS]; /* [kind][class] */
     uint32_t slot[GC_NCLS];
     uint8_t cls_of[GC_MAX_SMALL / 16 + 1];
     int ready, enabled, armed, collecting, stats;
+    int generational, verify, major_next;
+    size_t live_after_major, nminor;
     long stress, stress_count;
     char *base;               /* the reserved region */
     uintptr_t heap_bytes;     /* chunks in use (high-water), in bytes */
@@ -190,6 +213,11 @@ static void fwp_gc_init(void) {
     fwp_gc.enabled = !(e && (!strcmp(e, "off") || !strcmp(e, "0")));
     e = getenv("FWP_GC_STATS");
     fwp_gc.stats = e && *e && strcmp(e, "0") != 0;
+    e = getenv("FWP_GC");
+    fwp_gc.generational = !(e && !strcmp(e, "full"));
+    fwp_gc.major_next = 1;
+    e = getenv("FWP_GC_VERIFY");
+    fwp_gc.verify = e && *e && strcmp(e, "0") != 0;
     e = getenv("FWP_GC_STRESS");
     fwp_gc.stress = e ? atol(e) : 0;
     if (fwp_gc.stress < 0) fwp_gc.stress = 0;
@@ -311,6 +339,8 @@ static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int
     m->slot = fwp_gc.slot[c];
     m->nslots = (uint32_t)(GC_CHUNK / m->slot);
     char *p = fwp_gc_chunk_addr(ci);
+    /* verifying, a reused chunk's stale words are cleared (see the sweep) */
+    if (fwp_gc.verify) memset(p, 0, GC_CHUNK);
     l->bump = p + m->slot;
     l->end = p + (size_t)m->nslots * m->slot;
     return p;
@@ -327,7 +357,7 @@ static __attribute__((noinline)) void *fwp_gc_alloc_slow(size_t n, int leaf) {
     if (p) l->free = (char *)~*(uintptr_t *)p;
     else if ((size_t)(l->end - l->bump) >= sz) { p = l->bump; l->bump += sz; }
     else p = fwp_gc_refill(l, c, leaf);
-    memset(p, 0, leaf ? n : sz);
+    memset(p, 0, leaf == 1 ? n : sz);
     return p;
 }
 
@@ -340,13 +370,13 @@ static inline void *fwp_gc_alloc(size_t n, int leaf) {
             char *p = l->free;
             if (p) {
                 l->free = (char *)~*(uintptr_t *)p;
-                memset(p, 0, leaf ? n : sz);
+                memset(p, 0, leaf == 1 ? n : sz);
                 return p;
             }
             if ((size_t)(l->end - l->bump) >= sz) {
                 p = l->bump;
                 l->bump += sz;
-                memset(p, 0, leaf ? n : sz);
+                memset(p, 0, leaf == 1 ? n : sz);
                 return p;
             }
         }
@@ -354,8 +384,9 @@ static inline void *fwp_gc_alloc(size_t n, int leaf) {
     return fwp_gc_alloc_slow(n, leaf);
 }
 
-/* zeroed memory, scanned for values */
-static inline void *fwp_alloc(size_t n) { return fwp_gc_alloc(n, 0); }
+/* zeroed memory, scanned for values, that may be written after more
+ * allocations (kind 2) */
+static inline void *fwp_alloc(size_t n) { return fwp_gc_alloc(n, 2); }
 /* memory the caller fills (its first n bytes) before the next allocation:
  * only the rest of the slot is zeroed, so the collector, which scans whole
  * slots, finds no stale values there */
@@ -396,11 +427,15 @@ static void fwp_mem_free(void *p) {
     if (!m) return;
     if (m->type == GC_SMALL) {
         gc_list *l = &fwp_gc.lists[m->leaf][m->cls];
+        /* reused unmarked: young again */
+        size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
+        m->bits[i >> 6] &= ~((uint64_t)1 << (i & 63));
         *(uintptr_t *)p = ~(uintptr_t)l->free;
         l->free = (char *)p;
         fwp_gc.budget += m->slot;
     } else if (m->type == GC_BIG && (char *)p == fwp_gc_chunk_addr(ci)) {
         fwp_gc.budget += (intptr_t)m->size;
+        m->mark = 0;
         size_t k = m->head;
         for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
         fwp_gc.nfree_chunks += k;
@@ -446,7 +481,7 @@ static inline void fwp_gc_mark(uintptr_t a) {
         uint64_t bit = (uint64_t)1 << (i & 63);
         if (m->bits[i >> 6] & bit) return;
         m->bits[i >> 6] |= bit;
-        if (!m->leaf) fwp_gc_push(fwp_gc_chunk_addr(ci) + i * m->slot, m->slot);
+        if (m->leaf != 1) fwp_gc_push(fwp_gc_chunk_addr(ci) + i * m->slot, m->slot);
         return;
     }
     case GC_BIG_TAIL:
@@ -456,7 +491,7 @@ static inline void fwp_gc_mark(uintptr_t a) {
     case GC_BIG:
         if (m->mark) return;
         m->mark = 1;
-        if (!m->leaf) fwp_gc_push(fwp_gc_chunk_addr(ci), m->size);
+        if (m->leaf != 1) fwp_gc_push(fwp_gc_chunk_addr(ci), m->size);
         return;
     default:
         return;
@@ -607,14 +642,17 @@ static void fwp_gc_sweep(void) {
             for (size_t i = n; i-- > 0;) {
                 if (m->bits[i >> 6] & ((uint64_t)1 << (i & 63))) continue;
                 char *s = p + i * m->slot;
+                /* verifying, stale words of dead objects are cleared: a
+                 * conservative full trace would follow them through a free
+                 * slot that a stale root marked */
+                if (fwp_gc.verify) memset(s, 0, m->slot);
                 *(uintptr_t *)s = ~(uintptr_t)l->free;
                 l->free = s;
             }
         } else if (m->type == GC_BIG) {
             size_t k = m->head;
             if (m->mark) {
-                m->mark = 0;
-                live += m->size;
+                live += m->size; /* the mark stays: old */
             } else {
                 for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
                 nfree += k;
@@ -664,17 +702,99 @@ static __attribute__((noinline)) void fwp_gc_mark_all(void) {
     fwp_gc_drain();
 }
 
+static void fwp_gc_clear_marks(void) {
+    for (size_t ci = 0; ci < fwp_gc.top; ci++) {
+        gc_chunk *m = &fwp_gc.meta[ci];
+        if (m->type == GC_SMALL) memset(m->bits, 0, (m->nslots + 63) / 64 * 8);
+        else if (m->type == GC_BIG) m->mark = 0;
+    }
+}
+
+/* a minor collection's extra roots: every old object of kind 2 */
+static void fwp_gc_scan_old_filled(void) {
+    for (size_t ci = 0; ci < fwp_gc.top; ci++) {
+        gc_chunk *m = &fwp_gc.meta[ci];
+        if (m->leaf != 2) continue;
+        if (m->type == GC_SMALL) {
+            char *p = fwp_gc_chunk_addr(ci);
+            for (size_t w = 0, words = (m->nslots + 63) / 64; w < words; w++) {
+                uint64_t b = m->bits[w];
+                while (b) {
+                    size_t i = w * 64 + (size_t)__builtin_ctzll(b);
+                    b &= b - 1;
+                    fwp_gc_push(p + i * m->slot, m->slot);
+                }
+            }
+        } else if (m->type == GC_BIG && m->mark) {
+            fwp_gc_push(fwp_gc_chunk_addr(ci), m->size);
+        }
+    }
+    fwp_gc_drain();
+}
+
+/* FWP_GC_VERIFY: after a minor collection's marking, trace everything
+ * again from scratch; an object reachable then must have been marked */
+static void fwp_gc_verify_minor(void) {
+    size_t n = fwp_gc.top;
+    uint64_t(*saved)[GC_CHUNK / 16 / 64] = malloc(n * sizeof *saved);
+    uint8_t *saved_big = malloc(n ? n : 1);
+    if (!saved || !saved_big) fwp_gc_oom();
+    for (size_t ci = 0; ci < n; ci++) {
+        memcpy(saved[ci], fwp_gc.meta[ci].bits, sizeof saved[ci]);
+        saved_big[ci] = fwp_gc.meta[ci].mark;
+    }
+    fwp_gc_clear_marks();
+    fwp_gc_mark_all();
+    for (size_t ci = 0; ci < n; ci++) {
+        gc_chunk *m = &fwp_gc.meta[ci];
+        int missed = 0;
+        size_t slot = 0;
+        if (m->type == GC_SMALL) {
+            for (size_t w = 0; w < (m->nslots + 63) / 64 && !missed; w++) {
+                uint64_t lost = m->bits[w] & ~saved[ci][w];
+                if (lost) {
+                    missed = 1;
+                    slot = w * 64 + (size_t)__builtin_ctzll(lost);
+                }
+            }
+        } else if (m->type == GC_BIG) {
+            missed = m->mark && !saved_big[ci];
+        }
+        if (missed) {
+            char *obj = fwp_gc_chunk_addr(ci) + slot * m->slot;
+            size_t len = m->type == GC_SMALL ? m->slot : m->size;
+            fprintf(stderr, "fwp gc verify: a minor collection missed the reachable object at %p (kind %d, %zu bytes)\n",
+                    (void *)obj, m->leaf, len);
+            /* the old objects that point to it */
+            for (size_t cj = 0; cj < n; cj++) {
+                gc_chunk *o = &fwp_gc.meta[cj];
+                if (o->type != GC_SMALL || o->leaf == 1) continue;
+                for (size_t k = 0; k < o->nslots; k++) {
+                    if (!((saved[cj][k >> 6] >> (k & 63)) & 1)) continue;
+                    uintptr_t *w = (uintptr_t *)(fwp_gc_chunk_addr(cj) + k * o->slot);
+                    for (size_t j = 0; j < o->slot / 8; j++)
+                        if (w[j] >= (uintptr_t)obj && w[j] < (uintptr_t)obj + len)
+                            fprintf(stderr, "  from the old object at %p (kind %d, %u bytes), word %zu; its first words %lx %lx %lx\n",
+                                    (void *)w, o->leaf, o->slot, j, (unsigned long)w[0], (unsigned long)w[1],
+                                    (unsigned long)w[2]);
+                }
+            }
+            abort();
+        }
+    }
+    free(saved);
+    free(saved_big);
+    /* the full trace's marks stand: they are exact */
+}
+
 static __attribute__((noinline)) void fwp_gc_collect(void) {
     if (fwp_gc.collecting) return;
     fwp_gc.collecting = 1;
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
     fwp_gc.total_alloc += (double)(fwp_gc.budget_given - fwp_gc.budget);
-    for (size_t ci = 0; ci < fwp_gc.top; ci++) {
-        gc_chunk *m = &fwp_gc.meta[ci];
-        if (m->type == GC_SMALL) memset(m->bits, 0, (m->nslots + 63) / 64 * 8);
-        else if (m->type == GC_BIG) m->mark = 0;
-    }
+    int major = !fwp_gc.generational || fwp_gc.major_next;
+    if (major) fwp_gc_clear_marks();
     /* the registers, on the stack: the callee-saved ones are spilled by
      * __builtin_unwind_init, the others saved by setjmp */
     jmp_buf regs;
@@ -682,11 +802,29 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
     setjmp(regs);
     fwp_gc.root_bytes = 0;
     fwp_gc_mark_all();
+    if (!major) {
+        fwp_gc_scan_old_filled();
+        if (fwp_gc.verify) fwp_gc_verify_minor();
+    }
     fwp_gc_finalize();
     fwp_gc_sweep();
     fwp_gc.ncollect++;
+    if (!major) fwp_gc.nminor++;
     if (fwp_gc.live > fwp_gc.peak) fwp_gc.peak = fwp_gc.live;
-    intptr_t b = 2 * (intptr_t)fwp_gc.live + (intptr_t)fwp_gc.root_bytes;
+    if (major) {
+        fwp_gc.live_after_major = fwp_gc.live;
+        fwp_gc.major_next = 0;
+    } else {
+        /* the old generation holds dead objects too, until a major collection */
+        size_t limit = fwp_gc.live_after_major + fwp_gc.live_after_major / 2;
+        if (limit < ((size_t)16 << 20)) limit = (size_t)16 << 20;
+        fwp_gc.major_next = fwp_gc.live > limit;
+    }
+    /* under stress, a major collection now and then too */
+    if (fwp_gc.stress && fwp_gc.ncollect % 8 == 0) fwp_gc.major_next = 1;
+    /* minor collections are cheap: they come sooner, which keeps the
+     * heap smaller */
+    intptr_t b = (fwp_gc.generational ? 1 : 2) * (intptr_t)fwp_gc.live + (intptr_t)fwp_gc.root_bytes;
     fwp_gc.budget = fwp_gc.budget_given = b > GC_MIN_BUDGET ? b : GC_MIN_BUDGET;
     clock_gettime(CLOCK_MONOTONIC, &t1);
     double ms = (double)(t1.tv_sec - t0.tv_sec) * 1e3 + (double)(t1.tv_nsec - t0.tv_nsec) / 1e6;
@@ -711,9 +849,9 @@ static void fwp_gc_report(void) {
     fwp_gc.total_alloc += (double)(fwp_gc.budget_given - fwp_gc.budget);
     fwp_gc.budget_given = fwp_gc.budget;
     fprintf(stderr,
-            "fwp gc: %zu collections, %.1f MiB allocated, heap %.1f MiB, live %.1f MiB (peak %.1f), "
+            "fwp gc: %zu collections (%zu minor), %.1f MiB allocated, heap %.1f MiB, live %.1f MiB (peak %.1f), "
             "pauses %.1f ms (max %.2f ms), max RSS %ld KiB%s\n",
-            fwp_gc.ncollect, fwp_gc.total_alloc / 1048576.0, (double)fwp_gc.heap_bytes / 1048576.0,
+            fwp_gc.ncollect, fwp_gc.nminor, fwp_gc.total_alloc / 1048576.0, (double)fwp_gc.heap_bytes / 1048576.0,
             (double)fwp_gc.live / 1048576.0, (double)fwp_gc.peak / 1048576.0, fwp_gc.pause_total,
             fwp_gc.pause_max, fwp_gc_status_kb("VmHWM"), fwp_gc.armed ? "" : " (collection off)");
 }

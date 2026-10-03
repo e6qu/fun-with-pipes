@@ -110,12 +110,34 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   saved stack pointer, and the program's writable data segments, where
   static constants, CAFs and runtime globals live. Pointers into the middle
   of an object keep it alive, and from a stack so do pointers just past
-  its end. A collection starts when the bytes allocated since the last one
-  exceed twice the live heap (8 MiB at least); free chunks beyond a
-  reserve are given back to the system. `FWP_GC=off` disables it,
+  its end.
+
+  Collection is generational without moving anything: mark bits are kept
+  from one collection to the next, so an object that survived one is old.
+  Most collections are minor: they mark from the roots without tracing
+  into old objects and free only young garbage, so they cost what the
+  young survivors cost, not the whole live heap; a major collection clears
+  the marks and traces everything when the heap kept since the last one
+  has grown by half. This needs old objects never to point to young ones,
+  which holds because fwp values are immutable, with the help of a split
+  by kind: records, variants and list cells are complete when allocated
+  (`fwp_alloc_init`) and never written again, while memory that is filled
+  after other allocations (arrays, maps, partial applications, temporary
+  arrays, runtime structures: `fwp_alloc`) is scanned whole by every minor
+  collection once it is old. The only write to a complete value in
+  generated code, a record update, computes its new fields before copying.
+  On a program that builds a map and churns through lists, minor
+  collections cut the time spent collecting from 850 ms to 250 ms.
+
+  A collection starts when the bytes allocated since the last one exceed
+  the live heap (twice it without generations; 8 MiB at least); free
+  chunks beyond a reserve are given back to the system. `FWP_GC=off`
+  disables collection, `FWP_GC=full` makes every collection major,
   `FWP_GC_STATS=1` prints statistics at exit and `FWP_GC_STRESS=n`
-  collects at every n-th allocation, which `tests/gc.rs` uses to run every
-  golden program with a collection at each allocation. WebAssembly keeps
+  collects at every n-th allocation. `tests/gc.rs` runs every golden
+  program with a collection at each allocation and `FWP_GC_VERIFY=1`,
+  which checks each minor collection against a full trace from scratch
+  and stops at the first reachable object it did not mark. WebAssembly keeps
   a bump allocator that never frees, because values in WebAssembly locals
   are invisible to a stack scan; libraries (`--staticlib`, `--cdylib`)
   use the collector's allocator but never collect, since the host's
