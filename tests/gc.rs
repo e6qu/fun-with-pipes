@@ -1,6 +1,8 @@
 //! The collector of native programs (runtime/fwp_rt_gc.c): every golden
 //! program under FWP_GC_STRESS (a collection at every allocation, to find
-//! missing roots), and memory that stays bounded in a long allocating loop
+//! missing roots) with FWP_GC_VERIFY (each minor collection checked
+//! against a full trace, to find old objects pointing to young ones that
+//! a minor collection does not see), and memory that stays bounded in a long allocating loop
 //! and in HTTP, REST and gRPC servers handling many requests.
 
 use std::io::{BufRead, BufReader, Read, Write};
@@ -91,6 +93,8 @@ fn stressed(path: &Path, dir: &Path) -> Option<String> {
         .current_dir(path.parent().unwrap())
         .env("FWP_SEED", "42")
         .env("FWP_GC_STRESS", "1")
+        // every minor collection checked against a full trace
+        .env("FWP_GC_VERIFY", "1")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -156,7 +160,9 @@ fn stats(stderr: &str) -> (f64, u64, u64) {
         words[i + 1].trim_end_matches(',')
     };
     let collections = words[2].parse().unwrap();
-    let allocated = words[4].parse().unwrap();
+    // "N collections (M minor), X MiB allocated"
+    let mib = words.iter().position(|x| *x == "MiB").unwrap();
+    let allocated = words[mib - 1].parse().unwrap();
     let rss = after("RSS").parse().unwrap();
     (allocated, collections, rss)
 }

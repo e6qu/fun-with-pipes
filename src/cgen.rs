@@ -1038,10 +1038,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.bind(format!("OBJ({})->f[{}]", rv, i))
             }
             Expr::SetFields(r, sets) => {
+                // the new fields first: the copy is a complete object (kind
+                // 0 in runtime/fwp_rt_gc.c), written only before anything
+                // else is allocated
                 let rv = self.expr(r);
+                let xs: Vec<(u32, String)> = sets.iter().map(|(i, x)| (*i, self.expr(x))).collect();
                 let t = self.bind(format!("fwp_data(0, OBJ({rv})->n, OBJ({rv})->f)", rv = rv));
-                for (i, x) in sets {
-                    let xv = self.expr(x);
+                for (i, xv) in xs {
                     self.line(&format!("OBJ({})->f[{}] = {};", t, i, xv));
                 }
                 t

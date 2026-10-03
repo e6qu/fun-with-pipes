@@ -232,13 +232,22 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     (with any other state, only the `Step` is not). The loop of tuple
     arithmetic of item 15 runs in 0.15 s instead of 1.7 s before item 15.
 
+19. **Generational collection** (done). Small allocations already came
+    from bump arenas per size class; collections are now generational
+    without moving anything: marks stay from one collection to the next,
+    minor collections trace only young objects and free young garbage,
+    and old objects never point to young ones because values are
+    immutable once allocated (memory filled later is scanned whole). On
+    a program that churns through lists and a map, collections take 250
+    ms instead of 850 ms and the program runs 2.6 times as fast.
+    `FWP_GC_VERIFY=1` checks every minor collection against a full trace
+    under `FWP_GC_STRESS` in the tests.
+
 Next in this series, toward static, zero-cost programs:
 
-19. Escape analysis beyond loops: records and tuples that do not escape
+20. Escape analysis beyond loops: records and tuples that do not escape
     a function kept in C locals, and values that do not outlive a call on
     the stack.
-20. Arenas by default: bump allocation per task and per request, freed
-    whole, with the collector for what escapes them.
 21. Fused list and iterator pipelines (`map | filter | fold` in one pass,
     without the intermediate lists). Fusing interleaves the stages, so
     it needs to know which functions cannot fail or have effects (an
