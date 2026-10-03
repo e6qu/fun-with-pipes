@@ -224,6 +224,10 @@ static void fwp_pipe_write(const void *p, size_t n) {
 
 /* a ring in a fresh memfd, sent over the socket; 0 if that fails */
 static int fwp_po_make_ring(void) {
+#ifdef FWP_STATIC_MEMORY
+    /* a ring would be new memory: static programs stay on the socket */
+    return 0;
+#endif
     int fd = (int)syscall(SYS_memfd_create, "fwp-ring", 1 /* MFD_CLOEXEC */);
     if (fd < 0) return 0;
     size_t size = FWP_RING_DATA + (size_t)FWP_RING_CAP;
@@ -356,7 +360,7 @@ static void fwp_pipe_in_offer(void) {
     const char *t = getenv("FWP_TRANSPORT");
     /* FWP_TRANSPORT=stdio declines (0), so that a waiting producer goes on */
     int off = fwp_transport_off();
-    unsigned char hello[5] = {'F', 'W', 'P', 'T', off ? FWP_T_STDIO : t && strcmp(t, "uds") == 0 ? FWP_T_UDS : FWP_T_SHM};
+    unsigned char hello[5] = {'F', 'W', 'P', 'T', off ? FWP_T_STDIO : fwp_static_memory || (t && strcmp(t, "uds") == 0) ? FWP_T_UDS : FWP_T_SHM};
     if (connect(fd, (struct sockaddr *)&a, len) != 0 || send(fd, hello, 5, MSG_NOSIGNAL) != 5 || off) {
         close(fd);
         return;

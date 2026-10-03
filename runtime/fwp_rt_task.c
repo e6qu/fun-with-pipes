@@ -321,6 +321,10 @@ static int fwp_stack_pool_n = 0;
 
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
+#ifdef FWP_STATIC_MEMORY
+        if (1) fwp_static_task_stack_free(fwp_zombie->stack);
+        else
+#endif
         if (fwp_stack_pool_n < 64) fwp_stack_pool[fwp_stack_pool_n++] = fwp_zombie->stack;
 #ifdef FWP_FIBERS
         else free(fwp_zombie->stack);
@@ -630,6 +634,9 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         t->stack = (char *)malloc(t->stack_size);
         if (!t->stack) fwp_trap("cannot allocate a task stack");
     }
+#elif defined(FWP_STATIC_MEMORY)
+    t->stack_size = FWP_STATIC_TASK_STACK;
+    t->stack = fwp_static_task_stack();
 #else
     t->stack_size = (size_t)256 << 20;
     if (fwp_stack_pool_n > 0) {

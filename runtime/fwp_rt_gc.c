@@ -166,6 +166,16 @@ static void fwp_gc_init(void) {
         while (fwp_gc.slot[k] < i * 16) k++;
         fwp_gc.cls_of[i] = (uint8_t)k;
     }
+#ifdef FWP_STATIC_MEMORY
+    /* the heap and its metadata were mapped with the rest of the static
+     * memory (runtime/fwp_rt_static.c), all of it usable */
+    fwp_static_init();
+    fwp_gc.base = fwp_static.heap;
+    fwp_gc.nchunks = fwp_static.heap_bytes >> GC_SHIFT;
+    fwp_gc.meta_bytes = fwp_static.meta_bytes;
+    fwp_gc.meta = (gc_chunk *)fwp_static.meta;
+    fwp_gc.committed = fwp_gc.nchunks;
+#else
     size_t bytes = sizeof(void *) == 8 ? (size_t)1 << 36 : (size_t)1 << 30;
     char *r = (char *)fwp_gc_reserve(&bytes);
     if (!r) fwp_gc_oom();
@@ -175,6 +185,7 @@ static void fwp_gc_init(void) {
     void *m = mmap(0, fwp_gc.meta_bytes, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
     if (m == MAP_FAILED) fwp_gc_oom();
     fwp_gc.meta = (gc_chunk *)m;
+#endif
     const char *e = getenv("FWP_GC");
     fwp_gc.enabled = !(e && (!strcmp(e, "off") || !strcmp(e, "0")));
     e = getenv("FWP_GC_STATS");
@@ -185,9 +196,16 @@ static void fwp_gc_init(void) {
     fwp_gc.budget = fwp_gc.budget_given = GC_MIN_BUDGET;
 }
 
+#ifdef FWP_STATIC_MEMORY
+static size_t fwp_static_meta_bytes(size_t heap) { return (heap >> GC_SHIFT) * sizeof(gc_chunk); }
+#endif
+
 /* commit chunks up to `top` */
 static void fwp_gc_commit(size_t top) {
     if (top <= fwp_gc.committed) return;
+#ifdef FWP_STATIC_MEMORY
+    fwp_static_full("heap", fwp_static.heap_bytes, "--heap");
+#endif
     if (top > fwp_gc.nchunks) fwp_gc_oom();
     size_t to = top + GC_COMMIT_STEP;
     if (to > fwp_gc.nchunks) to = fwp_gc.nchunks;
@@ -203,6 +221,8 @@ static void fwp_gc_commit(size_t top) {
 
 static inline char *fwp_gc_chunk_addr(size_t ci) { return fwp_gc.base + (ci << GC_SHIFT); }
 
+static void fwp_gc_collect(void);
+
 /* `k` free chunks in a row (index of the first) */
 static size_t fwp_gc_chunks(size_t k) {
     size_t *rover = k == 1 ? &fwp_gc.rover : &fwp_gc.big_rover;
@@ -217,6 +237,19 @@ static size_t fwp_gc_chunks(size_t k) {
     }
     /* a free run ending at the top grows into fresh chunks */
     size_t first = fwp_gc.top - run;
+#ifdef FWP_STATIC_MEMORY
+    /* the heap cannot grow: collect, once, before giving up */
+    static int retrying = 0;
+    if (first + k > fwp_gc.nchunks && fwp_gc.armed && !fwp_gc.collecting && !retrying) {
+        retrying = 1;
+        fwp_gc.rover = fwp_gc.big_rover = 0;
+        fwp_gc_collect();
+        fwp_gc.rover = fwp_gc.big_rover = 0;
+        size_t ci = fwp_gc_chunks(k);
+        retrying = 0;
+        return ci;
+    }
+#endif
     fwp_gc.nfree_chunks -= run;
     fwp_gc_commit(first + k);
     fwp_gc.top = first + k;
@@ -611,7 +644,10 @@ static void fwp_gc_sweep(void) {
                 fwp_gc.meta[ci].dirty = 0;
                 run++;
             }
+#ifndef FWP_STATIC_MEMORY
+            /* static memory keeps its pages: they were given at startup */
             madvise(fwp_gc_chunk_addr(ci), run << GC_SHIFT, MADV_DONTNEED);
+#endif
         }
     }
 }
@@ -691,10 +727,33 @@ static void fwp_gc_start(void *top) {
     fwp_gc.armed = fwp_gc.enabled && fwp_gc.ndata > 0;
 #endif
     if (fwp_gc.stats) atexit(fwp_gc_report);
+#ifdef FWP_STATIC_MEMORY
+    const char *mr = getenv("FWP_MEMORY_REPORT");
+    if (mr && *mr && strcmp(mr, "0") != 0) atexit(fwp_static_report);
+#endif
     if (fwp_gc.armed && fwp_gc.stress) {
         fwp_gc.total_alloc += (double)(fwp_gc.budget_given - fwp_gc.budget);
         fwp_gc.budget = fwp_gc.budget_given = 0;
     }
 }
+
+#ifdef FWP_STATIC_MEMORY
+/* FWP_MEMORY_REPORT=1: the static memory's parts, and how much of each was
+ * used at most */
+static void fwp_static_report(void) {
+    fprintf(stderr,
+            "fwp: static memory: %zu KiB mapped at startup\n"
+            "  heap        %8zu KiB, %zu KiB used at most (%zu KiB live at most, %zu collections)\n"
+            "  pool        %8zu KiB, %zu KiB used at most\n"
+            "  main stack  %8zu KiB\n"
+            "  tasks       %d stacks of %zu KiB, %d used at most\n"
+            "  threads     %d stacks of %zu KiB\n",
+            (size_t)(fwp_static.end - fwp_static.base) >> 10, fwp_static.heap_bytes >> 10,
+            (size_t)fwp_gc.heap_bytes >> 10, fwp_gc.peak >> 10, fwp_gc.ncollect, (size_t)FWP_STATIC_POOL >> 10,
+            fwp_static.pool_peak >> 10, (size_t)FWP_STATIC_STACK >> 10, FWP_STATIC_TASKS,
+            (size_t)FWP_STATIC_TASK_STACK >> 10, fwp_static.tasks_peak, FWP_STATIC_THREADS,
+            (size_t)FWP_STATIC_THREAD_STACK >> 10);
+}
+#endif
 
 #endif /* FWP_GC */

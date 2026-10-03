@@ -15,6 +15,8 @@ usage:
                                  go to that service
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
+            [--memory static [--heap S] [--pool S] [--stack S]
+                             [--tasks N] [--task-stack S] [--threads N]]
             [--wasm-async jspi|asyncify]
             [--staticlib|--cdylib] [--link lib-or-source]...
             [--service m[=addr]]...
@@ -27,6 +29,9 @@ usage:
                                  --rest makes every exported function an
                                  endpoint of one HTTP server, with JSON
                                  and an OpenAPI document (see docs/rest.md);
+                                 --memory static maps all of the program's
+                                 memory once at startup, of the given sizes
+                                 (such as 64M), and none after it;
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
                                  --wasm-async=asyncify runs the tasks of a
@@ -406,9 +411,38 @@ fn build(args: &[String]) -> ExitCode {
     let mut wasm_async = fwp::asyncify::WasmAsync::Jspi;
     let mut lib: Option<fwp::cgen::LibKind> = None;
     let mut services: Vec<(String, String)> = Vec::new();
+    let mut memory: Option<fwp::cgen::StaticMemory> = None;
+    let mut sizes: Vec<(String, String)> = Vec::new();
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--memory" | "--memory=static" | "--memory=dynamic" => {
+                let v = match args[i].split_once('=') {
+                    Some((_, v)) => Some(v.to_string()),
+                    None => {
+                        i += 1;
+                        args.get(i).cloned()
+                    }
+                };
+                match v.as_deref() {
+                    Some("static") => memory = Some(Default::default()),
+                    Some("dynamic") => memory = None,
+                    _ => {
+                        eprintln!("fwp build: --memory is static or dynamic");
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            o @ ("--heap" | "--pool" | "--stack" | "--tasks" | "--task-stack" | "--threads") => {
+                i += 1;
+                match args.get(i) {
+                    Some(v) => sizes.push((o.to_string(), v.clone())),
+                    None => {
+                        eprintln!("fwp build: {} needs a value", o);
+                        return ExitCode::from(2);
+                    }
+                }
+            }
             "--service" => {
                 i += 1;
                 if let Some(s) = args.get(i) {
@@ -475,6 +509,48 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: missing file");
         return ExitCode::from(2);
     };
+    if !sizes.is_empty() && memory.is_none() {
+        eprintln!(
+            "fwp build: {} sets a part of static memory: add --memory static",
+            sizes[0].0
+        );
+        return ExitCode::from(2);
+    }
+    if let Some(m) = memory.as_mut() {
+        if target.is_wasm() || lib.is_some() {
+            eprintln!("fwp build: --memory static builds native executables (not WebAssembly or libraries)");
+            return ExitCode::from(2);
+        }
+        for (o, v) in &sizes {
+            let n = if o == "--tasks" || o == "--threads" {
+                v.parse::<u64>().ok().filter(|n| *n <= 65536)
+            } else {
+                fwp::cgen::parse_size(v).filter(|n| *n >= 64 << 10)
+            };
+            let Some(n) = n else {
+                eprintln!(
+                    "fwp build: {} {}: expected {}",
+                    o,
+                    v,
+                    if o == "--tasks" || o == "--threads" {
+                        "a count"
+                    } else {
+                        "a size of at least 64K, such as 512K, 64M or 1G"
+                    }
+                );
+                return ExitCode::from(2);
+            };
+            match o.as_str() {
+                "--heap" => m.heap = n,
+                "--pool" => m.pool = n,
+                "--stack" => m.stack = n,
+                "--tasks" => m.tasks = n,
+                "--task-stack" => m.task_stack = n,
+                _ => m.threads = n,
+            }
+        }
+        fwp::cgen::set_static_memory(Some(*m));
+    }
     if IN_WASM && !emit_c {
         return not_in_wasm(
             "compiling with `fwp build` (it needs a C compiler; `--emit-c` writes the C source)",
