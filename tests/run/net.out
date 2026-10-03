@@ -6,7 +6,7 @@ error: :0: invalid socket address
 error: 127.0.0.1:+80: invalid socket address
 error: 127.0.0.1:: invalid socket address
 error: 127.0.0.1: invalid socket address
-Some True
+True
 Some 1
 Some 7
 None

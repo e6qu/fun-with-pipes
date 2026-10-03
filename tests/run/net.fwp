@@ -66,7 +66,9 @@ spin : () -> Bool ! {Async, IO, Network, FileIO}
 spin = loop (if (const () | task.cancelled) (const (Stop True)) Again)
 
 # a task whose deadline passes while it computes; its child, waiting on a
-# channel, is cancelled with it
+# channel, is cancelled with it. The task either sees `task.cancelled`
+# (`Some True`) or is stopped at a preemption point first (`None`),
+# depending on timing; either way it stops, so both print True.
 spin-task : () -> Bool ! {Async, IO, Network, FileIO}
 spin-task = tap (const wait-forever | task.spawn) | spin
 
@@ -81,7 +83,7 @@ main = [
     "127.0.0.1:0" | tcp.listen | pair | guard guarded | echo,
     "127.0.0.1:0" | tcp.listen | pair | guard closing | echo,
     ["127.0.0.1:65536", "127.0.0.1:http", ":0", "127.0.0.1:+80", "127.0.0.1:", "127.0.0.1"] | each (listen-error | print),
-    task.within 30ms spin-task | echo,
+    task.within 30ms spin-task | option.unwrap-or True | echo,
     9000000000000000000 | channel.make | the-ch | tap (flip channel.send 1) | channel.recv | echo,
     task.within huge (const 7) | echo,
     task.within 20ms (const huge | task.sleep) | echo,
