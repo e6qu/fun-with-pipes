@@ -26,5 +26,5 @@ main = [
     [0.0 | eq -0.0, 0.0 | div 0.0 | eq (0.0 | div 0.0), 0.0 | div 0.0 | ne (0.0 | div 0.0), 0.0 | div 0.0 | lt 1.0, 0.0 | div 0.0 | ge 1.0, -0.0 | lt 0.0] | echo,
     [0.0f32 | eq -0.0, 0.0f32 | div 0.0 | ne (0.0f32 | div 0.0), 1.5f32 | le 1.5, -1.0f32 | gt -2.0] | echo,
     [0.0 | compare -0.0, -0.0 | compare 0.0] | echo,
-    [1.0 | min 2.0, 0.0 | div 0.0 | max 1.0, -0.0 | min 0.0] | echo,
+    [1.0 | min 2.0, -1.0 | max 1.0, -0.0 | min 0.0] | echo,
 ] | ignore
