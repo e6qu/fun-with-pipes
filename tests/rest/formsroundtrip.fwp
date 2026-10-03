@@ -1,0 +1,74 @@
+# Calls the API of forms.fwp through formsclient.fwp, the client that
+# `fwp openapi --import` generates from its OpenAPI document
+# (tests/rest.rs): JSON, form and multipart/form-data bodies with files,
+# and responses as JSON, text and CSV. The server's address is in
+# FWP_TEST_BASE.
+
+import formsclient
+
+# call a function with the base URL and show what it returned
+call : (String -> a ! {Async, IO, Network, Error[RestError]}) -> String -> () ! {Async, IO, Network} where Display[a]
+call = attempt | flip compose echo
+
+ann : formsclient.Profile
+ann = formsclient.Profile {
+    name = "ann",
+    age = Some 30,
+    tags = ["a", "b c"],
+    admin = True,
+    avatar = Some Upload {
+        filename = "me.png",
+        content-type = "image/png",
+        bytes = bytes.from-list [137, 80, 78, 71, 0, 255],
+    },
+}
+
+bundle : formsclient.UploadBody
+bundle = formsclient.UploadBody {
+    title = "two \"files\"",
+    files = [
+        Upload {
+            filename = "a.txt",
+            content-type = "text/plain",
+            bytes = "first file\r\n--not a boundary\r\n" | string.to-bytes,
+        },
+        Upload {
+            filename = "b.bin",
+            content-type = "application/octet-stream",
+            bytes = bytes.from-list [0, 13, 10, 45, 45, 1],
+        },
+    ],
+    data = Some Upload {
+        filename = "",
+        content-type = "text/plain",
+        bytes = "data" | string.to-bytes,
+    },
+}
+
+poetry : formsclient.ShelfBody
+poetry = formsclient.ShelfBody {
+    kind = formsclient.Poetry,
+    size = 12,
+    label = Some "odes & elegies",
+}
+
+shelf-seven : String -> formsclient.ShelfSeen ! {Async, Network, Error[RestError]}
+shelf-seven = fork apply (const poetry) (fork formsclient.shelf id (const 7))
+
+calls : String -> () ! {Async, IO, Network}
+calls =
+    tap (call (flip formsclient.profile ann))
+    | tap (call (flip formsclient.upload bundle))
+    | tap (call shelf-seven)
+    | tap (call formsclient.list-books)
+    | tap (call (flip formsclient.book 2))
+    | tap (call (flip formsclient.book 9))
+    | tap (call (flip formsclient.half 4))
+    | tap (call (flip formsclient.half 3))
+    | tap (call (flip formsclient.note "hi"))
+    | tap (call formsclient.books-csv)
+    | tap (call (flip formsclient.hello "Ada Lovelace"))
+    | ignore
+
+main =
+    "FWP_TEST_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080" | calls

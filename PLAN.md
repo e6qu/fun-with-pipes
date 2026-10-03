@@ -174,6 +174,19 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     were left out. See [docs/numerics.md](docs/numerics.md) and
     [tutorial 21](docs/tutorials/21-autodiff-and-devices/README.md).
 
+14. **REST bodies, formats and imports; reflection of imported routes**
+    (done). REST endpoints take forms and `multipart/form-data` with
+    files (`Upload`) besides JSON (`# accepts:`, 415 for other media
+    types), and write their results as JSON, text or CSV by the request's
+    `Accept` header (`# produces:`, 406), all in fwp and in the OpenAPI
+    document. `fwp openapi --import` reads YAML (a YAML 1.2 reader of its
+    own) and Swagger 2.0 (converted to OpenAPI 3), and its clients send
+    forms and files and read text and bytes. `fwp proto --import` keeps
+    the descriptors of the `.proto` file and its imports, and `grpc.serve`
+    serves server reflection (v1 and v1alpha) for the routes that carry
+    them, so grpcurl needs no `.proto`. See [docs/rest.md](docs/rest.md)
+    and [docs/grpc.md](docs/grpc.md).
+
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).

@@ -1,0 +1,259 @@
+# The petstore of petstore.json, written in YAML: `fwp openapi --import`
+# makes the same client of either (tests/rest.rs).
+openapi: 3.0.3
+info:
+  title: Petstore
+  version: "1.0.7"
+  description: >-
+    A pet store, written by hand to try what
+    `fwp openapi --import` supports.
+paths:
+  /pet/{petId}:
+    parameters:
+      - $ref: '#/components/parameters/PetId'
+    get:
+      operationId: getPetById
+      summary: Find a pet by its id
+      parameters:
+        - { name: X-Trace, in: header, schema: { type: string } }
+      responses:
+        '200':
+          description: the pet
+          content: &pet
+            application/json:
+              schema: { $ref: "#/components/schemas/Pet" }
+        404: { description: Pet not found }
+    delete:
+      operationId: deletePet
+      parameters:
+      - name: api_key
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: deleted
+  /pet:
+    post:
+      operationId: addPet
+      security:
+        - petstore_auth: []
+      requestBody:
+        $ref: '#/components/requestBodies/Pet'
+      responses:
+        '201':
+          description: created
+          content: *pet
+  /pet/findByStatus:
+    get:
+      operationId: findPetsByStatus
+      description: |-
+        Multiple status values can be provided
+        with comma separated strings.
+      parameters:
+        - name: status
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [available, pending, sold]
+        - name: maxResults
+          in: query
+          schema: {type: integer, format: int32}
+      responses:
+        '200':
+          description: the pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Pet'}
+  /store/inventory:
+    get:
+      operationId: getInventory
+      responses:
+        '200':
+          description: counts by status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  format: int32
+  /store/order:
+    post:
+      operationId: placeOrder
+      requestBody:
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '200': {description: ok}
+  /pet/{petId}/form:
+    post:
+      operationId: updatePetWithForm
+      parameters:
+        - $ref: '#/components/parameters/PetId'
+        - name: session
+          in: cookie
+          schema: { type: string }
+      security: [{basic: []}, {api_key: []}]
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                status: { type: string }
+      responses:
+        '200':
+          description: updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dog'
+  /user/logout:
+    post:
+      operationId: logoutUser
+      security:
+        - basic: []
+      responses:
+        '204':
+          description: logged out
+  /user/login:
+    get:
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/Kind'
+      responses:
+        '200':
+          description: a session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+components:
+  parameters:
+    PetId:
+      name: petId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+  requestBodies:
+    Pet:
+      required: true
+      content: *pet
+  schemas:
+    Pet:
+      type: object
+      description: A pet for sale.
+      required:
+        - name
+        - photoUrls
+      properties:
+        id: &int64
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: doggie
+        category:
+          $ref: '#/components/schemas/Category'
+        photoUrls:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        status:
+          type: string
+          description: pet status in the store
+          enum:
+            - available
+            - pending
+            - sold
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+        owner:
+          type: object
+          properties:
+            first-name:
+              type: string
+            2nd:
+              type: boolean
+    Category: &idName
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    Tag: *idName
+    Kind:
+      type: string
+      enum: [Admin, Guest]
+    Session:
+      type: object
+      required: [token]
+      properties:
+        owner:
+          $ref: '#/components/schemas/Owner'
+        token:
+          type: string
+        expires:
+          type: string
+          format: duration
+        extra:
+          allOf:
+            - $ref: '#/components/schemas/Tag'
+        data:
+          oneOf:
+            - type: string
+            - type: integer
+        match:
+          type: [string, 'null']
+    Order:
+      type: object
+      properties:
+        id: {type: integer}
+    Dog:
+      description: A pet that barks.
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          required: [bark]
+          properties:
+            bark:
+              type: boolean
+    Owner:
+      anyOf:
+        - $ref: '#/components/schemas/Tag'
+        - type: string
+        - type: 'null'
+  securitySchemes:
+    petstore_auth:
+      type: http
+      scheme: bearer
+    api_key: {type: apiKey, in: header, name: X-API-Key}
+    basic:
+      type: http
+      scheme: basic

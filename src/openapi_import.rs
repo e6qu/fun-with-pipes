@@ -65,8 +65,40 @@ const RESERVED_TYPES: &[&str] = &[
     "Route",
     "Set",
     "String",
+    "Upload",
+    "RestPart",
     "Url",
 ];
+
+/// A marker of the schemas of files in `multipart/form-data` bodies:
+/// `Upload`s.
+const UPLOAD: &str = "x-fwp-upload";
+
+/// A schema of a file: a binary string.
+fn is_binary(s: &Json) -> bool {
+    s.get("type").and_then(Json::as_str) == Some("string")
+        && matches!(
+            s.get("format").and_then(Json::as_str),
+            Some("binary") | Some("base64")
+        )
+}
+
+/// The schema of fwp's `Upload` (files of forms in JSON): an object of
+/// `filename`, `content-type` and base64 `bytes`.
+fn is_upload(s: &Json) -> bool {
+    let mut keys: Vec<&str> = s
+        .get("properties")
+        .map(Json::members)
+        .unwrap_or(&[])
+        .iter()
+        .map(|(k, _)| k.as_str())
+        .collect();
+    keys.sort();
+    keys == ["bytes", "content-type", "filename"]
+        && s.at(&["properties", "bytes", "format"])
+            .and_then(Json::as_str)
+            == Some("byte")
+}
 
 /// A type in fwp syntax.
 #[derive(Clone, Debug, PartialEq)]
@@ -274,6 +306,9 @@ impl<'a> Gen<'a> {
             self.warn(at, format!("there is no component schema `{}`", name));
             return Ty::Prim("Json");
         };
+        if is_upload(schema) {
+            return Ty::Prim("Upload");
+        }
         let tname = self.new_type_name(name);
         self.defined.insert(name.to_string(), tname.clone());
         self.define(&tname, schema, name);
@@ -302,6 +337,39 @@ impl<'a> Gen<'a> {
         }
     }
 
+    /// A `multipart/form-data` schema whose binary properties are files
+    /// (`Upload`s), if it has any.
+    fn with_uploads(&self, s: &Json) -> Option<Json> {
+        let o = self.resolve(s)?;
+        let props = o.get("properties")?.members();
+        let file = |p: &Json| is_binary(p) || p.get("items").is_some_and(is_binary);
+        if !props.iter().any(|(_, p)| file(p)) {
+            return None;
+        }
+        let marker = || Json::obj(vec![(UPLOAD, Json::Bool(true))]);
+        let props = props
+            .iter()
+            .map(|(k, p)| {
+                let p = if is_binary(p) {
+                    marker()
+                } else if p.get("items").is_some_and(is_binary) {
+                    Json::obj(vec![("type", Json::str("array")), ("items", marker())])
+                } else {
+                    p.clone()
+                };
+                (k.clone(), p)
+            })
+            .collect();
+        let mut out: Vec<(String, Json)> = o
+            .members()
+            .iter()
+            .filter(|(k, _)| k != "properties")
+            .cloned()
+            .collect();
+        out.push(("properties".into(), Json::Obj(props)));
+        Some(Json::Obj(out))
+    }
+
     /// The type of a schema; `hint` names inline types.
     fn ty(&mut self, s: &Json, hint: &str, at: &str) -> Ty {
         let t = self.ty_inner(s, hint, at, None);
@@ -315,6 +383,9 @@ impl<'a> Gen<'a> {
     /// `name`: the name of the type being defined, which an enum, a
     /// variant type or a record takes instead of a new one.
     fn ty_inner(&mut self, s: &Json, hint: &str, at: &str, name: Option<&str>) -> Ty {
+        if s.get(UPLOAD).is_some() {
+            return Ty::Prim("Upload");
+        }
         if let Some(r) = s.get("$ref").and_then(Json::as_str) {
             return self.reference(r, at);
         }
@@ -762,8 +833,23 @@ struct Operation {
     body: Option<Ty>,
     /// The body is a form (`application/x-www-form-urlencoded`).
     form: bool,
+    /// The body is `multipart/form-data`.
+    multipart: bool,
     result: Ty,
+    /// How the body of a success is read, if not as JSON: `text` or
+    /// `bytes`, and the media type to accept.
+    reader: Option<(&'static str, String)>,
     not_found: bool,
+}
+
+/// The content of a successful response.
+enum Reply<'a> {
+    Empty,
+    Json(&'a Json),
+    /// Text of a media type (`text/plain`).
+    Text(String),
+    /// Bytes of a media type (`image/png`).
+    Bytes(String),
 }
 
 /// The credential an operation needs: of the first of its security
@@ -816,9 +902,9 @@ fn credential(doc: &Json, op: &Json) -> Result<Option<Credential>, String> {
     ))
 }
 
-/// The JSON schema of the first successful response: `Some(None)` for a
-/// response without JSON content.
-fn success(op: &Json) -> Option<Option<&Json>> {
+/// The content of the first successful response: JSON if it has some,
+/// else text, else bytes.
+fn success(op: &Json) -> Option<Reply<'_>> {
     let Some(Json::Obj(responses)) = op.get("responses") else {
         return None;
     };
@@ -828,23 +914,60 @@ fn success(op: &Json) -> Option<Option<&Json>> {
         .collect();
     ok.sort_by_key(|(k, _)| k.clone());
     let (_, r) = ok.first()?;
-    Some(r.at(&["content", "application/json", "schema"]))
+    let content = r.get("content").map(Json::members).unwrap_or(&[]);
+    let json = |m: &str| {
+        let m = m
+            .split(';')
+            .next()
+            .unwrap_or("")
+            .trim()
+            .to_ascii_lowercase();
+        m == "application/json" || m.ends_with("+json")
+    };
+    if let Some((_, c)) = content.iter().find(|(m, _)| json(m)) {
+        return Some(match c.get("schema") {
+            Some(s) => Reply::Json(s),
+            None => Reply::Empty,
+        });
+    }
+    if let Some((m, _)) = content.iter().find(|(m, _)| m.starts_with("text/")) {
+        return Some(Reply::Text(m.clone()));
+    }
+    Some(match content.first() {
+        Some((m, _)) => Reply::Bytes(m.clone()),
+        None => Reply::Empty,
+    })
 }
 
-/// Generate the client module of an OpenAPI document (JSON text).
+/// Generate the client module of an OpenAPI document (JSON or YAML
+/// text, OpenAPI 3.0 or 3.1, or Swagger 2.0).
 pub fn client(text: &str) -> Result<Module, String> {
-    let doc = Json::parse(text).map_err(|e| {
-        format!(
-            "not a JSON document ({}); YAML is not supported, convert it to JSON first",
-            e
-        )
-    })?;
-    let version = doc.get("openapi").and_then(Json::as_str).unwrap_or("");
-    if !version.starts_with("3.") {
-        return Err(match doc.get("swagger") {
-            Some(_) => "Swagger 2.0 documents are not supported (OpenAPI 3.0 and 3.1 are)".into(),
-            None => "not an OpenAPI 3 document (it has no `openapi: 3.x` member)".into(),
-        });
+    let doc = match Json::parse(text) {
+        Ok(d) => d,
+        Err(je) => crate::yaml::parse(text).map_err(|ye| {
+            if text.trim_start().starts_with(['{', '[']) {
+                format!("not a JSON document ({})", je)
+            } else {
+                format!("not a JSON or YAML document ({})", ye)
+            }
+        })?,
+    };
+    let doc = if crate::swagger::is_swagger(&doc) {
+        crate::swagger::to_openapi(&doc)?
+    } else {
+        doc
+    };
+    // (a YAML `openapi: 3.0` is a number)
+    let version = match doc.get("openapi") {
+        Some(Json::Num(n)) => n.to_string(),
+        Some(v) => v.as_str().unwrap_or("").to_string(),
+        None => String::new(),
+    };
+    if !version.starts_with("3.") && version != "3" {
+        return Err(
+            "not an OpenAPI document (it has no `openapi: 3.x` or `swagger: \"2.0\"` member)"
+                .into(),
+        );
     }
     let mut g = Gen {
         components: BTreeMap::new(),
@@ -888,10 +1011,11 @@ pub fn client(text: &str) -> Result<Module, String> {
         .at(&["info", "title"])
         .and_then(Json::as_str)
         .unwrap_or("an API");
-    let ver = doc
-        .at(&["info", "version"])
-        .and_then(Json::as_str)
-        .unwrap_or("");
+    let ver = match doc.at(&["info", "version"]) {
+        Some(Json::Num(n)) => n.to_string(),
+        Some(v) => v.as_str().unwrap_or("").to_string(),
+        None => String::new(),
+    };
     let _ = writeln!(
         out,
         "# A client of `{}` {}, generated from its OpenAPI document by\n# `fwp openapi --import`.",
@@ -1054,6 +1178,7 @@ fn operation(
     let headers = records.pop().unwrap();
     let query = records.pop().unwrap();
     let mut form = false;
+    let mut multipart = false;
     let body = match op.get("requestBody") {
         None => None,
         Some(b) => {
@@ -1064,13 +1189,23 @@ fn operation(
                     .ok_or_else(|| format!("there is no request body `{}`", r))?,
                 None => b,
             };
+            let files;
             let schema = match b.at(&["content", "application/json", "schema"]) {
                 Some(s) => s,
-                None => {
-                    form = true;
-                    b.at(&["content", "application/x-www-form-urlencoded", "schema"])
-                        .ok_or("its request body is neither JSON (`application/json`) nor a form (`application/x-www-form-urlencoded`)")?
-                }
+                None => match b.at(&["content", "application/x-www-form-urlencoded", "schema"]) {
+                    Some(s) => {
+                        form = true;
+                        s
+                    }
+                    None => {
+                        let s = b.at(&["content", "multipart/form-data", "schema"])
+                            .ok_or("its request body is neither JSON (`application/json`), a form (`application/x-www-form-urlencoded`) nor `multipart/form-data`")?;
+                        form = true;
+                        multipart = true;
+                        files = g.with_uploads(s);
+                        files.as_ref().unwrap_or(s)
+                    }
+                },
             };
             let t = g.ty(schema, &format!("{}Body", type_name(&name)), &at);
             if form
@@ -1085,10 +1220,19 @@ fn operation(
             })
         }
     };
+    let mut reader = None;
     let result = match success(op) {
         None => return Err("it has no success (2xx) response".into()),
-        Some(None) => Ty::Tuple(vec![]),
-        Some(Some(s)) => g.ty(s, &format!("{}Result", type_name(&name)), &at),
+        Some(Reply::Empty) => Ty::Tuple(vec![]),
+        Some(Reply::Json(s)) => g.ty(s, &format!("{}Result", type_name(&name)), &at),
+        Some(Reply::Text(m)) => {
+            reader = Some(("rest.text-body", m));
+            Ty::Prim("String")
+        }
+        Some(Reply::Bytes(m)) => {
+            reader = Some(("rest.bytes-body", m));
+            Ty::Prim("Bytes")
+        }
     };
     let not_found = op
         .at(&["responses", "404", "description"])
@@ -1106,7 +1250,9 @@ fn operation(
         cookies,
         body,
         form,
+        multipart,
         result,
+        reader,
         not_found,
     })
 }
@@ -1221,8 +1367,14 @@ fn function_text(o: &Operation) -> String {
             format!("{} | rest.cookie-header", c)
         });
     }
-    if o.form {
+    if o.form && !o.multipart {
         headers.push("const [(\"content-type\", \"application/x-www-form-urlencoded\")]".into());
+    }
+    if let Some((_, m)) = &o.reader {
+        headers.push(format!(
+            "const [(\"accept\", {})]",
+            crate::rest::fwp_string(m)
+        ));
     }
     let encode = if o.form {
         "rest.form-body"
@@ -1230,17 +1382,35 @@ fn function_text(o: &Operation) -> String {
         "json.write"
     };
     let body = match &o.body {
+        _ if o.multipart => "const None".into(),
         Some(Ty::Option(_)) => format!("{} | option.map {}", arg(n - 1, n), encode),
         Some(_) => format!("{} | {} | Some", arg(n - 1, n), encode),
         None => "const None".into(),
     };
-    let fetch = if o.not_found {
-        "rest.fetch-option"
-    } else {
-        "rest.fetch"
+    let fetch = match &o.reader {
+        _ if o.reader.is_none() && !o.multipart && o.not_found => "rest.fetch-option".to_string(),
+        _ if o.reader.is_none() && !o.multipart => "rest.fetch".to_string(),
+        r => {
+            let read = r.as_ref().map(|r| r.0).unwrap_or("rest.json-body");
+            let read = if o.not_found {
+                format!("rest.or-none {}", read)
+            } else {
+                read.to_string()
+            };
+            if o.multipart {
+                format!("rest.send | {}", read)
+            } else {
+                format!("rest.request | rest.send | {}", read)
+            }
+        }
     };
     let mut expr = format!(
-        "make RestRequest {{\n    method = const {},\n    url = make RestTarget {{\n        base = {},\n        path = const {},\n        params = rest.texts [{}],\n        query = {},\n    }} | rest.url,\n    headers = {},\n    body = {},\n}} | {}",
+        "{}make RestRequest {{\n    method = const {},\n    url = make RestTarget {{\n        base = {},\n        path = const {},\n        params = rest.texts [{}],\n        query = {},\n    }} | rest.url,\n    headers = {},\n    body = {},\n}}{} | {}",
+        if o.multipart {
+            format!("fork rest.multipart-request ({}) (", arg(n - 1, n))
+        } else {
+            String::new()
+        },
         crate::rest::fwp_string(&o.method),
         arg(0, n),
         crate::rest::fwp_string(&o.path),
@@ -1248,6 +1418,7 @@ fn function_text(o: &Operation) -> String {
         pairs(query),
         pairs(headers),
         body,
+        if o.multipart { ")" } else { "" },
         fetch
     );
     for _ in 1..n {

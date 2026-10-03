@@ -1465,8 +1465,10 @@ an `Err` result or an `Error` the function raises is an error response
 # may be absent), nothing (a `()` parameter), a request header (required
 # or not), every line of a repeated header, a cookie (required or not),
 # the whole `Request`, the principal that authentication found
-# (`rest.secured`), or the fields of an options record from the query,
-# headers and cookies.
+# (`rest.secured`), the fields of an options record from the query,
+# headers and cookies, or a body of the media types it accepts ("json",
+# "form", "multipart"), with `True` if it may be absent and the fields of
+# its record as a form.
 RestSource =
     | RestSource.Path String
     | RestSource.Query String Bool
@@ -1480,10 +1482,33 @@ RestSource =
     | RestSource.Request
     | RestSource.Principal
     | RestSource.Options List[RestField]
+    | RestSource.Content Bool List[String] List[RestFormField]
 
 # A field of an options record: its JSON name, its kind (0 a value, 1
 # optional, 2 repeated, 3 a switch) and where it is read.
 RestField = { name: String, kind: I64, place: RestPlace }
+
+# A field of a body read from a form (`application/x-www-form-urlencoded`
+# or `multipart/form-data`): its JSON name, its kind (0 a value, 1
+# optional, 2 repeated, 3 a switch) and what its parts are (0 text, 1
+# `Bytes`, 2 an `Upload`).
+RestFormField = { name: String, kind: I64, part: I64 }
+
+# A file sent in a form (`multipart/form-data`): its file name, its media
+# type and its content. A field of this type in the body of an endpoint
+# that accepts forms (`# accepts: multipart`) takes a file part; in JSON
+# it is an object whose `bytes` are base64.
+Upload = { filename: String, content-type: String, bytes: Bytes }
+
+# A part of a `multipart/form-data` body: the name of its field, its file
+# name (for a file), its media type (`text/plain` by default) and its
+# content.
+RestPart = {
+    name: String,
+    filename: Option[String],
+    content-type: String,
+    bytes: Bytes,
+}
 
 # Where a field of an options record is read: the query parameter of its
 # name, a request header, or a cookie.
@@ -1555,6 +1580,22 @@ rest.endpoint-reply : RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, Fil
 # `rest.endpoint-reply` for a `RestReply[()]`: no body.
 rest.endpoint-reply-empty : RestRoute -> (a -> RestReply[()] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
 
+# The media type of a request's body, in lower case and without its
+# parameters (`multipart/form-data`); "" without a `Content-Type`.
+rest.media-type : Request -> String
+
+# The parts of a `multipart/form-data` body with a boundary
+# (`rest.header-param "boundary"` of its `Content-Type`); `None` when
+# there is no part.
+rest.multipart-parts : String -> Bytes -> Option[List[RestPart]]
+
+# A parameter of a header value: `rest.header-param "boundary"
+# "multipart/form-data; boundary=\"x\""` is `Some "x"`.
+rest.header-param : String -> String -> Option[String]
+
+# The file of a part.
+rest.upload-of : RestPart -> Upload
+
 # 200 (or the route's status) with the JSON of a value; 204 has no body
 rest.success : RestRoute -> b -> Response where Encode[b]
 
@@ -1573,6 +1614,46 @@ rest.json-text : I64 -> String -> Response
 
 # An error value as a response: `{"error": <the error as JSON>}`.
 rest.failure : RestRoute -> e -> Response where Encode[e]
+
+# `rest.endpoint` for an endpoint that writes its result in several media
+# types (`# produces:`): each format is a media type and how a value is
+# written in it (`("text/plain; charset=utf-8", show)`); the one the
+# request's `Accept` header prefers is used (the first one without it),
+# and a request that accepts none of them gets a 406. Errors stay JSON.
+rest.endpoint-as : List[(String, b -> String)] -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+
+# `rest.endpoint-as` for a function returning `Option`: `None` is a 404.
+rest.endpoint-option-as : List[(String, b -> String)] -> RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+
+# `rest.endpoint-as` for a function returning `Result`: `Err` is an error
+# response.
+rest.endpoint-result-as : List[(String, b -> String)] -> RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[x], Encode[e]
+
+# `rest.endpoint-as` for a function returning `RestReply`.
+rest.endpoint-reply-as : List[(String, b -> String)] -> RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+
+# A route that answers 406 to requests whose `Accept` header accepts none
+# of the media types, before calling its handler.
+rest.negotiated : List[String] -> Route -> Route
+
+# The media type of those offered (in the order of the server's
+# preference) that an `Accept` header prefers: the one of the highest
+# quality, the first one without the header, and none when it accepts
+# none of them (`q=0` refuses one).
+rest.choose : List[String] -> Option[String] -> Option[String]
+
+# The media ranges of an `Accept` header and their qualities:
+# `"text/*;q=0.5, application/json"` is
+# `[("text/*", 0.5), ("application/json", 1.0)]`.
+rest.accept-ranges : String -> List[(String, F64)]
+
+# a response with a status, a media type and a text
+rest.media-text : I64 -> String -> String -> Response
+
+# Records as CSV (`text/csv`): a header of the columns (JSON names of the
+# fields), then a row per record, with each value as in a query string and
+# an absent one empty.
+rest.csv : List[String] -> List[r] -> String where Encode[r]
 
 # Require credentials for a route: the first credential of the schemes
 # that the request carries is passed to `verify`, whose `Ok` value is the
@@ -1693,6 +1774,40 @@ rest.fetch : RestRequest -> b ! {Async, Network, Error[RestError]} where Decode[
 
 # `rest.fetch`, with `None` for a 404.
 rest.fetch-option : RestRequest -> Option[b] ! {Async, Network, Error[RestError]} where Decode[b]
+
+# The HTTP request of a call: its headers with `Accept:
+# application/json` and `Content-Type: application/json` unless it has
+# them.
+rest.request : RestRequest -> ClientRequest
+
+# The HTTP request of a call whose body is a record sent as
+# `multipart/form-data` (`rest.multipart-body`).
+rest.multipart-request : a -> RestRequest -> ClientRequest where Encode[a]
+
+# Send a request; a failed connection is a `RestError` of status 0.
+rest.send : ClientRequest -> ClientResponse ! {Async, Network, Error[RestError]}
+
+# The decoded JSON of a successful response; any other response is a
+# `RestError` with its status and body.
+rest.json-body : ClientResponse -> b ! {Error[RestError]} where Decode[b]
+
+# The text of a successful response (`text/plain`, `text/csv`, ...).
+rest.text-body : ClientResponse -> String ! {Error[RestError]}
+
+# The bytes of a successful response.
+rest.bytes-body : ClientResponse -> Bytes ! {Error[RestError]}
+
+# A reader of responses with `None` for a 404.
+rest.or-none : (ClientResponse -> b ! {Error[RestError]}) -> ClientResponse -> Option[b] ! {Error[RestError]}
+
+# The boundary between the parts of the `multipart/form-data` bodies that
+# clients send.
+rest.boundary : String
+
+# A record as a `multipart/form-data` body (with `rest.boundary`): a text
+# part per field, a file part per `Upload`, a part per element of a list,
+# and none for `None`.
+rest.multipart-body : a -> Bytes where Encode[a]
 ```
 
 ## gRPC
@@ -1718,11 +1833,25 @@ GrpcError = { code: I64, message: String }
 # one side of a call: the client's, or the server's
 GrpcStream = builtin
 
-# a method served by `grpc.serve`: its path (`/package.Service/Method`) and
-# the function that handles a call
+# a method served by `grpc.serve`: its path (`/package.Service/Method`),
+# the function that handles a call, and the descriptors of the `.proto`
+# files it comes from (for server reflection; routes that `fwp proto
+# --import` generates carry them)
 GrpcRoute = {
     handler: GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
     path: String,
+    reflection: List[GrpcFile],
+}
+
+# A `.proto` file for server reflection: its name
+# (`google/protobuf/timestamp.proto`), its serialized `FileDescriptorProto`,
+# the full names of the messages, enums and services it defines, and the
+# files it imports, directly or not.
+GrpcFile = {
+    name: String,
+    descriptor: Bytes,
+    symbols: List[String],
+    imports: List[String],
 }
 
 # the status codes
@@ -1820,7 +1949,9 @@ grpc.cancel : GrpcStream -> () ! {Network}
 
 # serve routes on an address ("127.0.0.1:50051"; port 0 picks a free
 # port, reported on standard error), with health checking
-# (`grpc.health.v1.Health`), until the task is cancelled
+# (`grpc.health.v1.Health`) and server reflection (`grpc.reflection.v1`
+# and `v1alpha`: the services of the routes, and the `.proto` files of
+# routes that carry their descriptors), until the task is cancelled
 grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
 # serve routes like `grpc.serve`, over TLS (offering h2 with ALPN) with a
@@ -1832,6 +1963,14 @@ grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Netw
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
 
+# Bytes from their base64 text (empty if it is not base64), as generated
+# modules write descriptors.
+grpc.base64-bytes : String -> Bytes
+
+# a route with the descriptors of the `.proto` file it comes from and of
+# the files that file imports, which `grpc.serve` serves by reflection
+grpc.with-files : List[GrpcFile] -> GrpcRoute -> GrpcRoute
+
 # handlers of methods from a request decoder, a response encoder and a
 # function; a request that cannot be decoded fails with
 # `grpc.invalid-argument`
@@ -1839,6 +1978,12 @@ grpc.unary-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> 
 grpc.server-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (a -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
 grpc.client-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> b ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
 grpc.bidi-streaming-handler : (Bytes -> a ! {Error[GrpcError]}) -> (b -> Bytes) -> (Iterator[a] -> Channel[b] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]} where Dup[a]
+
+# The routes with server reflection (`grpc.reflection.v1` and `v1alpha`)
+# added, unless they serve it themselves: it lists the services of the
+# routes and health checking, and answers with the files that routes
+# carry (`grpc.with-files`).
+grpc.reflected : List[GrpcRoute] -> List[GrpcRoute]
 ```
 
 ## Protobuf

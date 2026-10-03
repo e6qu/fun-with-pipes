@@ -144,6 +144,7 @@ fn other_examples_check() {
         "rest/books.fwp",
         "rest/shop.fwp",
         "rest/client.fwp",
+        "rest/uploads.fwp",
     ] {
         let out = Command::new(fwp())
             .arg("check")

@@ -203,6 +203,90 @@ pub struct Endpoint {
     pub auth: Vec<Auth>,
     /// How long a call may take (an fwp duration literal: `5s`).
     pub timeout: Option<String>,
+    /// The kinds of request bodies it accepts (`# accepts:`): "json",
+    /// "form", "multipart"; empty for JSON whatever the `Content-Type`.
+    pub accepts: Vec<String>,
+    /// The fields of its body record, read from forms.
+    pub form_fields: Vec<FormField>,
+    /// The media types of its responses (`# produces:`): "json", "text",
+    /// "csv"; empty for JSON only.
+    pub produces: Vec<String>,
+    /// The columns of CSV responses: the JSON names of the fields.
+    pub csv_columns: Vec<String>,
+}
+
+/// A field of a body record read from a form: its JSON name, its kind and
+/// what its parts are (`RestFormField` in `lib/rest.fwp`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct FormField {
+    pub name: String,
+    pub ty: MT,
+    pub kind: FieldKind,
+    pub part: Part,
+}
+
+/// What the parts of a form field are.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Part {
+    Text = 0,
+    Bytes = 1,
+    Upload = 2,
+}
+
+/// The type of files in forms.
+pub fn upload_type() -> MT {
+    MT::con("std::Upload")
+}
+
+/// The kinds of bodies of `# accepts:`, by name or media type.
+const ACCEPTS: &[(&str, &str)] = &[
+    ("json", "application/json"),
+    ("form", "application/x-www-form-urlencoded"),
+    ("multipart", "multipart/form-data"),
+];
+
+/// The formats of `# produces:`, by name or media type.
+const PRODUCES: &[(&str, &str)] = &[
+    ("json", "application/json"),
+    ("text", "text/plain"),
+    ("csv", "text/csv"),
+];
+
+/// The media type of a kind of body or format.
+pub fn media_of(kind: &str) -> &'static str {
+    ACCEPTS
+        .iter()
+        .chain(PRODUCES)
+        .find(|(k, _)| *k == kind)
+        .map(|(_, m)| *m)
+        .unwrap_or("application/octet-stream")
+}
+
+/// An `# accepts:` or `# produces:` line: names or media types.
+fn media_list(value: &str, what: &str, known: &[(&str, &str)]) -> Result<Vec<String>, String> {
+    let mut out: Vec<String> = Vec::new();
+    for item in value.split([',', ' ']).filter(|v| !v.is_empty()) {
+        let item = item.to_ascii_lowercase();
+        let Some((k, _)) = known.iter().find(|(k, m)| *k == item || *m == item) else {
+            return Err(format!(
+                "unknown media type `{}` in `# {}:` (it takes {})",
+                item,
+                what,
+                known
+                    .iter()
+                    .map(|(k, m)| format!("`{}` ({})", k, m))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        };
+        if !out.iter().any(|o| o == k) {
+            out.push(k.to_string());
+        }
+    }
+    if out.is_empty() {
+        return Err(format!("`# {}:` needs media types", what));
+    }
+    Ok(out)
 }
 
 /// The effects an endpoint may perform: those of an HTTP handler.
@@ -574,6 +658,8 @@ fn endpoint(
     let mut headers: Vec<(String, Option<String>, bool)> = Vec::new();
     let mut response_headers = Vec::new();
     let mut timeout = None;
+    let mut accepts = Vec::new();
+    let mut produces = Vec::new();
     for line in &doc.http {
         let (key, value) = line.split_once(':').unwrap_or((line, ""));
         let bad = |what: &str| format!("`{}`: invalid `# {}:` line `{}`", name, what, value.trim());
@@ -605,6 +691,14 @@ fn endpoint(
                 response_headers.push((h.to_string(), d.trim().to_string()));
             }
             "timeout" => timeout = Some(parse_duration(value).ok_or_else(|| bad("timeout"))?),
+            "accepts" => {
+                accepts =
+                    media_list(value, key, ACCEPTS).map_err(|e| format!("`{}`: {}", name, e))?
+            }
+            "produces" => {
+                produces =
+                    media_list(value, key, PRODUCES).map_err(|e| format!("`{}`: {}", name, e))?
+            }
             "auth" => {}
             _ => {
                 for item in value.split(',').map(str::trim).filter(|s| !s.is_empty()) {
@@ -675,6 +769,16 @@ fn endpoint(
         principal: verifier.map(|v| &v.principal),
     };
     let params = sources(&ctx, &params)?;
+    let form_fields = if accepts.is_empty() {
+        Vec::new()
+    } else {
+        body_forms(prog, name, &params, &accepts)?
+    };
+    let csv_columns = if produces.is_empty() {
+        Vec::new()
+    } else {
+        formats(prog, name, &outcome, result, &produces)?
+    };
     Ok(Endpoint {
         function: name.to_string(),
         name: command,
@@ -692,7 +796,128 @@ fn endpoint(
         response_headers,
         auth,
         timeout,
+        accepts,
+        form_fields,
+        produces,
+        csv_columns,
     })
+}
+
+/// The fields of the body record of an endpoint that accepts forms.
+fn body_forms(
+    prog: &Program,
+    name: &str,
+    params: &[Param],
+    accepts: &[String],
+) -> Result<Vec<FormField>, String> {
+    let Some(body) = params
+        .iter()
+        .find(|p| matches!(p.source, Source::Body { .. }))
+    else {
+        return Err(format!(
+            "`{}`: `# accepts:` needs a request body (a POST, PUT or PATCH route with a body parameter)",
+            name
+        ));
+    };
+    if accepts.iter().all(|a| a == "json") {
+        return Ok(Vec::new());
+    }
+    let ty = match jsontype::shape(&body.ty, prog) {
+        Shape::Option(t) => t,
+        _ => body.ty.clone(),
+    };
+    let Shape::Record(_, fs, order, json) = jsontype::shape(&ty, prog) else {
+        return Err(format!(
+            "`{}`: a form body must be a record, not `{}` (`# accepts:` json only for other types)",
+            name, body.ty
+        ));
+    };
+    let part_of = |t: &MT| -> Option<Part> {
+        if *t == upload_type() {
+            Some(Part::Upload)
+        } else if matches!(jsontype::shape(t, prog), Shape::Bytes) {
+            Some(Part::Bytes)
+        } else if is_scalar(t, prog) {
+            Some(Part::Text)
+        } else {
+            None
+        }
+    };
+    let mut out = Vec::new();
+    for i in order {
+        let (l, t) = &fs[i];
+        let (kind, part) = match jsontype::shape(t, prog) {
+            Shape::Bool => (FieldKind::Switch, Some(Part::Text)),
+            Shape::Option(e) => (FieldKind::Optional, part_of(&e)),
+            Shape::List(e) => (FieldKind::Repeated, part_of(&e)),
+            _ => (FieldKind::Value, part_of(t)),
+        };
+        let Some(part) = part else {
+            return Err(format!(
+                "`{}`: the field `{}` of its form body has type `{}` (form fields are numbers, strings, `Bool`, enums, `Duration`, `Bytes` or `Upload`, or `Option` or `List` of them)",
+                name, l, t
+            ));
+        };
+        out.push(FormField {
+            name: json[i].clone(),
+            ty: t.clone(),
+            kind,
+            part,
+        });
+    }
+    Ok(out)
+}
+
+/// The type of the value an endpoint answers with, if it has one.
+pub fn value_type(outcome: &Outcome, result: &MT, prog: &Program) -> Option<MT> {
+    match outcome {
+        Outcome::Value => Some(result.clone()),
+        Outcome::Option(t) | Outcome::Result(t, _) => Some(t.clone()),
+        Outcome::Reply(t) if !matches!(jsontype::shape(t, prog), Shape::Unit) => Some(t.clone()),
+        _ => None,
+    }
+}
+
+/// Check the formats of `# produces:`; the columns of CSV.
+fn formats(
+    prog: &Program,
+    name: &str,
+    outcome: &Outcome,
+    result: &MT,
+    produces: &[String],
+) -> Result<Vec<String>, String> {
+    let Some(v) = value_type(outcome, result, prog) else {
+        return Err(format!(
+            "`{}`: `# produces:` needs a result with a body",
+            name
+        ));
+    };
+    if !produces.iter().any(|p| p == "csv") {
+        return Ok(Vec::new());
+    }
+    let bad = || {
+        format!(
+            "`{}`: `# produces: csv` needs a list of records whose fields are numbers, strings, `Bool`, enums, `Duration` or `Option`s of them, not `{}`",
+            name, v
+        )
+    };
+    let Shape::List(r) = jsontype::shape(&v, prog) else {
+        return Err(bad());
+    };
+    let Shape::Record(_, fs, order, json) = jsontype::shape(&r, prog) else {
+        return Err(bad());
+    };
+    let mut cols = Vec::new();
+    for i in order {
+        let t = &fs[i].1;
+        let ok = is_scalar(t, prog)
+            || matches!(jsontype::shape(t, prog), Shape::Option(e) if is_scalar(&e, prog));
+        if !ok {
+            return Err(bad());
+        }
+        cols.push(json[i].clone());
+    }
+    Ok(cols)
 }
 
 fn plural(n: usize, what: &str) -> String {
@@ -1127,13 +1352,29 @@ pub fn server_source(api: &Api, openapi: &str, docs: &str) -> String {
         strings(&expose)
     );
     for e in eps {
-        let wrapper = match &e.outcome {
+        let mut wrapper = match &e.outcome {
             Outcome::Option(_) => "rest.endpoint-option",
             Outcome::Result(..) => "rest.endpoint-result",
             Outcome::Reply(MT::Record(fs)) if fs.is_empty() => "rest.endpoint-reply-empty",
             Outcome::Reply(_) => "rest.endpoint-reply",
             _ => "rest.endpoint",
-        };
+        }
+        .to_string();
+        if !e.produces.is_empty() {
+            let formats: Vec<String> = e
+                .produces
+                .iter()
+                .map(|p| match p.as_str() {
+                    "text" => "(\"text/plain; charset=utf-8\", show)".to_string(),
+                    "csv" => format!(
+                        "(\"text/csv; charset=utf-8\", rest.csv {})",
+                        strings(&e.csv_columns)
+                    ),
+                    _ => "(\"application/json\", json.write)".to_string(),
+                })
+                .collect();
+            wrapper = format!("{}-as [{}]", wrapper, formats.join(", "));
+        }
         let f = match e.params.len() {
             1 => e.function.clone(),
             2 => format!("(uncurry {})", e.function),
@@ -1145,7 +1386,28 @@ pub fn server_source(api: &Api, openapi: &str, docs: &str) -> String {
             .iter()
             .map(|(v, s)| format!("({}, {})", fwp_string(v), s))
             .collect();
-        let sources: Vec<String> = e.params.iter().map(|p| source_expr(&p.source)).collect();
+        let sources: Vec<String> = e
+            .params
+            .iter()
+            .map(|p| match &p.source {
+                Source::Body { optional } if !e.accepts.is_empty() => format!(
+                    "RestSource.Content {} {} [{}]",
+                    if *optional { "True" } else { "False" },
+                    strings(&e.accepts),
+                    e.form_fields
+                        .iter()
+                        .map(|f| format!(
+                            "RestFormField {{ name = {}, kind = {}, part = {} }}",
+                            fwp_string(&f.name),
+                            f.kind as u8,
+                            f.part as u8
+                        ))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+                s => source_expr(s),
+            })
+            .collect();
         let _ = write!(
             out,
             "            {} (RestRoute {{ method = {}, path = {}, sources = [{}], status = {}, error-status = {}, errors = [{}] }}) {}",

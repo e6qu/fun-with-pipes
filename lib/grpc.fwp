@@ -291,10 +291,12 @@ grpc.reflected =
         (fork append id grpc._reflection-routes)
 
 # What server reflection answers with: the services, and the files.
+# internal
 GrpcReflection = { services: List[String], files: List[GrpcFile] }
 
 # A reflection request: a file by name, the file of a symbol, the
 # extension numbers of a type, the services, another request, or none.
+# internal
 GrpcAsk =
     | GrpcAsk.File String
     | GrpcAsk.Symbol String

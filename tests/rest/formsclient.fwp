@@ -1,0 +1,176 @@
+# A client of `forms` 0.1.0, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
+
+Profile = {
+    name: String,
+    age: Option[I64],
+    tags: List[String],
+    admin: Bool,
+    avatar: Option[Upload],
+}
+
+Seen = {
+    name: String,
+    age: Option[I64],
+    tags: List[String],
+    admin: Bool,
+    avatar: Option[String],
+}
+
+UploadBody = { title: String, files: List[Upload], data: Option[Upload] }
+
+FileInfo = { filename: String, content-type: String, size: I64, text: String }
+
+Shelf =
+    | Fiction
+    | Poetry
+
+ShelfBody = { kind: Shelf, size: I64, label: Option[String] }
+
+ShelfSeen = { id: I64, kind: Shelf, size: I64, label: Option[String] }
+
+Book = { id: I64, title: String, price: F64, note: Option[String] }
+
+# A profile, whatever way it is sent.
+# POST /profiles
+profile : String -> Profile -> Seen ! {Async, Network, Error[RestError]}
+profile = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/profiles",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# Files and data, as multipart/form-data.
+# POST /files
+upload : String -> UploadBody -> List[FileInfo] ! {Async, Network, Error[RestError]}
+upload = curry (fork rest.multipart-request .1 (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0,
+            path = const "/files",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = const [],
+        body = const None,
+    })
+    | rest.send
+    | rest.json-body)
+
+# A shelf from a form: an enum, a number and an optional label.
+# PUT /shelves/{id}
+shelf : String -> I64 -> ShelfBody -> ShelfSeen ! {Async, Network, Error[RestError]}
+shelf = curry (curry
+    (make RestRequest {
+        method = const "PUT",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/shelves/{id}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = const [("content-type", "application/x-www-form-urlencoded")],
+        body = .1 | rest.form-body | Some,
+    } | rest.fetch))
+
+# The books, as JSON, text or CSV.
+# GET /books
+list-books : String -> List[Book] ! {Async, Network, Error[RestError]}
+list-books = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/books",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch
+
+# A book by its id, as text or JSON.
+# GET /books/{id}
+book : String -> I64 -> Option[Book] ! {Async, Network, Error[RestError]}
+book = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/books/{id}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch-option)
+
+# Half of an even number.
+# GET /halves/{n}
+half : String -> I64 -> I64 ! {Async, Network, Error[RestError]}
+half = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/halves/{n}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch)
+
+# A note, created.
+# POST /notes
+note : String -> String -> String ! {Async, Network, Error[RestError]}
+note = curry (make RestRequest {
+    method = const "POST",
+    url = make RestTarget {
+        base = .0,
+        path = const "/notes",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [],
+    body = .1 | json.write | Some,
+} | rest.fetch)
+
+# The books as CSV only.
+# GET /books.csv
+books-csv : String -> String ! {Async, Network, Error[RestError]}
+books-csv = make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = id,
+        path = const "/books.csv",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = const [("accept", "text/csv")],
+    body = const None,
+} | rest.request | rest.send | rest.text-body
+
+# A greeting, as text only.
+# GET /hello/{name}
+hello : String -> String -> String ! {Async, Network, Error[RestError]}
+hello = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/hello/{name}",
+        params = rest.texts [.1 | rest.param-text],
+        query = const [],
+    } | rest.url,
+    headers = const [("accept", "text/plain")],
+    body = const None,
+} | rest.request | rest.send | rest.text-body)

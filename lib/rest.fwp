@@ -20,8 +20,10 @@
 # may be absent), nothing (a `()` parameter), a request header (required
 # or not), every line of a repeated header, a cookie (required or not),
 # the whole `Request`, the principal that authentication found
-# (`rest.secured`), or the fields of an options record from the query,
-# headers and cookies.
+# (`rest.secured`), the fields of an options record from the query,
+# headers and cookies, or a body of the media types it accepts ("json",
+# "form", "multipart"), with `True` if it may be absent and the fields of
+# its record as a form.
 RestSource =
     | RestSource.Path String
     | RestSource.Query String Bool
@@ -35,10 +37,33 @@ RestSource =
     | RestSource.Request
     | RestSource.Principal
     | RestSource.Options List[RestField]
+    | RestSource.Content Bool List[String] List[RestFormField]
 
 # A field of an options record: its JSON name, its kind (0 a value, 1
 # optional, 2 repeated, 3 a switch) and where it is read.
 RestField = { name: String, kind: I64, place: RestPlace }
+
+# A field of a body read from a form (`application/x-www-form-urlencoded`
+# or `multipart/form-data`): its JSON name, its kind (0 a value, 1
+# optional, 2 repeated, 3 a switch) and what its parts are (0 text, 1
+# `Bytes`, 2 an `Upload`).
+RestFormField = { name: String, kind: I64, part: I64 }
+
+# A file sent in a form (`multipart/form-data`): its file name, its media
+# type and its content. A field of this type in the body of an endpoint
+# that accepts forms (`# accepts: multipart`) takes a file part; in JSON
+# it is an object whose `bytes` are base64.
+Upload = { filename: String, content-type: String, bytes: Bytes }
+
+# A part of a `multipart/form-data` body: the name of its field, its file
+# name (for a file), its media type (`text/plain` by default) and its
+# content.
+RestPart = {
+    name: String,
+    filename: Option[String],
+    content-type: String,
+    bytes: Bytes,
+}
 
 # Where a field of an options record is read: the query parameter of its
 # name, a request header, or a cookie.
@@ -107,28 +132,30 @@ RestOptions = {
 # A route of `http.router` that calls a function with the arguments of a
 # request and responds with its result as JSON.
 rest.endpoint : RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
-rest.endpoint = rest.endpoint-with (then2 rest.success Ok)
+rest.endpoint = rest.endpoint-with (const (then2 rest.success Ok))
 
 # `rest.endpoint` for a function returning `Option`: `None` is a 404.
 rest.endpoint-option : RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
-rest.endpoint-option = rest.endpoint-with rest.success-option
+rest.endpoint-option = rest.endpoint-with (const rest.success-option)
 
 # `rest.endpoint` for a function returning `Result`: `Err` is an error
 # response, like a raised `Error`.
 rest.endpoint-result : RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[x], Encode[e]
-rest.endpoint-result = rest.endpoint-with rest.success-result
+rest.endpoint-result = rest.endpoint-with (const rest.success-result)
 
 # `rest.endpoint` for a function returning `RestReply`: its status and
 # headers, and its body as JSON.
 rest.endpoint-reply : RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[b], Encode[e]
-rest.endpoint-reply = rest.endpoint-with rest.success-reply
+rest.endpoint-reply = rest.endpoint-with (const rest.success-reply)
 
 # `rest.endpoint-reply` for a `RestReply[()]`: no body.
 rest.endpoint-reply-empty : RestRoute -> (a -> RestReply[()] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
-rest.endpoint-reply-empty = rest.endpoint-with rest.success-empty
+rest.endpoint-reply-empty = rest.endpoint-with (const rest.success-empty)
 
+# a route from how a success is answered (for a request), the route and
+# the function
 # internal
-rest.endpoint-with : (RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-with : (Request -> RestRoute -> b -> Result[Response, HttpError]) -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
 rest.endpoint-with = curry3 (make Route {
     method = .1 | .method,
     pattern = .1 | .path | rest.pattern,
@@ -143,12 +170,18 @@ rest.pattern =
     | map (if (starts-with "{") (replace "{" ":" | replace "}" "") id)
 
 # internal
-rest.handler : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Decode[a], Encode[e]
+rest.handler : (Request -> RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]} where Decode[a], Encode[e]
 rest.handler = curry (fork
         rest.call
-        .0
+        (uncurry rest.at-request)
         (fork rest.decode (.0 | .1 | .sources) .1)
     | rest.respond)
+
+# how a success of an endpoint is answered for a request
+# internal
+rest.at-request : (Request -> RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Request -> (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]})
+rest.at-request =
+    curry (make { 0 = fork apply .1 (.0 | .0), 1 = .0 | .1, 2 = .0 | .2 })
 
 # internal
 rest.call : (RestRoute -> b -> Result[Response, HttpError], RestRoute, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> a -> Result[Response, HttpError] ! {Async, IO, Network, FileIO} where Encode[e]
@@ -204,7 +237,8 @@ rest.argument = curry (match
     (_, RestSource.Headers _) -> rest.headers-arg
     (_, RestSource.Cookie _ _) -> rest.cookie-arg
     (_, RestSource.Request) -> json.write
-    (_, RestSource.Principal) -> rest.principal-arg)
+    (_, RestSource.Principal) -> rest.principal-arg
+    (_, RestSource.Content _ _ _) -> curry3 rest.content-arg)
 
 # internal
 rest.quote : String -> String
@@ -360,6 +394,320 @@ rest.checked = curry (match
     (_, Err _) ->
         const (flip concat "invalid JSON in the request body: " | http.fail 400))
 
+# ------------------------------------------------------- forms and files
+
+# A body of the media types an endpoint accepts (`# accepts:`), chosen by
+# its `Content-Type` (the first one without it): JSON, a form
+# (`application/x-www-form-urlencoded`) or `multipart/form-data`, whose
+# fields become the members of a JSON object for the body's record type.
+# Another media type is a 415.
+# internal
+rest.content-arg : (Request, Bool, List[String]) -> List[RestFormField] -> String ! {Error[HttpError]}
+rest.content-arg = curry (fork
+    rest.content-of
+    (fork rest.chosen-kind (.0 | .2) (.0 | .0 | rest.media-type))
+    id)
+
+# The media type of a request's body, in lower case and without its
+# parameters (`multipart/form-data`); "" without a `Content-Type`.
+rest.media-type : Request -> String
+rest.media-type =
+    http.header "content-type"
+    | option.unwrap-or ""
+    | split ";"
+    | head
+    | option.unwrap-or ""
+    | trim
+    | lower
+
+# "json", "form" or "multipart" for the media types of bodies, else the
+# media type itself
+# internal
+rest.media-kind : String -> String
+rest.media-kind = match
+    "application/json" -> "json"
+    "application/x-www-form-urlencoded" -> "form"
+    "multipart/form-data" -> "multipart"
+    _ -> if (ends-with "+json") (const "json") id
+
+# the media type of a kind of body
+# internal
+rest.kind-media : String -> String
+rest.kind-media = match
+    "json" -> "application/json"
+    "form" -> "application/x-www-form-urlencoded"
+    "multipart" -> "multipart/form-data"
+    _ -> id
+
+# internal
+rest.chosen-kind : List[String] -> String -> String
+rest.chosen-kind = curry (if
+    (.1 | string.is-empty)
+    (.0 | head | option.unwrap-or "json")
+    (.1 | rest.media-kind))
+
+# internal
+rest.content-of : String -> ((Request, Bool, List[String]), List[RestFormField]) -> String ! {Error[HttpError]}
+rest.content-of = curry (if
+    (fork contains .0 (.1 | .0 | .2))
+    (uncurry rest.decode-content)
+    (fork rest.unsupported (.1 | .0 | .0 | rest.media-type) (.1 | .0 | .2)))
+
+# a 415 naming the media types that are accepted
+# internal
+rest.unsupported : String -> List[String] -> String ! {Error[HttpError]}
+rest.unsupported = curry (fork
+        concat
+        (.1
+            | map rest.kind-media
+            | join ", "
+            | flip concat " (it accepts "
+            | concat ")")
+        (.0 | flip concat "unsupported content type ")
+    | http.fail 415)
+
+# internal
+rest.decode-content : String -> ((Request, Bool, List[String]), List[RestFormField]) -> String ! {Error[HttpError]}
+rest.decode-content = curry (match
+    ("json", _) -> .0 | fork rest.body-of .1 (.0 | http.body-text)
+    ("form", _) -> fork rest.form-json .1 (.0
+        | .0
+        | http.body-text
+        | form.parse
+        | map rest.text-part)
+    (_, _) -> const (fork rest.form-json .1 (.0 | .0 | rest.request-parts)))
+
+# internal
+rest.text-part : (String, String) -> RestPart
+rest.text-part = make RestPart {
+    name = .0,
+    filename = const None,
+    content-type = const "text/plain",
+    bytes = .1 | string.to-bytes,
+}
+
+# the parts of a `multipart/form-data` request (a 400 if there are none)
+# internal
+rest.request-parts : Request -> List[RestPart] ! {Error[HttpError]}
+rest.request-parts =
+    fork
+        option.and-then
+        (.body | flip rest.multipart-parts)
+        (http.header "content-type"
+            | option.and-then (rest.header-param "boundary"))
+    | or-fail { status = 400, message = "invalid multipart/form-data body" }
+
+# The parts of a `multipart/form-data` body with a boundary
+# (`rest.header-param "boundary"` of its `Content-Type`); `None` when
+# there is no part.
+rest.multipart-parts : String -> Bytes -> Option[List[RestPart]]
+rest.multipart-parts = curry (fork
+        rest.split-bytes
+        (.0 | flip concat "\r\n--" | string.to-bytes)
+        (.1 | flip bytes.append rest.crlf)
+    | rest.segment-parts)
+
+# internal
+rest.segment-parts : List[Bytes] -> Option[List[RestPart]]
+rest.segment-parts =
+    if
+        (length | lt 2)
+        (const None)
+        (drop 1
+            | take-while (bytes.slice 0 2 | ne rest.dashes)
+            | filter-map rest.segment-part
+            | Some)
+
+# a part after its delimiter (CRLF, `--` and the boundary; the body's
+# first has a CRLF before it): CRLF, its headers, an empty line and its
+# content
+# internal
+rest.segment-part : Bytes -> Option[RestPart]
+rest.segment-part =
+    rest.trim-crlf | fork rest.part-of (bytes.find rest.blank-line) id
+
+# internal
+rest.part-of : Option[I64] -> Bytes -> Option[RestPart]
+rest.part-of = curry (match
+    (None, _) -> const None
+    (Some _, _) -> curry (fork
+            rest.make-part
+            (fork rest.until .0 .1
+                | string.from-bytes
+                | option.unwrap-or ""
+                | rest.part-headers)
+            (fork rest.from (.0 | add 4) .1)
+        | Some))
+
+# internal
+rest.make-part : List[(String, String)] -> Bytes -> RestPart
+rest.make-part = curry (make RestPart {
+    name = .0 | rest.disposition "name" | option.unwrap-or "",
+    filename = .0 | rest.disposition "filename",
+    content-type =
+        .0 | json.lookup "content-type" | option.unwrap-or "text/plain",
+    bytes = .1,
+})
+
+# the headers of a part, with lower-case names
+# internal
+rest.part-headers : String -> List[(String, String)]
+rest.part-headers =
+    split "\r\n"
+    | filter-map (string.split-once ":")
+    | map (both (.0 | trim | lower) (.1 | trim))
+
+# a parameter of `Content-Disposition`
+# internal
+rest.disposition : String -> List[(String, String)] -> Option[String]
+rest.disposition = curry (fork
+    option.and-then
+    (.0 | rest.header-param)
+    (.1 | json.lookup "content-disposition"))
+
+# A parameter of a header value: `rest.header-param "boundary"
+# "multipart/form-data; boundary=\"x\""` is `Some "x"`.
+rest.header-param : String -> String -> Option[String]
+rest.header-param = curry (fork
+    json.lookup
+    (.0 | lower)
+    (.1
+        | split ";"
+        | drop 1
+        | filter-map (string.split-once "=")
+        | map (both (.0 | trim | lower) (.1 | trim | rest.unquote-param))))
+
+# internal
+rest.unquote-param : String -> String
+rest.unquote-param =
+    if
+        (fork
+            and
+            (string.length | ge 2)
+            (fork and (starts-with "\"") (ends-with "\"")))
+        (fork apply id (string.length | sub 2 | string.slice 1))
+        id
+
+# bytes split at each occurrence of a separator
+# internal
+rest.split-bytes : Bytes -> Bytes -> List[Bytes]
+rest.split-bytes =
+    curry (make { 0 = .0, 1 = .1, 2 = const [] } | loop rest.split-step)
+
+# internal
+rest.split-step : (Bytes, Bytes, List[Bytes]) -> Step[(Bytes, Bytes, List[Bytes]), List[Bytes]]
+rest.split-step = fork rest.split-at (fork bytes.find .0 .1) id
+
+# internal
+rest.split-at : Option[I64] -> (Bytes, Bytes, List[Bytes]) -> Step[(Bytes, Bytes, List[Bytes]), List[Bytes]]
+rest.split-at = curry (match
+    (None, _) -> fork Cons .1 .2 | reverse | Stop
+    (Some _, _) -> curry (make {
+        0 = .1 | .0,
+        1 = fork rest.from (fork add .0 (.1 | .0 | bytes.length)) (.1 | .1),
+        2 = fork Cons (fork rest.until .0 (.1 | .1)) (.1 | .2),
+    } | Again))
+
+# the bytes from an offset on
+# internal
+rest.from : I64 -> Bytes -> Bytes
+rest.from = curry (fork apply .1 (fork bytes.slice .0 (.1 | bytes.length)))
+
+# the first n bytes
+# internal
+rest.until : I64 -> Bytes -> Bytes
+rest.until = bytes.slice 0
+
+# without the line break that follows a boundary (and anything before
+# it)
+# internal
+rest.trim-crlf : Bytes -> Bytes
+rest.trim-crlf =
+    fork
+        rest.from
+        (bytes.find rest.crlf | option.map (add 2) | option.unwrap-or 0)
+        id
+
+# internal
+rest.crlf : Bytes
+rest.crlf = "\r\n" | string.to-bytes
+
+# internal
+rest.blank-line : Bytes
+rest.blank-line = "\r\n\r\n" | string.to-bytes
+
+# internal
+rest.dashes : Bytes
+rest.dashes = "--" | string.to-bytes
+
+# The JSON object of a form's fields: each field of the body's record
+# from the parts of its name, as text, base64 `Bytes` or an `Upload`;
+# every part for a list, the last one otherwise (an empty one is absent
+# for an `Option`), and `on` or nothing for a switch.
+# internal
+rest.form-json : List[RestFormField] -> List[RestPart] -> String ! {Error[HttpError]}
+rest.form-json =
+    curry (fork filter-map (.1 | rest.form-member) .0 | Json.Obj | json.encode)
+
+# internal
+rest.form-member : List[RestPart] -> RestFormField -> Option[(String, Json)] ! {Error[HttpError]}
+rest.form-member = curry (fork
+    option.map
+    (.1 | .name | curry id)
+    (fork rest.member-value (.1 | .kind) (fork rest.part-values .1 .0)))
+
+# internal
+rest.part-values : RestFormField -> List[RestPart] -> List[Json] ! {Error[HttpError]}
+rest.part-values = curry (fork
+    map
+    (.0 | .part | rest.part-as)
+    (fork filter (.0 | .name | rest.part-named) .1))
+
+# internal
+rest.part-named : String -> RestPart -> Bool
+rest.part-named = curry (fork eq .0 (.1 | .name))
+
+# internal
+rest.part-as : I64 -> RestPart -> Json ! {Error[HttpError]}
+rest.part-as = curry (match
+    (1, _) -> .bytes | json.encode-value
+    (2, _) -> rest.upload-of | json.encode-value
+    _ ->
+        .1
+        | fork
+            or-fail
+            (.name
+                | format "form.{}: the value is not UTF-8 text"
+                | make HttpError { status = const 400, message = id })
+            (.bytes | string.from-bytes)
+        | Json.Str)
+
+# The file of a part.
+rest.upload-of : RestPart -> Upload
+rest.upload-of = make Upload {
+    filename = .filename | option.unwrap-or "",
+    content-type = .content-type,
+    bytes = .bytes,
+}
+
+# internal
+rest.member-value : I64 -> List[Json] -> Option[Json]
+rest.member-value = curry (match
+    (2, _) -> Json.Arr | Some
+    (3, _) -> last | rest.switch-json | Some
+    (1, _) -> last | option.filter (eq (Json.Str "") | not)
+    _ -> .1 | last)
+
+# internal
+rest.switch-json : Option[Json] -> Json
+rest.switch-json = match
+    None -> Json.Bool False
+    Some _ ->
+        if
+            (fork or (eq (Json.Str "")) (eq (Json.Str "on")))
+            (const (Json.Bool True))
+            id
+
 # How a source is named in decoding errors.
 # internal
 rest.label : RestSource -> String
@@ -376,6 +724,7 @@ rest.label = match
     RestSource.Cookie _ _ -> flip concat "cookie." | const
     RestSource.Request -> "request"
     RestSource.Principal -> "principal"
+    RestSource.Content _ _ _ -> curry3 (const "$")
 
 # `$[1].price: ...` with the label of argument 1 instead of `$[1]` (of
 # the only argument instead of `$`)
@@ -555,6 +904,239 @@ rest.status-field =
 rest.http-error : HttpError -> Response
 rest.http-error =
     fork rest.json-text .status (.message | json.write | rest.error-body)
+
+# ----------------------------------------------------- content negotiation
+
+# `rest.endpoint` for an endpoint that writes its result in several media
+# types (`# produces:`): each format is a media type and how a value is
+# written in it (`("text/plain; charset=utf-8", show)`); the one the
+# request's `Accept` header prefers is used (the first one without it),
+# and a request that accepts none of them gets a 406. Errors stay JSON.
+rest.endpoint-as : List[(String, b -> String)] -> RestRoute -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-as = curry3 (fork
+    rest.negotiated
+    (.0 | map .0)
+    (fork apply .2 (fork rest.endpoint-with (.0 | rest.success-as) .1)))
+
+# `rest.endpoint-as` for a function returning `Option`: `None` is a 404.
+rest.endpoint-option-as : List[(String, b -> String)] -> RestRoute -> (a -> Option[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-option-as = curry3 (fork
+    rest.negotiated
+    (.0 | map .0)
+    (fork
+        apply
+        .2
+        (fork rest.endpoint-with (.0 | rest.success-as | rest.or-not-found) .1)))
+
+# `rest.endpoint-as` for a function returning `Result`: `Err` is an error
+# response.
+rest.endpoint-result-as : List[(String, b -> String)] -> RestRoute -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[x], Encode[e]
+rest.endpoint-result-as = curry3 (fork
+    rest.negotiated
+    (.0 | map .0)
+    (fork
+        apply
+        .2
+        (fork rest.endpoint-with (.0 | rest.success-as | rest.or-failure) .1)))
+
+# `rest.endpoint-as` for a function returning `RestReply`.
+rest.endpoint-reply-as : List[(String, b -> String)] -> RestRoute -> (a -> RestReply[b] ! {Async, IO, Network, FileIO, Error[e]}) -> Route where Decode[a], Encode[e]
+rest.endpoint-reply-as = curry3 (fork
+    rest.negotiated
+    (.0 | map .0)
+    (fork apply .2 (fork rest.endpoint-with (.0 | rest.reply-as) .1)))
+
+# A route that answers 406 to requests whose `Accept` header accepts none
+# of the media types, before calling its handler.
+rest.negotiated : List[String] -> Route -> Route
+rest.negotiated = curry (make Route {
+    method = .1 | .method,
+    pattern = .1 | .pattern,
+    handler = rest.negotiate,
+})
+
+# internal
+rest.negotiate : (List[String], Route) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+rest.negotiate = curry (if
+    (fork rest.choose (.0 | .0) (.1 | http.header "accept") | option.is-some)
+    (fork apply .1 (.0 | .1 | .handler))
+    (.0 | .0 | rest.not-acceptable))
+
+# internal
+rest.not-acceptable : List[String] -> Response
+rest.not-acceptable =
+    map rest.base-media
+    | join ", "
+    | flip concat "not acceptable: the response is "
+    | json.write
+    | rest.error-body
+    | rest.json-text 406
+
+# The media type of those offered (in the order of the server's
+# preference) that an `Accept` header prefers: the one of the highest
+# quality, the first one without the header, and none when it accepts
+# none of them (`q=0` refuses one).
+rest.choose : List[String] -> Option[String] -> Option[String]
+rest.choose = curry (match
+    (_, None) -> head
+    (_, Some _) -> curry (fork rest.best .0 (.1 | rest.accept-ranges)))
+
+# internal
+rest.best : List[String] -> List[(String, F64)] -> Option[String]
+rest.best = curry (fork map (.1 | rest.rated) .0
+    | filter (.1 | gt 0.0)
+    | fold rest.better None
+    | option.map .0)
+
+# internal
+rest.rated : List[(String, F64)] -> String -> (String, F64)
+rest.rated = curry (both .1 (fork rest.quality .0 (.1 | rest.base-media)))
+
+# internal
+rest.better : Option[(String, F64)] -> (String, F64) -> Option[(String, F64)]
+rest.better = curry (match
+    (None, _) -> Some
+    (Some _, _) ->
+        curry (if (fork gt (.0 | .1) (.1 | .1)) (.1 | Some) (.0 | Some)))
+
+# the quality of a media type: of its own range, else of `type/*`, else
+# of `*/*`, else 0
+# internal
+rest.quality : List[(String, F64)] -> String -> F64
+rest.quality = curry (fork
+        filter-map
+        (.0 | flip json.lookup)
+        (.1
+            | fork Cons id (fork
+                Cons
+                (split "/" | head | option.unwrap-or "" | concat "/*")
+                (const ["*/*"])))
+    | head
+    | option.unwrap-or 0.0)
+
+# The media ranges of an `Accept` header and their qualities:
+# `"text/*;q=0.5, application/json"` is
+# `[("text/*", 0.5), ("application/json", 1.0)]`.
+rest.accept-ranges : String -> List[(String, F64)]
+rest.accept-ranges =
+    split ","
+    | map (both
+        rest.base-media
+        (rest.header-param "q"
+            | option.and-then parse-float
+            | option.unwrap-or 1.0))
+    | filter (.0 | string.is-empty | not)
+
+# a media type without its parameters, in lower case
+# internal
+rest.base-media : String -> String
+rest.base-media = split ";" | head | option.unwrap-or "" | trim | lower
+
+# the format the request prefers
+# internal
+rest.pick-format : List[(String, b -> String)] -> Request -> Option[(String, b -> String)]
+rest.pick-format = curry (fork
+    rest.format-named
+    (fork rest.choose (.0 | map .0) (.1 | http.header "accept"))
+    .0)
+
+# internal
+rest.format-named : Option[String] -> List[(String, b -> String)] -> Option[(String, b -> String)]
+rest.format-named = curry (match
+    (None, _) -> head
+    (Some _, _) -> curry (fork find (.0 | rest.first-is) .1))
+
+# internal
+rest.first-is : String -> (String, b -> String) -> Bool
+rest.first-is = curry (fork eq .0 (.1 | .0))
+
+# a success in the format the request prefers
+# internal
+rest.success-as : List[(String, b -> String)] -> Request -> RestRoute -> b -> Result[Response, HttpError]
+rest.success-as = curry3 (curry
+    (fork
+        rest.write-as
+        (.0 | fork rest.pick-format .0 .1)
+        (both (.0 | .2 | .status) .1)))
+
+# internal
+rest.write-as : Option[(String, b -> String)] -> (I64, b) -> Result[Response, HttpError]
+rest.write-as = curry (match
+    (None, _) -> const (Err rest.no-format)
+    (Some _, _) -> curry (fork
+            apply
+            (fork apply (.1 | .1) (.0 | .1))
+            (fork rest.media-text (.1 | .0) (.0 | .0))
+        | Ok))
+
+# internal
+rest.no-format : HttpError
+rest.no-format = HttpError { status = 500, message = "no response format" }
+
+# a response with a status, a media type and a text
+rest.media-text : I64 -> String -> String -> Response
+rest.media-text =
+    curry3 (fork apply (.2 | string.to-bytes) (fork http.respond .0 .1))
+
+# internal
+rest.or-not-found : (Request -> RestRoute -> b -> Result[Response, HttpError]) -> Request -> RestRoute -> Option[b] -> Result[Response, HttpError]
+rest.or-not-found = curry3 (fork apply .2 (fork apply .1 .0) | rest.if-found)
+
+# internal
+rest.if-found : (b -> Result[Response, HttpError]) -> Option[b] -> Result[Response, HttpError]
+rest.if-found = curry (match
+    (_, None) -> const (Err HttpError { status = 404, message = "not found" })
+    (_, Some _) -> flip apply)
+
+# internal
+rest.or-failure : (Request -> RestRoute -> b -> Result[Response, HttpError]) -> Request -> RestRoute -> Result[b, x] -> Result[Response, HttpError] where Encode[x]
+rest.or-failure = curry3 (fork rest.if-ok (fork apply .2 (fork apply .1 .0)) .2)
+
+# internal
+rest.if-ok : (b -> Result[Response, HttpError]) -> RestRoute -> Result[b, x] -> Result[Response, HttpError] where Encode[x]
+rest.if-ok = curry3 (match
+    (_, _, Ok _) -> curry3 (fork apply .2 .0)
+    (_, _, Err _) -> curry3 (fork rest.failure .1 .2 | Ok))
+
+# internal
+rest.reply-as : List[(String, b -> String)] -> Request -> RestRoute -> RestReply[b] -> Result[Response, HttpError]
+rest.reply-as =
+    curry3 (curry (fork rest.reply-write (.0 | fork rest.pick-format .0 .1) .1))
+
+# internal
+rest.reply-write : Option[(String, b -> String)] -> RestReply[b] -> Result[Response, HttpError]
+rest.reply-write = curry (match
+    (None, _) -> const (Err rest.no-format)
+    (Some _, _) -> curry (fork
+            rest.add-headers
+            (.1 | .headers)
+            (fork
+                apply
+                (fork apply (.1 | .body) (.0 | .1))
+                (fork rest.media-text (.1 | .status) (.0 | .0)))
+        | rest.valid))
+
+# Records as CSV (`text/csv`): a header of the columns (JSON names of the
+# fields), then a row per record, with each value as in a query string and
+# an absent one empty.
+rest.csv : List[String] -> List[r] -> String where Encode[r]
+rest.csv = curry (fork Cons .0 (fork map (.0 | rest.csv-row) .1) | csv.encode)
+
+# internal
+rest.csv-row : List[String] -> r -> List[String] where Encode[r]
+rest.csv-row = curry (fork map (.1 | json.encode-value | rest.cell-of) .0)
+
+# internal
+rest.cell-of : Json -> String -> String
+rest.cell-of = curry (fork json.get .1 .0
+    | option.map rest.cell-text
+    | option.unwrap-or "")
+
+# internal
+rest.cell-text : Json -> String
+rest.cell-text = match
+    Json.Null -> ""
+    _ -> rest.scalar-text
 
 # ---------------------------------------------- authentication, timeouts
 
@@ -1164,24 +1746,156 @@ rest.fetch-option =
 
 # internal
 rest.exchange : RestRequest -> ClientResponse ! {Async, Network, Error[RestError]}
-rest.exchange =
-    attempt (make ClientRequest {
-        method = .method,
-        url = .url,
-        headers = .headers | rest.request-headers,
-        body = .body | option.unwrap-or "" | string.to-bytes,
-    } | http.send)
-    | rest.sent
+rest.exchange = rest.request | rest.send
+
+# The HTTP request of a call: its headers with `Accept:
+# application/json` and `Content-Type: application/json` unless it has
+# them.
+rest.request : RestRequest -> ClientRequest
+rest.request = make ClientRequest {
+    method = .method,
+    url = .url,
+    headers = .headers | rest.request-headers,
+    body = .body | option.unwrap-or "" | string.to-bytes,
+}
+
+# The HTTP request of a call whose body is a record sent as
+# `multipart/form-data` (`rest.multipart-body`).
+rest.multipart-request : a -> RestRequest -> ClientRequest where Encode[a]
+rest.multipart-request = curry (make ClientRequest {
+    method = .1 | .method,
+    url = .1 | .url,
+    headers =
+        .1
+        | .headers
+        | Cons (
+            "content-type",
+            "multipart/form-data; boundary=" | concat rest.boundary,
+        )
+        | rest.request-headers,
+    body = .0 | rest.multipart-body,
+})
+
+# Send a request; a failed connection is a `RestError` of status 0.
+rest.send : ClientRequest -> ClientResponse ! {Async, Network, Error[RestError]}
+rest.send = attempt http.send | rest.sent
+
+# The decoded JSON of a successful response; any other response is a
+# `RestError` with its status and body.
+rest.json-body : ClientResponse -> b ! {Error[RestError]} where Decode[b]
+rest.json-body = rest.decode-response
+
+# The text of a successful response (`text/plain`, `text/csv`, ...).
+rest.text-body : ClientResponse -> String ! {Error[RestError]}
+rest.text-body = rest.success-body | string.from-bytes | option.unwrap-or ""
+
+# The bytes of a successful response.
+rest.bytes-body : ClientResponse -> Bytes ! {Error[RestError]}
+rest.bytes-body = rest.success-body
+
+# internal
+rest.success-body : ClientResponse -> Bytes ! {Error[RestError]}
+rest.success-body =
+    if
+        (fork and (.status | ge 200) (.status | lt 300))
+        .body
+        (make RestError {
+            status = .status,
+            message = .body | string.from-bytes | option.unwrap-or "",
+        } | fail)
+
+# A reader of responses with `None` for a 404.
+rest.or-none : (ClientResponse -> b ! {Error[RestError]}) -> ClientResponse -> Option[b] ! {Error[RestError]}
+rest.or-none =
+    curry (if (.1 | .status | eq 404) (const None) (fork apply .1 .0 | Some))
 
 # internal
 rest.request-headers : List[(String, String)] -> List[(String, String)]
-rest.request-headers = fork append id (if
-    (map (.0 | lower) | contains "content-type")
-    (const [("accept", "application/json")])
-    (const [
-        ("accept", "application/json"),
-        ("content-type", "application/json"),
-    ]))
+rest.request-headers = fork append id (fork
+    append
+    (rest.default-header "content-type" "application/json")
+    (rest.default-header "accept" "application/json"))
+
+# a header, unless the headers have one of its name
+# internal
+rest.default-header : String -> String -> List[(String, String)] -> List[(String, String)]
+rest.default-header = curry3 (if
+    (fork contains .0 (.2 | map (.0 | lower)))
+    (const [])
+    (both .0 .1 | singleton))
+
+# The boundary between the parts of the `multipart/form-data` bodies that
+# clients send.
+rest.boundary : String
+rest.boundary = "fwp-form-boundary-5d3c8e1a9b7f"
+
+# A record as a `multipart/form-data` body (with `rest.boundary`): a text
+# part per field, a file part per `Upload`, a part per element of a list,
+# and none for `None`.
+rest.multipart-body : a -> Bytes where Encode[a]
+rest.multipart-body =
+    json.encode-value
+    | json.as-object
+    | option.unwrap-or []
+    | list.flat-map rest.multipart-field
+    | map rest.part-bytes
+    | append ["--" | concat rest.boundary | concat "--\r\n" | string.to-bytes]
+    | fold (flip bytes.append) (bytes.from-list [])
+
+# internal
+rest.multipart-field : (String, Json) -> List[RestPart]
+rest.multipart-field = match
+    (_, Json.Arr _) -> curry (fork map (.0 | rest.field-part) .1)
+    (_, Json.Null) -> const []
+    (_, _) -> curry (uncurry rest.field-part | singleton)
+
+# a value as a part: a file for an `Upload`, else text
+# internal
+rest.field-part : String -> Json -> RestPart
+rest.field-part = curry (fork
+    rest.as-part
+    .0
+    (both (.1 | rest.upload-value) (.1 | rest.scalar-text)))
+
+# internal
+rest.upload-value : Json -> Option[Upload]
+rest.upload-value =
+    if
+        (json.get "filename" | option.is-some)
+        (json.decode | result.to-option)
+        (const None)
+
+# internal
+rest.as-part : String -> (Option[Upload], String) -> RestPart
+rest.as-part = curry (match
+    (_, (None, _)) -> curry rest.text-part
+    (_, (Some _, _)) -> curry3 (make RestPart {
+        name = .0,
+        filename = .1 | .filename | Some,
+        content-type = .1 | .content-type,
+        bytes = .1 | .bytes,
+    }))
+
+# a part with its boundary before it
+# internal
+rest.part-bytes : RestPart -> Bytes
+rest.part-bytes =
+    fork
+        bytes.append
+        (.bytes | bytes.append rest.crlf)
+        (make {
+                0 = const rest.boundary,
+                1 = .name | replace "\"" "%22",
+                2 =
+                    .filename
+                    | option.map
+                        (replace "\"" "%22" | format "; filename=\"{}\"")
+                    | option.unwrap-or "",
+                3 = .content-type,
+            }
+            | format
+                "--{}\r\ncontent-disposition: form-data; name=\"{}\"{}\r\ncontent-type: {}\r\n\r\n"
+            | string.to-bytes)
 
 # internal
 rest.sent : Result[ClientResponse, IoError] -> ClientResponse ! {Error[RestError]}

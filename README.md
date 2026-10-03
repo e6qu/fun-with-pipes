@@ -41,10 +41,11 @@ main =
   parameter becomes flags, doc comments become `--help`, and
   `fwp build --cli` makes one executable with a subcommand per function.
 - **REST and OpenAPI.** Any exported function is also a REST endpoint
-  with a typed JSON contract: `fwp build --rest` makes one HTTP server,
+  with a typed JSON contract (forms, file uploads and text or CSV
+  responses where declared): `fwp build --rest` makes one HTTP server,
   which serves the OpenAPI 3.1 document derived from the types, and
-  `fwp openapi --import` turns any API's OpenAPI document into typed
-  client functions.
+  `fwp openapi --import` turns any API's OpenAPI or Swagger document
+  (JSON or YAML) into typed client functions.
 - **In the browser.** The compiler and interpreter build for WebAssembly;
   a playground page checks, formats and runs programs without a server,
   tasks and channels included where the browser has JavaScript Promise
@@ -107,7 +108,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
 | [docs/cli.md](docs/cli.md) | any function as a command-line program: flags, choices, environment variables, help, subcommands, exit statuses, shell completion, man pages |
-| [docs/rest.md](docs/rest.md) | any function as a REST endpoint: routes, the JSON codec, OpenAPI documents and generated clients |
+| [docs/rest.md](docs/rest.md) | any function as a REST endpoint: routes, the JSON codec, forms and files, content negotiation, OpenAPI documents and generated clients |
 | [docs/interfaces.md](docs/interfaces.md) | one function as a command, a REST endpoint and a gRPC method, compared |
 | [docs/grpc.md](docs/grpc.md) | any function as a gRPC method: streams, deadlines, metadata, statuses, reflection, and clients and servers from `.proto` files |
 | [docs/tls.md](docs/tls.md) | TLS with the system's OpenSSL: HTTPS servers and clients, REST over HTTPS, gRPC over TLS |

@@ -893,6 +893,10 @@ fn openapi_golden() {
         &fixture("secure.openapi.json"),
         &openapi_text(&fixture("secure.fwp")),
     );
+    golden(
+        &fixture("forms.openapi.json"),
+        &openapi_text(&fixture("forms.fwp")),
+    );
 }
 
 // --------------------------------------------------------- the documents
@@ -1120,11 +1124,11 @@ fn check_document(doc: &J) {
                 assert!(r.get("description").and_then(J::str).is_some());
             }
             if let Some(b) = op.get("requestBody") {
-                assert!(b
-                    .get("content")
-                    .and_then(|c| c.get("application/json"))
-                    .and_then(|c| c.get("schema"))
-                    .is_some());
+                let content = b.get("content").expect("content");
+                assert!(!content.members().is_empty());
+                for (_, c) in content.members() {
+                    assert!(c.get("schema").is_some());
+                }
             }
         }
     }
@@ -1135,6 +1139,7 @@ fn openapi_structure() {
     for file in [
         fixture("api.fwp"),
         fixture("secure.fwp"),
+        fixture("forms.fwp"),
         root().join("examples/rest/books.fwp"),
     ] {
         let doc = parse_json(&openapi_text(&file));
@@ -1308,7 +1313,7 @@ fn client_golden() {
     );
     let spec = fixture("petstore.json").display().to_string();
     let expected: String = [
-        "POST /store/order: its request body is neither JSON (`application/json`) nor a form (`application/x-www-form-urlencoded`); it is left out",
+        "POST /store/order: its request body is neither JSON (`application/json`), a form (`application/x-www-form-urlencoded`) nor `multipart/form-data`; it is left out",
         "POST /user/logout: its security scheme `basic` is not supported (bearer tokens and API keys are); it is left out",
     ]
     .iter()
@@ -1331,11 +1336,15 @@ fn import_errors() {
     let dir = temp_dir("import-errors");
     for (text, msg) in [
         (
-            "{\"swagger\": \"2.0\"}",
-            "Swagger 2.0 documents are not supported",
+            "{\"swagger\": \"1.2\"}",
+            "Swagger 1.2 is not supported (Swagger 2.0 and OpenAPI 3.0 and 3.1 are)",
         ),
-        ("openapi: 3.1.0\n", "YAML is not supported"),
-        ("{\"info\": {}}", "not an OpenAPI 3 document"),
+        (
+            "openapi: 3.1.0\n  paths: {}\n",
+            "not a JSON or YAML document (line 2",
+        ),
+        ("{\"info\": {}", "not a JSON document"),
+        ("info: {}\n", "not an OpenAPI document"),
     ] {
         let f = dir.join("spec.json");
         std::fs::write(&f, text).unwrap();
@@ -1629,4 +1638,767 @@ fn server_command_line() {
         .unwrap();
     assert_eq!(o.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&o.stderr).contains("unknown option `--bogus`"));
+}
+
+// ------------------------------------------- forms, files and formats
+
+/// One request with raw headers and body: the status, the headers and the
+/// body of the response.
+fn http_raw(
+    addr: &str,
+    method: &str,
+    target: &str,
+    headers: &[(&str, &str)],
+    body: &[u8],
+) -> (u16, Vec<(String, String)>, String) {
+    let mut conn = TcpStream::connect(addr).unwrap();
+    conn.set_read_timeout(Some(Duration::from_secs(30)))
+        .unwrap();
+    let mut req = format!(
+        "{} {} HTTP/1.1\r\nhost: test\r\nconnection: close\r\ncontent-length: {}\r\n",
+        method,
+        target,
+        body.len()
+    );
+    for (k, v) in headers {
+        req.push_str(&format!("{}: {}\r\n", k, v));
+    }
+    req.push_str("\r\n");
+    let mut bytes = req.into_bytes();
+    bytes.extend_from_slice(body);
+    conn.write_all(&bytes).unwrap();
+    let mut raw = Vec::new();
+    conn.read_to_end(&mut raw).unwrap();
+    let text = String::from_utf8_lossy(&raw).into_owned();
+    let (head, rest) = text.split_once("\r\n\r\n").expect("a response head");
+    let mut lines = head.split("\r\n");
+    let status: u16 = lines
+        .next()
+        .and_then(|l| l.split(' ').nth(1))
+        .and_then(|s| s.parse().ok())
+        .expect("a status");
+    let headers: Vec<(String, String)> = lines
+        .filter_map(|l| l.split_once(':'))
+        .map(|(k, v)| (k.trim().to_ascii_lowercase(), v.trim().to_string()))
+        .collect();
+    (status, headers, rest.to_string())
+}
+
+/// A `multipart/form-data` body with the boundary `XyZ`: (name, file
+/// name, content type, content) per part.
+/// A part: its name, file name, content type and content.
+type PartSpec<'a> = (&'a str, Option<&'a str>, Option<&'a str>, &'a [u8]);
+
+fn multipart(parts: &[PartSpec]) -> Vec<u8> {
+    let mut out = Vec::new();
+    // a preamble, which is ignored
+    out.extend_from_slice(b"preamble\r\n");
+    for (name, file, ct, content) in parts {
+        out.extend_from_slice(b"--XyZ\r\n");
+        let mut d = format!("Content-Disposition: form-data; name=\"{}\"", name);
+        if let Some(f) = file {
+            d.push_str(&format!("; filename=\"{}\"", f));
+        }
+        out.extend_from_slice(d.as_bytes());
+        out.extend_from_slice(b"\r\n");
+        if let Some(c) = ct {
+            out.extend_from_slice(format!("Content-Type: {}\r\n", c).as_bytes());
+        }
+        out.extend_from_slice(b"\r\n");
+        out.extend_from_slice(content);
+        out.extend_from_slice(b"\r\n");
+    }
+    out.extend_from_slice(b"--XyZ--\r\nepilogue");
+    out
+}
+
+/// Requests to `tests/rest/forms.fwp`: the content type of the body,
+/// the body, the Accept header, and the expected status, content type
+/// and body.
+/// A request: method, target, content type, body, Accept; then the
+/// expected status, content type and body.
+type FormCase = (
+    &'static str,
+    &'static str,
+    Option<&'static str>,
+    Vec<u8>,
+    Option<&'static str>,
+    u16,
+    &'static str,
+    &'static str,
+);
+
+fn forms_requests() -> Vec<FormCase> {
+    let json = Some("application/json");
+    let form = Some("application/x-www-form-urlencoded");
+    let multi = Some("multipart/form-data; boundary=\"XyZ\"");
+    vec![
+        // a body as JSON, a form and multipart/form-data
+        (
+            "POST",
+            "/profiles",
+            json,
+            br#"{"name":"ann","tags":["a"],"admin":true}"#.to_vec(),
+            None,
+            200,
+            "application/json",
+            r#"{"name":"ann","tags":["a"],"admin":true}"#,
+        ),
+        (
+            "POST",
+            "/profiles",
+            form,
+            b"name=b%C3%B6b&age=42&tags=x&tags=y+z&admin=on".to_vec(),
+            None,
+            200,
+            "application/json",
+            r#"{"name":"böb","age":42,"tags":["x","y z"],"admin":true}"#,
+        ),
+        // an empty optional field is absent, a missing switch false
+        (
+            "POST",
+            "/profiles",
+            form,
+            b"name=c&age=".to_vec(),
+            None,
+            200,
+            "application/json",
+            r#"{"name":"c","tags":[],"admin":false}"#,
+        ),
+        (
+            "POST",
+            "/profiles",
+            form,
+            b"age=x".to_vec(),
+            None,
+            400,
+            "application/json",
+            r#"{"error":"$.name: required field is missing"}"#,
+        ),
+        (
+            "POST",
+            "/profiles",
+            multi,
+            multipart(&[
+                ("name", None, None, b"dee"),
+                ("tags", None, None, b"t1"),
+                ("tags", None, None, b"t2"),
+                ("admin", None, None, b"false"),
+                (
+                    "avatar",
+                    Some("me.png"),
+                    Some("image/png"),
+                    &[137, 80, 78, 71, 13, 10, 0],
+                ),
+            ]),
+            None,
+            200,
+            "application/json",
+            r#"{"name":"dee","tags":["t1","t2"],"admin":false,"avatar":"me.png: 7 bytes"}"#,
+        ),
+        // a media type the endpoint does not accept
+        (
+            "POST",
+            "/profiles",
+            Some("text/plain"),
+            b"name".to_vec(),
+            None,
+            415,
+            "application/json",
+            r#"{"error":"unsupported content type text/plain (it accepts application/json, application/x-www-form-urlencoded, multipart/form-data)"}"#,
+        ),
+        (
+            "POST",
+            "/files",
+            json,
+            b"{}".to_vec(),
+            None,
+            415,
+            "application/json",
+            r#"{"error":"unsupported content type application/json (it accepts multipart/form-data)"}"#,
+        ),
+        // files, with a boundary in the content and binary bytes
+        (
+            "POST",
+            "/files",
+            multi,
+            multipart(&[
+                ("title", None, None, b"t"),
+                (
+                    "files",
+                    Some("a.txt"),
+                    Some("text/plain"),
+                    b"line\r\n-XyZ--XyZ\r\n",
+                ),
+                ("data", Some("d.bin"), None, b"raw"),
+                (
+                    "files",
+                    Some("b.bin"),
+                    Some("application/octet-stream"),
+                    &[0, 255, 13, 10],
+                ),
+            ]),
+            None,
+            201,
+            "application/json",
+            r#"[{"filename":"a.txt","content-type":"text/plain","size":17,"text":"line\r\n-X"},{"filename":"b.bin","content-type":"application/octet-stream","size":4,"text":"?"},{"filename":"data","content-type":"","size":3,"text":"raw"}]"#,
+        ),
+        (
+            "POST",
+            "/files",
+            Some("multipart/form-data"),
+            b"x".to_vec(),
+            None,
+            400,
+            "application/json",
+            r#"{"error":"invalid multipart/form-data body"}"#,
+        ),
+        // a form of an enum and numbers
+        (
+            "PUT",
+            "/shelves/7",
+            form,
+            b"kind=Poetry&size=3&label=odes".to_vec(),
+            None,
+            200,
+            "application/json",
+            r#"{"id":7,"kind":"Poetry","size":3,"label":"odes"}"#,
+        ),
+        (
+            "PUT",
+            "/shelves/7",
+            form,
+            b"kind=Poetry&size=x".to_vec(),
+            None,
+            400,
+            "application/json",
+            r#"{"error":"$.size: expected an integer, got \"x\""}"#,
+        ),
+        // responses as JSON, text or CSV
+        (
+            "GET",
+            "/books",
+            None,
+            vec![],
+            None,
+            200,
+            "application/json",
+            r#"[{"id":1,"title":"Dune","price":9.5},{"id":2,"title":"Odes, \"selected\"","price":12.0,"note":"used"}]"#,
+        ),
+        (
+            "GET",
+            "/books",
+            None,
+            vec![],
+            Some("text/csv"),
+            200,
+            "text/csv; charset=utf-8",
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n",
+        ),
+        (
+            "GET",
+            "/books",
+            None,
+            vec![],
+            Some("application/json;q=0.4, text/*;q=0.5"),
+            200,
+            "text/plain; charset=utf-8",
+            r#"[Book {id = 1, note = None, price = 9.5, title = "Dune"}, Book {id = 2, note = Some "used", price = 12.0, title = "Odes, \"selected\""}]"#,
+        ),
+        (
+            "GET",
+            "/books",
+            None,
+            vec![],
+            Some("text/csv;q=0, image/png"),
+            406,
+            "application/json",
+            r#"{"error":"not acceptable: the response is application/json, text/plain, text/csv"}"#,
+        ),
+        (
+            "GET",
+            "/books/2",
+            None,
+            vec![],
+            None,
+            200,
+            "text/plain; charset=utf-8",
+            r#"Book {id = 2, note = Some "used", price = 12.0, title = "Odes, \"selected\""}"#,
+        ),
+        (
+            "GET",
+            "/books/2",
+            None,
+            vec![],
+            Some("*/*;q=0.1, application/json"),
+            200,
+            "application/json",
+            r#"{"id":2,"title":"Odes, \"selected\"","price":12.0,"note":"used"}"#,
+        ),
+        // errors stay JSON
+        (
+            "GET",
+            "/books/9",
+            None,
+            vec![],
+            Some("text/plain"),
+            404,
+            "application/json",
+            r#"{"error":"not found"}"#,
+        ),
+        (
+            "GET",
+            "/halves/3",
+            None,
+            vec![],
+            Some("text/plain"),
+            500,
+            "application/json",
+            r#"{"error":"odd"}"#,
+        ),
+        (
+            "GET",
+            "/halves/4",
+            None,
+            vec![],
+            Some("text/plain"),
+            200,
+            "text/plain; charset=utf-8",
+            "2",
+        ),
+        (
+            "POST",
+            "/notes",
+            json,
+            br#""hi""#.to_vec(),
+            None,
+            201,
+            "text/plain; charset=utf-8",
+            "hi!",
+        ),
+        (
+            "POST",
+            "/notes",
+            json,
+            br#""hi""#.to_vec(),
+            Some("application/json"),
+            201,
+            "application/json",
+            r#""hi!""#,
+        ),
+    ]
+}
+
+fn exercise_forms(srv: &Server) {
+    for (method, target, ct, body, accept, status, rct, rbody) in forms_requests() {
+        let mut headers = Vec::new();
+        if let Some(c) = ct {
+            headers.push(("content-type", c));
+        }
+        if let Some(a) = accept {
+            headers.push(("accept", a));
+        }
+        let (st, hs, b) = http_raw(&srv.addr, method, target, &headers, &body);
+        let what = format!("{} {} ({:?}, accept {:?})", method, target, ct, accept);
+        assert_eq!((st, b.as_str()), (status, rbody), "{}", what);
+        let got_ct = hs
+            .iter()
+            .find(|(k, _)| k == "content-type")
+            .map(|(_, v)| v.as_str());
+        assert_eq!(got_ct, Some(rct), "{}", what);
+        if target == "/notes" {
+            assert!(hs.iter().any(|(k, v)| k == "location" && v == "/notes/1"));
+        }
+    }
+    // with curl's forms, when it is installed
+    if Command::new("curl").arg("--version").output().is_ok() {
+        let dir = temp_dir(&format!("curl-{}", srv.addr.replace([':', '.'], "-")));
+        std::fs::write(dir.join("a b.txt"), "curl file\n").unwrap();
+        let url = format!("http://{}", srv.addr);
+        let curl = |args: &[&str]| {
+            let o = Command::new("curl")
+                .args(["-s", "--max-time", "30"])
+                .args(args)
+                .current_dir(&dir)
+                .output()
+                .unwrap();
+            String::from_utf8_lossy(&o.stdout).into_owned()
+        };
+        assert_eq!(
+            curl(&[
+                "-F",
+                "name=eve",
+                "-F",
+                "tags=1",
+                "-F",
+                "avatar=@a b.txt;type=text/plain",
+                &format!("{}/profiles", url)
+            ]),
+            r#"{"name":"eve","tags":["1"],"admin":false,"avatar":"a b.txt: 10 bytes"}"#
+        );
+        assert_eq!(
+            curl(&[
+                "-d",
+                "name=fay",
+                "--data-urlencode",
+                "tags=a&b",
+                &format!("{}/profiles", url)
+            ]),
+            r#"{"name":"fay","tags":["a&b"],"admin":false}"#
+        );
+        assert_eq!(
+            curl(&[
+                "-F",
+                "title=x",
+                "-F",
+                "files=@a b.txt",
+                "-F",
+                "files=@a b.txt;filename=c.txt",
+                &format!("{}/files", url)
+            ]),
+            r#"[{"filename":"a b.txt","content-type":"text/plain","size":10,"text":"curl fil"},{"filename":"c.txt","content-type":"text/plain","size":10,"text":"curl fil"}]"#
+        );
+        assert_eq!(
+            curl(&["-H", "accept: text/csv", &format!("{}/books", url)]),
+            "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n"
+        );
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}
+
+/// A native server with the collector running at every 16th allocation.
+fn native_stressed(file: &Path, dir: &Path) -> Server {
+    let exe = dir.join("server");
+    let out = Command::new(fwp())
+        .arg("build")
+        .arg(file)
+        .args(["--rest", "-O1", "-o"])
+        .arg(&exe)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "build failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let mut cmd = Command::new(exe);
+    cmd.args(["--listen", "127.0.0.1:0"])
+        .env("FWP_GC_STRESS", "16");
+    start(cmd)
+}
+
+#[test]
+fn forms_and_formats_interpreted() {
+    exercise_forms(&interpreted(&fixture("forms.fwp")));
+}
+
+#[test]
+fn forms_and_formats_native() {
+    if !have_cc() {
+        eprintln!("skipping: no C compiler");
+        return;
+    }
+    let dir = temp_dir("forms-native");
+    exercise_forms(&native_stressed(&fixture("forms.fwp"), &dir));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// The document lists the media types of bodies and responses.
+#[test]
+fn openapi_media_types() {
+    let doc = parse_json(&openapi_text(&fixture("forms.fwp")));
+    let op = |path: &str, method: &str| {
+        doc.get("paths")
+            .and_then(|p| p.get(path))
+            .and_then(|p| p.get(method))
+            .cloned()
+            .unwrap_or(J::Null)
+    };
+    let keys = |j: Option<&J>| -> Vec<String> {
+        j.map(|j| j.members().iter().map(|(k, _)| k.clone()).collect())
+            .unwrap_or_default()
+    };
+    let profile = op("/profiles", "post");
+    let content = profile.get("requestBody").and_then(|b| b.get("content"));
+    assert_eq!(
+        keys(content),
+        [
+            "application/json",
+            "application/x-www-form-urlencoded",
+            "multipart/form-data"
+        ]
+    );
+    let multi = content
+        .and_then(|c| c.get("multipart/form-data"))
+        .and_then(|c| c.get("schema"))
+        .and_then(|s| s.get("properties"))
+        .and_then(|p| p.get("avatar"))
+        .cloned();
+    assert_eq!(
+        multi,
+        Some(J::Obj(vec![
+            ("type".into(), J::Str("string".into())),
+            ("format".into(), J::Str("binary".into())),
+        ]))
+    );
+    assert!(keys(profile.get("responses")).contains(&"415".to_string()));
+    let books = op("/books", "get");
+    let ok = books
+        .get("responses")
+        .and_then(|r| r.get("200"))
+        .and_then(|r| r.get("content"));
+    assert_eq!(keys(ok), ["application/json", "text/plain", "text/csv"]);
+    assert!(keys(books.get("responses")).contains(&"406".to_string()));
+    // endpoints without `# accepts:` and `# produces:` are JSON only
+    let api = parse_json(&openapi_text(&fixture("api.fwp")));
+    let text = format!("{:?}", api);
+    for m in ["multipart/form-data", "text/plain", "\"415\"", "\"406\""] {
+        assert!(!text.contains(m), "{}", m);
+    }
+}
+
+/// Endpoints whose annotations do not fit their types are rejected.
+#[test]
+fn media_type_errors() {
+    let dir = temp_dir("media-errors");
+    for (src, msg) in [
+        (
+            "# route: GET /x\n# accepts: form\nexport x : I64 -> I64\nx = id\n",
+            "`x`: `# accepts:` needs a request body",
+        ),
+        (
+            "# accepts: form\nexport x : List[I64] -> I64\nx = length\n",
+            "`x`: a form body must be a record, not `List[I64]`",
+        ),
+        (
+            "R = { a: List[List[I64]] }\n# accepts: multipart\nexport x : R -> I64\nx = const 1\n",
+            "`x`: the field `a` of its form body has type `List[List[I64]]`",
+        ),
+        (
+            "# accepts: xml\nexport x : I64 -> I64\nx = id\n",
+            "unknown media type `xml` in `# accepts:`",
+        ),
+        (
+            "# produces: text\nexport x : I64 -> ()\nx = const ()\n",
+            "`x`: `# produces:` needs a result with a body",
+        ),
+        (
+            "# produces: csv\nexport x : I64 -> List[I64]\nx = singleton\n",
+            "`x`: `# produces: csv` needs a list of records",
+        ),
+    ] {
+        let f = dir.join("bad.fwp");
+        std::fs::write(&f, src).unwrap();
+        let o = Command::new(fwp()).arg("openapi").arg(&f).output().unwrap();
+        assert!(!o.status.success(), "{}", src);
+        let err = String::from_utf8_lossy(&o.stderr);
+        assert!(err.contains(msg), "{}\n---\n{}", src, err);
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// Run a client program against a server, interpreted, then natively
+/// against a native server: both print the same.
+fn client_runs(server: &Path, client_dir: &Path, program: &str, golden_out: &Path) {
+    let srv = interpreted(server);
+    let run = Command::new(fwp())
+        .arg("run")
+        .arg(client_dir.join(program))
+        .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
+        .output()
+        .unwrap();
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    let got = String::from_utf8_lossy(&run.stdout).into_owned();
+    golden(golden_out, &got);
+    drop(srv);
+    if have_cc() {
+        let srv = native_stressed(server, client_dir);
+        let exe = client_dir.join("client");
+        let b = Command::new(fwp())
+            .arg("build")
+            .arg(client_dir.join(program))
+            .args(["-O1", "-o"])
+            .arg(&exe)
+            .output()
+            .unwrap();
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        let run = Command::new(&exe)
+            .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
+            .env("FWP_GC_STRESS", "16")
+            .output()
+            .unwrap();
+        assert!(run.status.success());
+        assert_eq!(String::from_utf8_lossy(&run.stdout), got);
+    }
+}
+
+/// A client generated from the document of forms.fwp sends JSON, forms
+/// and files, and reads JSON, text and CSV.
+#[test]
+fn forms_client_round_trip() {
+    let dir = temp_dir("forms-roundtrip");
+    let doc = dir.join("forms.json");
+    std::fs::write(&doc, openapi_text(&fixture("forms.fwp"))).unwrap();
+    assert_eq!(import(&doc, &dir.join("formsclient.fwp")), "");
+    golden(
+        &fixture("formsclient.fwp"),
+        &std::fs::read_to_string(dir.join("formsclient.fwp")).unwrap(),
+    );
+    std::fs::copy(
+        fixture("formsroundtrip.fwp"),
+        dir.join("formsroundtrip.fwp"),
+    )
+    .unwrap();
+    client_runs(
+        &fixture("forms.fwp"),
+        &dir,
+        "formsroundtrip.fwp",
+        &fixture("formsroundtrip.out"),
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// YAML documents: the YAML of the petstore makes the client of its JSON,
+/// and the YAML that `fwp openapi --yaml` prints makes the client of its
+/// JSON.
+#[test]
+fn yaml_documents() {
+    let dir = temp_dir("yaml");
+    let out = dir.join("petstore.fwp");
+    let warnings = import(&fixture("petstore.yaml"), &out);
+    assert_eq!(
+        std::fs::read_to_string(&out).unwrap(),
+        std::fs::read_to_string(fixture("petstore.fwp")).unwrap()
+    );
+    assert_eq!(warnings.lines().count(), 2, "{}", warnings);
+    for file in [
+        fixture("api.fwp"),
+        fixture("forms.fwp"),
+        fixture("secure.fwp"),
+    ] {
+        let yaml = Command::new(fwp())
+            .args(["openapi", "--yaml"])
+            .arg(&file)
+            .output()
+            .unwrap();
+        assert!(yaml.status.success());
+        std::fs::write(dir.join("doc.yaml"), &yaml.stdout).unwrap();
+        std::fs::write(dir.join("doc.json"), openapi_text(&file)).unwrap();
+        import(&dir.join("doc.yaml"), &dir.join("from-yaml.fwp"));
+        import(&dir.join("doc.json"), &dir.join("from-json.fwp"));
+        assert_eq!(
+            std::fs::read_to_string(dir.join("from-yaml.fwp")).unwrap(),
+            std::fs::read_to_string(dir.join("from-json.fwp")).unwrap(),
+            "{}",
+            file.display()
+        );
+    }
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// Swagger 2.0 documents: the petstore's client type-checks, and a client
+/// of a Swagger document in YAML calls forms.fwp, interpreted and native.
+#[test]
+fn swagger_documents() {
+    let dir = temp_dir("swagger");
+    let out = dir.join("petstore.fwp");
+    let warnings = import(&fixture("petstore-swagger.json"), &out);
+    golden(
+        &fixture("petstore-swagger.fwp"),
+        &std::fs::read_to_string(&out).unwrap(),
+    );
+    assert!(
+        warnings.contains("GET /user/logout: its security scheme `basic` is not supported"),
+        "{}",
+        warnings
+    );
+    std::fs::write(dir.join("main.fwp"), "import petstore\n\nmain = ()\n").unwrap();
+    let o = Command::new(fwp())
+        .arg("check")
+        .arg(dir.join("main.fwp"))
+        .output()
+        .unwrap();
+    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+    assert_eq!(
+        import(
+            &fixture("forms.swagger.yaml"),
+            &dir.join("swaggerclient.fwp")
+        ),
+        ""
+    );
+    golden(
+        &fixture("swaggerclient.fwp"),
+        &std::fs::read_to_string(dir.join("swaggerclient.fwp")).unwrap(),
+    );
+    std::fs::copy(
+        fixture("swaggerroundtrip.fwp"),
+        dir.join("swaggerroundtrip.fwp"),
+    )
+    .unwrap();
+    client_runs(
+        &fixture("forms.fwp"),
+        &dir,
+        "swaggerroundtrip.fwp",
+        &fixture("swaggerroundtrip.out"),
+    );
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// examples/rest/uploads.fwp: files in, a summary out; a form; CSV.
+#[test]
+fn uploads_example() {
+    let srv = interpreted(&root().join("examples/rest/uploads.fwp"));
+    let body = multipart(&[
+        ("title", None, None, b"notes"),
+        ("files", Some("a.txt"), Some("text/plain"), b"one\ntwo\n"),
+        ("tags", None, None, b"x"),
+    ]);
+    let (st, _, b) = http_raw(
+        &srv.addr,
+        "POST",
+        "/uploads",
+        &[("content-type", "multipart/form-data; boundary=XyZ")],
+        &body,
+    );
+    assert_eq!(st, 201);
+    assert_eq!(
+        b,
+        r#"{"title":"notes","tags":["x"],"files":[{"filename":"a.txt","content-type":"text/plain","size":8,"lines":2,"checksum":688}]}"#
+    );
+    let (st, hs, b) = http_raw(
+        &srv.addr,
+        "POST",
+        "/guestbook",
+        &[
+            ("content-type", "application/x-www-form-urlencoded"),
+            ("accept", "text/plain"),
+        ],
+        b"name=Ada&message=hi&stars=4",
+    );
+    assert_eq!(
+        (st, b.as_str()),
+        (
+            201,
+            r#"Entry {message = "hi", name = "Ada", stars = Some 4}"#
+        )
+    );
+    assert!(hs
+        .iter()
+        .any(|(k, v)| k == "content-type" && v.starts_with("text/plain")));
+    let (st, _, b) = http_raw(
+        &srv.addr,
+        "GET",
+        "/guestbook",
+        &[("accept", "text/csv")],
+        b"",
+    );
+    assert_eq!(st, 200);
+    assert_eq!(
+        b,
+        "name,message,stars\nAda,hello,5\nAlan,\"a, b, \"\"c\"\"\",\n"
+    );
 }

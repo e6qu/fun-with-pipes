@@ -466,9 +466,26 @@ impl Gen<'_> {
                         Shape::Option(t) if *optional => self.optional(&t),
                         _ => self.schema(&p.ty),
                     };
+                    let content = if e.accepts.is_empty() {
+                        Self::content(s)
+                    } else {
+                        let mut c = Vec::new();
+                        for a in &e.accepts {
+                            let schema = if a == "json" {
+                                s.clone()
+                            } else {
+                                self.form_schema(e)
+                            };
+                            c.push((
+                                crate::rest::media_of(a).to_string(),
+                                obj(vec![("schema", schema)]),
+                            ));
+                        }
+                        Json::Obj(c)
+                    };
                     body = Some(obj(vec![
                         ("required", Json::Bool(!optional)),
-                        ("content", Self::content(s)),
+                        ("content", content),
                     ]));
                 }
                 Source::Unit => {}
@@ -498,7 +515,26 @@ impl Gen<'_> {
             } else {
                 ok.clone()
             };
-            let mut r = Self::response(crate::openapi::reason(st), schema);
+            let mut r = match schema {
+                Some(s) if !e.produces.is_empty() => {
+                    let c = e
+                        .produces
+                        .iter()
+                        .map(|p| {
+                            let schema = if p == "json" { s.clone() } else { ty("string") };
+                            (
+                                crate::rest::media_of(p).to_string(),
+                                obj(vec![("schema", schema)]),
+                            )
+                        })
+                        .collect();
+                    obj(vec![
+                        ("description", Json::str(crate::openapi::reason(st))),
+                        ("content", Json::Obj(c)),
+                    ])
+                }
+                schema => Self::response(crate::openapi::reason(st), schema),
+            };
             if !e.response_headers.is_empty() {
                 let hs: Vec<(String, Json)> = e
                     .response_headers
@@ -539,6 +575,24 @@ impl Gen<'_> {
             responses.push((
                 "400".into(),
                 Self::response("invalid arguments", Some(error_ref.clone())),
+            ));
+        }
+        if !e.produces.is_empty() {
+            responses.push((
+                "406".into(),
+                Self::response(
+                    "none of the media types of the response is acceptable",
+                    Some(error_ref.clone()),
+                ),
+            ));
+        }
+        if !e.accepts.is_empty() {
+            responses.push((
+                "415".into(),
+                Self::response(
+                    "the body is of a media type that is not accepted",
+                    Some(error_ref.clone()),
+                ),
             ));
         }
         if matches!(e.outcome, Outcome::Option(_)) {
@@ -603,6 +657,47 @@ impl Gen<'_> {
             op.push(("security", Json::Arr(reqs)));
         }
         obj(op)
+    }
+
+    /// The schema of a body record as a form: files (`Upload`, `Bytes`)
+    /// are binary strings.
+    fn form_schema(&mut self, e: &Endpoint) -> Json {
+        let mut props = Vec::new();
+        let mut required = Vec::new();
+        for f in &e.form_fields {
+            let binary = obj(vec![
+                ("type", Json::str("string")),
+                ("format", Json::str("binary")),
+            ]);
+            let elem = match (f.kind, jsontype::shape(&f.ty, self.prog)) {
+                (FieldKind::Optional, Shape::Option(t)) | (FieldKind::Repeated, Shape::List(t)) => {
+                    t
+                }
+                _ => f.ty.clone(),
+            };
+            let one = match f.part {
+                crate::rest::Part::Text => self.schema(&elem),
+                _ => binary,
+            };
+            let s = if f.kind == FieldKind::Repeated {
+                obj(vec![("type", Json::str("array")), ("items", one)])
+            } else {
+                one
+            };
+            // (absent, a list is empty and a switch false)
+            if f.kind != FieldKind::Optional {
+                required.push(Json::str(&f.name));
+            }
+            props.push((f.name.clone(), s));
+        }
+        let mut o = vec![
+            ("type", Json::str("object")),
+            ("properties", Json::Obj(props)),
+        ];
+        if !required.is_empty() {
+            o.push(("required", Json::Arr(required)));
+        }
+        obj(o)
     }
 
     fn has_status_field(&self, t: &MT) -> bool {

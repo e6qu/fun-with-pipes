@@ -64,7 +64,8 @@ pub struct FuncDoc {
     /// The name of `# command:`.
     pub command: Option<String>,
     /// The `# route:`, `# status:`, `# error:`, `# header:`, `# cookie:`,
-    /// `# auth:`, `# timeout:` and `# response-header:` lines of REST
+    /// `# auth:`, `# timeout:`, `# response-header:`, `# accepts:` and
+    /// `# produces:` lines of REST
     /// endpoints (`src/rest.rs`), without the `#`.
     pub http: Vec<String>,
     /// The gRPC name of `# grpc:` (`src/rpc.rs`).
@@ -107,6 +108,8 @@ const FUNC_HTTP: &[&str] = &[
     "auth:",
     "timeout:",
     "response-header:",
+    "accepts:",
+    "produces:",
 ];
 
 /// The text of a comment: without the `#`, one space and trailing space.
