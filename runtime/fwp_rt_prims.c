@@ -130,6 +130,7 @@ static V fwp_p_drop_while(V f, V xs) {
  * available on WebAssembly) */
 static V fwp_p_loop(V f, V s) {
     for (;;) {
+        FWP_TICK();
         V r = fwp_apply1(f, s);
         if (fwp_tag(r) != 0) return OBJ(r)->f[0];
         s = OBJ(r)->f[0];

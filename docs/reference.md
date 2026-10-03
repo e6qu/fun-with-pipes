@@ -319,7 +319,9 @@ is a fiber whose stack the JavaScript host suspends and resumes
 native one (or, in fwp.wasm, the interpreter's), with the same order of
 tasks; waiting for a timer suspends the program on a JavaScript timer
 rather than busy-waiting, and a program whose tasks all wait for each
-other traps with `fwp: trap: deadlock: every task is waiting`.
+other traps with `fwp: trap: deadlock: every task is waiting`. Tasks are
+preempted there as natively ([preemption](concurrency.md#preemption)):
+each switch at the end of a slice is a JSPI suspension.
 
 | Host | Tasks |
 |---|---|
@@ -392,6 +394,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 |---|---|
 | `FWP_SEED` | fixes the seed of `random.*` |
 | `FWP_OUT=bin` | makes executable functions write the binary protocol |
+| `FWP_PREEMPT=n` | the slice of a task: the safe points (function entries, `loop` iterations) after which it lets other tasks run and notices cancellation (default 10000; `0`: never; see [preemption](concurrency.md#preemption)) |
 | `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#grpc)) |
 | `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
 | `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |

@@ -15,8 +15,10 @@ A spawned function may perform IO but must handle its own errors, because
 single-threaded program.
 
 Cancelling a task cancels its whole subtree. A task notices cancellation
-when it next suspends: when it sleeps, waits on a channel, awaits another
-task, or waits on a socket. At that point it unwinds. Cancellation is not an
+when it next suspends (when it sleeps, waits on a channel, awaits another
+task, or waits on a socket) or reaches the end of its time slice (see
+[preemption](#preemption)), so a task that only computes is cancelled
+too. At that point it unwinds. Cancellation is not an
 error, so `attempt` does not catch it. A deadline cancels its task when it
 passes, so a deadline set on a task also applies to all of its children.
 `task.scope f` waits for the tasks that `f` started; if `f` fails, those
@@ -37,11 +39,47 @@ processes.
 | task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread (`ucontext`) with its own stack, on one OS thread |
 | task, WebAssembly | a fiber that the JavaScript host switches with JavaScript Promise Integration (fwp.wasm, the playground) | a fiber, as in the interpreter (`wasm32-wasi`, `wasm32-browser`) |
 | waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets on an epoll event loop (poll elsewhere) |
-| scheduling | cooperative: tasks switch only when they suspend | cooperative, as in the interpreter |
+| scheduling | preemptive at safe points: a task that used up its slice hands the baton to the next task waiting for it | the same, switching green threads |
 
-On both backends, a task that computes without ever suspending is not
-pre-empted. A native program in which every task waits forever stops with a
+A native program in which every task waits forever stops with a
 `deadlock` trap, as does any program on WebAssembly.
+
+### Preemption
+
+A task runs until it suspends or until its *slice* ends. The slice is a
+count of safe points, not a time: every entry to a function of the
+program, and every iteration of `loop`, is a safe point, and after
+10000 of them (`FWP_PREEMPT=n` sets another count, `FWP_PREEMPT=0` turns
+preemption off) the task:
+
+1. unwinds if it was cancelled or its deadline passed, so that
+   `task.within 100ms spin` returns `None` after 100 ms even if `spin`
+   never suspends;
+2. otherwise lets the tasks that are ready run first (on the native
+   backend, also those whose timers passed or whose sockets became ready),
+   then continues with a new slice.
+
+A task gets a new slice whenever it starts or resumes after suspending.
+Since the slice is counted the same way by the interpreter and by native
+programs (where `fwp build` adds a decrement and a branch to the entry of
+each function of a program that uses tasks or services, and nothing to
+other programs), a program interleaves the same on both, from run to run:
+three tasks that each compute and print interleave their lines in one
+fixed order. Where tasks also wait for timers or sockets, the order
+depends on time, as before. One exception: callbacks of the runtime's own
+algorithms, such as the comparisons of a sort, may be called a different
+number of times by the two backends.
+
+The cost is small: a native program spends one decrement and a
+never-taken branch per function call (no measurable difference on
+`fib 35` in two tasks), and switching happens once per slice. The
+collector finds the values of a task that is switched out at a safe point
+as at any other switch: on its stack and in its saved registers.
+
+Tasks started in a row get their turns in the order they were started,
+on both backends (the interpreter's threads take their places in the
+queue for the baton when they are started, not when the operating system
+first runs them).
 
 On WebAssembly, which cannot switch stacks by itself, tasks need an engine
 with JavaScript Promise Integration (JSPI): Chrome and Edge 137 and later,

@@ -170,7 +170,6 @@ error. See [protocol.md](protocol.md).
   time, with client certificates (mutual TLS). DTLS and QUIC are not
   implemented.
 - Server reflection for `grpc.serve` routes made from `.proto` files.
-- Preemptive scheduling.
 - Sockets and foreign C functions in the WebAssembly build of fwp (the
   playground): a browser has neither sockets nor a C compiler. Tasks on
   WebAssembly need JavaScript Promise Integration; there is no fallback

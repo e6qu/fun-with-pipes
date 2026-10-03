@@ -54,6 +54,13 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n);
 static void fwp_mem_free(void *p);
 static void fwp_gc_start(void *top);
 
+/* runtime/fwp_rt_task.c: preemption. A safe point (the entry of a
+ * function of a program that uses tasks, an iteration of `loop`) spends
+ * one unit of the running task's slice. */
+static int32_t fwp_budget = 0;
+static void fwp_preempt(void);
+#define FWP_TICK() do { if (__builtin_expect(--fwp_budget <= 0, 0)) fwp_preempt(); } while (0)
+
 /* ---------------------------------------------------------------- objects */
 
 typedef struct { uint32_t tag; uint32_t n; V f[]; } fwp_obj;
