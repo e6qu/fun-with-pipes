@@ -67,8 +67,8 @@ inventory server. Splitting a subset is fine: with only
 | Command | What it does |
 |---|---|
 | `fwp build app.fwp --service m [--service n]... [-o dir]` | builds `dir/app` (the main program) and `dir/m`, `dir/n` (servers; a dotted module name `a.b` gives `a-b`). `-o` defaults to the current directory. `-O`, `--fat` and `--emit-c` apply to each executable |
-| `fwp run --service m... app.fwp [args]` | runs `main` in the interpreter, calling the named modules remotely |
-| `fwp serve --service n... app.fwp m [--listen addr]` | serves module `m` with the interpreter; its calls to the modules named by `--service` are remote |
+| `fwp run --service m... app.fwp [args]` | runs `main` (compiled and cached, or interpreted with `--interp`), calling the named modules remotely |
+| `fwp serve --service n... app.fwp m [--listen addr]` | serves module `m` (compiled and cached, or interpreted with `--interp`); its calls to the modules named by `--service` are remote |
 | `fwp proto app.fwp [--service m]...` | prints the `.proto` file of the named services (by default, of every imported module that exports functions) |
 
 To serve the exported functions of a file on their own, without a program

@@ -58,7 +58,7 @@ exported functions and a chat room built from a `.proto` file.
 | Command | Result |
 |---|---|
 | `fwp build app.fwp --grpc [-o server]` | a native gRPC server of the file's exported functions (`-O`, `--fat` and `--emit-c` apply) |
-| `fwp serve --grpc app.fwp [--listen addr]` | the same server, interpreted |
+| `fwp serve --grpc app.fwp [--listen addr]` | the same server, compiled and cached (`--interp` interprets it) |
 | `fwp proto --grpc app.fwp [-o app.proto]` | its `.proto` file |
 | `fwp proto --import service.proto [-o gen.fwp]` | an fwp module for the messages and services of a `.proto` file |
 

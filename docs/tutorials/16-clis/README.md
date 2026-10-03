@@ -221,7 +221,7 @@ $ ./words shout hey <TAB>  # quiet normal loud
 $ ./words --man > words.1 && man ./words.1
 ```
 
-`fwp exec main.fwp say -n 3 ho` runs a function with the interpreter, and
+`fwp exec main.fwp say -n 3 ho` compiles and runs a function, and
 `fwp exec --cli main.fwp divide 1 0` runs the file as the `--cli` program
 would; both behave exactly as the native programs.
 

@@ -180,7 +180,7 @@ fn build(args: &[&str], cwd: &Path) {
 fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
     let mut v = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc"])
+    cmd.args(["serve", "--grpc", "--interp"])
         .arg(dir().join("greeter.fwp"))
         .args(["--listen", "127.0.0.1:0"]);
     v.push(start(cmd));
@@ -344,7 +344,7 @@ fn exported_functions_are_served() {
     let mut outputs = Vec::new();
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--service", "greeter"])
+        cmd.args(["run", "--interp", "--service", "greeter"])
             .arg(&client)
             .env("FWP_SERVICE_GREETER", &s.addr);
         outputs.push(("interpreted client", render(&run(cmd, 120))));
@@ -387,7 +387,7 @@ fn calls_are_concurrent() {
     }
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--service", "greeter"])
+        cmd.args(["run", "--interp", "--service", "greeter"])
             .arg(&client)
             .env("FWP_SERVICE_GREETER", &s.addr);
         let out = render(&run(cmd, 120));
@@ -417,7 +417,8 @@ fn imported_proto_round_trip() {
     }
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "client.fwp", &s.addr]).current_dir(&rt);
+        cmd.args(["run", "--interp", "client.fwp", &s.addr])
+            .current_dir(&rt);
         let out = render(&run(cmd, 120));
         expect_file(&rt.join("client.out"), &out, "interpreted client");
         if native {
@@ -448,7 +449,8 @@ fn reflection_and_health() {
     }
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "client.fwp", &s.addr]).current_dir(&rd);
+        cmd.args(["run", "--interp", "client.fwp", &s.addr])
+            .current_dir(&rd);
         expect_file(
             &rd.join("client.out"),
             &render(&run(cmd, 120)),
@@ -477,7 +479,7 @@ fn routes_from_a_proto_file() {
     let hd = dir().join("hello");
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "server.fwp", "127.0.0.1:0"])
+    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
         .current_dir(&hd);
     servers.push(start(cmd));
     if native {
@@ -495,7 +497,8 @@ fn routes_from_a_proto_file() {
     }
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "client.fwp", &s.addr]).current_dir(&hd);
+        cmd.args(["run", "--interp", "client.fwp", &s.addr])
+            .current_dir(&hd);
         expect_file(
             &hd.join("client.out"),
             &render(&run(cmd, 120)),
@@ -525,7 +528,7 @@ fn reflection_of_routes() {
     let rd = dir().join("reflection");
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "server.fwp", "127.0.0.1:0"])
+    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
         .current_dir(&hd);
     servers.push(start(cmd));
     if native {
@@ -544,7 +547,8 @@ fn reflection_of_routes() {
     let grpcurl = have("grpcurl", "-version");
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "routes.fwp", &s.addr]).current_dir(&rd);
+        cmd.args(["run", "--interp", "routes.fwp", &s.addr])
+            .current_dir(&rd);
         expect_file(
             &rd.join("routes.out"),
             &render(&run(cmd, 120)),
@@ -702,7 +706,7 @@ fn examples_run() {
     );
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "chat-server.fwp", "127.0.0.1:0"])
+    cmd.args(["run", "--interp", "chat-server.fwp", "127.0.0.1:0"])
         .current_dir(&ex);
     servers.push(start(cmd));
     if native {
@@ -729,7 +733,7 @@ fn examples_run() {
     let expected = "room: ada joined\nada: hello\nada: bye\n";
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "chat-client.fwp", &s.addr])
+        cmd.args(["run", "--interp", "chat-client.fwp", &s.addr])
             .current_dir(&ex);
         assert_eq!(render(&run(cmd, 60)), expected);
         if native {
@@ -741,12 +745,20 @@ fn examples_run() {
     }
     // the weather client prints the same with the service local or remote
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "forecast-client.fwp"]).current_dir(&ex);
+    cmd.args(["run", "--interp", "forecast-client.fwp"])
+        .current_dir(&ex);
     let local = render(&run(cmd, 60));
     assert!(local.contains("Atlantis is not a known place"), "{}", local);
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
-        .current_dir(&ex);
+    cmd.args([
+        "serve",
+        "--grpc",
+        "--interp",
+        "weather.fwp",
+        "--listen",
+        "127.0.0.1:0",
+    ])
+    .current_dir(&ex);
     let mut servers = vec![start(cmd)];
     if native {
         build(
@@ -764,9 +776,15 @@ fn examples_run() {
     }
     for s in &servers {
         let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--service", "weather", "forecast-client.fwp"])
-            .env("FWP_SERVICE_WEATHER", &s.addr)
-            .current_dir(&ex);
+        cmd.args([
+            "run",
+            "--interp",
+            "--service",
+            "weather",
+            "forecast-client.fwp",
+        ])
+        .env("FWP_SERVICE_WEATHER", &s.addr)
+        .current_dir(&ex);
         assert_eq!(render(&run(cmd, 60)), local);
     }
 }

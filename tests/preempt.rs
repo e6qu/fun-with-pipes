@@ -53,7 +53,7 @@ fn render(out: &std::process::Output) -> String {
 
 fn interpret(path: &Path, env: &[(&str, &str)]) -> String {
     let out = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(path)
         .env("FWP_SEED", "42")
         .envs(env.iter().copied())

@@ -35,7 +35,7 @@ one.
 | Command | Result |
 |---|---|
 | `fwp build app.fwp --rest -o server` | a native HTTP server of the exported functions |
-| `fwp serve --rest app.fwp [--listen addr]` | the same server, interpreted |
+| `fwp serve --rest app.fwp [--listen addr]` | the same server, compiled and cached (`--interp` interprets it) |
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
 

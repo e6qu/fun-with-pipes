@@ -32,7 +32,7 @@ binary protocol between fwp programs, and the
 |---|---|
 | `fwp build file.fwp --fn f -o f` | the exported function `f` as an executable |
 | `fwp build file.fwp --cli -o tools` | every exported function as a subcommand of `tools` |
-| `fwp exec file.fwp f args...` | runs `f` with the interpreter, as `--fn f` would |
+| `fwp exec file.fwp f args...` | runs `f` as `--fn f` would (compiled and cached; `--interp` for the interpreter) |
 | `fwp exec --cli file.fwp args...` | runs the file as `--cli` would, named after the file |
 
 `--target wasm32-wasi` builds the same programs as WebAssembly modules

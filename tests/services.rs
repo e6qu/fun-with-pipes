@@ -132,7 +132,7 @@ fn interp_server(
     env: &[(String, String)],
 ) -> Server {
     let mut c = Command::new(fwp());
-    c.arg("serve");
+    c.args(["serve", "--interp"]);
     for r in remote {
         c.arg("--service").arg(r);
     }
@@ -147,7 +147,7 @@ fn env_of(module: &str, s: &Server) -> (String, String) {
 /// The output of `fwp run` and of a single native executable.
 fn reference(program: &Path, dir: &Path) -> String {
     let run = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(program)
         .output()
         .unwrap();
@@ -168,7 +168,7 @@ fn reference(program: &Path, dir: &Path) -> String {
 
 fn run_interp_client(program: &Path, remote: &[&str], env: &[(String, String)]) -> String {
     let mut c = Command::new(fwp());
-    c.arg("run");
+    c.args(["run", "--interp"]);
     for r in remote {
         c.arg("--service").arg(r);
     }
@@ -250,7 +250,7 @@ fn shop_split_into_services() {
         err
     );
     let interp = Command::new(fwp())
-        .args(["run", "--service", "inventory"])
+        .args(["run", "--interp", "--service", "inventory"])
         .arg(&program)
         .env("FWP_SERVICE_INVENTORY", "127.0.0.1:1")
         .output()
@@ -713,7 +713,7 @@ fn split_build_rejects_bad_interfaces() {
     )
     .unwrap();
     let ok = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(dir.join("main.fwp"))
         .output()
         .unwrap();
@@ -723,7 +723,7 @@ fn split_build_rejects_bad_interfaces() {
         String::from_utf8_lossy(&ok.stderr)
     );
     let bad = Command::new(fwp())
-        .args(["run", "--service", "lib"])
+        .args(["run", "--interp", "--service", "lib"])
         .arg(dir.join("main.fwp"))
         .output()
         .unwrap();

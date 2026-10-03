@@ -104,10 +104,18 @@ pub fn build(args: &[String]) -> i32 {
     })
 }
 
-/// `fwp serve --grpc file.fwp`: serve the file's exported functions with
-/// the interpreter.
+/// `fwp serve --grpc file.fwp`: serve the file's exported functions,
+/// compiled (interpreted with `--interp`).
 pub fn serve(args: &[String]) -> i32 {
     let mut args = args.to_vec();
+    let mode = match crate::aot::take_mode(&mut args) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("fwp serve: {}", e);
+            return 2;
+        }
+    };
+    let opt = crate::aot::take_opt(&mut args, "-O2");
     let tls = match crate::tls::server_files(&mut args) {
         Ok(t) => t,
         Err(e) => {
@@ -145,7 +153,22 @@ pub fn serve(args: &[String]) -> i32 {
         return 2;
     };
     crate::driver::with_big_stack(move || match compile(&path, remote) {
-        Ok(prog) => crate::grpc::serve(&prog, listen, tls),
+        Ok(prog) => {
+            if crate::aot::wants_native(mode) {
+                let mut sargs = Vec::new();
+                if let Some(l) = &listen {
+                    sargs.extend(["--listen".to_string(), l.clone()]);
+                }
+                sargs.extend(crate::aot::tls_args(&tls));
+                let generated = crate::cgen::generate_service(&prog);
+                if let Some(code) =
+                    crate::aot::run_native("serve", generated, &opt, &stem(&path), &sargs)
+                {
+                    return code;
+                }
+            }
+            crate::grpc::serve(&prog, listen, tls)
+        }
         Err(e) => report("serve", e),
     })
 }

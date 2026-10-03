@@ -55,7 +55,7 @@ fn render(out: &Output) -> String {
 
 fn interp(path: &Path, env: &[(&str, &str)]) -> String {
     let out = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(path)
         .envs(env.iter().copied())
         .output()
@@ -237,7 +237,7 @@ fn bench() {
         let (b, t_interp) = if name.contains("4M") || name.contains("gradient n=1000") {
             (a.clone(), f64::NAN)
         } else {
-            timed(Command::new(fwp()).arg("run").arg(&path))
+            timed(Command::new(fwp()).args(["run", "--interp"]).arg(&path))
         };
         assert_eq!(a, b);
         println!(

@@ -5,7 +5,7 @@ use std::process::Command;
 #[test]
 fn std_tests_pass() {
     let out = Command::new(env!("CARGO_BIN_EXE_fwp"))
-        .args(["test", "--std"])
+        .args(["test", "--std", "--interp"])
         .output()
         .unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);

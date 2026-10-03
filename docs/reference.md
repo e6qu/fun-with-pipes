@@ -233,7 +233,7 @@ WebSocket sessions ([concurrency.md](concurrency.md#http2)).
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
-                                              run main (interpreter)
+                                              run main (compiled, see below)
 fwp build file.fwp [options]                  compile
     -o out           output path
     -O0..-O3         C optimization level
@@ -255,9 +255,9 @@ fwp build file.fwp [options]                  compile
     --service M[=A]  split M into a gRPC service (repeatable); -o is then
                      a directory for the main and server executables
 fwp serve [--service M]... file.fwp module [--listen A]
-                                              serve a module over gRPC (interpreter)
-fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints (interpreter)
-fwp serve --grpc file.fwp [--listen A]        serve the exported functions over gRPC (interpreter)
+                                              serve a module over gRPC
+fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints
+fwp serve --grpc file.fwp [--listen A]        serve the exported functions over gRPC
     --tls-cert F --tls-key F                  (any `fwp serve`, and the servers that --rest,
                                               --grpc and --service build) serve over TLS
                                               with this certificate chain and key (PEM; see tls.md)
@@ -273,15 +273,44 @@ fwp openapi --import spec.json [-o out.fwp]   generate a client module of an Ope
 fwp exec file.fwp fn [args...]                run an exported function
 fwp exec --cli file.fwp [command] [args...]   run the file as `--cli` builds it
 fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes
-fwp test file.fwp [--native]                  run test declarations
-fwp test --std [--native]                     the standard library's tests
+fwp test file.fwp                             run test declarations
+fwp test --std                                the standard library's tests
 fwp check [--parse] file.fwp                  print inferred types (or the syntax tree)
 fwp fmt [--check] [paths...]                  format files in place (see below)
 fwp lint [paths...]                           warn about likely mistakes (see below)
 fwp lsp                                       the language server, on stdin/stdout
+fwp cache dir | clean                         print or empty the cache of compiled programs
+    --interp         (run, exec, test, serve, pipe) run the interpreter instead
+    -O0..-O3         (run, exec, test, serve) the C optimization level
 ```
 
 A file argument of `-` reads the program from standard input.
+
+### Compiled by default
+
+`fwp run`, `fwp exec`, `fwp test`, `fwp serve` (gRPC services, `--rest`
+and `--grpc`) and the stages of `fwp pipe` compile the program to a native
+executable through C, as `fwp build` would, and run it in place of `fwp`
+(on Unix the executable replaces the `fwp` process, so it has its process
+id, signals and exit status). The executable is cached under the hash of
+its C source, the C compiler and its options, the files given to `--link`
+and the version of fwp, so a program is compiled once and runs at native
+speed after that; the type checker still runs on every start, so errors
+and warnings are reported as before.
+
+| | |
+|---|---|
+| `--interp`, `FWP_RUN=interp` | run the interpreter instead (`--native` and `FWP_RUN=native` ask for the default) |
+| `-O0` .. `-O3`, `-Os` before the file | the C optimization level: `-O2`, and `-O1` for tests |
+| `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp` |
+| `FWP_CACHE_MAX` | how many executables it keeps, the least recently used going first (256) |
+| `fwp cache dir`, `fwp cache clean` | print its directory, empty it |
+| `CC` | the C compiler (`cc`) |
+
+Without a C compiler a program is interpreted, with a note on standard
+error (none when `FWP_RUN` is set). The WebAssembly build of fwp always
+interprets. The interpreter is the reference: the golden tests run every
+program through both and compare their output byte for byte.
 
 Exit codes:
 
@@ -409,7 +438,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
   starts, with the effect or function named:
   ``fwp run: the WebAssembly build of fwp does not provide the `Network` effect (used by `tcp.listen`)``.
   These are the effects the `wasm32-wasi` target rejects.
-- `fwp build` (without `--emit-c`), `fwp test --native`, `fwp pipe`,
+- `fwp build` (without `--emit-c`), `--native`, `fwp pipe`,
   `fwp serve` and `--link` exit with status 2 and
   `fwp: … is not available in the WebAssembly build of fwp`.
 - The interpreter's stack is 512 MiB (a linker argument in

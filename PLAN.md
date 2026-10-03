@@ -187,6 +187,28 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     them, so grpcurl needs no `.proto`. See [docs/rest.md](docs/rest.md)
     and [docs/grpc.md](docs/grpc.md).
 
+14. **Compiled by default** (done). `fwp run`, `fwp exec`, `fwp test`,
+    `fwp serve` and `fwp pipe` compile programs to native executables
+    through C and run them in place of `fwp`, cached by the hash of the C
+    source, the compiler, its options and the linked C code; `--interp` (or
+    `FWP_RUN=interp`) runs the interpreter, which stays the reference, and
+    so does a missing C compiler. See
+    [the reference](docs/reference.md#compiled-by-default).
+
+Next in this series, toward static, zero-cost programs:
+
+15. Typed C: unboxed scalars, records and tuples by value, no tagging in
+    monomorphic code.
+16. Closures and combinators specialized away (defunctionalization,
+    inlining of known functions), and fused list and iterator pipelines.
+17. Escape analysis: values that do not outlive a call on the stack.
+18. Arenas by default: bump allocation per task and per request, freed
+    whole, with the collector for what escapes them.
+19. A static memory mode (`--memory=static`): every limit computed or
+    declared, all memory allocated once at startup, nothing after it.
+20. Static, LTO and profile-guided builds, a precompiled runtime for
+    faster first runs, and benchmarks against C and Rust in CI.
+
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).

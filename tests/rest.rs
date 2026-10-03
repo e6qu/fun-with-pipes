@@ -79,7 +79,7 @@ fn start(mut cmd: Command) -> Server {
 
 fn interpreted(file: &Path) -> Server {
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--rest"])
+    cmd.args(["serve", "--rest", "--interp"])
         .arg(file)
         .args(["--listen", "127.0.0.1:0"]);
     start(cmd)
@@ -792,7 +792,7 @@ fn secure_native() {
 #[test]
 fn cors_from_the_command_line() {
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--rest"])
+    cmd.args(["serve", "--rest", "--interp"])
         .arg(fixture("secure.fwp"))
         .args([
             "--listen",
@@ -811,7 +811,7 @@ fn cors_from_the_command_line() {
     assert!(!allowed("https://app.example"));
     drop(srv);
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--rest"])
+    cmd.args(["serve", "--rest", "--interp"])
         .arg(fixture("api.fwp"))
         .args(["--listen", "127.0.0.1:0"])
         .env("FWP_REST_CORS", "*");
@@ -1378,7 +1378,7 @@ fn client_round_trip() {
     );
     std::fs::copy(fixture("roundtrip.fwp"), dir.join("roundtrip.fwp")).unwrap();
     let run = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(dir.join("roundtrip.fwp"))
         .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
         .output()
@@ -1438,7 +1438,7 @@ fn secure_client_round_trip() {
     )
     .unwrap();
     let run = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(dir.join("secureroundtrip.fwp"))
         .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
         .output()
@@ -1594,7 +1594,7 @@ fn endpoint_errors() {
 #[test]
 fn cli_help_without_routes() {
     let o = Command::new(fwp())
-        .args(["exec", "--cli"])
+        .args(["exec", "--interp", "--cli"])
         .arg(root().join("examples/rest/books.fwp"))
         .args(["help", "quote-order"])
         .output()
@@ -1608,7 +1608,7 @@ fn cli_help_without_routes() {
         help
     );
     let o = Command::new(fwp())
-        .args(["exec", "--cli"])
+        .args(["exec", "--interp", "--cli"])
         .arg(root().join("examples/rest/books.fwp"))
         .args(["book", "3"])
         .output()
@@ -1620,7 +1620,7 @@ fn cli_help_without_routes() {
 fn server_command_line() {
     // --help and --openapi need no socket
     let o = Command::new(fwp())
-        .args(["serve", "--rest"])
+        .args(["serve", "--rest", "--interp"])
         .arg(fixture("api.fwp"))
         .arg("--openapi")
         .output()
@@ -1631,7 +1631,7 @@ fn server_command_line() {
         openapi_text(&fixture("api.fwp"))
     );
     let o = Command::new(fwp())
-        .args(["serve", "--rest"])
+        .args(["serve", "--rest", "--interp"])
         .arg(fixture("api.fwp"))
         .arg("--bogus")
         .output()
@@ -2202,7 +2202,7 @@ fn media_type_errors() {
 fn client_runs(server: &Path, client_dir: &Path, program: &str, golden_out: &Path) {
     let srv = interpreted(server);
     let run = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(client_dir.join(program))
         .env("FWP_TEST_BASE", format!("http://{}", srv.addr))
         .output()

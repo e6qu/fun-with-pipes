@@ -9,9 +9,10 @@ fwp - the fwp (\"foop\") language
 
 usage:
   fwp run [--service m[=addr]]... <file.fwp> [args...]
-                                 run a program's `main` (interpreter); calls
-                                 to the exported functions of each module
-                                 named by --service go to that service
+                                 run a program's `main`, compiled to native
+                                 code (cached); calls to the exported
+                                 functions of each module named by --service
+                                 go to that service
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
             [--wasm-async jspi|asyncify]
@@ -41,10 +42,10 @@ usage:
                                  (see docs/services.md)
   fwp serve [--service m[=addr]]... <file.fwp> <module> [--listen addr]
                                  serve a module's exported functions over
-                                 gRPC with the interpreter
+                                 gRPC
   fwp serve --rest <file.fwp> [--listen addr]
                                  serve a file's exported functions as REST
-                                 endpoints with the interpreter
+                                 endpoints
                                  (every `fwp serve`, and the servers that
                                  --rest, --grpc and --service build, take
                                  --tls-cert file --tls-key file to serve
@@ -59,7 +60,7 @@ usage:
   fwp build <file.fwp> --grpc [-o out]
   fwp serve --grpc <file.fwp> [--listen addr]
   fwp proto --grpc <file.fwp>    a gRPC server of a file's exported
-                                 functions (native, interpreted) and its
+                                 functions (built or served) and its
                                  .proto file; with reflection and health
                                  checking (see docs/grpc.md)
   fwp proto --import <file.proto> [-o out.fwp]
@@ -76,7 +77,6 @@ usage:
                                  typed protocol
   fwp test <file.fwp>            run the `test` declarations of a file
   fwp test --std                 run the standard library's tests
-  fwp test ... --native          run tests compiled to native code
   fwp check <file.fwp>           type-check a file and print inferred types
   fwp check --parse <file.fwp>   parse a file and print its syntax tree
   fwp fmt [--check] [paths...]   format files in place (directories are
@@ -91,6 +91,13 @@ usage:
 
 A file argument of `-` reads the program from standard input (run, test,
 check, exec, fmt, lint).
+
+run, exec, test, serve and pipe compile programs to native executables
+through C, cached by content in `fwp cache dir` (FWP_CACHE_DIR; at most
+FWP_CACHE_MAX, default 256); -O0..-O3 before the file sets the C
+optimization level (default -O2, -O1 for tests). --interp (or
+FWP_RUN=interp) runs the interpreter instead, as does a missing C compiler.
+  fwp cache dir | clean          print or empty the cache of executables
 ";
 
 /// The WebAssembly build of fwp (`--target wasm32-wasip1`) has no C
@@ -115,6 +122,33 @@ fn host_unsupported(cmd: &str, prog: &fwp::ir::Program) -> Option<i32> {
     let why = fwp::driver::wasm_host_unsupported(prog)?;
     eprintln!("fwp {}: {}", cmd, why);
     Some(1)
+}
+
+/// Take `--interp`, `--native` and `-O<n>` before the program file.
+fn take_run_options(
+    cmd: &str,
+    args: &mut Vec<String>,
+    opt: &str,
+) -> Result<(bool, String), ExitCode> {
+    let asked_native = args
+        .iter()
+        .take_while(|a| !a.ends_with(".fwp") && *a != "-")
+        .any(|a| a == "--native");
+    match fwp::aot::take_mode(args) {
+        Ok(m) => {
+            if m == fwp::aot::Mode::Native && IN_WASM && asked_native {
+                return Err(not_in_wasm(&format!(
+                    "`fwp {} --native` (it needs a C compiler)",
+                    cmd
+                )));
+            }
+            Ok((fwp::aot::wants_native(m), fwp::aot::take_opt(args, opt)))
+        }
+        Err(e) => {
+            eprintln!("fwp {}: {}", cmd, e);
+            Err(ExitCode::from(2))
+        }
+    }
 }
 
 /// Remove `--link <item>` options (C libraries, sources and objects for
@@ -170,6 +204,7 @@ fn main() -> ExitCode {
         Some("serve") if IN_WASM => not_in_wasm("`fwp serve` (it needs sockets)"),
         Some("serve") => serve(&args[1..]),
         Some("proto") => proto(&args[1..]),
+        Some("cache") => ExitCode::from(fwp::aot::cache_command(&args[1..]) as u8),
         Some("openapi") => openapi(&args[1..]),
         Some("help") | Some("--help") | Some("-h") | None => {
             print!("{}", USAGE);
@@ -256,6 +291,10 @@ fn take_services(args: &mut Vec<String>) -> Vec<(String, String)> {
 
 fn run(args: &[String]) -> ExitCode {
     let mut args = args.to_vec();
+    let (native, opt) = match take_run_options("run", &mut args, "-O2") {
+        Ok(o) => o,
+        Err(c) => return c,
+    };
     let remote = take_services(&mut args);
     let Some(path) = args.first().cloned() else {
         eprintln!("fwp run: missing file");
@@ -274,6 +313,15 @@ fn run(args: &[String]) -> ExitCode {
                 if let Some(code) = host_unsupported("run", &prog) {
                     return code;
                 }
+                if native {
+                    let generated = fwp::cgen::generate(&prog);
+                    let name = program_name(&path);
+                    if let Some(code) =
+                        fwp::aot::run_native("run", generated, &opt, &name, &prog_args)
+                    {
+                        return code;
+                    }
+                }
                 fwp::interp::run_main(&prog, prog_args).exit_code
             }
             Err(f) => {
@@ -285,15 +333,18 @@ fn run(args: &[String]) -> ExitCode {
 }
 
 fn test(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    // no arguments go to the program, so the mode may follow the file
+    args.sort_by_key(|a| a != "--interp" && a != "--native");
+    let (native, opt) = match take_run_options("test", &mut args, "-O1") {
+        Ok(o) => o,
+        Err(c) => return c,
+    };
     let std_tests = args.iter().any(|a| a == "--std");
-    let native = args.iter().any(|a| a == "--native");
     let path = args.iter().find(|a| !a.starts_with("--")).cloned();
     if path.is_none() && !std_tests {
         eprintln!("fwp test: missing file (or --std)");
         return ExitCode::from(2);
-    }
-    if native && IN_WASM {
-        return not_in_wasm("`fwp test --native` (it needs a C compiler)");
     }
     let roots = fwp::mono::Roots {
         tests: true,
@@ -306,41 +357,20 @@ fn test(args: &[String]) -> ExitCode {
             None => fwp::driver::compile_source("<empty>", "", roots),
         };
         match compiled {
-            Ok((c, prog)) if native => {
-                eprint!("{}", c.render_warnings());
-                let src = match fwp::cgen::generate_tests(&prog) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        eprintln!("fwp test: {}", e);
-                        return 1;
-                    }
-                };
-                let dir = match fwp::cgen::TempDir::new("fwp-tests") {
-                    Ok(d) => d,
-                    Err(e) => {
-                        eprintln!("fwp test: {}", e);
-                        return 1;
-                    }
-                };
-                let exe = dir.join("tests");
-                if let Err(e) = fwp::cgen::compile_c(&src, &exe, "-O1") {
-                    eprintln!("fwp test: {}", e);
-                    return 1;
-                }
-                let status = std::process::Command::new(&exe).status();
-                drop(dir);
-                match status {
-                    Ok(s) => s.code().unwrap_or(1),
-                    Err(e) => {
-                        eprintln!("fwp test: cannot run test binary: {}", e);
-                        1
-                    }
-                }
-            }
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
                 if let Some(code) = host_unsupported("test", &prog) {
                     return code;
+                }
+                if native {
+                    let generated = fwp::cgen::generate_tests(&prog);
+                    let name = path
+                        .as_deref()
+                        .map(program_name)
+                        .unwrap_or_else(|| "std".into());
+                    if let Some(code) = fwp::aot::run_native("test", generated, &opt, &name, &[]) {
+                        return code;
+                    }
                 }
                 let mut out = std::io::stdout();
                 let (pass, fail) = fwp::driver::run_tests(&prog, &mut out);
@@ -698,6 +728,10 @@ fn serve(args: &[String]) -> ExitCode {
         return ExitCode::from(fwp::grpc_cli::serve(args).clamp(0, 255) as u8);
     }
     let mut args = args.to_vec();
+    let (native, opt) = match take_run_options("serve", &mut args, "-O2") {
+        Ok(o) => o,
+        Err(c) => return c,
+    };
     let tls = match fwp::tls::server_files(&mut args) {
         Ok(t) => t,
         Err(e) => {
@@ -736,13 +770,28 @@ fn serve(args: &[String]) -> ExitCode {
     let (path, module) = (path.clone(), module.clone());
     let code = fwp::driver::with_big_stack(move || {
         let roots = fwp::mono::Roots {
-            service: Some(module),
+            service: Some(module.clone()),
             remote,
             ..Default::default()
         };
         match fwp::driver::compile_file(std::path::Path::new(&path), roots) {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
+                if native {
+                    let generated = fwp::services::check_service(&prog)
+                        .and_then(|_| fwp::cgen::generate_service(&prog));
+                    let mut sargs = Vec::new();
+                    if let Some(l) = &listen {
+                        sargs.extend(["--listen".to_string(), l.clone()]);
+                    }
+                    sargs.extend(fwp::aot::tls_args(&tls));
+                    let name = module.replace('.', "-");
+                    if let Some(code) =
+                        fwp::aot::run_native("serve", generated, &opt, &name, &sargs)
+                    {
+                        return code;
+                    }
+                }
                 fwp::services::serve(&prog, listen, tls)
             }
             Err(f) => {
@@ -755,8 +804,13 @@ fn serve(args: &[String]) -> ExitCode {
 }
 
 /// `fwp serve --rest file.fwp [--listen addr] [--openapi]`: the REST
-/// server of a file, interpreted.
+/// server of a file, compiled (interpreted with `--interp`).
 fn serve_rest(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    let (native, opt) = match take_run_options("serve", &mut args, "-O2") {
+        Ok(o) => o,
+        Err(c) => return c,
+    };
     let Some(path) = args.iter().find(|a| a.ends_with(".fwp")).cloned() else {
         eprintln!("fwp serve: usage: fwp serve --rest <file.fwp> [--listen host:port]");
         return ExitCode::from(2);
@@ -766,6 +820,15 @@ fn serve_rest(args: &[String]) -> ExitCode {
         match fwp::rest::compile(std::path::Path::new(&path)) {
             Ok((c, prog)) => {
                 eprint!("{}", c.render_warnings());
+                if native {
+                    let generated = fwp::cgen::generate(&prog);
+                    let name = program_name(&path);
+                    if let Some(code) =
+                        fwp::aot::run_native("serve", generated, &opt, &name, &server_args)
+                    {
+                        return code;
+                    }
+                }
                 fwp::interp::run_main(&prog, server_args).exit_code
             }
             Err(f) => {
@@ -941,6 +1004,12 @@ fn proto(args: &[String]) -> ExitCode {
 }
 
 fn exec(args: &[String]) -> ExitCode {
+    let mut args = args.to_vec();
+    let (native, opt) = match take_run_options("exec", &mut args, "-O2") {
+        Ok(o) => o,
+        Err(c) => return c,
+    };
+    let args = &args[..];
     let (cli, args) = match args.first().map(String::as_str) {
         Some("--cli") => (true, &args[1..]),
         _ => (false, args),
@@ -964,11 +1033,30 @@ fn exec(args: &[String]) -> ExitCode {
                 if let Some(code) = host_unsupported("exec", &prog) {
                     return code;
                 }
+                let pname = program_name(&path);
                 if cli {
-                    return fwp::exec::exec_program(&prog, &program_name(&path), &fargs);
+                    if native {
+                        let generated = fwp::cgen::generate_cli(&prog, &pname);
+                        if let Some(code) =
+                            fwp::aot::run_native("exec", generated, &opt, &pname, &fargs)
+                        {
+                            return code;
+                        }
+                    }
+                    return fwp::exec::exec_program(&prog, &pname, &fargs);
                 }
                 match prog.exports.iter().find(|(n, _)| *n == name) {
-                    Some((_, fid)) => fwp::exec::exec(&prog, *fid, &name, &fargs),
+                    Some((_, fid)) => {
+                        if native {
+                            let generated = fwp::cgen::generate_exec(&prog, *fid, &name);
+                            if let Some(code) =
+                                fwp::aot::run_native("exec", generated, &opt, &name, &fargs)
+                            {
+                                return code;
+                            }
+                        }
+                        fwp::exec::exec(&prog, *fid, &name, &fargs)
+                    }
                     None => {
                         let names: Vec<&str> =
                             prog.exports.iter().map(|(n, _)| n.as_str()).collect();
@@ -1006,9 +1094,24 @@ fn program_name(path: &str) -> String {
 }
 
 fn pipe(args: &[String]) -> ExitCode {
+    // the mode's options come before the stages, whose own arguments may
+    // look like them
+    let lead = args
+        .iter()
+        .take_while(|a| *a == "--interp" || *a == "--native")
+        .count();
+    let mut mode_args = args[..lead].to_vec();
+    let args = &args[lead..];
+    let interp = match fwp::aot::take_mode(&mut mode_args) {
+        Ok(m) => m == fwp::aot::Mode::Interp,
+        Err(e) => {
+            eprintln!("fwp pipe: {}", e);
+            return ExitCode::from(2);
+        }
+    };
     let spec = args.join(" ");
     let exe = std::env::current_exe().unwrap_or_else(|_| "fwp".into());
-    match fwp::exec::run_pipeline(&exe, &spec) {
+    match fwp::exec::run_pipeline(&exe, &spec, interp) {
         Ok(code) => ExitCode::from((code & 0xff) as u8),
         Err(e) => {
             eprintln!("fwp pipe: {}", e);
