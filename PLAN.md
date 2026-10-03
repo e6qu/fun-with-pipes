@@ -253,8 +253,11 @@ Next in this series, toward static, zero-cost programs:
     it needs to know which functions cannot fail or have effects (an
     overflow trap in one stage must still come before the stages after
     it run): a totality analysis comes first.
-22. Static, LTO and profile-guided builds, a precompiled runtime for
-    faster first runs, and benchmarks against C and Rust in CI.
+22. Faster first runs (begun: large programs are compiled with GCC's
+    parallel link-time optimization, halving a REST server's first start
+    on four cores; most of their C is the standard library monomorphized
+    for them, so the next step is generating less of it), static and
+    profile-guided builds, and benchmarks against C and Rust in CI.
 
 ## Later
 
