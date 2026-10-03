@@ -30,3 +30,13 @@ jobs:
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: test
         run: cargo test --all-targets
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL headers (TLS)
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: benchmarks against C and Rust (docs/benchmarks.md)
+        run: cargo test --release --test bench -- --ignored --nocapture

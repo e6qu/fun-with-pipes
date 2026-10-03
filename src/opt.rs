@@ -300,3 +300,180 @@ pub fn optimize(prog: &mut Program) {
         }
     }
 }
+
+/// The number of arguments a higher-order primitive applies its function
+/// argument to, for those that `specialize_hofs` handles.
+pub fn hof_arity(sym: &str) -> Option<usize> {
+    match sym {
+        "map" | "filter" | "take-while" | "drop-while" | "loop" => Some(1),
+        "fold" | "fold-right" | "zip-with" => Some(2),
+        _ => None,
+    }
+}
+
+/// The locals an expression reads, in order of first use.
+fn free_locals(e: &Expr, out: &mut Vec<Local>) {
+    match e {
+        Expr::Local(l) => {
+            if !out.contains(l) {
+                out.push(*l)
+            }
+        }
+        Expr::Const(_) | Expr::Func(_) => {}
+        Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
+            a.iter().for_each(|x| free_locals(x, out))
+        }
+        Expr::Apply(f, a) => {
+            free_locals(f, out);
+            a.iter().for_each(|x| free_locals(x, out));
+        }
+        Expr::Field(r, _) => free_locals(r, out),
+        // closures built from pure parts have none of these
+        Expr::SetFields(..) | Expr::Let(..) | Expr::Match(..) => {}
+    }
+}
+
+/// Specialize the function arguments of higher-order primitives (`map`,
+/// `filter`, `fold`, ...) that are closures built from known functions,
+/// such as `map (mul 3)` or `filter (rem 2 | eq 0)`: each becomes a new
+/// function `h(c1, ..., ck, x)` of the locals it captures and the
+/// element(s), whose body is the closure applied and optimized (so `compose`
+/// and the partial applications become direct calls), and the primitive is
+/// given `h` partially applied to the captured locals (or `h` itself when it
+/// captures none). Native code then calls `h` directly for every element
+/// (`known_hof` in src/cgen.rs). Both backends run the result, so they stay
+/// in step, safe points included.
+pub fn specialize_hofs(prog: &mut Program) {
+    let snapshot = prog.funcs.clone();
+    let mut made: Vec<Func> = Vec::new();
+    let mut seen: Vec<(String, FuncId)> = Vec::new();
+    let base = prog.funcs.len();
+    for id in 0..base {
+        let Body::Expr(body) = &prog.funcs[id].body else {
+            continue;
+        };
+        if size(body) > MAX_BODY {
+            continue;
+        }
+        let mut body = body.clone();
+        rewrite_hofs(&mut body, &snapshot, base, &mut made, &mut seen);
+        prog.funcs[id].body = Body::Expr(body);
+    }
+    prog.funcs.extend(made);
+}
+
+fn rewrite_hofs(
+    e: &mut Expr,
+    funcs: &[Func],
+    base: usize,
+    made: &mut Vec<Func>,
+    seen: &mut Vec<(String, FuncId)>,
+) {
+    // children first
+    match e {
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
+        Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a
+            .iter_mut()
+            .for_each(|x| rewrite_hofs(x, funcs, base, made, seen)),
+        Expr::Apply(f, a) => {
+            rewrite_hofs(f, funcs, base, made, seen);
+            a.iter_mut()
+                .for_each(|x| rewrite_hofs(x, funcs, base, made, seen));
+        }
+        Expr::Field(r, _) => rewrite_hofs(r, funcs, base, made, seen),
+        Expr::SetFields(r, s) => {
+            rewrite_hofs(r, funcs, base, made, seen);
+            s.iter_mut()
+                .for_each(|(_, x)| rewrite_hofs(x, funcs, base, made, seen));
+        }
+        Expr::Let(_, v, b) => {
+            rewrite_hofs(v, funcs, base, made, seen);
+            rewrite_hofs(b, funcs, base, made, seen);
+        }
+        Expr::Match(s, arms) => {
+            rewrite_hofs(s, funcs, base, made, seen);
+            arms.iter_mut()
+                .for_each(|(_, b)| rewrite_hofs(b, funcs, base, made, seen));
+        }
+    }
+    let Expr::Call(prim, args) = e else { return };
+    let Some(prim_f) = funcs.get(*prim) else {
+        return;
+    };
+    let Body::Prim(sym) = &prim_f.body else {
+        return;
+    };
+    let Some(n) = hof_arity(sym) else { return };
+    let Some(fexpr) = args.first() else { return };
+    let o = Opt {
+        funcs,
+        current: usize::MAX,
+        nlocals: 0,
+        budget: 0,
+    };
+    if !matches!(fexpr, Expr::Apply(..)) || !o.pure(fexpr) {
+        return;
+    }
+    let mut caps = Vec::new();
+    free_locals(fexpr, &mut caps);
+    let k = caps.len();
+    // the closure over its captures, numbered from 0
+    let renamed = rename_locals(fexpr, &caps);
+    let key = format!("{:?}|{}", renamed, n);
+    let h = match seen.iter().find(|(s, _)| *s == key) {
+        Some((_, h)) => *h,
+        None => {
+            let params: Vec<Expr> = (k..k + n).map(|i| Expr::Local(i as Local)).collect();
+            let mut o = Opt {
+                funcs,
+                current: usize::MAX,
+                nlocals: (k + n) as Local,
+                budget: 600,
+            };
+            let mut body = Expr::Apply(Box::new(renamed), params);
+            for _ in 0..ROUNDS {
+                body = o.expr(body, 0);
+            }
+            let h = base + made.len();
+            let ty = prim_f.ty.params(prim_f.arity as usize).0[0].clone();
+            made.push(Func {
+                name: format!("{}-fn", sym),
+                arity: (k + n) as u32,
+                nlocals: o.nlocals,
+                ty,
+                body: Body::Expr(body),
+            });
+            seen.push((key, h));
+            h
+        }
+    };
+    args[0] = if k == 0 {
+        Expr::Func(h)
+    } else {
+        Expr::Apply(
+            Box::new(Expr::Func(h)),
+            caps.iter().map(|l| Expr::Local(*l)).collect(),
+        )
+    };
+}
+
+/// An expression whose locals `caps[i]` become local `i`.
+fn rename_locals(e: &Expr, caps: &[Local]) -> Expr {
+    let mut s: Vec<Option<Expr>> = Vec::new();
+    for (i, l) in caps.iter().enumerate() {
+        let l = *l as usize;
+        if s.len() <= l {
+            s.resize(l + 1, None);
+        }
+        s[l] = Some(Expr::Local(i as Local));
+    }
+    let max = {
+        let mut all = Vec::new();
+        free_locals(e, &mut all);
+        all.into_iter().max().map_or(0, |m| m as usize + 1)
+    };
+    if s.len() < max {
+        s.resize(max, None);
+    }
+    substitute(e, &s)
+}

@@ -1,0 +1,48 @@
+# Maps and sets built from lists are sorted once (runtime/fwp_rt_prims.c,
+# fwp_map_build): a repeated key keeps its last value, as inserting the
+# pairs one by one would, and set operations merge sorted keys.
+
+main = [
+    [(3, "c"), (1, "a"), (2, "b"), (1, "z"), (3, "y")]
+    | map.from-list
+    | map.to-list
+    | echo,
+    [] | map.from-list | map.size | echo,
+    [("pear", 1), ("apple", 2), ("pear", 3)]
+    | map.from-list
+    | map.to-list
+    | echo,
+    [(0.0, "zero"), (-0.0, "minus"), (1.5, "x")]
+    | map.from-list
+    | map.to-list
+    | echo,
+    [5, 3, 5, 1, 3, 9] | set.from-list | set.to-list | echo,
+    [] | set.from-list | set.size | echo,
+    [1, 2, 3, 4]
+    | set.from-list
+    | set.union ([3, 4, 5] | set.from-list)
+    | set.to-list
+    | echo,
+    [1, 2, 3, 4]
+    | set.from-list
+    | set.intersect ([3, 4, 5] | set.from-list)
+    | set.to-list
+    | echo,
+    [1, 2, 3, 4]
+    | set.from-list
+    | set.diff ([3, 4, 5] | set.from-list)
+    | set.to-list
+    | echo,
+    [1, 2]
+    | set.from-list
+    | set.intersect ([3] | set.from-list)
+    | set.to-list
+    | echo,
+    [] | set.from-list | set.union ([2, 1] | set.from-list) | set.to-list | echo,
+    range 0 100000 | map (rem 1000) | set.from-list | set.size | echo,
+    range 0 100000
+    | map (fork (curry id) (rem 997) id)
+    | map.from-list
+    | map.get 5
+    | echo,
+] | ignore

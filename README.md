@@ -114,6 +114,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 | [docs/tls.md](docs/tls.md) | TLS with the system's OpenSSL: HTTPS servers and clients, REST over HTTPS, gRPC over TLS |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
 | [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
+| [docs/benchmarks.md](docs/benchmarks.md) | fwp against C and Rust on five programs, and what the gaps come from |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
 | [PLAN.md](PLAN.md) | what was delivered and what comes next |
 
@@ -133,6 +134,7 @@ examples/   a word counter, a JSON API server, executable tools, a shop
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
             FFI, WebAssembly, fat-binary, formatter, language server,
             services, REST, gRPC and browser (fwp.wasm) tests
+bench/      the same programs in fwp, C and Rust (docs/benchmarks.md)
 docs/       documentation and tutorials
 ```
 

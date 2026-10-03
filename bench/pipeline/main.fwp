@@ -1,0 +1,6 @@
+# Lists: build, map, filter and sum, again and again.
+
+one-round : I64 -> I64
+one-round = const (range 0 1000000 | map (mul 3) | filter (rem 2 | eq 0) | sum)
+
+main = range 0 20 | map one-round | sum | echo

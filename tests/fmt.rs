@@ -41,7 +41,7 @@ fn comments(text: &str) -> Vec<String> {
 
 #[test]
 fn formatting_is_stable_and_faithful() {
-    let all = files(&["lib", "examples", "tests", "docs/tutorials"]);
+    let all = files(&["lib", "examples", "tests", "docs/tutorials", "bench"]);
     assert!(all.len() > 50);
     let mut failures = Vec::new();
     let mut formatted = 0;
@@ -91,7 +91,7 @@ fn formatting_is_stable_and_faithful() {
 #[test]
 fn repository_is_formatted() {
     let mut unformatted = Vec::new();
-    for path in files(&["lib", "examples", "docs/tutorials"]) {
+    for path in files(&["lib", "examples", "docs/tutorials", "bench"]) {
         let text = std::fs::read_to_string(&path).unwrap();
         if format_source(&text).ok().as_deref() != Some(text.as_str()) {
             unformatted.push(path.display().to_string());
@@ -108,7 +108,14 @@ fn repository_is_formatted() {
 fn fmt_check_command() {
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let ok = std::process::Command::new(fwp)
-        .args(["fmt", "--check", "lib", "examples", "docs/tutorials"])
+        .args([
+            "fmt",
+            "--check",
+            "lib",
+            "examples",
+            "docs/tutorials",
+            "bench",
+        ])
         .current_dir(root())
         .output()
         .unwrap();
