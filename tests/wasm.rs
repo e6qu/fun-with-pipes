@@ -334,7 +334,9 @@ fn command_line_program_under_wasi() {
     ];
     for (args, stdin, env) in cases {
         let want = run(
-            Command::new(fwp()).args(["exec", "--cli"]).arg(&src),
+            Command::new(fwp())
+                .args(["exec", "--interp", "--cli"])
+                .arg(&src),
             args,
             stdin,
             env,

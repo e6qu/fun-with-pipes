@@ -32,7 +32,7 @@ fn command(r: &Runner, func: &str) -> Command {
     match r {
         Runner::Interp => {
             let mut c = Command::new(fwp());
-            c.arg("exec").arg(tools()).arg(func);
+            c.args(["exec", "--interp"]).arg(tools()).arg(func);
             c
         }
         Runner::Native(exes) => Command::new(&exes[func]),
@@ -304,7 +304,7 @@ fn fwp_pipe_connects_stages() {
     use std::io::Write;
     let spec = format!("{t}:scale 10 | {t}:total", t = tools().display());
     let mut child = Command::new(fwp())
-        .arg("pipe")
+        .args(["pipe", "--interp"])
         .arg(&spec)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -447,7 +447,7 @@ fn transports_switch_and_fall_back() {
     use std::io::Write;
     let spec = format!("{t}:lines 2000 | {t}:normalize", t = tools().display());
     let mut child = Command::new(fwp())
-        .arg("pipe")
+        .args(["pipe", "--interp"])
         .arg(&spec)
         .env("FWP_TRANSPORT_REPORT", "1")
         .stdin(Stdio::piped())

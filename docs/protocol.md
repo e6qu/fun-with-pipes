@@ -21,8 +21,8 @@ $ printf '1\n2\n3\n' | ./scale 10
 30
 ```
 
-`fwp exec tools.fwp scale 3 14` runs the same function with the interpreter
-and behaves identically. This page describes the arguments, input and
+`fwp exec tools.fwp scale 3 14` compiles and runs the same function (with
+`--interp`, the interpreter) and behaves identically. This page describes the arguments, input and
 output of such executables, and the binary protocol between them;
 [cli.md](cli.md) describes how they work as command-line programs: flags
 from a record parameter, `--help`, `--version`, `# args:` names,
@@ -188,7 +188,7 @@ one at a time (each flushed, as streaming results are):
 (Best of five runs on a shared machine; with three other processes
 spinning on the four cores, `SHM_V1` took 0.85 s and 1.2 s.)
 
-The interpreter (`fwp exec`) implements the same transports, so
+The interpreter (`fwp exec --interp`) implements the same transports, so
 interpreted and native stages switch with each other.
 
 ## Pipelines

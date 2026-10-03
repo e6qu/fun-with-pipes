@@ -55,7 +55,7 @@ fn foreign_functions_interpreted() {
         return;
     }
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--link"])
+    cmd.args(["run", "--interp", "--link"])
         .arg(dir().join("vec.c"))
         .arg(dir().join("vec.fwp"));
     assert_eq!(stdout(cmd), VEC_OUT);

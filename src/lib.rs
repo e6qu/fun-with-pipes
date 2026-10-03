@@ -4,6 +4,7 @@
 // handles, whose ordering is by pointer and never by their contents.
 #![allow(clippy::mutable_key_type)]
 
+pub mod aot;
 pub mod ast;
 pub mod asyncify;
 pub mod cgen;

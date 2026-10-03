@@ -24,7 +24,7 @@ weather.Weather
 
 | | |
 |---|---|
-| interpreter (`fwp run`, `fwp serve`) | loads `libssl.so.3` and `libcrypto.so.3` with `dlopen` the first time a program uses TLS; the `fwp` executable does not link them, so it runs (and programs without TLS run) where they are missing, and TLS then fails with an `IoError` of kind `"tls"`: `TLS needs OpenSSL 3 (libssl.so.3), which could not be loaded` |
+| interpreter (`--interp`) | loads `libssl.so.3` and `libcrypto.so.3` with `dlopen` the first time a program uses TLS; the `fwp` executable does not link them, so it runs (and programs without TLS run) where they are missing, and TLS then fails with an `IoError` of kind `"tls"`: `TLS needs OpenSSL 3 (libssl.so.3), which could not be loaded` |
 | native programs | programs that use TLS are linked with `-lssl -lcrypto`, so they depend on `libssl.so.3`; building them needs the OpenSSL headers (`libssl-dev` on Debian and Ubuntu, `openssl-devel` on Fedora). A program uses TLS when a `tls.*` primitive is reachable from its entry points: any HTTPS server or client (`http.serve`, `http.get`, ...; `--rest` servers), and every program that calls or serves gRPC services. Other programs do not depend on OpenSSL |
 | `--staticlib`, `--emit-c` | a static library, or the C, of a program that uses TLS needs `-lssl -lcrypto` where it is linked; `--cdylib` libraries are linked with them |
 | WebAssembly | no sockets: `wasm32-wasi` and `wasm32-browser` reject programs that use TLS, like other `Network` programs, and so does the WebAssembly build of fwp |

@@ -592,8 +592,9 @@ pub fn parse_pipeline(spec: &str) -> Result<Vec<Stage>, String> {
 
 /// Run a pipeline of exported functions as processes connected with the
 /// binary typed protocol; the last stage prints text. Returns the exit code
-/// of the first failing stage (or 0).
-pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str) -> Result<i32, String> {
+/// of the first failing stage (or 0). `interp` runs the stages with the
+/// interpreter instead of compiling them.
+pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str, interp: bool) -> Result<i32, String> {
     use std::process::{Command, Stdio};
     let stages = parse_pipeline(spec)?;
     let mut children = Vec::new();
@@ -601,10 +602,11 @@ pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str) -> Result<i32, String
     let n = stages.len();
     for (i, st) in stages.iter().enumerate() {
         let mut cmd = Command::new(fwp_exe);
-        cmd.arg("exec")
-            .arg(&st.file)
-            .arg(&st.function)
-            .args(&st.args);
+        cmd.arg("exec");
+        if interp {
+            cmd.arg("--interp");
+        }
+        cmd.arg(&st.file).arg(&st.function).args(&st.args);
         if i + 1 < n {
             cmd.env("FWP_OUT", "bin").stdout(Stdio::piped());
             // the next stage is an fwp program, which asks for a faster

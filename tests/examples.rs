@@ -83,7 +83,11 @@ fn tutorial_programs() {
         .output()
         .is_ok();
     for path in tutorials() {
-        let out = Command::new(fwp()).arg("run").arg(&path).output().unwrap();
+        let out = Command::new(fwp())
+            .args(["run", "--interp"])
+            .arg(&path)
+            .output()
+            .unwrap();
         assert!(
             out.status.success(),
             "{}: {}",

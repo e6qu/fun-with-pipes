@@ -95,7 +95,7 @@ impl Runner {
         match self {
             Runner::Interp(pre) => {
                 let mut c = Command::new(fwp());
-                c.arg("exec").args(pre);
+                c.args(["exec", "--interp"]).args(pre);
                 c
             }
             Runner::Native(exe) => Command::new(exe),
@@ -699,7 +699,7 @@ fn declaration_errors() {
         let file = dir.join(format!("decl{}.fwp", i));
         std::fs::write(&file, src).unwrap();
         let o = Command::new(fwp())
-            .arg("exec")
+            .args(["exec", "--interp"])
             .arg(&file)
             .arg(f)
             .output()

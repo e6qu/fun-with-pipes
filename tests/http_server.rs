@@ -187,7 +187,7 @@ fn exercise(name: &str, cmd: Command, clients: usize, per_client: usize) {
 #[test]
 fn interpreted_server() {
     let mut cmd = Command::new(fwp());
-    cmd.arg("run").arg(example());
+    cmd.args(["run", "--interp"]).arg(example());
     exercise("interpreter", cmd, 8, 25);
 }
 

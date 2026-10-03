@@ -266,7 +266,7 @@ fn curl(args: &[&str]) -> (i32, String) {
 fn both_ways(file: &Path, d: &Path, name: &str) -> Vec<Command> {
     let mut v = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.arg("run").arg(file);
+    cmd.args(["run", "--interp"]).arg(file);
     v.push(cmd);
     if have_cc() {
         let exe = d.join(name);
@@ -370,7 +370,7 @@ fn linking() {
     let o = Command::new(d.join("secure")).output().unwrap();
     assert_eq!(text(&o), "tls: True\nconnect\n");
     let o = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(d.join("secure.fwp"))
         .output()
         .unwrap();
@@ -619,7 +619,7 @@ fn rest_over_https() {
     let key = certs.join("server.key");
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--rest"])
+    cmd.args(["serve", "--rest", "--interp"])
         .arg(&api)
         .args(["--listen", "127.0.0.1:0", "--tls-cert"])
         .arg(&cert)
@@ -670,7 +670,7 @@ fn rest_over_https() {
     }
     // a certificate without a key
     let o = Command::new(fwp())
-        .args(["serve", "--rest"])
+        .args(["serve", "--rest", "--interp"])
         .arg(&api)
         .args(["--listen", "127.0.0.1:0", "--tls-cert"])
         .arg(&cert)
@@ -695,7 +695,7 @@ fn rest_with_client_certificates() {
     let file = |n: &str| certs.join(n).to_str().unwrap().to_string();
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--rest"])
+    cmd.args(["serve", "--rest", "--interp"])
         .arg(&app)
         .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
         .args([
@@ -749,7 +749,7 @@ fn rest_with_client_certificates() {
     }
     // client certificates need a server certificate
     let o = Command::new(fwp())
-        .args(["serve", "--rest"])
+        .args(["serve", "--rest", "--interp"])
         .arg(&app)
         .args([
             "--listen",
@@ -804,7 +804,7 @@ fn grpc_with_client_certificates() {
     .unwrap();
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc"])
+    cmd.args(["serve", "--grpc", "--interp"])
         .arg(&app)
         .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
         .args([
@@ -816,7 +816,7 @@ fn grpc_with_client_certificates() {
     servers.push(start(cmd));
     let mut clients = vec![{
         let mut c = Command::new(fwp());
-        c.arg("run").arg(d.join("whoamiclient.fwp"));
+        c.args(["run", "--interp"]).arg(d.join("whoamiclient.fwp"));
         c
     }];
     if have_cc() {
@@ -874,32 +874,46 @@ fn grpc_with_client_certificates() {
     let local = run(
         {
             let mut c = Command::new(fwp());
-            c.args(["run", "forecast-client.fwp"]).current_dir(&ex);
+            c.args(["run", "--interp", "forecast-client.fwp"])
+                .current_dir(&ex);
             c
         },
         120,
     );
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
-        .args([
-            "--tls-cert",
-            &file("server.pem"),
-            "--tls-key",
-            &file("server.key"),
-        ])
-        .args(["--tls-client-ca", &file("ca.pem")])
-        .current_dir(&ex);
+    cmd.args([
+        "serve",
+        "--grpc",
+        "--interp",
+        "weather.fwp",
+        "--listen",
+        "127.0.0.1:0",
+    ])
+    .args([
+        "--tls-cert",
+        &file("server.pem"),
+        "--tls-key",
+        &file("server.key"),
+    ])
+    .args(["--tls-client-ca", &file("ca.pem")])
+    .current_dir(&ex);
     let srv = start(cmd);
     let client = |cert: bool| {
         let mut c = Command::new(fwp());
-        c.args(["run", "--service", "weather", "forecast-client.fwp"])
-            .current_dir(&ex)
-            .env_remove("SSL_CERT_FILE")
-            .env(
-                "FWP_SERVICE_WEATHER",
-                format!("tls://localhost:{}", srv.port()),
-            )
-            .env("FWP_SERVICE_WEATHER_CA", file("ca.pem"));
+        c.args([
+            "run",
+            "--interp",
+            "--service",
+            "weather",
+            "forecast-client.fwp",
+        ])
+        .current_dir(&ex)
+        .env_remove("SSL_CERT_FILE")
+        .env(
+            "FWP_SERVICE_WEATHER",
+            format!("tls://localhost:{}", srv.port()),
+        )
+        .env("FWP_SERVICE_WEATHER_CA", file("ca.pem"));
         if cert {
             c.env("FWP_SERVICE_WEATHER_CERT", file("client.pem"))
                 .env("FWP_SERVICE_WEATHER_KEY", file("client.key"));
@@ -925,7 +939,8 @@ fn grpc_over_tls() {
     let local = run(
         {
             let mut c = Command::new(fwp());
-            c.args(["run", "forecast-client.fwp"]).current_dir(&ex);
+            c.args(["run", "--interp", "forecast-client.fwp"])
+                .current_dir(&ex);
             c
         },
         120,
@@ -934,17 +949,30 @@ fn grpc_over_tls() {
     assert!(expected.contains("Lisbon"), "{}", expected);
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
-        .arg("--tls-cert")
-        .arg(&cert)
-        .arg("--tls-key")
-        .arg(&key)
-        .current_dir(&ex);
+    cmd.args([
+        "serve",
+        "--grpc",
+        "--interp",
+        "weather.fwp",
+        "--listen",
+        "127.0.0.1:0",
+    ])
+    .arg("--tls-cert")
+    .arg(&cert)
+    .arg("--tls-key")
+    .arg(&key)
+    .current_dir(&ex);
     servers.push(start(cmd));
     let mut clients = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--service", "weather", "forecast-client.fwp"])
-        .current_dir(&ex);
+    cmd.args([
+        "run",
+        "--interp",
+        "--service",
+        "weather",
+        "forecast-client.fwp",
+    ])
+    .current_dir(&ex);
     clients.push(cmd);
     if have_cc() {
         let out = d.join("split");
@@ -1081,12 +1109,12 @@ fn grpc_routes_over_tls() {
     let expected = std::fs::read_to_string(hello.join("client.out")).unwrap();
     let mut servers = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "server.fwp", "127.0.0.1:0"])
+    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
         .current_dir(&d);
     servers.push(start(cmd));
     let mut clients = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["run", "client.fwp"]).current_dir(&d);
+    cmd.args(["run", "--interp", "client.fwp"]).current_dir(&d);
     clients.push(cmd);
     if have_cc() {
         build(&["server.fwp", "-o", "server"], &d);

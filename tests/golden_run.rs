@@ -73,7 +73,7 @@ fn exec(mut cmd: Command, path: &Path) -> String {
 
 fn run(path: &Path) -> String {
     let mut cmd = Command::new(fwp());
-    cmd.arg("run").arg(path.file_name().unwrap());
+    cmd.args(["run", "--interp"]).arg(path.file_name().unwrap());
     exec(cmd, path)
 }
 

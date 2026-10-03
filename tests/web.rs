@@ -172,7 +172,7 @@ fn program(b: Backend, name: &str) -> Option<Command> {
     match b {
         Backend::Interp => {
             let mut c = Command::new(fwp());
-            c.arg("run")
+            c.args(["run", "--interp"])
                 .arg(root().join("tests/web").join(format!("{}.fwp", name)));
             Some(c)
         }
@@ -786,7 +786,7 @@ ws.onclose = (e) => console.log(out.join(' '), 'close', e.code, e.reason, e.wasC
 #[test]
 fn chat_example() {
     let mut child = Command::new(fwp())
-        .arg("run")
+        .args(["run", "--interp"])
         .arg(root().join("examples/server/chat.fwp"))
         .env("FWP_ADDR", "127.0.0.1:0")
         .stdout(Stdio::null())
