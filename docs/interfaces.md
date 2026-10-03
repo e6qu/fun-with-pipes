@@ -43,7 +43,7 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | response status and headers | `Outcome` (the exit status) | `RestReply[T]` (`rest.reply 201 x`, `rest.with-header`) | `grpc.set-header`, `grpc.set-trailer`; statuses from `Error[GrpcError]` or `Iterator[Result[R, GrpcError]]` |
 | authentication | — | `# auth:` (bearer tokens, API keys, client certificates) verified by `authenticate` | client certificates (`grpc.peer-subject`); metadata the function checks |
 | browsers | — | CORS (`# cors:`, `--cors`) | — |
-| compression | — | — | gzip (`grpc.with-gzip`) |
+| compression | — | gzip or deflate by `Accept-Encoding` (responses of 1 KiB or more), compressed request bodies ([rest.md](rest.md#http2-and-compression)) | gzip (`grpc.with-gzip`) |
 | TLS | — | HTTPS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca` ([tls.md](tls.md#rest)) | TLS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca`; clients call `tls://host:port` ([tls.md](tls.md#grpc)) |
 | documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `--yaml`, `/openapi.json`) and its page (`/docs`) | `.proto` (`fwp proto`), server reflection (also of routes from `.proto` files) |
 | calling it from fwp | `process.run` | `fwp openapi --import` gives typed functions (of OpenAPI 3 or Swagger 2.0, in JSON or YAML) | `fwp proto --import` gives typed functions; or the same call, made remote by the build |
