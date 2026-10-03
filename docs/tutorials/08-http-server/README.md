@@ -123,8 +123,8 @@ main =
     | ignore
 ```
 
-Run it with `fwp run docs/tutorials/08-http-server/main.fwp`, or compile it with
-`fwp build docs/tutorials/08-http-server/main.fwp -o http-server`. The output is
+Run it with `fwp run docs/tutorials/08-http-server/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/08-http-server/main.fwp -o http-server`. The output is
 [`main.out`](main.out):
 
 ```

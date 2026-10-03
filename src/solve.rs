@@ -415,6 +415,13 @@ impl<'a> Infer<'a> {
     /// `I64`, float literals `F64`, and variables constrained only by
     /// structural classes become `()`.
     fn apply_defaults(&mut self, preds: &[(Pred, Span)]) -> IResult<bool> {
+        self.defaults(preds, false)
+    }
+
+    /// Default the type variables of literals: `F64` for a float literal,
+    /// `I64` for an integer one; with `literals_only` unset, a variable
+    /// with only structural constraints is `()`.
+    fn defaults(&mut self, preds: &[(Pred, Span)], literals_only: bool) -> IResult<bool> {
         let mut classes: HashMap<TV, Vec<String>> = HashMap::new();
         let mut spans: HashMap<TV, Span> = HashMap::new();
         for (p, span) in preds {
@@ -441,7 +448,7 @@ impl<'a> Infer<'a> {
                 || has("std::Numeric")
             {
                 Some("std::I64")
-            } else if cs.iter().all(|c| STRUCTURAL.contains(&c.as_str())) {
+            } else if !literals_only && cs.iter().all(|c| STRUCTURAL.contains(&c.as_str())) {
                 None
             } else {
                 continue;
@@ -556,6 +563,12 @@ impl<'a> Infer<'a> {
                 }
             }
             if rest.is_empty() {
+                // definitions without a signature are not generic: the
+                // type of a literal they leave open is the default one
+                if self.defaults(&keep, true)? {
+                    residual = self.solve(keep, &[])?;
+                    continue;
+                }
                 return Ok(keep);
             }
             if !self.apply_defaults(&rest)? {

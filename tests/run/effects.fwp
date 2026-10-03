@@ -5,6 +5,7 @@ div-or-fail = curry (match
 
 safe-div = div-or-fail | attempt
 
+count-calls : I64 -> () ! {State[I64]}
 count-calls = const (add 1) | modify
 
 main = [

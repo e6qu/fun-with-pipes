@@ -1,0 +1,4 @@
+check/err_implicit_generic.fwp:3:1: error: `square` would be generic, but it has no signature
+3 | square = fork mul id id
+  | ^^^^^^
+  note: generics are explicit: write `square : a -> a where Mul[a]` to make it generic, or a signature with concrete types

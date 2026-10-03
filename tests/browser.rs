@@ -450,7 +450,7 @@ fn stdin_programs_and_unavailable_commands() {
     );
     assert_eq!(r.render(), "hi\n");
     let r = wasm(w, Host::NodeWasi, &dir, &["check", "-"], b"twice = mul 2\n");
-    assert_eq!(r.render(), "twice : a -> a where Mul[a], IntLit[a]\n");
+    assert_eq!(r.render(), "twice : I64 -> I64\n");
     let r = wasm(w, Host::NodeWasi, &dir, &["test", "--std"], b"");
     assert!(r.stdout.ends_with(" passed, 0 failed\n"), "{}", r.render());
 

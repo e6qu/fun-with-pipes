@@ -8,6 +8,7 @@ Shape =
     | Rect Point Point
 
 # `.field` selects a field; `.0`, `.1` select tuple components.
+dist : Point -> F64
 dist = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
 
 # `make` builds a record from functions of the input;

@@ -1,4 +1,4 @@
-check/warn_unreachable.fwp:3:5: warning: unreachable match arm
-3 |     None -> 2
+check/warn_unreachable.fwp:4:5: warning: unreachable match arm
+4 |     None -> 2
   |     ^^^^
-f : Option[a] -> b where IntLit[b]
+f : Option[a] -> I64

@@ -2,5 +2,6 @@ Box[T] = | Box T
 Wrap[F, A] = { inner: F[A] }
 wrap-list : Wrap[List, I64] -> List[I64]
 wrap-list = .inner
+unwrap : Box[a] -> a
 unwrap = match
     Box -> id

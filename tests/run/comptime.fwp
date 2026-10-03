@@ -1,5 +1,6 @@
 # Compile-time evaluation: tables, routing and schema generation.
 
+square : I64 -> I64
 square = fork mul id id
 squares = comptime (range 0 8 | map square)
 
@@ -29,8 +30,10 @@ json-type = match
     "Bool" -> "boolean"
     _ -> const "integer"
 
+field-schema : FieldInfo -> String
 field-schema = both .name (.ty | json-type) | format "\"{}\": {{\"type\": \"{}\"}}"
 
+json-schema : TypeInfo -> String
 json-schema = .shape | match
     ShapeRecord -> map field-schema | join ", " | format "{{\"type\": \"object\", \"properties\": {{{}}}}}"
     _ -> const "{}"

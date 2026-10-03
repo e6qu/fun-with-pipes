@@ -367,8 +367,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/17-rest-and-openapi/main.fwp`, or
-compile it with `fwp build docs/tutorials/17-rest-and-openapi/main.fwp -o
+Run it with `fwp run docs/tutorials/17-rest-and-openapi/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/17-rest-and-openapi/main.fwp -o
 rest`. The output is [`main.out`](main.out):
 
 ```

@@ -32,7 +32,7 @@ library is listed in [stdlib.md](stdlib.md).
 
 ```
 name = expression                 # a definition
-name : Type where Trait[a]        # a signature (optional)
+name : Type where Trait[a]        # a signature (needed for a generic)
 rec name = ...                    # recursion must be declared
 rec name : Type                   # (or on the signature)
 export name : Type                # exported: executables, libraries
@@ -60,7 +60,8 @@ macro name = function             # a Syntax -> Syntax function
 foreign "C" name : Type = "symbol" [variadic N]
 ```
 
-In types, an unknown upper-case name (`T`, `Elem`) is a type variable.
+In types, a lower-case name (`a`, `t`) or an unknown upper-case name
+(`T`, `Elem`) is a type variable.
 Imported modules are named by their path; two different files may not be
 imported under the same name.
 
@@ -136,6 +137,33 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   `!`, and `e` is a row variable.
 - **Type-level naturals:** `Vector[F64, 3]`, `Matrix[T, M, N]`, `Vec[4, F32]`.
 - **Higher-kinded parameters:** `Functor[F]`.
+
+### Generics
+
+Only a signature makes a definition generic. Its type variables are the
+definition's type parameters, and its `where` clause is their
+constraints:
+
+```fwp
+swap : (a, b) -> (b, a)
+swap = both .1 .0
+
+sum-squares : List[a] -> a where Add[a], Mul[a], Zero[a], Dup[a]
+sum-squares = map (fork mul id id) | fold add zero
+```
+
+A definition without a signature is not generic:
+
+- A type left open only by a literal is `I64` (integer literal) or `F64`
+  (float literal), so `inc = add 1` is `I64 -> I64`.
+- Any other open type is an error, which shows the signature to write.
+  For `square = fork mul id id`, that is `square : a -> a where Mul[a]`.
+- `Dup` constraints and effect rows are inferred, with or without a
+  signature.
+
+Generics are resolved at compile time: each use at new types compiles to
+its own specialized code, with no run-time cost
+([design.md](design.md#generics)).
 
 ## Traits
 
@@ -305,9 +333,9 @@ and warnings are reported as before.
 |---|---|
 | `--interp`, `FWP_RUN=interp` | run the interpreter instead (`--native` and `FWP_RUN=native` ask for the default) |
 | `-O0` .. `-O3`, `-Os` before the file | the C optimization level: `-O2`, and `-O1` for tests |
-| `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp` |
+| `FWP_CACHE_DIR` | the cache: `$XDG_CACHE_HOME/fwp`, else `~/.cache/fwp`, else `fwp-cache` in the temporary directory |
 | `FWP_CACHE_MAX` | how many executables it keeps, the least recently used going first (256) |
-| `fwp cache dir`, `fwp cache clean` | print its directory, empty it |
+| `fwp cache dir`, `fwp cache clean` | print its directory, remove its executables |
 | `CC` | the C compiler (`cc`) |
 | `FWP_LTO` | with GCC, a large program (over 1 MB of C, such as a REST or HTTP server with its standard library) is compiled with `-flto=auto`, which generates its code on all cores: a REST server's first start takes about half as long on four. `FWP_LTO=0` compiles it as one unit, `FWP_LTO=1` uses LTO for any size |
 
@@ -325,6 +353,7 @@ Exit codes:
 | 2 | usage error, or an executable function's argument or flag cannot be parsed |
 | 3 | malformed input to an executable function |
 | 101 | trap: overflow, division by zero, deadlock, or stack overflow (`fwp: trap: stack overflow`) |
+| 102 | out of memory (`fwp: out of memory: …`); with static memory, the message names the option to raise |
 
 An exported function run as a program exits with 1 when it returns
 `Err` or raises an uncaught `Error`, and prints the error as
@@ -577,6 +606,7 @@ declaration silences those rules inside it:
 ```fwp
 # kept for the next release
 # fwp:allow(unused-binding)
+legacy-total : List[{amount: I64}] -> I64
 legacy-total = map .amount | sum
 ```
 

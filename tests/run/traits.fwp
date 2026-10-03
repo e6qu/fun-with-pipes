@@ -25,6 +25,7 @@ impl FromInt[Dual] =
     from-int = int.to-float | make Dual { re = id, eps = const 0.0 }
 
 # f(x) = x^3 + 2x + 1, written once, generic over Ring-like types.
+f : a -> a where Add[a], Mul[a], IntLit[a]
 f = fork add (fork mul id (fork mul id id)) (fork add (mul 2) (const 1))
 
 derivative : (Dual -> Dual) -> F64 -> F64

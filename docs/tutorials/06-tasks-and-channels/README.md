@@ -36,6 +36,7 @@ applies to everything the task started.
 # 6. Tasks and channels
 
 # Each element is handled by its own task; results come back in order.
+squares : List[I64] -> List[Option[I64]] ! {Async}
 squares = task.map (fork mul id id)
 
 # A producer task sends into a bounded channel; the consumer reads until
@@ -68,8 +69,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/06-tasks-and-channels/main.fwp`, or compile it with
-`fwp build docs/tutorials/06-tasks-and-channels/main.fwp -o tasks-and-channels`. The output is
+Run it with `fwp run docs/tutorials/06-tasks-and-channels/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/06-tasks-and-channels/main.fwp -o tasks-and-channels`. The output is
 [`main.out`](main.out):
 
 ```

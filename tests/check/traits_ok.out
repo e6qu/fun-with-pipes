@@ -1,19 +1,19 @@
 unbox : Box[a] -> a
-inc-all : a[b] -> a[b] where Add[b], MyFunctor[a], IntLit[b]
-halve-even : a -> Option[b] where Eq[a], IntLit[b], IntLit[a]
+inc-all : f[I64] -> f[I64] where MyFunctor[f]
+halve-even : I64 -> Option[I64]
 monadic : Option[I64]
 pairs : List[String]
 shout-bool : Bool -> String
 ring-thing : a -> a where Ring[a]
 dual-add : Dual -> Dual -> Dual
 dual-mul : Dual -> Dual -> Dual
-poly : a -> a where Mul[a], Add[a], IntLit[a], Dup[a]
+poly : a -> a where Add[a], Mul[a], IntLit[a], Dup[a]
 poly-dual : Dual -> Dual
 derivative-at : F64 -> F64
-birthday : {age: a | r} -> {age: a | r} where Add[a], IntLit[a]
+birthday : {age: I64 | r} -> {age: I64 | r}
 square : a -> a where Mul[a], Dup[a]
 square-dual : Dual -> Dual
-twice-int : a -> a where Mul[a], IntLit[a]
+twice-int : I64 -> I64
 x : String
 y : String
 bits : U8

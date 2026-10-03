@@ -9,12 +9,15 @@ safe-div = div-or-fail | attempt
 halve = safe-div 2
 
 # `try` turns a Result back into the Error effect: monadic bind in a pipe.
+unwrap-all : List[Result[a, b]] -> List[a] ! {Error[b]}
 unwrap-all = map try
 
+first-or-fail : List[a] -> a ! {Error[String]}
 first-or-fail = match
     Cons -> const
     Nil -> fail "empty list"
 
+count-up : a -> ((), I64)
 count-up = run-state 0 (const (add 1) | modify)
 
 roll = random.f64 | mul 6.0

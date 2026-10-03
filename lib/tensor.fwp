@@ -189,14 +189,20 @@ graph.size = match
     TDiv -> on add graph.size | then2 id (add 1)
     TUnary -> const (graph.size | add 1)
 
+# internal
+graph.fold-add : TensorExpr[a] -> TensorExpr[a] -> TensorExpr[a]
 graph.fold-add = curry (match
     (TFill _, TFill _) -> then2 add TFill
     _ -> uncurry TAdd)
 
+# internal
+graph.fold-mul : TensorExpr[a] -> TensorExpr[a] -> TensorExpr[a]
 graph.fold-mul = curry (match
     (TFill _, TFill _) -> then2 mul TFill
     _ -> uncurry TMul)
 
+# internal
+graph.fold-scale : F64 -> TensorExpr[a] -> TensorExpr[a]
 graph.fold-scale = curry (match
     (_, TFill _) -> then2 mul TFill
     (_, TScale _ _) ->

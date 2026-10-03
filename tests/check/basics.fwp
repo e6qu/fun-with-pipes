@@ -17,25 +17,32 @@ active-names =
     | map .name
     | sort
 
+get-name : {name: a | r} -> a
 get-name = .name
+older : {age: I64 | r} -> {age: I64 | r}
 older = with { age = 99 }
 older-users = users | map older
 pair = (1, "two")
+second-of : {1: a | r} -> a
 second-of = .1
+city : {address: {city: a | r} | r1} -> a
 city = .address.city
 
 rec factorial = match
     0 -> 1
     _ -> fork mul id (sub 1 | factorial)
 
+describe : Option[a] -> String where Display[a]
 describe = match
     Some -> show
     None -> "nothing"
 
+first-two : List[a] -> Bool
 first-two = match
     Cons _ (Cons _ _) -> const (const (const True))
     _ -> const False
 
+twice : (a -> a ! e) -> a -> a ! e
 twice = fork compose id id
 inc-twice = twice inc
 

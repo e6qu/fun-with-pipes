@@ -97,7 +97,7 @@ fn defines(d: &Decl) -> Option<&str> {
     }
 }
 
-fn macro_names(modules: &Modules) -> HashMap<String, String> {
+pub(crate) fn macro_names(modules: &Modules) -> HashMap<String, String> {
     // source-visible name -> canonical; std macros are visible everywhere,
     // a module's own macros unqualified, imported ones as `module.name`
     let mut m = HashMap::new();
@@ -244,6 +244,7 @@ pub fn expand(
         let phase = phase_modules(&modules);
         let mut env = crate::env::Env {
             next_node_id: *next_id,
+            macros: macros.values().cloned().collect(),
             ..Default::default()
         };
         env.collect(phase);

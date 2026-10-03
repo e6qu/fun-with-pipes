@@ -1,6 +1,10 @@
 # A module without `main` or exports: its bindings are for importers, so
 # none is reported as unused.
 
+Rect = { w: I64, h: I64 }
+
+area : Rect -> I64
 area = fork mul .w .h
 
+perimeter : Rect -> I64
 perimeter = fork add .w .h | mul 2

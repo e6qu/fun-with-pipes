@@ -71,8 +71,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/07-executables-and-pipes/main.fwp`, or compile it with
-`fwp build docs/tutorials/07-executables-and-pipes/main.fwp -o executables-and-pipes`. The output is
+Run it with `fwp run docs/tutorials/07-executables-and-pipes/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/07-executables-and-pipes/main.fwp -o executables-and-pipes`. The output is
 [`main.out`](main.out):
 
 ```

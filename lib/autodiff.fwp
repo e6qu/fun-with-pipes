@@ -20,7 +20,11 @@ dual.var = make Dual { re = id, eps = const one }
 stop-gradient : Dual[t] -> Dual[t] where Zero[t]
 stop-gradient = update { eps = const zero }
 
+# internal
+dual.re2 : (Dual[t], Dual[t]) -> (t, t)
 dual.re2 = both (.0 | .re) (.1 | .re)
+# internal
+dual.eps2 : (Dual[t], Dual[t]) -> (t, t)
 dual.eps2 = both (.0 | .eps) (.1 | .eps)
 
 impl Add[Dual[t]] where Add[t] =

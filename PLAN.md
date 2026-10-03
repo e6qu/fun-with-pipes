@@ -266,6 +266,16 @@ Next in this series, toward static, zero-cost programs:
     the generic application for every element: higher-order primitives
     now get a specialized function of the captured locals and the
     elements, called directly (`opt::specialize_hofs`).
+24. **Explicit generics** (done). Only a signature makes a top-level
+    definition generic, as in Odin. A definition without one is
+    monomorphic: a type left open by a literal takes the literal's
+    default (`I64`, `F64`), and any other open type is an error that
+    gives the signature to write. Effect rows are still inferred.
+    Generics stay zero-cost: each is specialized per use by the
+    monomorphizer. This avoids what implicit generalization cost Haskell:
+    generic code that needs an optimizer to be fast again, and type
+    errors far from their cause. See
+    [docs/design.md](docs/design.md#generics).
 
 ## Later
 

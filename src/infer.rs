@@ -575,7 +575,8 @@ impl<'a> Infer<'a> {
                     ty: Type::Var(v),
                 }
             } else {
-                self.generalize(&t, &residual)
+                let sc = self.generalize(&t, &residual);
+                self.explicit_generics(&b, sc)
             };
             self.env.bindings[i].mono_vars = scheme.vars.clone();
             if let Some(g) = self.env.globals.get_mut(&b.name) {
@@ -685,6 +686,53 @@ impl<'a> Infer<'a> {
             .iter()
             .map(|(l, _)| l.clone())
             .collect()
+    }
+
+    /// Polymorphism is explicit: a definition without a signature is not
+    /// generic. Its effect row variables are generalized (effects are
+    /// erased, so they cost nothing), but a type or record row variable
+    /// left in its inferred type is an error that suggests the signature
+    /// which would make it generic. `main` and tests are values whose
+    /// unconstrained type variables are `()`.
+    fn explicit_generics(&mut self, b: &BindingInfo, sc: Scheme) -> Scheme {
+        let generic: Vec<TV> = sc
+            .vars
+            .iter()
+            .copied()
+            .filter(|v| self.env.table.vars[*v as usize].kind != Kind::Eff)
+            .collect();
+        // a macro's type is checked where it is expanded
+        if generic.is_empty() || self.env.macros.contains(&b.name) {
+            return sc;
+        }
+        if b.name == "main::main" || b.name == crate::rest::ENTRY || b.test_name.is_some() {
+            for v in &generic {
+                if self.env.table.vars[*v as usize].kind == Kind::Star {
+                    let _ = self.unify(b.span, &Type::Var(*v), &Type::unit(), "`main`");
+                }
+            }
+            return self.generalize(&sc.ty, &[]);
+        }
+        // `Dup` is inferred for signatures too
+        let mut wanted = sc.clone();
+        wanted.preds.retain(|p| p.trait_name != "std::Dup");
+        let shown = crate::driver::show_scheme(self.env, &wanted);
+        self.env.errors.push(
+            Diagnostic::error(
+                b.span,
+                format!(
+                    "`{}` would be generic, but it has no signature",
+                    display_name(&b.name)
+                ),
+            )
+            .with_note(format!(
+                "generics are explicit: write `{} : {}` to make it generic, \
+                 or a signature with concrete types",
+                b.name.rsplit("::").next().unwrap_or(&b.name),
+                shown
+            )),
+        );
+        sc
     }
 
     fn generalize(&mut self, t: &Type, residual: &[(Pred, Span)]) -> Scheme {

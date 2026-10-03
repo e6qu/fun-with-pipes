@@ -1,2 +1,2 @@
-is-even : a -> Bool where Sub[a], Eq[a], IntLit[a]
-is-odd : a -> Bool where Sub[a], Eq[a], IntLit[a]
+is-even : I64 -> Bool
+is-odd : I64 -> Bool

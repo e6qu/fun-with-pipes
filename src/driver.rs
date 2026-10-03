@@ -222,12 +222,16 @@ pub fn check_source_with(
     if !ld.errors.is_empty() {
         return Err(Failure::new(ld.errors, &ld.sm, root));
     }
+    let macros = crate::macros::macro_names(&ld.modules)
+        .into_values()
+        .collect();
     let modules = match crate::macros::expand(ld.modules, &mut ld.next_id, &ld.sm) {
         Ok(m) => m,
         Err(errs) => return Err(Failure::new(errs, &ld.sm, root)),
     };
     let mut env = Env {
         next_node_id: ld.next_id,
+        macros,
         ..Env::default()
     };
     env.collect(modules);
