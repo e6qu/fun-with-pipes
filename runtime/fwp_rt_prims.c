@@ -137,6 +137,71 @@ static V fwp_p_loop(V f, V s) {
     }
 }
 
+/* The higher-order primitives above for a known function with nothing
+ * captured (src/cgen.rs, `known_hof`): the C compiler inlines them at the
+ * call, so the function is called directly instead of through
+ * fwp_apply. Same order of calls and the same results. */
+typedef V (*fwp_fn1)(V);
+typedef V (*fwp_fn2)(V, V);
+#define FWP_K static inline __attribute__((always_inline))
+
+FWP_K V fwp_k_map(fwp_fn1 f, V xs) {
+    size_t n;
+    V *a = fwp_list_items(xs, &n);
+    for (size_t i = 0; i < n; i++) a[i] = f(a[i]);
+    return fwp_list_from(a, n);
+}
+
+FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {
+    size_t n, k = 0;
+    V *a = fwp_list_items(xs, &n);
+    for (size_t i = 0; i < n; i++)
+        if (f(a[i]) == FWP_TRUE) a[k++] = a[i];
+    return fwp_list_from(a, k);
+}
+
+FWP_K V fwp_k_fold(fwp_fn2 f, V z, V xs) {
+    while (xs != 0) { z = f(z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
+    return z;
+}
+
+FWP_K V fwp_k_fold_right(fwp_fn2 f, V z, V xs) {
+    size_t n;
+    V *a = fwp_list_items(xs, &n);
+    for (size_t i = n; i > 0; i--) z = f(a[i - 1], z);
+    return z;
+}
+
+FWP_K V fwp_k_take_while(fwp_fn1 f, V xs) {
+    size_t n, k = 0;
+    V *a = fwp_list_items(xs, &n);
+    while (k < n && f(a[k]) == FWP_TRUE) k++;
+    return fwp_list_from(a, k);
+}
+
+FWP_K V fwp_k_drop_while(fwp_fn1 f, V xs) {
+    while (xs != 0 && f(OBJ(xs)->f[0]) == FWP_TRUE) xs = OBJ(xs)->f[1];
+    return xs;
+}
+
+FWP_K V fwp_k_loop(fwp_fn1 f, V s) {
+    for (;;) {
+        FWP_TICK();
+        V r = f(s);
+        if (fwp_tag(r) != 0) return OBJ(r)->f[0];
+        s = OBJ(r)->f[0];
+    }
+}
+
+FWP_K V fwp_k_zip_with(fwp_fn2 f, V ys, V xs) {
+    size_t n, m;
+    V *a = fwp_list_items(xs, &n);
+    V *b = fwp_list_items(ys, &m);
+    size_t k = n < m ? n : m;
+    for (size_t i = 0; i < k; i++) a[i] = f(b[i], a[i]);
+    return fwp_list_from(a, k);
+}
+
 static V fwp_p_zip(V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);

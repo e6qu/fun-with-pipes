@@ -785,6 +785,36 @@ impl<'g, 'p> FnGen<'g, 'p> {
         format!("(V[]){{{}}}", xs.join(", "))
     }
 
+    /// A call of a higher-order primitive whose function argument is a
+    /// known function, with nothing captured, of the arity the primitive
+    /// applies it at: the runtime's `fwp_k_*` variant, which calls it
+    /// directly.
+    fn known_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        let Body::Prim(sym) = &self.g.prog.funcs[id].body else {
+            return None;
+        };
+        let (k, arity) = match sym.as_str() {
+            "map" => ("fwp_k_map", 1),
+            "filter" => ("fwp_k_filter", 1),
+            "fold" => ("fwp_k_fold", 2),
+            "fold-right" => ("fwp_k_fold_right", 2),
+            "take-while" => ("fwp_k_take_while", 1),
+            "drop-while" => ("fwp_k_drop_while", 1),
+            "loop" => ("fwp_k_loop", 1),
+            "zip-with" => ("fwp_k_zip_with", 2),
+            _ => return None,
+        };
+        let Some(Expr::Func(g)) = args.first() else {
+            return None;
+        };
+        if self.g.prog.funcs[*g].arity != arity {
+            return None;
+        }
+        let mut xs = vec![format!("f{}", g)];
+        xs.extend(self.args(&args[1..]));
+        Some(format!("{}({})", k, xs.join(", ")))
+    }
+
     fn expr(&mut self, e: &Expr) -> String {
         match e {
             Expr::Local(i) => format!("l{}", i),
@@ -798,6 +828,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
             Expr::Call(id, args) => {
+                if let Some(call) = self.known_hof(*id, args) {
+                    return self.bind(call);
+                }
                 let xs = self.args(args);
                 if self.g.prog.funcs[*id].arity == 0 {
                     self.bind(format!("caf{}()", id))

@@ -202,21 +202,28 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     number kind at run time; and applying a closure that captured nothing
     to all its arguments no longer copies them. A loop of tuple
     arithmetic runs 1.7 times as fast. Scalars were already unboxed in a
-    `V`; records by value come with escape analysis (17).
+    `V`; records by value come with escape analysis (18).
+
+16. **Direct calls of known functions** (done). `map`, `filter`, `fold`,
+    `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop`, given
+    a named function (or one the optimizer reduced to one), call it
+    directly: the runtime's `fwp_k_*` variants take a C function pointer
+    and are inlined at the call. Records and constructor values, which
+    are filled as soon as they are allocated, no longer have their memory
+    zeroed first. The loop of tuple arithmetic of item 15 runs 2.6 times
+    as fast as before item 15.
 
 Next in this series, toward static, zero-cost programs:
 
-16. Closures and combinators specialized away (defunctionalization,
-    direct calls of known functions in `loop`, `map`, `fold` and the
-    other higher-order primitives), and fused list and iterator
-    pipelines.
-17. Escape analysis: values that do not outlive a call on the stack, and
+17. Fused list and iterator pipelines (`map | filter | fold` in one pass,
+    without the intermediate lists).
+18. Escape analysis: values that do not outlive a call on the stack, and
     records and tuples that do not escape kept in C locals.
-18. Arenas by default: bump allocation per task and per request, freed
+19. Arenas by default: bump allocation per task and per request, freed
     whole, with the collector for what escapes them.
-19. A static memory mode (`--memory=static`): every limit computed or
+20. A static memory mode (`--memory=static`): every limit computed or
     declared, all memory allocated once at startup, nothing after it.
-20. Static, LTO and profile-guided builds, a precompiled runtime for
+21. Static, LTO and profile-guided builds, a precompiled runtime for
     faster first runs, and benchmarks against C and Rust in CI.
 
 ## Later
