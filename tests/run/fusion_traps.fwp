@@ -1,0 +1,5 @@
+# Stages that can raise different traps are not fused: `map` overflows on
+# the third element before `filter` divides by zero on the first, as if
+# each stage ran over the whole list.
+
+main = range 0 3 | map (mul 4611686018427387904) | filter (rem 0 | eq 0) | sum | echo

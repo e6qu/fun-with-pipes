@@ -1,0 +1,33 @@
+# List pipelines fused into one loop (src/fuse.rs) must behave as if each
+# stage ran over the whole list.
+
+# range, map, filter and a fold
+sum-of : I64 -> I64
+sum-of = range 0 | map (mul 3) | filter (rem 2 | eq 0) | sum
+
+# a list producer, filter before map
+lengths : List[String] -> I64
+lengths = filter (string.length | gt 1) | map string.length | fold add 0
+
+# a captured local: the step reads it from the loop state
+plus-all : I64 -> List[I64] -> I64
+plus-all = add | map | flip compose sum
+
+# floats, with no traps at all
+mean-square : List[F64] -> F64
+mean-square = map (fork mul id id) | sum
+
+# unsigned elements
+small : U8 -> U8
+small = range 0u8 | sum
+
+main = [
+    1000 | sum-of | echo,
+    0 | sum-of | echo,
+    ["a", "bb", "ccc", ""] | lengths | echo,
+    [1, 2, 3] | plus-all 10 | echo,
+    [1.5, 2.0] | mean-square | echo,
+    10u8 | small | echo,
+    # one trap kind in two stages: the overflow is reported either way
+    range 0 3 | map (mul 4611686018427387904) | sum | echo,
+] | ignore

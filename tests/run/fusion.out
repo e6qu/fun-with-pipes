@@ -1,0 +1,9 @@
+748500
+0
+5
+36
+6.25
+45
+--- stderr
+fwp: trap: arithmetic overflow in I64
+--- exit 101

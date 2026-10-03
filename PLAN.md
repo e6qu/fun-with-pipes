@@ -248,11 +248,14 @@ Next in this series, toward static, zero-cost programs:
 20. Escape analysis beyond loops: records and tuples that do not escape
     a function kept in C locals, and values that do not outlive a call on
     the stack.
-21. Fused list and iterator pipelines (`map | filter | fold` in one pass,
-    without the intermediate lists). Fusing interleaves the stages, so
-    it needs to know which functions cannot fail or have effects (an
-    overflow trap in one stage must still come before the stages after
-    it run): a totality analysis comes first.
+21. **Fused list pipelines** (done for folds). A `fold` (and so `sum`)
+    over `map` and `filter` stages of a `range` or a list runs as one
+    `loop`, without the intermediate lists (`src/fuse.rs`). A totality
+    analysis comes first: every stage must be pure and terminating, and
+    the stages together may raise at most one trap message, so whichever
+    stage traps first, the program prints and exits the same. The
+    `pipeline` benchmark went from 44 times C's time to 1.2. Next: other
+    consumers (`length`, `any`, `all`, `to-list`) and iterators.
 22. Faster first runs (begun: large programs are compiled with GCC's
     parallel link-time optimization, halving a REST server's first start
     on four cores; most of their C is the standard library monomorphized

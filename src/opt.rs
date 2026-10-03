@@ -301,6 +301,22 @@ pub fn optimize(prog: &mut Program) {
     }
 }
 
+/// Optimize an expression of a new function with `nlocals` locals (as
+/// every function is): returns it and the function's new local count.
+pub(crate) fn simplify(funcs: &[Func], body: Expr, nlocals: Local) -> (Expr, Local) {
+    let mut o = Opt {
+        funcs,
+        current: usize::MAX,
+        nlocals,
+        budget: 600,
+    };
+    let mut body = body;
+    for _ in 0..ROUNDS {
+        body = o.expr(body, 0);
+    }
+    (body, o.nlocals)
+}
+
 /// The number of arguments a higher-order primitive applies its function
 /// argument to, for those that `specialize_hofs` handles.
 pub fn hof_arity(sym: &str) -> Option<usize> {

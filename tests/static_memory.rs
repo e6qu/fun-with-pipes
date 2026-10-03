@@ -224,9 +224,10 @@ fn running_out_names_the_option() {
     }
     let dir = TempDir::new("out");
     let cases: &[(&str, &[&str], &str)] = &[
-        // a list of a million elements, all live
+        // a list of a million elements, all live (reversed, so it is
+        // built: a range folded directly is fused into a loop)
         (
-            "main = range 0 1000000 | sum | echo\n",
+            "main = range 0 1000000 | reverse | sum | echo\n",
             &["--heap", "1M"],
             "fwp: out of memory: the static heap (1024 KiB) is full; build with a larger --heap\n",
         ),
