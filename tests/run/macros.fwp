@@ -15,6 +15,7 @@ macro const-sum = match
     _ -> const (SInt 0)
 
 shout = twice!(upper | concat "!")
+minus : I64 -> I64 -> I64
 minus = swap-args!(sub)
 inc4 = quad!(add 1)
 

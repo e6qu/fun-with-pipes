@@ -9,12 +9,14 @@ impl MyFunctor[List] =
 
 Box[T] = | Box T
 
+unbox : Box[a] -> a
 unbox = match
     Box -> id
 
 impl MyFunctor[Box] =
     my-map = compose unbox | flip compose Box
 
+inc-all : f[I64] -> f[I64] where MyFunctor[f]
 inc-all = my-map (add 1)
 
 # The prelude's Functor/Monad over Option and List.
@@ -68,12 +70,15 @@ impl FromInt[Dual] =
     from-int = int.to-float | make Dual { re = id, eps = const 0.0 }
 
 # Generic code instantiated at Dual: d/dx (x^2 + 3) at x.
+poly : a -> a where Add[a], Mul[a], IntLit[a]
 poly = fork add (fork mul id id) (const 3)
 poly-dual : Dual -> Dual
 poly-dual = poly
 derivative-at = make Dual { re = id, eps = const 1.0 } | poly-dual | .eps
 
+birthday : {age: I64 | r} -> {age: I64 | r}
 birthday = update { age = add 1 }
+square : a -> a where Mul[a]
 square = fork mul id id
 square-dual : Dual -> Dual
 square-dual = square

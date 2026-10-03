@@ -21,10 +21,10 @@ lex → parse (offside layout) → macro expansion → name collection
 | Interpreter | Runs the same typed IR. It powers `comptime`, macros, the WebAssembly build of fwp and `--interp`, and it is the oracle the native backend is tested against |
 | Scalars | Every value is a 64-bit `V` in C: integers up to 64 bits sign- or zero-extended, floats by their bits, everything else a pointer or a small tag. Arithmetic and comparisons of fixed-width integers, `F32` and `F64` are generated as typed C per type (`Scalar` in `src/cgen.rs`), checked like the interpreter's; 128-bit integers, `TInt` and `F16` go through the runtime's generic `fwp_arith` |
 | Loops | A `loop` whose step is a known function with literal `Again x` and `Stop y` results compiles to a C loop (`loop_shape`, `Gen::loop_def` in `src/cgen.rs`): the step's body writes the next state into locals instead of allocating it, field by field when the state is a record the step only reads through fields; safe points are counted as in the generic loop |
-| Higher-order primitives | `map`, `filter`, `fold`, `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop` called with a known function that captured nothing compile to `fwp_k_*` (runtime/fwp_rt_prims.c), which take a C function pointer and are always inlined, so the function is called directly; any other function value goes through `fwp_apply` |
+| Higher-order primitives | `map`, `filter`, `fold`, `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop` called with a known function that captured nothing compile to `fwp_k_*` (runtime/fwp_rt_prims.c), which take a C function pointer and are always inlined, so the function is called directly. A known function applied to captured values (`map (mul 3)`) gets a specialized loop of its own, `fwp_hof<i>`, which takes the captured values and calls the function directly (`opt::specialize_hofs` in `src/opt.rs`, `hof_def` in `src/cgen.rs`); any other function value goes through `fwp_apply` |
 | Primitives | A fixed set of primitives, implemented twice: in Rust (`src/prims_std.rs`, `src/web.rs`, `src/linalg.rs`, …) and in C (`runtime/fwp_rt*.c`). Everything else in the standard library is fwp code in `lib/` |
-| Polymorphism | Whole-program monomorphization. Traits resolve statically; there is no dictionary passing. Polymorphic recursion is rejected |
-| Memory | Native programs have a non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
+| Polymorphism | Explicit and static: only a signature makes a definition generic, and whole-program monomorphization compiles each use to its own code. Traits resolve statically; there is no dictionary passing. Polymorphic recursion is rejected. See [Generics](#generics) |
+| Memory | Native programs have a generational, non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -45,8 +45,8 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   read left to right.
 - The type checker decides what `|` means. With a value on the left,
   `x | f` is application; with a function on the left, `f | g` is
-  composition. If the left side is still unknown when the binding is
-  generalized, it defaults to application.
+  composition. If the left side is still unknown when the binding's
+  types are solved, it defaults to application.
 - `match` builds a function. Patterns never bind names; each `_` hole is
   passed to the arm's body as a curried argument, left to right.
 - `quote` turns an expression into a `Syntax` value and `name!(…)` calls a
@@ -56,7 +56,7 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 ## Types and effects
 
 - Hindley–Milner inference with levels. Records and effects share one row
-  unifier.
+  unifier. Only signatures generalize: see [Generics](#generics).
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
@@ -81,6 +81,65 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   by zero; `wrapping`, `saturating`, `overflowing` and `checked` give the
   alternatives. There are no implicit conversions. `F16`, `BF16` and
   `F128` are computed at `F32` or `F64` precision.
+
+## Generics
+
+Polymorphism is explicit, as in Odin, and every generic is resolved at
+compile time.
+
+- A top-level definition is generic only when its signature has type
+  variables:
+
+  ```fwp
+  swap : (a, b) -> (b, a)
+  swap = both .1 .0
+
+  sum-squares : List[a] -> a where Add[a], Mul[a], Zero[a], Dup[a]
+  sum-squares = map (fork mul id id) | fold add zero
+  ```
+
+  Inference still works inside every definition and along every pipeline.
+  It never makes a definition generic on its own.
+- A definition without a signature is monomorphic. A type left open only
+  by a literal takes the literal's default (`I64` for an integer, `F64`
+  for a float), as it does for values: `inc = add 1` is `I64 -> I64`.
+  Any other type or record row variable is an error at the definition,
+  and the error gives the inferred signature to write
+  (`explicit_generics` in `src/infer.rs`):
+
+  ```
+  error: `square` would be generic, but it has no signature
+    note: generics are explicit: write `square : a -> a where Mul[a]`
+          to make it generic, or a signature with concrete types
+  ```
+
+  `main`, tests, the REST entry point and macros are exempt. The first
+  three are values whose open types are `()`, and a macro's type is
+  checked where it is expanded.
+- Effect row variables are generalized without a signature. Effects are
+  erased before code generation, so a function that is polymorphic in
+  its effects is still one function.
+- Generics are a zero-cost abstraction. The monomorphizer gives every
+  instantiation its own function, with its types known, so the C backend
+  generates typed scalar code and direct calls. Nothing is boxed or
+  erased, as Java erases its generics, and no dictionary of methods is
+  passed, as Go passes one to code shared by types of the same shape.
+  Trait methods are resolved at compile time. A definition that would be
+  instantiated at unboundedly many types (polymorphic recursion) is
+  rejected.
+
+Why: Haskell generalizes every definition it can and solves constraints
+by passing dictionaries at run time. GHC then needs a large optimizer
+(specialization, inlining, worker/wrapper) to win the performance back,
+and pays for it in compile time. Its type errors also surface at a use,
+far from the definition that was too general. GHC's own designers
+stopped generalizing local definitions (`MonoLocalBinds`, after
+Vytiniotis, Peyton Jones and Schrijvers, *Let Should Not Be
+Generalised*, 2010), and it keeps the monomorphism restriction and
+defaulting for top-level ones. fwp has no local definitions, and with
+this rule it has no implicit generalization at top level either. Each
+generic in a program is one the programmer wrote down. Monomorphization's
+cost is code size, so explicit generics keep that cost visible.
 
 ## Runtime
 

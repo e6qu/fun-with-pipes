@@ -1,6 +1,7 @@
 # 6. Tasks and channels
 
 # Each element is handled by its own task; results come back in order.
+squares : List[I64] -> List[Option[I64]] ! {Async}
 squares = task.map (fork mul id id)
 
 # A producer task sends into a bounded channel; the consumer reads until

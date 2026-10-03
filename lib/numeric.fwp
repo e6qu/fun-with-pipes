@@ -233,7 +233,11 @@ complex.abs : Complex[a] -> a where Ring[a], Floating[a], Dup[a]
 complex.abs = fork add (.re | fork mul id id) (.im | fork mul id id) | sqrt
 
 # component-wise pair of fields from the two operands
+# internal
+complex.re2 : (Complex[t], Complex[t]) -> (t, t)
 complex.re2 = both (.0 | .re) (.1 | .re)
+# internal
+complex.im2 : (Complex[t], Complex[t]) -> (t, t)
 complex.im2 = both (.0 | .im) (.1 | .im)
 
 impl Add[Complex[t]] where Add[t] =

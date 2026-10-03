@@ -165,6 +165,8 @@ pub struct Env {
     pub modules: HashMap<String, ModuleInfo>,
     pub errors: Vec<Diagnostic>,
     pub warnings: Vec<Diagnostic>,
+    /// Canonical names of the bindings declared with `macro`.
+    pub macros: HashSet<String>,
 }
 
 /// Name-resolution scope: the module a declaration belongs to.

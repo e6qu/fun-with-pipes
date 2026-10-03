@@ -143,6 +143,7 @@ fn nothing_is_mapped_after_startup() {
         &src,
         "step : (I64, I64) -> Step[(I64, I64), I64]\n\
          step = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add .1 .0) | Again)\n\n\
+         squares : List[I64] -> List[Option[I64]] ! {Async}\n\
          squares = task.map (fork mul id id)\n\n\
          xs : Vector[F64, Dyn]\n\
          xs = 100000 | range 0 | map (int.to-float | mul 0.0001) | vector.from-list\n\n\

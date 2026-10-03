@@ -1,7 +1,7 @@
 # 3. Types and traits
 
-# Signatures are optional; types are inferred. Lower-case type names are
-# type variables.
+# Types are inferred; a signature makes a definition generic. Lower-case
+# type names are type variables.
 pair-up : a -> (a, a) where Dup[a]
 pair-up = both id id
 

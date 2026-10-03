@@ -98,8 +98,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/09-c-interop/main.fwp`, or compile it with
-`fwp build docs/tutorials/09-c-interop/main.fwp -o c-interop`. The output is
+Run it with `fwp run docs/tutorials/09-c-interop/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/09-c-interop/main.fwp -o c-interop`. The output is
 [`main.out`](main.out):
 
 ```
@@ -110,8 +110,10 @@ True
 [-2, 0, 3, 5, 9]
 ```
 
-The interpreter reaches C through a small shim library that it compiles
-with the system C compiler, so `fwp run` needs `cc` for foreign functions.
+`fwp run` compiles the program to native code, so foreign calls are
+ordinary C calls. With `--interp`, the interpreter reaches C through a
+small shim library that it compiles with the system C compiler, so it
+needs `cc` too.
 
 ---
 

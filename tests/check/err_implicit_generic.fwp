@@ -1,0 +1,5 @@
+# Polymorphism is explicit: a definition is generic only through its
+# signature. Without one, `square` would be generic over `a`.
+square = fork mul id id
+
+main = 3 | square | echo

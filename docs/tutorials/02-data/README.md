@@ -54,6 +54,7 @@ Shape =
     | Rect Point Point
 
 # `.field` selects a field; `.0`, `.1` select tuple components.
+dist : Point -> F64
 dist = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
 
 # `make` builds a record from functions of the input;
@@ -86,8 +87,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/02-data/main.fwp`, or compile it with
-`fwp build docs/tutorials/02-data/main.fwp -o data`. The output is
+Run it with `fwp run docs/tutorials/02-data/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/02-data/main.fwp -o data`. The output is
 [`main.out`](main.out):
 
 ```

@@ -10,6 +10,7 @@ get = .x
 bump : Total -> Total
 bump = add 1
 
+first : {0: a} -> a
 first = match
   (_, ) -> id
 

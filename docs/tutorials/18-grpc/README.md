@@ -325,8 +325,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/18-grpc/main.fwp`, or compile it
-with `fwp build docs/tutorials/18-grpc/main.fwp -o notes`. The output is
+Run it with `fwp run docs/tutorials/18-grpc/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/18-grpc/main.fwp -o notes`. The output is
 [`main.out`](main.out):
 
 ```

@@ -38,7 +38,8 @@
  *      every minor collection.
  *
  * A collection starts when the bytes allocated since the last one exceed
- * twice the live heap (8 MiB at least); it is major when the heap kept
+ * the live heap (twice it when collection is not generational; 8 MiB at
+ * least); it is major when the heap kept
  * since the last major collection has grown past twice its size then (and
  * 16 MiB). Slots freed by a collection go to free lists; empty chunks are
  * reused for any class, and their memory is given back to the system

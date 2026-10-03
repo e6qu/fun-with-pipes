@@ -26,6 +26,10 @@ main =
 - **Static types.** Inference with records, rows and variants; traits with
   superclasses and higher kinds; numbers that trap on overflow;
   exhaustive matching.
+- **Explicit, zero-cost generics.** Only a signature makes a definition
+  generic. Every generic is resolved at compile time and specialized for
+  each type it is used at, with no boxing and no dictionaries
+  ([docs/design.md](docs/design.md#generics)).
 - **Tracked effects.** `IO`, `Error[E]`, `State[S]`, `Async`, `Network`
   appear in function types, with handlers and affine resources.
 - **Compile time.** `comptime`, syntax as data, hygienic macros, `type[T]`.
@@ -117,6 +121,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 | [docs/benchmarks.md](docs/benchmarks.md) | fwp against C and Rust on five programs, and what the gaps come from |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
 | [PLAN.md](PLAN.md) | what was delivered and what comes next |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | setting up, testing, the rules the code follows, and how changes are merged |
 
 ## Layout
 
@@ -132,8 +137,9 @@ examples/   a word counter, a JSON API server, executable tools, a shop
             split into services, command-line programs, a REST bookstore,
             gRPC services
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
-            FFI, WebAssembly, fat-binary, formatter, language server,
-            services, REST, gRPC and browser (fwp.wasm) tests
+            TLS, FFI, WebAssembly, fat-binary, formatter, language server,
+            services, REST, gRPC, browser (fwp.wasm), compile cache, GC,
+            static memory and preemption tests; the benchmark runner
 bench/      the same programs in fwp, C and Rust (docs/benchmarks.md)
 docs/       documentation and tutorials
 ```
@@ -146,3 +152,15 @@ cargo clippy --all-targets -- -D warnings
 cargo test                 # interpreter and native for every golden program
 FWP_BLESS=1 cargo test     # regenerate snapshot files after an intended change
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full checklist, the test
+suites and how changes are merged.
+
+## License
+
+fwp is released under the MIT license ([LICENSE](LICENSE)). Code and
+documentation vendored in from other projects keep their own licenses,
+which are kept with them. Each is traceable to its original source: the
+project, where it came from and the version taken.
+
+Copyright 2026 Adrian Mârza and fwp contributors

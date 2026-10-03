@@ -10,6 +10,7 @@ rec factorial = match
     0 -> 1
     _ -> fork mul id (sub 1 | factorial)
 
+describe : Option[I64] -> String
 describe = match
     Some -> show | concat " found"
     None -> "nothing"

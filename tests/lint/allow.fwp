@@ -9,6 +9,7 @@ twice = map (mul 2) | id | map show | map string.length
 
 # only the listed rule is silenced
 # fwp:allow(redundant-id)
+again : List[I64] -> List[I64]
 again = map show | map string.length
 
 # a signature and its binding are one declaration

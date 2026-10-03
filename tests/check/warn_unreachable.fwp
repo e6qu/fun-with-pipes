@@ -1,3 +1,4 @@
+f : Option[a] -> I64
 f = match
     _ -> const 1
     None -> 2

@@ -268,8 +268,8 @@ main =
         ()
 ```
 
-Run it with `fwp run docs/tutorials/20-websockets-and-http2/main.fwp`, or
-compile it with `fwp build docs/tutorials/20-websockets-and-http2/main.fwp -o mirror`.
+Run it with `fwp run docs/tutorials/20-websockets-and-http2/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/20-websockets-and-http2/main.fwp -o mirror`.
 The output is [`main.out`](main.out):
 
 ```

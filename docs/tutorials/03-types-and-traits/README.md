@@ -1,12 +1,21 @@
 # 3. Types and traits
 
-Types are inferred, so signatures are optional. You write them to
-document a definition or to constrain it. Lower-case names in a type are
-type variables, and `where` lists the traits they must implement:
+Types are inferred, so most definitions need no signature. A signature
+documents a definition, pins its types down, or makes it generic.
+Lower-case names in a type are type variables, and `where` lists the
+traits they must implement:
 
 ```fwp
 pair-up : a -> (a, a) where Dup[a]
 ```
+
+Generics are explicit: only a signature with type variables makes a
+definition generic. Without one, `pair-up = dup` would be an error, and
+the compiler would suggest the signature to write. A definition
+whose only open type comes from a number literal takes the literal's
+default type instead, so `double = mul 2` is `I64 -> I64`. The compiler
+specializes a generic definition for each type it is used at, so
+generics cost nothing at run time.
 
 ## Traits
 
@@ -37,8 +46,8 @@ arithmetic that overflows stops the program with a trap.
 ```fwp
 # 3. Types and traits
 
-# Signatures are optional; types are inferred. Lower-case type names are
-# type variables.
+# Types are inferred; a signature makes a definition generic. Lower-case
+# type names are type variables.
 pair-up : a -> (a, a) where Dup[a]
 pair-up = both id id
 
@@ -72,8 +81,8 @@ main = [
 ] | ignore
 ```
 
-Run it with `fwp run docs/tutorials/03-types-and-traits/main.fwp`, or compile it with
-`fwp build docs/tutorials/03-types-and-traits/main.fwp -o types-and-traits`. The output is
+Run it with `fwp run docs/tutorials/03-types-and-traits/main.fwp` (compiled to native code and cached), or
+build an executable with `fwp build docs/tutorials/03-types-and-traits/main.fwp -o types-and-traits`. The output is
 [`main.out`](main.out):
 
 ```
