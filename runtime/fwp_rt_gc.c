@@ -61,6 +61,7 @@ static void *fwp_alloc(size_t n) {
 }
 
 static void *fwp_alloc_leaf(size_t n) { return fwp_alloc(n); }
+static void *fwp_alloc_init(size_t n) { return fwp_alloc(n); }
 static void *fwp_mem_alloc(size_t n) {
     void *p = calloc(1, n ? n : 1);
     if (!p) {
@@ -322,6 +323,28 @@ static inline void *fwp_gc_alloc(size_t n, int leaf) {
 
 /* zeroed memory, scanned for values */
 static inline void *fwp_alloc(size_t n) { return fwp_gc_alloc(n, 0); }
+/* memory the caller fills (its first n bytes) before the next allocation:
+ * only the rest of the slot is zeroed, so the collector, which scans whole
+ * slots, finds no stale values there */
+static inline void *fwp_alloc_init(size_t n) {
+    if (__builtin_expect(n <= GC_MAX_SMALL, 1)) {
+        unsigned c = fwp_gc.cls_of[(n + 15) >> 4];
+        size_t sz = fwp_gc.slot[c];
+        gc_list *l = &fwp_gc.lists[0][c];
+        if (__builtin_expect((fwp_gc.budget -= (intptr_t)sz) >= 0, 1)) {
+            char *p = l->free;
+            if (p) l->free = (char *)~*(uintptr_t *)p;
+            else if ((size_t)(l->end - l->bump) >= sz) { p = l->bump; l->bump += sz; }
+            if (p) {
+                for (size_t i = n & ~(size_t)7; i < sz; i += 8) *(uint64_t *)(p + i) = 0;
+                return p;
+            }
+        }
+        /* the slow path does the budget's bookkeeping again */
+        fwp_gc.budget += (intptr_t)sz;
+    }
+    return fwp_gc_alloc(n, 0);
+}
 /* zeroed memory that holds no values (bytes, numbers) */
 static inline void *fwp_alloc_leaf(size_t n) { return fwp_gc_alloc(n, 1); }
 

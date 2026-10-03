@@ -48,6 +48,9 @@ typedef unsigned __int128 u128;
 /* runtime/fwp_rt_gc.c: the collected heap */
 static void *fwp_alloc(size_t n);      /* zeroed; scanned for values */
 static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
+/* scanned for values; the caller writes all of its first n bytes before
+ * anything else is allocated (only the slot's slack is zeroed) */
+static void *fwp_alloc_init(size_t n);
 /* runtime memory that may hold values (explicitly freed, or collected) */
 static void *fwp_mem_alloc(size_t n);
 static void *fwp_mem_realloc(void *p, size_t old, size_t n);
@@ -95,10 +98,10 @@ static inline uint32_t fwp_tag(V v) { return v < 4096 ? (uint32_t)v : OBJ(v)->ta
 
 static V fwp_data(uint32_t tag, uint32_t n, const V *f) {
     if (n == 0) return tag;
-    fwp_obj *o = (fwp_obj *)fwp_alloc(sizeof(fwp_obj) + n * sizeof(V));
+    fwp_obj *o = (fwp_obj *)fwp_alloc_init(sizeof(fwp_obj) + n * sizeof(V));
     o->tag = tag;
     o->n = n;
-    memcpy(o->f, f, n * sizeof(V));
+    for (uint32_t i = 0; i < n; i++) o->f[i] = f[i];
     return PTR(o);
 }
 

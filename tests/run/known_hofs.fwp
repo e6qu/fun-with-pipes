@@ -1,0 +1,53 @@
+# Higher-order primitives given a named function call it directly in
+# native code (`fwp_k_*` in runtime/fwp_rt_prims.c); a partial application
+# goes through the generic path. Both must give the same results, errors
+# included.
+
+double : I64 -> I64
+double = mul 2
+
+odd : I64 -> Bool
+odd = rem 2 | eq 1
+
+small : I64 -> Bool
+small = lt 4
+
+plus : I64 -> I64 -> I64
+plus = add
+
+minus : I64 -> I64 -> I64
+minus = sub
+
+pair : I64 -> I64 -> (I64, I64)
+pair = curry id
+
+countdown : (I64, I64) -> Step[(I64, I64), I64]
+countdown = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add .0 .1) | Again)
+
+checked-half : I64 -> I64 ! {Error[String]}
+checked-half = if odd (const "odd" | fail) (div 2)
+
+xs : List[I64]
+xs = [1, 2, 3, 4, 5, 6]
+
+main = [
+    xs | map double | echo,
+    xs | map (mul 3) | echo,
+    xs | filter odd | echo,
+    xs | filter (gt 2) | echo,
+    xs | fold plus 0 | echo,
+    xs | fold add 100 | echo,
+    xs | fold-right plus 0 | echo,
+    xs | fold-right minus 0 | echo,
+    xs | fold-right sub 0 | echo,
+    xs | take-while small | echo,
+    xs | drop-while small | echo,
+    xs | take-while (lt 3) | echo,
+    (100000, 0) | loop countdown | echo,
+    xs | zip-with pair [9, 8, 7] | echo,
+    xs | zip-with plus [10, 20, 30, 40, 50, 60, 70] | echo,
+    [2, 4, 6] | attempt (map checked-half) | echo,
+    [2, 3, 6] | attempt (map checked-half) | echo,
+    [] | map double | echo,
+    [] | fold plus 7 | echo,
+] | ignore
