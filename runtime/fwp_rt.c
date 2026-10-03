@@ -283,21 +283,32 @@ static const fwp_fninfo *fwp_fns; /* set by the generated main */
 static V fwp_apply(V f, uint32_t n, V *args) {
     for (;;) {
         fwp_clo *c = CLO(f);
-        uint32_t ar = fwp_fns[c->fn].arity;
+        const fwp_fninfo *fi = &fwp_fns[c->fn];
+        uint32_t ar = fi->arity;
         uint32_t have = c->n;
+        /* the common case: a function with nothing captured, given (at
+         * least) all its arguments, reads them where they are */
+        if (have == 0 && n >= ar && ar > 0) {
+            V r = fi->entry(args);
+            if (n == ar) return r;
+            f = r;
+            args += ar;
+            n -= ar;
+            continue;
+        }
         if (have + n < ar) {
             fwp_clo *r = (fwp_clo *)fwp_alloc(sizeof(fwp_clo) + (have + n) * sizeof(V));
             r->fn = c->fn;
             r->n = have + n;
-            memcpy(r->a, c->a, have * sizeof(V));
-            memcpy(r->a + have, args, n * sizeof(V));
+            for (uint32_t i = 0; i < have; i++) r->a[i] = c->a[i];
+            for (uint32_t i = 0; i < n; i++) r->a[have + i] = args[i];
             return PTR(r);
         }
         uint32_t need = ar - have;
         V all[ar ? ar : 1];
-        memcpy(all, c->a, have * sizeof(V));
-        memcpy(all + have, args, need * sizeof(V));
-        V r = fwp_fns[c->fn].entry(all);
+        for (uint32_t i = 0; i < have; i++) all[i] = c->a[i];
+        for (uint32_t i = 0; i < need; i++) all[have + i] = args[i];
+        V r = fi->entry(all);
         if (n == need) return r;
         f = r;
         args += need;

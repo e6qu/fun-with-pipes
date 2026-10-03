@@ -1,0 +1,30 @@
+# Arithmetic and comparisons of every fixed-width number type, at their
+# bounds: native code computes them in plain C, and must agree with the
+# interpreter (the traps are in tests/scalar_traps.rs).
+
+main = [
+    [127i8 | sub 1, -128i8 | add 127, -128i8 | div 1, -7i8 | div 2, -7i8 | rem 2, 7i8 | rem -2, -128i8 | rem 1, 11i8 | mul -11, 5i8 | neg] | echo,
+    [32767i16 | sub 2, -32768i16 | div -2, -9i16 | rem 4, 181i16 | mul 181, -32767i16 | neg] | echo,
+    [2147483647i32 | sub 1, -2147483648i32 | add 1, -2147483648i32 | rem 3, 46340i32 | mul 46340, -100i32 | div 7] | echo,
+    [9223372036854775807 | sub 1, -9223372036854775807 | sub 1, -9223372036854775807 | div -1, 3037000499 | mul 3037000499, -9223372036854775807 | neg, -17 | rem 5, 17 | rem -5] | echo,
+    [255u8 | sub 255, 254u8 | add 1, 15u8 | mul 17, 255u8 | div 2, 255u8 | rem 7] | echo,
+    [65535u16 | sub 1, 255u16 | mul 257, 1000u16 | rem 7] | echo,
+    [4294967295u32 | sub 1, 65535u32 | mul 65537, 4294967295u32 | div 65536] | echo,
+    [18446744073709551615u64 | sub 1, 4294967295u64 | mul 4294967297, 18446744073709551615u64 | rem 10, 18446744073709551614u64 | add 1] | echo,
+    [1.5f32 | add 2.25, 1.0f32 | div 3.0, 7.5f32 | rem 2.0, -7.5f32 | rem 2.0, 0.0f32 | neg, 1.0f32 | div 0.0] | echo,
+    [0.1 | add 0.2, 1.0 | div 3.0, 7.5 | rem -2.0, 1.0e308 | mul 10.0, 0.0 | neg, 0.0 | div 0.0] | echo,
+    [-1 | lt 1, -1 | le -1, -1 | gt 1, 2 | ge 2, -1 | eq -1, -1 | ne -1] | echo,
+    [200u8 | lt 100, 200u8 | gt 100, 0u8 | le 0] | echo,
+    [18446744073709551615u64 | gt 1, 1u64 | lt 18446744073709551615] | echo,
+    [4294967295u32 | ge 4294967295, -32768i16 | lt 32767 | not] | echo,
+    [-1 | compare 1, 1 | compare 1, 2 | compare -9223372036854775807] | echo,
+    [18446744073709551615u64 | compare 1, 1u64 | compare 18446744073709551615] | echo,
+    [-128i8 | compare 127, 200u8 | compare 100] | echo,
+    [-1 | min 1, -1 | max 1] | echo,
+    [18446744073709551615u64 | min 1, 18446744073709551615u64 | max 1] | echo,
+    [200u8 | max 100, 200u8 | min 100] | echo,
+    [0.0 | eq -0.0, 0.0 | div 0.0 | eq (0.0 | div 0.0), 0.0 | div 0.0 | ne (0.0 | div 0.0), 0.0 | div 0.0 | lt 1.0, 0.0 | div 0.0 | ge 1.0, -0.0 | lt 0.0] | echo,
+    [0.0f32 | eq -0.0, 0.0f32 | div 0.0 | ne (0.0f32 | div 0.0), 1.5f32 | le 1.5, -1.0f32 | gt -2.0] | echo,
+    [0.0 | compare -0.0, -0.0 | compare 0.0] | echo,
+    [1.0 | min 2.0, 0.0 | div 0.0 | max 1.0, -0.0 | min 0.0] | echo,
+] | ignore

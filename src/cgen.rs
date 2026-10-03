@@ -219,6 +219,137 @@ fn op_code(sym: &str) -> &'static str {
     }
 }
 
+/// A number type whose operations compile to plain C: fixed-width
+/// integers (stored sign- or zero-extended in a `V`) and `F32`/`F64`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Scalar {
+    Signed(u32),
+    Unsigned(u32),
+    F32,
+    F64,
+}
+
+fn scalar(mt: &MT) -> Option<Scalar> {
+    let MT::Con(n, _) = mt else { return None };
+    Some(match n.strip_prefix("std::")? {
+        "I8" => Scalar::Signed(8),
+        "I16" => Scalar::Signed(16),
+        "I32" => Scalar::Signed(32),
+        "I64" | "ISize" => Scalar::Signed(64),
+        "U8" => Scalar::Unsigned(8),
+        "U16" => Scalar::Unsigned(16),
+        "U32" => Scalar::Unsigned(32),
+        "U64" | "USize" => Scalar::Unsigned(64),
+        "F32" => Scalar::F32,
+        "F64" => Scalar::F64,
+        _ => return None,
+    })
+}
+
+impl Scalar {
+    /// The C type a value of this type is computed in.
+    fn c(self) -> &'static str {
+        match self {
+            Scalar::Signed(_) => "int64_t",
+            Scalar::Unsigned(_) => "uint64_t",
+            Scalar::F32 => "float",
+            Scalar::F64 => "double",
+        }
+    }
+
+    /// The C expression of a `V` as this type.
+    fn get(self, v: &str) -> String {
+        match self {
+            Scalar::Signed(_) => format!("(int64_t){}", v),
+            Scalar::Unsigned(_) => format!("(uint64_t){}", v),
+            Scalar::F32 => format!("fwp_f32({})", v),
+            Scalar::F64 => format!("fwp_f64({})", v),
+        }
+    }
+
+    /// The `V` of a C expression of this type.
+    fn put(self, x: &str) -> String {
+        match self {
+            Scalar::Signed(_) | Scalar::Unsigned(_) => format!("(V)({})", x),
+            Scalar::F32 => format!("fwp_from_f32({})", x),
+            Scalar::F64 => format!("fwp_from_f64({})", x),
+        }
+    }
+
+    /// The bounds of a narrow integer, as C literals.
+    fn bounds(self) -> Option<(String, String)> {
+        match self {
+            Scalar::Signed(b) if b < 64 => Some((
+                format!("{}LL", -(1i64 << (b - 1))),
+                format!("{}LL", (1i64 << (b - 1)) - 1),
+            )),
+            Scalar::Unsigned(b) if b < 64 => Some(("0".into(), format!("{}LL", (1i64 << b) - 1))),
+            _ => None,
+        }
+    }
+
+    /// The body of `subject op argument` (the operands are `l1` and `l0`),
+    /// with the interpreter's traps: overflow, division by zero, and
+    /// `MIN / -1` and `MIN % -1` for signed integers.
+    fn arith(self, sym: &str, name: &str) -> String {
+        let op = sym.rsplit('.').next().unwrap();
+        let (x, y) = (self.get("l1"), self.get("l0"));
+        let ovf = format!("fwp_trap_overflow({});", name);
+        if matches!(self, Scalar::F32 | Scalar::F64) {
+            let e = match op {
+                "add" => format!("{} + {}", x, y),
+                "sub" => format!("{} - {}", x, y),
+                "mul" => format!("{} * {}", x, y),
+                "div" => format!("{} / {}", x, y),
+                _ if self == Scalar::F32 => format!("fmodf({}, {})", x, y),
+                _ => format!("fmod({}, {})", x, y),
+            };
+            return format!("return {};", self.put(&e));
+        }
+        let t = self.c();
+        let mut s = format!("{t} x = {x}, y = {y}, r;\n    ", t = t, x = x, y = y);
+        match op {
+            "div" | "rem" => {
+                s.push_str("if (y == 0) fwp_trap(\"division by zero\");\n    ");
+                if let Scalar::Signed(b) = self {
+                    let min = if b == 64 {
+                        "INT64_MIN".to_string()
+                    } else {
+                        self.bounds().unwrap().0
+                    };
+                    s.push_str(&format!("if (x == {} && y == -1) {}\n    ", min, ovf));
+                }
+                s.push_str(if op == "div" {
+                    "r = x / y;"
+                } else {
+                    "r = x % y;"
+                });
+            }
+            _ => match self.bounds() {
+                // computed in 64 bits, where it cannot overflow, and checked
+                Some((lo, hi)) => {
+                    let c = match op {
+                        "add" => "+",
+                        "sub" => "-",
+                        _ => "*",
+                    };
+                    s = format!(
+                        "int64_t r = (int64_t){x} {c} (int64_t){y};\n    if (r < {lo} || r > {hi}) {ovf}",
+                        x = "l1",
+                        y = "l0",
+                        c = c,
+                        lo = lo,
+                        hi = hi,
+                        ovf = ovf
+                    );
+                }
+                None => s.push_str(&format!("if (__builtin_{}_overflow(x, y, &r)) {}", op, ovf)),
+            },
+        }
+        format!("{}\n    return (V)r;", s)
+    }
+}
+
 fn elem(mt: &MT, i: usize) -> MT {
     match mt {
         MT::Con(_, args) => args.get(i).cloned().unwrap_or(MT::unit()),
@@ -810,7 +941,71 @@ impl<'p> Gen<'p> {
         let p = |i: usize| params.get(i).cloned().unwrap_or(MT::unit());
         let nk = |mt: &MT| num_kind(mt).unwrap_or(("K_I64", "?".into(), 0));
         let (rk, rname, rw) = nk(&result);
+        let sc = scalar(&result);
+        let sp = scalar(&p(0));
         let s = match sym {
+            "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" if sc.is_some() => {
+                sc.unwrap().arith(sym, &Self::cstr(&rname))
+            }
+            "prim.neg" if sc.is_some() => match sc.unwrap() {
+                Scalar::Signed(_) => {
+                    let min = sc.unwrap().bounds().map_or("INT64_MIN".into(), |b| b.0);
+                    format!(
+                        "if ((int64_t)l0 == {}) fwp_trap_overflow({});\n    return (V)(-(int64_t)l0);",
+                        min,
+                        Self::cstr(&rname)
+                    )
+                }
+                // 0 - x
+                Scalar::Unsigned(_) => format!(
+                    "if (l0 != 0) fwp_trap_overflow({});\n    return 0;",
+                    Self::cstr(&rname)
+                ),
+                f => format!("return {};", f.put(&format!("-{}", f.get("l0")))),
+            },
+            "eq" | "ne" if sp.is_some() => {
+                let s = sp.unwrap();
+                format!(
+                    "return {} {} {} ? FWP_TRUE : FWP_FALSE;",
+                    s.get("l1"),
+                    if sym == "eq" { "==" } else { "!=" },
+                    s.get("l0")
+                )
+            }
+            "lt" | "le" | "gt" | "ge" if sp.is_some() => {
+                let s = sp.unwrap();
+                let c = match sym {
+                    "lt" => "<",
+                    "le" => "<=",
+                    "gt" => ">",
+                    _ => ">=",
+                };
+                format!(
+                    "return {} {} {} ? FWP_TRUE : FWP_FALSE;",
+                    s.get("l1"),
+                    c,
+                    s.get("l0")
+                )
+            }
+            // floats compare in their total order, which stays generic
+            "compare" if matches!(sp, Some(Scalar::Signed(_) | Scalar::Unsigned(_))) => {
+                let s = sp.unwrap();
+                format!(
+                    "{t} x = {x}, y = {y};\n    return x < y ? 0 : x == y ? 1 : 2;",
+                    t = s.c(),
+                    x = s.get("l1"),
+                    y = s.get("l0")
+                )
+            }
+            "min" | "max" if matches!(sp, Some(Scalar::Signed(_) | Scalar::Unsigned(_))) => {
+                let s = sp.unwrap();
+                format!(
+                    "return {} {} {} ? l1 : l0;",
+                    s.get("l1"),
+                    if sym == "min" { "<=" } else { ">=" },
+                    s.get("l0")
+                )
+            }
             "prim.add" | "prim.sub" | "prim.mul" | "prim.div" | "prim.rem" => format!(
                 "return fwp_arith({}, {}, l1, l0, {}, {});",
                 rk,
