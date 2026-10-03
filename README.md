@@ -33,7 +33,7 @@ main =
   reverse-mode autodiff, balanced ternary, SIMD, and fused tensor kernels
   on CPU threads or OpenCL devices ([docs/numerics.md](docs/numerics.md)).
 - **Concurrency and the web.** Tasks, channels and deadlines; TCP, UDP and
-  DNS; an HTTP/1.1 server and client; JSON, logs and metrics.
+  DNS; HTTP/1.1 and HTTP/2 servers and clients, WebSocket; JSON, logs and metrics.
 - **Many outputs.** An interpreter and native executables with identical
   output; one executable per exported function, joined by a typed pipe
   protocol; WebAssembly; fat binaries; C libraries and C interop.
