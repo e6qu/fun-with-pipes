@@ -1,0 +1,145 @@
+# Request bodies beyond JSON and content negotiation (tests/rest.rs):
+# forms, multipart/form-data with files, and responses as JSON, text or
+# CSV by the request's Accept header.
+
+# A profile, from JSON, a form or multipart/form-data.
+Profile = {
+    name: String,
+    age: Option[I64],
+    tags: List[String],
+    admin: Bool,
+    avatar: Option[Upload],
+}
+
+# What the server saw of a profile.
+Seen = {
+    name: String,
+    age: Option[I64],
+    tags: List[String],
+    admin: Bool,
+    avatar: Option[String],
+}
+
+# Files sent together.
+Bundle = { title: String, files: List[Upload], data: Option[Bytes] }
+
+# A file as the server saw it.
+FileInfo = { filename: String, content-type: String, size: I64, text: String }
+
+# Kinds of shelves.
+Shelf =
+    | Fiction
+    | Poetry
+
+# A shelf, from a form.
+ShelfForm = { kind: Shelf, size: I64, label: Option[String] }
+
+# A shelf as the server saw it.
+ShelfSeen = { id: I64, kind: Shelf, size: I64, label: Option[String] }
+
+# A book of the shelf.
+Book = { id: I64, title: String, price: F64, note: Option[String] }
+
+# A profile, whatever way it is sent.
+# route: POST /profiles
+# accepts: json, form, multipart
+export profile : Profile -> Seen
+profile = make Seen {
+    name = .name,
+    age = .age,
+    tags = .tags,
+    admin = .admin,
+    avatar =
+        .avatar
+        | option.map (fork
+            concat
+            (.bytes | bytes.length | show | concat " bytes")
+            (.filename | concat ": ")),
+}
+
+# Files and data, as multipart/form-data.
+# route: POST /files
+# accepts: multipart
+# status: 201
+export upload : Bundle -> List[FileInfo]
+upload =
+    fork
+        append
+        (.data | option.to-list | map data-info)
+        (.files | map file-info)
+
+file-info : Upload -> FileInfo
+file-info = make FileInfo {
+    filename = .filename,
+    content-type = .content-type,
+    size = .bytes | bytes.length,
+    text = .bytes | bytes.slice 0 8 | string.from-bytes | option.unwrap-or "?",
+}
+
+data-info : Bytes -> FileInfo
+data-info = make FileInfo {
+    filename = const "data",
+    content-type = const "",
+    size = bytes.length,
+    text = string.from-bytes | option.unwrap-or "?",
+}
+
+# A shelf from a form: an enum, a number and an optional label.
+# route: PUT /shelves/{id}
+# accepts: form
+export shelf : I64 -> ShelfForm -> ShelfSeen
+shelf = curry (make ShelfSeen {
+    id = .0,
+    kind = .1 | .kind,
+    size = .1 | .size,
+    label = .1 | .label,
+})
+
+books : List[Book]
+books = [
+    Book { id = 1, title = "Dune", price = 9.5, note = None },
+    Book {
+        id = 2,
+        title = "Odes, \"selected\"",
+        price = 12.0,
+        note = Some "used",
+    },
+]
+
+# The books, as JSON, text or CSV.
+# route: GET /books
+# produces: json, text, csv
+export list-books : () -> List[Book]
+list-books = const books
+
+# A book by its id, as text or JSON.
+# route: GET /books/{id}
+# produces: text, json
+export book : I64 -> Option[Book]
+book = fork find (eq | compose .id) (const books)
+
+# Half of an even number.
+# route: GET /halves/{n}
+# produces: json, text
+export half : I64 -> Result[I64, String]
+half = if (rem 2 | eq 0) (div 2 | Ok) (const (Err "odd"))
+
+# A note, created.
+# route: POST /notes
+# status: 201
+# response-header: Location where the note is
+# produces: text, json
+export note : String -> RestReply[String]
+note = concat "!" | rest.reply 201 | rest.with-header "location" "/notes/1"
+
+# The books as CSV only.
+# route: GET /books.csv
+# produces: csv
+export books-csv : () -> List[Book]
+books-csv = const books
+
+# A greeting, as text only.
+# route: GET /hello/{name}
+# produces: text
+export hello : String -> String
+hello = concat "!" | flip concat "hello, "

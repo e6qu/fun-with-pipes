@@ -25,6 +25,8 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
+use crate::rpc::{put_bytes, put_int, put_str};
+
 // ================================================================== lexing
 
 #[derive(Clone, Debug, PartialEq)]
@@ -231,7 +233,7 @@ struct Service {
     doc: Vec<String>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct Defs {
     messages: Vec<Message>,
     enums: Vec<Enum>,
@@ -244,6 +246,8 @@ struct Parser<'a> {
     pos: usize,
     file: &'a str,
     package: String,
+    /// `proto2` or `proto3`.
+    syntax: String,
 }
 
 const SCALARS: &[&str] = &[
@@ -408,6 +412,7 @@ impl<'a> Parser<'a> {
                         if k == "edition" || (v != "proto3" && v != "proto2") {
                             return self.err(format!("unsupported {} \"{}\"", k, v));
                         }
+                        self.syntax = v;
                         self.sym(';')?;
                     }
                     "package" => {
@@ -715,8 +720,18 @@ fn builtin(path: &str) -> Option<&'static str> {
     })
 }
 
+/// A parsed `.proto` file, for its descriptor.
+struct ProtoFile {
+    /// Its name: the file name of the main file, the path of an import.
+    name: String,
+    package: String,
+    syntax: String,
+    imports: Vec<String>,
+    defs: Defs,
+}
+
 /// Parse a file and its imports (from its directory, or built in).
-fn load(path: &Path) -> Result<(Defs, String), String> {
+fn load(path: &Path) -> Result<(Defs, String, Vec<ProtoFile>), String> {
     let mut defs = Defs::default();
     let mut seen = BTreeSet::new();
     let dir = path.parent().map(Path::to_path_buf).unwrap_or_default();
@@ -726,6 +741,7 @@ fn load(path: &Path) -> Result<(Defs, String), String> {
         .unwrap_or_default();
     let mut work: Vec<(String, Option<PathBuf>)> = vec![(name, Some(path.to_path_buf()))];
     let mut main_package = None;
+    let mut files = Vec::new();
     while let Some((name, p)) = work.pop() {
         if !seen.insert(name.clone()) {
             continue;
@@ -762,10 +778,18 @@ fn load(path: &Path) -> Result<(Defs, String), String> {
             pos: 0,
             file: &name,
             package: String::new(),
+            syntax: "proto2".into(),
         };
         let mut imports = Vec::new();
         let mut file_defs = Defs::default();
         p.file(&mut file_defs, &mut imports)?;
+        files.push(ProtoFile {
+            name: name.clone(),
+            package: p.package.clone(),
+            syntax: p.syntax.clone(),
+            imports: imports.clone(),
+            defs: file_defs.clone(),
+        });
         if main_package.is_none() {
             main_package = Some(p.package.clone());
         } else {
@@ -779,7 +803,7 @@ fn load(path: &Path) -> Result<(Defs, String), String> {
             work.push((i, None));
         }
     }
-    Ok((defs, main_package.unwrap_or_default()))
+    Ok((defs, main_package.unwrap_or_default(), files))
 }
 
 // ============================================================== generation
@@ -881,6 +905,9 @@ struct Gen {
 }
 
 const EMPTY: &str = "google.protobuf.Empty";
+
+/// The name of the generated list of the descriptors of the files.
+const FILES: &str = "proto-files";
 
 const EFFECTS: &str = "{Async, IO, Network, FileIO, Error[GrpcError]}";
 
@@ -1340,8 +1367,8 @@ impl Gen {
             let _ = writeln!(o, "{}.route : ({}) -> GrpcRoute", mp, impl_t);
             let _ = writeln!(
                 o,
-                "{}.route = {} {} {} | grpc.route {:?}\n",
-                mp, handler, in_dec, out_enc, path
+                "{}.route = {} {} {} | grpc.route {:?} | grpc.with-files {}\n",
+                mp, handler, in_dec, out_enc, path, FILES
             );
             let fname = kebab(&m.name);
             fields.push(format!("    {}: {},", fname, impl_t));
@@ -1370,9 +1397,266 @@ impl Gen {
     }
 }
 
+// ============================================================ descriptors
+
+/// The `FieldDescriptorProto.Type` of a scalar type.
+fn scalar_code(t: &str) -> Option<u64> {
+    Some(match t {
+        "double" => 1,
+        "float" => 2,
+        "int64" => 3,
+        "uint64" => 4,
+        "int32" => 5,
+        "fixed64" => 6,
+        "fixed32" => 7,
+        "bool" => 8,
+        "string" => 9,
+        "bytes" => 12,
+        "uint32" => 13,
+        "sfixed32" => 15,
+        "sfixed64" => 16,
+        "sint32" => 17,
+        "sint64" => 18,
+        _ => return None,
+    })
+}
+
+/// The scope a full name is defined in: `pkg.Outer` for `pkg.Outer.Inner`.
+fn parent_of(full: &str) -> &str {
+    full.rsplit_once('.').map(|(p, _)| p).unwrap_or("")
+}
+
+fn last_of(full: &str) -> &str {
+    full.rsplit('.').next().unwrap_or(full)
+}
+
+impl Gen {
+    /// The type and type name of a field type in a scope.
+    fn field_type(&self, t: &str, scope: &str) -> Result<(u64, Option<String>), String> {
+        if let Some(c) = scalar_code(t) {
+            return Ok((c, None));
+        }
+        let full = self.resolve(t, scope)?;
+        let code = match self.by_full.get(&full) {
+            Some(Def::Enum(_)) => 14,
+            _ => 11,
+        };
+        Ok((code, Some(format!(".{}", full))))
+    }
+
+    /// A `FieldDescriptorProto`.
+    #[allow(clippy::too_many_arguments)]
+    fn field_desc(
+        &self,
+        name: &str,
+        number: i64,
+        label: u64,
+        (ty, type_name): (u64, Option<String>),
+        oneof: Option<usize>,
+        synthetic: bool,
+    ) -> Vec<u8> {
+        let mut f = Vec::new();
+        put_str(&mut f, 1, name);
+        put_int(&mut f, 3, number as u64);
+        put_int(&mut f, 4, label);
+        put_int(&mut f, 5, ty);
+        if let Some(t) = type_name {
+            put_str(&mut f, 6, &t);
+        }
+        if let Some(i) = oneof {
+            put_int(&mut f, 9, i as u64);
+        }
+        put_str(&mut f, 10, &crate::rpc::json_name(name));
+        if synthetic {
+            put_int(&mut f, 17, 1);
+        }
+        f
+    }
+
+    /// A `DescriptorProto`, with the messages and enums nested in it.
+    fn message_desc(&self, m: &Message, file: &ProtoFile) -> Result<Vec<u8>, String> {
+        let mut d = Vec::new();
+        put_str(&mut d, 1, last_of(&m.full));
+        let proto3 = file.syntax == "proto3";
+        let mut synthetic = Vec::new();
+        let mut entries = Vec::new();
+        for f in &m.fields {
+            let desc = match &f.ty {
+                FType::Map(k, v) => {
+                    let entry = format!("{}Entry", camel(&f.name));
+                    let mut e = Vec::new();
+                    put_str(&mut e, 1, &entry);
+                    let kt = self.field_type(k, &m.full)?;
+                    let vt = self.field_type(v, &m.full)?;
+                    put_bytes(&mut e, 2, &self.field_desc("key", 1, 1, kt, None, false));
+                    put_bytes(&mut e, 2, &self.field_desc("value", 2, 1, vt, None, false));
+                    put_bytes(&mut e, 7, &[0x38, 1]); // map_entry
+                    entries.push(e);
+                    let t = (11, Some(format!(".{}.{}", m.full, entry)));
+                    self.field_desc(&f.name, f.number, 3, t, None, false)
+                }
+                FType::Named(t) => {
+                    let ty = self.field_type(t, &m.full)?;
+                    let (label, oneof, synth) = match f.label {
+                        Label::Repeated => (3, None, false),
+                        Label::Optional if proto3 && f.oneof.is_none() => {
+                            synthetic.push(format!("_{}", f.name));
+                            (1, Some(m.oneofs.len() + synthetic.len() - 1), true)
+                        }
+                        _ => (1, f.oneof, false),
+                    };
+                    self.field_desc(&f.name, f.number, label, ty, oneof, synth)
+                }
+            };
+            put_bytes(&mut d, 2, &desc);
+        }
+        for n in file
+            .defs
+            .messages
+            .iter()
+            .filter(|n| parent_of(&n.full) == m.full)
+        {
+            put_bytes(&mut d, 3, &self.message_desc(n, file)?);
+        }
+        for e in &entries {
+            put_bytes(&mut d, 3, e);
+        }
+        for e in file
+            .defs
+            .enums
+            .iter()
+            .filter(|e| parent_of(&e.full) == m.full)
+        {
+            put_bytes(&mut d, 4, &enum_desc(e));
+        }
+        for o in m.oneofs.iter().chain(&synthetic) {
+            let mut od = Vec::new();
+            put_str(&mut od, 1, o);
+            put_bytes(&mut d, 8, &od);
+        }
+        Ok(d)
+    }
+
+    /// The serialized `FileDescriptorProto` of a file, and the full names
+    /// of what it defines.
+    fn file_desc(&self, file: &ProtoFile) -> Result<(Vec<u8>, Vec<String>), String> {
+        let mut out = Vec::new();
+        let mut symbols = Vec::new();
+        put_str(&mut out, 1, &file.name);
+        if !file.package.is_empty() {
+            put_str(&mut out, 2, &file.package);
+        }
+        for i in &file.imports {
+            put_str(&mut out, 3, i);
+        }
+        let is_msg = |n: &str| file.defs.messages.iter().any(|m| m.full == n);
+        for m in &file.defs.messages {
+            symbols.push(m.full.clone());
+            if !is_msg(parent_of(&m.full)) {
+                put_bytes(&mut out, 4, &self.message_desc(m, file)?);
+            }
+        }
+        for e in &file.defs.enums {
+            symbols.push(e.full.clone());
+            if !is_msg(parent_of(&e.full)) {
+                put_bytes(&mut out, 5, &enum_desc(e));
+            }
+        }
+        for s in &file.defs.services {
+            let full = if s.package.is_empty() {
+                s.name.clone()
+            } else {
+                format!("{}.{}", s.package, s.name)
+            };
+            symbols.push(full);
+            let mut sd = Vec::new();
+            put_str(&mut sd, 1, &s.name);
+            for m in &s.methods {
+                let mut md = Vec::new();
+                put_str(&mut md, 1, &m.name);
+                put_str(
+                    &mut md,
+                    2,
+                    &format!(".{}", self.resolve(&m.input, &m.scope)?),
+                );
+                put_str(
+                    &mut md,
+                    3,
+                    &format!(".{}", self.resolve(&m.output, &m.scope)?),
+                );
+                if m.client_streaming {
+                    put_int(&mut md, 5, 1);
+                }
+                if m.server_streaming {
+                    put_int(&mut md, 6, 1);
+                }
+                put_bytes(&mut sd, 2, &md);
+            }
+            put_bytes(&mut out, 6, &sd);
+        }
+        put_str(&mut out, 12, &file.syntax);
+        Ok((out, symbols))
+    }
+
+    /// The descriptors of the files, for server reflection (`proto-files`).
+    fn files_def(&mut self, files: &[ProtoFile]) -> Result<(), String> {
+        let mut items = Vec::new();
+        for f in files {
+            let (desc, symbols) = self.file_desc(f)?;
+            // the files it imports, directly or not
+            let mut imports: Vec<String> = Vec::new();
+            let mut work = f.imports.clone();
+            while let Some(i) = work.pop() {
+                if imports.contains(&i) || i == f.name {
+                    continue;
+                }
+                if let Some(g) = files.iter().find(|g| g.name == i) {
+                    work.extend(g.imports.iter().cloned());
+                }
+                imports.push(i);
+            }
+            imports.sort();
+            let list = |v: &[String]| {
+                v.iter()
+                    .map(|s| format!("{:?}", s))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            items.push(format!(
+                "GrpcFile {{ name = {:?}, descriptor = grpc.base64-bytes \"{}\", symbols = [{}], imports = [{}] }}",
+                f.name,
+                crate::jsontype::base64(&desc),
+                list(&symbols),
+                list(&imports)
+            ));
+        }
+        let o = &mut self.out;
+        let _ = writeln!(
+            o,
+            "# ---- descriptors\n\n# the descriptors of the `.proto` files, which the routes carry for server\n# reflection (`grpc.serve` answers grpcurl and other clients with them)"
+        );
+        let _ = writeln!(o, "{} : List[GrpcFile]", FILES);
+        let _ = writeln!(o, "{} = [{}]\n", FILES, items.join(", "));
+        Ok(())
+    }
+}
+
+/// An `EnumDescriptorProto`.
+fn enum_desc(e: &Enum) -> Vec<u8> {
+    let mut d = Vec::new();
+    put_str(&mut d, 1, last_of(&e.full));
+    for (name, n) in &e.values {
+        let mut v = Vec::new();
+        put_str(&mut v, 1, name);
+        put_int(&mut v, 2, *n as u64);
+        put_bytes(&mut d, 2, &v);
+    }
+    d
+}
+
 /// The fwp module for a `.proto` file.
 pub fn generate(path: &Path) -> Result<String, String> {
-    let (defs, package) = load(path)?;
+    let (defs, package, files) = load(path)?;
     let mut g = Gen {
         defs,
         package,
@@ -1492,6 +1776,9 @@ pub fn generate(path: &Path) -> Result<String, String> {
         }
     }
     let services = std::mem::take(&mut g.defs.services);
+    if !services.is_empty() {
+        g.files_def(&files)?;
+    }
     for s in &services {
         g.service_def(s)?;
     }

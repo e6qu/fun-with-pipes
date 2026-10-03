@@ -1,0 +1,7 @@
+Ok (swaggerclient.Seen {admin = False, age = None, avatar = Some "bob %22b%22.txt: 5 bytes", name = "bob", tags = ["x", "y"]})
+Ok (swaggerclient.ShelfSeen {id = 3, kind = Fiction, label = None, size = 3})
+Ok [swaggerclient.Book {id = 1, note = None, price = 9.5, title = "Dune"}, swaggerclient.Book {id = 2, note = Some "used", price = 12.0, title = "Odes, \"selected\""}]
+Ok (Some (swaggerclient.Book {id = 1, note = None, price = 9.5, title = "Dune"}))
+Ok None
+Ok "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n"
+Ok "hello, a/b!"

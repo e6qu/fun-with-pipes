@@ -394,8 +394,32 @@ main =
 ```
 
 `grpc.serve address routes` serves until its task is cancelled, with
-health checking but without reflection (its routes carry no
-descriptors). Importing the `.proto` that `fwp proto --grpc` prints for an
+health checking and server reflection. The generated module keeps the
+descriptors (`FileDescriptorProto`s) of the `.proto` file and of the
+files it imports, the well-known types included, in `proto-files :
+List[GrpcFile]`, and each generated route carries them
+(`grpc.with-files`); `grpc.serve` adds `grpc.reflection.v1` and
+`v1alpha` routes that list the services of all its routes (and
+`grpc.health.v1.Health`) and answer with the file that defines a symbol
+(a service, method, message or enum) together with the files it imports,
+or with a file by its name. So grpcurl needs no `-proto`:
+
+```
+$ grpcurl -plaintext 127.0.0.1:50051 describe helloworld.HelloRequest
+helloworld.HelloRequest is a message:
+message HelloRequest {
+  string name = 1;
+  ...
+  .google.protobuf.Timestamp when = 8;
+  ...
+}
+```
+
+Reflection is implemented in fwp (`lib/grpc.fwp`), so both backends serve
+the same answers. Hand-written routes (`grpc.route`) carry no
+descriptors: they are listed but not described, unless `grpc.with-files`
+gives them some; routes that already serve reflection themselves keep
+it. Importing the `.proto` that `fwp proto --grpc` prints for an
 fwp service gives a client of it in any fwp program (the test suite does
 this round trip).
 
@@ -435,10 +459,6 @@ HPACK implementation.
 * TLS limits: see [tls.md](tls.md#limitations).
 * gzip is the only compression; the encoder compresses less than zlib.
   Clients compress only within `grpc.with-gzip`.
-* Servers of `grpc.serve` routes have no reflection: a `.proto` file's
-  descriptors (and those of the files it imports, such as
-  `google/protobuf/timestamp.proto`) are not kept by `fwp proto --import`.
-  Give tools the `.proto` file (`grpcurl -proto`).
 * After the first element, a failure of a remote `Iterator[R]` result
   traps in the client, since forcing an iterator cannot raise an error;
   `Iterator[Result[R, GrpcError]]` reports it instead. The request sender

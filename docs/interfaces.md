@@ -30,10 +30,10 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | build | `fwp build --cli`, `fwp exec --cli` | `fwp build --rest`, `fwp serve --rest` | `fwp build --grpc`, `fwp serve --grpc`; `fwp build --service m`, `fwp serve` |
 | name | `books quote-order` (or `# command:`) | `POST /quote-order` (or `# command:`, `# route:`) | `/fwp.Books/QuoteOrder` (or `# grpc:`) |
 | record first parameter | flags: `--author x --tag a --tag b` | query parameters (GET, DELETE, or with more parameters): `?author=x&tag=a&tag=b` | the request message itself when it is the only parameter, else a field of it |
-| other parameters | positional arguments, named by `# args:`; the last from stdin | path parameters, query parameters, the JSON body (the last) | `arg1`, `arg2`, ... of the request message |
+| other parameters | positional arguments, named by `# args:`; the last from stdin | path parameters, query parameters, the body (the last): JSON, or a form or `multipart/form-data` with files (`# accepts:`) | `arg1`, `arg2`, ... of the request message |
 | `Iterator` and `Channel` | — | — | streams: an `Iterator` result or a final `Channel` parameter streams responses, an `Iterator` parameter requests |
 | `()` parameter | implicit | implicit | no field |
-| value encoding | fwp's text format (`show`); strings as they are | JSON (`json.write`, `json.read`) | protobuf (proto3), through the canonical binary encoding |
+| value encoding | fwp's text format (`show`); strings as they are | JSON (`json.write`, `json.read`); text and CSV responses by `Accept` (`# produces:`) | protobuf (proto3), through the canonical binary encoding |
 | result | printed; a list one per line | the JSON body of a 200 (`# status:`) | `value = 1` of the response (a record result is the response) |
 | `()` result | nothing | 204 | an empty message |
 | `None` | nothing | 404 | an absent `optional` |
@@ -43,10 +43,10 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | response status and headers | `Outcome` (the exit status) | `RestReply[T]` (`rest.reply 201 x`, `rest.with-header`) | `grpc.set-header`, `grpc.set-trailer`; statuses from `Error[GrpcError]` or `Iterator[Result[R, GrpcError]]` |
 | authentication | — | `# auth:` (bearer tokens, API keys, client certificates) verified by `authenticate` | client certificates (`grpc.peer-subject`); metadata the function checks |
 | browsers | — | CORS (`# cors:`, `--cors`) | — |
-| compression | — | — | gzip (`grpc.with-gzip`) |
+| compression | — | gzip or deflate by `Accept-Encoding` (responses of 1 KiB or more), compressed request bodies ([rest.md](rest.md#http2-and-compression)) | gzip (`grpc.with-gzip`) |
 | TLS | — | HTTPS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca` ([tls.md](tls.md#rest)) | TLS with `--tls-cert` and `--tls-key`, client certificates with `--tls-client-ca`; clients call `tls://host:port` ([tls.md](tls.md#grpc)) |
-| documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `--yaml`, `/openapi.json`) and its page (`/docs`) | `.proto` (`fwp proto`), server reflection |
-| calling it from fwp | `process.run` | `fwp openapi --import` gives typed functions | `fwp proto --import` gives typed functions; or the same call, made remote by the build |
+| documentation | `--help` from the comments | OpenAPI 3.1 (`fwp openapi`, `--yaml`, `/openapi.json`) and its page (`/docs`) | `.proto` (`fwp proto`), server reflection (also of routes from `.proto` files) |
+| calling it from fwp | `process.run` | `fwp openapi --import` gives typed functions (of OpenAPI 3 or Swagger 2.0, in JSON or YAML) | `fwp proto --import` gives typed functions; or the same call, made remote by the build |
 | versioning | — | unknown members are ignored, so new `Option` fields and new results' fields keep clients working; the document is the contract | a type fingerprint between fwp programs; field numbers for others |
 
 ## Comment lines
@@ -64,6 +64,8 @@ export quote-order : Order -> Quote ! {Error[OrderError]}
 | `# auth: bearer`, `# auth: api-key header X-Key`, `# auth: client-cert`, `# auth: none` | — | security schemes (also in the file's leading comment) | — |
 | `# timeout: 5s` | — | a time limit (503) | — |
 | `# response-header: Location ...` | — | a header of a `RestReply` | — |
+| `# accepts: json, form, multipart` | — | the media types of the body (415 for others) | — |
+| `# produces: json, text, csv` | — | the media types of the result, by `Accept` (406) | — |
 | `# cors: origins` (leading comment) | — | allowed origins | — |
 | a field comment `-x text` | the short flag `-x` and the flag's help | the query parameter's description | — |
 | a field comment `json: name` | — | the JSON name of the field | — |

@@ -1,0 +1,47 @@
+# Calls the API of forms.fwp through swaggerclient.fwp, the client that
+# `fwp openapi --import` generates from forms.swagger.yaml, a Swagger 2.0
+# document in YAML (tests/rest.rs). The server's address is in
+# FWP_TEST_BASE.
+
+import swaggerclient
+
+# call a function with the base URL and show what it returned
+call : (String -> a ! {Async, IO, Network, Error[RestError]}) -> String -> () ! {Async, IO, Network} where Display[a]
+call = attempt | flip compose echo
+
+bob : swaggerclient.ProfileBody
+bob = swaggerclient.ProfileBody {
+    name = "bob",
+    age = None,
+    tags = Some ["x", "y"],
+    admin = False,
+    avatar = Some Upload {
+        filename = "bob \"b\".txt",
+        content-type = "text/plain",
+        bytes = "hello" | string.to-bytes,
+    },
+}
+
+fiction : swaggerclient.ShelfBody
+fiction = swaggerclient.ShelfBody {
+    kind = swaggerclient.ShelfBodyKind.Fiction,
+    size = 3,
+    label = None,
+}
+
+shelf-three : String -> swaggerclient.ShelfSeen ! {Async, Network, Error[RestError]}
+shelf-three = fork apply (const fiction) (fork swaggerclient.shelf id (const 3))
+
+calls : String -> () ! {Async, IO, Network}
+calls =
+    tap (call (flip swaggerclient.profile bob))
+    | tap (call shelf-three)
+    | tap (call swaggerclient.list-books)
+    | tap (call (flip swaggerclient.book 1))
+    | tap (call (flip swaggerclient.book 5))
+    | tap (call swaggerclient.books-csv)
+    | tap (call (flip swaggerclient.hello "a/b"))
+    | ignore
+
+main =
+    "FWP_TEST_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080" | calls

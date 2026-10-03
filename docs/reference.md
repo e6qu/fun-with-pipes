@@ -241,7 +241,8 @@ fwp build file.fwp [options]                  compile
     --cli            every exported function as a subcommand of one
                      executable (see cli.md)
     --rest           every exported function as an endpoint of one HTTP
-                     server, with /openapi.json (see rest.md)
+                     server, with /openapi.json, forms and content
+                     negotiation (see rest.md)
     --grpc           every exported function as a method of one gRPC
                      server, with reflection (see grpc.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
@@ -264,9 +265,11 @@ fwp serve --grpc file.fwp [--listen A]        serve the exported functions over 
     --cors ORIGINS                            (REST servers) allow these origins from browsers
 fwp proto file.fwp [--service M]...           print the .proto of the services
 fwp proto --grpc file.fwp                     print the .proto of the exported functions
-fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes of a .proto file
+fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes (with descriptors
+                                              for server reflection) of a .proto file
 fwp openapi [--yaml] file.fwp                 print the OpenAPI document of the REST endpoints
-fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI document
+fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI 3 or Swagger 2.0
+                                              document (JSON or YAML)
 fwp exec file.fwp fn [args...]                run an exported function
 fwp exec --cli file.fwp [command] [args...]   run the file as `--cli` builds it
 fwp pipe 'a.fwp:f x | b.fwp:g'                connect functions with typed pipes

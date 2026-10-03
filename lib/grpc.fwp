@@ -16,11 +16,25 @@ GrpcError = { code: I64, message: String }
 # one side of a call: the client's, or the server's
 GrpcStream = builtin
 
-# a method served by `grpc.serve`: its path (`/package.Service/Method`) and
-# the function that handles a call
+# a method served by `grpc.serve`: its path (`/package.Service/Method`),
+# the function that handles a call, and the descriptors of the `.proto`
+# files it comes from (for server reflection; routes that `fwp proto
+# --import` generates carry them)
 GrpcRoute = {
     handler: GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]},
     path: String,
+    reflection: List[GrpcFile],
+}
+
+# A `.proto` file for server reflection: its name
+# (`google/protobuf/timestamp.proto`), its serialized `FileDescriptorProto`,
+# the full names of the messages, enums and services it defines, and the
+# files it imports, directly or not.
+GrpcFile = {
+    name: String,
+    descriptor: Bytes,
+    symbols: List[String],
+    imports: List[String],
 }
 
 # ----------------------------------------------------------- status codes
@@ -182,8 +196,13 @@ foreign "fwp" grpc.cancel : GrpcStream -> () ! {Network}
 
 # serve routes on an address ("127.0.0.1:50051"; port 0 picks a free
 # port, reported on standard error), with health checking
-# (`grpc.health.v1.Health`), until the task is cancelled
-foreign "fwp" grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+# (`grpc.health.v1.Health`) and server reflection (`grpc.reflection.v1`
+# and `v1alpha`: the services of the routes, and the `.proto` files of
+# routes that carry their descriptors), until the task is cancelled
+grpc.serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+grpc.serve = curry (fork grpc._serve .0 (.1 | grpc.reflected))
+
+foreign "fwp" grpc._serve : String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 # certificate, key, client CA ("" for none), address, routes
 foreign "fwp" grpc._serve-tls : String -> String -> String -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
 
@@ -192,7 +211,13 @@ foreign "fwp" grpc._serve-tls : String -> String -> String -> String -> List[Grp
 # and `tls.with-client-ca "ca.pem"` to require client certificates);
 # clients call `tls://host:port`
 grpc.serve-tls : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
-grpc.serve-tls =
+grpc.serve-tls = curry3 (fork
+    apply
+    (.2 | grpc.reflected)
+    (fork apply .1 (.0 | grpc._tls-serve)))
+
+grpc._tls-serve : TlsServer -> String -> List[GrpcRoute] -> () ! {Async, IO, Network, FileIO, Error[IoError]}
+grpc._tls-serve =
     fork
         apply
         (.client-ca | option.unwrap-or "")
@@ -200,7 +225,23 @@ grpc.serve-tls =
 
 # a route from a path and a handler
 grpc.route : String -> (GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
-grpc.route = curry (make GrpcRoute { path = .0, handler = .1 })
+grpc.route =
+    curry (make GrpcRoute { path = .0, handler = .1, reflection = const [] })
+
+# Bytes from their base64 text (empty if it is not base64), as generated
+# modules write descriptors.
+grpc.base64-bytes : String -> Bytes
+grpc.base64-bytes =
+    json.write | json.read | result.unwrap-or (bytes.from-list [])
+
+# a route with the descriptors of the `.proto` file it comes from and of
+# the files that file imports, which `grpc.serve` serves by reflection
+grpc.with-files : List[GrpcFile] -> GrpcRoute -> GrpcRoute
+grpc.with-files = curry (make GrpcRoute {
+    path = .1 | .path,
+    handler = .1 | .handler,
+    reflection = .0,
+})
 
 # handlers of methods from a request decoder, a response encoder and a
 # function; a request that cannot be decoded fails with
@@ -227,6 +268,204 @@ rec grpc._iter : GrpcCell[a] -> Iterator[a] where Dup[a]
 grpc._iter = grpc._force | match
     None -> Done
     Some _ -> fork Yield .0 (.1 | iter.later grpc._iter)
+
+# ------------------------------------------------------- server reflection
+
+grpc._reflection-v1 : String
+grpc._reflection-v1 =
+    "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo"
+
+grpc._reflection-v1alpha : String
+grpc._reflection-v1alpha =
+    "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo"
+
+# The routes with server reflection (`grpc.reflection.v1` and `v1alpha`)
+# added, unless they serve it themselves: it lists the services of the
+# routes and health checking, and answers with the files that routes
+# carry (`grpc.with-files`).
+grpc.reflected : List[GrpcRoute] -> List[GrpcRoute]
+grpc.reflected =
+    if
+        (map .path | contains grpc._reflection-v1)
+        id
+        (fork append id grpc._reflection-routes)
+
+# What server reflection answers with: the services, and the files.
+# internal
+GrpcReflection = { services: List[String], files: List[GrpcFile] }
+
+# A reflection request: a file by name, the file of a symbol, the
+# extension numbers of a type, the services, another request, or none.
+# internal
+GrpcAsk =
+    | GrpcAsk.File String
+    | GrpcAsk.Symbol String
+    | GrpcAsk.Numbers String
+    | GrpcAsk.Services
+    | GrpcAsk.Other String
+    | GrpcAsk.Bad
+
+grpc._reflection-routes : List[GrpcRoute] -> List[GrpcRoute]
+grpc._reflection-routes =
+    make GrpcReflection {
+        services =
+            map (.path | split "/" | nth 1 | option.unwrap-or "")
+            | append ["grpc.health.v1.Health"]
+            | fold grpc._add-new [],
+        files =
+            list.flat-map .reflection
+            | append [grpc._health-file]
+            | fold grpc._add-new [],
+    }
+    | grpc._reflection-handler
+    | fork
+        Cons
+        (grpc.route grpc._reflection-v1)
+        (grpc.route grpc._reflection-v1alpha | singleton)
+
+grpc._add-new : List[a] -> a -> List[a] where Eq[a]
+grpc._add-new =
+    curry (if (uncurry (flip contains)) .0 (fork append (.1 | singleton) .0))
+
+grpc._reflection-handler : GrpcReflection -> GrpcStream -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc._reflection-handler =
+    grpc._reflect
+    | grpc.bidi-streaming-handler (make { 0 = id, 1 = pb.decode }) id
+
+grpc._reflect : GrpcReflection -> Iterator[(Bytes, List[PbField])] -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc._reflect = curry3 (fork grpc._reflect-on (make { 0 = .0, 1 = .2 }) .1)
+
+grpc._reflect-on : (GrpcReflection, Channel[Bytes]) -> Iterator[(Bytes, List[PbField])] -> () ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc._reflect-on = curry (both .0 (.1 | const) | loop grpc._reflect-step)
+
+# one request at a time: the next request is received after the response
+# to this one is sent
+grpc._reflect-step : ((GrpcReflection, Channel[Bytes]), () -> Iterator[(Bytes, List[PbField])]) -> Step[((GrpcReflection, Channel[Bytes]), () -> Iterator[(Bytes, List[PbField])]), ()] ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc._reflect-step = fork grpc._reflect-next .0 (.1 | grpc._uncons)
+
+grpc._reflect-next : (GrpcReflection, Channel[Bytes]) -> Option[((Bytes, List[PbField]), () -> Iterator[(Bytes, List[PbField])])] -> Step[((GrpcReflection, Channel[Bytes]), () -> Iterator[(Bytes, List[PbField])]), ()] ! {Async, IO, Network, FileIO, Error[GrpcError]}
+grpc._reflect-next = curry (match
+    (_, None) -> const (Stop ())
+    (_, Some _) -> curry (tap (fork
+            channel.send
+            (.0 | .1)
+            (fork grpc._answer (.0 | .0) (.1 | .0)))
+        | both .0 (.1 | .1)
+        | Again))
+
+# force an iterator: its first element and the rest, not yet forced
+grpc._uncons : (() -> Iterator[a]) -> Option[(a, () -> Iterator[a])]
+grpc._uncons = apply () | match
+    Done -> None
+    Yield _ _ -> curry Some
+
+# the response to a request (its bytes, and its fields)
+grpc._answer : GrpcReflection -> (Bytes, List[PbField]) -> Bytes ! {Error[GrpcError]}
+grpc._answer = curry (fork
+        append
+        (fork grpc._reply .0 (.1 | .1 | grpc._ask))
+        (.1
+            | fork
+                append
+                (.0 | pb.always 2 pb.bytes)
+                (.1 | pb.get 1 pb.string | pb.field 1 pb.string))
+    | pb.write)
+
+grpc._ask : List[PbField] -> GrpcAsk
+grpc._ask =
+    find (fork and (.wire | eq 2) (.num | fork and (ge 3) (le 7)))
+    | option.map (both .num (.data | string.from-bytes | option.unwrap-or ""))
+    | match
+        None -> GrpcAsk.Bad
+        Some _ -> grpc._ask-of
+
+grpc._ask-of : (I64, String) -> GrpcAsk
+grpc._ask-of = match
+    (3, _) -> GrpcAsk.File
+    (4, _) -> GrpcAsk.Symbol
+    (6, _) -> GrpcAsk.Numbers
+    (7, _) -> const GrpcAsk.Services
+    _ -> .1 | GrpcAsk.Other
+
+grpc._reply : GrpcReflection -> GrpcAsk -> List[PbField]
+grpc._reply = curry (match
+    (_, GrpcAsk.File _) -> curry (fork
+        apply
+        (fork grpc._named-in (.0 | .files) .1)
+        (fork grpc._file-answer (.1 | flip concat "unknown file ") .0))
+    (_, GrpcAsk.Symbol _) -> curry (fork
+        apply
+        (fork grpc._defining (.0 | .files) .1)
+        (fork grpc._file-answer (.1 | flip concat "unknown symbol ") .0))
+    (_, GrpcAsk.Numbers _) ->
+        const (pb.always 1 pb.string | pb.write | pb.always 5 pb.bytes)
+    (_, GrpcAsk.Services) ->
+        .services
+        | map (pb.always 1 pb.string | pb.write)
+        | pb.repeated 1 pb.bytes
+        | pb.write
+        | pb.always 6 pb.bytes
+    (_, GrpcAsk.Other _) ->
+        const (flip concat "no extension " | grpc._reflection-error 5)
+    (_, GrpcAsk.Bad) ->
+        const (grpc._reflection-error 3 "unsupported reflection request"))
+
+grpc._reflection-error : I64 -> String -> List[PbField]
+grpc._reflection-error = curry (fork
+        append
+        (.1 | pb.field 2 pb.string)
+        (.0 | pb.field 1 pb.int64)
+    | pb.write
+    | pb.always 7 pb.bytes)
+
+grpc._file-answer : String -> GrpcReflection -> Option[GrpcFile] -> List[PbField]
+grpc._file-answer = curry3 (match
+    (_, _, None) -> grpc._reflection-error 5 | const
+    (_, _, Some _) -> const grpc._file-list)
+
+# a file and the files it imports
+grpc._file-list : GrpcReflection -> GrpcFile -> List[PbField]
+grpc._file-list = curry (fork
+        Cons
+        .1
+        (fork filter-map (.0 | .files | grpc._named-in) (.1 | .imports))
+    | map .descriptor
+    | pb.repeated 1 pb.bytes
+    | pb.write
+    | pb.always 4 pb.bytes)
+
+grpc._named-in : List[GrpcFile] -> String -> Option[GrpcFile]
+grpc._named-in = curry (fork find (.1 | grpc._has-name) .0)
+
+grpc._has-name : String -> GrpcFile -> Bool
+grpc._has-name = curry (fork eq .0 (.1 | .name))
+
+# the file that defines a symbol (a message, an enum, a service, or
+# something in one, such as a method)
+grpc._defining : List[GrpcFile] -> String -> Option[GrpcFile]
+grpc._defining = curry (fork find (.1 | grpc._defines) .0)
+
+grpc._defines : String -> GrpcFile -> Bool
+grpc._defines = curry (fork any (.0 | grpc._symbol-match) (.1 | .symbols))
+
+grpc._symbol-match : String -> String -> Bool
+grpc._symbol-match =
+    curry (fork or (uncurry eq) (fork starts-with (.1 | concat ".") .0))
+
+# grpc/health/v1/health.proto
+grpc._health-file : GrpcFile
+grpc._health-file = GrpcFile {
+    name = "grpc/health/v1/health.proto",
+    descriptor =
+        grpc.base64-bytes
+            "ChtncnBjL2hlYWx0aC92MS9oZWFsdGgucHJvdG8SDmdycGMuaGVhbHRoLnYxIi4KEkhlYWx0aENoZWNrUmVxdWVzdBIYCgdzZXJ2aWNlGAEgASgJUgdzZXJ2aWNlIrEBChNIZWFsdGhDaGVja1Jlc3BvbnNlEkkKBnN0YXR1cxgBIAEoDjIxLmdycGMuaGVhbHRoLnYxLkhlYWx0aENoZWNrUmVzcG9uc2UuU2VydmluZ1N0YXR1c1IGc3RhdHVzIk8KDVNlcnZpbmdTdGF0dXMSCwoHVU5LTk9XThAAEgsKB1NFUlZJTkcQARIPCgtOT1RfU0VSVklORxACEhMKD1NFUlZJQ0VfVU5LTk9XThADMq4BCgZIZWFsdGgSUAoFQ2hlY2sSIi5ncnBjLmhlYWx0aC52MS5IZWFsdGhDaGVja1JlcXVlc3QaIy5ncnBjLmhlYWx0aC52MS5IZWFsdGhDaGVja1Jlc3BvbnNlElIKBVdhdGNoEiIuZ3JwYy5oZWFsdGgudjEuSGVhbHRoQ2hlY2tSZXF1ZXN0GiMuZ3JwYy5oZWFsdGgudjEuSGVhbHRoQ2hlY2tSZXNwb25zZTABYgZwcm90bzM=",
+    symbols = [
+        "grpc.health.v1.HealthCheckRequest",
+        "grpc.health.v1.HealthCheckResponse",
+        "grpc.health.v1.Health",
+    ],
+    imports = [],
+}
 
 test "grpc.code-name" =
     [grpc.not-found, grpc.unavailable, 99]

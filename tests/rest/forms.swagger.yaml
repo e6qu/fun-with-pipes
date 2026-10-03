@@ -1,0 +1,146 @@
+# Some endpoints of forms.fwp, described by hand as a Swagger 2.0
+# document in YAML: tests/rest.rs generates a client of it with
+# `fwp openapi --import` (swaggerclient.fwp), which calls the server of
+# forms.fwp (swaggerroundtrip.fwp).
+swagger: '2.0'
+info:
+  title: Forms
+  version: 2.0.1
+  description: |
+    Forms, files and formats.
+host: 127.0.0.1:8080
+schemes: [http]
+consumes:
+  - application/json
+produces:
+  - application/json
+parameters:
+  bookId: &id
+    name: id
+    in: path
+    required: true
+    type: integer
+    format: int64
+paths:
+  /profiles:
+    post:
+      operationId: profile
+      summary: A profile, as multipart/form-data.
+      consumes: [multipart/form-data]
+      parameters:
+        - {name: name, in: formData, type: string, required: true}
+        - {name: age, in: formData, type: integer, format: int64}
+        - name: tags
+          in: formData
+          type: array
+          items: {type: string}
+          collectionFormat: multi
+        - {name: admin, in: formData, type: boolean, required: true}
+        - name: avatar
+          in: formData
+          type: file
+          description: a picture
+      responses:
+        200:
+          description: what the server saw
+          schema:
+            $ref: '#/definitions/Seen'
+  /shelves/{id}:
+    put:
+      operationId: shelf
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - *id
+        - name: kind
+          in: formData
+          required: true
+          type: string
+          enum: [Fiction, Poetry]
+        - {name: size, in: formData, required: true, type: integer}
+        - {name: label, in: formData, type: string}
+      responses:
+        '200':
+          description: the shelf
+          schema: {$ref: '#/definitions/ShelfSeen'}
+  /books:
+    get:
+      operationId: listBooks
+      responses:
+        '200':
+          description: the books
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Book'
+  /books/{id}:
+    parameters:
+      - $ref: '#/parameters/bookId'
+    get:
+      operationId: book
+      produces: [application/json, text/plain]
+      responses:
+        '200':
+          description: the book
+          schema: {$ref: '#/definitions/Book'}
+        '404':
+          description: not found
+  /books.csv:
+    get:
+      operationId: booksCsv
+      produces: [text/csv]
+      responses:
+        '200':
+          description: the books, as CSV
+          schema: {type: string}
+  /hello/{name}:
+    get:
+      operationId: hello
+      produces:
+      - text/plain
+      parameters:
+      - name: name
+        in: path
+        required: true
+        type: string
+      responses:
+        '200':
+          description: a greeting
+          schema:
+            type: string
+definitions:
+  Seen:
+    type: object
+    required: [name, tags, admin]
+    properties:
+      name: {type: string}
+      age: {type: integer, format: int64}
+      tags: {type: array, items: {type: string}}
+      admin: {type: boolean}
+      avatar: {type: string}
+  ShelfSeen:
+    type: object
+    required: [id, kind, size]
+    properties:
+      id: {type: integer, format: int64}
+      kind: {type: string, enum: [Fiction, Poetry]}
+      size: {type: integer, format: int64}
+      label: {type: string}
+  Book:
+    type: object
+    required:
+      - id
+      - title
+      - price
+    properties:
+      id:
+        type: integer
+        format: int64
+      title:
+        type: string
+      price:
+        type: number
+        format: double
+      note:
+        type: string
+        x-nullable: true

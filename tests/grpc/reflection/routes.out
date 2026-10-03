@@ -1,0 +1,11 @@
+helloworld.Greeter, grpc.health.v1.Health
+hello.proto | helloworld | HelloRequest[Point,CountsEntry],Tree[],HelloReply[] | Greeter (("SayHello", False, False), ("Watch", False, True), ("Collect", True, False), ("Chat", True, True), ("Ping", False, False)); google/protobuf/empty.proto | google.protobuf | Empty[] | ; google/protobuf/timestamp.proto | google.protobuf | Timestamp[] | 
+hello.proto | helloworld | HelloRequest[Point,CountsEntry],Tree[],HelloReply[] | Greeter (("SayHello", False, False), ("Watch", False, True), ("Collect", True, False), ("Chat", True, True), ("Ping", False, False)); google/protobuf/empty.proto | google.protobuf | Empty[] | ; google/protobuf/timestamp.proto | google.protobuf | Timestamp[] | 
+hello.proto | helloworld | HelloRequest[Point,CountsEntry],Tree[],HelloReply[] | Greeter (("SayHello", False, False), ("Watch", False, True), ("Collect", True, False), ("Chat", True, True), ("Ping", False, False)); google/protobuf/empty.proto | google.protobuf | Empty[] | ; google/protobuf/timestamp.proto | google.protobuf | Timestamp[] | 
+google/protobuf/timestamp.proto | google.protobuf | Timestamp[] | 
+grpc/health/v1/health.proto | grpc.health.v1 | HealthCheckRequest[],HealthCheckResponse[] | Health (("Check", False, False), ("Watch", False, True))
+error 5: unknown file nope.proto
+error 5: unknown symbol nope.Nothing
+helloworld.Greeter, grpc.health.v1.Health
+hello.proto | helloworld | HelloRequest[Point,CountsEntry],Tree[],HelloReply[] | Greeter (("SayHello", False, False), ("Watch", False, True), ("Collect", True, False), ("Chat", True, True), ("Ping", False, False)); google/protobuf/empty.proto | google.protobuf | Empty[] | ; google/protobuf/timestamp.proto | google.protobuf | Timestamp[] | 
+[8, 1]

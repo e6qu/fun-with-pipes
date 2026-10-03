@@ -1,11 +1,13 @@
 # REST APIs and OpenAPI
 
 Any exported function is a REST endpoint. Its parameters are the request:
-path parameters, query parameters and a JSON body; its result is the JSON
-response, and its errors are error responses. One file of exported
+path parameters, query parameters and a JSON body (or a form, with
+files); its result is the JSON response (or text, or CSV), and its errors
+are error responses. One file of exported
 functions builds into one HTTP server, which also serves its OpenAPI 3.1
 document. In the other direction, `fwp openapi --import` turns the OpenAPI
-document of any API into an fwp module of typed client functions. There
+document of any API (JSON or YAML, OpenAPI 3 or Swagger 2.0) into an fwp
+module of typed client functions. There
 is nothing to declare and no routing or JSON code to write.
 
 ```
@@ -35,7 +37,7 @@ one.
 | `fwp build app.fwp --rest -o server` | a native HTTP server of the exported functions |
 | `fwp serve --rest app.fwp [--listen addr]` | the same server, interpreted |
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
-| `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API |
+| `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
 
 A server takes `--listen host:port` (default: `FWP_REST_ADDR`, else
 `127.0.0.1:8080`; port 0 picks a free port), `--tls-cert file` and
@@ -48,7 +50,8 @@ origins that may call it from browsers, [below](#cors); default:
 It writes `fwp: rest listening on http://host:port` (`https://` with TLS)
 on stderr once it accepts connections, and serves:
 
-* each endpoint, with JSON request and response bodies;
+* each endpoint, with JSON request and response bodies (and forms,
+  files, text and CSV where it declares them, [below](#forms-and-files));
 * `GET /openapi.json`, the document `fwp openapi` prints;
 * `GET /docs`, an HTML page of the document: each operation with its
   parameters, responses and security, and the schemas (plain HTML and CSS,
@@ -91,6 +94,8 @@ export book : I64 -> Option[Book]
 | `# auth: bearer`, `# auth: api-key header X-API-Key`, `# auth: none` | the credentials the endpoint needs ([below](#authentication)) |
 | `# timeout: 5s` | how long a call may take, else 503 ([below](#timeouts)) |
 | `# response-header: Location the new item` | a header that a `RestReply` sets, for the document ([below](#replies-statuses-and-headers)) |
+| `# accepts: json, form, multipart` | the media types of the request body ([below](#forms-and-files)) |
+| `# produces: json, text, csv` | the media types of the response, chosen by `Accept` ([below](#content-negotiation)) |
 
 The comment lines are not part of the description, which becomes the
 operation's summary and description in the OpenAPI document (and the help
@@ -235,6 +240,94 @@ may answer with (each documented with `T`'s schema, but 204 and 304
 without a body) and `# response-header:` the headers it sets (documented
 in each of them). A status outside 100 to 599, or a header with a line
 break, is a 500.
+
+## Forms and files
+
+By default the body is JSON, whatever the request's `Content-Type`. An
+endpoint with `# accepts:` takes the media types it lists, chosen by
+`Content-Type` (the first one when the request has none), and answers
+others with 415 (`{"error": "unsupported content type text/plain (it
+accepts application/json, multipart/form-data)"}`):
+
+| Name | Media type | The body |
+|---|---|---|
+| `json` | `application/json` (and `+json` types) | JSON, as above |
+| `form` | `application/x-www-form-urlencoded` | the fields of a form, as browsers and `curl -d` send them |
+| `multipart` | `multipart/form-data` | the parts of a form with files, as browsers and `curl -F` send them |
+
+```fwp
+# Files sent with a title.
+Batch = { title: String, files: List[Upload], tags: List[String] }
+
+# route: POST /uploads
+# accepts: multipart
+export upload : Batch -> Receipt
+```
+
+```
+$ curl -F title=notes -F files=@README.md -F files=@LICENSE localhost:8080/uploads
+$ curl -d 'name=Ada&message=hello' localhost:8080/guestbook
+```
+
+A form fills the fields of the body's record by name (their JSON names):
+
+| Field type | From the form | When absent |
+|---|---|---|
+| numbers, strings, enums, `Duration` | the field's (last) value, read as a query parameter is | a 400 |
+| `Bool` | `on` (what a checkbox sends) or empty is true; `true` and `false` | `False` |
+| `Option[T]` | the value; an empty one is absent | `None` |
+| `List[T]` | every value of the name, in order | `[]` |
+| `Bytes` | the bytes of the part (a file or not) | a 400 |
+| `Upload` | a file part: `Upload = { filename: String, content-type: String, bytes: Bytes }` (`lib/rest.fwp`); a text part is a file without a name | a 400 |
+
+`Option`s and `List`s of `Bytes` and `Upload` work the same way. Other
+field types (records, nested lists) cannot come from a form, and a body
+that is not a record cannot be a form: both are errors when the server
+is built. A text value that is not UTF-8 is a 400, as is a multipart
+body without parts (`{"error": "invalid multipart/form-data body"}`);
+values that do not decode are 400s as in JSON bodies
+(`$.size: expected an integer, got "x"`). In JSON, an `Upload` is an
+object whose `bytes` are base64, so an endpoint that also accepts JSON
+takes files that way. The whole body is in memory (within the server's
+body size limit) before it is decoded.
+
+For hand-written servers, `rest.multipart-parts boundary bytes` gives the
+parts (`RestPart`s) of a body, and `rest.header-param "boundary"` the
+boundary of its `Content-Type`.
+
+## Content negotiation
+
+The response is JSON. An endpoint with `# produces:` writes its result in
+the media types it lists, chosen by the request's `Accept` header (with
+qualities and wildcards: `text/*;q=0.5, application/json;q=0.4`), the
+first one when the request has none; a request that accepts none of them
+gets 406 (`{"error": "not acceptable: the response is application/json,
+text/plain"}`) before the function is called:
+
+| Name | Media type | The result |
+|---|---|---|
+| `json` | `application/json` | its JSON |
+| `text` | `text/plain; charset=utf-8` | as `show` writes it (`Display`) |
+| `csv` | `text/csv; charset=utf-8` | for a list of records whose fields are numbers, strings, `Bool`, enums or `Duration` (or `Option`s of them): a header of the fields' JSON names, then a row per record (`lib/csv.fwp`), with absent values empty |
+
+```fwp
+# route: GET /guestbook
+# produces: json, csv, text
+export guestbook : () -> List[Entry]
+```
+
+```
+$ curl -H 'accept: text/csv' localhost:8080/guestbook
+name,message,stars
+Ada,hello,5
+Alan,"a, b, ""c""",
+```
+
+It applies to the value of `Option`, `Result` and `RestReply` results;
+`None`, errors and the server's own errors stay JSON. A `()` result has
+no body to negotiate (an error when the server is built).
+[`examples/rest/uploads.fwp`](../examples/rest/uploads.fwp) has files, a
+form and the three formats.
 
 ## Authentication
 
@@ -424,7 +517,10 @@ to the least specific.
   its `operationId`, the first sentence of its comment as the summary,
   its parameters (`in: path`, `in: query`, `in: header` or `in: cookie`,
   with the field comments of an options record as descriptions), its
-  request body, its responses (the successes, with the headers of
+  request body (an entry per media type of `# accepts:`; a form's schema
+  is an object of the record's fields, with files as `{type: string,
+  format: binary}`), its responses (an entry per media type of
+  `# produces:`, text and CSV as strings; 406 and 415 when it negotiates) (the successes, with the headers of
   `# response-header:`; 400 for arguments that do not decode, 401 for
   endpoints that need credentials, 404 for `Option` results, 503 for
   endpoints with a time limit, and the statuses of its errors with the
@@ -463,7 +559,8 @@ files.
 ## Calling REST APIs
 
 `fwp openapi --import spec.json -o client.fwp` generates a module of
-types and functions from an OpenAPI 3.0 or 3.1 document in JSON:
+types and functions from an OpenAPI 3.0 or 3.1 document, or a Swagger
+2.0 one, in JSON or YAML:
 
 ```
 $ fwp openapi examples/rest/books.fwp > books.json
@@ -502,11 +599,25 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
   base URL of the server, then its credential if it needs one, then its
   path parameters in the order of the path, then records of its query,
   header and cookie parameters (`GetPetsQuery`, `GetPetsHeaders`,
-  `GetPetsCookies`), then its body: JSON, or a record sent as a form
-  (`application/x-www-form-urlencoded`). It returns the decoded body of
-  the first 2xx response (`()` if it has no JSON content), as an `Option`
-  that is `None` on a 404 when the operation declares a 404 response
-  described as "not found".
+  `GetPetsCookies`), then its body: JSON, else a record sent as a form
+  (`application/x-www-form-urlencoded`), else a record sent as
+  `multipart/form-data` (`rest.multipart-request`), whose binary
+  properties (`format: binary`) are `Upload`s. It returns the body of the
+  first 2xx response: its JSON decoded, else its text as a `String`
+  (`text/*`, asked for with `Accept`), else its `Bytes` (other media
+  types), and `()` without content; as an `Option` that is `None` on a
+  404 when the operation declares a 404 response described as "not
+  found".
+* **YAML and Swagger 2.0.** YAML documents are read by a YAML 1.2 reader
+  of fwp's own (`src/yaml.rs`: block and flow collections, the quoting
+  styles, block scalars, comments, anchors, aliases and merge keys).
+  Swagger 2.0 documents are converted to OpenAPI 3 first
+  (`src/swagger.rs`): `definitions` are the component schemas, a `body`
+  parameter the request body with the media types of `consumes`,
+  `formData` parameters a form (`multipart/form-data` when one is a
+  `file`), responses get the media types of `produces`, `host` and
+  `basePath` the server, and `securityDefinitions` the security schemes
+  (`basic`, `apiKey`, `oauth2`).
 * **Credentials.** An operation whose `security` (or the document's)
   requires a bearer token (`http` with scheme `bearer`, or OAuth 2 and
   OpenID Connect, whose access tokens are bearer tokens) or an API key
@@ -524,17 +635,17 @@ main = 1 | bookclient.book "http://127.0.0.1:8080" | option.map .title | echo
 
 Schemas outside this subset (`not`, enums of numbers, an `allOf` of
 schemas that are not all objects) become `Json` values, and operations
-whose body is neither JSON nor a form, or that only accept credentials of
-other schemes (HTTP basic authentication, mutual TLS), are left out; each
+whose body is neither JSON, a form nor `multipart/form-data`, or that
+only accept credentials of other schemes (HTTP basic authentication, mutual TLS), are left out; each
 is reported on stderr, as in
 `fwp openapi: spec.json: POST /user/logout: its security scheme \`basic\` is not supported (bearer tokens and API keys are); it is left out`.
-YAML documents and Swagger 2.0 are not read (convert them to JSON or
-OpenAPI 3 first).
-
 The round trip is tested: a client generated from the document a server
 serves calls that server, interpreted and natively, and decodes what it
 answers (`tests/rest/roundtrip.fwp`; `tests/rest/secureroundtrip.fwp`
-with tokens, headers, cookies and replies).
+with tokens, headers, cookies and replies; `tests/rest/formsroundtrip.fwp`
+with forms, files, text and CSV; `tests/rest/swaggerroundtrip.fwp`, a
+client of a Swagger 2.0 document in YAML). The YAML that
+`fwp openapi --yaml` prints makes the same client as the JSON.
 
 ## How it works
 
@@ -559,9 +670,11 @@ fwp-rest-main =
 
 `rest.endpoint` (`lib/rest.fwp`) makes a route of `http.router`: it
 gathers the arguments as JSON text (path and query values as strings, the
-body as it is), decodes them with `json.read` at the type of the function's
+body as it is, or a JSON object of a form's fields:
+`RestSource.Content`), decodes them with `json.read` at the type of the function's
 parameters (a tuple for several), calls the function under `attempt`, and
-writes the result or the error with `json.write`. `rest.secured` checks
+writes the result or the error with `json.write` (`rest.endpoint-as`
+writes the result in the format that `Accept` chooses). `rest.secured` checks
 credentials before the endpoint's handler, `rest.within` gives it a time
 limit, and `rest.serve` adds `/openapi.json`, `/docs`, CORS
 (`rest.cors`) and JSON errors (`rest.error-response` as the server's
@@ -574,9 +687,11 @@ endpoints byte for byte.
 
 ## Limitations
 
-* JSON bodies only on the server: no content negotiation, form or
-  multipart request bodies, and no streaming responses (generated clients
-  send forms).
+* Request bodies are JSON, forms and `multipart/form-data`, read whole
+  into memory; responses are JSON, text and CSV. There are no other media
+  types (XML), no streaming bodies and no `Content-Encoding`. A part's
+  `filename*` (RFC 5987) is not read, and quotes in file names arrive as
+  clients escape them (`%22`).
 * Authentication is bearer tokens and API keys checked by one function;
   no HTTP basic authentication, OAuth flows or scopes (the token of an
   OAuth flow is a bearer token, which `authenticate` must verify itself).

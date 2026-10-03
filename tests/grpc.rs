@@ -513,6 +513,78 @@ fn routes_from_a_proto_file() {
     }
 }
 
+/// Server reflection of the routes of hello.proto: the generated module
+/// keeps the descriptors of hello.proto and of the files it imports, which
+/// `grpc.serve` answers reflection requests with (v1 and v1alpha), with
+/// interpreted and native servers and clients, and grpcurl when installed.
+#[test]
+fn reflection_of_routes() {
+    let native = have_cc();
+    let d = scratch("routes-reflection");
+    let hd = dir().join("hello");
+    let rd = dir().join("reflection");
+    let mut servers = Vec::new();
+    let mut cmd = Command::new(fwp());
+    cmd.args(["run", "server.fwp", "127.0.0.1:0"])
+        .current_dir(&hd);
+    servers.push(start(cmd));
+    if native {
+        build(
+            &["server.fwp", "-o", d.join("server").to_str().unwrap()],
+            &hd,
+        );
+        build(
+            &["routes.fwp", "-o", d.join("routes").to_str().unwrap()],
+            &rd,
+        );
+        let mut cmd = Command::new(d.join("server"));
+        cmd.arg("127.0.0.1:0").env("FWP_GC_STRESS", "16");
+        servers.push(start(cmd));
+    }
+    let grpcurl = have("grpcurl", "-version");
+    for s in &servers {
+        let mut cmd = Command::new(fwp());
+        cmd.args(["run", "routes.fwp", &s.addr]).current_dir(&rd);
+        expect_file(
+            &rd.join("routes.out"),
+            &render(&run(cmd, 120)),
+            "interpreted client",
+        );
+        if native {
+            let mut cmd = Command::new(d.join("routes"));
+            cmd.arg(&s.addr).env("FWP_GC_STRESS", "16");
+            expect_file(
+                &rd.join("routes.out"),
+                &render(&run(cmd, 120)),
+                "native client",
+            );
+        }
+        if grpcurl {
+            let mut out = String::new();
+            let calls: Vec<Vec<&str>> = vec![
+                vec!["list"],
+                vec!["describe", "helloworld.Greeter"],
+                vec!["describe", "helloworld.HelloRequest"],
+                vec!["describe", "google.protobuf.Timestamp"],
+                vec!["-d", r#"{"name": "Ada"}"#, "helloworld.Greeter/SayHello"],
+                vec![
+                    "-d",
+                    r#"{"name": "a"} {"name": "b"}"#,
+                    "helloworld.Greeter/Chat",
+                ],
+            ];
+            for args in calls {
+                let (flags, tail) = args.split_at(if args[0] == "-d" { 2 } else { 0 });
+                let mut cmd = Command::new("grpcurl");
+                cmd.arg("-plaintext").args(flags).arg(&s.addr).args(tail);
+                out.push_str(&format!("$ grpcurl {}\n", args.join(" ")));
+                out.push_str(&render(&run(cmd, 60)));
+            }
+            expect_file(&hd.join("grpcurl.out"), &out, "grpcurl");
+        }
+    }
+}
+
 // ------------------------------------------------------------ interoperability
 
 /// Go's HTTP/2 client (the standard library only) calls both servers.

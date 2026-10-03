@@ -55,6 +55,7 @@ usage:
                                  print the OpenAPI document of the endpoints
   fwp openapi --import <spec.json> [-o client.fwp]
                                  generate an fwp client module of an API
+                                 (OpenAPI 3 or Swagger 2.0, JSON or YAML)
   fwp build <file.fwp> --grpc [-o out]
   fwp serve --grpc <file.fwp> [--listen addr]
   fwp proto --grpc <file.fwp>    a gRPC server of a file's exported

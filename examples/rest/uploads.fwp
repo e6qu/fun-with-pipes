@@ -1,0 +1,68 @@
+# A file upload service: forms and files in, JSON, text or CSV out.
+#
+#     fwp serve --rest examples/rest/uploads.fwp
+#     curl -F title=notes -F files=@README.md -F files=@LICENSE \
+#         localhost:8080/uploads
+#     curl -d 'name=Ada&message=hello' localhost:8080/guestbook
+#     curl -H 'accept: text/csv' localhost:8080/guestbook
+#
+# (See docs/rest.md.)
+
+# Files sent with a title (`multipart/form-data`).
+Batch = { title: String, files: List[Upload], tags: List[String] }
+
+# What the server makes of a file.
+Summary = {
+    filename: String,
+    content-type: String,
+    size: I64,
+    # its lines, if it is text
+    lines: Option[I64],
+    # the sum of its bytes, modulo 65521
+    checksum: I64,
+}
+
+# What the server makes of a batch.
+Receipt = { title: String, tags: List[String], files: List[Summary] }
+
+# An entry of the guest book.
+Entry = { name: String, message: String, stars: Option[I64] }
+
+# Summarize the files of a batch.
+# route: POST /uploads
+# accepts: multipart
+# status: 201
+export upload : Batch -> Receipt
+upload =
+    make Receipt { title = .title, tags = .tags, files = .files | map summary }
+
+summary : Upload -> Summary
+summary = make Summary {
+    filename = .filename,
+    content-type = .content-type,
+    size = .bytes | bytes.length,
+    lines = .bytes | string.from-bytes | option.map (lines | length),
+    checksum = .bytes | bytes.to-list | fold checksum-step 0,
+}
+
+checksum-step : I64 -> U8 -> I64
+checksum-step =
+    curry (fork add .0 (.1 | int.convert | option.unwrap-or 0) | rem 65521)
+
+# Sign the guest book: a form (from an HTML page) or JSON; the entry is
+# returned as JSON or text.
+# route: POST /guestbook
+# accepts: form, json
+# produces: json, text
+# status: 201
+export sign : Entry -> Entry
+sign = id
+
+# The guest book, as JSON, text or CSV.
+# route: GET /guestbook
+# produces: json, csv, text
+export guestbook : () -> List[Entry]
+guestbook = const [
+    Entry { name = "Ada", message = "hello", stars = Some 5 },
+    Entry { name = "Alan", message = "a, b, \"c\"", stars = None },
+]

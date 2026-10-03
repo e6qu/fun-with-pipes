@@ -1,0 +1,185 @@
+# A client of `Swagger Petstore` 1.0.6, generated from its OpenAPI document by
+# `fwp openapi --import`.
+#
+# Each function takes the server's base URL first (`http://host:port`),
+# then its credential (a bearer token or an API key) if it needs one, the
+# path parameters, records of the query, header and cookie parameters,
+# and the body. A response other than a success raises
+# `Error[RestError]`.
+
+Category = { id: Option[I64], name: Option[String] }
+
+Tag = { id: Option[I64], name: Option[String] }
+
+Pet = {
+    id: Option[I64],
+    category: Option[Category],
+    name: String,
+    photoUrls: List[String],
+    tags: Option[List[Tag]],
+    # pet status in the store
+    status: Option[String],
+    nickname: Option[String],
+}
+
+# the query parameters of `find-pets-by-status`
+FindPetsByStatusQuery = {
+    # Status values that need to be considered for filter
+    status: List[String],
+}
+
+UpdatePetWithFormBody = {
+    # Updated name of the pet
+    name: Option[String],
+    # Updated status of the pet
+    status: Option[String],
+}
+
+# the header parameters of `delete-pet`
+DeletePetHeaders = { api_key: Option[String] }
+
+UploadFileBody = {
+    # Additional data to pass to server
+    additionalMetadata: Option[String],
+    file: Upload,
+}
+
+ApiResponse = {
+    code: Option[I32],
+    # json: type
+    type-field: Option[String],
+    message: Option[String],
+}
+
+# the query parameters of `login-user`
+LoginUserQuery = { username: String, password: String }
+
+# Add a new pet to the store
+# POST /pet
+# auth: bearer (the token after the base URL)
+add-pet : String -> String -> Pet -> Pet ! {Async, Network, Error[RestError]}
+add-pet = curry (curry
+    (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet",
+            params = rest.texts [],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | rest.bearer,
+        body = .1 | json.write | Some,
+    } | rest.fetch))
+
+# Finds Pets by status
+# GET /pet/findByStatus
+find-pets-by-status : String -> FindPetsByStatusQuery -> List[Pet] ! {Async, Network, Error[RestError]}
+find-pets-by-status = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/pet/findByStatus",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    headers = const [],
+    body = const None,
+} | rest.fetch)
+
+# Find pet by ID
+# GET /pet/{petId}
+# auth: api-key header api_key (the key after the base URL)
+get-pet-by-id : String -> String -> I64 -> Option[Pet] ! {Async, Network, Error[RestError]}
+get-pet-by-id = curry (curry
+    (make RestRequest {
+        method = const "GET",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet/{petId}",
+            params = rest.texts [.1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = .0 | .1 | curry id "api_key" | singleton,
+        body = const None,
+    } | rest.fetch-option))
+
+# Updates a pet in the store with form data
+# POST /pet/{petId}
+update-pet-with-form : String -> I64 -> Option[UpdatePetWithFormBody] -> () ! {Async, Network, Error[RestError]}
+update-pet-with-form = curry (curry
+    (make RestRequest {
+        method = const "POST",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet/{petId}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = const [("content-type", "application/x-www-form-urlencoded")],
+        body = .1 | option.map rest.form-body,
+    } | rest.fetch))
+
+# Deletes a pet
+# DELETE /pet/{petId}
+delete-pet : String -> I64 -> DeletePetHeaders -> Option[()] ! {Async, Network, Error[RestError]}
+delete-pet = curry (curry
+    (make RestRequest {
+        method = const "DELETE",
+        url = make RestTarget {
+            base = .0 | .0,
+            path = const "/pet/{petId}",
+            params = rest.texts [.0 | .1 | rest.param-text],
+            query = const [],
+        } | rest.url,
+        headers = .1 | rest.query-pairs,
+        body = const None,
+    } | rest.fetch-option))
+
+# uploads an image
+# POST /pet/{petId}/uploadImage
+upload-file : String -> I64 -> UploadFileBody -> ApiResponse ! {Async, Network, Error[RestError]}
+upload-file = curry (curry
+    (fork rest.multipart-request .1 (make RestRequest {
+            method = const "POST",
+            url = make RestTarget {
+                base = .0 | .0,
+                path = const "/pet/{petId}/uploadImage",
+                params = rest.texts [.0 | .1 | rest.param-text],
+                query = const [],
+            } | rest.url,
+            headers = const [],
+            body = const None,
+        })
+        | rest.send
+        | rest.json-body))
+
+# Returns pet inventories by status
+# GET /store/inventory
+# auth: api-key header api_key (the key after the base URL)
+get-inventory : String -> String -> Map[String, I32] ! {Async, Network, Error[RestError]}
+get-inventory = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/store/inventory",
+        params = rest.texts [],
+        query = const [],
+    } | rest.url,
+    headers = .1 | curry id "api_key" | singleton,
+    body = const None,
+} | rest.fetch)
+
+# Logs user into the system
+# GET /user/login
+login-user : String -> LoginUserQuery -> String ! {Async, Network, Error[RestError]}
+login-user = curry (make RestRequest {
+    method = const "GET",
+    url = make RestTarget {
+        base = .0,
+        path = const "/user/login",
+        params = rest.texts [],
+        query = .1 | rest.query-pairs,
+    } | rest.url,
+    headers = const [("accept", "text/plain")],
+    body = const None,
+} | rest.request | rest.send | rest.text-body)

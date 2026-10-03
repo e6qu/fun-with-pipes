@@ -1,0 +1,11 @@
+Ok (formsclient.Seen {admin = True, age = Some 30, avatar = Some "me.png: 6 bytes", name = "ann", tags = ["a", "b c"]})
+Ok [formsclient.FileInfo {content-type = "text/plain", filename = "a.txt", size = 30, text = "first fi"}, formsclient.FileInfo {content-type = "application/octet-stream", filename = "b.bin", size = 6, text = "\u{0}\r\n--\u{1}"}, formsclient.FileInfo {content-type = "", filename = "data", size = 4, text = "data"}]
+Ok (formsclient.ShelfSeen {id = 7, kind = Poetry, label = Some "odes & elegies", size = 12})
+Ok [formsclient.Book {id = 1, note = None, price = 9.5, title = "Dune"}, formsclient.Book {id = 2, note = Some "used", price = 12.0, title = "Odes, \"selected\""}]
+Ok (Some (formsclient.Book {id = 2, note = Some "used", price = 12.0, title = "Odes, \"selected\""}))
+Ok None
+Ok 2
+Err (RestError {message = "{\"error\":\"odd\"}", status = 500})
+Ok "hi!"
+Ok "id,title,price,note\n1,Dune,9.5,\n2,\"Odes, \"\"selected\"\"\",12,used\n"
+Ok "hello, Ada Lovelace!"

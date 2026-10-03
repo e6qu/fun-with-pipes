@@ -191,6 +191,46 @@ tree.decode =
 rec tree.codec : PbCodec[Tree]
 tree.codec = pb.message tree.encode tree.decode tree.default
 
+# ---- descriptors
+
+# the descriptors of the `.proto` files, which the routes carry for server
+# reflection (`grpc.serve` answers grpcurl and other clients with them)
+proto-files : List[GrpcFile]
+proto-files = [
+    GrpcFile {
+        name = "hello.proto",
+        descriptor =
+            grpc.base64-bytes
+                "CgtoZWxsby5wcm90bxIKaGVsbG93b3JsZBobZ29vZ2xlL3Byb3RvYnVmL2VtcHR5LnByb3RvGh9nb29nbGUvcHJvdG9idWYvdGltZXN0YW1wLnByb3RvIpcECgxIZWxsb1JlcXVlc3QSEgoEbmFtZRgBIAEoCVIEbmFtZRIUCgV0aW1lcxgCIAEoBVIFdGltZXMSEgoEdGFncxgDIAMoCVIEdGFncxI8CgZjb3VudHMYBCADKAsyJC5oZWxsb3dvcmxkLkhlbGxvUmVxdWVzdC5Db3VudHNFbnRyeVIGY291bnRzEikKBG1vb2QYBSABKA4yEC5oZWxsb3dvcmxkLk1vb2RIAVIEbW9vZIgBARIUCgRub3RlGAYgASgJSABSBG5vdGUSMAoCYXQYByABKAsyHi5oZWxsb3dvcmxkLkhlbGxvUmVxdWVzdC5Qb2ludEgAUgJhdBIuCgR3aGVuGAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcFIEd2hlbhIkCgR0cmVlGAkgASgLMhAuaGVsbG93b3JsZC5UcmVlUgR0cmVlEhIKBGJsb2IYCiABKAxSBGJsb2ISFAoFZGVsdGEYCyABKBJSBWRlbHRhEhAKA2YzMhgMIAEoB1IDZjMyEhQKBXJhdGlvGA0gASgCUgVyYXRpbxojCgVQb2ludBIMCgF4GAEgASgBUgF4EgwKAXkYAiABKAFSAXkaOQoLQ291bnRzRW50cnkSEAoDa2V5GAEgASgJUgNrZXkSFAoFdmFsdWUYAiABKANSBXZhbHVlOgI4AUIHCgVleHRyYUIHCgVfbW9vZCJoCgRUcmVlEiQKBGxlZnQYASABKAsyEC5oZWxsb3dvcmxkLlRyZWVSBGxlZnQSFAoFdmFsdWUYAiABKAVSBXZhbHVlEiQKBGtpZHMYAyADKAsyEC5oZWxsb3dvcmxkLlRyZWVSBGtpZHMiJgoKSGVsbG9SZXBseRIYCgdtZXNzYWdlGAEgASgJUgdtZXNzYWdlKjkKBE1vb2QSEAoMTU9PRF9VTktOT1dOEAASDgoKTU9PRF9IQVBQWRABEg8KC01PT0RfR1JVTVBZEAIyuQIKB0dyZWV0ZXISPAoIU2F5SGVsbG8SGC5oZWxsb3dvcmxkLkhlbGxvUmVxdWVzdBoWLmhlbGxvd29ybGQuSGVsbG9SZXBseRI7CgVXYXRjaBIYLmhlbGxvd29ybGQuSGVsbG9SZXF1ZXN0GhYuaGVsbG93b3JsZC5IZWxsb1JlcGx5MAESPQoHQ29sbGVjdBIYLmhlbGxvd29ybGQuSGVsbG9SZXF1ZXN0GhYuaGVsbG93b3JsZC5IZWxsb1JlcGx5KAESPAoEQ2hhdBIYLmhlbGxvd29ybGQuSGVsbG9SZXF1ZXN0GhYuaGVsbG93b3JsZC5IZWxsb1JlcGx5KAEwARI2CgRQaW5nEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5YgZwcm90bzM=",
+        symbols = [
+            "helloworld.HelloRequest.Point",
+            "helloworld.HelloRequest",
+            "helloworld.Tree",
+            "helloworld.HelloReply",
+            "helloworld.Mood",
+            "helloworld.Greeter",
+        ],
+        imports =
+            ["google/protobuf/empty.proto", "google/protobuf/timestamp.proto"],
+    },
+    GrpcFile {
+        name = "google/protobuf/timestamp.proto",
+        descriptor =
+            grpc.base64-bytes
+                "Ch9nb29nbGUvcHJvdG9idWYvdGltZXN0YW1wLnByb3RvEg9nb29nbGUucHJvdG9idWYiOwoJVGltZXN0YW1wEhgKB3NlY29uZHMYASABKANSB3NlY29uZHMSFAoFbmFub3MYAiABKAVSBW5hbm9zYgZwcm90bzM=",
+        symbols = ["google.protobuf.Timestamp"],
+        imports = [],
+    },
+    GrpcFile {
+        name = "google/protobuf/empty.proto",
+        descriptor =
+            grpc.base64-bytes
+                "Chtnb29nbGUvcHJvdG9idWYvZW1wdHkucHJvdG8SD2dvb2dsZS5wcm90b2J1ZiIHCgVFbXB0eWIGcHJvdG8z",
+        symbols = ["google.protobuf.Empty"],
+        imports = [],
+    },
+]
+
 # ---- service helloworld.Greeter
 
 # Sends a greeting
@@ -207,6 +247,7 @@ greeter.say-hello.route : (HelloRequest -> HelloReply ! {Async, IO, Network, Fil
 greeter.say-hello.route =
     grpc.unary-handler hello-request.decode hello-reply.encode
     | grpc.route "/helloworld.Greeter/SayHello"
+    | grpc.with-files proto-files
 
 # rpc Watch(HelloRequest) returns (stream HelloReply): a call to the service at an address
 greeter.watch : String -> HelloRequest -> Channel[HelloReply] -> () ! {Async, Network, Error[GrpcError]}
@@ -221,6 +262,7 @@ greeter.watch.route : (HelloRequest -> Channel[HelloReply] -> () ! {Async, IO, N
 greeter.watch.route =
     grpc.server-streaming-handler hello-request.decode hello-reply.encode
     | grpc.route "/helloworld.Greeter/Watch"
+    | grpc.with-files proto-files
 
 # rpc Collect(stream HelloRequest) returns (HelloReply): a call to the service at an address
 greeter.collect : String -> Iterator[HelloRequest] -> HelloReply ! {Network, Error[GrpcError]}
@@ -235,6 +277,7 @@ greeter.collect.route : (Iterator[HelloRequest] -> HelloReply ! {Async, IO, Netw
 greeter.collect.route =
     grpc.client-streaming-handler hello-request.decode hello-reply.encode
     | grpc.route "/helloworld.Greeter/Collect"
+    | grpc.with-files proto-files
 
 # rpc Chat(stream HelloRequest) returns (stream HelloReply): a call to the service at an address
 greeter.chat : String -> Iterator[HelloRequest] -> Channel[HelloReply] -> () ! {Async, Network, Error[GrpcError]}
@@ -249,6 +292,7 @@ greeter.chat.route : (Iterator[HelloRequest] -> Channel[HelloReply] -> () ! {Asy
 greeter.chat.route =
     grpc.bidi-streaming-handler hello-request.decode hello-reply.encode
     | grpc.route "/helloworld.Greeter/Chat"
+    | grpc.with-files proto-files
 
 # rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty): a call to the service at an address
 greeter.ping : String -> () -> () ! {Network, Error[GrpcError]}
@@ -263,6 +307,7 @@ greeter.ping.route : (() -> () ! {Async, IO, Network, FileIO, Error[GrpcError]})
 greeter.ping.route =
     grpc.unary-handler (pb.decode | const ()) (const (bytes.from-list []))
     | grpc.route "/helloworld.Greeter/Ping"
+    | grpc.with-files proto-files
 
 # The greeting service.
 # implementations of the methods of helloworld.Greeter

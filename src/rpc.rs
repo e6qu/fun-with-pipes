@@ -475,21 +475,21 @@ pub fn proto_file(schema: &Schema, methods: &[MethodText], source: &str) -> Resu
 
 // -------------------------------------------------------------- reflection
 
-fn put_key(out: &mut Vec<u8>, num: u32, wire: u8) {
+pub(crate) fn put_key(out: &mut Vec<u8>, num: u32, wire: u8) {
     protobuf::varint(out, ((num as u64) << 3) | wire as u64);
 }
 
-fn put_str(out: &mut Vec<u8>, num: u32, s: &str) {
+pub(crate) fn put_str(out: &mut Vec<u8>, num: u32, s: &str) {
     put_bytes(out, num, s.as_bytes());
 }
 
-fn put_bytes(out: &mut Vec<u8>, num: u32, b: &[u8]) {
+pub(crate) fn put_bytes(out: &mut Vec<u8>, num: u32, b: &[u8]) {
     put_key(out, num, 2);
     protobuf::varint(out, b.len() as u64);
     out.extend_from_slice(b);
 }
 
-fn put_int(out: &mut Vec<u8>, num: u32, x: u64) {
+pub(crate) fn put_int(out: &mut Vec<u8>, num: u32, x: u64) {
     put_key(out, num, 0);
     protobuf::varint(out, x);
 }
@@ -570,7 +570,7 @@ fn field_desc(
 }
 
 /// protoc's `json_name`: lowerCamelCase of the field name.
-fn json_name(s: &str) -> String {
+pub(crate) fn json_name(s: &str) -> String {
     let mut out = String::new();
     let mut up = false;
     for c in s.chars() {
@@ -848,4 +848,27 @@ pub fn parse_timeout(s: &str) -> Option<u64> {
         _ => return None,
     };
     Some(n.saturating_mul(scale))
+}
+
+#[cfg(test)]
+mod tests {
+    /// `grpc._health-file` in lib/grpc.fwp holds the descriptor of the
+    /// health checking service.
+    #[test]
+    fn health_file_matches() {
+        let lib = include_str!("../lib/grpc.fwp");
+        let start = lib.find("grpc._health-file =").expect("grpc._health-file");
+        let rest = &lib[start..];
+        let open = rest.find("grpc.base64-bytes").expect("base64 text") + 17;
+        let open = open + rest[open..].find('"').unwrap() + 1;
+        let close = open + rest[open..].find('"').unwrap();
+        let bytes = crate::jsontype::unbase64(&rest[open..close]).unwrap_or_default();
+        let want = super::health_descriptor();
+        if bytes != want {
+            panic!(
+                "update grpc._health-file in lib/grpc.fwp: {}",
+                crate::jsontype::base64(&want)
+            );
+        }
+    }
 }
