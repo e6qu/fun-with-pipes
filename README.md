@@ -29,8 +29,9 @@ main =
 - **Tracked effects.** `IO`, `Error[E]`, `State[S]`, `Async`, `Network`
   appear in function types, with handlers and affine resources.
 - **Compile time.** `comptime`, syntax as data, hygienic macros, `type[T]`.
-- **Numerics.** Sized vectors and matrices, complex numbers, autodiff,
-  balanced ternary, SIMD and tensor graphs.
+- **Numerics.** Sized vectors and matrices, complex numbers, forward and
+  reverse-mode autodiff, balanced ternary, SIMD, and fused tensor kernels
+  on CPU threads or OpenCL devices ([docs/numerics.md](docs/numerics.md)).
 - **Concurrency and the web.** Tasks, channels and deadlines; TCP, UDP and
   DNS; an HTTP/1.1 server and client; JSON, logs and metrics.
 - **Many outputs.** An interpreter and native executables with identical
@@ -101,7 +102,7 @@ python3 -m http.server -d web 8000      # open http://localhost:8000
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | nineteen tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs, gRPC and TLS |
+| [docs/tutorials](docs/tutorials/README.md) | twenty-one tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs, gRPC, TLS, WebSockets and HTTP/2, and reverse-mode autodiff |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |

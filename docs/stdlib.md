@@ -2146,6 +2146,30 @@ jacobian : (List[Dual[t]] -> List[Dual[t]]) -> List[t] -> List[List[t]] where Ze
 
 # second derivatives of a scalar function (nested duals)
 hessian : (List[Dual[Dual[t]]] -> Dual[Dual[t]]) -> List[t] -> List[List[t]] where Zero[t], One[t], Dup[t]
+Rev[T] = { value: T, vertex: I64 }
+
+# a constant: no gradient flows through it
+rev.const : t -> Rev[t]
+
+# The value of a scalar function and its gradient at a point, in one
+# forward and one backward pass.
+value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
+
+# All partial derivatives of a scalar function at a point (reverse mode;
+# the same numbers as `gradient`, for any number of inputs at the cost of
+# about one evaluation).
+grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where Float[t], One[t], Dup[t]
+
+# `grad` of a function of a vector
+grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] where Float[t], One[t], Dup[t]
+
+# Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
+# of f at xs (one backward pass, whatever the number of outputs).
+vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
+
+# The Jacobian in reverse mode, one backward pass per output (rows are
+# outputs, columns are inputs, as for `jacobian`).
+rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where Float[t], Zero[t], One[t], Dup[t]
 ```
 
 ## Tensor expressions
@@ -2157,6 +2181,15 @@ evaluates the whole graph in one pass over the elements (the operations
 are fused: no intermediate arrays are allocated). Graph passes rewrite
 expressions before they are realized.
 
+Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
+so generic numeric code builds fused elementwise kernels. They run on a
+`Device`: `Cpu`, `CpuParallel n` (n threads) or `Gpu` (OpenCL, when a
+device with double precision is present). Elementwise results are the
+same on every CPU device and in both backends, bit for bit; reductions
+(`tensor.sum`) add blocks of 4096 elements from the left and then the
+block sums from the left, whatever the number of threads, so they are
+reproducible too. See docs/numerics.md.
+
 ```fwp
 TensorExpr[N] =
     | TLeaf Vector[F64, N]
@@ -2165,6 +2198,23 @@ TensorExpr[N] =
     | TMul TensorExpr[N] TensorExpr[N]
     | TScale F64 TensorExpr[N]
     | TMap (F64 -> F64) TensorExpr[N]
+    # minuend and subtrahend
+    | TSub TensorExpr[N] TensorExpr[N]
+    # dividend and divisor
+    | TDiv TensorExpr[N] TensorExpr[N]
+    | TUnary UnaryOp TensorExpr[N]
+
+# The elementwise functions a kernel computes itself (`tensor.map` takes
+# any function, but runs it on the CPU before the kernel).
+UnaryOp =
+    | OpNeg
+    | OpSqrt
+    | OpExp
+    | OpLn
+    | OpSin
+    | OpCos
+    | OpTan
+    | OpAbs
 tensor.lazy : Vector[F64, n] -> TensorExpr[n]
 tensor.fill : F64 -> TensorExpr[n]
 
@@ -2174,6 +2224,17 @@ tensor.mul : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
 tensor.scale : F64 -> TensorExpr[n] -> TensorExpr[n]
 tensor.map : (F64 -> F64) -> TensorExpr[n] -> TensorExpr[n]
 
+# `x | tensor.sub y` is x - y
+tensor.sub : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+
+# `x | tensor.div y` is x / y
+tensor.div : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+tensor.unary : UnaryOp -> TensorExpr[n] -> TensorExpr[n]
+tensor.abs : TensorExpr[n] -> TensorExpr[n]
+
+# one element of a unary operation
+tensor.apply-unary : UnaryOp -> F64 -> F64
+
 # element i of an expression
 rec tensor.at : TensorExpr[n] -> I64 -> F64
 
@@ -2182,13 +2243,77 @@ rec tensor.at : TensorExpr[n] -> I64 -> F64
 # operands of different lengths is a trap.
 rec tensor.length : TensorExpr[n] -> Option[I64]
 
-# Evaluate an expression; a trap when it is made only of fills, whose
-# length is unknown.
+# Evaluate an expression (on the CPU, one thread); a trap when it is made
+# only of fills, whose length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
 rec graph.size : TensorExpr[n] -> I64
 
 # Constant folding: combine constants and nested scalings.
 rec graph.constant-fold : TensorExpr[n] -> TensorExpr[n]
+
+# Where kernels run. `CpuParallel n` splits the elements into n contiguous
+# ranges, one per thread (in WebAssembly, one thread). `Gpu` is the first
+# OpenCL device with double precision (a GPU if there is one); it needs
+# libOpenCL at run time (`FWP_OPENCL_LIB` names another library).
+Device =
+    | Cpu
+    | CpuParallel I64
+    | Gpu
+
+# Whether a device can run kernels here (`Gpu`: an OpenCL device with
+# double precision was found).
+device.available : Device -> Bool
+device.name : Device -> String
+
+# A fused elementwise kernel: postfix code over `length` elements, with
+# the constants and the input arrays in the order the code uses them.
+Kernel = {
+    code: Array[I64],
+    consts: Array[F64],
+    inputs: List[Array[F64]],
+    length: I64,
+}
+
+# The kernel of an expression over n elements.
+tensor.kernel-of : I64 -> TensorExpr[n] -> Kernel
+
+# The kernel of an expression (a trap when it is made only of fills).
+tensor.kernel : TensorExpr[n] -> Kernel
+
+# Run a kernel on a device: an error when the device cannot run it.
+kernel.run : Device -> Kernel -> Result[Array[F64], String]
+
+# The sum of a kernel's elements, in blocks of 4096 from the left (on the
+# GPU, the elements are computed there and summed on the CPU).
+kernel.sum : Device -> Kernel -> Result[F64, String]
+
+# Evaluate an expression on a device; an error when the device is not
+# available.
+tensor.try-realize-on : Device -> TensorExpr[n] -> Result[Vector[F64, n], String]
+
+# Evaluate an expression on a device (a trap with the reason when the
+# device is not available).
+realize-on : Device -> TensorExpr[n] -> Vector[F64, n]
+
+# The sum of the elements of an expression, in a fixed order (see above).
+tensor.sum-on : Device -> TensorExpr[n] -> F64
+tensor.sum : TensorExpr[n] -> F64
+
+# The OpenCL C source of an expression's kernel: `fwp_kernel(out, k, n,
+# x0, x1, ...)` computes element i of n from the inputs xj and the
+# constants k, in the order of the CPU kernel (FP_CONTRACT OFF: no fused
+# multiply-add).
+tensor.opencl : TensorExpr[n] -> String
+tensor.opencl-of : Kernel -> String
+
+# The gradient of the sum of an expression's elements with respect to
+# each of its leaves (`tensor.lazy` vectors, in order from the left), by
+# reverse mode over the expression: the adjoint of each leaf is itself a
+# fused expression, run on the device. `tensor.map` cannot be
+# differentiated (a trap; `Floating` and the elementwise builders can);
+# the derivative of `tensor.abs` at 0 is NaN.
+tensor.grad-on : Device -> TensorExpr[n] -> List[Vector[F64, n]]
+tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
 ```
 
 ## Balanced ternary

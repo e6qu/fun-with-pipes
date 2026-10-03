@@ -139,3 +139,219 @@ test "gradient" =
         (nth 0 | option.unwrap-or zero)
         (nth 1 | option.unwrap-or zero))
     | eq [2.0, 1.0]
+
+# ------------------------------------------------------------ reverse mode
+#
+# Reverse-mode automatic differentiation with a tape. `Rev[T]` is a number
+# that records each operation on the tape of the `grad` that made it (in
+# the runtime, outside the program's values); `grad` then walks the tape
+# backwards once, so the gradient of a function of n inputs costs a small
+# multiple of one evaluation, where forward mode needs n. Like `Dual`, it
+# implements the numeric traits, so generic numeric code (vectors,
+# matrices, `where Field[t], Floating[t]`) differentiates unchanged.
+# Adjoints are accumulated in F64. Comparisons (`lt`, `max`, ...) look at
+# `.value` first. A `Rev` value belongs to its `grad`: using it after the
+# grad returned, or combining values of two grads (nested reverse mode),
+# is a trap.
+
+Rev[T] = { value: T, vertex: I64 }
+
+# internal
+foreign "fwp" ad.tape : I64 -> I64
+# internal
+foreign "fwp" ad.push : (I64, F64, I64, F64) -> I64
+# internal
+foreign "fwp" ad.backward : I64 -> Array[I64] -> Array[F64] -> Array[F64]
+
+# a constant: no gradient flows through it
+rev.const : t -> Rev[t]
+rev.const = make Rev { value = id, vertex = const -1 }
+
+# An operation of two operands: `g (a, b)` gives the value of `op a b` and
+# its partial derivatives with respect to a and b.
+rev._op2 : ((t, t) -> (t, t, t)) -> Rev[t] -> Rev[t] -> Rev[t] where Float[t], Dup[t]
+rev._op2 =
+    curry3
+        (make {
+                0 = both .0 (both (.1 | .value) (.2 | .value)) | uncurry id,
+                1 = .1 | .vertex,
+                2 = .2 | .vertex,
+            }
+            | make Rev {
+                value = .0 | .0,
+                vertex = make {
+                    0 = .1,
+                    1 = .0 | .1 | float.convert,
+                    2 = .2,
+                    3 = .0 | .2 | float.convert,
+                } | ad.push,
+            })
+
+# An operation of one operand: `g a` gives the value and the derivative.
+rev._op1 : (t -> (t, t)) -> Rev[t] -> Rev[t] where Float[t], Dup[t]
+rev._op1 =
+    curry (make { 0 = both .0 (.1 | .value) | uncurry id, 1 = .1 | .vertex }
+        | make Rev {
+            value = .0 | .0,
+            vertex = make {
+                0 = .1,
+                1 = .0 | .1 | float.convert,
+                2 = const -1,
+                3 = const 0.0,
+            } | ad.push,
+        })
+
+impl Add[Rev[t]] where Float[t], Ring[t], Dup[t] =
+    add = rev._op2 (make { 0 = uncurry add, 1 = const one, 2 = const one })
+
+# `sub a b` is b - a
+impl Sub[Rev[t]] where Float[t], Ring[t], Neg[t], Dup[t] =
+    sub =
+        rev._op2 (make { 0 = uncurry sub, 1 = const (neg one), 2 = const one })
+
+impl Mul[Rev[t]] where Float[t], Ring[t], Dup[t] =
+    mul = rev._op2 (make { 0 = uncurry mul, 1 = .1, 2 = .0 })
+
+# `div a b` is b / a
+impl Div[Rev[t]] where Float[t], Field[t], Neg[t], Dup[t] =
+    div = rev._op2 (make {
+        0 = uncurry div,
+        1 = fork div .0 (uncurry div) | neg,
+        2 = .0 | flip div one,
+    })
+
+impl Neg[Rev[t]] where Float[t], Ring[t], Neg[t], Dup[t] =
+    neg = rev._op1 (make { 0 = neg, 1 = const (neg one) })
+
+impl Zero[Rev[t]] where Zero[t] =
+    zero = Rev { value = zero, vertex = -1 }
+
+impl One[Rev[t]] where One[t] =
+    one = Rev { value = one, vertex = -1 }
+
+impl FromInt[Rev[t]] where FromInt[t] =
+    from-int = from-int | rev.const
+
+impl FromFloat[Rev[t]] where FromFloat[t] =
+    from-float = from-float | rev.const
+
+impl Ring[Rev[t]] where Float[t], Ring[t], Neg[t], Dup[t] = {}
+
+impl Field[Rev[t]] where Float[t], Field[t], Neg[t], Dup[t] = {}
+
+impl Floating[Rev[t]] where Float[t], Floating[t], Field[t], Neg[t], Dup[t] =
+    sqrt =
+        rev._op1 (make { 0 = sqrt, 1 = sqrt | fork add id id | flip div one })
+    exp = rev._op1 (make { 0 = exp, 1 = exp })
+    ln = rev._op1 (make { 0 = ln, 1 = flip div one })
+    sin = rev._op1 (make { 0 = sin, 1 = cos })
+    cos = rev._op1 (make { 0 = cos, 1 = sin | neg })
+    tan = rev._op1 (make { 0 = tan, 1 = cos | fork mul id id | flip div one })
+
+# input i of a tape
+rev._leaf : I64 -> (I64, t) -> Rev[t]
+rev._leaf = curry (make Rev {
+    value = .1 | .1,
+    vertex = both .0 (.1 | .0) | uncurry add,
+})
+
+# a new tape and the inputs on it
+rev._seed : List[t] -> (I64, List[Rev[t]]) where Dup[t]
+rev._seed =
+    both (length | ad.tape) enumerate
+    | both .0 (both (.0 | rev._leaf) .1 | uncurry map)
+
+# the adjoints of a tape's inputs, seeding the given vertices (frees the
+# tape)
+rev._backward : I64 -> List[I64] -> List[t] -> List[t] where Float[t]
+rev._backward = curry3 (make {
+    0 = .0,
+    1 = .1 | array.from-list,
+    2 = .2 | map float.convert | array.from-list,
+} | uncurry3 ad.backward | array.to-list | map float.convert)
+
+rev._finish : (I64, Rev[t]) -> (t, List[t]) where Float[t], One[t], Dup[t]
+rev._finish =
+    both
+        (.1 | .value)
+        (both .0 (.1 | .vertex | singleton)
+            | uncurry rev._backward
+            | apply [one])
+
+# The value of a scalar function and its gradient at a point, in one
+# forward and one backward pass.
+value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
+value-and-grad = second | compose rev._seed | flip compose rev._finish
+
+# All partial derivatives of a scalar function at a point (reverse mode;
+# the same numbers as `gradient`, for any number of inputs at the cost of
+# about one evaluation).
+grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where Float[t], One[t], Dup[t]
+grad = value-and-grad | flip compose .1
+
+# `grad` of a function of a vector
+grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] where Float[t], One[t], Dup[t]
+grad-vector =
+    compose (array.from-list | vector.wrap)
+    | grad
+    | compose vector.to-list
+    | flip compose (array.from-list | vector.wrap)
+
+rev._vjp-finish : List[t] -> (I64, List[Rev[t]]) -> List[t] where Float[t], Dup[t]
+rev._vjp-finish = curry (make { 0 = .1 | .0, 1 = .1 | .1 | map .vertex, 2 = .0 }
+    | uncurry3 rev._backward)
+
+# Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
+# of f at xs (one backward pass, whatever the number of outputs).
+vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
+vjp = curry (both (.0 | second | compose rev._seed) (.1 | rev._vjp-finish)
+    | uncurry compose)
+
+# The Jacobian in reverse mode, one backward pass per output (rows are
+# outputs, columns are inputs, as for `jacobian`).
+rev.jacobian : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[List[t]] where Float[t], Zero[t], One[t], Dup[t]
+rev.jacobian = curry (make { 0 = uncurry rev._outputs, 1 = .0, 2 = .1 }
+    | both rev._row (.0 | range 0)
+    | uncurry map)
+
+# the number of outputs of f at xs
+rev._outputs : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> I64
+rev._outputs = curry (both .0 (.1 | map rev.const) | uncurry id | length)
+
+# row i of the Jacobian, of (number of outputs, f, xs)
+rev._row : (I64, List[Rev[t]] -> List[Rev[t]], List[t]) -> I64 -> List[t] where Float[t], Zero[t], One[t], Dup[t]
+rev._row = curry (make {
+    0 = .0 | .1,
+    1 = both .1 (.0 | .0) | uncurry rev._basis,
+    2 = .0 | .2,
+} | uncurry3 vjp)
+
+# unit vector i of length m
+rev._basis : I64 -> I64 -> List[t] where Zero[t], One[t]
+rev._basis = curry (both (.0 | eq | flip compose bool.to-num) (.1 | range 0)
+    | uncurry map)
+
+test "grad" =
+    [1.0, 2.0]
+    | grad (fork
+        mul
+        (nth 0 | option.unwrap-or zero)
+        (nth 1 | option.unwrap-or zero))
+    | eq [2.0, 1.0]
+test "grad of sin, sqrt and division" =
+    [0.0, 4.0]
+    | grad (fork
+        div
+        (nth 1 | option.unwrap-or one | sqrt)
+        (nth 0 | option.unwrap-or zero | sin | add 1.0))
+    | eq [0.5, -0.0625]
+test "value-and-grad" =
+    [3.0]
+    | value-and-grad (head | option.unwrap-or zero | fork mul id id)
+    | eq (9.0, [6.0])
+test "vjp" =
+    [1.0, 2.0]
+    | vjp
+        (fork Cons (map (mul 3.0) | sum) (map exp | sum | ln | singleton))
+        [1.0, 0.0]
+    | eq [3.0, 3.0]

@@ -1,0 +1,34 @@
+# Large kernels: every device and thread count gives the same bits.
+n : I64
+n = 300001
+
+xs : Vector[F64, Dyn]
+xs =
+    n
+    | range 0
+    | map (int.to-float | mul 0.001 | sin | add 1.5)
+    | vector.from-list
+
+e : TensorExpr[Dyn]
+e =
+    xs
+    | tensor.lazy
+    | fork mul (sqrt | add (tensor.fill 0.1)) (exp | div (tensor.fill 3.0))
+    | ln
+    | cos
+
+devices : List[Device]
+devices = [
+    Cpu,
+    CpuParallel 1,
+    CpuParallel 2,
+    CpuParallel 3,
+    CpuParallel 8,
+    CpuParallel 64,
+]
+
+main = [
+    devices | map (flip realize-on e | vector.to-list | hash) | echo,
+    devices | map (flip tensor.sum-on e) | echo,
+    e | realize | vector.to-list | take 3 | echo,
+] | ignore

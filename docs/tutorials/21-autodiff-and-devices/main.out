@@ -1,0 +1,20 @@
+[-215.59999999999997, 112.00000000000001, -100.0]
+[-215.59999999999997, 112.00000000000001, -100.0]
+3.493467774689583
+1410.6489026879174
+1410.6489026879174
+[[0.006692850924284856, 0.006759660510713249]]
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#pragma OPENCL FP_CONTRACT OFF
+__kernel void fwp_kernel(__global double *out, __global const double *k, const long n, __global const double *x0) {
+    const long i = get_global_id(0);
+    if (i >= n) return;
+    double s0, s1;
+    s0 = x0[i];
+    s0 = exp(s0);
+    s1 = k[0];
+    s0 = s0 + s1;
+    s0 = log(s0);
+    out[i] = s0;
+}
+

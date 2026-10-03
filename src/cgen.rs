@@ -21,6 +21,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_pipe.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
     include_str!("../runtime/fwp_rt_pb.c"),
+    include_str!("../runtime/fwp_rt_kernel.c"),
 ];
 
 /// The TLS runtime, embedded only in programs that use TLS (and linked
@@ -1374,6 +1375,13 @@ impl<'p> Gen<'p> {
                     ("linalg.qr", "fwp_p_qr(l0, l1, l2)"),
                     ("linalg.cg", "fwp_p_cg(l0, l1, l2, l3, l4)"),
                     ("list.transpose", "fwp_p_list_transpose(l0)"),
+                    ("ad.tape", "fwp_p_ad_tape(l0)"),
+                    ("ad.push", "fwp_p_ad_push(l0)"),
+                    ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),
+                    ("device.run", "fwp_p_device_run(l0, l1, l2, l3, l4)"),
+                    ("device.sum", "fwp_p_device_sum(l0, l1, l2, l3, l4)"),
+                    ("device.gpu-available", "fwp_p_gpu_available()"),
+                    ("device.gpu-run", "fwp_p_gpu_run(l0, l1, l2, l3)"),
                     ("syntax.show", "fwp_p_syntax_show(l0)"),
                     ("write", "fwp_p_write(l0)"),
                     ("eprint", "fwp_p_eprint(l0)"),

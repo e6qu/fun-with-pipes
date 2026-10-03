@@ -1,0 +1,45 @@
+# 21. Reverse-mode autodiff and devices
+
+# One generic function: plain floats, dual numbers, reverse-mode numbers
+# and tensor expressions all implement the numeric traits.
+rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+rosenbrock =
+    fork zip id (drop 1)
+    | map (fork
+        add
+        (fork sub (.1 | fork mul id id) .0 | fork mul id id | mul 100.0)
+        (.1 | flip sub 1.0 | fork mul id id))
+    | sum
+
+# Gradient descent, with the gradient from one backward pass
+descend : List[F64] -> List[F64]
+descend = fork (zip-with sub) (grad rosenbrock | map (mul 0.001)) id
+
+# A fused elementwise kernel, built by generic code
+soft : t -> t where Field[t], Floating[t], FromFloat[t]
+soft = exp | add 1.0 | ln
+
+xs : Vector[F64, Dyn]
+xs = 1000 | range 0 | map (int.to-float | mul 0.01 | sub 5.0) | vector.from-list
+
+main = [
+    [-1.2, 1.0, 0.5] | grad rosenbrock | show | print,
+    [-1.2, 1.0, 0.5] | gradient rosenbrock | show | print,
+    [-1.2, 1.0, 0.5]
+    | iterate 200 descend
+    | last
+    | option.unwrap-or []
+    | rosenbrock
+    | show
+    | print,
+    xs | tensor.lazy | soft | tensor.sum-on (CpuParallel 4) | show | print,
+    xs | tensor.lazy | soft | tensor.sum-on Cpu | show | print,
+    xs
+    | tensor.lazy
+    | soft
+    | tensor.grad
+    | map (vector.to-list | take 2)
+    | show
+    | print,
+    vector [0.0, 1.0] | tensor.lazy | soft | tensor.opencl | print,
+] | ignore

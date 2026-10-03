@@ -1,0 +1,10 @@
+# The GPU device without a usable OpenCL library.
+e : TensorExpr[2]
+e = vector [1.0, 4.0] | tensor.lazy | sqrt
+
+main = [
+    Gpu | device.available | echo,
+    e | tensor.try-realize-on Gpu | echo,
+    e | tensor.try-realize-on Cpu | echo,
+    e | realize-on Gpu | echo,
+] | ignore

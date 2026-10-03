@@ -2,6 +2,15 @@
 # evaluates the whole graph in one pass over the elements (the operations
 # are fused: no intermediate arrays are allocated). Graph passes rewrite
 # expressions before they are realized.
+#
+# Expressions implement the numeric traits (`Ring`, `Field`, `Floating`),
+# so generic numeric code builds fused elementwise kernels. They run on a
+# `Device`: `Cpu`, `CpuParallel n` (n threads) or `Gpu` (OpenCL, when a
+# device with double precision is present). Elementwise results are the
+# same on every CPU device and in both backends, bit for bit; reductions
+# (`tensor.sum`) add blocks of 4096 elements from the left and then the
+# block sums from the left, whatever the number of threads, so they are
+# reproducible too. See docs/numerics.md.
 
 TensorExpr[N] =
     | TLeaf Vector[F64, N]
@@ -10,6 +19,23 @@ TensorExpr[N] =
     | TMul TensorExpr[N] TensorExpr[N]
     | TScale F64 TensorExpr[N]
     | TMap (F64 -> F64) TensorExpr[N]
+    # minuend and subtrahend
+    | TSub TensorExpr[N] TensorExpr[N]
+    # dividend and divisor
+    | TDiv TensorExpr[N] TensorExpr[N]
+    | TUnary UnaryOp TensorExpr[N]
+
+# The elementwise functions a kernel computes itself (`tensor.map` takes
+# any function, but runs it on the CPU before the kernel).
+UnaryOp =
+    | OpNeg
+    | OpSqrt
+    | OpExp
+    | OpLn
+    | OpSin
+    | OpCos
+    | OpTan
+    | OpAbs
 
 tensor.lazy : Vector[F64, n] -> TensorExpr[n]
 tensor.lazy = TLeaf
@@ -30,6 +56,71 @@ tensor.scale = TScale
 tensor.map : (F64 -> F64) -> TensorExpr[n] -> TensorExpr[n]
 tensor.map = TMap
 
+# `x | tensor.sub y` is x - y
+tensor.sub : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+tensor.sub = flip TSub
+
+# `x | tensor.div y` is x / y
+tensor.div : TensorExpr[n] -> TensorExpr[n] -> TensorExpr[n]
+tensor.div = flip TDiv
+
+tensor.unary : UnaryOp -> TensorExpr[n] -> TensorExpr[n]
+tensor.unary = TUnary
+
+tensor.abs : TensorExpr[n] -> TensorExpr[n]
+tensor.abs = TUnary OpAbs
+
+# one element of a unary operation
+tensor.apply-unary : UnaryOp -> F64 -> F64
+tensor.apply-unary = match
+    OpNeg -> neg
+    OpSqrt -> sqrt
+    OpExp -> exp
+    OpLn -> ln
+    OpSin -> sin
+    OpCos -> cos
+    OpTan -> tan
+    OpAbs -> abs
+
+impl Add[TensorExpr[n]] =
+    add = flip TAdd
+
+impl Sub[TensorExpr[n]] =
+    sub = flip TSub
+
+impl Mul[TensorExpr[n]] =
+    mul = flip TMul
+
+impl Div[TensorExpr[n]] =
+    div = flip TDiv
+
+impl Neg[TensorExpr[n]] =
+    neg = TUnary OpNeg
+
+impl Zero[TensorExpr[n]] =
+    zero = TFill 0.0
+
+impl One[TensorExpr[n]] =
+    one = TFill 1.0
+
+impl FromInt[TensorExpr[n]] =
+    from-int = int.to-float | TFill
+
+impl FromFloat[TensorExpr[n]] =
+    from-float = TFill
+
+impl Ring[TensorExpr[n]] = {}
+
+impl Field[TensorExpr[n]] = {}
+
+impl Floating[TensorExpr[n]] =
+    sqrt = TUnary OpSqrt
+    exp = TUnary OpExp
+    ln = TUnary OpLn
+    sin = TUnary OpSin
+    cos = TUnary OpCos
+    tan = TUnary OpTan
+
 # element i of an expression
 rec tensor.at : TensorExpr[n] -> I64 -> F64
 tensor.at = match
@@ -40,6 +131,10 @@ tensor.at = match
     TMul -> on (fork mul) tensor.at
     TScale -> mul | flip compose | compose tensor.at
     TMap -> flip (tensor.at | compose)
+    TSub -> on (flip (fork sub)) tensor.at
+    TDiv -> on (flip (fork div)) tensor.at
+    TUnary -> curry (both (.1 | tensor.at) (.0 | tensor.apply-unary)
+        | uncurry compose)
 
 # The number of elements, or None for an expression made only of fills
 # (a fill takes the length of what it is combined with). Combining two
@@ -52,6 +147,9 @@ tensor.length = match
     TMul -> on tensor._same-length tensor.length
     TScale -> const tensor.length
     TMap -> const tensor.length
+    TSub -> on tensor._same-length tensor.length
+    TDiv -> on tensor._same-length tensor.length
+    TUnary -> const tensor.length
 
 tensor._same-length : Option[I64] -> Option[I64] -> Option[I64]
 tensor._same-length = curry (match
@@ -63,10 +161,14 @@ tensor._same-length = curry (match
         (format "tensor: operands have different lengths ({} and {})"
             | prim.trap)))
 
-# Evaluate an expression; a trap when it is made only of fills, whose
-# length is unknown.
+# Evaluate an expression (on the CPU, one thread); a trap when it is made
+# only of fills, whose length is unknown.
 realize : TensorExpr[n] -> Vector[F64, n]
-realize = fork array.generate tensor._realized-length tensor.at | vector.wrap
+realize = realize-on Cpu
+
+# element by element, through `tensor.at`
+tensor._realize-at : TensorExpr[n] -> Array[F64]
+tensor._realize-at = fork array.generate tensor._realized-length tensor.at
 
 tensor._realized-length : TensorExpr[n] -> I64
 tensor._realized-length = tensor.length | match
@@ -83,6 +185,9 @@ graph.size = match
     TMul -> on add graph.size | then2 id (add 1)
     TScale -> const (graph.size | add 1)
     TMap -> const (graph.size | add 1)
+    TSub -> on add graph.size | then2 id (add 1)
+    TDiv -> on add graph.size | then2 id (add 1)
+    TUnary -> const (graph.size | add 1)
 
 graph.fold-add = curry (match
     (TFill _, TFill _) -> then2 add TFill
@@ -105,7 +210,397 @@ graph.constant-fold = match
     TMul -> on graph.fold-mul graph.constant-fold
     TScale -> graph.fold-scale | compose graph.constant-fold
     TMap -> TMap | compose graph.constant-fold
+    TSub -> on TSub graph.constant-fold
+    TDiv -> on TDiv graph.constant-fold
+    TUnary -> TUnary | compose graph.constant-fold
     _ -> id
+
+# ---------------------------------------------------------------- devices
+
+# Where kernels run. `CpuParallel n` splits the elements into n contiguous
+# ranges, one per thread (in WebAssembly, one thread). `Gpu` is the first
+# OpenCL device with double precision (a GPU if there is one); it needs
+# libOpenCL at run time (`FWP_OPENCL_LIB` names another library).
+Device =
+    | Cpu
+    | CpuParallel I64
+    | Gpu
+
+# internal
+foreign "fwp" device.run : I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> Array[F64]
+# internal
+foreign "fwp" device.sum : I64 -> I64 -> Array[I64] -> Array[F64] -> List[Array[F64]] -> F64
+# internal
+foreign "fwp" device.gpu-available : () -> Bool
+# internal
+foreign "fwp" device.gpu-run : String -> I64 -> Array[F64] -> List[Array[F64]] -> Result[Array[F64], String]
+
+# Whether a device can run kernels here (`Gpu`: an OpenCL device with
+# double precision was found).
+device.available : Device -> Bool
+device.available = match
+    Cpu -> True
+    CpuParallel _ -> ge 1
+    Gpu -> device.gpu-available ()
+
+device.name : Device -> String
+device.name = match
+    Cpu -> "cpu"
+    CpuParallel _ -> format "cpu-parallel({})"
+    Gpu -> "gpu (OpenCL)"
+
+device._threads : Device -> I64
+device._threads = match
+    CpuParallel _ -> max 1
+    _ -> const 1
+
+# A fused elementwise kernel: postfix code over `length` elements, with
+# the constants and the input arrays in the order the code uses them.
+Kernel = {
+    code: Array[I64],
+    consts: Array[F64],
+    inputs: List[Array[F64]],
+    length: I64,
+}
+
+# Opcodes: 0 an input, 1 a constant, 2 +, 3 -, 4 ×, 5 ÷, then the unary
+# operations from 6 (OpNeg) to 13 (OpAbs). `tensor.map` subexpressions
+# are evaluated first, on the CPU, and become inputs.
+rec tensor._code : TensorExpr[n] -> List[I64]
+tensor._code = match
+    TLeaf -> const [0]
+    TFill -> const [1]
+    TAdd -> on (tensor._join 2) tensor._code
+    TMul -> on (tensor._join 4) tensor._code
+    TScale -> const (tensor._code | tensor._join 4 [1])
+    TMap -> const (const [0])
+    TSub -> on (tensor._join 3) tensor._code
+    TDiv -> on (tensor._join 5) tensor._code
+    TUnary -> curry (both (.1 | tensor._code) (.0 | tensor._opcode | singleton)
+        | uncurry (flip append))
+
+# the code of two operands, then op
+tensor._join : I64 -> List[I64] -> List[I64] -> List[I64]
+tensor._join =
+    curry3 (fork Cons .1 (fork Cons .2 (.0 | singleton | singleton)) | flatten)
+
+tensor._opcode : UnaryOp -> I64
+tensor._opcode = match
+    OpNeg -> 6
+    OpSqrt -> 7
+    OpExp -> 8
+    OpLn -> 9
+    OpSin -> 10
+    OpCos -> 11
+    OpTan -> 12
+    OpAbs -> 13
+
+rec tensor._consts : TensorExpr[n] -> List[F64]
+tensor._consts = match
+    TLeaf -> const []
+    TFill -> singleton
+    TAdd -> on (flip append) tensor._consts
+    TMul -> on (flip append) tensor._consts
+    TScale -> curry (both .0 (.1 | tensor._consts) | uncurry Cons)
+    TMap -> const (const [])
+    TSub -> on (flip append) tensor._consts
+    TDiv -> on (flip append) tensor._consts
+    TUnary -> const tensor._consts
+
+rec tensor._inputs : TensorExpr[n] -> List[Array[F64]]
+tensor._inputs = match
+    TLeaf -> .data | singleton
+    TFill -> const []
+    TAdd -> on (flip append) tensor._inputs
+    TMul -> on (flip append) tensor._inputs
+    TScale -> const tensor._inputs
+    TMap -> curry (uncurry TMap | tensor._realize-at | singleton)
+    TSub -> on (flip append) tensor._inputs
+    TDiv -> on (flip append) tensor._inputs
+    TUnary -> const tensor._inputs
+
+# The kernel of an expression over n elements.
+tensor.kernel-of : I64 -> TensorExpr[n] -> Kernel
+tensor.kernel-of = curry (make Kernel {
+    code = .1 | tensor._code | array.from-list,
+    consts = .1 | tensor._consts | array.from-list,
+    inputs = .1 | tensor._inputs,
+    length = .0,
+})
+
+# The kernel of an expression (a trap when it is made only of fills).
+tensor.kernel : TensorExpr[n] -> Kernel
+tensor.kernel = fork tensor.kernel-of tensor._realized-length id
+
+# Run a kernel on a device: an error when the device cannot run it.
+kernel.run : Device -> Kernel -> Result[Array[F64], String]
+kernel.run = curry (match
+    (Gpu, _) -> fork kernel._gpu-run tensor.opencl-of id
+    (_, _) ->
+        curry (both (.0 | device._threads) .1 | uncurry kernel._cpu-run | Ok))
+
+kernel._cpu-run : I64 -> Kernel -> Array[F64]
+kernel._cpu-run = curry (make {
+    0 = .0,
+    1 = .1 | .length,
+    2 = .1 | .code,
+    3 = .1 | .consts,
+    4 = .1 | .inputs,
+} | kernel._apply5 device.run)
+
+kernel._apply5 : (a -> b -> c -> d -> e -> r) -> (a, b, c, d, e) -> r
+kernel._apply5 = curry (both
+        (both
+                (both
+                        (both (both .0 (.1 | .0) | uncurry id) (.1 | .1)
+                            | uncurry id)
+                        (.1 | .2)
+                    | uncurry id)
+                (.1 | .3)
+            | uncurry id)
+        (.1 | .4)
+    | uncurry id)
+
+kernel._gpu-run : String -> Kernel -> Result[Array[F64], String]
+kernel._gpu-run =
+    curry (make { 0 = .0, 1 = .1 | .length, 2 = .1 | .consts, 3 = .1 | .inputs }
+        | both (both (both .0 .1 | uncurry device.gpu-run) .2 | uncurry id) .3
+        | uncurry id)
+
+# The sum of a kernel's elements, in blocks of 4096 from the left (on the
+# GPU, the elements are computed there and summed on the CPU).
+kernel.sum : Device -> Kernel -> Result[F64, String]
+kernel.sum = curry (match
+    (Gpu, _) ->
+        fork kernel._gpu-run tensor.opencl-of id
+        | result.map (fork tensor.kernel-of array.length (vector.wrap | TLeaf)
+            | kernel._cpu-sum 1)
+    (_, _) ->
+        curry (both (.0 | device._threads) .1 | uncurry kernel._cpu-sum | Ok))
+
+kernel._cpu-sum : I64 -> Kernel -> F64
+kernel._cpu-sum = curry (make {
+    0 = .0,
+    1 = .1 | .length,
+    2 = .1 | .code,
+    3 = .1 | .consts,
+    4 = .1 | .inputs,
+} | kernel._apply5 device.sum)
+
+# Evaluate an expression on a device; an error when the device is not
+# available.
+tensor.try-realize-on : Device -> TensorExpr[n] -> Result[Vector[F64, n], String]
+tensor.try-realize-on = curry (both .0 (.1 | tensor.kernel)
+    | uncurry kernel.run
+    | result.map vector.wrap)
+
+# Evaluate an expression on a device (a trap with the reason when the
+# device is not available).
+realize-on : Device -> TensorExpr[n] -> Vector[F64, n]
+realize-on = tensor.try-realize-on | flip compose device._or-trap
+
+device._or-trap : Result[a, String] -> a
+device._or-trap = match
+    Ok -> id
+    Err -> flip concat "device: " | prim.trap
+
+# The sum of the elements of an expression, in a fixed order (see above).
+tensor.sum-on : Device -> TensorExpr[n] -> F64
+tensor.sum-on =
+    curry (both .0 (.1 | tensor.kernel) | uncurry kernel.sum | device._or-trap)
+
+tensor.sum : TensorExpr[n] -> F64
+tensor.sum = tensor.sum-on Cpu
+
+# ------------------------------------------------------------------ OpenCL
+
+# internal
+ClState = { sp: I64, depth: I64, leaves: I64, consts: I64, lines: List[String] }
+
+# The OpenCL C source of an expression's kernel: `fwp_kernel(out, k, n,
+# x0, x1, ...)` computes element i of n from the inputs xj and the
+# constants k, in the order of the CPU kernel (FP_CONTRACT OFF: no fused
+# multiply-add).
+tensor.opencl : TensorExpr[n] -> String
+tensor.opencl = tensor.kernel | tensor.opencl-of
+
+tensor.opencl-of : Kernel -> String
+tensor.opencl-of =
+    .code
+    | array.to-list
+    | fold tensor._cl-step ClState {
+        sp = 0,
+        depth = 0,
+        leaves = 0,
+        consts = 0,
+        lines = [],
+    }
+    | tensor._cl-source
+
+tensor._cl-source : ClState -> String
+tensor._cl-source = make {
+    0 = const "#pragma OPENCL EXTENSION cl_khr_fp64 : enable",
+    1 = const "#pragma OPENCL FP_CONTRACT OFF",
+    2 =
+        .leaves
+        | range 0
+        | map (format ", __global const double *x{}")
+        | join ""
+        | format
+            "__kernel void fwp_kernel(__global double *out, __global const double *k, const long n{}) {{",
+    3 = const "    const long i = get_global_id(0);",
+    4 = const "    if (i >= n) return;",
+    5 =
+        .depth
+        | range 0
+        | map (format "s{}")
+        | join ", "
+        | format "    double {};",
+    6 = .lines | reverse | join "\n",
+    7 = const "    out[i] = s0;\n}\n",
+} | tensor._cl-lines | join "\n"
+
+tensor._cl-lines : (String, String, String, String, String, String, String, String) -> List[String]
+tensor._cl-lines = fork Cons .0 (fork
+    Cons
+    .1
+    (fork
+        Cons
+        .2
+        (fork
+            Cons
+            .3
+            (fork Cons .4 (fork Cons .5 (fork Cons .6 (.7 | singleton)))))))
+
+tensor._cl-step : ClState -> I64 -> ClState
+tensor._cl-step = curry (match
+    (_, 0) -> tensor._cl-leaf
+    (_, 1) -> tensor._cl-const
+    (_, 2) -> tensor._cl-binary "+"
+    (_, 3) -> tensor._cl-binary "-"
+    (_, 4) -> tensor._cl-binary "*"
+    (_, 5) -> tensor._cl-binary "/"
+    (_, 6) -> tensor._cl-unary "-"
+    (_, 7) -> tensor._cl-unary "sqrt"
+    (_, 8) -> tensor._cl-unary "exp"
+    (_, 9) -> tensor._cl-unary "log"
+    (_, 10) -> tensor._cl-unary "sin"
+    (_, 11) -> tensor._cl-unary "cos"
+    (_, 12) -> tensor._cl-unary "tan"
+    (_, _) -> tensor._cl-unary "fabs" | const)
+
+tensor._cl-push : String -> ClState -> ClState
+tensor._cl-push = curry (make ClState {
+    sp = .1 | .sp | add 1,
+    depth = fork max (.1 | .depth) (.1 | .sp | add 1),
+    leaves = .1 | .leaves,
+    consts = .1 | .consts,
+    lines = fork Cons .0 (.1 | .lines),
+})
+
+tensor._cl-leaf : ClState -> ClState
+tensor._cl-leaf =
+    fork tensor._cl-push (both .sp .leaves | format "    s{} = x{}[i];") id
+    | update { leaves = add 1 }
+
+tensor._cl-const : ClState -> ClState
+tensor._cl-const =
+    fork tensor._cl-push (both .sp .consts | format "    s{} = k[{}];") id
+    | update { consts = add 1 }
+
+tensor._cl-binary : String -> ClState -> ClState
+tensor._cl-binary = curry (make ClState {
+    sp = .1 | .sp | sub 1,
+    depth = .1 | .depth,
+    leaves = .1 | .leaves,
+    consts = .1 | .consts,
+    lines =
+        fork
+            Cons
+            (make {
+                0 = .1 | .sp | sub 2,
+                1 = .1 | .sp | sub 2,
+                2 = .0,
+                3 = .1 | .sp | sub 1,
+            } | format "    s{} = s{} {} s{};")
+            (.1 | .lines),
+})
+
+tensor._cl-unary : String -> ClState -> ClState
+tensor._cl-unary = curry (make ClState {
+    sp = .1 | .sp,
+    depth = .1 | .depth,
+    leaves = .1 | .leaves,
+    consts = .1 | .consts,
+    lines =
+        fork
+            Cons
+            (make { 0 = .1 | .sp | sub 1, 1 = .0, 2 = .1 | .sp | sub 1 }
+                | format "    s{} = {}(s{});")
+            (.1 | .lines),
+})
+
+# ------------------------------------------------------- reverse mode
+
+# The gradient of the sum of an expression's elements with respect to
+# each of its leaves (`tensor.lazy` vectors, in order from the left), by
+# reverse mode over the expression: the adjoint of each leaf is itself a
+# fused expression, run on the device. `tensor.map` cannot be
+# differentiated (a trap; `Floating` and the elementwise builders can);
+# the derivative of `tensor.abs` at 0 is NaN.
+tensor.grad-on : Device -> TensorExpr[n] -> List[Vector[F64, n]]
+tensor.grad-on = curry (both
+        (both (.1 | tensor._realized-length) .0 | uncurry tensor._adjoint-runner)
+        (both .1 (const (TFill 1.0)) | uncurry tensor._adjoints)
+    | uncurry map)
+
+tensor.grad : TensorExpr[n] -> List[Vector[F64, n]]
+tensor.grad = tensor.grad-on Cpu
+
+tensor._adjoint-runner : I64 -> Device -> TensorExpr[n] -> Vector[F64, n]
+tensor._adjoint-runner = curry3 (both .1 (both .0 .2 | uncurry tensor.kernel-of)
+    | uncurry kernel.run
+    | device._or-trap
+    | vector.wrap)
+
+# the adjoints of the leaves of e, given the adjoint g of e
+rec tensor._adjoints : TensorExpr[n] -> TensorExpr[n] -> List[TensorExpr[n]]
+tensor._adjoints = match
+    TLeaf -> const singleton
+    TFill -> const (const [])
+    TAdd -> curry3 (tensor._two .2 .2)
+    TMul -> curry3 (tensor._two (fork TMul .2 .1) (fork TMul .2 .0))
+    TScale -> curry3 (both .1 (both .0 .2 | uncurry TScale)
+        | uncurry tensor._adjoints)
+    TMap -> const (const
+        (prim.trap "tensor.grad: tensor.map cannot be differentiated"))
+    TSub -> curry3 (tensor._two .2 (.2 | TUnary OpNeg))
+    TDiv -> curry3 (tensor._two
+        (fork TDiv .2 .1)
+        (fork TDiv (fork TMul .2 .0) (.1 | fork TMul id id) | TUnary OpNeg))
+    TUnary -> curry3 (both
+            .1
+            (fork TMul .2 (both .0 .1 | uncurry tensor._derivative))
+        | uncurry tensor._adjoints)
+
+# operands a and b, given (a, b, g), get the adjoints `ga` and `gb`
+rec tensor._two : ((TensorExpr[n], TensorExpr[n], TensorExpr[n]) -> TensorExpr[n]) -> ((TensorExpr[n], TensorExpr[n], TensorExpr[n]) -> TensorExpr[n]) -> (TensorExpr[n], TensorExpr[n], TensorExpr[n]) -> List[TensorExpr[n]]
+tensor._two = curry3 (both
+        (both (.2 | .0) (both .0 .2 | uncurry id) | uncurry tensor._adjoints)
+        (both (.2 | .1) (both .1 .2 | uncurry id) | uncurry tensor._adjoints)
+    | uncurry (flip append))
+
+# the derivative of a unary operation at e
+tensor._derivative : UnaryOp -> TensorExpr[n] -> TensorExpr[n]
+tensor._derivative = match
+    OpNeg -> const (TFill -1.0)
+    OpSqrt -> TUnary OpSqrt | TDiv (TFill 0.5)
+    OpExp -> TUnary OpExp
+    OpLn -> TDiv (TFill 1.0)
+    OpSin -> TUnary OpCos
+    OpCos -> TUnary OpSin | TUnary OpNeg
+    OpTan -> TUnary OpCos | fork TMul id id | TDiv (TFill 1.0)
+    OpAbs -> fork TDiv id (TUnary OpAbs)
 
 test "realize" =
     vector [1.0, 2.0]
