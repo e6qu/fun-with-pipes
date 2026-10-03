@@ -160,7 +160,7 @@ request = make Request {
 body-text : Body -> String
 body-text = match
     Body.Full _ -> string.from-bytes | option.unwrap-or ""
-    Body.Stream _ -> const ""
+    _ -> const ""
 
 call : (String, String, String, String) -> () ! {Async, IO, Network, FileIO}
 call =

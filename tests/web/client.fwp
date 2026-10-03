@@ -1,0 +1,104 @@
+# The client of tests/web.rs: HTTP/1.1 and HTTP/2, compression and
+# WebSocket against tests/web/server.fwp at FWP_BASE (http:// or
+# https://; for https the CA comes from SSL_CERT_FILE) and FWP_WS.
+
+base : () -> String ! {IO}
+base = const "FWP_BASE" | env.get | option.unwrap-or "http://127.0.0.1:8080"
+
+get-with : HttpVersion -> String -> ClientResponse ! {Async, IO, Network, Error[IoError]}
+get-with = curry (fork
+    http.send-using
+    (.0
+        | make ClientOptions {
+            tls = const tls.options,
+            version = id,
+            compression = const True,
+        })
+    (.1
+        | fork concat id (const () | base)
+        | make ClientRequest {
+            method = const "GET",
+            url = id,
+            headers = const [],
+            body = const http.no-bytes,
+        }))
+
+text : ClientResponse -> String
+text = .body | string.from-bytes | option.unwrap-or "?"
+
+show-response : String -> ClientResponse -> () ! {IO}
+show-response =
+    curry (both .0 (.1 | both .status text) | format "{}: {}" | print)
+
+gzip-post : () -> ClientResponse ! {Async, IO, Network, Error[IoError]}
+gzip-post =
+    const ()
+    | base
+    | concat "/echo"
+    | make ClientRequest {
+        method = const "POST",
+        url = id,
+        headers = const [("content-encoding", "gzip")],
+        body = const ("compressed request" | string.to-bytes | gzip.compress),
+    }
+    | http.send
+
+ws-url : () -> String ! {IO}
+ws-url = const "FWP_WS" | env.get | option.unwrap-or "ws://127.0.0.1:8080/ws"
+
+show-message : Option[WsMessage] -> String
+show-message = match
+    Some (WsMessage.Text _) -> format "text {}"
+    Some (WsMessage.Binary _) -> bytes.to-list | format "binary {}"
+    Some (WsMessage.Close _ _) -> curry (format "close {} {}")
+    Some _ -> const "control"
+    None -> "end"
+
+websocket : () -> () ! {Async, IO, Network, Error[IoError]}
+websocket =
+    ws-url
+    | ws.connect
+    | tap (ws.send-text "ping me")
+    | tap (ws.recv | show-message | print)
+    | tap (ws.send (WsMessage.Binary (bytes.from-list [1, 2, 255])))
+    | tap (ws.recv | show-message | print)
+    | tap (ws.send-text (string.repeat 30000 "ab"))
+    | tap (ws.recv
+        | option.map (match
+            WsMessage.Text -> string.length | format "long text {}"
+            _ -> const "?")
+        | option.unwrap-or "none"
+        | print)
+    | tap (ws.send-text "close")
+    | tap (ws.recv | show-message | print)
+    | tap (ws.recv | show-message | print)
+    | ws.wait
+
+slow : () -> List[Option[I64]] ! {Async, IO, Network}
+slow =
+    const (range 0 4)
+    | task.map (const "/slow"
+        | attempt (get-with HttpVersion.Auto)
+        | result.map .status
+        | result.unwrap-or 0)
+
+main =
+    ()
+    | tap (const "/hello" | get-with HttpVersion.Auto | show-response "auto")
+    | tap
+        (const "/hello" | get-with HttpVersion.Http1 | show-response "http/1.1")
+    | tap (const "/hello" | get-with HttpVersion.Http2 | show-response "http/2")
+    | tap (const "/big"
+        | get-with HttpVersion.Auto
+        | both
+            (.body | bytes.length)
+            (.headers | json.lookup "content-encoding")
+        | format "big: {} bytes, content-encoding {}"
+        | print)
+    | tap
+        (const "/stream" | get-with HttpVersion.Http2 | show-response "stream")
+    | tap (gzip-post | show-response "gzip request")
+    | tap (slow | format "concurrent: {}" | print)
+    | tap websocket
+    | const "done"
+    | print

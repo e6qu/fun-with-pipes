@@ -1,4 +1,4 @@
-# HTTP/1.1 server and client.
+# HTTP/1.1 and HTTP/2 server and client.
 #
 # A handler is an ordinary function `Request -> Response`, and middleware is
 # ordinary composition:
@@ -15,6 +15,15 @@
 # With `tls` in its config the server speaks HTTPS, and the client speaks
 # HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
 # connections, which are `Conn`s too.
+#
+# The server also speaks HTTP/2: over TLS when the client chooses "h2"
+# with ALPN, and on cleartext connections that start with HTTP/2's
+# connection preface (h2c with prior knowledge). Every stream runs in its
+# own task, with the same handler, limits and timeouts. The client uses
+# HTTP/2 when a TLS server chooses it, pooling one connection per origin.
+# Responses can be compressed (`compress` in the config, or the
+# `http.compress` middleware), request bodies with a content encoding
+# are decompressed, and the client decompresses responses.
 
 Request = {
     method: String,
@@ -31,9 +40,15 @@ Request = {
 # streaming body is produced by a function that the server runs in its own
 # task, sending chunks into a bounded channel (which gives backpressure);
 # `channel.send` returns False once the client has gone away.
+#
+# `Body.Upgrade f` (with status 101) switches the connection to another
+# protocol: after the response head, the server runs `f` with the
+# connection and the bytes it already read past the request, then closes
+# the connection (WebSocket is built on it: lib/websocket.fwp).
 Body =
     | Body.Full Bytes
     | Body.Stream (Channel[Bytes] -> () ! {Async, IO, Network, FileIO})
+    | Body.Upgrade (Conn -> Bytes -> () ! {Async, IO, Network, FileIO})
 
 Response = { status: I64, headers: List[(String, String)], body: Body }
 
@@ -52,6 +67,11 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
+    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
+    http2: Bool,
+    # compress responses of at least this many bytes with gzip (or
+    # deflate) for clients that accept it (`Accept-Encoding`)
+    compress: Option[I64],
     # the response to an error the server answers itself (a malformed
     # request, a body too large, a request timeout): its status and
     # message; `http.text` by default (REST servers answer JSON)
@@ -87,6 +107,8 @@ http.config = make ServerConfig {
     request-timeout = const 30s,
     shutdown-grace = const 5s,
     tls = const None,
+    http2 = const True,
+    compress = const None,
     error-response = const http.text,
 }
 
@@ -442,23 +464,32 @@ http.serve = curry (fork http.serve-on (.0 | http.listen) id)
 
 # listen on a config's address, with TLS if it has `tls`
 http.listen : ServerConfig -> Listener ! {Network, Error[IoError]}
-http.listen = fork http.listen-with .tls .addr
+http.listen = fork http.listen-with (both .tls .http2) .addr
 
 # internal
-http.listen-with : Option[TlsServer] -> String -> Listener ! {Network, Error[IoError]}
+http.listen-with : (Option[TlsServer], Bool) -> String -> Listener ! {Network, Error[IoError]}
 http.listen-with = curry (match
-    (None, _) -> tcp.listen
-    (Some _, _) -> http.tls-server | tls.listen)
+    ((None, _), _) -> curry (.1 | tcp.listen)
+    ((Some _, _), _) -> curry3 (fork
+        apply
+        .2
+        (both .0 .1 | uncurry http.tls-server-for | tls.listen)))
 
-# a TLS server that offers HTTP/1.1 with ALPN
+# a TLS server that offers HTTP/2 and HTTP/1.1 with ALPN, preferring
+# HTTP/2
 # internal
 http.tls-server : TlsServer -> TlsServer
-http.tls-server = make TlsServer {
-    cert-file = .cert-file,
-    key-file = .key-file,
-    alpn = const ["http/1.1"],
-    client-ca = .client-ca,
-}
+http.tls-server = flip http.tls-server-for True
+
+# a TLS server that offers HTTP/2 (unless not `http2`) and HTTP/1.1
+# internal
+http.tls-server-for : TlsServer -> Bool -> TlsServer
+http.tls-server-for = curry (make TlsServer {
+    cert-file = .0 | .cert-file,
+    key-file = .0 | .key-file,
+    alpn = .1 | if id (const ["h2", "http/1.1"]) (const ["http/1.1"]),
+    client-ca = .0 | .client-ca,
+})
 
 # Serve on a listener (for example one bound to port 0; a listener from
 # `tls.listen` serves HTTPS).
@@ -672,9 +703,21 @@ http.error-of =
         (both .0 (.1 | .1))
         (.1 | .0 | .server | .config | .error-response | uncurry)
 
+# HTTP/2's connection preface starts like a request head
 # internal
 http.on-request : Bytes -> ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.on-request = curry (fork http.on-parsed .1 (.0 | http.parse-request-head))
+http.on-request = curry (if
+    (fork and (.0 | eq http.preface-head) (.1 | .server | .config | .http2))
+    (.1 | http.serve-h2)
+    (fork http.on-parsed .1 (.0 | http.parse-request-head)))
+
+# internal
+http.preface-head : Bytes
+http.preface-head = "PRI * HTTP/2.0" | string.to-bytes
+
+# internal
+http.preface-start : Bytes
+http.preface-start = "PRI * HTTP/2.0\r\n\r\n" | string.to-bytes
 
 # internal
 http.on-parsed : ConnState -> Result[(String, String, String, List[(String, String)]), String] -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
@@ -830,29 +873,74 @@ http.keep-alive =
 # internal
 http.exchange : Exchange -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
 http.exchange =
-    tap (make Out {
-        conn = .st | .conn,
-        keep = .keep,
-        head-only = .request | .method | eq "HEAD",
-        response = http.run-handler,
-        timeout = .st | .server | .config | .write-timeout,
-    } | http.write-out)
-    | if .keep (.st | http.next-served | Again) (const (Stop ()))
+    fork http.exchanged id (fork http.answer (.st | .server) .request)
+
+# internal
+http.exchanged : Exchange -> Response -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
+http.exchanged = curry (tap (http.out-of | http.write-out)
+    | if
+        (.1 | .body | http.is-upgrade)
+        (fork http.upgrade-with (.1 | .body) (.0 | .st) | const (Stop ()))
+        (.0 | if .keep (.st | http.next-served | Again) (const (Stop ()))))
+
+# internal
+http.out-of : (Exchange, Response) -> Out
+http.out-of = make Out {
+    conn = .0 | .st | .conn,
+    keep = .0 | .keep,
+    head-only = .0 | .request | .method | eq "HEAD",
+    response = .1,
+    timeout = .0 | .st | .server | .config | .write-timeout,
+}
+
+# internal
+http.is-upgrade : Body -> Bool
+http.is-upgrade = match
+    Body.Upgrade _ -> const True
+    _ -> const False
+
+# run the protocol a connection switched to
+# internal
+http.upgrade-with : Body -> ConnState -> () ! {Async, IO, Network, FileIO}
+http.upgrade-with = curry (match
+    (Body.Upgrade _, _) ->
+        curry (fork apply (both (.1 | .conn) (.1 | .buffer)) (.0 | uncurry))
+    _ -> const ())
+
+# the response to a request: its body decoded (`content-encoding`), the
+# handler run, and the response compressed when the config says so
+# internal
+http.answer : Server -> Request -> Response ! {Async}
+http.answer = curry (fork
+    http.compressing
+    (both (.0 | .config | .compress) .1)
+    (fork
+        http.decoded-or
+        .0
+        (fork http.decode-request (.0 | .config | .max-body-bytes) .1)))
+
+# internal
+http.decoded-or : Server -> Result[Request, (I64, String)] -> Response ! {Async}
+http.decoded-or = curry (match
+    (_, Ok _) -> http.run-handler
+    (_, Err _) -> http.error-response-of)
+
+# the server's response to an error: status and message
+# internal
+http.error-response-of : Server -> (I64, String) -> Response
+http.error-response-of =
+    curry (fork apply .1 (.0 | .config | .error-response | uncurry))
 
 # the handler in its own task, with the request timeout
 # internal
-http.run-handler : Exchange -> Response ! {Async}
-http.run-handler =
-    fork
-        http.outcome
-        (.st | .server | .config | .error-response)
-        (fork
-            task.within
-            (.st | .server | .config | .request-timeout)
-            (fork
-                compose
-                (.request | const)
-                (.st | .server | .handler | attempt)))
+http.run-handler : Server -> Request -> Response ! {Async}
+http.run-handler = curry (fork
+    http.outcome
+    (.0 | .config | .error-response)
+    (fork
+        task.within
+        (.0 | .config | .request-timeout)
+        (fork compose (.1 | const) (.0 | .handler | attempt))))
 
 # internal
 http.outcome : (I64 -> String -> Response) -> Option[Result[Response, HttpError]] -> Response
@@ -919,7 +1007,8 @@ http.send-body = curry (match
             (if (.0 | .head-only) (const http.no-bytes) .1)
             (.0 | http.head-bytes)))
     (_, Body.Stream _) -> curry (tap (fork http.put .0 (.0 | http.head-bytes))
-        | if (.0 | .head-only) (const ()) http.stream-body))
+        | if (.0 | .head-only) (const ()) http.stream-body)
+    (_, Body.Upgrade _) -> curry (fork http.put .0 (.0 | http.head-bytes)))
 
 # internal
 http.stream-body : (Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, Network, Error[IoError]}
@@ -995,9 +1084,12 @@ http.head-parts = [
     .response | .headers | map (format "{}: {}\r\n") | join "",
     .response | .body | http.framing,
     if
-        .keep
-        (const "connection: keep-alive\r\n")
-        (const "connection: close\r\n"),
+        (.response | .body | http.is-upgrade)
+        (const "")
+        (if
+            .keep
+            (const "connection: keep-alive\r\n")
+            (const "connection: close\r\n")),
     const "\r\n",
 ]
 
@@ -1006,6 +1098,426 @@ http.framing : Body -> String
 http.framing = match
     Body.Full _ -> bytes.length | format "content-length: {}\r\n"
     Body.Stream _ -> const "transfer-encoding: chunked\r\n"
+    Body.Upgrade _ -> const ""
+
+# ------------------------------------------------------------- compression
+
+# gzip (RFC 1952) and the zlib format of HTTP's `deflate` content coding
+# (RFC 1950), written from scratch; `-max` decompression gives up past
+# that many bytes (a guard against decompression bombs)
+foreign "fwp" gzip.compress : Bytes -> Bytes = "zlib.gzip"
+foreign "fwp" gzip.decompress-max : I64 -> Bytes -> Result[Bytes, String] = "zlib.gunzip"
+foreign "fwp" deflate.compress : Bytes -> Bytes = "zlib.deflate"
+# the zlib format, or raw DEFLATE (which some servers send)
+foreign "fwp" deflate.decompress-max : I64 -> Bytes -> Result[Bytes, String] = "zlib.inflate"
+
+# decompress up to 64 MiB
+gzip.decompress : Bytes -> Result[Bytes, String]
+gzip.decompress = gzip.decompress-max 67108864
+
+deflate.decompress : Bytes -> Result[Bytes, String]
+deflate.decompress = deflate.decompress-max 67108864
+
+# compress a handler's responses whose bodies have at least `min` bytes,
+# with gzip or deflate, for clients that accept it (`Accept-Encoding`);
+# streamed bodies, responses with a content encoding of their own and
+# already compressed types (images, video, audio, archives) are left as
+# they are
+http.compress : I64 -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+http.compress =
+    curry3 (fork http.compressing (both (.0 | Some) .2) (fork apply .2 .1))
+
+# internal
+http.compressing : (Option[I64], Request) -> Response -> Response
+http.compressing = curry (fork http.encode-response http.coding-for .1)
+
+# the coding to compress a response with ("" for none)
+# internal
+http.coding-for : ((Option[I64], Request), Response) -> String
+http.coding-for =
+    if http.should-compress (.0 | .1 | http.preferred-coding) (const "")
+
+# internal
+http.should-compress : ((Option[I64], Request), Response) -> Bool
+http.should-compress =
+    fork
+        and
+        (fork
+            and
+            (.0 | .0 | option.is-some)
+            (fork
+                ge
+                (.0 | .0 | option.unwrap-or 0)
+                (.1 | .body | http.full-length)))
+        (.1 | http.compressible)
+
+# internal
+http.full-length : Body -> I64
+http.full-length = match
+    Body.Full _ -> bytes.length
+    _ -> const -1
+
+# internal
+http.compressible : Response -> Bool
+http.compressible =
+    fork
+        and
+        (.status | fork and (ge 200) (fork and (ne 204) (ne 304)))
+        (fork
+            and
+            (.headers
+                | map (first lower)
+                | json.lookup "content-encoding"
+                | option.is-none)
+            (.headers
+                | map (first lower)
+                | json.lookup "content-type"
+                | option.unwrap-or ""
+                | lower
+                | http.compressible-type))
+
+# internal
+http.compressible-type : String -> Bool
+http.compressible-type =
+    fork
+        or
+        (starts-with "image/svg")
+        (fork
+                any
+                (flip starts-with)
+                (const [
+                    "image/",
+                    "video/",
+                    "audio/",
+                    "font/woff",
+                    "application/zip",
+                    "application/gzip",
+                    "application/x-gzip",
+                ])
+            | not)
+
+# gzip if the client accepts it, else deflate, else ""
+# internal
+http.preferred-coding : Request -> String
+http.preferred-coding =
+    http.accepted-codings
+    | if
+        (fork or (contains "gzip") (contains "*"))
+        (const "gzip")
+        (if (contains "deflate") (const "deflate") (const ""))
+
+# the codings of `accept-encoding` headers, but those with `q=0`
+# internal
+http.accepted-codings : Request -> List[String]
+http.accepted-codings =
+    .headers
+    | filter (.0 | lower | eq "accept-encoding")
+    | list.flat-map (.1 | split ",")
+    | filter http.coding-allowed
+    | map (split ";" | head | option.unwrap-or "" | trim | lower)
+
+# internal
+http.coding-allowed : String -> Bool
+http.coding-allowed =
+    split ";"
+    | drop 1
+    | any (trim
+        | lower
+        | flip contains ["q=0", "q=0.", "q=0.0", "q=0.00", "q=0.000"])
+    | not
+
+# internal
+http.encode-response : String -> Response -> Response
+http.encode-response = curry (match
+    ("gzip", _) -> http.encoded "gzip" gzip.compress
+    ("deflate", _) -> http.encoded "deflate" deflate.compress
+    _ -> .1)
+
+# internal
+http.encoded : String -> (Bytes -> Bytes) -> Response -> Response
+http.encoded = curry3 (make Response {
+    status = .2 | .status,
+    headers =
+        fork
+            Cons
+            (.0 | curry id "content-encoding")
+            (fork
+                Cons
+                (const ("vary", "accept-encoding"))
+                (.2 | .headers | filter (.0 | lower | ne "content-length"))),
+    body = fork http.map-full .1 (.2 | .body),
+})
+
+# internal
+http.map-full : (Bytes -> Bytes) -> Body -> Body
+http.map-full = curry (match
+    (_, Body.Full _) -> then2 (flip apply) Body.Full
+    _ -> .1)
+
+# a request whose body is decoded by its `content-encoding` (gzip or
+# deflate), up to `max` bytes; the status and message of an error
+# response otherwise
+# internal
+http.decode-request : I64 -> Request -> Result[Request, (I64, String)]
+http.decode-request = curry (fork
+    http.decode-with
+    (.1
+        | http.header "content-encoding"
+        | option.map (trim | lower)
+        | option.unwrap-or "identity")
+    id)
+
+# internal
+http.decode-with : String -> (I64, Request) -> Result[Request, (I64, String)]
+http.decode-with = curry (match
+    ("identity", _) -> .1 | Ok
+    ("gzip", _) -> http.decode-body gzip.decompress-max
+    ("x-gzip", _) -> http.decode-body gzip.decompress-max
+    ("deflate", _) -> http.decode-body deflate.decompress-max
+    _ -> const (Err (415, "unsupported content encoding")))
+
+# internal
+http.decode-body : (I64 -> Bytes -> Result[Bytes, String]) -> (I64, Request) -> Result[Request, (I64, String)]
+http.decode-body = curry (fork
+    http.decoded-body
+    (.1 | .1)
+    (fork apply (.1 | .1 | .body) (fork apply (.1 | .0) .0)))
+
+# internal
+http.decoded-body : Request -> Result[Bytes, String] -> Result[Request, (I64, String)]
+http.decoded-body = curry (match
+    (_, Ok _) -> curry (fork http.with-body .1 .0 | Ok)
+    (_, Err _) -> curry (.1
+        | if
+            (string.contains "too large")
+            (const (Err (413, "request body too large")))
+            (const (Err (400, "invalid compressed request body")))))
+
+# a request with this (decoded) body
+# internal
+http.with-body : Bytes -> Request -> Request
+http.with-body = curry (make Request {
+    method = .1 | .method,
+    path = .1 | .path,
+    query = .1 | .query,
+    version = .1 | .version,
+    headers =
+        .1
+        | .headers
+        | filter (.0 | fork and (ne "content-encoding") (ne "content-length")),
+    body = .0,
+    params = .1 | .params,
+    remote = .1 | .remote,
+})
+
+# ------------------------------------------------------------- HTTP/2
+
+# a request's stream on an HTTP/2 connection
+# internal
+H2Stream = builtin
+
+# serve an HTTP/2 connection (its first bytes; limits: max-header-bytes,
+# max-requests-per-connection, idle-timeout), running a function per stream
+# internal
+foreign "fwp" http._h2-serve : Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, IO, Network, FileIO} = "http2.serve"
+# (method, path, headers, remote address, the client's certificate)
+# internal
+foreign "fwp" http._h2-request : H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network} = "http2.request"
+# the request body: `Err` 413 (too large), 408 (too late) or 0 (gone)
+# internal
+foreign "fwp" http._h2-body : I64 -> Duration -> H2Stream -> Result[Bytes, I64] ! {Async, Network} = "http2.body"
+# internal
+foreign "fwp" http._h2-respond : I64 -> List[(String, String)] -> Bytes -> Bool -> H2Stream -> Bool ! {Async, Network} = "http2.respond"
+# internal
+foreign "fwp" http._h2-data : Bytes -> Bool -> H2Stream -> Bool ! {Async, Network} = "http2.data"
+# a request on the pooled connection of a key (made of the connection
+# given): (method, scheme, authority, path, headers, body) to (status,
+# headers, body)
+# internal
+foreign "fwp" http._h2-send : String -> Option[Conn] -> (String, String, String, String, List[(String, String)], Bytes) -> (I64, List[(String, String)], Bytes) ! {Async, Network, Error[IoError]} = "http2.send"
+# internal
+foreign "fwp" http._h2-pooled : String -> Bool ! {Network} = "http2.pooled"
+
+# the connection started with HTTP/2's preface: serve it
+# internal
+http.serve-h2 : ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO}
+http.serve-h2 =
+    tap (fork
+        apply
+        (.server | http.h2-stream)
+        (fork
+            apply
+            (make {
+                0 = .server | .config | .max-header-bytes,
+                1 = .server | .config | .max-requests-per-connection,
+                2 = .server | .config | .idle-timeout,
+            })
+            (fork
+                apply
+                (fork bytes.append .buffer (const http.preface-start))
+                (.conn | http._h2-serve))))
+    | const (Stop ())
+
+# internal
+H2Out = { stream: H2Stream, head-only: Bool, response: Response }
+
+# one stream: its request, the response
+# internal
+http.h2-stream : Server -> H2Stream -> () ! {Async, IO, Network, FileIO}
+http.h2-stream = curry (fork
+    http.h2-got
+    id
+    (fork
+        apply
+        .1
+        (fork
+            http._h2-body
+            (.0 | .config | .max-body-bytes)
+            (.0 | .config | .body-timeout))))
+
+# internal
+http.h2-got : (Server, H2Stream) -> Result[Bytes, I64] -> () ! {Async, IO, Network, FileIO}
+http.h2-got = curry (match
+    (_, Ok _) ->
+        curry (fork http.h2-answer .0 (fork http.h2-request-of (.0 | .1) .1))
+    (_, Err 0) -> const ()
+    (_, Err _) -> http.h2-error)
+
+# internal
+http.h2-error : (Server, H2Stream) -> I64 -> () ! {Async, IO, Network, FileIO}
+http.h2-error = curry (make H2Out {
+    stream = .0 | .1,
+    head-only = const False,
+    response =
+        fork
+            http.error-response-of
+            (.0 | .0)
+            (.1 | both id http.h2-error-message),
+} | http.h2-out)
+
+# internal
+http.h2-error-message : I64 -> String
+http.h2-error-message = match
+    413 -> "request body too large"
+    408 -> "request body timeout"
+    _ -> const "bad request"
+
+# internal
+http.h2-request-of : H2Stream -> Bytes -> Request ! {Network}
+http.h2-request-of =
+    curry (fork http.h2-request-from .1 (.0 | http._h2-request))
+
+# internal
+http.h2-request-from : Bytes -> (String, String, List[(String, String)], String, Option[String]) -> Request
+http.h2-request-from = curry (make Request {
+    method = .1 | .0,
+    path = .1 | .1 | http.path-of,
+    query =
+        .1 | .1 | string.split-once "?" | option.map .1 | option.unwrap-or "",
+    version = const "HTTP/2",
+    headers = .1 | .2,
+    body = .0,
+    params = .1 | .4 | option.map (curry id ":tls-peer") | option.to-list,
+    remote = .1 | .3,
+})
+
+# internal
+http.h2-answer : (Server, H2Stream) -> Request -> () ! {Async, IO, Network, FileIO}
+http.h2-answer = curry (make H2Out {
+    stream = .0 | .1,
+    head-only = .1 | .method | eq "HEAD",
+    response = fork http.answer (.0 | .0) .1,
+} | http.h2-out)
+
+# internal
+http.h2-out : H2Out -> () ! {Async, IO, Network, FileIO}
+http.h2-out = http.h2-checked | fork http.h2-send-body id (.response | .body)
+
+# internal
+http.h2-checked : H2Out -> H2Out
+http.h2-checked =
+    if
+        (.response | http.response-ok)
+        id
+        (make H2Out {
+            stream = .stream,
+            head-only = .head-only,
+            response = const (http.text 500 "invalid response header"),
+        })
+
+# internal
+http.h2-send-body : H2Out -> Body -> () ! {Async, IO, Network, FileIO}
+http.h2-send-body = curry (match
+    (_, Body.Full _) -> curry (fork
+            apply
+            (.0 | .stream)
+            (fork
+                apply
+                (const True)
+                (fork
+                    apply
+                    (if (.0 | .head-only) (const http.no-bytes) .1)
+                    (fork
+                        apply
+                        (fork
+                            Cons
+                            (.1
+                                | bytes.length
+                                | show
+                                | curry id "content-length")
+                            (.0 | .response | .headers))
+                        (.0 | .response | .status | http._h2-respond))))
+        | ignore)
+    (_, Body.Stream _) -> curry (tap (fork
+            apply
+            (.0 | .stream)
+            (fork
+                apply
+                (.0 | .head-only)
+                (fork
+                    apply
+                    (const http.no-bytes)
+                    (fork
+                        apply
+                        (.0 | .response | .headers)
+                        (.0 | .response | .status | http._h2-respond)))))
+        | if (.0 | .head-only) (const ()) http.h2-stream-body)
+    (_, Body.Upgrade _) -> curry (.0
+        | .stream
+        | http._h2-respond 501 [] http.no-bytes True
+        | ignore))
+
+# internal
+http.h2-stream-body : (H2Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, IO, Network, FileIO}
+http.h2-stream-body = fork http.h2-stream-start id (const 8 | channel.make)
+
+# internal
+http.h2-stream-start : (H2Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
+http.h2-stream-start = curry (fork
+    http.h2-stream-run
+    id
+    (fork spawn-with (.0 | .1 | http.closing) .1))
+
+# internal
+http.h2-stream-run : ((H2Out, Channel[Bytes] -> () ! {Async, IO, Network, FileIO}), Channel[Bytes]) -> Task[()] -> () ! {Async, Network}
+http.h2-stream-run = curry (tap
+        (both (.0 | .0 | .0 | .stream) (.0 | .1) | loop http.h2-chunk-step)
+    | tap (.0 | .1 | channel.close)
+    | .1
+    | task.cancel)
+
+# internal
+http.h2-chunk-step : (H2Stream, Channel[Bytes]) -> Step[(H2Stream, Channel[Bytes]), ()] ! {Async, Network}
+http.h2-chunk-step = fork http.h2-chunk-got id (.1 | channel.recv)
+
+# internal
+http.h2-chunk-got : (H2Stream, Channel[Bytes]) -> Option[Bytes] -> Step[(H2Stream, Channel[Bytes]), ()] ! {Async, Network}
+http.h2-chunk-got = curry (match
+    (_, None) -> .0 | http._h2-data http.no-bytes True | const (Stop ())
+    (_, Some _) -> curry (if
+        (fork apply (.0 | .0) (fork http._h2-data .1 (const False)))
+        (.0 | Again)
+        (const (Stop ()))))
 
 # ------------------------------------------------------------- client
 
@@ -1034,17 +1546,139 @@ http.post = curry (make ClientRequest {
     body = .1,
 } | http.send)
 
-# send a request (one connection per request) and read the whole response;
-# `https://` URLs are fetched over TLS, verifying the server's certificate
-# with the system's CA certificates
+# How the client speaks HTTP: `Auto` uses HTTP/2 when a TLS server
+# chooses it with ALPN (and HTTP/1.1 otherwise), `Http1` always HTTP/1.1,
+# and `Http2` always HTTP/2 (on cleartext connections with prior
+# knowledge: h2c).
+HttpVersion =
+    | HttpVersion.Auto
+    | HttpVersion.Http1
+    | HttpVersion.Http2
+
+# The client's options: TLS for `https://` URLs, the HTTP version, and
+# compression (the client sends `accept-encoding: gzip, deflate`, unless
+# the request has an `accept-encoding` of its own, and decompresses
+# responses with a `content-encoding` of gzip or deflate).
+ClientOptions = { tls: TlsOptions, version: HttpVersion, compression: Bool }
+
+# verify certificates with the system's CA certificates, HTTP/2 when the
+# server chooses it, compression
+http.client : ClientOptions
+http.client = ClientOptions {
+    tls = tls.options,
+    version = HttpVersion.Auto,
+    compression = True,
+}
+
+# send a request and read the whole response. `https://` URLs are fetched
+# over TLS, verifying the server's certificate with the system's CA
+# certificates; HTTP/2 connections (which TLS servers may choose) are kept
+# and reused for later requests to the same origin, HTTP/1.1 ones are not
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send = http.send-with tls.options
+http.send = http.send-using http.client
 
 # send a request, with these TLS options for `https://` URLs (for example
 # `tls.options | tls.with-ca "ca.pem"`)
 http.send-with : TlsOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send-with = curry (both .0 (.1 | http.check-request)
-    | fork http.send-to id (.1 | .url | url.parse | http.require-url))
+http.send-with = curry (fork http.send-using (.0 | http.client-tls) .1)
+
+# internal
+http.client-tls : TlsOptions -> ClientOptions
+http.client-tls = make ClientOptions {
+    tls = id,
+    version = const HttpVersion.Auto,
+    compression = const True,
+}
+
+# send a request with these options
+# (`http.client | with { version = HttpVersion.Http2 }`)
+http.send-using : ClientOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-using = curry (both .0 (fork
+        http.with-accept-encoding
+        (.0 | .compression)
+        (.1 | http.check-request))
+    | fork
+        http.received
+        (.0 | .compression)
+        (fork http.send-to id (.1 | .url | url.parse | http.require-url)))
+
+# internal
+http.with-accept-encoding : Bool -> ClientRequest -> ClientRequest
+http.with-accept-encoding = curry (if
+    (fork
+        and
+        .0
+        (.1 | .headers | any (.0 | lower | eq "accept-encoding") | not))
+    (.1
+        | make ClientRequest {
+            method = .method,
+            url = .url,
+            headers =
+                fork Cons (const ("accept-encoding", "gzip, deflate")) .headers,
+            body = .body,
+        })
+    .1)
+
+# internal
+http.received : Bool -> ClientResponse -> ClientResponse ! {Error[IoError]}
+http.received = curry (if
+    (fork and .0 (.1 | .body | bytes.length | gt 0))
+    (.1 | http.decode-response)
+    .1)
+
+# internal
+http.decode-response : ClientResponse -> ClientResponse ! {Error[IoError]}
+http.decode-response =
+    fork
+        http.decode-response-with
+        (.headers
+            | json.lookup "content-encoding"
+            | option.map (trim | lower)
+            | option.unwrap-or "identity")
+        id
+
+# internal
+http.decode-response-with : String -> ClientResponse -> ClientResponse ! {Error[IoError]}
+http.decode-response-with = curry (match
+    ("gzip", _) -> http.client-decoded gzip.decompress
+    ("x-gzip", _) -> http.client-decoded gzip.decompress
+    ("deflate", _) -> http.client-decoded deflate.decompress
+    _ -> .1)
+
+# internal
+http.client-decoded : (Bytes -> Result[Bytes, String]) -> ClientResponse -> ClientResponse ! {Error[IoError]}
+http.client-decoded = then2 http.client-decode http.require-decoded
+
+# internal
+http.client-decode : (Bytes -> Result[Bytes, String]) -> ClientResponse -> Result[ClientResponse, String]
+http.client-decode =
+    curry (fork http.with-decoded .1 (fork apply (.1 | .body) .0))
+
+# internal
+http.with-decoded : ClientResponse -> Result[Bytes, String] -> Result[ClientResponse, String]
+http.with-decoded = curry (match
+    (_, Ok _) -> then2 http.client-with-body Ok
+    (_, Err _) -> curry (.1 | Err))
+
+# internal
+http.require-decoded : Result[ClientResponse, String] -> ClientResponse ! {Error[IoError]}
+http.require-decoded = match
+    Ok -> id
+    Err ->
+        flip concat "invalid compressed response: "
+        | make IoError { kind = const "http", message = id }
+        | fail
+
+# internal
+http.client-with-body : ClientResponse -> Bytes -> ClientResponse
+http.client-with-body = curry (make ClientResponse {
+    status = .0 | .status,
+    headers =
+        .0
+        | .headers
+        | filter (.0 | fork and (ne "content-encoding") (ne "content-length")),
+    body = .1,
+})
 
 # refuse a method or header that would not make one well-formed request
 # (URLs with spaces or control characters do not parse)
@@ -1066,35 +1700,107 @@ http.require-url = match
     Some _ -> id
     None -> fail { kind = "url", message = "invalid URL" }
 
+# a pooled HTTP/2 connection to the origin, or a new connection
 # internal
-http.send-to : (TlsOptions, ClientRequest) -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
-http.send-to = curry (both (both (.0 | .1) .1) http.open
-    | tap (fork tcp.write (.0 | http.request-bytes) .1)
-    | both (.1 | http.read-all) (.1 | tcp.close)
-    | .0
-    | http.parse-client)
+http.send-to : (ClientOptions, ClientRequest) -> Url -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-to = curry (if
+    (fork
+        and
+        (.0 | .0 | .version | http.not-http1)
+        (http.pool-key | http._h2-pooled))
+    (fork http.h2-exchange id (const None))
+    (fork http.send-on id http.connect))
 
-# connect to a URL's server: with TLS for https, offering HTTP/1.1
 # internal
-http.open : ((TlsOptions, ClientRequest), Url) -> Conn ! {Async, Network, Error[IoError]}
-http.open =
+http.not-http1 : HttpVersion -> Bool
+http.not-http1 = match
+    HttpVersion.Http1 -> False
+    _ -> const True
+
+# connect to a URL's server: with TLS for https, offering HTTP/2 and
+# HTTP/1.1 (by the version) with ALPN
+# internal
+http.connect : ((ClientOptions, ClientRequest), Url) -> Conn ! {Async, Network, Error[IoError]}
+http.connect =
     if
         (.1 | .scheme | eq "https")
         (fork
             apply
             (.1 | http.host-port)
-            (.0 | .0 | http.tls-client | tls.connect-with))
+            (both (.0 | .0 | .tls) (.0 | .0 | .version)
+                | uncurry http.tls-client
+                | tls.connect-with))
         (.1 | http.host-port | tcp.connect)
 
 # internal
-http.tls-client : TlsOptions -> TlsOptions
-http.tls-client = make TlsOptions {
-    ca-file = .ca-file,
-    insecure = .insecure,
-    server-name = .server-name,
-    alpn = const ["http/1.1"],
-    cert-file = .cert-file,
-    key-file = .key-file,
+http.tls-client : TlsOptions -> HttpVersion -> TlsOptions
+http.tls-client = curry (make TlsOptions {
+    ca-file = .0 | .ca-file,
+    insecure = .0 | .insecure,
+    server-name = .0 | .server-name,
+    alpn = .1 | http.alpn-of,
+    cert-file = .0 | .cert-file,
+    key-file = .0 | .key-file,
+})
+
+# internal
+http.alpn-of : HttpVersion -> List[String]
+http.alpn-of = match
+    HttpVersion.Auto -> ["h2", "http/1.1"]
+    HttpVersion.Http1 -> ["http/1.1"]
+    HttpVersion.Http2 -> ["h2"]
+
+# internal
+http.send-on : ((ClientOptions, ClientRequest), Url) -> Conn -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-on = curry (if
+    (fork http.speaks-h2 (.0 | .0 | .0 | .version) .1)
+    (fork http.h2-exchange .0 (.1 | Some))
+    http.send-h1)
+
+# internal
+http.speaks-h2 : HttpVersion -> Conn -> Bool ! {Network}
+http.speaks-h2 = curry (match
+    (HttpVersion.Auto, _) -> tls.alpn | eq "h2"
+    (HttpVersion.Http1, _) -> const False
+    (HttpVersion.Http2, _) -> const True)
+
+# HTTP/1.1: one connection per request
+# internal
+http.send-h1 : (((ClientOptions, ClientRequest), Url), Conn) -> ClientResponse ! {Async, Network, Error[IoError]}
+http.send-h1 =
+    tap (fork tcp.write (both (.0 | .0 | .1) (.0 | .1) | http.request-bytes) .1)
+    | both (.1 | http.read-all) (.1 | tcp.close)
+    | .0
+    | http.parse-client
+
+# the pool's key of an origin's connections (with the TLS options)
+# internal
+http.pool-key : ((ClientOptions, ClientRequest), Url) -> String
+http.pool-key = make {
+    0 = .1 | .scheme,
+    1 = .1 | http.host-port,
+    2 = .0 | .0 | .tls | show,
+} | format "{}://{} {}"
+
+# HTTP/2: a request on the origin's pooled connection (made of `conn`,
+# when given)
+# internal
+http.h2-exchange : ((ClientOptions, ClientRequest), Url) -> Option[Conn] -> ClientResponse ! {Async, Network, Error[IoError]}
+http.h2-exchange = curry (fork
+        apply
+        (.0 | http.h2-request)
+        (fork apply .1 (.0 | http.pool-key | http._h2-send))
+    | make ClientResponse { status = .0, headers = .1, body = .2 })
+
+# internal
+http.h2-request : ((ClientOptions, ClientRequest), Url) -> (String, String, String, String, List[(String, String)], Bytes)
+http.h2-request = make {
+    0 = .0 | .1 | .method,
+    1 = .1 | .scheme,
+    2 = .1 | http.host-header,
+    3 = .1 | http.target-of,
+    4 = .0 | .1 | .headers | Cons ("user-agent", "fwp"),
+    5 = .0 | .1 | .body,
 }
 
 # internal

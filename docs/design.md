@@ -144,7 +144,7 @@ error. See [protocol.md](protocol.md).
 
 | Output | How |
 |---|---|
-| executable | C compiled and linked with the runtime; the reachable standard library is included. Programs whose reachable code uses TLS (a `tls.*` primitive) or services also get `runtime/fwp_rt_tls.c` and are linked with `-lssl -lcrypto`; the interpreter reaches the same OpenSSL through `dlopen` (`src/tls.rs`), so the compiler links no TLS library. See [tls.md](tls.md) |
+| executable | C compiled and linked with the runtime; the reachable standard library is included. Programs whose reachable code uses TLS (a `tls.*` primitive) or services also get `runtime/fwp_rt_tls.c` and are linked with `-lssl -lcrypto`; the interpreter reaches the same OpenSSL through `dlopen` (`src/tls.rs`), so the compiler links no TLS library. See [tls.md](tls.md). Programs that serve or send HTTP (HTTP/2, compression, WebSocket frames: `http2.*`, `zlib.*` and `ws.*` primitives) also get the HTTP/2 runtime of gRPC (`fwp_rt_h2.c`, `fwp_rt_grpc.c`) and `runtime/fwp_rt_http2.c` |
 | `--fn f` | the exported function `f` as a standalone executable |
 | `--cli` | every exported function as a subcommand of one executable. `src/cli.rs` computes the command line of each function (flags from an options record, positional arguments, defaults evaluated with the interpreter at build time) and its help and usage texts once; the C runtime (`runtime/fwp_rt_exec.c`) gets them as static data and parses arguments with the same rules as `src/exec.rs`. See [cli.md](cli.md) |
 | `--rest` | every exported function as an endpoint of one HTTP server. `src/rest.rs` computes the endpoints from the types and doc comments (routes, where each argument comes from, statuses) and `src/openapi.rs` the OpenAPI document; the file is then compiled again with a generated `main` (`Roots::entry`) that serves `rest.endpoint`s of `lib/rest.fwp` over the HTTP server of `lib/http.fwp`, with authentication (`rest.secured` and the file's `authenticate`, compiled by name: `Roots::names`), time limits, CORS and an HTML page of the document, all in fwp. Arguments and results go through the typed JSON codec (`json.read`, `json.write`), a primitive written twice: `src/jsontype.rs` over types, `runtime/fwp_rt_json.c` over type descriptors. See [rest.md](rest.md) |
@@ -157,13 +157,14 @@ error. See [protocol.md](protocol.md).
 
 ## Not implemented
 
-- HTTP/3, WebSocket, and compression outside gRPC (which has gzip, with
-  DEFLATE of its own). REST endpoints take JSON bodies only (no content
-  negotiation or forms; headers and cookies are parameters), and
-  `fwp openapi --import` reads JSON documents of OpenAPI 3.0 and 3.1, not
-  YAML or Swagger 2.0 (`fwp openapi --yaml` writes YAML). HTTP/2 exists
-  only as the gRPC transport of [gRPC services](grpc.md) (h2c, or over
-  TLS).
+- HTTP/3; the HTTP/1.1 `Upgrade: h2c` handshake, HTTP/2 server push and
+  WebSocket over HTTP/2 (RFC 8441); WebSocket subprotocols and extensions
+  (permessage-deflate); compression of streamed responses, and content
+  codings other than gzip and deflate. REST endpoints take JSON bodies
+  only (no content negotiation or forms; headers and cookies are
+  parameters), and `fwp openapi --import` reads JSON documents of
+  OpenAPI 3.0 and 3.1, not YAML or Swagger 2.0 (`fwp openapi --yaml`
+  writes YAML).
 - TLS of fwp's own: TLS uses the system's OpenSSL 3 ([tls.md](tls.md)),
   which native programs that use it link and the interpreter loads at run
   time, with client certificates (mutual TLS). DTLS and QUIC are not

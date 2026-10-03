@@ -19,6 +19,7 @@ Every module is available without an import.
 - [Networking](#networking)
 - [TLS](#tls)
 - [HTTP](#http)
+- [WebSocket](#websocket)
 - [JSON](#json)
 - [REST endpoints and clients](#rest-endpoints-and-clients)
 - [gRPC](#grpc)
@@ -1094,7 +1095,7 @@ tls.listen : TlsServer -> String -> Listener ! {Network, Error[IoError]}
 
 `lib/http.fwp`
 
-HTTP/1.1 server and client.
+HTTP/1.1 and HTTP/2 server and client.
 
 A handler is an ordinary function `Request -> Response`, and middleware is
 ordinary composition:
@@ -1112,6 +1113,15 @@ With `tls` in its config the server speaks HTTPS, and the client speaks
 HTTPS to `https://` URLs (lib/tls.fwp): the same code runs over TLS
 connections, which are `Conn`s too.
 
+The server also speaks HTTP/2: over TLS when the client chooses "h2"
+with ALPN, and on cleartext connections that start with HTTP/2's
+connection preface (h2c with prior knowledge). Every stream runs in its
+own task, with the same handler, limits and timeouts. The client uses
+HTTP/2 when a TLS server chooses it, pooling one connection per origin.
+Responses can be compressed (`compress` in the config, or the
+`http.compress` middleware), request bodies with a content encoding
+are decompressed, and the client decompresses responses.
+
 ```fwp
 Request = {
     method: String,
@@ -1128,9 +1138,15 @@ Request = {
 # streaming body is produced by a function that the server runs in its own
 # task, sending chunks into a bounded channel (which gives backpressure);
 # `channel.send` returns False once the client has gone away.
+#
+# `Body.Upgrade f` (with status 101) switches the connection to another
+# protocol: after the response head, the server runs `f` with the
+# connection and the bytes it already read past the request, then closes
+# the connection (WebSocket is built on it: lib/websocket.fwp).
 Body =
     | Body.Full Bytes
     | Body.Stream (Channel[Bytes] -> () ! {Async, IO, Network, FileIO})
+    | Body.Upgrade (Conn -> Bytes -> () ! {Async, IO, Network, FileIO})
 Response = { status: I64, headers: List[(String, String)], body: Body }
 HttpError = { status: I64, message: String }
 
@@ -1147,6 +1163,11 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
+    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
+    http2: Bool,
+    # compress responses of at least this many bytes with gzip (or
+    # deflate) for clients that accept it (`Accept-Encoding`)
+    compress: Option[I64],
     # the response to an error the server answers itself (a malformed
     # request, a body too large, a request timeout): its status and
     # message; `http.text` by default (REST servers answer JSON)
@@ -1225,6 +1246,27 @@ http.listen : ServerConfig -> Listener ! {Network, Error[IoError]}
 # `tls.listen` serves HTTPS).
 http.serve-on : Listener -> (ServerConfig, Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> () ! {Async, IO, Network}
 
+# gzip (RFC 1952) and the zlib format of HTTP's `deflate` content coding
+# (RFC 1950), written from scratch; `-max` decompression gives up past
+# that many bytes (a guard against decompression bombs)
+gzip.compress : Bytes -> Bytes = "zlib.gzip"
+gzip.decompress-max : I64 -> Bytes -> Result[Bytes, String] = "zlib.gunzip"
+deflate.compress : Bytes -> Bytes = "zlib.deflate"
+
+# the zlib format, or raw DEFLATE (which some servers send)
+deflate.decompress-max : I64 -> Bytes -> Result[Bytes, String] = "zlib.inflate"
+
+# decompress up to 64 MiB
+gzip.decompress : Bytes -> Result[Bytes, String]
+deflate.decompress : Bytes -> Result[Bytes, String]
+
+# compress a handler's responses whose bodies have at least `min` bytes,
+# with gzip or deflate, for clients that accept it (`Accept-Encoding`);
+# streamed bodies, responses with a content encoding of their own and
+# already compressed types (images, video, audio, archives) are left as
+# they are
+http.compress : I64 -> (Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+
 ClientRequest = {
     method: String,
     url: String,
@@ -1235,14 +1277,107 @@ ClientResponse = { status: I64, headers: List[(String, String)], body: Bytes }
 http.get : String -> ClientResponse ! {Async, Network, Error[IoError]}
 http.post : String -> Bytes -> ClientResponse ! {Async, Network, Error[IoError]}
 
-# send a request (one connection per request) and read the whole response;
-# `https://` URLs are fetched over TLS, verifying the server's certificate
-# with the system's CA certificates
+# How the client speaks HTTP: `Auto` uses HTTP/2 when a TLS server
+# chooses it with ALPN (and HTTP/1.1 otherwise), `Http1` always HTTP/1.1,
+# and `Http2` always HTTP/2 (on cleartext connections with prior
+# knowledge: h2c).
+HttpVersion =
+    | HttpVersion.Auto
+    | HttpVersion.Http1
+    | HttpVersion.Http2
+
+# The client's options: TLS for `https://` URLs, the HTTP version, and
+# compression (the client sends `accept-encoding: gzip, deflate`, unless
+# the request has an `accept-encoding` of its own, and decompresses
+# responses with a `content-encoding` of gzip or deflate).
+ClientOptions = { tls: TlsOptions, version: HttpVersion, compression: Bool }
+
+# verify certificates with the system's CA certificates, HTTP/2 when the
+# server chooses it, compression
+http.client : ClientOptions
+
+# send a request and read the whole response. `https://` URLs are fetched
+# over TLS, verifying the server's certificate with the system's CA
+# certificates; HTTP/2 connections (which TLS servers may choose) are kept
+# and reused for later requests to the same origin, HTTP/1.1 ones are not
 http.send : ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
 
 # send a request, with these TLS options for `https://` URLs (for example
 # `tls.options | tls.with-ca "ca.pem"`)
 http.send-with : TlsOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+
+# send a request with these options
+# (`http.client | with { version = HttpVersion.Http2 }`)
+http.send-using : ClientOptions -> ClientRequest -> ClientResponse ! {Async, Network, Error[IoError]}
+```
+
+## WebSocket
+
+`lib/websocket.fwp`
+
+WebSocket (RFC 6455): servers upgrade HTTP/1.1 requests
+(`http.websocket`), and clients connect to `ws://` and `wss://` URLs
+(`ws.connect`).
+
+A session is a pair of channels. Messages from the peer arrive on
+`incoming`, which ends with a `WsMessage.Close` (the peer's code and
+reason, or the code of the failure that ended the session) and is then
+closed; messages sent on `outgoing` go to the peer. Closing `outgoing`
+(`ws.close`), or sending a `WsMessage.Close`, starts the closing
+handshake, which the peer has `close-timeout` to finish. Pings are
+answered with pongs, fragmented messages are reassembled, a client masks
+its frames, and a message larger than `max-message-bytes` ends the
+session with the code 1009 (1002 for frames that break the protocol,
+1007 for text that is not UTF-8).
+
+```fwp
+WsMessage =
+    | WsMessage.Text String
+    | WsMessage.Binary Bytes
+    | WsMessage.Ping Bytes
+    | WsMessage.Pong Bytes
+    | WsMessage.Close I64 String
+
+# `done` finishes when the session is over and its connection closed
+WebSocket = {
+    incoming: Channel[WsMessage],
+    outgoing: Channel[WsMessage],
+    done: Task[()],
+}
+
+# the largest message, the time the peer has to answer a close, and the
+# capacity of each channel
+WsConfig = { max-message-bytes: I64, close-timeout: Duration, queue: I64 }
+ws.config : WsConfig
+
+# send a message; `False` once the session is closing
+ws.send : WsMessage -> WebSocket -> Bool ! {Async}
+ws.send-text : String -> WebSocket -> Bool ! {Async}
+
+# the next message; `None` once the session is over
+ws.recv : WebSocket -> Option[WsMessage] ! {Async}
+
+# close the session (code 1000)
+ws.close : WebSocket -> () ! {Async}
+
+# close the session with a code and a reason
+ws.close-with : I64 -> String -> WebSocket -> () ! {Async}
+
+# wait until the session is over
+ws.wait : WebSocket -> () ! {Async}
+
+# a handler that upgrades a request to a WebSocket session and runs `f`
+# with it (in the connection's task); when `f` returns, the session is
+# closed. Requests that are not upgrades get 400 (426 for another
+# WebSocket version).
+http.websocket : (WebSocket -> () ! {Async, IO, Network, FileIO}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+http.websocket-with : WsConfig -> (WebSocket -> () ! {Async, IO, Network, FileIO}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+
+# connect to a `ws://` or `wss://` URL
+ws.connect : String -> WebSocket ! {Async, Network, Error[IoError]}
+
+# connect with a config, and TLS options for `wss://` URLs
+ws.connect-with : WsConfig -> TlsOptions -> String -> WebSocket ! {Async, Network, Error[IoError]}
 ```
 
 ## JSON

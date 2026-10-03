@@ -1,0 +1,614 @@
+# WebSocket (RFC 6455): servers upgrade HTTP/1.1 requests
+# (`http.websocket`), and clients connect to `ws://` and `wss://` URLs
+# (`ws.connect`).
+#
+# A session is a pair of channels. Messages from the peer arrive on
+# `incoming`, which ends with a `WsMessage.Close` (the peer's code and
+# reason, or the code of the failure that ended the session) and is then
+# closed; messages sent on `outgoing` go to the peer. Closing `outgoing`
+# (`ws.close`), or sending a `WsMessage.Close`, starts the closing
+# handshake, which the peer has `close-timeout` to finish. Pings are
+# answered with pongs, fragmented messages are reassembled, a client masks
+# its frames, and a message larger than `max-message-bytes` ends the
+# session with the code 1009 (1002 for frames that break the protocol,
+# 1007 for text that is not UTF-8).
+
+WsMessage =
+    | WsMessage.Text String
+    | WsMessage.Binary Bytes
+    | WsMessage.Ping Bytes
+    | WsMessage.Pong Bytes
+    | WsMessage.Close I64 String
+
+# `done` finishes when the session is over and its connection closed
+WebSocket = {
+    incoming: Channel[WsMessage],
+    outgoing: Channel[WsMessage],
+    done: Task[()],
+}
+
+# the largest message, the time the peer has to answer a close, and the
+# capacity of each channel
+WsConfig = { max-message-bytes: I64, close-timeout: Duration, queue: I64 }
+
+ws.config : WsConfig
+ws.config =
+    WsConfig { max-message-bytes = 1048576, close-timeout = 5s, queue = 16 }
+
+# `Sec-WebSocket-Accept` for a `Sec-WebSocket-Key` (SHA-1 and base64)
+# internal
+foreign "fwp" ws._accept : String -> String = "ws.accept"
+# a fresh `Sec-WebSocket-Key`
+# internal
+foreign "fwp" ws._key : () -> String ! {Network} = "ws.key"
+# a complete frame: masked (with a fresh key), opcode, payload
+# internal
+foreign "fwp" ws._frame : Bool -> I64 -> Bytes -> Bytes = "ws.frame"
+# the first frame of a buffer from an offset, up to a payload size:
+# (bytes it took, or 0 when more are needed, or a negated close code; FIN;
+# opcode; masked; payload)
+# internal
+foreign "fwp" ws._parse : I64 -> I64 -> Bytes -> (I64, Bool, I64, Bool, Bytes) = "ws.parse"
+# internal
+foreign "fwp" ws._close-payload : I64 -> String -> Bytes = "ws.close-payload"
+# (code, reason) of a close frame: 1005 for none, -1 when invalid
+# internal
+foreign "fwp" ws._close-parse : Bytes -> (I64, String) = "ws.close-parse"
+
+# ------------------------------------------------------------- using
+
+# send a message; `False` once the session is closing
+ws.send : WsMessage -> WebSocket -> Bool ! {Async}
+ws.send = curry (fork channel.send (.1 | .outgoing) .0)
+
+ws.send-text : String -> WebSocket -> Bool ! {Async}
+ws.send-text = curry (fork channel.send (.1 | .outgoing) (.0 | WsMessage.Text))
+
+# the next message; `None` once the session is over
+ws.recv : WebSocket -> Option[WsMessage] ! {Async}
+ws.recv = .incoming | channel.recv
+
+# close the session (code 1000)
+ws.close : WebSocket -> () ! {Async}
+ws.close = .outgoing | channel.close
+
+# close the session with a code and a reason
+ws.close-with : I64 -> String -> WebSocket -> () ! {Async}
+ws.close-with = curry3 (fork
+        channel.send
+        (.2 | .outgoing)
+        (both .0 .1 | uncurry WsMessage.Close)
+    | ignore)
+
+# wait until the session is over
+ws.wait : WebSocket -> () ! {Async}
+ws.wait = .done | task.await | ignore
+
+# ------------------------------------------------------------- server
+
+# a handler that upgrades a request to a WebSocket session and runs `f`
+# with it (in the connection's task); when `f` returns, the session is
+# closed. Requests that are not upgrades get 400 (426 for another
+# WebSocket version).
+http.websocket : (WebSocket -> () ! {Async, IO, Network, FileIO}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+http.websocket = http.websocket-with ws.config
+
+http.websocket-with : WsConfig -> (WebSocket -> () ! {Async, IO, Network, FileIO}) -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+http.websocket-with = curry3 (if
+    (.2 | ws._upgrade-request)
+    (if
+        (.2 | http.header "sec-websocket-version" | eq (Some "13"))
+        ws._switching
+        (const "unsupported WebSocket version" | http.fail 426))
+    (const "expected a WebSocket upgrade request" | http.fail 400))
+
+# internal
+ws._upgrade-request : Request -> Bool
+ws._upgrade-request =
+    fork
+        and
+        (.method | eq "GET")
+        (fork
+            and
+            (http.header "upgrade"
+                | option.unwrap-or ""
+                | lower
+                | string.contains "websocket")
+            (fork
+                and
+                (http.header "connection"
+                    | option.unwrap-or ""
+                    | lower
+                    | string.contains "upgrade")
+                (http.header "sec-websocket-key" | option.is-some)))
+
+# internal
+ws._switching : (WsConfig, WebSocket -> () ! {Async, IO, Network, FileIO}, Request) -> Response
+ws._switching = make Response {
+    status = const 101,
+    headers =
+        .2
+        | http.header "sec-websocket-key"
+        | option.unwrap-or ""
+        | ws._accept
+        | curry id "sec-websocket-accept"
+        | flip Cons [("upgrade", "websocket"), ("connection", "Upgrade")],
+    body = both .0 .1 | ws._serve | Body.Upgrade,
+}
+
+# internal
+ws._serve : (WsConfig, WebSocket -> () ! {Async, IO, Network, FileIO}) -> Conn -> Bytes -> () ! {Async, IO, Network, FileIO}
+ws._serve = curry3 (fork
+    ws._run
+    (.0 | .1)
+    (make { 0 = .0 | .0, 1 = const False, 2 = .1, 3 = .2 } | ws._start))
+
+# internal
+ws._run : (WebSocket -> () ! {Async, IO, Network, FileIO}) -> WebSocket -> () ! {Async, IO, Network, FileIO}
+ws._run = curry (tap (fork apply .1 .0) | .1 | tap ws.close | ws.wait)
+
+# ------------------------------------------------------------- client
+
+# connect to a `ws://` or `wss://` URL
+ws.connect : String -> WebSocket ! {Async, Network, Error[IoError]}
+ws.connect = ws.connect-with ws.config tls.options
+
+# connect with a config, and TLS options for `wss://` URLs
+ws.connect-with : WsConfig -> TlsOptions -> String -> WebSocket ! {Async, Network, Error[IoError]}
+ws.connect-with = curry3 (fork
+    ws._dial
+    (both .0 .1)
+    (.2 | url.parse | http.require-url | ws._require-ws))
+
+# internal
+ws._require-ws : Url -> Url ! {Error[IoError]}
+ws._require-ws =
+    if
+        (.scheme | fork or (eq "ws") (eq "wss"))
+        id
+        (const { kind = "url", message = "not a ws:// or wss:// URL" } | fail)
+
+# internal
+WsDial = { config: WsConfig, url: Url, conn: Conn, key: String }
+
+# internal
+ws._dial : (WsConfig, TlsOptions) -> Url -> WebSocket ! {Async, Network, Error[IoError]}
+ws._dial = curry (make WsDial {
+    config = .0 | .0,
+    url = .1,
+    conn = ws._open,
+    key = const () | ws._key,
+} | ws._handshake)
+
+# internal
+ws._open : ((WsConfig, TlsOptions), Url) -> Conn ! {Async, Network, Error[IoError]}
+ws._open =
+    if
+        (.1 | .scheme | eq "wss")
+        (fork
+            apply
+            (.1 | http.host-port)
+            (.0 | .1 | flip http.tls-client HttpVersion.Http1 | tls.connect-with))
+        (.1 | http.host-port | tcp.connect)
+
+# internal
+ws._handshake : WsDial -> WebSocket ! {Async, Network, Error[IoError]}
+ws._handshake =
+    tap (fork tcp.write ws._request-bytes .conn)
+    | fork ws._answered id (.conn | ws._read-head)
+
+# internal
+ws._request-bytes : WsDial -> Bytes
+ws._request-bytes =
+    apply | flip map ws._request-parts | join "" | string.to-bytes
+
+# internal
+ws._request-parts : List[WsDial -> String]
+ws._request-parts = [
+    .url | http.target-of | format "GET {} HTTP/1.1\r\n",
+    .url | http.host-header | format "host: {}\r\n",
+    const
+        "upgrade: websocket\r\nconnection: Upgrade\r\nsec-websocket-version: 13\r\nuser-agent: fwp\r\n",
+    .key | format "sec-websocket-key: {}\r\n\r\n",
+]
+
+# the response head and the bytes after it
+# internal
+ws._read-head : Conn -> (Bytes, Bytes) ! {Async, Network, Error[IoError]}
+ws._read-head = both id (const http.no-bytes) | loop ws._head-step
+
+# internal
+ws._head-step : (Conn, Bytes) -> Step[(Conn, Bytes), (Bytes, Bytes)] ! {Async, Network, Error[IoError]}
+ws._head-step = fork ws._head-found id (.1 | bytes.find http.crlf2)
+
+# internal
+ws._head-found : (Conn, Bytes) -> Option[I64] -> Step[(Conn, Bytes), (Bytes, Bytes)] ! {Async, Network, Error[IoError]}
+ws._head-found = curry (match
+    (_, Some _) -> curry (both
+            (fork http.bytes-take .1 (.0 | .1))
+            (fork http.bytes-drop (.1 | add 4) (.0 | .1))
+        | Stop)
+    (_, None) -> ws._head-more)
+
+# internal
+ws._head-more : (Conn, Bytes) -> Step[(Conn, Bytes), (Bytes, Bytes)] ! {Async, Network, Error[IoError]}
+ws._head-more =
+    if
+        (.1 | bytes.length | gt 16384)
+        (const { kind = "websocket", message = "handshake response too large" }
+            | fail)
+        (fork ws._head-read id (.0 | tcp.read 65536))
+
+# internal
+ws._head-read : (Conn, Bytes) -> Bytes -> Step[(Conn, Bytes), (Bytes, Bytes)] ! {Error[IoError]}
+ws._head-read = curry (if
+    (.1 | bytes.length | eq 0)
+    (const {
+            kind = "websocket",
+            message = "connection closed during the handshake",
+        }
+        | fail)
+    (both (.0 | .0) (fork bytes.append .1 (.0 | .1)) | Again))
+
+# internal
+ws._answered : WsDial -> (Bytes, Bytes) -> WebSocket ! {Async, Network, Error[IoError]}
+ws._answered = curry (if
+    (fork ws._accepted-by (.0 | .key) (.1 | .0 | http.parse-response-head))
+    (make { 0 = .0 | .config, 1 = const True, 2 = .0 | .conn, 3 = .1 | .1 }
+        | ws._start)
+    (tap (.0 | .conn | tcp.close)
+        | .1
+        | .0
+        | http.parse-response-head
+        | ws._refused))
+
+# internal
+ws._accepted-by : String -> Result[(String, I64, String, List[(String, String)]), String] -> Bool
+ws._accepted-by = curry (match
+    (_, Ok _) -> curry (fork
+        and
+        (.1 | .1 | eq 101)
+        (fork
+            eq
+            (.0 | ws._accept | Some)
+            (.1 | .3 | json.lookup "sec-websocket-accept")))
+    _ -> const False)
+
+# internal
+ws._refused : Result[(String, I64, String, List[(String, String)]), String] -> WebSocket ! {Error[IoError]}
+ws._refused = match
+    Ok _ ->
+        .1
+        | format "handshake failed: status {}"
+        | make IoError { kind = const "websocket", message = id }
+        | fail
+    Err _ ->
+        flip concat "handshake failed: "
+        | make IoError { kind = const "websocket", message = id }
+        | fail
+
+# ------------------------------------------------------------- sessions
+
+# internal
+WsPeer = {
+    config: WsConfig,
+    client: Bool,
+    conn: Conn,
+    incoming: Channel[WsMessage],
+    outgoing: Channel[WsMessage],
+}
+
+# a session on a connection (config, client, connection, the bytes
+# already read): its reader, writer and supervisor tasks
+# internal
+ws._start : (WsConfig, Bool, Conn, Bytes) -> WebSocket ! {Async}
+ws._start = fork ws._started id (make WsPeer {
+    config = .0,
+    client = .1,
+    conn = .2,
+    incoming = .0 | .queue | channel.make,
+    outgoing = .0 | .queue | channel.make,
+})
+
+# internal
+ws._started : (WsConfig, Bool, Conn, Bytes) -> WsPeer -> WebSocket ! {Async}
+ws._started = curry (make WebSocket {
+    incoming = .1 | .incoming,
+    outgoing = .1 | .outgoing,
+    done = both .1 (.0 | .3) | spawn-with ws._supervise,
+})
+
+# wait for the writer (the session is closing), give the reader the close
+# timeout to see the peer's close, then close the connection
+# internal
+ws._supervise : (WsPeer, Bytes) -> () ! {Async, IO, Network, FileIO}
+ws._supervise = fork ws._supervised .0 (both
+    (spawn-with ws._read-loop)
+    (.0 | spawn-with ws._write-loop))
+
+# internal
+ws._supervised : WsPeer -> (Task[()], Task[()]) -> () ! {Async, IO, Network, FileIO}
+ws._supervised = curry (tap (.1 | .1 | task.await)
+    | tap (fork
+        task.within
+        (.0 | .config | .close-timeout)
+        (.1 | .0 | const | flip compose task.await))
+    | tap (.1 | .0 | task.cancel)
+    | tap (.0 | .incoming | channel.close)
+    | tap (.0 | .outgoing | channel.close)
+    | .0
+    | .conn
+    | tcp.close)
+
+# internal
+# what was read, the offset of what is not parsed yet, and the fragments
+# of a message so far
+# internal
+WsRead = { peer: WsPeer, buffer: Bytes, at: I64, frag: Option[(I64, Bytes)] }
+
+# internal
+WsFrame = { fin: Bool, opcode: I64, masked: Bool, payload: Bytes }
+
+# internal
+ws._read-loop : (WsPeer, Bytes) -> () ! {Async, IO, Network, FileIO}
+ws._read-loop =
+    make WsRead { peer = .0, buffer = .1, at = const 0, frag = const None }
+    | loop ws._read-step
+    | tap (.incoming | channel.close)
+    | .outgoing
+    | channel.close
+
+# internal
+ws._read-step : WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._read-step = fork ws._on-parse id (make {
+    0 = .peer | .config | .max-message-bytes,
+    1 = .at,
+    2 = .buffer,
+} | uncurry3 ws._parse)
+
+# internal
+ws._on-parse : WsRead -> (I64, Bool, I64, Bool, Bytes) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._on-parse = curry (if
+    (.1 | .0 | lt 0)
+    (fork ws._fail (.1 | .0 | mul -1) .0)
+    (if (.1 | .0 | eq 0) (.0 | ws._read-more) ws._on-frame))
+
+# internal
+ws._read-more : WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._read-more = fork ws._got-bytes id (.peer | .conn | attempt (tcp.read 65536))
+
+# internal
+ws._got-bytes : WsRead -> Result[Bytes, IoError] -> Step[WsRead, WsPeer]
+ws._got-bytes = curry (match
+    (_, Ok _) -> curry (if
+        (.1 | bytes.length | eq 0)
+        (.0 | .peer | Stop)
+        (fork
+                ws._with-buffer
+                (fork bytes.append .1 (.0 | fork http.bytes-drop .at .buffer))
+                .0
+            | Again))
+    (_, Err _) -> curry (.0 | .peer | Stop))
+
+# internal
+ws._with-buffer : Bytes -> WsRead -> WsRead
+ws._with-buffer = curry (make WsRead {
+    peer = .1 | .peer,
+    buffer = .0,
+    at = const 0,
+    frag = .1 | .frag,
+})
+
+# internal
+ws._advance : I64 -> WsRead -> WsRead
+ws._advance = curry (make WsRead {
+    peer = .1 | .peer,
+    buffer = .1 | .buffer,
+    at = fork add .0 (.1 | .at),
+    frag = .1 | .frag,
+})
+
+# internal
+ws._with-frag : Option[(I64, Bytes)] -> WsRead -> WsRead
+ws._with-frag = curry (make WsRead {
+    peer = .1 | .peer,
+    buffer = .1 | .buffer,
+    at = .1 | .at,
+    frag = .0,
+})
+
+# internal
+ws._on-frame : (WsRead, (I64, Bool, I64, Bool, Bytes)) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._on-frame =
+    fork
+        ws._dispatch
+        (fork ws._advance (.1 | .0) .0)
+        (.1 | make WsFrame { fin = .1, opcode = .2, masked = .3, payload = .4 })
+
+# a server's frames are masked, a client's are not
+# internal
+ws._dispatch : WsRead -> WsFrame -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._dispatch = curry (if
+    (fork eq (.1 | .masked) (.0 | .peer | .client | not))
+    (fork ws._by-opcode (.1 | .opcode) id)
+    (.0 | ws._fail 1002))
+
+# internal
+ws._by-opcode : I64 -> (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._by-opcode = curry (match
+    (1, _) -> ws._data
+    (2, _) -> ws._data
+    (0, _) -> ws._continuation
+    (8, _) -> ws._closed
+    (9, _) -> ws._ping
+    (10, _) -> .0 | Again
+    _ -> .1 | .0 | ws._fail 1002)
+
+# internal
+ws._data : (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._data =
+    if
+        (.0 | .frag | option.is-some)
+        (.0 | ws._fail 1002)
+        (if
+            (.1 | .fin)
+            (fork ws._deliver (both (.1 | .opcode) (.1 | .payload)) .0)
+            (fork ws._with-frag (.1 | both .opcode .payload | Some) .0 | Again))
+
+# internal
+ws._continuation : (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._continuation =
+    if
+        (.0 | .frag | option.is-none)
+        (.0 | ws._fail 1002)
+        (fork ws._continued (fork ws._joined (.0 | .frag) (.1 | .payload)) id)
+
+# internal
+ws._joined : Option[(I64, Bytes)] -> Bytes -> (I64, Bytes)
+ws._joined = curry (match
+    (Some _, _) -> curry (both (.0 | .0) (fork bytes.append .1 (.0 | .1)))
+    _ -> const (0, http.no-bytes))
+
+# internal
+ws._continued : (I64, Bytes) -> (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._continued = curry (if
+    (fork
+        gt
+        (.1 | .0 | .peer | .config | .max-message-bytes)
+        (.0 | .1 | bytes.length))
+    (.1 | .0 | ws._fail 1009)
+    (if
+        (.1 | .1 | .fin)
+        (fork ws._deliver .0 (.1 | .0 | ws._with-frag None))
+        (fork ws._with-frag (.0 | Some) (.1 | .0) | Again)))
+
+# internal
+ws._deliver : (I64, Bytes) -> WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._deliver = curry (fork ws._send-in (.0 | uncurry ws._message) .1)
+
+# a text message must be UTF-8
+# internal
+ws._message : I64 -> Bytes -> Option[WsMessage]
+ws._message = curry (if
+    (.0 | eq 1)
+    (.1 | string.from-bytes | option.map WsMessage.Text)
+    (.1 | WsMessage.Binary | Some))
+
+# internal
+ws._send-in : Option[WsMessage] -> WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._send-in = curry (match
+    (None, _) -> ws._fail 1007
+    (Some _, _) -> curry (tap (fork channel.send (.1 | .peer | .incoming) .0)
+        | .1
+        | ws._with-frag None
+        | Again))
+
+# the peer closes: deliver its close, answer it, stop reading
+# internal
+ws._closed : (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._closed = fork ws._close-got (.1 | .payload | ws._close-parse) .0
+
+# internal
+ws._close-got : (I64, String) -> WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._close-got = curry (if
+    (.0 | .0 | lt 0)
+    (.1 | ws._fail 1002)
+    (tap (fork
+            channel.send
+            (.1 | .peer | .incoming)
+            (.0 | uncurry WsMessage.Close))
+        | tap (fork
+            channel.send
+            (.1 | .peer | .outgoing)
+            (.0 | .0 | ws._close-message))
+        | .1
+        | .peer
+        | Stop))
+
+# end the session with a code: tell the peer and the user
+# internal
+ws._fail : I64 -> WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._fail = curry (tap
+        (fork channel.send (.1 | .peer | .outgoing) (.0 | ws._close-message))
+    | tap (fork channel.send (.1 | .peer | .incoming) (.0 | ws._close-message))
+    | .1
+    | .peer
+    | Stop)
+
+# internal
+ws._close-message : I64 -> WsMessage
+ws._close-message = both id (const "") | uncurry WsMessage.Close
+
+# internal
+ws._ping : (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._ping =
+    tap (fork
+        channel.send
+        (.0 | .peer | .outgoing)
+        (.1 | .payload | WsMessage.Pong))
+    | .0
+    | Again
+
+# the writer: messages from `outgoing` as frames, until a close
+# internal
+ws._write-loop : WsPeer -> () ! {Async, IO, Network, FileIO}
+ws._write-loop = tap (loop ws._write-step) | .outgoing | channel.close
+
+# internal
+ws._write-step : WsPeer -> Step[WsPeer, ()] ! {Async, Network}
+ws._write-step = fork ws._write-got id (.outgoing | channel.recv)
+
+# internal
+ws._write-got : WsPeer -> Option[WsMessage] -> Step[WsPeer, ()] ! {Async, Network}
+ws._write-got = curry (match
+    (_, None) -> flip ws._put (ws._close-message 1000) | const (Stop ())
+    (_, Some _) -> curry (if
+        (.1 | ws._is-close)
+        (fork ws._put .0 .1 | const (Stop ()))
+        (fork ws._wrote .0 (fork ws._put .0 .1))))
+
+# internal
+ws._is-close : WsMessage -> Bool
+ws._is-close = match
+    WsMessage.Close _ _ -> curry (const True)
+    _ -> const False
+
+# internal
+ws._put : WsPeer -> WsMessage -> Result[(), IoError] ! {Async, Network}
+ws._put = curry (both
+        (fork ws._parts (.0 | .client) .1 | uncurry3 ws._frame)
+        (.0 | .conn)
+    | attempt (uncurry tcp.write))
+
+# internal
+ws._wrote : WsPeer -> Result[(), IoError] -> Step[WsPeer, ()]
+ws._wrote = curry (match
+    (_, Ok _) -> curry (.0 | Again)
+    (_, Err _) -> curry (const (Stop ())))
+
+# (masked, opcode, payload) of a message
+# internal
+ws._parts : Bool -> WsMessage -> (Bool, I64, Bytes)
+ws._parts = curry (match
+    (_, WsMessage.Text _) ->
+        curry (make { 0 = .0, 1 = const 1, 2 = .1 | string.to-bytes })
+    (_, WsMessage.Binary _) -> curry (make { 0 = .0, 1 = const 2, 2 = .1 })
+    (_, WsMessage.Ping _) -> curry (make { 0 = .0, 1 = const 9, 2 = .1 })
+    (_, WsMessage.Pong _) -> curry (make { 0 = .0, 1 = const 10, 2 = .1 })
+    (_, WsMessage.Close _ _) -> curry3 (make {
+        0 = .0,
+        1 = const 8,
+        2 = both .1 .2 | uncurry ws._close-payload,
+    }))
+
+test "ws accept key" =
+    "dGhlIHNhbXBsZSBub25jZQ==" | ws._accept | eq "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+test "ws frames" =
+    "hi"
+    | string.to-bytes
+    | ws._frame False 1
+    | ws._parse 100 0
+    | both .0 (.4 | string.from-bytes)
+    | eq (4, Some "hi")
+test "ws close payload" =
+    ws._close-payload 1001 "bye" | ws._close-parse | eq (1001, "bye")

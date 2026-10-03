@@ -959,11 +959,14 @@ rest.serve-on = curry (fork
     .0
     (both (const rest.config) (.1 | rest.api-handler)))
 
-# the configuration of a REST server: JSON errors
+# the configuration of a REST server: JSON errors, and responses of 1 KiB
+# or more compressed for clients that accept it
 # internal
 rest.config : ServerConfig
 rest.config =
-    "unused" | http.config | with { error-response = rest.error-response }
+    "unused"
+    | http.config
+    | with { error-response = rest.error-response, compress = Some 1024 }
 
 # an error the server answers itself, as JSON
 rest.error-response : I64 -> String -> Response

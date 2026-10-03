@@ -24,6 +24,7 @@ const MODULES: &[(&str, &str)] = &[
     ("net", "Networking"),
     ("tls", "TLS"),
     ("http", "HTTP"),
+    ("websocket", "WebSocket"),
     ("json", "JSON"),
     ("rest", "REST endpoints and clients"),
     ("grpc", "gRPC"),

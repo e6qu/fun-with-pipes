@@ -1,0 +1,96 @@
+# The server of tests/web.rs: HTTP/1.1 and HTTP/2 (h2c, and h2 with ALPN
+# over TLS when FWP_TLS_CERT and FWP_TLS_KEY are set), compression and
+# WebSocket. FWP_ADDR is the address to listen on; the address it got is
+# printed on stderr.
+
+hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+hello = .version | format "hello over {}" | http.text 200
+
+# a compressible body (compressed by the server's config)
+big : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+big = const (string.repeat 500 "compress me ") | http.text 200
+
+# the request body (decompressed by the server) and its length
+echo : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+echo =
+    .body
+    | both bytes.length (string.from-bytes | option.unwrap-or "?")
+    | format "{} bytes: {}"
+    | http.text 200
+
+# a small body, compressed by the `http.compress` middleware
+small : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+small = http.compress 10 (const (http.text 200 "small but compressed"))
+
+stream : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+stream = const count-to-three | http.stream 200 "text/plain"
+
+count-to-three : Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
+count-to-three =
+    channel.send
+    | compose (format "chunk {}\n" | string.to-bytes)
+    | flip compose ignore
+    | flip each (range 1 4)
+
+slow : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+slow = tap (const 300ms | task.sleep) | const "slow" | http.text 200
+
+# WebSocket: every text and binary message back; "close" closes with 4000
+echo-session : WebSocket -> () ! {Async, IO, Network, FileIO}
+echo-session = loop echo-step
+
+echo-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+echo-step = fork echo-got id ws.recv
+
+echo-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+echo-got = curry (match
+    (_, Some (WsMessage.Text "close")) ->
+        ws.close-with 4000 "asked to" | const (Stop ())
+    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
+    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
+    (_, None) -> const (Stop ()))
+
+routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes = http.router [
+    http.route "GET" "/hello" hello,
+    http.route "GET" "/big" big,
+    http.route "POST" "/echo" echo,
+    http.route "GET" "/small" small,
+    http.route "GET" "/stream" stream,
+    http.route "GET" "/slow" slow,
+    http.route "GET" "/ws" (http.websocket-with ws-config echo-session),
+]
+
+ws-config : WsConfig
+ws-config = ws.config | with { max-message-bytes = 100000 }
+
+config : ServerConfig
+config = "unused" | http.config | with { compress = Some 256 }
+
+tls-files : () -> Option[TlsServer] ! {IO}
+tls-files =
+    const ()
+    | both (const "FWP_TLS_CERT" | env.get) (const "FWP_TLS_KEY" | env.get)
+    | match
+        (Some _, Some _) -> curry (uncurry tls.server | Some)
+        _ -> const None
+
+listen : String -> Listener ! {IO, Network, Error[IoError]}
+listen = fork listen-with (const () | tls-files) id
+
+listen-with : Option[TlsServer] -> String -> Listener ! {IO, Network, Error[IoError]}
+listen-with = curry (match
+    (None, _) ->
+        tcp.listen
+        | tap (tcp.local-addr | format "listening on http://{}" | eprint)
+    (Some _, _) -> curry (fork apply .1 (.0 | http.tls-server | tls.listen)
+        | tap (tcp.local-addr | format "listening on https://{}" | eprint)))
+
+main =
+    "FWP_ADDR"
+    | env.get
+    | option.unwrap-or "127.0.0.1:8080"
+    | listen
+    | flip http.serve-on (config, routes)
+    | const "stopped"
+    | eprint
