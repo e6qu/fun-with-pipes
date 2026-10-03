@@ -1,0 +1,114 @@
+# Reverse-mode autodiff: gradients agree with forward mode and finite
+# differences, through lists, vectors and matrices.
+
+rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+rosenbrock =
+    fork zip id (drop 1)
+    | map (fork
+        add
+        (fork sub (.1 | fork mul id id) .0 | fork mul id id | mul 100.0)
+        (.1 | flip sub 1.0 | fork mul id id))
+    | sum
+
+point : List[F64]
+point = [-1.2, 1.0, 0.5, 2.0, -0.3]
+
+# central differences
+finite-diff : (List[F64] -> F64) -> List[F64] -> List[F64]
+finite-diff = curry (both fd-at (.1 | length | range 0) | uncurry map)
+
+fd-at : (List[F64] -> F64, List[F64]) -> I64 -> F64
+fd-at = curry (fork
+    div
+    (const 2e-6)
+    (fork
+        sub
+        (both (.0 | .0) (both .1 (.0 | .1) | uncurry (bump -1e-6)) | uncurry id)
+        (both (.0 | .0) (both .1 (.0 | .1) | uncurry (bump 1e-6)) | uncurry id)))
+
+bump : F64 -> I64 -> List[F64] -> List[F64]
+bump = curry3 (both (both .0 .1) (.2 | enumerate) | uncurry (bump-one | map))
+
+bump-one : (F64, I64) -> (I64, F64) -> F64
+bump-one = curry (if
+    (fork eq (.0 | .1) (.1 | .0))
+    (both (.0 | .0) (.1 | .1) | uncurry add)
+    (.1 | .1))
+
+close : List[F64] -> List[F64] -> Bool
+close = zip-with sub | flip compose (map abs | all (lt 1e-4))
+
+# logistic regression: (features, label) samples
+samples : List[(List[F64], F64)]
+samples = [
+    ([1.0, 0.5, 1.5], 1.0),
+    ([1.0, -1.0, 0.2], -1.0),
+    ([1.0, 2.0, -0.5], 1.0),
+    ([1.0, -0.3, -1.2], -1.0),
+    ([1.0, 0.8, 0.1], 1.0),
+]
+
+# mean of ln(1 + exp(-y·w·x))
+loss : List[t] -> t where Field[t], Floating[t], FromFloat[t], Dup[t]
+loss = loss-of | flip map samples | sum | div 5.0
+
+loss-of : List[t] -> (List[F64], F64) -> t where Field[t], Floating[t], FromFloat[t], Dup[t]
+loss-of = curry (both
+        (both (.1 | .0 | map from-float) .0 | uncurry matrix.dot-list)
+        (.1 | .1 | neg | from-float)
+    | uncurry mul
+    | exp
+    | add 1.0
+    | ln)
+
+step : List[F64] -> List[F64]
+step = fork (zip-with sub) (grad loss | map (mul 0.5)) id
+
+# trace(M·M) + sum of squares of the entries of M for a 2x2 M
+matrix-fn : List[t] -> t where Ring[t]
+matrix-fn =
+    chunks 2
+    | matrix.from-rows
+    | fork matmul id id
+    | .data
+    | array.to-list
+    | sum
+
+big : I64 -> List[F64]
+big = range 0 | map (int.to-float | mul 0.001 | sin)
+
+poly : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
+poly = map (fork mul id id | mul 0.5) | sum | fork mul id id
+
+outputs : List[t] -> List[t] where Field[t], Floating[t], FromFloat[t], Dup[t]
+outputs =
+    fork
+        Cons
+        (map sin | sum)
+        (fork
+            Cons
+            (fold mul one)
+            (fork
+                    div
+                    (nth 1 | option.unwrap-or zero)
+                    (nth 0 | option.unwrap-or zero)
+                | singleton))
+
+main = [
+    point | grad rosenbrock | echo,
+    point | gradient rosenbrock | echo,
+    point | fork close (grad rosenbrock) (finite-diff rosenbrock) | echo,
+    point | value-and-grad rosenbrock | echo,
+    vector [3.0, 4.0] | grad-vector norm | echo,
+    [1.0, 2.0, 3.0, 4.0] | grad matrix-fn | echo,
+    [1.0, 2.0, 3.0, 4.0] | gradient matrix-fn | echo,
+    [0.0, 0.0, 0.0] | loss | echo,
+    [0.0, 0.0, 0.0] | iterate 20 step | last | option.unwrap-or [] | echo,
+    [0.0, 0.0, 0.0] | iterate 20 step | last | option.unwrap-or [] | loss | echo,
+    [0.5, -0.25, 2.0] | fork close (grad loss) (finite-diff loss) | echo,
+    [0.5, 2.0] | rev.jacobian outputs | echo,
+    [0.5, 2.0] | jacobian outputs | echo,
+    [0.5, 2.0] | vjp outputs [1.0, 2.0, 3.0] | echo,
+    30 | big | fork eq (grad poly) (gradient poly) | echo,
+    [1.0f32, 2.0f32] | grad (fold mul one | exp) | echo,
+] | ignore

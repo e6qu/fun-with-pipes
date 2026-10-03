@@ -1,0 +1,79 @@
+# Fused tensor kernels on devices: every CPU device gives the same bits as
+# the sequential evaluation, reductions are reproducible, and the GPU is
+# reported unavailable without OpenCL.
+
+xs : I64 -> Vector[F64, Dyn]
+xs = range 0 | map (int.to-float | mul 0.37 | sin | add 2.0) | vector.from-list
+
+ys : I64 -> Vector[F64, Dyn]
+ys = range 0 | map (int.to-float | mul 0.011 | add 0.5) | vector.from-list
+
+# a generic function: on tensors it builds one fused kernel
+f : t -> t -> t where Field[t], Floating[t], FromFloat[t]
+f = curry (fork add (.0 | exp | mul 0.5) (fork div .0 (.1 | sqrt) | sin | tan)
+    | fork mul id (sub 0.25)
+    | div 3.0)
+
+expr : I64 -> TensorExpr[Dyn]
+expr = fork f (xs | tensor.lazy) (ys | tensor.lazy)
+
+reference : I64 -> List[F64]
+reference = fork (zip-with (flip f)) (ys | vector.to-list) (xs | vector.to-list)
+
+same-everywhere : I64 -> Bool
+same-everywhere =
+    fork
+        and
+        (fork eq (expr | realize-on (CpuParallel 4) | vector.to-list) reference)
+        (fork
+            eq
+            (expr | realize-on (CpuParallel 3) | vector.to-list)
+            (expr | realize-on Cpu | vector.to-list))
+
+sums : I64 -> List[F64]
+sums =
+    fork
+        Cons
+        (expr | tensor.sum-on Cpu)
+        (fork
+            Cons
+            (expr | tensor.sum-on (CpuParallel 2))
+            (expr | tensor.sum-on (CpuParallel 7) | singleton))
+
+small : TensorExpr[3]
+small =
+    vector [1.0, 4.0, 9.0]
+    | tensor.lazy
+    | sqrt
+    | tensor.sub (vector [0.5, 0.5, 0.5] | tensor.lazy)
+    | tensor.scale 2.0
+    | tensor.map (add 1.0)
+    | tensor.div (tensor.fill 4.0)
+    | tensor.abs
+
+grad-expr : TensorExpr[3]
+grad-expr =
+    vector [1.0, 2.0, 3.0]
+    | tensor.lazy
+    | mul (vector [0.5, 1.0, 2.0] | tensor.lazy | add (tensor.fill 1.0))
+    | fork add exp ln
+
+main = [
+    10 | expr | realize | vector.to-list | echo,
+    10 | reference | echo,
+    10 | fork eq (expr | realize | vector.to-list) reference | echo,
+    600 | same-everywhere | echo,
+    1000 | same-everywhere | echo,
+    0 | same-everywhere | echo,
+    700 | sums | echo,
+    700 | sums | fork eq head last | echo,
+    small | realize | echo,
+    small | realize-on (CpuParallel 2) | echo,
+    small | tensor.sum | echo,
+    small | tensor.kernel | echo,
+    small | tensor.opencl | print,
+    grad-expr | tensor.grad | echo,
+    grad-expr | tensor.grad-on (CpuParallel 2) | echo,
+    [Cpu, CpuParallel 4, CpuParallel 0] | map device.available | echo,
+    [Cpu, CpuParallel 4, Gpu] | map device.name | echo,
+] | ignore

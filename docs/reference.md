@@ -146,6 +146,12 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   `Dup`, `Encode`, `Decode`.
 - **Abstractions:** `Functor`, `Applicative`, `Monad`.
 
+The standard library implements the numeric traits for `Complex[T]`,
+`Dual[T]` (forward-mode autodiff), `Rev[T]` (reverse-mode autodiff) and
+`TensorExpr[N]` (fused elementwise kernels on devices), so code written
+against the traits computes values, derivatives or kernels
+([numerics.md](numerics.md)).
+
 ## Effects
 
 | Effect | Performed by |
@@ -427,6 +433,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`, `_CERT`, `_KEY` | the TLS options of the clients of service `M`: a CA file, no verification, the server name, a client certificate and key (see [tls.md](tls.md#grpc)) |
 | `FWP_REST_CORS` | the origins (separated by commas, or `*`) that may call a REST server from browsers, without `--cors` (see [rest.md](rest.md#cors)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
+| `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer |
 | `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |
 | `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |

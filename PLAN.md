@@ -161,6 +161,19 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     [docs/protocol.md](docs/protocol.md#transports) and
     [the reference](docs/reference.md#tasks-on-webassembly).
 
+13. **Reverse-mode autodiff and devices** (done). `Rev[T]` numbers record
+    operations on a tape kept by the runtime, so generic numeric code
+    differentiates in reverse mode unchanged: `grad`, `value-and-grad`,
+    `vjp`, `rev.jacobian`, checked against forward mode and finite
+    differences. Tensor expressions implement the numeric traits and
+    compile to fused elementwise kernels that run on a `Device`: `Cpu`,
+    `CpuParallel n` (OS threads, with results that do not depend on the
+    thread count, sums included) or `Gpu` (OpenCL C generated from the
+    kernel, with libOpenCL loaded at run time); `tensor.grad`
+    differentiates them in reverse mode. A JIT and distributed execution
+    were left out. See [docs/numerics.md](docs/numerics.md) and
+    [tutorial 21](docs/tutorials/21-autodiff-and-devices/README.md).
+
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).

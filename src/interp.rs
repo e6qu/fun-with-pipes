@@ -814,7 +814,10 @@ impl<'p> Interp<'p> {
             "cli.help" => Ok(Value::str(&crate::cli::options_help(
                 &params[0], &a[0], self.prog,
             ))),
-            _ => match self.prim_std(sym, &mut a, &params, &result) {
+            _ => match self
+                .prim_std(sym, &mut a, &params, &result)
+                .or_else(|| crate::numerics::prim(sym, &a))
+            {
                 Some(r) => r,
                 None => trap(format!(
                     "primitive `{}` is not implemented (at type {})",

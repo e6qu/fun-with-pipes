@@ -117,6 +117,11 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   use the collector's allocator but never collect, since the host's
   stacks are unknown. The collector needs Linux (`dl_iterate_phdr`) to
   find the data segments; elsewhere it never collects.
+- Reverse-mode autodiff records operations on tapes kept by the runtime
+  outside the program's values (numbers only), and tensor kernels run on
+  OS threads that never touch the collected heap; both are implemented
+  twice, with the same operation order (`src/numerics.rs`,
+  `runtime/fwp_rt_kernel.c`, see [numerics.md](numerics.md)).
 - Native tasks are green threads (`ucontext`) on an event loop: epoll on
   Linux, poll elsewhere. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time and scheduling is the same.
@@ -172,10 +177,15 @@ error. See [protocol.md](protocol.md).
 - Server reflection for `grpc.serve` routes made from `.proto` files.
 - Sockets and foreign C functions in the WebAssembly build of fwp (the
   playground): a browser has neither sockets nor a C compiler. Tasks on
-  WebAssembly need JavaScript Promise Integration, or binaryen's Asyncify (`--wasm-async=asyncify`, and
+  WebAssembly need JavaScript Promise Integration, or binaryen's
+  Asyncify (`--wasm-async=asyncify`, and
   `scripts/build-playground.sh --asyncify` for fwp.wasm); WASI runtimes
   without a JavaScript host run no tasks.
-- GPU and distributed backends, a JIT, reverse-mode autodiff.
+- A JIT, and distributed execution (tensors sharded across processes,
+  collectives). Reverse-mode autodiff and devices for fused tensor
+  kernels (CPU threads, OpenCL loaded at run time) exist
+  ([numerics.md](numerics.md)), but the OpenCL path has only been run
+  without an OpenCL device; kernels are elementwise expressions and sums.
 - Transports of the pipe protocol other than the pipe, `UDS_V1` and
   `SHM_V1` (which are Linux only), the WebAssembly component model and
   `wasm64`.

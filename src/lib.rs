@@ -35,6 +35,7 @@ pub mod lint;
 pub mod lsp;
 pub mod macros;
 pub mod mono;
+pub mod numerics;
 pub mod openapi;
 pub mod openapi_import;
 pub mod opt;
