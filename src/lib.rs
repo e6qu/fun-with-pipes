@@ -53,6 +53,7 @@ pub mod syntax;
 pub mod sys;
 pub mod textio;
 pub mod tls;
+pub mod transport;
 pub mod types;
 pub mod value;
 pub mod web;

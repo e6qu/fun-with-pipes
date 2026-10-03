@@ -79,14 +79,16 @@ header  := "FWP1" version:u8
            fingerprint:16 bytes
            len:leb128 utf8                      human-readable type
 frame   := 0x01 len:u32le payload               one encoded value
+         | 0x02 0x01 0x00 0x00 0x00 transport:u8  the rest is elsewhere
 end     := 0x00 0x00 0x00 0x00 0x00
 ```
 
-* `version` is 1. The only capability currently offered is `PIPE_V1`;
-  `UDS_V1`, `SHM_V1`, `GRPC_V1`, `STREAMING`, `TLS` and `ZSTD` are reserved
-  names for future transports. The transport never changes the meaning of a
-  program. (Calls between [services](services.md) use gRPC instead, with
-  the same value encoding and fingerprints underneath.)
+* `version` is 1. The capabilities offered are `PIPE_V1` and the
+  [transports](#transports) `UDS_V1` and `SHM_V1`; `GRPC_V1`,
+  `STREAMING`, `TLS` and `ZSTD` are reserved names. A reader ignores
+  capabilities it does not know. The transport never changes the meaning
+  of a program. (Calls between [services](services.md) use gRPC instead,
+  with the same value encoding and fingerprints underneath.)
 * The **fingerprint** is two little-endian FNV-1a 64-bit hashes, of the
   canonical structural type string and of `"fwp:"` followed by it. The
   canonical string includes module-qualified names *and the structure* of
@@ -125,6 +127,70 @@ Decoding is strict, and fails the same way in both backends (exit 3):
   an over-long LEB128 number, a string that is not UTF-8, an unknown
   constructor) is a `malformed value`.
 
+## Transports
+
+Between two fwp executables on Linux, the stream can leave the pipe after
+its header, for a Unix domain socket (`UDS_V1`) or a ring buffer in shared
+memory (`SHM_V1`). The bytes are the same (the frames after the header and
+the end frame); only the way they travel changes, so results are
+identical, and each side falls back to the pipe whenever the other cannot
+follow.
+
+1. A producer whose stdout is a pipe listens on the abstract Unix socket
+   `fwp.pipe.<dev>.<inode>`, named after that pipe, and writes its header
+   (which lists `UDS_V1` and `SHM_V1`) on the pipe.
+2. A consumer that reads such a header from a pipe connects to the socket
+   of the same pipe, so no name travels in the stream, and asks for a
+   transport: `FWPT` and one byte, 2 for `SHM_V1` (the default), 1 for
+   `UDS_V1` (`FWP_TRANSPORT=uds`), or 0 to decline
+   (`FWP_TRANSPORT=stdio`). It keeps reading frames from the pipe.
+3. At its next frame boundary, the producer accepts a connection from a
+   process of the same user. For `SHM_V1` it creates the ring in a
+   `memfd` and passes the descriptor over the socket (`SCM_RIGHTS`); if
+   that fails, it uses the socket itself. It then writes a switch frame
+   (`0x02`, length 1, the transport chosen) on the pipe and writes the
+   rest of the stream to the socket or the ring.
+4. A consumer that reads the switch frame continues on that transport. A
+   switch frame that it did not ask for is a `bad switch frame` (exit 3).
+
+The ring is one producer and one consumer without locks: a 4096-byte
+header (the `FWPS` magic, version 1, the capacity of 1 MiB, the bytes
+written and read so far on separate cache lines, and a futex word with a
+waiting flag for each direction) followed by the data. A side that finds
+the ring empty (or full) spins for up to 50 µs (yielding the processor
+now and then, in case the other side waits for it), then sleeps on the futex;
+the other side wakes it only when it is sleeping, so a busy stream needs
+no system calls. Each side notices from the socket when the other one
+exited.
+
+Producers check for a consumer at most once a millisecond (when they
+flush, and every 64 frames), and stop offering after 5 seconds, so a
+stream that a consumer does not ask to move costs nothing.
+With `FWP_TRANSPORT_WAIT=ms` the producer waits that long after its
+header for the consumer to ask, so that the whole stream moves; `fwp pipe`
+sets it, since all its stages are fwp programs. Other readers of the pipe
+(`xxd`, a file, an older fwp) get the stream unchanged on the pipe:
+nobody connects. A producer also enlarges its stdout pipe to 1 MiB where
+the system allows. Elsewhere than on Linux, and on WebAssembly, streams
+stay on the pipe.
+
+Measured between two native executables (`-O2`, 4 cores), the throughput
+of a stream of 200,000 strings of 4 KiB (820 MB, written as one list and
+read one record at a time) and of 1,000,000 strings of 100 bytes written
+one at a time (each flushed, as streaming results are):
+
+| transport | 820 MB in large records | 1M small records, each flushed |
+|---|---|---|
+| pipe (`FWP_TRANSPORT=stdio`) | 1.6 s | 2.2–4.3 s |
+| `UDS_V1` | 0.80 s | 3.5–4.0 s |
+| `SHM_V1` | 0.66 s | 1.3–1.4 s |
+
+(Best of five runs on a shared machine; with three other processes
+spinning on the four cores, `SHM_V1` took 0.85 s and 1.2 s.)
+
+The interpreter (`fwp exec`) implements the same transports, so
+interpreted and native stages switch with each other.
+
 ## Pipelines
 
 `fwp pipe` starts each stage as a process and connects them with the binary
@@ -141,5 +207,7 @@ Native executables compose the same way in any shell:
 $ printf '1\n2\n3\n' | FWP_OUT=bin ./scale 10 | ./total
 60
 ```
+
+Between them, the stream may move to a faster [transport](#transports).
 
 Native and interpreted stages can be mixed; they write identical bytes.

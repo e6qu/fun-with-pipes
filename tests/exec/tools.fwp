@@ -51,3 +51,8 @@ later = id
 
 export flag : Bool -> Bool
 flag = not
+
+# `n` records of up to 100 bytes, with multi-byte characters (for the
+# transports of the binary protocol, tests/exec.rs)
+export lines : I64 -> List[String]
+lines = range 0 | map (fork concat show (rem 97 | flip string.repeat "Äb"))

@@ -18,6 +18,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_sys.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
+    include_str!("../runtime/fwp_rt_pipe.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
     include_str!("../runtime/fwp_rt_pb.c"),
 ];

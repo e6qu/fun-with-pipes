@@ -113,3 +113,19 @@ fn pipeline_parsing() {
     assert_eq!(st[1].function, "g");
     assert!(fwp::exec::parse_pipeline("a.fwp:f | ").is_err());
 }
+
+#[test]
+fn header_offers_the_transports() {
+    let prog = program();
+    let h = proto::header(&MT::con("std::I64"), &prog);
+    let mut r = &h[4..];
+    let parsed = proto::read_header(&mut r).unwrap();
+    assert_eq!(parsed.capabilities, ["PIPE_V1", "UDS_V1", "SHM_V1"]);
+    // the switch frame: kind 2, one byte naming the transport
+    let mut stream: &[u8] = &[2, 1, 0, 0, 0, fwp::transport::SHM, 0, 0, 0, 0, 0];
+    assert_eq!(
+        proto::read_any_frame(&mut stream).unwrap(),
+        Some((proto::SWITCH_FRAME, vec![fwp::transport::SHM]))
+    );
+    assert_eq!(proto::read_any_frame(&mut stream).unwrap(), None);
+}

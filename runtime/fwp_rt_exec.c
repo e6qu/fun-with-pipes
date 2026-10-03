@@ -892,9 +892,10 @@ static void fwp_emit(const fwp_exec_spec *s, V v) {
         fwp_encode(&b, v, s->out_elem);
         unsigned char hdr[5] = {1, (unsigned char)(b.len & 0xff), (unsigned char)((b.len >> 8) & 0xff),
                                 (unsigned char)((b.len >> 16) & 0xff), (unsigned char)((b.len >> 24) & 0xff)};
-        fwrite(hdr, 1, 5, stdout);
-        if (b.len) fwrite(b.d, 1, b.len, stdout);
+        fwp_pipe_write(hdr, 5);
+        if (b.len) fwp_pipe_write(b.d, b.len);
         free(b.d);
+        fwp_pipe_frame_done();
     } else if (!(s->out_elem->kind == K_RECORD && s->out_elem->n == 0 && !s->out_elem->name)) {
         fwp_display_top(v, s->out_elem, stdout);
         fputc('\n', stdout);
@@ -903,7 +904,7 @@ static void fwp_emit(const fwp_exec_spec *s, V v) {
 
 /* an error as a command reports it: an IoError by its message */
 static void fwp_exec_error(const fwp_exec_spec *s, V v, const fwp_desc *d) {
-    fflush(stdout);
+    fwp_pipe_flush();
     fprintf(stderr, "%s: ", s->name);
     if (d->kind == K_RECORD && d->name && strcmp(d->name, "IoError") == 0 && d->n == 2) {
         V m = OBJ(v)->f[1];
@@ -973,7 +974,12 @@ static int fwp_getc(void) {
 static int fwp_read_exact(unsigned char *buf, size_t n) {
     size_t i = 0;
     while (i < n && fwp_in_ppos < fwp_in_npend) buf[i++] = fwp_in_pend[fwp_in_ppos++];
-    return i == n || fread(buf + i, 1, n - i, stdin) == n - i;
+    while (i < n) {
+        size_t k = fwp_pipe_read(buf + i, n - i);
+        if (!k) return 0;
+        i += k;
+    }
+    return 1;
 }
 
 /* the longest capability or type name a header may carry (as
@@ -1157,7 +1163,12 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     const char *outv = getenv("FWP_OUT");
     fwp_exec_binary_out = outv && strcmp(outv, "bin") == 0;
     fwp_prog_out = fwp_exec_binary_out ? stderr : stdout;
-    if (fwp_exec_binary_out) fwrite(s->out_header, 1, s->out_header_len, stdout);
+    if (fwp_exec_binary_out) {
+        fwp_pipe_out_start();
+        fwp_pipe_write(s->out_header, s->out_header_len);
+        fwp_pipe_flush();
+        fwp_pipe_out_ready();
+    }
     int code = 0, failed = 0, ok = 1;
     if (!from_stdin) {
         V r = fwp_exec_call(s, args, n, &failed);
@@ -1167,6 +1178,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     } else {
         /* input records from stdin; binary input starts with the magic */
         int binary = 0;
+        setvbuf(stdin, 0, _IOFBF, 1 << 20);
         fwp_in_npend = (int)fread(fwp_in_pend, 1, 4, stdin);
         fwp_in_ppos = 0;
         if (fwp_in_npend == 4 && memcmp(fwp_in_pend, "FWP1", 4) == 0) {
@@ -1179,9 +1191,15 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
             unsigned char fp[16];
             if (!fwp_read_exact(&ver, 1)) goto bad_header;
             if ((ok = fwp_stdin_leb(&ncaps)) != 1) goto header_error;
+            int uds = 0;
             for (uint64_t i = 0; i < ncaps && i < 64; i++) {
                 if ((ok = fwp_stdin_name_len(&l)) != 1) goto header_error;
                 unsigned char tmp[256];
+                if (l == 6) {
+                    if (!fwp_read_exact(tmp, 6)) goto bad_header;
+                    if (memcmp(tmp, "UDS_V1", 6) == 0) uds = 1;
+                    l = 0;
+                }
                 while (l > 0) {
                     size_t chunk = l > sizeof tmp ? sizeof tmp : (size_t)l;
                     if (!fwp_read_exact(tmp, chunk)) goto bad_header;
@@ -1201,6 +1219,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 fprintf(stderr, "%s: input type mismatch: expected `%s`, got `%s`\n", s->name, s->in_type, tname);
                 return 3;
             }
+            if (uds) fwp_pipe_in_offer();
         }
         size_t cap = 16, cnt = 0;
         V *items = s->last_is_list ? (V *)fwp_mem_alloc(cap * sizeof(V)) : 0;
@@ -1215,6 +1234,12 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 unsigned char *pl = (unsigned char *)fwp_alloc_leaf(len + 1);
                 if (len && !fwp_read_exact(pl, len)) { fprintf(stderr, "%s: truncated frame\n", s->name); code = 3; break; }
                 if (hdr[0] == 0) break;
+                if (hdr[0] == 2) {
+                    if (fwp_pipe_in_switch(pl, len)) continue;
+                    fprintf(stderr, "%s: bad switch frame\n", s->name);
+                    code = 3;
+                    break;
+                }
                 fwp_rd rd = {pl, len, 0};
                 if (!fwp_decode(&rd, s->in_elem, &v)) { fprintf(stderr, "%s: malformed value\n", s->name); code = 3; break; }
             } else {
@@ -1238,7 +1263,7 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
                 int st = fwp_emit_result(s, r);
                 if (st < 0) { code = 1; break; }
                 if (st > code) code = st;
-                fflush(stdout);
+                fwp_pipe_flush();
             }
         }
         if (s->last_is_list && code == 0) {
@@ -1253,7 +1278,8 @@ static int fwp_exec(const fwp_exec_spec *s, int argc, char **argv) {
     }
     if (fwp_exec_binary_out) {
         static const unsigned char end[5] = {0, 0, 0, 0, 0};
-        fwrite(end, 1, 5, stdout);
+        fwp_pipe_write(end, 5);
+        fwp_pipe_out_end();
     }
     fflush(stdout);
     return code;

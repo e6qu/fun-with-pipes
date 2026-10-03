@@ -395,6 +395,9 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_SEED` | fixes the seed of `random.*` |
 | `FWP_OUT=bin` | makes executable functions write the binary protocol |
 | `FWP_PREEMPT=n` | the slice of a task: the safe points (function entries, `loop` iterations) after which it lets other tasks run and notices cancellation (default 10000; `0`: never; see [preemption](concurrency.md#preemption)) |
+| `FWP_TRANSPORT` | the transport an executable reading the binary protocol asks its producer for: `shm` (the default), `uds`, or `stdio`, which keeps the stream on the pipe and makes producers not offer any (see [transports](protocol.md#transports)) |
+| `FWP_TRANSPORT_WAIT=ms` | a producer of the binary protocol waits that long after its header for the consumer to ask for a transport (`fwp pipe` sets 10000 for its stages) |
+| `FWP_TRANSPORT_REPORT=1` | a consumer of the binary protocol says on stderr when its input moves to another transport |
 | `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#grpc)) |
 | `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
 | `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |

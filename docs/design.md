@@ -175,5 +175,6 @@ error. See [protocol.md](protocol.md).
   WebAssembly need JavaScript Promise Integration; there is no fallback
   for engines without it (Safari), nor for other WASI runtimes.
 - GPU and distributed backends, a JIT, reverse-mode autodiff.
-- The `UDS_V1` and `SHM_V1` transports (the header reserves bits for
-  them), the WebAssembly component model and `wasm64`.
+- Transports of the pipe protocol other than the pipe, `UDS_V1` and
+  `SHM_V1` (which are Linux only), the WebAssembly component model and
+  `wasm64`.
