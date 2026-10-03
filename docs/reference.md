@@ -328,7 +328,7 @@ each switch at the end of a slice is a JSPI suspension.
 |---|---|
 | Chrome, Edge 137 and later | yes (JSPI is on by default) |
 | Firefox, Safari | with `--wasm-async=asyncify` (below); otherwise once they enable JSPI by default (until then, a program with tasks is rejected or traps as below) |
-| node 22 | with `--experimental-wasm-jspi` (`tests/wasm/wasi-run.mjs` and `fwp-run.mjs` set it); later versions as they ship JSPI |
+| node 24 | yes (JSPI is on by default; node 22 needs `--experimental-wasm-jspi`). With `node:wasi`, also pass `--no-turbo-fast-api-calls` (`tests/wasm/wasi-run.mjs` and `fwp-run.mjs` do): node may otherwise crash when V8 collects garbage inside a WASI call made from optimized code (node 24 stops with ``Check failed: isolate_->IsOnCentralStack()``, node 22 with a segmentation fault), which programs that switch tasks often make likely. node 24's `node:wasi` also rejects addresses beyond 2 GiB (which the stacks of a few thousand tasks reach) unless its 32-bit arguments are made unsigned (`x >>> 0`) in wrappers, as these runners and the browser loader do |
 | wasmtime and other WASI runtimes | no: a program that starts a task traps with `fwp: trap: tasks need a WebAssembly host with JavaScript Promise Integration (JSPI), …`; `task.sleep` alone works |
 
 A module that uses tasks exports `fwp_fiber_hooks`, `fwp_fiber_stack`,
@@ -350,9 +350,9 @@ output, preemption and cancellation; not in WASI runtimes without a
 JavaScript host. wasm-opt is an optional tool, needed only for this
 option and only by programs with tasks: it comes with binaryen (`npm
 install -g binaryen`, or a system package); `FWP_WASM_OPT` names the
-executable. The cost: the module is about 7% larger, calls are about 40%
-slower (`fib 35` in two tasks: 1.84 s against 1.3 s with JSPI in node
-22), and a task's own stack in linear memory is checked at each call,
+executable. The cost: the module is about 7% larger, calls are about 70%
+slower (`fib 35` in two tasks: 0.9 s against 0.53 s with JSPI in node
+24), and a task's own stack in linear memory is checked at each call,
 since its calls run on the engine's main stack. The default stays
 `--wasm-async=jspi`. The same works for fwp.wasm itself:
 `scripts/build-playground.sh --asyncify` applies Asyncify to it, so the

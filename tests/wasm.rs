@@ -3,7 +3,7 @@
 //! the `.out` file. Programs using effects WASI does not provide (sockets,
 //! processes) must be rejected at compile time. Tasks run as fibers, which
 //! the JavaScript host switches with JavaScript Promise Integration
-//! (web/fibers.js; node 22 has it behind a flag, which the runners set).
+//! (web/fibers.js; on by default in node 24, which CI uses).
 //! The browser target is run through its JavaScript loader. Skipped when
 //! clang cannot target WASI or node is missing.
 

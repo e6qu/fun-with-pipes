@@ -123,8 +123,8 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     JavaScript host suspends and resumes with JSPI (`web/fibers.js`), while
     the scheduling stays in the native runtime and the interpreter.
     Sleeping uses a JavaScript timer; a deadlock traps. This works in
-    Chrome and Edge 137 and later and in node 22 with
-    `--experimental-wasm-jspi`; other engines and WASI runtimes run
+    Chrome and Edge 137 and later and in node 24 (node 22 with
+    `--experimental-wasm-jspi`); other engines and WASI runtimes run
     programs without tasks only (a program that starts one traps, or in
     fwp.wasm is rejected before it starts). Sockets stay unavailable. See
     [the reference](docs/reference.md#tasks-on-webassembly).

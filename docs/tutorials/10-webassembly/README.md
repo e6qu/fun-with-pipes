@@ -24,9 +24,10 @@ WebAssembly has no sockets, so programs that use `Network` are rejected
 when they are compiled for these targets, with an error naming the
 effect. Tasks and channels (`Async`) work where the JavaScript engine has
 JavaScript Promise Integration, which suspends a task's stack while it
-waits: Chrome and Edge 137 and later, and node 22 with
-`--experimental-wasm-jspi` (`tests/wasm/wasi-run.mjs` sets it). In
-wasmtime a program that starts a task traps. Everything else, files
+waits: Chrome and Edge 137 and later, and node 24 (node 22 with
+`--experimental-wasm-jspi`). Built with `--wasm-async=asyncify`, they
+work in any JavaScript engine. In wasmtime a program that starts a task
+traps. Everything else, files
 included (for WASI, in preopened directories), behaves exactly as in a
 native build.
 
