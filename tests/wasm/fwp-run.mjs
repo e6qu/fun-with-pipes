@@ -109,13 +109,28 @@ if (isMainThread) {
   } else {
     const { MemFS, runWasi } = await import(new URL("../../web/wasi.js", import.meta.url));
     const files = {};
+    // Other tests may create and remove files here while this one runs
+    // (the `.tmp` scratch directories of golden programs): skip those, and
+    // anything that disappears between listing and reading it.
+    const gone = (e) => e && (e.code === "ENOENT" || e.code === "ENOTDIR");
     const walk = async (dir) => {
-      for (const name of await readdir(dir)) {
-        if (name.startsWith(".") || name === "target") continue;
+      let names;
+      try {
+        names = await readdir(dir);
+      } catch (e) {
+        if (gone(e)) return;
+        throw e;
+      }
+      for (const name of names) {
+        if (name.startsWith(".") || name === "target" || name.endsWith(".tmp")) continue;
         const path = dir === "." ? name : `${dir}/${name}`;
-        const st = await stat(path);
-        if (st.isDirectory()) await walk(path);
-        else if (st.size < 1 << 20) files[path] = new Uint8Array(await readFile(path));
+        try {
+          const st = await stat(path);
+          if (st.isDirectory()) await walk(path);
+          else if (st.size < 1 << 20) files[path] = new Uint8Array(await readFile(path));
+        } catch (e) {
+          if (!gone(e)) throw e;
+        }
       }
     };
     await walk(".");
