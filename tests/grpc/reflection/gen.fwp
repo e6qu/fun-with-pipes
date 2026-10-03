@@ -477,6 +477,46 @@ service-response.codec =
         service-response.decode
         service-response.default
 
+# ---- descriptors
+
+# the descriptors of the `.proto` files, which the routes carry for server
+# reflection (`grpc.serve` answers grpcurl and other clients with them)
+proto-files : List[GrpcFile]
+proto-files = [
+    GrpcFile {
+        name = "reflection.proto",
+        descriptor =
+            grpc.base64-bytes
+                "ChByZWZsZWN0aW9uLnByb3RvEhJncnBjLnJlZmxlY3Rpb24udjEaEGRlc2NyaXB0b3IucHJvdG8i8wIKF1NlcnZlclJlZmxlY3Rpb25SZXF1ZXN0EhIKBGhvc3QYASABKAlSBGhvc3QSKgoQZmlsZV9ieV9maWxlbmFtZRgDIAEoCUgAUg5maWxlQnlGaWxlbmFtZRI2ChZmaWxlX2NvbnRhaW5pbmdfc3ltYm9sGAQgASgJSABSFGZpbGVDb250YWluaW5nU3ltYm9sEmIKGWZpbGVfY29udGFpbmluZ19leHRlbnNpb24YBSABKAsyJC5ncnBjLnJlZmxlY3Rpb24udjEuRXh0ZW5zaW9uUmVxdWVzdEgAUhdmaWxlQ29udGFpbmluZ0V4dGVuc2lvbhJCCh1hbGxfZXh0ZW5zaW9uX251bWJlcnNfb2ZfdHlwZRgGIAEoCUgAUhlhbGxFeHRlbnNpb25OdW1iZXJzT2ZUeXBlEiUKDWxpc3Rfc2VydmljZXMYByABKAlIAFIMbGlzdFNlcnZpY2VzQhEKD21lc3NhZ2VfcmVxdWVzdCJmChBFeHRlbnNpb25SZXF1ZXN0EicKD2NvbnRhaW5pbmdfdHlwZRgBIAEoCVIOY29udGFpbmluZ1R5cGUSKQoQZXh0ZW5zaW9uX251bWJlchgCIAEoBVIPZXh0ZW5zaW9uTnVtYmVyIq4EChhTZXJ2ZXJSZWZsZWN0aW9uUmVzcG9uc2USHQoKdmFsaWRfaG9zdBgBIAEoCVIJdmFsaWRIb3N0ElYKEG9yaWdpbmFsX3JlcXVlc3QYAiABKAsyKy5ncnBjLnJlZmxlY3Rpb24udjEuU2VydmVyUmVmbGVjdGlvblJlcXVlc3RSD29yaWdpbmFsUmVxdWVzdBJmChhmaWxlX2Rlc2NyaXB0b3JfcmVzcG9uc2UYBCABKAsyKi5ncnBjLnJlZmxlY3Rpb24udjEuRmlsZURlc2NyaXB0b3JSZXNwb25zZUgAUhZmaWxlRGVzY3JpcHRvclJlc3BvbnNlEnIKHmFsbF9leHRlbnNpb25fbnVtYmVyc19yZXNwb25zZRgFIAEoCzIrLmdycGMucmVmbGVjdGlvbi52MS5FeHRlbnNpb25OdW1iZXJSZXNwb25zZUgAUhthbGxFeHRlbnNpb25OdW1iZXJzUmVzcG9uc2USXwoWbGlzdF9zZXJ2aWNlc19yZXNwb25zZRgGIAEoCzInLmdycGMucmVmbGVjdGlvbi52MS5MaXN0U2VydmljZVJlc3BvbnNlSABSFGxpc3RTZXJ2aWNlc1Jlc3BvbnNlEkoKDmVycm9yX3Jlc3BvbnNlGAcgASgLMiEuZ3JwYy5yZWZsZWN0aW9uLnYxLkVycm9yUmVzcG9uc2VIAFINZXJyb3JSZXNwb25zZUISChBtZXNzYWdlX3Jlc3BvbnNlIkwKFkZpbGVEZXNjcmlwdG9yUmVzcG9uc2USMgoVZmlsZV9kZXNjcmlwdG9yX3Byb3RvGAEgAygMUhNmaWxlRGVzY3JpcHRvclByb3RvImoKF0V4dGVuc2lvbk51bWJlclJlc3BvbnNlEiQKDmJhc2VfdHlwZV9uYW1lGAEgASgJUgxiYXNlVHlwZU5hbWUSKQoQZXh0ZW5zaW9uX251bWJlchgCIAMoBVIPZXh0ZW5zaW9uTnVtYmVyIlQKE0xpc3RTZXJ2aWNlUmVzcG9uc2USPQoHc2VydmljZRgBIAMoCzIjLmdycGMucmVmbGVjdGlvbi52MS5TZXJ2aWNlUmVzcG9uc2VSB3NlcnZpY2UiJQoPU2VydmljZVJlc3BvbnNlEhIKBG5hbWUYASABKAlSBG5hbWUiUwoNRXJyb3JSZXNwb25zZRIdCgplcnJvcl9jb2RlGAEgASgFUgllcnJvckNvZGUSIwoNZXJyb3JfbWVzc2FnZRgCIAEoCVIMZXJyb3JNZXNzYWdlMokBChBTZXJ2ZXJSZWZsZWN0aW9uEnUKFFNlcnZlclJlZmxlY3Rpb25JbmZvEisuZ3JwYy5yZWZsZWN0aW9uLnYxLlNlcnZlclJlZmxlY3Rpb25SZXF1ZXN0GiwuZ3JwYy5yZWZsZWN0aW9uLnYxLlNlcnZlclJlZmxlY3Rpb25SZXNwb25zZSgBMAFiBnByb3RvMw==",
+        symbols = [
+            "grpc.reflection.v1.ServerReflectionRequest",
+            "grpc.reflection.v1.ExtensionRequest",
+            "grpc.reflection.v1.ServerReflectionResponse",
+            "grpc.reflection.v1.FileDescriptorResponse",
+            "grpc.reflection.v1.ExtensionNumberResponse",
+            "grpc.reflection.v1.ListServiceResponse",
+            "grpc.reflection.v1.ServiceResponse",
+            "grpc.reflection.v1.ErrorResponse",
+            "grpc.reflection.v1.ServerReflection",
+        ],
+        imports = ["descriptor.proto"],
+    },
+    GrpcFile {
+        name = "descriptor.proto",
+        descriptor =
+            grpc.base64-bytes
+                "ChBkZXNjcmlwdG9yLnByb3RvEg9nb29nbGUucHJvdG9idWYi4wEKE0ZpbGVEZXNjcmlwdG9yUHJvdG8SEgoEbmFtZRgBIAEoCVIEbmFtZRIYCgdwYWNrYWdlGAIgASgJUgdwYWNrYWdlEkMKDG1lc3NhZ2VfdHlwZRgEIAMoCzIgLmdvb2dsZS5wcm90b2J1Zi5EZXNjcmlwdG9yUHJvdG9SC21lc3NhZ2VUeXBlEkEKB3NlcnZpY2UYBiADKAsyJy5nb29nbGUucHJvdG9idWYuU2VydmljZURlc2NyaXB0b3JQcm90b1IHc2VydmljZRIWCgZzeW50YXgYDCABKAlSBnN5bnRheCKlAQoPRGVzY3JpcHRvclByb3RvEhIKBG5hbWUYASABKAlSBG5hbWUSOwoFZmllbGQYAiADKAsyJS5nb29nbGUucHJvdG9idWYuRmllbGREZXNjcmlwdG9yUHJvdG9SBWZpZWxkEkEKC25lc3RlZF90eXBlGAMgAygLMiAuZ29vZ2xlLnByb3RvYnVmLkRlc2NyaXB0b3JQcm90b1IKbmVzdGVkVHlwZSKJAQoURmllbGREZXNjcmlwdG9yUHJvdG8SEgoEbmFtZRgBIAEoCVIEbmFtZRIWCgZudW1iZXIYAyABKAVSBm51bWJlchIUCgVsYWJlbBgEIAEoBVIFbGFiZWwSEgoEdHlwZRgFIAEoBVIEdHlwZRIbCgl0eXBlX25hbWUYBiABKAlSCHR5cGVOYW1lImwKFlNlcnZpY2VEZXNjcmlwdG9yUHJvdG8SEgoEbmFtZRgBIAEoCVIEbmFtZRI+CgZtZXRob2QYAiADKAsyJi5nb29nbGUucHJvdG9idWYuTWV0aG9kRGVzY3JpcHRvclByb3RvUgZtZXRob2QiwQEKFU1ldGhvZERlc2NyaXB0b3JQcm90bxISCgRuYW1lGAEgASgJUgRuYW1lEh0KCmlucHV0X3R5cGUYAiABKAlSCWlucHV0VHlwZRIfCgtvdXRwdXRfdHlwZRgDIAEoCVIKb3V0cHV0VHlwZRIpChBjbGllbnRfc3RyZWFtaW5nGAUgASgIUg9jbGllbnRTdHJlYW1pbmcSKQoQc2VydmVyX3N0cmVhbWluZxgGIAEoCFIPc2VydmVyU3RyZWFtaW5nYgZwcm90bzM=",
+        symbols = [
+            "google.protobuf.FileDescriptorProto",
+            "google.protobuf.DescriptorProto",
+            "google.protobuf.FieldDescriptorProto",
+            "google.protobuf.ServiceDescriptorProto",
+            "google.protobuf.MethodDescriptorProto",
+        ],
+        imports = [],
+    },
+]
+
 # ---- service grpc.reflection.v1.ServerReflection
 
 # rpc ServerReflectionInfo(stream ServerReflectionRequest) returns (stream ServerReflectionResponse): a call to the service at an address
@@ -494,6 +534,7 @@ server-reflection.server-reflection-info.route =
         server-reflection-request.decode
         server-reflection-response.encode
     | grpc.route "/grpc.reflection.v1.ServerReflection/ServerReflectionInfo"
+    | grpc.with-files proto-files
 
 # implementations of the methods of grpc.reflection.v1.ServerReflection
 ServerReflectionServer = {

@@ -1,0 +1,122 @@
+# A server reflection client of the routes of hello.proto that
+# tests/grpc/hello/server.fwp serves with `grpc.serve` (tests/grpc.rs):
+# the services, the files of symbols and files by name, with the
+# grpc.reflection.v1 and v1alpha services.
+
+import gen
+
+ask : gen.ServerReflectionRequestMessageRequest -> gen.ServerReflectionRequest
+ask =
+    make gen.ServerReflectionRequest { host = const "", message-request = Some }
+
+requests : List[gen.ServerReflectionRequest]
+requests = [
+    gen.ServerReflectionRequestMessageRequest.ListServices "" | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "helloworld.Greeter"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "helloworld.HelloRequest.Point"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "helloworld.Greeter.SayHello"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileByFilename
+        "google/protobuf/timestamp.proto"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileByFilename
+        "grpc/health/v1/health.proto"
+    | ask,
+    gen.ServerReflectionRequestMessageRequest.FileByFilename "nope.proto" | ask,
+    gen.ServerReflectionRequestMessageRequest.FileContainingSymbol
+        "nope.Nothing"
+    | ask,
+]
+
+method-shape : gen.ProtobufMethodDescriptorProto -> String
+method-shape =
+    make { 0 = .name, 1 = .client-streaming, 2 = .server-streaming } | show
+
+describe-service : gen.ProtobufServiceDescriptorProto -> String
+describe-service =
+    fork
+        concat
+        (.method | map method-shape | join ", " | flip concat " (" | concat ")")
+        .name
+
+# a message, with the names of its nested messages
+describe-message : gen.ProtobufDescriptorProto -> String
+describe-message =
+    fork
+        concat
+        (.nested-type | map .name | join "," | flip concat "[" | concat "]")
+        .name
+
+describe-file : gen.ProtobufFileDescriptorProto -> String
+describe-file =
+    fork Cons .name (fork
+        Cons
+        .package
+        (fork
+            Cons
+            (.message-type | map describe-message | join ",")
+            (fork Cons (.service | map describe-service | join ",") (const Nil))))
+    | join " | "
+
+drained : (Channel[a] -> () ! {Async, Network, Error[GrpcError]}) -> List[a] ! {Async, Network, Error[GrpcError]}
+drained =
+    fork apply (const 100 | channel.make) tap
+    | tap channel.close
+    | channel.drain
+
+describe : gen.ServerReflectionResponseMessageResponse -> String ! {Error[GrpcError]}
+describe = match
+    gen.ServerReflectionResponseMessageResponse.FileDescriptorResponse _ ->
+        .file-descriptor-proto
+        | map (gen.protobuf-file-descriptor-proto.decode | describe-file)
+        | join "; "
+    gen.ServerReflectionResponseMessageResponse.AllExtensionNumbersResponse _ ->
+        .base-type-name
+    gen.ServerReflectionResponseMessageResponse.ListServicesResponse _ ->
+        .service | map .name | join ", "
+    gen.ServerReflectionResponseMessageResponse.ErrorResponse _ ->
+        fork concat .error-message (.error-code
+            | show
+            | flip concat "error "
+            | concat ": ")
+
+# the requests, with the v1 service and with the v1alpha service
+responses : String -> List[gen.ServerReflectionResponse] ! {Async, Network, Error[GrpcError]}
+responses =
+    fork
+        append
+        (flip
+                (grpc.bidi-streaming
+                    gen.server-reflection-request.encode
+                    gen.server-reflection-response.decode
+                    "/grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
+                (iter.from-list (take 2 requests))
+            | drained)
+        (flip
+                gen.server-reflection.server-reflection-info
+                (iter.from-list requests)
+            | drained)
+
+# a health check with the lower-level calls: the response's bytes
+health : String -> List[U8] ! {Network, Error[GrpcError]}
+health =
+    flip (grpc.unary id id "/grpc.health.v1.Health/Check") (bytes.from-list [])
+    | bytes.to-list
+
+main =
+    args ()
+    | head
+    | option.unwrap-or "127.0.0.1:50051"
+    | both
+        (responses
+            | map (.message-response
+                | option.map describe
+                | option.unwrap-or "nothing")
+            | each print)
+        (health | echo)
+    | ignore

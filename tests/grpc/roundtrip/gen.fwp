@@ -493,6 +493,51 @@ whoami-response.codec =
         whoami-response.decode
         whoami-response.default
 
+# ---- descriptors
+
+# the descriptors of the `.proto` files, which the routes carry for server
+# reflection (`grpc.serve` answers grpcurl and other clients with them)
+proto-files : List[GrpcFile]
+proto-files = [
+    GrpcFile {
+        name = "greeter.proto",
+        descriptor =
+            grpc.base64-bytes
+                "Cg1ncmVldGVyLnByb3RvEgR0ZXN0IjgKDEhlbGxvUmVxdWVzdBISCgRuYW1lGAEgASgJUgRuYW1lEhQKBXRpbWVzGAIgASgSUgV0aW1lcyImCgpIZWxsb1JlcGx5EhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2UiIgoMQ291bnRSZXF1ZXN0EhIKBGFyZzEYASABKBJSBGFyZzEiJQoNQ291bnRSZXNwb25zZRIUCgV2YWx1ZRgBIAEoElIFdmFsdWUiIgoMVGlja3NSZXF1ZXN0EhIKBGFyZzEYASABKBJSBGFyZzEiJQoNVGlja3NSZXNwb25zZRIUCgV2YWx1ZRgBIAEoCVIFdmFsdWUiIgoMVG90YWxSZXF1ZXN0EhIKBGFyZzEYASABKBJSBGFyZzEiJQoNVG90YWxSZXNwb25zZRIUCgV2YWx1ZRgBIAEoElIFdmFsdWUiIgoMU2hvdXRSZXF1ZXN0EhIKBGFyZzEYASABKAlSBGFyZzEiJQoNU2hvdXRSZXNwb25zZRIUCgV2YWx1ZRgBIAEoCVIFdmFsdWUiIwoNRmlyc3RzUmVxdWVzdBISCgRhcmcxGAEgASgSUgRhcmcxIiYKDkZpcnN0c1Jlc3BvbnNlEhQKBXZhbHVlGAEgASgSUgV2YWx1ZSIhCgtGaW5kUmVxdWVzdBISCgRhcmcxGAEgASgJUgRhcmcxIiEKC1Nsb3dSZXF1ZXN0EhIKBGFyZzEYASABKBJSBGFyZzEiJAoMU2xvd1Jlc3BvbnNlEhQKBXZhbHVlGAEgASgSUgV2YWx1ZSIPCg1XaG9hbWlSZXF1ZXN0IiYKDldob2FtaVJlc3BvbnNlEhQKBXZhbHVlGAEgASgJUgV2YWx1ZSIhCgtCb29tUmVxdWVzdBISCgRhcmcxGAEgASgSUgRhcmcxIiQKDEJvb21SZXNwb25zZRIUCgV2YWx1ZRgBIAEoElIFdmFsdWUiNwoNRGl2aWRlUmVxdWVzdBISCgRhcmcxGAEgASgSUgRhcmcxEhIKBGFyZzIYAiABKBJSBGFyZzIiSgoORGl2aWRlUmVzcG9uc2USFgoFdmFsdWUYASABKBJIAFIFdmFsdWUSFgoFZXJyb3IYAiABKAlIAFIFZXJyb3JCCAoGcmVzdWx0IiYKEENvdW50ZG93blJlcXVlc3QSEgoEYXJnMRgBIAEoElIEYXJnMSIpChFDb3VudGRvd25SZXNwb25zZRIUCgV2YWx1ZRgBIAEoElIFdmFsdWUiIwoNVGFnZ2VkUmVxdWVzdBISCgRhcmcxGAEgASgJUgRhcmcxIiYKDlRhZ2dlZFJlc3BvbnNlEhQKBXZhbHVlGAEgASgJUgV2YWx1ZSIgCgpOYXBSZXF1ZXN0EhIKBGFyZzEYASABKBJSBGFyZzEiIwoLTmFwUmVzcG9uc2USFAoFdmFsdWUYASABKBJSBXZhbHVlMtwFCgdHcmVldGVyEjAKCFNheUhlbGxvEhIudGVzdC5IZWxsb1JlcXVlc3QaEC50ZXN0LkhlbGxvUmVwbHkSMgoFQ291bnQSEi50ZXN0LkNvdW50UmVxdWVzdBoTLnRlc3QuQ291bnRSZXNwb25zZTABEjIKBVRpY2tzEhIudGVzdC5UaWNrc1JlcXVlc3QaEy50ZXN0LlRpY2tzUmVzcG9uc2UwARIyCgVUb3RhbBISLnRlc3QuVG90YWxSZXF1ZXN0GhMudGVzdC5Ub3RhbFJlc3BvbnNlKAESNAoFU2hvdXQSEi50ZXN0LlNob3V0UmVxdWVzdBoTLnRlc3QuU2hvdXRSZXNwb25zZSgBMAESNwoGRmlyc3RzEhMudGVzdC5GaXJzdHNSZXF1ZXN0GhQudGVzdC5GaXJzdHNSZXNwb25zZSgBMAESKwoERmluZBIRLnRlc3QuRmluZFJlcXVlc3QaEC50ZXN0LkhlbGxvUmVwbHkSLQoEU2xvdxIRLnRlc3QuU2xvd1JlcXVlc3QaEi50ZXN0LlNsb3dSZXNwb25zZRIzCgZXaG9hbWkSEy50ZXN0Lldob2FtaVJlcXVlc3QaFC50ZXN0Lldob2FtaVJlc3BvbnNlEi0KBEJvb20SES50ZXN0LkJvb21SZXF1ZXN0GhIudGVzdC5Cb29tUmVzcG9uc2USMwoGRGl2aWRlEhMudGVzdC5EaXZpZGVSZXF1ZXN0GhQudGVzdC5EaXZpZGVSZXNwb25zZRI+CglDb3VudGRvd24SFi50ZXN0LkNvdW50ZG93blJlcXVlc3QaFy50ZXN0LkNvdW50ZG93blJlc3BvbnNlMAESMwoGVGFnZ2VkEhMudGVzdC5UYWdnZWRSZXF1ZXN0GhQudGVzdC5UYWdnZWRSZXNwb25zZRIqCgNOYXASEC50ZXN0Lk5hcFJlcXVlc3QaES50ZXN0Lk5hcFJlc3BvbnNlYgZwcm90bzM=",
+        symbols = [
+            "test.HelloRequest",
+            "test.HelloReply",
+            "test.CountRequest",
+            "test.CountResponse",
+            "test.TicksRequest",
+            "test.TicksResponse",
+            "test.TotalRequest",
+            "test.TotalResponse",
+            "test.ShoutRequest",
+            "test.ShoutResponse",
+            "test.FirstsRequest",
+            "test.FirstsResponse",
+            "test.FindRequest",
+            "test.SlowRequest",
+            "test.SlowResponse",
+            "test.WhoamiRequest",
+            "test.WhoamiResponse",
+            "test.BoomRequest",
+            "test.BoomResponse",
+            "test.DivideRequest",
+            "test.DivideResponse",
+            "test.CountdownRequest",
+            "test.CountdownResponse",
+            "test.TaggedRequest",
+            "test.TaggedResponse",
+            "test.NapRequest",
+            "test.NapResponse",
+            "test.Greeter",
+        ],
+        imports = [],
+    },
+]
+
 # ---- service test.Greeter
 
 # rpc SayHello(HelloRequest) returns (HelloReply): a call to the service at an address
@@ -505,6 +550,7 @@ greeter.say-hello.route : (HelloRequest -> HelloReply ! {Async, IO, Network, Fil
 greeter.say-hello.route =
     grpc.unary-handler hello-request.decode hello-reply.encode
     | grpc.route "/test.Greeter/SayHello"
+    | grpc.with-files proto-files
 
 # rpc Count(CountRequest) returns (stream CountResponse): a call to the service at an address
 greeter.count : String -> CountRequest -> Channel[CountResponse] -> () ! {Async, Network, Error[GrpcError]}
@@ -519,6 +565,7 @@ greeter.count.route : (CountRequest -> Channel[CountResponse] -> () ! {Async, IO
 greeter.count.route =
     grpc.server-streaming-handler count-request.decode count-response.encode
     | grpc.route "/test.Greeter/Count"
+    | grpc.with-files proto-files
 
 # rpc Ticks(TicksRequest) returns (stream TicksResponse): a call to the service at an address
 greeter.ticks : String -> TicksRequest -> Channel[TicksResponse] -> () ! {Async, Network, Error[GrpcError]}
@@ -533,6 +580,7 @@ greeter.ticks.route : (TicksRequest -> Channel[TicksResponse] -> () ! {Async, IO
 greeter.ticks.route =
     grpc.server-streaming-handler ticks-request.decode ticks-response.encode
     | grpc.route "/test.Greeter/Ticks"
+    | grpc.with-files proto-files
 
 # rpc Total(stream TotalRequest) returns (TotalResponse): a call to the service at an address
 greeter.total : String -> Iterator[TotalRequest] -> TotalResponse ! {Network, Error[GrpcError]}
@@ -547,6 +595,7 @@ greeter.total.route : (Iterator[TotalRequest] -> TotalResponse ! {Async, IO, Net
 greeter.total.route =
     grpc.client-streaming-handler total-request.decode total-response.encode
     | grpc.route "/test.Greeter/Total"
+    | grpc.with-files proto-files
 
 # rpc Shout(stream ShoutRequest) returns (stream ShoutResponse): a call to the service at an address
 greeter.shout : String -> Iterator[ShoutRequest] -> Channel[ShoutResponse] -> () ! {Async, Network, Error[GrpcError]}
@@ -561,6 +610,7 @@ greeter.shout.route : (Iterator[ShoutRequest] -> Channel[ShoutResponse] -> () ! 
 greeter.shout.route =
     grpc.bidi-streaming-handler shout-request.decode shout-response.encode
     | grpc.route "/test.Greeter/Shout"
+    | grpc.with-files proto-files
 
 # rpc Firsts(stream FirstsRequest) returns (stream FirstsResponse): a call to the service at an address
 greeter.firsts : String -> Iterator[FirstsRequest] -> Channel[FirstsResponse] -> () ! {Async, Network, Error[GrpcError]}
@@ -575,6 +625,7 @@ greeter.firsts.route : (Iterator[FirstsRequest] -> Channel[FirstsResponse] -> ()
 greeter.firsts.route =
     grpc.bidi-streaming-handler firsts-request.decode firsts-response.encode
     | grpc.route "/test.Greeter/Firsts"
+    | grpc.with-files proto-files
 
 # rpc Find(FindRequest) returns (HelloReply): a call to the service at an address
 greeter.find : String -> FindRequest -> HelloReply ! {Network, Error[GrpcError]}
@@ -586,6 +637,7 @@ greeter.find.route : (FindRequest -> HelloReply ! {Async, IO, Network, FileIO, E
 greeter.find.route =
     grpc.unary-handler find-request.decode hello-reply.encode
     | grpc.route "/test.Greeter/Find"
+    | grpc.with-files proto-files
 
 # rpc Slow(SlowRequest) returns (SlowResponse): a call to the service at an address
 greeter.slow : String -> SlowRequest -> SlowResponse ! {Network, Error[GrpcError]}
@@ -597,6 +649,7 @@ greeter.slow.route : (SlowRequest -> SlowResponse ! {Async, IO, Network, FileIO,
 greeter.slow.route =
     grpc.unary-handler slow-request.decode slow-response.encode
     | grpc.route "/test.Greeter/Slow"
+    | grpc.with-files proto-files
 
 # rpc Whoami(WhoamiRequest) returns (WhoamiResponse): a call to the service at an address
 greeter.whoami : String -> WhoamiRequest -> WhoamiResponse ! {Network, Error[GrpcError]}
@@ -611,6 +664,7 @@ greeter.whoami.route : (WhoamiRequest -> WhoamiResponse ! {Async, IO, Network, F
 greeter.whoami.route =
     grpc.unary-handler whoami-request.decode whoami-response.encode
     | grpc.route "/test.Greeter/Whoami"
+    | grpc.with-files proto-files
 
 # rpc Boom(BoomRequest) returns (BoomResponse): a call to the service at an address
 greeter.boom : String -> BoomRequest -> BoomResponse ! {Network, Error[GrpcError]}
@@ -622,6 +676,7 @@ greeter.boom.route : (BoomRequest -> BoomResponse ! {Async, IO, Network, FileIO,
 greeter.boom.route =
     grpc.unary-handler boom-request.decode boom-response.encode
     | grpc.route "/test.Greeter/Boom"
+    | grpc.with-files proto-files
 
 # rpc Divide(DivideRequest) returns (DivideResponse): a call to the service at an address
 greeter.divide : String -> DivideRequest -> DivideResponse ! {Network, Error[GrpcError]}
@@ -636,6 +691,7 @@ greeter.divide.route : (DivideRequest -> DivideResponse ! {Async, IO, Network, F
 greeter.divide.route =
     grpc.unary-handler divide-request.decode divide-response.encode
     | grpc.route "/test.Greeter/Divide"
+    | grpc.with-files proto-files
 
 # rpc Countdown(CountdownRequest) returns (stream CountdownResponse): a call to the service at an address
 greeter.countdown : String -> CountdownRequest -> Channel[CountdownResponse] -> () ! {Async, Network, Error[GrpcError]}
@@ -652,6 +708,7 @@ greeter.countdown.route =
         countdown-request.decode
         countdown-response.encode
     | grpc.route "/test.Greeter/Countdown"
+    | grpc.with-files proto-files
 
 # rpc Tagged(TaggedRequest) returns (TaggedResponse): a call to the service at an address
 greeter.tagged : String -> TaggedRequest -> TaggedResponse ! {Network, Error[GrpcError]}
@@ -666,6 +723,7 @@ greeter.tagged.route : (TaggedRequest -> TaggedResponse ! {Async, IO, Network, F
 greeter.tagged.route =
     grpc.unary-handler tagged-request.decode tagged-response.encode
     | grpc.route "/test.Greeter/Tagged"
+    | grpc.with-files proto-files
 
 # rpc Nap(NapRequest) returns (NapResponse): a call to the service at an address
 greeter.nap : String -> NapRequest -> NapResponse ! {Network, Error[GrpcError]}
@@ -677,6 +735,7 @@ greeter.nap.route : (NapRequest -> NapResponse ! {Async, IO, Network, FileIO, Er
 greeter.nap.route =
     grpc.unary-handler nap-request.decode nap-response.encode
     | grpc.route "/test.Greeter/Nap"
+    | grpc.with-files proto-files
 
 # implementations of the methods of test.Greeter
 GreeterServer = {

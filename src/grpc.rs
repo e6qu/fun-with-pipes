@@ -2969,7 +2969,7 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             r
         }
         // ----- serving
-        "grpc.serve" | "grpc._serve-tls" => {
+        "grpc._serve" | "grpc._serve-tls" => {
             // certificate and key first for TLS
             let (files, a) = if sym == "grpc._serve-tls" {
                 (

@@ -46,6 +46,22 @@ posted.decode = pb.decode | const ()
 posted.codec : PbCodec[Posted]
 posted.codec = pb.empty
 
+# ---- descriptors
+
+# the descriptors of the `.proto` files, which the routes carry for server
+# reflection (`grpc.serve` answers grpcurl and other clients with them)
+proto-files : List[GrpcFile]
+proto-files = [
+    GrpcFile {
+        name = "chat.proto",
+        descriptor =
+            grpc.base64-bytes
+                "CgpjaGF0LnByb3RvEgRjaGF0IhoKBEpvaW4SEgoEdXNlchgBIAEoCVIEdXNlciIxCgdNZXNzYWdlEhIKBHVzZXIYASABKAlSBHVzZXISEgoEdGV4dBgCIAEoCVIEdGV4dCIICgZQb3N0ZWQyVQoEUm9vbRIjCgRQb3N0Eg0uY2hhdC5NZXNzYWdlGgwuY2hhdC5Qb3N0ZWQSKAoJU3Vic2NyaWJlEgouY2hhdC5Kb2luGg0uY2hhdC5NZXNzYWdlMAFiBnByb3RvMw==",
+        symbols = ["chat.Join", "chat.Message", "chat.Posted", "chat.Room"],
+        imports = [],
+    },
+]
+
 # ---- service chat.Room
 
 # Post a message to the room.
@@ -58,6 +74,7 @@ room.post.route : (Message -> Posted ! {Async, IO, Network, FileIO, Error[GrpcEr
 room.post.route =
     grpc.unary-handler message.decode posted.encode
     | grpc.route "/chat.Room/Post"
+    | grpc.with-files proto-files
 
 # The messages of the room from now on, starting with a greeting.
 # rpc Subscribe(Join) returns (stream Message): a call to the service at an address
@@ -70,6 +87,7 @@ room.subscribe.route : (Join -> Channel[Message] -> () ! {Async, IO, Network, Fi
 room.subscribe.route =
     grpc.server-streaming-handler join.decode message.encode
     | grpc.route "/chat.Room/Subscribe"
+    | grpc.with-files proto-files
 
 # Messages posted to the room go to everyone subscribed.
 # implementations of the methods of chat.Room

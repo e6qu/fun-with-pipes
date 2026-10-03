@@ -174,7 +174,6 @@ error. See [protocol.md](protocol.md).
   which native programs that use it link and the interpreter loads at run
   time, with client certificates (mutual TLS). DTLS and QUIC are not
   implemented.
-- Server reflection for `grpc.serve` routes made from `.proto` files.
 - Sockets and foreign C functions in the WebAssembly build of fwp (the
   playground): a browser has neither sockets nor a C compiler. Tasks on
   WebAssembly need JavaScript Promise Integration, or binaryen's

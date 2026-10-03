@@ -1188,7 +1188,7 @@ impl<'p> Gen<'p> {
             "grpc.open"
             | "grpc.send"
             | "grpc.recv"
-            | "grpc.serve"
+            | "grpc._serve"
             | "grpc._serve-tls"
             | "grpc.unary"
             | "grpc.server-streaming"
