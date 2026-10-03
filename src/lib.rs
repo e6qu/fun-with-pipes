@@ -5,6 +5,7 @@
 #![allow(clippy::mutable_key_type)]
 
 pub mod ast;
+pub mod asyncify;
 pub mod cgen;
 pub mod cli;
 pub mod cli_gen;
@@ -53,6 +54,7 @@ pub mod syntax;
 pub mod sys;
 pub mod textio;
 pub mod tls;
+pub mod transport;
 pub mod types;
 pub mod value;
 pub mod web;

@@ -6,12 +6,20 @@
 #   scripts/build-playground.sh && python3 -m http.server -d web 8000
 #
 # Needs the Rust target: rustup target add wasm32-wasip1
+#
+# With --asyncify, fwp.wasm also runs tasks in browsers without JavaScript
+# Promise Integration (Firefox, Safari): binaryen's wasm-opt (`npm install
+# -g binaryen`, or FWP_WASM_OPT) applies Asyncify, which web/fibers.js
+# recognizes. The module is then about a fifth larger and slower.
 set -eu
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
 
 cargo build --release --target wasm32-wasip1
 cp target/wasm32-wasip1/release/fwp.wasm web/fwp.wasm
+if [ "${1:-}" = "--asyncify" ]; then
+    "${FWP_WASM_OPT:-wasm-opt}" web/fwp.wasm --asyncify --pass-arg=asyncify-imports@fwp.none -O2 -o web/fwp.wasm
+fi
 
 # Examples: the tutorials that fwp.wasm can run, then two programs from examples/. Each is
 # web/examples/<name>.fwp; index.txt lists the names in order, each

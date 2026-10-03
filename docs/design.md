@@ -170,11 +170,12 @@ error. See [protocol.md](protocol.md).
   time, with client certificates (mutual TLS). DTLS and QUIC are not
   implemented.
 - Server reflection for `grpc.serve` routes made from `.proto` files.
-- Preemptive scheduling.
 - Sockets and foreign C functions in the WebAssembly build of fwp (the
   playground): a browser has neither sockets nor a C compiler. Tasks on
-  WebAssembly need JavaScript Promise Integration; there is no fallback
-  for engines without it (Safari), nor for other WASI runtimes.
+  WebAssembly need JavaScript Promise Integration, or binaryen's Asyncify (`--wasm-async=asyncify`, and
+  `scripts/build-playground.sh --asyncify` for fwp.wasm); WASI runtimes
+  without a JavaScript host run no tasks.
 - GPU and distributed backends, a JIT, reverse-mode autodiff.
-- The `UDS_V1` and `SHM_V1` transports (the header reserves bits for
-  them), the WebAssembly component model and `wasm64`.
+- Transports of the pipe protocol other than the pipe, `UDS_V1` and
+  `SHM_V1` (which are Linux only), the WebAssembly component model and
+  `wasm64`.

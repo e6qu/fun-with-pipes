@@ -14,6 +14,7 @@ usage:
                                  named by --service go to that service
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
+            [--wasm-async jspi|asyncify]
             [--staticlib|--cdylib] [--link lib-or-source]...
             [--service m[=addr]]...
                                  compile `main` (or an exported function) to a
@@ -27,6 +28,9 @@ usage:
                                  and an OpenAPI document (see docs/rest.md);
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
+                                 --wasm-async=asyncify runs the tasks of a
+                                 WebAssembly program without JSPI (needs
+                                 binaryen's wasm-opt);
                                  --staticlib/--cdylib build a C library
                                  (and header) of the exported functions;
                                  --link adds C code for foreign functions
@@ -368,6 +372,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut opt = "-O2".to_string();
     let mut target = fwp::cgen::Target::Native;
     let mut fat = false;
+    let mut wasm_async = fwp::asyncify::WasmAsync::Jspi;
     let mut lib: Option<fwp::cgen::LibKind> = None;
     let mut services: Vec<(String, String)> = Vec::new();
     let mut i = 0;
@@ -404,6 +409,22 @@ fn build(args: &[String]) -> ExitCode {
                         eprintln!(
                             "fwp build: unknown target (native, wasm32-wasi, wasm32-browser)"
                         );
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            "--wasm-async" | "--wasm-async=jspi" | "--wasm-async=asyncify" => {
+                let v = match args[i].split_once('=') {
+                    Some((_, v)) => Some(v.to_string()),
+                    None => {
+                        i += 1;
+                        args.get(i).cloned()
+                    }
+                };
+                match v.as_deref().and_then(fwp::asyncify::WasmAsync::parse) {
+                    Some(w) => wasm_async = w,
+                    None => {
+                        eprintln!("fwp build: --wasm-async is jspi or asyncify");
                         return ExitCode::from(2);
                     }
                 }
@@ -557,10 +578,30 @@ fn build(args: &[String]) -> ExitCode {
             eprintln!("fwp build: --fat applies to native executables only");
             return 2;
         }
+        // tasks without JSPI: the module goes through Asyncify (programs
+        // without tasks need nothing)
+        let asyncify = target.is_wasm()
+            && wasm_async == fwp::asyncify::WasmAsync::Asyncify
+            && fwp::cgen::uses_async(&prog);
+        if asyncify && fwp::asyncify::wasm_opt().is_none() {
+            eprintln!("fwp build: --wasm-async=asyncify needs binaryen's wasm-opt (`npm install -g binaryen`, or set FWP_WASM_OPT)");
+            return 1;
+        }
+        let csrc = if asyncify {
+            format!("{}{}", fwp::asyncify::ASYNCIFY_MARK, csrc)
+        } else {
+            csrc
+        };
         let compiled = if fat {
             fwp::cgen::compile_fat(&csrc, &out, &opt)
         } else {
-            fwp::cgen::compile_for(&csrc, &out, &opt, target)
+            fwp::cgen::compile_for(&csrc, &out, &opt, target).and_then(|_| {
+                if asyncify {
+                    fwp::asyncify::apply(&out, &opt)
+                } else {
+                    Ok(())
+                }
+            })
         };
         match compiled {
             Ok(()) => 0,

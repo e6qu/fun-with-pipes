@@ -13,8 +13,15 @@
 //! cancelling a task cancels its subtree. Cancellation is observed at
 //! suspension points and unwinds the task (`Ctl::Cancelled`), which
 //! `attempt` does not catch.
+//!
+//! Scheduling is preemptive at safe points: every entry to a function of
+//! the program spends one unit of the running task's budget, and a task
+//! whose budget runs out ([`SLICE`] entries, `FWP_PREEMPT`) notices its
+//! cancellation or deadline and hands the baton on if another task is
+//! waiting for it. Native programs count the same entries (cgen's
+//! `FWP_TICK`), so a deterministic program interleaves alike on both.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, VecDeque};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream, ToSocketAddrs, UdpSocket};
@@ -30,6 +37,50 @@ use crate::interp::{Ctl, Interp, R};
 use crate::ir::MT;
 use crate::tls::Io;
 use crate::value::Value;
+
+/// Function entries a task makes before it is preempted, unless
+/// `FWP_PREEMPT` says otherwise (`runtime/fwp_rt_task.c` has the same).
+pub const SLICE: i32 = 10000;
+
+/// The slice length: `FWP_PREEMPT` entries, or never (0) if it is 0.
+fn slice() -> i32 {
+    static N: std::sync::OnceLock<i32> = std::sync::OnceLock::new();
+    *N.get_or_init(|| match std::env::var("FWP_PREEMPT") {
+        Ok(s) if !s.trim().is_empty() => match s.trim().parse::<i64>() {
+            Ok(n) if n > 0 => n.min(i32::MAX as i64) as i32,
+            _ => i32::MAX,
+        },
+        _ => SLICE,
+    })
+}
+
+thread_local! {
+    /// Function entries left in the running task's slice. Each task has
+    /// its own thread; on WebAssembly, where tasks are fibers of one
+    /// thread, it is reset whenever another fiber resumes.
+    static BUDGET: Cell<i32> = const { Cell::new(0) };
+}
+
+/// Spend one unit of the budget: true when the slice is over.
+#[inline]
+pub(crate) fn tick() -> bool {
+    BUDGET.with(|b| {
+        let n = b.get() - 1;
+        b.set(n);
+        n <= 0
+    })
+}
+
+/// A task starts, or resumes after suspending: a full slice.
+pub(crate) fn new_slice() {
+    BUDGET.with(|b| b.set(slice()));
+}
+
+/// The start of a program (or test): its first safe point starts the
+/// slice, as in native programs, whatever compile-time code ran before.
+pub(crate) fn start_slice() {
+    BUDGET.with(|b| b.set(0));
+}
 
 /// Contents only accessed by the thread holding the baton.
 pub struct Baton<T>(pub T);
@@ -89,9 +140,23 @@ impl World {
 
     #[cfg(not(target_family = "wasm"))]
     fn acquire(&self) {
+        let me = self.ticket();
+        self.wait_turn(me);
+    }
+
+    /// A place in the queue for the baton.
+    #[cfg(not(target_family = "wasm"))]
+    fn ticket(&self) -> u64 {
         let mut t = self.turn.lock().unwrap();
         let me = t.next;
         t.next += 1;
+        me
+    }
+
+    /// Wait for the baton with a ticket.
+    #[cfg(not(target_family = "wasm"))]
+    fn wait_turn(&self, me: u64) {
+        let mut t = self.turn.lock().unwrap();
         while t.serving != me {
             t = self.turn_cv.wait(t).unwrap();
         }
@@ -136,6 +201,14 @@ impl World {
         while t.serving != me {
             t = self.turn_cv.wait(t).unwrap();
         }
+        new_slice();
+    }
+
+    /// Whether another task waits for the baton.
+    #[cfg(not(target_family = "wasm"))]
+    fn contended(&self) -> bool {
+        let t = self.turn.lock().unwrap();
+        t.next > t.serving + 1
     }
 
     /// Run `f` (which must not touch values) without the baton.
@@ -144,6 +217,7 @@ impl World {
         self.release();
         let r = f();
         self.acquire();
+        new_slice();
         r
     }
 
@@ -162,6 +236,19 @@ impl World {
         self.fibers.lock().unwrap().parked.push((me, until));
         let next = self.next_fiber();
         crate::fiber::switch_to(next);
+        new_slice();
+    }
+
+    /// Whether another fiber is ready, or waits for an instant that
+    /// passed.
+    #[cfg(target_family = "wasm")]
+    fn contended(&self) -> bool {
+        let f = self.fibers.lock().unwrap();
+        if !f.ready.is_empty() {
+            return true;
+        }
+        let now = Instant::now();
+        f.parked.iter().any(|p| p.1.is_some_and(|u| u <= now))
     }
 
     /// A fiber ready to run, after waiting for the earliest timer if none
@@ -202,7 +289,9 @@ impl World {
     /// Run `f` (WebAssembly has no sockets to wait for).
     #[cfg(target_family = "wasm")]
     pub(crate) fn blocking<T>(&self, f: impl FnOnce() -> T) -> T {
-        f()
+        let r = f();
+        new_slice();
+        r
     }
 }
 
@@ -436,6 +525,7 @@ pub(crate) fn wrap(n: Native) -> Value {
 /// Run a task's body with the baton, wait for its children and record its
 /// result; a failure that is not a cancellation ends the process.
 fn run_task(mut it: Interp<'static>, body: TaskBody, world: &World) {
+    new_slice();
     let result = match body {
         TaskBody::Thunk(thunk) => match it.apply(thunk, vec![Value::unit()]) {
             Ok(v) => Some(v),
@@ -474,6 +564,19 @@ impl<'p> Interp<'p> {
         }
         if self.task.cancelled.load(AO::SeqCst) {
             return Err(Ctl::Cancelled);
+        }
+        Ok(())
+    }
+
+    /// A safe point where the slice is over: unwind if the task was
+    /// cancelled or its deadline passed, otherwise let a waiting task run
+    /// (the task resumes after it, with a new slice).
+    pub(crate) fn preempt(&mut self) -> R<()> {
+        new_slice();
+        self.check_cancel()?;
+        if self.world.contended() {
+            self.world.park(Some(Instant::now()));
+            self.check_cancel()?;
         }
         Ok(())
     }
@@ -639,13 +742,17 @@ impl<'p> Interp<'p> {
         }
         #[cfg(not(target_family = "wasm"))]
         {
+            // the task's turn comes after the tasks already waiting, in
+            // the order tasks are started (as in native programs), not in
+            // the order their threads happen to start
+            let ticket = self.world.ticket();
             let started = std::thread::Builder::new()
                 .stack_size(256 << 20)
                 .spawn(move || {
                     crate::interp::set_stack_limit(256 << 20);
                     let job = job;
                     let Baton((it, body)) = job;
-                    world.acquire();
+                    world.wait_turn(ticket);
                     run_task(it, body, &world);
                     world.release();
                 });

@@ -1,0 +1,43 @@
+# Preemptive scheduling: tasks that compute without suspending take turns
+# after a slice of function entries (the same on both backends), a ticker
+# keeps ticking while another task spins, and deadlines and cancellation
+# interrupt tasks that never suspend.
+
+rec down : I64 -> I64
+down = match
+    0 -> 0
+    _ -> sub 1 | down | add 1
+
+# compute, then print, three times
+step : String -> I64 -> () ! {IO}
+step = curry (tap (const 4000 | down) | echo)
+
+worker : String -> () -> () ! {Async, IO, Network, FileIO}
+worker = flip (const (step | flip each [1, 2, 3]))
+
+# spin until cancelled, without suspending
+spin : () -> I64 ! {Async}
+spin = loop (if (const () | task.cancelled) (const (Stop 1)) Again)
+
+# spin forever: only preemption can stop it
+forever : () -> I64
+forever = loop Again
+
+ticks : () -> () ! {Async, IO, Network, FileIO}
+ticks =
+    const [1, 2, 3]
+    | each (tap (const 20ms | task.sleep) | format "tick {}" | print)
+
+watch : Task[I64] -> () ! {Async, IO, Network, FileIO}
+watch = tap (const () | ticks) | tap task.cancel | task.await | echo
+
+main = [
+    task.scope (const ["a", "b", "c"] | each (worker | task.spawn | ignore)),
+    task.spawn spin | watch,
+    task.within 50ms forever | echo,
+    task.spawn forever
+    | tap (const 30ms | task.sleep)
+    | tap task.cancel
+    | task.await
+    | echo,
+] | ignore

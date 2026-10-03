@@ -37,7 +37,7 @@ fn is_unit(mt: &MT) -> bool {
 }
 
 pub struct Emitter<'w> {
-    out: &'w mut dyn Write,
+    out: &'w mut crate::transport::Out,
     binary: bool,
     elem: MT,
 }
@@ -47,7 +47,9 @@ impl Emitter<'_> {
         if self.binary {
             let mut buf = Vec::new();
             proto::encode(&mut buf, v, &self.elem, prog);
-            self.out.write_all(&proto::frame(&buf))
+            let r = self.out.write_all(&proto::frame(&buf));
+            self.out.frame_done();
+            r
         } else if is_unit(&self.elem) {
             Ok(())
         } else {
@@ -107,10 +109,11 @@ pub fn error_text(v: &Value, mt: &MT, prog: &Program) -> String {
     display(v, mt, prog, true)
 }
 
-/// Input records from stdin, in text or binary form.
+/// Input records from stdin, in text or binary form (with the request for
+/// another transport, until the producer switches to it).
 pub enum Input {
     Text(Box<dyn BufRead>),
-    Binary(Box<dyn BufRead>),
+    Binary(Box<dyn BufRead>, crate::transport::Pending),
 }
 
 /// Detect the input format by peeking at the magic bytes.
@@ -129,7 +132,8 @@ pub fn open_input(mut r: Box<dyn BufRead>, elem: &MT, prog: &Program) -> Result<
                 elem, h.type_name
             ));
         }
-        return Ok(Input::Binary(r));
+        let pending = crate::transport::ask(&h.capabilities);
+        return Ok(Input::Binary(r, pending));
     }
     Ok(Input::Text(r))
 }
@@ -138,9 +142,18 @@ impl Input {
     /// Next input record.
     pub fn next(&mut self, elem: &MT, prog: &Program) -> Result<Option<Value>, String> {
         match self {
-            Input::Binary(r) => match proto::read_frame(r)? {
+            Input::Binary(r, pending) => match proto::read_any_frame(r)? {
                 None => Ok(None),
-                Some(payload) => {
+                Some((proto::SWITCH_FRAME, payload)) => {
+                    match crate::transport::switch(pending, &payload) {
+                        Some(next) => {
+                            *r = next;
+                            self.next(elem, prog)
+                        }
+                        None => Err("bad switch frame".into()),
+                    }
+                }
+                Some((_, payload)) => {
                     let mut rd = proto::Reader::new(&payload);
                     // one message for every decoding failure, as in the
                     // native runtime
@@ -380,10 +393,12 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
     let output = &cmd.output;
     let binary = std::env::var("FWP_OUT").is_ok_and(|v| v == "bin");
     crate::sys::OUTPUT_TO_STDERR.store(binary, std::sync::atomic::Ordering::Relaxed);
-    let stdout = std::io::stdout();
-    let mut lock = std::io::BufWriter::new(stdout.lock());
+    let mut lock = crate::transport::Out::new();
     if binary {
+        lock.offer();
         let _ = lock.write_all(&proto::header(&output.elem, prog));
+        let _ = lock.flush();
+        lock.ready();
     }
     let code = {
         // In binary mode the program's own output goes to stderr so that it
@@ -503,6 +518,7 @@ pub fn exec_command(prog: &Program, cmd: &cli::Command, argv: &[String]) -> i32 
     };
     if binary {
         let _ = lock.write_all(&proto::end_frame());
+        lock.end();
     }
     let _ = lock.flush();
     code
@@ -591,6 +607,11 @@ pub fn run_pipeline(fwp_exe: &std::path::Path, spec: &str) -> Result<i32, String
             .args(&st.args);
         if i + 1 < n {
             cmd.env("FWP_OUT", "bin").stdout(Stdio::piped());
+            // the next stage is an fwp program, which asks for a faster
+            // transport (src/transport.rs) once it read the header
+            if std::env::var_os("FWP_TRANSPORT_WAIT").is_none() {
+                cmd.env("FWP_TRANSPORT_WAIT", "10000");
+            }
         } else {
             cmd.env_remove("FWP_OUT");
         }

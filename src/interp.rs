@@ -116,6 +116,7 @@ impl<'p> Interp<'p> {
     /// Call a root function (main or a test) and wait for the tasks it
     /// started; when it failed, they are cancelled first.
     pub fn call_root(&mut self, id: FuncId) -> R<Value> {
+        crate::sched::start_slice();
         let r = self.call(id, vec![]);
         if r.is_err() {
             self.cancel_children();
@@ -137,6 +138,10 @@ impl<'p> Interp<'p> {
         }
         let v = match &f.body {
             Body::Expr(e) => {
+                // a safe point: preempted after a slice of function entries
+                if crate::sched::tick() {
+                    self.preempt()?;
+                }
                 let mut locals = args;
                 locals.resize(f.nlocals as usize, Value::unit());
                 self.eval(e, &mut locals)?
@@ -587,6 +592,10 @@ impl<'p> Interp<'p> {
                 let f = a[0].clone();
                 let mut s = a[1].clone();
                 loop {
+                    // a safe point, as each function entry is
+                    if crate::sched::tick() {
+                        self.preempt()?;
+                    }
                     match &self.apply(f.clone(), vec![s])? {
                         Value::Data(0, fs) => s = fs[0].clone(),
                         Value::Data(_, fs) => return Ok(fs[0].clone()),

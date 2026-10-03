@@ -17,9 +17,11 @@ jobs:
           targets: wasm32-wasip1
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libssl-dev openssl
+      - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
+        run: npm install -g binaryen
       - name: fmt
         run: cargo fmt --all -- --check
       - name: clippy

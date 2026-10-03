@@ -162,6 +162,7 @@ fn native() -> Runner {
         "safe-div",
         "later",
         "flag",
+        "lines",
     ] {
         let exe = dir.join(f);
         let out = Command::new(fwp())
@@ -283,6 +284,12 @@ fn malformed_inputs() -> Vec<(&'static str, Vec<u8>, String)> {
             [b"FWP1\x01".to_vec(), leb(1)].concat(),
             bad("truncated header"),
         ),
+        // a switch to another transport that nobody asked for
+        (
+            "normalize",
+            [header.clone(), vec![2, 1, 0, 0, 0, 1], vec![0; 5]].concat(),
+            bad("bad switch frame"),
+        ),
         // invalid UTF-8 in text records becomes U+FFFD
         (
             "normalize",
@@ -306,4 +313,162 @@ fn fwp_pipe_connects_stages() {
     child.stdin.take().unwrap().write_all(b"1\n2\n3\n").unwrap();
     let out = child.wait_with_output().unwrap();
     assert_eq!(String::from_utf8_lossy(&out.stdout), "60\n");
+}
+
+/// `producer | consumer` connected by a pipe, each with its environment;
+/// the consumer's (stdout, stderr, exit code).
+fn pipeline(
+    p: &Runner,
+    c: &Runner,
+    prod: (&str, &[&str]),
+    cons: (&str, &[&str]),
+    penv: &[(&str, &str)],
+    cenv: &[(&str, &str)],
+) -> (Vec<u8>, String, i32) {
+    let mut pc = command(p, prod.0);
+    pc.args(prod.1)
+        .env("FWP_OUT", "bin")
+        .envs(penv.iter().copied())
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut producer = pc.spawn().unwrap();
+    let mut cc = command(c, cons.0);
+    cc.args(cons.1)
+        .env_remove("FWP_OUT")
+        .envs(cenv.iter().copied())
+        .stdin(Stdio::from(producer.stdout.take().unwrap()))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let out = cc.output().unwrap();
+    let pout = producer.wait_with_output().unwrap();
+    assert!(
+        pout.status.success(),
+        "producer: {}",
+        String::from_utf8_lossy(&pout.stderr)
+    );
+    (
+        out.stdout,
+        String::from_utf8_lossy(&out.stderr).to_string(),
+        out.status.code().unwrap_or(-1),
+    )
+}
+
+/// The stream moves from the stdout pipe to a Unix domain socket or to
+/// shared memory when both sides can (Linux), between every combination
+/// of backends, with byte-identical results; and it stays on the pipe when
+/// the consumer declines or cannot ask.
+#[test]
+fn transports_switch_and_fall_back() {
+    if !cfg!(target_os = "linux") {
+        return;
+    }
+    let n = if have_cc() { Some(native()) } else { None };
+    let mut runners = vec![(Runner::Interp, Runner::Interp)];
+    if let Some(n) = &n {
+        runners.push((n.clone(), n.clone()));
+        runners.push((Runner::Interp, n.clone()));
+        runners.push((n.clone(), Runner::Interp));
+    }
+    // about 1.5 MB: more than the ring holds, so it wraps around
+    let count = "10000";
+    let off = [("FWP_TRANSPORT", "stdio")];
+    let lines = ("lines", &[count][..]);
+    let (want, _, _) = pipeline(
+        &Runner::Interp,
+        &Runner::Interp,
+        lines,
+        ("normalize", &[]),
+        &off,
+        &off,
+    );
+    let want = String::from_utf8(want).unwrap();
+    assert_eq!(want.lines().count(), 10000);
+    let wait = ("FWP_TRANSPORT_WAIT", "20000");
+    let report = ("FWP_TRANSPORT_REPORT", "1");
+    for (p, c) in &runners {
+        for (transport, name) in [("shm", "SHM_V1"), ("uds", "UDS_V1"), ("stdio", "")] {
+            let t = std::time::Instant::now();
+            let (out, err, code) = pipeline(
+                p,
+                c,
+                ("lines", &[count]),
+                ("normalize", &[]),
+                &[wait],
+                &[("FWP_TRANSPORT", transport), report],
+            );
+            assert_eq!(code, 0, "{}", err);
+            assert!(
+                String::from_utf8_lossy(&out) == want,
+                "{} differs",
+                transport
+            );
+            if name.is_empty() {
+                // declining releases the waiting producer at once
+                assert_eq!(err, "");
+                assert!(t.elapsed() < std::time::Duration::from_secs(15));
+            } else {
+                assert_eq!(err, format!("fwp: input continues on {}\n", name));
+            }
+        }
+    }
+    // a producer that does not offer (FWP_TRANSPORT=stdio), or offers
+    // without waiting: the same results
+    for (p, c) in &runners {
+        for penv in [&[("FWP_TRANSPORT", "stdio")][..], &[]] {
+            let (out, err, code) =
+                pipeline(p, c, ("lines", &[count]), ("normalize", &[]), penv, &[]);
+            assert_eq!(code, 0, "{}", err);
+            assert!(String::from_utf8_lossy(&out) == want);
+        }
+    }
+    // a reader that is not an fwp program gets the stream on the pipe,
+    // byte for byte as without transports
+    for r in std::iter::once(Runner::Interp).chain(n.clone()) {
+        let mut pc = command(&r, "lines");
+        let plain = pc
+            .arg("300")
+            .env("FWP_OUT", "bin")
+            .env("FWP_TRANSPORT", "stdio")
+            .output()
+            .unwrap()
+            .stdout;
+        let mut pc = command(&r, "lines");
+        let offered = pc
+            .arg("300")
+            .env("FWP_OUT", "bin")
+            .env("FWP_TRANSPORT_WAIT", "100")
+            .output()
+            .unwrap()
+            .stdout;
+        assert_eq!(plain, offered);
+    }
+    // `fwp pipe` switches between its stages
+    use std::io::Write;
+    let spec = format!("{t}:lines 2000 | {t}:normalize", t = tools().display());
+    let mut child = Command::new(fwp())
+        .arg("pipe")
+        .arg(&spec)
+        .env("FWP_TRANSPORT_REPORT", "1")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    child.stdin.take().unwrap().write_all(b"").unwrap();
+    let out = child.wait_with_output().unwrap();
+    let (want, _, _) = pipeline(
+        &Runner::Interp,
+        &Runner::Interp,
+        ("lines", &["2000"]),
+        ("normalize", &[]),
+        &off,
+        &off,
+    );
+    let want = String::from_utf8(want).unwrap();
+    assert!(String::from_utf8_lossy(&out.stdout) == want);
+    assert_eq!(
+        String::from_utf8_lossy(&out.stderr),
+        "fwp: input continues on SHM_V1\n"
+    );
 }

@@ -2,9 +2,9 @@
 // Standard streams, arguments and environment are passed through; the
 // current directory is preopened as ".". The module runs in a worker with
 // a large stack, since deep recursion uses the engine's native stack.
-// Tasks run as fibers (web/fibers.js): JavaScript Promise Integration is
-// switched on for the worker (node 22 has it behind a flag), unless
-// FWP_NO_JSPI=1.
+// Tasks run as fibers (web/fibers.js), with JavaScript Promise Integration
+// (on by default in node 24); FWP_NO_JSPI=1 switches it off for the
+// worker.
 import { readFile } from "node:fs/promises";
 import { writeSync } from "node:fs";
 import { WASI } from "node:wasi";
@@ -13,7 +13,16 @@ import v8 from "node:v8";
 import process from "node:process";
 
 if (isMainThread) {
-  if (!process.env.FWP_NO_JSPI) v8.setFlagsFromString("--experimental-wasm-jspi");
+  // node:wasi's functions are "fast API" functions, which optimized code
+  // calls directly; when one of them allocates (fd_write does), V8 may
+  // collect garbage in the middle of such a call and then crash walking
+  // the stack (node 22: a segmentation fault; node 24: the fatal error
+  // "Check failed: isolate_->IsOnCentralStack()"; both more likely the
+  // more the program switches fibers). Plain API calls are safe.
+  v8.setFlagsFromString("--no-turbo-fast-api-calls");
+  // JSPI is on by default in node 24 (node 22 needs the flag);
+  // FWP_NO_JSPI=1 turns it off, as an engine without it
+  v8.setFlagsFromString(process.env.FWP_NO_JSPI ? "--no-experimental-wasm-jspi" : "--experimental-wasm-jspi");
   const worker = new Worker(new URL(import.meta.url), {
     workerData: { args: process.argv.slice(2), env: process.env },
     resourceLimits: { stackSizeMb: 1024 },
@@ -41,8 +50,15 @@ if (isMainThread) {
   const imports = wasi.getImportObject();
   // proc_exit may be called from any fiber: it ends the run with an
   // exception that web/fibers.js passes on
+  // WASI's 32-bit arguments are unsigned, but WebAssembly passes i32s to
+  // JavaScript as signed numbers: node 24 rejects the negative ones (an
+  // address beyond 2 GiB, as the stacks of thousands of tasks reach) with
+  // EFAULT, so they are made unsigned here
+  const unsigned = {};
+  for (const [name, f] of Object.entries(imports.wasi_snapshot_preview1))
+    unsigned[name] = (...a) => f(...a.map((x) => (typeof x === "number" && x < 0 ? x >>> 0 : x)));
   imports.wasi_snapshot_preview1 = {
-    ...imports.wasi_snapshot_preview1,
+    ...unsigned,
     proc_exit: (code) => {
       throw new Exit(code);
     },

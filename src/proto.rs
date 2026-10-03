@@ -369,9 +369,11 @@ pub fn fingerprint(canonical: &str) -> [u8; 16] {
 
 pub const MAGIC: &[u8; 4] = b"FWP1";
 pub const VERSION: u8 = 1;
-/// Capabilities this implementation offers; reserved names for future
-/// transports are listed in docs/protocol.md.
-pub const CAPABILITIES: &[&str] = &["PIPE_V1"];
+/// Capabilities this implementation offers: the stream itself, and
+/// switching it to a Unix domain socket or to shared memory
+/// (`src/transport.rs`); other reserved names are listed in
+/// docs/protocol.md.
+pub const CAPABILITIES: &[&str] = &["PIPE_V1", "UDS_V1", "SHM_V1"];
 
 /// Stream header for values of type `mt`.
 pub fn header(mt: &MT, prog: &Program) -> Vec<u8> {
@@ -474,6 +476,16 @@ pub fn read_header(r: &mut impl std::io::Read) -> Result<Header, String> {
 
 /// Read the next frame payload; `None` at the end frame or end of input.
 pub fn read_frame(r: &mut impl std::io::Read) -> Result<Option<Vec<u8>>, String> {
+    Ok(read_any_frame(r)?.map(|(_, p)| p))
+}
+
+/// The kind of a frame that moves the rest of the stream to another
+/// transport (`src/transport.rs`); its payload is the transport.
+pub const SWITCH_FRAME: u8 = 2;
+
+/// Read the next frame, with its kind; `None` at the end frame or end of
+/// input.
+pub fn read_any_frame(r: &mut impl std::io::Read) -> Result<Option<(u8, Vec<u8>)>, String> {
     let mut kind = [0u8; 1];
     if r.read_exact(&mut kind).is_err() {
         return Ok(None);
@@ -486,5 +498,5 @@ pub fn read_frame(r: &mut impl std::io::Read) -> Result<Option<Vec<u8>>, String>
     if kind[0] == 0 {
         return Ok(None);
     }
-    Ok(Some(payload))
+    Ok(Some((kind[0], payload)))
 }

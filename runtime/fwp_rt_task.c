@@ -1,9 +1,13 @@
 /* Structured concurrency, networking and metrics.
  *
- * Tasks are green threads (ucontext) on one OS thread, scheduled
- * cooperatively: a task runs until it suspends on a timer, a channel,
- * another task or a socket. Sockets are non-blocking; a task waiting for
- * one is parked on an event loop (epoll on Linux, poll elsewhere).
+ * Tasks are green threads (ucontext) on one OS thread. A task runs until
+ * it suspends on a timer, a channel, another task or a socket, or until
+ * its slice ends: programs that use tasks count the entries to their
+ * functions (FWP_TICK), and after FWP_SLICE of them (FWP_PREEMPT) the
+ * task notices its cancellation or deadline and lets the other ready
+ * tasks run (fwp_preempt). The count is deterministic and the same as the
+ * interpreter's. Sockets are non-blocking; a task waiting for one is
+ * parked on an event loop (epoll on Linux, poll elsewhere).
  *
  * Tasks form a tree: a task finishes only after its children finished, and
  * cancelling a task cancels its subtree. A cancelled task unwinds (longjmp
@@ -335,6 +339,9 @@ static void fwp_free_zombie(void) {
 /* make `to` the current task, with its runtime state */
 static void fwp_enter(fwp_task *to) {
     fwp_cur = to;
+#ifdef FWP_ASYNCIFY
+    fwp_stack_low = to->stack ? (uintptr_t)to->stack + 65536 : 0;
+#endif
     fwp_handlers = to->handlers;
     fwp_state = to->st;
     fwp_state_len = to->st_len;
@@ -412,15 +419,62 @@ static void fwp_poll_events(void) {
     }
 }
 
+/* ----- preemption: function entries left in the running task's slice
+ * (a new slice when a task starts or resumes after suspending) */
+#define FWP_SLICE 10000
+static int32_t fwp_slice = 0;
+
+static void fwp_new_slice(void) {
+    if (!fwp_slice) {
+        const char *s = getenv("FWP_PREEMPT");
+        long long n = s && *s ? strtoll(s, 0, 10) : FWP_SLICE;
+        fwp_slice = n <= 0 || n > INT32_MAX ? INT32_MAX : (int32_t)n;
+    }
+    fwp_budget = fwp_slice;
+}
+
 /* Run other tasks until the current one is made ready again. */
 static void fwp_block(void) {
     for (;;) {
         fwp_task *t = fwp_dequeue();
         if (t) {
             if (t != fwp_cur) fwp_switch(t);
+            fwp_new_slice();
             return;
         }
         fwp_poll_events();
+    }
+}
+
+/* Make the tasks whose timers passed, or whose sockets are ready, ready,
+ * without waiting. */
+static void fwp_poll_ready(void) {
+    if (!fwp_timers && !fwp_io_waiting) return;
+#if defined(__linux__) && !defined(FWP_FIBERS)
+    if (fwp_io_waiting) {
+        struct epoll_event evs[64];
+        int n = epoll_wait(fwp_epfd, evs, 64, 0);
+        for (int i = 0; i < n; i++) {
+            int fd = evs[i].data.fd;
+            uint32_t e = evs[i].events;
+            if ((size_t)fd >= fwp_nfdws || !fwp_fdws[fd]) continue;
+            fwp_fdw *w = fwp_fdws[fd];
+            if (e & (EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR)) fwp_wake_io(&w->rd);
+            if (e & (EPOLLOUT | EPOLLHUP | EPOLLERR)) fwp_wake_io(&w->wr);
+            fwp_fd_sync(fd);
+        }
+    }
+#endif
+    if (!fwp_timers) return;
+    int64_t now = fwp_now_ns();
+    for (fwp_task *t = fwp_timers, *nx; t; t = nx) {
+        nx = t->tnext;
+        if (t->wake_at <= now) {
+            fwp_timer_remove(t);
+            t->timed_out = 1;
+            if (t->deadline && now >= t->deadline && !t->cancelled) fwp_cancel_tree(t);
+            fwp_make_ready(t);
+        }
     }
 }
 
@@ -434,6 +488,20 @@ static void fwp_check_cancel(void) {
     if (!t->cancelled) return;
     if (t == fwp_root) fwp_root_cancelled();
     longjmp(t->base, 1);
+}
+
+/* The slice of the current task is over: unwind it if it was cancelled
+ * or its deadline passed, otherwise run the other ready tasks first. */
+static __attribute__((noinline)) void fwp_preempt(void) {
+    fwp_new_slice();
+    fwp_task *t = fwp_cur;
+    if (!t) return;
+    fwp_check_cancel();
+    fwp_poll_ready();
+    if (!fwp_ready_head) return;
+    fwp_make_ready(t);
+    fwp_block();
+    fwp_check_cancel();
 }
 
 /* Park the current task on `wl` (may be null) until woken or `at`
@@ -482,6 +550,7 @@ FWP_EXPORT("fwp_fiber_entry") int fwp_fiber_entry(int id) {
 static void fwp_task_main(void) {
 #endif
     fwp_free_zombie();
+    fwp_new_slice();
     fwp_task *t = fwp_cur;
     if (setjmp(t->base) == 0) {
         if (t->cfn) {

@@ -18,6 +18,7 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_sys.c"),
     include_str!("../runtime/fwp_rt_json.c"),
     include_str!("../runtime/fwp_rt_web.c"),
+    include_str!("../runtime/fwp_rt_pipe.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
     include_str!("../runtime/fwp_rt_pb.c"),
 ];
@@ -143,6 +144,9 @@ struct Gen<'p> {
     /// Flag tables of options records (`cli.parse`, executables).
     cli_defs: String,
     cli_flags: HashMap<MT, usize>,
+    /// Whether functions are safe points for preemption (programs with
+    /// tasks): their entries spend the running task's budget.
+    ticks: bool,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -1612,6 +1616,9 @@ impl<'p> Gen<'p> {
             }
             Body::Expr(e) => {
                 let e = e.clone();
+                if self.ticks {
+                    out.push_str("    FWP_TICK();\n");
+                }
                 let mut fg = FnGen {
                     g: self,
                     out: String::new(),
@@ -2018,6 +2025,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         remotes: Vec::new(),
         cli_defs: String::new(),
         cli_flags: HashMap::new(),
+        ticks: uses_async(prog) || uses_services(prog),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
@@ -2449,6 +2457,7 @@ static const fwp_exec_spec exec_spec{i} = {{
                 r,
                 r#"    {{
         fwp_handler h; h.prev = fwp_handlers; h.state_depth = fwp_state_len; fwp_handlers = &h;
+        fwp_budget = 0;
         if (setjmp(h.jb) == 0) {{
             V v = caf{id}();
             fwp_handlers = h.prev;
