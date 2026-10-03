@@ -202,7 +202,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     number kind at run time; and applying a closure that captured nothing
     to all its arguments no longer copies them. A loop of tuple
     arithmetic runs 1.7 times as fast. Scalars were already unboxed in a
-    `V`; records by value come with escape analysis (18).
+    `V`; records by value come with escape analysis (18, 19).
 
 16. **Direct calls of known functions** (done). `map`, `filter`, `fold`,
     `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop`, given
@@ -225,18 +225,26 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     `FWP_MEMORY_REPORT=1` shows how much of each part was used. See
     [the reference](docs/reference.md#static-memory).
 
+18. **Loops without allocation** (done). A `loop` whose step function is
+    known, returns literal `Again x` and `Stop y`, and reads a record state
+    only field by field compiles to a C loop with the state's fields in
+    locals: neither the state nor the `Step` is allocated per iteration
+    (with any other state, only the `Step` is not). The loop of tuple
+    arithmetic of item 15 runs in 0.15 s instead of 1.7 s before item 15.
+
 Next in this series, toward static, zero-cost programs:
 
-18. Escape analysis: values that do not outlive a call on the stack, and
-    records and tuples that do not escape kept in C locals.
-19. Arenas by default: bump allocation per task and per request, freed
+19. Escape analysis beyond loops: records and tuples that do not escape
+    a function kept in C locals, and values that do not outlive a call on
+    the stack.
+20. Arenas by default: bump allocation per task and per request, freed
     whole, with the collector for what escapes them.
-20. Fused list and iterator pipelines (`map | filter | fold` in one pass,
+21. Fused list and iterator pipelines (`map | filter | fold` in one pass,
     without the intermediate lists). Fusing interleaves the stages, so
     it needs to know which functions cannot fail or have effects (an
     overflow trap in one stage must still come before the stages after
     it run): a totality analysis comes first.
-21. Static, LTO and profile-guided builds, a precompiled runtime for
+22. Static, LTO and profile-guided builds, a precompiled runtime for
     faster first runs, and benchmarks against C and Rust in CI.
 
 ## Later
