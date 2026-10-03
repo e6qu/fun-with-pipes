@@ -239,9 +239,9 @@ fn language_server() {
     assert_eq!(num(&d, &["range", "start", "character"]), 0);
 
     // definition of a name from an imported module
-    std::fs::write(dir.join("geo.fwp"), "# areas\narea = fork mul .w .h\n").unwrap();
+    std::fs::write(dir.join("geo.fwp"), "# areas\narea = uncurry mul | add 0\n").unwrap();
     let user = dir.join("user.fwp");
-    let user_text = "import geo\n\nmain = { w = 2, h = 3 } | geo.area | echo\n";
+    let user_text = "import geo\n\nmain = (2, 3) | geo.area | echo\n";
     std::fs::write(&user, user_text).unwrap();
     let user_uri = path_to_uri(&user);
     c.notify(
@@ -257,7 +257,7 @@ fn language_server() {
         )]),
     );
     assert_eq!(c.diagnostics(&user_uri), vec![]);
-    let d = c.request("textDocument/definition", at(&user_uri, 2, 28));
+    let d = c.request("textDocument/definition", at(&user_uri, 2, 19));
     assert_eq!(
         d.get("uri").and_then(Json::as_str),
         Some(path_to_uri(&dir.join("geo.fwp")).as_str())
