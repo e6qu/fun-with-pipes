@@ -256,8 +256,16 @@ Next in this series, toward static, zero-cost programs:
 22. Faster first runs (begun: large programs are compiled with GCC's
     parallel link-time optimization, halving a REST server's first start
     on four cores; most of their C is the standard library monomorphized
-    for them, so the next step is generating less of it), static and
-    profile-guided builds, and benchmarks against C and Rust in CI.
+    for them, so the next step is generating less of it), and static and
+    profile-guided builds.
+23. **Benchmarks against C and Rust** (done). `bench/` has five programs
+    in fwp, C and Rust, run in CI with their outputs compared; see
+    [docs/benchmarks.md](docs/benchmarks.md). They found that building a
+    map or a set from a list was quadratic (now sorted once), and that
+    closures such as `map (mul 3)` or `filter (rem 2 | eq 0)` went through
+    the generic application for every element: higher-order primitives
+    now get a specialized function of the captured locals and the
+    elements, called directly (`opt::specialize_hofs`).
 
 ## Later
 

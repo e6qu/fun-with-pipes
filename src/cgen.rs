@@ -202,6 +202,10 @@ struct Gen<'p> {
     /// locals (`loop_shape`), with whether the state is a record kept
     /// field by field.
     loops: Vec<(FuncId, Option<usize>)>,
+    /// Higher-order primitives specialized for a function of the captured
+    /// locals and the elements (`opt::specialize_hofs`): the primitive and
+    /// the function, and how many locals it captures.
+    hofs: Vec<(String, FuncId, usize)>,
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -821,6 +825,67 @@ struct LoopGen {
     record: bool,
 }
 
+/// The signature of a higher-order primitive specialized for a function
+/// that captures `k` values (`Gen::hofs`).
+fn hof_sig(i: usize, sym: &str, k: usize) -> String {
+    let caps: Vec<String> = (0..k).map(|j| format!("V c{}", j)).collect();
+    let rest = match sym {
+        "fold" | "fold-right" => "V z, V xs",
+        "zip-with" => "V ys, V xs",
+        "loop" => "V s",
+        _ => "V xs",
+    };
+    format!("static V fwp_hof{}({}, {})", i, caps.join(", "), rest)
+}
+
+/// Its definition: the runtime's generic loop (runtime/fwp_rt_prims.c),
+/// calling the function directly with the captured values first.
+fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize)) -> String {
+    let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
+    let call = |x: &str| format!("f{}({}{})", g, caps, x);
+    let body = match sym.as_str() {
+        "map" => format!(
+            "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++) a[i] = {};\n    return fwp_list_from(a, n);",
+            call("a[i]")
+        ),
+        "filter" => format!(
+            "size_t n, k = 0;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++)\n        if ({} == FWP_TRUE) a[k++] = a[i];\n    return fwp_list_from(a, k);",
+            call("a[i]")
+        ),
+        "fold" => format!(
+            "while (xs != 0) {{ z = {}; xs = OBJ(xs)->f[1]; }}\n    return z;",
+            call("z, OBJ(xs)->f[0]")
+        ),
+        "fold-right" => format!(
+            "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = n; i > 0; i--) z = {};\n    return z;",
+            call("a[i - 1], z")
+        ),
+        "take-while" => format!(
+            "size_t n, k = 0;\n    V *a = fwp_list_items(xs, &n);\n    while (k < n && {} == FWP_TRUE) k++;\n    return fwp_list_from(a, k);",
+            call("a[k]")
+        ),
+        "drop-while" => format!(
+            "while (xs != 0 && {} == FWP_TRUE) xs = OBJ(xs)->f[1];\n    return xs;",
+            call("OBJ(xs)->f[0]")
+        ),
+        "loop" => format!(
+            "for (;;) {{\n        FWP_TICK();\n        V r = {};\n        if (fwp_tag(r) != 0) return OBJ(r)->f[0];\n        s = OBJ(r)->f[0];\n    }}",
+            call("s")
+        ),
+        _ => format!(
+            "size_t n, m;\n    V *a = fwp_list_items(xs, &n);\n    V *b = fwp_list_items(ys, &m);\n    size_t k = n < m ? n : m;\n    for (size_t i = 0; i < k; i++) a[i] = {};\n    return fwp_list_from(a, k);",
+            call("b[i], a[i]")
+        ),
+    };
+    format!(
+        "/* {} of a function capturing {} values */\n{} {{\n    {}\n}}\n",
+        sym,
+        k,
+        hof_sig(i, sym, *k),
+        body
+    )
+}
+
 /// The tail positions of an expression: what it can evaluate to last.
 fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match e {
@@ -946,15 +1011,37 @@ impl<'g, 'p> FnGen<'g, 'p> {
             "zip-with" => ("fwp_k_zip_with", 2),
             _ => return None,
         };
-        let Some(Expr::Func(g)) = args.first() else {
-            return None;
+        // the function and the locals it captures
+        let (g, caps): (FuncId, &[Expr]) = match args.first() {
+            Some(Expr::Func(g)) => (*g, &[]),
+            Some(Expr::Apply(f, caps))
+                if matches!(**f, Expr::Func(_))
+                    && caps.iter().all(|c| matches!(c, Expr::Local(_))) =>
+            {
+                let Expr::Func(g) = **f else { unreachable!() };
+                (g, &caps[..])
+            }
+            _ => return None,
         };
-        if self.g.prog.funcs[*g].arity != arity {
+        if self.g.prog.funcs[g].arity as usize != arity + caps.len() {
             return None;
         }
-        let mut xs = vec![format!("f{}", g)];
+        if caps.is_empty() {
+            let mut xs = vec![format!("f{}", g)];
+            xs.extend(self.args(&args[1..]));
+            return Some(format!("{}({})", k, xs.join(", ")));
+        }
+        let key = (sym.clone(), g, caps.len());
+        let i = match self.g.hofs.iter().position(|h| *h == key) {
+            Some(i) => i,
+            None => {
+                self.g.hofs.push(key);
+                self.g.hofs.len() - 1
+            }
+        };
+        let mut xs = self.args(caps);
         xs.extend(self.args(&args[1..]));
-        Some(format!("{}({})", k, xs.join(", ")))
+        Some(format!("fwp_hof{}({})", i, xs.join(", ")))
     }
 
     fn expr(&mut self, e: &Expr) -> String {
@@ -2514,10 +2601,15 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         cli_flags: HashMap::new(),
         ticks: uses_async(prog) || uses_services(prog),
         loops: Vec::new(),
+        hofs: Vec::new(),
     };
     let mut bodies = String::new();
     for id in 0..prog.funcs.len() {
         bodies.push_str(&g.func(id)?);
+        bodies.push('\n');
+    }
+    for i in 0..g.hofs.len() {
+        bodies.push_str(&hof_def(i, &g.hofs[i]));
         bodies.push('\n');
     }
     // the specialized loops, which may use others
@@ -2887,6 +2979,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
+    }
+    for (i, (sym, _, k)) in g.hofs.iter().enumerate() {
+        let _ = writeln!(out, "{};", hof_sig(i, sym, *k));
     }
     // constant applicative forms
     for (id, f) in prog.funcs.iter().enumerate() {

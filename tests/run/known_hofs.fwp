@@ -22,13 +22,24 @@ pair : I64 -> I64 -> (I64, I64)
 pair = curry id
 
 countdown : (I64, I64) -> Step[(I64, I64), I64]
-countdown = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add .0 .1) | Again)
+countdown =
+    if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (fork add .0 .1) | Again)
 
 checked-half : I64 -> I64 ! {Error[String]}
 checked-half = if odd (const "odd" | fail) (div 2)
 
 xs : List[I64]
 xs = [1, 2, 3, 4, 5, 6]
+
+# closures over a local (opt::specialize_hofs): `n` is captured
+scale-by : I64 -> List[I64] -> List[I64]
+scale-by = mul | map
+
+above : I64 -> List[I64] -> List[I64]
+above = gt | filter
+
+below : I64 -> List[I64] -> List[I64]
+below = lt | take-while
 
 main = [
     xs | map double | echo,
@@ -50,4 +61,9 @@ main = [
     [2, 3, 6] | attempt (map checked-half) | echo,
     [] | map double | echo,
     [] | fold plus 7 | echo,
+    xs | scale-by 4 | echo,
+    xs | above 3 | echo,
+    xs | below 4 | echo,
+    xs | map (rem 4 | eq 0 | not) | echo,
+    xs | filter (fork and (gt 1) (lt 6)) | echo,
 ] | ignore

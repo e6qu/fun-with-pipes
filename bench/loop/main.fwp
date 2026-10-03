@@ -1,0 +1,10 @@
+# A loop of integer arithmetic on a pair of state variables.
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork add .1 (.0 | mul 3 | rem 7)) | Again)
+
+main = (100000000, 0) | loop step | echo

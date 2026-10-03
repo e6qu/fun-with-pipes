@@ -1,0 +1,9 @@
+# Naive recursion: function calls and integer arithmetic.
+
+rec fib : I64 -> I64
+fib = match
+    0 -> 0
+    1 -> 1
+    _ -> fork add (sub 1 | fib) (sub 2 | fib)
+
+main = 35 | fib | echo

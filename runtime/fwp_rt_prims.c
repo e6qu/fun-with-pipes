@@ -933,13 +933,40 @@ static V fwp_p_map_to_list(V m) {
     return fwp_list_from(a, n);
 }
 
-static V fwp_p_map_from_list(V xs, const fwp_desc *kd) {
-    V m = FWP_EMPTY_MAP;
-    for (; xs != 0; xs = OBJ(xs)->f[1]) {
-        V p = OBJ(xs)->f[0];
-        m = fwp_p_map_insert(OBJ(p)->f[0], OBJ(p)->f[1], m, kd);
+/* A map of n keys and values in list order, sorted once (stable), where a
+ * repeated key keeps its first occurrence and the last value, as inserting
+ * them one by one would: O(n log n) instead of a copy per insert. */
+static V fwp_map_build(V *keys, V *vals, size_t n, const fwp_desc *kd) {
+    if (n == 0) return FWP_EMPTY_MAP;
+    V *tk = (V *)fwp_alloc((n + 1) * sizeof(V));
+    V *tv = (V *)fwp_alloc((n + 1) * sizeof(V));
+    fwp_msort(keys, vals, n, kd, tk, tv);
+    size_t len = 0;
+    for (size_t i = 0; i < n; len++) {
+        size_t j = i + 1;
+        while (j < n && fwp_cmp(keys[j], keys[i], kd) == 0) j++;
+        tk[len] = keys[i];
+        tv[len] = vals[j - 1];
+        i = j;
+    }
+    V m = fwp_map_alloc(len);
+    for (size_t i = 0; i < len; i++) {
+        MAP(m)->d[2 * i] = tk[i];
+        MAP(m)->d[2 * i + 1] = tv[i];
     }
     return m;
+}
+
+static V fwp_p_map_from_list(V xs, const fwp_desc *kd) {
+    size_t n = fwp_list_len(xs);
+    V *keys = (V *)fwp_alloc((n + 1) * sizeof(V));
+    V *vals = (V *)fwp_alloc((n + 1) * sizeof(V));
+    for (size_t i = 0; i < n; i++, xs = OBJ(xs)->f[1]) {
+        V p = OBJ(xs)->f[0];
+        keys[i] = OBJ(p)->f[0];
+        vals[i] = OBJ(p)->f[1];
+    }
+    return fwp_map_build(keys, vals, n, kd);
 }
 
 static V fwp_p_map_update(V k, V f, V d, V m, const fwp_desc *kd) {
@@ -962,24 +989,38 @@ static V fwp_p_map_map_values(V f, V m) {
 static V fwp_p_set_insert(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert(k, 0, s, kd); }
 
 static V fwp_p_set_from_list(V xs, const fwp_desc *kd) {
-    V m = FWP_EMPTY_MAP;
-    for (; xs != 0; xs = OBJ(xs)->f[1]) m = fwp_p_map_insert(OBJ(xs)->f[0], 0, m, kd);
-    return m;
+    size_t n;
+    V *keys = fwp_list_items(xs, &n);
+    V *vals = (V *)fwp_alloc((n + 1) * sizeof(V));
+    return fwp_map_build(keys, vals, n, kd);
 }
 
 /* op: 0 union, 1 intersect, 2 diff; `other` is the argument, `this` the
- * subject (data-last). */
+ * subject (data-last). Both are sorted, so they are merged; a key in both
+ * is this one's. */
 static V fwp_p_set_op(V other, V this_, int op, const fwp_desc *kd) {
-    V r = FWP_EMPTY_MAP;
-    for (uint64_t i = 0; i < MAP(this_)->len; i++) {
-        V k = MAP(this_)->d[2 * i];
-        int in_other;
-        fwp_map_find(other, k, kd, &in_other);
-        if (op == 0 || (op == 1 && in_other) || (op == 2 && !in_other))
-            r = fwp_p_map_insert(k, 0, r, kd);
+    uint64_t a = MAP(this_)->len, b = MAP(other)->len, i = 0, j = 0, n = 0;
+    V *out = (V *)fwp_alloc((a + b + 1) * sizeof(V));
+    while (i < a || j < b) {
+        int c = i == a ? 1 : j == b ? -1 : fwp_cmp(MAP(this_)->d[2 * i], MAP(other)->d[2 * j], kd);
+        if (c < 0) {
+            if (op != 1) out[n++] = MAP(this_)->d[2 * i];
+            i++;
+        } else if (c > 0) {
+            if (op == 0) out[n++] = MAP(other)->d[2 * j];
+            j++;
+        } else {
+            if (op != 2) out[n++] = MAP(this_)->d[2 * i];
+            i++;
+            j++;
+        }
     }
-    if (op == 0)
-        for (uint64_t i = 0; i < MAP(other)->len; i++) r = fwp_p_map_insert(MAP(other)->d[2 * i], 0, r, kd);
+    if (n == 0) return FWP_EMPTY_MAP;
+    V r = fwp_map_alloc(n);
+    for (uint64_t k = 0; k < n; k++) {
+        MAP(r)->d[2 * k] = out[k];
+        MAP(r)->d[2 * k + 1] = 0;
+    }
     return r;
 }
 

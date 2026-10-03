@@ -1597,6 +1597,7 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
     let mut prog = Mono::new(env, typed).run(roots)?;
     if std::env::var("FWP_NO_OPT").is_err() {
         crate::opt::optimize(&mut prog);
+        crate::opt::specialize_hofs(&mut prog);
     }
     Ok(prog)
 }

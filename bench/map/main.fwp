@@ -1,0 +1,13 @@
+# An ordered map: built from 500 000 pairs, then 2 000 000 lookups.
+
+key : I64 -> I64
+key = mul 7919 | rem 1000003
+
+table : Map[I64, I64]
+table = range 0 500000 | map (fork (curry id) key id) | map.from-list
+
+hit : I64 -> I64
+hit = key | flip map.get table | option.unwrap-or 0
+
+main =
+    [table | map.size | echo, range 0 2000000 | map hit | sum | echo] | ignore
