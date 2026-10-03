@@ -48,6 +48,12 @@ typedef unsigned __int128 u128;
 /* runtime/fwp_rt_gc.c: the collected heap */
 static void *fwp_alloc(size_t n);      /* zeroed; scanned for values */
 static void *fwp_alloc_leaf(size_t n); /* zeroed; holds no values */
+/* whether all memory was mapped at startup (runtime/fwp_rt_static.c) */
+#ifdef FWP_STATIC_MEMORY
+static const int fwp_static_memory = 1;
+#else
+static const int fwp_static_memory = 0;
+#endif
 /* scanned for values; the caller writes all of its first n bytes before
  * anything else is allocated (only the slot's slack is zeroed) */
 static void *fwp_alloc_init(size_t n);

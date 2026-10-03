@@ -291,7 +291,24 @@ static void fwp_kernel_parallel(const fwp_kernel *k, int sum, size_t n, size_t u
 #ifndef __wasi__
     pthread_t tids[256];
     int started[256] = {0};
+#ifdef FWP_STATIC_MEMORY
+    /* threads on the stacks mapped at startup; the results do not depend
+     * on how many there are */
+    if (t > FWP_STATIC_THREADS + 1) t = FWP_STATIC_THREADS + 1;
+    for (size_t i = 0; i < t; i++) {
+        jobs[i].lo = i * units / t;
+        jobs[i].hi = (i + 1) * units / t;
+    }
+    for (size_t i = 1; i < t; i++) {
+        pthread_attr_t a;
+        pthread_attr_init(&a);
+        pthread_attr_setstack(&a, fwp_static.thread_stack[i - 1], FWP_STATIC_THREAD_STACK);
+        started[i] = pthread_create(&tids[i], &a, fwp_kjob_thread, &jobs[i]) == 0;
+        pthread_attr_destroy(&a);
+    }
+#else
     for (size_t i = 1; i < t; i++) started[i] = pthread_create(&tids[i], 0, fwp_kjob_thread, &jobs[i]) == 0;
+#endif
     fwp_kjob_do(&jobs[0]);
     for (size_t i = 1; i < t; i++) {
         if (started[i]) pthread_join(tids[i], 0);

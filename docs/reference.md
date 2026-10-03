@@ -247,6 +247,9 @@ fwp build file.fwp [options]                  compile
                      server, with reflection (see grpc.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
+    --memory static  all memory mapped once at startup (see below), with
+                     --heap S, --pool S, --stack S, --tasks N,
+                     --task-stack S and --threads N
     --wasm-async A   jspi (default) or asyncify: how tasks switch on WebAssembly
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
     --cdylib         lib<name>.so and lib<name>.h
@@ -335,6 +338,46 @@ way: each maximal invalid sequence of bytes becomes one U+FFFD (`�`), as
 Rust's `String::from_utf8_lossy` does. Strings are therefore always valid
 UTF-8. Strings in the binary pipe protocol must be valid UTF-8 and are
 rejected otherwise.
+
+### Static memory
+
+`fwp build --memory static` builds a native executable that maps all the
+memory it will use when it starts, in one populated mapping, and asks the
+operating system for none after that, in the spirit of TigerBeetle's
+static allocation. The mapping holds:
+
+| Part | Option | Default | What uses it |
+|---|---|---|---|
+| heap | `--heap S` | 64M | fwp values; still collected, but it never grows: when it is full the collector runs before giving up |
+| pool | `--pool S` | 32M | `malloc`, `calloc`, `realloc` and `free`, which the program defines, so the runtime's buffers and the C library's own allocations come from it |
+| main stack | `--stack S` | 16M | the main task |
+| task stacks | `--tasks N`, `--task-stack S` | 64 of 1M | tasks: at most N run at once, each with a guard page |
+| thread stacks | `--threads N` | 8 of 1M | the threads of `CpuParallel` kernels (more are not started; results do not depend on their number) |
+
+Sizes take `K`, `M` and `G`. Running out of a part ends the program with
+exit code 102 and names the option to raise:
+
+```
+fwp: out of memory: the static heap (1024 KiB) is full; build with a larger --heap
+```
+
+`FWP_MEMORY_REPORT=1` prints, at exit, the size of each part and how much
+of it was used at most, which is how to size them:
+
+```
+fwp: static memory: 124448 KiB mapped at startup
+  heap           65536 KiB, 8320 KiB used at most (4231 KiB live at most, 1 collections)
+  pool           32768 KiB, 136 KiB used at most
+  ...
+```
+
+Pipes between fwp programs stay on the Unix socket transport (`UDS_V1`)
+rather than the shared-memory ring, which would be new memory. Static
+memory is for native executables on Linux; WebAssembly and libraries
+keep the usual allocator. `tests/static_memory.rs` checks the golden
+programs with it, and, with `strace`, that a program with tasks, a
+parallel kernel and plenty of allocation makes no memory system call after
+startup.
 
 ### Targets
 

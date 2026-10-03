@@ -24,6 +24,56 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_kernel.c"),
 ];
 
+/// Static memory (`fwp build --memory static`): the sizes of what is mapped
+/// at startup, in bytes (stacks per task).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StaticMemory {
+    pub heap: u64,
+    pub pool: u64,
+    pub stack: u64,
+    pub tasks: u64,
+    pub task_stack: u64,
+    pub threads: u64,
+}
+
+impl Default for StaticMemory {
+    fn default() -> StaticMemory {
+        StaticMemory {
+            heap: 64 << 20,
+            pool: 32 << 20,
+            stack: 16 << 20,
+            tasks: 64,
+            task_stack: 1 << 20,
+            threads: 8,
+        }
+    }
+}
+
+static STATIC_MEMORY: std::sync::Mutex<Option<StaticMemory>> = std::sync::Mutex::new(None);
+
+/// Build the native executables generated from now on with static memory
+/// (or, with `None`, the collector's growing heap).
+pub fn set_static_memory(m: Option<StaticMemory>) {
+    *STATIC_MEMORY.lock().unwrap() = m;
+}
+
+pub fn static_memory() -> Option<StaticMemory> {
+    *STATIC_MEMORY.lock().unwrap()
+}
+
+/// A size such as `64M`, `512K`, `1G` or a number of bytes.
+pub fn parse_size(s: &str) -> Option<u64> {
+    let (n, mul) = match s.chars().last()? {
+        'K' | 'k' => (&s[..s.len() - 1], 1u64 << 10),
+        'M' | 'm' => (&s[..s.len() - 1], 1 << 20),
+        'G' | 'g' => (&s[..s.len() - 1], 1 << 30),
+        _ => (s, 1),
+    };
+    n.parse::<u64>().ok()?.checked_mul(mul)
+}
+
+const STATIC_RUNTIME: &str = include_str!("../runtime/fwp_rt_static.c");
+
 /// The TLS runtime, embedded only in programs that use TLS (and linked
 /// with OpenSSL); `FWP_TLS` is defined for the other parts then.
 const TLS_RUNTIME: &str = include_str!("../runtime/fwp_rt_tls.c");
@@ -2567,9 +2617,22 @@ static const fwp_exec_spec exec_spec{i} = {{
     if uses_async(prog) {
         out.push_str(ASYNC_MARK);
     }
-    for part in RUNTIME {
+    let stat = static_memory();
+    if let Some(m) = stat {
+        let _ = write!(
+            out,
+            "#define FWP_STATIC_MEMORY 1\n#define FWP_STATIC_HEAP ((size_t){}ULL)\n#define FWP_STATIC_POOL ((size_t){}ULL)\n#define FWP_STATIC_STACK ((size_t){}ULL)\n#define FWP_STATIC_TASKS {}\n#define FWP_STATIC_TASK_STACK ((size_t){}ULL)\n#define FWP_STATIC_THREADS {}\n",
+            m.heap, m.pool, m.stack, m.tasks, m.task_stack, m.threads
+        );
+    }
+    for (i, part) in RUNTIME.iter().enumerate() {
         out.push_str(part);
         out.push('\n');
+        // malloc and the static region, before the collector uses them
+        if i == 0 && stat.is_some() {
+            out.push_str(STATIC_RUNTIME);
+            out.push('\n');
+        }
     }
     if tls {
         out.push_str(TLS_RUNTIME);
@@ -2760,7 +2823,13 @@ int main(int argc, char **argv) {{
     signal(SIGPIPE, SIG_IGN);
     pthread_attr_t attr;
     pthread_attr_init(&attr);
+#ifdef FWP_STATIC_MEMORY
+    fwp_static_init();
+    fwp_main_stack = FWP_STATIC_STACK;
+    pthread_attr_setstack(&attr, fwp_static.main_stack, fwp_main_stack);
+#else
     pthread_attr_setstacksize(&attr, fwp_main_stack);
+#endif
     pthread_t t;
     if (pthread_create(&t, &attr, fwp_main_thread, 0) != 0) {{
         /* on the process stack instead */

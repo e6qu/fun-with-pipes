@@ -213,16 +213,29 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     zeroed first. The loop of tuple arithmetic of item 15 runs 2.6 times
     as fast as before item 15.
 
+17. **Static memory** (done). `fwp build --memory static` maps all of a
+    program's memory once, populated, when it starts: the collector's heap
+    (still collected, never grown), a pool behind `malloc` and `free`
+    (defined by the program, so the C library's allocations come from it
+    too), and the stacks of the main task, of a fixed number of tasks and
+    of the threads of parallel kernels; nothing is asked of the operating
+    system after that, which `strace` confirms in the tests. The sizes
+    are options (`--heap`, `--pool`, `--stack`, `--tasks`,
+    `--task-stack`, `--threads`); running out names the one to raise, and
+    `FWP_MEMORY_REPORT=1` shows how much of each part was used. See
+    [the reference](docs/reference.md#static-memory).
+
 Next in this series, toward static, zero-cost programs:
 
-17. Fused list and iterator pipelines (`map | filter | fold` in one pass,
-    without the intermediate lists).
 18. Escape analysis: values that do not outlive a call on the stack, and
     records and tuples that do not escape kept in C locals.
 19. Arenas by default: bump allocation per task and per request, freed
     whole, with the collector for what escapes them.
-20. A static memory mode (`--memory=static`): every limit computed or
-    declared, all memory allocated once at startup, nothing after it.
+20. Fused list and iterator pipelines (`map | filter | fold` in one pass,
+    without the intermediate lists). Fusing interleaves the stages, so
+    it needs to know which functions cannot fail or have effects (an
+    overflow trap in one stage must still come before the stages after
+    it run): a totality analysis comes first.
 21. Static, LTO and profile-guided builds, a precompiled runtime for
     faster first runs, and benchmarks against C and Rust in CI.
 
