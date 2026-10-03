@@ -748,6 +748,12 @@ impl<'p> Interp<'p> {
                     None => trap(format!("primitive `{}` is not implemented", sym)),
                 }
             }
+            _ if sym.starts_with("http2.")
+                || sym.starts_with("zlib.")
+                || sym.starts_with("ws.") =>
+            {
+                crate::grpc::web::prim(self, sym, &mut a)
+            }
             _ if sym.starts_with("grpc.") || sym.starts_with("pb.") => {
                 crate::grpc::prim(self, id, sym, &mut a)
             }

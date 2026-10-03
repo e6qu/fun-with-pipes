@@ -98,8 +98,9 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
     the timeout passes, the handler is cancelled and the client gets 503.
   - On SIGINT or SIGTERM, the server stops accepting and lets in-flight
     requests finish within `shutdown-grace`, then cancels whatever is left.
-- **Client:** `http.get`, `http.post` and `http.send`. Each request uses one
-  connection; responses may be chunked or sized by `content-length`.
+- **Client:** `http.get`, `http.post` and `http.send`. An HTTP/1.1
+  request uses one connection; responses may be chunked or sized by
+  `content-length`. HTTP/2 connections are kept and shared (below).
 - **TLS:** a config with `tls = Some (tls.server "cert.pem" "key.pem")`
   serves HTTPS, and the client fetches `https://` URLs, verifying
   certificates (`http.send-with` takes `TlsOptions`). TLS connections are
@@ -107,9 +108,7 @@ handler = http.count | timeout 5s | auth.bearer "secret" | service | json.respon
   wait on the scheduler like any socket operation, in the connection's own
   task. See [tls.md](tls.md).
 
-HTTP/3 and WebSocket are not implemented yet; HTTP/2 is used only
-by [gRPC](grpc.md), whose servers and clients also run on the task
-scheduler. Request bodies
+Request bodies
 with a transfer encoding are rejected with 501, and requests whose
 `content-length` is not a plain decimal number or appears more than once
 with 400, so that a request's length is never ambiguous. A response whose
@@ -122,6 +121,134 @@ methods and headers, and URLs with spaces or control characters; its
 `examples/server/api.fwp` is a complete JSON API. `tests/http_server.rs`
 drives it, both interpreted and native, with curl, a concurrent keep-alive
 load test, and a SIGTERM shutdown while a request is in flight.
+
+### HTTP/2
+
+`http.serve` (and so every REST server) speaks HTTP/2 as well as
+HTTP/1.1, with the same handlers:
+
+- Over TLS, the server offers `h2` and `http/1.1` with ALPN and prefers
+  `h2`; a client that offers only HTTP/1.1 gets HTTP/1.1.
+- On cleartext connections, a connection that starts with HTTP/2's
+  connection preface is HTTP/2 (h2c with prior knowledge, as
+  `curl --http2-prior-knowledge` and gRPC clients connect). The HTTP/1.1
+  `Upgrade: h2c` handshake is not supported.
+- `http2 = False` in the config turns both off.
+
+Every stream runs in its own task and becomes the same `Request`
+(`version` is `"HTTP/2"`, `:authority` is the `host` header), so routing,
+middleware and `http.fail` work unchanged. A `Body.Full` response is sent
+with `content-length`, and a `Body.Stream` as DATA frames, one per chunk,
+with HTTP/2's flow control giving the producer backpressure. The limits
+apply per stream: `max-header-bytes` (431), `max-body-bytes` (413),
+`body-timeout` (408) and `request-timeout` (503).
+`max-requests-per-connection` counts streams: after the last one the
+server sends GOAWAY and refuses new streams. `idle-timeout` closes a
+connection without open streams, at most 128 streams are open at once
+(`SETTINGS_MAX_CONCURRENT_STREAMS`), and on SIGINT or SIGTERM a
+connection sends GOAWAY and closes once its streams have finished.
+`write-timeout` does not apply to HTTP/2 streams, whose writes wait on
+the client's flow control.
+
+The client (`http.send`) uses HTTP/2 when a TLS server chooses `h2` with
+ALPN, and keeps that connection for later requests to the same origin
+(with the same TLS options), multiplexing requests from different tasks
+on it; HTTP/1.1 requests still use one connection each.
+`http.send-using options request` takes `ClientOptions`, whose `version`
+forces HTTP/1.1 (`HttpVersion.Http1`) or HTTP/2 (`HttpVersion.Http2`,
+also on cleartext connections, with prior knowledge):
+
+```
+http.client | with { version = HttpVersion.Http2 }
+```
+
+The HTTP/2 framing, HPACK and flow control are those of gRPC
+(`src/h2.rs`, `runtime/fwp_rt_h2.c`); the connections and streams of
+`src/grpc.rs` and `runtime/fwp_rt_grpc.c` serve HTTP streams too
+(`src/h2web.rs`, `runtime/fwp_rt_http2.c`). No server push, priorities
+or trailers in responses.
+
+### WebSocket
+
+`http.websocket f` is a handler that upgrades an HTTP/1.1 request to a
+WebSocket session (RFC 6455) and runs `f` with it; `ws.connect url`
+connects to a `ws://` or `wss://` URL. A `WebSocket` is a pair of
+channels of `WsMessage`s (`Text`, `Binary`, `Ping`, `Pong`, `Close code
+reason`):
+
+```
+echo : WebSocket -> () ! {Async, IO, Network, FileIO}
+echo = loop echo-step
+
+echo-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+echo-step = fork echo-got id ws.recv
+
+echo-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+echo-got = curry (match
+    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
+    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
+    (_, None) -> const (Stop ()))
+
+routes = http.router [http.route "GET" "/ws" (http.websocket echo)]
+```
+
+- `ws.recv` waits for the next message, `ws.send` and `ws.send-text`
+  send one (`False` once the session is closing), and `ws.close` or
+  `ws.close-with code reason` start the closing handshake; when `f`
+  returns, the server closes the session itself. `incoming` ends with a
+  `WsMessage.Close` before it is closed.
+- Pings are answered with pongs, fragmented messages are reassembled, a
+  client masks every frame and a server requires masked frames, and text
+  must be UTF-8. A message (all its fragments together) longer than
+  `max-message-bytes` (`WsConfig`, 1 MiB by default; `http.websocket-with`
+  and `ws.connect-with` take one) ends the session with code 1009; a frame
+  that breaks the protocol, 1002; text that is not UTF-8, 1007.
+- The server answers a request that is not an upgrade with 400, and one
+  for another WebSocket version than 13 with 426. The upgrade is a
+  `Body.Upgrade` response (status 101), which hands the connection to a
+  function once the response head is written; it works over HTTPS too
+  (`wss://`). WebSocket over HTTP/2 (RFC 8441) is not supported.
+- `Sec-WebSocket-Accept` uses SHA-1 and base64 written from scratch. A
+  session is three tasks (reader, writer and a supervisor that closes the
+  connection), all fwp code over `tcp.read` and `tcp.write`; framing,
+  masking and the accept key are primitives (`src/h2web.rs`,
+  `runtime/fwp_rt_http2.c`). No subprotocols or extensions
+  (permessage-deflate).
+
+`examples/server/chat.fwp` is a chat server; tutorial 20 walks through
+WebSocket and HTTP/2.
+
+### Compression
+
+- **Responses:** `compress = Some n` in the config compresses response
+  bodies of at least `n` bytes with gzip, or deflate, for clients whose
+  `Accept-Encoding` accepts it (a coding with `q=0` is refused), adding
+  `content-encoding` and `vary: accept-encoding`. The middleware
+  `http.compress n handler` does the same for one handler. Streamed
+  bodies, responses that have a `content-encoding` already, statuses 204
+  and 304, and types that are compressed already (images but SVG, video,
+  audio, archives) are left alone.
+- **Requests:** bodies with `content-encoding: gzip` (or `x-gzip`) or
+  `deflate` are decompressed before the handler sees them, which then
+  sees no `content-encoding`; `max-body-bytes` bounds the decompressed
+  size (413). Other codings get 415, and malformed data 400.
+- **Client:** `http.send` sends `accept-encoding: gzip, deflate` (unless
+  the request has an `accept-encoding`) and decompresses responses, which
+  then have no `content-encoding` (`compression = False` in
+  `ClientOptions` turns this off).
+- `gzip.compress`, `gzip.decompress`, `deflate.compress` and
+  `deflate.decompress` (the zlib format of HTTP's `deflate`; raw DEFLATE
+  is accepted too) are the codecs, written from scratch
+  (`src/gzip.rs`, `runtime/fwp_rt_h2.c`): the encoder uses fixed Huffman
+  codes and a greedy LZ77 search, so it compresses less than zlib.
+  Decompression stops at 64 MiB (`gzip.decompress-max` takes a limit).
+
+`tests/web.rs` drives `tests/web/server.fwp` and `tests/web/client.fwp`
+on both backends: curl over h2c and h2 with ALPN, concurrent streams on
+one connection, compression, the fwp client against the fwp server in
+every pairing of the interpreter and native code (also over TLS), and
+WebSocket from raw sockets (handshake, fragmentation, close codes, an
+oversized message) and from node's WebSocket client.
 
 ## JSON, URLs, logs and metrics
 

@@ -54,6 +54,10 @@ main =
   health checking, and `fwp proto --import` turns any `.proto` file into
   typed clients and server routes. Calls and servers run concurrently on
   the task scheduler.
+- **HTTP/2 and WebSocket.** The HTTP server speaks HTTP/1.1 and HTTP/2
+  (h2 with ALPN, h2c) with the same handlers, compresses responses, and
+  upgrades connections to WebSocket sessions, which are pairs of
+  channels; the client speaks both versions and WebSocket too.
 - **One program, two deployments.** The same source builds into one
   executable or into gRPC services, one per module you name, whose calls
   to each other go over HTTP/2.
@@ -73,6 +77,7 @@ fwp run examples/hello.fwp
 fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
 fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
+fwp run examples/server/chat.fwp         # a WebSocket chat on 127.0.0.1:8080
 fwp build examples/services/main.fwp --service inventory -o shop   # gRPC
 fwp build examples/cli/todo.fwp --cli -o todo && ./todo --help    # a CLI
 fwp serve --rest examples/rest/books.fwp # a REST API with /openapi.json

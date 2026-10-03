@@ -79,6 +79,7 @@ struct g_stream {
     fwp_wl waiters;
     fwp_task *task;            /* the task serving the call */
     g_stream *next;
+    int raw;                   /* an HTTP stream: its data is a body */
 };
 
 typedef struct g_server g_server;
@@ -102,6 +103,8 @@ struct g_conn {
     fwp_wl writer_wl, space_wl;
     char *tlskey;              /* a client's TLS options (g_tls key), or 0 */
     g_conn *next_pool;
+    void *web;                 /* an HTTP server connection's g_web
+                                * (fwp_rt_http2.c), or 0 */
 };
 
 /* the call a server task is running */
@@ -349,6 +352,9 @@ static void g_split(g_stream *s) {
     }
 }
 
+/* a request on an HTTP server connection (fwp_rt_http2.c) */
+static void g_web_stream(g_conn *c, uint32_t sid, h2_hdrs *hs, int end, g_slist *fresh);
+
 static void g_header_block(g_conn *c, uint32_t sid, const unsigned char *b, size_t n, int end, g_slist *fresh,
                            char **dead) {
     h2_hdrs hs = {0};
@@ -368,6 +374,7 @@ static void g_header_block(g_conn *c, uint32_t sid, const unsigned char *b, size
         if (end) s->remote_end = 1;
         return;
     }
+    if (c->web) { g_web_stream(c, sid, &hs, end, fresh); return; }
     if (!c->server || sid % 2 == 0 || sid <= c->last_stream) { h2_hdrs_free(&hs); return; }
     c->last_stream = sid;
     const char *method = h2_get(&hs, ":method"), *ct = h2_get(&hs, "content-type");
@@ -424,10 +431,10 @@ static void g_on_frame(g_conn *c, const h2_fr *f, g_slist *fresh, char **dead) {
         if (f->n > 0 && !end) h2_frame(&c->out, H2_WINDOW_UPDATE, 0, f->stream, inc, 4);
         s->got_data = 1;
         h2b_put(&s->data, p, n);
-        g_split(s);
+        if (!s->raw) g_split(s);
         if (end) {
             s->remote_end = 1;
-            if (s->data.len && !s->bad) s->bad = strdup("truncated gRPC message");
+            if (!s->raw && s->data.len && !s->bad) s->bad = strdup("truncated gRPC message");
         }
         return;
     }
@@ -474,7 +481,7 @@ static void g_on_frame(g_conn *c, const h2_fr *f, g_slist *fresh, char **dead) {
     case H2_GOAWAY:
         if (f->n < 8) return;
         c->goaway = 1;
-        if (!c->server) {
+        if (!c->server && !c->web) {
             uint32_t last = h2_rd32(f->p) & 0x7fffffffu;
             char buf[300];
             snprintf(buf, sizeof buf, "%s is shutting down", c->authority);

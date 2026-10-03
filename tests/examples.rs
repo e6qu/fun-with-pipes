@@ -134,6 +134,7 @@ fn other_examples_check() {
         "hello.fwp",
         "wordfreq.fwp",
         "server/api.fwp",
+        "server/chat.fwp",
         "shell/tools.fwp",
         "services/main.fwp",
         "cli/wc.fwp",

@@ -128,6 +128,23 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     programs without tasks only (a program that starts one traps, or in
     fwp.wasm is rejected before it starts). Sockets stay unavailable. See
     [the reference](docs/reference.md#tasks-on-webassembly).
+11. **HTTP/2, WebSocket and compression** (done). `http.serve`, and so
+    every REST server, speaks HTTP/2 with the same handlers: h2 chosen
+    with ALPN over TLS and h2c with prior knowledge, every stream in its
+    own task, streamed bodies as DATA frames, the server's limits and
+    timeouts per stream, GOAWAY on shutdown. It runs on the HTTP/2
+    connections of gRPC (framing, HPACK, flow control), shared in both
+    backends. The client uses HTTP/2 when a TLS server chooses it (or
+    when told to), pooling a connection per origin. WebSocket (RFC 6455)
+    servers (`http.websocket`, on a new `Body.Upgrade` response) and
+    clients (`ws.connect`, `ws://` and `wss://`) exchange messages over a
+    pair of channels, with pings, fragmentation, masking, close codes and
+    size limits; SHA-1 and base64 are written from scratch. Responses are
+    compressed with gzip or deflate (`compress` in the config,
+    `http.compress`), request bodies decompressed, and the client
+    decompresses responses. See
+    [docs/concurrency.md](docs/concurrency.md#http2) and
+    [tutorial 20](docs/tutorials/20-websockets-and-http2/README.md).
 
 ## Later
 

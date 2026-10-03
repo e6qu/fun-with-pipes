@@ -214,6 +214,9 @@ struct Conn {
     preface: bool,
     dead: Option<String>,
     goaway: bool,
+    /// What an HTTP server connection serves (`http.serve` over HTTP/2,
+    /// web.rs below); `None` otherwise.
+    web: Option<Rc<web::Web>>,
 }
 
 #[derive(Default)]
@@ -242,6 +245,8 @@ struct Stream {
     bad: Option<String>,
     /// The task serving the call.
     task: Option<Arc<TaskShared>>,
+    /// An HTTP stream: its data is a body, not gRPC messages.
+    raw: bool,
 }
 
 impl Conn {
@@ -271,6 +276,7 @@ impl Conn {
             preface: client,
             dead: None,
             goaway: false,
+            web: None,
         }
     }
 }
@@ -360,6 +366,9 @@ fn header_block(c: &mut Conn, sid: u32, block: Vec<u8>, end: bool, acts: &mut Ac
         }
         return;
     }
+    if let Some(w) = c.web.clone() {
+        return web::new_stream(c, &w, sid, hs, end, acts);
+    }
     if c.server.is_none() || sid.is_multiple_of(2) || sid <= c.last_stream {
         return;
     }
@@ -430,10 +439,12 @@ fn on_frame(c: &mut Conn, f: Frame, acts: &mut Acts) {
                 }
                 s.got_data = true;
                 s.data.extend_from_slice(p);
-                split_messages(&mut s);
+                if !s.raw {
+                    split_messages(&mut s);
+                }
                 if end {
                     s.remote_end = true;
-                    if !s.data.is_empty() && s.bad.is_none() {
+                    if !s.raw && !s.data.is_empty() && s.bad.is_none() {
                         s.bad = Some("truncated gRPC message".into());
                     }
                 }
@@ -482,7 +493,7 @@ fn on_frame(c: &mut Conn, f: Frame, acts: &mut Acts) {
         }
         h2::GOAWAY if f.payload.len() >= 8 => {
             c.goaway = true;
-            if c.server.is_none() {
+            if c.server.is_none() && c.web.is_none() {
                 let last =
                     u32::from_be_bytes([f.payload[0], f.payload[1], f.payload[2], f.payload[3]])
                         & 0x7fff_ffff;
@@ -3207,3 +3218,8 @@ fn closed_error(it: &mut Interp, call: &Call) -> R<Ctl> {
         _ => Ok(grpc_error(UNAVAILABLE, "the stream is closed")),
     }
 }
+
+// HTTP/2 for `http.serve` and `http.send` (lib/http.fwp), on the
+// connections above.
+#[path = "h2web.rs"]
+pub(crate) mod web;

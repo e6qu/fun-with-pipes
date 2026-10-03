@@ -318,6 +318,18 @@ its next suspension point, as for `task.within`) and the client gets 503
 `{"error": "request timed out"}`. The HTTP server's own request timeout
 (30 seconds) applies to every request too, with the same answer.
 
+## HTTP/2 and compression
+
+REST servers speak HTTP/2 as well as HTTP/1.1 (h2 with ALPN over TLS, and
+h2c with prior knowledge on cleartext connections; see
+[concurrency.md](concurrency.md#http2)): `curl --http2-prior-knowledge
+http://127.0.0.1:8080/books/1` works as it does with HTTP/1.1. Responses
+of 1 KiB or more are compressed with gzip (or deflate) for clients that
+send `Accept-Encoding`, and request bodies with `Content-Encoding: gzip`
+or `deflate` are decompressed before they are decoded. Generated clients
+(`rest.fetch`) use `http.send`, which asks for compressed responses,
+decompresses them, and uses HTTP/2 when a TLS server offers it.
+
 ## Results and errors
 
 | The function... | The response |
@@ -581,4 +593,5 @@ endpoints byte for byte.
 * `I64` values beyond 2^53 are exact in fwp's JSON, but JavaScript clients
   lose digits; query parameters in generated clients go through `Json`
   values (doubles).
-* HTTP/1.1 only, over TLS too: HTTP/2 is used by gRPC alone.
+* Compression is gzip and deflate (from scratch, below zlib's ratio); no
+  Brotli or zstd, and streamed responses are not compressed.

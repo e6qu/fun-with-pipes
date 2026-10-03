@@ -1,0 +1,92 @@
+# A WebSocket chat: every text message a client sends goes to every
+# client connected, through one hub task. GET / serves a page that chats.
+#
+#     fwp run examples/server/chat.fwp       # interpreted
+#     fwp build examples/server/chat.fwp && ./chat
+#
+# FWP_ADDR sets the listen address (default 127.0.0.1:8080); the actual
+# address is printed on stderr. The same server speaks HTTP/2 to clients
+# that use it (`curl --http2-prior-knowledge http://127.0.0.1:8080/`).
+
+ChatEvent =
+    | ChatEvent.Join Channel[WsMessage]
+    | ChatEvent.Say String
+
+# the hub: the clients' outgoing channels, and every message to all of
+# them (a client whose session is over is dropped)
+hub : Channel[ChatEvent] -> () ! {Async, IO, Network, FileIO}
+hub = both id (const []) | loop hub-step
+
+hub-step : (Channel[ChatEvent], List[Channel[WsMessage]]) -> Step[(Channel[ChatEvent], List[Channel[WsMessage]]), ()] ! {Async}
+hub-step = fork hub-got id (.0 | channel.recv)
+
+hub-got : (Channel[ChatEvent], List[Channel[WsMessage]]) -> Option[ChatEvent] -> Step[(Channel[ChatEvent], List[Channel[WsMessage]]), ()] ! {Async}
+hub-got = curry (match
+    (_, None) -> const (Stop ())
+    (_, Some (ChatEvent.Join _)) ->
+        curry (both (.0 | .0) (fork Cons .1 (.0 | .1)) | Again)
+    (_, Some (ChatEvent.Say _)) ->
+        curry (both (.0 | .0) (fork broadcast .1 (.0 | .1)) | Again))
+
+broadcast : String -> List[Channel[WsMessage]] -> List[Channel[WsMessage]] ! {Async}
+broadcast = curry (fork filter (.0 | WsMessage.Text | flip channel.send) .1)
+
+# one client: join the hub, then pass its messages on
+session : Channel[ChatEvent] -> WebSocket -> () ! {Async, IO, Network, FileIO}
+session = curry (tap (fork channel.send .0 (.1 | .outgoing | ChatEvent.Join))
+    | loop chat-step)
+
+chat-step : (Channel[ChatEvent], WebSocket) -> Step[(Channel[ChatEvent], WebSocket), ()] ! {Async}
+chat-step = fork chat-got id (.1 | ws.recv)
+
+chat-got : (Channel[ChatEvent], WebSocket) -> Option[WsMessage] -> Step[(Channel[ChatEvent], WebSocket), ()] ! {Async}
+chat-got = curry (match
+    (_, Some (WsMessage.Text _)) -> curry (tap
+            (fork channel.send (.0 | .0) (.1 | ChatEvent.Say))
+        | .0
+        | Again)
+    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
+    (_, Some _) -> curry (.0 | Again)
+    (_, None) -> const (Stop ()))
+
+page : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+page =
+    const (http.respond 200 "text/html; charset=utf-8" (string.to-bytes html))
+
+html : String
+html =
+    "<!doctype html>
+<meta charset=utf-8><title>fwp chat</title>
+<pre id=log></pre>
+<form id=f><input id=m autofocus> <button>send</button></form>
+<script>
+const ws = new WebSocket(`ws://${location.host}/ws`);
+ws.onmessage = (e) => { log.textContent += e.data + '\\n'; };
+f.onsubmit = (e) => { e.preventDefault(); ws.send(m.value); m.value = ''; };
+</script>
+"
+
+routes : Channel[ChatEvent] -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes =
+    session
+    | http.websocket
+    | http.route "GET" "/ws"
+    | singleton
+    | Cons (http.route "GET" "/" page)
+    | http.router
+
+main =
+    "FWP_ADDR"
+    | env.get
+    | option.unwrap-or "127.0.0.1:8080"
+    | http.config
+    | both id (const 64 | channel.make)
+    | tap (.1 | spawn-with hub)
+    | tap (fork
+        http.serve-on
+        (.0
+            | http.listen
+            | tap (tcp.local-addr | format "chat on http://{}" | eprint))
+        (both .0 (.1 | routes)))
+    | .1
+    | channel.close

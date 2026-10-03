@@ -26,6 +26,7 @@ checks the code shown in each README against the program.
 | 17 | [REST APIs and OpenAPI](17-rest-and-openapi/README.md) | functions as endpoints, `fwp serve --rest`, the JSON codec, OpenAPI documents and generated clients |
 | 18 | [gRPC](18-grpc/README.md) | functions as gRPC methods, `fwp serve --grpc`, streams from types, statuses, deadlines and metadata, `fwp proto --import` |
 | 19 | [TLS](19-tls/README.md) | HTTPS and gRPC over TLS: certificates, `--tls-cert`, verifying clients, `lib/tls.fwp` |
+| 20 | [WebSockets and HTTP/2](20-websockets-and-http2/README.md) | HTTP/2 servers and clients (h2c, ALPN), compressed responses, WebSocket sessions with `http.websocket` and `ws.connect` |
 
 Start with the first, which introduces the notation the others rely on.
 After that, the tutorials stand alone. The [language

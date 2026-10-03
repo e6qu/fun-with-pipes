@@ -40,6 +40,7 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/url.fwp", include_str!("../lib/url.fwp")),
     ("<std>/log.fwp", include_str!("../lib/log.fwp")),
     ("<std>/http.fwp", include_str!("../lib/http.fwp")),
+    ("<std>/websocket.fwp", include_str!("../lib/websocket.fwp")),
     ("<std>/rest.fwp", include_str!("../lib/rest.fwp")),
     ("<std>/ffi.fwp", include_str!("../lib/ffi.fwp")),
 ];

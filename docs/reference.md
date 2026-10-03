@@ -221,7 +221,9 @@ subcommands, environment variables, shell completion and man pages
 OpenAPI document ([rest.md](rest.md)), and as gRPC methods
 ([grpc.md](grpc.md)); [interfaces.md](interfaces.md) compares them.
 The HTTP, REST and gRPC servers and clients also speak TLS
-([tls.md](tls.md)).
+([tls.md](tls.md)). The HTTP server and client (and so REST) speak
+HTTP/1.1 and HTTP/2, compress bodies with gzip and deflate, and carry
+WebSocket sessions ([concurrency.md](concurrency.md#http2)).
 
 ```
 fwp run [--link X]... [--service M]... file.fwp [args...]
