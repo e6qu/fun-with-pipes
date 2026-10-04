@@ -2659,6 +2659,83 @@ fn bytes_literal(b: &[u8]) -> String {
     )
 }
 
+/// The functions a program can reach from its roots (`main`, tests,
+/// exports, functions named by the driver, served methods, and `extra`):
+/// after inlining, most instances of small combinators are reached by
+/// nothing, and no C is generated for them.
+fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
+    let mut live = vec![false; prog.funcs.len()];
+    let mut work: Vec<FuncId> = extra.to_vec();
+    work.extend(prog.main);
+    work.extend(prog.tests.iter().map(|(_, f)| *f));
+    work.extend(prog.exports.iter().map(|(_, f)| *f));
+    work.extend(prog.named.iter().map(|(_, f)| *f));
+    if let Some(svc) = &prog.service {
+        for m in &svc.methods {
+            work.push(m.func);
+            work.extend(m.iter_fn);
+        }
+    }
+    // compile-time constants may hold closures
+    fn value_refs(v: &crate::value::Value, out: &mut Vec<FuncId>) {
+        use crate::value::Value;
+        match v {
+            Value::Closure(c) => {
+                out.push(c.func);
+                c.args.iter().for_each(|x| value_refs(x, out));
+            }
+            Value::Data(_, fs) | Value::Record(fs) => fs.iter().for_each(|x| value_refs(x, out)),
+            Value::Array(xs) => xs.iter().for_each(|x| value_refs(x, out)),
+            Value::Map(m) => m.iter().for_each(|(k, x)| {
+                value_refs(k, out);
+                value_refs(x, out);
+            }),
+            _ => {}
+        }
+    }
+    fn refs(e: &Expr, out: &mut Vec<FuncId>) {
+        match e {
+            Expr::Local(_) => {}
+            Expr::Const(v) => value_refs(v, out),
+            Expr::Func(f) => out.push(*f),
+            Expr::Call(f, a) => {
+                out.push(*f);
+                a.iter().for_each(|x| refs(x, out));
+            }
+            Expr::Apply(f, a) => {
+                refs(f, out);
+                a.iter().for_each(|x| refs(x, out));
+            }
+            Expr::Construct(_, a) | Expr::Record(a) => a.iter().for_each(|x| refs(x, out)),
+            Expr::Field(r, _) => refs(r, out),
+            Expr::SetFields(r, s) => {
+                refs(r, out);
+                s.iter().for_each(|(_, x)| refs(x, out));
+            }
+            Expr::Let(_, v, b) => {
+                refs(v, out);
+                refs(b, out);
+            }
+            Expr::Match(sc, arms) => {
+                refs(sc, out);
+                arms.iter().for_each(|(_, b)| refs(b, out));
+            }
+        }
+    }
+    while let Some(f) = work.pop() {
+        if f >= live.len() || live[f] {
+            continue;
+        }
+        live[f] = true;
+        match &prog.funcs[f].body {
+            Body::Expr(e) => refs(e, &mut work),
+            Body::Remote(r) => work.extend(r.iter_fn),
+            _ => {}
+        }
+    }
+    live
+}
+
 fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let tests = matches!(mode, Mode::Tests);
     let main = prog.main.unwrap_or(0);
@@ -2681,8 +2758,13 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         loops: Vec::new(),
         hofs: Vec::new(),
     };
+    let mut roots = Vec::new();
+    if let Mode::Exec(cmds, _) = &mode {
+        roots.extend(cmds.iter().map(|c| c.fid));
+    }
+    let live = live_functions(prog, &roots);
     let mut bodies = String::new();
-    for id in 0..prog.funcs.len() {
+    for id in (0..prog.funcs.len()).filter(|&id| live[id]) {
         bodies.push_str(&g.func(id)?);
         bodies.push('\n');
     }
@@ -3042,7 +3124,7 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push('\n');
     }
     // prototypes
-    for (id, f) in prog.funcs.iter().enumerate() {
+    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
         let _ = writeln!(
             out,
@@ -3062,7 +3144,7 @@ static const fwp_exec_spec exec_spec{i} = {{
         let _ = writeln!(out, "{};", hof_sig(i, sym, *k));
     }
     // constant applicative forms
-    for (id, f) in prog.funcs.iter().enumerate() {
+    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         if f.arity == 0 {
             let _ = writeln!(
                 out,
@@ -3071,8 +3153,9 @@ static const fwp_exec_spec exec_spec{i} = {{
             );
         }
     }
-    // entries and the function table
-    for (id, f) in prog.funcs.iter().enumerate() {
+    // entries and the function table (whose entries for functions nothing
+    // reaches stay, without code, so function ids keep their positions)
+    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
         if f.arity > 0 {
             let args: Vec<String> = (0..f.arity).map(|i| format!("a[{}]", i)).collect();
             let _ = writeln!(
@@ -3086,7 +3169,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     out.push_str("static const fwp_fninfo fwp_fn_table[] = {\n");
     for (id, f) in prog.funcs.iter().enumerate() {
-        let entry = if f.arity > 0 {
+        let entry = if f.arity > 0 && live[id] {
             format!("e{}", id)
         } else {
             "0".into()
