@@ -261,7 +261,11 @@ Next in this series, toward static, zero-cost programs:
     `pipeline` benchmark went from 44 times C's time to 1.2. `find` stops
     at its first match, so the stages before it may not trap at all.
     Chains of two or more stages whose list is used as such build it in
-    one pass (in reverse, then reversed). Next: iterators. String stages
+    one pass (in reverse, then reversed). `iter.to-list` over
+    `iter.map`, `iter.filter` and `iter.take` runs as one loop that pulls
+    its source one element at a time: iterators are lazy, so the order is
+    already element by element and no totality condition is needed (a
+    pipeline over `iter.count-from` went from 2.4 s to 0.48 s). String stages
     (`show`, `concat`, `string.length`, ...) count as total, and the C
     backend measures a `concat` or a shown integer without building
     it: the `strings` benchmark went from 4.1 times C's time to 0.1.
