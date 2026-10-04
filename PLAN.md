@@ -268,8 +268,10 @@ Next in this series, toward static, zero-cost programs:
     1.1.
 22. Faster first runs (begun: large programs are compiled with GCC's
     parallel link-time optimization, halving a REST server's first start
-    on four cores; most of their C is the standard library monomorphized
-    for them, so the next step is generating less of it), and static and
+    on four cores; and no C is generated for the functions nothing
+    reaches after inlining, mostly instances of small combinators: the
+    REST bookstore's C went from 2.3 MB and 3796 functions to 1.1 MB and
+    839, and its first build from 9.4 s to 4.4 s), and static and
     profile-guided builds.
 23. **Benchmarks against C and Rust** (done). `bench/` has five programs
     in fwp, C and Rust, run in CI with their outputs compared; see
