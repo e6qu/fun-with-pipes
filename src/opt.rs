@@ -201,6 +201,26 @@ impl<'p> Opt<'p> {
                     }
                     return out;
                 }
+                // a copy of a local or constant: substituted
+                if matches!(v, Expr::Local(_) | Expr::Const(_)) && self.trivial(&v) {
+                    let mut s: Vec<Option<Expr>> = vec![None; self.nlocals as usize];
+                    s[l as usize] = Some(v);
+                    return self.expr(substitute(&b, &s), depth);
+                }
+                // a record read only field by field: one local per field
+                // (scalar replacement), so it is never built
+                if let Expr::Record(es) = &v {
+                    if only_fields(&b, l) {
+                        let ls: Vec<Local> = es.iter().map(|_| self.fresh()).collect();
+                        let b = replace_fields(&b, l, &ls);
+                        let mut out = self.expr(b, depth);
+                        let Expr::Record(es) = v else { unreachable!() };
+                        for (li, e) in ls.into_iter().zip(es).rev() {
+                            out = Expr::Let(li, Box::new(e), Box::new(out));
+                        }
+                        return out;
+                    }
+                }
                 let b = self.expr(*b, depth);
                 Expr::Let(l, Box::new(v), Box::new(b))
             }
@@ -342,6 +362,47 @@ fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
     match tested.first() {
         Some(&k) => Expr::Match(Box::new(es[k].clone()), out),
         None => out.swap_remove(0).1,
+    }
+}
+
+/// Whether local `l` is used in `e` only as `Field(Local(l), _)`.
+fn only_fields(e: &Expr, l: Local) -> bool {
+    match e {
+        Expr::Local(x) => *x != l,
+        Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
+        Expr::Const(_) | Expr::Func(_) => true,
+        Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
+            a.iter().all(|x| only_fields(x, l))
+        }
+        Expr::Apply(f, a) => only_fields(f, l) && a.iter().all(|x| only_fields(x, l)),
+        Expr::Field(r, _) => only_fields(r, l),
+        Expr::SetFields(r, s) => only_fields(r, l) && s.iter().all(|(_, x)| only_fields(x, l)),
+        Expr::Let(_, v, b) => only_fields(v, l) && only_fields(b, l),
+        Expr::Match(sc, arms) => only_fields(sc, l) && arms.iter().all(|(_, b)| only_fields(b, l)),
+    }
+}
+
+/// `e` with each `Field(Local(l), i)` replaced by `Local(ls[i])`.
+fn replace_fields(e: &Expr, l: Local, ls: &[Local]) -> Expr {
+    let r = |x: &Expr| replace_fields(x, l, ls);
+    match e {
+        Expr::Field(b, i) if matches!(**b, Expr::Local(x) if x == l) => {
+            Expr::Local(ls[*i as usize])
+        }
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e.clone(),
+        Expr::Call(f, a) => Expr::Call(*f, a.iter().map(r).collect()),
+        Expr::Construct(t, a) => Expr::Construct(*t, a.iter().map(r).collect()),
+        Expr::Record(a) => Expr::Record(a.iter().map(r).collect()),
+        Expr::Apply(f, a) => Expr::Apply(Box::new(r(f)), a.iter().map(r).collect()),
+        Expr::Field(b, i) => Expr::Field(Box::new(r(b)), *i),
+        Expr::SetFields(b, s) => {
+            Expr::SetFields(Box::new(r(b)), s.iter().map(|(i, x)| (*i, r(x))).collect())
+        }
+        Expr::Let(x, v, b) => Expr::Let(*x, Box::new(r(v)), Box::new(r(b))),
+        Expr::Match(sc, arms) => Expr::Match(
+            Box::new(r(sc)),
+            arms.iter().map(|(p, b)| (p.clone(), r(b))).collect(),
+        ),
     }
 }
 
