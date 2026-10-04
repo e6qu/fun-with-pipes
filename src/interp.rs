@@ -200,6 +200,8 @@ impl<'p> Interp<'p> {
 
     pub fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
         match e {
+            // Rust's reference counts free the interpreter's values
+            Expr::Dup(_, b) | Expr::Drop(_, b) => self.eval(b, locals),
             Expr::Local(i) => Ok(locals[*i as usize].clone()),
             Expr::Const(v) => Ok(v.clone()),
             Expr::Func(id) => self.func_value(*id),

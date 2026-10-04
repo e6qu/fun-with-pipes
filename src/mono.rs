@@ -1463,6 +1463,7 @@ fn field_infos(fs: &[(String, MT)]) -> Value {
 /// Functions referenced by an expression.
 fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
     match e {
+        Expr::Dup(_, b) | Expr::Drop(_, b) => funcs_in(b, out),
         Expr::Func(f) => out.push(*f),
         Expr::Call(f, a) => {
             out.push(*f);
@@ -1654,6 +1655,20 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);
         check(&prog, "fusing");
+    }
+    // in debug builds, references are counted (not yet used by the
+    // backends) and the result is checked
+    if cfg!(debug_assertions) {
+        for (f, rc) in prog.funcs.iter().zip(crate::rc::insert(&prog)) {
+            if let Some((body, locals)) = rc {
+                if let Err(e) = crate::rc::check(&prog, f, &body, &locals) {
+                    panic!(
+                        "reference counts of {}: {}: {}\n{:?}",
+                        f.name, f.ty, e, body
+                    );
+                }
+            }
+        }
     }
     if let Some(how) = std::env::var_os("FWP_DUMP_IR") {
         // `FWP_DUMP_IR=all` includes the standard library's functions

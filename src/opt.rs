@@ -15,6 +15,7 @@ const ROUNDS: usize = 4;
 
 fn size(e: &Expr) -> usize {
     match e {
+        Expr::Dup(_, b) | Expr::Drop(_, b) => 1 + size(b),
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => 1,
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
             1 + a.iter().map(size).sum::<usize>()
@@ -29,6 +30,7 @@ fn size(e: &Expr) -> usize {
 
 fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
+        Expr::Dup(_, b) | Expr::Drop(_, b) => calls(b, id),
         Expr::Local(_) | Expr::Const(_) => false,
         Expr::Func(f) => *f == id,
         Expr::Call(f, a) => *f == id || a.iter().any(|x| calls(x, id)),
@@ -43,6 +45,7 @@ fn calls(e: &Expr, id: FuncId) -> bool {
 
 pub(crate) fn uses(e: &Expr, l: Local) -> usize {
     match e {
+        Expr::Dup(x, b) | Expr::Drop(x, b) => (*x == l) as usize + uses(b, l),
         Expr::Local(x) => (*x == l) as usize,
         Expr::Const(_) | Expr::Func(_) => 0,
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
@@ -139,6 +142,7 @@ impl<'p> Opt<'p> {
 
     fn expr(&mut self, e: Expr, depth: usize) -> Expr {
         match e {
+            Expr::Dup(..) | Expr::Drop(..) => e,
             Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e,
             Expr::Call(id, args) => {
                 let args: Vec<Expr> = args.into_iter().map(|a| self.expr(a, depth)).collect();
@@ -377,6 +381,7 @@ fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
 /// Whether local `l` is used in `e` only as `Field(Local(l), _)`.
 pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
     match e {
+        Expr::Dup(x, b) | Expr::Drop(x, b) => *x != l && only_fields(b, l),
         Expr::Local(x) => *x != l,
         Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
         Expr::Const(_) | Expr::Func(_) => true,
@@ -395,6 +400,8 @@ pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
 fn replace_fields(e: &Expr, l: Local, ls: &[Local]) -> Expr {
     let r = |x: &Expr| replace_fields(x, l, ls);
     match e {
+        Expr::Dup(x, b) => Expr::Dup(*x, Box::new(r(b))),
+        Expr::Drop(x, b) => Expr::Drop(*x, Box::new(r(b))),
         Expr::Field(b, i) if matches!(**b, Expr::Local(x) if x == l) => {
             Expr::Local(ls[*i as usize])
         }
@@ -437,6 +444,8 @@ fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
         _ => *l,
     };
     match e {
+        Expr::Dup(x, b) => Expr::Dup(local(x), Box::new(substitute(b, s))),
+        Expr::Drop(x, b) => Expr::Drop(local(x), Box::new(substitute(b, s))),
         Expr::Local(l) => s[*l as usize].clone().unwrap_or(Expr::Local(*l)),
         Expr::Const(_) | Expr::Func(_) => e.clone(),
         Expr::Call(f, a) => Expr::Call(*f, a.iter().map(|x| substitute(x, s)).collect()),
@@ -537,6 +546,12 @@ pub fn hof_arity(sym: &str) -> Option<usize> {
 /// The locals an expression reads, in order of first use.
 fn free_locals(e: &Expr, out: &mut Vec<Local>) {
     match e {
+        Expr::Dup(l, b) | Expr::Drop(l, b) => {
+            if !out.contains(l) {
+                out.push(*l)
+            }
+            free_locals(b, out)
+        }
         Expr::Local(l) => {
             if !out.contains(l) {
                 out.push(*l)
@@ -600,6 +615,9 @@ fn rewrite_hofs(
 ) {
     // children first
     match e {
+        Expr::Dup(_, b) | Expr::Drop(_, b) => {
+            rewrite_hofs(b, funcs, shapes, locals, base, made, seen)
+        }
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a
             .iter_mut()

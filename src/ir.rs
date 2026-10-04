@@ -143,6 +143,11 @@ pub enum Expr {
     Let(Local, Box<Expr>, Box<Expr>),
     /// First matching arm wins; patterns bind locals.
     Match(Box<Expr>, Vec<(Pat, Expr)>),
+    /// One more reference to the value of a local, then the expression
+    /// (reference counting, `src/rc.rs`; only after every other pass).
+    Dup(Local, Box<Expr>),
+    /// One reference to the value of a local fewer, then the expression.
+    Drop(Local, Box<Expr>),
 }
 
 #[derive(Clone, Debug)]
@@ -298,6 +303,7 @@ pub fn type_of<'a>(
 ) -> Option<MT> {
     let type_of = |e| type_of(func, shapes, locals, e);
     match e {
+        Expr::Dup(_, b) | Expr::Drop(_, b) => type_of(b),
         Expr::Local(l) => locals.get(*l as usize).cloned(),
         Expr::Func(id) => Some(func(*id).clone()),
         Expr::Call(id, a) => Some(func(*id).params(a.len()).1.clone()),
@@ -408,6 +414,10 @@ fn check_expr<'a>(
         _ => Ok(()),
     };
     match e {
+        Expr::Dup(l, b) | Expr::Drop(l, b) => {
+            has(*l)?;
+            check_expr(func, shapes, locals, b)
+        }
         Expr::Local(l) => has(*l),
         Expr::Const(_) | Expr::Func(_) => Ok(()),
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a

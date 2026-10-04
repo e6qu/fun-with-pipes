@@ -1141,6 +1141,7 @@ fn int64_kind(t: &MT) -> Option<bool> {
 /// Whether local 0 is used only as `Field(Local(0), _)`.
 fn state_by_fields(e: &Expr) -> bool {
     match e {
+        Expr::Dup(x, b) | Expr::Drop(x, b) => *x != 0 && state_by_fields(b),
         Expr::Local(0) => false,
         Expr::Field(r, _) if matches!(**r, Expr::Local(0)) => true,
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => true,
@@ -1501,6 +1502,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         match e {
+            // the collector frees memory: references are not counted
+            Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
             Expr::Local(i) => format!("l{}", i),
             Expr::Const(v) => self.g.const_expr(v),
             Expr::Func(id) => {
@@ -3257,6 +3260,7 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
     }
     fn refs(e: &Expr, out: &mut Vec<FuncId>) {
         match e {
+            Expr::Dup(_, b) | Expr::Drop(_, b) => refs(b, out),
             Expr::Local(_) => {}
             Expr::Const(v) => value_refs(v, out),
             Expr::Func(f) => out.push(*f),
