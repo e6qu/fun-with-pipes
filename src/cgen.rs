@@ -63,6 +63,124 @@ pub fn set_static_memory(m: Option<StaticMemory>) {
 pub struct NativeOptions {
     pub static_link: bool,
     pub pgo: Option<(Pgo, std::path::PathBuf)>,
+    /// Another system to build for (`fwp build --target`), as a GNU
+    /// triple such as `aarch64-linux-gnu`.
+    pub cross: Option<String>,
+}
+
+/// The 64-bit little-endian architectures the runtime is written for.
+const CROSS_ARCHES: &[&str] = &["x86_64", "aarch64", "riscv64", "powerpc64le", "loongarch64"];
+
+/// A cross target given as `<arch>-linux`, `<arch>-linux-gnu` or Rust's
+/// `<arch>-unknown-linux-gnu`, as the GNU triple of its C toolchain.
+pub fn parse_cross(t: &str) -> Result<String, String> {
+    let parts: Vec<&str> = t.split('-').collect();
+    let (arch, rest) = match parts.as_slice() {
+        [a, rest @ ..] => (*a, rest),
+        _ => return Err(format!("unknown target `{}`", t)),
+    };
+    let arch = match arch {
+        "arm64" => "aarch64",
+        "amd64" => "x86_64",
+        "ppc64le" => "powerpc64le",
+        a => a,
+    };
+    let rest: Vec<&str> = rest
+        .iter()
+        .copied()
+        .filter(|p| *p != "unknown" && *p != "pc")
+        .collect();
+    let os_ok = matches!(rest.as_slice(), ["linux"] | ["linux", "gnu"]);
+    if !os_ok {
+        let what = if rest.first().is_some_and(|o| *o == "linux") {
+            "the runtime needs glibc (musl has no `makecontext`, which tasks use)"
+        } else {
+            "the runtime is written for Linux; macOS and Windows are not supported yet"
+        };
+        return Err(format!("cannot build for `{}`: {}", t, what));
+    }
+    if !CROSS_ARCHES.contains(&arch) {
+        return Err(format!(
+            "cannot build for `{}`: the runtime needs a 64-bit little-endian architecture ({})",
+            t,
+            CROSS_ARCHES.join(", ")
+        ));
+    }
+    Ok(format!("{}-linux-gnu", arch))
+}
+
+/// The architecture native code is built for: the cross target's, or the
+/// host's.
+fn target_arch() -> String {
+    match native_options().cross {
+        Some(t) => t.split('-').next().unwrap_or_default().to_string(),
+        None => std::env::consts::ARCH.to_string(),
+    }
+}
+
+/// Whether `prog` is a program on `PATH`.
+fn on_path(prog: &str) -> bool {
+    std::env::var_os("PATH")
+        .is_some_and(|p| std::env::split_paths(&p).any(|d| d.join(prog).is_file()))
+}
+
+/// The C compiler for native code, with the arguments that come first: `CC`
+/// (or `cc`) for the host; for a cross target, `FWP_CC_<triple>` (with
+/// `_` for `-`, and arguments after spaces), else the first found of
+/// `<triple>-gcc`, `clang --target=<triple>` (with the target's sysroot
+/// in `/usr/<triple>`) and `zig cc -target <arch>-linux-gnu`.
+pub fn c_compiler() -> Result<(String, Vec<String>), String> {
+    let Some(t) = native_options().cross else {
+        return Ok((crate::aot::cc(), vec![]));
+    };
+    let var = format!("FWP_CC_{}", t.replace('-', "_"));
+    if let Ok(v) = std::env::var(&var) {
+        let mut w = v.split_whitespace().map(String::from);
+        if let Some(cc) = w.next() {
+            return Ok((cc, w.collect()));
+        }
+    }
+    let gcc = format!("{}-gcc", t);
+    if on_path(&gcc) {
+        return Ok((gcc, vec![]));
+    }
+    if on_path("clang") && std::path::Path::new("/usr").join(&t).is_dir() {
+        return Ok(("clang".into(), vec![format!("--target={}", t)]));
+    }
+    if on_path("zig") {
+        return Ok(("zig".into(), vec!["cc".into(), "-target".into(), t.clone()]));
+    }
+    let arch = t.split('-').next().unwrap_or_default();
+    Err(format!(
+        "no C compiler for `{t}`: install one (Debian and Ubuntu: gcc-{deb}-linux-gnu), \
+         or zig, or name one with {var}",
+        deb = arch.replace('_', "-"),
+    ))
+}
+
+/// A command running the C compiler.
+fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
+    let mut c = std::process::Command::new(&cc.0);
+    c.args(&cc.1);
+    c
+}
+
+/// The archiver for static libraries: `AR`, or for a cross target
+/// `<triple>-ar` (else `llvm-ar`), or `ar`.
+fn archiver() -> String {
+    if let Ok(a) = std::env::var("AR") {
+        return a;
+    }
+    if let Some(t) = native_options().cross {
+        let ar = format!("{}-ar", t);
+        if on_path(&ar) {
+            return ar;
+        }
+        if on_path("llvm-ar") {
+            return "llvm-ar".into();
+        }
+    }
+    "ar".into()
 }
 
 /// The two compiles of `fwp build --pgo`: instrumented, then using the
@@ -3623,10 +3741,21 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     if !res.status.success() {
         let err = String::from_utf8_lossy(&res.stderr);
         // a program that uses TLS needs OpenSSL's headers and libraries
-        let hint = if err.contains("openssl/ssl.h") || err.contains("-lssl") {
-            "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)"
-        } else {
-            ""
+        let tls = err.contains("openssl/") || err.contains("-lssl");
+        let hint = match native_options().cross {
+            Some(t) if tls => {
+                let deb = match t.split('-').next().unwrap_or_default() {
+                    "aarch64" => "arm64",
+                    "x86_64" => "amd64",
+                    "powerpc64le" => "ppc64el",
+                    "loongarch64" => "loong64",
+                    a => a,
+                }
+                .to_string();
+                format!("\nthe program uses TLS, which needs OpenSSL 3's headers and libraries for {} (Debian and Ubuntu: libssl-dev:{}; see docs/tls.md)", t, deb)
+            }
+            _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
+            _ => String::new(),
         };
         return Err(format!("C compiler failed:\n{}{}", err, hint));
     }
@@ -3673,7 +3802,7 @@ fn parallel_codegen(cc: &str, opt: &str, c_source: &str) -> &'static [&'static s
 /// flags, and the C condition (in terms of `__builtin_cpu_supports`) under
 /// which the variant may run. The first is the baseline.
 fn fat_variants() -> Vec<(&'static str, &'static str, &'static str)> {
-    match std::env::consts::ARCH {
+    match target_arch().as_str() {
         "x86_64" => vec![
             ("x86-64", "-march=x86-64", "1"),
             // the whole feature level (the compiler may use any of its
@@ -3720,20 +3849,20 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
     let dir = TempDir::new("fwp-build")?;
     let c_path = dir.join("fat-program.c");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let cc = c_compiler()?;
     let variants = fat_variants();
     let mut objs = Vec::new();
     let mut result = Ok(());
     for (i, (_, flags, _)) in variants.iter().enumerate() {
         let obj = dir.join(format!("fat-{}.o", i));
-        let mut cmd = std::process::Command::new(&cc);
+        let mut cmd = cc_command(&cc);
         cmd.args([opt, "-std=gnu11", "-ffp-contract=off", "-w", "-c"])
             .arg(format!("-Dmain=fwp_variant_{}", i));
         if !flags.is_empty() {
             cmd.arg(flags);
         }
         cmd.arg("-o").arg(&obj).arg(&c_path);
-        result = run_cc(&mut cmd, &cc);
+        result = run_cc(&mut cmd, &cc.0);
         objs.push(obj);
         if result.is_err() {
             break;
@@ -3766,7 +3895,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
         let dpath = dir.join("fat-dispatch.c");
         std::fs::write(&dpath, d).map_err(|e| e.to_string())?;
         result = run_cc(
-            std::process::Command::new(&cc)
+            cc_command(&cc)
                 .arg(opt)
                 .arg("-o")
                 .arg(output)
@@ -3775,7 +3904,7 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
                 .args(crate::ffi::links())
                 .args(tls_links(c_source))
                 .args(["-lm", "-lpthread"]),
-            &cc,
+            &cc.0,
         );
         let _ = std::fs::remove_file(&dpath);
     }
@@ -3807,9 +3936,9 @@ pub fn compile_library(
     let obj = dir.join("library.o");
     std::fs::write(&c_path, c_source).map_err(|e| e.to_string())?;
     std::fs::write(output.with_extension("h"), header).map_err(|e| e.to_string())?;
-    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+    let cc = c_compiler()?;
     let mut result = run_cc(
-        std::process::Command::new(&cc)
+        cc_command(&cc)
             .args([
                 opt,
                 "-std=gnu11",
@@ -3821,13 +3950,13 @@ pub fn compile_library(
             ])
             .arg(&obj)
             .arg(&c_path),
-        &cc,
+        &cc.0,
     );
     if result.is_ok() {
         result = match kind {
             LibKind::Static => {
                 let _ = std::fs::remove_file(output);
-                let ar = std::env::var("AR").unwrap_or_else(|_| "ar".into());
+                let ar = archiver();
                 run_cc(
                     std::process::Command::new(&ar)
                         .arg("rcs")
@@ -3837,7 +3966,7 @@ pub fn compile_library(
                 )
             }
             LibKind::Shared => run_cc(
-                std::process::Command::new(&cc)
+                cc_command(&cc)
                     .arg("-shared")
                     .arg("-o")
                     .arg(output)
@@ -3845,7 +3974,7 @@ pub fn compile_library(
                     .args(crate::ffi::links())
                     .args(tls_links(c_source))
                     .args(["-lm", "-lpthread"]),
-                &cc,
+                &cc.0,
             ),
         };
     }
@@ -3950,7 +4079,7 @@ pub fn compile_for(
         let _ = std::fs::remove_file(&sj_obj);
         result
     } else {
-        let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
+        let cc = c_compiler()?;
         let native = native_options();
         let link_static: &[&str] = if native.static_link {
             &["-static"]
@@ -3970,16 +4099,16 @@ pub fn compile_for(
                     Pgo::Use => format!("-fprofile-use={}", pdir.display()),
                 };
                 run_cc(
-                    std::process::Command::new(&cc)
+                    cc_command(&cc)
                         .args([opt, "-std=gnu11", "-ffp-contract=off", "-w"])
                         .args([flag.as_str(), "-Wno-missing-profile", "-c", "-o"])
                         .arg(&obj)
                         .arg(&src),
-                    &cc,
+                    &cc.0,
                 )
                 .and_then(|_| {
                     run_cc(
-                        std::process::Command::new(&cc)
+                        cc_command(&cc)
                             .arg(&flag)
                             .args(link_static)
                             .arg("-o")
@@ -3988,14 +4117,14 @@ pub fn compile_for(
                             .args(crate::ffi::links())
                             .args(tls_links(c_source))
                             .args(["-lm", "-lpthread"]),
-                        &cc,
+                        &cc.0,
                     )
                 })
             }
             None => run_cc(
-                std::process::Command::new(&cc)
+                cc_command(&cc)
                     .arg(opt)
-                    .args(parallel_codegen(&cc, opt, c_source))
+                    .args(parallel_codegen(&cc.0, opt, c_source))
                     .arg("-std=gnu11")
                     // no fused multiply-add: results must match the interpreter exactly
                     .arg("-ffp-contract=off")
@@ -4008,7 +4137,7 @@ pub fn compile_for(
                     .args(tls_links(c_source))
                     .arg("-lm")
                     .arg("-lpthread"),
-                &cc,
+                &cc.0,
             ),
         }
     };

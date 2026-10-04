@@ -314,8 +314,14 @@ Next in this series, toward static, zero-cost programs:
     a few scalars passed and returned in registers as C structs; then
     reference counting behind `--memory rc`, module by module, before it
     becomes the default.
-26. **Cross-compilation**: `fwp build --target <triple>` for another
-    operating system or architecture, as in Go and Rust.
+26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
+    (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
+    Linux with that system's C compiler: `FWP_CC_<triple>`,
+    `<triple>-gcc`, `clang --target` or `zig cc`. `--static` gives one
+    self-contained executable, as Go does. The tests build every golden
+    program for aarch64 and run it under qemu (`tests/cross.rs`). Next:
+    macOS (the runtime's processes, sockets and fibers on Darwin) and
+    Windows, and musl (fibers without `makecontext`).
 
 ## Later
 
