@@ -1598,6 +1598,14 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
     if std::env::var("FWP_NO_OPT").is_err() {
         crate::opt::optimize(&mut prog);
         crate::opt::specialize_hofs(&mut prog);
+        crate::fuse::fuse(&mut prog);
+    }
+    if std::env::var_os("FWP_DUMP_IR").is_some() {
+        for (i, f) in prog.funcs.iter().enumerate() {
+            if !f.name.starts_with("std") || f.name.contains("-fn") {
+                eprintln!("f{} {} : {} = {:?}", i, f.name, f.ty, f.body);
+            }
+        }
     }
     Ok(prog)
 }

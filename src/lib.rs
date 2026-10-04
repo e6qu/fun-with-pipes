@@ -21,6 +21,7 @@ pub mod ffi_interp;
 #[cfg(target_family = "wasm")]
 pub mod fiber;
 pub mod fmt;
+pub mod fuse;
 pub mod grpc;
 pub mod grpc_cli;
 pub mod gzip;

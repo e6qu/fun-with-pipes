@@ -25,11 +25,11 @@ On a 4-core x86-64 machine (GCC 13, Rust 1.99):
 
 | benchmark | C (cc -O2) | Rust (rustc -O) | fwp (fwp build -O2) | fwp / C |
 |---|--:|--:|--:|--:|
-| fib | 19 ms | 33 ms | 11 ms | 0.6× |
-| loop | 91 ms | 93 ms | 227 ms | 2.5× |
-| map | 539 ms | 412 ms | 1016 ms | 1.9× |
-| pipeline | 43 ms | 24 ms | 1882 ms | 44× |
-| strings | 155 ms | 162 ms | 670 ms | 4.3× |
+| fib | 19 ms | 34 ms | 11 ms | 0.6× |
+| loop | 91 ms | 103 ms | 227 ms | 2.5× |
+| map | 527 ms | 406 ms | 1048 ms | 2.0× |
+| pipeline | 41 ms | 25 ms | 50 ms | 1.2× |
+| strings | 154 ms | 159 ms | 631 ms | 4.1× |
 
 What the numbers say:
 
@@ -40,10 +40,11 @@ What the numbers say:
   here). Integer arithmetic is checked for overflow in fwp, not in C.
 - `map` is fwp's sorted-array map against C's sorted array and Rust's
   B-tree: twice the time, mostly the generic comparison of keys.
-- `pipeline` is the gap that remains: each stage builds a list of a
-  million cells (1.8 GB allocated over the run), where C reuses two
-  arrays and Rust's iterators fuse. Fusing list pipelines (see
-  [PLAN.md](../PLAN.md)) is what closes it.
+- `pipeline` runs as one loop. `range | map | filter | sum` is fused
+  (`src/fuse.rs`), so no list is built, and the loop keeps its state in
+  C locals. Before fusion, each stage built a list of a million cells
+  (1.8 GB allocated over the run), and the benchmark took 1882 ms, 44
+  times as long as C. What remains is fwp's overflow checks.
 - `strings` allocates a string per number and per concatenation; C and
   Rust write into one buffer.
 
