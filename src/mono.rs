@@ -62,13 +62,22 @@ pub struct Mono<'a> {
 
 /// Function-local builder state.
 struct FB {
-    nlocals: u32,
+    /// The type of each local.
+    locals: Vec<MT>,
 }
 
 impl FB {
-    fn local(&mut self) -> Local {
-        self.nlocals += 1;
-        self.nlocals - 1
+    /// A function's builder, with its first `arity` parameters as locals.
+    fn params(ty: &MT, arity: u32) -> FB {
+        let (ps, _) = ty.params(arity as usize);
+        FB {
+            locals: ps.into_iter().cloned().collect(),
+        }
+    }
+
+    fn local(&mut self, ty: &MT) -> Local {
+        self.locals.push(ty.clone());
+        self.locals.len() as Local - 1
     }
 }
 
@@ -385,7 +394,7 @@ impl<'a> Mono<'a> {
         self.prog.funcs.push(Func {
             name,
             arity,
-            nlocals: arity,
+            locals: ty.params(arity as usize).0.into_iter().cloned().collect(),
             ty,
             body,
         });
@@ -473,26 +482,28 @@ impl<'a> Mono<'a> {
         id
     }
 
-    fn ctor_func(&mut self, canon: &str) -> FuncId {
-        let k = (format!("ctor:{}", canon), vec![]);
+    /// The constructor `canon` as a function of type `ty`.
+    fn ctor_func(&mut self, canon: &str, ty: &MT) -> FuncId {
+        let k = (format!("ctor:{}", canon), vec![ty.clone()]);
         if let Some(id) = self.instances.get(&k) {
             return *id;
         }
         let cd = &self.env.ctors[canon];
         let arity = cd.fields.len() as u32;
         let tag = cd.tag as u32;
-        let id = self.new_func(display_name(canon), arity, MT::unit(), Body::Ctor(tag));
+        let id = self.new_func(display_name(canon), arity, ty.clone(), Body::Ctor(tag));
         self.instances.insert(k, id);
         id
     }
 
-    /// A generated helper function, memoized by key.
-    fn generated(&mut self, key: String, arity: u32, body: Expr) -> FuncId {
-        if let Some(id) = self.generated.get(&key) {
+    /// A generated helper function of type `ty`, memoized by key and type.
+    fn generated(&mut self, key: String, arity: u32, ty: MT, body: Expr) -> FuncId {
+        let memo = format!("{}: {}", key, ty);
+        if let Some(id) = self.generated.get(&memo) {
             return *id;
         }
-        let id = self.new_func(key.clone(), arity, MT::unit(), Body::Expr(body));
-        self.generated.insert(key, id);
+        let id = self.new_func(key, arity, ty, Body::Expr(body));
+        self.generated.insert(memo, id);
         id
     }
 
@@ -864,13 +875,13 @@ impl<'a> Mono<'a> {
                 let saved = std::mem::replace(&mut self.cur_module, b.module.clone());
                 self.in_progress.insert(id);
                 let arity = self.prog.funcs[id].arity;
-                let mut fb = FB { nlocals: arity };
+                let mut fb = FB::params(&self.prog.funcs[id].ty, arity);
                 let e = self.expr(&b.body, &s, &mut fb)?;
                 let args = (0..arity).map(Expr::Local).collect();
                 let body = self.mk_apply(e, args);
                 let f = &mut self.prog.funcs[id];
                 f.body = Body::Expr(body);
-                f.nlocals = fb.nlocals;
+                f.locals = fb.locals;
                 self.in_progress.remove(&id);
                 self.cur_module = saved;
                 continue;
@@ -890,10 +901,10 @@ impl<'a> Mono<'a> {
     /// Evaluate `x` at compile time and return its value as a constant.
     fn comptime(&mut self, e: &ast::Expr, x: &ast::Expr, s: &Subst) -> MResult<Expr> {
         let mt = self.node_mt(e.id, s);
-        let mut fb = FB { nlocals: 0 };
+        let mut fb = FB { locals: vec![] };
         let body = self.expr(x, s, &mut fb)?;
         let tmp = self.new_func("comptime".into(), 0, mt, Body::Expr(body));
-        self.prog.funcs[tmp].nlocals = fb.nlocals;
+        self.prog.funcs[tmp].locals = fb.locals;
         self.drain()?;
         // the expression must not depend on code that is still being lowered
         let mut seen = std::collections::HashSet::new();
@@ -1019,7 +1030,8 @@ impl<'a> Mono<'a> {
             ExprKind::Var(_) => self.var(e, s),
             ExprKind::Ctor(_) => {
                 let inst = &self.typed.insts[&e.id];
-                let id = self.ctor_func(&inst.target.clone());
+                let mt = self.node_mt(e.id, s);
+                let id = self.ctor_func(&inst.target.clone(), &mt);
                 if self.prog.funcs[id].arity == 0 {
                     if let Body::Ctor(tag) = self.prog.funcs[id].body {
                         return Ok(Expr::Construct(tag, vec![]));
@@ -1052,6 +1064,7 @@ impl<'a> Mono<'a> {
                 Ok(Expr::Func(self.generated(
                     format!("select{:?}", idxs),
                     1,
+                    mt,
                     body,
                 )))
             }
@@ -1068,9 +1081,14 @@ impl<'a> Mono<'a> {
                 let re = self.expr(r, s, fb)?;
                 match self.typed.pipe_modes.get(&e.id) {
                     Some(PipeMode::Compose) => {
+                        let ty = fun_of(
+                            vec![self.node_mt(l.id, s), self.node_mt(r.id, s)],
+                            self.node_mt(e.id, s),
+                        );
                         let compose = self.generated(
                             "compose".into(),
                             3,
+                            ty,
                             Expr::Apply(
                                 Box::new(Expr::Local(1)),
                                 vec![Expr::Apply(Box::new(Expr::Local(0)), vec![Expr::Local(2)])],
@@ -1123,7 +1141,11 @@ impl<'a> Mono<'a> {
                         .map(|(i, idx)| (*idx, Expr::Local(i as u32)))
                         .collect(),
                 );
-                let f = self.generated(format!("with{:?}", idxs), k + 1, body);
+                let ty = fun_of(
+                    fields.iter().map(|(_, x)| self.node_mt(x.id, s)).collect(),
+                    mt,
+                );
+                let f = self.generated(format!("with{:?}", idxs), k + 1, ty, body);
                 Ok(self.mk_apply(Expr::Func(f), vals))
             }
             ExprKind::Make(_, fields) => {
@@ -1146,7 +1168,11 @@ impl<'a> Mono<'a> {
                         .map(|i| Expr::Apply(Box::new(Expr::Local(*i)), vec![Expr::Local(k)]))
                         .collect(),
                 );
-                let f = self.generated(format!("make{:?}", order), k + 1, body);
+                let ty = fun_of(
+                    fields.iter().map(|(_, x)| self.node_mt(x.id, s)).collect(),
+                    mt,
+                );
+                let f = self.generated(format!("make{:?}", order), k + 1, ty, body);
                 Ok(self.mk_apply(Expr::Func(f), vals))
             }
             ExprKind::Update(fields) => {
@@ -1175,7 +1201,11 @@ impl<'a> Mono<'a> {
                         })
                         .collect(),
                 );
-                let f = self.generated(format!("update{:?}", idxs), k + 1, body);
+                let ty = fun_of(
+                    fields.iter().map(|(_, x)| self.node_mt(x.id, s)).collect(),
+                    mt,
+                );
+                let f = self.generated(format!("update{:?}", idxs), k + 1, ty, body);
                 Ok(self.mk_apply(Expr::Func(f), vals))
             }
             ExprKind::Match(_) => {
@@ -1204,7 +1234,8 @@ impl<'a> Mono<'a> {
                     return crate::syntax::quote(x, &mut cx);
                 }
                 // a syntax template: a function of its positional holes
-                let mut tfb = FB { nlocals: holes };
+                let mt = self.node_mt(e.id, s);
+                let mut tfb = FB::params(&mt, holes);
                 let body = {
                     let mut cx = QuoteCx {
                         mono: self,
@@ -1213,9 +1244,8 @@ impl<'a> Mono<'a> {
                     };
                     crate::syntax::quote(x, &mut cx)?
                 };
-                let mt = self.node_mt(e.id, s);
                 let id = self.new_func("quote".into(), holes, mt, Body::Expr(body));
-                self.prog.funcs[id].nlocals = tfb.nlocals;
+                self.prog.funcs[id].locals = tfb.locals;
                 Ok(Expr::Func(id))
             }
             ExprKind::TypeOf(_) => {
@@ -1296,7 +1326,9 @@ impl<'a> Mono<'a> {
         };
         let mt = self.node_mt(node, s);
         let scrut = mt.as_fun().map(|(a, _)| a.clone()).unwrap_or(MT::unit());
-        let mut fb = FB { nlocals: 1 };
+        let mut fb = FB {
+            locals: vec![scrut.clone()],
+        };
         let mut out = Vec::new();
         for arm in arms {
             let mut holes = Vec::new();
@@ -1307,7 +1339,7 @@ impl<'a> Mono<'a> {
         }
         let f = &mut self.prog.funcs[id];
         f.body = Body::Expr(Expr::Match(Box::new(Expr::Local(0)), out));
-        f.nlocals = fb.nlocals;
+        f.locals = fb.locals;
         Ok(())
     }
 
@@ -1320,7 +1352,7 @@ impl<'a> Mono<'a> {
     ) -> MResult<Pat> {
         match &p.kind {
             PatKind::Hole => {
-                let l = fb.local();
+                let l = fb.local(mt);
                 holes.push(l);
                 Ok(Pat::Bind(l))
             }
@@ -1360,8 +1392,8 @@ impl<'a> Mono<'a> {
                 let mut ps = Vec::new();
                 match args {
                     None => {
-                        for _ in &ftypes {
-                            let l = fb.local();
+                        for ft in &ftypes {
+                            let l = fb.local(ft);
                             holes.push(l);
                             ps.push(Pat::Bind(l));
                         }
@@ -1595,13 +1627,33 @@ fn index_matches(env: &Env) -> HashMap<NodeId, &ast::Expr> {
     out
 }
 
+/// The function type from `params` to `result`.
+fn fun_of(params: Vec<MT>, result: MT) -> MT {
+    params
+        .into_iter()
+        .rev()
+        .fold(result, |t, p| MT::Fun(Box::new(p), Box::new(t)))
+}
+
 /// Lower a checked program to optimized IR.
 pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
     let mut prog = Mono::new(env, typed).run(roots)?;
+    // in debug builds (the tests), every pass keeps the locals' types
+    let check = |prog: &Program, after: &str| {
+        if cfg!(debug_assertions) {
+            if let Err(e) = crate::ir::check_locals(prog) {
+                panic!("local types after {}: {}", after, e);
+            }
+        }
+    };
+    check(&prog, "lowering");
     if std::env::var("FWP_NO_OPT").is_err() {
         crate::opt::optimize(&mut prog);
+        check(&prog, "optimizing");
         crate::opt::specialize_hofs(&mut prog);
+        check(&prog, "specializing");
         crate::fuse::fuse(&mut prog);
+        check(&prog, "fusing");
     }
     if let Some(how) = std::env::var_os("FWP_DUMP_IR") {
         // `FWP_DUMP_IR=all` includes the standard library's functions
