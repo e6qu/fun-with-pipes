@@ -273,6 +273,9 @@ pub struct Program {
     /// Exported functions: the `Error[E]` type and the effects (by name)
     /// of their final arrow (for REST endpoints).
     pub export_effects: std::collections::BTreeMap<String, (Option<MT>, Vec<String>)>,
+    /// The canonical names (`std::iter.map`) of instances of the standard
+    /// library's iterator functions, which the optimizer recognizes.
+    pub std_names: std::collections::BTreeMap<FuncId, String>,
 }
 
 impl crate::value::Shapes for Program {

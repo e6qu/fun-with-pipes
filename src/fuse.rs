@@ -251,6 +251,7 @@ fn prim_sym(funcs: &[Func], id: FuncId) -> Option<&str> {
 
 struct Fuser<'p> {
     funcs: &'p [Func],
+    std_names: &'p std::collections::BTreeMap<FuncId, String>,
     beh: Behaviors<'p>,
     /// Functions made by this pass (step functions and primitives).
     made: Vec<Func>,
@@ -354,6 +355,254 @@ impl Fuser<'_> {
         }
     }
 
+    fn std_name(&self, id: FuncId) -> Option<&str> {
+        self.std_names.get(&id).map(String::as_str)
+    }
+
+    /// `iter.to-list` over `iter.map`, `iter.filter` and `iter.take`
+    /// stages of any iterator, as one loop that consumes the source one
+    /// element at a time, without the stages' `Yield` cells and thunks.
+    /// Iterators are lazy, so each element already goes through every
+    /// stage in turn: the loop keeps that order exactly, effects and traps
+    /// included, and forces the source's tail only when another element
+    /// is wanted (so `iter.take n` forces nothing after the n-th).
+    fn iter_to_list(&mut self, to_list: FuncId, it: &Expr) -> Option<Expr> {
+        // a stage's function: a closure built from known functions, which
+        // the step applies to each element (and the optimizer then turns
+        // into direct calls)
+        enum St {
+            Map(Expr),
+            Filter(Expr),
+            Take(usize),
+        }
+        let funcs = self.funcs;
+        // outermost first, as written in the IR
+        let mut raw: Vec<(&str, &Expr)> = Vec::new();
+        let mut cur = it;
+        while let Expr::Call(id, a) = cur {
+            match (self.std_name(*id), a.len()) {
+                (Some("std::iter.map"), 2) => raw.push(("map", &a[0])),
+                (Some("std::iter.filter"), 2) => raw.push(("filter", &a[0])),
+                (Some("std::iter.take"), 2) => raw.push(("take", &a[0])),
+                _ => break,
+            }
+            cur = &a[1];
+        }
+        if raw.is_empty() {
+            return None;
+        }
+        let list_ty = funcs[to_list].ty.params(1).1.clone();
+        let i64 = MT::con("std::I64");
+        let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
+        let subp = self.prim("prim.sub", fun2(&i64, &i64, &i64), 2);
+        let rev = self.prim(
+            "reverse",
+            MT::Fun(Box::new(list_ty.clone()), Box::new(list_ty.clone())),
+            1,
+        );
+        // outer values in the unfused order: the stages' arguments
+        // outermost first, then the source
+        let mut binds: Vec<(Local, Expr)> = Vec::new();
+        let mut stages: Vec<St> = Vec::new();
+        let mut takes: Vec<Expr> = Vec::new();
+        for (kind, arg) in &raw {
+            match *kind {
+                "take" => {
+                    let v = match arg {
+                        Expr::Local(_) | Expr::Const(_) => (*arg).clone(),
+                        _ => {
+                            let l = self.fresh();
+                            binds.push((l, (*arg).clone()));
+                            Expr::Local(l)
+                        }
+                    };
+                    takes.push(v);
+                    stages.push(St::Take(takes.len() - 1));
+                }
+                k => {
+                    if !closure(funcs, arg) {
+                        return None;
+                    }
+                    stages.push(if k == "map" {
+                        St::Map((*arg).clone())
+                    } else {
+                        St::Filter((*arg).clone())
+                    });
+                }
+            }
+        }
+        stages.reverse(); // the source's side first
+        let src = {
+            let l = self.fresh();
+            binds.push((l, cur.clone()));
+            Expr::Local(l)
+        };
+        // the state: the iterator, the list so far (reversed), the take
+        // counters, then captured locals
+        let nt = takes.len();
+        let mut outer: Vec<Local> = Vec::new();
+        let mut field = |e: &Expr| -> Expr {
+            match e {
+                Expr::Local(l) => {
+                    let i = match outer.iter().position(|o| o == l) {
+                        Some(i) => i,
+                        None => {
+                            outer.push(*l);
+                            outer.len() - 1
+                        }
+                    };
+                    Expr::Field(Box::new(Expr::Local(0)), (2 + nt + i) as u32)
+                }
+                _ => e.clone(),
+            }
+        };
+        let st = |i: usize| Expr::Field(Box::new(Expr::Local(0)), i as u32);
+        let mut calls: Vec<Option<Expr>> = Vec::new();
+        for s in &stages {
+            calls.push(match s {
+                St::Map(f) | St::Filter(f) => Some(map_locals(f, &mut field)),
+                St::Take(_) => None,
+            });
+        }
+        let nout = outer.len();
+        let (h, t) = (1 as Local, 2 as Local);
+        let mut nl: Local = 3;
+        let unit = Expr::Const(Value::unit());
+        let less_than_one = |c: Expr| Expr::Call(lt, vec![Expr::Const(Value::I64(1)), c]);
+        // go on to the next element, or stop when a take is exhausted
+        let go_on = |acc: Expr, counters: &[Expr]| {
+            let mut fs = vec![
+                Expr::Apply(Box::new(Expr::Local(t)), vec![unit.clone()]),
+                acc.clone(),
+            ];
+            fs.extend(counters.iter().cloned());
+            fs.extend((0..nout).map(|i| st(2 + nt + i)));
+            let mut e = Expr::Construct(0, vec![Expr::Record(fs)]);
+            for c in counters.iter().rev() {
+                e = Expr::Match(
+                    Box::new(less_than_one(c.clone())),
+                    vec![
+                        (
+                            Pat::Construct(1, vec![]),
+                            Expr::Construct(1, vec![acc.clone()]),
+                        ),
+                        (Pat::Wild, e),
+                    ],
+                );
+            }
+            e
+        };
+        // the element through the stages, innermost (source side) first;
+        // built from the end, so collect the steps first
+        enum Do {
+            Let(Local, Expr),
+            Guard(Expr, Vec<Expr>),
+        }
+        let mut steps: Vec<Do> = Vec::new();
+        let mut x = Expr::Local(h);
+        let mut counters: Vec<Expr> = (0..nt).map(|k| st(2 + k)).collect();
+        for (s, c) in stages.iter().zip(&calls) {
+            match (s, c) {
+                (St::Map(_), Some(f)) => {
+                    let l = nl;
+                    nl += 1;
+                    steps.push(Do::Let(
+                        l,
+                        Expr::Apply(Box::new(f.clone()), vec![x.clone()]),
+                    ));
+                    x = Expr::Local(l);
+                }
+                (St::Filter(_), Some(f)) => {
+                    let cond = Expr::Apply(Box::new(f.clone()), vec![x.clone()]);
+                    steps.push(Do::Guard(cond, counters.clone()));
+                }
+                (St::Take(k), _) => {
+                    let l = nl;
+                    nl += 1;
+                    steps.push(Do::Let(
+                        l,
+                        Expr::Call(subp, vec![Expr::Const(Value::I64(1)), counters[*k].clone()]),
+                    ));
+                    counters[*k] = Expr::Local(l);
+                }
+                _ => return None,
+            }
+        }
+        let mut body = go_on(Expr::Construct(1, vec![x, st(1)]), &counters);
+        for d in steps.into_iter().rev() {
+            body = match d {
+                Do::Let(l, v) => Expr::Let(l, Box::new(v), Box::new(body)),
+                Do::Guard(cond, cs) => Expr::Match(
+                    Box::new(cond),
+                    vec![
+                        (Pat::Construct(1, vec![]), body),
+                        (Pat::Wild, go_on(st(1), &cs)),
+                    ],
+                ),
+            };
+        }
+        let stop = Expr::Construct(1, vec![st(1)]);
+        let mut body = Expr::Match(
+            Box::new(st(0)),
+            vec![
+                (Pat::Construct(1, vec![Pat::Bind(h), Pat::Bind(t)]), body),
+                (Pat::Wild, stop.clone()),
+            ],
+        );
+        // an exhausted take stops before the source is looked at
+        for k in (0..nt).rev() {
+            body = Expr::Match(
+                Box::new(less_than_one(st(2 + k))),
+                vec![(Pat::Construct(1, vec![]), stop.clone()), (Pat::Wild, body)],
+            );
+        }
+        let mut fields = vec![
+            ("0".to_string(), MT::unit()),
+            ("1".to_string(), list_ty.clone()),
+        ];
+        fields.extend((0..nt + nout).map(|i| ((i + 2).to_string(), MT::unit())));
+        MT::sort_fields(&mut fields);
+        let state_ty = MT::Record(fields);
+        let step_ty = MT::Fun(
+            Box::new(state_ty.clone()),
+            Box::new(MT::Con(
+                "std::Step".into(),
+                vec![state_ty.clone(), list_ty.clone()],
+            )),
+        );
+        let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
+        let (body, nlocals) = crate::opt::simplify(&all, body, nl);
+        let step = self.new_func(Func {
+            name: "fused-iter".into(),
+            arity: 1,
+            nlocals,
+            ty: step_ty.clone(),
+            body: Body::Expr(body),
+        });
+        let loop_id = self.prim(
+            "loop",
+            MT::Fun(
+                Box::new(step_ty),
+                Box::new(MT::Fun(Box::new(state_ty), Box::new(list_ty))),
+            ),
+            2,
+        );
+        let mut init = vec![src, Expr::Construct(0, vec![])];
+        init.extend(takes);
+        init.extend(outer.into_iter().map(Expr::Local));
+        let mut out = Expr::Call(
+            rev,
+            vec![Expr::Call(
+                loop_id,
+                vec![Expr::Func(step), Expr::Record(init)],
+            )],
+        );
+        for (l, v) in binds.into_iter().rev() {
+            out = Expr::Let(l, Box::new(v), Box::new(out));
+        }
+        Some(out)
+    }
+
     /// The primitive a fused pipeline can end in, if `id` is one.
     fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
         match (prim_sym(self.funcs, id)?, args.len()) {
@@ -408,6 +657,13 @@ impl Fuser<'_> {
     /// Lists built by `map` and `filter` chains no consumer took: fused
     /// one by one, outermost first.
     fn lists(&mut self, e: Expr) -> Expr {
+        if let Expr::Call(id, args) = &e {
+            if self.std_name(*id) == Some("std::iter.to-list") && args.len() == 1 {
+                if let Some(r) = self.iter_to_list(*id, &args[0]) {
+                    return r;
+                }
+            }
+        }
         if let Expr::Call(id, _) = &e {
             if matches!(prim_sym(self.funcs, *id), Some("map" | "filter")) {
                 if let Some(r) = self.materialize(&e) {
@@ -726,6 +982,41 @@ impl Fuser<'_> {
     }
 }
 
+/// A function value whose construction can do nothing: a known function,
+/// a local or constant, or a known function partially applied to such.
+fn closure(funcs: &[Func], e: &Expr) -> bool {
+    fn arg(funcs: &[Func], e: &Expr) -> bool {
+        matches!(e, Expr::Local(_) | Expr::Const(_)) || closure(funcs, e)
+    }
+    match e {
+        Expr::Local(_) => true,
+        Expr::Func(id) => funcs[*id].arity > 0,
+        Expr::Apply(f, a) => match &**f {
+            Expr::Func(id) => {
+                a.len() < funcs[*id].arity as usize && a.iter().all(|x| arg(funcs, x))
+            }
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+/// `e` with each local replaced by `f(local)` (for expressions without
+/// binders: closures and their arguments).
+fn map_locals(e: &Expr, f: &mut dyn FnMut(&Expr) -> Expr) -> Expr {
+    match e {
+        Expr::Local(_) => f(e),
+        Expr::Apply(g, a) => Expr::Apply(
+            Box::new(map_locals(g, f)),
+            a.iter().map(|x| map_locals(x, f)).collect(),
+        ),
+        Expr::Call(g, a) => Expr::Call(*g, a.iter().map(|x| map_locals(x, f)).collect()),
+        Expr::Record(a) => Expr::Record(a.iter().map(|x| map_locals(x, f)).collect()),
+        Expr::Construct(t, a) => Expr::Construct(*t, a.iter().map(|x| map_locals(x, f)).collect()),
+        _ => e.clone(),
+    }
+}
+
 /// The subexpression an expression evaluates first, through `Let`s.
 fn first_evaluated(e: &mut Expr) -> &mut Expr {
     match e {
@@ -749,6 +1040,7 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
 /// Fuse the list pipelines of every function.
 pub fn fuse(prog: &mut Program) {
     let snapshot = prog.funcs.clone();
+    let std_names = prog.std_names.clone();
     let mut made = Vec::new();
     for id in 0..snapshot.len() {
         let Body::Expr(body) = &snapshot[id].body else {
@@ -756,6 +1048,7 @@ pub fn fuse(prog: &mut Program) {
         };
         let mut f = Fuser {
             funcs: &snapshot,
+            std_names: &std_names,
             beh: Behaviors::new(&snapshot),
             made: std::mem::take(&mut made),
             nlocals: snapshot[id].nlocals,

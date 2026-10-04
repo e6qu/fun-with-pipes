@@ -424,6 +424,9 @@ impl<'a> Mono<'a> {
             ty,
             Body::Expr(Expr::Const(Value::unit())),
         );
+        if b.name.starts_with("std::iter.") {
+            self.prog.std_names.insert(id, b.name.clone());
+        }
         self.instances.insert(k, id);
         self.work.push((id, idx, s));
         Ok(id)

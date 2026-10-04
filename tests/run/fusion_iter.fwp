@@ -1,0 +1,12 @@
+# iter.to-list over iter.map, iter.filter and iter.take: one loop that
+# pulls the source one element at a time (src/fuse.rs, iter_to_list).
+# The take of 0 never maps; the take of 1 never forces the division.
+
+main = [
+    0 | iter.count-from | iter.map (mul 2) | iter.filter (rem 3 | eq 0) | iter.take 4 | iter.to-list | echo,
+    [1, 2, 3, 4, 5] | iter.from-list | iter.take 2 | iter.map (add 10) | iter.to-list | echo,
+    1 | iter.iterate (mul 3) | iter.take 0 | iter.map (div 0) | iter.to-list | echo,
+    Yield 1 (fork Yield (const 1 | div 0) (const (const Done))) | iter.take 1 | iter.map (add 1) | iter.to-list | echo,
+    [1, 2, 3] | iter.from-list | iter.filter (gt 5) | iter.take 2 | iter.to-list | echo,
+    0 | iter.count-from | iter.filter (gt 300000) | iter.take 1 | iter.map show | iter.to-list | echo,
+] | ignore

@@ -258,6 +258,9 @@ impl<'p> Opt<'p> {
             || self.budget < body_size as isize
             || calls(body, id)
             || args.len() != callee.arity as usize
+            // iterator stages stay calls, so that `iter.to-list` over them
+            // can be fused (src/fuse.rs); inlining one level gains nothing
+            || callee.name.starts_with("iter.")
         {
             return Expr::Call(id, args);
         }
