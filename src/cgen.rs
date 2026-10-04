@@ -350,6 +350,63 @@ struct Gen<'p> {
     /// locals and the elements (`opt::specialize_hofs`): the primitive and
     /// the function, and how many locals it captures.
     hofs: Vec<(String, FuncId, usize)>,
+    /// The unboxed calling convention of each function that has one.
+    abis: Vec<Option<Abi>>,
+}
+
+/// Most fields of a record passed or returned in registers (a C struct).
+const MAX_UNBOXED: usize = 4;
+
+/// How a function's worker (`w<id>`) takes and returns records, for
+/// direct calls: a parameter read only field by field comes as its
+/// fields, and a record result comes back as a C struct (`fwp_r<n>`),
+/// so neither is allocated. The function itself (`f<id>`, for closures
+/// and primitives) wraps the worker.
+#[derive(Clone, Debug)]
+struct Abi {
+    /// Per parameter: its number of fields when it is passed field by field.
+    params: Vec<Option<usize>>,
+    /// The number of fields of a result returned as a struct.
+    ret: Option<usize>,
+}
+
+/// The number of fields of a record type small enough to unbox.
+fn small_record(prog: &Program, t: &MT) -> Option<usize> {
+    let n = record_fields(&prog.shapes, t)?.len();
+    (1..=MAX_UNBOXED).contains(&n).then_some(n)
+}
+
+fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
+    let Body::Expr(body) = &f.body else {
+        return None;
+    };
+    if f.arity == 0 {
+        return None;
+    }
+    let params: Vec<Option<usize>> = (0..f.arity)
+        .map(|i| {
+            small_record(prog, &f.locals[i as usize]).filter(|_| crate::opt::only_fields(body, i))
+        })
+        .collect();
+    let ret = small_record(prog, f.ty.params(f.arity as usize).1);
+    (ret.is_some() || params.iter().any(Option::is_some)).then_some(Abi { params, ret })
+}
+
+impl Abi {
+    fn sig(&self, id: FuncId) -> String {
+        let mut ps = Vec::new();
+        for (i, p) in self.params.iter().enumerate() {
+            match p {
+                Some(n) => ps.extend((0..*n).map(|k| format!("V l{}_{}", i, k))),
+                None => ps.push(format!("V l{}", i)),
+            }
+        }
+        let ret = match self.ret {
+            Some(n) => format!("fwp_r{}", n),
+            None => "V".into(),
+        };
+        format!("static {} w{}({})", ret, id, ps.join(", "))
+    }
 }
 
 /// Numeric kind, display name and TInt width of a primitive type.
@@ -959,6 +1016,8 @@ struct FnGen<'g, 'p> {
     indent: usize,
     /// Generating the step of a specialized loop (`Gen::loop_def`).
     in_loop: Option<LoopGen>,
+    /// Locals kept as their fields (C expressions), read only through them.
+    fields: HashMap<Local, Vec<String>>,
 }
 
 /// A loop's step function generated with its state in arrays: its results
@@ -1138,6 +1197,102 @@ impl<'g, 'p> FnGen<'g, 'p> {
         format!("(V[]){{{}}}", xs.join(", "))
     }
 
+    /// The arguments of a direct call of a function's worker, in
+    /// evaluation order: a record passed field by field is not built.
+    fn worker_args(&mut self, abi: &Abi, args: &[Expr]) -> Vec<String> {
+        let mut out = Vec::new();
+        for (a, p) in args.iter().zip(&abi.params) {
+            match p {
+                Some(n) => out.extend(self.expr_fields(a, *n)),
+                None => out.push(self.expr(a)),
+            }
+        }
+        out
+    }
+
+    /// The number of fields of a record `e` can give without building it.
+    fn unboxed(&self, e: &Expr) -> Option<usize> {
+        match e {
+            Expr::Call(id, _) => self.g.abis[*id].as_ref()?.ret,
+            Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
+            Expr::Let(_, _, b) => self.unboxed(b),
+            Expr::Match(_, arms) => {
+                let n = self.unboxed(&arms.first()?.1)?;
+                arms.iter()
+                    .all(|(_, b)| self.unboxed(b) == Some(n))
+                    .then_some(n)
+            }
+            _ => None,
+        }
+    }
+
+    /// The `n` fields of the record `e`, as C expressions, building it
+    /// only when it comes from elsewhere.
+    fn expr_fields(&mut self, e: &Expr, n: usize) -> Vec<String> {
+        match e {
+            Expr::Record(xs) if xs.len() == n => self.args(xs),
+            Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.ret) == Some(n) => {
+                let abi = self.g.abis[*id].clone().unwrap();
+                let xs = self.worker_args(&abi, args);
+                let t = self.fresh();
+                self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
+            }
+            Expr::Let(l, v, b) => {
+                self.bind_local(*l, v, b);
+                self.expr_fields(b, n)
+            }
+            Expr::Match(scrut, arms) if self.unboxed(e) == Some(n) => {
+                let sv = self.expr(scrut);
+                let s = self.bind(sv);
+                let rs: Vec<String> = (0..n).map(|_| self.fresh()).collect();
+                for r in &rs {
+                    self.line(&format!("V {};", r));
+                }
+                self.label += 1;
+                let done = format!("done{}", self.label);
+                for (pat, body) in arms {
+                    self.label += 1;
+                    let next = format!("next{}", self.label);
+                    self.line("{");
+                    self.indent += 1;
+                    self.pattern(pat, &s, &next);
+                    let fs = self.expr_fields(body, n);
+                    for (r, f) in rs.iter().zip(fs) {
+                        self.line(&format!("{} = {};", r, f));
+                    }
+                    self.line(&format!("goto {};", done));
+                    self.indent -= 1;
+                    self.line("}");
+                    self.line(&format!("{}:;", next));
+                }
+                self.line("fwp_trap(\"internal: no match arm applies\");");
+                self.line(&format!("{}:;", done));
+                rs
+            }
+            _ => {
+                let v = self.expr(e);
+                let t = self.bind(v);
+                (0..n).map(|k| format!("OBJ({})->f[{}]", t, k)).collect()
+            }
+        }
+    }
+
+    /// `l = v` before `body`: a record that `body` reads only through its
+    /// fields and that `v` gives unboxed is kept as its fields.
+    fn bind_local(&mut self, l: Local, v: &Expr, body: &Expr) {
+        if let Some(n) = self.unboxed(v) {
+            if !matches!(v, Expr::Record(_)) && crate::opt::only_fields(body, l) {
+                let fs = self.expr_fields(v, n);
+                let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
+                self.fields.insert(l, names);
+                return;
+            }
+        }
+        let x = self.expr(v);
+        self.line(&format!("l{} = {};", l, x));
+    }
+
     /// `string.length` of a `concat` or of an integer's `show`: the sum of
     /// the parts' lengths, or the count of the digits, without building
     /// the string. The parts are evaluated in the same order.
@@ -1299,6 +1454,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if let Some(n) = self.length_without_string(*id, args) {
                     return self.bind(format!("(V)(int64_t)({})", n));
                 }
+                if let Some(abi) = self.g.abis[*id].clone() {
+                    let xs = self.worker_args(&abi, args);
+                    return match abi.ret {
+                        Some(n) => {
+                            let t = self.fresh();
+                            self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                            self.bind(format!("fwp_record({}, {}.f)", n, t))
+                        }
+                        None => self.bind(format!("w{}({})", id, xs.join(", "))),
+                    };
+                }
                 let xs = self.args(args);
                 if self.g.prog.funcs[*id].arity == 0 {
                     self.bind(format!("caf{}()", id))
@@ -1336,6 +1502,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.bind(format!("fwp_record({}, {})", xs.len(), Self::array(&xs)))
             }
             Expr::Field(r, i) => {
+                if let Expr::Local(l) = &**r {
+                    if let Some(fs) = self.fields.get(l) {
+                        return fs[*i as usize].clone();
+                    }
+                }
+                if let (Expr::Call(..), Some(n)) = (&**r, self.unboxed(r)) {
+                    let fs = self.expr_fields(r, n);
+                    return fs[*i as usize].clone();
+                }
                 let rv = self.expr(r);
                 self.bind(format!("OBJ({})->f[{}]", rv, i))
             }
@@ -1352,8 +1527,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 t
             }
             Expr::Let(l, v, body) => {
-                let x = self.expr(v);
-                self.line(&format!("l{} = {};", l, x));
+                self.bind_local(*l, v, body);
                 self.expr(body)
             }
             Expr::Match(scrut, arms) => {
@@ -2387,6 +2561,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             label: 0,
             indent: 1,
             in_loop: Some(lg),
+            fields: HashMap::new(),
         };
         let r = fg.expr(e);
         out.push_str(&fg.out);
@@ -2492,6 +2667,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
             Body::Expr(e) => {
                 let e = e.clone();
+                if let Some(abi) = self.abis[id].clone() {
+                    return Ok(self.worker(id, &abi, &e));
+                }
                 if self.ticks {
                     out.push_str("    FWP_TICK();\n");
                 }
@@ -2502,6 +2680,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     label: 0,
                     indent: 1,
                     in_loop: None,
+                    fields: HashMap::new(),
                 };
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -2511,6 +2690,69 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         }
         out.push_str("}\n");
         Ok(out)
+    }
+
+    /// A function with an unboxed calling convention: its worker, and the
+    /// function itself, which unpacks its record parameters and boxes its
+    /// record result.
+    fn worker(&mut self, id: FuncId, abi: &Abi, e: &Expr) -> String {
+        let f = &self.prog.funcs[id];
+        let mut out = format!("/* {} : {} */\n{} {{\n", f.name, f.ty, abi.sig(id));
+        for i in f.arity..f.nlocals() {
+            let _ = writeln!(out, "    V l{} = 0;", i);
+        }
+        if self.ticks {
+            out.push_str("    FWP_TICK();\n");
+        }
+        let mut fields = HashMap::new();
+        for (i, p) in abi.params.iter().enumerate() {
+            if let Some(n) = p {
+                fields.insert(
+                    i as Local,
+                    (0..*n).map(|k| format!("l{}_{}", i, k)).collect(),
+                );
+            }
+        }
+        let mut fg = FnGen {
+            g: self,
+            out: String::new(),
+            tmp: 0,
+            label: 0,
+            indent: 1,
+            in_loop: None,
+            fields,
+        };
+        let ret = match abi.ret {
+            Some(n) => {
+                let fs = fg.expr_fields(e, n);
+                format!("(fwp_r{}){{{{{}}}}}", n, fs.join(", "))
+            }
+            None => fg.expr(e),
+        };
+        out.push_str(&fg.out);
+        let _ = writeln!(out, "    return {};\n}}", ret);
+        // the function as a value: unpack, call, box
+        let params: Vec<String> = (0..f.arity).map(|i| format!("V l{}", i)).collect();
+        let mut args = Vec::new();
+        for (i, p) in abi.params.iter().enumerate() {
+            match p {
+                Some(n) => args.extend((0..*n).map(|k| format!("OBJ(l{})->f[{}]", i, k))),
+                None => args.push(format!("l{}", i)),
+            }
+        }
+        let call = format!("w{}({})", id, args.join(", "));
+        let body = match abi.ret {
+            Some(n) => format!("fwp_r{} r = {}; return fwp_record({}, r.f);", n, call, n),
+            None => format!("return {};", call),
+        };
+        let _ = writeln!(
+            out,
+            "static V f{}({}) {{ {} }}",
+            id,
+            params.join(", "),
+            body
+        );
+        out
     }
 }
 
@@ -2982,6 +3224,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         ticks: uses_async(prog) || uses_services(prog),
         loops: Vec::new(),
         hofs: Vec::new(),
+        abis: prog.funcs.iter().map(|f| abi_of(prog, f)).collect(),
     };
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
@@ -3347,6 +3590,15 @@ static const fwp_exec_spec exec_spec{i} = {{
     for c in &g.consts {
         out.push_str(c);
         out.push('\n');
+    }
+    // records returned in registers, and the workers that return them
+    for n in 1..=MAX_UNBOXED {
+        let _ = writeln!(out, "typedef struct {{ V f[{}]; }} fwp_r{};", n, n);
+    }
+    for (id, abi) in g.abis.iter().enumerate() {
+        if let Some(abi) = abi.as_ref().filter(|_| live[id]) {
+            let _ = writeln!(out, "{};", abi.sig(id));
+        }
     }
     // prototypes
     for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
