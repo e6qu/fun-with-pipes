@@ -14,7 +14,7 @@ usage:
                                  functions of each module named by --service
                                  go to that service
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
-            [--target native|wasm32-wasi|wasm32-browser] [--fat]
+            [--target native|<arch>-linux|wasm32-wasi|wasm32-browser] [--fat]
             [--static] [--pgo [--pgo-input file] [-- training args...]]
             [--memory static [--heap S] [--pool S] [--stack S]
                              [--tasks N] [--task-stack S] [--threads N]]
@@ -33,6 +33,10 @@ usage:
                                  --memory static maps all of the program's
                                  memory once at startup, of the given sizes
                                  (such as 64M), and none after it;
+                                 --target aarch64-linux (or another
+                                 64-bit Linux: x86_64, riscv64, ...)
+                                 cross-compiles with that system's C
+                                 compiler (see docs/reference.md);
                                  --fat builds one variant per CPU feature
                                  level and picks the best at startup;
                                  --wasm-async=asyncify runs the tasks of a
@@ -415,6 +419,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
     let mut static_link = false;
+    let mut cross: Option<String> = None;
     let mut pgo = false;
     let mut pgo_input: Option<String> = None;
     // the training run's arguments: everything after `--`
@@ -483,14 +488,29 @@ fn build(args: &[String]) -> ExitCode {
             }
             "--target" => {
                 i += 1;
-                match args.get(i).and_then(|t| fwp::cgen::Target::parse(t)) {
-                    Some(t) => target = t,
-                    None => {
-                        eprintln!(
-                            "fwp build: unknown target (native, wasm32-wasi, wasm32-browser)"
-                        );
-                        return ExitCode::from(2);
+                let t = args.get(i).map(String::as_str).unwrap_or_default();
+                match fwp::cgen::Target::parse(t) {
+                    Some(t) => {
+                        target = t;
+                        cross = None;
                     }
+                    None => match fwp::cgen::parse_cross(t) {
+                        Ok(triple) => {
+                            target = fwp::cgen::Target::Native;
+                            // the host's own system is a native build
+                            let host = format!("{}-linux-gnu", std::env::consts::ARCH);
+                            cross = (triple != host || std::env::consts::OS != "linux")
+                                .then_some(triple);
+                        }
+                        Err(e) => {
+                            eprintln!(
+                                "fwp build: {} (targets: native, wasm32-wasi, wasm32-browser, \
+                                 or <arch>-linux such as aarch64-linux)",
+                                e
+                            );
+                            return ExitCode::from(2);
+                        }
+                    },
                 }
             }
             "--wasm-async" | "--wasm-async=jspi" | "--wasm-async=asyncify" => {
@@ -576,6 +596,10 @@ fn build(args: &[String]) -> ExitCode {
         );
         return ExitCode::from(2);
     }
+    if pgo && cross.is_some() {
+        eprintln!("fwp build: --pgo runs the program to train it, so it builds for this system only (not with --target {})", cross.unwrap_or_default());
+        return ExitCode::from(2);
+    }
     if pgo && !fwp::cgen::is_gcc(&fwp::aot::cc()) {
         eprintln!("fwp build: --pgo needs GCC as the C compiler (set CC)");
         return ExitCode::from(2);
@@ -583,6 +607,7 @@ fn build(args: &[String]) -> ExitCode {
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
         static_link,
         pgo: None,
+        cross,
     });
     if IN_WASM && !emit_c {
         return not_in_wasm(
@@ -781,6 +806,7 @@ fn pgo_build(
             fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
                 static_link,
                 pgo: Some((phase, dir.clone())),
+                cross: None,
             })
         };
         set(fwp::cgen::Pgo::Generate);

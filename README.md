@@ -82,6 +82,7 @@ export PATH=$PWD/target/release:$PATH
 fwp run examples/hello.fwp
 fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
+fwp build examples/hello.fwp --target aarch64-linux -o hello-arm64  # cross
 fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
 fwp run examples/server/chat.fwp         # a WebSocket chat on 127.0.0.1:8080
 fwp build examples/services/main.fwp --service inventory -o shop   # gRPC

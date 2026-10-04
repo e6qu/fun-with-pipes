@@ -206,6 +206,32 @@ static int fwp_status_code(int st) {
     return 1;
 }
 
+/* Whether `prog` names a file, found on PATH as execvp finds it (one
+ * found but not executable is left to posix_spawnp, which says so). posix_spawnp reports a missing program itself only where the C
+ * library spawns with vfork semantics (glibc 2.24 and later, on hardware);
+ * elsewhere (older C libraries, qemu-user) the child exits with 127, so
+ * the lookup is done here first. */
+static int fwp_program_exists(const char *prog) {
+    if (strchr(prog, '/')) return access(prog, F_OK) == 0;
+    const char *path = getenv("PATH");
+    if (!path) path = "/bin:/usr/bin";
+    size_t pl = strlen(prog);
+    for (const char *p = path;; ) {
+        const char *e = strchr(p, ':');
+        size_t dl = e ? (size_t)(e - p) : strlen(p);
+        char buf[4096];
+        if (dl + pl + 2 <= sizeof buf) {
+            if (dl == 0) { memcpy(buf, ".", 1); dl = 1; } else memcpy(buf, p, dl);
+            buf[dl] = '/';
+            memcpy(buf + dl + 1, prog, pl + 1);
+            struct stat sb;
+            if (stat(buf, &sb) == 0 && S_ISREG(sb.st_mode)) return 1;
+        }
+        if (!e) return 0;
+        p = e + 1;
+    }
+}
+
 /* Run a command: with `capture`, give it `input` and capture its output;
  * without, share the standard streams and return the
  * status. */
@@ -217,6 +243,10 @@ static V fwp_run_process(V argv, V input, int capture, const fwp_desc *err) {
     n = 0;
     for (V l = argv; l; l = OBJ(l)->f[1]) args[n++] = STR(OBJ(l)->f[0])->d;
     args[n] = 0;
+    if (!fwp_program_exists(args[0])) {
+        errno = ENOENT;
+        return fwp_io_error_path("spawn", args[0], err);
+    }
     fwp_flush();
     fflush(stderr);
     pid_t pid;

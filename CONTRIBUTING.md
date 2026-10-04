@@ -16,8 +16,10 @@ You need:
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
   (Debian/Ubuntu: `clang lld wasi-libc libclang-rt-18-dev-wasm32`), the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
-  and binaryen's `wasm-opt` (`npm install -g binaryen`). Tests that need a
-  missing tool skip themselves.
+  and binaryen's `wasm-opt` (`npm install -g binaryen`).
+- Optional, for the cross-compilation tests: an aarch64 C compiler and
+  qemu (`gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user`). Tests
+  that need a missing tool skip themselves.
 
 ```
 cargo build --release

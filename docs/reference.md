@@ -273,7 +273,8 @@ fwp build file.fwp [options]                  compile
                      negotiation (see rest.md)
     --grpc           every exported function as a method of one gRPC
                      server, with reflection (see grpc.md)
-    --target T       native (default), wasm32-wasi, wasm32-browser
+    --target T       native (default), <arch>-linux (cross-compiled, such
+                     as aarch64-linux), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
     --static         a statically linked executable, which needs no shared
                      libraries (not even the C library's) at run time
@@ -422,6 +423,7 @@ startup.
 | native | an executable | all features; a program that uses TLS ([tls.md](tls.md): HTTPS, HTTP clients, REST servers, gRPC) is linked with OpenSSL and depends on `libssl.so.3`, and building it needs OpenSSL's headers (`libssl-dev`) |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
+| `<arch>-linux` | an executable for another 64-bit little-endian Linux: `x86_64`, `aarch64` (or `arm64`), `riscv64`, `powerpc64le`, `loongarch64`; `-gnu` and Rust's `-unknown-linux-gnu` spellings are accepted | all features, as native. See [Cross-compiling](#cross-compiling) |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
 | `--static` | an executable linked with static libraries | runs on any Linux of the same architecture. A program that uses TLS needs OpenSSL's static libraries (`libssl.a`) to build; the C library's name resolution (`getaddrinfo`) still loads the system's NSS modules when it runs |
 | `--pgo` (GCC) | an executable optimized with a profile of one training run | `fwp build --pgo main.fwp -- 1000` runs the instrumented program as `main 1000`, discarding its output, then compiles again with the branch and call counts it recorded. The training run should exercise the program as it is used |
@@ -429,6 +431,34 @@ startup.
 The interpreter and every compiled target produce the same output for the
 same program, including float formatting and trap messages. The test suite
 checks this.
+
+### Cross-compiling
+
+`fwp build --target aarch64-linux main.fwp` builds an executable for
+64-bit ARM Linux on any host, as `GOARCH=arm64 go build` or
+`cargo build --target aarch64-unknown-linux-gnu` do. The generated C is
+the same for every target; only the C compiler differs. fwp uses the
+first of:
+
+1. `FWP_CC_<triple>`, with `_` for `-` (`FWP_CC_aarch64_linux_gnu`), a
+   compiler and its first arguments (`"clang --target=aarch64-linux-gnu"`);
+2. `<triple>-gcc` (Debian and Ubuntu: `gcc-aarch64-linux-gnu`);
+3. `clang --target=<triple>`, when the target's libraries are in
+   `/usr/<triple>`;
+4. `zig cc -target <triple>`, which brings the C library of every target
+   with it.
+
+`--static` makes an executable that runs on any Linux of that
+architecture, and `--fat`, `--staticlib`, `--cdylib` and `--service`
+cross-compile too (libraries with `<triple>-ar`). A program that uses TLS
+needs the target's OpenSSL (Debian and Ubuntu: `libssl-dev:arm64` from
+the target's package architecture). `--pgo` trains the program by running
+it, so it builds for the host only.
+
+The runtime is written for Linux with glibc on 64-bit little-endian
+processors: musl lacks the `makecontext` that tasks run on, and macOS and
+Windows are not supported yet. To try an ARM executable on an x86 machine,
+run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.
 
 #### Tasks on WebAssembly
 
@@ -555,7 +585,8 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |
 | `FWP_GC_STRESS=n` | native programs: collect at every n-th allocation (`1`: at every one), to find bugs in the runtime |
 | `CC` | the C compiler for native builds |
-| `AR` | the archiver for `--staticlib` |
+| `FWP_CC_<triple>` | the C compiler (and its first arguments) for `--target <triple>`, such as `FWP_CC_aarch64_linux_gnu` (see [Cross-compiling](#cross-compiling)) |
+| `AR` | the archiver for `--staticlib` (cross builds: `<triple>-ar`, else `llvm-ar`) |
 | `FWP_WASM_CC` | the C compiler for WebAssembly builds |
 | `FWP_WASM_OPT` | binaryen's `wasm-opt`, for `--wasm-async=asyncify` (default: `wasm-opt` on the `PATH`) |
 | `FWP_BLESS=1` | regenerates the expected outputs of the test suite |
