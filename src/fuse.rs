@@ -251,12 +251,13 @@ fn prim_sym(funcs: &[Func], id: FuncId) -> Option<&str> {
 
 struct Fuser<'p> {
     funcs: &'p [Func],
+    shapes: &'p Shapes,
     std_names: &'p std::collections::BTreeMap<FuncId, String>,
     beh: Behaviors<'p>,
     /// Functions made by this pass (step functions and primitives).
     made: Vec<Func>,
-    /// The caller's locals.
-    nlocals: Local,
+    /// The types of the caller's locals.
+    locals: Vec<MT>,
 }
 
 impl Fuser<'_> {
@@ -277,15 +278,26 @@ impl Fuser<'_> {
         self.new_func(Func {
             name: sym.to_string(),
             arity,
-            nlocals: arity,
+            locals: ty.params(arity as usize).0.into_iter().cloned().collect(),
             ty,
             body: Body::Prim(sym.to_string()),
         })
     }
 
-    fn fresh(&mut self) -> Local {
-        self.nlocals += 1;
-        self.nlocals - 1
+    fn fresh(&mut self, ty: MT) -> Local {
+        self.locals.push(ty);
+        self.locals.len() as Local - 1
+    }
+
+    /// The type of `e` in a function with locals `locals`, functions made
+    /// by this pass included.
+    fn ty_in(&self, locals: &[MT], e: &Expr) -> Option<MT> {
+        let base = self.funcs.len();
+        let func = |id: FuncId| match id.checked_sub(base) {
+            Some(i) => &self.made[i].ty,
+            None => &self.funcs[id].ty,
+        };
+        type_of(&func, self.shapes, locals, e)
     }
 
     fn expr(&mut self, e: Expr) -> Expr {
@@ -377,20 +389,24 @@ impl Fuser<'_> {
         }
         let funcs = self.funcs;
         // outermost first, as written in the IR
-        let mut raw: Vec<(&str, &Expr)> = Vec::new();
+        // with the element type after each stage
+        let mut raw: Vec<(&str, &Expr, MT)> = Vec::new();
         let mut cur = it;
         while let Expr::Call(id, a) = cur {
-            match (self.std_name(*id), a.len()) {
-                (Some("std::iter.map"), 2) => raw.push(("map", &a[0])),
-                (Some("std::iter.filter"), 2) => raw.push(("filter", &a[0])),
-                (Some("std::iter.take"), 2) => raw.push(("take", &a[0])),
+            let kind = match (self.std_name(*id), a.len()) {
+                (Some("std::iter.map"), 2) => "map",
+                (Some("std::iter.filter"), 2) => "filter",
+                (Some("std::iter.take"), 2) => "take",
                 _ => break,
-            }
+            };
+            raw.push((kind, &a[0], elem(funcs[*id].ty.params(2).1)?));
             cur = &a[1];
         }
         if raw.is_empty() {
             return None;
         }
+        let src_ty = self.ty_in(&self.locals, cur)?;
+        let src_elem = elem(&src_ty)?;
         let list_ty = funcs[to_list].ty.params(1).1.clone();
         let i64 = MT::con("std::I64");
         let lt = self.prim("lt", fun2(&i64, &i64, &MT::con("std::Bool")), 2);
@@ -405,13 +421,13 @@ impl Fuser<'_> {
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut stages: Vec<St> = Vec::new();
         let mut takes: Vec<Expr> = Vec::new();
-        for (kind, arg) in &raw {
+        for (kind, arg, _) in &raw {
             match *kind {
                 "take" => {
                     let v = match arg {
                         Expr::Local(_) | Expr::Const(_) => (*arg).clone(),
                         _ => {
-                            let l = self.fresh();
+                            let l = self.fresh(i64.clone());
                             binds.push((l, (*arg).clone()));
                             Expr::Local(l)
                         }
@@ -433,7 +449,7 @@ impl Fuser<'_> {
         }
         stages.reverse(); // the source's side first
         let src = {
-            let l = self.fresh();
+            let l = self.fresh(src_ty.clone());
             binds.push((l, cur.clone()));
             Expr::Local(l)
         };
@@ -465,8 +481,27 @@ impl Fuser<'_> {
             });
         }
         let nout = outer.len();
+        let mut fields = vec![
+            ("0".to_string(), src_ty.clone()),
+            ("1".to_string(), list_ty.clone()),
+        ];
+        fields.extend((0..nt).map(|i| ((i + 2).to_string(), i64.clone())));
+        fields.extend(
+            outer
+                .iter()
+                .enumerate()
+                .map(|(i, l)| ((i + 2 + nt).to_string(), self.locals[*l as usize].clone())),
+        );
+        MT::sort_fields(&mut fields);
+        let state_ty = MT::Record(fields);
+        // step locals: the state, the source's head and tail, then the
+        // stages' results
         let (h, t) = (1 as Local, 2 as Local);
-        let mut nl: Local = 3;
+        let mut nl: Vec<MT> = vec![
+            state_ty.clone(),
+            src_elem,
+            MT::Fun(Box::new(MT::unit()), Box::new(src_ty.clone())),
+        ];
         let unit = Expr::Const(Value::unit());
         let less_than_one = |c: Expr| Expr::Call(lt, vec![Expr::Const(Value::I64(1)), c]);
         // go on to the next element, or stop when a take is exhausted
@@ -501,11 +536,12 @@ impl Fuser<'_> {
         let mut steps: Vec<Do> = Vec::new();
         let mut x = Expr::Local(h);
         let mut counters: Vec<Expr> = (0..nt).map(|k| st(2 + k)).collect();
-        for (s, c) in stages.iter().zip(&calls) {
+        let elems = raw.iter().rev().map(|(_, _, t)| t.clone());
+        for ((s, c), e) in stages.iter().zip(&calls).zip(elems) {
             match (s, c) {
                 (St::Map(_), Some(f)) => {
-                    let l = nl;
-                    nl += 1;
+                    let l = nl.len() as Local;
+                    nl.push(e);
                     steps.push(Do::Let(
                         l,
                         Expr::Apply(Box::new(f.clone()), vec![x.clone()]),
@@ -517,8 +553,8 @@ impl Fuser<'_> {
                     steps.push(Do::Guard(cond, counters.clone()));
                 }
                 (St::Take(k), _) => {
-                    let l = nl;
-                    nl += 1;
+                    let l = nl.len() as Local;
+                    nl.push(i64.clone());
                     steps.push(Do::Let(
                         l,
                         Expr::Call(subp, vec![Expr::Const(Value::I64(1)), counters[*k].clone()]),
@@ -556,13 +592,6 @@ impl Fuser<'_> {
                 vec![(Pat::Construct(1, vec![]), stop.clone()), (Pat::Wild, body)],
             );
         }
-        let mut fields = vec![
-            ("0".to_string(), MT::unit()),
-            ("1".to_string(), list_ty.clone()),
-        ];
-        fields.extend((0..nt + nout).map(|i| ((i + 2).to_string(), MT::unit())));
-        MT::sort_fields(&mut fields);
-        let state_ty = MT::Record(fields);
         let step_ty = MT::Fun(
             Box::new(state_ty.clone()),
             Box::new(MT::Con(
@@ -571,11 +600,11 @@ impl Fuser<'_> {
             )),
         );
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
-        let (body, nlocals) = crate::opt::simplify(&all, body, nl);
+        let (body, locals) = crate::opt::simplify(&all, self.shapes, body, nl);
         let step = self.new_func(Func {
             name: "fused-iter".into(),
             arity: 1,
-            nlocals,
+            locals,
             ty: step_ty.clone(),
             body: Body::Expr(body),
         });
@@ -708,7 +737,6 @@ impl Fuser<'_> {
     ) -> Option<Expr> {
         let funcs = self.funcs;
         let list = args.last()?;
-        let list_ty = cparams.last()?.clone();
         let mut stages = Vec::new();
         let mut cur = list;
         loop {
@@ -759,9 +787,18 @@ impl Fuser<'_> {
         if traps.len() > usize::from(kind != "find") {
             return None;
         }
-        let elem_ty = match list_ty {
-            MT::Con(_, a) if a.len() == 1 => a[0].clone(),
-            _ => return None,
+        // the producer's list: its own type, or the list of what the
+        // innermost stage takes
+        let prod_ty = match &producer {
+            Producer::Range(_, _, t) => t.clone(),
+            Producer::List(e) => match self.ty_in(&self.locals, e) {
+                Some(t) => t,
+                None => {
+                    let (id, caps) = fns.last()?;
+                    let (ps, _) = funcs[*id].ty.params(caps.len() + 1);
+                    MT::Con("std::List".into(), vec![(*ps.last()?).clone()])
+                }
+            },
         };
         // the accumulator: a fold's, a count, the list so far in reverse,
         // or nothing (`find`)
@@ -775,20 +812,20 @@ impl Fuser<'_> {
         // Outer values, evaluated in the order the unfused program evaluates
         // them: g, z, the stages outermost first, then the producer.
         let mut binds: Vec<(Local, Expr)> = Vec::new();
-        let mut bind = |me: &mut Self, e: &Expr| -> Expr {
+        let mut bind = |me: &mut Self, e: &Expr, ty: &MT| -> Expr {
             match e {
                 Expr::Local(_) | Expr::Const(_) => e.clone(),
                 _ => {
-                    let l = me.fresh();
+                    let l = me.fresh(ty.clone());
                     binds.push((l, e.clone()));
                     Expr::Local(l)
                 }
             }
         };
-        let z = bind(self, &z);
+        let z = bind(self, &z, &acc_ty);
         let (start, end) = match &producer {
-            Producer::Range(a, b, _) => (bind(self, a), Some(bind(self, b))),
-            Producer::List(e) => (bind(self, e), None),
+            Producer::Range(a, b, t) => (bind(self, a, t), Some(bind(self, b, t))),
+            Producer::List(e) => (bind(self, e, &prod_ty), None),
         };
 
         // the state: position, accumulator, then the outer locals the step
@@ -824,7 +861,9 @@ impl Fuser<'_> {
             .map(|(s, f)| (matches!(s, Stage::Filter(_)), f))
             .collect();
 
-        // step locals: 0 is the state; 1 and 2 the head and tail of a list
+        // step locals: 0 is the state; 1 and 2 the head and tail of a
+        // list; then the stages' results (typed once the state's type is
+        // known, below)
         let mut nl: Local = 1;
         let next = |nl: &mut Local| {
             *nl += 1;
@@ -932,12 +971,31 @@ impl Fuser<'_> {
         };
         let pos_ty = match &producer {
             Producer::Range(_, _, t) => t.clone(),
-            Producer::List(_) => MT::Con("std::List".into(), vec![elem_ty]),
+            Producer::List(_) => prod_ty.clone(),
         };
-        let mut fields = vec![("0".to_string(), pos_ty), ("1".to_string(), acc_ty.clone())];
-        fields.extend((0..n).map(|i| ((i + 2).to_string(), MT::unit())));
+        let mut fields = vec![
+            ("0".to_string(), pos_ty.clone()),
+            ("1".to_string(), acc_ty.clone()),
+        ];
+        fields.extend(
+            outer
+                .iter()
+                .enumerate()
+                .map(|(i, l)| ((i + 2).to_string(), self.locals[*l as usize].clone())),
+        );
         MT::sort_fields(&mut fields);
         let state_ty = MT::Record(fields);
+        // the step's locals: the state, a list's head and tail, the stages'
+        // results (calls of known functions)
+        let mut step_locals = vec![state_ty.clone()];
+        if cell.is_some() {
+            step_locals.extend([elem(&prod_ty)?, pos_ty]);
+        }
+        for (l, v) in &lets {
+            debug_assert_eq!(*l as usize, step_locals.len());
+            step_locals.push(self.ty_in(&[], v)?);
+        }
+        debug_assert_eq!(step_locals.len(), nl as usize);
         let step_ty = MT::Fun(
             Box::new(state_ty.clone()),
             Box::new(MT::Con(
@@ -946,16 +1004,16 @@ impl Fuser<'_> {
             )),
         );
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
-        let (body, nlocals) = crate::opt::simplify(&all, body, nl);
+        let (body, locals) = crate::opt::simplify(&all, self.shapes, body, step_locals);
         // the step may have inlined pipelines (from the functions as they
         // were before this pass): fuse those too
-        let saved = std::mem::replace(&mut self.nlocals, nlocals);
+        let saved = std::mem::replace(&mut self.locals, locals);
         let body = self.expr(body);
-        let nlocals = std::mem::replace(&mut self.nlocals, saved);
+        let locals = std::mem::replace(&mut self.locals, saved);
         let step = self.new_func(Func {
             name: "fused".into(),
             arity: 1,
-            nlocals,
+            locals,
             ty: step_ty.clone(),
             body: Body::Expr(body),
         });
@@ -1025,6 +1083,14 @@ fn first_evaluated(e: &mut Expr) -> &mut Expr {
     }
 }
 
+/// The element type of a list or iterator type.
+fn elem(t: &MT) -> Option<MT> {
+    match t {
+        MT::Con(_, a) if a.len() == 1 => Some(a[0].clone()),
+        _ => None,
+    }
+}
+
 fn fun2(a: &MT, b: &MT, r: &MT) -> MT {
     MT::Fun(
         Box::new(a.clone()),
@@ -1040,6 +1106,7 @@ fn dummy_args(funcs: &[Func], id: FuncId) -> Vec<Expr> {
 /// Fuse the list pipelines of every function.
 pub fn fuse(prog: &mut Program) {
     let snapshot = prog.funcs.clone();
+    let shapes = prog.shapes.clone();
     let std_names = prog.std_names.clone();
     let mut made = Vec::new();
     for id in 0..snapshot.len() {
@@ -1048,16 +1115,17 @@ pub fn fuse(prog: &mut Program) {
         };
         let mut f = Fuser {
             funcs: &snapshot,
+            shapes: &shapes,
             std_names: &std_names,
             beh: Behaviors::new(&snapshot),
             made: std::mem::take(&mut made),
-            nlocals: snapshot[id].nlocals,
+            locals: snapshot[id].locals.clone(),
         };
         let body = f.expr(body.clone());
         let body = f.lists(body);
         made = f.made;
         prog.funcs[id].body = Body::Expr(body);
-        prog.funcs[id].nlocals = f.nlocals;
+        prog.funcs[id].locals = f.locals;
     }
     prog.funcs.extend(made);
 }

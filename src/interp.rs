@@ -143,7 +143,7 @@ impl<'p> Interp<'p> {
                     self.preempt()?;
                 }
                 let mut locals = args;
-                locals.resize(f.nlocals as usize, Value::unit());
+                locals.resize(f.nlocals() as usize, Value::unit());
                 self.eval(e, &mut locals)?
             }
             Body::Prim(sym) => self.prim(id, sym, args)?,

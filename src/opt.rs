@@ -60,8 +60,10 @@ pub(crate) fn uses(e: &Expr, l: Local) -> usize {
 
 struct Opt<'p> {
     funcs: &'p [Func],
+    shapes: &'p Shapes,
     current: FuncId,
-    nlocals: u32,
+    /// The type of each local of the function being optimized.
+    locals: Vec<MT>,
     /// Remaining number of IR nodes this function may grow by inlining.
     budget: isize,
 }
@@ -112,7 +114,7 @@ impl<'p> Opt<'p> {
                     .into_iter()
                     .map(|a| match a {
                         Expr::Func(id) if self.arity(id) == 0 => {
-                            let l = self.fresh();
+                            let l = self.fresh(&self.funcs[id].ty);
                             out.push((l, Expr::Func(id)));
                             Expr::Local(l)
                         }
@@ -126,9 +128,13 @@ impl<'p> Opt<'p> {
         }
     }
 
-    fn fresh(&mut self) -> Local {
-        self.nlocals += 1;
-        self.nlocals - 1
+    fn fresh(&mut self, ty: &MT) -> Local {
+        self.locals.push(ty.clone());
+        self.locals.len() as Local - 1
+    }
+
+    fn nlocals(&self) -> usize {
+        self.locals.len()
     }
 
     fn expr(&mut self, e: Expr, depth: usize) -> Expr {
@@ -187,7 +193,7 @@ impl<'p> Opt<'p> {
                         self.hoist_constants(v, &mut consts)
                     };
                     if self.pure(&v) || applied_first(&b, l) {
-                        let mut s: Vec<Option<Expr>> = vec![None; self.nlocals as usize];
+                        let mut s: Vec<Option<Expr>> = vec![None; self.nlocals()];
                         s[l as usize] = Some(v);
                         let mut out = self.expr(substitute(&b, &s), depth);
                         for (c, e) in consts.into_iter().rev() {
@@ -203,15 +209,18 @@ impl<'p> Opt<'p> {
                 }
                 // a copy of a local or constant: substituted
                 if matches!(v, Expr::Local(_) | Expr::Const(_)) && self.trivial(&v) {
-                    let mut s: Vec<Option<Expr>> = vec![None; self.nlocals as usize];
+                    let mut s: Vec<Option<Expr>> = vec![None; self.nlocals()];
                     s[l as usize] = Some(v);
                     return self.expr(substitute(&b, &s), depth);
                 }
                 // a record read only field by field: one local per field
                 // (scalar replacement), so it is never built
-                if let Expr::Record(es) = &v {
-                    if only_fields(&b, l) {
-                        let ls: Vec<Local> = es.iter().map(|_| self.fresh()).collect();
+                if let (Expr::Record(es), Some(fts)) =
+                    (&v, record_fields(self.shapes, &self.locals[l as usize]))
+                {
+                    if only_fields(&b, l) && fts.len() == es.len() {
+                        let fts: Vec<MT> = fts.iter().map(|(_, t)| t.clone()).collect();
+                        let ls: Vec<Local> = fts.iter().map(|t| self.fresh(t)).collect();
                         let b = replace_fields(&b, l, &ls);
                         let mut out = self.expr(b, depth);
                         let Expr::Record(es) = v else { unreachable!() };
@@ -287,23 +296,23 @@ impl<'p> Opt<'p> {
         self.budget -= body_size as isize;
         let body = body.clone();
         let arity = callee.arity;
-        let nlocals = callee.nlocals;
+        let types = &callee.locals;
         // map callee locals to caller expressions/locals
         let mut lets = Vec::new();
-        let mut subst: Vec<Option<Expr>> = vec![None; nlocals as usize];
+        let mut subst: Vec<Option<Expr>> = vec![None; types.len()];
         for (i, a) in args.into_iter().enumerate() {
             let n = uses(&body, i as u32);
             if self.trivial(&a) || (n <= 1 && self.pure(&a)) {
                 subst[i] = Some(a);
             } else {
-                let l = self.fresh();
+                let l = self.fresh(&types[i]);
                 lets.push((l, a));
                 subst[i] = Some(Expr::Local(l));
             }
         }
         let mut renamed = Vec::new();
-        for slot in subst.iter_mut().skip(arity as usize) {
-            let l = self.fresh();
+        for (slot, ty) in subst.iter_mut().zip(types).skip(arity as usize) {
+            let l = self.fresh(ty);
             renamed.push(l);
             *slot = Some(Expr::Local(l));
         }
@@ -480,32 +489,39 @@ pub fn optimize(prog: &mut Program) {
             }
             let mut o = Opt {
                 funcs: &snapshot,
+                shapes: &prog.shapes,
                 current: id,
-                nlocals: prog.funcs[id].nlocals,
+                locals: prog.funcs[id].locals.clone(),
                 budget: 600,
             };
             let new = o.expr(body.clone(), 0);
             let f = &mut prog.funcs[id];
             f.body = Body::Expr(new);
-            f.nlocals = o.nlocals;
+            f.locals = o.locals;
         }
     }
 }
 
-/// Optimize an expression of a new function with `nlocals` locals (as
-/// every function is): returns it and the function's new local count.
-pub(crate) fn simplify(funcs: &[Func], body: Expr, nlocals: Local) -> (Expr, Local) {
+/// Optimize an expression of a new function whose locals have the types
+/// `locals` (as every function's): returns it and the function's locals.
+pub(crate) fn simplify(
+    funcs: &[Func],
+    shapes: &Shapes,
+    body: Expr,
+    locals: Vec<MT>,
+) -> (Expr, Vec<MT>) {
     let mut o = Opt {
         funcs,
+        shapes,
         current: usize::MAX,
-        nlocals,
+        locals,
         budget: 600,
     };
     let mut body = body;
     for _ in 0..ROUNDS {
         body = o.expr(body, 0);
     }
-    (body, o.nlocals)
+    (body, o.locals)
 }
 
 /// The number of arguments a higher-order primitive applies its function
@@ -552,6 +568,7 @@ fn free_locals(e: &Expr, out: &mut Vec<Local>) {
 /// in step, safe points included.
 pub fn specialize_hofs(prog: &mut Program) {
     let snapshot = prog.funcs.clone();
+    let shapes = prog.shapes.clone();
     let mut made: Vec<Func> = Vec::new();
     let mut seen: Vec<(String, FuncId)> = Vec::new();
     let base = prog.funcs.len();
@@ -563,7 +580,10 @@ pub fn specialize_hofs(prog: &mut Program) {
             continue;
         }
         let mut body = body.clone();
-        rewrite_hofs(&mut body, &snapshot, base, &mut made, &mut seen);
+        let locals = &snapshot[id].locals;
+        rewrite_hofs(
+            &mut body, &snapshot, &shapes, locals, base, &mut made, &mut seen,
+        );
         prog.funcs[id].body = Body::Expr(body);
     }
     prog.funcs.extend(made);
@@ -572,6 +592,8 @@ pub fn specialize_hofs(prog: &mut Program) {
 fn rewrite_hofs(
     e: &mut Expr,
     funcs: &[Func],
+    shapes: &Shapes,
+    locals: &[MT],
     base: usize,
     made: &mut Vec<Func>,
     seen: &mut Vec<(String, FuncId)>,
@@ -581,26 +603,26 @@ fn rewrite_hofs(
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a
             .iter_mut()
-            .for_each(|x| rewrite_hofs(x, funcs, base, made, seen)),
+            .for_each(|x| rewrite_hofs(x, funcs, shapes, locals, base, made, seen)),
         Expr::Apply(f, a) => {
-            rewrite_hofs(f, funcs, base, made, seen);
+            rewrite_hofs(f, funcs, shapes, locals, base, made, seen);
             a.iter_mut()
-                .for_each(|x| rewrite_hofs(x, funcs, base, made, seen));
+                .for_each(|x| rewrite_hofs(x, funcs, shapes, locals, base, made, seen));
         }
-        Expr::Field(r, _) => rewrite_hofs(r, funcs, base, made, seen),
+        Expr::Field(r, _) => rewrite_hofs(r, funcs, shapes, locals, base, made, seen),
         Expr::SetFields(r, s) => {
-            rewrite_hofs(r, funcs, base, made, seen);
+            rewrite_hofs(r, funcs, shapes, locals, base, made, seen);
             s.iter_mut()
-                .for_each(|(_, x)| rewrite_hofs(x, funcs, base, made, seen));
+                .for_each(|(_, x)| rewrite_hofs(x, funcs, shapes, locals, base, made, seen));
         }
         Expr::Let(_, v, b) => {
-            rewrite_hofs(v, funcs, base, made, seen);
-            rewrite_hofs(b, funcs, base, made, seen);
+            rewrite_hofs(v, funcs, shapes, locals, base, made, seen);
+            rewrite_hofs(b, funcs, shapes, locals, base, made, seen);
         }
         Expr::Match(s, arms) => {
-            rewrite_hofs(s, funcs, base, made, seen);
+            rewrite_hofs(s, funcs, shapes, locals, base, made, seen);
             arms.iter_mut()
-                .for_each(|(_, b)| rewrite_hofs(b, funcs, base, made, seen));
+                .for_each(|(_, b)| rewrite_hofs(b, funcs, shapes, locals, base, made, seen));
         }
     }
     let Expr::Call(prim, args) = e else { return };
@@ -614,8 +636,9 @@ fn rewrite_hofs(
     let Some(fexpr) = args.first() else { return };
     let o = Opt {
         funcs,
+        shapes,
         current: usize::MAX,
-        nlocals: 0,
+        locals: vec![],
         budget: 0,
     };
     if !matches!(fexpr, Expr::Apply(..)) || !o.pure(fexpr) {
@@ -626,15 +649,22 @@ fn rewrite_hofs(
     let k = caps.len();
     // the closure over its captures, numbered from 0
     let renamed = rename_locals(fexpr, &caps);
-    let key = format!("{:?}|{}", renamed, n);
+    // the closure's function type, after its captures' types
+    let fn_ty = prim_f.ty.params(prim_f.arity as usize).0[0].clone();
+    let cap_tys: Vec<MT> = caps.iter().map(|l| locals[*l as usize].clone()).collect();
+    let key = format!("{:?}|{}|{:?}", renamed, n, cap_tys);
     let h = match seen.iter().find(|(s, _)| *s == key) {
         Some((_, h)) => *h,
         None => {
             let params: Vec<Expr> = (k..k + n).map(|i| Expr::Local(i as Local)).collect();
+            let ty = cap_tys.iter().rev().fold(fn_ty.clone(), |t, c| {
+                MT::Fun(Box::new(c.clone()), Box::new(t))
+            });
             let mut o = Opt {
                 funcs,
+                shapes,
                 current: usize::MAX,
-                nlocals: (k + n) as Local,
+                locals: ty.params(k + n).0.into_iter().cloned().collect(),
                 budget: 600,
             };
             let mut body = Expr::Apply(Box::new(renamed), params);
@@ -642,11 +672,10 @@ fn rewrite_hofs(
                 body = o.expr(body, 0);
             }
             let h = base + made.len();
-            let ty = prim_f.ty.params(prim_f.arity as usize).0[0].clone();
             made.push(Func {
                 name: format!("{}-fn", sym),
                 arity: (k + n) as u32,
-                nlocals: o.nlocals,
+                locals: o.locals,
                 ty,
                 body: Body::Expr(body),
             });

@@ -304,6 +304,18 @@ Next in this series, toward static, zero-cost programs:
     generic code that needs an optimizer to be fast again, and type
     errors far from their cause. See
     [docs/design.md](docs/design.md#generics).
+25. **Memory without a collector** (begun). Plan: values small enough
+    for registers stay in them, and the rest is reference counted with
+    reuse in place (as in Perceus), checked against the interpreter.
+    Every IR function now records the type of each local
+    (`Func::locals`), kept by mono, the optimizer and fusion, and checked
+    after each pass in debug builds (`ir::check_locals`): a value's size
+    and whether it holds pointers follow from its type. Next: records of
+    a few scalars passed and returned in registers as C structs; then
+    reference counting behind `--memory rc`, module by module, before it
+    becomes the default.
+26. **Cross-compilation**: `fwp build --target <triple>` for another
+    operating system or architecture, as in Go and Rust.
 
 ## Later
 

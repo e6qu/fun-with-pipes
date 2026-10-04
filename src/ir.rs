@@ -232,9 +232,87 @@ pub struct ServedFn {
 pub struct Func {
     pub name: String,
     pub arity: u32,
-    pub nlocals: u32,
+    /// The type of each local: the parameters first, then the locals the
+    /// body binds.
+    pub locals: Vec<MT>,
     pub ty: MT,
     pub body: Body,
+}
+
+impl Func {
+    pub fn nlocals(&self) -> u32 {
+        self.locals.len() as u32
+    }
+}
+
+pub type Shapes = std::collections::BTreeMap<MT, TypeShape>;
+
+/// The fields of a record type, nominal (by its shape) or not.
+pub fn record_fields<'a>(shapes: &'a Shapes, t: &'a MT) -> Option<&'a [(String, MT)]> {
+    match t {
+        MT::Record(fs) => Some(fs),
+        MT::Con(..) => match shapes.get(t)? {
+            TypeShape::Record(fs) => Some(fs),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+
+/// Whether two types have the same representation: equal, or a nominal
+/// record and a record with the same fields.
+pub fn same_type(shapes: &Shapes, a: &MT, b: &MT) -> bool {
+    if a == b {
+        return true;
+    }
+    let nominal =
+        |t: &MT| matches!(t, MT::Con(..)) && matches!(shapes.get(t), Some(TypeShape::Record(_)));
+    match (a, b) {
+        (MT::Con(x, xs), MT::Con(y, ys)) if x == y && !nominal(a) => {
+            xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| same_type(shapes, x, y))
+        }
+        (MT::Fun(a1, r1), MT::Fun(a2, r2)) => {
+            same_type(shapes, a1, a2) && same_type(shapes, r1, r2)
+        }
+        _ => match (record_fields(shapes, a), record_fields(shapes, b)) {
+            (Some(x), Some(y)) => {
+                x.len() == y.len()
+                    && x.iter()
+                        .zip(y)
+                        .all(|((l, s), (m, t))| l == m && same_type(shapes, s, t))
+            }
+            _ => false,
+        },
+    }
+}
+
+/// The type of `e`, where it follows from the types of its parts: a local
+/// (`locals`), a function (`func`), or a call or field of one. `None` for
+/// constants and constructed values, whose type the expression alone does
+/// not give.
+pub fn type_of<'a>(
+    func: &dyn Fn(FuncId) -> &'a MT,
+    shapes: &Shapes,
+    locals: &'a [MT],
+    e: &'a Expr,
+) -> Option<MT> {
+    let type_of = |e| type_of(func, shapes, locals, e);
+    match e {
+        Expr::Local(l) => locals.get(*l as usize).cloned(),
+        Expr::Func(id) => Some(func(*id).clone()),
+        Expr::Call(id, a) => Some(func(*id).params(a.len()).1.clone()),
+        Expr::Apply(f, a) => Some(type_of(f)?.params(a.len()).1.clone()),
+        Expr::Field(r, i) => Some(
+            record_fields(shapes, &type_of(r)?)?
+                .get(*i as usize)?
+                .1
+                .clone(),
+        ),
+        Expr::SetFields(r, _) => type_of(r),
+        Expr::Let(_, _, b) => type_of(b),
+        Expr::Match(_, arms) => arms.iter().find_map(|(_, b)| type_of(b)),
+        Expr::Const(_) | Expr::Construct(..) | Expr::Record(_) => None,
+    }
 }
 
 /// Information about named types needed at runtime (display, encoding).
@@ -252,7 +330,7 @@ pub enum TypeShape {
 pub struct Program {
     pub funcs: Vec<Func>,
     /// Shapes of all named types reachable from function types.
-    pub shapes: std::collections::BTreeMap<MT, TypeShape>,
+    pub shapes: Shapes,
     pub main: Option<FuncId>,
     /// `(test name, function)`.
     pub tests: Vec<(String, FuncId)>,
@@ -281,5 +359,109 @@ pub struct Program {
 impl crate::value::Shapes for Program {
     fn shape(&self, mt: &MT) -> TypeShape {
         self.shapes.get(mt).cloned().unwrap_or(TypeShape::Opaque)
+    }
+}
+
+/// Check that every function's local types agree with its body: each
+/// local it uses has a type, its parameters have its type's parameter
+/// types, and a local bound to a value (or a pattern on one) whose type
+/// the value gives has that type.
+pub fn check_locals(prog: &Program) -> Result<(), String> {
+    let func = |id: FuncId| &prog.funcs[id].ty;
+    let shapes = &prog.shapes;
+    for f in &prog.funcs {
+        let err = |m: String| format!("{}: {}: {}", f.name, f.ty, m);
+        let (ps, _) = f.ty.params(f.arity as usize);
+        if ps.len() == f.arity as usize
+            && ps
+                .iter()
+                .zip(&f.locals)
+                .any(|(p, l)| !same_type(shapes, p, l))
+        {
+            return Err(err("parameter types differ from the function's".into()));
+        }
+        if f.locals.len() < f.arity as usize {
+            return Err(err("fewer locals than parameters".into()));
+        }
+        if let Body::Expr(e) = &f.body {
+            check_expr(&func, shapes, &f.locals, e).map_err(err)?;
+        }
+    }
+    Ok(())
+}
+
+fn check_expr<'a>(
+    func: &dyn Fn(FuncId) -> &'a MT,
+    shapes: &Shapes,
+    locals: &'a [MT],
+    e: &'a Expr,
+) -> Result<(), String> {
+    let has = |l: Local| match locals.get(l as usize) {
+        Some(_) => Ok(()),
+        None => Err(format!("local {} has no type", l)),
+    };
+    let same = |l: Local, v: &'a Expr| match type_of(func, shapes, locals, v) {
+        Some(t) if !same_type(shapes, &t, &locals[l as usize]) => Err(format!(
+            "local {} is {} but is bound to a {}",
+            l, locals[l as usize], t
+        )),
+        _ => Ok(()),
+    };
+    match e {
+        Expr::Local(l) => has(*l),
+        Expr::Const(_) | Expr::Func(_) => Ok(()),
+        Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => a
+            .iter()
+            .try_for_each(|x| check_expr(func, shapes, locals, x)),
+        Expr::Apply(f, a) => {
+            check_expr(func, shapes, locals, f)?;
+            a.iter()
+                .try_for_each(|x| check_expr(func, shapes, locals, x))
+        }
+        Expr::Field(r, _) => check_expr(func, shapes, locals, r),
+        Expr::SetFields(r, s) => {
+            check_expr(func, shapes, locals, r)?;
+            s.iter()
+                .try_for_each(|(_, x)| check_expr(func, shapes, locals, x))
+        }
+        Expr::Let(l, v, b) => {
+            has(*l)?;
+            same(*l, v)?;
+            check_expr(func, shapes, locals, v)?;
+            check_expr(func, shapes, locals, b)
+        }
+        Expr::Match(s, arms) => {
+            check_expr(func, shapes, locals, s)?;
+            let st = type_of(func, shapes, locals, s);
+            for (p, b) in arms {
+                check_pat(shapes, locals, p, st.as_ref())?;
+                check_expr(func, shapes, locals, b)?;
+            }
+            Ok(())
+        }
+    }
+}
+
+fn check_pat(shapes: &Shapes, locals: &[MT], p: &Pat, ty: Option<&MT>) -> Result<(), String> {
+    match p {
+        Pat::Bind(l) => match (locals.get(*l as usize), ty) {
+            (None, _) => Err(format!("local {} has no type", l)),
+            (Some(t), Some(u)) if !same_type(shapes, t, u) => {
+                Err(format!("local {} is {} but matches a {}", l, t, u))
+            }
+            _ => Ok(()),
+        },
+        Pat::Wild | Pat::Lit(_) => Ok(()),
+        Pat::Construct(_, ps) => ps
+            .iter()
+            .try_for_each(|p| check_pat(shapes, locals, p, None)),
+        Pat::Record(ps) => {
+            let fs = ty
+                .and_then(|t| record_fields(shapes, t))
+                .filter(|fs| fs.len() == ps.len());
+            ps.iter()
+                .enumerate()
+                .try_for_each(|(i, p)| check_pat(shapes, locals, p, fs.map(|fs| &fs[i].1)))
+        }
     }
 }

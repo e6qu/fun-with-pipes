@@ -2253,7 +2253,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
 ",
             );
         }
-        for i in 1..f.nlocals {
+        for i in 1..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
         if self.ticks {
@@ -2322,7 +2322,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
         );
         let mut out = format!("/* {} : {} */\n{} {{\n", f.name, f.ty, sig);
-        for i in f.arity..f.nlocals {
+        for i in f.arity..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
         match &f.body {
