@@ -1,0 +1,11 @@
+# A constant captured by a closure is evaluated where the closure is
+# built, before the closure's argument: the optimizer may inline the
+# closure, but `bad` still traps before the overflow in `mul`.
+
+bad : I64
+bad = 1 | div 0
+
+probe : I64 -> I64
+probe = mul 4611686018427387904 | flip sub bad
+
+main = 4 | probe | echo

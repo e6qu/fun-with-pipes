@@ -2180,13 +2180,15 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         } else {
             "st[0] = s;".into()
         };
+        // a safe point per iteration, where a task could be preempted
+        let tick = if self.ticks { "FWP_TICK();" } else { "" };
         let _ = write!(
             out,
             "static V fwp_loop{id}(V s) {{
     V st[{n}], nx[{n}], out = 0;
     {load}
     for (;;) {{
-        FWP_TICK();
+        {tick}
         if (fs{id}(st, nx, &out)) return out;
         for (int i = 0; i < {n}; i++) st[i] = nx[i];
     }}
@@ -2194,7 +2196,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
 ",
             id = step,
             n = n,
-            load = load
+            load = load,
+            tick = tick
         );
         out
     }

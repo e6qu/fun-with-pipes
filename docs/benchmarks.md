@@ -25,11 +25,11 @@ On a 4-core x86-64 machine (GCC 13, Rust 1.99):
 
 | benchmark | C (cc -O2) | Rust (rustc -O) | fwp (fwp build -O2) | fwp / C |
 |---|--:|--:|--:|--:|
-| fib | 19 ms | 32 ms | 10 ms | 0.6× |
-| loop | 90 ms | 93 ms | 221 ms | 2.5× |
-| map | 513 ms | 414 ms | 1017 ms | 2.0× |
-| pipeline | 41 ms | 25 ms | 53 ms | 1.3× |
-| strings | 156 ms | 158 ms | 19 ms | 0.1× |
+| fib | 19 ms | 33 ms | 10 ms | 0.5× |
+| loop | 88 ms | 90 ms | 119 ms | 1.3× |
+| map | 543 ms | 407 ms | 599 ms | 1.1× |
+| pipeline | 40 ms | 25 ms | 32 ms | 0.8× |
+| strings | 155 ms | 160 ms | 16 ms | 0.1× |
 
 What the numbers say:
 
@@ -37,14 +37,22 @@ What the numbers say:
   typed arithmetic, a known `loop` runs as a C loop with its state in
   locals, and the optimizer inlines small recursive calls a few levels
   deep (which, with GCC's own inlining, is why `fib` beats the C version
-  here). Integer arithmetic is checked for overflow in fwp, not in C.
+  here). Integer arithmetic is checked for overflow in fwp, not in C. A
+  program without tasks has no safe points, so its loops count nothing
+  per iteration (`loop` took 227 ms while they did).
 - `map` is fwp's sorted-array map against C's sorted array and Rust's
-  B-tree: twice the time, mostly the generic comparison of keys.
+  B-tree. Integer keys are compared inline. The optimizer turns `key |
+  flip map.get table` into direct calls: a closure used once is
+  substituted where it is applied (after binding the constants it
+  captures, so they are still evaluated first), and a tuple built only to
+  be matched is never built. What remains is the `Some` allocated per
+  lookup. It took 1016 ms before these changes.
 - `pipeline` runs as one loop. `range | map | filter | sum` is fused
   (`src/fuse.rs`), so no list is built, and the loop keeps its state in
   C locals. Before fusion, each stage built a list of a million cells
   (1.8 GB allocated over the run), and the benchmark took 1882 ms, 44
-  times as long as C. What remains is fwp's overflow checks.
+  times as long as C. The outer `range 0 20 | map one-round | sum` is
+  fused too, with the inner pipeline fused inside its step.
 - `strings` builds no string at all. `string.length` of a `concat` is the
   sum of the parts' lengths, and `string.length` of an integer's `show`
   is its count of digits (`length_without_string` in `src/cgen.rs`).

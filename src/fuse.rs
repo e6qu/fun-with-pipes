@@ -78,7 +78,10 @@ impl<'p> Behaviors<'p> {
         let f = &self.funcs[id];
         match &f.body {
             Body::Ctor(_) => none(),
-            Body::Prim(sym) => prim(sym, &f.ty, args),
+            Body::Prim(sym) => match self.higher_order(sym, args) {
+                Some(t) => t,
+                None => prim(sym, &f.ty, args),
+            },
             Body::Expr(e) => {
                 if let Some(t) = self.memo.get(&id) {
                     return t.clone();
@@ -95,6 +98,22 @@ impl<'p> Behaviors<'p> {
             }
             _ => None,
         }
+    }
+
+    /// What a higher-order primitive can do: what its function argument
+    /// can, when it is a known function. `None` when `sym` is not one.
+    fn higher_order(&mut self, sym: &str, args: &[Expr]) -> Option<Traps> {
+        let n = match sym {
+            "map" | "filter" | "find" | "take-while" | "drop-while" => 1,
+            "fold" => 2,
+            _ => return None,
+        };
+        Some(
+            match args.first().and_then(|f| fn_value(self.funcs, f, n)) {
+                Some((id, _)) => self.call(id, &dummy_args(self.funcs, id)),
+                None => None,
+            },
+        )
     }
 
     fn all(&mut self, es: &[Expr]) -> Traps {
@@ -178,7 +197,13 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
         // is not a trap a program can tell from another)
         "show" | "concat" | "string.length" | "string.byte-length" | "string.chars" | "split"
         | "join" | "lower" | "upper" | "trim" | "trim-start" | "trim-end" | "length"
-        | "reverse" | "not" | "and" | "or" => none(),
+        | "reverse" | "not" | "and" | "or" | "range" => none(),
+        // ordered maps and sets: structural comparisons of keys
+        s if (s.starts_with("map.") || s.starts_with("set."))
+            && !matches!(s, "map.update" | "map.map-values") =>
+        {
+            none()
+        }
         _ => None,
     }
 }
@@ -584,6 +609,11 @@ impl Fuser<'_> {
         );
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
         let (body, nlocals) = crate::opt::simplify(&all, body, nl);
+        // the step may have inlined pipelines (from the functions as they
+        // were before this pass): fuse those too
+        let saved = std::mem::replace(&mut self.nlocals, nlocals);
+        let body = self.expr(body);
+        let nlocals = std::mem::replace(&mut self.nlocals, saved);
         let step = self.new_func(Func {
             name: "fused".into(),
             arity: 1,
