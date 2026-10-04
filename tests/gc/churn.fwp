@@ -1,8 +1,9 @@
 # Allocates about 1 GB in short-lived lists and strings: the native
-# collector keeps it in a few MB (tests/gc.rs).
+# collector keeps it in a few MB (tests/gc.rs). The `reverse`s keep the
+# lists from being fused away (src/fuse.rs).
 
 work : I64 -> I64
-work = const (range 0 1000 | map (mul 3) | map show | map string.length | sum)
+work = const (range 0 1000 | map (mul 3) | reverse | map show | reverse | map string.length | sum)
 
 step : (I64, I64) -> Step[(I64, I64), I64]
 step =

@@ -899,6 +899,20 @@ fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     }
 }
 
+/// Integer types of at most 64 bits, which a `V` holds sign-extended
+/// (`Some(true)`) or zero-extended (`Some(false)`).
+fn int64_kind(t: &MT) -> Option<bool> {
+    let MT::Con(n, a) = t else { return None };
+    if !a.is_empty() {
+        return None;
+    }
+    match n.trim_start_matches("std::") {
+        "I8" | "I16" | "I32" | "I64" | "ISize" => Some(true),
+        "U8" | "U16" | "U32" | "U64" | "USize" => Some(false),
+        _ => None,
+    }
+}
+
 /// Whether local 0 is used only as `Field(Local(0), _)`.
 fn state_by_fields(e: &Expr) -> bool {
     match e {
@@ -978,6 +992,60 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     fn array(xs: &[String]) -> String {
         format!("(V[]){{{}}}", xs.join(", "))
+    }
+
+    /// `string.length` of a `concat` or of an integer's `show`: the sum of
+    /// the parts' lengths, or the count of the digits, without building
+    /// the string. The parts are evaluated in the same order.
+    fn length_without_string(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        let sym = |g: &Gen, f: FuncId| match &g.prog.funcs[f].body {
+            Body::Prim(s) => Some(s.clone()),
+            _ => None,
+        };
+        if sym(self.g, id).as_deref() != Some("string.length") || args.len() != 1 {
+            return None;
+        }
+        let Expr::Call(inner, a) = &args[0] else {
+            return None;
+        };
+        let s = sym(self.g, *inner)?;
+        let ok = match s.as_str() {
+            "concat" => a.len() == 2,
+            "show" => int64_kind(&self.g.prog.funcs[*inner].ty.params(1).0[0].clone()).is_some(),
+            _ => false,
+        };
+        ok.then(|| self.string_length(&args[0]))
+    }
+
+    /// The length in characters of the string `e` evaluates to, as a C
+    /// expression.
+    fn string_length(&mut self, e: &Expr) -> String {
+        if let Expr::Call(id, a) = e {
+            if let Body::Prim(s) = &self.g.prog.funcs[*id].body {
+                match s.as_str() {
+                    "concat" if a.len() == 2 => {
+                        let x = self.string_length(&a[0]);
+                        let x = self.bind(format!("(V)(int64_t)({})", x));
+                        let y = self.string_length(&a[1]);
+                        return format!("(int64_t){} + {}", x, y);
+                    }
+                    "show" if a.len() == 1 => {
+                        let t = self.g.prog.funcs[*id].ty.params(1).0[0].clone();
+                        if let Some(signed) = int64_kind(&t) {
+                            let v = self.expr(&a[0]);
+                            return if signed {
+                                format!("fwp_i64_chars((int64_t){})", v)
+                            } else {
+                                format!("fwp_u64_chars((uint64_t){})", v)
+                            };
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        let v = self.expr(e);
+        format!("(int64_t)fwp_utf8_count(STR({})->d, STR({})->len)", v, v)
     }
 
     /// A call of a higher-order primitive whose function argument is a
@@ -1083,6 +1151,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Call(id, args) => {
                 if let Some(call) = self.known_hof(*id, args) {
                     return self.bind(call);
+                }
+                if let Some(n) = self.length_without_string(*id, args) {
+                    return self.bind(format!("(V)(int64_t)({})", n));
                 }
                 let xs = self.args(args);
                 if self.g.prog.funcs[*id].arity == 0 {
@@ -1488,7 +1559,11 @@ impl<'p> Gen<'p> {
             "not" => "return l0 == FWP_TRUE ? FWP_FALSE : FWP_TRUE;".into(),
             "and" => "return (l0 == FWP_TRUE && l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
             "or" => "return (l0 == FWP_TRUE || l1 == FWP_TRUE) ? FWP_TRUE : FWP_FALSE;".into(),
-            "show" => format!("return fwp_show(l0, {});", self.desc(&p(0))),
+            "show" => match int64_kind(&p(0)) {
+                Some(true) => "return fwp_show_i64(l0);".into(),
+                Some(false) => "return fwp_show_u64(l0);".into(),
+                None => format!("return fwp_show(l0, {});", self.desc(&p(0))),
+            },
             "json.write" => format!("return fwp_p_json_write(l0, {});", self.desc(&p(0))),
             "json.read" => format!(
                 "return fwp_p_json_read(l0, {});",

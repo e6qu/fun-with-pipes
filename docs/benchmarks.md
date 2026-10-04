@@ -25,11 +25,11 @@ On a 4-core x86-64 machine (GCC 13, Rust 1.99):
 
 | benchmark | C (cc -O2) | Rust (rustc -O) | fwp (fwp build -O2) | fwp / C |
 |---|--:|--:|--:|--:|
-| fib | 19 ms | 34 ms | 11 ms | 0.6× |
-| loop | 91 ms | 103 ms | 227 ms | 2.5× |
-| map | 527 ms | 406 ms | 1048 ms | 2.0× |
-| pipeline | 41 ms | 25 ms | 50 ms | 1.2× |
-| strings | 154 ms | 159 ms | 631 ms | 4.1× |
+| fib | 19 ms | 32 ms | 10 ms | 0.6× |
+| loop | 90 ms | 93 ms | 221 ms | 2.5× |
+| map | 513 ms | 414 ms | 1017 ms | 2.0× |
+| pipeline | 41 ms | 25 ms | 53 ms | 1.3× |
+| strings | 156 ms | 158 ms | 19 ms | 0.1× |
 
 What the numbers say:
 
@@ -45,8 +45,14 @@ What the numbers say:
   C locals. Before fusion, each stage built a list of a million cells
   (1.8 GB allocated over the run), and the benchmark took 1882 ms, 44
   times as long as C. What remains is fwp's overflow checks.
-- `strings` allocates a string per number and per concatenation; C and
-  Rust write into one buffer.
+- `strings` builds no string at all. `string.length` of a `concat` is the
+  sum of the parts' lengths, and `string.length` of an integer's `show`
+  is its count of digits (`length_without_string` in `src/cgen.rs`).
+  The stages are total, so `map line | sum` is fused too. C and Rust
+  format into a buffer and measure it. Before these changes, fwp built
+  a string per number and per concatenation and took 631 ms (4.1×).
+  Integers are now shown without going through a type descriptor, which
+  helps every `show` of an integer.
 
 The benchmarks also found a bug: `map.from-list` and `set.from-list`
 inserted pairs one by one into a sorted array, copying it each time, so

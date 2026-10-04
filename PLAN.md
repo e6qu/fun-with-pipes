@@ -257,7 +257,10 @@ Next in this series, toward static, zero-cost programs:
     stage traps first, the program prints and exits the same. The
     `pipeline` benchmark went from 44 times C's time to 1.2. `find` stops
     at its first match, so the stages before it may not trap at all.
-    Next: pipelines that end in a list, and iterators.
+    Next: pipelines that end in a list, and iterators. String stages
+    (`show`, `concat`, `string.length`, ...) count as total, and the C
+    backend measures a `concat` or a shown integer without building
+    it: the `strings` benchmark went from 4.1 times C's time to 0.1.
 22. Faster first runs (begun: large programs are compiled with GCC's
     parallel link-time optimization, halving a REST server's first start
     on four cores; most of their C is the standard library monomorphized

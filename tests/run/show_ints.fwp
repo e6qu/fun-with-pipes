@@ -1,0 +1,15 @@
+# Integers shown directly, and string lengths computed without building
+# the string (src/cgen.rs, length_without_string).
+
+main = [
+    -9223372036854775808 | show | print,
+    9223372036854775807 | show | print,
+    0 | show | print,
+    -5i8 | show | print,
+    255u8 | show | print,
+    18446744073709551615u64 | show | print,
+    -120 | show | concat "é" | string.length | echo,
+    -9223372036854775808 | show | string.length | echo,
+    18446744073709551615u64 | show | string.length | echo,
+    0u8 | show | string.length | echo,
+] | ignore
