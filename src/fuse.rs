@@ -22,6 +22,7 @@
 use std::collections::{BTreeSet, HashMap};
 
 use crate::ir::*;
+use crate::value::Value;
 
 /// The trap messages an expression can raise when it is evaluated; `None`
 /// when it may do anything else.
@@ -282,35 +283,67 @@ impl Fuser<'_> {
             e => e,
         };
         match &e {
-            Expr::Call(id, args) if self.is_fold(*id, args) => self.fold(*id, args).unwrap_or(e),
+            Expr::Call(id, args) if self.consumer(*id, args).is_some() => {
+                self.consume(*id, args).unwrap_or(e)
+            }
             // `Let(l, xs, fold g z l)`: the list is consumed right away, and
-            // evaluating `g` and `z` first changes nothing when they can do
-            // nothing
-            Expr::Let(l, v, b) => match &**b {
-                Expr::Call(id, args)
-                    if self.is_fold(*id, args)
-                        && matches!(&args[2], Expr::Local(x) if x == l)
-                        && self.beh.expr(&args[0]) == none()
-                        && self.beh.expr(&args[1]) == none() =>
-                {
-                    let mut args = args.clone();
-                    args[2] = (**v).clone();
-                    self.fold(*id, &args).unwrap_or(e)
+            // evaluating the consumer's other arguments first changes
+            // nothing when they can do nothing
+            // The call may also be the first thing the body evaluates, as
+            // in `Let(l, xs, Let(m, find p l, ...))`.
+            Expr::Let(l, v, b) if crate::opt::uses(b, *l) == 1 => {
+                let (l, v) = (*l, (**v).clone());
+                let Expr::Let(_, _, b) = e else {
+                    unreachable!()
+                };
+                let mut b = *b;
+                let first = first_evaluated(&mut b);
+                let fused = match first {
+                    Expr::Call(id, args)
+                        if self.consumer(*id, args).is_some()
+                            && matches!(args.last(), Some(Expr::Local(x)) if *x == l)
+                            && args[..args.len() - 1]
+                                .iter()
+                                .all(|a| self.beh.expr(a) == none()) =>
+                    {
+                        let mut args = args.clone();
+                        *args.last_mut().unwrap() = v.clone();
+                        self.consume(*id, &args)
+                    }
+                    _ => None,
+                };
+                match fused {
+                    Some(f) => {
+                        *first_evaluated(&mut b) = f;
+                        b
+                    }
+                    None => Expr::Let(l, Box::new(v), Box::new(b)),
                 }
-                _ => e,
-            },
+            }
             _ => e,
         }
     }
 
-    fn is_fold(&self, id: FuncId, args: &[Expr]) -> bool {
-        prim_sym(self.funcs, id) == Some("fold") && args.len() == 3
+    /// The primitive a fused pipeline can end in, if `id` is one.
+    fn consumer(&self, id: FuncId, args: &[Expr]) -> Option<&'static str> {
+        match (prim_sym(self.funcs, id)?, args.len()) {
+            ("fold", 3) => Some("fold"),
+            ("length", 1) => Some("length"),
+            ("find", 2) => Some("find"),
+            _ => None,
+        }
     }
 
-    /// `fold g z (stages (producer))` as a loop, when that is safe.
-    fn fold(&mut self, fold_id: FuncId, args: &[Expr]) -> Option<Expr> {
+    /// `consumer (stages (producer))` as a loop, when that is safe: a
+    /// `fold g z`, `length`, or `find p` (which stops at the first match,
+    /// so the stages before it may not trap at all).
+    fn consume(&mut self, cons_id: FuncId, args: &[Expr]) -> Option<Expr> {
         let funcs = self.funcs;
-        let (g, z, list) = (&args[0], &args[1], &args[2]);
+        let kind = self.consumer(cons_id, args)?;
+        let list = args.last()?;
+        let (cparams, result_ty) = funcs[cons_id].ty.params(args.len());
+        let list_ty = (*cparams.last()?).clone();
+        let result_ty = result_ty.clone();
         let mut stages = Vec::new();
         let mut cur = list;
         loop {
@@ -341,9 +374,16 @@ impl Fuser<'_> {
             e if !stages.is_empty() => Producer::List(e.clone()),
             _ => return None,
         };
-        // the stage functions, and what they can do together
-        let gv = fn_value(funcs, g, 2)?;
-        let mut traps = self.beh.call(gv.0, &dummy_args(funcs, gv.0))?;
+        // the consumer's and stages' functions, and what they can do together
+        let cv = match kind {
+            "fold" => Some(fn_value(funcs, &args[0], 2)?),
+            "find" => Some(fn_value(funcs, &args[0], 1)?),
+            _ => None,
+        };
+        let mut traps = match &cv {
+            Some((id, _)) => self.beh.call(*id, &dummy_args(funcs, *id))?,
+            None => BTreeSet::new(),
+        };
         let mut fns = Vec::new();
         for s in &stages {
             let (Stage::Map(f) | Stage::Filter(f)) = s;
@@ -351,15 +391,19 @@ impl Fuser<'_> {
             traps.extend(self.beh.call(fv.0, &dummy_args(funcs, fv.0))?);
             fns.push(fv);
         }
-        if traps.len() > 1 {
+        if traps.len() > usize::from(kind != "find") {
             return None;
         }
-        let elem_ty = funcs[fold_id].ty.params(3).0[2].clone();
-        let elem_ty = match elem_ty {
+        let elem_ty = match list_ty {
             MT::Con(_, a) if a.len() == 1 => a[0].clone(),
             _ => return None,
         };
-        let acc_ty = funcs[fold_id].ty.params(3).0[1].clone();
+        // the accumulator: a fold's, a count, or nothing (`find`)
+        let (z, acc_ty) = match kind {
+            "fold" => (args[1].clone(), cparams[1].clone()),
+            "length" => (Expr::Const(Value::I64(0)), MT::con("std::I64")),
+            _ => (Expr::Const(Value::unit()), MT::unit()),
+        };
 
         // Outer values, evaluated in the order the unfused program evaluates
         // them: g, z, the stages outermost first, then the producer.
@@ -374,7 +418,7 @@ impl Fuser<'_> {
                 }
             }
         };
-        let z = bind(self, z);
+        let z = bind(self, &z);
         let (start, end) = match &producer {
             Producer::Range(a, b, _) => (bind(self, a), Some(bind(self, b))),
             Producer::List(e) => (bind(self, e), None),
@@ -407,8 +451,6 @@ impl Fuser<'_> {
             a.extend(xs);
             Expr::Call(*id, a)
         };
-        let gcall =
-            |field: &mut dyn FnMut(&Expr) -> Expr, x: Expr| apply(field, &gv, vec![st(1), x]);
         let fcalls: Vec<(bool, (FuncId, Vec<Expr>))> = stages
             .iter()
             .zip(fns)
@@ -451,11 +493,31 @@ impl Fuser<'_> {
                 x = Expr::Local(l);
             }
         }
-        let acc = gcall(&mut field, x);
+        // the element after every stage, into the consumer
+        let some = |x: Expr| Expr::Construct(1, vec![Expr::Construct(1, vec![x])]);
+        let last = match kind {
+            "fold" => Ok(apply(&mut field, cv.as_ref()?, vec![st(1), x.clone()])),
+            "length" => {
+                let i64 = MT::con("std::I64");
+                let add = self.prim("prim.add", fun2(&i64, &i64, &i64), 2);
+                Ok(Expr::Call(add, vec![Expr::Const(Value::I64(1)), st(1)]))
+            }
+            _ => Err(apply(&mut field, cv.as_ref()?, vec![x.clone()])),
+        };
         let n = outer.len();
-        let mut body = again(&next_pos, acc, n);
-        // wrap from the last binding back to the first
         let skip = again(&next_pos, st(1), n);
+        let mut body = match last {
+            Ok(acc) => again(&next_pos, acc, n),
+            // `find`: stop with the element it matches
+            Err(cond) => Expr::Match(
+                Box::new(cond),
+                vec![
+                    (Pat::Construct(1, vec![]), some(x)),
+                    (Pat::Wild, skip.clone()),
+                ],
+            ),
+        };
+        // wrap from the last binding back to the first
         let mut li = lets.len();
         for (at, cond) in guards.into_iter().rev() {
             while li > at {
@@ -473,7 +535,14 @@ impl Fuser<'_> {
             let (l, v) = lets[li].clone();
             body = Expr::Let(l, Box::new(v), Box::new(body));
         }
-        let stop = Expr::Construct(1, vec![st(1)]);
+        let stop = Expr::Construct(
+            1,
+            vec![if kind == "find" {
+                Expr::Construct(0, vec![])
+            } else {
+                st(1)
+            }],
+        );
         let body = match &producer {
             Producer::Range(_, _, t) => {
                 let lt = self.prim("lt", fun2(t, t, &MT::con("std::Bool")), 2);
@@ -505,7 +574,7 @@ impl Fuser<'_> {
             Box::new(state_ty.clone()),
             Box::new(MT::Con(
                 "std::Step".into(),
-                vec![state_ty.clone(), acc_ty.clone()],
+                vec![state_ty.clone(), result_ty.clone()],
             )),
         );
         let all: Vec<Func> = self.funcs.iter().chain(&self.made).cloned().collect();
@@ -521,7 +590,7 @@ impl Fuser<'_> {
             "loop",
             MT::Fun(
                 Box::new(step_ty),
-                Box::new(MT::Fun(Box::new(state_ty), Box::new(acc_ty))),
+                Box::new(MT::Fun(Box::new(state_ty), Box::new(result_ty))),
             ),
             2,
         );
@@ -532,6 +601,14 @@ impl Fuser<'_> {
             out = Expr::Let(l, Box::new(v), Box::new(out));
         }
         Some(out)
+    }
+}
+
+/// The subexpression an expression evaluates first, through `Let`s.
+fn first_evaluated(e: &mut Expr) -> &mut Expr {
+    match e {
+        Expr::Let(_, v, _) => first_evaluated(v),
+        e => e,
     }
 }
 
