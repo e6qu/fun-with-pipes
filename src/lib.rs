@@ -47,6 +47,7 @@ pub mod prims_std;
 pub mod proto;
 pub mod proto_import;
 pub mod protobuf;
+pub mod rc;
 pub mod rest;
 pub mod rpc;
 pub mod sched;

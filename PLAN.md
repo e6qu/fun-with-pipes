@@ -316,9 +316,16 @@ Next in this series, toward static, zero-cost programs:
     ms to 21 MiB (its input list) and 49 ms. A `loop`'s state whose
     fields are such records (a `fold` with a tuple accumulator) keeps
     them field by field: summing and counting 30 million numbers went
-    from 915 MiB and 176 ms to nothing allocated and 26 ms. Next:
-    reference counting behind `--memory rc`, module by module, before it
-    becomes the default.
+    from 915 MiB and 176 ms to nothing allocated and 26 ms. Reference
+    counting has begun: `src/rc.rs` inserts `Dup` and `Drop` (Perceus's
+    discipline: owned parameters, borrowing primitives, drops as early as
+    possible) and checks every path of every function for leaks, double
+    releases and reads after the last reference; every test program is
+    counted and checked in debug builds. Next: the C runtime freeing at
+    zero behind `--memory rc` (primitives that keep what they store,
+    constants that are never freed, and a verify mode in which the
+    collector confirms that nothing it reaches was freed), then reuse in
+    place, before it becomes the default.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
