@@ -300,6 +300,39 @@ static V fwp_show(V v, const fwp_desc *d) {
     return buf_to_str(&b);
 }
 
+/* integers up to 64 bits: digits written backwards into a buffer, and
+ * their count, without formatting through a descriptor */
+static int fwp_u64_fmt(char *end, uint64_t x) {
+    char *p = end;
+    do { *--p = (char)('0' + x % 10); x /= 10; } while (x);
+    return (int)(end - p);
+}
+
+static V fwp_show_u64(V v) {
+    char b[24];
+    int n = fwp_u64_fmt(b + sizeof b, (uint64_t)v);
+    return fwp_str_new(b + sizeof b - n, (size_t)n);
+}
+
+static V fwp_show_i64(V v) {
+    int64_t x = (int64_t)v;
+    char b[24];
+    uint64_t m = x < 0 ? (uint64_t)0 - (uint64_t)x : (uint64_t)x;
+    int n = fwp_u64_fmt(b + sizeof b, m);
+    if (x < 0) b[sizeof b - ++n] = '-';
+    return fwp_str_new(b + sizeof b - n, (size_t)n);
+}
+
+static int64_t fwp_u64_chars(uint64_t x) {
+    int64_t n = 1;
+    while (x >= 10) { x /= 10; n++; }
+    return n;
+}
+
+static int64_t fwp_i64_chars(int64_t x) {
+    return x < 0 ? 1 + fwp_u64_chars((uint64_t)0 - (uint64_t)x) : fwp_u64_chars((uint64_t)x);
+}
+
 static void fwp_display_top(V v, const fwp_desc *d, FILE *out) {
     fwp_buf b = {0};
     fwp_write(&b, v, d, 1);

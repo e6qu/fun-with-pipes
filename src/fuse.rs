@@ -174,6 +174,11 @@ fn prim(sym: &str, ty: &MT, args: &[Expr]) -> Traps {
                 }
             }
         },
+        // total, and with no effect but allocation (running out of memory
+        // is not a trap a program can tell from another)
+        "show" | "concat" | "string.length" | "string.byte-length" | "string.chars" | "split"
+        | "join" | "lower" | "upper" | "trim" | "trim-start" | "trim-end" | "length"
+        | "reverse" | "not" | "and" | "or" => none(),
         _ => None,
     }
 }
