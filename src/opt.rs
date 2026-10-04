@@ -164,6 +164,18 @@ impl<'p> Opt<'p> {
             ),
             Expr::Let(l, v, b) => {
                 let v = self.expr(*v, depth);
+                // `Let(l, v, Match(l, arms))` with `l` used nowhere else:
+                // matched directly (backends may then avoid building `v`)
+                if let Expr::Match(s, arms) = &*b {
+                    if matches!(**s, Expr::Local(x) if x == l)
+                        && arms.iter().all(|(_, a)| uses(a, l) == 0)
+                    {
+                        let Expr::Match(_, arms) = *b else {
+                            unreachable!()
+                        };
+                        return self.expr(Expr::Match(Box::new(v), arms), depth);
+                    }
+                }
                 // a partial application used once: substituted, so that
                 // applying it becomes a direct call
                 if matches!(v, Expr::Apply(..)) && uses(&b, l) == 1 {

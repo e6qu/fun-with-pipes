@@ -1,0 +1,27 @@
+# A `match` on `map.get` looks the key up without building the `Some`
+# (src/cgen.rs, lookup_match): found, missing, string keys, and a
+# pattern inside the `Some`.
+
+ages : Map[String, I64]
+ages = [("ada", 36), ("bob", 25)] | map.from-list
+
+age-of : String -> String
+age-of = flip map.get ages | match
+    Some -> show
+    None -> "unknown"
+
+pairs : Map[I64, (I64, String)]
+pairs = [(1, (10, "ten")), (2, (20, "twenty"))] | map.from-list
+
+second : I64 -> String
+second = flip map.get pairs | match
+    Some (_, _) -> const id
+    None -> "none"
+
+main = [
+    "ada" | age-of | print,
+    "eve" | age-of | print,
+    2 | second | print,
+    3 | second | print,
+    range 0 5 | map (flip map.get pairs | option.map .0 | option.unwrap-or 0) | sum | echo,
+] | ignore
