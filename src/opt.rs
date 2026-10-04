@@ -102,6 +102,30 @@ impl<'p> Opt<'p> {
         }
     }
 
+    /// The arguments of a partial application that are constants
+    /// (`Func` of arity 0, whose evaluation may trap) become locals bound
+    /// in `out`, in evaluation order.
+    fn hoist_constants(&mut self, e: Expr, out: &mut Vec<(Local, Expr)>) -> Expr {
+        match e {
+            Expr::Apply(f, args) => {
+                let args = args
+                    .into_iter()
+                    .map(|a| match a {
+                        Expr::Func(id) if self.arity(id) == 0 => {
+                            let l = self.fresh();
+                            out.push((l, Expr::Func(id)));
+                            Expr::Local(l)
+                        }
+                        a @ Expr::Apply(..) => self.hoist_constants(a, out),
+                        a => a,
+                    })
+                    .collect();
+                Expr::Apply(f, args)
+            }
+            e => e,
+        }
+    }
+
     fn fresh(&mut self) -> Local {
         self.nlocals += 1;
         self.nlocals - 1
@@ -140,15 +164,42 @@ impl<'p> Opt<'p> {
             ),
             Expr::Let(l, v, b) => {
                 let v = self.expr(*v, depth);
+                // a partial application used once: substituted, so that
+                // applying it becomes a direct call
+                if matches!(v, Expr::Apply(..)) && uses(&b, l) == 1 {
+                    // constants it captures are evaluated here, first
+                    let mut consts = Vec::new();
+                    let v = if self.pure(&v) || applied_first(&b, l) {
+                        v
+                    } else {
+                        self.hoist_constants(v, &mut consts)
+                    };
+                    if self.pure(&v) || applied_first(&b, l) {
+                        let mut s: Vec<Option<Expr>> = vec![None; self.nlocals as usize];
+                        s[l as usize] = Some(v);
+                        let mut out = self.expr(substitute(&b, &s), depth);
+                        for (c, e) in consts.into_iter().rev() {
+                            out = Expr::Let(c, Box::new(e), Box::new(out));
+                        }
+                        return out;
+                    }
+                    let mut out = Expr::Let(l, Box::new(v), Box::new(self.expr(*b, depth)));
+                    for (c, e) in consts.into_iter().rev() {
+                        out = Expr::Let(c, Box::new(e), Box::new(out));
+                    }
+                    return out;
+                }
                 let b = self.expr(*b, depth);
                 Expr::Let(l, Box::new(v), Box::new(b))
             }
-            Expr::Match(s, arms) => Expr::Match(
-                Box::new(self.expr(*s, depth)),
-                arms.into_iter()
+            Expr::Match(s, arms) => {
+                let s = self.expr(*s, depth);
+                let arms: Vec<(Pat, Expr)> = arms
+                    .into_iter()
                     .map(|(p, b)| (p, self.expr(b, depth)))
-                    .collect(),
-            ),
+                    .collect();
+                known_record(s, arms)
+            }
         }
     }
 
@@ -226,6 +277,70 @@ impl<'p> Opt<'p> {
             out = Expr::Let(l, Box::new(v), Box::new(out));
         }
         self.expr(out, depth + 1)
+    }
+}
+
+/// A match of a record built in place (`Record([a, b])`, as `curry` and
+/// `uncurry` leave behind) whose arms test at most one of its fields: the
+/// other fields are bound directly, and the match is on that field alone,
+/// so the record is never built.
+fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
+    let Expr::Record(es) = &s else {
+        return Expr::Match(Box::new(s), arms);
+    };
+    let n = es.len();
+    let trivial = es
+        .iter()
+        .all(|e| matches!(e, Expr::Local(_) | Expr::Const(_) | Expr::Func(_)));
+    let shapes = arms
+        .iter()
+        .all(|(p, _)| matches!(p, Pat::Record(ps) if ps.len() == n));
+    if !trivial || !shapes || arms.is_empty() {
+        return Expr::Match(Box::new(s), arms);
+    }
+    let irrefutable = |p: &Pat| matches!(p, Pat::Bind(_) | Pat::Wild);
+    let tested: Vec<usize> = (0..n)
+        .filter(|&i| {
+            arms.iter()
+                .any(|(p, _)| matches!(p, Pat::Record(ps) if !irrefutable(&ps[i])))
+        })
+        .collect();
+    if tested.len() > 1 {
+        return Expr::Match(Box::new(s), arms);
+    }
+    let Expr::Record(es) = s else { unreachable!() };
+    let mut out = Vec::new();
+    for (p, mut body) in arms {
+        let Pat::Record(ps) = p else { unreachable!() };
+        let mut test = Pat::Wild;
+        for (i, pi) in ps.into_iter().enumerate().rev() {
+            match pi {
+                Pat::Bind(l) if !tested.contains(&i) => {
+                    body = Expr::Let(l, Box::new(es[i].clone()), Box::new(body))
+                }
+                pi if tested.contains(&i) => test = pi,
+                _ => {}
+            }
+        }
+        out.push((test, body));
+    }
+    match tested.first() {
+        Some(&k) => Expr::Match(Box::new(es[k].clone()), out),
+        None => out.swap_remove(0).1,
+    }
+}
+
+/// Whether the first thing `e` evaluates is local `l` applied to locals
+/// and constants, so a value bound to `l` can be computed there instead.
+fn applied_first(e: &Expr, l: Local) -> bool {
+    match e {
+        Expr::Let(_, v, _) => applied_first(v, l),
+        Expr::Apply(f, a) => {
+            matches!(**f, Expr::Local(x) if x == l)
+                && a.iter()
+                    .all(|x| matches!(x, Expr::Local(y) if *y != l) || matches!(x, Expr::Const(_)))
+        }
+        _ => false,
     }
 }
 

@@ -867,6 +867,33 @@ static V fwp_map_from_sorted(uint64_t len, const V *kv) {
 /* index of key or insertion point (found flag) */
 static uint64_t fwp_map_find(V m, V k, const fwp_desc *kd, int *found) {
     uint64_t lo = 0, hi = MAP(m)->len;
+    /* integer keys: compared inline, without the descriptor */
+    switch (kd->kind) {
+    case K_I8: case K_I16: case K_I32: case K_I64: {
+        int64_t x = (int64_t)k;
+        const V *d = MAP(m)->d;
+        while (lo < hi) {
+            uint64_t mid = (lo + hi) / 2;
+            int64_t y = (int64_t)d[2 * mid];
+            if (y == x) { *found = 1; return mid; }
+            if (y < x) lo = mid + 1; else hi = mid;
+        }
+        *found = 0;
+        return lo;
+    }
+    case K_U8: case K_U16: case K_U32: case K_U64: {
+        const V *d = MAP(m)->d;
+        while (lo < hi) {
+            uint64_t mid = (lo + hi) / 2;
+            V y = d[2 * mid];
+            if (y == k) { *found = 1; return mid; }
+            if (y < k) lo = mid + 1; else hi = mid;
+        }
+        *found = 0;
+        return lo;
+    }
+    default: break;
+    }
     while (lo < hi) {
         uint64_t mid = (lo + hi) / 2;
         int c = fwp_cmp(MAP(m)->d[2 * mid], k, kd);

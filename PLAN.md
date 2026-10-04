@@ -261,6 +261,11 @@ Next in this series, toward static, zero-cost programs:
     (`show`, `concat`, `string.length`, ...) count as total, and the C
     backend measures a `concat` or a shown integer without building
     it: the `strings` benchmark went from 4.1 times C's time to 0.1.
+    Loops in programs without tasks count no safe points, maps compare
+    integer keys inline, and the optimizer substitutes a closure used
+    once where it is applied and drops tuples built only to be matched:
+    `loop` and `map` went from 2.5 and 2.0 times C's time to 1.3 and
+    1.1.
 22. Faster first runs (begun: large programs are compiled with GCC's
     parallel link-time optimization, halving a REST server's first start
     on four cores; most of their C is the standard library monomorphized
