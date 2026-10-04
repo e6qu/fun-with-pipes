@@ -41,7 +41,7 @@ fn calls(e: &Expr, id: FuncId) -> bool {
     }
 }
 
-fn uses(e: &Expr, l: Local) -> usize {
+pub(crate) fn uses(e: &Expr, l: Local) -> usize {
     match e {
         Expr::Local(x) => (*x == l) as usize,
         Expr::Const(_) | Expr::Func(_) => 0,
@@ -321,7 +321,7 @@ pub(crate) fn simplify(funcs: &[Func], body: Expr, nlocals: Local) -> (Expr, Loc
 /// argument to, for those that `specialize_hofs` handles.
 pub fn hof_arity(sym: &str) -> Option<usize> {
     match sym {
-        "map" | "filter" | "take-while" | "drop-while" | "loop" => Some(1),
+        "map" | "filter" | "find" | "take-while" | "drop-while" | "loop" => Some(1),
         "fold" | "fold-right" | "zip-with" => Some(2),
         _ => None,
     }

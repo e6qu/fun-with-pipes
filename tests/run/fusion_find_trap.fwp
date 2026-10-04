@@ -1,0 +1,5 @@
+# `find` stops at its first match, so it is fused only with stages that
+# cannot trap: here `map` overflows on the third element, after the
+# second already matches, and the program must still trap.
+
+main = range 0 3 | map (mul 4611686018427387904) | find (gt 0) | echo

@@ -21,6 +21,13 @@ mean-square = map (fork mul id id) | sum
 small : U8 -> U8
 small = range 0u8 | sum
 
+# other consumers: `length` (and `count`), `find` (and `any`, `all`)
+evens : I64 -> I64
+evens = range 0 | filter (rem 2 | eq 0) | length
+
+first-square-over : I64 -> List[I64] -> Option[I64]
+first-square-over = gt | find | compose (map (fork mul id id))
+
 main = [
     1000 | sum-of | echo,
     0 | sum-of | echo,
@@ -28,6 +35,13 @@ main = [
     [1, 2, 3] | plus-all 10 | echo,
     [1.5, 2.0] | mean-square | echo,
     10u8 | small | echo,
+    10 | evens | echo,
+    [1, 2, 3, 4] | count (gt 2) | echo,
+    [3, 1, 4, 1, 5] | first-square-over 5 | echo,
+    [1, 2] | first-square-over 5 | echo,
+    range 0 100 | any (gt 98) | echo,
+    range 0 100 | all (lt 100) | echo,
+    [] | map (add 1) | find (eq 2) | echo,
     # one trap kind in two stages: the overflow is reported either way
     range 0 3 | map (mul 4611686018427387904) | sum | echo,
 ] | ignore
