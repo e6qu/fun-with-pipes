@@ -1,0 +1,8 @@
+(499500, 1000)
+(333666, 334)
+Range {hi = 10, lo = -5}
+75
+(3, 3)
+--- stderr
+fwp: trap: division by zero
+--- exit 101

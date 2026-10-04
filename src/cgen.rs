@@ -354,6 +354,25 @@ struct Gen<'p> {
     abis: Vec<Option<Abi>>,
 }
 
+impl Gen<'_> {
+    /// The number of fields of a record `e` gives without being built:
+    /// a record expression, or a call of a worker returning a struct.
+    fn unboxed_value(&self, e: &Expr) -> Option<usize> {
+        match e {
+            Expr::Call(id, _) => self.abis[*id].as_ref()?.ret,
+            Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
+            Expr::Let(_, _, b) => self.unboxed_value(b),
+            Expr::Match(_, arms) => {
+                let n = self.unboxed_value(&arms.first()?.1)?;
+                arms.iter()
+                    .all(|(_, b)| self.unboxed_value(b) == Some(n))
+                    .then_some(n)
+            }
+            _ => None,
+        }
+    }
+}
+
 /// Most fields of a record passed or returned in registers (a C struct).
 const MAX_UNBOXED: usize = 4;
 
@@ -1026,6 +1045,9 @@ struct FnGen<'g, 'p> {
 struct LoopGen {
     tails: std::collections::HashSet<*const Expr>,
     record: bool,
+    /// Per field of a record state: its first slot in the state arrays,
+    /// and its number of fields when it is a record kept as its fields.
+    slots: Vec<(usize, Option<usize>)>,
 }
 
 /// The signature of a higher-order primitive specialized for a function
@@ -1210,8 +1232,24 @@ impl<'g, 'p> FnGen<'g, 'p> {
         out
     }
 
+    /// In a loop's step, a field of the state kept as its own fields: its
+    /// first slot and its number of fields.
+    fn state_field(&self, e: &Expr) -> Option<(usize, usize)> {
+        let lg = self.in_loop.as_ref().filter(|lg| lg.record)?;
+        match e {
+            Expr::Field(r, i) if matches!(**r, Expr::Local(0)) => match lg.slots[*i as usize] {
+                (off, Some(m)) => Some((off, m)),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
     /// The number of fields of a record `e` can give without building it.
     fn unboxed(&self, e: &Expr) -> Option<usize> {
+        if let Some((_, m)) = self.state_field(e) {
+            return Some(m);
+        }
         match e {
             Expr::Call(id, _) => self.g.abis[*id].as_ref()?.ret,
             Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
@@ -1229,6 +1267,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The `n` fields of the record `e`, as C expressions, building it
     /// only when it comes from elsewhere.
     fn expr_fields(&mut self, e: &Expr, n: usize) -> Vec<String> {
+        if let Some((off, m)) = self.state_field(e).filter(|(_, m)| *m == n) {
+            return (off..off + m).map(|k| format!("st[{}]", k)).collect();
+        }
         match e {
             Expr::Record(xs) if xs.len() == n => self.args(xs),
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.ret) == Some(n) => {
@@ -1415,8 +1456,21 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if let Some(lg) = &self.in_loop {
             let record = lg.record;
             match e {
+                Expr::Field(r, k) if record && self.state_field(r).is_some() => {
+                    let (off, _) = self.state_field(r).unwrap();
+                    return format!("st[{}]", off + *k as usize);
+                }
                 Expr::Field(r, i) if record && matches!(**r, Expr::Local(0)) => {
-                    return format!("st[{}]", i);
+                    let (off, w) = lg.slots[*i as usize];
+                    return match w {
+                        None => format!("st[{}]", off),
+                        // the record itself: built again from its fields
+                        Some(m) => {
+                            let fs: Vec<String> =
+                                (off..off + m).map(|k| format!("st[{}]", k)).collect();
+                            self.bind(format!("fwp_record({}, {})", m, Self::array(&fs)))
+                        }
+                    };
                 }
                 Expr::Construct(tag, xs) if lg.tails.contains(&(e as *const Expr)) => {
                     if *tag == 1 {
@@ -1425,7 +1479,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         return "(V)1".into();
                     }
                     let parts: Vec<String> = match (&xs[0], record) {
-                        (Expr::Record(fs), true) => self.args(fs),
+                        (Expr::Record(fs), true) => {
+                            let slots = lg.slots.clone();
+                            let mut parts = Vec::new();
+                            for (f, (_, w)) in fs.iter().zip(slots) {
+                                match w {
+                                    Some(m) => parts.extend(self.expr_fields(f, m)),
+                                    None => parts.push(self.expr(f)),
+                                }
+                            }
+                            parts
+                        }
                         _ => vec![self.expr(&xs[0])],
                     };
                     for (i, p) in parts.iter().enumerate() {
@@ -2526,12 +2590,36 @@ impl<'p> Gen<'p> {
         let Body::Expr(e) = &f.body else {
             unreachable!()
         };
-        let n = record.unwrap_or(1);
         let mut ts = Vec::new();
         tails(e, &mut ts);
+        // a field of a record state that is itself a small record, and
+        // that every `Again` gives unboxed, is kept as its fields
+        let field_tys: Vec<MT> = record_fields(&self.prog.shapes, &f.locals[0])
+            .map(|fs| fs.iter().map(|(_, t)| t.clone()).collect())
+            .unwrap_or_default();
+        let mut slots = Vec::new();
+        let mut n = 0;
+        for j in 0..record.unwrap_or(0) {
+            let w = field_tys
+                .get(j)
+                .and_then(|t| small_record(self.prog, t))
+                .filter(|m| {
+                    ts.iter().all(|t| match t {
+                        Expr::Construct(0, xs) => match &xs[0] {
+                            Expr::Record(fs) => self.unboxed_value(&fs[j]) == Some(*m),
+                            _ => false,
+                        },
+                        _ => true,
+                    })
+                });
+            slots.push((n, w));
+            n += w.unwrap_or(1);
+        }
+        let n = if record.is_some() { n } else { 1 };
         let lg = LoopGen {
             tails: ts.iter().map(|t| *t as *const Expr).collect(),
             record: record.is_some(),
+            slots: slots.clone(),
         };
         let mut out = format!(
             "/* loop of {} : {}, the state in locals */
@@ -2573,10 +2661,17 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             r
         );
         let load = if record.is_some() {
-            (0..n)
-                .map(|i| format!("st[{}] = OBJ(s)->f[{}];", i, i))
-                .collect::<Vec<_>>()
-                .join(" ")
+            let mut ls = Vec::new();
+            for (j, (off, w)) in slots.iter().enumerate() {
+                match w {
+                    Some(m) => ls
+                        .extend((0..*m).map(|k| {
+                            format!("st[{}] = OBJ(OBJ(s)->f[{}])->f[{}];", off + k, j, k)
+                        })),
+                    None => ls.push(format!("st[{}] = OBJ(s)->f[{}];", off, j)),
+                }
+            }
+            ls.join(" ")
         } else {
             "st[0] = s;".into()
         };

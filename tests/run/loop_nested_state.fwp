@@ -1,0 +1,43 @@
+# A loop's state with fields that are records: kept field by field in the
+# C loop (`LoopGen::slots` in src/cgen.rs), built only when read whole.
+
+# a fold with a tuple accumulator (fused into a loop)
+acc : (I64, I64) -> I64 -> (I64, I64)
+acc = curry (both (fork add (.0 | .0) .1) (.0 | .1 | add 1))
+
+Range = { lo: I64, hi: I64 }
+
+# a nominal record inside the state, read field by field
+widen : (I64, Range) -> Step[(I64, Range), Range]
+widen =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (make Range { lo = .1 | .lo | sub 1, hi = .1 | .hi | add 2 }) | Again)
+
+# the nested record read whole every iteration (here: shown)
+count-shows : (I64, (I64, I64), I64) -> Step[(I64, (I64, I64), I64), I64]
+count-shows =
+    if
+        (.0 | eq 0)
+        (.2 | Stop)
+        (make { 0 = .0 | sub 1, 1 = .1 | both (.0 | add 1) .1, 2 = fork add (.1 | show | string.length) .2 } | Again)
+
+# a nested pair rebuilt by primitives (`swap`, `second`), which the
+# optimizer turns into a record
+flip-flop : (I64, (I64, I64)) -> Step[(I64, (I64, I64)), (I64, I64)]
+flip-flop =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (.1 | swap | second (add 1)) | Again)
+
+main = [
+    range 0 1000 | fold acc (0, 0) | echo,
+    range 0 1000 | filter (rem 3 | eq 0) | map (mul 2) | fold acc (0, 0) | echo,
+    (5, Range { lo = 0, hi = 0 }) | loop widen | echo,
+    (12, (1, 2), 0) | loop count-shows | echo,
+    (3, (1, 2)) | loop flip-flop | echo,
+    # a trap in the step, with the state in slots
+    range 0 10 | fold (curry (both (.0 | .0 | add 1) (fork div .1 (.0 | .1)))) (0, 1) | echo,
+] | ignore
