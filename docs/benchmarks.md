@@ -45,8 +45,10 @@ What the numbers say:
   flip map.get table` into direct calls: a closure used once is
   substituted where it is applied (after binding the constants it
   captures, so they are still evaluated first), and a tuple built only to
-  be matched is never built. What remains is the `Some` allocated per
-  lookup. It took 1016 ms before these changes.
+  be matched is never built, and a `match` on `map.get` branches on
+  whether the key was found instead of allocating a `Some`
+  (`lookup_match` in `src/cgen.rs`). What remains is the binary search's
+  cache misses, which C pays too. It took 1016 ms before these changes.
 - `pipeline` runs as one loop. `range | map | filter | sum` is fused
   (`src/fuse.rs`), so no list is built, and the loop keeps its state in
   C locals. Before fusion, each stage built a list of a million cells

@@ -1213,6 +1213,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.expr(body)
             }
             Expr::Match(scrut, arms) => {
+                if let Some(r) = self.lookup_match(scrut, arms) {
+                    return r;
+                }
                 let sv = self.expr(scrut);
                 let s = self.bind(sv);
                 let r = self.fresh();
@@ -1237,6 +1240,84 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 r
             }
         }
+    }
+
+    /// `match` on `map.get k m`: the key is looked up and the arms test
+    /// whether it was found, so no `Some` is allocated. Only when every arm
+    /// is `Some p`, `None` or `_` (the option itself is never bound).
+    fn lookup_match(&mut self, scrut: &Expr, arms: &[(Pat, Expr)]) -> Option<String> {
+        // through the `Let`s that compute the arguments
+        let mut inner = scrut;
+        while let Expr::Let(_, _, b) = inner {
+            inner = b;
+        }
+        let Expr::Call(id, args) = inner else {
+            return None;
+        };
+        let f = &self.g.prog.funcs[*id];
+        if !matches!(&f.body, Body::Prim(s) if s == "map.get") || args.len() != 2 {
+            return None;
+        }
+        let shapes = arms.iter().all(|(p, _)| match p {
+            Pat::Wild => true,
+            Pat::Construct(0, ps) => ps.is_empty(),
+            Pat::Construct(1, ps) => ps.len() == 1,
+            _ => false,
+        });
+        if !shapes {
+            return None;
+        }
+        let kd = self.g.desc(&f.ty.params(2).0[0].clone());
+        let mut e = scrut;
+        while let Expr::Let(l, v, b) = e {
+            let x = self.expr(v);
+            self.line(&format!("l{} = {};", l, x));
+            e = b;
+        }
+        let xs = self.args(args);
+        let (found, at, v) = (self.fresh(), self.fresh(), self.fresh());
+        self.line(&format!(
+            "int {found}; uint64_t {at} = fwp_map_find({m}, {k}, {kd}, &{found});",
+            found = found,
+            at = at,
+            m = xs[1],
+            k = xs[0],
+            kd = kd
+        ));
+        self.line(&format!(
+            "V {v} = {found} ? MAP({m})->d[2 * {at} + 1] : 0;",
+            v = v,
+            found = found,
+            m = xs[1],
+            at = at
+        ));
+        let r = self.fresh();
+        self.line(&format!("V {};", r));
+        self.label += 1;
+        let done = format!("done{}", self.label);
+        for (pat, body) in arms {
+            self.label += 1;
+            let next = format!("next{}", self.label);
+            self.line("{");
+            self.indent += 1;
+            match pat {
+                Pat::Construct(0, _) => self.line(&format!("if ({}) goto {};", found, next)),
+                Pat::Construct(1, ps) => {
+                    self.line(&format!("if (!{}) goto {};", found, next));
+                    self.pattern(&ps[0], &v, &next);
+                }
+                _ => {}
+            }
+            let bv = self.expr(body);
+            self.line(&format!("{} = {};", r, bv));
+            self.line(&format!("goto {};", done));
+            self.indent -= 1;
+            self.line("}");
+            self.line(&format!("{}:;", next));
+        }
+        self.line("fwp_trap(\"internal: no match arm applies\");");
+        self.line(&format!("{}:;", done));
+        Some(r)
     }
 
     fn pattern(&mut self, p: &Pat, v: &str, fail: &str) {
