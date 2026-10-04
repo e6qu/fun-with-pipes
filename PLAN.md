@@ -248,9 +248,11 @@ Next in this series, toward static, zero-cost programs:
 20. Escape analysis beyond loops (begun: a tuple built only to be
     matched is never built, and a `match` on `map.get` looks the key up
     and branches without allocating the `Some`, so the `map` benchmark
-    allocates 72 MiB instead of 408). Next: records and tuples that do
-    not escape a function kept in C locals, and values that do not
-    outlive a call on the stack.
+    allocates 72 MiB instead of 408). A record bound to a local and read
+    only field by field becomes a local per field (scalar replacement),
+    and copies of locals are propagated: the tuples `curry3` and friends
+    leave behind are never built. Next: values that do not outlive a call
+    on the stack.
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
     `any` and `all`) over `map` and `filter` stages of a `range` or a list
