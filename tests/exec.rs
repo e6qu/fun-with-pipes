@@ -146,7 +146,11 @@ fn check(r: &Runner) {
 }
 
 fn native() -> Runner {
-    let dir = std::env::temp_dir().join(format!("fwp-exec-{}", std::process::id()));
+    // a directory per call: tests run in parallel threads, and one must not
+    // relink an executable while another runs it
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!("fwp-exec-{}-{}", std::process::id(), n));
     std::fs::create_dir_all(&dir).unwrap();
     let mut exes = HashMap::new();
     for f in [
