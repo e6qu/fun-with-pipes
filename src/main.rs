@@ -15,6 +15,7 @@ usage:
                                  go to that service
   fwp build <file.fwp> [-o out] [--fn name|--cli|--rest] [--emit-c] [-O0|-O1|-O2|-O3]
             [--target native|wasm32-wasi|wasm32-browser] [--fat]
+            [--static] [--pgo [--pgo-input file] [-- training args...]]
             [--memory static [--heap S] [--pool S] [--stack S]
                              [--tasks N] [--task-stack S] [--threads N]]
             [--wasm-async jspi|asyncify]
@@ -413,9 +414,23 @@ fn build(args: &[String]) -> ExitCode {
     let mut services: Vec<(String, String)> = Vec::new();
     let mut memory: Option<fwp::cgen::StaticMemory> = None;
     let mut sizes: Vec<(String, String)> = Vec::new();
+    let mut static_link = false;
+    let mut pgo = false;
+    let mut pgo_input: Option<String> = None;
+    // the training run's arguments: everything after `--`
+    let (args, pgo_args) = match args.iter().position(|a| a == "--") {
+        Some(k) => (&args[..k], args[k + 1..].to_vec()),
+        None => (args, Vec::new()),
+    };
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--static" => static_link = true,
+            "--pgo" => pgo = true,
+            "--pgo-input" => {
+                i += 1;
+                pgo_input = args.get(i).cloned();
+            }
             "--memory" | "--memory=static" | "--memory=dynamic" => {
                 let v = match args[i].split_once('=') {
                     Some((_, v)) => Some(v.to_string()),
@@ -551,6 +566,24 @@ fn build(args: &[String]) -> ExitCode {
         }
         fwp::cgen::set_static_memory(Some(*m));
     }
+    if (static_link || pgo) && (target.is_wasm() || lib.is_some() || fat || !services.is_empty()) {
+        eprintln!("fwp build: --static and --pgo build one native executable (not WebAssembly, libraries, --fat or --service)");
+        return ExitCode::from(2);
+    }
+    if (pgo_input.is_some() || !pgo_args.is_empty()) && !pgo {
+        eprintln!(
+            "fwp build: --pgo-input and arguments after `--` are for the training run of --pgo"
+        );
+        return ExitCode::from(2);
+    }
+    if pgo && !fwp::cgen::is_gcc(&fwp::aot::cc()) {
+        eprintln!("fwp build: --pgo needs GCC as the C compiler (set CC)");
+        return ExitCode::from(2);
+    }
+    fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+        static_link,
+        pgo: None,
+    });
     if IN_WASM && !emit_c {
         return not_in_wasm(
             "compiling with `fwp build` (it needs a C compiler; `--emit-c` writes the C source)",
@@ -701,6 +734,15 @@ fn build(args: &[String]) -> ExitCode {
         };
         let compiled = if fat {
             fwp::cgen::compile_fat(&csrc, &out, &opt)
+        } else if pgo {
+            pgo_build(
+                &csrc,
+                &out,
+                &opt,
+                static_link,
+                &pgo_args,
+                pgo_input.as_deref(),
+            )
         } else {
             fwp::cgen::compile_for(&csrc, &out, &opt, target).and_then(|_| {
                 if asyncify {
@@ -719,6 +761,56 @@ fn build(args: &[String]) -> ExitCode {
         }
     });
     ExitCode::from(code)
+}
+
+/// `fwp build --pgo`: an instrumented build, one training run of it with
+/// `args` (stdin from `input`, or empty; its output is discarded), and the
+/// build that uses the profile the run wrote.
+fn pgo_build(
+    csrc: &str,
+    out: &std::path::Path,
+    opt: &str,
+    static_link: bool,
+    args: &[String],
+    input: Option<&str>,
+) -> Result<(), String> {
+    let dir = std::env::temp_dir().join(format!("fwp-pgo-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let result = (|| {
+        let set = |phase| {
+            fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
+                static_link,
+                pgo: Some((phase, dir.clone())),
+            })
+        };
+        set(fwp::cgen::Pgo::Generate);
+        let trainer = dir.join("train");
+        fwp::cgen::compile_for(csrc, &trainer, opt, fwp::cgen::Target::Native)?;
+        let stdin = match input {
+            Some(f) => std::process::Stdio::from(
+                std::fs::File::open(f).map_err(|e| format!("--pgo-input {}: {}", f, e))?,
+            ),
+            None => std::process::Stdio::null(),
+        };
+        let status = std::process::Command::new(&trainer)
+            .args(args)
+            .stdin(stdin)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()
+            .map_err(|e| format!("cannot run the training build: {}", e))?;
+        // a failing run still writes its profile when it exits
+        if !status.success() {
+            eprintln!(
+                "fwp build: note: the training run exited with {}",
+                status.code().map_or("a signal".into(), |c| c.to_string())
+            );
+        }
+        set(fwp::cgen::Pgo::Use);
+        fwp::cgen::compile_for(csrc, out, opt, fwp::cgen::Target::Native)
+    })();
+    let _ = std::fs::remove_dir_all(&dir);
+    result
 }
 
 /// A split build: the main executable, whose calls to the named modules'

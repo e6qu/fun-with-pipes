@@ -275,6 +275,12 @@ fwp build file.fwp [options]                  compile
                      server, with reflection (see grpc.md)
     --target T       native (default), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
+    --static         a statically linked executable, which needs no shared
+                     libraries (not even the C library's) at run time
+    --pgo            profile-guided: build with instrumentation, run it once
+                     with the arguments after `--` (stdin from
+                     --pgo-input F, or empty), then build with the profile
+                     (needs GCC)
     --memory static  all memory mapped once at startup (see below), with
                      --heap S, --pool S, --stack S, --tasks N,
                      --task-stack S and --threads N
@@ -417,6 +423,8 @@ startup.
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
 | `--fat` (x86-64) | variants for x86-64, x86-64-v2 and x86-64-v3 | the best variant the CPU supports runs; `FWP_VARIANT=name` forces one, `FWP_VARIANT_SHOW=1` reports the choice |
+| `--static` | an executable linked with static libraries | runs on any Linux of the same architecture. A program that uses TLS needs OpenSSL's static libraries (`libssl.a`) to build; the C library's name resolution (`getaddrinfo`) still loads the system's NSS modules when it runs |
+| `--pgo` (GCC) | an executable optimized with a profile of one training run | `fwp build --pgo main.fwp -- 1000` runs the instrumented program as `main 1000`, discarding its output, then compiles again with the branch and call counts it recorded. The training run should exercise the program as it is used |
 
 The interpreter and every compiled target produce the same output for the
 same program, including float formatting and trap messages. The test suite

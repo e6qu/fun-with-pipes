@@ -275,8 +275,11 @@ Next in this series, toward static, zero-cost programs:
     on four cores; and no C is generated for the functions nothing
     reaches after inlining, mostly instances of small combinators: the
     REST bookstore's C went from 2.3 MB and 3796 functions to 1.1 MB and
-    839, and its first build from 9.4 s to 4.4 s), and static and
-    profile-guided builds.
+    839, and its first build from 9.4 s to 4.4 s). Static and
+    profile-guided builds are done: `fwp build --static` links a
+    self-contained executable, and `fwp build --pgo -- args` trains the
+    program once and compiles it again with the profile (the `map`
+    benchmark: 650 ms to 558 ms).
 23. **Benchmarks against C and Rust** (done). `bench/` has five programs
     in fwp, C and Rust, run in CI with their outputs compared; see
     [docs/benchmarks.md](docs/benchmarks.md). They found that building a

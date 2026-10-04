@@ -57,6 +57,32 @@ pub fn set_static_memory(m: Option<StaticMemory>) {
     *STATIC_MEMORY.lock().unwrap() = m;
 }
 
+/// Options of native executables beyond the C source: linked statically
+/// (`fwp build --static`), and the phase of a profile-guided build.
+#[derive(Clone, Debug, Default)]
+pub struct NativeOptions {
+    pub static_link: bool,
+    pub pgo: Option<(Pgo, std::path::PathBuf)>,
+}
+
+/// The two compiles of `fwp build --pgo`: instrumented, then using the
+/// profile its training run wrote to the directory.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Pgo {
+    Generate,
+    Use,
+}
+
+static NATIVE_OPTIONS: std::sync::Mutex<Option<NativeOptions>> = std::sync::Mutex::new(None);
+
+pub fn set_native_options(o: NativeOptions) {
+    *NATIVE_OPTIONS.lock().unwrap() = Some(o);
+}
+
+fn native_options() -> NativeOptions {
+    NATIVE_OPTIONS.lock().unwrap().clone().unwrap_or_default()
+}
+
 pub fn static_memory() -> Option<StaticMemory> {
     *STATIC_MEMORY.lock().unwrap()
 }
@@ -3608,7 +3634,7 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
 }
 
 /// Whether the C compiler is GCC (`cc --version`), asked once per compiler.
-fn is_gcc(cc: &str) -> bool {
+pub fn is_gcc(cc: &str) -> bool {
     static SEEN: std::sync::Mutex<Vec<(String, bool)>> = std::sync::Mutex::new(Vec::new());
     let mut seen = SEEN.lock().unwrap();
     if let Some((_, g)) = seen.iter().find(|(c, _)| c == cc) {
@@ -3925,23 +3951,66 @@ pub fn compile_for(
         result
     } else {
         let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
-        run_cc(
-            std::process::Command::new(&cc)
-                .arg(opt)
-                .args(parallel_codegen(&cc, opt, c_source))
-                .arg("-std=gnu11")
-                // no fused multiply-add: results must match the interpreter exactly
-                .arg("-ffp-contract=off")
-                .arg("-w")
-                .arg("-o")
-                .arg(output)
-                .arg(&c_path)
-                .args(crate::ffi::links())
-                .args(tls_links(c_source))
-                .arg("-lm")
-                .arg("-lpthread"),
-            &cc,
-        )
+        let native = native_options();
+        let link_static: &[&str] = if native.static_link {
+            &["-static"]
+        } else {
+            &[]
+        };
+        match &native.pgo {
+            // A profile-guided build compiles and links separately, with the
+            // source and object at fixed paths in the profile directory: GCC
+            // names a profile after its object, so both compiles must agree.
+            Some((phase, pdir)) => {
+                let src = pdir.join("prog.c");
+                let obj = pdir.join("prog.o");
+                std::fs::write(&src, c_source).map_err(|e| e.to_string())?;
+                let flag = match phase {
+                    Pgo::Generate => format!("-fprofile-generate={}", pdir.display()),
+                    Pgo::Use => format!("-fprofile-use={}", pdir.display()),
+                };
+                run_cc(
+                    std::process::Command::new(&cc)
+                        .args([opt, "-std=gnu11", "-ffp-contract=off", "-w"])
+                        .args([flag.as_str(), "-Wno-missing-profile", "-c", "-o"])
+                        .arg(&obj)
+                        .arg(&src),
+                    &cc,
+                )
+                .and_then(|_| {
+                    run_cc(
+                        std::process::Command::new(&cc)
+                            .arg(&flag)
+                            .args(link_static)
+                            .arg("-o")
+                            .arg(output)
+                            .arg(&obj)
+                            .args(crate::ffi::links())
+                            .args(tls_links(c_source))
+                            .args(["-lm", "-lpthread"]),
+                        &cc,
+                    )
+                })
+            }
+            None => run_cc(
+                std::process::Command::new(&cc)
+                    .arg(opt)
+                    .args(parallel_codegen(&cc, opt, c_source))
+                    .arg("-std=gnu11")
+                    // no fused multiply-add: results must match the interpreter exactly
+                    .arg("-ffp-contract=off")
+                    .arg("-w")
+                    .args(link_static)
+                    .arg("-o")
+                    .arg(output)
+                    .arg(&c_path)
+                    .args(crate::ffi::links())
+                    .args(tls_links(c_source))
+                    .arg("-lm")
+                    .arg("-lpthread"),
+                &cc,
+            ),
+        }
     };
     let _ = std::fs::remove_file(&c_path);
     result
