@@ -1,0 +1,51 @@
+# Records of up to four fields are passed and returned in registers by
+# direct calls (`Abi` in src/cgen.rs); used as values, the same functions
+# box them. Both must agree with the interpreter.
+
+Point = { x: I64, y: I64 }
+
+# a nominal record in and out, read field by field
+step : Point -> Point
+step = make Point { x = .x | add 1, y = fork add .x .y }
+
+rec walk : I64 -> Point
+walk = match
+    0 -> Point { x = 0, y = 0 }
+    _ -> sub 1 | walk | step
+
+# a pair built in either arm of a match
+rec fib-pair : I64 -> (I64, I64)
+fib-pair = match
+    0 -> (0, 1)
+    _ -> sub 1 | fib-pair | both .1 (fork add .0 .1)
+
+# four fields, unboxed; five, boxed
+spread : I64 -> (I64, I64, I64, I64)
+spread = make { 0 = id, 1 = add 1, 2 = add 2, 3 = add 3 }
+
+wide : I64 -> (I64, I64, I64, I64, I64)
+wide = make { 0 = id, 1 = add 1, 2 = add 2, 3 = add 3, 4 = add 4 }
+
+total4 : (I64, I64, I64, I64) -> I64
+total4 = fork add (fork add .0 .1) (fork add .2 .3)
+
+# a parameter used whole is passed boxed
+both-ways : (I64, I64) -> ((I64, I64), I64)
+both-ways = fork (curry id) id (fork sub .0 .1)
+
+# a trap inside a worker reports the same
+checked : (I64, I64) -> (I64, I64)
+checked = both (fork div .1 .0) .1
+
+main = [
+    10 | walk | echo,
+    50 | fib-pair | echo,
+    50 | fib-pair | .0 | echo,
+    [1, 2, 3] | map fib-pair | echo,
+    5 | spread | total4 | echo,
+    5 | spread | echo,
+    5 | wide | echo,
+    (7, 2) | both-ways | echo,
+    [10, 20] | map walk | map .y | echo,
+    (7, 0) | checked | echo,
+] | ignore

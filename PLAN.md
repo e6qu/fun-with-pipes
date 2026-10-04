@@ -310,10 +310,13 @@ Next in this series, toward static, zero-cost programs:
     Every IR function now records the type of each local
     (`Func::locals`), kept by mono, the optimizer and fusion, and checked
     after each pass in debug builds (`ir::check_locals`): a value's size
-    and whether it holds pointers follow from its type. Next: records of
-    a few scalars passed and returned in registers as C structs; then
-    reference counting behind `--memory rc`, module by module, before it
-    becomes the default.
+    and whether it holds pointers follow from its type. Records of up to
+    four fields are passed and returned in registers by direct calls, as
+    C structs: a recursion over pairs went from 437 MiB allocated and 282
+    ms to 21 MiB (its input list) and 49 ms. Next: a `loop`'s state whose
+    fields are records (a `fold` with a tuple accumulator), kept field by
+    field; then reference counting behind `--memory rc`, module by
+    module, before it becomes the default.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
