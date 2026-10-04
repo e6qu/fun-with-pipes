@@ -368,12 +368,91 @@ impl Fuser<'_> {
     /// `fold g z`, `length`, or `find p` (which stops at the first match,
     /// so the stages before it may not trap at all).
     fn consume(&mut self, cons_id: FuncId, args: &[Expr]) -> Option<Expr> {
-        let funcs = self.funcs;
         let kind = self.consumer(cons_id, args)?;
-        let list = args.last()?;
-        let (cparams, result_ty) = funcs[cons_id].ty.params(args.len());
-        let list_ty = (*cparams.last()?).clone();
+        let (cparams, result_ty) = self.funcs[cons_id].ty.params(args.len());
+        let cparams: Vec<MT> = cparams.into_iter().cloned().collect();
         let result_ty = result_ty.clone();
+        self.fuse_chain(kind, args, cparams, result_ty)
+    }
+
+    /// A chain of at least two `map` and `filter` stages whose list is
+    /// used as such: one pass that conses the elements in reverse, then a
+    /// `reverse`, instead of a list per stage.
+    fn materialize(&mut self, chain: &Expr) -> Option<Expr> {
+        let mut n = 0;
+        let mut cur = chain;
+        while let Expr::Call(id, a) = cur {
+            match prim_sym(self.funcs, *id) {
+                Some("map" | "filter") if a.len() == 2 => {
+                    n += 1;
+                    cur = &a[1];
+                }
+                _ => break,
+            }
+        }
+        if n < 2 {
+            return None;
+        }
+        let Expr::Call(top, _) = chain else {
+            return None;
+        };
+        let list_ty = self.funcs[*top].ty.params(2).1.clone();
+        self.fuse_chain(
+            "list",
+            std::slice::from_ref(chain),
+            vec![list_ty.clone()],
+            list_ty,
+        )
+    }
+
+    /// Lists built by `map` and `filter` chains no consumer took: fused
+    /// one by one, outermost first.
+    fn lists(&mut self, e: Expr) -> Expr {
+        if let Expr::Call(id, _) = &e {
+            if matches!(prim_sym(self.funcs, *id), Some("map" | "filter")) {
+                if let Some(r) = self.materialize(&e) {
+                    return r;
+                }
+            }
+        }
+        match e {
+            Expr::Call(id, args) => {
+                Expr::Call(id, args.into_iter().map(|a| self.lists(a)).collect())
+            }
+            Expr::Apply(f, args) => Expr::Apply(
+                Box::new(self.lists(*f)),
+                args.into_iter().map(|a| self.lists(a)).collect(),
+            ),
+            Expr::Construct(t, a) => {
+                Expr::Construct(t, a.into_iter().map(|x| self.lists(x)).collect())
+            }
+            Expr::Record(a) => Expr::Record(a.into_iter().map(|x| self.lists(x)).collect()),
+            Expr::Field(r, i) => Expr::Field(Box::new(self.lists(*r)), i),
+            Expr::SetFields(r, s) => Expr::SetFields(
+                Box::new(self.lists(*r)),
+                s.into_iter().map(|(i, x)| (i, self.lists(x))).collect(),
+            ),
+            Expr::Let(l, v, b) => Expr::Let(l, Box::new(self.lists(*v)), Box::new(self.lists(*b))),
+            Expr::Match(sc, arms) => Expr::Match(
+                Box::new(self.lists(*sc)),
+                arms.into_iter().map(|(p, b)| (p, self.lists(b))).collect(),
+            ),
+            e => e,
+        }
+    }
+
+    /// The loop for `kind` (`fold`, `length`, `find` or `list`) over the
+    /// stages and producer of its last argument.
+    fn fuse_chain(
+        &mut self,
+        kind: &'static str,
+        args: &[Expr],
+        cparams: Vec<MT>,
+        result_ty: MT,
+    ) -> Option<Expr> {
+        let funcs = self.funcs;
+        let list = args.last()?;
+        let list_ty = cparams.last()?.clone();
         let mut stages = Vec::new();
         let mut cur = list;
         loop {
@@ -428,10 +507,12 @@ impl Fuser<'_> {
             MT::Con(_, a) if a.len() == 1 => a[0].clone(),
             _ => return None,
         };
-        // the accumulator: a fold's, a count, or nothing (`find`)
+        // the accumulator: a fold's, a count, the list so far in reverse,
+        // or nothing (`find`)
         let (z, acc_ty) = match kind {
             "fold" => (args[1].clone(), cparams[1].clone()),
             "length" => (Expr::Const(Value::I64(0)), MT::con("std::I64")),
+            "list" => (Expr::Construct(0, vec![]), result_ty.clone()),
             _ => (Expr::Const(Value::unit()), MT::unit()),
         };
 
@@ -527,6 +608,7 @@ impl Fuser<'_> {
         let some = |x: Expr| Expr::Construct(1, vec![Expr::Construct(1, vec![x])]);
         let last = match kind {
             "fold" => Ok(apply(&mut field, cv.as_ref()?, vec![st(1), x.clone()])),
+            "list" => Ok(Expr::Construct(1, vec![x.clone(), st(1)])),
             "length" => {
                 let i64 = MT::con("std::I64");
                 let add = self.prim("prim.add", fun2(&i64, &i64, &i64), 2);
@@ -625,13 +707,18 @@ impl Fuser<'_> {
             "loop",
             MT::Fun(
                 Box::new(step_ty),
-                Box::new(MT::Fun(Box::new(state_ty), Box::new(result_ty))),
+                Box::new(MT::Fun(Box::new(state_ty), Box::new(result_ty.clone()))),
             ),
             2,
         );
         let mut init = vec![start, z];
         init.extend(outer.into_iter().map(Expr::Local));
         let mut out = Expr::Call(loop_id, vec![Expr::Func(step), Expr::Record(init)]);
+        if kind == "list" {
+            let ty = MT::Fun(Box::new(result_ty.clone()), Box::new(result_ty.clone()));
+            let rev = self.prim("reverse", ty, 1);
+            out = Expr::Call(rev, vec![out]);
+        }
         for (l, v) in binds.into_iter().rev() {
             out = Expr::Let(l, Box::new(v), Box::new(out));
         }
@@ -674,6 +761,7 @@ pub fn fuse(prog: &mut Program) {
             nlocals: snapshot[id].nlocals,
         };
         let body = f.expr(body.clone());
+        let body = f.lists(body);
         made = f.made;
         prog.funcs[id].body = Body::Expr(body);
         prog.funcs[id].nlocals = f.nlocals;

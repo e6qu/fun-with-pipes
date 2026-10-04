@@ -1600,9 +1600,11 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         crate::opt::specialize_hofs(&mut prog);
         crate::fuse::fuse(&mut prog);
     }
-    if std::env::var_os("FWP_DUMP_IR").is_some() {
+    if let Some(how) = std::env::var_os("FWP_DUMP_IR") {
+        // `FWP_DUMP_IR=all` includes the standard library's functions
+        let all = how == "all";
         for (i, f) in prog.funcs.iter().enumerate() {
-            if !f.name.starts_with("std") || f.name.contains("-fn") {
+            if all || !f.name.starts_with("std") || f.name.contains("-fn") {
                 eprintln!("f{} {} : {} = {:?}", i, f.name, f.ty, f.body);
             }
         }

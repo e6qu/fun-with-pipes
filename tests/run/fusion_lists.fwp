@@ -1,0 +1,9 @@
+# Chains of map and filter whose list is used as such: one pass that
+# conses in reverse, then a reverse (src/fuse.rs, materialize).
+
+main = [
+    range 0 10 | map (mul 3) | filter (rem 2 | eq 0) | echo,
+    ["a", "bb", "ccc"] | map upper | filter (string.length | gt 1) | map (concat "!") | echo,
+    [1, 2, 3] | filter (gt 5) | map (add 1) | echo,
+    range 0 3 | map (mul 4611686018427387904) | map (add 1) | echo,
+] | ignore

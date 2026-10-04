@@ -1,0 +1,6 @@
+[0, 6, 12, 18, 24]
+["BB!", "CCC!"]
+[]
+--- stderr
+fwp: trap: arithmetic overflow in I64
+--- exit 101
