@@ -6,9 +6,10 @@
 //! passes it to a parameter of another function that does not escape
 //! either. Anything else lets it escape: returning it, storing it in a
 //! constructor, record or closure, handing it to a primitive, a C
-//! function or a function value, or passing it to the function itself
-//! (a call of itself in tail position is compiled as a jump, which would
-//! reuse the frame that holds the value).
+//! function or a function value. A parameter passed on to the function
+//! itself lives in a caller's frame, so it may; a value the function
+//! builds may not go to the function itself, as a call of itself in tail
+//! position is compiled as a jump, which reuses the frame that holds it.
 //!
 //! The C backend allocates a record or variant that does not escape on
 //! the stack (`src/cgen.rs`): its fields are on the stack the collector
@@ -32,7 +33,7 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
                 continue;
             };
             for p in 0..f.arity as usize {
-                if noesc[id][p] && escapes(body, p as Local, &noesc, id) {
+                if noesc[id][p] && escapes(body, p as Local, &noesc, None) {
                     noesc[id][p] = false;
                     changed = true;
                 }
@@ -44,9 +45,11 @@ pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     }
 }
 
-/// Whether the value of local `x` may outlive the evaluation of `e` (in
-/// function `me`), given which parameters of each function do not escape.
-pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: FuncId) -> bool {
+/// Whether the value of local `x` may outlive the evaluation of `e`, given
+/// which parameters of each function do not escape. With `me`, `x` is in
+/// the frame of function `me` (built there), and passing it to `me`
+/// itself lets it escape.
+pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: Option<FuncId>) -> bool {
     let is_x = |e: &Expr| matches!(bare(e), Expr::Local(y) if *y == x);
     let go = |e: &Expr| escapes(e, x, noesc, me);
     match e {
@@ -54,7 +57,7 @@ pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: FuncId) -> bool {
         Expr::Const(_) | Expr::Func(_) => false,
         Expr::Call(g, args) => args.iter().enumerate().any(|(j, a)| {
             if is_x(a) {
-                *g == me || !noesc[*g].get(j).copied().unwrap_or(false)
+                Some(*g) == me || !noesc[*g].get(j).copied().unwrap_or(false)
             } else {
                 go(a)
             }
@@ -143,13 +146,18 @@ mod tests {
             func(1, Expr::Field(Box::new(l(0)), 0)),
             func(1, Expr::Call(3, vec![l(0)])),
             func(1, l(0)),
-            // itself: a tail call would reuse the frame
-            func(1, Expr::Call(4, vec![l(0)])),
+            // a parameter passed on to the function itself: in a caller's
+            // frame
+            func(1, Expr::Field(Box::new(Expr::Call(4, vec![l(0)])), 0)),
         ]);
         let n = params(&p);
         assert_eq!(n[0], vec![true]);
         assert_eq!(n[2], vec![false]);
-        assert_eq!(n[4], vec![false]);
+        assert_eq!(n[4], vec![true]);
+        // a value built in function 4 does not go to function 4
+        let call = Expr::Call(4, vec![l(1)]);
+        assert!(escapes(&call, 1, &n, Some(4)));
+        assert!(!escapes(&call, 1, &n, Some(0)));
     }
 
     #[test]

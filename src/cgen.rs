@@ -1567,7 +1567,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         if let Expr::Record(args) | Expr::Construct(_, args) = v {
             if !args.is_empty()
                 && stack_enabled()
-                && !crate::escape::escapes(body, l, &self.g.noesc, self.me)
+                && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
             {
                 let x = self.stack_object(v);
                 self.line(&format!("l{} = {};", l, x));
@@ -1761,6 +1761,33 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
         } else {
+            // the last reference to an object holding arrays: the arrays
+            // lose the reference it held, so they may become unique
+            if op == "fwp_rc_drop" {
+                let t = &self.locals[l as usize];
+                let tys: Vec<MT> = match (record_fields(shapes, t), shapes.get(t)) {
+                    (Some(fs), _) => fs.iter().map(|(_, t)| t.clone()).collect(),
+                    (None, Some(TypeShape::Adt(vs))) => match self.known_tag.get(&l) {
+                        Some(tag) => vs
+                            .get(*tag as usize)
+                            .map(|v| v.1.clone())
+                            .unwrap_or_default(),
+                        None => Vec::new(),
+                    },
+                    _ => Vec::new(),
+                };
+                let is_array = |t: &MT| matches!(t, MT::Con(n, _) if n == "std::Array");
+                if tys.iter().any(is_array) {
+                    self.line(&format!("if (fwp_rc_last(l{})) {{", l));
+                    for (k, ft) in tys.iter().enumerate() {
+                        if crate::rc::needs_rc(shapes, ft) {
+                            self.line(&format!("    fwp_rc_drop(OBJ(l{})->f[{}]);", l, k));
+                        }
+                    }
+                    self.line("}");
+                    return;
+                }
+            }
             self.line(&format!("{}(l{});", op, l));
             return;
         }
@@ -3209,8 +3236,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         // a primitive (a C function, a remote call) may keep what it is
         // given: it is shared
         if self.reuse && !matches!(f.body, Body::Expr(_) | Body::Ctor(_)) {
+            let sym = match &f.body {
+                Body::Prim(s) => s.as_str(),
+                _ => "",
+            };
             for i in 0..f.arity {
-                if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize]) {
+                if crate::rc::needs_rc(&self.prog.shapes, &f.locals[i as usize])
+                    && !crate::rc::prim_reads_only(sym, i as usize)
+                {
                     let _ = writeln!(out, "    fwp_rc_share(l{});", i);
                 }
             }
@@ -3219,7 +3252,21 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             Body::Prim(sym) => {
                 let sym = sym.clone();
                 let func = f.clone();
-                let s = self.prim(&func, &sym)?;
+                let mut s = self.prim(&func, &sym)?;
+                if self.reuse {
+                    // with counted references: arrays written in place, and
+                    // new ones owned by compiled code
+                    if sym == "array.set" {
+                        s = "return fwp_p_array_set_own(l0, l1, l2);".into();
+                    } else if sym == "array.push" {
+                        s = "return fwp_p_array_push_own(l0, l1);".into();
+                    } else if crate::rc::prim_fresh(&sym) {
+                        let r = s.strip_prefix("return ").and_then(|r| r.strip_suffix(';'));
+                        if let Some(r) = r {
+                            s = format!("return fwp_rc_fresh({});", r);
+                        }
+                    }
+                }
                 let _ = writeln!(out, "    {}", s);
             }
             Body::ForeignC { symbol, variadic } => {

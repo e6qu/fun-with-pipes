@@ -331,9 +331,11 @@ Next in this series, toward static, zero-cost programs:
     `map` (8% slower: its pairs are made unique and then shared at once).
     A variant's cell is reused by a constructor of the same size: adding
     to every node of a tree of 2^18 nodes 20 times went from 168 MiB
-    allocated and 234 ms to 16 MiB (the tree) and 137 ms. Next: fewer
-    counts where values go straight to the runtime, and reuse inside the
-    runtime's own list and map primitives.
+    allocated and 234 ms to 16 MiB (the tree) and 137 ms. Arrays are
+    counted too, and `array.set` and `array.push` write a unique array in
+    place: 200 000 pushes in a loop went from 152 GiB allocated and 80 s
+    to 6 MiB and 14 ms. Next: fewer counts where values go straight to
+    the runtime, and maps written in place.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,

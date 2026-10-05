@@ -1,0 +1,12 @@
+grow : (I64, Array[I64]) -> Step[(I64, Array[I64]), Array[I64]]
+grow =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork array.push .0 .1) | Again)
+
+main =
+    (100000, [] | array.from-list)
+    | loop grow
+    | fork add array.length (array.get 7 | option.unwrap-or 0)
+    | echo

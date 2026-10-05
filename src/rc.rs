@@ -29,15 +29,16 @@ use crate::ir::*;
 type Set = BTreeSet<Local>;
 
 /// Whether values of type `t` are counted: records and variants, which
-/// compiled code allocates and may come to own alone. Strings, byte
-/// strings, arrays, maps, closures and the other values the runtime
-/// allocates are always shared, so they are never counted; neither are
+/// compiled code allocates and may come to own alone, and arrays, which
+/// `array.set` and `array.push` write in place when unique. Strings, byte
+/// strings, maps, closures and the other values the runtime allocates
+/// are always shared, so they are never counted; neither are
 /// integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
         MT::Record(fs) => !fs.is_empty(),
-        MT::Con(n, _) if n == "?" => true,
+        MT::Con(n, _) if n == "?" || n == "std::Array" => true,
         MT::Con(..) => match shapes.get(t) {
             Some(TypeShape::Adt(vs)) => vs.iter().any(|(_, fs)| !fs.is_empty()),
             Some(TypeShape::Record(fs)) => !fs.is_empty(),
@@ -56,6 +57,49 @@ fn unknown() -> MT {
 /// Whether a call of `id` takes ownership of its arguments.
 fn consumes(funcs: &[Func], id: FuncId) -> bool {
     matches!(funcs[id].body, Body::Expr(_) | Body::Ctor(_))
+}
+
+/// Whether a call of `id` takes ownership of its argument `j`: every
+/// argument of a function or constructor, and the array that
+/// `array.set` and `array.push` write in place when it is unique.
+fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
+    consumes(funcs, id) || matches!(&funcs[id].body, Body::Prim(s) if prim_consumes(s, j))
+}
+
+/// The primitives' arguments they take ownership of (see `consumes_arg`).
+pub fn prim_consumes(sym: &str, j: usize) -> bool {
+    matches!((sym, j), ("array.set", 2) | ("array.push", 1))
+}
+
+/// Arguments of primitives that read an array without keeping it: they
+/// need not be shared, so the array may stay unique.
+pub fn prim_reads_only(sym: &str, j: usize) -> bool {
+    prim_consumes(sym, j)
+        || matches!(
+            (sym, j),
+            ("array.to-list", 0)
+                | ("array.length", 0)
+                | ("array.get", 1)
+                | ("array.map", 1)
+                | ("array.fold", 2)
+                | ("array.slice", 2)
+                | ("array.append", 0 | 1)
+                | ("array.sort", 0)
+        )
+}
+
+/// Primitives whose result is a new array, which compiled code owns.
+pub fn prim_fresh(sym: &str) -> bool {
+    matches!(
+        sym,
+        "array.from-list"
+            | "array.make"
+            | "array.generate"
+            | "array.map"
+            | "array.slice"
+            | "array.append"
+            | "array.sort"
+    )
 }
 
 struct Pass<'a> {
@@ -119,7 +163,15 @@ impl Pass<'_> {
                 self.seq(args, &modes, owned, borrowed, move |xs| Expr::Call(id, xs))
             }
             Expr::Call(id, args) => {
-                let modes = vec![Mode::Borrow; args.len()];
+                let modes: Vec<Mode> = (0..args.len())
+                    .map(|j| {
+                        if consumes_arg(self.funcs, *id, j) {
+                            Mode::Consume
+                        } else {
+                            Mode::Borrow
+                        }
+                    })
+                    .collect();
                 let id = *id;
                 self.seq(args, &modes, owned, borrowed, move |xs| Expr::Call(id, xs))
             }
@@ -529,11 +581,10 @@ impl Checker<'_> {
                 }
             }
             Expr::Const(_) | Expr::Func(_) => Ok(()),
-            Expr::Call(id, args) => {
-                let c = consumes(self.funcs, *id);
-                args.iter()
-                    .try_for_each(|a| self.expr(a, st, c || !matches!(a, Expr::Local(_))))
-            }
+            Expr::Call(id, args) => args.iter().enumerate().try_for_each(|(j, a)| {
+                let c = consumes_arg(self.funcs, *id, j);
+                self.expr(a, st, c || !matches!(a, Expr::Local(_)))
+            }),
             Expr::Construct(_, a) | Expr::Record(a) => {
                 a.iter().try_for_each(|x| self.expr(x, st, true))
             }
