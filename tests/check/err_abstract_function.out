@@ -1,0 +1,4 @@
+check/err_abstract_function.fwp:4:33: error: type mismatch in argument 2: expected `Vector[I64, _1]`, found `Vector[I64, _2]`
+4 | both-sizes = vector.add (mk 1) (mk 2)
+  |                                 ^^
+  note: `_1` is not compatible with `_2`

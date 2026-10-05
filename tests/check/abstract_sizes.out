@@ -1,0 +1,8 @@
+xs : Vector[I64, _]
+twice : Vector[I64, _]
+mk : I64 -> Vector[I64, _]
+pushed : Vector[I64, _]
+same : Option[Vector[I64, _]]
+square : Option[Matrix[F64, _n, _n]]
+eye : I64 -> Matrix[F64, _n, _n]
+counted : I64 -> Vector[I64, _]

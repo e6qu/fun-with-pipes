@@ -300,13 +300,13 @@ impl<'a> Mono<'a> {
                 MT::Record(fs)
             }
             Type::Nat(n) => MT::Nat(n),
-            // every size is a number here, or `Dyn`
+            // every size is a number here, or abstract (no number: `()`)
             Type::NatOp(op, a, b) => match (self.mt(&a, s), self.mt(&b, s)) {
                 (MT::Nat(x), MT::Nat(y)) => MT::Nat(match op {
                     NatOp::Add => x.saturating_add(y),
                     NatOp::Mul => x.saturating_mul(y),
                 }),
-                (dyn_ @ MT::Con(..), _) | (_, dyn_ @ MT::Con(..)) => dyn_,
+                (abs @ MT::Con(..), _) | (_, abs @ MT::Con(..)) => abs,
                 (x, _) => x,
             },
         }

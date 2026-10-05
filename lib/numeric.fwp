@@ -4,10 +4,11 @@
 # `vector [1.0, 2.0]` has type Vector[F64, 2] and `matrix [[1, 2], [3, 4]]`
 # has type Matrix[I64, 2, 2]: dimensions come from the literal and take
 # part in type checking, so `a | matmul b` with mismatched inner
-# dimensions is a compile error. `Dyn` marks dimensions known only at run
-# time.
-
-Dyn = builtin
+# dimensions is a compile error. A size known only when the program runs
+# is abstract: `vector.from-list : List[t] -> Vector[t, _]` gives each
+# call a size of its own, unknown but rigid, and `vector.same-size` checks
+# at run time that two vectors agree. Performance: abstract sizes cost a
+# length comparison and an `Option` at each such check.
 
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }
@@ -21,11 +22,21 @@ vector = array.from-list | make Vector { data = id }
 vector.wrap : Array[t] -> Vector[t, n]
 vector.wrap = make Vector { data = id }
 
-vector.dyn : Vector[t, n] -> Vector[t, Dyn]
-vector.dyn = .data | vector.wrap
+# forget the size: the result has a size of its own
+vector.forget : Vector[t, n] -> Vector[t, _]
+vector.forget = .data | vector.wrap
 
-vector.from-list : List[t] -> Vector[t, Dyn]
+# the size is the length of the list, known when the program runs
+vector.from-list : List[t] -> Vector[t, _]
 vector.from-list = array.from-list | vector.wrap
+
+# `ys | vector.same-size xs` is `ys` with the size of `xs` when their
+# lengths agree
+vector.same-size : Vector[a, m] -> Vector[b, n] -> Option[Vector[b, m]]
+vector.same-size = curry (if
+    (fork eq (.0 | vector.length) (.1 | vector.length))
+    (.1 | .data | vector.wrap | Some)
+    (const None))
 
 vector.to-list : Vector[t, n] -> List[t]
 vector.to-list = .data | array.to-list
@@ -95,45 +106,46 @@ matrix = make Matrix {
 matrix.flatten : Matrix[t, m, n] -> Vector[t, m * n]
 matrix.flatten = .data | vector.wrap
 
-# `a | matrix.stack b` is the rows of `a`, then those of `b`. The column
-# counts must agree: the types say so, and with `Dyn` sizes a program
-# whose matrices differ stops (a matrix without rows stacks with any)
+# `a | matrix.stack b` is the rows of `a`, then those of `b` (the types
+# make the column counts agree)
 matrix.stack : Matrix[t, k, n] -> Matrix[t, m, n] -> Matrix[t, m + k, n]
-matrix.stack = curry (if
-    (fork
-        or
-        (fork eq (.0 | .cols) (.1 | .cols))
-        (fork or (.0 | .rows | eq 0) (.1 | .rows | eq 0)))
-    (make Matrix {
-        rows = fork add (.0 | .rows) (.1 | .rows),
-        cols = fork max (.0 | .cols) (.1 | .cols),
-        data = both (.0 | .data) (.1 | .data) | uncurry array.append,
-    })
-    (const "matrix.stack: the matrices have different numbers of columns"
-        | prim.trap))
+matrix.stack = curry (make Matrix {
+    rows = fork add (.0 | .rows) (.1 | .rows),
+    cols = fork max (.0 | .cols) (.1 | .cols),
+    data = both (.0 | .data) (.1 | .data) | uncurry array.append,
+})
 
-# `a | matrix.beside b` is `a` with the columns of `b` to its right. The
-# row counts must agree, as for `matrix.stack`
+# `a | matrix.beside b` is `a` with the columns of `b` to its right (the
+# types make the row counts agree)
 matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
-matrix.beside = curry (if
-    (fork
-        or
-        (fork eq (.0 | .rows) (.1 | .rows))
-        (fork or (.0 | .cols | eq 0) (.1 | .cols | eq 0)))
-    (make Matrix {
-        rows = fork max (.0 | .rows) (.1 | .rows),
-        cols = fork add (.0 | .cols) (.1 | .cols),
-        data =
-            both (.0 | matrix.rows-of) (.1 | matrix.rows-of)
-            | uncurry (zip-with append)
-            | flatten
-            | array.from-list,
-    })
-    (const "matrix.beside: the matrices have different numbers of rows"
-        | prim.trap))
+matrix.beside = curry (make Matrix {
+    rows = fork max (.0 | .rows) (.1 | .rows),
+    cols = fork add (.0 | .cols) (.1 | .cols),
+    data =
+        both (.0 | matrix.rows-of) (.1 | matrix.rows-of)
+        | uncurry (zip-with append)
+        | flatten
+        | array.from-list,
+})
 
-matrix.dyn : Matrix[t, m, n] -> Matrix[t, Dyn, Dyn]
-matrix.dyn = make Matrix { rows = .rows, cols = .cols, data = .data }
+# the same matrix, with sizes the caller names (unchecked)
+matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
+matrix.cast = make Matrix { rows = .rows, cols = .cols, data = .data }
+
+# forget the sizes: the result has sizes of its own
+matrix.forget : Matrix[t, m, n] -> Matrix[t, _m, _n]
+matrix.forget = matrix.cast
+
+# `b | matrix.same-shape a` is `b` with the sizes of `a` when their row
+# and column counts agree
+matrix.same-shape : Matrix[a, m, n] -> Matrix[b, j, k] -> Option[Matrix[b, m, n]]
+matrix.same-shape = curry (if
+    (fork
+        and
+        (fork eq (.0 | .rows) (.1 | .rows))
+        (fork eq (.0 | .cols) (.1 | .cols)))
+    (.1 | matrix.cast | Some)
+    (const None))
 
 matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.square = curry (make Matrix { rows = .0, cols = .0, data = .1 })
@@ -145,8 +157,14 @@ matrix.rows-of =
         (.rows | flip repeat [])
         (both .cols (.data | array.to-list) | uncurry chunks)
 
-matrix.from-rows : List[List[t]] -> Matrix[t, Dyn, Dyn]
-matrix.from-rows = matrix | matrix.dyn
+# `m | matrix.as-square` is `m` as a square matrix when it has as many
+# rows as columns
+matrix.as-square : Matrix[t, m, n] -> Option[Matrix[t, m, m]]
+matrix.as-square = if (fork eq .rows .cols) (matrix.cast | Some) (const None)
+
+# the sizes are those of the rows, known when the program runs
+matrix.from-rows : List[List[t]] -> Matrix[t, _m, _n]
+matrix.from-rows = matrix
 
 # `m | matrix.get i j` is the element in row i, column j; None when either
 # index is out of range (like `nth` and `array.get`)
@@ -205,7 +223,7 @@ bool.to-num = match
     True -> one
     False -> zero
 
-identity : I64 -> Matrix[t, Dyn, Dyn] where Zero[t], One[t]
+identity : I64 -> Matrix[t, _n, _n] where Zero[t], One[t]
 identity = make Matrix {
     rows = id,
     cols = id,
@@ -409,12 +427,7 @@ test "empty matrix" =
 test "empty matrix get" =
     [] | matrix.from-rows | matrix._test-im | matrix.get 0 0 | eq None
 test "empty matrix product" =
-    []
-    | matrix.from-rows
-    | matrix._test-im
-    | matmul ([] | matrix.from-rows)
-    | matrix.rows-of
-    | eq []
+    matrix [] | matrix._test-im | matmul (matrix []) | matrix.rows-of | eq []
 test "matrix with empty rows" =
     [[], []] | matrix.from-rows | matrix._test-im | matrix.rows-of | eq [[], []]
 test "transpose" =
@@ -492,5 +505,5 @@ test "complex.conj" = complex 1.0 2.0 | complex.conj | eq (complex 1.0 -2.0)
 test "complex.abs" = complex 3.0 4.0 | complex.abs | eq 5.0
 test "complex from-int" = 3 | from-int | eq (complex 3.0 0.0)
 
-matrix._test-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
+matrix._test-im : Matrix[I64, m, n] -> Matrix[I64, m, n]
 matrix._test-im = id

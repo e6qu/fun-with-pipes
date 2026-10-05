@@ -1,6 +1,6 @@
 # Standard library behaviours: argument order, laziness, bounds, parsing.
 
-m = matrix [[1, 2], [3, 4]] | matrix.dyn
+m = matrix [[1, 2], [3, 4]] | matrix.forget
 
 main = [
     # zip-with passes the subject's element last, like `x | sub y`
@@ -29,7 +29,7 @@ main = [
 the-ints : List[I64] -> List[I64]
 the-ints = id
 
-the-im : Matrix[I64, Dyn, Dyn] -> Matrix[I64, Dyn, Dyn]
+the-im : Matrix[I64, m, n] -> Matrix[I64, m, n]
 the-im = id
 
 the-ofs : List[Option[F64]] -> List[Option[F64]]

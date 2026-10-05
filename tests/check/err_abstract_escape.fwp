@@ -1,0 +1,2 @@
+# a list of from-list results would share one size
+bad2 = [[1], [1, 2]] | map vector.from-list

@@ -118,6 +118,8 @@ pub enum UnifyError {
     MissingLabel(String, Kind),
     LabelOnRigid(String),
     RigidRow,
+    /// An abstract size (a marker) would leave the result of its call.
+    Abstract(TV, Type),
 }
 
 #[derive(Default)]
@@ -128,6 +130,14 @@ pub struct TypeTable {
     /// variables still unknown); the checker takes them and tries again
     /// when more is known (`Infer::check_sizes`).
     pub deferred: Vec<(Type, Type)>,
+    /// Abstract sizes still to be chosen: a function whose result has an
+    /// abstract size (`List[t] -> Vector[t, _]`) carries a marker there,
+    /// which each call replaces by a fresh rigid size of its own
+    /// (`open_call`). A marker anywhere else is an error
+    /// (`loose_marker`).
+    pub markers: HashSet<TV>,
+    /// How many rigid sizes calls have chosen (to name them apart).
+    pub opened: usize,
 }
 
 /// A size as a polynomial: each product of variables (sorted, with
@@ -137,8 +147,6 @@ pub type Poly = BTreeMap<Vec<TV>, u64>;
 /// What a type is as a size.
 #[derive(Debug, PartialEq)]
 pub enum Size {
-    /// `Dyn`: known only at run time (any arithmetic with it is `Dyn`).
-    Dyn,
     Poly(Poly),
     /// Not a size.
     Other,
@@ -224,6 +232,74 @@ impl TypeTable {
             fields: vec![],
             tail: Some(self.fresh(Kind::Eff, level)),
         }
+    }
+
+    /// A fresh marker for an abstract size (see `markers`).
+    pub fn fresh_marker(&mut self, name: &str) -> TV {
+        let v = self.fresh_rigid(Kind::Star, 0, name);
+        self.markers.insert(v);
+        v
+    }
+
+    /// The type of a function at a call: when the call gives the final
+    /// result and that result holds markers, each marker becomes a fresh
+    /// rigid size, so results of different calls have different sizes.
+    pub fn open_call(&mut self, f: &Type, level: u32) -> Type {
+        let Type::Fun(a, b, e) = self.resolve(f) else {
+            return f.clone();
+        };
+        if matches!(self.resolve(&b), Type::Fun(..)) {
+            return Type::Fun(a, b, e);
+        }
+        let b = self.zonk(&b);
+        let mut fv = Vec::new();
+        self.free_vars(&b, &mut fv);
+        let mut map = HashMap::new();
+        fv.retain(|v| self.markers.contains(v));
+        for v in fv {
+            self.opened += 1;
+            let name = format!(
+                "{}{}",
+                self.vars[v as usize].rigid.clone().unwrap(),
+                self.opened
+            );
+            map.insert(v, Type::Var(self.fresh_rigid(Kind::Star, level, &name)));
+        }
+        if map.is_empty() {
+            return Type::Fun(a, Box::new(b), e);
+        }
+        Type::Fun(a, Box::new(Self::subst(&b, &map)), e)
+    }
+
+    /// The final result of a function type with the markers there
+    /// replaced by fresh rigid sizes (what one call of the whole chain
+    /// gives).
+    pub fn open_final(&mut self, t: &Type, level: u32) -> Type {
+        match self.resolve(t) {
+            Type::Fun(a, b, e) if matches!(self.resolve(&b), Type::Fun(..)) => {
+                Type::Fun(a, Box::new(self.open_final(&b, level)), e)
+            }
+            Type::Fun(..) => self.open_call(t, level),
+            other => other,
+        }
+    }
+
+    /// A marker in `t` that is not in the final result of its function
+    /// spine: an abstract size no call chooses.
+    pub fn loose_marker(&self, t: &Type) -> Option<TV> {
+        match self.resolve(t) {
+            Type::Fun(a, b, _) => self.any_marker(&a).or_else(|| match self.resolve(&b) {
+                Type::Fun(..) => self.loose_marker(&b),
+                _ => None,
+            }),
+            other => self.any_marker(&other),
+        }
+    }
+
+    fn any_marker(&self, t: &Type) -> Option<TV> {
+        let mut fv = Vec::new();
+        self.free_vars(t, &mut fv);
+        fv.into_iter().find(|v| self.markers.contains(v))
     }
 
     pub fn is_rigid(&self, v: TV) -> bool {
@@ -493,12 +569,8 @@ impl TypeTable {
                 Size::Poly(p)
             }
             Type::Var(v) => Size::Poly(Poly::from([(vec![v], 1)])),
-            Type::Con(n, args) if args.is_empty() && (n == "Dyn" || n.ends_with("::Dyn")) => {
-                Size::Dyn
-            }
             Type::NatOp(op, a, b) => match (self.size(&a), self.size(&b)) {
                 (Size::Other, _) | (_, Size::Other) => Size::Other,
-                (Size::Dyn, _) | (_, Size::Dyn) => Size::Dyn,
                 (Size::Poly(p), Size::Poly(q)) => Size::Poly(match op {
                     NatOp::Add => poly_add(p, q),
                     NatOp::Mul => poly_mul(&p, &q),
@@ -516,7 +588,6 @@ impl TypeTable {
     fn unify_size(&mut self, a: &Type, b: &Type) -> Result<(), UnifyError> {
         let mismatch = || UnifyError::Mismatch(a.clone(), b.clone());
         let (p, q) = match (self.size(a), self.size(b)) {
-            (Size::Dyn, Size::Dyn) => return Ok(()),
             (Size::Poly(p), Size::Poly(q)) => (p, q),
             _ => return Err(mismatch()),
         };
@@ -577,6 +648,9 @@ impl TypeTable {
     }
 
     fn bind_var(&mut self, v: TV, t: &Type) -> Result<(), UnifyError> {
+        if let Some(m) = self.loose_marker(t) {
+            return Err(UnifyError::Abstract(m, t.clone()));
+        }
         let level = self.vars[v as usize].level;
         if self.occurs_adjust(v, t, level) {
             return Err(UnifyError::Occurs(v, t.clone()));
@@ -697,6 +771,8 @@ pub struct Printer<'a> {
     names: HashMap<TV, String>,
     counts: HashMap<TV, usize>,
     next: [usize; 3],
+    /// Sizes chosen by calls shown so far (numbered per printer).
+    opened: usize,
 }
 
 impl<'a> Printer<'a> {
@@ -706,6 +782,7 @@ impl<'a> Printer<'a> {
             names: HashMap::new(),
             counts: HashMap::new(),
             next: [0; 3],
+            opened: 0,
         }
     }
 
@@ -750,10 +827,21 @@ impl<'a> Printer<'a> {
     }
 
     fn var_name(&mut self, v: TV) -> String {
-        if let Some(n) = &self.table.vars[v as usize].rigid {
+        if let Some(n) = self.names.get(&v) {
             return n.clone();
         }
-        if let Some(n) = self.names.get(&v) {
+        if let Some(n) = &self.table.vars[v as usize].rigid {
+            // a size a call chose (`TypeTable::open_call`): numbered here
+            if n.starts_with('_') && n.ends_with(|c: char| c.is_ascii_digit()) {
+                self.opened += 1;
+                let name = format!(
+                    "{}{}",
+                    n.trim_end_matches(|c: char| c.is_ascii_digit()),
+                    self.opened
+                );
+                self.names.insert(v, name.clone());
+                return name;
+            }
             return n.clone();
         }
         let kind = self.table.vars[v as usize].kind;

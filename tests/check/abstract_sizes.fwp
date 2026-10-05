@@ -1,0 +1,32 @@
+# Abstract sizes: chosen by the definition, rigid for the caller.
+xs : Vector[I64, _]
+xs = vector.from-list [1, 2, 3]
+
+# a value has one size: xs agrees with itself
+twice : Vector[I64, _]
+twice = xs | vector.add xs
+
+mk : I64 -> Vector[I64, _]
+mk = flip repeat 7 | vector.from-list
+
+# what a call gives keeps the size through size-preserving functions
+pushed : Vector[I64, _]
+pushed = 3 | mk | vector.map (add 1) | vector.push 0
+
+# `vector.same-size` checks at run time, giving the static size
+same : Option[Vector[I64, _]]
+same =
+    [4, 5, 6]
+    | vector.from-list
+    | vector.same-size xs
+    | option.map (vector.add xs)
+
+square : Option[Matrix[F64, _n, _n]]
+square = [[1.0, 2.0], [3.0, 4.0]] | matrix.from-rows | matrix.as-square
+
+eye : I64 -> Matrix[F64, _n, _n]
+eye = identity
+
+# a composition chooses the sizes again for each call
+counted : I64 -> Vector[I64, _]
+counted = mk | vector.map (mul 2)

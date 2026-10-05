@@ -1,0 +1,4 @@
+check/err_abstract_two_calls.fwp:2:32: error: type mismatch in pipe input: expected `Vector[a, _1]`, found `Vector[a, _2]`
+2 | bad1 = vector.from-list [1, 2] | vector.add (vector.from-list [1, 2, 3])
+  |                                ^
+  note: `_1` is not compatible with `_2`

@@ -1,0 +1,4 @@
+# each call of a function with an abstract result has its own size, also
+# when the function has no signature
+mk = flip repeat 0 | vector.from-list
+both-sizes = vector.add (mk 1) (mk 2)

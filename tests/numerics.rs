@@ -195,9 +195,9 @@ fn gradient_program(mode: &str, n: usize) -> String {
 
 fn kernel_program(device: &str, n: usize) -> String {
     format!(
-        "xs : Vector[F64, Dyn]\n\
+        "xs : Vector[F64, _]\n\
          xs = {n} | range 0 | map (int.to-float | mul 0.001 | add 1.0) | vector.from-list\n\n\
-         step : TensorExpr[Dyn] -> TensorExpr[Dyn]\n\
+         step : TensorExpr[n] -> TensorExpr[n]\n\
          step = sqrt | sin | add (tensor.fill 1.5) | exp | ln | cos | mul (tensor.fill 0.5) | add (tensor.fill 1.0)\n\n\
          main = xs | tensor.lazy | iterate 20 step | last | option.unwrap-or (tensor.fill 0.0) | tensor.sum-on ({d}) | echo\n",
         n = n,
