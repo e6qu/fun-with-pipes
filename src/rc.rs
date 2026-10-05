@@ -29,16 +29,17 @@ use crate::ir::*;
 type Set = BTreeSet<Local>;
 
 /// Whether values of type `t` are counted: records and variants, which
-/// compiled code allocates and may come to own alone, and arrays, which
-/// `array.set` and `array.push` write in place when unique. Strings, byte
-/// strings, maps, closures and the other values the runtime allocates
-/// are always shared, so they are never counted; neither are
+/// compiled code allocates and may come to own alone, and arrays, maps
+/// and sets, which some primitives update in place when unique
+/// (`prim_consumes`). Strings, byte strings, closures and the other values
+/// the runtime allocates are always shared, so they are never counted;
+/// neither are
 /// integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
         MT::Record(fs) => !fs.is_empty(),
-        MT::Con(n, _) if n == "?" || n == "std::Array" => true,
+        MT::Con(n, _) if n == "?" || is_container(n) => true,
         MT::Con(..) => match shapes.get(t) {
             Some(TypeShape::Adt(vs)) => vs.iter().any(|(_, fs)| !fs.is_empty()),
             Some(TypeShape::Record(fs)) => !fs.is_empty(),
@@ -66,9 +67,24 @@ fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
     consumes(funcs, id) || matches!(&funcs[id].body, Body::Prim(s) if prim_consumes(s, j))
 }
 
+/// Arrays, maps and sets: what the runtime allocates and some primitives
+/// update in place when compiled code holds the only reference.
+pub fn is_container(name: &str) -> bool {
+    matches!(name, "std::Array" | "std::Map" | "std::Set")
+}
+
 /// The primitives' arguments they take ownership of (see `consumes_arg`).
 pub fn prim_consumes(sym: &str, j: usize) -> bool {
-    matches!((sym, j), ("array.set", 2) | ("array.push", 1))
+    matches!(
+        (sym, j),
+        ("array.set", 2)
+            | ("array.push", 1)
+            | ("map.insert", 2)
+            | ("map.remove", 1)
+            | ("map.update", 3)
+            | ("set.insert", 1)
+            | ("set.remove", 1)
+    )
 }
 
 /// Arguments of primitives that read an array without keeping it: they
@@ -85,6 +101,19 @@ pub fn prim_reads_only(sym: &str, j: usize) -> bool {
                 | ("array.slice", 2)
                 | ("array.append", 0 | 1)
                 | ("array.sort", 0)
+                | ("map.get", 1)
+                | ("map.contains", 1)
+                | ("map.size", 0)
+                | ("map.keys", 0)
+                | ("map.values", 0)
+                | ("map.to-list", 0)
+                | ("map.map-values", 1)
+                | ("set.contains", 1)
+                | ("set.size", 0)
+                | ("set.to-list", 0)
+                | ("set.union", 0 | 1)
+                | ("set.intersect", 0 | 1)
+                | ("set.diff", 0 | 1)
         )
 }
 
@@ -99,6 +128,12 @@ pub fn prim_fresh(sym: &str) -> bool {
             | "array.slice"
             | "array.append"
             | "array.sort"
+            | "map.from-list"
+            | "map.map-values"
+            | "set.from-list"
+            | "set.union"
+            | "set.intersect"
+            | "set.diff"
     )
 }
 
