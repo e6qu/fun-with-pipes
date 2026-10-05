@@ -1,0 +1,40 @@
+Shape =
+    | Circle I64
+    | Rect I64 I64
+
+# big enough not to be inlined; it matches on the shape and hands it on
+area : Shape -> I64
+area = match
+    Circle _ ->
+        fork mul id id
+        | mul 3
+        | add 1
+        | mul 2
+        | sub 1
+        | rem 1000003
+        | add 7
+        | mul 5
+        | rem 999983
+    Rect _ _ -> curry (uncurry mul
+        | add 1
+        | mul 2
+        | sub 1
+        | rem 1000003
+        | add 7
+        | mul 5
+        | rem 999983
+        | add 11
+        | mul 13)
+
+score : Shape -> I64
+score = fork add area (area | mul 2 | rem 1009)
+
+walk : (I64, I64) -> Step[(I64, I64), I64]
+walk =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork add .1 (.0 | fork Rect id (rem 17) | score))
+            | Again)
+
+main = (1000000, 0) | loop walk | echo
