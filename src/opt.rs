@@ -174,11 +174,14 @@ impl<'p> Opt<'p> {
             ),
             Expr::Let(l, v, b) => {
                 let v = self.expr(*v, depth);
-                // `Let(l, v, Match(l, arms))` with `l` used nowhere else:
-                // matched directly (backends may then avoid building `v`)
+                // `Let(l, v, Match(l, arms))` with `l` used nowhere else
+                // and `v` a record or variant built here: matched directly
+                // (backends may then avoid building `v`); any other `v`
+                // keeps its local, whose type the expression would not tell
                 if let Expr::Match(s, arms) = &*b {
                     if matches!(**s, Expr::Local(x) if x == l)
                         && arms.iter().all(|(_, a)| uses(a, l) == 0)
+                        && builds_object(&v)
                     {
                         let Expr::Match(_, arms) = *b else {
                             unreachable!()
@@ -379,6 +382,16 @@ fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
 }
 
 /// Whether local `l` is used in `e` only as `Field(Local(l), _)`.
+/// Whether `e` gives a record or variant it builds itself (after the
+/// locals it binds).
+fn builds_object(e: &Expr) -> bool {
+    match e {
+        Expr::Let(_, _, b) => builds_object(b),
+        Expr::Record(_) | Expr::Construct(..) => true,
+        _ => false,
+    }
+}
+
 pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
     match e {
         // (a reference count change of a record kept as its fields applies

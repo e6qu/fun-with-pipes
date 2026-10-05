@@ -1,0 +1,22 @@
+Tree =
+    | Leaf
+    | Node Tree I64 Tree
+
+rec build : I64 -> Tree
+build = match
+    0 -> Leaf
+    _ -> make { 0 = sub 1 | build, 1 = id, 2 = sub 1 | build } | uncurry3 Node
+
+rec total : Tree -> I64
+total = match
+    Leaf -> 0
+    Node -> curry3 (fork add (.0 | total) (fork add .1 (.2 | total)))
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork add .1 (const 16 | build | total)) | Again)
+
+main = (100, 0) | loop step | echo

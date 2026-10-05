@@ -112,10 +112,13 @@ static inline void fwp_rc_share(V v) { (void)v; }
 static inline int fwp_rc_unique(V v) { (void)v; return 0; }
 static inline int fwp_rc_unique_mut(V v) { (void)v; return 0; }
 static inline int fwp_rc_last(V v) { (void)v; return 0; }
+static inline void fwp_rc_free_obj(V v) { (void)v; }
+static inline void fwp_rc_free_arr(V v) { (void)v; }
 static inline size_t fwp_rc_capacity(V v) { (void)v; return 0; }
 static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
 static inline int fwp_rc_young(V v) { (void)v; return 0; }
+static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
 
 #else /* FWP_GC */
 
@@ -175,6 +178,7 @@ static struct {
     size_t nfins, fins_cap;
     size_t live, peak, ncollect, nfree_chunks;
     double total_alloc, pause_total, pause_max, root_bytes;
+    double freed;             /* bytes freed by counts (fwp_rc_free_obj) */
     intptr_t budget_given;
 } fwp_gc = {-1};
 
@@ -614,6 +618,55 @@ static inline int fwp_rc_last(V v) {
     return c && *c == 1;
 }
 
+/* whether the object `v` starts has not survived a collection: only such
+ * an object is freed by its count, as no old object points to it (the
+ * collector's invariant), so its cell can be given out again; an old one
+ * is left to a major collection */
+static inline int fwp_rc_unmarked(V v) {
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    if (off >= fwp_gc.top << GC_SHIFT) return 0;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->type == GC_BIG) return (off & (GC_CHUNK - 1)) == 0 && !m->mark;
+    if (m->type != GC_SMALL) return 0;
+    size_t i = (size_t)(off & (GC_CHUNK - 1)) / m->slot;
+    return !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
+}
+
+/* An object whose last counted reference compiled code gave up (its
+ * references gone first, by their types: the `fwp_drop` functions of the
+ * program): freed, or poisoned under FWP_REUSE_VERIFY so that a wrong
+ * judgment shows. The bytes freed still count as allocated. */
+static void fwp_rc_free_obj(V v) {
+    if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    if (fwp_reuse_verify) {
+        fwp_rc_poison(v);
+        return;
+    }
+    if (!fwp_rc_unmarked(v)) return;
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free((void *)(uintptr_t)v);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+}
+
+/* an array, map or set, the same way (poisoned: empty) */
+static void fwp_rc_free_arr(V v) {
+    if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    if (fwp_reuse_verify) {
+        ARR(v)->len = 0;
+        return;
+    }
+    if (!fwp_rc_unmarked(v)) return;
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free((void *)(uintptr_t)v);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+}
+
 /* the bytes usable from `v`, the start of a small object of kind 2 or of
  * a big one (its slot or chunks), or 0 */
 static inline size_t fwp_rc_capacity(V v) {
@@ -1020,9 +1073,10 @@ static void fwp_gc_report(void) {
     fwp_gc.total_alloc += (double)(fwp_gc.budget_given - fwp_gc.budget);
     fwp_gc.budget_given = fwp_gc.budget;
     fprintf(stderr,
-            "fwp gc: %zu collections (%zu minor), %.1f MiB allocated, heap %.1f MiB, live %.1f MiB (peak %.1f), "
-            "pauses %.1f ms (max %.2f ms), max RSS %ld KiB%s\n",
-            fwp_gc.ncollect, fwp_gc.nminor, fwp_gc.total_alloc / 1048576.0, (double)fwp_gc.heap_bytes / 1048576.0,
+            "fwp gc: %zu collections (%zu minor), %.1f MiB allocated (%.1f MiB freed by counts), heap %.1f MiB, "
+            "live %.1f MiB (peak %.1f), pauses %.1f ms (max %.2f ms), max RSS %ld KiB%s\n",
+            fwp_gc.ncollect, fwp_gc.nminor, (fwp_gc.total_alloc + fwp_gc.freed) / 1048576.0,
+            fwp_gc.freed / 1048576.0, (double)fwp_gc.heap_bytes / 1048576.0,
             (double)fwp_gc.live / 1048576.0, (double)fwp_gc.peak / 1048576.0, fwp_gc.pause_total,
             fwp_gc.pause_max, fwp_gc_status_kb("VmHWM"), fwp_gc.armed ? "" : " (collection off)");
 }

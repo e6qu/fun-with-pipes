@@ -286,3 +286,51 @@ fn unique_arrays_are_written_in_place() {
         );
     }
 }
+
+/// Objects are freed when their last counted reference goes: building
+/// and walking a tree over and over needs no collection, where leaving the
+/// trees to the collector takes many.
+#[test]
+fn objects_are_freed_by_their_counts() {
+    if !linux_cc() {
+        return;
+    }
+    let dir = TempDir::new("free");
+    let src = root().join("tests/reuse/tree.fwp");
+    let stats = |free: &str| -> (f64, u64) {
+        let exe = dir.0.join(format!("tree{}", free));
+        let b = Command::new(fwp())
+            .arg("build")
+            .arg(&src)
+            .arg("-o")
+            .arg(&exe)
+            .env("FWP_FREE", free)
+            .output()
+            .unwrap();
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+        assert_eq!(String::from_utf8_lossy(&o.stdout), "13105400\n");
+        let err = String::from_utf8_lossy(&o.stderr).to_string();
+        let words: Vec<&str> = err.split_whitespace().collect();
+        let collections = words[2].parse().unwrap();
+        let freed = err
+            .split(" MiB freed by counts")
+            .next()
+            .unwrap()
+            .rsplit('(')
+            .next()
+            .unwrap()
+            .parse()
+            .unwrap();
+        (freed, collections)
+    };
+    let (kept, kept_collections) = stats("0");
+    let (freed, collections) = stats("1");
+    assert!(
+        kept == 0.0 && kept_collections > 5 && freed > 100.0 && collections == 0,
+        "collector only: {} collections; freed by counts: {} MiB, {} collections",
+        kept_collections,
+        freed,
+        collections
+    );
+}
