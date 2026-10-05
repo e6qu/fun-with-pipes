@@ -230,12 +230,6 @@ stay ordinary calls.)
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 18. gRPC
-#
-# Exported functions are gRPC methods: `fwp serve --grpc main.fwp` serves
-# them and `fwp proto --grpc main.fwp` prints their .proto file. `main`
-# calls them in-process; the README shows them served and called.
-#
 # grpc: notes.Notes
 
 Note = { id: I64, text: String, tags: List[String] }
@@ -287,8 +281,6 @@ count-words = iter.to-list | map (words | length) | sum
 export whoami : () -> String ! {Network}
 whoami = const "x-user" | grpc.header | option.unwrap-or "nobody"
 
-# A note as protobuf, written as `fwp proto --import` writes codecs for
-# `message Note { int64 id = 1; string text = 2; repeated string tags = 3; }`.
 note.encode : Note -> Bytes
 note.encode = pb.encode [
     .id | pb.field 1 pb.int64,

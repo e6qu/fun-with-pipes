@@ -86,7 +86,6 @@ how a client verifies the server; `tls.with-ca` trusts a CA of one's own
 for one client instead of setting `SSL_CERT_FILE` for all:
 
 ```fwp
-# A client that trusts the CA of the README (instead of the system's).
 client : TlsOptions
 client = tls.options | tls.with-ca "ca.pem"
 ```
@@ -95,7 +94,6 @@ client = tls.options | tls.with-ca "ca.pem"
 `tls.options`, the system's CA certificates):
 
 ```fwp
-# Fetch a quote from the HTTPS server of the README.
 fetch : I64 -> String ! {Async, Network, Error[IoError]}
 fetch =
     format "https://localhost:8443/sayings/{}"
@@ -118,7 +116,6 @@ A `TlsServer` holds a certificate and key; a server configuration of
 `lib/http.fwp` with one serves HTTPS with `http.serve`:
 
 ```fwp
-# An HTTPS server's configuration, for `http.serve`.
 server : ServerConfig
 server =
     "127.0.0.1:8443"
@@ -180,13 +177,6 @@ program first uses TLS.
 ## The program
 
 ```fwp
-# 19. TLS
-#
-# The exported functions of this file, served over HTTPS and over gRPC
-# with TLS once there is a certificate: the README makes one and serves
-# them. `main` calls them in-process, and shows the TLS settings of a
-# client and of a server.
-#
 # grpc: quotes.Quotes
 
 Quote = { id: I64, text: String }
@@ -208,11 +198,9 @@ saying = eq | compose .id | find | apply all-quotes
 export count : () -> I64
 count = const all-quotes | length
 
-# A client that trusts the CA of the README (instead of the system's).
 client : TlsOptions
 client = tls.options | tls.with-ca "ca.pem"
 
-# Fetch a quote from the HTTPS server of the README.
 fetch : I64 -> String ! {Async, Network, Error[IoError]}
 fetch =
     format "https://localhost:8443/sayings/{}"
@@ -227,7 +215,6 @@ fetch =
     | string.from-bytes
     | option.unwrap-or ""
 
-# An HTTPS server's configuration, for `http.serve`.
 server : ServerConfig
 server =
     "127.0.0.1:8443"

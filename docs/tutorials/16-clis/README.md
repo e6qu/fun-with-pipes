@@ -212,12 +212,15 @@ none
 ## Completion and man pages
 
 Every program writes completion scripts for its commands, flags and
-choices (files for arguments named `FILE` or `DIR`), and a man page:
+choices (files for arguments named `FILE` or `DIR`), and a man page.
+With bash completion loaded (`--completions zsh` and `fish` work the same
+way; fish reads it with `| source`), `sh` then TAB completes to `shout`,
+and TAB after `shout hey` offers `quiet normal loud`:
 
 ```
-$ source <(./words --completions bash)     # or zsh; fish: | source
-$ ./words sh<TAB>          # shout
-$ ./words shout hey <TAB>  # quiet normal loud
+$ source <(./words --completions bash)
+$ ./words sh<TAB>
+$ ./words shout hey <TAB>
 $ ./words --man > words.1 && man ./words.1
 ```
 
@@ -242,12 +245,6 @@ programs need.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 16. Command-line programs
-#
-# Exported functions are command-line programs: a first parameter that is
-# a record becomes flags, comments become the help, and
-# `fwp build --cli` puts every command in one executable.
-
 export version : String
 version = "0.3.0"
 
@@ -264,7 +261,6 @@ Options = {
 export defaults : {times: I64, sep: String}
 defaults = { times = 1, sep = " " }
 
-# The words, each `times` times, between copies of `sep`.
 repeated : Options -> List[String] -> String
 repeated = curry (both
         (.0 | .sep)

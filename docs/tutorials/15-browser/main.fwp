@@ -1,15 +1,8 @@
-# 15. fwp in the browser
-#
-# A program that runs the same in the interpreter, natively, compiled to
-# WebAssembly, and in the playground, where fwp itself is WebAssembly.
-
 poem = "level noon kayak\nrefer to the radar\nstats"
 
-# The words that read the same backwards, each once.
 palindromes : String -> List[String]
 palindromes = words | filter (fork eq string.reverse id) | unique
 
-# The length of the longest line.
 widest : String -> Option[I64]
 widest = lines | map string.length | maximum
 

@@ -149,7 +149,6 @@ function and encodes its result. The program builds the same router to
 call the endpoints in-process, without a socket:
 
 ```fwp
-# The endpoints as `fwp serve --rest` builds them, called in-process.
 api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 ```
 
@@ -158,11 +157,6 @@ api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 17. REST APIs and OpenAPI
-#
-# Exported functions are REST endpoints: `fwp serve --rest` serves them
-# with JSON bodies, and their OpenAPI document is derived from their types.
-
 export version : String
 version = "1.0.0"
 
@@ -277,7 +271,6 @@ anything = Options { express = False, max-days = None }
 read-parcel : String -> Result[Parcel, String]
 read-parcel = json.read
 
-# The endpoints as `fwp serve --rest` builds them, called in-process.
 api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 api = http.router [
     rest.endpoint-option

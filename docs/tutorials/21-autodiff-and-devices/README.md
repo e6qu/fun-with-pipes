@@ -52,10 +52,6 @@ without a device with double precision) `device.available Gpu` is
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 21. Reverse-mode autodiff and devices
-
-# One generic function: plain floats, dual numbers, reverse-mode numbers
-# and tensor expressions all implement the numeric traits.
 rosenbrock : List[t] -> t where Ring[t], FromFloat[t], Dup[t]
 rosenbrock =
     fork zip id (drop 1)
@@ -65,11 +61,9 @@ rosenbrock =
         (.1 | flip sub 1.0 | fork mul id id))
     | sum
 
-# Gradient descent, with the gradient from one backward pass
 descend : List[F64] -> List[F64]
 descend = fork (zip-with sub) (grad rosenbrock | map (mul 0.001)) id
 
-# A fused elementwise kernel, built by generic code
 soft : t -> t where Field[t], Floating[t], FromFloat[t]
 soft = exp | add 1.0 | ln
 

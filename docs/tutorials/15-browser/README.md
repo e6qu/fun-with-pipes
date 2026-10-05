@@ -7,10 +7,11 @@ playground does, and it needs no server and no C compiler.
 
 ## A program, compiled for the browser
 
-`--target wasm32-browser` writes the module and a loader next to it:
+`--target wasm32-browser` writes the module and a loader next to it,
+`palindromes.js`:
 
 ```
-fwp build main.fwp --target wasm32-browser -o palindromes.wasm   # also palindromes.js
+fwp build main.fwp --target wasm32-browser -o palindromes.wasm
 ```
 
 ```html
@@ -34,12 +35,13 @@ compiling needs clang with a WASI sysroot.
 ## fwp itself, in the browser
 
 fwp is written in Rust without dependencies, so it also builds for
-WebAssembly:
+WebAssembly. `scripts/build-playground.sh` builds `web/fwp.wasm` and
+`web/examples/`; serve `web/` and open http://localhost:8000:
 
 ```
 rustup target add wasm32-wasip1
-scripts/build-playground.sh             # web/fwp.wasm and web/examples/
-python3 -m http.server -d web 8000      # then open http://localhost:8000
+scripts/build-playground.sh
+python3 -m http.server -d web 8000
 ```
 
 The playground (`web/index.html`) has an editor, a box for standard input
@@ -79,7 +81,6 @@ unchanged in the interpreter, as a native executable, compiled to
 WebAssembly, and in the playground:
 
 ```fwp
-# The words that read the same backwards, each once.
 palindromes : String -> List[String]
 palindromes = words | filter (fork eq string.reverse id) | unique
 ```
@@ -94,18 +95,11 @@ test "palindromes" = "noon or never" | palindromes | eq ["noon"]
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 15. fwp in the browser
-#
-# A program that runs the same in the interpreter, natively, compiled to
-# WebAssembly, and in the playground, where fwp itself is WebAssembly.
-
 poem = "level noon kayak\nrefer to the radar\nstats"
 
-# The words that read the same backwards, each once.
 palindromes : String -> List[String]
 palindromes = words | filter (fork eq string.reverse id) | unique
 
-# The length of the longest line.
 widest : String -> Option[I64]
 widest = lines | map string.length | maximum
 

@@ -1,10 +1,5 @@
-# 11. Compile-time code and macros
-
-# `comptime` evaluates while compiling; the result is a constant in the
-# program (here a table of the first ten squares).
 squares = comptime (range 0 10 | map (fork mul id id))
 
-# Even functions can be built at compile time: a dispatch table.
 commands : Map[String, String -> String]
 commands = comptime ([
     ("shout", upper),
@@ -18,15 +13,12 @@ run = curry (fork
     .1
     (.0 | flip map.get commands | option.unwrap-or (const "unknown command")))
 
-# `type[T]` describes a type; here it becomes a list of field names.
 Order = { id: I64, item: String, quantity: U32 }
 
 field-names = comptime (type[Order] | .shape | match
     ShapeRecord -> map .name
     _ -> const [])
 
-# A macro rewrites syntax before type checking. `unquote!(0)` is its
-# first argument: twice!(f) becomes f | f.
 macro twice = quote (unquote!(0) | unquote!(0))
 
 add-two = twice!(add 1)

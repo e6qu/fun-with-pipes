@@ -29,18 +29,12 @@ graphs.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 12. Numerics: matrices, complex numbers and derivatives
-
-# Vectors and matrices know their sizes; a shape mismatch is a compile
-# error. Sizes come from the literals.
 a = matrix [[4.0, 1.0], [1.0, 3.0]]
 b = vector [1.0, 2.0]
 
-# Generic numeric code works for floats, complex numbers and dual numbers.
 f : t -> t where Ring[t], FromFloat[t]
 f = fork mul id id | sub 2.0
 
-# Newton's method for the root of f, with the derivative computed exactly
 newton-step : F64 -> F64
 newton-step = fork sub (fork div (derivative f) f) id
 

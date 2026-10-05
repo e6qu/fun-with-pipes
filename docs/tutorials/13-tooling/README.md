@@ -33,11 +33,11 @@ or could be simpler. On a version of the program below that maps twice and
 has no `fwp:allow` comment, it prints:
 
 ```
-main.fwp:19:32: warning: `map upper | map string.length` traverses twice; use `map (upper | string.length)` [map-fusion]
-19 | word-sizes = words | map upper | map string.length
+main.fwp:14:32: warning: `map upper | map string.length` traverses twice; use `map (upper | string.length)` [map-fusion]
+14 | word-sizes = words | map upper | map string.length
    |                                ^^^^^
-main.fwp:22:1: warning: `shout` is never used [unused-binding]
-22 | shout = upper | flip concat "!"
+main.fwp:16:1: warning: `shout` is never used [unused-binding]
+16 | shout = upper | flip concat "!"
    | ^^^^^
 ```
 
@@ -74,13 +74,9 @@ configurations for Neovim, Helix and VS Code.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 13. Tooling: a program kept tidy by `fwp fmt` and `fwp lint`
-
 text : String
 text = "the cat and the dog and the bird saw the other cat"
 
-# The three most frequent words. `fwp fmt` puts a pipeline that does not
-# fit on one line one stage per line.
 top-words : String -> List[String]
 top-words =
     words
@@ -90,11 +86,9 @@ top-words =
     | take 3
     | map (format "{}: {}")
 
-# One traversal: `fwp lint` suggests `map (f | g)` for `map f | map g`.
 word-sizes : String -> List[I64]
 word-sizes = words | map (upper | string.length)
 
-# A helper kept for later; the comment above silences one lint rule.
 # fwp:allow(unused-binding)
 shout = upper | flip concat "!"
 

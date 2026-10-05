@@ -44,29 +44,21 @@ Matches must be exhaustive. If a case is missing, the compiler names it.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 2. Data: records, tuples and variants
-
-# A nominal record type, and a variant (sum) type.
 Point = { x: F64, y: F64 }
 
 Shape =
     | Circle Point F64
     | Rect Point Point
 
-# `.field` selects a field; `.0`, `.1` select tuple components.
 dist : Point -> F64
 dist = fork add (.x | fork mul id id) (.y | fork mul id id) | sqrt
 
-# `make` builds a record from functions of the input;
-# `update` applies functions to fields; `with` replaces them.
 from-pair : (F64, F64) -> Point
 from-pair = make Point { x = .0, y = .1 }
 
 shift-right : Point -> Point
 shift-right = update { x = add 1.0 }
 
-# `match` takes the value apart. The holes `_` of a pattern are passed,
-# in order, to the function on the right of the arrow.
 area : Shape -> F64
 area = match
     Circle _ _ -> const (fork mul id id | mul 3.14159)

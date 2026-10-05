@@ -1,9 +1,3 @@
-# 8. An HTTP server
-#
-# A handler is a function from `Request` to `Response`; middleware is
-# ordinary composition. This program starts the server on a free port,
-# calls it with the built-in client, and shuts it down again.
-
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 hello =
     http.param "name"
@@ -11,7 +5,6 @@ hello =
     | format "hello, {}"
     | http.text 200
 
-# POST /sum with a JSON array of numbers
 sum-numbers : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 sum-numbers =
     http.json-body
@@ -36,7 +29,6 @@ routes = http.router [
 handler : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 handler = timeout 2s | routes
 
-# the client side: (method, path, body, headers)
 calls : List[(String, String, String, List[(String, String)])]
 calls = [
     ("GET", "/hello", "", []),
@@ -66,8 +58,12 @@ call =
 run-calls : String -> () ! {Async, IO, Network}
 run-calls = format "http://{}" | curry id | flip map calls | each (call | print)
 
-main =
-    "127.0.0.1:0"
+serve : () -> () ! {Async, IO, Network, Error[IoError]}
+serve = const ("127.0.0.1:8080" | http.config) | flip http.serve handler
+
+check : () -> () ! {Async, IO, Network, Error[IoError]}
+check =
+    const "127.0.0.1:0"
     | tcp.listen
     | both
         (both id (const (http.config "unused", handler))
@@ -77,3 +73,6 @@ main =
     | .0
     | task.await
     | ignore
+
+main =
+    () | if (const () | args | contains "serve") (attempt serve | ignore) check
