@@ -21,7 +21,7 @@ jobs:
       - name: WebAssembly toolchain, OpenSSL headers (TLS)
         run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libssl-dev openssl
       - name: aarch64 cross compiler and qemu (tests/cross.rs)
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
       - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
         run: npm install -g binaryen
       - name: fmt

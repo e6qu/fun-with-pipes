@@ -121,7 +121,11 @@ static int w_take(V conn, SSL **ssl) {
     return fd;
 }
 
-static V fwp_p_http2_serve(V conn, V initial, V limits, V handler) {
+static void w_upgraded(g_conn *c, V r, g_slist *fresh);
+
+/* serve an HTTP/2 connection; one upgraded from HTTP/1.1 (Upgrade: h2c)
+ * brings its request, (method, target, headers, body), as stream 1 */
+static V fwp_p_http2_serve(V conn, V initial, V limits, V handler, V upgraded) {
     SSL *ssl;
     int fd = w_take(conn, &ssl);
     if (fd < 0) return FWP_UNIT;
@@ -143,8 +147,12 @@ static V fwp_p_http2_serve(V conn, V initial, V limits, V handler) {
     w->max_requests = mr < 1 ? 1 : (uint64_t)mr;
     int64_t idle = fwp_dur_ns(OBJ(limits)->f[2]);
     c->web = w;
+    g_slist up = {0, 0, 0};
+    if (upgraded != FWP_NONE) w_upgraded(c, OBJ(upgraded)->f[0], &up);
     c->refs = 2;
     fwp_spawn_task(0, g_writer, c, 0, 0);
+    for (size_t i = 0; i < up.n; i++) w_start(c, up.v[i]);
+    fwp_mem_free(up.v);
     fwp_task *me = fwp_cur;
     int was = me->unwinding;
     me->unwinding = 1; /* cancellation is checked below */
@@ -292,6 +300,31 @@ static void w_headers(h2_buf *blk, V hs, int client) {
             h2_hpack_lit(blk, k, STR(value)->d);
         free(k);
     }
+}
+
+/* stream 1 of a connection upgraded from HTTP/1.1, whose request was
+ * read already */
+static void w_upgraded(g_conn *c, V r, g_slist *fresh) {
+    V *f = OBJ(r)->f;
+    h2_hdrs hs = {0};
+    h2_hdrs_add(&hs, ":method", 7, STR(f[0])->d, STR(f[0])->len);
+    h2_hdrs_add(&hs, ":scheme", 7, "http", 4);
+    h2_hdrs_add(&hs, ":path", 5, STR(f[1])->d, STR(f[1])->len);
+    for (V l = f[2]; l != 0; l = OBJ(l)->f[1]) {
+        V h = OBJ(l)->f[0];
+        V name = OBJ(h)->f[0], value = OBJ(h)->f[1];
+        size_t n = STR(name)->len;
+        char *k = (char *)malloc(n + 1);
+        for (size_t i = 0; i < n; i++) k[i] = (char)tolower((unsigned char)STR(name)->d[i]);
+        k[n] = 0;
+        if (!w_connection_specific(k) && strcmp(k, "http2-settings") && k[0] != ':')
+            h2_hdrs_add(&hs, k, n, STR(value)->d, STR(value)->len);
+        free(k);
+    }
+    size_t before = fresh->n;
+    g_web_stream(c, 1, &hs, 1, fresh);
+    if (fresh->n > before)
+        h2b_put(&fresh->v[before]->data, (const unsigned char *)STR(f[3])->d, STR(f[3])->len);
 }
 
 static V fwp_p_http2_respond(V status, V hs, V body, V end, V call) {

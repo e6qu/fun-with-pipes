@@ -14,6 +14,11 @@
  * to its base) at its next suspension point. Each task has its own Error
  * handler chain and State stack, swapped in and out with the task.
  *
+ * Without glibc (musl has no makecontext), or with FWP_OWN_CONTEXT,
+ * tasks switch with a few instructions of their own on x86-64 and
+ * AArch64 (fwp_ctx_swap): the callee-saved registers are pushed on the
+ * task's stack, which the collector scans from the saved stack pointer.
+ *
  * On WebAssembly (FWP_FIBERS) there is no ucontext: each task is a fiber
  * whose stack the JavaScript host suspends and resumes with JavaScript
  * Promise Integration (web/fibers.js). The scheduler below is the same;
@@ -24,7 +29,12 @@
 #ifdef __wasi__
 #define FWP_FIBERS 1
 #else
+#if !defined(__GLIBC__) && (defined(__x86_64__) || defined(__aarch64__)) && !defined(FWP_OWN_CONTEXT)
+#define FWP_OWN_CONTEXT 1
+#endif
+#ifndef FWP_OWN_CONTEXT
 #include <ucontext.h>
+#endif
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
@@ -46,11 +56,95 @@
 
 typedef struct fwp_task fwp_task;
 
+#ifdef FWP_OWN_CONTEXT
+/* a suspended task: its stack pointer, below the registers it saved */
+typedef struct { void *sp; } fwp_ctx_t;
+/* save the callee-saved registers (and the floating-point control) on
+ * the stack, store the stack pointer in *from, switch to `to` and
+ * restore what it saved */
+void fwp_ctx_swap(void **from, void *to);
+#if defined(__x86_64__)
+__asm__(".text\n"
+        ".globl fwp_ctx_swap\n"
+        ".hidden fwp_ctx_swap\n"
+        ".type fwp_ctx_swap,@function\n"
+        "fwp_ctx_swap:\n"
+        "    pushq %rbp\n"
+        "    pushq %rbx\n"
+        "    pushq %r12\n"
+        "    pushq %r13\n"
+        "    pushq %r14\n"
+        "    pushq %r15\n"
+        "    subq $8, %rsp\n"
+        "    stmxcsr (%rsp)\n"
+        "    fnstcw 4(%rsp)\n"
+        "    movq %rsp, (%rdi)\n"
+        "    movq %rsi, %rsp\n"
+        "    ldmxcsr (%rsp)\n"
+        "    fldcw 4(%rsp)\n"
+        "    addq $8, %rsp\n"
+        "    popq %r15\n"
+        "    popq %r14\n"
+        "    popq %r13\n"
+        "    popq %r12\n"
+        "    popq %rbx\n"
+        "    popq %rbp\n"
+        "    ret\n"
+        ".size fwp_ctx_swap, .-fwp_ctx_swap\n");
+/* bytes fwp_ctx_swap keeps on the stack, and where it returns to */
+#define FWP_CTX_FRAME 72
+#define FWP_CTX_RET 56
+#elif defined(__aarch64__)
+__asm__(".text\n"
+        ".globl fwp_ctx_swap\n"
+        ".hidden fwp_ctx_swap\n"
+        ".type fwp_ctx_swap,%function\n"
+        "fwp_ctx_swap:\n"
+        "    sub sp, sp, #176\n"
+        "    stp x19, x20, [sp, #0]\n"
+        "    stp x21, x22, [sp, #16]\n"
+        "    stp x23, x24, [sp, #32]\n"
+        "    stp x25, x26, [sp, #48]\n"
+        "    stp x27, x28, [sp, #64]\n"
+        "    stp x29, x30, [sp, #80]\n"
+        "    stp d8, d9, [sp, #96]\n"
+        "    stp d10, d11, [sp, #112]\n"
+        "    stp d12, d13, [sp, #128]\n"
+        "    stp d14, d15, [sp, #144]\n"
+        "    mrs x2, fpcr\n"
+        "    str x2, [sp, #160]\n"
+        "    mov x2, sp\n"
+        "    str x2, [x0]\n"
+        "    mov sp, x1\n"
+        "    ldr x2, [sp, #160]\n"
+        "    msr fpcr, x2\n"
+        "    ldp x19, x20, [sp, #0]\n"
+        "    ldp x21, x22, [sp, #16]\n"
+        "    ldp x23, x24, [sp, #32]\n"
+        "    ldp x25, x26, [sp, #48]\n"
+        "    ldp x27, x28, [sp, #64]\n"
+        "    ldp x29, x30, [sp, #80]\n"
+        "    ldp d8, d9, [sp, #96]\n"
+        "    ldp d10, d11, [sp, #112]\n"
+        "    ldp d12, d13, [sp, #128]\n"
+        "    ldp d14, d15, [sp, #144]\n"
+        "    add sp, sp, #176\n"
+        "    ret\n"
+        ".size fwp_ctx_swap, .-fwp_ctx_swap\n");
+#define FWP_CTX_FRAME 176
+#define FWP_CTX_RET 88
+#else
+#error "FWP_OWN_CONTEXT is written for x86-64 and AArch64"
+#endif
+#endif
+
 /* a list of parked tasks */
 typedef struct { fwp_task *head; } fwp_wl;
 
 struct fwp_task {
-#ifndef FWP_FIBERS
+#ifdef FWP_OWN_CONTEXT
+    fwp_ctx_t ctx;
+#elif !defined(FWP_FIBERS)
     ucontext_t ctx;
 #endif
     char *stack;
@@ -126,12 +220,19 @@ static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fw
 static fwp_task *fwp_gc_tasks = 0;
 
 #if FWP_GC
+/* the lowest address of a suspended task's stack in use */
+#ifdef FWP_OWN_CONTEXT
+#define FWP_TASK_LOW(t) ((char *)(t)->ctx.sp)
+#else
+#define FWP_TASK_LOW(t) ((t)->gc_sp)
+#endif
 static void fwp_gc_scan_stacks(char *sp) {
     char *top = fwp_cur && fwp_cur->stack ? fwp_cur->stack + fwp_cur->stack_size : fwp_gc.main_top;
     fwp_gc_scan_root(sp, top);
     for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next)
-        if (t != fwp_cur && t->stack && t->gc_sp) fwp_gc_scan_root(t->gc_sp, t->stack + t->stack_size);
-    if (fwp_root && fwp_cur != fwp_root && fwp_root->gc_sp) fwp_gc_scan_root(fwp_root->gc_sp, fwp_gc.main_top);
+        if (t != fwp_cur && t->stack && t->gc_sp) fwp_gc_scan_root(FWP_TASK_LOW(t), t->stack + t->stack_size);
+    if (fwp_root && fwp_cur != fwp_root && fwp_root->gc_sp)
+        fwp_gc_scan_root(FWP_TASK_LOW(fwp_root), fwp_gc.main_top);
 }
 #endif
 
@@ -365,6 +466,8 @@ static void fwp_switch(fwp_task *to) {
 #endif
 #ifdef FWP_FIBERS
     ((int (*)(int))(uintptr_t)fwp_hooks.sw)(fwp_fiber_id(to));
+#elif defined(FWP_OWN_CONTEXT)
+    fwp_ctx_swap(&from->ctx.sp, to->ctx.sp);
 #else
     swapcontext(&from->ctx, &to->ctx);
 #endif
@@ -597,6 +700,11 @@ static void fwp_task_main(void) {
 /* Start a task running `thunk`, or `cfn(carg)` when `cfn` is set. A
  * detached task is not a child of the current one: nothing waits for it
  * or cancels it. */
+#ifdef FWP_OWN_CONTEXT
+/* where a new task's first switch returns to */
+static void fwp_ctx_entry(void) { fwp_task_main(); }
+#endif
+
 static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, int64_t deadline, int detached) {
     fwp_tasks_init();
     fwp_task *t = fwp_task_new();
@@ -651,7 +759,25 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->gc_next = fwp_gc_tasks;
     if (fwp_gc_tasks) fwp_gc_tasks->gc_prev = t;
     fwp_gc_tasks = t;
-#ifndef FWP_FIBERS
+#ifdef FWP_OWN_CONTEXT
+    {
+        /* what fwp_ctx_swap restores: zeroed registers, the default
+         * floating-point control, and a return to fwp_ctx_entry, entered
+         * as a function is (a 16-byte aligned stack before the call) */
+        uintptr_t top = ((uintptr_t)t->stack + t->stack_size) & ~(uintptr_t)15;
+        char *sp = (char *)(top - FWP_CTX_FRAME);
+        memset(sp, 0, FWP_CTX_FRAME);
+#if defined(__x86_64__)
+        uint32_t mxcsr = 0x1f80;
+        uint16_t fpucw = 0x037f;
+        memcpy(sp, &mxcsr, 4);
+        memcpy(sp + 4, &fpucw, 2);
+#endif
+        void (*entry)(void) = fwp_ctx_entry;
+        memcpy(sp + FWP_CTX_RET, &entry, sizeof entry);
+        t->ctx.sp = sp;
+    }
+#elif !defined(FWP_FIBERS)
     getcontext(&t->ctx);
     t->ctx.uc_stack.ss_sp = t->stack;
     t->ctx.uc_stack.ss_size = t->stack_size;

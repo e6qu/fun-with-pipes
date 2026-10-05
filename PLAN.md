@@ -349,9 +349,12 @@ Next in this series, toward static, zero-cost programs:
     Linux with that system's C compiler: `FWP_CC_<triple>`,
     `<triple>-gcc`, `clang --target` or `zig cc`. `--static` gives one
     self-contained executable, as Go does. The tests build every golden
-    program for aarch64 and run it under qemu (`tests/cross.rs`). Next:
-    macOS (the runtime's processes, sockets and fibers on Darwin) and
-    Windows, and musl (fibers without `makecontext`).
+    program for aarch64 and run it under qemu (`tests/cross.rs`). musl
+    (`--target x86_64-linux-musl`, `aarch64-linux-musl`): the runtime
+    switches tasks itself there (a few instructions for x86-64 and
+    AArch64), and the tests build every golden program static with musl,
+    and run the task programs on aarch64 with that switch. Next: macOS
+    (the runtime's processes, sockets and fibers on Darwin) and Windows.
 27. **Size arithmetic** (done). Sizes in types may be sums and
     products (`Vector[t, n + m]`, `Vector[t, m * n]`), checked as
     polynomials over the size variables, with `vector.append`,

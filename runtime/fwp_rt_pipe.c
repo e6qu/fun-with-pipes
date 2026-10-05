@@ -30,7 +30,13 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <unistd.h>
+#if __has_include(<linux/futex.h>)
 #include <linux/futex.h>
+#else
+/* musl's headers have no kernel headers */
+#define FUTEX_WAIT 0
+#define FUTEX_WAKE 1
+#endif
 #include <sched.h>
 #define FWP_PIPE_TRANSPORTS 1
 #endif

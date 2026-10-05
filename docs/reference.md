@@ -484,7 +484,9 @@ first of:
 2. `<triple>-gcc` (Debian and Ubuntu: `gcc-aarch64-linux-gnu`);
 3. `clang --target=<triple>`, when the target's libraries are in
    `/usr/<triple>`;
-4. `zig cc -target <triple>`, which brings the C library of every target
+4. for musl on the host's architecture, `musl-gcc` (Debian and Ubuntu:
+   `musl-tools`);
+5. `zig cc -target <triple>`, which brings the C library of every target
    with it.
 
 `--static` makes an executable that runs on any Linux of that
@@ -494,9 +496,16 @@ needs the target's OpenSSL (Debian and Ubuntu: `libssl-dev:arm64` from
 the target's package architecture). `--pgo` trains the program by running
 it, so it builds for the host only.
 
-The runtime is written for Linux with glibc on 64-bit little-endian
-processors: musl lacks the `makecontext` that tasks run on, and macOS and
-Windows are not supported yet. To try an ARM executable on an x86 machine,
+`--target x86_64-linux-musl` (or `aarch64-linux-musl`) builds with musl
+instead of glibc; with `--static` that is one executable without any
+library of the system, smaller than glibc's static ones. musl has no
+`makecontext`, so the runtime switches tasks itself there, saving the
+callee-saved registers on the task's stack (`fwp_ctx_swap` in
+`runtime/fwp_rt_task.c`, for x86-64 and AArch64). A program that uses TLS
+needs an OpenSSL built for musl.
+
+The runtime is written for Linux on 64-bit little-endian processors;
+macOS and Windows are not supported yet. To try an ARM executable on an x86 machine,
 run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.
 
 #### Tasks on WebAssembly

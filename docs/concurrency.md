@@ -170,8 +170,13 @@ HTTP/1.1, with the same handlers:
   `h2`; a client that offers only HTTP/1.1 gets HTTP/1.1.
 - On cleartext connections, a connection that starts with HTTP/2's
   connection preface is HTTP/2 (h2c with prior knowledge, as
-  `curl --http2-prior-knowledge` and gRPC clients connect). The HTTP/1.1
-  `Upgrade: h2c` handshake is not supported.
+  `curl --http2-prior-knowledge` and gRPC clients connect). A request
+  with `Upgrade: h2c` and `HTTP2-Settings` (as `curl --http2` sends)
+  switches the connection: the server answers 101, reads the client's
+  preface, and answers the request on stream 1 (its body was read
+  first, as for any request); the settings in the header are not used,
+  as the client's SETTINGS frame follows. Over TLS the upgrade is
+  ignored (ALPN chooses).
 - `http2 = False` in the config turns both off.
 
 Every stream runs in its own task and becomes the same `Request`

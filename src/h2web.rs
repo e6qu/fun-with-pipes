@@ -180,7 +180,9 @@ fn shutdown_requested(it: &mut Interp) -> bool {
 }
 
 /// `http2.serve`: serve an HTTP/2 connection until it closes, its idle
-/// timeout passes, or (after a GOAWAY) its last stream ended.
+/// timeout passes, or (after a GOAWAY) its last stream ended. A
+/// connection upgraded from HTTP/1.1 (`Upgrade: h2c`) brings its request,
+/// (method, target, headers, body), which is stream 1.
 fn serve(it: &mut Interp, a: &mut [Value]) -> R<Value> {
     let (sock, session) = take_conn(&a[0])?;
     let Some(sock) = sock else {
@@ -211,6 +213,28 @@ fn serve(it: &mut Interp, a: &mut [Value]) -> R<Value> {
         draining: Cell::new(false),
     });
     conn.web = Some(w.clone());
+    let mut upgraded = Acts::default();
+    if let Value::Data(1, fs) = &a[4] {
+        if let Value::Record(r) = &fs[0] {
+            let mut hs = vec![
+                (":method".to_string(), r[0].as_str().to_string()),
+                (":scheme".to_string(), "http".to_string()),
+                (":path".to_string(), r[1].as_str().to_string()),
+            ];
+            for h in r[2].list_items() {
+                if let Value::Record(ref kv) = h {
+                    let k = kv[0].as_str().to_ascii_lowercase();
+                    if !connection_specific(&k) && k != "http2-settings" && !k.starts_with(':') {
+                        hs.push((k, kv[1].as_str().to_string()));
+                    }
+                }
+            }
+            new_stream(&mut conn, &w, 1, hs, true, &mut upgraded);
+            for s in &upgraded.new_streams {
+                s.borrow_mut().data = bytes(&r[3]).to_vec();
+            }
+        }
+    }
     let c = Rc::new(RefCell::new(conn));
     let wc = Baton(c.clone());
     it.spawn_rust(
@@ -221,6 +245,9 @@ fn serve(it: &mut Interp, a: &mut [Value]) -> R<Value> {
         None,
         false,
     );
+    for s in upgraded.new_streams {
+        start(it, &c, s, &w);
+    }
     let mut last = Instant::now();
     let mut buf = vec![0u8; 65536];
     let mut input: Option<Vec<u8>> = Some(initial.to_vec());

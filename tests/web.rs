@@ -255,6 +255,20 @@ fn curl_cleartext(b: Backend) {
         curl(&["--http2-prior-knowledge", "-w", fmt, &u("/hello")]),
         "hello over HTTP/2|2|200"
     );
+    // `Upgrade: h2c`: the request (with its body) is stream 1, and the
+    // connection goes on as HTTP/2
+    assert_eq!(
+        curl(&["--http2", "-w", fmt, &u("/hello")]),
+        "hello over HTTP/2|2|200"
+    );
+    assert_eq!(
+        curl(&["--http2", "-d", "posted body", "-w", fmt, &u("/echo")]),
+        "11 bytes: posted body|2|200"
+    );
+    assert_eq!(
+        curl(&["--http2", "-w", fmt, &u("/hello"), &u("/stream")]),
+        "hello over HTTP/2|2|200chunk 1\nchunk 2\nchunk 3\n|2|200"
+    );
     // HEAD, an unknown path, and a streamed body, over HTTP/2
     let head = curl(&["--http2-prior-knowledge", "-I", &u("/hello")]);
     assert!(head.starts_with("HTTP/2 200"), "{}", head);

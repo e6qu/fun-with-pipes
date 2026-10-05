@@ -505,7 +505,7 @@ fn build(args: &[String]) -> ExitCode {
                         Err(e) => {
                             eprintln!(
                                 "fwp build: {} (targets: native, wasm32-wasi, wasm32-browser, \
-                                 or <arch>-linux such as aarch64-linux)",
+                                 or <arch>-linux such as aarch64-linux, or <arch>-linux-musl)",
                                 e
                             );
                             return ExitCode::from(2);

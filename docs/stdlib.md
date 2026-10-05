@@ -1115,7 +1115,8 @@ connections, which are `Conn`s too.
 
 The server also speaks HTTP/2: over TLS when the client chooses "h2"
 with ALPN, and on cleartext connections that start with HTTP/2's
-connection preface (h2c with prior knowledge). Every stream runs in its
+connection preface (h2c with prior knowledge) or ask for it with
+`Upgrade: h2c`. Every stream runs in its
 own task, with the same handler, limits and timeouts. The client uses
 HTTP/2 when a TLS server chooses it, pooling one connection per origin.
 Responses can be compressed (`compress` in the config, or the
@@ -1163,7 +1164,8 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
-    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
+    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge
+    # or `Upgrade: h2c`)
     http2: Bool,
     # compress responses of at least this many bytes with gzip (or
     # deflate) for clients that accept it (`Accept-Encoding`), and
