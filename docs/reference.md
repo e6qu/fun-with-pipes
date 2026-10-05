@@ -141,7 +141,10 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   Vector[t, m * n]`. Sizes are compared as polynomials, so `2 * n` is
   `n + n`, and a generic signature must hold for every size. A size
   inference cannot work out (two unknown sizes whose sum must be 5) is an
-  error that asks for a signature.
+  error that asks for a signature. A size `n + 1` is never zero, so
+  `vector.head : Vector[t, n + 1] -> t` (and `last`, `tail`, `init`)
+  needs no `Option`: `vector [] | vector.head` is a compile error, and
+  `vector.non-empty` checks a run-time size once.
 - **Abstract sizes:** `_` or `_n` in the result of a signature is a size
   the definition chooses when the program runs: `vector.from-list :
   List[t] -> Vector[t, _]`, `matrix.from-rows : List[List[t]] ->

@@ -1,0 +1,19 @@
+# Sizes of the form `n + 1` make `vector.head` and friends total: the
+# checker proves the vector has an element, so there is no `Option`.
+three : Vector[I64, 3]
+three = vector [1, 2, 3]
+
+main = [
+    three | vector.head | echo,
+    three | vector.last | echo,
+    three | vector.tail | vector.to-list | echo,
+    three | vector.init | vector.tail | vector.head | echo,
+    three | vector.push 4 | vector.last | echo,
+    # a size known when the program runs: checked once
+    [4, 5] | vector.from-list | vector.non-empty | option.map vector.head | echo,
+    [] | vector.from-list | vector.non-empty | option.map vector.head | echo,
+    three | vector.take 2 | vector.to-list | echo,
+    three | vector.take 9 | vector.to-list | echo,
+    three | vector.take -1 | vector.to-list | echo,
+    three | vector.filter (rem 2 | eq 1) | vector.to-list | echo,
+] | ignore

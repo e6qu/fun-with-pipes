@@ -57,6 +57,51 @@ vector.append =
 vector.push : t -> Vector[t, n] -> Vector[t, n + 1]
 vector.push = curry (both .0 (.1 | .data) | uncurry array.push | vector.wrap)
 
+# A vector whose size is `n + 1` has an element whatever n is, so these
+# need no `Option`: the checker proves the vector is not empty.
+
+# the first element
+vector.head : Vector[t, n + 1] -> t
+vector.head = .data | array.get 0 | vector._present
+
+# the last element
+vector.last : Vector[t, n + 1] -> t
+vector.last = .data | fork array.get (array.length | sub 1) id | vector._present
+
+# all but the first element
+vector.tail : Vector[t, n + 1] -> Vector[t, n]
+vector.tail =
+    .data | fork (array.slice 1) (array.length | sub 1) id | vector.wrap
+
+# all but the last element
+vector.init : Vector[t, n + 1] -> Vector[t, n]
+vector.init =
+    .data | fork (array.slice 0) (array.length | sub 1) id | vector.wrap
+
+vector._present : Option[t] -> t
+vector._present = match
+    Some _ -> id
+    None -> prim.trap "vector: no element in a vector of size n + 1"
+
+# `v | vector.non-empty` is `v` with a size of the form `_ + 1`, so that
+# `vector.head` applies, when it has an element
+vector.non-empty : Vector[t, n] -> Option[Vector[t, _ + 1]]
+vector.non-empty =
+    if (vector.length | lt 1) (const None) (.data | vector.wrap | Some)
+
+# the first k elements (all of them when there are fewer)
+vector.take : I64 -> Vector[t, n] -> Vector[t, _]
+vector.take = curry (both (.0 | max 0) (.1 | .data)
+    | uncurry (array.slice 0)
+    | vector.wrap)
+
+# the elements that satisfy p
+vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
+vector.filter = curry (both .0 (.1 | vector.to-list)
+    | uncurry filter
+    | array.from-list
+    | vector.wrap)
+
 # Lift an array function to vectors of the same size.
 vector.via : (Array[a] -> Array[b]) -> Vector[a, n] -> Vector[b, n]
 vector.via = compose .data | flip compose vector.wrap

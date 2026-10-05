@@ -344,6 +344,8 @@ Next in this series, toward static, zero-cost programs:
     polynomials over the size variables, with `vector.append`,
     `vector.push`, `matrix.flatten`, `matrix.stack` (rows add up) and
     `matrix.beside` (columns add up) in the standard library.
+    A size `n + 1` proves a vector has an element: `vector.head`,
+    `last`, `tail` and `init` are total, without an `Option`.
     Next: subtraction where it is safe (a `take` of at most n).
 28. **Abstract sizes** (done). `Dyn` is gone: a size known only when
     the program runs is abstract (`_`, `_n` in a signature's result),
