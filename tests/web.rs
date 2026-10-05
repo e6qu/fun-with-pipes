@@ -283,6 +283,35 @@ fn curl_cleartext(b: Backend) {
         let plain = curl(&[v, "-D", "-", &u("/big")]);
         assert!(!plain.contains("content-encoding"), "{}", plain);
         assert!(plain.ends_with(&"compress me ".repeat(500)));
+        // a streamed body is gzipped chunk by chunk; for a client that
+        // accepts only deflate, it is sent as it is
+        let stream = curl(&[v, "--compressed", "-D", "-", &u("/stream")]);
+        assert!(
+            stream
+                .to_ascii_lowercase()
+                .contains("content-encoding: gzip"),
+            "{}",
+            stream
+        );
+        assert!(
+            stream.ends_with("chunk 1\nchunk 2\nchunk 3\n"),
+            "{}",
+            stream
+        );
+        let deflate = curl(&[
+            v,
+            "-H",
+            "accept-encoding: deflate",
+            "-D",
+            "-",
+            &u("/stream"),
+        ]);
+        assert!(!deflate.contains("content-encoding"), "{}", deflate);
+        assert!(
+            deflate.ends_with("chunk 1\nchunk 2\nchunk 3\n"),
+            "{}",
+            deflate
+        );
     }
     // a small body is left alone by the config, compressed by the
     // middleware; `q=0` refuses a coding

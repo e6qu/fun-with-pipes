@@ -452,6 +452,29 @@ static V fwp_p_zlib_gunzip(V max, V d) {
     return w_ok_bytes(&out);
 }
 
+static V fwp_p_zlib_gzip_chunk(V d) {
+    h2_buf out = {0};
+    h2_gzip_chunk((const unsigned char *)STR(d)->d, STR(d)->len, &out);
+    V r = fwp_str_new((const char *)out.d, out.len);
+    h2b_free(&out);
+    return r;
+}
+
+static V fwp_p_zlib_crc32(V crc, V d) {
+    return (V)(int64_t)h2_crc32_update((uint32_t)(int64_t)crc, (const unsigned char *)STR(d)->d,
+                                       STR(d)->len);
+}
+
+/* the end of a gzip stream of chunks: an empty last block, then the CRC
+ * and length of all the data */
+static V fwp_p_zlib_gzip_end(V crc, V len) {
+    uint32_t c = (uint32_t)(int64_t)crc, n = (uint32_t)(int64_t)len;
+    unsigned char t[10] = {0x03, 0x00, (unsigned char)c, (unsigned char)(c >> 8),
+                           (unsigned char)(c >> 16), (unsigned char)(c >> 24), (unsigned char)n,
+                           (unsigned char)(n >> 8), (unsigned char)(n >> 16), (unsigned char)(n >> 24)};
+    return fwp_str_new((const char *)t, 10);
+}
+
 /* the zlib format of `deflate`: the DEFLATE data of h2_gzip's output */
 static V fwp_p_zlib_deflate(V d) {
     h2_buf g = {0};

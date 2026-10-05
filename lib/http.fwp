@@ -70,7 +70,8 @@ ServerConfig = {
     # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
     http2: Bool,
     # compress responses of at least this many bytes with gzip (or
-    # deflate) for clients that accept it (`Accept-Encoding`)
+    # deflate) for clients that accept it (`Accept-Encoding`), and
+    # streamed responses with gzip as they go
     compress: Option[I64],
     # the response to an error the server answers itself (a malformed
     # request, a body too large, a request timeout): its status and
@@ -1112,6 +1113,20 @@ foreign "fwp" deflate.compress : Bytes -> Bytes = "zlib.deflate"
 # the zlib format, or raw DEFLATE (which some servers send)
 foreign "fwp" deflate.decompress-max : I64 -> Bytes -> Result[Bytes, String] = "zlib.inflate"
 
+# a gzip stream in chunks: the header, then a chunk for each piece of data
+# (compressed on its own and flushed, so the receiver decodes it as it
+# arrives), then the end, with the CRC (`gzip._crc32` from 0) and length
+# of all the data
+# internal
+gzip._header : Bytes
+gzip._header = bytes.from-list [31, 139, 8, 0, 0, 0, 0, 0, 0, 255]
+# internal
+foreign "fwp" gzip._chunk : Bytes -> Bytes = "zlib.gzip-chunk"
+# internal
+foreign "fwp" gzip._crc32 : I64 -> Bytes -> I64 = "zlib.crc32"
+# internal
+foreign "fwp" gzip._end : I64 -> I64 -> Bytes = "zlib.gzip-end"
+
 # decompress up to 64 MiB
 gzip.decompress : Bytes -> Result[Bytes, String]
 gzip.decompress = gzip.decompress-max 67108864
@@ -1135,8 +1150,26 @@ http.compressing = curry (fork http.encode-response http.coding-for .1)
 # the coding to compress a response with ("" for none)
 # internal
 http.coding-for : ((Option[I64], Request), Response) -> String
-http.coding-for =
-    if http.should-compress (.0 | .1 | http.preferred-coding) (const "")
+http.coding-for = if http.should-compress http.coding-of (const "")
+
+# the client's preferred coding; streams are compressed with gzip only
+# internal
+http.coding-of : ((Option[I64], Request), Response) -> String
+http.coding-of =
+    fork
+        http.stream-allows
+        (.1 | .body | http.is-stream)
+        (.0 | .1 | http.preferred-coding)
+
+# internal
+http.stream-allows : Bool -> String -> String
+http.stream-allows = curry (if (fork and .0 (.1 | ne "gzip")) (const "") .1)
+
+# internal
+http.is-stream : Body -> Bool
+http.is-stream = match
+    Body.Stream _ -> const True
+    _ -> const False
 
 # internal
 http.should-compress : ((Option[I64], Request), Response) -> Bool
@@ -1147,9 +1180,12 @@ http.should-compress =
             and
             (.0 | .0 | option.is-some)
             (fork
-                ge
-                (.0 | .0 | option.unwrap-or 0)
-                (.1 | .body | http.full-length)))
+                or
+                (.1 | .body | http.is-stream)
+                (fork
+                    ge
+                    (.0 | .0 | option.unwrap-or 0)
+                    (.1 | .body | http.full-length))))
         (.1 | http.compressible)
 
 # internal
@@ -1249,11 +1285,45 @@ http.encoded = curry3 (make Response {
     body = fork http.map-full .1 (.2 | .body),
 })
 
+# a whole body compressed, or a stream compressed with gzip as it goes
+# (only gzip streams are chosen, `http.coding-of`)
 # internal
 http.map-full : (Bytes -> Bytes) -> Body -> Body
 http.map-full = curry (match
     (_, Body.Full _) -> then2 (flip apply) Body.Full
+    (_, Body.Stream _) -> curry (.1 | http.gzip-stream | Body.Stream)
     _ -> .1)
+
+# a producer whose chunks go out gzipped: it writes to a channel of its
+# own, which a loop compresses into the response's channel
+# internal
+http.gzip-stream : (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
+http.gzip-stream = curry (fork http.gzip-start id (const 8 | channel.make))
+
+# internal
+http.gzip-start : (Channel[Bytes] -> () ! {Async, IO, Network, FileIO}, Channel[Bytes]) -> Channel[Bytes] -> () ! {Async, IO, Network, FileIO}
+http.gzip-start = curry (tap (fork spawn-with (.0 | .0 | http.closing) .1)
+    | make { 0 = .0 | .1, 1 = .1, 2 = const 0, 3 = const 0 }
+    | tap (fork channel.send .0 (const gzip._header))
+    | loop http.gzip-step)
+
+# the response's channel, the producer's, and the CRC and length so far
+# internal
+http.gzip-step : (Channel[Bytes], Channel[Bytes], I64, I64) -> Step[(Channel[Bytes], Channel[Bytes], I64, I64), ()] ! {Async}
+http.gzip-step = fork http.gzip-got id (.1 | channel.recv)
+
+# internal
+http.gzip-got : (Channel[Bytes], Channel[Bytes], I64, I64) -> Option[Bytes] -> Step[(Channel[Bytes], Channel[Bytes], I64, I64), ()] ! {Async}
+http.gzip-got = curry (match
+    (_, None) -> fork channel.send .0 (fork gzip._end .2 .3) | const (Stop ())
+    (_, Some _) -> curry (tap (fork channel.send (.0 | .0) (.1 | gzip._chunk))
+        | make {
+            0 = .0 | .0,
+            1 = .0 | .1,
+            2 = fork gzip._crc32 (.0 | .2) .1,
+            3 = fork add (.0 | .3) (.1 | bytes.length),
+        }
+        | Again))
 
 # a request whose body is decoded by its `content-encoding` (gzip or
 # deflate), up to `max` bytes; the status and message of an error

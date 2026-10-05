@@ -276,8 +276,8 @@ error. See [protocol.md](protocol.md).
 
 - HTTP/3; the HTTP/1.1 `Upgrade: h2c` handshake, HTTP/2 server push and
   WebSocket over HTTP/2 (RFC 8441); WebSocket extensions
-  (permessage-deflate); compression of streamed responses, and content
-  codings other than gzip and deflate. REST bodies are JSON, forms and
+  (permessage-deflate); content codings other than gzip and deflate
+  (streamed responses: gzip only). REST bodies are JSON, forms and
   `multipart/form-data` in, JSON, text and CSV out, read and written
   whole (no XML, no streaming bodies).
 - TLS of fwp's own: TLS uses the system's OpenSSL 3 ([tls.md](tls.md)),

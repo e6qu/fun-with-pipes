@@ -268,7 +268,10 @@ WebSocket and HTTP/2.
   `Accept-Encoding` accepts it (a coding with `q=0` is refused), adding
   `content-encoding` and `vary: accept-encoding`. The middleware
   `http.compress n handler` does the same for one handler. Streamed
-  bodies, responses that have a `content-encoding` already, statuses 204
+  bodies, whatever their length, are compressed with gzip as they go:
+  each chunk is a block of its own, flushed, so the client decodes it
+  when it arrives (a client that accepts only deflate gets the stream as
+  it is). Responses that have a `content-encoding` already, statuses 204
   and 304, and types that are compressed already (images but SVG, video,
   audio, archives) are left alone.
 - **Requests:** bodies with `content-encoding: gzip` (or `x-gzip`) or

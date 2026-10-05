@@ -873,6 +873,14 @@ pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
             int(&a[0]).max(0) as usize,
         ))),
         "zlib.deflate" => Ok(b(&zlib(&bytes(&a[0]))[..])),
+        "zlib.gzip-chunk" => Ok(b(&crate::gzip::gzip_chunk(&bytes(&a[0]))[..])),
+        "zlib.crc32" => Ok(Value::I64(
+            crate::gzip::crc32_update(int(&a[0]) as u32, &bytes(&a[1])) as i64,
+        )),
+        "zlib.gzip-end" => Ok(b(&crate::gzip::gzip_end(
+            int(&a[0]) as u32,
+            int(&a[1]) as u64,
+        )[..])),
         "zlib.inflate" => Ok(result_bytes(unzlib(
             &bytes(&a[1]),
             int(&a[0]).max(0) as usize,

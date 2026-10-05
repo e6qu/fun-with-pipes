@@ -1166,7 +1166,8 @@ ServerConfig = {
     # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
     http2: Bool,
     # compress responses of at least this many bytes with gzip (or
-    # deflate) for clients that accept it (`Accept-Encoding`)
+    # deflate) for clients that accept it (`Accept-Encoding`), and
+    # streamed responses with gzip as they go
     compress: Option[I64],
     # the response to an error the server answers itself (a malformed
     # request, a body too large, a request timeout): its status and
