@@ -286,9 +286,9 @@ impl Pass<'_> {
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut xs = Vec::new();
         let mut drop_after: Vec<Local> = Vec::new();
-        // a borrowed part that is computed becomes a temporary bound before
-        // the operation; the parts before the last such one are bound too,
-        // to keep the order of evaluation
+        // a borrowed part that is computed (and counted) becomes a
+        // temporary bound before the operation; every computed part before
+        // the last such one is bound too, to keep the order of evaluation
         let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
@@ -319,7 +319,18 @@ impl Pass<'_> {
                     xs.push(Expr::Local(*l));
                 }
                 (Mode::Borrow, Expr::Const(_) | Expr::Func(_)) => xs.push(p.clone()),
-                (Mode::Borrow, p) if uncounted[i] => xs.push(self.conv(p, &mine, &theirs)),
+                // computed in place, unless a later part is bound before
+                // the operation (then bound too, in order)
+                (Mode::Borrow, p) if uncounted[i] => {
+                    let v = self.conv(p, &mine, &theirs);
+                    if last_bound.is_none_or(|j| i > j) {
+                        xs.push(v);
+                    } else {
+                        let tl = self.fresh(self.ty(p));
+                        binds.push((tl, v));
+                        xs.push(Expr::Local(tl));
+                    }
+                }
                 (Mode::Borrow, p) => {
                     // an owned temporary, dropped after the call
                     let t = self.ty(p);
@@ -643,6 +654,7 @@ pub fn check(prog: &Program, f: &Func, body: &Expr, locals: &[MT]) -> Result<(),
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value::Value;
 
     fn list() -> MT {
         MT::Con("std::List".into(), vec![MT::con("std::I64")])
@@ -745,6 +757,44 @@ mod tests {
         );
         let p = prog(vec![list()], vec![], body);
         counted(&p);
+    }
+
+    #[test]
+    fn parts_keep_their_order() {
+        // prim(uncounted read of x, counted part that releases x): the
+        // first part must still run before the second
+        let mut p = prog(vec![list()], vec![], Expr::Const(Value::unit()));
+        p.funcs.push(Func {
+            name: "prim".into(),
+            arity: 2,
+            locals: vec![MT::con("std::I64"), list()],
+            ty: MT::Fun(
+                Box::new(MT::con("std::I64")),
+                Box::new(MT::Fun(Box::new(list()), Box::new(MT::unit()))),
+            ),
+            body: Body::Prim("prim".into()),
+        });
+        p.funcs.push(Func {
+            name: "len".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("len".into()),
+        });
+        let body = Expr::Call(
+            1,
+            vec![
+                Expr::Call(2, vec![Expr::Local(0)]),
+                Expr::Construct(1, vec![Expr::Const(Value::I64(0)), Expr::Local(0)]),
+            ],
+        );
+        p.funcs[0].body = Body::Expr(body);
+        let (e, _) = counted(&p);
+        // the length is computed first
+        let s = format!("{:?}", e);
+        let len = s.find("Call(2").unwrap();
+        let cons = s.find("Construct(1").unwrap();
+        assert!(len < cons, "{}", s);
     }
 
     #[test]

@@ -1663,8 +1663,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
             if let Some((body, locals)) = rc {
                 if let Err(e) = crate::rc::check(&prog, f, &body, &locals) {
                     panic!(
-                        "reference counts of {}: {}: {}\n{:?}",
-                        f.name, f.ty, e, body
+                        "reference counts of {}: {}: {}\ncounted: {:?}\nfrom: {:?}",
+                        f.name, f.ty, e, body, f.body
                     );
                 }
             }
