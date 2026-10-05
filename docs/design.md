@@ -275,7 +275,7 @@ error. See [protocol.md](protocol.md).
 ## Not implemented
 
 - HTTP/3; the HTTP/1.1 `Upgrade: h2c` handshake, HTTP/2 server push and
-  WebSocket over HTTP/2 (RFC 8441); WebSocket subprotocols and extensions
+  WebSocket over HTTP/2 (RFC 8441); WebSocket extensions
   (permessage-deflate); compression of streamed responses, and content
   codings other than gzip and deflate. REST bodies are JSON, forms and
   `multipart/form-data` in, JSON, text and CSV out, read and written

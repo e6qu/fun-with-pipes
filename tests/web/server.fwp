@@ -62,7 +62,9 @@ routes = http.router [
 ]
 
 ws-config : WsConfig
-ws-config = ws.config | with { max-message-bytes = 100000 }
+ws-config =
+    ws.config
+    | with { max-message-bytes = 100000, protocols = ["chat", "superchat"] }
 
 config : ServerConfig
 config = "unused" | http.config | with { compress = Some 256 }

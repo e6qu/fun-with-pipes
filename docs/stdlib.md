@@ -1338,16 +1338,24 @@ WsMessage =
     | WsMessage.Pong Bytes
     | WsMessage.Close I64 String
 
-# `done` finishes when the session is over and its connection closed
+# `done` finishes when the session is over and its connection closed;
+# `protocol` is the subprotocol the two sides agreed on, if any
 WebSocket = {
     incoming: Channel[WsMessage],
     outgoing: Channel[WsMessage],
     done: Task[()],
+    protocol: Option[String],
 }
 
-# the largest message, the time the peer has to answer a close, and the
-# capacity of each channel
-WsConfig = { max-message-bytes: I64, close-timeout: Duration, queue: I64 }
+# the largest message, the time the peer has to answer a close, the
+# capacity of each channel, and the subprotocols (`Sec-WebSocket-Protocol`):
+# a server's, in its order of preference, or those a client offers
+WsConfig = {
+    max-message-bytes: I64,
+    close-timeout: Duration,
+    queue: I64,
+    protocols: List[String],
+}
 ws.config : WsConfig
 
 # send a message; `False` once the session is closing

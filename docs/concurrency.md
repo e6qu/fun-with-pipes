@@ -251,8 +251,12 @@ routes = http.router [http.route "GET" "/ws" (http.websocket echo)]
   session is three tasks (reader, writer and a supervisor that closes the
   connection), all fwp code over `tcp.read` and `tcp.write`; framing,
   masking and the accept key are primitives (`src/h2web.rs`,
-  `runtime/fwp_rt_http2.c`). No subprotocols or extensions
-  (permessage-deflate).
+  `runtime/fwp_rt_http2.c`). No extensions (permessage-deflate).
+- Subprotocols (`Sec-WebSocket-Protocol`): a client offers the
+  `protocols` of its `WsConfig`, and a server picks the first of its own
+  `protocols` (in its order of preference) that the client offered. The
+  session's `protocol` is the one chosen, or `None`; a client refuses an
+  answer naming a protocol it did not offer.
 
 `examples/server/chat.fwp` is a chat server; tutorial 20 walks through
 WebSocket and HTTP/2.

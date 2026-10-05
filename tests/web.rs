@@ -469,6 +469,7 @@ big: 6000 bytes, content-encoding None
 stream: (200, \"chunk 1\\nchunk 2\\nchunk 3\\n\")
 gzip request: (200, \"18 bytes: compressed request\")
 concurrent: [Some 200, Some 200, Some 200, Some 200]
+protocol Some \"superchat\"
 text ping me
 binary [1, 2, 255]
 long text 60000
