@@ -322,14 +322,15 @@ Next in this series, toward static, zero-cost programs:
     and checks every path of every function for leaks, double releases
     and reads after the last reference. The collector keeps freeing
     memory; the counts find records with one reference, which an update
-    then writes in place (`FWP_REUSE=1`, experimental): a loop updating a
+    then writes in place (now the default; `FWP_REUSE=0` turns it off): a loop updating a
     record of five fields went from 458 MiB allocated and 114 ms to
     nothing and 67 ms, while the benchmarks stay within noise except
     `map` (8% slower: its pairs are made unique and then shared at once).
     A variant's cell is reused by a constructor of the same size: adding
     to every node of a tree of 2^18 nodes 20 times went from 168 MiB
     allocated and 234 ms to 16 MiB (the tree) and 137 ms. Next: fewer
-    counts where values go straight to the runtime, then on by default.
+    counts where values go straight to the runtime, and reuse inside the
+    runtime's own list and map primitives.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,

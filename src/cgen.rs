@@ -409,10 +409,10 @@ fn shared(reuse: bool, v: String) -> String {
     }
 }
 
-/// Whether to count references and reuse unique records in place
-/// (experimental: `FWP_REUSE=1` when compiling).
+/// Whether to count references and reuse unique records in place: by
+/// default, unless `FWP_REUSE=0` when compiling.
 fn reuse_enabled() -> bool {
-    std::env::var("FWP_REUSE").is_ok_and(|v| !v.is_empty() && v != "0")
+    std::env::var("FWP_REUSE").map_or(true, |v| v != "0")
 }
 
 /// `prog` with its function bodies' references counted (`src/rc.rs`).
