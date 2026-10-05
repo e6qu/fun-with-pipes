@@ -237,17 +237,21 @@ fn variant_cells_are_reused() {
     );
 }
 
-/// An array that a loop pushes to or writes into, holding its only
-/// reference, is written in place: the loops allocate next to nothing,
-/// where copying allocates a whole array per step.
+/// An array that a loop pushes to or writes into, or a map it inserts
+/// into, holding its only reference, is written in place: the loops
+/// allocate next to nothing, where copying allocates a whole array or map
+/// per step.
 #[test]
 fn unique_arrays_are_written_in_place() {
     if !linux_cc() {
         return;
     }
     let dir = TempDir::new("arrays");
-    for (name, want, copied_at_least) in [("push", "199993\n", 1000.0), ("set", "500500\n", 100.0)]
-    {
+    for (name, want, copied_at_least) in [
+        ("push", "199993\n", 1000.0),
+        ("set", "500500\n", 100.0),
+        ("map", "100014\n", 1000.0),
+    ] {
         let src = root().join(format!("tests/reuse/{}.fwp", name));
         let allocated = |reuse: &str| -> f64 {
             let exe = dir.0.join(format!("{}{}", name, reuse));

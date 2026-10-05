@@ -334,8 +334,9 @@ Next in this series, toward static, zero-cost programs:
     allocated and 234 ms to 16 MiB (the tree) and 137 ms. Arrays are
     counted too, and `array.set` and `array.push` write a unique array in
     place: 200 000 pushes in a loop went from 152 GiB allocated and 80 s
-    to 6 MiB and 14 ms. Next: fewer counts where values go straight to
-    the runtime, and maps written in place.
+    to 6 MiB and 14 ms. Maps and sets too: 100 000 insertions went from
+    76 GiB and 41 s to 5 MiB and 17 ms. Next: fewer counts where values
+    go straight to the runtime.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
