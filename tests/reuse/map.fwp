@@ -1,0 +1,11 @@
+put : (I64, Map[I64, I64]) -> Map[I64, I64]
+put = make { 0 = .0 | neg, 1 = .0 | mul 2, 2 = .1 } | uncurry3 map.insert
+
+fill : (I64, Map[I64, I64]) -> Step[(I64, Map[I64, I64]), Map[I64, I64]]
+fill = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) put | Again)
+
+main =
+    (100000, map.empty)
+    | loop fill
+    | fork add map.size (map.get -7 | option.unwrap-or 0)
+    | echo

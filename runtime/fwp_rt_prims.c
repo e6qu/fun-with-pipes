@@ -1053,6 +1053,68 @@ static V fwp_p_map_map_values(V f, V m) {
 
 static V fwp_p_set_insert(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert(k, 0, s, kd); }
 
+/* `map.insert`, `map.remove`, `map.update`, `set.insert` and `set.remove`
+ * given the only reference to the map (src/rc.rs): written in place when
+ * it is unique, a map inserted into while unique growing by doubling;
+ * else copied, and the reference given up. Results are counted. */
+static V fwp_map_given_up(V m, int u, V r) {
+    if (u == 2) MAP(m)->len = 0; /* poisoned (FWP_REUSE_VERIFY) */
+    else fwp_rc_drop(m);
+    return fwp_rc_fresh(r);
+}
+
+static V fwp_p_map_insert_own(V k, V v, V m, const fwp_desc *kd) {
+    int found;
+    uint64_t i = fwp_map_find(m, k, kd, &found);
+    uint64_t n = MAP(m)->len;
+    int u = fwp_rc_unique_mut(m);
+    if (u == 1 && found) {
+        MAP(m)->d[2 * i + 1] = v;
+        return m;
+    }
+    if (u == 1 && fwp_rc_capacity(m) >= sizeof(fwp_map) + 2 * (n + 1) * sizeof(V)) {
+        memmove(MAP(m)->d + 2 * i + 2, MAP(m)->d + 2 * i, 2 * (n - i) * sizeof(V));
+        MAP(m)->d[2 * i] = k;
+        MAP(m)->d[2 * i + 1] = v;
+        MAP(m)->len = n + 1;
+        return m;
+    }
+    if (u != 1 || found) return fwp_map_given_up(m, u, fwp_p_map_insert(k, v, m, kd));
+    V r = fwp_map_alloc(n < 4 ? 4 : 2 * n);
+    memcpy(MAP(r)->d, MAP(m)->d, 2 * i * sizeof(V));
+    MAP(r)->d[2 * i] = k;
+    MAP(r)->d[2 * i + 1] = v;
+    memcpy(MAP(r)->d + 2 * i + 2, MAP(m)->d + 2 * i, 2 * (n - i) * sizeof(V));
+    MAP(r)->len = n + 1;
+    return fwp_map_given_up(m, u, r);
+}
+
+static V fwp_p_map_remove_own(V k, V m, const fwp_desc *kd) {
+    int found;
+    uint64_t i = fwp_map_find(m, k, kd, &found);
+    if (!found) return m;
+    uint64_t n = MAP(m)->len;
+    int u = fwp_rc_unique_mut(m);
+    if (u == 1) {
+        memmove(MAP(m)->d + 2 * i, MAP(m)->d + 2 * i + 2, 2 * (n - i - 1) * sizeof(V));
+        /* the freed pair keeps nothing alive */
+        MAP(m)->d[2 * n - 2] = 0;
+        MAP(m)->d[2 * n - 1] = 0;
+        MAP(m)->len = n - 1;
+        return m;
+    }
+    return fwp_map_given_up(m, u, fwp_p_map_remove(k, m, kd));
+}
+
+static V fwp_p_map_update_own(V k, V f, V d, V m, const fwp_desc *kd) {
+    int found;
+    uint64_t i = fwp_map_find(m, k, kd, &found);
+    V cur = found ? MAP(m)->d[2 * i + 1] : d;
+    return fwp_p_map_insert_own(k, fwp_apply1(f, cur), m, kd);
+}
+
+static V fwp_p_set_insert_own(V k, V s, const fwp_desc *kd) { return fwp_p_map_insert_own(k, 0, s, kd); }
+
 static V fwp_p_set_from_list(V xs, const fwp_desc *kd) {
     size_t n;
     V *keys = fwp_list_items(xs, &n);

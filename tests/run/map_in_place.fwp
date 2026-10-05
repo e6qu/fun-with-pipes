@@ -1,0 +1,39 @@
+# Maps and sets updated in place when unique (`map.insert`, `map.remove`,
+# `map.update`, `set.insert`, `set.remove`): every way of keeping a second
+# reference must still see the old one.
+
+two : Map[String, I64]
+two = map.empty | map.insert "a" 1 | map.insert "b" 2
+
+Box = { m: Map[String, I64], tag: I64 }
+
+main = [
+    two | both id (map.insert "c" 3) | show | echo,
+    two | both (map.insert "a" 10) id | show | echo,
+    two | both (map.remove "a") id | show | echo,
+    two | both id (map.update "b" (add 5) 0) | show | echo,
+    two | both (map.update "z" (add 5) 0) id | show | echo,
+    two
+    | make Box { m = id, tag = const 1 }
+    | both .m (.m | map.insert "a" 7)
+    | show
+    | echo,
+    two | fork Cons id (map.remove "b" | singleton) | map map.size | echo,
+    map.empty
+    | map.insert 1 two
+    | both id (map.get 1 | option.map (map.insert "q" 9))
+    | show
+    | echo,
+    [3, 1, 2] | set.from-list | both id (set.insert 0) | show | echo,
+    [3, 1, 2] | set.from-list | both (set.remove 1) id | show | echo,
+    [3, 1, 2]
+    | set.from-list
+    | both (set.union ([9] | set.from-list)) (set.insert 4)
+    | show
+    | echo,
+    two
+    | both (flip map.get) (map.insert "a" 0)
+    | both (.0 | apply "a") .1
+    | show
+    | echo,
+] | ignore
