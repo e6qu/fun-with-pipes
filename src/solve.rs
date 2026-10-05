@@ -305,7 +305,7 @@ impl<'a> Infer<'a> {
                     fail(self, what)
                 }
             }
-            Type::Nat(_) => Outcome::Solved(vec![]),
+            Type::Nat(_) | Type::NatOp(..) => Outcome::Solved(vec![]),
             Type::Record(r) => {
                 let r = self.env.table.flatten_row(r);
                 if r.tail.is_some() {
@@ -397,7 +397,7 @@ impl<'a> Infer<'a> {
 
     fn field_ok(&self, class: &str, t: &Type, visiting: &mut HashSet<String>) -> bool {
         match t {
-            Type::Var(_) | Type::Nat(_) => true,
+            Type::Var(_) | Type::Nat(_) | Type::NatOp(..) => true,
             Type::App(_, args) => args.iter().all(|a| self.field_ok(class, a, visiting)),
             Type::Fun(..) => class == "std::Dup",
             Type::Record(r) => r

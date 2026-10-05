@@ -8,6 +8,8 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
+pub use crate::ast::NatOp;
+
 pub type TV = u32;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -23,6 +25,8 @@ pub enum Type {
     Record(Row),
     /// Type-level natural number.
     Nat(u64),
+    /// Arithmetic on type-level naturals (`n + m`, `2 * n`).
+    NatOp(NatOp, Box<Type>, Box<Type>),
 }
 
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -120,6 +124,78 @@ pub enum UnifyError {
 pub struct TypeTable {
     pub vars: Vec<VarInfo>,
     pub records: HashMap<String, RecordTemplate>,
+    /// Equations between sizes that cannot be decided yet (they hold
+    /// variables still unknown); the checker takes them and tries again
+    /// when more is known (`Infer::check_sizes`).
+    pub deferred: Vec<(Type, Type)>,
+}
+
+/// A size as a polynomial: each product of variables (sorted, with
+/// repetition for powers) with its coefficient; zero terms are absent.
+pub type Poly = BTreeMap<Vec<TV>, u64>;
+
+/// What a type is as a size.
+#[derive(Debug, PartialEq)]
+pub enum Size {
+    /// `Dyn`: known only at run time (any arithmetic with it is `Dyn`).
+    Dyn,
+    Poly(Poly),
+    /// Not a size.
+    Other,
+}
+
+fn poly_add(mut p: Poly, q: Poly) -> Poly {
+    for (m, c) in q {
+        *p.entry(m).or_insert(0) += c;
+    }
+    p
+}
+
+fn poly_mul(p: &Poly, q: &Poly) -> Poly {
+    let mut out = Poly::new();
+    for (m1, c1) in p {
+        for (m2, c2) in q {
+            let mut m = m1.clone();
+            m.extend(m2);
+            m.sort();
+            *out.entry(m).or_insert(0) += c1 * c2;
+        }
+    }
+    out.retain(|_, c| *c != 0);
+    out
+}
+
+impl Type {
+    /// `a op b`, computed when both are numbers.
+    pub fn nat_op(op: NatOp, a: Type, b: Type) -> Type {
+        match (&a, &b) {
+            (Type::Nat(x), Type::Nat(y)) => Type::Nat(match op {
+                NatOp::Add => x.saturating_add(*y),
+                NatOp::Mul => x.saturating_mul(*y),
+            }),
+            _ => Type::NatOp(op, Box::new(a), Box::new(b)),
+        }
+    }
+
+    /// A polynomial as a type: a sum of products.
+    pub fn from_poly(p: &Poly) -> Type {
+        let mut terms = p.iter().map(|(m, c)| {
+            let mut t: Option<Type> = if *c != 1 || m.is_empty() {
+                Some(Type::Nat(*c))
+            } else {
+                None
+            };
+            for v in m {
+                t = Some(match t {
+                    None => Type::Var(*v),
+                    Some(t) => Type::NatOp(NatOp::Mul, Box::new(t), Box::new(Type::Var(*v))),
+                });
+            }
+            t.unwrap()
+        });
+        let first = terms.next().unwrap_or(Type::Nat(0));
+        terms.fold(first, |a, b| Type::nat_op(NatOp::Add, a, b))
+    }
 }
 
 impl TypeTable {
@@ -222,6 +298,7 @@ impl TypeTable {
             ),
             Type::Record(r) => Type::Record(self.zonk_row(&r)),
             Type::Nat(n) => Type::Nat(n),
+            Type::NatOp(op, a, b) => Type::nat_op(op, self.zonk(&a), self.zonk(&b)),
         }
     }
 
@@ -257,6 +334,10 @@ impl TypeTable {
             }
             Type::Record(r) => self.free_vars_row(&r, out),
             Type::Nat(_) => {}
+            Type::NatOp(_, a, b) => {
+                self.free_vars(&a, out);
+                self.free_vars(&b, out);
+            }
         }
     }
 
@@ -307,6 +388,7 @@ impl TypeTable {
             ),
             Type::Record(r) => Type::Record(Self::subst_row(r, map)),
             Type::Nat(n) => Type::Nat(*n),
+            Type::NatOp(op, a, b) => Type::nat_op(*op, Self::subst(a, map), Self::subst(b, map)),
         }
     }
 
@@ -395,8 +477,103 @@ impl TypeTable {
             }
             (Type::Record(r1), Type::Record(r2)) => self.unify_row(r1, r2, Kind::Row),
             (Type::Nat(x), Type::Nat(y)) if x == y => Ok(()),
+            (Type::NatOp(..), _) | (_, Type::NatOp(..)) => self.unify_size(&a, &b),
             _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
         }
+    }
+
+    /// `t` as a size.
+    pub fn size(&self, t: &Type) -> Size {
+        match self.resolve(t) {
+            Type::Nat(n) => {
+                let mut p = Poly::new();
+                if n != 0 {
+                    p.insert(vec![], n);
+                }
+                Size::Poly(p)
+            }
+            Type::Var(v) => Size::Poly(Poly::from([(vec![v], 1)])),
+            Type::Con(n, args) if args.is_empty() && (n == "Dyn" || n.ends_with("::Dyn")) => {
+                Size::Dyn
+            }
+            Type::NatOp(op, a, b) => match (self.size(&a), self.size(&b)) {
+                (Size::Other, _) | (_, Size::Other) => Size::Other,
+                (Size::Dyn, _) | (_, Size::Dyn) => Size::Dyn,
+                (Size::Poly(p), Size::Poly(q)) => Size::Poly(match op {
+                    NatOp::Add => poly_add(p, q),
+                    NatOp::Mul => poly_mul(&p, &q),
+                }),
+            },
+            _ => Size::Other,
+        }
+    }
+
+    /// Unify sizes, one of them computed (`n + m`): equal polynomials
+    /// unify; an equation in one unknown variable (`v + 2 = m + 3`) binds
+    /// it when its value is a natural (`v = m + 1`); an equation of known
+    /// sizes that differ is an error; any other is deferred until more is
+    /// known.
+    fn unify_size(&mut self, a: &Type, b: &Type) -> Result<(), UnifyError> {
+        let mismatch = || UnifyError::Mismatch(a.clone(), b.clone());
+        let (p, q) = match (self.size(a), self.size(b)) {
+            (Size::Dyn, Size::Dyn) => return Ok(()),
+            (Size::Poly(p), Size::Poly(q)) => (p, q),
+            _ => return Err(mismatch()),
+        };
+        if p == q {
+            return Ok(());
+        }
+        // p - q, as signed coefficients
+        let mut d: BTreeMap<Vec<TV>, i128> = BTreeMap::new();
+        for (m, c) in &p {
+            *d.entry(m.clone()).or_insert(0) += *c as i128;
+        }
+        for (m, c) in &q {
+            *d.entry(m.clone()).or_insert(0) -= *c as i128;
+        }
+        d.retain(|_, c| *c != 0);
+        let flexible = |t: &TypeTable, m: &[TV]| m.iter().any(|v| !t.is_rigid(*v));
+        let unknown: Vec<&Vec<TV>> = d.keys().filter(|m| flexible(self, m)).collect();
+        if unknown.is_empty() {
+            // only numbers and the signature's sizes: they must agree as
+            // polynomials, whatever the sizes are
+            return Err(mismatch());
+        }
+        // c·v + rest = 0, with v unknown and absent from rest
+        if let [m] = unknown.as_slice() {
+            if let [v] = m.as_slice() {
+                let v = *v;
+                let c = d[*m];
+                let rest: Vec<(Vec<TV>, i128)> = d
+                    .iter()
+                    .filter(|(k, _)| *k != *m)
+                    .map(|(k, x)| (k.clone(), *x))
+                    .collect();
+                if rest.iter().all(|(k, _)| !k.contains(&v)) {
+                    // v = -rest / c, which must be a polynomial with natural
+                    // coefficients
+                    let mut val = Poly::new();
+                    let mut ok = true;
+                    for (k, x) in &rest {
+                        let y = -x;
+                        if y % c != 0 || y / c < 0 {
+                            ok = false;
+                            break;
+                        }
+                        val.insert(k.clone(), (y / c) as u64);
+                    }
+                    if ok {
+                        return self.bind_var(v, &Type::from_poly(&val));
+                    }
+                    if rest.iter().all(|(k, _)| k.is_empty()) {
+                        // a number that is not a natural: no size fits
+                        return Err(mismatch());
+                    }
+                }
+            }
+        }
+        self.deferred.push((a.clone(), b.clone()));
+        Ok(())
     }
 
     fn bind_var(&mut self, v: TV, t: &Type) -> Result<(), UnifyError> {
@@ -556,6 +733,10 @@ impl<'a> Printer<'a> {
             }
             Type::Record(r) => self.count_row(r),
             Type::Nat(_) => {}
+            Type::NatOp(_, a, b) => {
+                self.count(a);
+                self.count(b);
+            }
         }
     }
 
@@ -675,6 +856,15 @@ impl<'a> Printer<'a> {
             }
             Type::Fun(..) => format!("({})", self.go(t)),
             Type::Nat(n) => n.to_string(),
+            Type::NatOp(op, a, b) => {
+                // `*` binds tighter than `+`
+                let side = |p: &mut Self, x: &Type| match (op, x) {
+                    (NatOp::Mul, Type::NatOp(NatOp::Add, ..)) => format!("({})", p.atom(x)),
+                    _ => p.atom(x),
+                };
+                let (l, r) = (side(self, a), side(self, b));
+                format!("{} {} {}", l, op.text(), r)
+            }
             Type::Record(r) => {
                 let is_tuple = r.tail.is_none()
                     && !r.fields.is_empty()

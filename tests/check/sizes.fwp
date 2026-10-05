@@ -1,0 +1,14 @@
+# Arithmetic on sizes: a sum or product of sizes in a signature is checked
+# as a polynomial, so `2 * n` is `n + n`, and sizes left to inference are
+# solved from the equations they meet.
+doubled : Vector[t, n] -> Vector[t, 2 * n]
+doubled = fork vector.append id id
+
+square : Matrix[t, n, n] -> Vector[t, n * n]
+square = matrix.flatten
+
+grow : Vector[t, n] -> Vector[t, (n + 1) * 2] where Zero[t]
+grow = vector.push zero | doubled
+
+three = vector [1, 2] | vector.push 3
+five = three | vector.append (vector [4, 5])

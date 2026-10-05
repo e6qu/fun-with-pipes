@@ -2187,6 +2187,13 @@ vector.to-list : Vector[t, n] -> List[t]
 vector.length : Vector[t, n] -> I64
 vector.get : I64 -> Vector[t, n] -> Option[t]
 
+# `a | vector.append b` is the elements of `a`, then those of `b`: its
+# size is the sum of theirs
+vector.append : Vector[t, m] -> Vector[t, n] -> Vector[t, n + m]
+
+# `v | vector.push x` is `v` with `x` at the end
+vector.push : t -> Vector[t, n] -> Vector[t, n + 1]
+
 # Lift an array function to vectors of the same size.
 vector.via : (Array[a] -> Array[b]) -> Vector[a, n] -> Vector[b, n]
 vector.map : (a -> b) -> Vector[a, n] -> Vector[b, n]
@@ -2203,6 +2210,9 @@ matrix.dot-list : List[t] -> List[t] -> t where Ring[t]
 dot : Vector[t, n] -> Vector[t, n] -> t where Ring[t]
 norm : Vector[a, n] -> a where Ring[a], Floating[a], Dup[a]
 matrix : List[List[t]] -> Matrix[t, m, n]
+
+# the elements row by row: an m by n matrix gives a vector of m * n
+matrix.flatten : Matrix[t, m, n] -> Vector[t, m * n]
 matrix.dyn : Matrix[t, m, n] -> Matrix[t, Dyn, Dyn]
 matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.rows-of : Matrix[t, m, n] -> List[List[t]]

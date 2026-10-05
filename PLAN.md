@@ -339,6 +339,12 @@ Next in this series, toward static, zero-cost programs:
     program for aarch64 and run it under qemu (`tests/cross.rs`). Next:
     macOS (the runtime's processes, sockets and fibers on Darwin) and
     Windows, and musl (fibers without `makecontext`).
+27. **Size arithmetic** (done). Sizes in types may be sums and
+    products (`Vector[t, n + m]`, `Vector[t, m * n]`), checked as
+    polynomials over the size variables, with `vector.append`,
+    `vector.push` and `matrix.flatten` in the standard library. Next:
+    sizes in more of the library (slicing, stacking matrices), and
+    subtraction where it is safe (a `take` of at most n).
 
 ## Later
 

@@ -1,0 +1,5 @@
+doubled : Vector[t, n] -> Vector[t, 2 * n] where Dup[t]
+square : Matrix[t, n, n] -> Vector[t, n * n]
+grow : Vector[t, n] -> Vector[t, (n + 1) * 2] where Zero[t], Dup[t]
+three : Vector[I64, 3]
+five : Vector[I64, 5]

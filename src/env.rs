@@ -338,6 +338,22 @@ impl Env {
                 Ok(Type::Record(row))
             }
             TypeKind::Nat(n) => Ok(Type::Nat(*n)),
+            TypeKind::NatOp(op, a, b) => {
+                let a = self.conv_type(a, scope, vars, allow_new)?;
+                let b = self.conv_type(b, scope, vars, allow_new)?;
+                if matches!(self.table.size(&a), crate::types::Size::Other)
+                    || matches!(self.table.size(&b), crate::types::Size::Other)
+                {
+                    return Err(Diagnostic::error(
+                        te.span,
+                        format!(
+                            "`{}` applies to sizes (numbers, size variables and `Dyn`)",
+                            op.text()
+                        ),
+                    ));
+                }
+                Ok(Type::nat_op(*op, a, b))
+            }
         }
     }
 
@@ -1443,6 +1459,7 @@ pub fn match_type(
             _ => false,
         },
         Type::Nat(n) => matches!(target, Type::Nat(m) if *n == m),
+        Type::NatOp(..) => types_equal(table, pat, &target),
     }
 }
 
@@ -1500,5 +1517,9 @@ fn type_names(t: &TypeExpr, out: &mut Vec<String>) {
         TypeKind::Tuple(ts) => ts.iter().for_each(|t| type_names(t, out)),
         TypeKind::Record(fs, _) => fs.iter().for_each(|(_, t)| type_names(t, out)),
         TypeKind::Unit | TypeKind::Nat(_) => {}
+        TypeKind::NatOp(_, a, b) => {
+            type_names(a, out);
+            type_names(b, out);
+        }
     }
 }

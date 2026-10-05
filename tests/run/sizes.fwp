@@ -1,0 +1,21 @@
+# Sizes computed in types (`n + m`, `m * n`): the program builds vectors
+# whose sizes the checker adds and multiplies.
+
+doubled : Vector[t, n] -> Vector[t, 2 * n]
+doubled = fork vector.append id id
+
+three : Vector[I64, 3]
+three = vector [1, 2] | vector.push 3
+
+five : Vector[I64, 5]
+five = three | vector.append (vector [4, 5])
+
+six : Vector[I64, 6]
+six = matrix [[1, 2, 3], [4, 5, 6]] | matrix.flatten
+
+main = [
+    five | vector.to-list | echo,
+    three | doubled | vector.to-list | echo,
+    six | dot (three | doubled) | echo,
+    five | vector.length | echo,
+] | ignore

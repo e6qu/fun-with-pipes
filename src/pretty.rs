@@ -177,6 +177,13 @@ fn ty_atom(t: &TypeExpr) -> String {
         TypeKind::Tuple(ts) => format!("({})", tys(ts)),
         TypeKind::Record(fs, tail) => record_ty(fs, tail),
         TypeKind::Nat(n) => n.to_string(),
+        TypeKind::NatOp(op, a, b) => {
+            let side = |x: &TypeExpr| match (op, &x.kind) {
+                (NatOp::Mul, TypeKind::NatOp(NatOp::Add, ..)) => format!("({})", ty_atom(x)),
+                _ => ty_atom(x),
+            };
+            format!("{} {} {}", side(a), op.text(), side(b))
+        }
     }
 }
 

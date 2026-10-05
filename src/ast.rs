@@ -104,6 +104,24 @@ pub enum TypeKind {
     Tuple(Vec<TypeExpr>),
     Record(Vec<(String, TypeExpr)>, Option<String>),
     Nat(u64),
+    /// Arithmetic on sizes: `n + m`, `2 * n`.
+    NatOp(NatOp, Box<TypeExpr>, Box<TypeExpr>),
+}
+
+/// An operation on type-level naturals.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum NatOp {
+    Add,
+    Mul,
+}
+
+impl NatOp {
+    pub fn text(self) -> &'static str {
+        match self {
+            NatOp::Add => "+",
+            NatOp::Mul => "*",
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

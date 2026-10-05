@@ -300,6 +300,15 @@ impl<'a> Mono<'a> {
                 MT::Record(fs)
             }
             Type::Nat(n) => MT::Nat(n),
+            // every size is a number here, or `Dyn`
+            Type::NatOp(op, a, b) => match (self.mt(&a, s), self.mt(&b, s)) {
+                (MT::Nat(x), MT::Nat(y)) => MT::Nat(match op {
+                    NatOp::Add => x.saturating_add(y),
+                    NatOp::Mul => x.saturating_mul(y),
+                }),
+                (dyn_ @ MT::Con(..), _) | (_, dyn_ @ MT::Con(..)) => dyn_,
+                (x, _) => x,
+            },
         }
     }
 
@@ -1554,6 +1563,7 @@ fn match_mt(table: &TypeTable, pat: &Type, target: &MT, vars: &[TV], sub: &mut S
             _ => false,
         },
         Type::Nat(n) => matches!(target, MT::Nat(m) if n == *m),
+        Type::NatOp(..) => false,
     }
 }
 

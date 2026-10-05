@@ -1,0 +1,4 @@
+check/err_size_claim.fwp:3:7: error: type mismatch in the definition of `bad`: expected `Vector[t, n] -> Vector[t, n + 2]`, found `Vector[t, n] -> Vector[t, n + n]`
+3 | bad = fork vector.append id id
+  |       ^^^^
+  note: `n + 2` is not compatible with `n + n`

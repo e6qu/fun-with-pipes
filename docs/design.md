@@ -67,7 +67,13 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
 - Higher-kinded parameters work through variable-headed application
-  (`F[A]`). Type-level naturals (`Vector[F64, 3]`) unify by equality.
+  (`F[A]`). Type-level naturals (`Vector[F64, 3]`) may be sums and
+  products of sizes (`n + m`, `m * n`, `Type::NatOp`). They unify as
+  polynomials: equal polynomials unify, an equation in one unknown
+  (`v + 2 = m + 3`) solves it when its value is a natural, and an
+  equation still undecided is deferred and checked when the definitions
+  of its group are (`Infer::check_sizes`). Monomorphization turns every
+  size into a number.
 - Traits have superclasses, default methods and parameterized impls. The
   compiler solves `Eq`, `Ord`, `Hash`, `Display`, `Dup`, `Encode` and
   `Decode` structurally. Integer and float literals are classes that fall

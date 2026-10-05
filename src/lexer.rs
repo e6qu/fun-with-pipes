@@ -73,6 +73,9 @@ pub enum Sym {
     RBrace,
     Comma,
     Semi,
+    /// `+` and `*`: arithmetic on sizes in types (`Vector[T, n + m]`).
+    Plus,
+    Star,
 }
 
 impl Sym {
@@ -91,6 +94,8 @@ impl Sym {
             Sym::RBrace => "}",
             Sym::Comma => ",",
             Sym::Semi => ";",
+            Sym::Plus => "+",
+            Sym::Star => "*",
         }
     }
 }
@@ -395,6 +400,8 @@ impl<'a> Lexer<'a> {
                 b'}' => Sym::RBrace,
                 b',' => Sym::Comma,
                 b';' => Sym::Semi,
+                b'+' => Sym::Plus,
+                b'*' => Sym::Star,
                 _ => {
                     let ch = self.text[self.pos..].chars().next().unwrap_or('?');
                     return self.err(line, col, format!("unexpected character `{}`", ch));

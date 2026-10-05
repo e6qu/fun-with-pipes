@@ -1,0 +1,6 @@
+# two sizes inference cannot know, whose sum must be 5
+arr : Array[I64]
+arr = [1, 2, 3] | array.from-list
+
+unknown : Vector[I64, 5]
+unknown = arr | vector.wrap | vector.append (arr | vector.wrap)
