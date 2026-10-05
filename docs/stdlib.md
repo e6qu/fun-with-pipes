@@ -1166,7 +1166,8 @@ ServerConfig = {
     # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
     http2: Bool,
     # compress responses of at least this many bytes with gzip (or
-    # deflate) for clients that accept it (`Accept-Encoding`)
+    # deflate) for clients that accept it (`Accept-Encoding`), and
+    # streamed responses with gzip as they go
     compress: Option[I64],
     # the response to an error the server answers itself (a malformed
     # request, a body too large, a request timeout): its status and
@@ -1330,6 +1331,10 @@ its frames, and a message larger than `max-message-bytes` ends the
 session with the code 1009 (1002 for frames that break the protocol,
 1007 for text that is not UTF-8).
 
+With `compress` in the config, messages are compressed when the peer
+agrees (`permessage-deflate`, RFC 7692, each message on its own: no
+context takeover either way).
+
 ```fwp
 WsMessage =
     | WsMessage.Text String
@@ -1338,16 +1343,27 @@ WsMessage =
     | WsMessage.Pong Bytes
     | WsMessage.Close I64 String
 
-# `done` finishes when the session is over and its connection closed
+# `done` finishes when the session is over and its connection closed;
+# `protocol` is the subprotocol the two sides agreed on, if any
 WebSocket = {
     incoming: Channel[WsMessage],
     outgoing: Channel[WsMessage],
     done: Task[()],
+    protocol: Option[String],
 }
 
-# the largest message, the time the peer has to answer a close, and the
-# capacity of each channel
-WsConfig = { max-message-bytes: I64, close-timeout: Duration, queue: I64 }
+# the largest message, the time the peer has to answer a close, the
+# capacity of each channel, the subprotocols (`Sec-WebSocket-Protocol`):
+# a server's, in its order of preference, or those a client offers, and
+# whether to compress messages of at least so many bytes (offered by a
+# client, accepted by a server)
+WsConfig = {
+    max-message-bytes: I64,
+    close-timeout: Duration,
+    queue: I64,
+    protocols: List[String],
+    compress: Option[I64],
+}
 ws.config : WsConfig
 
 # send a message; `False` once the session is closing
@@ -2180,12 +2196,24 @@ length comparison and an `Option` at each such check.
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }
 
+# A vector or matrix whose sizes are hidden, so that values of different
+# sizes have one type: a list may hold vectors of any lengths. `unpack`
+# gives the sizes back as abstract ones, a fresh size for each value.
+AnyVector[T] = { data: Array[T] }
+AnyMatrix[T] = { rows: I64, cols: I64, data: Array[T] }
+
 # The size parameter is taken from the literal argument.
 vector : List[t] -> Vector[t, n]
 vector.wrap : Array[t] -> Vector[t, n]
 
 # forget the size: the result has a size of its own
 vector.forget : Vector[t, n] -> Vector[t, _]
+
+# hide the size (see `AnyVector`)
+vector.pack : Vector[t, n] -> AnyVector[t]
+
+# a packed vector with a size of its own
+vector.unpack : AnyVector[t] -> Vector[t, _]
 
 # the size is the length of the list, known when the program runs
 vector.from-list : List[t] -> Vector[t, _]
@@ -2223,6 +2251,11 @@ vector.non-empty : Vector[t, n] -> Option[Vector[t, _ + 1]]
 # the first k elements (all of them when there are fewer)
 vector.take : I64 -> Vector[t, n] -> Vector[t, _]
 
+# `v | vector.split w` is the first elements of `v`, as many as `w` has,
+# and the rest: a size `n + m` less `m` is `n`, so splitting never runs
+# out of elements
+vector.split : Vector[a, m] -> Vector[t, n + m] -> (Vector[t, m], Vector[t, n])
+
 # the elements that satisfy p
 vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
 
@@ -2254,8 +2287,22 @@ matrix.stack : Matrix[t, k, n] -> Matrix[t, m, n] -> Matrix[t, m + k, n]
 # types make the row counts agree)
 matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
 
+# `a | matrix.split-rows v` is the first rows of `a`, as many as `v` has
+# elements, and the rows after them
+matrix.split-rows : Vector[a, m] -> Matrix[t, k + m, n] -> (Matrix[t, m, n], Matrix[t, k, n])
+
+# `a | matrix.split-columns v` is the first columns of `a`, as many as
+# `v` has elements, and the columns after them
+matrix.split-columns : Vector[a, m] -> Matrix[t, r, k + m] -> (Matrix[t, r, m], Matrix[t, r, k])
+
 # the same matrix, with sizes the caller names (unchecked)
 matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
+
+# hide the sizes (see `AnyMatrix`)
+matrix.pack : Matrix[t, m, n] -> AnyMatrix[t]
+
+# a packed matrix with sizes of its own
+matrix.unpack : AnyMatrix[t] -> Matrix[t, _m, _n]
 
 # forget the sizes: the result has sizes of its own
 matrix.forget : Matrix[t, m, n] -> Matrix[t, _m, _n]

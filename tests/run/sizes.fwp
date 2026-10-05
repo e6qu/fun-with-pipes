@@ -20,6 +20,13 @@ tall = matrix [[1, 2]] | matrix.stack (matrix [[3, 4], [5, 6]])
 wide : Matrix[I64, 2, 3]
 wide = matrix [[1], [2]] | matrix.beside (matrix [[3, 4], [5, 6]])
 
+# 3 rows less 1 are 2, and 2 columns less 1 are 1
+bottom : Matrix[I64, 2, 2]
+bottom = tall | matrix.split-rows (vector [()]) | .1
+
+right : Matrix[I64, 2, 1]
+right = wide | matrix.split-columns (vector [(), ()]) | .1
+
 main = [
     five | vector.to-list | echo,
     three | doubled | vector.to-list | echo,
@@ -28,4 +35,8 @@ main = [
     tall | matrix.rows-of | echo,
     wide | matrix.rows-of | echo,
     tall | matmul wide | matrix.rows-of | echo,
+    tall | matrix.split-rows (vector [()]) | .0 | matrix.rows-of | echo,
+    bottom | matrix.rows-of | echo,
+    wide | matrix.split-columns (vector [(), ()]) | .0 | matrix.rows-of | echo,
+    right | matrix.rows-of | echo,
 ] | ignore

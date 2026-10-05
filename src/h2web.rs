@@ -729,11 +729,12 @@ fn mask_key() -> [u8; 4] {
     })
 }
 
-/// A complete (FIN) frame; masked with a fresh key for clients.
+/// A complete (FIN) frame; masked with a fresh key for clients. An
+/// opcode plus 64 sets RSV1 (a compressed message, RFC 7692).
 pub fn ws_frame(mask: bool, opcode: u8, payload: &[u8]) -> Vec<u8> {
     let n = payload.len();
     let mut out = Vec::with_capacity(n + 14);
-    out.push(0x80 | (opcode & 0x0f));
+    out.push(0x80 | (opcode & 0x4f));
     let mb = if mask { 0x80 } else { 0 };
     if n < 126 {
         out.push(mb | n as u8);
@@ -756,7 +757,8 @@ pub fn ws_frame(mask: bool, opcode: u8, payload: &[u8]) -> Vec<u8> {
 
 /// The first frame of `buf`: (bytes it took, FIN, opcode, masked, the
 /// payload unmasked); 0 bytes when more are needed, and the negated close
-/// code of a malformed frame (1002) or one larger than `max` (1009).
+/// code of a malformed frame (1002) or one larger than `max` (1009). The
+/// opcode of a frame with RSV1 set (compressed) is 64 more.
 pub fn ws_parse(max: usize, buf: &[u8]) -> (i64, bool, i64, bool, Vec<u8>) {
     let none = |k: i64| (k, false, 0, false, Vec::new());
     if buf.len() < 2 {
@@ -764,7 +766,7 @@ pub fn ws_parse(max: usize, buf: &[u8]) -> (i64, bool, i64, bool, Vec<u8>) {
     }
     let (b0, b1) = (buf[0], buf[1]);
     let op = b0 & 0x0f;
-    if b0 & 0x70 != 0 || !matches!(op, 0 | 1 | 2 | 8 | 9 | 10) {
+    if b0 & 0x30 != 0 || !matches!(op, 0 | 1 | 2 | 8 | 9 | 10) {
         return none(-1002);
     }
     let control = op >= 8;
@@ -814,7 +816,30 @@ pub fn ws_parse(max: usize, buf: &[u8]) -> (i64, bool, i64, bool, Vec<u8>) {
     } else {
         p.to_vec()
     };
+    let op = op | (b0 & 0x40);
     ((at + n) as i64, b0 & 0x80 != 0, op as i64, masked, payload)
+}
+
+/// A message compressed for permessage-deflate (RFC 7692) without
+/// context takeover: a block flushed to a byte, without the flush's
+/// final `00 00 ff ff`.
+pub fn ws_deflate(data: &[u8]) -> Vec<u8> {
+    let mut z = crate::gzip::gzip_chunk(data);
+    z.truncate(z.len() - 4);
+    z
+}
+
+/// A permessage-deflate message decompressed, up to `max` bytes: 0 and
+/// the data, or the close code of a failure (1009: too large; 1007).
+pub fn ws_inflate(max: usize, data: &[u8]) -> (i64, Vec<u8>) {
+    // the flush the sender left out, then an empty last block
+    let mut d = data.to_vec();
+    d.extend_from_slice(&[0, 0, 0xff, 0xff, 0x03, 0x00]);
+    match crate::gzip::inflate(&d, max) {
+        Ok((out, _)) => (0, out),
+        Err(e) if e.contains("too large") => (1009, Vec::new()),
+        Err(_) => (1007, Vec::new()),
+    }
 }
 
 /// A close frame's payload: the code and the reason (a code of 1005,
@@ -873,6 +898,14 @@ pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
             int(&a[0]).max(0) as usize,
         ))),
         "zlib.deflate" => Ok(b(&zlib(&bytes(&a[0]))[..])),
+        "zlib.gzip-chunk" => Ok(b(&crate::gzip::gzip_chunk(&bytes(&a[0]))[..])),
+        "zlib.crc32" => Ok(Value::I64(
+            crate::gzip::crc32_update(int(&a[0]) as u32, &bytes(&a[1])) as i64,
+        )),
+        "zlib.gzip-end" => Ok(b(&crate::gzip::gzip_end(
+            int(&a[0]) as u32,
+            int(&a[1]) as u64,
+        )[..])),
         "zlib.inflate" => Ok(result_bytes(unzlib(
             &bytes(&a[1]),
             int(&a[0]).max(0) as usize,
@@ -903,6 +936,11 @@ pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
             ]))
         }
         "ws.close-payload" => Ok(b(&ws_close_payload(int(&a[0]), a[1].as_str())[..])),
+        "ws.deflate" => Ok(b(&ws_deflate(&bytes(&a[0]))[..])),
+        "ws.inflate" => {
+            let (c, d) = ws_inflate(int(&a[0]).max(0) as usize, &bytes(&a[1]));
+            Ok(Value::tuple(vec![Value::I64(c), b(&d[..])]))
+        }
         "ws.close-parse" => {
             let (c, r) = ws_close_parse(&bytes(&a[0]));
             Ok(Value::tuple(vec![Value::I64(c), Value::str(&r)]))
@@ -914,6 +952,17 @@ pub fn prim(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn websocket_messages_deflate_and_inflate() {
+        for m in [&b""[..], b"a", &b"abc".repeat(5000)] {
+            let z = ws_deflate(m);
+            assert!(!z.ends_with(&[0, 0, 0xff, 0xff]));
+            assert_eq!(ws_inflate(1 << 20, &z), (0, m.to_vec()));
+        }
+        assert_eq!(ws_inflate(100, &ws_deflate(&[1; 101])).0, 1009);
+        assert_eq!(ws_inflate(100, &[0xff, 0xff]).0, 1007);
+    }
 
     #[test]
     fn sha1_and_accept() {

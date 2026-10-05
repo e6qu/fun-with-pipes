@@ -711,4 +711,4 @@ endpoints byte for byte.
   lose digits; query parameters in generated clients go through `Json`
   values (doubles).
 * Compression is gzip and deflate (from scratch, below zlib's ratio); no
-  Brotli or zstd, and streamed responses are not compressed.
+  Brotli or zstd; streamed responses are compressed with gzip only.

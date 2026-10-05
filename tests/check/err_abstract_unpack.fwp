@@ -1,0 +1,2 @@
+# unpacked vectors keep a size each, so they cannot share a list
+all = [vector [1] | vector.pack] | map vector.unpack

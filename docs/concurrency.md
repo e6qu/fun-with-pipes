@@ -251,8 +251,20 @@ routes = http.router [http.route "GET" "/ws" (http.websocket echo)]
   session is three tasks (reader, writer and a supervisor that closes the
   connection), all fwp code over `tcp.read` and `tcp.write`; framing,
   masking and the accept key are primitives (`src/h2web.rs`,
-  `runtime/fwp_rt_http2.c`). No subprotocols or extensions
-  (permessage-deflate).
+  `runtime/fwp_rt_http2.c`).
+- Compression (`permessage-deflate`, RFC 7692): with `compress = Some n`
+  in its `WsConfig`, a client offers it and a server accepts an offer it
+  can honour, both without context takeover, so each message is
+  compressed on its own (as a stream's chunks are, below). Text and
+  binary messages of at least n bytes go out compressed (RSV1); a
+  compressed message in is decompressed up to `max-message-bytes`
+  (1009 beyond, 1007 for data that does not decompress), and RSV1
+  without an agreement, or on a continuation or control frame, is 1002.
+- Subprotocols (`Sec-WebSocket-Protocol`): a client offers the
+  `protocols` of its `WsConfig`, and a server picks the first of its own
+  `protocols` (in its order of preference) that the client offered. The
+  session's `protocol` is the one chosen, or `None`; a client refuses an
+  answer naming a protocol it did not offer.
 
 `examples/server/chat.fwp` is a chat server; tutorial 20 walks through
 WebSocket and HTTP/2.
@@ -264,7 +276,10 @@ WebSocket and HTTP/2.
   `Accept-Encoding` accepts it (a coding with `q=0` is refused), adding
   `content-encoding` and `vary: accept-encoding`. The middleware
   `http.compress n handler` does the same for one handler. Streamed
-  bodies, responses that have a `content-encoding` already, statuses 204
+  bodies, whatever their length, are compressed with gzip as they go:
+  each chunk is a block of its own, flushed, so the client decodes it
+  when it arrives (a client that accepts only deflate gets the stream as
+  it is). Responses that have a `content-encoding` already, statuses 204
   and 304, and types that are compressed already (images but SVG, video,
   audio, archives) are left alone.
 - **Requests:** bodies with `content-encoding: gzip` (or `x-gzip`) or

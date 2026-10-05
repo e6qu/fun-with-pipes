@@ -908,7 +908,8 @@ static int pb_decode(const int *S, int node, const unsigned char *pb, size_t n, 
 
 #define H2_GZIP_MAX ((size_t)64 << 20)
 
-static uint32_t h2_crc32(const unsigned char *d, size_t n) {
+/* the CRC of data that continues data whose CRC is `crc` */
+static uint32_t h2_crc32_update(uint32_t crc, const unsigned char *d, size_t n) {
     static uint32_t t[256];
     static int ready = 0;
     if (!ready) {
@@ -919,10 +920,12 @@ static uint32_t h2_crc32(const unsigned char *d, size_t n) {
         }
         ready = 1;
     }
-    uint32_t c = 0xffffffffu;
+    uint32_t c = ~crc;
     for (size_t i = 0; i < n; i++) c = t[(c ^ d[i]) & 0xff] ^ (c >> 8);
-    return c ^ 0xffffffffu;
+    return ~c;
 }
+
+static uint32_t h2_crc32(const unsigned char *d, size_t n) { return h2_crc32_update(0, d, n); }
 
 static const uint16_t z_len_base[29] = {3,  4,  5,  6,  7,  8,  9,  10, 11,  13,  15,  17,  19,  23, 27,
                                         31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258};
@@ -1145,13 +1148,12 @@ static void z_lit(z_out *o, uint32_t s) {
     else z_code(o, 0xc0 + s - 280, 8);
 }
 
-/* gzip data of `d`: one fixed-Huffman block */
-static void h2_gzip(const unsigned char *d, size_t n, h2_buf *out) {
-    static const unsigned char head[10] = {0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255};
-    h2b_put(out, head, 10);
-    z_out o = {out, 0, 0};
-    z_put(&o, 1, 1);
-    z_put(&o, 1, 2);
+static const unsigned char h2_gzip_head[10] = {0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255};
+
+/* the rest of a fixed-Huffman block after its first bit: its type, the
+ * data (a greedy LZ77 search within the block) and the end of block */
+static void z_block(z_out *o, const unsigned char *d, size_t n) {
+    z_put(o, 1, 2);
     enum { HASH = 1 << 15, WINDOW = 32768 };
     size_t *headt = (size_t *)malloc(HASH * sizeof(size_t));
     for (size_t i = 0; i < HASH; i++) headt[i] = (size_t)-1;
@@ -1168,28 +1170,48 @@ static void h2_gzip(const unsigned char *d, size_t n, h2_buf *out) {
                 if (l >= 3) { len = l; dist = i - cand; }
             }
         }
-        if (len == 0) { z_lit(&o, d[i]); i++; continue; }
+        if (len == 0) { z_lit(o, d[i]); i++; continue; }
         int li = 28;
         while (z_len_base[li] > len) li--;
-        z_lit(&o, 257 + (uint32_t)li);
-        z_put(&o, (uint32_t)(len - z_len_base[li]), z_len_extra[li]);
+        z_lit(o, 257 + (uint32_t)li);
+        z_put(o, (uint32_t)(len - z_len_base[li]), z_len_extra[li]);
         int di = 29;
         while (z_dist_base[di] > dist) di--;
-        z_code(&o, (uint32_t)di, 5);
-        z_put(&o, (uint32_t)(dist - z_dist_base[di]), z_dist_extra[di]);
+        z_code(o, (uint32_t)di, 5);
+        z_put(o, (uint32_t)(dist - z_dist_base[di]), z_dist_extra[di]);
         size_t end = i + len < (n >= 2 ? n - 2 : 0) ? i + len : (n >= 2 ? n - 2 : 0);
         for (size_t k = i + 1; k < end; k++) headt[Z_HASH(k)] = k;
         i += len;
     }
 #undef Z_HASH
     free(headt);
-    z_lit(&o, 256);
+    z_lit(o, 256);
+}
+
+/* gzip data of `d`: one fixed-Huffman block */
+static void h2_gzip(const unsigned char *d, size_t n, h2_buf *out) {
+    h2b_put(out, h2_gzip_head, 10);
+    z_out o = {out, 0, 0};
+    z_put(&o, 1, 1);
+    z_block(&o, d, n);
     if (o.nbits) h2b_byte(out, o.bit & 0xff);
     uint32_t crc = h2_crc32(d, n), sz = (uint32_t)n;
     unsigned char t[8] = {(unsigned char)crc, (unsigned char)(crc >> 8), (unsigned char)(crc >> 16),
                           (unsigned char)(crc >> 24), (unsigned char)sz, (unsigned char)(sz >> 8),
                           (unsigned char)(sz >> 16), (unsigned char)(sz >> 24)};
     h2b_put(out, t, 8);
+}
+
+/* one chunk of a gzip stream (src/gzip.rs, gzip_chunk): a block that is
+ * not the last, then an empty stored block (a sync flush) */
+static void h2_gzip_chunk(const unsigned char *d, size_t n, h2_buf *out) {
+    z_out o = {out, 0, 0};
+    z_put(&o, 0, 1);
+    z_block(&o, d, n);
+    z_put(&o, 0, 3);
+    if (o.nbits) h2b_byte(out, o.bit & 0xff);
+    static const unsigned char sync[4] = {0, 0, 0xff, 0xff};
+    h2b_put(out, sync, 4);
 }
 
 #endif /* __wasi__ */

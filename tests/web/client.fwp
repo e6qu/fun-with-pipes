@@ -57,7 +57,11 @@ show-message = match
 websocket : () -> () ! {Async, IO, Network, Error[IoError]}
 websocket =
     ws-url
-    | ws.connect
+    | ws.connect-with
+        (ws.config
+            | with { protocols = ["other", "superchat"], compress = Some 64 })
+        tls.options
+    | tap (.protocol | format "protocol {}" | print)
     | tap (ws.send-text "ping me")
     | tap (ws.recv | show-message | print)
     | tap (ws.send (WsMessage.Binary (bytes.from-list [1, 2, 255])))

@@ -150,7 +150,11 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   error that asks for a signature. A size `n + 1` is never zero, so
   `vector.head : Vector[t, n + 1] -> t` (and `last`, `tail`, `init`)
   needs no `Option`: `vector [] | vector.head` is a compile error, and
-  `vector.non-empty` checks a run-time size once.
+  `vector.non-empty` checks a run-time size once. Subtraction is the other
+  way round: `vector.split : Vector[a, m] -> Vector[t, n + m] ->
+  (Vector[t, m], Vector[t, n])` takes the first m elements, and
+  a vector of 5 split by one of 7 is a compile error (and so for
+  `matrix.split-rows` and `matrix.split-columns`).
 - **Abstract sizes:** `_` or `_n` in the result of a signature is a size
   the definition chooses when the program runs: `vector.from-list :
   List[t] -> Vector[t, _]`, `matrix.from-rows : List[List[t]] ->
@@ -160,7 +164,12 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   (`Option[Vector[b, m]]`), `matrix.same-shape` and `matrix.as-square`
   compare at run time. A function's abstract size cannot be shared
   beyond one call's result (`map vector.from-list` is an error), and
-  may not appear in an argument (use a size variable).
+  may not appear in an argument (use a size variable). Values of
+  different sizes share a type when packed: `vector.pack : Vector[t, n]
+  -> AnyVector[t]` hides the size, so a `List[AnyVector[F64]]` holds
+  vectors of any lengths, and `vector.unpack : AnyVector[t] -> Vector[t,
+  _]` gives each a size of its own (`matrix.pack` and `matrix.unpack`
+  likewise).
   Performance: an abstract size costs a run-time comparison and an
   `Option` at each such check, where a static size costs nothing.
 - **Higher-kinded parameters:** `Functor[F]`.

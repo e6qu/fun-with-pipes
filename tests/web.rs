@@ -283,6 +283,35 @@ fn curl_cleartext(b: Backend) {
         let plain = curl(&[v, "-D", "-", &u("/big")]);
         assert!(!plain.contains("content-encoding"), "{}", plain);
         assert!(plain.ends_with(&"compress me ".repeat(500)));
+        // a streamed body is gzipped chunk by chunk; for a client that
+        // accepts only deflate, it is sent as it is
+        let stream = curl(&[v, "--compressed", "-D", "-", &u("/stream")]);
+        assert!(
+            stream
+                .to_ascii_lowercase()
+                .contains("content-encoding: gzip"),
+            "{}",
+            stream
+        );
+        assert!(
+            stream.ends_with("chunk 1\nchunk 2\nchunk 3\n"),
+            "{}",
+            stream
+        );
+        let deflate = curl(&[
+            v,
+            "-H",
+            "accept-encoding: deflate",
+            "-D",
+            "-",
+            &u("/stream"),
+        ]);
+        assert!(!deflate.contains("content-encoding"), "{}", deflate);
+        assert!(
+            deflate.ends_with("chunk 1\nchunk 2\nchunk 3\n"),
+            "{}",
+            deflate
+        );
     }
     // a small body is left alone by the config, compressed by the
     // middleware; `q=0` refuses a coding
@@ -469,6 +498,7 @@ big: 6000 bytes, content-encoding None
 stream: (200, \"chunk 1\\nchunk 2\\nchunk 3\\n\")
 gzip request: (200, \"18 bytes: compressed request\")
 concurrent: [Some 200, Some 200, Some 200, Some 200]
+protocol Some \"superchat\"
 text ping me
 binary [1, 2, 255]
 long text 60000
@@ -550,13 +580,19 @@ struct Ws {
 }
 
 fn ws_open(addr: &str) -> Ws {
+    ws_open_with(addr, "").0
+}
+
+/// A session whose request has `headers` (lines ending in CRLF) too, and
+/// the response head.
+fn ws_open_with(addr: &str, headers: &str) -> (Ws, String) {
     let mut s = TcpStream::connect(addr).unwrap();
     s.set_read_timeout(Some(Duration::from_secs(20))).unwrap();
     let key = "dGhlIHNhbXBsZSBub25jZQ==";
     write!(
         s,
-        "GET /ws HTTP/1.1\r\nhost: {}\r\nupgrade: websocket\r\nconnection: keep-alive, Upgrade\r\nsec-websocket-key: {}\r\nsec-websocket-version: 13\r\n\r\n",
-        addr, key
+        "GET /ws HTTP/1.1\r\nhost: {}\r\nupgrade: websocket\r\nconnection: keep-alive, Upgrade\r\nsec-websocket-key: {}\r\nsec-websocket-version: 13\r\n{}\r\n",
+        addr, key, headers
     )
     .unwrap();
     let mut r = BufReader::new(s.try_clone().unwrap());
@@ -578,7 +614,7 @@ fn ws_open(addr: &str) -> Ws {
         "accept key: {}",
         head
     );
-    Ws { s, r }
+    (Ws { s, r }, lower)
 }
 
 /// A client frame: masked unless `unmasked`.
@@ -613,6 +649,12 @@ impl Ws {
     /// The next frame from the server: (FIN, opcode, payload); servers do
     /// not mask.
     fn recv(&mut self) -> (bool, u8, Vec<u8>) {
+        let (b0, p) = self.recv_raw();
+        (b0 & 0x80 != 0, b0 & 0x0f, p)
+    }
+
+    /// The next frame: its first byte and its payload.
+    fn recv_raw(&mut self) -> (u8, Vec<u8>) {
         let mut h = [0u8; 2];
         self.r.read_exact(&mut h).unwrap();
         assert_eq!(h[1] & 0x80, 0, "a server frame is not masked");
@@ -628,7 +670,7 @@ impl Ws {
         }
         let mut p = vec![0u8; n];
         self.r.read_exact(&mut p).unwrap();
-        (h[0] & 0x80 != 0, h[0] & 0x0f, p)
+        (h[0], p)
     }
 
     fn close_code(&mut self) -> u16 {
@@ -701,6 +743,45 @@ fn raw_websocket(b: Backend) {
     ws.send(&frame(true, 0, b"x", false));
     assert_eq!(ws.close_code(), 1002);
 
+    // permessage-deflate: the server agrees, each message on its own
+    let offer = "sec-websocket-extensions: permessage-deflate; client_max_window_bits\r\n";
+    let (mut ws, head) = ws_open_with(&srv.addr, offer);
+    assert!(
+        head.contains("sec-websocket-extensions: permessage-deflate; server_no_context_takeover; client_no_context_takeover"),
+        "{}",
+        head
+    );
+    // a compressed message (RSV1): a stored block, then the empty stored
+    // block of a flush without its 00 00 ff ff
+    let text = b"compressed ".repeat(20);
+    let mut z = vec![0, text.len() as u8, 0, !(text.len() as u8), 0xff];
+    z.extend_from_slice(&text);
+    z.push(0);
+    ws.send(&frame(true, 0x40 | 1, &z, false));
+    // the echo comes back compressed, as it has more than 64 bytes
+    let (b0, p) = ws.recv_raw();
+    assert_eq!(b0, 0x80 | 0x40 | 1, "a compressed text frame: {:?}", p);
+    assert!(p.len() < text.len() / 2, "{} bytes", p.len());
+    // a short one is sent as it is
+    ws.send(&frame(true, 1, b"short", false));
+    assert_eq!(ws.recv(), (true, 1, b"short".to_vec()));
+    // a compressed continuation: 1002
+    ws.send(&frame(false, 0x40 | 1, &z, false));
+    ws.send(&frame(true, 0x40, &z, false));
+    assert_eq!(ws.close_code(), 1002);
+    // data that does not inflate: 1007
+    let (mut ws, _) = ws_open_with(&srv.addr, offer);
+    ws.send(&frame(true, 0x40 | 2, &[0xff, 0xff, 0xff], false));
+    assert_eq!(ws.close_code(), 1007);
+    // an offer the server cannot honour, and RSV1 without an agreement
+    let (mut ws, head) = ws_open_with(
+        &srv.addr,
+        "sec-websocket-extensions: permessage-deflate; server_max_window_bits=10\r\n",
+    );
+    assert!(!head.contains("sec-websocket-extensions"), "{}", head);
+    ws.send(&frame(true, 0x40 | 1, &z, false));
+    assert_eq!(ws.close_code(), 1002);
+
     // not an upgrade request
     if have("curl", "--version") {
         let u = format!("http://{}/ws", srv.addr);
@@ -760,6 +841,7 @@ const ws = new WebSocket(process.argv[1]);
 ws.binaryType = 'arraybuffer';
 const out = [];
 ws.onopen = () => {
+  out.push('ext:' + ws.extensions);
   ws.send('hi'); ws.send(new Uint8Array([1, 2, 3])); ws.send('x'.repeat(70000)); ws.send('close');
 };
 ws.onmessage = (e) => out.push(typeof e.data === 'string'
@@ -775,7 +857,7 @@ ws.onclose = (e) => console.log(out.join(' '), 'close', e.code, e.reason, e.wasC
             .unwrap();
         assert_eq!(
             String::from_utf8_lossy(&out.stdout).trim(),
-            "text:hi bin:1,2,3 text:70000 close 4000 asked to true",
+            "ext:permessage-deflate; server_no_context_takeover; client_no_context_takeover text:hi bin:1,2,3 text:70000 close 4000 asked to true",
             "{:?}: {}",
             b,
             String::from_utf8_lossy(&out.stderr)

@@ -1,0 +1,5 @@
+# a vector of 2 has no first 3 elements
+xs : Vector[I64, 2]
+xs = vector [1, 2]
+
+front = xs | vector.split (vector [0, 0, 0]) | .0

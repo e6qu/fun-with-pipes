@@ -1,0 +1,20 @@
+# Packed vectors and matrices: values of different sizes in one list, each
+# unpacked with a size of its own.
+bag : List[AnyVector[I64]]
+bag = [
+    vector [1, 2] | vector.pack,
+    vector [1, 2, 3] | vector.pack,
+    [4, 5, 6, 7] | vector.from-list | vector.pack,
+]
+
+squares : List[AnyMatrix[I64]]
+squares = [matrix [[1, 2], [3, 4]] | matrix.pack, matrix [[5]] | matrix.pack]
+
+main = [
+    bag | map (vector.unpack | vector.length) | echo,
+    bag | map (vector.unpack | fork dot id id) | echo,
+    bag | map (vector.unpack | vector.push 0 | vector.to-list) | echo,
+    squares
+    | map (matrix.unpack | matrix.as-square | option.map matrix.rows-of)
+    | echo,
+] | ignore

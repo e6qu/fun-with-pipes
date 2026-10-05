@@ -31,12 +31,17 @@ fn crc_table() -> &'static [u32; 256] {
 }
 
 pub fn crc32(data: &[u8]) -> u32 {
+    crc32_update(0, data)
+}
+
+/// The CRC of data that continues data whose CRC is `crc`.
+pub fn crc32_update(crc: u32, data: &[u8]) -> u32 {
     let t = crc_table();
-    let mut c = 0xffff_ffffu32;
+    let mut c = !crc;
     for &b in data {
         c = t[((c ^ b as u32) & 0xff) as usize] ^ (c >> 8);
     }
-    c ^ 0xffff_ffff
+    !c
 }
 
 // ------------------------------------------------------------------ tables
@@ -365,14 +370,56 @@ impl Out {
 
 /// Compress with one fixed-Huffman block (raw DEFLATE).
 pub fn deflate(data: &[u8]) -> Vec<u8> {
-    const WINDOW: usize = 32768;
-    const HASH: usize = 1 << 15;
     let mut o = Out {
         d: Vec::with_capacity(data.len() / 2 + 16),
         bit: 0,
         nbits: 0,
     };
     o.put(1, 1); // the last block
+    block(&mut o, data);
+    if o.nbits > 0 {
+        o.d.push(o.bit as u8);
+    }
+    o.d
+}
+
+/// One chunk of a gzip stream: a fixed-Huffman block that is not the
+/// last, then an empty stored block, which ends on a byte (a sync flush:
+/// the receiver can decode everything so far). Chunks follow
+/// [`GZIP_HEADER`] and end with [`gzip_end`].
+pub fn gzip_chunk(data: &[u8]) -> Vec<u8> {
+    let mut o = Out {
+        d: Vec::with_capacity(data.len() / 2 + 16),
+        bit: 0,
+        nbits: 0,
+    };
+    o.put(0, 1);
+    block(&mut o, data);
+    o.put(0, 3); // a stored block, not the last
+    if o.nbits > 0 {
+        o.d.push(o.bit as u8);
+    }
+    o.d.extend_from_slice(&[0, 0, 0xff, 0xff]);
+    o.d
+}
+
+/// A gzip header: no name, no time, an unknown system.
+pub const GZIP_HEADER: [u8; 10] = [0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255];
+
+/// The end of a gzip stream of chunks: an empty last block, then the CRC
+/// and length of all the data.
+pub fn gzip_end(crc: u32, len: u64) -> Vec<u8> {
+    let mut out = vec![0x03, 0x00];
+    out.extend_from_slice(&crc.to_le_bytes());
+    out.extend_from_slice(&(len as u32).to_le_bytes());
+    out
+}
+
+/// The rest of a fixed-Huffman block after its first bit: its type, the
+/// data (a greedy LZ77 search within the block) and the end of block.
+fn block(o: &mut Out, data: &[u8]) {
+    const WINDOW: usize = 32768;
+    const HASH: usize = 1 << 15;
     o.put(1, 2); // fixed Huffman codes
     let mut head = vec![usize::MAX; HASH];
     let hash = |i: usize| -> usize {
@@ -419,15 +466,11 @@ pub fn deflate(data: &[u8]) -> Vec<u8> {
         i += len;
     }
     o.lit(256);
-    if o.nbits > 0 {
-        o.d.push(o.bit as u8);
-    }
-    o.d
 }
 
 /// gzip data: a minimal header, the DEFLATE data, the CRC and the length.
 pub fn gzip(data: &[u8]) -> Vec<u8> {
-    let mut out = vec![0x1f, 0x8b, 8, 0, 0, 0, 0, 0, 0, 255];
+    let mut out = GZIP_HEADER.to_vec();
     out.extend(deflate(data));
     out.extend_from_slice(&crc32(data).to_le_bytes());
     out.extend_from_slice(&(data.len() as u32).to_le_bytes());
@@ -459,6 +502,23 @@ mod tests {
             assert_eq!(gunzip(&z, MAX_OUTPUT).unwrap(), s);
         }
         assert!(gzip(&b"abc".repeat(10000)).len() < 1000);
+    }
+
+    #[test]
+    fn chunks_make_one_stream() {
+        let chunks: Vec<&[u8]> = vec![b"hello, ", b"", b"hello, hello", &[7; 3000], b"!"];
+        let mut z = GZIP_HEADER.to_vec();
+        let (mut crc, mut len) = (0, 0);
+        for c in &chunks {
+            let part = gzip_chunk(c);
+            // each chunk ends with a sync flush
+            assert!(part.ends_with(&[0, 0, 0xff, 0xff]));
+            z.extend(part);
+            crc = crc32_update(crc, c);
+            len += c.len() as u64;
+        }
+        z.extend(gzip_end(crc, len));
+        assert_eq!(gunzip(&z, MAX_OUTPUT).unwrap(), chunks.concat());
     }
 
     #[test]

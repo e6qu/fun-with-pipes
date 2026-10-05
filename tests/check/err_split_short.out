@@ -1,0 +1,4 @@
+check/err_split_short.fwp:5:12: error: type mismatch in pipe input: expected `Vector[I64, a + 3]`, found `Vector[I64, 2]`
+5 | front = xs | vector.split (vector [0, 0, 0]) | .0
+  |            ^
+  note: `a + 3` is not compatible with `2`

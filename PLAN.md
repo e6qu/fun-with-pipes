@@ -338,10 +338,12 @@ Next in this series, toward static, zero-cost programs:
     76 GiB and 41 s to 5 MiB and 17 ms. Objects are freed when their
     last counted reference goes, with what they hold (drop functions per
     type): building and walking a tree 200 times went from 33
-    collections and a 37 MiB heap to none and 2 MiB. Next: counted lists
-    from the runtime's list primitives (now shared, so left to the
-    collector), and fewer counts where values go straight to the
-    runtime.
+    collections and a 37 MiB heap to none and 2 MiB. Lists the runtime's
+    primitives build stay shared and are left to the collector: counting
+    their cells (fresh results, inputs shared element by element) freed
+    730 of 1101 MiB of a list-churning program but made it 35% slower, as
+    the generational collector already frees short-lived lists cheaply.
+    Next: fewer counts where values go straight to the runtime.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
@@ -357,14 +359,19 @@ Next in this series, toward static, zero-cost programs:
     `matrix.beside` (columns add up) in the standard library.
     A size `n + 1` proves a vector has an element: `vector.head`,
     `last`, `tail` and `init` are total, without an `Option`.
-    Next: subtraction where it is safe (a `take` of at most n).
+    Subtraction where it is safe: `vector.split : Vector[a, m] ->
+    Vector[t, n + m] -> (Vector[t, m], Vector[t, n])` takes the first m
+    elements, and a split of more than a vector has is a compile error.
+    `matrix.split-rows` and `matrix.split-columns` do the same for
+    matrices.
 28. **Abstract sizes** (done). `Dyn` is gone: a size known only when
     the program runs is abstract (`_`, `_n` in a signature's result),
     chosen afresh by each call and rigid for callers, with
     `vector.same-size`, `matrix.same-shape` and `matrix.as-square` to
     compare at run time. Performance-impacting: each such check is a
-    run-time comparison and an `Option`. Next: existential packages
-    (a list of vectors of different sizes).
+    run-time comparison and an `Option`. Packed values hold sizes of
+    their own: `AnyVector[t]` and `AnyMatrix[t]` (`vector.pack`,
+    `vector.unpack`), so a list may hold vectors of different lengths.
 
 ## Later
 
