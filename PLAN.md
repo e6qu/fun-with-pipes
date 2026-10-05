@@ -326,9 +326,10 @@ Next in this series, toward static, zero-cost programs:
     record of five fields went from 458 MiB allocated and 114 ms to
     nothing and 67 ms, while the benchmarks stay within noise except
     `map` (8% slower: its pairs are made unique and then shared at once).
-    Next: reusing a variant's cell for a constructor of the same size
-    (a `map` over a list written in fwp), fewer counts where the values
-    go straight to the runtime, then on by default.
+    A variant's cell is reused by a constructor of the same size: adding
+    to every node of a tree of 2^18 nodes 20 times went from 168 MiB
+    allocated and 234 ms to 16 MiB (the tree) and 137 ms. Next: fewer
+    counts where values go straight to the runtime, then on by default.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,

@@ -359,6 +359,38 @@ struct Gen<'p> {
     callbacks: Vec<FuncId>,
 }
 
+/// `e` without the reference count changes of local `x`, if it does
+/// not use `x` otherwise.
+fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
+    let go = |e: &Expr| without_counts(e, x);
+    let all = |es: &[Expr]| es.iter().map(go).collect::<Option<Vec<Expr>>>();
+    Some(match e {
+        Expr::Dup(l, b) | Expr::Drop(l, b) if *l == x => go(b)?,
+        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(go(b)?)),
+        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(go(b)?)),
+        Expr::Local(l) if *l == x => return None,
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e.clone(),
+        Expr::Call(f, a) => Expr::Call(*f, all(a)?),
+        Expr::Construct(t, a) => Expr::Construct(*t, all(a)?),
+        Expr::Record(a) => Expr::Record(all(a)?),
+        Expr::Apply(f, a) => Expr::Apply(Box::new(go(f)?), all(a)?),
+        Expr::Field(r, i) => Expr::Field(Box::new(go(r)?), *i),
+        Expr::SetFields(r, sets) => Expr::SetFields(
+            Box::new(go(r)?),
+            sets.iter()
+                .map(|(i, v)| go(v).map(|v| (*i, v)))
+                .collect::<Option<Vec<_>>>()?,
+        ),
+        Expr::Let(l, v, b) => Expr::Let(*l, Box::new(go(v)?), Box::new(go(b)?)),
+        Expr::Match(s, arms) => Expr::Match(
+            Box::new(go(s)?),
+            arms.iter()
+                .map(|(p, b)| go(b).map(|b| (p.clone(), b)))
+                .collect::<Option<Vec<_>>>()?,
+        ),
+    })
+}
+
 /// Whether `e` is local `x`, under reference count changes.
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
@@ -1102,6 +1134,39 @@ struct FnGen<'g, 'p> {
     fields: HashMap<Local, Vec<String>>,
     /// The type of each local of the function.
     locals: Vec<MT>,
+    /// The constructor a local is known to hold (in the arm of a match on
+    /// it).
+    known_tag: HashMap<Local, u32>,
+    /// Cells of dropped unique values, which a constructor of the same size
+    /// may take (innermost last).
+    tokens: Vec<Token>,
+}
+
+/// A dropped value's cell, which a constructor of the same size may reuse
+/// (`FnGen::reuse_token`).
+struct Token {
+    /// The C variable holding the cell, or 0 when the value was not unique.
+    var: String,
+    /// The C variable holding `fwp_rc_unique`'s answer (2: verify instead).
+    unique: String,
+    arity: usize,
+    used: bool,
+}
+
+/// Whether `e` builds a record or a variant of `n` fields.
+fn allocates(e: &Expr, n: usize) -> bool {
+    let any = |xs: &[Expr]| xs.iter().any(|x| allocates(x, n));
+    match e {
+        Expr::Construct(_, xs) | Expr::Record(xs) => xs.len() == n || any(xs),
+        Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => false,
+        Expr::Call(_, xs) => any(xs),
+        Expr::Apply(f, xs) => allocates(f, n) || any(xs),
+        Expr::Field(r, _) => allocates(r, n),
+        Expr::SetFields(r, xs) => allocates(r, n) || xs.iter().any(|(_, x)| allocates(x, n)),
+        Expr::Let(_, v, b) => allocates(v, n) || allocates(b, n),
+        Expr::Match(s, arms) => allocates(s, n) || arms.iter().any(|(_, b)| allocates(b, n)),
+        Expr::Dup(_, b) | Expr::Drop(_, b) => allocates(b, n),
+    }
 }
 
 /// A loop's step function generated with its state in arrays: its results
@@ -1364,6 +1429,20 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let b = self.bind_local(*l, v, b);
                 self.expr_fields(b, n)
             }
+            Expr::Drop(l, b) if self.g.reuse && !self.fields.contains_key(l) => {
+                match self.reuse_token(*l, b) {
+                    Some(t) => {
+                        self.tokens.push(t);
+                        let r = self.expr_fields(b, n);
+                        self.tokens.pop();
+                        r
+                    }
+                    None => {
+                        self.count(e, *l);
+                        self.expr_fields(b, n)
+                    }
+                }
+            }
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -1377,13 +1456,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 self.label += 1;
                 let done = format!("done{}", self.label);
+                let before = self.arms_start();
+                let mut after = before.clone();
                 for (pat, body) in arms {
                     self.label += 1;
                     let next = format!("next{}", self.label);
                     self.line("{");
                     self.indent += 1;
                     self.pattern(pat, &s, &next);
+                    let known = self.arm_start(scrut, pat, &before);
                     let fs = self.expr_fields(body, n);
+                    self.arm_end(known, &mut after);
                     for (r, f) in rs.iter().zip(fs) {
                         self.line(&format!("{} = {};", r, f));
                     }
@@ -1394,6 +1477,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 self.line("fwp_trap(\"internal: no match arm applies\");");
                 self.line(&format!("{}:;", done));
+                self.arms_end(&after);
                 rs
             }
             _ => {
@@ -1463,6 +1547,112 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.line(&format!("fwp_rc_share({});", v));
             }
         }
+    }
+
+    /// Which reuse tokens are taken, before a match's arms.
+    fn arms_start(&self) -> Vec<bool> {
+        self.tokens.iter().map(|t| t.used).collect()
+    }
+
+    /// An arm starts: every token is as before the match, and a pattern
+    /// with a constructor tells which one the scrutinee holds.
+    fn arm_start(&mut self, scrut: &Expr, pat: &Pat, before: &[bool]) -> Option<Local> {
+        for (t, u) in self.tokens.iter_mut().zip(before) {
+            t.used = *u;
+        }
+        match (scrut, pat) {
+            (Expr::Local(x), Pat::Construct(tag, _)) => {
+                self.known_tag.insert(*x, *tag);
+                Some(*x)
+            }
+            _ => None,
+        }
+    }
+
+    fn arm_end(&mut self, known: Option<Local>, after: &mut [bool]) {
+        if let Some(x) = known {
+            self.known_tag.remove(&x);
+        }
+        for (t, a) in self.tokens.iter().zip(after.iter_mut()) {
+            *a |= t.used;
+        }
+    }
+
+    /// After a match: a token one of its arms took is taken.
+    fn arms_end(&mut self, after: &[bool]) {
+        for (t, a) in self.tokens.iter_mut().zip(after) {
+            t.used = *a;
+        }
+    }
+
+    /// `Drop(x)` before `body`, where `x`'s cell could be reused by a
+    /// constructor of the same size in `body`: when `x` is unique, its
+    /// fields give up the references it held (the cell is dead) and the
+    /// cell becomes a token; otherwise it is an ordinary drop.
+    fn reuse_token(&mut self, x: Local, body: &Expr) -> Option<Token> {
+        let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record) && x == 0;
+        if self.fields.contains_key(&x) || virtual_state {
+            return None;
+        }
+        let shapes = &self.g.prog.shapes;
+        let t = &self.locals[x as usize];
+        let tys: Vec<MT> = match (
+            record_fields(shapes, t),
+            shapes.get(t),
+            self.known_tag.get(&x),
+        ) {
+            (Some(fs), _, _) => fs.iter().map(|(_, t)| t.clone()).collect(),
+            (None, Some(TypeShape::Adt(vs)), Some(tag)) => vs.get(*tag as usize)?.1.clone(),
+            _ => return None,
+        };
+        if tys.is_empty() || tys.len() > 255 || !allocates(body, tys.len()) {
+            return None;
+        }
+        let (u, tok) = (self.fresh(), self.fresh());
+        self.line(&format!("int {} = fwp_rc_unique(l{});", u, x));
+        self.line(&format!("V {} = 0;", tok));
+        self.line(&format!("if ({}) {{", u));
+        self.line(&format!("    {} = l{};", tok, x));
+        for (k, ft) in tys.iter().enumerate() {
+            if crate::rc::needs_rc(shapes, ft) {
+                self.line(&format!("    fwp_rc_drop(OBJ(l{})->f[{}]);", x, k));
+            }
+        }
+        self.line(&format!("}} else fwp_rc_drop(l{});", x));
+        Some(Token {
+            var: tok,
+            unique: u,
+            arity: tys.len(),
+            used: false,
+        })
+    }
+
+    /// A record or variant of fields `xs`: in a token's cell when one of
+    /// that size is free and still young (a cell that became old may not
+    /// point to young values), else allocated by `alloc`.
+    fn alloc(&mut self, tag: u32, xs: &[String], alloc: String) -> String {
+        let Some(i) = self
+            .tokens
+            .iter()
+            .rposition(|t| !t.used && t.arity == xs.len())
+        else {
+            return self.bind(self.g.fresh(alloc));
+        };
+        self.tokens[i].used = true;
+        let (tok, u) = (self.tokens[i].var.clone(), self.tokens[i].unique.clone());
+        let r = self.fresh();
+        self.line(&format!("V {};", r));
+        self.line(&format!("if ({} == 1 && fwp_rc_young({})) {{", u, tok));
+        self.line(&format!("    OBJ({})->tag = {};", tok, tag));
+        for (k, x) in xs.iter().enumerate() {
+            self.line(&format!("    OBJ({})->f[{}] = {};", tok, k, x));
+        }
+        self.line(&format!("    {} = {};", r, tok));
+        self.line("} else {");
+        self.line(&format!("    {} = {};", r, self.g.fresh(alloc)));
+        self.line(&format!("    if ({} == 2) fwp_rc_poison({});", u, tok));
+        self.line("}");
+        r
     }
 
     /// The reference count change of a `Dup` or `Drop` of local `l`: none
@@ -1681,6 +1871,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         match e {
+            Expr::Drop(l, b) if self.g.reuse => match self.reuse_token(*l, b) {
+                Some(t) => {
+                    self.tokens.push(t);
+                    let r = self.expr(b);
+                    self.tokens.pop();
+                    r
+                }
+                None => {
+                    self.count(e, *l);
+                    self.expr(b)
+                }
+            },
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr(b)
@@ -1738,7 +1940,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let xs = self.args(args);
                 let alloc = format!("fwp_data({}, {}, {})", tag, xs.len(), Self::array(&xs));
-                self.bind(self.g.fresh(alloc))
+                self.alloc(*tag, &xs, alloc)
             }
             Expr::Record(args) => {
                 if args.is_empty() {
@@ -1746,7 +1948,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let xs = self.args(args);
                 let alloc = format!("fwp_record({}, {})", xs.len(), Self::array(&xs));
-                self.bind(self.g.fresh(alloc))
+                self.alloc(0, &xs, alloc)
             }
             Expr::Field(r, i) => {
                 if let Expr::Local(l) = &**r {
@@ -1782,6 +1984,21 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 t
             }
             Expr::Let(l, v, body) => {
+                // `let o = map.get k m in match o ...`, with only o's
+                // reference counts in the arms: no `Some` is built
+                if let Expr::Match(s, arms) = &**body {
+                    if matches!(**s, Expr::Local(x) if x == *l) {
+                        let stripped: Option<Vec<(Pat, Expr)>> = arms
+                            .iter()
+                            .map(|(p, b)| without_counts(b, *l).map(|b| (p.clone(), b)))
+                            .collect();
+                        if let Some(arms) = stripped {
+                            if let Some(r) = self.lookup_match(v, &arms) {
+                                return r;
+                            }
+                        }
+                    }
+                }
                 let body = self.bind_local(*l, v, body);
                 self.expr(body)
             }
@@ -1795,13 +2012,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.line(&format!("V {};", r));
                 self.label += 1;
                 let done = format!("done{}", self.label);
+                let before = self.arms_start();
+                let mut after = before.clone();
                 for (pat, body) in arms {
                     self.label += 1;
                     let next = format!("next{}", self.label);
                     self.line("{");
                     self.indent += 1;
                     self.pattern(pat, &s, &next);
+                    let known = self.arm_start(scrut, pat, &before);
                     let bv = self.expr(body);
+                    self.arm_end(known, &mut after);
                     self.line(&format!("{} = {};", r, bv));
                     self.line(&format!("goto {};", done));
                     self.indent -= 1;
@@ -1810,6 +2031,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 self.line("fwp_trap(\"internal: no match arm applies\");");
                 self.line(&format!("{}:;", done));
+                self.arms_end(&after);
                 r
             }
         }
@@ -2842,6 +3064,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             in_loop: Some(lg),
             fields: HashMap::new(),
             locals: f.locals.clone(),
+            known_tag: HashMap::new(),
+            tokens: Vec::new(),
         };
         let r = fg.expr(e);
         out.push_str(&fg.out);
@@ -2979,6 +3203,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     in_loop: None,
                     fields: HashMap::new(),
                     locals,
+                    known_tag: HashMap::new(),
+                    tokens: Vec::new(),
                 };
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -3020,6 +3246,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             in_loop: None,
             fields,
             locals: f.locals.clone(),
+            known_tag: HashMap::new(),
+            tokens: Vec::new(),
         };
         let ret = match abi.ret {
             Some(n) => {
