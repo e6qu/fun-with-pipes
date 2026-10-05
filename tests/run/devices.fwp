@@ -2,11 +2,15 @@
 # the sequential evaluation, reductions are reproducible, and the GPU is
 # reported unavailable without OpenCL.
 
-xs : I64 -> Vector[F64, Dyn]
-xs = range 0 | map (int.to-float | mul 0.37 | sin | add 2.0) | vector.from-list
+# 0.0, 1.0, ... with a size known when the program runs
+idx : I64 -> Vector[F64, _]
+idx = range 0 | map int.to-float | vector.from-list
 
-ys : I64 -> Vector[F64, Dyn]
-ys = range 0 | map (int.to-float | mul 0.011 | add 0.5) | vector.from-list
+xs : Vector[F64, n] -> Vector[F64, n]
+xs = vector.map (mul 0.37 | sin | add 2.0)
+
+ys : Vector[F64, n] -> Vector[F64, n]
+ys = vector.map (mul 0.011 | add 0.5)
 
 # a generic function: on tensors it builds one fused kernel
 f : t -> t -> t where Field[t], Floating[t], FromFloat[t]
@@ -14,11 +18,12 @@ f = curry (fork add (.0 | exp | mul 0.5) (fork div .0 (.1 | sqrt) | sin | tan)
     | fork mul id (sub 0.25)
     | div 3.0)
 
-expr : I64 -> TensorExpr[Dyn]
-expr = fork f (xs | tensor.lazy) (ys | tensor.lazy)
+expr : I64 -> TensorExpr[_]
+expr = idx | fork f (xs | tensor.lazy) (ys | tensor.lazy)
 
 reference : I64 -> List[F64]
-reference = fork (zip-with (flip f)) (ys | vector.to-list) (xs | vector.to-list)
+reference =
+    idx | fork (zip-with (flip f)) (ys | vector.to-list) (xs | vector.to-list)
 
 same-everywhere : I64 -> Bool
 same-everywhere =

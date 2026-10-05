@@ -19,7 +19,7 @@ descend = fork (zip-with sub) (grad rosenbrock | map (mul 0.001)) id
 soft : t -> t where Field[t], Floating[t], FromFloat[t]
 soft = exp | add 1.0 | ln
 
-xs : Vector[F64, Dyn]
+xs : Vector[F64, _]
 xs = 1000 | range 0 | map (int.to-float | mul 0.01 | sub 5.0) | vector.from-list
 
 main = [

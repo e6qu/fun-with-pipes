@@ -806,6 +806,14 @@ impl<'a> Parser<'a> {
                     kind: TypeKind::Name(name, args),
                 })
             }
+            Tok::Underscore => {
+                // an abstract size
+                self.bump();
+                Ok(TypeExpr {
+                    span,
+                    kind: TypeKind::Name("_".into(), vec![]),
+                })
+            }
             Tok::Int {
                 neg: false, mag, ..
             } => {

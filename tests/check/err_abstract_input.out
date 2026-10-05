@@ -1,0 +1,4 @@
+check/err_abstract_input.fwp:2:7: error: the abstract size `_` may appear only in the final result
+2 | len : Vector[I64, _] -> I64
+  |       ^^^^^^
+  note: an abstract size is chosen by the definition; for a size the caller gives, use a size variable such as `n`

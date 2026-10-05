@@ -342,9 +342,16 @@ Next in this series, toward static, zero-cost programs:
 27. **Size arithmetic** (done). Sizes in types may be sums and
     products (`Vector[t, n + m]`, `Vector[t, m * n]`), checked as
     polynomials over the size variables, with `vector.append`,
-    `vector.push` and `matrix.flatten` in the standard library. Next:
-    sizes in more of the library (slicing, stacking matrices), and
-    subtraction where it is safe (a `take` of at most n).
+    `vector.push`, `matrix.flatten`, `matrix.stack` (rows add up) and
+    `matrix.beside` (columns add up) in the standard library.
+    Next: subtraction where it is safe (a `take` of at most n).
+28. **Abstract sizes** (done). `Dyn` is gone: a size known only when
+    the program runs is abstract (`_`, `_n` in a signature's result),
+    chosen afresh by each call and rigid for callers, with
+    `vector.same-size`, `matrix.same-shape` and `matrix.as-square` to
+    compare at run time. Performance-impacting: each such check is a
+    run-time comparison and an `Option`. Next: existential packages
+    (a list of vectors of different sizes).
 
 ## Later
 

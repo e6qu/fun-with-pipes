@@ -2170,19 +2170,29 @@ numbers and dense linear algebra.
 `vector [1.0, 2.0]` has type Vector[F64, 2] and `matrix [[1, 2], [3, 4]]`
 has type Matrix[I64, 2, 2]: dimensions come from the literal and take
 part in type checking, so `a | matmul b` with mismatched inner
-dimensions is a compile error. `Dyn` marks dimensions known only at run
-time.
+dimensions is a compile error. A size known only when the program runs
+is abstract: `vector.from-list : List[t] -> Vector[t, _]` gives each
+call a size of its own, unknown but rigid, and `vector.same-size` checks
+at run time that two vectors agree. Performance: abstract sizes cost a
+length comparison and an `Option` at each such check.
 
 ```fwp
-Dyn = builtin
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }
 
 # The size parameter is taken from the literal argument.
 vector : List[t] -> Vector[t, n]
 vector.wrap : Array[t] -> Vector[t, n]
-vector.dyn : Vector[t, n] -> Vector[t, Dyn]
-vector.from-list : List[t] -> Vector[t, Dyn]
+
+# forget the size: the result has a size of its own
+vector.forget : Vector[t, n] -> Vector[t, _]
+
+# the size is the length of the list, known when the program runs
+vector.from-list : List[t] -> Vector[t, _]
+
+# `ys | vector.same-size xs` is `ys` with the size of `xs` when their
+# lengths agree
+vector.same-size : Vector[a, m] -> Vector[b, n] -> Option[Vector[b, m]]
 vector.to-list : Vector[t, n] -> List[t]
 vector.length : Vector[t, n] -> I64
 vector.get : I64 -> Vector[t, n] -> Option[t]
@@ -2213,10 +2223,33 @@ matrix : List[List[t]] -> Matrix[t, m, n]
 
 # the elements row by row: an m by n matrix gives a vector of m * n
 matrix.flatten : Matrix[t, m, n] -> Vector[t, m * n]
-matrix.dyn : Matrix[t, m, n] -> Matrix[t, Dyn, Dyn]
+
+# `a | matrix.stack b` is the rows of `a`, then those of `b` (the types
+# make the column counts agree)
+matrix.stack : Matrix[t, k, n] -> Matrix[t, m, n] -> Matrix[t, m + k, n]
+
+# `a | matrix.beside b` is `a` with the columns of `b` to its right (the
+# types make the row counts agree)
+matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
+
+# the same matrix, with sizes the caller names (unchecked)
+matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
+
+# forget the sizes: the result has sizes of its own
+matrix.forget : Matrix[t, m, n] -> Matrix[t, _m, _n]
+
+# `b | matrix.same-shape a` is `b` with the sizes of `a` when their row
+# and column counts agree
+matrix.same-shape : Matrix[a, m, n] -> Matrix[b, j, k] -> Option[Matrix[b, m, n]]
 matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.rows-of : Matrix[t, m, n] -> List[List[t]]
-matrix.from-rows : List[List[t]] -> Matrix[t, Dyn, Dyn]
+
+# `m | matrix.as-square` is `m` as a square matrix when it has as many
+# rows as columns
+matrix.as-square : Matrix[t, m, n] -> Option[Matrix[t, m, m]]
+
+# the sizes are those of the rows, known when the program runs
+matrix.from-rows : List[List[t]] -> Matrix[t, _m, _n]
 
 # `m | matrix.get i j` is the element in row i, column j; None when either
 # index is out of range (like `nth` and `array.get`)
@@ -2233,7 +2266,7 @@ matmul : Matrix[t, k, n] -> Matrix[t, m, k] -> Matrix[t, m, n] where Ring[t]
 # `m | matrix.apply v` is the product m·v
 matrix.apply : Vector[t, n] -> Matrix[t, m, n] -> Vector[t, m] where Ring[t]
 bool.to-num : Bool -> t where Zero[t], One[t]
-identity : I64 -> Matrix[t, Dyn, Dyn] where Zero[t], One[t]
+identity : I64 -> Matrix[t, _n, _n] where Zero[t], One[t]
 linalg.lu-solve : I64 -> Array[F64] -> Array[F64] -> Option[Array[F64]]
 linalg.det : I64 -> Array[F64] -> F64
 linalg.inverse : I64 -> Array[F64] -> Option[Array[F64]]

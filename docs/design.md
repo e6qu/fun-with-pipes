@@ -74,6 +74,20 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   equation still undecided is deferred and checked when the definitions
   of its group are (`Infer::check_sizes`). Monomorphization turns every
   size into a number.
+- A size known only when the program runs is abstract: `_` or `_n` in
+  the result of a signature (`vector.from-list : List[t] -> Vector[t,
+  _]`). The definition chooses it; for callers it is rigid. In a
+  function's result it is a marker (`TypeTable::markers`) that each call
+  replaces by a fresh rigid size (`open_call`), so two calls give
+  different sizes. A composition or `match` re-marks the sizes its body's
+  calls chose (`Infer::reabstract`), since it runs them once per call. A
+  marker bound anywhere but a function's final result would be shared by
+  many calls, which is an error (`UnifyError::Abstract`). Sizes are
+  phantom, so monomorphization gives abstract ones no number.
+  Performance: abstract sizes move checks to run time — `vector.same-size`,
+  `matrix.same-shape` and `matrix.as-square` compare lengths and return an
+  `Option` that the program must take apart — where a static size costs
+  nothing.
 - Traits have superclasses, default methods and parameterized impls. The
   compiler solves `Eq`, `Ord`, `Hash`, `Display`, `Dup`, `Encode` and
   `Decode` structurally. Integer and float literals are classes that fall

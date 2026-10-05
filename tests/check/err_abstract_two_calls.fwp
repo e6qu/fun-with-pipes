@@ -1,0 +1,2 @@
+# each call has its own size
+bad1 = vector.from-list [1, 2] | vector.add (vector.from-list [1, 2, 3])

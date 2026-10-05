@@ -1,0 +1,5 @@
+check/err_abstract_escape.fwp:2:28: error: type mismatch in argument 1: expected `List[a] -> b`, found `List[a] -> Vector[a, _]`
+2 | bad2 = [[1], [1, 2]] | map vector.from-list
+  |                            ^^^^^^^^^^^^^^^^
+  note: the size `_` is abstract: each call of the function chooses its own, so it cannot be shared beyond one call's result
+  note: call the function directly (`xs | vector.from-list`), and compare sizes at run time with `vector.same-size`

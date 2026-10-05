@@ -383,7 +383,7 @@ impl<'a> Infer<'a> {
                     *span,
                     format!("cannot tell whether `{}` is `{}` in {}", x, y, what),
                 )
-                .with_note("give the sizes in a signature, or use `Dyn` for sizes known only when the program runs"));
+                .with_note("give the sizes in a signature, or an abstract size (`_`) for a size chosen when the program runs"));
             }
             self.size_eqs = left;
         }
@@ -438,6 +438,19 @@ impl<'a> Infer<'a> {
                         ));
                     }
                     UnifyError::RigidRow => {}
+                    UnifyError::Abstract(m, _) => {
+                        let x = self.show(&Type::Var(m));
+                        d = d
+                            .with_note(format!(
+                            "the size `{}` is abstract: each call of the function chooses its own, \
+                             so it cannot be shared beyond one call's result",
+                            x
+                        ))
+                            .with_note(
+                                "call the function directly (`xs | vector.from-list`), \
+                             and compare sizes at run time with `vector.same-size`",
+                            );
+                    }
                 }
                 Err(d)
             }
@@ -452,6 +465,11 @@ impl<'a> Infer<'a> {
         let mut map = HashMap::new();
         let mut inst = Vec::new();
         for v in &s.vars {
+            if self.is_abstract(*v) {
+                // chosen by the definition (see `Env::abstract_sizes`)
+                inst.push(Type::Var(*v));
+                continue;
+            }
             let kind = self.env.table.vars[*v as usize].kind;
             let nv = self.env.table.fresh(kind, self.level);
             map.insert(*v, Type::Var(nv));
@@ -468,6 +486,12 @@ impl<'a> Infer<'a> {
             })
             .collect();
         (ty, inst, preds)
+    }
+
+    /// An abstract size of a signature (`_`, `_n`).
+    fn is_abstract(&self, v: TV) -> bool {
+        let info = &self.env.table.vars[v as usize];
+        info.rigid.as_deref().is_some_and(|n| n.starts_with('_'))
     }
 
     fn open_spine(&mut self, t: Type) -> Type {
@@ -823,12 +847,19 @@ impl<'a> Infer<'a> {
         self.ctxs.push((b.name.clone(), ctx.clone(), b.body.span));
         let t = self.infer(&b.body, &ctx)?;
         let expected = if b.annotated {
-            self.env.globals[&b.name]
-                .scheme
-                .as_ref()
-                .unwrap()
-                .ty
-                .clone()
+            let sc = self.env.globals[&b.name].scheme.clone().unwrap();
+            // the definition chooses its abstract sizes
+            let mut map = HashMap::new();
+            let abs: Vec<TV> = sc
+                .vars
+                .iter()
+                .copied()
+                .filter(|v| self.is_abstract(*v))
+                .collect();
+            for v in abs {
+                map.insert(v, self.fresh());
+            }
+            TypeTable::subst(&sc.ty, &map)
         } else {
             self.group[&b.name].clone()
         };
@@ -837,7 +868,14 @@ impl<'a> Infer<'a> {
         } else {
             format!("the definition of `{}`", display_name(&b.name))
         };
-        self.unify(b.body.span, &expected, &t, &what)?;
+        // under a signature, the definition's own results choose its
+        // abstract sizes
+        let found = if b.annotated {
+            self.env.table.open_final(&t, self.level)
+        } else {
+            t.clone()
+        };
+        self.unify(b.body.span, &expected, &found, &what)?;
         Ok(t)
     }
 
@@ -973,7 +1011,8 @@ impl<'a> Infer<'a> {
         let f = Type::fun(lhs.clone(), result.clone(), eff);
         match self.env.table.resolve(rhs) {
             Type::Fun(..) | Type::Var(_) | Type::App(..) => {
-                self.unify(span, &f, rhs, "the stage after `|`")
+                let rhs = self.env.table.open_call(rhs, self.level);
+                self.unify(span, &f, &rhs, "the stage after `|`")
             }
             other => Err(Diagnostic::error(
                 span,
@@ -994,6 +1033,10 @@ impl<'a> Infer<'a> {
         result: &Type,
     ) -> IResult<()> {
         self.out.pipe_modes.insert(node, PipeMode::Compose);
+        // each call of the composition calls both stages once, choosing
+        // their abstract sizes again
+        let start = self.env.table.vars.len();
+        let lhs = &self.env.table.open_call(lhs, self.level);
         let Type::Fun(a, b, e) = self.env.table.resolve(lhs) else {
             unreachable!()
         };
@@ -1015,8 +1058,9 @@ impl<'a> Infer<'a> {
         if let Type::Fun(param, _, _) = self.env.table.resolve(rhs) {
             self.unify(span, &param, &b, "pipe input (composition)")?;
         }
-        self.unify(span, &g, rhs, "the stage after `|`")?;
-        let composed = Type::Fun(a, Box::new(c), e);
+        let rhs = self.env.table.open_call(rhs, self.level);
+        self.unify(span, &g, &rhs, "the stage after `|`")?;
+        let composed = self.reabstract(start, Type::Fun(a, Box::new(c), e));
         self.unify(span, result, &composed, "composition")
     }
 
@@ -1446,7 +1490,8 @@ impl<'a> Infer<'a> {
             }
             self.captures.push((arg.span, ta.clone(), r.clone()));
             let want = Type::fun(ta, r.clone(), ctx.clone());
-            self.unify(e.span, &want, &tf, "application")?;
+            let opened = self.env.table.open_call(&tf, self.level);
+            self.unify(e.span, &want, &opened, "application")?;
             tf = r;
         }
         Ok(tf)
@@ -1508,6 +1553,7 @@ impl<'a> Infer<'a> {
     }
 
     fn infer_match(&mut self, e: &Expr, arms: &[Arm]) -> IResult<Type> {
+        let start = self.env.table.vars.len();
         let scrut = self.fresh();
         let result = self.fresh();
         let eff = self.fresh_eff();
@@ -1548,7 +1594,32 @@ impl<'a> Infer<'a> {
                 format!("match is not exhaustive: `{}` is not covered", shown),
             ));
         }
-        Ok(Type::fun(scrut, result, eff))
+        Ok(self.reabstract(start, Type::fun(scrut, result, eff)))
+    }
+
+    /// A function runs its body once per call, so the sizes its body's
+    /// calls chose (rigid sizes made since `start`) are chosen again by
+    /// each call of the function: they become markers.
+    fn reabstract(&mut self, start: usize, t: Type) -> Type {
+        let t = self.env.table.zonk(&t);
+        let mut fv = Vec::new();
+        self.env.table.free_vars(&t, &mut fv);
+        let mut map = HashMap::new();
+        for v in fv {
+            if (v as usize) >= start && self.is_abstract(v) && !self.env.table.markers.contains(&v)
+            {
+                let name = self.env.table.vars[v as usize].rigid.clone().unwrap();
+                let base = name
+                    .trim_end_matches(|c: char| c.is_ascii_digit())
+                    .to_string();
+                map.insert(v, Type::Var(self.env.table.fresh_marker(&base)));
+            }
+        }
+        if map.is_empty() {
+            t
+        } else {
+            TypeTable::subst(&t, &map)
+        }
     }
 
     fn check_pattern(

@@ -1,0 +1,4 @@
+check/err_size_stack.fwp:2:25: error: type mismatch in pipe input: expected `Matrix[a, 1, 3]`, found `Matrix[a, 1, 2]`
+2 | wrong = matrix [[1, 2]] | matrix.stack (matrix [[3, 4, 5], [6, 7, 8]])
+  |                         ^
+  note: `3` is not compatible with `2`

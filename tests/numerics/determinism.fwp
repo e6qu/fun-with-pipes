@@ -2,14 +2,14 @@
 n : I64
 n = 300001
 
-xs : Vector[F64, Dyn]
+xs : Vector[F64, _]
 xs =
     n
     | range 0
     | map (int.to-float | mul 0.001 | sin | add 1.5)
     | vector.from-list
 
-e : TensorExpr[Dyn]
+e : TensorExpr[_]
 e =
     xs
     | tensor.lazy

@@ -1,0 +1,3 @@
+# an abstract size is chosen by the definition, not given by the caller
+len : Vector[I64, _] -> I64
+len = vector.length

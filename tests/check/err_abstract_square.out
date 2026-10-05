@@ -1,0 +1,4 @@
+check/err_abstract_square.fwp:2:51: error: type mismatch in pipe input: expected `Matrix[F64, _m1, _m1]`, found `Matrix[F64, _m1, _n2]`
+2 | det = [[1.0, 2.0], [3.0, 4.0]] | matrix.from-rows | determinant
+  |                                                   ^
+  note: `_m1` is not compatible with `_n2`

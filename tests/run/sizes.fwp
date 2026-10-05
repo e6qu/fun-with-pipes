@@ -13,9 +13,19 @@ five = three | vector.append (vector [4, 5])
 six : Vector[I64, 6]
 six = matrix [[1, 2, 3], [4, 5, 6]] | matrix.flatten
 
+# a 3 by 2 matrix: rows add up when stacking, columns beside
+tall : Matrix[I64, 3, 2]
+tall = matrix [[1, 2]] | matrix.stack (matrix [[3, 4], [5, 6]])
+
+wide : Matrix[I64, 2, 3]
+wide = matrix [[1], [2]] | matrix.beside (matrix [[3, 4], [5, 6]])
+
 main = [
     five | vector.to-list | echo,
     three | doubled | vector.to-list | echo,
     six | dot (three | doubled) | echo,
     five | vector.length | echo,
+    tall | matrix.rows-of | echo,
+    wide | matrix.rows-of | echo,
+    tall | matmul wide | matrix.rows-of | echo,
 ] | ignore

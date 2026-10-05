@@ -297,6 +297,15 @@ impl<'a> Infer<'a> {
             _ => "cannot be duplicated because they are resources",
         };
         match &t {
+            // an abstract size is a size, like a number
+            Type::Var(v)
+                if self.env.table.vars[*v as usize]
+                    .rigid
+                    .as_deref()
+                    .is_some_and(|n| n.starts_with('_')) =>
+            {
+                Outcome::Solved(vec![])
+            }
             Type::Var(_) | Type::App(..) => Outcome::Stuck,
             Type::Fun(..) => {
                 if class == "std::Dup" {

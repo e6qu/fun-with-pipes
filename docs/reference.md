@@ -141,8 +141,19 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   Vector[t, m * n]`. Sizes are compared as polynomials, so `2 * n` is
   `n + n`, and a generic signature must hold for every size. A size
   inference cannot work out (two unknown sizes whose sum must be 5) is an
-  error that asks for a signature. `Dyn` is a size known only at run time;
-  arithmetic with it is `Dyn`.
+  error that asks for a signature.
+- **Abstract sizes:** `_` or `_n` in the result of a signature is a size
+  the definition chooses when the program runs: `vector.from-list :
+  List[t] -> Vector[t, _]`, `matrix.from-rows : List[List[t]] ->
+  Matrix[t, _m, _n]`. For callers it is unknown but rigid, and each call
+  gives a size of its own, so `vector.from-list a | vector.add
+  (vector.from-list b)` is a compile error. `ys | vector.same-size xs`
+  (`Option[Vector[b, m]]`), `matrix.same-shape` and `matrix.as-square`
+  compare at run time. A function's abstract size cannot be shared
+  beyond one call's result (`map vector.from-list` is an error), and
+  may not appear in an argument (use a size variable).
+  Performance: an abstract size costs a run-time comparison and an
+  `Option` at each such check, where a static size costs nothing.
 - **Higher-kinded parameters:** `Functor[F]`.
 
 ### Generics

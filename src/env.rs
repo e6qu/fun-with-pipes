@@ -241,6 +241,9 @@ impl Env {
     /// Whether a name in a type is an (implicitly quantified) type variable.
     fn is_type_var_name(&self, scope: &Scope, n: &str) -> bool {
         let first = n.chars().next().unwrap();
+        if first == '_' {
+            return true;
+        }
         if first.is_ascii_lowercase() {
             return !n.contains('.');
         }
@@ -264,6 +267,12 @@ impl Env {
                     cargs.push(self.conv_type(a, scope, vars, allow_new)?);
                 }
                 if self.is_type_var_name(scope, n) {
+                    if n.starts_with('_') && !cargs.is_empty() {
+                        return Err(Diagnostic::error(
+                            te.span,
+                            format!("the abstract size `{}` takes no type arguments", n),
+                        ));
+                    }
                     let v = self.type_var(n, Kind::Star, te.span, vars, allow_new)?;
                     if cargs.is_empty() {
                         return Ok(Type::Var(v));
@@ -347,7 +356,7 @@ impl Env {
                     return Err(Diagnostic::error(
                         te.span,
                         format!(
-                            "`{}` applies to sizes (numbers, size variables and `Dyn`)",
+                            "`{}` applies to sizes (numbers and size variables)",
                             op.text()
                         ),
                     ));
@@ -408,7 +417,8 @@ impl Env {
         vars: &mut Vec<(String, TV)>,
         allow_new: bool,
     ) -> Result<TV, Diagnostic> {
-        if let Some((_, v)) = vars.iter().find(|(n, _)| n == name) {
+        // each `_` is a size of its own
+        if let Some((_, v)) = vars.iter().find(|(n, _)| n == name && n != "_") {
             let k = self.table.vars[*v as usize].kind;
             if k != kind {
                 return Err(Diagnostic::error(
@@ -851,11 +861,60 @@ impl Env {
         for c in constraints {
             preds.push(self.conv_constraint(c, scope, &mut vars, &mut kinds)?);
         }
+        self.abstract_sizes(&t, &preds, &vars, ty.span)?;
         Ok(Scheme {
             vars: vars.iter().map(|(_, v)| *v).collect(),
             preds,
             ty: t,
         })
+    }
+
+    /// Abstract sizes (`_`, `_n`) of a signature stand for sizes the
+    /// definition chooses: they may appear only in its final result. In
+    /// a function's result they are markers, chosen afresh by each call;
+    /// a value's abstract size is one rigid size.
+    fn abstract_sizes(
+        &mut self,
+        t: &Type,
+        preds: &[Pred],
+        vars: &[(String, TV)],
+        span: Span,
+    ) -> Result<(), Diagnostic> {
+        let abs: Vec<(String, TV)> = vars
+            .iter()
+            .filter(|(n, _)| n.starts_with('_'))
+            .cloned()
+            .collect();
+        if abs.is_empty() {
+            return Ok(());
+        }
+        let mut inputs = Vec::new();
+        let mut result = t.clone();
+        while let Type::Fun(a, b, _) = result {
+            self.table.free_vars(&a, &mut inputs);
+            result = *b;
+        }
+        for p in preds {
+            for a in &p.args {
+                self.table.free_vars(a, &mut inputs);
+            }
+        }
+        for (n, v) in &abs {
+            if inputs.contains(v) {
+                return Err(Diagnostic::error(
+                    span,
+                    format!(
+                        "the abstract size `{}` may appear only in the final result",
+                        n
+                    ),
+                )
+                .with_note("an abstract size is chosen by the definition; for a size the caller gives, use a size variable such as `n`"));
+            }
+            if matches!(t, Type::Fun(..)) {
+                self.table.markers.insert(*v);
+            }
+        }
+        Ok(())
     }
 
     pub fn resolve_trait(&self, scope: &Scope, name: &str) -> Option<String> {
