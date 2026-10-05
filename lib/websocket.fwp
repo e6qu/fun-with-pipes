@@ -12,6 +12,10 @@
 # its frames, and a message larger than `max-message-bytes` ends the
 # session with the code 1009 (1002 for frames that break the protocol,
 # 1007 for text that is not UTF-8).
+#
+# With `compress` in the config, messages are compressed when the peer
+# agrees (`permessage-deflate`, RFC 7692, each message on its own: no
+# context takeover either way).
 
 WsMessage =
     | WsMessage.Text String
@@ -30,13 +34,16 @@ WebSocket = {
 }
 
 # the largest message, the time the peer has to answer a close, the
-# capacity of each channel, and the subprotocols (`Sec-WebSocket-Protocol`):
-# a server's, in its order of preference, or those a client offers
+# capacity of each channel, the subprotocols (`Sec-WebSocket-Protocol`):
+# a server's, in its order of preference, or those a client offers, and
+# whether to compress messages of at least so many bytes (offered by a
+# client, accepted by a server)
 WsConfig = {
     max-message-bytes: I64,
     close-timeout: Duration,
     queue: I64,
     protocols: List[String],
+    compress: Option[I64],
 }
 
 ws.config : WsConfig
@@ -45,6 +52,7 @@ ws.config = WsConfig {
     close-timeout = 5s,
     queue = 16,
     protocols = [],
+    compress = None,
 }
 
 # `Sec-WebSocket-Accept` for a `Sec-WebSocket-Key` (SHA-1 and base64)
@@ -66,6 +74,13 @@ foreign "fwp" ws._close-payload : I64 -> String -> Bytes = "ws.close-payload"
 # (code, reason) of a close frame: 1005 for none, -1 when invalid
 # internal
 foreign "fwp" ws._close-parse : Bytes -> (I64, String) = "ws.close-parse"
+# a message compressed for permessage-deflate
+# internal
+foreign "fwp" ws._deflate : Bytes -> Bytes = "ws.deflate"
+# a message decompressed, up to a size: (0, the data), or the close code
+# of the failure
+# internal
+foreign "fwp" ws._inflate : I64 -> Bytes -> (I64, Bytes) = "ws.inflate"
 
 # ------------------------------------------------------------- using
 
@@ -141,9 +156,12 @@ ws._switching = make Response {
     headers =
         fork
             append
-            (fork ws._chosen .0 .2
-                | option.to-list
-                | map (curry id "sec-websocket-protocol"))
+            (fork
+                append
+                (fork ws._chosen .0 .2
+                    | option.to-list
+                    | map (curry id "sec-websocket-protocol"))
+                ws._extension-header)
             (.2
                 | http.header "sec-websocket-key"
                 | option.unwrap-or ""
@@ -154,7 +172,7 @@ ws._switching = make Response {
                     ("connection", "Upgrade"),
                 ]),
     body =
-        make { 0 = .0, 1 = .1, 2 = fork ws._chosen .0 .2 }
+        make { 0 = ws._agreed, 1 = .1, 2 = fork ws._chosen .0 .2 }
         | ws._serve
         | Body.Upgrade,
 }
@@ -166,6 +184,62 @@ ws._chosen = curry (both
         (.0 | .protocols)
         (.1 | http.header "sec-websocket-protocol" | ws._protocol-list)
     | fork find (.1 | flip contains) .0)
+
+# whether the server compresses and the client offered permessage-deflate
+# with parameters the server can honour
+# internal
+ws._deflates : (WsConfig, WebSocket -> () ! {Async, IO, Network, FileIO}, Request) -> Bool
+ws._deflates =
+    fork
+        and
+        (.0 | .compress | option.is-some)
+        (.2 | http.header "sec-websocket-extensions" | ws._deflate-offered)
+
+# the config of the session: no compression unless both sides agreed
+# internal
+ws._agreed : (WsConfig, WebSocket -> () ! {Async, IO, Network, FileIO}, Request) -> WsConfig
+ws._agreed = if ws._deflates .0 (.0 | with { compress = None })
+
+# internal
+ws._extension-header : (WsConfig, WebSocket -> () ! {Async, IO, Network, FileIO}, Request) -> List[(String, String)]
+ws._extension-header =
+    if
+        ws._deflates
+        (const [("sec-websocket-extensions", ws._deflate-answer)])
+        (const [])
+
+# each message compressed on its own, both ways
+# internal
+ws._deflate-answer : String
+ws._deflate-answer =
+    "permessage-deflate; server_no_context_takeover; client_no_context_takeover"
+
+# internal
+ws._deflate-offered : Option[String] -> Bool
+ws._deflate-offered = option.unwrap-or "" | split "," | any ws._deflate-offer
+
+# `permessage-deflate` with parameters a window of 32 KiB satisfies
+# internal
+ws._deflate-offer : String -> Bool
+ws._deflate-offer =
+    split ";"
+    | map (trim | lower)
+    | fork
+        and
+        (head | eq (Some "permessage-deflate"))
+        (drop 1 | all ws._deflate-param)
+
+# internal
+ws._deflate-param : String -> Bool
+ws._deflate-param =
+    fork
+        or
+        (flip contains [
+            "server_no_context_takeover",
+            "client_no_context_takeover",
+            "server_max_window_bits=15",
+        ])
+        (starts-with "client_max_window_bits")
 
 # the subprotocols of a header (`chat, superchat`)
 # internal
@@ -248,6 +322,7 @@ ws._request-parts = [
     const
         "upgrade: websocket\r\nconnection: Upgrade\r\nsec-websocket-version: 13\r\nuser-agent: fwp\r\n",
     .config | .protocols | ws._offer,
+    .config | .compress | ws._deflate-line,
     .key | format "sec-websocket-key: {}\r\n\r\n",
 ]
 
@@ -256,6 +331,15 @@ ws._request-parts = [
 ws._offer : List[String] -> String
 ws._offer =
     if is-empty (const "") (join ", " | format "sec-websocket-protocol: {}\r\n")
+
+# the `Sec-WebSocket-Extensions` line of a client that compresses
+# internal
+ws._deflate-line : Option[I64] -> String
+ws._deflate-line = match
+    Some _ ->
+        const
+            "sec-websocket-extensions: permessage-deflate; client_no_context_takeover; server_no_context_takeover\r\n"
+    None -> ""
 
 # the response head and the bytes after it
 # internal
@@ -306,7 +390,11 @@ ws._answered = curry (if
             (.0 | .config | .protocols)
             (.1 | .0 | http.parse-response-head | ws._answer-protocol)))
     (make {
-        0 = .0 | .config,
+        0 =
+            fork
+                ws._client-agreed
+                (.0 | .config)
+                (.1 | .0 | http.parse-response-head | ws._answer-deflates),
         1 = const True,
         2 = .0 | .conn,
         3 = .1 | .1,
@@ -381,6 +469,22 @@ ws._started = curry (make WebSocket {
     done = both .1 (.0 | .3) | spawn-with ws._supervise,
     protocol = .0 | .4,
 })
+
+# whether a server's answer agrees to compress
+# internal
+ws._answer-deflates : Result[(String, I64, String, List[(String, String)]), String] -> Bool
+ws._answer-deflates = match
+    Ok _ ->
+        .3
+        | json.lookup "sec-websocket-extensions"
+        | option.unwrap-or ""
+        | lower
+        | string.contains "permessage-deflate"
+    Err _ -> const False
+
+# internal
+ws._client-agreed : WsConfig -> Bool -> WsConfig
+ws._client-agreed = curry (if .1 .0 (.0 | with { compress = None }))
 
 # the subprotocol a server's answer names
 # internal
@@ -496,13 +600,27 @@ ws._on-frame =
         (fork ws._advance (.1 | .0) .0)
         (.1 | make WsFrame { fin = .1, opcode = .2, masked = .3, payload = .4 })
 
-# a server's frames are masked, a client's are not
+# a server's frames are masked, a client's are not; the opcode of a
+# compressed frame is 64 more (RSV1)
 # internal
 ws._dispatch : WsRead -> WsFrame -> Step[WsRead, WsPeer] ! {Async, Network}
 ws._dispatch = curry (if
-    (fork eq (.1 | .masked) (.0 | .peer | .client | not))
-    (fork ws._by-opcode (.1 | .opcode) id)
+    (fork and (fork eq (.1 | .masked) (.0 | .peer | .client | not)) ws._rsv-ok)
+    (fork ws._by-opcode (.1 | .opcode | rem 64) id)
     (.0 | ws._fail 1002))
+
+# only the first frame of a data message may be compressed, and only
+# when both sides agreed
+# internal
+ws._rsv-ok : (WsRead, WsFrame) -> Bool
+ws._rsv-ok =
+    fork
+        or
+        (.1 | .opcode | lt 64)
+        (fork
+            and
+            (.0 | .peer | .config | .compress | option.is-some)
+            (.1 | .opcode | fork or (eq 65) (eq 66)))
 
 # internal
 ws._by-opcode : I64 -> (WsRead, WsFrame) -> Step[WsRead, WsPeer] ! {Async, Network}
@@ -553,9 +671,26 @@ ws._continued = curry (if
         (fork ws._deliver .0 (.1 | .0 | ws._with-frag None))
         (fork ws._with-frag (.0 | Some) (.1 | .0) | Again)))
 
+# a message, decompressed first when its opcode says so
 # internal
 ws._deliver : (I64, Bytes) -> WsRead -> Step[WsRead, WsPeer] ! {Async, Network}
-ws._deliver = curry (fork ws._send-in (.0 | uncurry ws._message) .1)
+ws._deliver = curry (if
+    (.0 | .0 | lt 64)
+    (fork ws._send-in (.0 | uncurry ws._message) .1)
+    (fork
+        ws._inflated
+        (fork ws._inflate (.1 | .peer | .config | .max-message-bytes) (.0 | .1))
+        id))
+
+# internal
+ws._inflated : (I64, Bytes) -> ((I64, Bytes), WsRead) -> Step[WsRead, WsPeer] ! {Async, Network}
+ws._inflated = curry (if
+    (.0 | .0 | eq 0)
+    (fork
+        ws._send-in
+        (both (.1 | .0 | .0 | sub 64) (.0 | .1) | uncurry ws._message)
+        (.1 | .1))
+    (fork ws._fail (.0 | .0) (.1 | .1)))
 
 # a text message must be UTF-8
 # internal
@@ -647,7 +782,11 @@ ws._is-close = match
 # internal
 ws._put : WsPeer -> WsMessage -> Result[(), IoError] ! {Async, Network}
 ws._put = curry (both
-        (fork ws._parts (.0 | .client) .1 | uncurry3 ws._frame)
+        (fork
+                ws._squeezed
+                (.0 | .config | .compress)
+                (fork ws._parts (.0 | .client) .1)
+            | uncurry3 ws._frame)
         (.0 | .conn)
     | attempt (uncurry tcp.write))
 
@@ -656,6 +795,24 @@ ws._wrote : WsPeer -> Result[(), IoError] -> Step[WsPeer, ()]
 ws._wrote = curry (match
     (_, Ok _) -> curry (.0 | Again)
     (_, Err _) -> curry (const (Stop ())))
+
+# a data message compressed when the session compresses and it is large
+# enough
+# internal
+ws._squeezed : Option[I64] -> (Bool, I64, Bytes) -> (Bool, I64, Bytes)
+ws._squeezed = curry (if
+    (fork ws._worth .0 .1)
+    (make { 0 = .1 | .0, 1 = .1 | .1 | add 64, 2 = .1 | .2 | ws._deflate })
+    .1)
+
+# internal
+ws._worth : Option[I64] -> (Bool, I64, Bytes) -> Bool
+ws._worth = curry (match
+    (Some _, _) -> curry (fork
+        and
+        (.1 | .1 | fork or (eq 1) (eq 2))
+        (fork ge .0 (.1 | .2 | bytes.length)))
+    (None, _) -> const False)
 
 # (masked, opcode, payload) of a message
 # internal

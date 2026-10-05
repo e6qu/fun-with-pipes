@@ -1331,6 +1331,10 @@ its frames, and a message larger than `max-message-bytes` ends the
 session with the code 1009 (1002 for frames that break the protocol,
 1007 for text that is not UTF-8).
 
+With `compress` in the config, messages are compressed when the peer
+agrees (`permessage-deflate`, RFC 7692, each message on its own: no
+context takeover either way).
+
 ```fwp
 WsMessage =
     | WsMessage.Text String
@@ -1349,13 +1353,16 @@ WebSocket = {
 }
 
 # the largest message, the time the peer has to answer a close, the
-# capacity of each channel, and the subprotocols (`Sec-WebSocket-Protocol`):
-# a server's, in its order of preference, or those a client offers
+# capacity of each channel, the subprotocols (`Sec-WebSocket-Protocol`):
+# a server's, in its order of preference, or those a client offers, and
+# whether to compress messages of at least so many bytes (offered by a
+# client, accepted by a server)
 WsConfig = {
     max-message-bytes: I64,
     close-timeout: Duration,
     queue: I64,
     protocols: List[String],
+    compress: Option[I64],
 }
 ws.config : WsConfig
 

@@ -616,7 +616,7 @@ static V fwp_p_ws_frame(V mask, V opcode, V payload) {
     unsigned char *o = (unsigned char *)r->d;
     r->len = hl + n;
     o[hl + n] = 0;
-    o[0] = (unsigned char)(0x80 | ((int64_t)opcode & 0x0f));
+    o[0] = (unsigned char)(0x80 | ((int64_t)opcode & 0x4f)); /* + 64: RSV1, compressed */
     unsigned char mb = mk ? 0x80 : 0;
     size_t at = 2;
     if (n < 126) {
@@ -662,7 +662,7 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv) {
     V empty = fwp_str_new("", 0);
     if (n < 2) return w_parsed(0, 0, 0, 0, empty);
     unsigned b0 = b[0], b1 = b[1], op = b0 & 0x0f;
-    if ((b0 & 0x70) || !(op == 0 || op == 1 || op == 2 || op == 8 || op == 9 || op == 10))
+    if ((b0 & 0x30) || !(op == 0 || op == 1 || op == 2 || op == 8 || op == 9 || op == 10))
         return w_parsed(-1002, 0, 0, 0, empty);
     if (op >= 8 && (!(b0 & 0x80) || (b1 & 0x7f) > 125)) return w_parsed(-1002, 0, 0, 0, empty);
     int masked = (b1 & 0x80) != 0;
@@ -695,7 +695,39 @@ static V fwp_p_ws_parse(V maxv, V atv, V bufv) {
         for (size_t i = 0; i < len; i++) r->d[i] = (char)(b[at + i] ^ key[i & 3]);
     else if (len)
         memcpy(r->d, b + at, len);
-    return w_parsed((int64_t)(at + len), (b0 & 0x80) != 0, op, masked, PTR(r));
+    return w_parsed((int64_t)(at + len), (b0 & 0x80) != 0, op | (b0 & 0x40), masked, PTR(r));
+}
+
+/* permessage-deflate (RFC 7692) without context takeover, as
+ * src/h2web.rs: a message is a block flushed to a byte, without the
+ * flush's final 00 00 ff ff */
+static V fwp_p_ws_deflate(V d) {
+    h2_buf out = {0};
+    h2_gzip_chunk((const unsigned char *)STR(d)->d, STR(d)->len, &out);
+    V r = fwp_str_new((const char *)out.d, out.len - 4);
+    h2b_free(&out);
+    return r;
+}
+
+/* (0, data), or (the close code of the failure, "") */
+static V fwp_p_ws_inflate(V maxv, V dv) {
+    size_t n = STR(dv)->len;
+    unsigned char *d = (unsigned char *)malloc(n + 6);
+    memcpy(d, STR(dv)->d, n);
+    static const unsigned char tail[6] = {0, 0, 0xff, 0xff, 0x03, 0x00};
+    memcpy(d + n, tail, 6);
+    int64_t m = (int64_t)maxv;
+    size_t used = 0;
+    h2_buf out = {0};
+    int ok = h2_inflate(d, n + 6, &out, m < 0 ? 0 : (size_t)m, &used);
+    free(d);
+    if (!ok) {
+        h2b_free(&out);
+        return fwp_tuple2((V)(int64_t)(strstr(h2_err, "too large") ? 1009 : 1007), fwp_str_new("", 0));
+    }
+    V r = fwp_str_new(out.d ? (const char *)out.d : "", out.len);
+    h2b_free(&out);
+    return fwp_tuple2((V)(int64_t)0, r);
 }
 
 static V fwp_p_ws_close_payload(V codev, V reason) {

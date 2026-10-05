@@ -251,7 +251,15 @@ routes = http.router [http.route "GET" "/ws" (http.websocket echo)]
   session is three tasks (reader, writer and a supervisor that closes the
   connection), all fwp code over `tcp.read` and `tcp.write`; framing,
   masking and the accept key are primitives (`src/h2web.rs`,
-  `runtime/fwp_rt_http2.c`). No extensions (permessage-deflate).
+  `runtime/fwp_rt_http2.c`).
+- Compression (`permessage-deflate`, RFC 7692): with `compress = Some n`
+  in its `WsConfig`, a client offers it and a server accepts an offer it
+  can honour, both without context takeover, so each message is
+  compressed on its own (as a stream's chunks are, below). Text and
+  binary messages of at least n bytes go out compressed (RSV1); a
+  compressed message in is decompressed up to `max-message-bytes`
+  (1009 beyond, 1007 for data that does not decompress), and RSV1
+  without an agreement, or on a continuation or control frame, is 1002.
 - Subprotocols (`Sec-WebSocket-Protocol`): a client offers the
   `protocols` of its `WsConfig`, and a server picks the first of its own
   `protocols` (in its order of preference) that the client offered. The

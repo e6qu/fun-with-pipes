@@ -3193,6 +3193,8 @@ impl<'p> Gen<'p> {
                     ("ws.parse", "fwp_p_ws_parse(l0, l1, l2)"),
                     ("ws.close-payload", "fwp_p_ws_close_payload(l0, l1)"),
                     ("ws.close-parse", "fwp_p_ws_close_parse(l0)"),
+                    ("ws.deflate", "fwp_p_ws_deflate(l0)"),
+                    ("ws.inflate", "fwp_p_ws_inflate(l0, l1)"),
                     ("pb.parse", "fwp_p_pb_parse(l0)"),
                     ("pb.write", "fwp_p_pb_write(l0)"),
                     ("pb.zigzag", "fwp_p_pb_zigzag(l0)"),

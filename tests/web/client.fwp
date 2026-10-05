@@ -58,7 +58,8 @@ websocket : () -> () ! {Async, IO, Network, Error[IoError]}
 websocket =
     ws-url
     | ws.connect-with
-        (ws.config | with { protocols = ["other", "superchat"] })
+        (ws.config
+            | with { protocols = ["other", "superchat"], compress = Some 64 })
         tls.options
     | tap (.protocol | format "protocol {}" | print)
     | tap (ws.send-text "ping me")
