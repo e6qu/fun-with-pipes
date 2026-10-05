@@ -2243,6 +2243,11 @@ vector.non-empty : Vector[t, n] -> Option[Vector[t, _ + 1]]
 # the first k elements (all of them when there are fewer)
 vector.take : I64 -> Vector[t, n] -> Vector[t, _]
 
+# `v | vector.split w` is the first elements of `v`, as many as `w` has,
+# and the rest: a size `n + m` less `m` is `n`, so splitting never runs
+# out of elements
+vector.split : Vector[a, m] -> Vector[t, n + m] -> (Vector[t, m], Vector[t, n])
+
 # the elements that satisfy p
 vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
 

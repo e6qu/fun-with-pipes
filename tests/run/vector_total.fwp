@@ -3,6 +3,13 @@
 three : Vector[I64, 3]
 three = vector [1, 2, 3]
 
+# 5 less 2 is 3, so the rest has a head
+five : Vector[I64, 5]
+five = vector [1, 2, 3, 4, 5]
+
+rest : Vector[I64, 3]
+rest = five | vector.split (vector ["a", "b"]) | .1
+
 main = [
     three | vector.head | echo,
     three | vector.last | echo,
@@ -16,4 +23,7 @@ main = [
     three | vector.take 9 | vector.to-list | echo,
     three | vector.take -1 | vector.to-list | echo,
     three | vector.filter (rem 2 | eq 1) | vector.to-list | echo,
+    five | vector.split three | .0 | vector.to-list | echo,
+    rest | vector.head | echo,
+    five | vector.split five | .1 | vector.to-list | echo,
 ] | ignore

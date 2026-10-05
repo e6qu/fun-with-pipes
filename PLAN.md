@@ -359,7 +359,10 @@ Next in this series, toward static, zero-cost programs:
     `matrix.beside` (columns add up) in the standard library.
     A size `n + 1` proves a vector has an element: `vector.head`,
     `last`, `tail` and `init` are total, without an `Option`.
-    Next: subtraction where it is safe (a `take` of at most n).
+    Subtraction where it is safe: `vector.split : Vector[a, m] ->
+    Vector[t, n + m] -> (Vector[t, m], Vector[t, n])` takes the first m
+    elements, and a split of more than a vector has is a compile error.
+    Next: matrices split by rows and columns.
 28. **Abstract sizes** (done). `Dyn` is gone: a size known only when
     the program runs is abstract (`_`, `_n` in a signature's result),
     chosen afresh by each call and rigid for callers, with

@@ -109,6 +109,16 @@ vector.take = curry (both (.0 | max 0) (.1 | .data)
     | uncurry (array.slice 0)
     | vector.wrap)
 
+# `v | vector.split w` is the first elements of `v`, as many as `w` has,
+# and the rest: a size `n + m` less `m` is `n`, so splitting never runs
+# out of elements
+vector.split : Vector[a, m] -> Vector[t, n + m] -> (Vector[t, m], Vector[t, n])
+vector.split = curry (both (.0 | vector.length) (.1 | .data)
+    | both
+        (uncurry (array.slice 0))
+        (fork apply .1 (fork array.slice .0 (fork sub .0 (.1 | array.length))))
+    | both (.0 | vector.wrap) (.1 | vector.wrap))
+
 # the elements that satisfy p
 vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
 vector.filter = curry (both .0 (.1 | vector.to-list)
