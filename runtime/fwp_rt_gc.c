@@ -118,6 +118,7 @@ static inline size_t fwp_rc_capacity(V v) { (void)v; return 0; }
 static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
 static inline int fwp_rc_young(V v) { (void)v; return 0; }
+static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
 
 #else /* FWP_GC */
 
