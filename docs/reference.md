@@ -579,8 +579,8 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer (inlining, specialization, fusion) |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
-| `FWP_REUSE=1` | when compiling (experimental): native code counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again) instead of copying it, and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
-| `FWP_REUSE_VERIFY=1` | native programs built with `FWP_REUSE=1`: a record judged unique is copied and the original poisoned instead, so that a wrong judgment shows (for testing) |
+| `FWP_REUSE=0` | when compiling: native code does not count references, so it copies every record it updates. By default it counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again), and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
+| `FWP_REUSE_VERIFY=1` | native programs: a value judged unique is copied and the original poisoned instead of reused, so that a wrong judgment shows (for testing) |
 | `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |
 | `FWP_GC=full` | native programs: every collection is a major one (no generations) |
 | `FWP_GC_VERIFY=1` | native programs: check each minor collection against a full trace, and abort at the first object it missed (for testing the runtime) |

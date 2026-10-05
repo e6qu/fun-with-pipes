@@ -1,8 +1,9 @@
-//! Reuse in place (`FWP_REUSE=1` when compiling): every golden program
-//! behaves the same when unique records are updated in place, and the
-//! same again under `FWP_REUSE_VERIFY=1`, which copies a record judged
-//! unique and poisons the original instead, so that a wrong judgment
-//! changes the output (with the collector verifying itself as well).
+//! Reuse in place (the default; `FWP_REUSE=0` when compiling turns it
+//! off): every golden program behaves the same under
+//! `FWP_REUSE_VERIFY=1`, which copies a value judged unique and poisons
+//! the original instead of reusing it, so that a wrong judgment changes
+//! the output (with the collector verifying itself as well). Plain reuse
+//! is what tests/golden_run.rs runs.
 //! `tests/run/reuse_aliasing.fwp` keeps a second reference to records it
 //! updates in each of the ways a program can.
 
@@ -70,7 +71,7 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
 }
 
 #[test]
-fn golden_programs_with_reuse() {
+fn golden_programs_with_reuse_verified() {
     if !linux_cc() {
         return;
     }
@@ -110,17 +111,14 @@ fn golden_programs_with_reuse() {
                     ("FWP_GC_VERIFY", "1"),
                     ("FWP_GC_STRESS", "50"),
                 ];
-                for (mode, env) in [("reuse", &[][..]), ("reuse, verified", verify)] {
-                    let got = render(&run(&exe, path.parent().unwrap(), &input, env));
-                    if got != want {
-                        failures.lock().unwrap().push(format!(
-                            "{} ({}):\n--- expected\n{}--- got\n{}",
-                            path.display(),
-                            mode,
-                            want,
-                            got
-                        ));
-                    }
+                let got = render(&run(&exe, path.parent().unwrap(), &input, verify));
+                if got != want {
+                    failures.lock().unwrap().push(format!(
+                        "{} (reuse verified):\n--- expected\n{}--- got\n{}",
+                        path.display(),
+                        want,
+                        got
+                    ));
                 }
             });
         }

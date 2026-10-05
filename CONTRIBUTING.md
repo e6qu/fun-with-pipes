@@ -129,6 +129,14 @@ allocator:
 Run the golden tests with both after you change the runtime or the code
 generator.
 
+Records and variants that compiled code allocates are updated in place
+when they have a single reference (`fwp_rc_*` in runtime/fwp_rt_gc.c).
+A value the runtime keeps must be shared first (`fwp_rc_share`): generated
+code does this for whatever it hands to a primitive. Runtime code that
+calls compiled code back gets shared results through the `e<id>` and
+`k<id>` entries. `FWP_REUSE_VERIFY=1` poisons what would be reused, and
+tests/reuse.rs runs every golden program that way.
+
 ### A benchmark
 
 Add `bench/<name>/main.fwp`, `main.c` and `main.rs`, three programs that
