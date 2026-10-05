@@ -18,7 +18,8 @@
 #
 # The server also speaks HTTP/2: over TLS when the client chooses "h2"
 # with ALPN, and on cleartext connections that start with HTTP/2's
-# connection preface (h2c with prior knowledge). Every stream runs in its
+# connection preface (h2c with prior knowledge) or ask for it with
+# `Upgrade: h2c`. Every stream runs in its
 # own task, with the same handler, limits and timeouts. The client uses
 # HTTP/2 when a TLS server chooses it, pooling one connection per origin.
 # Responses can be compressed (`compress` in the config, or the
@@ -67,7 +68,8 @@ ServerConfig = {
     request-timeout: Duration,
     shutdown-grace: Duration,
     tls: Option[TlsServer],
-    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge)
+    # serve HTTP/2 too (h2 with ALPN over TLS, h2c with prior knowledge
+    # or `Upgrade: h2c`)
     http2: Bool,
     # compress responses of at least this many bytes with gzip (or
     # deflate) for clients that accept it (`Accept-Encoding`), and
@@ -821,12 +823,12 @@ http.on-body = match
 
 # internal
 http.respond-to : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
-http.respond-to = make Exchange {
+http.respond-to = if http.h2c-wanted http.upgrade-h2c (make Exchange {
     st =
         fork http.with-buffer (fork http.bytes-drop .length (.st | .buffer)) .st,
     request = http.request-of,
     keep = http.keep-alive,
-} | http.exchange
+} | http.exchange)
 
 # internal
 http.request-of : Pending -> Request ! {Network}
@@ -1390,7 +1392,7 @@ H2Stream = builtin
 # serve an HTTP/2 connection (its first bytes; limits: max-header-bytes,
 # max-requests-per-connection, idle-timeout), running a function per stream
 # internal
-foreign "fwp" http._h2-serve : Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> () ! {Async, IO, Network, FileIO} = "http2.serve"
+foreign "fwp" http._h2-serve : Conn -> Bytes -> (I64, I64, Duration) -> (H2Stream -> () ! {Async, IO, Network, FileIO}) -> Option[(String, String, List[(String, String)], Bytes)] -> () ! {Async, IO, Network, FileIO} = "http2.serve"
 # (method, path, headers, remote address, the client's certificate)
 # internal
 foreign "fwp" http._h2-request : H2Stream -> (String, String, List[(String, String)], String, Option[String]) ! {Network} = "http2.request"
@@ -1413,21 +1415,89 @@ foreign "fwp" http._h2-pooled : String -> Bool ! {Network} = "http2.pooled"
 # internal
 http.serve-h2 : ConnState -> Step[ConnState, ()] ! {Async, IO, Network, FileIO}
 http.serve-h2 =
-    tap (fork
+    fork
+        http.h2-run
+        (both
+            (fork bytes.append .buffer (const http.preface-start))
+            (const None))
+        id
+    | const (Stop ())
+
+# serve HTTP/2 on a connection, from what was read of it, with the request
+# of an upgrade (stream 1)
+# internal
+http.h2-run : (Bytes, Option[(String, String, List[(String, String)], Bytes)]) -> ConnState -> () ! {Async, IO, Network, FileIO}
+http.h2-run = curry (fork
+    apply
+    (.0 | .1)
+    (fork
         apply
-        (.server | http.h2-stream)
+        (.1 | .server | http.h2-stream)
         (fork
             apply
-            (make {
-                0 = .server | .config | .max-header-bytes,
-                1 = .server | .config | .max-requests-per-connection,
-                2 = .server | .config | .idle-timeout,
-            })
+            (.1
+                | make {
+                    0 = .server | .config | .max-header-bytes,
+                    1 = .server | .config | .max-requests-per-connection,
+                    2 = .server | .config | .idle-timeout,
+                })
+            (fork apply (.0 | .0) (.1 | .conn | http._h2-serve)))))
+
+# a request that asks to switch to HTTP/2 (`Upgrade: h2c`, with
+# `HTTP2-Settings`), on a server that serves it, over cleartext
+# internal
+http.h2c-wanted : Pending -> Bool ! {Network}
+http.h2c-wanted =
+    fork
+        and
+        (.st | .server | .config | .http2)
+        (fork
+            and
+            (.headers | http.h2c-upgrade)
             (fork
-                apply
-                (fork bytes.append .buffer (const http.preface-start))
-                (.conn | http._h2-serve))))
+                and
+                (.headers | json.lookup "http2-settings" | option.is-some)
+                (.st | .conn | tls.secure | not)))
+
+# internal
+http.h2c-upgrade : List[(String, String)] -> Bool
+http.h2c-upgrade =
+    fork
+        and
+        (json.lookup "upgrade"
+            | option.unwrap-or ""
+            | lower
+            | split ","
+            | map trim
+            | contains "h2c")
+        (json.lookup "connection"
+            | option.unwrap-or ""
+            | lower
+            | string.contains "upgrade")
+
+# switch: 101, then HTTP/2, whose stream 1 is the request
+# internal
+http.upgrade-h2c : Pending -> Step[ConnState, ()] ! {Async, IO, Network, FileIO, Error[IoError]}
+http.upgrade-h2c =
+    tap (fork tcp.write (const http.switching-h2c) (.st | .conn))
+    | fork
+        http.h2-run
+        (both
+            (fork http.bytes-drop .length (.st | .buffer))
+            (make {
+                0 = .method,
+                1 = .target,
+                2 = .headers,
+                3 = fork http.bytes-take .length (.st | .buffer),
+            } | Some))
+        .st
     | const (Stop ())
+
+# internal
+http.switching-h2c : Bytes
+http.switching-h2c =
+    "HTTP/1.1 101 Switching Protocols\r\nconnection: Upgrade\r\nupgrade: h2c\r\n\r\n"
+    | string.to-bytes
 
 # internal
 H2Out = { stream: H2Stream, head-only: Bool, response: Response }

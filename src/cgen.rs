@@ -3174,7 +3174,7 @@ impl<'p> Gen<'p> {
                     ("grpc.response-metadata", "fwp_p_grpc_response_metadata(l0)"),
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
-                    ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3)"),
+                    ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),
                     ("http2.request", "fwp_p_http2_request(l0)"),
                     ("http2.body", "fwp_p_http2_body(l0, l1, l2)"),
                     ("http2.respond", "fwp_p_http2_respond(l0, l1, l2, l3, l4)"),

@@ -416,7 +416,7 @@ its next suspension point, as for `task.within`) and the client gets 503
 ## HTTP/2 and compression
 
 REST servers speak HTTP/2 as well as HTTP/1.1 (h2 with ALPN over TLS, and
-h2c with prior knowledge on cleartext connections; see
+h2c on cleartext connections, with prior knowledge or `Upgrade: h2c`; see
 [concurrency.md](concurrency.md#http2)): `curl --http2-prior-knowledge
 http://127.0.0.1:8080/books/1` works as it does with HTTP/1.1. Responses
 of 1 KiB or more are compressed with gzip (or deflate) for clients that
