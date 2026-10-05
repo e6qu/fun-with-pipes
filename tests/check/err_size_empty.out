@@ -1,0 +1,8 @@
+check/err_size_empty.fwp:3:18: error: type mismatch in pipe input: expected `Vector[a, b + 1]`, found `Vector[a, 0]`
+3 | none = vector [] | vector.head
+  |                  ^
+  note: `a + 1` is not compatible with `0`
+check/err_size_empty.fwp:4:34: error: type mismatch in pipe input: expected `Vector[a, b + 1]`, found `Vector[a, _1]`
+4 | unknown = [1] | vector.from-list | vector.head
+  |                                  ^
+  note: `a + 1` is not compatible with `_1`

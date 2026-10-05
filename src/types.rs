@@ -636,10 +636,9 @@ impl TypeTable {
                     if ok {
                         return self.bind_var(v, &Type::from_poly(&val));
                     }
-                    if rest.iter().all(|(k, _)| k.is_empty()) {
-                        // a number that is not a natural: no size fits
-                        return Err(mismatch());
-                    }
+                    // the rest is numbers and rigid sizes, so no size fits
+                    // v, now or later (`v + 1 = m` with m rigid)
+                    return Err(mismatch());
                 }
             }
         }

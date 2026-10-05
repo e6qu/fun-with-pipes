@@ -1,0 +1,4 @@
+# `vector.head` wants a size `n + 1`; neither 0 nor a size known only when
+# the program runs is one (use `vector.non-empty`)
+none = vector [] | vector.head
+unknown = [1] | vector.from-list | vector.head

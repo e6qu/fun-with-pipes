@@ -2204,6 +2204,28 @@ vector.append : Vector[t, m] -> Vector[t, n] -> Vector[t, n + m]
 # `v | vector.push x` is `v` with `x` at the end
 vector.push : t -> Vector[t, n] -> Vector[t, n + 1]
 
+# the first element
+vector.head : Vector[t, n + 1] -> t
+
+# the last element
+vector.last : Vector[t, n + 1] -> t
+
+# all but the first element
+vector.tail : Vector[t, n + 1] -> Vector[t, n]
+
+# all but the last element
+vector.init : Vector[t, n + 1] -> Vector[t, n]
+
+# `v | vector.non-empty` is `v` with a size of the form `_ + 1`, so that
+# `vector.head` applies, when it has an element
+vector.non-empty : Vector[t, n] -> Option[Vector[t, _ + 1]]
+
+# the first k elements (all of them when there are fewer)
+vector.take : I64 -> Vector[t, n] -> Vector[t, _]
+
+# the elements that satisfy p
+vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
+
 # Lift an array function to vectors of the same size.
 vector.via : (Array[a] -> Array[b]) -> Vector[a, n] -> Vector[b, n]
 vector.map : (a -> b) -> Vector[a, n] -> Vector[b, n]
