@@ -861,7 +861,8 @@ impl<'p> Gen<'p> {
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
         let head = format!(
-            "static void fwp_drop{}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c || !*c) return;\n        if (*c > 1) {{ (*c)--; return; }}\n",
+            "/* {} */\nstatic void fwp_drop{}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c || !*c) return;\n        if (*c > 1) {{ (*c)--; return; }}\n",
+            mt.to_string().replace("*/", "* /"),
             id
         );
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
@@ -1603,7 +1604,36 @@ impl<'g, 'p> FnGen<'g, 'p> {
             _ => {
                 let v = self.expr(e);
                 let t = self.bind(v);
-                (0..n).map(|k| format!("OBJ({})->f[{}]", t, k)).collect()
+                let mut fs: Vec<String> = (0..n).map(|k| format!("OBJ({})->f[{}]", t, k)).collect();
+                if self.g.reuse {
+                    // read before the record may be freed
+                    fs = fs.into_iter().map(|f| self.bind(f)).collect();
+                    // the reference to the record becomes one to each field
+                    // (their owner gives each up on its own)
+                    let ty = {
+                        let funcs = &self.g.prog.funcs;
+                        let func = |id: FuncId| &funcs[id].ty;
+                        crate::ir::type_of(&func, &self.g.prog.shapes, &self.locals, e)
+                    };
+                    let tys: Option<Vec<MT>> = ty.as_ref().and_then(|t| {
+                        record_fields(&self.g.prog.shapes, t)
+                            .map(|fs| fs.iter().map(|(_, t)| t.clone()).collect())
+                    });
+                    for (k, f) in fs.iter().enumerate() {
+                        let counted = match &tys {
+                            Some(tys) => tys.get(k).is_some_and(|t| crate::rc::needs_rc(&self.g.prog.shapes, t)),
+                            None => true,
+                        };
+                        if counted {
+                            self.line(&format!("fwp_rc_dup({});", f));
+                        }
+                    }
+                    let d = ty
+                        .and_then(|t| self.typed_drop(&t))
+                        .unwrap_or_else(|| "fwp_rc_drop".into());
+                    self.line(&format!("{}({});", d, t));
+                }
+                fs
             }
         }
     }
