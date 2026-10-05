@@ -1621,7 +1621,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     });
                     for (k, f) in fs.iter().enumerate() {
                         let counted = match &tys {
-                            Some(tys) => tys.get(k).is_some_and(|t| crate::rc::needs_rc(&self.g.prog.shapes, t)),
+                            Some(tys) => tys
+                                .get(k)
+                                .is_some_and(|t| crate::rc::needs_rc(&self.g.prog.shapes, t)),
                             None => true,
                         };
                         if counted {
@@ -2097,7 +2099,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         Some(m) => {
                             let fs: Vec<String> =
                                 (off..off + m).map(|k| format!("st[{}]", k)).collect();
-                            self.bind(format!("fwp_record({}, {})", m, Self::array(&fs)))
+                            let r = format!("fwp_record({}, {})", m, Self::array(&fs));
+                            self.bind(self.g.fresh(r))
                         }
                     };
                 }
@@ -2169,7 +2172,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         Some(n) => {
                             let t = self.fresh();
                             self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
-                            self.bind(format!("fwp_record({}, {}.f)", n, t))
+                            // a record compiled code owns, like any it builds
+                            let r = format!("fwp_record({}, {}.f)", n, t);
+                            self.bind(self.g.fresh(r))
                         }
                         None => self.bind(format!("w{}({})", id, xs.join(", "))),
                     };
@@ -3581,8 +3586,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         }
         let body = match abi.ret {
             Some(n) => format!(
-                "{}fwp_r{} r = {}; {}return fwp_record({}, r.f);",
-                pre, n, call, post, n
+                "{}fwp_r{} r = {}; {}return {};",
+                pre,
+                n,
+                call,
+                post,
+                self.fresh(format!("fwp_record({}, r.f)", n))
             ),
             None => format!("{}V r = {}; {}return r;", pre, call, post),
         };

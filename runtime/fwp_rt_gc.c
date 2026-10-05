@@ -617,6 +617,20 @@ static inline int fwp_rc_last(V v) {
     return c && *c == 1;
 }
 
+/* whether the object `v` starts has not survived a collection: only such
+ * an object is freed by its count, as no old object points to it (the
+ * collector's invariant), so its cell can be given out again; an old one
+ * is left to a major collection */
+static inline int fwp_rc_unmarked(V v) {
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    if (off >= fwp_gc.top << GC_SHIFT) return 0;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->type == GC_BIG) return (off & (GC_CHUNK - 1)) == 0 && !m->mark;
+    if (m->type != GC_SMALL) return 0;
+    size_t i = (size_t)(off & (GC_CHUNK - 1)) / m->slot;
+    return !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
+}
+
 /* An object whose last counted reference compiled code gave up (its
  * references gone first, by their types: the `fwp_drop` functions of the
  * program): freed, or poisoned under FWP_REUSE_VERIFY so that a wrong
@@ -630,6 +644,7 @@ static void fwp_rc_free_obj(V v) {
         fwp_rc_poison(v);
         return;
     }
+    if (!fwp_rc_unmarked(v)) return;
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
@@ -645,6 +660,7 @@ static void fwp_rc_free_arr(V v) {
         ARR(v)->len = 0;
         return;
     }
+    if (!fwp_rc_unmarked(v)) return;
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
