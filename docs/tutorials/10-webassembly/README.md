@@ -2,13 +2,18 @@
 
 `--target wasm32-wasi` compiles a program to a WebAssembly module for WASI
 runtimes such as wasmtime or node. `--target wasm32-browser` also writes a
-small JavaScript loader for web pages:
+small JavaScript loader for web pages. A WASI module runs under
+wasmtime, or under node with `node tests/wasm/wasi-run.mjs collatz.wasm`:
 
 ```
 fwp build main.fwp --target wasm32-wasi -o collatz.wasm
-wasmtime collatz.wasm          # or: node tests/wasm/wasi-run.mjs collatz.wasm
+wasmtime collatz.wasm
+```
 
-fwp build main.fwp --target wasm32-browser -o collatz.wasm   # also collatz.js
+For a page, the build writes `collatz.js` next to the module:
+
+```
+fwp build main.fwp --target wasm32-browser -o collatz.wasm
 ```
 
 In a page:
@@ -40,18 +45,11 @@ Ubuntu, install `clang`, `lld`, `wasi-libc` and
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 10. WebAssembly
-#
-# The same program runs in the interpreter, natively, under WASI and in a
-# browser. It only uses effects that every target provides.
-
-# the number of steps of the Collatz sequence from n down to 1
 rec collatz-length : I64 -> I64
 collatz-length = match
     1 -> 1
     _ -> if (rem 2 | eq 0) (div 2) (mul 3 | add 1) | collatz-length | add 1
 
-# the start below n with the longest sequence
 longest : I64 -> Option[(I64, I64)]
 longest = range 1 | map (both id collatz-length) | sort-by .1 | last
 

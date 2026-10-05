@@ -1,9 +1,3 @@
-# 16. Command-line programs
-#
-# Exported functions are command-line programs: a first parameter that is
-# a record becomes flags, comments become the help, and
-# `fwp build --cli` puts every command in one executable.
-
 export version : String
 version = "0.3.0"
 
@@ -20,7 +14,6 @@ Options = {
 export defaults : {times: I64, sep: String}
 defaults = { times = 1, sep = " " }
 
-# The words, each `times` times, between copies of `sep`.
 repeated : Options -> List[String] -> String
 repeated = curry (both
         (.0 | .sep)

@@ -236,3 +236,49 @@ fn variant_cells_are_reused() {
         reused
     );
 }
+
+/// An array that a loop pushes to or writes into, holding its only
+/// reference, is written in place: the loops allocate next to nothing,
+/// where copying allocates a whole array per step.
+#[test]
+fn unique_arrays_are_written_in_place() {
+    if !linux_cc() {
+        return;
+    }
+    let dir = TempDir::new("arrays");
+    for (name, want, copied_at_least) in [("push", "199993\n", 1000.0), ("set", "500500\n", 100.0)]
+    {
+        let src = root().join(format!("tests/reuse/{}.fwp", name));
+        let allocated = |reuse: &str| -> f64 {
+            let exe = dir.0.join(format!("{}{}", name, reuse));
+            let b = Command::new(fwp())
+                .arg("build")
+                .arg(&src)
+                .arg("-o")
+                .arg(&exe)
+                .env("FWP_REUSE", reuse)
+                .output()
+                .unwrap();
+            assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+            let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+            assert_eq!(String::from_utf8_lossy(&o.stdout), want);
+            let err = String::from_utf8_lossy(&o.stderr);
+            let mib = err
+                .split(" MiB allocated")
+                .next()
+                .unwrap()
+                .rsplit(' ')
+                .next()
+                .unwrap();
+            mib.parse().unwrap()
+        };
+        let (copied, in_place) = (allocated("0"), allocated("1"));
+        assert!(
+            copied > copied_at_least && in_place < 10.0,
+            "{}: {} MiB copied, {} MiB in place",
+            name,
+            copied,
+            in_place
+        );
+    }
+}

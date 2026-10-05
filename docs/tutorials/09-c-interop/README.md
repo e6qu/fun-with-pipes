@@ -30,10 +30,11 @@ fwp build program.fwp --link mylib.c --link -lm -o program
 ## fwp as a C library
 
 The other direction works too. `--staticlib` and `--cdylib` build the
-exported functions into a C library, with a generated header:
+exported functions into a C library, with a generated header (here
+`libgeom.h`, next to `libgeom.a`):
 
 ```
-fwp build geom.fwp --staticlib -o libgeom.a   # also writes libgeom.h
+fwp build geom.fwp --staticlib -o libgeom.a
 ```
 
 [tests/c-interop](../../../tests/c-interop) has a Rust program and a C
@@ -44,28 +45,19 @@ program that use such a library.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 9. Calling C
-#
-# `foreign "C"` declares a C function with an fwp type. These come from the
-# C library, so no extra linking is needed.
-
 foreign "C" strlen : String -> USize
 foreign "C" hypot : F64 -> F64 -> F64
 
-# a struct returned by value
 repr(C) DivResult = { quot: I32, rem: I32 }
 foreign "C" div : I32 -> I32 -> DivResult
 
-# a nullable pointer: NULL is None
 foreign "C" getenv : String -> Option[Ptr[U8]] ! {IO}
 
-# a callback: qsort calls back into fwp to compare two elements
 foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
 
 compare : Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}
 compare = curry (both (.0 | ptr.read) (.1 | ptr.read) | uncurry (flip sub))
 
-# copy a list into C memory, sort it there, read it back
 sort-in-c : List[I32] -> List[I32] ! {Unsafe}
 sort-in-c = fork sort-buffer length to-buffer
 

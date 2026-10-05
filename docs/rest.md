@@ -151,8 +151,10 @@ export search : String -> Option[I64] -> List[Item]
 
 # route: POST /sum/{a}/{b}
 # args: a b c xs
-export sum4 : I64 -> I64 -> I64 -> List[I64] -> I64   # POST /sum/1/2?c=3 with [4, 5]
+export sum4 : I64 -> I64 -> I64 -> List[I64] -> I64
 ```
+
+`sum4` is called as `POST /sum/1/2?c=3` with the body `[4, 5]`.
 
 Values are decoded with the typed JSON codec below; path and query values
 are strings, which it accepts for numbers, `Bool` and enums (`"42"`,

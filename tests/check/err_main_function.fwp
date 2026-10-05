@@ -1,0 +1,4 @@
+# `main` is a value: a function there would never be called
+hello : () -> () ! {IO}
+hello = const "hello" | print
+main = hello

@@ -26,13 +26,11 @@ An `Error[E]` effect is part of the interface: the error value travels
 back to the caller, where `attempt` catches it as usual.
 
 ```fwp
-# a book by its ISBN
 export book : String -> Option[Book]
 book = eq | compose .isbn | find | apply shelf
 ```
 
 ```fwp
-# borrow a copy: how many are left, or why not
 export borrow : String -> Loan ! {Error[NotAvailable]}
 borrow = fork or-fail unknown book | lend
 ```
@@ -43,13 +41,6 @@ details, compiled into whichever executable needs them.
 ## The program
 
 ```fwp
-# 14. Services
-#
-# `book` and `borrow` are written as a service interface: exported,
-# monomorphic functions whose arguments and results can be encoded. Moved
-# into a module of their own, they can be linked into their callers or
-# served over gRPC, without changing a line (see the README).
-
 Book = { isbn: String, title: String, copies: I64 }
 
 Loan = { isbn: String, left: I64 }
@@ -62,7 +53,6 @@ shelf = [
     Book { isbn = "978-1", title = "Types", copies = 0 },
 ]
 
-# a book by its ISBN
 export book : String -> Option[Book]
 book = eq | compose .isbn | find | apply shelf
 
@@ -77,7 +67,6 @@ lend =
         (make NotAvailable { isbn = .isbn, reason = const "all copies are out" }
             | fail)
 
-# borrow a copy: how many are left, or why not
 export borrow : String -> Loan ! {Error[NotAvailable]}
 borrow = fork or-fail unknown book | lend
 

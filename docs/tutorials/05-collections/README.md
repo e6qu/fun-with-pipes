@@ -26,8 +26,6 @@ the elements that are consumed are computed:
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 5. Lists, maps, strings and lazy iterators
-
 text = "the quick brown fox jumps over the lazy dog the end"
 
 main = [
@@ -35,7 +33,6 @@ main = [
     text | words | frequencies | map.get "the" | echo,
     text | words | unique | sort | take 3 | echo,
     [1, 2, 3, 4, 5, 6] | filter (rem 2 | eq 0) | map (mul 10) | echo,
-    # an infinite iterator: only the first five are computed
     1 | iter.iterate (mul 2) | iter.take 5 | iter.to-list | echo,
     ("fwp", 12) | format "{} is {} PRs old" | print,
 ] | ignore

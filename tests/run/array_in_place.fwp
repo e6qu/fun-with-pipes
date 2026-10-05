@@ -1,0 +1,63 @@
+# Arrays written in place when unique (`array.set`, `array.push`): every
+# way of keeping a second reference must still see the old array.
+
+present : Option[Array[I64]] -> Array[I64]
+present = match
+    Some _ -> id
+    None -> prim.trap "out of range"
+
+put : I64 -> I64 -> Array[I64] -> Array[I64]
+put = curry3 (uncurry3 array.set | present)
+
+base : I64 -> Array[I64]
+base = flip array.make 0
+
+Box = { arr: Array[I64], tag: I64 }
+
+grow : (I64, Array[I64]) -> Step[(I64, Array[I64]), Array[I64]]
+grow =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork array.push .0 .1) | Again)
+
+# the getter keeps the array it closes over
+reader : Array[I64] -> I64 -> Option[I64]
+reader = flip array.get
+
+main = [
+    # the original kept beside its update
+    3 | base | both id (put 0 7) | show | echo,
+    3 | base | both (put 1 5) id | show | echo,
+    # kept in a record, then updated through a field
+    3
+    | base
+    | make Box { arr = id, tag = const 1 }
+    | both .arr (.arr | put 2 9)
+    | show
+    | echo,
+    # kept in a list
+    2 | base | fork Cons id (put 0 1 | singleton) | map array.to-list | echo,
+    # pushed twice from the same array
+    [1] | array.from-list | both (array.push 2) (array.push 3) | show | echo,
+    # an array of arrays: the inner one is shared
+    [1, 2]
+    | array.from-list
+    | array.make 2
+    | both id (array.get 0 | option.map (put 0 8))
+    | show
+    | echo,
+    # captured by a closure
+    2 | base | both reader (put 0 4) | both (.0 | apply 0) .1 | show | echo,
+    # grown in a loop, then read
+    (1000, [] | array.from-list)
+    | loop grow
+    | both array.length (array.get 999)
+    | echo,
+    # a map's value
+    map.empty
+    | map.insert 1 (2 | base)
+    | both id (map.get 1 | option.map (put 1 6))
+    | show
+    | echo,
+] | ignore

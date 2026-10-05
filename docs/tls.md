@@ -52,24 +52,23 @@ server and client of `lib/http.fwp` are such code). `tls.read`,
 | `tls.secure conn` | `True` for a TLS connection, `False` for a plain one (or a closed one) |
 | `tls.available ()` | OpenSSL can be used |
 
+Options that trust our own CA when calling the server:
+
 ```fwp
-# trust our own CA when calling the server
 client-tls : TlsOptions
 client-tls = tls.options | tls.with-ca "ca.pem"
 ```
 
 ### Client options
 
-```
-TlsOptions = {
-    ca-file: Option[String],     # trust the CA certificates of this PEM file instead
-    insecure: Bool,              # do not verify the server's certificate
-    server-name: Option[String], # the name to verify and send (default: the host)
-    alpn: List[String],          # protocols to offer
-    cert-file: Option[String],   # a client certificate chain (PEM), for mutual TLS
-    key-file: Option[String],    # and its private key (else in cert-file)
-}
-```
+| Field | Type | Meaning |
+|---|---|---|
+| `ca-file` | `Option[String]` | trust the CA certificates of this PEM file instead |
+| `insecure` | `Bool` | do not verify the server's certificate |
+| `server-name` | `Option[String]` | the name to verify and send (default: the host) |
+| `alpn` | `List[String]` | protocols to offer |
+| `cert-file` | `Option[String]` | a client certificate chain (PEM), for mutual TLS |
+| `key-file` | `Option[String]` | its private key (else in `cert-file`) |
 
 `tls.options` verifies with the system's CA certificates, offers no
 protocols, presents no certificate and takes the server name from the
@@ -182,10 +181,9 @@ writes to it, as with TCP.
 
 * **Server**: a `ServerConfig` with `tls` serves HTTPS (offering
   `http/1.1` with ALPN); `http.serve-on` serves a listener from
-  `tls.listen` the same way.
+  `tls.listen` the same way. An HTTPS server's configuration:
 
   ```fwp
-  # an HTTPS server's configuration
   server : ServerConfig
   server =
       "127.0.0.1:8443"
@@ -248,10 +246,10 @@ TLS, as every gRPC implementation does). Cleartext h2c stays the default.
   options). The stubs of split builds read them for a service `m` from
   `FWP_SERVICE_<M>_CA`, `FWP_SERVICE_<M>_INSECURE` (`1`),
   `FWP_SERVICE_<M>_SERVER_NAME`, `FWP_SERVICE_<M>_CERT` and
-  `FWP_SERVICE_<M>_KEY`, unless the calling task has `grpc.with-tls`.
+  `FWP_SERVICE_<M>_KEY`, unless the calling task has `grpc.with-tls`. A
+  call with TLS options:
 
   ```fwp
-  # a call with TLS options
   call : (TlsOptions, String) -> String ! {Network, Error[GrpcError]}
   call =
       fork

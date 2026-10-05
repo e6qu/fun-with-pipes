@@ -11,11 +11,9 @@ has the details.
 Two ordinary handlers, and a router:
 
 ```fwp
-# GET /hello: the HTTP version the request came in
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 hello = .version | format "hello over {}\n" | http.text 200
 
-# GET /report: a long text
 report : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 report = const (string.repeat 100 "all work and no play\n") | http.text 200
 ```
@@ -36,7 +34,6 @@ have 512 bytes or more, with gzip (or deflate) for clients that say they
 accept it (`Accept-Encoding`):
 
 ```fwp
-# responses of 512 bytes or more are compressed
 app : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 app = http.compress 512 routes
 ```
@@ -64,7 +61,6 @@ channels of messages. This session sends every message back until the
 client closes it:
 
 ```fwp
-# a WebSocket session: every message back, until the client closes
 mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
 mirror = loop mirror-step
 
@@ -90,7 +86,6 @@ not an upgrade gets 400.
 `fwp run main.fwp serve` serves `app` on 127.0.0.1:8080:
 
 ```fwp
-# serve: `fwp run main.fwp serve`
 serve : () -> () ! {Async, IO, Network, Error[IoError]}
 serve = const ("127.0.0.1:8080" | http.config) | flip http.serve app
 ```
@@ -156,22 +151,12 @@ Some (Text "hello from fwp")
 ## The program
 
 ```fwp
-# 20. WebSockets and HTTP/2
-#
-# A server with a WebSocket echo and responses compressed for clients that
-# accept it, which also speaks HTTP/2: the README serves it and talks to
-# it with curl, node and an fwp client. `main` calls the handler
-# in-process, which is how its output is checked.
-
-# GET /hello: the HTTP version the request came in
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 hello = .version | format "hello over {}\n" | http.text 200
 
-# GET /report: a long text
 report : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 report = const (string.repeat 100 "all work and no play\n") | http.text 200
 
-# a WebSocket session: every message back, until the client closes
 mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
 mirror = loop mirror-step
 
@@ -191,15 +176,12 @@ routes = http.router [
     http.route "GET" "/mirror" (http.websocket mirror),
 ]
 
-# responses of 512 bytes or more are compressed
 app : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 app = http.compress 512 routes
 
-# serve: `fwp run main.fwp serve`
 serve : () -> () ! {Async, IO, Network, Error[IoError]}
 serve = const ("127.0.0.1:8080" | http.config) | flip http.serve app
 
-# a request made in-process: method, path and headers
 request : (String, String, List[(String, String)]) -> Request
 request = make Request {
     method = .0,

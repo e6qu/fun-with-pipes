@@ -796,6 +796,44 @@ static V fwp_p_array_push(V x, V a) {
     return r;
 }
 
+/* `array.set` and `array.push` given the only reference to the array
+ * (src/rc.rs: compiled code passes it on): written in place when it is
+ * unique, else copied (and the reference given up). The results are
+ * counted (fwp_rc_fresh): compiled code owns them. */
+static V fwp_p_array_set_own(V i, V x, V a) {
+    if ((int64_t)i < 0 || (uint64_t)(int64_t)i >= ARR(a)->len) {
+        fwp_rc_drop(a);
+        return FWP_NONE;
+    }
+    int u = fwp_rc_unique_mut(a);
+    V r = a;
+    if (u != 1) {
+        r = fwp_rc_fresh(fwp_p_array_copy(a, 0));
+        if (u == 2) ARR(a)->len = 0; /* poisoned */
+        else fwp_rc_drop(a);
+    }
+    ARR(r)->d[(int64_t)i] = x;
+    return fwp_rc_fresh(fwp_some(r));
+}
+
+static V fwp_p_array_push_own(V x, V a) {
+    size_t n = ARR(a)->len;
+    int u = fwp_rc_unique_mut(a);
+    if (u == 1 && fwp_rc_capacity(a) >= sizeof(fwp_arr) + (n + 1) * sizeof(V)) {
+        ARR(a)->d[n] = x;
+        ARR(a)->len = n + 1;
+        return a;
+    }
+    /* an array pushed to while unique grows by doubling */
+    V r = fwp_arr_new(u ? (n < 4 ? 4 : 2 * n) : n + 1);
+    memcpy(ARR(r)->d, ARR(a)->d, n * sizeof(V));
+    ARR(r)->len = n + 1;
+    ARR(r)->d[n] = x;
+    if (u == 2) ARR(a)->len = 0; /* poisoned */
+    else fwp_rc_drop(a);
+    return fwp_rc_fresh(r);
+}
+
 static V fwp_p_array_make(V n, V x) {
     size_t k = fwp_count_arg(n);
     V r = fwp_arr_new(k);

@@ -34,20 +34,43 @@ finish, and returns. The configuration limits:
 - idle time;
 - handler time.
 
-This program uses `http.serve-on` with a listener on a free port instead,
-so that it can call itself with the HTTP client and then stop.
+Run as `fwp run main.fwp serve`, this program serves `handler` on
+127.0.0.1:8080:
+
+```fwp
+serve : () -> () ! {Async, IO, Network, Error[IoError]}
+serve = const ("127.0.0.1:8080" | http.config) | flip http.serve handler
+```
+
+Any HTTP client can call it:
+
+```
+$ fwp run main.fwp serve &
+$ curl http://127.0.0.1:8080/hello/fwp
+hello, fwp
+$ curl -d '[1, 2, 3.5]' http://127.0.0.1:8080/sum
+6.5
+$ curl -i http://127.0.0.1:8080/admin
+HTTP/1.1 401 Unauthorized
+content-type: text/plain; charset=utf-8
+content-length: 31
+connection: keep-alive
+
+missing or invalid bearer token
+$ curl -H "Authorization: Bearer secret" http://127.0.0.1:8080/admin
+welcome
+$ kill -INT %1
+```
+
+Without `serve`, the program checks itself: `http.serve-on` serves on a
+listener on a free port, the HTTP client makes the calls in `calls`, and
+`signal.request-shutdown` stops the server. That is the output below.
 
 ## The program
 
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 8. An HTTP server
-#
-# A handler is a function from `Request` to `Response`; middleware is
-# ordinary composition. This program starts the server on a free port,
-# calls it with the built-in client, and shuts it down again.
-
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 hello =
     http.param "name"
@@ -55,7 +78,6 @@ hello =
     | format "hello, {}"
     | http.text 200
 
-# POST /sum with a JSON array of numbers
 sum-numbers : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 sum-numbers =
     http.json-body
@@ -80,7 +102,6 @@ routes = http.router [
 handler : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 handler = timeout 2s | routes
 
-# the client side: (method, path, body, headers)
 calls : List[(String, String, String, List[(String, String)])]
 calls = [
     ("GET", "/hello", "", []),
@@ -110,8 +131,12 @@ call =
 run-calls : String -> () ! {Async, IO, Network}
 run-calls = format "http://{}" | curry id | flip map calls | each (call | print)
 
-main =
-    "127.0.0.1:0"
+serve : () -> () ! {Async, IO, Network, Error[IoError]}
+serve = const ("127.0.0.1:8080" | http.config) | flip http.serve handler
+
+check : () -> () ! {Async, IO, Network, Error[IoError]}
+check =
+    const "127.0.0.1:0"
     | tcp.listen
     | both
         (both id (const (http.config "unused", handler))
@@ -121,6 +146,9 @@ main =
     | .0
     | task.await
     | ignore
+
+main =
+    () | if (const () | args | contains "serve") (attempt serve | ignore) check
 ```
 
 Run it with `fwp run docs/tutorials/08-http-server/main.fwp` (compiled to native code and cached), or

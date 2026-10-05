@@ -162,10 +162,10 @@ besides an output channel; gRPC has no other request then.
   status (`OUT_OF_RANGE`, ...) in the trailers. A caller of such a remote
   function gets the same iterator back: its `Ok`s, then, if the stream
   fails (with a status, or because the connection is lost), one `Err`
-  with the status, and the end. Nothing traps.
+  with the status, and the end. Nothing traps. `countdown n` streams n,
+  ..., 1, then ends with a status, its first `Err`:
 
   ```fwp
-  # n, ..., 1, then a status: a stream of results ends with its first `Err`
   export countdown : I64 -> Iterator[Result[I64, GrpcError]]
   ```
 
@@ -202,9 +202,9 @@ be reached or the connection is lost, `DEADLINE_EXCEEDED` for
 `grpc.with-deadline`. Other client stubs of split builds trap on failures,
 as [services.md](services.md#what-stays-the-same-and-what-changes)
 describes; a trap on the server traps the caller with the same message.
+`lookup` answers `"ghost"` with the status `NOT_FOUND`:
 
 ```fwp
-# a status: NOT_FOUND for "ghost"
 export lookup : String -> HelloReply ! {Error[GrpcError]}
 lookup = if
     (eq "ghost")
@@ -257,10 +257,10 @@ task.within 100ms (const 2000 | greeter.slow) | echo,
 Tasks started by a served function see its call's metadata. Binary
 headers (`-bin`) are passed as their base64 text. Response metadata leaves
 out `content-type`, `grpc-status`, `grpc-message`, `grpc-encoding` and
-`grpc-accept-encoding`.
+`grpc-accept-encoding`. `tagged` greets with response metadata, a header
+and a trailer:
 
 ```fwp
-# a greeting with response metadata: a header and a trailer
 export tagged : String -> String ! {Network}
 ```
 
@@ -365,13 +365,14 @@ The well-known `Empty`, `Timestamp`, `Duration`, `Any` and the wrappers
 directory of the file. Options, `reserved` and extensions are skipped;
 groups are rejected.
 
-For each method `SayHello` of a service `Greeter`:
+For each method `SayHello` of a service `Greeter` (`rpc
+SayHello(HelloRequest) returns (HelloReply)`), `greeter.say-hello` calls
+the service at an address, and `greeter.say-hello.route` is the route
+that serves `SayHello` with a function:
 
 ```fwp
-# rpc SayHello(HelloRequest) returns (HelloReply): a call to the service at an address
 greeter.say-hello : String -> HelloRequest -> HelloReply ! {Network, Error[GrpcError]}
 
-# the route serving `SayHello` with a function
 greeter.say-hello.route : (HelloRequest -> HelloReply ! {Async, IO, Network, FileIO, Error[GrpcError]}) -> GrpcRoute
 ```
 

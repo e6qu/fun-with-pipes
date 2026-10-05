@@ -1,0 +1,13 @@
+# every step writes one element of the array
+present : Option[Array[I64]] -> Array[I64]
+present = match
+    Some _ -> id
+    None -> prim.trap "out of range"
+
+put : (I64, Array[I64]) -> Array[I64]
+put = make { 0 = .0 | rem 1000, 1 = .0, 2 = .1 } | uncurry3 array.set | present
+
+step : (I64, Array[I64]) -> Step[(I64, Array[I64]), Array[I64]]
+step = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) put | Again)
+
+main = (100000, 1000 | flip array.make 0) | loop step | array.fold add 0 | echo

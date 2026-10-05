@@ -110,6 +110,9 @@ static inline void fwp_rc_dup(V v) { (void)v; }
 static inline void fwp_rc_drop(V v) { (void)v; }
 static inline void fwp_rc_share(V v) { (void)v; }
 static inline int fwp_rc_unique(V v) { (void)v; return 0; }
+static inline int fwp_rc_unique_mut(V v) { (void)v; return 0; }
+static inline int fwp_rc_last(V v) { (void)v; return 0; }
+static inline size_t fwp_rc_capacity(V v) { (void)v; return 0; }
 static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
 static inline int fwp_rc_young(V v) { (void)v; return 0; }
@@ -139,7 +142,8 @@ typedef struct {
     size_t size;                   /* big: bytes */
     uint32_t recip;                /* small: 2^32 / slot, rounded up */
     uint64_t bits[GC_CHUNK / 16 / 64]; /* small: a mark bit per slot */
-    uint8_t rc[GC_CHUNK / 16];     /* small, kind 0: references counted (fwp_rc_*) */
+    uint8_t rc[GC_CHUNK / 16];     /* small, kinds 0 and 2: references counted
+                                    * (fwp_rc_*); big: rc[0] */
 } gc_chunk;
 
 typedef struct { char *free, *bump, *end; } gc_list;
@@ -329,6 +333,7 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
     m->dirty = 1;
     m->head = (uint32_t)k;
     m->size = n;
+    m->rc[0] = 0;
     for (size_t i = 1; i < k; i++) {
         gc_chunk *t = &fwp_gc.meta[ci + i];
         t->type = GC_BIG_TAIL;
@@ -451,6 +456,7 @@ static void fwp_mem_free(void *p) {
     } else if (m->type == GC_BIG && (char *)p == fwp_gc_chunk_addr(ci)) {
         fwp_gc.budget += (intptr_t)m->size;
         m->mark = 0;
+        m->rc[0] = 0;
         size_t k = m->head;
         for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
         fwp_gc.nfree_chunks += k;
@@ -487,12 +493,14 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
  * when it truly has one reference. Old objects are never reused: they must
  * not come to point to young ones. */
 
-/* the count of the small object of kind 0 that `v` points into, or 0 */
+/* the count of the object `v` points into, or 0: a small object of kind 0
+ * (records, variants) or 2 (arrays), or the start of a big one */
 static inline uint8_t *fwp_rc_slot(V v) {
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     if (off >= fwp_gc.top << GC_SHIFT) return 0;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
-    if (m->type != GC_SMALL || m->leaf != 0) return 0;
+    if (m->type == GC_BIG && (off & (GC_CHUNK - 1)) == 0) return &m->rc[0];
+    if (m->type != GC_SMALL || m->leaf == 1) return 0;
     /* (a word pointing inside an object counts for that object: only too
      * high, never too low, as words are only dropped through values) */
     size_t i = (size_t)(((uint64_t)(off & (GC_CHUNK - 1)) * m->recip) >> 32);
@@ -526,7 +534,8 @@ static void fwp_rc_share(V v) {
     while (sp) {
         V o = stack[--sp];
         size_t ci = ((uintptr_t)o - (uintptr_t)fwp_gc.base) >> GC_SHIFT;
-        uint32_t slot = fwp_gc.meta[ci].slot;
+        gc_chunk *mc = &fwp_gc.meta[ci];
+        size_t slot = mc->type == GC_BIG ? mc->size : mc->slot;
         V *w = (V *)(uintptr_t)o;
         for (size_t k = 0; k < slot / sizeof(V); k++) {
             uint8_t *d = fwp_rc_slot(w[k]);
@@ -582,6 +591,38 @@ static inline int fwp_rc_unique(V v) {
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
     }
     return fwp_reuse_verify ? 2 : 1;
+}
+
+/* 1: the object of kind 2 `v` (an array) has one reference and may be
+ * written in place, whatever its age (old objects of kind 2 are scanned
+ * by every minor collection); 2: it would be, but is to be copied and
+ * poisoned (FWP_REUSE_VERIFY) */
+static inline int fwp_rc_unique_mut(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (!c || *c != 1) return 0;
+    if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    return fwp_reuse_verify ? 2 : 1;
+}
+
+/* whether `v` has one reference, which is being given up: the references
+ * it holds go too (a count that is only too high stays so) */
+static inline int fwp_rc_last(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    return c && *c == 1;
+}
+
+/* the bytes usable from `v`, the start of a small object of kind 2 or of
+ * a big one (its slot or chunks), or 0 */
+static inline size_t fwp_rc_capacity(V v) {
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    if (off >= fwp_gc.top << GC_SHIFT) return 0;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->type == GC_BIG && (off & (GC_CHUNK - 1)) == 0) return m->size;
+    if (m->type == GC_SMALL && m->leaf == 2 && (off & (GC_CHUNK - 1)) % m->slot == 0) return m->slot;
+    return 0;
 }
 
 /* ----- marking */
@@ -783,6 +824,7 @@ static void fwp_gc_sweep(void) {
             if (m->mark) {
                 live += m->size; /* the mark stays: old */
             } else {
+                m->rc[0] = 0;
                 for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
                 nfree += k;
             }

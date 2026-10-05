@@ -1,0 +1,4 @@
+check/err_main_function.fwp:4:1: error: `main` is a function (`() -> () ! {IO}`), so it would never run
+4 | main = hello
+  | ^^^^
+  note: `main` is the program's value: apply the function, for example `main = () | f`

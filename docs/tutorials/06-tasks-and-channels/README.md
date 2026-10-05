@@ -33,14 +33,9 @@ applies to everything the task started.
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 6. Tasks and channels
-
-# Each element is handled by its own task; results come back in order.
 squares : List[I64] -> List[Option[I64]] ! {Async}
 squares = task.map (fork mul id id)
 
-# A producer task sends into a bounded channel; the consumer reads until
-# the channel is closed.
 produce : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
 produce = flip (const (both (flip send-all [1, 2, 3]) channel.close | ignore))
 
@@ -64,7 +59,6 @@ the-channel = id
 main = [
     [1, 2, 3, 4] | squares | echo,
     2 | channel.make | the-channel | tap (produce | task.spawn) | total | echo,
-    # a deadline cancels a task that takes too long
     task.within 50ms (const 1s | task.sleep) | echo,
 ] | ignore
 ```

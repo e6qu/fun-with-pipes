@@ -42,12 +42,6 @@ $ fwp pipe 'main.fwp:scale 2 | main.fwp:scale 5' <<< 3
 [`main.fwp`](main.fwp):
 
 ```fwp
-# 7. Functions as executables
-#
-# Every `export`ed function can become a standalone program: its curried
-# parameters come from the command line, and the last one may come from
-# standard input, one record per line.
-
 export normalize : String -> String
 normalize = trim | lower
 
@@ -62,7 +56,6 @@ Reading = { sensor: String, celsius: F64 }
 export fahrenheit : Reading -> Reading
 fahrenheit = update { celsius = mul 1.8 | add 32.0 }
 
-# `main` shows the same functions called from fwp.
 main = [
     "  Hello WORLD " | normalize | print,
     7 | scale 6 | echo,

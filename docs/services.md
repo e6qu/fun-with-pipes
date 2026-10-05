@@ -8,12 +8,13 @@ over gRPC. The source is the same in both builds; only the
 build command differs. You can write, test and debug a system as one
 program, then deploy parts of it as services when the need arises (to
 scale a part on its own, to isolate it, to call it from another language)
-and go back just as easily.
+and go back just as easily. The first build gives one executable, the
+second three:
 
 ```
-$ fwp build shop.fwp -o shop                    # one executable
+$ fwp build shop.fwp -o shop
 $ fwp build shop.fwp --service inventory --service pricing -o out
-$ ls out                                        # three executables
+$ ls out
 inventory  pricing  shop
 ```
 

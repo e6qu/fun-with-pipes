@@ -30,34 +30,40 @@ library is listed in [stdlib.md](stdlib.md).
 
 ## Declarations
 
-```
-name = expression                 # a definition
-name : Type where Trait[a]        # a signature (needed for a generic)
-rec name = ...                    # recursion must be declared
-rec name : Type                   # (or on the signature)
-export name : Type                # exported: executables, libraries
-import dir.module                 # dir/module.fwp; names as dir.module.name
+| Declaration | Meaning |
+|---|---|
+| `name = expression` | a definition |
+| `name : Type where Trait[a]` | a signature (needed for a generic) |
+| `rec name = ...` | recursion must be declared (or on the signature: `rec name : Type`) |
+| `export name : Type` | exported: executables, libraries |
+| `import dir.module` | `dir/module.fwp`; its names are `dir.module.name` |
+| `Point = { x: F64, y: F64 }` | a nominal record |
+| `Meters = F64` | an alias (aliases may refer to later ones, but not to themselves) |
+| `Handle = builtin` | opaque, provided by the runtime |
+| `resource File = builtin` | affine: no `Dup`, not captured by partial application |
+| `repr(C) Vec2 = { x: F64, y: F64 }` | C layout (fields in declaration order) |
+| `test "name" = expression` | must evaluate to `True` |
+| `macro name = function` | a `Syntax -> Syntax` function |
+| `foreign "C" name : Type = "symbol" [variadic N]` | a C function ([C interop](#c-interop)) |
 
-Point = { x: F64, y: F64 }        # nominal record
-Shape =                           # variants
+Variants list their constructors and the constructors' fields:
+
+```
+Shape =
     | Circle Point F64
     | Square Point F64
-Meters = F64                      # alias (aliases may refer to later ones,
-Handler = { path: String } -> F64 #   but not to themselves)
-Handle = builtin                  # opaque, provided by the runtime
-resource File = builtin           # affine: no Dup, not captured by partial application
-repr(C) Vec2 = { x: F64, y: F64 } # C layout (fields in declaration order)
+```
 
-trait Shape[T] : Super[T] =       # superclasses after `:`
+A trait lists superclasses after `:`, and may give default methods
+(`describe` here); an impl may have a context after `where`:
+
+```
+trait Shape[T] : Super[T] =
     area : T -> F64
     describe : T -> String
-    describe = area | show        # default method
+    describe = area | show
 impl Shape[Circle] where Ring[F64] =
     area = ...
-
-test "name" = expression          # must evaluate to True
-macro name = function             # a Syntax -> Syntax function
-foreign "C" name : Type = "symbol" [variadic N]
 ```
 
 In types, a lower-case name (`a`, `t`) or an unknown upper-case name
@@ -237,10 +243,13 @@ The effect rules:
 ```
 foreign "C" strlen : String -> USize
 repr(C) DivResult = { quot: I32, rem: I32 }
-foreign "C" c-div : I32 -> I32 -> DivResult = "div"   # c-div 7 2 is div(7, 2)
+foreign "C" c-div : I32 -> I32 -> DivResult = "div"
 foreign "C" qsort : Ptr[I32] -> USize -> USize -> (Ptr[I32] -> Ptr[I32] -> I32 ! {Unsafe}) -> () ! {Unsafe}
 foreign "C" snprintf : Ptr[U8] -> USize -> String -> I64 -> I32 ! {Unsafe} = "snprintf" variadic 3
 ```
+
+A C name other than the fwp one comes after `=`: `c-div 7 2` calls
+`div(7, 2)`.
 
 | fwp | C |
 |---|---|
@@ -535,12 +544,14 @@ compiling the larger module).
 fwp itself, the compiler and the interpreter, builds for WebAssembly:
 `cargo build --release --target wasm32-wasip1` makes `fwp.wasm`, a WASI
 command module that takes the same arguments as `fwp`. The playground in
-`web/` runs it in a page:
+`web/` runs it in a page. `scripts/build-playground.sh` builds
+`web/fwp.wasm` and `web/examples/`, and any static file server can serve
+`web/`:
 
 ```
 rustup target add wasm32-wasip1
-scripts/build-playground.sh              # web/fwp.wasm and web/examples/
-python3 -m http.server -d web 8000       # any static file server works
+scripts/build-playground.sh
+python3 -m http.server -d web 8000
 ```
 
 | File | Role |
@@ -667,7 +678,6 @@ A comment `# fwp:allow(code, ...)` in the comment lines directly above a
 declaration silences those rules inside it:
 
 ```fwp
-# kept for the next release
 # fwp:allow(unused-binding)
 legacy-total : List[{amount: I64}] -> I64
 legacy-total = map .amount | sum
@@ -724,11 +734,11 @@ args = ["lsp"]
 VS Code has no built-in generic client. Either configure a generic LSP
 client extension with the command `fwp`, the argument `lsp` and the file
 pattern `**/*.fwp`, or use a minimal extension built on
-`vscode-languageclient`:
+`vscode-languageclient`. Its `package.json` declares
+`"activationEvents": ["onLanguage:fwp"]` and contributes a language
+`fwp` with the extension `.fwp`; `extension.js` is:
 
 ```js
-// extension.js; package.json declares "activationEvents": ["onLanguage:fwp"]
-// and contributes a language "fwp" with the extension ".fwp"
 const { LanguageClient } = require("vscode-languageclient/node");
 
 let client;

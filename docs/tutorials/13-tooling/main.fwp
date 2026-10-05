@@ -1,10 +1,6 @@
-# 13. Tooling: a program kept tidy by `fwp fmt` and `fwp lint`
-
 text : String
 text = "the cat and the dog and the bird saw the other cat"
 
-# The three most frequent words. `fwp fmt` puts a pipeline that does not
-# fit on one line one stage per line.
 top-words : String -> List[String]
 top-words =
     words
@@ -14,11 +10,9 @@ top-words =
     | take 3
     | map (format "{}: {}")
 
-# One traversal: `fwp lint` suggests `map (f | g)` for `map f | map g`.
 word-sizes : String -> List[I64]
 word-sizes = words | map (upper | string.length)
 
-# A helper kept for later; the comment above silences one lint rule.
 # fwp:allow(unused-binding)
 shout = upper | flip concat "!"
 

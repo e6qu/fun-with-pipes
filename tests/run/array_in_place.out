@@ -1,0 +1,9 @@
+(array[0, 0, 0], array[7, 0, 0])
+(array[0, 5, 0], array[0, 0, 0])
+(array[0, 0, 0], array[0, 0, 9])
+[[0, 0], [1, 0]]
+(array[1, 2], array[1, 3])
+(array[array[1, 2], array[1, 2]], Some array[8, 2])
+(Some 0, array[4, 0])
+(1000, Some 1)
+(map{1: array[0, 0]}, Some array[0, 6])
