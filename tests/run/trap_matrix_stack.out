@@ -1,0 +1,4 @@
+[[1, 2], [3, 4]]
+--- stderr
+fwp: trap: matrix.stack: the matrices have different numbers of columns
+--- exit 101

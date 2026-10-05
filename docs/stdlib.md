@@ -2213,6 +2213,15 @@ matrix : List[List[t]] -> Matrix[t, m, n]
 
 # the elements row by row: an m by n matrix gives a vector of m * n
 matrix.flatten : Matrix[t, m, n] -> Vector[t, m * n]
+
+# `a | matrix.stack b` is the rows of `a`, then those of `b`. The column
+# counts must agree: the types say so, and with `Dyn` sizes a program
+# whose matrices differ stops (a matrix without rows stacks with any)
+matrix.stack : Matrix[t, k, n] -> Matrix[t, m, n] -> Matrix[t, m + k, n]
+
+# `a | matrix.beside b` is `a` with the columns of `b` to its right. The
+# row counts must agree, as for `matrix.stack`
+matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
 matrix.dyn : Matrix[t, m, n] -> Matrix[t, Dyn, Dyn]
 matrix.square : I64 -> Array[t] -> Matrix[t, n, n]
 matrix.rows-of : Matrix[t, m, n] -> List[List[t]]

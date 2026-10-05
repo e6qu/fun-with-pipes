@@ -1,0 +1,14 @@
+# With `Dyn` sizes the column counts of stacked matrices are checked when
+# the program runs.
+main = [
+    [[1, 2]]
+    | matrix.from-rows
+    | matrix.stack ([[3, 4]] | matrix.from-rows)
+    | matrix.rows-of
+    | echo,
+    [[1, 2]]
+    | matrix.from-rows
+    | matrix.stack ([[3, 4, 5]] | matrix.from-rows)
+    | matrix.rows-of
+    | echo,
+] | ignore
