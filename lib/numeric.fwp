@@ -39,7 +39,8 @@ vector.get = array.get | compose .data
 # `a | vector.append b` is the elements of `a`, then those of `b`: its
 # size is the sum of theirs
 vector.append : Vector[t, m] -> Vector[t, n] -> Vector[t, n + m]
-vector.append = curry (both (.0 | .data) (.1 | .data) | uncurry array.append | vector.wrap)
+vector.append =
+    curry (both (.0 | .data) (.1 | .data) | uncurry array.append | vector.wrap)
 
 # `v | vector.push x` is `v` with `x` at the end
 vector.push : t -> Vector[t, n] -> Vector[t, n + 1]
@@ -318,9 +319,15 @@ test "vector" = vector [1, 2, 3] | vector.to-list | eq [1, 2, 3]
 test "vector.length" = vector [1.0, 2.0] | vector.length | eq 2
 test "vector.get" = vector [5, 6] | vector.get 1 | eq (Some 6)
 test "vector.get out of range" = vector [5, 6] | vector.get 2 | eq None
-test "vector.append" = vector [1, 2] | vector.append (vector [3]) | vector.to-list | eq [1, 2, 3]
-test "vector.push" = vector [1, 2] | vector.push 3 | vector.to-list | eq [1, 2, 3]
-test "matrix.flatten" = matrix [[1, 2], [3, 4], [5, 6]] | matrix.flatten | vector.to-list | eq [1, 2, 3, 4, 5, 6]
+test "vector.append" =
+    vector [1, 2] | vector.append (vector [3]) | vector.to-list | eq [1, 2, 3]
+test "vector.push" =
+    vector [1, 2] | vector.push 3 | vector.to-list | eq [1, 2, 3]
+test "matrix.flatten" =
+    matrix [[1, 2], [3, 4], [5, 6]]
+    | matrix.flatten
+    | vector.to-list
+    | eq [1, 2, 3, 4, 5, 6]
 test "vector.map" =
     vector [1, 2] | vector.map (mul 3) | vector.to-list | eq [3, 6]
 test "vector.add" =
