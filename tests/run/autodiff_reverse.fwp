@@ -67,8 +67,8 @@ step = fork (zip-with sub) (grad loss | map (mul 0.5)) id
 # trace(M·M) + sum of squares of the entries of M for a 2x2 M
 matrix-fn : List[t] -> t where Ring[t]
 matrix-fn =
-    chunks 2
-    | matrix.from-rows
+    array.from-list
+    | matrix.square 2
     | fork matmul id id
     | .data
     | array.to-list

@@ -1,5 +1,9 @@
-# Tensor operands of different lengths are a trap, not silently padded.
+# Tensor operands of different lengths are a trap, not silently padded
+# (`vector.wrap` claims any size, unchecked, so the types cannot stop it).
+v : List[F64] -> Vector[F64, n]
+v = array.from-list | vector.wrap
+
 main = [
-    vector.from-list [1.0, 2.0] | tensor.lazy | tensor.mul (vector.from-list [3.0, 4.0] | tensor.lazy) | realize | echo,
-    vector.from-list [1.0, 2.0] | tensor.lazy | tensor.add (vector.from-list [1.0, 2.0, 3.0] | tensor.lazy) | realize | echo,
+    v [1.0, 2.0] | tensor.lazy | tensor.mul (v [3.0, 4.0] | tensor.lazy) | realize | echo,
+    v [1.0, 2.0] | tensor.lazy | tensor.add (v [1.0, 2.0, 3.0] | tensor.lazy) | realize | echo,
 ] | ignore
