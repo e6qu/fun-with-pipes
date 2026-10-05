@@ -1,0 +1,56 @@
+# A record updated in place must have no other reference: each case
+# keeps one (in a tuple, a list, a closure, another record, a loop's
+# state) and then updates the record. Built with FWP_REUSE=1 the native
+# program reuses only truly unique records (tests/reuse.rs); the output
+# shows the untouched original next to the copy.
+
+R = { a: I64, b: I64, c: I64, d: I64, e: I64 }
+
+r0 : R
+r0 = R { a = 1, b = 2, c = 3, d = 4, e = 5 }
+
+bump : R -> R
+bump = update { a = add 10, e = mul 2 }
+
+# fresh, then kept and updated
+fresh : I64 -> R
+fresh = make R { a = id, b = add 1, c = add 2, d = add 3, e = add 4 }
+
+pair : I64 -> (R, R)
+pair = fresh | fork (curry id) id bump
+
+in-list : I64 -> List[R]
+in-list = fresh | fork Cons id (bump | singleton)
+
+nested : I64 -> { inner: R, other: R }
+nested = fresh | make { inner = id, other = bump }
+
+captured : I64 -> (I64 -> R, R)
+captured = fresh | both const bump
+
+# the closure's record next to the updated one
+opened : (I64 -> R, R) -> (R, R)
+opened = fork (curry id) (.0 | apply 0) .1
+
+# a loop whose state keeps the old record next to the new one
+step : (I64, R, List[R]) -> Step[(I64, R, List[R]), List[R]]
+step =
+    if
+        (.0 | eq 0)
+        (fork Cons .1 .2 | Stop)
+        (make { 0 = .0 | sub 1, 1 = .1 | bump, 2 = fork Cons .1 .2 } | Again)
+
+# updated twice from the same original
+twice : I64 -> (R, R)
+twice = fresh | both bump (bump | bump)
+
+main = [
+    r0 | bump | echo,
+    r0 | echo,
+    7 | pair | echo,
+    7 | in-list | echo,
+    7 | nested | echo,
+    7 | captured | opened | echo,
+    (3, fresh 1, []) | loop step | echo,
+    7 | twice | echo,
+] | ignore
