@@ -866,10 +866,14 @@ impl<'p> Gen<'p> {
         );
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
         if container {
-            return format!("{}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n", head);
+            return format!(
+                "{}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n",
+                head
+            );
         }
         let shapes = &self.prog.shapes;
-        let counted = |t: &MT| crate::rc::needs_rc(shapes, t) && !matches!(t, MT::Con(n, _) if n == "?");
+        let counted =
+            |t: &MT| crate::rc::needs_rc(shapes, t) && !matches!(t, MT::Con(n, _) if n == "?");
         // the fields of each constructor (a record: one with tag 0)
         let cases: Vec<(u32, Vec<MT>)> = match (record_fields(shapes, mt), shapes.get(mt)) {
             (Some(fs), _) => vec![(0, fs.iter().map(|(_, t)| t.clone()).collect())],
