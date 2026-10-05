@@ -114,10 +114,15 @@ vector.take = curry (both (.0 | max 0) (.1 | .data)
 # out of elements
 vector.split : Vector[a, m] -> Vector[t, n + m] -> (Vector[t, m], Vector[t, n])
 vector.split = curry (both (.0 | vector.length) (.1 | .data)
-    | both
-        (uncurry (array.slice 0))
-        (fork apply .1 (fork array.slice .0 (fork sub .0 (.1 | array.length))))
+    | uncurry vector._cut
     | both (.0 | vector.wrap) (.1 | vector.wrap))
+
+# the first k elements of an array, and the rest
+# internal
+vector._cut : I64 -> Array[t] -> (Array[t], Array[t])
+vector._cut = curry (both
+    (uncurry (array.slice 0))
+    (fork apply .1 (fork array.slice .0 (fork sub .0 (.1 | array.length)))))
 
 # the elements that satisfy p
 vector.filter : (t -> Bool) -> Vector[t, n] -> Vector[t, _]
@@ -196,6 +201,55 @@ matrix.beside = curry (make Matrix {
         | flatten
         | array.from-list,
 })
+
+# `a | matrix.split-rows v` is the first rows of `a`, as many as `v` has
+# elements, and the rows after them
+matrix.split-rows : Vector[a, m] -> Matrix[t, k + m, n] -> (Matrix[t, m, n], Matrix[t, k, n])
+matrix.split-rows = curry (both (.0 | vector.length) .1 | matrix._split-rows)
+
+# internal
+matrix._split-rows : (I64, Matrix[t, j, n]) -> (Matrix[t, m, n], Matrix[t, k, n])
+matrix._split-rows = fork matrix._row-halves id (both
+        (fork mul .0 (.1 | .cols))
+        (.1 | .data)
+    | uncurry vector._cut)
+
+# internal
+matrix._row-halves : (I64, Matrix[t, j, n]) -> (Array[t], Array[t]) -> (Matrix[t, m, n], Matrix[t, k, n])
+matrix._row-halves = curry (both
+    (make Matrix { rows = .0 | .0, cols = .0 | .1 | .cols, data = .1 | .0 })
+    (make Matrix {
+        rows = fork sub (.0 | .0) (.0 | .1 | .rows),
+        cols = .0 | .1 | .cols,
+        data = .1 | .1,
+    }))
+
+# `a | matrix.split-columns v` is the first columns of `a`, as many as
+# `v` has elements, and the columns after them
+matrix.split-columns : Vector[a, m] -> Matrix[t, r, k + m] -> (Matrix[t, r, m], Matrix[t, r, k])
+matrix.split-columns =
+    curry (both (.0 | vector.length) .1 | matrix._split-columns)
+
+# internal
+matrix._split-columns : (I64, Matrix[t, r, j]) -> (Matrix[t, r, m], Matrix[t, r, k])
+matrix._split-columns =
+    both
+        (make Matrix {
+            rows = .1 | .rows,
+            cols = .0,
+            data =
+                fork map (.0 | take) (.1 | matrix.rows-of)
+                | flatten
+                | array.from-list,
+        })
+        (make Matrix {
+            rows = .1 | .rows,
+            cols = fork sub .0 (.1 | .cols),
+            data =
+                fork map (.0 | drop) (.1 | matrix.rows-of)
+                | flatten
+                | array.from-list,
+        })
 
 # the same matrix, with sizes the caller names (unchecked)
 matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]

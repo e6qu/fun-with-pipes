@@ -2279,6 +2279,14 @@ matrix.stack : Matrix[t, k, n] -> Matrix[t, m, n] -> Matrix[t, m + k, n]
 # types make the row counts agree)
 matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
 
+# `a | matrix.split-rows v` is the first rows of `a`, as many as `v` has
+# elements, and the rows after them
+matrix.split-rows : Vector[a, m] -> Matrix[t, k + m, n] -> (Matrix[t, m, n], Matrix[t, k, n])
+
+# `a | matrix.split-columns v` is the first columns of `a`, as many as
+# `v` has elements, and the columns after them
+matrix.split-columns : Vector[a, m] -> Matrix[t, r, k + m] -> (Matrix[t, r, m], Matrix[t, r, k])
+
 # the same matrix, with sizes the caller names (unchecked)
 matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
 

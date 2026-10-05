@@ -362,7 +362,8 @@ Next in this series, toward static, zero-cost programs:
     Subtraction where it is safe: `vector.split : Vector[a, m] ->
     Vector[t, n + m] -> (Vector[t, m], Vector[t, n])` takes the first m
     elements, and a split of more than a vector has is a compile error.
-    Next: matrices split by rows and columns.
+    `matrix.split-rows` and `matrix.split-columns` do the same for
+    matrices.
 28. **Abstract sizes** (done). `Dyn` is gone: a size known only when
     the program runs is abstract (`_`, `_n` in a signature's result),
     chosen afresh by each call and rigid for callers, with

@@ -153,7 +153,8 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   `vector.non-empty` checks a run-time size once. Subtraction is the other
   way round: `vector.split : Vector[a, m] -> Vector[t, n + m] ->
   (Vector[t, m], Vector[t, n])` takes the first m elements, and
-  a vector of 5 split by one of 7 is a compile error.
+  a vector of 5 split by one of 7 is a compile error (and so for
+  `matrix.split-rows` and `matrix.split-columns`).
 - **Abstract sizes:** `_` or `_n` in the result of a signature is a size
   the definition chooses when the program runs: `vector.from-list :
   List[t] -> Vector[t, _]`, `matrix.from-rows : List[List[t]] ->
