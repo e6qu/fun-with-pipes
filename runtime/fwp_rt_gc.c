@@ -104,6 +104,14 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
 static void fwp_mem_free(void *p) { free(p); }
 static void fwp_gc_start(void *top) { (void)top; }
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
+/* without the collector's metadata, everything is shared */
+static inline V fwp_rc_fresh(V v) { return v; }
+static inline void fwp_rc_dup(V v) { (void)v; }
+static inline void fwp_rc_drop(V v) { (void)v; }
+static inline void fwp_rc_share(V v) { (void)v; }
+static inline int fwp_rc_unique(V v) { (void)v; return 0; }
+static inline void fwp_rc_poison(V v) { (void)v; }
+static inline V fwp_rc_shared(V v) { return v; }
 
 #else /* FWP_GC */
 
@@ -128,7 +136,9 @@ typedef struct {
     uint32_t slot, nslots;
     uint32_t head;                 /* big: number of chunks; tail: its head */
     size_t size;                   /* big: bytes */
+    uint32_t recip;                /* small: 2^32 / slot, rounded up */
     uint64_t bits[GC_CHUNK / 16 / 64]; /* small: a mark bit per slot */
+    uint8_t rc[GC_CHUNK / 16];     /* small, kind 0: references counted (fwp_rc_*) */
 } gc_chunk;
 
 typedef struct { char *free, *bump, *end; } gc_list;
@@ -339,6 +349,8 @@ static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int
     m->dirty = 1;
     m->slot = fwp_gc.slot[c];
     m->nslots = (uint32_t)(GC_CHUNK / m->slot);
+    m->recip = (uint32_t)((((uint64_t)1 << 32) + m->slot - 1) / m->slot);
+    memset(m->rc, 0, sizeof m->rc);
     char *p = fwp_gc_chunk_addr(ci);
     /* verifying, a reused chunk's stale words are cleared (see the sweep) */
     if (fwp_gc.verify) memset(p, 0, GC_CHUNK);
@@ -431,6 +443,7 @@ static void fwp_mem_free(void *p) {
         /* reused unmarked: young again */
         size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
         m->bits[i >> 6] &= ~((uint64_t)1 << (i & 63));
+        m->rc[i] = 0;
         *(uintptr_t *)p = ~(uintptr_t)l->free;
         l->free = (char *)p;
         fwp_gc.budget += m->slot;
@@ -455,6 +468,108 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
         fwp_mem_free(p);
     }
     return r;
+}
+
+/* ----- unique objects, updated in place
+ *
+ * The collector frees memory; counted references only tell when an
+ * object has exactly one, so that it can be reused in place (a record
+ * copy with some fields changed writes them into the original). Records
+ * and variants that compiled code allocates (kind 0) start with one
+ * reference (fwp_rc_fresh); compiled code counts the references its locals
+ * take and give up (fwp_rc_dup, fwp_rc_drop, from src/rc.rs). Everything
+ * else is shared, count 0, forever: objects the runtime allocates, and
+ * every value compiled code hands to the runtime (a primitive, a closure,
+ * another thread), with everything it reaches (fwp_rc_share). A count can
+ * only be too high (a word that looks like a pointer counted, a reference
+ * dropped by a dead object never given back): an object is reused only
+ * when it truly has one reference. Old objects are never reused: they must
+ * not come to point to young ones. */
+
+/* the count of the small object of kind 0 that `v` points into, or 0 */
+static inline uint8_t *fwp_rc_slot(V v) {
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    if (off >= fwp_gc.top << GC_SHIFT) return 0;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->type != GC_SMALL || m->leaf != 0) return 0;
+    /* (a word pointing inside an object counts for that object: only too
+     * high, never too low, as words are only dropped through values) */
+    size_t i = (size_t)(((uint64_t)(off & (GC_CHUNK - 1)) * m->recip) >> 32);
+    return &m->rc[i];
+}
+
+static inline V fwp_rc_fresh(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (c) *c = 1;
+    return v;
+}
+
+static inline void fwp_rc_dup(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (c && *c) *c = *c == 255 ? 0 : *c + 1;
+}
+
+static inline void fwp_rc_drop(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (c && *c > 1) (*c)--;
+}
+
+/* `v` and everything it reaches become shared */
+static void fwp_rc_share(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (!c || !*c) return;
+    V stack[64];
+    size_t sp = 0;
+    *c = 0;
+    stack[sp++] = v;
+    while (sp) {
+        V o = stack[--sp];
+        size_t ci = ((uintptr_t)o - (uintptr_t)fwp_gc.base) >> GC_SHIFT;
+        uint32_t slot = fwp_gc.meta[ci].slot;
+        V *w = (V *)(uintptr_t)o;
+        for (size_t k = 0; k < slot / sizeof(V); k++) {
+            uint8_t *d = fwp_rc_slot(w[k]);
+            if (!d || !*d) continue;
+            *d = 0;
+            if (sp < 64) stack[sp++] = w[k];
+            else fwp_rc_share(w[k]);
+        }
+    }
+}
+
+/* `v`, shared (a value the runtime keeps) */
+static inline V fwp_rc_shared(V v) {
+    fwp_rc_share(v);
+    return v;
+}
+
+/* an object that was judged to have one reference, under
+ * FWP_REUSE_VERIFY: any later use of it reads nonsense (and a match on it
+ * finds no arm) */
+static void fwp_rc_poison(V v) {
+    fwp_obj *o = (fwp_obj *)(uintptr_t)v;
+    o->tag = 0xdead;
+    for (uint32_t k = 0; k < o->n; k++) o->f[k] = (V)0xdeadbeefdeadbeefULL;
+}
+
+/* FWP_REUSE_VERIFY=1: an object that would be reused is copied instead,
+ * and the original poisoned, so that a wrong judgment shows */
+static int fwp_reuse_verify = -1;
+
+/* 1: `v` has one reference and may be written in place; 2: it would be,
+ * but is to be copied and poisoned (FWP_REUSE_VERIFY) */
+static inline int fwp_rc_unique(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (!c || *c != 1) return 0;
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    size_t i = (size_t)(c - m->rc);
+    if (m->bits[i >> 6] & ((uint64_t)1 << (i & 63))) return 0; /* old */
+    if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    return fwp_reuse_verify ? 2 : 1;
 }
 
 /* ----- marking */
@@ -647,6 +762,7 @@ static void fwp_gc_sweep(void) {
                  * conservative full trace would follow them through a free
                  * slot that a stale root marked */
                 if (fwp_gc.verify) memset(s, 0, m->slot);
+                m->rc[i] = 0;
                 *(uintptr_t *)s = ~(uintptr_t)l->free;
                 l->free = s;
             }

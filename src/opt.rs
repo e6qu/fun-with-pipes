@@ -381,7 +381,9 @@ fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
 /// Whether local `l` is used in `e` only as `Field(Local(l), _)`.
 pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
     match e {
-        Expr::Dup(x, b) | Expr::Drop(x, b) => *x != l && only_fields(b, l),
+        // (a reference count change of a record kept as its fields applies
+        // to the fields)
+        Expr::Dup(_, b) | Expr::Drop(_, b) => only_fields(b, l),
         Expr::Local(x) => *x != l,
         Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
         Expr::Const(_) | Expr::Func(_) => true,

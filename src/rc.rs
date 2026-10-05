@@ -28,35 +28,22 @@ use crate::ir::*;
 
 type Set = BTreeSet<Local>;
 
-/// Whether values of type `t` may be counted references (conservatively:
-/// a type not known to be immediate is counted; counting an immediate
-/// value does nothing at run time).
+/// Whether values of type `t` are counted: records and variants, which
+/// compiled code allocates and may come to own alone. Strings, byte
+/// strings, arrays, maps, closures and the other values the runtime
+/// allocates are always shared, so they are never counted; neither are
+/// integers, floats, `Bool`, `()` and other enumerations. A type this pass
+/// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
         MT::Record(fs) => !fs.is_empty(),
-        MT::Con(n, _) => {
-            const IMMEDIATE: &[&str] = &[
-                "std::I8",
-                "std::I16",
-                "std::I32",
-                "std::I64",
-                "std::U8",
-                "std::U16",
-                "std::U32",
-                "std::U64",
-                "std::F32",
-                "std::F64",
-                "std::F16",
-                "std::BF16",
-                "std::Trit",
-            ];
-            if IMMEDIATE.contains(&n.as_str()) {
-                return false;
-            }
-            !matches!(shapes.get(t), Some(TypeShape::Adt(vs)) if vs.iter().all(|(_, fs)| fs.is_empty()))
-        }
-        MT::Fun(..) => true,
-        MT::Nat(_) => false,
+        MT::Con(n, _) if n == "?" => true,
+        MT::Con(..) => match shapes.get(t) {
+            Some(TypeShape::Adt(vs)) => vs.iter().any(|(_, fs)| !fs.is_empty()),
+            Some(TypeShape::Record(fs)) => !fs.is_empty(),
+            _ => false,
+        },
+        MT::Fun(..) | MT::Nat(_) => false,
     }
 }
 
@@ -299,6 +286,23 @@ impl Pass<'_> {
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut xs = Vec::new();
         let mut drop_after: Vec<Local> = Vec::new();
+        // a borrowed part that is computed (and counted) becomes a
+        // temporary bound before the operation; every computed part before
+        // the last such one is bound too, to keep the order of evaluation
+        let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
+        // a borrowed part whose value is not counted needs no temporary:
+        // nothing is dropped after the operation
+        let uncounted: Vec<bool> = parts
+            .iter()
+            .map(|p| !needs_rc(self.shapes, &self.ty(p)))
+            .collect();
+        let last_bound = parts
+            .iter()
+            .zip(modes)
+            .enumerate()
+            .filter(|(i, (p, m))| matches!(m, Mode::Borrow) && !inline(p) && !uncounted[*i])
+            .map(|(i, _)| i)
+            .next_back();
         for (i, (p, mode)) in parts.iter().zip(modes).enumerate() {
             let mine: Set = last
                 .iter()
@@ -314,6 +318,19 @@ impl Pass<'_> {
                     }
                     xs.push(Expr::Local(*l));
                 }
+                (Mode::Borrow, Expr::Const(_) | Expr::Func(_)) => xs.push(p.clone()),
+                // computed in place, unless a later part is bound before
+                // the operation (then bound too, in order)
+                (Mode::Borrow, p) if uncounted[i] => {
+                    let v = self.conv(p, &mine, &theirs);
+                    if last_bound.is_none_or(|j| i > j) {
+                        xs.push(v);
+                    } else {
+                        let tl = self.fresh(self.ty(p));
+                        binds.push((tl, v));
+                        xs.push(Expr::Local(tl));
+                    }
+                }
                 (Mode::Borrow, p) => {
                     // an owned temporary, dropped after the call
                     let t = self.ty(p);
@@ -327,9 +344,7 @@ impl Pass<'_> {
                 }
                 (Mode::Consume, p) => {
                     let v = self.conv(p, &mine, &theirs);
-                    // keep evaluation order: a part with effects before a
-                    // later one stays before it, so bind it unless trivial
-                    if matches!(v, Expr::Local(_) | Expr::Const(_) | Expr::Func(_)) {
+                    if inline(&v) || last_bound.is_none_or(|j| i > j) {
                         xs.push(v);
                     } else {
                         let t = self.ty(p);
@@ -639,6 +654,7 @@ pub fn check(prog: &Program, f: &Func, body: &Expr, locals: &[MT]) -> Result<(),
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::value::Value;
 
     fn list() -> MT {
         MT::Con("std::List".into(), vec![MT::con("std::I64")])
@@ -741,6 +757,44 @@ mod tests {
         );
         let p = prog(vec![list()], vec![], body);
         counted(&p);
+    }
+
+    #[test]
+    fn parts_keep_their_order() {
+        // prim(uncounted read of x, counted part that releases x): the
+        // first part must still run before the second
+        let mut p = prog(vec![list()], vec![], Expr::Const(Value::unit()));
+        p.funcs.push(Func {
+            name: "prim".into(),
+            arity: 2,
+            locals: vec![MT::con("std::I64"), list()],
+            ty: MT::Fun(
+                Box::new(MT::con("std::I64")),
+                Box::new(MT::Fun(Box::new(list()), Box::new(MT::unit()))),
+            ),
+            body: Body::Prim("prim".into()),
+        });
+        p.funcs.push(Func {
+            name: "len".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("len".into()),
+        });
+        let body = Expr::Call(
+            1,
+            vec![
+                Expr::Call(2, vec![Expr::Local(0)]),
+                Expr::Construct(1, vec![Expr::Const(Value::I64(0)), Expr::Local(0)]),
+            ],
+        );
+        p.funcs[0].body = Body::Expr(body);
+        let (e, _) = counted(&p);
+        // the length is computed first
+        let s = format!("{:?}", e);
+        let len = s.find("Call(2").unwrap();
+        let cons = s.find("Construct(1").unwrap();
+        assert!(len < cons, "{}", s);
     }
 
     #[test]

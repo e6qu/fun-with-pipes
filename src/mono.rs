@@ -1663,19 +1663,28 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
             if let Some((body, locals)) = rc {
                 if let Err(e) = crate::rc::check(&prog, f, &body, &locals) {
                     panic!(
-                        "reference counts of {}: {}: {}\n{:?}",
-                        f.name, f.ty, e, body
+                        "reference counts of {}: {}: {}\ncounted: {:?}\nfrom: {:?}",
+                        f.name, f.ty, e, body, f.body
                     );
                 }
             }
         }
     }
     if let Some(how) = std::env::var_os("FWP_DUMP_IR") {
-        // `FWP_DUMP_IR=all` includes the standard library's functions
+        // `FWP_DUMP_IR=all` includes the standard library's functions;
+        // `rc`, the program's own with their references counted
         let all = how == "all";
+        let counted = if how == "rc" {
+            crate::rc::insert(&prog)
+        } else {
+            vec![]
+        };
         for (i, f) in prog.funcs.iter().enumerate() {
             if all || !f.name.starts_with("std") || f.name.contains("-fn") {
-                eprintln!("f{} {} : {} = {:?}", i, f.name, f.ty, f.body);
+                match counted.get(i) {
+                    Some(Some((body, _))) => eprintln!("f{} {} : {} = {:?}", i, f.name, f.ty, body),
+                    _ => eprintln!("f{} {} : {} = {:?}", i, f.name, f.ty, f.body),
+                }
             }
         }
     }

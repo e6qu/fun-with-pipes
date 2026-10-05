@@ -317,15 +317,18 @@ Next in this series, toward static, zero-cost programs:
     fields are such records (a `fold` with a tuple accumulator) keeps
     them field by field: summing and counting 30 million numbers went
     from 915 MiB and 176 ms to nothing allocated and 26 ms. Reference
-    counting has begun: `src/rc.rs` inserts `Dup` and `Drop` (Perceus's
-    discipline: owned parameters, borrowing primitives, drops as early as
-    possible) and checks every path of every function for leaks, double
-    releases and reads after the last reference; every test program is
-    counted and checked in debug builds. Next: the C runtime freeing at
-    zero behind `--memory rc` (primitives that keep what they store,
-    constants that are never freed, and a verify mode in which the
-    collector confirms that nothing it reaches was freed), then reuse in
-    place, before it becomes the default.
+    counting: `src/rc.rs` inserts `Dup` and `Drop` (Perceus's discipline:
+    owned parameters, borrowing primitives, drops as early as possible)
+    and checks every path of every function for leaks, double releases
+    and reads after the last reference. The collector keeps freeing
+    memory; the counts find records with one reference, which an update
+    then writes in place (`FWP_REUSE=1`, experimental): a loop updating a
+    record of five fields went from 458 MiB allocated and 114 ms to
+    nothing and 67 ms, while the benchmarks stay within noise except
+    `map` (8% slower: its pairs are made unique and then shared at once).
+    Next: reusing a variant's cell for a constructor of the same size
+    (a `map` over a list written in fwp), fewer counts where the values
+    go straight to the runtime, then on by default.
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
