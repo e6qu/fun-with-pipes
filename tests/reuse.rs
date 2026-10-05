@@ -182,3 +182,59 @@ fn unique_records_are_updated_in_place() {
         reused
     );
 }
+
+/// A recursive function that rebuilds every node of a tree writes each
+/// new node into the old one when the tree is unique.
+#[test]
+fn variant_cells_are_reused() {
+    if !linux_cc() {
+        return;
+    }
+    let dir = TempDir::new("cells");
+    let src = dir.0.join("tree.fwp");
+    std::fs::write(
+        &src,
+        "Tree =\n    | Leaf\n    | Node Tree I64 Tree\n\n\
+         rec build : I64 -> Tree\n\
+         build = match\n    0 -> Leaf\n    _ -> make { 0 = sub 1 | build, 1 = id, 2 = sub 1 | build } | uncurry3 Node\n\n\
+         rec incr : Tree -> Tree\n\
+         incr = match\n    Leaf -> Leaf\n    Node -> curry3 (make { 0 = .0 | incr, 1 = .1 | add 1, 2 = .2 | incr } | uncurry3 Node)\n\n\
+         rec total : Tree -> I64\n\
+         total = match\n    Leaf -> 0\n    Node -> curry3 (fork add (.0 | total) (fork add .1 (.2 | total)))\n\n\
+         step : (I64, Tree) -> Step[(I64, Tree), Tree]\n\
+         step = if (.0 | eq 0) (.1 | Stop) (both (.0 | sub 1) (.1 | incr) | Again)\n\n\
+         main = (10, 16 | build) | loop step | total | echo\n",
+    )
+    .unwrap();
+    let allocated = |reuse: &str| -> f64 {
+        let exe = dir.0.join(format!("tree{}", reuse));
+        let b = Command::new(fwp())
+            .arg("build")
+            .arg(&src)
+            .arg("-o")
+            .arg(&exe)
+            .env("FWP_REUSE", reuse)
+            .output()
+            .unwrap();
+        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+        assert_eq!(String::from_utf8_lossy(&o.stdout), "786404\n");
+        let err = String::from_utf8_lossy(&o.stderr);
+        let mib = err
+            .split(" MiB allocated")
+            .next()
+            .unwrap()
+            .rsplit(' ')
+            .next()
+            .unwrap();
+        mib.parse().unwrap()
+    };
+    let (copied, reused) = (allocated("0"), allocated("1"));
+    // the tree itself is built once either way
+    assert!(
+        reused * 4.0 < copied,
+        "{} MiB copied, {} MiB with reuse",
+        copied,
+        reused
+    );
+}

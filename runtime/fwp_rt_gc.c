@@ -112,6 +112,7 @@ static inline void fwp_rc_share(V v) { (void)v; }
 static inline int fwp_rc_unique(V v) { (void)v; return 0; }
 static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
+static inline int fwp_rc_young(V v) { (void)v; return 0; }
 
 #else /* FWP_GC */
 
@@ -535,6 +536,17 @@ static void fwp_rc_share(V v) {
             else fwp_rc_share(w[k]);
         }
     }
+}
+
+/* whether the object `v` points into is young: it has not survived a
+ * collection (a reused cell must be, at the moment it is written) */
+static inline int fwp_rc_young(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (!c) return 0;
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    size_t i = (size_t)(c - m->rc);
+    return !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
 }
 
 /* `v`, shared (a value the runtime keeps) */

@@ -1,6 +1,7 @@
-# A record updated in place must have no other reference: each case
+# A record updated in place, or a variant's cell rebuilt in place by a
+# constructor of the same size, must have no other reference: each case
 # keeps one (in a tuple, a list, a closure, another record, a loop's
-# state) and then updates the record. Built with FWP_REUSE=1 the native
+# state) and then updates the value. Built with FWP_REUSE=1 the native
 # program reuses only truly unique records (tests/reuse.rs); the output
 # shows the untouched original next to the copy.
 
@@ -44,7 +45,39 @@ step =
 twice : I64 -> (R, R)
 twice = fresh | both bump (bump | bump)
 
+# variants rebuilt by a function written in fwp: each cell of the tree
+# may be reused for the new one, unless the tree is kept elsewhere
+Tree =
+    | Leaf
+    | Node Tree I64 Tree
+
+rec tree : I64 -> Tree
+tree = match
+    0 -> Leaf
+    _ -> make { 0 = sub 1 | tree, 1 = id, 2 = sub 1 | tree } | uncurry3 Node
+
+rec incr : Tree -> Tree
+incr = match
+    Leaf -> Leaf
+    Node -> curry3 (make { 0 = .0 | incr, 1 = .1 | add 10, 2 = .2 | incr } | uncurry3 Node)
+
+rec flatten : Tree -> List[I64]
+flatten = match
+    Leaf -> []
+    Node -> curry3 (fork append (.0 | flatten) (fork Cons .1 (.2 | flatten)))
+
+# a list mapped by a function written in fwp
+rec bump-all : List[I64] -> List[I64]
+bump-all = match
+    Cons -> curry (both (.0 | add 1) (.1 | bump-all) | uncurry Cons)
+    Nil -> []
+
 main = [
+    3 | tree | incr | flatten | echo,
+    3 | tree | both id incr | both (.0 | flatten) (.1 | flatten) | echo,
+    3 | tree | both incr (incr | incr) | both (.0 | flatten) (.1 | flatten) | echo,
+    [1, 2, 3] | both id bump-all | echo,
+    range 0 5 | bump-all | both bump-all id | echo,
     r0 | bump | echo,
     r0 | echo,
     7 | pair | echo,
