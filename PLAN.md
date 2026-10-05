@@ -251,8 +251,11 @@ Next in this series, toward static, zero-cost programs:
     allocates 72 MiB instead of 408). A record bound to a local and read
     only field by field becomes a local per field (scalar replacement),
     and copies of locals are propagated: the tuples `curry3` and friends
-    leave behind are never built. Next: values that do not outlive a call
-    on the stack.
+    leave behind are never built. Records and variants that do not
+    outlive a call live on the stack (`src/escape.rs`): a variant built
+    in a loop and handed to a function that matches on it went from 610
+    MiB allocated and 0.58 s to nothing and 0.40 s. Next: closures that
+    do not escape, and results built into the caller's frame.
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
     `any` and `all`) over `map` and `filter` stages of a `range` or a list

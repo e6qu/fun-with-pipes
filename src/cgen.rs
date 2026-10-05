@@ -352,6 +352,9 @@ struct Gen<'p> {
     hofs: Vec<(String, FuncId, usize)>,
     /// The unboxed calling convention of each function that has one.
     abis: Vec<Option<Abi>>,
+    /// Which parameters of each function do not escape (`src/escape.rs`):
+    /// a record or variant passed there may live on the caller's stack.
+    noesc: Vec<Vec<bool>>,
     /// Counted references, to update unique records in place
     /// (`FWP_REUSE=1`, see `fwp_rc_*` in runtime/fwp_rt_gc.c).
     reuse: bool,
@@ -425,6 +428,22 @@ fn counted_program(prog: &Program) -> Program {
         }
     }
     p
+}
+
+/// Whether `e` gives a record or variant built at its end (after the
+/// locals it binds).
+fn ends_in_object(e: &Expr) -> bool {
+    match e {
+        Expr::Let(_, _, b) => ends_in_object(b),
+        Expr::Record(xs) | Expr::Construct(_, xs) => !xs.is_empty(),
+        _ => false,
+    }
+}
+
+/// Whether records and variants that do not escape live on the stack
+/// (`FWP_STACK=0` turns it off, to compare).
+fn stack_enabled() -> bool {
+    std::env::var("FWP_STACK").map_or(true, |v| v != "0")
 }
 
 impl Gen<'_> {
@@ -1140,6 +1159,8 @@ struct FnGen<'g, 'p> {
     /// Cells of dropped unique values, which a constructor of the same size
     /// may take (innermost last).
     tokens: Vec<Token>,
+    /// The function being generated.
+    me: FuncId,
 }
 
 /// A dropped value's cell, which a constructor of the same size may reuse
@@ -1354,12 +1375,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// The arguments of a direct call of a function's worker, in
     /// evaluation order: a record passed field by field is not built.
-    fn worker_args(&mut self, abi: &Abi, args: &[Expr]) -> Vec<String> {
+    fn worker_args(&mut self, g: FuncId, abi: &Abi, args: &[Expr]) -> Vec<String> {
         let mut out = Vec::new();
-        for (a, p) in args.iter().zip(&abi.params) {
+        for (j, (a, p)) in args.iter().zip(&abi.params).enumerate() {
             match p {
                 Some(n) => out.extend(self.expr_fields(a, *n)),
-                None => out.push(self.expr(a)),
+                None => out.push(self.arg(g, j, a)),
             }
         }
         out
@@ -1414,7 +1435,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Record(xs) if xs.len() == n => self.args(xs),
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.ret) == Some(n) => {
                 let abi = self.g.abis[*id].clone().unwrap();
-                let xs = self.worker_args(&abi, args);
+                let xs = self.worker_args(*id, &abi, args);
                 let t = self.fresh();
                 self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
                 (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
@@ -1535,9 +1556,60 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
         }
+        // `l = (y = a; ... Rect ..)`: y first, then l from what is left
+        if let Expr::Let(y, a, rest) = v {
+            if ends_in_object(rest) {
+                let rest = self.bind_local(*y, a, rest);
+                return self.bind_local(l, rest, body);
+            }
+        }
+        // a record or variant that does not outlive `body`: on the stack
+        if let Expr::Record(args) | Expr::Construct(_, args) = v {
+            if !args.is_empty()
+                && stack_enabled()
+                && !crate::escape::escapes(body, l, &self.g.noesc, self.me)
+            {
+                let x = self.stack_object(v);
+                self.line(&format!("l{} = {};", l, x));
+                return body;
+            }
+        }
         let x = self.expr(v);
         self.line(&format!("l{} = {};", l, x));
         body
+    }
+
+    /// An argument of a call of `g` at parameter `j`: a record or variant
+    /// built for a parameter that does not escape is built on the stack.
+    fn arg(&mut self, g: FuncId, j: usize, a: &Expr) -> String {
+        if matches!(a, Expr::Record(xs) | Expr::Construct(_, xs) if !xs.is_empty())
+            && g != self.me
+            && stack_enabled()
+            && self.g.noesc[g].get(j).copied().unwrap_or(false)
+        {
+            return self.stack_object(a);
+        }
+        self.expr(a)
+    }
+
+    /// A record or variant in an object on the C stack (the layout of
+    /// `fwp_obj`), live until the end of the enclosing block.
+    fn stack_object(&mut self, v: &Expr) -> String {
+        let (tag, args) = match v {
+            Expr::Record(args) => (0, args),
+            Expr::Construct(tag, args) => (*tag, args),
+            _ => unreachable!(),
+        };
+        let xs = self.args(args);
+        let s = self.fresh();
+        self.line(&format!(
+            "struct {{ uint32_t tag; uint32_t n; V f[{n}]; }} {s} = {{{tag}, {n}, {{{xs}}}}};",
+            n = xs.len(),
+            s = s,
+            tag = tag,
+            xs = xs.join(", ")
+        ));
+        self.bind(format!("PTR(&{})", s))
     }
 
     /// Values handed to the runtime become shared (it may keep them).
@@ -1905,7 +1977,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     return self.bind(format!("(V)(int64_t)({})", n));
                 }
                 if let Some(abi) = self.g.abis[*id].clone() {
-                    let xs = self.worker_args(&abi, args);
+                    let xs = self.worker_args(*id, &abi, args);
                     return match abi.ret {
                         Some(n) => {
                             let t = self.fresh();
@@ -1915,7 +1987,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         None => self.bind(format!("w{}({})", id, xs.join(", "))),
                     };
                 }
-                let xs = self.args(args);
+                let xs: Vec<String> = args
+                    .iter()
+                    .enumerate()
+                    .map(|(j, a)| self.arg(*id, j, a))
+                    .collect();
                 if self.g.prog.funcs[*id].arity == 0 {
                     self.bind(format!("caf{}()", id))
                 } else {
@@ -3066,6 +3142,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             locals: f.locals.clone(),
             known_tag: HashMap::new(),
             tokens: Vec::new(),
+            me: step,
         };
         let r = fg.expr(e);
         out.push_str(&fg.out);
@@ -3205,6 +3282,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     locals,
                     known_tag: HashMap::new(),
                     tokens: Vec::new(),
+                    me: id,
                 };
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -3248,6 +3326,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             locals: f.locals.clone(),
             known_tag: HashMap::new(),
             tokens: Vec::new(),
+            me: id,
         };
         let ret = match abi.ret {
             Some(n) => {
@@ -3785,6 +3864,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,
+        noesc: crate::escape::params(prog),
         reuse,
         callbacks: Vec::new(),
     };

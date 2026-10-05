@@ -14,6 +14,7 @@ pub mod csv;
 pub mod diag;
 pub mod driver;
 pub mod env;
+pub mod escape;
 pub mod exec;
 pub mod exhaust;
 pub mod ffi;
