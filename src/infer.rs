@@ -80,6 +80,10 @@ pub struct Infer<'a> {
     /// uses of `vector`/`matrix`, and the ones sized by a literal argument
     size_uses: Vec<(NodeId, Span, &'static str)>,
     sized: HashSet<NodeId>,
+    /// Equations between sizes not decided when they were met (`n + 1 =
+    /// m` with m unknown), with where and why, checked when the group is
+    /// done (`check_sizes`).
+    size_eqs: Vec<(Type, Type, Span, String)>,
 }
 
 /// Effects permitted at compile time.
@@ -109,6 +113,7 @@ pub fn check_program(env: &mut Env, out: &mut Typed) {
             captures: Vec::new(),
             size_uses: Vec::new(),
             sized: HashSet::new(),
+            size_eqs: Vec::new(),
         };
         inf.check_group(&group);
     }
@@ -163,6 +168,7 @@ fn check_superclasses(env: &mut Env, out: &mut Typed) {
             captures: Vec::new(),
             size_uses: Vec::new(),
             sized: HashSet::new(),
+            size_eqs: Vec::new(),
         };
         let given = inf.given_closure(&imp.context);
         match inf.solve(wanted, &given) {
@@ -348,6 +354,41 @@ impl<'a> Infer<'a> {
         (p.show(a), p.show(b))
     }
 
+    /// The equations between sizes left undecided, now that the group's
+    /// definitions are checked: each must hold, and each must be decided.
+    fn check_sizes(&mut self) -> IResult<()> {
+        loop {
+            let eqs = std::mem::take(&mut self.size_eqs);
+            if eqs.is_empty() {
+                return Ok(());
+            }
+            let n = eqs.len();
+            let mut left = Vec::new();
+            for (a, b, span, what) in eqs {
+                if self.env.table.unify(&a, &b).is_err() {
+                    let (x, y) = self.show2(&a, &b);
+                    return Err(Diagnostic::error(
+                        span,
+                        format!("size mismatch in {}: `{}` is not `{}`", what, x, y),
+                    ));
+                }
+                if !std::mem::take(&mut self.env.table.deferred).is_empty() {
+                    left.push((a, b, span, what));
+                }
+            }
+            if left.len() == n {
+                let (a, b, span, what) = &left[0];
+                let (x, y) = self.show2(a, b);
+                return Err(Diagnostic::error(
+                    *span,
+                    format!("cannot tell whether `{}` is `{}` in {}", x, y, what),
+                )
+                .with_note("give the sizes in a signature, or use `Dyn` for sizes known only when the program runs"));
+            }
+            self.size_eqs = left;
+        }
+    }
+
     /// Unify with a located, explained error.
     pub(crate) fn unify(
         &mut self,
@@ -357,7 +398,12 @@ impl<'a> Infer<'a> {
         what: &str,
     ) -> IResult<()> {
         match self.env.table.unify(expected, found) {
-            Ok(()) => Ok(()),
+            Ok(()) => {
+                for (a, b) in std::mem::take(&mut self.env.table.deferred) {
+                    self.size_eqs.push((a, b, span, what.to_string()));
+                }
+                Ok(())
+            }
             Err(err) => {
                 let (e, f) = self.show2(expected, found);
                 let mut d = Diagnostic::error(
@@ -544,6 +590,12 @@ impl<'a> Infer<'a> {
                     ));
                     failed = true;
                 }
+            }
+        }
+        if !failed {
+            if let Err(d) = self.check_sizes() {
+                self.env.errors.push(d);
+                failed = true;
             }
         }
         if !failed {

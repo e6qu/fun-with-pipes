@@ -1,0 +1,4 @@
+check/err_size_unknown.fwp:6:29: error: cannot tell whether `5` is `a + b` in the definition of `unknown`
+6 | unknown = arr | vector.wrap | vector.append (arr | vector.wrap)
+  |                             ^
+  note: give the sizes in a signature, or use `Dyn` for sizes known only when the program runs

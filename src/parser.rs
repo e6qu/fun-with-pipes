@@ -700,7 +700,7 @@ impl<'a> Parser<'a> {
             self.with_layout(0, |p| {
                 if !p.at_sym(Sym::RBracket) {
                     loop {
-                        args.push(p.ty()?);
+                        args.push(p.size_sum()?);
                         if !p.eat_sym(Sym::Comma) {
                             break;
                         }
@@ -711,6 +711,34 @@ impl<'a> Parser<'a> {
             })?;
         }
         Ok(args)
+    }
+
+    /// A type argument: a type, or a sum of products of sizes
+    /// (`n + m`, `2 * n + 1`), `*` binding tighter.
+    fn size_sum(&mut self) -> DResult<TypeExpr> {
+        let mut lhs = self.size_product()?;
+        while self.eat_sym(Sym::Plus) {
+            let rhs = self.size_product()?;
+            let span = lhs.span;
+            lhs = TypeExpr {
+                span,
+                kind: TypeKind::NatOp(NatOp::Add, Box::new(lhs), Box::new(rhs)),
+            };
+        }
+        Ok(lhs)
+    }
+
+    fn size_product(&mut self) -> DResult<TypeExpr> {
+        let mut lhs = self.ty()?;
+        while self.eat_sym(Sym::Star) {
+            let rhs = self.ty()?;
+            let span = lhs.span;
+            lhs = TypeExpr {
+                span,
+                kind: TypeKind::NatOp(NatOp::Mul, Box::new(lhs), Box::new(rhs)),
+            };
+        }
+        Ok(lhs)
     }
 
     /// Full type, including arrows and effect annotations.
@@ -796,7 +824,7 @@ impl<'a> Parser<'a> {
                             kind: TypeKind::Unit,
                         });
                     }
-                    let first = p.ty()?;
+                    let first = p.size_sum()?;
                     if p.at_sym(Sym::Comma) {
                         let mut items = vec![first];
                         while p.eat_sym(Sym::Comma) {

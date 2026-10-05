@@ -136,6 +136,13 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
 - **Functions:** `A -> B ! {IO, Error[E] | e}`. The effect row comes after
   `!`, and `e` is a row variable.
 - **Type-level naturals:** `Vector[F64, 3]`, `Matrix[T, M, N]`, `Vec[4, F32]`.
+  A size may be a sum or a product of sizes: `vector.append : Vector[t, m]
+  -> Vector[t, n] -> Vector[t, n + m]`, `matrix.flatten : Matrix[t, m, n] ->
+  Vector[t, m * n]`. Sizes are compared as polynomials, so `2 * n` is
+  `n + n`, and a generic signature must hold for every size. A size
+  inference cannot work out (two unknown sizes whose sum must be 5) is an
+  error that asks for a signature. `Dyn` is a size known only at run time;
+  arithmetic with it is `Dyn`.
 - **Higher-kinded parameters:** `Functor[F]`.
 
 ### Generics

@@ -1,0 +1,4 @@
+check/err_size_mismatch.fwp:2:23: error: type mismatch in the definition of `wrong`: expected `Vector[I64, 4]`, found `Vector[I64, 3]`
+2 | wrong = vector [1, 2] | vector.push 3
+  |                       ^
+  note: `4` is not compatible with `3`

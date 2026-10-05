@@ -1,0 +1,2 @@
+odd : Vector[String + 1, 2] -> I64
+odd = vector.length
