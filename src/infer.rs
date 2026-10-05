@@ -448,7 +448,8 @@ impl<'a> Infer<'a> {
                         ))
                             .with_note(
                                 "call the function directly (`xs | vector.from-list`), \
-                             and compare sizes at run time with `vector.same-size`",
+                             compare sizes at run time with `vector.same-size`, \
+                             or keep values of different sizes packed (`vector.pack`)",
                             );
                     }
                 }

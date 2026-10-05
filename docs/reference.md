@@ -160,7 +160,12 @@ form `match { Some -> id, None -> const 0 }` fits on one line.
   (`Option[Vector[b, m]]`), `matrix.same-shape` and `matrix.as-square`
   compare at run time. A function's abstract size cannot be shared
   beyond one call's result (`map vector.from-list` is an error), and
-  may not appear in an argument (use a size variable).
+  may not appear in an argument (use a size variable). Values of
+  different sizes share a type when packed: `vector.pack : Vector[t, n]
+  -> AnyVector[t]` hides the size, so a `List[AnyVector[F64]]` holds
+  vectors of any lengths, and `vector.unpack : AnyVector[t] -> Vector[t,
+  _]` gives each a size of its own (`matrix.pack` and `matrix.unpack`
+  likewise).
   Performance: an abstract size costs a run-time comparison and an
   `Option` at each such check, where a static size costs nothing.
 - **Higher-kinded parameters:** `Functor[F]`.

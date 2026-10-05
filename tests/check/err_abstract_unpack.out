@@ -1,5 +1,5 @@
-check/err_abstract_escape.fwp:2:28: error: type mismatch in argument 1: expected `List[a] -> b`, found `List[a] -> Vector[a, _]`
-2 | bad2 = [[1], [1, 2]] | map vector.from-list
-  |                            ^^^^^^^^^^^^^^^^
+check/err_abstract_unpack.fwp:2:40: error: type mismatch in argument 1: expected `AnyVector[a] -> b`, found `AnyVector[a] -> Vector[a, _]`
+2 | all = [vector [1] | vector.pack] | map vector.unpack
+  |                                        ^^^^^^^^^^^^^
   note: the size `_` is abstract: each call of the function chooses its own, so it cannot be shared beyond one call's result
   note: call the function directly (`xs | vector.from-list`), compare sizes at run time with `vector.same-size`, or keep values of different sizes packed (`vector.pack`)

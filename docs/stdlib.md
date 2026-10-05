@@ -2180,12 +2180,24 @@ length comparison and an `Option` at each such check.
 Vector[T, N] = { data: Array[T] }
 Matrix[T, M, N] = { rows: I64, cols: I64, data: Array[T] }
 
+# A vector or matrix whose sizes are hidden, so that values of different
+# sizes have one type: a list may hold vectors of any lengths. `unpack`
+# gives the sizes back as abstract ones, a fresh size for each value.
+AnyVector[T] = { data: Array[T] }
+AnyMatrix[T] = { rows: I64, cols: I64, data: Array[T] }
+
 # The size parameter is taken from the literal argument.
 vector : List[t] -> Vector[t, n]
 vector.wrap : Array[t] -> Vector[t, n]
 
 # forget the size: the result has a size of its own
 vector.forget : Vector[t, n] -> Vector[t, _]
+
+# hide the size (see `AnyVector`)
+vector.pack : Vector[t, n] -> AnyVector[t]
+
+# a packed vector with a size of its own
+vector.unpack : AnyVector[t] -> Vector[t, _]
 
 # the size is the length of the list, known when the program runs
 vector.from-list : List[t] -> Vector[t, _]
@@ -2256,6 +2268,12 @@ matrix.beside : Matrix[t, m, k] -> Matrix[t, m, n] -> Matrix[t, m, n + k]
 
 # the same matrix, with sizes the caller names (unchecked)
 matrix.cast : Matrix[t, j, k] -> Matrix[t, m, n]
+
+# hide the sizes (see `AnyMatrix`)
+matrix.pack : Matrix[t, m, n] -> AnyMatrix[t]
+
+# a packed matrix with sizes of its own
+matrix.unpack : AnyMatrix[t] -> Matrix[t, _m, _n]
 
 # forget the sizes: the result has sizes of its own
 matrix.forget : Matrix[t, m, n] -> Matrix[t, _m, _n]
