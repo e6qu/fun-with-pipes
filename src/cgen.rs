@@ -324,6 +324,10 @@ struct Gen<'p> {
     prog: &'p Program,
     descs: HashMap<MT, usize>,
     desc_defs: Vec<String>,
+    /// Drop functions by type (`Gen::drop_id`): a reference given up, and
+    /// on the last one the object freed with what it holds.
+    drops: HashMap<MT, usize>,
+    drop_defs: Vec<String>,
     strings: HashMap<Vec<u8>, usize>,
     string_defs: Vec<String>,
     consts: Vec<String>,
@@ -438,6 +442,12 @@ fn ends_in_object(e: &Expr) -> bool {
         Expr::Record(xs) | Expr::Construct(_, xs) => !xs.is_empty(),
         _ => false,
     }
+}
+
+/// Whether objects are freed when their last counted reference goes
+/// (`FWP_FREE=0` when compiling leaves them to the collector).
+fn free_enabled() -> bool {
+    std::env::var("FWP_FREE").map_or(true, |v| v != "0")
 }
 
 /// Whether records and variants that do not escape live on the stack
@@ -829,6 +839,91 @@ impl<'p> Gen<'p> {
 
     fn cstr(s: &str) -> String {
         c_string_literal(s.as_bytes())
+    }
+
+    /// The drop function of values of type `mt` (counted, see
+    /// `rc::needs_rc`): it gives up one reference; on the last one, it
+    /// gives up the references the object holds, by their types, and frees
+    /// it. A field of the same type (a list's tail) is dropped by the
+    /// same loop, so a long list needs no deep recursion. Objects the
+    /// runtime shares (count 0) and objects off the heap are left alone.
+    fn drop_id(&mut self, mt: &MT) -> usize {
+        if let Some(i) = self.drops.get(mt) {
+            return *i;
+        }
+        let id = self.drop_defs.len();
+        self.drops.insert(mt.clone(), id);
+        self.drop_defs.push(String::new());
+        let def = self.drop_body(mt, id);
+        self.drop_defs[id] = def;
+        id
+    }
+
+    fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        let head = format!(
+            "static void fwp_drop{}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c || !*c) return;\n        if (*c > 1) {{ (*c)--; return; }}\n",
+            id
+        );
+        let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
+        if container {
+            return format!("{}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n", head);
+        }
+        let shapes = &self.prog.shapes;
+        let counted = |t: &MT| crate::rc::needs_rc(shapes, t) && !matches!(t, MT::Con(n, _) if n == "?");
+        // the fields of each constructor (a record: one with tag 0)
+        let cases: Vec<(u32, Vec<MT>)> = match (record_fields(shapes, mt), shapes.get(mt)) {
+            (Some(fs), _) => vec![(0, fs.iter().map(|(_, t)| t.clone()).collect())],
+            (None, Some(TypeShape::Adt(vs))) => vs
+                .iter()
+                .enumerate()
+                .filter(|(_, (_, fs))| !fs.is_empty())
+                .map(|(tag, (_, fs))| (tag as u32, fs.clone()))
+                .collect(),
+            _ => Vec::new(),
+        };
+        let mut body = String::new();
+        let one = cases.len() == 1;
+        if !one {
+            body.push_str("        switch (OBJ(v)->tag) {\n");
+        }
+        for (tag, fs) in &cases {
+            let ind = "        ";
+            if !one {
+                let _ = writeln!(body, "        case {}: {{", tag);
+            }
+            // the last field of the same type is followed by the loop
+            let tail = fs.iter().rposition(|t| t == mt);
+            for (k, t) in fs.iter().enumerate() {
+                if Some(k) == tail || !counted(t) {
+                    continue;
+                }
+                let d = self.drop_id(t);
+                let _ = writeln!(body, "{}    fwp_drop{}(OBJ(v)->f[{}]);", ind, d, k);
+            }
+            match tail {
+                Some(k) => {
+                    let _ = writeln!(body, "{}    V next = OBJ(v)->f[{}];", ind, k);
+                    let _ = writeln!(body, "{}    fwp_rc_free_obj(v);", ind);
+                    let _ = writeln!(body, "{}    v = next;", ind);
+                    let _ = writeln!(body, "{}    continue;", ind);
+                }
+                None => {
+                    let _ = writeln!(body, "{}    fwp_rc_free_obj(v);", ind);
+                    let _ = writeln!(body, "{}    return;", ind);
+                }
+            }
+            if !one {
+                body.push_str("        }\n");
+            }
+        }
+        if !one {
+            body.push_str("        }\n");
+        }
+        // no fields, or a constructor this type does not have: not freed
+        if cases.is_empty() || !one {
+            body.push_str("        return;\n");
+        }
+        format!("{}{}    }}\n}}\n", head, body)
     }
 
     fn desc_body(&mut self, mt: &MT, id: usize) -> String {
@@ -1549,8 +1644,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     for (i, xv) in &xs {
                         self.line(&format!("    OBJ(l{})->f[{}] = {};", l, i, xv));
                     }
-                    self.line(&format!("    fwp_rc_drop(l{});", x));
+                    let t = self.locals[x as usize].clone();
+                    let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
                     self.line(&format!("    if ({} == 2) fwp_rc_poison(l{});", u, x));
+                    self.line(&format!("    else {}(l{});", d, x));
                     self.line("}");
                     return rest;
                 }
@@ -1685,12 +1782,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.line(&format!("V {} = 0;", tok));
         self.line(&format!("if ({}) {{", u));
         self.line(&format!("    {} = l{};", tok, x));
-        for (k, ft) in tys.iter().enumerate() {
-            if crate::rc::needs_rc(shapes, ft) {
-                self.line(&format!("    fwp_rc_drop(OBJ(l{})->f[{}]);", x, k));
-            }
+        let counted: Vec<(usize, MT)> = tys
+            .iter()
+            .enumerate()
+            .filter(|(_, ft)| crate::rc::needs_rc(&self.g.prog.shapes, ft))
+            .map(|(k, ft)| (k, ft.clone()))
+            .collect();
+        for (k, ft) in counted {
+            let d = self.typed_drop(&ft).unwrap_or_else(|| "fwp_rc_drop".into());
+            self.line(&format!("    {}(OBJ(l{})->f[{}]);", d, x, k));
         }
-        self.line(&format!("}} else fwp_rc_drop(l{});", x));
+        let t = self.locals[x as usize].clone();
+        let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
+        self.line(&format!("}} else {}(l{});", d, x));
         Some(Token {
             var: tok,
             unique: u,
@@ -1761,6 +1865,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
         } else {
+            if op == "fwp_rc_drop" {
+                if let Some(d) = self.typed_drop(&self.locals[l as usize].clone()) {
+                    self.line(&format!("{}(l{});", d, l));
+                    return;
+                }
+            }
             // the last reference to an object holding arrays, maps or sets:
             // they lose the reference it held, so they may become unique
             if op == "fwp_rc_drop" {
@@ -1792,10 +1902,26 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return;
         }
         for (v, t) in parts {
-            if crate::rc::needs_rc(shapes, &t) {
+            if crate::rc::needs_rc(&self.g.prog.shapes, &t) {
+                let op = match self.typed_drop(&t) {
+                    Some(d) if op == "fwp_rc_drop" => d,
+                    _ => op.to_string(),
+                };
                 self.line(&format!("{}({});", op, v));
             }
         }
+    }
+
+    /// The drop function of a counted type (`Gen::drop_id`), when objects
+    /// are freed by their counts.
+    fn typed_drop(&mut self, t: &MT) -> Option<String> {
+        if !self.g.reuse || !free_enabled() || matches!(t, MT::Con(n, _) if n == "?") {
+            return None;
+        }
+        if !crate::rc::needs_rc(&self.g.prog.shapes, t) {
+            return None;
+        }
+        Some(format!("fwp_drop{}", self.g.drop_id(t)))
     }
 
     /// `string.length` of a `concat` or of an integer's `show`: the sum of
@@ -3903,6 +4029,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         prog,
         descs: HashMap::new(),
         desc_defs: Vec::new(),
+        drops: HashMap::new(),
+        drop_defs: Vec::new(),
         strings: HashMap::new(),
         string_defs: Vec::new(),
         consts: Vec::new(),
@@ -4276,6 +4404,13 @@ static const fwp_exec_spec exec_spec{i} = {{
         let _ = writeln!(out, "static fwp_desc d{};", i);
     }
     for d in &g.desc_defs {
+        out.push_str(d);
+        out.push('\n');
+    }
+    for i in 0..g.drop_defs.len() {
+        let _ = writeln!(out, "static void fwp_drop{}(V v);", i);
+    }
+    for d in &g.drop_defs {
         out.push_str(d);
         out.push('\n');
     }
