@@ -72,7 +72,9 @@ pub struct NativeOptions {
 const CROSS_ARCHES: &[&str] = &["x86_64", "aarch64", "riscv64", "powerpc64le", "loongarch64"];
 
 /// A cross target given as `<arch>-linux`, `<arch>-linux-gnu` or Rust's
-/// `<arch>-unknown-linux-gnu`, as the GNU triple of its C toolchain.
+/// `<arch>-unknown-linux-gnu`, as the GNU triple of its C toolchain; or
+/// `<arch>-linux-musl` (x86-64 and AArch64, where the runtime switches
+/// tasks itself, as musl has no `makecontext`).
 pub fn parse_cross(t: &str) -> Result<String, String> {
     let parts: Vec<&str> = t.split('-').collect();
     let (arch, rest) = match parts.as_slice() {
@@ -90,10 +92,20 @@ pub fn parse_cross(t: &str) -> Result<String, String> {
         .copied()
         .filter(|p| *p != "unknown" && *p != "pc")
         .collect();
+    if rest.as_slice() == ["linux", "musl"] {
+        if !matches!(arch, "x86_64" | "aarch64") {
+            return Err(format!(
+                "cannot build for `{}`: with musl, the runtime switches tasks itself, \
+                 which it does on x86_64 and aarch64",
+                t
+            ));
+        }
+        return Ok(format!("{}-linux-musl", arch));
+    }
     let os_ok = matches!(rest.as_slice(), ["linux"] | ["linux", "gnu"]);
     if !os_ok {
         let what = if rest.first().is_some_and(|o| *o == "linux") {
-            "the runtime needs glibc (musl has no `makecontext`, which tasks use)"
+            "the runtime needs glibc or musl"
         } else {
             "the runtime is written for Linux; macOS and Windows are not supported yet"
         };
@@ -128,7 +140,8 @@ fn on_path(prog: &str) -> bool {
 /// (or `cc`) for the host; for a cross target, `FWP_CC_<triple>` (with
 /// `_` for `-`, and arguments after spaces), else the first found of
 /// `<triple>-gcc`, `clang --target=<triple>` (with the target's sysroot
-/// in `/usr/<triple>`) and `zig cc -target <arch>-linux-gnu`.
+/// in `/usr/<triple>`), `musl-gcc` (musl for the host's architecture) and
+/// `zig cc -target <triple>`.
 pub fn c_compiler() -> Result<(String, Vec<String>), String> {
     let Some(t) = native_options().cross else {
         return Ok((crate::aot::cc(), vec![]));
@@ -147,10 +160,20 @@ pub fn c_compiler() -> Result<(String, Vec<String>), String> {
     if on_path("clang") && std::path::Path::new("/usr").join(&t).is_dir() {
         return Ok(("clang".into(), vec![format!("--target={}", t)]));
     }
+    let arch = t.split('-').next().unwrap_or_default();
+    let musl = t.ends_with("-musl");
+    if musl && arch == std::env::consts::ARCH && on_path("musl-gcc") {
+        return Ok(("musl-gcc".into(), vec![]));
+    }
     if on_path("zig") {
         return Ok(("zig".into(), vec!["cc".into(), "-target".into(), t.clone()]));
     }
-    let arch = t.split('-').next().unwrap_or_default();
+    if musl {
+        return Err(format!(
+            "no C compiler for `{t}`: install musl-gcc (Debian and Ubuntu: musl-tools) \
+             for the host's architecture, a `{t}-gcc`, or zig, or name one with {var}"
+        ));
+    }
     Err(format!(
         "no C compiler for `{t}`: install one (Debian and Ubuntu: gcc-{deb}-linux-gnu), \
          or zig, or name one with {var}",

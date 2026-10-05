@@ -4,6 +4,12 @@
 //! (`aarch64-linux-gnu-gcc`) and `qemu-aarch64`; programs that use TLS
 //! are skipped without the target's OpenSSL. Without qemu, a build
 //! is still checked to be an aarch64 executable.
+//!
+//! With musl (`--target x86_64-linux-musl`, built with `musl-gcc` on an
+//! x86-64 host), every golden program is built as a static executable
+//! and run directly; the programs that use tasks are also run on aarch64
+//! with the runtime's own task switch (`FWP_OWN_CONTEXT`, which musl
+//! builds use) instead of glibc's `swapcontext`.
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -44,12 +50,17 @@ impl Drop for TempDir {
 }
 
 fn build(src: &Path, exe: &Path, opts: &[&str]) -> Output {
+    build_for("aarch64-linux", &[], src, exe, opts)
+}
+
+fn build_for(target: &str, env: &[(&str, &str)], src: &Path, exe: &Path, opts: &[&str]) -> Output {
     Command::new(fwp())
         .arg("build")
         .arg(src)
-        .args(["--target", "aarch64-linux", "-O1", "-o"])
+        .args(["--target", target, "-O1", "-o"])
         .arg(exe)
         .args(opts)
+        .envs(env.iter().copied())
         .current_dir(src.parent().unwrap())
         .output()
         .unwrap()
@@ -69,10 +80,13 @@ fn render(o: &Output) -> String {
 
 /// Run an aarch64 executable under qemu, with the target's libraries.
 fn run(exe: &Path, cwd: &Path, input: &[u8]) -> Output {
-    let mut child = Command::new("qemu-aarch64")
-        .arg("-L")
-        .arg(format!("/usr/{}", TRIPLE))
-        .arg(exe)
+    let mut cmd = Command::new("qemu-aarch64");
+    cmd.arg("-L").arg(format!("/usr/{}", TRIPLE)).arg(exe);
+    run_cmd(cmd, cwd, input)
+}
+
+fn run_cmd(mut cmd: Command, cwd: &Path, input: &[u8]) -> Output {
+    let mut child = cmd
         .current_dir(cwd)
         .env("FWP_SEED", "42")
         .stdin(Stdio::piped())
@@ -117,11 +131,63 @@ fn golden_programs_on_aarch64() {
     if !have(&format!("{}-gcc", TRIPLE)) || !have("qemu-aarch64") {
         return;
     }
-    let dir = TempDir::new("golden");
+    goldens("aarch64-linux", &[], &[], |_| true, run);
+}
+
+#[test]
+fn golden_programs_with_musl() {
+    if std::env::consts::ARCH != "x86_64" || !have_cc("musl-gcc") {
+        eprintln!("skipping: needs musl-gcc on x86-64");
+        return;
+    }
+    goldens(
+        "x86_64-linux-musl",
+        &[],
+        &["--static"],
+        |_| true,
+        |exe, cwd, input| run_cmd(Command::new(exe), cwd, input),
+    );
+}
+
+#[test]
+fn tasks_on_aarch64_with_the_runtimes_own_switch() {
+    if !have(&format!("{}-gcc", TRIPLE)) || !have("qemu-aarch64") {
+        return;
+    }
+    let cc = format!("{}-gcc -DFWP_OWN_CONTEXT", TRIPLE);
+    goldens(
+        "aarch64-linux",
+        &[("FWP_CC_aarch64_linux_gnu", cc.as_str())],
+        &[],
+        |src| src.contains("task.") || src.contains("channel."),
+        run,
+    );
+}
+
+/// `musl-gcc` and the like print no version: whether they compile.
+fn have_cc(cc: &str) -> bool {
+    Command::new(cc)
+        .args(["-x", "c", "-", "-fsyntax-only"])
+        .stdin(Stdio::null())
+        .output()
+        .is_ok_and(|o| o.status.success())
+}
+
+/// Build the golden programs whose source passes `pick` for `target` and
+/// check what each prints when `exec` runs it.
+fn goldens(
+    target: &str,
+    env: &[(&str, &str)],
+    opts: &[&str],
+    pick: impl Fn(&str) -> bool + Sync,
+    exec: impl Fn(&Path, &Path, &[u8]) -> Output + Sync,
+) {
+    let dir = TempDir::new(&format!("golden-{}-{}", target, env.len()));
     let mut entries: Vec<PathBuf> = std::fs::read_dir(root().join("tests/run"))
         .unwrap()
         .map(|e| e.unwrap().path())
         .filter(|p| p.extension().is_some_and(|e| e == "fwp"))
+        .filter(|p| pick(&std::fs::read_to_string(p).unwrap()))
         .collect();
     entries.sort();
     let queue = std::sync::Mutex::new(entries);
@@ -134,12 +200,13 @@ fn golden_programs_on_aarch64() {
                 };
                 let name = path.file_stem().unwrap().to_string_lossy().to_string();
                 let exe = dir.0.join(&name);
-                let b = build(&path, &exe, &[]);
+                let b = build_for(target, env, &path, &exe, opts);
                 if !b.status.success() {
                     let err = String::from_utf8_lossy(&b.stderr);
                     // compile errors are covered by tests/golden_run.rs; a
                     // program that uses TLS needs the target's OpenSSL
-                    let no_tls = err.contains("uses TLS") && !target_openssl();
+                    let no_tls =
+                        err.contains("uses TLS") && (target.ends_with("musl") || !target_openssl());
                     if err.contains("C compiler failed") && !no_tls {
                         failures.lock().unwrap().push(format!(
                             "{} (build):\n{}",
@@ -150,12 +217,13 @@ fn golden_programs_on_aarch64() {
                     continue;
                 }
                 let input = std::fs::read(path.with_extension("in")).unwrap_or_default();
-                let got = render(&run(&exe, path.parent().unwrap(), &input));
+                let got = render(&exec(&exe, path.parent().unwrap(), &input));
                 let want = std::fs::read_to_string(path.with_extension("out")).unwrap_or_default();
                 if got != want {
                     failures.lock().unwrap().push(format!(
-                        "{} (aarch64):\n--- expected\n{}--- got\n{}",
+                        "{} ({}):\n--- expected\n{}--- got\n{}",
                         path.display(),
+                        target,
                         want,
                         got
                     ));
