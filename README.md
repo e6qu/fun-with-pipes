@@ -3,10 +3,9 @@
 fwp is a tacit, curried, pipe-oriented programming language. It has static
 types, tracked effects, structured concurrency, and two execution engines:
 an interpreter and native code through C. It implements the *Pipe Language
-Compact Specification*.
+Compact Specification*. The five most common words on standard input:
 
 ```fwp
-# Count the most common words on stdin.
 main =
     ()
     | read-all
@@ -82,26 +81,33 @@ export PATH=$PWD/target/release:$PATH
 fwp run examples/hello.fwp
 fwp build docs/tutorials/02-data/main.fwp -o data && ./data
 fwp build examples/hello.fwp --target wasm32-wasi -o hello.wasm
-fwp build examples/hello.fwp --target aarch64-linux -o hello-arm64  # cross
-fwp run examples/server/api.fwp          # a JSON API on 127.0.0.1:8080
-fwp run examples/server/chat.fwp         # a WebSocket chat on 127.0.0.1:8080
-fwp build examples/services/main.fwp --service inventory -o shop   # gRPC
-fwp build examples/cli/todo.fwp --cli -o todo && ./todo --help    # a CLI
-fwp serve --rest examples/rest/books.fwp # a REST API with /openapi.json
-fwp openapi examples/rest/books.fwp      # its OpenAPI document
-fwp serve --grpc examples/grpc/weather.fwp   # a gRPC server, with reflection
-fwp test --std                           # the standard library's own tests
-fwp fmt --check . && fwp lint examples   # formatting and lint checks
-fwp lsp                                  # the language server, for editors
+fwp build examples/hello.fwp --target aarch64-linux -o hello-arm64
 ```
+
+The last two build for WebAssembly and, cross-compiling, for 64-bit ARM
+Linux. More to try:
+
+| Command | What it does |
+|---|---|
+| `fwp run examples/server/api.fwp` | a JSON API on 127.0.0.1:8080 |
+| `fwp run examples/server/chat.fwp` | a WebSocket chat on 127.0.0.1:8080 |
+| `fwp build examples/services/main.fwp --service inventory -o shop` | a program split into gRPC services |
+| `fwp build examples/cli/todo.fwp --cli -o todo && ./todo --help` | a command-line program |
+| `fwp serve --rest examples/rest/books.fwp` | a REST API, with `/openapi.json` |
+| `fwp openapi examples/rest/books.fwp` | its OpenAPI document |
+| `fwp serve --grpc examples/grpc/weather.fwp` | a gRPC server, with reflection |
+| `fwp test --std` | the standard library's own tests |
+| `fwp fmt --check . && fwp lint examples` | formatting and lint checks |
+| `fwp lsp` | the language server, for editors |
 
 fwp itself also runs in the browser. The playground in `web/` checks,
 formats and runs programs with no server (needs
-`rustup target add wasm32-wasip1`):
+`rustup target add wasm32-wasip1`). Build `web/fwp.wasm`, serve `web/`,
+and open http://localhost:8000:
 
 ```
-scripts/build-playground.sh             # builds web/fwp.wasm
-python3 -m http.server -d web 8000      # open http://localhost:8000
+scripts/build-playground.sh
+python3 -m http.server -d web 8000
 ```
 
 ## Documentation
@@ -150,9 +156,12 @@ docs/       documentation and tutorials
 ```
 cargo fmt --all
 cargo clippy --all-targets -- -D warnings
-cargo test                 # interpreter and native for every golden program
-FWP_BLESS=1 cargo test     # regenerate snapshot files after an intended change
+cargo test
 ```
+
+`cargo test` runs every golden program in the interpreter and natively;
+`FWP_BLESS=1 cargo test` regenerates the snapshot files after an intended
+change.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full checklist, the test
 suites and how changes are merged.

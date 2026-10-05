@@ -659,6 +659,25 @@ impl<'a> Infer<'a> {
                 g.scheme = Some(scheme);
             }
         }
+        // the program runs `main`'s value: a function would never be called
+        for &i in group {
+            let b = &self.env.bindings[i];
+            if b.name != "main::main" || failed {
+                continue;
+            }
+            let ty = self.env.globals[&b.name]
+                .scheme
+                .as_ref()
+                .map(|s| s.ty.clone());
+            if let Some(t @ Type::Fun(..)) = ty.map(|t| self.env.table.resolve(&t)) {
+                let shown = self.show(&t);
+                let span = b.span;
+                self.env.errors.push(
+                    Diagnostic::error(span, format!("`main` is a function (`{}`), so it would never run", shown))
+                        .with_note("`main` is the program's value: apply the function, for example `main = () | f`"),
+                );
+            }
+        }
     }
 
     /// Effect rules: definitions are pure (except `main` and tests), only

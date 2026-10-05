@@ -3,13 +3,15 @@
 An exported fwp function is a command-line program, a REST endpoint and a
 gRPC method, without a line of interface code. Its type is the contract;
 its comments are the documentation; a few comment lines adjust what the
-types cannot say. The program is built for one interface or another:
+types cannot say. The program is built for one interface or another: a
+command-line program, an HTTP server, a gRPC server, or a gRPC server and
+its client:
 
 ```
-$ fwp build books.fwp --cli -o books              # a command-line program
-$ fwp build books.fwp --rest -o books-api         # an HTTP server
-$ fwp build books.fwp --grpc -o books-grpc        # a gRPC server
-$ fwp build shop.fwp --service books -o out       # a gRPC server and its client
+$ fwp build books.fwp --cli -o books
+$ fwp build books.fwp --rest -o books-api
+$ fwp build books.fwp --grpc -o books-grpc
+$ fwp build shop.fwp --service books -o out
 ```
 
 [`examples/rest`](../examples/rest/books.fwp) builds all three from one

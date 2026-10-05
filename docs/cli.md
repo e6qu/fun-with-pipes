@@ -317,12 +317,14 @@ roff, generated from the same commands, flags and comments as the help.
 They work the same way in multi-command programs and in single-command
 executables (where they are not listed in the help, and a flag of the
 same name takes precedence), with the interpreter and in both native and
-WebAssembly builds:
+WebAssembly builds. The first line loads bash completion into the
+current shell; the others install it for bash, zsh (in a directory of
+`$fpath`) and fish, and write the man page:
 
 ```
-$ source <(todo --completions bash)          # bash, for this shell
+$ source <(todo --completions bash)
 $ todo --completions bash > ~/.local/share/bash-completion/completions/todo
-$ todo --completions zsh > ~/.zfunc/_todo    # a directory of $fpath
+$ todo --completions zsh > ~/.zfunc/_todo
 $ todo --completions fish > ~/.config/fish/completions/todo.fish
 $ todo --man > todo.1 && man ./todo.1
 ```

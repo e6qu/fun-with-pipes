@@ -15,12 +15,14 @@ depending on the type it is used at:
 ```
 f : t -> t where Field[t], Floating[t], FromFloat[t]
 f = exp | add 1.0 | ln
-
-2.0 | f                                  # F64
-2.0 | derivative f                       # forward mode (Dual[F64])
-[2.0] | grad (head | option.unwrap-or zero | f)   # reverse mode (Rev[F64])
-xs | tensor.lazy | f | realize-on (CpuParallel 4) # a fused kernel
 ```
+
+| Use | `t` |
+|---|---|
+| `2.0 \| f` | `F64` |
+| `2.0 \| derivative f` | `Dual[F64]` (forward mode) |
+| `[2.0] \| grad (head \| option.unwrap-or zero \| f)` | `Rev[F64]` (reverse mode) |
+| `xs \| tensor.lazy \| f \| realize-on (CpuParallel 4)` | `TensorExpr[n]` (a fused kernel) |
 
 ## Forward mode
 
