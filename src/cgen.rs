@@ -1719,16 +1719,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 return self.bind_local(l, rest, body);
             }
         }
-        // a record or variant that does not outlive `body`: on the stack
-        if let Expr::Record(args) | Expr::Construct(_, args) = v {
-            if !args.is_empty()
-                && stack_enabled()
-                && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
-            {
-                let x = self.stack_object(v);
-                self.line(&format!("l{} = {};", l, x));
-                return body;
-            }
+        // a record, variant or closure that does not outlive `body`: on
+        // the stack
+        if self.stackable(v)
+            && stack_enabled()
+            && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
+        {
+            let x = self.stack_object(v);
+            self.line(&format!("l{} = {};", l, x));
+            return body;
         }
         let x = self.expr(v);
         self.line(&format!("l{} = {};", l, x));
@@ -1738,7 +1737,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// An argument of a call of `g` at parameter `j`: a record or variant
     /// built for a parameter that does not escape is built on the stack.
     fn arg(&mut self, g: FuncId, j: usize, a: &Expr) -> String {
-        if matches!(a, Expr::Record(xs) | Expr::Construct(_, xs) if !xs.is_empty())
+        if self.stackable(a)
             && g != self.me
             && stack_enabled()
             && self.g.noesc[g].get(j).copied().unwrap_or(false)
@@ -1748,12 +1747,43 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.expr(a)
     }
 
+    /// Whether `v` builds an object that can live on the stack: a record
+    /// or variant with fields, or a closure (a known function applied to
+    /// fewer arguments than it takes).
+    fn stackable(&self, v: &Expr) -> bool {
+        match v {
+            Expr::Record(xs) | Expr::Construct(_, xs) => !xs.is_empty(),
+            Expr::Apply(f, xs) => match **f {
+                Expr::Func(g) => !xs.is_empty() && xs.len() < self.g.prog.funcs[g].arity as usize,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
     /// A record or variant in an object on the C stack (the layout of
     /// `fwp_obj`), live until the end of the enclosing block.
     fn stack_object(&mut self, v: &Expr) -> String {
         let (tag, args) = match v {
             Expr::Record(args) => (0, args),
             Expr::Construct(tag, args) => (*tag, args),
+            // a closure (`fwp_clo`, the same layout): the function and
+            // what it captured, which the runtime may keep
+            Expr::Apply(f, args) => {
+                let Expr::Func(g) = **f else { unreachable!() };
+                self.g.used_closures[g] = true;
+                let xs = self.args(args);
+                self.share(&xs);
+                let s = self.fresh();
+                self.line(&format!(
+                    "struct {{ uint32_t fn; uint32_t n; V a[{n}]; }} {s} = {{{g}, {n}, {{{xs}}}}};",
+                    n = xs.len(),
+                    s = s,
+                    g = g,
+                    xs = xs.join(", ")
+                ));
+                return self.bind(format!("PTR(&{})", s));
+            }
             _ => unreachable!(),
         };
         let xs = self.args(args);

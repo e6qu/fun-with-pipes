@@ -1,0 +1,13 @@
+# a user-defined higher-order function, given a closure per iteration
+rec twice : (I64 -> I64) -> I64 -> I64
+twice = curry (fork apply (fork apply .1 .0) .0)
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both (.0 | sub 1) (fork twice (.0 | rem 7 | add) .1 | rem 1000003)
+            | Again)
+
+main = (3000000, 1) | loop step | echo
