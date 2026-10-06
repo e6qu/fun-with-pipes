@@ -1,7 +1,10 @@
 //! IR optimizations: inlining of small functions (combinators, compose,
 //! selectors, trait-method wrappers), flattening of nested applications,
-//! saturation of known partial applications into direct calls, and folding
-//! of record projections. Internal pipes compile to direct calls this way.
+//! saturation of known partial applications into direct calls, folding
+//! of record projections, and matches on values whose constructor is
+//! known (a match on a match whose arms build values is moved into those
+//! arms, where the constructor is known). Internal pipes compile to direct
+//! calls this way.
 //!
 //! All transformations preserve evaluation order: arguments that may have
 //! effects are bound with `Let` before the inlined body; only pure
@@ -181,7 +184,7 @@ impl<'p> Opt<'p> {
                 if let Expr::Match(s, arms) = &*b {
                     if matches!(**s, Expr::Local(x) if x == l)
                         && arms.iter().all(|(_, a)| uses(a, l) == 0)
-                        && builds_object(&v)
+                        && (builds_object(&v) || self.case_of_case(&v, arms))
                     {
                         let Expr::Match(_, arms) = *b else {
                             unreachable!()
@@ -242,6 +245,28 @@ impl<'p> Opt<'p> {
             }
             Expr::Match(s, arms) => {
                 let s = self.expr(*s, depth);
+                // a match on a match whose arms build values: the outer
+                // match moves into each inner arm (after the locals the
+                // scrutinee binds first, which the arms do not see)
+                if let Expr::Let(..) = s {
+                    if self.case_of_case(&s, &arms) {
+                        return self.expr(push_match(s, &arms), depth);
+                    }
+                }
+                if self.case_of_case(&s, &arms) {
+                    self.budget -= (size_of_arms(&arms) * arms_of(&s)) as isize;
+                    let Expr::Match(is, iarms) = s else {
+                        unreachable!()
+                    };
+                    let iarms = iarms
+                        .into_iter()
+                        .map(|(p, b)| (p, push_match(b, &arms)))
+                        .collect();
+                    return self.expr(Expr::Match(is, iarms), depth);
+                }
+                if let Some(e) = self.known_ctor(&s, &arms) {
+                    return self.expr(e, depth);
+                }
                 let arms: Vec<(Pat, Expr)> = arms
                     .into_iter()
                     .map(|(p, b)| (p, self.expr(b, depth)))
@@ -249,6 +274,66 @@ impl<'p> Opt<'p> {
                 known_record(s, arms)
             }
         }
+    }
+
+    /// Whether a match with `arms` on `s` should move into the arms of `s`:
+    /// `s` is a match whose every arm ends in a constructor, and the copies
+    /// of `arms` are small.
+    fn case_of_case(&self, s: &Expr, arms: &[(Pat, Expr)]) -> bool {
+        let mut s = s;
+        while let Expr::Let(_, _, b) = s {
+            s = b;
+        }
+        let Expr::Match(_, iarms) = s else {
+            return false;
+        };
+        let extra = size_of_arms(arms) * iarms.len().saturating_sub(1);
+        !iarms.is_empty()
+            && iarms.iter().all(|(_, b)| ends_in_ctor(b))
+            && extra <= INLINE_SIZE
+            && (extra as isize) <= self.budget
+    }
+
+    /// A match on a constructor applied to arguments: the arm it selects,
+    /// with the arguments bound to the arm's names in their order. `None`
+    /// when an arm before it could match or not depending on the fields.
+    fn known_ctor(&mut self, s: &Expr, arms: &[(Pat, Expr)]) -> Option<Expr> {
+        let Expr::Construct(tag, args) = s else {
+            return None;
+        };
+        let irrefutable = |p: &Pat| matches!(p, Pat::Bind(_) | Pat::Wild);
+        for (p, body) in arms {
+            match p {
+                Pat::Construct(t, _) if t != tag => continue,
+                Pat::Construct(_, ps) if ps.iter().all(irrefutable) && ps.len() == args.len() => {
+                    let mut binds = Vec::new();
+                    for (sp, a) in ps.iter().zip(args) {
+                        match sp {
+                            Pat::Bind(x) => binds.push((*x, a.clone())),
+                            _ if self.pure(a) => {}
+                            _ => {
+                                let funcs = self.funcs;
+                                let func = |id: FuncId| &funcs[id].ty;
+                                let t = type_of(&func, self.shapes, &self.locals, a)?;
+                                let l = self.fresh(&t);
+                                binds.push((l, a.clone()));
+                            }
+                        }
+                    }
+                    let mut out = body.clone();
+                    for (x, a) in binds.into_iter().rev() {
+                        out = Expr::Let(x, Box::new(a), Box::new(out));
+                    }
+                    return Some(out);
+                }
+                Pat::Bind(x) => {
+                    return Some(Expr::Let(*x, Box::new(s.clone()), Box::new(body.clone())))
+                }
+                Pat::Wild if self.pure(s) => return Some(body.clone()),
+                _ => return None,
+            }
+        }
+        None
     }
 
     fn apply(&mut self, f: Expr, args: Vec<Expr>, depth: usize) -> Expr {
@@ -381,7 +466,35 @@ fn known_record(s: Expr, arms: Vec<(Pat, Expr)>) -> Expr {
     }
 }
 
-/// Whether local `l` is used in `e` only as `Field(Local(l), _)`.
+/// Whether `e` gives a constructor applied to arguments (after the locals
+/// it binds).
+fn ends_in_ctor(e: &Expr) -> bool {
+    match e {
+        Expr::Let(_, _, b) => ends_in_ctor(b),
+        Expr::Construct(..) => true,
+        _ => false,
+    }
+}
+
+/// `match e { arms }`, with the match after the locals `e` binds.
+fn push_match(e: Expr, arms: &[(Pat, Expr)]) -> Expr {
+    match e {
+        Expr::Let(x, v, b) => Expr::Let(x, v, Box::new(push_match(*b, arms))),
+        e => Expr::Match(Box::new(e), arms.to_vec()),
+    }
+}
+
+fn size_of_arms(arms: &[(Pat, Expr)]) -> usize {
+    arms.iter().map(|(_, b)| 1 + size(b)).sum()
+}
+
+fn arms_of(e: &Expr) -> usize {
+    match e {
+        Expr::Match(_, arms) => arms.len().saturating_sub(1),
+        _ => 0,
+    }
+}
+
 /// Whether `e` gives a record or variant it builds itself (after the
 /// locals it binds).
 fn builds_object(e: &Expr) -> bool {

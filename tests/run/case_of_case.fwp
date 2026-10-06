@@ -1,0 +1,45 @@
+# Matches on values a function builds: after inlining, the match moves
+# into the arms that build them, where the constructor is known. The
+# results and the order of effects stay as written.
+half : I64 -> Option[I64]
+half = if (rem 2 | eq 0) (div 2 | Some) (const None)
+
+# an effect in the arm that builds the value comes before the match
+loud : I64 -> Option[I64] ! {IO}
+loud = if (gt 0) (tap (format "positive {}" | print) | Some) (const None)
+
+Shape =
+    | Shape.Circle F64
+    | Shape.Rect F64 F64
+    | Shape.Dot
+
+shape : I64 -> Shape
+shape = match
+    0 -> Shape.Dot
+    1 -> Shape.Circle 1.5
+    _ -> from-int | fork Shape.Rect id (mul 2.0)
+
+area : Shape -> F64
+area = match
+    Shape.Circle _ -> fork mul id id | mul 3.0
+    Shape.Rect _ _ -> mul
+    Shape.Dot -> 0.0
+
+# a nested pattern decides on a field: the match stays
+nested : I64 -> String
+nested = half | match
+    Some 3 -> "three"
+    Some _ -> const "even"
+    None -> "odd"
+
+main = [
+    range 0 7 | map (half | option.unwrap-or -1) | echo,
+    [3, -2] | map (loud | option.map (add 10)) | echo,
+    range 0 4 | map (shape | area) | echo,
+    [6, 4, 5] | map nested | echo,
+    range 0 3
+    | map (shape | match
+        Shape.Dot -> "dot"
+        _ -> const "not a dot")
+    | echo,
+] | ignore
