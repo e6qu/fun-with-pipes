@@ -528,8 +528,15 @@ impl Gen<'_> {
     }
 }
 
-/// Most fields of a record passed or returned in registers (a C struct).
-const MAX_UNBOXED: usize = 4;
+/// Most fields of a record passed or returned as a C struct (two words
+/// come back in registers, more in the caller's frame, which the C ABI
+/// provides).
+const MAX_UNBOXED: usize = 8;
+
+/// Most fields of a record returned as a struct whatever its tails: a
+/// wider one only when every tail builds it, so that a record a function
+/// passes on is not read into a struct and built again.
+const MAX_ANY_RET: usize = 4;
 
 /// How a function's worker (`w<id>`) takes and returns records, for
 /// direct calls: a parameter read only field by field comes as its
@@ -648,6 +655,42 @@ fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
                     vret: None,
                 })
                 .vret = Some(m);
+        }
+    }
+}
+
+/// Records of more than `MAX_ANY_RET` fields stay returned as structs
+/// only by functions whose every tail builds one or calls such a function
+/// (a fixed point).
+fn wide_record_returns(prog: &Program, abis: &mut [Option<Abi>]) {
+    loop {
+        let mut changed = false;
+        for (id, f) in prog.funcs.iter().enumerate() {
+            let Body::Expr(body) = &f.body else {
+                continue;
+            };
+            let Some(n) = abis[id].as_ref().and_then(|a| a.ret) else {
+                continue;
+            };
+            if n <= MAX_ANY_RET {
+                continue;
+            }
+            let mut ts = Vec::new();
+            tails(body, &mut ts);
+            let ok = ts.iter().all(|t| match t {
+                Expr::Record(xs) => xs.len() == n,
+                Expr::Call(g, _) => abis[*g].as_ref().and_then(|a| a.ret) == Some(n),
+                _ => false,
+            });
+            if !ok {
+                if let Some(a) = abis[id].as_mut() {
+                    a.ret = None;
+                }
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
         }
     }
 }
@@ -4549,6 +4592,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
     let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
+    wide_record_returns(prog, &mut abis);
     if variant_returns_enabled() {
         variant_returns(prog, &mut abis);
     }
