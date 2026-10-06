@@ -254,8 +254,11 @@ Next in this series, toward static, zero-cost programs:
     leave behind are never built. Records and variants that do not
     outlive a call live on the stack (`src/escape.rs`): a variant built
     in a loop and handed to a function that matches on it went from 610
-    MiB allocated and 0.58 s to nothing and 0.40 s. Next: closures that
-    do not escape, and results built into the caller's frame.
+    MiB allocated and 0.58 s to nothing and 0.40 s. Closures too: one
+    built per iteration and given to a function that only applies it
+    went from 46 MiB allocated and 152 ms to nothing and 109 ms
+    (`tests/stack/twice.fwp`). Next: results built into the caller's
+    frame.
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
     `any` and `all`) over `map` and `filter` stages of a `range` or a list

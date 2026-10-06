@@ -4,16 +4,18 @@
 //! through its fields, matches on it, copies it with fields replaced
 //! (`SetFields`, which builds a new object), counts its references, or
 //! passes it to a parameter of another function that does not escape
-//! either. Anything else lets it escape: returning it, storing it in a
-//! constructor, record or closure, handing it to a primitive, a C
-//! function or a function value. A parameter passed on to the function
+//! either, or applies it (a closure applied hands the function its
+//! captured values, never itself). Anything else lets it escape:
+//! returning it, storing it in a constructor, record or closure, handing
+//! it to a primitive, a C function or a function value. A parameter passed on to the function
 //! itself lives in a caller's frame, so it may; a value the function
 //! builds may not go to the function itself, as a call of itself in tail
 //! position is compiled as a jump, which reuses the frame that holds it.
 //!
-//! The C backend allocates a record or variant that does not escape on
-//! the stack (`src/cgen.rs`): its fields are on the stack the collector
-//! scans, and the runtime counts no references of a value off its heap.
+//! The C backend allocates a record, variant or closure that does not
+//! escape on the stack (`src/cgen.rs`): its fields are on the stack the
+//! collector scans, and the runtime counts no references of a value off
+//! its heap.
 
 use crate::ir::{Body, Expr, FuncId, Local, Pat, Program};
 
@@ -62,7 +64,7 @@ pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: Option<FuncId>) -> b
                 go(a)
             }
         }),
-        Expr::Apply(f, args) => go(f) || args.iter().any(go),
+        Expr::Apply(f, args) => (!is_x(f) && go(f)) || args.iter().any(go),
         Expr::Construct(_, args) | Expr::Record(args) => args.iter().any(go),
         Expr::Field(r, _) => !is_x(r) && go(r),
         Expr::SetFields(r, sets) => (!is_x(r) && go(r)) || sets.iter().any(|(_, s)| go(s)),
@@ -174,6 +176,22 @@ mod tests {
         assert_eq!(n[0], vec![true]);
         // f3 stores its parameter in a record
         assert_eq!(n[2], vec![false]);
+    }
+
+    #[test]
+    fn applying_a_closure_does_not_let_it_escape() {
+        let p = prog(vec![
+            func(
+                1,
+                Expr::Apply(
+                    Box::new(l(0)),
+                    vec![Expr::Const(crate::value::Value::I64(1))],
+                ),
+            ),
+            // given to itself: it escapes
+            func(1, Expr::Apply(Box::new(l(0)), vec![l(0)])),
+        ]);
+        assert_eq!(params(&p), vec![vec![true], vec![false]]);
     }
 
     #[test]
