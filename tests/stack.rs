@@ -77,6 +77,45 @@ fn variants_returned_as_structs_are_not_allocated() {
     on_heap_and_stack("digits", "FWP_VRET", "182551542\n");
 }
 
+/// A recursive function returning a record of six fields, which it builds
+/// on every path, returns it as a struct in the caller's frame.
+#[test]
+fn wide_records_are_returned_without_allocating() {
+    if !linux_cc() {
+        return;
+    }
+    let dir = TempDir::new("wide");
+    let mib = allocated(&dir, "wide", "FWP_STACK", "1", "60003000000\n");
+    assert!(mib < 1.0, "{} MiB", mib);
+}
+
+/// What `tests/stack/<name>.fwp`, compiled with `var` set to `value`,
+/// allocates (MiB), checking that it prints `expected`.
+fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) -> f64 {
+    let src = root().join(format!("tests/stack/{}.fwp", name));
+    let exe = dir.0.join(format!("{}{}", name, value));
+    let b = Command::new(fwp())
+        .arg("build")
+        .arg(&src)
+        .arg("-o")
+        .arg(&exe)
+        .env(var, value)
+        .output()
+        .unwrap();
+    assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
+    let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
+    assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
+    let err = String::from_utf8_lossy(&o.stderr);
+    let mib = err
+        .split(" MiB allocated")
+        .next()
+        .unwrap()
+        .rsplit(' ')
+        .next()
+        .unwrap();
+    mib.parse().unwrap()
+}
+
 /// `tests/stack/<name>.fwp` prints `expected`, allocating more than 10 MiB
 /// with `var` set to 0 when compiling and less than 1 MiB without.
 fn on_heap_and_stack(name: &str, var: &str, expected: &str) {
@@ -84,31 +123,8 @@ fn on_heap_and_stack(name: &str, var: &str, expected: &str) {
         return;
     }
     let dir = TempDir::new(name);
-    let src = root().join(format!("tests/stack/{}.fwp", name));
-    let allocated = |stack: &str| -> f64 {
-        let exe = dir.0.join(format!("{}{}", name, stack));
-        let b = Command::new(fwp())
-            .arg("build")
-            .arg(&src)
-            .arg("-o")
-            .arg(&exe)
-            .env(var, stack)
-            .output()
-            .unwrap();
-        assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
-        let o = run(&exe, &dir.0, b"", &[("FWP_GC_STATS", "1")]);
-        assert_eq!(String::from_utf8_lossy(&o.stdout), expected);
-        let err = String::from_utf8_lossy(&o.stderr);
-        let mib = err
-            .split(" MiB allocated")
-            .next()
-            .unwrap()
-            .rsplit(' ')
-            .next()
-            .unwrap();
-        mib.parse().unwrap()
-    };
-    let (heap, stack) = (allocated("0"), allocated("1"));
+    let heap = allocated(&dir, name, var, "0", expected);
+    let stack = allocated(&dir, name, var, "1", expected);
     assert!(
         heap > 10.0 && stack < 1.0,
         "{}: {} MiB on the heap, {} MiB with stack objects",

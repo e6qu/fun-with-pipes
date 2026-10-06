@@ -1,0 +1,29 @@
+# Records of up to eight fields come back from calls as structs when the
+# function builds them on every path; one it may pass on is returned as
+# it is.
+Stats = { n: I64, sum: I64, min: I64, max: I64, label: String, seen: List[I64] }
+
+rec stats : List[I64] -> Stats
+stats = match
+    Nil -> Stats { n = 0, sum = 0, min = 1000, max = 0, label = "", seen = [] }
+    Cons _ _ -> curry (fork add-one .0 (.1 | stats))
+
+add-one : I64 -> Stats -> Stats
+add-one = curry (make Stats {
+    n = .1 | .n | add 1,
+    sum = fork add .0 (.1 | .sum),
+    min = fork min .0 (.1 | .min),
+    max = fork max .0 (.1 | .max),
+    label = fork concat (.1 | .label) (.0 | show),
+    seen = fork Cons .0 (.1 | .seen),
+})
+
+# either argument, as it is
+larger : Stats -> Stats -> Stats
+larger = curry (if (fork gt (.0 | .sum) (.1 | .sum)) .0 .1)
+
+main = [
+    [3, 1, 4, 1, 5] | stats | echo,
+    larger ([1, 2] | stats) ([7] | stats) | .label | echo,
+    [9, 2, 6] | stats | both .min .seen | echo,
+] | ignore

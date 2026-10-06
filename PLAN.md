@@ -266,8 +266,11 @@ Next in this series, toward static, zero-cost programs:
     and fields) when every path builds one, and a caller that only
     matches on it keeps it as one: a recursive function's `Option`,
     matched in a loop, went from 24 MiB allocated and 125 ms to nothing
-    and 84 ms (`tests/stack/digits.fwp`). Next: larger results built
-    into the caller's frame.
+    and 84 ms (`tests/stack/digits.fwp`). Records of up to eight fields
+    are passed and returned as structs (a wide one returned by a function
+    that builds it on every path), which the C ABI places in the caller's
+    frame: a recursion returning a record of six fields went from 366 MiB
+    allocated and 301 ms to nothing and 103 ms (`tests/stack/wide.fwp`).
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
     `any` and `all`) over `map` and `filter` stages of a `range` or a list
