@@ -59,19 +59,27 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
 /// iteration on the heap, and not at all on the stack.
 #[test]
 fn values_that_do_not_escape_are_not_allocated() {
-    on_heap_and_stack("shapes", "6118033823962\n");
+    on_heap_and_stack("shapes", "FWP_STACK", "6118033823962\n");
 }
 
 /// A closure built in a loop and given to a function that only applies
 /// it lives on the stack too.
 #[test]
 fn closures_that_do_not_escape_are_not_allocated() {
-    on_heap_and_stack("twice", "999944\n");
+    on_heap_and_stack("twice", "FWP_STACK", "999944\n");
+}
+
+/// A recursive function returning an `Option` (not inlined) returns it as
+/// a struct, which its caller matches without allocating (`FWP_VRET=0`
+/// turns that off).
+#[test]
+fn variants_returned_as_structs_are_not_allocated() {
+    on_heap_and_stack("digits", "FWP_VRET", "182551542\n");
 }
 
 /// `tests/stack/<name>.fwp` prints `expected`, allocating more than 10 MiB
-/// without stack objects and less than 1 MiB with them.
-fn on_heap_and_stack(name: &str, expected: &str) {
+/// with `var` set to 0 when compiling and less than 1 MiB without.
+fn on_heap_and_stack(name: &str, var: &str, expected: &str) {
     if !linux_cc() {
         return;
     }
@@ -84,7 +92,7 @@ fn on_heap_and_stack(name: &str, expected: &str) {
             .arg(&src)
             .arg("-o")
             .arg(&exe)
-            .env("FWP_STACK", stack)
+            .env(var, stack)
             .output()
             .unwrap();
         assert!(b.status.success(), "{}", String::from_utf8_lossy(&b.stderr));
