@@ -6,6 +6,8 @@
 #   ./todo done 1
 #   TODO_FILE=~/todo.txt ./todo list
 #   source <(./todo --completions bash)
+#
+# expose: cli
 
 export version : String
 version = "1.0.0"

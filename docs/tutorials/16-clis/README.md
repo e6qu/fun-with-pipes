@@ -1,9 +1,36 @@
 # 16. Command-line programs
 
-[Tutorial 7](../07-executables-and-pipes/README.md) turned exported
-functions into executables. This one makes them command-line programs
-with flags, help, subcommands and exit statuses, without writing an
-argument parser. [docs/cli.md](../../cli.md) has every rule.
+This tutorial builds a real command-line program from ordinary
+functions: flags, help, subcommands, exit statuses, shell completion and
+a man page, with no argument parser to write. You build it with `fwp build
+--cli` and run it from your shell. [docs/cli.md](../../cli.md) has every
+rule.
+
+To follow along, go to this directory (`cd docs/tutorials/16-clis`).
+Every session below runs exactly as shown: the test suite runs them.
+
+## Exposing functions as commands
+
+An exported function is not a command until you say so. The line
+`# expose: cli` in the file's leading comment exposes every exported
+function of [`words.fwp`](words.fwp) as a command. A line above one
+`export` would expose only that function:
+
+```fwp
+# Play with words: repeat them, shout them, find them, and divide
+# numbers.
+#
+# expose: cli
+```
+
+`fwp build --cli` builds every exposed function into one program, named
+by `-o`. Its first argument picks the command:
+
+```console
+$ fwp build words.fwp --cli -o words
+$ ./words say hello world
+hello world
+```
 
 ## Flags are a record
 
@@ -34,8 +61,6 @@ export defaults : {times: I64, sep: String}
 defaults = { times = 1, sep = " " }
 ```
 
-## Comments are the help
-
 The comments right above an `export` describe the command, and its first
 sentence is its summary. A line `# args:` names the positional
 arguments; `WORDS...` makes the last one, a `List`, take all the
@@ -49,17 +74,21 @@ remaining arguments:
 export say : Options -> List[String] -> String
 ```
 
-`fwp build --cli` builds every exported function into one program, with
-the name given by `-o`, and `export version` gives it `--version`:
-
-```
-$ fwp build main.fwp --cli -o words
+```console
 $ ./words say -n 2 -u hi there
 HI HI THERE THERE
 $ ./words say --sep=, a b c
 a,b,c
 $ WORDS_TIMES=2 ./words say a b
 a a b b
+```
+
+## The help is generated
+
+`help say` (or `say --help`) shows the help of a command, from its
+comments and types, and `export version` gives the program `--version`:
+
+```console
 $ ./words help say
 usage: words say [options] [WORDS...]
 
@@ -82,15 +111,12 @@ words 0.3.0
 
 Without a command, or with `--help`, it lists the commands:
 
-```
+```console
 $ ./words --help
 usage: words <command> [arguments...]
 
-16. Command-line programs
-
-Exported functions are command-line programs: a first parameter that is
-a record becomes flags, comments become the help, and
-`fwp build --cli` puts every command in one executable.
+Play with words: repeat them, shout them, find them, and divide
+numbers.
 
 commands:
   say         Repeat words.
@@ -121,7 +147,7 @@ error on stderr and exits with 1:
 export divide : I64 -> I64 -> Result[I64, String]
 ```
 
-```
+```console
 $ ./words say --times x
 words say: option `--times`: cannot parse `x` as I64
 usage: words say [options] [WORDS...]
@@ -135,9 +161,10 @@ $ echo $?
 1
 ```
 
-As in tutorial 7, the last argument may come from standard input, one
-value per line, and `--fn` builds one function on its own. A function
-that returns an `Option` is a filter: `None` writes nothing.
+## Standard input
+
+The last argument may come from standard input, one value per line. A
+function that returns an `Option` is a filter: `None` writes nothing.
 
 ```fwp
 # Keep the lines that are not blank.
@@ -145,17 +172,23 @@ export non-blank : String -> Option[String]
 non-blank = if (trim | eq "") (const None) Some
 ```
 
-```
+```console
 $ printf 'one\n\n  \ntwo\n' | ./words non-blank
 one
 two
-$ fwp build main.fwp --fn divide -o divide
+```
+
+`--fn` builds one exported function on its own, as a program of its
+own (it needs no `# expose:` line: naming the function exposes it):
+
+```console
+$ fwp build words.fwp --fn divide -o divide
 $ printf '10\n20\n' | ./divide 100
 10
 5
 ```
 
-## Choices, optional arguments and exit statuses
+## Choices and optional arguments
 
 A type whose constructors have no fields is a set of choices: its values
 are written as the constructor names in any case, in kebab-case or not,
@@ -174,7 +207,7 @@ Volume =
 export shout : String -> Option[Volume] -> String
 ```
 
-```
+```console
 $ ./words shout hey
 hey
 $ ./words shout hey LOUD
@@ -183,10 +216,16 @@ $ ./words shout hey shouting
 words shout: argument 2: `shouting` is not one of quiet, normal, loud
 $ ./words help shout
 usage: words shout WORD [VOLUME]
-...
+
+Say a word, normally unless VOLUME says otherwise.
+
 arguments:
   WORD    String
   VOLUME  Volume, one of: quiet, normal, loud, optional
+
+options:
+  -h, --help     show this help
+      --version  show the version
 ```
 
 A command that returns an `Outcome` chooses its exit status:
@@ -202,7 +241,7 @@ containing =
     | then2 id (outcome.fail-if is-empty)
 ```
 
-```
+```console
 $ ./words containing pp apple fig
 apple
 $ ./words containing pp fig || echo none
@@ -212,39 +251,82 @@ none
 ## Completion and man pages
 
 Every program writes completion scripts for its commands, flags and
-choices (files for arguments named `FILE` or `DIR`), and a man page.
-With bash completion loaded (`--completions zsh` and `fish` work the same
-way; fish reads it with `| source`), `sh` then TAB completes to `shout`,
-and TAB after `shout hey` offers `quiet normal loud`:
+choices (files for arguments named `FILE` or `DIR`), and a man page:
 
-```
-$ source <(./words --completions bash)
-$ ./words sh<TAB>
-$ ./words shout hey <TAB>
-$ ./words --man > words.1 && man ./words.1
+```console
+$ ./words --completions bash > words.bash
+$ ./words --man > words.1
+$ ls words.1 words.bash
+words.1
+words.bash
 ```
 
-`fwp exec main.fwp say -n 3 ho` compiles and runs a function, and
-`fwp exec --cli main.fwp divide 1 0` runs the file as the `--cli` program
-would; both behave exactly as the native programs.
+In an interactive shell, `source words.bash` (or `source <(./words
+--completions bash)`) loads it: `./words sh` TAB completes to `shout`, and
+TAB after `./words shout hey` offers `quiet normal loud`. `--completions
+zsh` and `fish` work the same way; `man ./words.1` shows the man page.
+
+## Without building
+
+`fwp exec --cli` runs the file as the `--cli` program would, compiled and
+cached, and `fwp exec` runs one exported function:
+
+```console
+$ fwp exec --cli words.fwp divide 10 4
+2
+$ fwp exec words.fwp say -n 3 ho
+ho ho ho
+```
 
 ## A hand-written `main`
 
-The `cli` module parses arguments by the same rules for a program that
-reads `args ()` itself: `cli.parse` takes a record of defaults and the
+A program can also read its arguments itself. The `cli` module parses
+them by the same rules: `cli.parse` takes a record of defaults and the
 arguments, and returns the options and the positional arguments, or a
-message for `cli.usage-error`. The module also has `table.lines` for
-columns, `term.paint` and `ansi.*` for colours, `prompt.line`,
-`prompt.confirm` and `prompt.password` for questions, `progress.show`
-for a status line on a terminal, and the library has `csv` for CSV files
-and the `path`, `file`, `dir` and `process` functions that command-line
-programs need.
+message for `cli.usage-error`. [`greet.fwp`](greet.fwp):
+
+```fwp
+# Greet people, parsing the command line by hand.
+
+Flags = {
+    # -l  shout the greeting
+    loud: Bool,
+}
+
+greeting : Flags -> List[String] -> String
+greeting = curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ")
+    | if .0 (.1 | upper) .1)
+
+main = () | args | cli.parse Flags { loud = False } | match
+    Ok _ -> uncurry greeting | print
+    Err _ -> cli.usage-error "usage: greet [-l] NAME..."
+```
+
+```console
+$ fwp build greet.fwp -o greet
+$ ./greet -l ada lovelace
+HELLO, ADA LOVELACE
+$ ./greet --quiet ada
+unknown option `--quiet`
+usage: greet [-l] NAME...
+```
+
+The `cli` module also has `table.lines` for columns, `term.paint` and
+`ansi.*` for colours, `prompt.line`, `prompt.confirm` and
+`prompt.password` for questions, and `progress.show` for a status line on
+a terminal; the library has `csv` for CSV files and the `path`, `file`,
+`dir` and `process` functions that command-line programs need.
 
 ## The program
 
-[`main.fwp`](main.fwp):
+[`words.fwp`](words.fwp):
 
 ```fwp
+# Play with words: repeat them, shout them, find them, and divide
+# numbers.
+#
+# expose: cli
+
 export version : String
 version = "0.3.0"
 
@@ -306,52 +388,7 @@ export containing : String -> List[String] -> Outcome[List[String]]
 containing =
     curry (fork filter (.0 | string.contains) .1)
     | then2 id (outcome.fail-if is-empty)
-
-main = [
-    ["hi", "there"]
-    | say Options { upper = False, times = 2, sep = "-" }
-    | print,
-    divide 9 2 | echo,
-    divide 9 0 | echo,
-    ["a", " ", "b"] | filter-map non-blank | echo,
-    shout "hey" (Some Loud) | print,
-    ["apple", "fig"] | containing "pp" | echo,
-    ["fig"] | containing "pp" | .status | echo,
-    ["-u", "--times=2", "hi", "--", "-x"]
-    | cli.parse Options { upper = False, times = 1, sep = " " }
-    | echo,
-    ["--times", "many"]
-    | cli.parse Options { upper = False, times = 1, sep = " " }
-    | echo,
-    [["command", "arguments"], ["say", "WORDS..."], ["divide", "N D"]]
-    | table.lines
-    | each print,
-    "docs/cli.md" | both path.dirname path.extension | echo,
-] | ignore
 ```
-
-Run it with `fwp run docs/tutorials/16-clis/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/16-clis/main.fwp -o clis`. The output is
-[`main.out`](main.out):
-
-```
-hi-hi-there-there
-Ok 4
-Err "cannot divide by zero"
-["a", "b"]
-HEY!
-Outcome {output = ["apple"], status = 0}
-1
-Ok (Options {sep = " ", times = 2, upper = True}, ["hi", "-x"])
-Err "option `--times`: cannot parse `many` as I64"
-command  arguments
-say      WORDS...
-divide   N D
-("docs", "md")
-```
-
-`main` calls the commands as ordinary functions, which is how the output
-is checked; the shell sessions above show them as programs.
 
 ---
 

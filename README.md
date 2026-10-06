@@ -40,36 +40,39 @@ main =
 - **Many outputs.** An interpreter and native executables with identical
   output; one executable per exported function, joined by a typed pipe
   protocol; WebAssembly; fat binaries; C libraries and C interop.
-- **Command-line programs.** Any exported function is a CLI: a record
-  parameter becomes flags, doc comments become `--help`, and
-  `fwp build --cli` makes one executable with a subcommand per function.
-- **REST and OpenAPI.** Any exported function is also a REST endpoint
-  with a typed JSON contract (forms, file uploads and text or CSV
-  responses where declared): `fwp build --rest` makes one HTTP server,
-  which serves the OpenAPI 3.1 document derived from the types, and
-  `fwp openapi --import` turns any API's OpenAPI or Swagger document
-  (JSON or YAML) into typed client functions.
+- **One function, three interfaces.** A line `# expose: cli, rest, mcp`
+  makes exported functions command-line programs, REST endpoints or MCP
+  tools, with no interface code: the types are the
+  contract and the comments the documentation
+  ([docs/interfaces.md](docs/interfaces.md)).
+- **Command-line programs.** A record parameter becomes flags, doc
+  comments become `--help`, and `fwp build --cli` makes one executable
+  with a subcommand per function, shell completion and a man page.
+- **REST and OpenAPI.** Each endpoint has a typed JSON contract (forms,
+  file uploads and text or CSV responses where declared): `fwp build
+  --rest` makes one HTTP server, which serves the OpenAPI 3.1 document
+  derived from the types, and `fwp openapi --import` turns any API's
+  OpenAPI or Swagger document (JSON or YAML) into typed client functions.
+- **MCP.** `fwp build --mcp` makes a server of tools for AI applications,
+  on the stateless Model Context Protocol (2026-07-28), over stdio or
+  HTTP, with JSON Schemas derived from the types.
 - **In the browser.** The compiler and interpreter build for WebAssembly;
   a playground page checks, formats and runs programs without a server,
   tasks and channels included where the browser has JavaScript Promise
   Integration (Chrome and Edge 137 and later).
-- **gRPC.** Any exported function is also a gRPC method, with streams
-  decided by its type (`Iterator` and `Channel`), deadlines, metadata and
-  statuses: `fwp build --grpc` makes one server, with reflection and
-  health checking, and `fwp proto --import` turns any `.proto` file into
-  typed clients and server routes. Calls and servers run concurrently on
-  the task scheduler.
 - **HTTP/2 and WebSocket.** The HTTP server speaks HTTP/1.1 and HTTP/2
   (h2 with ALPN, h2c) with the same handlers, compresses responses, and
   upgrades connections to WebSocket sessions, which are pairs of
   channels; the client speaks both versions and WebSocket too.
 - **One program, two deployments.** The same source builds into one
-  executable or into gRPC services, one per module you name, whose calls
-  to each other go over HTTP/2.
+  executable or into services, one per module you name, whose calls to
+  each other go over gRPC, with streams decided by the types (`Iterator`
+  and `Channel`), deadlines, metadata and statuses; the functions do not
+  change.
 
 ## Quick start
 
-Requirements: Rust (stable) and a C compiler. For TLS (HTTPS, gRPC over
+Requirements: Rust (stable) and a C compiler. For TLS (HTTPS, services over
 TLS): OpenSSL 3 (`libssl3`; to build native programs that use it, also
 `libssl-dev`). Optionally, for WebAssembly: clang with a WASI sysroot
 (Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`, `lld`) and node.
@@ -95,7 +98,7 @@ Linux. More to try:
 | `fwp build examples/cli/todo.fwp --cli -o todo && ./todo --help` | a command-line program |
 | `fwp serve --rest examples/rest/books.fwp` | a REST API, with `/openapi.json` |
 | `fwp openapi examples/rest/books.fwp` | its OpenAPI document |
-| `fwp serve --grpc examples/grpc/weather.fwp` | a gRPC server, with reflection |
+| `fwp build examples/rest/books.fwp --mcp -o books-mcp` | an MCP server of the same functions |
 | `fwp test --std` | the standard library's own tests |
 | `fwp fmt --check . && fwp lint examples` | formatting and lint checks |
 | `fwp lsp` | the language server, for editors |
@@ -114,17 +117,17 @@ python3 -m http.server -d web 8000
 
 | Document | Contents |
 |---|---|
-| [docs/tutorials](docs/tutorials/README.md) | twenty-one tutorials, from pipes to gRPC services, fwp in the browser, command-line programs, REST APIs, gRPC, TLS, WebSockets and HTTP/2, and reverse-mode autodiff |
+| [docs/tutorials](docs/tutorials/README.md) | twenty-one tutorials, from pipes to split services, fwp in the browser, and building real command-line programs, REST APIs and MCP servers, step by step |
 | [docs/reference.md](docs/reference.md) | the language, the `fwp` command, targets, C interop, formatter, linter and language server |
 | [docs/stdlib.md](docs/stdlib.md) | every standard library module and signature |
 | [docs/concurrency.md](docs/concurrency.md) | tasks, networking, HTTP, JSON, logs, metrics |
-| [docs/cli.md](docs/cli.md) | any function as a command-line program: flags, choices, environment variables, help, subcommands, exit statuses, shell completion, man pages |
-| [docs/rest.md](docs/rest.md) | any function as a REST endpoint: routes, the JSON codec, forms and files, content negotiation, OpenAPI documents and generated clients |
-| [docs/interfaces.md](docs/interfaces.md) | one function as a command, a REST endpoint and a gRPC method, compared |
-| [docs/grpc.md](docs/grpc.md) | any function as a gRPC method: streams, deadlines, metadata, statuses, reflection, and clients and servers from `.proto` files |
-| [docs/tls.md](docs/tls.md) | TLS with the system's OpenSSL: HTTPS servers and clients, REST over HTTPS, gRPC over TLS |
+| [docs/cli.md](docs/cli.md) | functions as a command-line program: flags, choices, environment variables, help, subcommands, exit statuses, shell completion, man pages |
+| [docs/rest.md](docs/rest.md) | functions as REST endpoints: routes, the JSON codec, forms and files, content negotiation, OpenAPI documents and generated clients |
+| [docs/interfaces.md](docs/interfaces.md) | exposing functions (`# expose:`); one function as a command, a REST endpoint and an MCP tool, compared |
+| [docs/mcp.md](docs/mcp.md) | functions as the tools of a stateless MCP server, over stdio or HTTP |
+| [docs/tls.md](docs/tls.md) | TLS with the system's OpenSSL: HTTPS servers and clients, REST over HTTPS, services over TLS |
 | [docs/protocol.md](docs/protocol.md) | executables and the typed pipe protocol |
-| [docs/services.md](docs/services.md) | one program as one executable or as gRPC services |
+| [docs/services.md](docs/services.md) | one program as one executable or as services that talk gRPC: streams, deadlines, metadata, statuses |
 | [docs/benchmarks.md](docs/benchmarks.md) | fwp against C and Rust on five programs, and what the gaps come from |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
 | [PLAN.md](PLAN.md) | what was delivered and what comes next |
@@ -141,8 +144,7 @@ web/        the playground: fwp.wasm in a page, with a small WASI in JavaScript
 scripts/    build-playground.sh
 lib/        the standard library, written in fwp (with its tests)
 examples/   a word counter, a JSON API server, executable tools, a shop
-            split into services, command-line programs, a REST bookstore,
-            gRPC services
+            split into services, command-line programs, a REST bookstore
 tests/      golden programs, type-check and lint snapshots, protocol, HTTP,
             TLS, FFI, WebAssembly, fat-binary, formatter, language server,
             services, REST, gRPC, browser (fwp.wasm), compile cache, GC,

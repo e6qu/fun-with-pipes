@@ -1,5 +1,7 @@
 # A REST API that exercises every way an argument can arrive and a result
 # can leave (tests/rest.rs).
+#
+# expose: rest, cli
 
 Item = {
     id: I64,

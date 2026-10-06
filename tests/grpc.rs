@@ -1,12 +1,12 @@
-//! gRPC (docs/grpc.md): servers of exported functions (`fwp serve --grpc`,
-//! `fwp build --grpc`) and of routes generated from `.proto` files
-//! (`fwp proto --import`), called by interpreted and native fwp clients in
-//! every combination, with streaming, deadlines, metadata, statuses,
-//! concurrency, server reflection and health checking; the generated files
-//! (`.proto` and fwp modules) against the checked-in ones; and
-//! interoperability with Go's HTTP/2 client and, when installed, grpcurl.
+//! gRPC between the modules of a split program (docs/services.md): a
+//! module served by the interpreter (`fwp serve file module`) and as a
+//! native executable (`fwp build --service`), called by interpreted and
+//! native clients in every combination, with every kind of call (streams
+//! from `Iterator` and `Channel` types), deadlines, metadata, statuses and
+//! concurrency; and interoperability of the servers with Go's HTTP/2
+//! client.
 //!
-//! `FWP_BLESS=1` rewrites the expected outputs and generated files.
+//! `FWP_BLESS=1` rewrites the expected outputs.
 
 use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
@@ -176,154 +176,41 @@ fn build(args: &[&str], cwd: &Path) {
     assert!(o.status.success(), "fwp build {:?}: {}", args, render(&o));
 }
 
-/// The greeter served by the interpreter and as a native executable.
+/// The greeter served by the interpreter and as a native executable: the
+/// module `greeter` of client.fwp, split off with `--service`.
 fn greeter_servers(native_dir: Option<&Path>) -> Vec<Server> {
     let mut v = Vec::new();
     let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc", "--interp"])
-        .arg(dir().join("greeter.fwp"))
+    cmd.args(["serve", "--interp"])
+        .arg(dir().join("client.fwp"))
+        .arg("greeter")
         .args(["--listen", "127.0.0.1:0"]);
     v.push(start(cmd));
     if let Some(d) = native_dir {
+        let out = d.join("servers");
         build(
             &[
-                dir().join("greeter.fwp").to_str().unwrap(),
-                "--grpc",
+                dir().join("client.fwp").to_str().unwrap(),
+                "--service",
+                "greeter",
                 "-o",
-                d.join("greeter").to_str().unwrap(),
+                out.to_str().unwrap(),
             ],
-            d,
+            &dir(),
         );
-        let mut cmd = Command::new(d.join("greeter"));
+        let mut cmd = Command::new(out.join("greeter"));
         cmd.args(["--listen", "127.0.0.1:0"]);
         v.push(start(cmd));
     }
     v
 }
 
-// ------------------------------------------------------------ generated files
-
-#[test]
-fn generated_files_are_current() {
-    // the .proto of the greeter
-    let mut cmd = Command::new(fwp());
-    cmd.args(["proto", "--grpc", "greeter.fwp"])
-        .current_dir(dir());
-    let o = run(cmd, 120);
-    assert!(o.status.success(), "{}", render(&o));
-    expect_file(
-        &dir().join("greeter.proto"),
-        &String::from_utf8_lossy(&o.stdout),
-        "fwp proto --grpc",
-    );
-    // modules generated from .proto files
-    for (proto, module) in [
-        ("greeter.proto", "roundtrip/gen.fwp"),
-        ("hello/hello.proto", "hello/gen.fwp"),
-        ("reflection/reflection.proto", "reflection/gen.fwp"),
-    ] {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["proto", "--import", proto]).current_dir(dir());
-        let o = run(cmd, 120);
-        assert!(o.status.success(), "{}", render(&o));
-        expect_file(
-            &dir().join(module),
-            &String::from_utf8_lossy(&o.stdout),
-            "fwp proto --import",
-        );
-    }
-    // protoc accepts the generated .proto, when installed
-    if have("protoc", "--version") {
-        let out = scratch("protoc");
-        let o = run(
-            {
-                let mut c = Command::new("protoc");
-                c.arg("-I")
-                    .arg(dir())
-                    .arg(format!("--descriptor_set_out={}", out.join("d").display()))
-                    .arg(dir().join("greeter.proto"));
-                c
-            },
-            60,
-        );
-        assert!(o.status.success(), "{}", render(&o));
-    }
-}
-
-#[test]
-fn proto_import_errors() {
-    let d = scratch("import-errors");
-    for (text, msg) in [
-        (
-            "syntax = \"proto3\"; message A { B b = 1; }",
-            "unknown type `B`",
-        ),
-        (
-            "syntax = \"proto3\"; message A { group G = 1 {} }",
-            "groups are not supported",
-        ),
-        (
-            "syntax = \"proto3\"; message A { int32 x = 0; }",
-            "invalid number",
-        ),
-        (
-            "syntax = \"proto3\"; import \"missing.proto\";",
-            "missing.proto",
-        ),
-        (
-            "syntax = \"proto3\"; message A { int32 x = 1 }",
-            "expected `;`",
-        ),
-    ] {
-        std::fs::write(d.join("x.proto"), text).unwrap();
-        let mut cmd = Command::new(fwp());
-        cmd.args(["proto", "--import", "x.proto"]).current_dir(&d);
-        let o = run(cmd, 60);
-        let r = render(&o);
-        assert!(!o.status.success() && r.contains(msg), "{}: {}", text, r);
-    }
-}
-
-#[test]
-fn grpc_build_errors() {
-    let d = scratch("errors");
-    for (text, msg) in [
-        ("x = 1\n", "exports no functions to serve"),
-        (
-            "# grpc: Bad Name\nexport f : I64 -> I64\nf = id\n",
-            "expected `Method`",
-        ),
-        (
-            "# grpc: A\nexport f : I64 -> I64\nf = id\n\n# grpc: A\nexport g : I64 -> I64\ng = id\n",
-            "have the same gRPC method",
-        ),
-        (
-            "export f : (I64 -> I64) -> I64\nf = apply 1\n",
-            "cannot be sent to a service",
-        ),
-    ] {
-        std::fs::write(d.join("svc.fwp"), text).unwrap();
-        let mut cmd = Command::new(fwp());
-        cmd.args(["proto", "--grpc", "svc.fwp"]).current_dir(&d);
-        let o = run(cmd, 60);
-        let r = render(&o);
-        assert!(!o.status.success() && r.contains(msg), "{}: {}", text, r);
-    }
-    // gRPC needs the native target
-    let mut cmd = Command::new(fwp());
-    cmd.args(["build", "--target", "wasm32-wasi", "client.fwp", "-o"])
-        .arg(d.join("c.wasm"))
-        .current_dir(dir().join("hello"));
-    let o = run(cmd, 60);
-    assert!(!o.status.success(), "{}", render(&o));
-}
-
-// ---------------------------------------------- exported functions over gRPC
+// ------------------------------------------------------------------ calls
 
 /// Every kind of call of greeter.fwp: interpreted and native servers,
 /// interpreted and native clients.
 #[test]
-fn exported_functions_are_served() {
+fn every_kind_of_call() {
     let native = have_cc();
     let d = scratch("served");
     let servers = greeter_servers(native.then_some(d.as_path()));
@@ -401,194 +288,6 @@ fn calls_are_concurrent() {
     }
 }
 
-/// The module `fwp proto --import` generates from the .proto that `fwp
-/// proto --grpc` prints calls the service.
-#[test]
-fn imported_proto_round_trip() {
-    let native = have_cc();
-    let d = scratch("roundtrip");
-    let servers = greeter_servers(native.then_some(d.as_path()));
-    let rt = dir().join("roundtrip");
-    if native {
-        build(
-            &["client.fwp", "-o", d.join("client").to_str().unwrap()],
-            &rt,
-        );
-    }
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--interp", "client.fwp", &s.addr])
-            .current_dir(&rt);
-        let out = render(&run(cmd, 120));
-        expect_file(&rt.join("client.out"), &out, "interpreted client");
-        if native {
-            let mut cmd = Command::new(d.join("client"));
-            cmd.arg(&s.addr);
-            expect_file(
-                &rt.join("client.out"),
-                &render(&run(cmd, 120)),
-                "native client",
-            );
-        }
-    }
-}
-
-/// Server reflection and health checking, by a reflection client written
-/// with a module generated from reflection.proto.
-#[test]
-fn reflection_and_health() {
-    let native = have_cc();
-    let d = scratch("reflection");
-    let servers = greeter_servers(native.then_some(d.as_path()));
-    let rd = dir().join("reflection");
-    if native {
-        build(
-            &["client.fwp", "-o", d.join("client").to_str().unwrap()],
-            &rd,
-        );
-    }
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--interp", "client.fwp", &s.addr])
-            .current_dir(&rd);
-        expect_file(
-            &rd.join("client.out"),
-            &render(&run(cmd, 120)),
-            "interpreted client",
-        );
-        if native {
-            let mut cmd = Command::new(d.join("client"));
-            cmd.arg(&s.addr);
-            expect_file(
-                &rd.join("client.out"),
-                &render(&run(cmd, 120)),
-                "native client",
-            );
-        }
-    }
-}
-
-// --------------------------------------------- services from a .proto file
-
-/// A service implemented from hello.proto with `grpc.serve` and the
-/// generated routes, and called with the generated client functions.
-#[test]
-fn routes_from_a_proto_file() {
-    let native = have_cc();
-    let d = scratch("hello");
-    let hd = dir().join("hello");
-    let mut servers = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
-        .current_dir(&hd);
-    servers.push(start(cmd));
-    if native {
-        build(
-            &["server.fwp", "-o", d.join("server").to_str().unwrap()],
-            &hd,
-        );
-        build(
-            &["client.fwp", "-o", d.join("client").to_str().unwrap()],
-            &hd,
-        );
-        let mut cmd = Command::new(d.join("server"));
-        cmd.arg("127.0.0.1:0");
-        servers.push(start(cmd));
-    }
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--interp", "client.fwp", &s.addr])
-            .current_dir(&hd);
-        expect_file(
-            &hd.join("client.out"),
-            &render(&run(cmd, 120)),
-            "interpreted client",
-        );
-        if native {
-            let mut cmd = Command::new(d.join("client"));
-            cmd.arg(&s.addr);
-            expect_file(
-                &hd.join("client.out"),
-                &render(&run(cmd, 120)),
-                "native client",
-            );
-        }
-    }
-}
-
-/// Server reflection of the routes of hello.proto: the generated module
-/// keeps the descriptors of hello.proto and of the files it imports, which
-/// `grpc.serve` answers reflection requests with (v1 and v1alpha), with
-/// interpreted and native servers and clients, and grpcurl when installed.
-#[test]
-fn reflection_of_routes() {
-    let native = have_cc();
-    let d = scratch("routes-reflection");
-    let hd = dir().join("hello");
-    let rd = dir().join("reflection");
-    let mut servers = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
-        .current_dir(&hd);
-    servers.push(start(cmd));
-    if native {
-        build(
-            &["server.fwp", "-o", d.join("server").to_str().unwrap()],
-            &hd,
-        );
-        build(
-            &["routes.fwp", "-o", d.join("routes").to_str().unwrap()],
-            &rd,
-        );
-        let mut cmd = Command::new(d.join("server"));
-        cmd.arg("127.0.0.1:0").env("FWP_GC_STRESS", "16");
-        servers.push(start(cmd));
-    }
-    let grpcurl = have("grpcurl", "-version");
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--interp", "routes.fwp", &s.addr])
-            .current_dir(&rd);
-        expect_file(
-            &rd.join("routes.out"),
-            &render(&run(cmd, 120)),
-            "interpreted client",
-        );
-        if native {
-            let mut cmd = Command::new(d.join("routes"));
-            cmd.arg(&s.addr).env("FWP_GC_STRESS", "16");
-            expect_file(
-                &rd.join("routes.out"),
-                &render(&run(cmd, 120)),
-                "native client",
-            );
-        }
-        if grpcurl {
-            let mut out = String::new();
-            let calls: Vec<Vec<&str>> = vec![
-                vec!["list"],
-                vec!["describe", "helloworld.Greeter"],
-                vec!["describe", "helloworld.HelloRequest"],
-                vec!["describe", "google.protobuf.Timestamp"],
-                vec!["-d", r#"{"name": "Ada"}"#, "helloworld.Greeter/SayHello"],
-                vec![
-                    "-d",
-                    r#"{"name": "a"} {"name": "b"}"#,
-                    "helloworld.Greeter/Chat",
-                ],
-            ];
-            for args in calls {
-                let (flags, tail) = args.split_at(if args[0] == "-d" { 2 } else { 0 });
-                let mut cmd = Command::new("grpcurl");
-                cmd.arg("-plaintext").args(flags).arg(&s.addr).args(tail);
-                out.push_str(&format!("$ grpcurl {}\n", args.join(" ")));
-                out.push_str(&render(&run(cmd, 60)));
-            }
-            expect_file(&hd.join("grpcurl.out"), &out, "grpcurl");
-        }
-    }
-}
-
 // ------------------------------------------------------------ interoperability
 
 /// Go's HTTP/2 client (the standard library only) calls both servers.
@@ -619,172 +318,5 @@ fn go_client_interoperates() {
             &render(&run(cmd, 120)),
             "the Go client",
         );
-    }
-}
-
-/// grpcurl (grpc-go), when installed: reflection, calls, streams,
-/// metadata, deadlines and health checks.
-#[test]
-fn grpcurl_interoperates() {
-    if !have("grpcurl", "-version") {
-        return;
-    }
-    let d = scratch("grpcurl");
-    let servers = greeter_servers(have_cc().then_some(d.as_path()));
-    for s in &servers {
-        let mut out = String::new();
-        let calls: Vec<(Vec<&str>, Vec<&str>)> = vec![
-            (vec![], vec!["list"]),
-            (vec![], vec!["describe", "test.Greeter.Count"]),
-            (
-                vec!["-d", r#"{"name": "Ada"}"#],
-                vec!["test.Greeter/SayHello"],
-            ),
-            (vec!["-d", r#"{"arg1": 3}"#], vec!["test.Greeter/Count"]),
-            (vec!["-d", r#"{"arg1": 2}"#], vec!["test.Greeter/Countdown"]),
-            (
-                vec!["-d", r#"{"arg1": 1} {"arg1": 2}"#],
-                vec!["test.Greeter/Total"],
-            ),
-            (
-                vec!["-d", r#"{"arg1": "a"} {"arg1": "b"}"#],
-                vec!["test.Greeter/Shout"],
-            ),
-            (vec!["-H", "x-user: grpcurl"], vec!["test.Greeter/Whoami"]),
-            (
-                vec!["-v", "-d", r#"{"arg1": "Ann"}"#],
-                vec!["test.Greeter/Tagged"],
-            ),
-            (
-                vec!["-d", r#"{"arg1": "ghost"}"#],
-                vec!["test.Greeter/Find"],
-            ),
-            (
-                vec!["-d", r#"{"arg1": 8, "arg2": 0}"#],
-                vec!["test.Greeter/Divide"],
-            ),
-            (
-                vec!["-d", r#"{"arg1": 2000}"#, "-max-time", "0.5"],
-                vec!["test.Greeter/Nap"],
-            ),
-            (vec![], vec!["grpc.health.v1.Health/Check"]),
-        ];
-        for (flags, tail) in calls {
-            let mut cmd = Command::new("grpcurl");
-            cmd.arg("-plaintext").args(&flags).arg(&s.addr).args(&tail);
-            out.push_str(&format!(
-                "$ grpcurl {} {}\n",
-                flags.join(" "),
-                tail.join(" ")
-            ));
-            // the server or grpcurl may notice the deadline first
-            out.push_str(&render(&run(cmd, 60)).replace("context deadline", "deadline"));
-        }
-        expect_file(&dir().join("grpcurl.out"), &out, "grpcurl");
-    }
-}
-
-// ------------------------------------------------------------------ examples
-
-/// examples/grpc: the chat room (a service from chat.proto with a hub
-/// task) and the weather service (exported functions), interpreted and
-/// native.
-#[test]
-fn examples_run() {
-    let ex = root().join("examples/grpc");
-    let native = have_cc();
-    let d = scratch("examples");
-    // chat.fwp is what `fwp proto --import` makes of chat.proto
-    let mut cmd = Command::new(fwp());
-    cmd.args(["proto", "--import", "chat.proto"])
-        .current_dir(&ex);
-    let o = run(cmd, 60);
-    expect_file(
-        &ex.join("chat.fwp"),
-        &String::from_utf8_lossy(&o.stdout),
-        "chat.fwp",
-    );
-    let mut servers = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "chat-server.fwp", "127.0.0.1:0"])
-        .current_dir(&ex);
-    servers.push(start(cmd));
-    if native {
-        build(
-            &[
-                "chat-server.fwp",
-                "-o",
-                d.join("chat-server").to_str().unwrap(),
-            ],
-            &ex,
-        );
-        build(
-            &[
-                "chat-client.fwp",
-                "-o",
-                d.join("chat-client").to_str().unwrap(),
-            ],
-            &ex,
-        );
-        let mut cmd = Command::new(d.join("chat-server"));
-        cmd.arg("127.0.0.1:0");
-        servers.push(start(cmd));
-    }
-    let expected = "room: ada joined\nada: hello\nada: bye\n";
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args(["run", "--interp", "chat-client.fwp", &s.addr])
-            .current_dir(&ex);
-        assert_eq!(render(&run(cmd, 60)), expected);
-        if native {
-            let mut cmd = Command::new(d.join("chat-client"));
-            cmd.arg(&s.addr);
-            assert_eq!(render(&run(cmd, 60)), expected);
-        }
-        assert!(s.wait_log("cancelled by the client (in chat.Room/Subscribe)"));
-    }
-    // the weather client prints the same with the service local or remote
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "forecast-client.fwp"])
-        .current_dir(&ex);
-    let local = render(&run(cmd, 60));
-    assert!(local.contains("Atlantis is not a known place"), "{}", local);
-    let mut cmd = Command::new(fwp());
-    cmd.args([
-        "serve",
-        "--grpc",
-        "--interp",
-        "weather.fwp",
-        "--listen",
-        "127.0.0.1:0",
-    ])
-    .current_dir(&ex);
-    let mut servers = vec![start(cmd)];
-    if native {
-        build(
-            &[
-                "weather.fwp",
-                "--grpc",
-                "-o",
-                d.join("weather").to_str().unwrap(),
-            ],
-            &ex,
-        );
-        let mut cmd = Command::new(d.join("weather"));
-        cmd.args(["--listen", "127.0.0.1:0"]);
-        servers.push(start(cmd));
-    }
-    for s in &servers {
-        let mut cmd = Command::new(fwp());
-        cmd.args([
-            "run",
-            "--interp",
-            "--service",
-            "weather",
-            "forecast-client.fwp",
-        ])
-        .env("FWP_SERVICE_WEATHER", &s.addr)
-        .current_dir(&ex);
-        assert_eq!(render(&run(cmd, 60)), local);
     }
 }

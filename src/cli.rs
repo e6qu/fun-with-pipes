@@ -54,6 +54,11 @@ pub struct Docs {
     /// Variant types whose comment has a line `json: untagged`: their
     /// JSON form is the value of a constructor alone (`src/jsontype.rs`).
     pub untagged: BTreeSet<String>,
+    /// The `# expose:` line of the module's comment: the interfaces of
+    /// every exported function without its own `# expose:`.
+    pub expose: Option<Vec<String>>,
+    /// Invalid `# expose:` lines, reported by the interfaces.
+    pub expose_errors: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -70,6 +75,35 @@ pub struct FuncDoc {
     pub http: Vec<String>,
     /// The gRPC name of `# grpc:` (`src/rpc.rs`).
     pub grpc: Option<String>,
+    /// The interfaces of `# expose:` (`cli`, `rest`, `mcp`).
+    pub expose: Option<Vec<String>>,
+}
+
+/// The interfaces an exported function can be exposed as.
+pub const INTERFACES: &[&str] = &["cli", "rest", "mcp"];
+
+/// The interfaces of an `# expose:` line, or what is wrong with it.
+fn expose_line(text: &str) -> Result<Vec<String>, String> {
+    let names: Vec<String> = text
+        .split([' ', ','])
+        .filter(|n| !n.is_empty())
+        .map(str::to_string)
+        .collect();
+    if names.is_empty() {
+        return Err(format!(
+            "`# expose:` needs one or more of {}",
+            INTERFACES.join(", ")
+        ));
+    }
+    if let Some(n) = names.iter().find(|n| !INTERFACES.contains(&n.as_str())) {
+        return Err(format!(
+            "`# expose: {}`: unknown interface `{}` (expected {})",
+            text.trim(),
+            n,
+            INTERFACES.join(", ")
+        ));
+    }
+    Ok(names)
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -258,6 +292,12 @@ impl Docs {
                 if let Some(i) = block.iter().position(|l| l.starts_with("grpc:")) {
                     self.grpc = Some(block.remove(i)["grpc:".len()..].trim().to_string());
                 }
+                if let Some(i) = block.iter().position(|l| l.starts_with("expose:")) {
+                    match expose_line(&block.remove(i)["expose:".len()..]) {
+                        Ok(v) => self.expose = Some(v),
+                        Err(e) => self.expose_errors.push(e),
+                    }
+                }
                 let (http, rest): (Vec<String>, Vec<String>) = block
                     .into_iter()
                     .partition(|l| MODULE_HTTP.iter().any(|p| l.starts_with(p)));
@@ -335,6 +375,11 @@ impl Docs {
                     doc.http.push(t);
                 } else if let Some(g) = t.strip_prefix("grpc:") {
                     doc.grpc = Some(g.trim().to_string());
+                } else if let Some(e) = t.strip_prefix("expose:") {
+                    match expose_line(e) {
+                        Ok(v) => doc.expose = Some(v),
+                        Err(e) => self.expose_errors.push(format!("above `{}`: {}", name, e)),
+                    }
                 } else if !t.starts_with("fwp:allow") {
                     doc.lines.push(t);
                 }
@@ -342,6 +387,42 @@ impl Docs {
             doc.lines = trim_blank(doc.lines);
             self.funcs.entry(name).or_insert(doc);
         }
+    }
+
+    /// Whether the exported `name` is exposed as `interface`: its `#
+    /// expose:` line, else the module's.
+    pub fn exposed(&self, name: &str, interface: &str) -> bool {
+        let local = name.rsplit("::").next().unwrap_or(name);
+        self.funcs
+            .get(local)
+            .and_then(|d| d.expose.as_ref())
+            .or(self.expose.as_ref())
+            .is_some_and(|v| v.iter().any(|i| i == interface))
+    }
+
+    /// The first invalid `# expose:` line, or a line configuring an
+    /// interface the function is not exposed as.
+    pub fn check_expose(&self) -> Result<(), String> {
+        if let Some(e) = self.expose_errors.first() {
+            return Err(e.clone());
+        }
+        for (name, d) in &self.funcs {
+            let lines = [
+                ("cli", d.command.as_ref().map(|c| format!("command: {}", c))),
+                ("rest", d.http.first().cloned()),
+            ];
+            for (interface, line) in lines {
+                if let Some(l) = line {
+                    if !self.exposed(name, interface) {
+                        return Err(format!(
+                            "`# {}` above `{}`: `{}` is not exposed as {} (add `{}` to its `# expose:` line)",
+                            l, name, name, interface, interface
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     /// The field comments of a record type (by its name, without its
@@ -949,19 +1030,28 @@ pub fn version(prog: &Program) -> Result<Option<String>, String> {
     }
 }
 
+/// The error of an interface no exported function is exposed as.
+pub fn none_exposed(interface: &str, what: &str) -> String {
+    format!(
+        "no exported function is exposed as {}: add a comment line `# expose: {}` above the `export` (or to the file's leading comment, for every export)",
+        what, interface
+    )
+}
+
 /// Whether an exported name is a command (not `version`, `defaults` or
 /// the defaults of a command).
 pub fn is_command(name: &str) -> bool {
     name != "version" && name != "defaults" && !name.ends_with(".defaults")
 }
 
-/// The exported functions of a program as commands; `prefix` is the
+/// The exported functions exposed as `cli` as commands; `prefix` is the
 /// program name of a multi-command program.
 pub fn commands(prog: &Program, prefix: Option<&str>) -> Result<Vec<Command>, String> {
     let version = version(prog)?;
+    prog.docs.check_expose()?;
     let mut out = Vec::new();
     for (name, fid) in &prog.exports {
-        if is_command(name) {
+        if is_command(name) && prog.docs.exposed(name, "cli") {
             out.push(command(prog, *fid, name, prefix, version.clone())?);
         }
     }

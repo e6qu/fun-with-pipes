@@ -181,39 +181,10 @@ pub fn env_var(module: &str) -> String {
 /// A hex fingerprint of a function's interface (its type and error type),
 /// sent by fwp clients in the `fwp-fingerprint` header.
 pub fn fingerprint(prog: &Program, ty: &MT, error: Option<&MT>) -> String {
-    fingerprint_as(prog, ty, error, None)
-}
-
-/// The fingerprint of a function of the root file served on its own
-/// (`--grpc`), whose types are those of module `main_as` to its callers.
-pub fn fingerprint_as(
-    prog: &Program,
-    ty: &MT,
-    error: Option<&MT>,
-    main_as: Option<&str>,
-) -> String {
     let mut canon = crate::proto::canonical_type(ty, prog);
     if let Some(e) = error {
         canon.push('!');
         canon.push_str(&crate::proto::canonical_type(e, prog));
-    }
-    if let Some(m) = main_as {
-        let name_char = |c: char| c.is_alphanumeric() || c == '.' || c == '_' || c == '-';
-        let mut out = String::new();
-        let mut rest = canon.as_str();
-        while let Some(i) = rest.find("main::") {
-            let before = rest[..i].chars().last();
-            out.push_str(&rest[..i]);
-            if before.is_none_or(|c| !name_char(c)) {
-                out.push_str(m);
-                out.push_str("::");
-            } else {
-                out.push_str("main::");
-            }
-            rest = &rest[i + "main::".len()..];
-        }
-        out.push_str(rest);
-        canon = out;
     }
     crate::proto::fingerprint(&canon)
         .iter()

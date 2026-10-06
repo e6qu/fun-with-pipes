@@ -1518,7 +1518,7 @@ fn endpoint_errors() {
             "# status: 99\nexport f : I64 -> I64\nf = id\n",
             "invalid `# status:` line `99`",
         ),
-        ("f : I64 -> I64\nf = id\n", "the program exports no functions to serve"),
+        ("f : I64 -> I64\nf = id\n", "no exported function is exposed as an endpoint"),
         (
             "# route: GET /openapi.json\nexport f : () -> I64\nf = const 1\n",
             "`GET /openapi.json` is a route of the server",
@@ -1558,7 +1558,7 @@ fn endpoint_errors() {
     ];
     for (i, (src, msg)) in cases.iter().enumerate() {
         let f = dir.join(format!("e{}.fwp", i));
-        std::fs::write(&f, src).unwrap();
+        std::fs::write(&f, format!("# expose: rest\n\n{}", src)).unwrap();
         for cmd in [&["openapi"][..], &["build", "--rest", "--emit-c"][..]] {
             let o = Command::new(fwp())
                 .args(cmd)
@@ -2188,7 +2188,7 @@ fn media_type_errors() {
         ),
     ] {
         let f = dir.join("bad.fwp");
-        std::fs::write(&f, src).unwrap();
+        std::fs::write(&f, format!("# expose: rest\n\n{}", src)).unwrap();
         let o = Command::new(fwp()).arg("openapi").arg(&f).output().unwrap();
         assert!(!o.status.success(), "{}", src);
         let err = String::from_utf8_lossy(&o.stderr);

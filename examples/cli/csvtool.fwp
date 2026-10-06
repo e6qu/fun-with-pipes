@@ -8,6 +8,8 @@
 #   ./csvtool cut -c name -c city --format tsv people.csv
 #   CSVTOOL_SEPARATOR=';' ./csvtool show export.csv
 #   source <(./csvtool --completions bash)
+#
+# expose: cli
 
 export version : String
 version = "1.0.0"

@@ -242,7 +242,7 @@ fn serve_rest_runs_a_native_server() {
     let file = dir.join("api.fwp");
     std::fs::write(
         &file,
-        "# route: GET /double/{n}\nexport double : I64 -> I64\ndouble = mul 2\n",
+        "# expose: rest\n# route: GET /double/{n}\nexport double : I64 -> I64\ndouble = mul 2\n",
     )
     .unwrap();
     let (mut child, addr) = start(&mut cache.fwp(&[
@@ -348,41 +348,4 @@ fn pipe_runs_native_stages() {
         String::from_utf8_lossy(&o.stderr)
     );
     assert_eq!(cache.entries().len(), 2);
-}
-
-#[test]
-fn serve_grpc_runs_a_native_server() {
-    if !have_cc() {
-        return;
-    }
-    let cache = Cache::new("grpc");
-    let ex = root().join("examples/grpc");
-    let local = output(
-        cache
-            .fwp(&["run", "--interp", "forecast-client.fwp"])
-            .current_dir(&ex),
-        b"",
-    );
-    let (mut server, addr) = start(
-        cache
-            .fwp(&["serve", "--grpc", "weather.fwp", "--listen", "127.0.0.1:0"])
-            .current_dir(&ex),
-    );
-    let remote = output(
-        cache
-            .fwp(&[
-                "run",
-                "--interp",
-                "--service",
-                "weather",
-                "forecast-client.fwp",
-            ])
-            .env("FWP_SERVICE_WEATHER", &addr)
-            .current_dir(&ex),
-        b"",
-    );
-    let _ = server.kill();
-    let _ = server.wait();
-    assert_eq!(render(&remote), render(&local));
-    assert_eq!(cache.entries().len(), 1, "the server ran interpreted");
 }

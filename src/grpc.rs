@@ -1,8 +1,8 @@
-//! gRPC for the interpreter (docs/grpc.md): HTTP/2 connections and streams
-//! on the task scheduler, the client stubs of split builds, servers of
-//! exported functions (`fwp serve`, `--grpc`) and of `GrpcRoute`s
-//! (`grpc.serve`), streaming, deadlines, metadata, health checking and
-//! server reflection, and the `grpc.*` and `pb.*` primitives. The C runtime
+//! gRPC for the interpreter, the transport of split programs
+//! (docs/services.md): HTTP/2 connections and streams on the task
+//! scheduler, the client stubs of split builds, the servers of their
+//! modules (`fwp serve`), streaming, deadlines, metadata, health checking
+//! and server reflection, and the `grpc.*` primitives. The C runtime
 //! implements the same in `runtime/fwp_rt_grpc.c`.
 //!
 //! Every connection has a reader task and a writer task. The reader parses
@@ -1581,12 +1581,10 @@ impl std::fmt::Debug for Obj {
     }
 }
 
-/// A call as an fwp value (`GrpcStream`): the client or the server side.
+/// The call a task serves (for its metadata).
 pub struct Call {
     conn: ConnRef,
     stream: StreamRef,
-    server: bool,
-    deadline: Option<Instant>,
 }
 
 /// The source of a received stream.
@@ -1776,8 +1774,6 @@ fn sink_value(conn: &ConnRef, stream: &StreamRef, enc: Encoder) -> Value {
 /// How a path is served.
 enum Route {
     Method(Rc<Method>),
-    /// An fwp function `GrpcStream -> ()`.
-    Fwp(Value),
     HealthCheck,
     HealthWatch,
     Reflection,
@@ -1912,17 +1908,13 @@ fn handle(it: &mut Interp, c: ConnRef, s: StreamRef, server: Rc<Server>) {
     let what = route_name(&server, &path);
     // calls of the program's functions (not of reflection and health
     // checking) are logged when they are cancelled
-    let logged = matches!(
-        server.routes.get(&path),
-        Some(Route::Method(_)) | Some(Route::Fwp(_))
-    );
+    let logged = matches!(server.routes.get(&path), Some(Route::Method(_)));
     let r = match server.routes.get(&path) {
         None => Ok(Err(Status::new(
             UNIMPLEMENTED,
             format!("unknown method {}", path),
         ))),
         Some(Route::Method(m)) => run_method(it, &c, &s, m, &headers, &what),
-        Some(Route::Fwp(h)) => run_fwp(it, &c, &s, h.clone(), &what),
         Some(Route::HealthCheck) | Some(Route::HealthWatch) => {
             health(it, &c, &s, &server, path == HEALTH_WATCH)
         }
@@ -2228,31 +2220,6 @@ fn run_method(
         Output::Chan(_) => {}
     }
     Ok(Ok(()))
-}
-
-fn call_value(c: &ConnRef, s: &StreamRef, server: bool, deadline: Option<Instant>) -> Value {
-    wrap(Native::Grpc(Obj::Call(Rc::new(Call {
-        conn: c.clone(),
-        stream: s.clone(),
-        server,
-        deadline,
-    }))))
-}
-
-fn run_fwp(
-    it: &mut Interp,
-    c: &ConnRef,
-    s: &StreamRef,
-    h: Value,
-    what: &str,
-) -> R<Result<(), Status>> {
-    let call = call_value(c, s, true, None);
-    let r = it.apply(h, vec![call]);
-    match outcome(it, r, None, what)? {
-        Ok(_) => Ok(Ok(())),
-        Err(Err(st)) => Ok(Err(st)),
-        Err(Ok(_)) => Ok(Ok(())),
-    }
 }
 
 // ------------------------------------------------------- protobuf helpers
@@ -2651,214 +2618,10 @@ fn field(prog: &Program, v: &Value, ty: &str, name: &str) -> Value {
     }
 }
 
-fn u64_of(v: &Value) -> u64 {
-    match v {
-        Value::U64(x) => *x,
-        other => other.as_i128().unwrap_or(0) as u64,
-    }
-}
-
 /// The `grpc.*` and `pb.*` primitives.
 pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value> {
     let _ = id;
     match sym {
-        // ----- protobuf wire format
-        "pb.parse" => {
-            let b = bytes_of(&a[0]);
-            Ok(opt(pb_fields(&b).map(|fs| {
-                Value::list(
-                    fs.iter()
-                        .map(|(num, wire, bits, data)| {
-                            Value::tuple(vec![
-                                Value::U64(*bits),
-                                Value::Bytes(Rc::from(*data)),
-                                Value::I64(*num as i64),
-                                Value::I64(*wire as i64),
-                            ])
-                        })
-                        .collect(),
-                )
-            })))
-        }
-        "pb.write" => {
-            let mut out = Vec::new();
-            for f in a[0].list_items() {
-                let Value::Record(fs) = &f else { continue };
-                let bits = u64_of(&fs[0]);
-                let data = bytes_of(&fs[1]);
-                let num = fs[2].as_i128().unwrap_or(0) as u32;
-                let wire = fs[3].as_i128().unwrap_or(0) as u8;
-                put_key(&mut out, num, wire);
-                match wire {
-                    0 => crate::protobuf::varint(&mut out, bits),
-                    1 => out.extend_from_slice(&bits.to_le_bytes()),
-                    5 => out.extend_from_slice(&(bits as u32).to_le_bytes()),
-                    _ => {
-                        crate::protobuf::varint(&mut out, data.len() as u64);
-                        out.extend_from_slice(&data);
-                    }
-                }
-            }
-            Ok(Value::Bytes(Rc::from(out)))
-        }
-        "pb.cast" => {
-            let f = &it.prog.funcs[id];
-            let (_, result) = f.ty.params(1);
-            let x = match &a[0] {
-                Value::U64(x) => *x as i128,
-                v => v.as_i128().unwrap_or(0),
-            };
-            let name = match result {
-                MT::Con(n, _) => n.trim_start_matches("std::"),
-                _ => "",
-            };
-            Ok(match name {
-                "I8" => Value::I8(x as i8),
-                "I16" => Value::I16(x as i16),
-                "I32" => Value::I32(x as i32),
-                "U8" => Value::U8(x as u8),
-                "U16" => Value::U16(x as u16),
-                "U32" => Value::U32(x as u32),
-                "U64" | "USize" => Value::U64(x as u64),
-                "I128" => Value::I128(x),
-                "U128" => Value::U128(x as u128),
-                _ => Value::I64(x as i64),
-            })
-        }
-        "pb.zigzag" => {
-            let n = a[0].as_i128().unwrap_or(0) as i64;
-            Ok(Value::U64(((n << 1) ^ (n >> 63)) as u64))
-        }
-        "pb.unzigzag" => {
-            let n = u64_of(&a[0]);
-            Ok(Value::I64(((n >> 1) as i64) ^ -((n & 1) as i64)))
-        }
-        "pb.f64-bits" => Ok(Value::U64(a[0].as_f64().unwrap_or(0.0).to_bits())),
-        "pb.f64-from-bits" => Ok(Value::F64(f64::from_bits(u64_of(&a[0])))),
-        "pb.f32-bits" => Ok(Value::U64(match &a[0] {
-            Value::F32(x) => x.to_bits() as u64,
-            other => (other.as_f64().unwrap_or(0.0) as f32).to_bits() as u64,
-        })),
-        "pb.f32-from-bits" => Ok(Value::F32(f32::from_bits(u64_of(&a[0]) as u32))),
-        "pb.unpack" => {
-            let wire = a[0].as_i128().unwrap_or(0);
-            let b = bytes_of(&a[1]);
-            let mut out = Vec::new();
-            let mut i = 0;
-            let ok = loop {
-                if i >= b.len() {
-                    break true;
-                }
-                match wire {
-                    1 | 5 => {
-                        let n = if wire == 1 { 8 } else { 4 };
-                        let Some(s) = b.get(i..i + n) else {
-                            break false;
-                        };
-                        let mut v = 0u64;
-                        for (k, c) in s.iter().enumerate() {
-                            v |= (*c as u64) << (8 * k);
-                        }
-                        out.push(Value::U64(v));
-                        i += n;
-                    }
-                    _ => {
-                        let mut x = 0u64;
-                        let mut done = false;
-                        for k in 0..10 {
-                            let Some(c) = b.get(i) else { break };
-                            i += 1;
-                            x |= ((c & 0x7f) as u64) << (7 * k);
-                            if c & 0x80 == 0 {
-                                done = true;
-                                break;
-                            }
-                        }
-                        if !done {
-                            break false;
-                        }
-                        out.push(Value::U64(x));
-                    }
-                }
-            };
-            Ok(opt(ok.then(|| Value::list(out))))
-        }
-        "pb.pack" => {
-            let wire = a[0].as_i128().unwrap_or(0);
-            let mut out = Vec::new();
-            for v in a[1].list_items() {
-                let x = u64_of(&v);
-                match wire {
-                    1 => out.extend_from_slice(&x.to_le_bytes()),
-                    5 => out.extend_from_slice(&(x as u32).to_le_bytes()),
-                    _ => crate::protobuf::varint(&mut out, x),
-                }
-            }
-            Ok(Value::Bytes(Rc::from(out)))
-        }
-        // ----- typed calls and handlers
-        "grpc.unary"
-        | "grpc.server-streaming"
-        | "grpc.client-streaming"
-        | "grpc.bidi-streaming" => typed_call(it, sym, a),
-        "grpc.unary-handler"
-        | "grpc.server-streaming-handler"
-        | "grpc._client-streaming-handler"
-        | "grpc._bidi-streaming-handler" => typed_handler(it, sym, a),
-        // ----- calls
-        "grpc.open" => {
-            let addr = a[0].as_str().to_string();
-            let path = a[1].as_str().to_string();
-            let deadline = it.grpc.deadline;
-            match open_call(it, &addr, &path, &[])? {
-                Ok((c, s, _)) => Ok(call_value(&c, &s, false, deadline)),
-                Err(e) => Err(grpc_error(UNAVAILABLE, &e)),
-            }
-        }
-        "grpc.send" => {
-            let b = bytes_of(&a[0]);
-            let call = the_call(&a[1])?;
-            if call.server {
-                send_msg(it, &call.conn, &call.stream, &b, false)?;
-                it.check_cancel()?;
-                return Ok(Value::unit());
-            }
-            if send_msg(it, &call.conn, &call.stream, &b, false)? {
-                return Ok(Value::unit());
-            }
-            Err(closed_error(it, &call)?)
-        }
-        "grpc.close-send" => {
-            let call = the_call(&a[0])?;
-            if !call.server {
-                send_data(it, &call.conn, &call.stream, &[], true)?;
-            }
-            Ok(Value::unit())
-        }
-        "grpc.recv" => {
-            let call = the_call(&a[0])?;
-            match recv(it, &call.conn, &call.stream, call.deadline)? {
-                Got::Msg(m) => Ok(opt(Some(Value::Bytes(Rc::from(m))))),
-                Got::End(st) if st.code == OK => Ok(opt(None)),
-                Got::End(st) => Err(grpc_error(st.code, &st.message)),
-                Got::Lost(m, _) => {
-                    if call.server {
-                        if s_bad(&call) {
-                            return Err(fail_call(it, Status::new(INVALID_ARGUMENT, m)));
-                        }
-                        return Err(Ctl::Cancelled);
-                    }
-                    Err(grpc_error(UNAVAILABLE, &m))
-                }
-            }
-        }
-        "grpc.cancel" => {
-            let call = the_call(&a[0])?;
-            if !call.server {
-                reset_stream(it, &call.conn, &call.stream, 8);
-            }
-            Ok(Value::unit())
-        }
         // ----- context
         "grpc.metadata" => {
             let hs = it
@@ -2928,11 +2691,6 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             }
             Ok(Value::tuple(vec![v, pairs_value(&md)]))
         }
-        "grpc.response-metadata" => {
-            let call = the_call(&a[0])?;
-            let md = response_metadata(&call.stream.borrow());
-            Ok(pairs_value(&md))
-        }
         "grpc.with-tls" => {
             // TlsOptions: alpn, ca-file, cert-file, insecure, key-file,
             // server-name
@@ -2968,63 +2726,6 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             it.grpc.deadline = saved;
             r
         }
-        // ----- serving
-        "grpc._serve" | "grpc._serve-tls" => {
-            // certificate and key first for TLS
-            let (files, a) = if sym == "grpc._serve-tls" {
-                (
-                    Some(tls::ServerFiles {
-                        cert: a[0].as_str().to_string(),
-                        key: a[1].as_str().to_string(),
-                        client_ca: a[2].as_str().to_string(),
-                    }),
-                    &a[3..],
-                )
-            } else {
-                (None, &a[..])
-            };
-            let ctx = server_tls(files).map_err(|e| {
-                Ctl::Fail(
-                    Value::tuple(vec![Value::str("tls"), Value::str(&e)]),
-                    MT::con("std::IoError"),
-                )
-            })?;
-            let addr = a[0].as_str().to_string();
-            let mut routes = HashMap::new();
-            for r in a[1].list_items() {
-                let path = field(it.prog, &r, "std::GrpcRoute", "path");
-                let h = field(it.prog, &r, "std::GrpcRoute", "handler");
-                routes.insert(path.as_str().to_string(), Route::Fwp(h));
-            }
-            let mut services = Vec::new();
-            for p in routes.keys() {
-                if let Some(p) = rpc::Path::parse(p) {
-                    if !services.contains(&p.full_service()) {
-                        services.push(p.full_service());
-                    }
-                }
-            }
-            routes.insert(HEALTH_CHECK.into(), Route::HealthCheck);
-            routes.insert(HEALTH_WATCH.into(), Route::HealthWatch);
-            let server = Rc::new(Server {
-                routes,
-                module: String::new(),
-                services,
-                reflection: None,
-            });
-            let l = bind(&addr).map_err(|e| {
-                Ctl::Fail(
-                    Value::tuple(vec![Value::str("listen"), Value::str(&e)]),
-                    MT::con("std::IoError"),
-                )
-            })?;
-            let local = l.local_addr().map(|a| a.to_string()).unwrap_or(addr);
-            let _ = it.out.flush();
-            let scheme = if ctx.is_some() { "tls://" } else { "" };
-            eprintln!("fwp: gRPC server listening on {}{}", scheme, local);
-            accept_loop(it, l, server, ctx)?;
-            Ok(Value::unit())
-        }
         "grpc._force" => {
             let cell = match native(&a[0])? {
                 Native::Grpc(Obj::Cell(c)) => c.clone(),
@@ -3038,184 +2739,6 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
             }
         }
         _ => Err(Ctl::Trap(format!("primitive `{}` is not implemented", sym))),
-    }
-}
-
-fn apply_bytes(it: &mut Interp, f: &Value, x: Value) -> R<Vec<u8>> {
-    match &it.apply(f.clone(), vec![x])? {
-        Value::Bytes(b) => Ok(b.to_vec()),
-        _ => Err(Ctl::Trap(
-            "internal: an encoder did not return bytes".into(),
-        )),
-    }
-}
-
-/// A received message as a `GrpcError` failure.
-fn got_error(g: Got) -> Ctl {
-    match g {
-        Got::End(st) if st.code == OK => grpc_error(INTERNAL, "missing response message"),
-        Got::End(st) => grpc_error(st.code, &st.message),
-        Got::Lost(m, _) => grpc_error(UNAVAILABLE, &m),
-        Got::Msg(_) => grpc_error(INTERNAL, "more than one response message"),
-    }
-}
-
-/// `grpc.unary`, `grpc.server-streaming`, `grpc.client-streaming` and
-/// `grpc.bidi-streaming`.
-fn typed_call(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
-    let (enc, dec) = (a[0].clone(), a[1].clone());
-    let path = a[2].as_str().to_string();
-    let addr = a[3].as_str().to_string();
-    let deadline = it.grpc.deadline;
-    let (c, s) = match open_call(it, &addr, &path, &[])? {
-        Ok((c, s, _)) => (c, s),
-        Err(e) => return Err(grpc_error(UNAVAILABLE, &e)),
-    };
-    if sym == "grpc.bidi-streaming" {
-        // requests are sent as responses arrive
-        let sender = spawn_sender(it, &c, &s, a[4].clone(), Encoder::Fwp(enc.clone()));
-        let ch = a[5].clone();
-        let r = (|| -> R<Value> {
-            loop {
-                match recv(it, &c, &s, deadline)? {
-                    Got::Msg(m) => {
-                        let v = it.apply(dec.clone(), vec![Value::Bytes(Rc::from(m))])?;
-                        if let Some(r) = it.prim_conc("channel.send", &mut [ch.clone(), v]) {
-                            r?;
-                        }
-                    }
-                    Got::End(st) if st.code == OK => return Ok(Value::unit()),
-                    g => return Err(got_error(g)),
-                }
-            }
-        })();
-        if let Some(e) = sender.finish(it) {
-            return Err(e);
-        }
-        if r.is_err() {
-            reset_stream(it, &c, &s, 8);
-        }
-        return r;
-    }
-    let r = (|| -> R<Value> {
-        let streaming_in = sym == "grpc.client-streaming";
-        if streaming_in {
-            let mut cur = a[4].clone();
-            while let Some((x, rest)) = iter_next(it, cur)? {
-                let b = apply_bytes(it, &enc, x)?;
-                if !send_msg(it, &c, &s, &b, false)? {
-                    let call = Call {
-                        conn: c.clone(),
-                        stream: s.clone(),
-                        server: false,
-                        deadline,
-                    };
-                    return Err(closed_error(it, &call)?);
-                }
-                cur = rest;
-            }
-            send_data(it, &c, &s, &[], true)?;
-        } else {
-            let b = apply_bytes(it, &enc, a[4].clone())?;
-            send_msg(it, &c, &s, &b, true)?;
-        }
-        if sym == "grpc.unary" || sym == "grpc.client-streaming" {
-            let msg = match recv(it, &c, &s, deadline)? {
-                Got::Msg(m) => m,
-                g => return Err(got_error(g)),
-            };
-            match recv(it, &c, &s, deadline)? {
-                Got::End(st) if st.code == OK => {}
-                g => return Err(got_error(g)),
-            }
-            return it.apply(dec.clone(), vec![Value::Bytes(Rc::from(msg))]);
-        }
-        let ch = a[5].clone();
-        loop {
-            match recv(it, &c, &s, deadline)? {
-                Got::Msg(m) => {
-                    let v = it.apply(dec.clone(), vec![Value::Bytes(Rc::from(m))])?;
-                    if let Some(r) = it.prim_conc("channel.send", &mut [ch.clone(), v]) {
-                        r?;
-                    }
-                }
-                Got::End(st) if st.code == OK => return Ok(Value::unit()),
-                g => return Err(got_error(g)),
-            }
-        }
-    })();
-    if r.is_err() {
-        reset_stream(it, &c, &s, 8);
-    }
-    r
-}
-
-/// The handlers of `grpc.serve` routes made from a decoder, an encoder and
-/// a function.
-fn typed_handler(it: &mut Interp, sym: &str, a: &mut [Value]) -> R<Value> {
-    let a: Vec<Value> = if sym.starts_with("grpc._") {
-        a.to_vec()
-    } else {
-        let mut v = vec![Value::unit()];
-        v.extend(a.iter().cloned());
-        v
-    };
-    let (iter_fn, dec, enc, f) = (&a[0], &a[1], &a[2], &a[3]);
-    let call = the_call(&a[4])?;
-    let (c, s) = (call.conn.clone(), call.stream.clone());
-    let streaming_in = sym.starts_with("grpc._");
-    let arg = if streaming_in {
-        let inc = Rc::new(Incoming {
-            conn: c.clone(),
-            stream: s.clone(),
-            server: true,
-            dec: Decoder::Fwp(dec.clone()),
-            what: String::new(),
-            deadline: None,
-            results: false,
-        });
-        let cell = wrap(Native::Grpc(Obj::Cell(Rc::new(StreamCell {
-            src: inc,
-            memo: RefCell::new(None),
-        }))));
-        it.apply(iter_fn.clone(), vec![cell])?
-    } else {
-        let m = match recv_one(it, &c, &s)? {
-            Ok(m) => m,
-            Err(st) => return Err(grpc_error(st.code, &st.message)),
-        };
-        match it.apply(dec.clone(), vec![Value::Bytes(Rc::from(m))]) {
-            Ok(v) => v,
-            Err(Ctl::Fail(e, _)) => {
-                return Err(grpc_error(INVALID_ARGUMENT, &status_of_error(&e).message))
-            }
-            Err(e) => return Err(e),
-        }
-    };
-    let chan_out = sym == "grpc.server-streaming-handler" || sym == "grpc._bidi-streaming-handler";
-    if chan_out {
-        let ch = sink_value(&c, &s, Encoder::Fwp(enc.clone()));
-        it.apply(f.clone(), vec![arg, ch])?;
-    } else {
-        let v = it.apply(f.clone(), vec![arg])?;
-        let b = apply_bytes(it, enc, v)?;
-        send_msg(it, &c, &s, &b, false)?;
-        it.check_cancel()?;
-    }
-    Ok(Value::unit())
-}
-
-fn s_bad(call: &Call) -> bool {
-    call.stream.borrow().bad.is_some()
-}
-
-/// Sending on a client stream failed: the status the server ended it
-/// with, or `UNAVAILABLE`.
-fn closed_error(it: &mut Interp, call: &Call) -> R<Ctl> {
-    match recv(it, &call.conn, &call.stream, call.deadline)? {
-        Got::End(st) if st.code != OK => Ok(grpc_error(st.code, &st.message)),
-        Got::Lost(m, _) => Ok(grpc_error(UNAVAILABLE, &m)),
-        _ => Ok(grpc_error(UNAVAILABLE, "the stream is closed")),
     }
 }
 

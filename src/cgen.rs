@@ -20,7 +20,6 @@ const RUNTIME: &[&str] = &[
     include_str!("../runtime/fwp_rt_web.c"),
     include_str!("../runtime/fwp_rt_pipe.c"),
     include_str!("../runtime/fwp_rt_exec.c"),
-    include_str!("../runtime/fwp_rt_pb.c"),
     include_str!("../runtime/fwp_rt_kernel.c"),
 ];
 
@@ -3382,70 +3381,6 @@ impl<'p> Gen<'p> {
                     format!("return fwp_p_cli_help(l0, {}, {});", t, o.flags.len())
                 }
             }
-            "pb.cast" => {
-                let name = match &result {
-                    MT::Con(n, _) => n.trim_start_matches("std::").to_string(),
-                    _ => String::new(),
-                };
-                let e = match name.as_str() {
-                    "I8" => "(V)(int64_t)(int8_t)l0",
-                    "I16" => "(V)(int64_t)(int16_t)l0",
-                    "I32" => "(V)(int64_t)(int32_t)l0",
-                    "U8" => "(V)(uint8_t)l0",
-                    "U16" => "(V)(uint16_t)l0",
-                    "U32" => "(V)(uint32_t)l0",
-                    _ => "l0",
-                };
-                format!("return {};", e)
-            }
-            "grpc.open"
-            | "grpc.send"
-            | "grpc.recv"
-            | "grpc._serve"
-            | "grpc._serve-tls"
-            | "grpc.unary"
-            | "grpc.server-streaming"
-            | "grpc.client-streaming"
-            | "grpc.bidi-streaming"
-            | "grpc.unary-handler"
-            | "grpc.server-streaming-handler"
-            | "grpc._client-streaming-handler"
-            | "grpc._bidi-streaming-handler" => {
-                let gerr = self.desc(&crate::rpc::grpc_error_type());
-                let typed = |kind: u8, n: u32| {
-                    let args: Vec<String> = (0..n).map(|i| format!("l{}", i)).collect();
-                    format!(
-                        "return fwp_p_grpc_typed({}, {}, (V[]){{{}}}, {});",
-                        kind,
-                        n,
-                        args.join(", "),
-                        gerr
-                    )
-                };
-                match sym {
-                    "grpc.unary" => typed(0, 5),
-                    "grpc.server-streaming" => typed(1, 6),
-                    "grpc.client-streaming" => typed(2, 5),
-                    "grpc.bidi-streaming" => typed(3, 6),
-                    "grpc.unary-handler" => typed(4, 4),
-                    "grpc.server-streaming-handler" => typed(5, 4),
-                    "grpc._client-streaming-handler" => typed(6, 5),
-                    "grpc._bidi-streaming-handler" => typed(7, 5),
-                    "grpc.open" => format!("return fwp_p_grpc_open(l0, l1, {});", gerr),
-                    "grpc.send" => format!("return fwp_p_grpc_send(l0, l1, {});", gerr),
-                    "grpc.recv" => format!("return fwp_p_grpc_recv(l0, {});", gerr),
-                    "grpc._serve-tls" => format!(
-                        "return fwp_p_grpc_serve_tls(l0, l1, l2, l3, l4, {}, {});",
-                        self.desc(&MT::con("std::IoError")),
-                        gerr
-                    ),
-                    _ => format!(
-                        "return fwp_p_grpc_serve(l0, l1, {}, {});",
-                        self.desc(&MT::con("std::IoError")),
-                        gerr
-                    ),
-                }
-            }
             "grpc.with-tls" => {
                 let idx = |n: &str| match self.prog.shapes.get(&MT::con("std::TlsOptions")) {
                     Some(TypeShape::Record(fs)) => fs.iter().position(|(l, _)| l == n).unwrap_or(0),
@@ -3669,8 +3604,6 @@ impl<'p> Gen<'p> {
                     ("metrics.set", "fwp_p_metrics_update(1, l0, l1)"),
                     ("metrics.observe", "fwp_p_metrics_update(2, l0, l1)"),
                     ("metrics.snapshot", "fwp_p_metrics_snapshot()"),
-                    ("grpc.close-send", "fwp_p_grpc_close_send(l0)"),
-                    ("grpc.cancel", "fwp_p_grpc_cancel(l0)"),
                     ("grpc.metadata", "fwp_p_grpc_metadata()"),
                     ("grpc.with-metadata", "fwp_p_grpc_with_metadata(l0, l1)"),
                     ("grpc.with-deadline", "fwp_p_grpc_with_deadline(l0, l1)"),
@@ -3681,7 +3614,6 @@ impl<'p> Gen<'p> {
                         "grpc.with-response-metadata",
                         "fwp_p_grpc_with_response_metadata(l0)",
                     ),
-                    ("grpc.response-metadata", "fwp_p_grpc_response_metadata(l0)"),
                     ("grpc.with-gzip", "fwp_p_grpc_with_gzip(l0)"),
                     ("grpc._force", "fwp_p_grpc_force(l0)"),
                     ("http2.serve", "fwp_p_http2_serve(l0, l1, l2, l3, l4)"),
@@ -3705,16 +3637,6 @@ impl<'p> Gen<'p> {
                     ("ws.close-parse", "fwp_p_ws_close_parse(l0)"),
                     ("ws.deflate", "fwp_p_ws_deflate(l0)"),
                     ("ws.inflate", "fwp_p_ws_inflate(l0, l1)"),
-                    ("pb.parse", "fwp_p_pb_parse(l0)"),
-                    ("pb.write", "fwp_p_pb_write(l0)"),
-                    ("pb.zigzag", "fwp_p_pb_zigzag(l0)"),
-                    ("pb.unzigzag", "fwp_p_pb_unzigzag(l0)"),
-                    ("pb.f64-bits", "l0"),
-                    ("pb.f64-from-bits", "l0"),
-                    ("pb.f32-bits", "fwp_p_pb_f32_bits(l0)"),
-                    ("pb.f32-from-bits", "fwp_p_pb_f32_from_bits(l0)"),
-                    ("pb.unpack", "fwp_p_pb_unpack(l0, l1)"),
-                    ("pb.pack", "fwp_p_pb_pack(l0, l1)"),
                 ];
                 match simple.iter().find(|(n, _)| *n == sym) {
                     Some((_, c)) => format!("return {};", c),
@@ -4475,11 +4397,11 @@ pub fn generate_exec(prog: &Program, fid: FuncId, name: &str) -> Result<String, 
 }
 
 /// Generate a multi-command executable named `name`: every exported
-/// function is a command (`fwp build --cli`).
+/// function exposed as `cli` is a command (`fwp build --cli`).
 pub fn generate_cli(prog: &Program, name: &str) -> Result<String, String> {
     let cmds = crate::cli::commands(prog, Some(name))?;
     if cmds.is_empty() {
-        return Err("the program exports no functions (mark them with `export`)".into());
+        return Err(crate::cli::none_exposed("cli", "a command"));
     }
     generate_mode(prog, Mode::Exec(cmds, Some(name)))
 }

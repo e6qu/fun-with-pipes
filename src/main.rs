@@ -23,11 +23,13 @@ usage:
             [--service m[=addr]]...
                                  compile `main` (or an exported function) to a
                                  native executable or a WebAssembly module;
-                                 --cli makes every exported function a
+                                 --cli makes every exported function exposed
+                                 as `cli` (`# expose: cli`) a
                                  subcommand of one executable, with flags,
                                  --help, --version, --completions
                                  bash|zsh|fish and --man (see docs/cli.md);
-                                 --rest makes every exported function an
+                                 --rest makes every exported function
+                                 exposed as `rest` an
                                  endpoint of one HTTP server, with JSON
                                  and an OpenAPI document (see docs/rest.md);
                                  --memory static maps all of the program's
@@ -54,10 +56,17 @@ usage:
                                  serve a module's exported functions over
                                  gRPC
   fwp serve --rest <file.fwp> [--listen addr]
-                                 serve a file's exported functions as REST
+                                 serve a file's exported functions exposed
+                                 as `rest` (`# expose: rest`) as REST
                                  endpoints
+  fwp serve --mcp <file.fwp> [--listen addr]
+  fwp build <file.fwp> --mcp [-o out]
+                                 the exported functions exposed as `mcp` as
+                                 the tools of a stateless MCP server, on
+                                 stdin and stdout or, with --listen, over
+                                 HTTP (see docs/mcp.md)
                                  (every `fwp serve`, and the servers that
-                                 --rest, --grpc and --service build, take
+                                 --rest and --service build, take
                                  --tls-cert file --tls-key file to serve
                                  over TLS; see docs/tls.md)
   fwp proto <file.fwp> [--service m]...
@@ -67,15 +76,6 @@ usage:
   fwp openapi --import <spec.json> [-o client.fwp]
                                  generate an fwp client module of an API
                                  (OpenAPI 3 or Swagger 2.0, JSON or YAML)
-  fwp build <file.fwp> --grpc [-o out]
-  fwp serve --grpc <file.fwp> [--listen addr]
-  fwp proto --grpc <file.fwp>    a gRPC server of a file's exported
-                                 functions (built or served) and its
-                                 .proto file; with reflection and health
-                                 checking (see docs/grpc.md)
-  fwp proto --import <file.proto> [-o out.fwp]
-                                 fwp types, clients and server routes for
-                                 the services of a .proto file
   fwp exec <file.fwp> <fn> [args...]
                                  run an exported function as an executable would
   fwp exec --cli <file.fwp> [command] [args...]
@@ -402,7 +402,7 @@ fn test(args: &[String]) -> ExitCode {
 
 fn build(args: &[String]) -> ExitCode {
     if args.iter().any(|a| a == "--grpc") {
-        return ExitCode::from(fwp::grpc_cli::build(args).clamp(0, 255) as u8);
+        return removed_grpc("build");
     }
     let mut path = None;
     let mut out = None;
@@ -410,6 +410,7 @@ fn build(args: &[String]) -> ExitCode {
     let mut func: Option<String> = None;
     let mut cli = false;
     let mut rest = false;
+    let mut mcp = false;
     let mut opt = "-O2".to_string();
     let mut target = fwp::cgen::Target::Native;
     let mut fat = false;
@@ -535,6 +536,7 @@ fn build(args: &[String]) -> ExitCode {
             }
             "--cli" => cli = true,
             "--rest" => rest = true,
+            "--mcp" => mcp = true,
             a if a.starts_with("-O") => opt = a.to_string(),
             a => path = Some(a.to_string()),
         }
@@ -619,6 +621,14 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --rest builds every exported function into one server (not with --cli, --fn, --staticlib, --cdylib or --service)");
         return ExitCode::from(2);
     }
+    if mcp && (rest || cli || func.is_some() || lib.is_some() || !services.is_empty()) {
+        eprintln!("fwp build: --mcp builds every exported function exposed as `mcp` into one server (not with --rest, --cli, --fn, --staticlib, --cdylib or --service)");
+        return ExitCode::from(2);
+    }
+    if mcp && target.is_wasm() {
+        eprintln!("fwp build: --mcp builds a native server (WebAssembly targets have no standard input loop or sockets here)");
+        return ExitCode::from(2);
+    }
     if rest && target.is_wasm() {
         eprintln!("fwp build: --rest builds a native server: WebAssembly targets have no sockets (the `Network` effect)");
         return ExitCode::from(2);
@@ -676,6 +686,8 @@ fn build(args: &[String]) -> ExitCode {
     let code = fwp::driver::with_big_stack(move || {
         let compiled = if rest {
             fwp::rest::compile(&src)
+        } else if mcp {
+            fwp::mcp::compile(&src)
         } else {
             fwp::driver::compile_file(&src, roots)
         };
@@ -916,10 +928,13 @@ fn build_split(
 
 fn serve(args: &[String]) -> ExitCode {
     if args.first().map(String::as_str) == Some("--rest") {
-        return serve_rest(&args[1..]);
+        return serve_generated(&args[1..], "--rest", fwp::rest::compile);
+    }
+    if args.first().map(String::as_str) == Some("--mcp") {
+        return serve_generated(&args[1..], "--mcp", fwp::mcp::compile);
     }
     if args.iter().any(|a| a == "--grpc") {
-        return ExitCode::from(fwp::grpc_cli::serve(args).clamp(0, 255) as u8);
+        return removed_grpc("serve");
     }
     let mut args = args.to_vec();
     let (native, opt) = match take_run_options("serve", &mut args, "-O2") {
@@ -997,38 +1012,46 @@ fn serve(args: &[String]) -> ExitCode {
     ExitCode::from(code.clamp(0, 255) as u8)
 }
 
-/// `fwp serve --rest file.fwp [--listen addr] [--openapi]`: the REST
-/// server of a file, compiled (interpreted with `--interp`).
-fn serve_rest(args: &[String]) -> ExitCode {
+/// `fwp serve --rest file.fwp [--listen addr] [--openapi]` and `fwp
+/// serve --mcp file.fwp [--listen addr]`: the REST or MCP server of a
+/// file, compiled (interpreted with `--interp`).
+fn serve_generated(
+    args: &[String],
+    flag: &str,
+    compile: fn(
+        &std::path::Path,
+    ) -> Result<(fwp::driver::Compilation, fwp::ir::Program), fwp::driver::Failure>,
+) -> ExitCode {
     let mut args = args.to_vec();
     let (native, opt) = match take_run_options("serve", &mut args, "-O2") {
         Ok(o) => o,
         Err(c) => return c,
     };
     let Some(path) = args.iter().find(|a| a.ends_with(".fwp")).cloned() else {
-        eprintln!("fwp serve: usage: fwp serve --rest <file.fwp> [--listen host:port]");
+        eprintln!(
+            "fwp serve: usage: fwp serve {} <file.fwp> [--listen host:port]",
+            flag
+        );
         return ExitCode::from(2);
     };
     let server_args: Vec<String> = args.iter().filter(|a| **a != path).cloned().collect();
-    let code = fwp::driver::with_big_stack(move || {
-        match fwp::rest::compile(std::path::Path::new(&path)) {
-            Ok((c, prog)) => {
-                eprint!("{}", c.render_warnings());
-                if native {
-                    let generated = fwp::cgen::generate(&prog);
-                    let name = program_name(&path);
-                    if let Some(code) =
-                        fwp::aot::run_native("serve", generated, &opt, &name, &server_args)
-                    {
-                        return code;
-                    }
+    let code = fwp::driver::with_big_stack(move || match compile(std::path::Path::new(&path)) {
+        Ok((c, prog)) => {
+            eprint!("{}", c.render_warnings());
+            if native {
+                let generated = fwp::cgen::generate(&prog);
+                let name = program_name(&path);
+                if let Some(code) =
+                    fwp::aot::run_native("serve", generated, &opt, &name, &server_args)
+                {
+                    return code;
                 }
-                fwp::interp::run_main(&prog, server_args).exit_code
             }
-            Err(f) => {
-                eprint!("{}", f.rendered);
-                1
-            }
+            fwp::interp::run_main(&prog, server_args).exit_code
+        }
+        Err(f) => {
+            eprint!("{}", f.rendered);
+            1
         }
     });
     ExitCode::from((code & 0xff) as u8)
@@ -1113,9 +1136,19 @@ fn openapi(args: &[String]) -> ExitCode {
     ExitCode::from(code)
 }
 
+/// gRPC is the transport between the modules of a split program, not an
+/// interface of its own.
+fn removed_grpc(cmd: &str) -> ExitCode {
+    eprintln!(
+        "fwp {}: gRPC carries the calls between the modules of a program split with `--service` (docs/services.md); to serve functions to other clients, expose them as `rest` or `mcp` (docs/interfaces.md)",
+        cmd
+    );
+    ExitCode::from(2)
+}
+
 fn proto(args: &[String]) -> ExitCode {
     if args.iter().any(|a| a == "--grpc" || a == "--import") {
-        return ExitCode::from(fwp::grpc_cli::proto(args).clamp(0, 255) as u8);
+        return removed_grpc("proto");
     }
     let mut args = args.to_vec();
     let mut services: Vec<String> = take_services(&mut args).into_iter().map(|s| s.0).collect();

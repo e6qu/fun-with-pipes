@@ -1,0 +1,22 @@
+# Quotes, served over HTTPS, and as a service over TLS.
+#
+# expose: rest
+
+Quote = { id: I64, text: String }
+
+all-quotes : List[Quote]
+all-quotes = [
+    Quote { id = 1, text = "Simplicity is prerequisite for reliability." },
+    Quote { id = 2, text = "Make it work, make it right, make it fast." },
+    Quote { id = 3, text = "Data dominates." },
+]
+
+# A quote by its id.
+# route: GET /sayings/{id}
+export saying : I64 -> Option[Quote]
+saying = eq | compose .id | find | apply all-quotes
+
+# How many quotes there are.
+# route: GET /count
+export count : () -> I64
+count = const all-quotes | length

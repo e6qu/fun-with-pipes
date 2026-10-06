@@ -688,7 +688,7 @@ impl<'a> Infer<'a> {
         for (name, ctx, span) in std::mem::take(&mut self.ctxs) {
             let labels = self.effect_labels(&ctx);
             let is_test = name.contains("::test#");
-            if name == "main::main" || name == crate::rest::ENTRY {
+            if name == "main::main" || name == crate::rest::ENTRY || name == crate::mcp::ENTRY {
                 if labels.iter().any(|l| l == "State") {
                     return Err(Diagnostic::error(
                         span,
@@ -801,7 +801,11 @@ impl<'a> Infer<'a> {
         if generic.is_empty() || self.env.macros.contains(&b.name) {
             return sc;
         }
-        if b.name == "main::main" || b.name == crate::rest::ENTRY || b.test_name.is_some() {
+        if b.name == "main::main"
+            || b.name == crate::rest::ENTRY
+            || b.name == crate::mcp::ENTRY
+            || b.test_name.is_some()
+        {
             for v in &generic {
                 if self.env.table.vars[*v as usize].kind == Kind::Star {
                     let _ = self.unify(b.span, &Type::Var(*v), &Type::unit(), "`main`");

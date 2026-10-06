@@ -1,9 +1,13 @@
 # Tutorials
 
-Each tutorial is a directory with a `README.md` that explains it and a
-complete program, `main.fwp`, whose output is in `main.out`. The test suite
-runs every program in the interpreter and as a native executable, and
-checks the code shown in each README against the program.
+Each tutorial is a directory with a `README.md` that explains it and the
+programs it uses. A tutorial about a language feature has a complete
+program, `main.fwp`, whose output is in `main.out`; a tutorial about
+building something (a command-line program, a server, an MCP server) is
+a shell session that you can follow in the tutorial's directory. The test
+suite runs every program, in the interpreter and as a native executable,
+replays every session and compares what it prints, and checks the code
+shown in each README against the programs.
 
 | # | Tutorial | Covers |
 |---|---|---|
@@ -22,12 +26,12 @@ checks the code shown in each README against the program.
 | 13 | [Tooling](13-tooling/README.md) | `fwp fmt`, `fwp lint`, the language server |
 | 14 | [Services](14-services/README.md) | one program as one executable or as gRPC services |
 | 15 | [fwp in the browser](15-browser/README.md) | `wasm32-browser`, fwp itself as WebAssembly, the playground |
-| 16 | [Command-line programs](16-clis/README.md) | flags from records, `--help`, `fwp build --cli`, exit statuses, the `cli` module |
-| 17 | [REST APIs and OpenAPI](17-rest-and-openapi/README.md) | functions as endpoints, `fwp serve --rest`, the JSON codec, OpenAPI documents and generated clients |
-| 18 | [gRPC](18-grpc/README.md) | functions as gRPC methods, `fwp serve --grpc`, streams from types, statuses, deadlines and metadata, `fwp proto --import` |
-| 19 | [TLS](19-tls/README.md) | HTTPS and gRPC over TLS: certificates, `--tls-cert`, verifying clients, `lib/tls.fwp` |
-| 20 | [WebSockets and HTTP/2](20-websockets-and-http2/README.md) | HTTP/2 servers and clients (h2c, ALPN), compressed responses, WebSocket sessions with `http.websocket` and `ws.connect` |
-| 21 | [Reverse-mode autodiff and devices](21-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu`, `CpuParallel` and `Gpu` devices |
+| 16 | [Command-line programs](16-clis/README.md) | `# expose: cli`, `fwp build --cli`, flags from records, `--help`, exit statuses, completion, the `cli` module |
+| 17 | [REST APIs and OpenAPI](17-rest-and-openapi/README.md) | `# expose: rest`, `fwp build --rest`, calls with `curl`, OpenAPI documents, a generated fwp client |
+| 18 | [TLS](18-tls/README.md) | HTTPS and services over TLS: certificates, `--tls-cert`, verifying clients, `lib/tls.fwp` |
+| 19 | [WebSockets and HTTP/2](19-websockets-and-http2/README.md) | HTTP/2 servers and clients (h2c, ALPN), compressed responses, WebSocket sessions with `http.websocket` and `ws.connect` |
+| 20 | [Reverse-mode autodiff and devices](20-autodiff-and-devices/README.md) | `grad` and `vjp` on tapes, tensor expressions as fused kernels, `Cpu`, `CpuParallel` and `Gpu` devices |
+| 21 | [MCP tools](21-mcp/README.md) | `# expose: mcp`, `fwp build --mcp`, a stateless MCP server over stdio and HTTP, schemas from types |
 
 Start with the first, which introduces the notation the others rely on.
 After that, the tutorials stand alone. The [language

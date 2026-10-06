@@ -33,7 +33,6 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/tensor.fwp", include_str!("../lib/tensor.fwp")),
     ("<std>/task.fwp", include_str!("../lib/task.fwp")),
     ("<std>/grpc.fwp", include_str!("../lib/grpc.fwp")),
-    ("<std>/protobuf.fwp", include_str!("../lib/protobuf.fwp")),
     ("<std>/net.fwp", include_str!("../lib/net.fwp")),
     ("<std>/tls.fwp", include_str!("../lib/tls.fwp")),
     ("<std>/json.fwp", include_str!("../lib/json.fwp")),
@@ -42,6 +41,7 @@ pub const STD_SOURCES: &[(&str, &str)] = &[
     ("<std>/http.fwp", include_str!("../lib/http.fwp")),
     ("<std>/websocket.fwp", include_str!("../lib/websocket.fwp")),
     ("<std>/rest.fwp", include_str!("../lib/rest.fwp")),
+    ("<std>/mcp.fwp", include_str!("../lib/mcp.fwp")),
     ("<std>/ffi.fwp", include_str!("../lib/ffi.fwp")),
 ];
 

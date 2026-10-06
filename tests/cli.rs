@@ -680,17 +680,17 @@ fn declaration_errors() {
     let dir = scratch("decl");
     let cases = [
         (
-            "O = {\n    # -a  a [requires: nope]\n    a: Bool,\n}\n\nexport g : O -> I64\ng = const 1\n",
+            "# expose: cli\n\nO = {\n    # -a  a [requires: nope]\n    a: Bool,\n}\n\nexport g : O -> I64\ng = const 1\n",
             "g",
             "`[requires: nope]` of the option `--a`: `O` has no option `--nope`",
         ),
         (
-            "export f.defaults : { x: I64 }\nf.defaults = { x = 1 }\n\n# args: X Y\nexport f : I64 -> I64 -> I64\nf = curry (uncurry add)\n",
+            "# expose: cli\n\nexport f.defaults : { x: I64 }\nf.defaults = { x = 1 }\n\n# args: X Y\nexport f : I64 -> I64 -> I64\nf = curry (uncurry add)\n",
             "f",
             "the argument `X` of `f` has a default, but `Y` after it is required",
         ),
         (
-            "export f.defaults : { x: String }\nf.defaults = { x = \"a\" }\n\n# args: X\nexport f : I64 -> I64\nf = id\n",
+            "# expose: cli\n\nexport f.defaults : { x: String }\nf.defaults = { x = \"a\" }\n\n# args: X\nexport f : I64 -> I64\nf = id\n",
             "f",
             "`f.defaults`: the field `x` is a `String`, but the argument `X` is a `I64`",
         ),
@@ -1128,5 +1128,92 @@ fn example_clis() {
         assert_eq!(got, "  1. [ ] write docs\ncode=0");
         let _ = std::fs::remove_file(dir.join("env.txt"));
     }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// The interfaces take only the exported functions exposed as theirs
+/// (`# expose:`, docs/interfaces.md); `fwp exec` and `--fn` take any.
+#[test]
+fn exposure() {
+    let dir = scratch("expose");
+    let run = |name: &str, src: &str, args: &[&str]| {
+        let file = dir.join(format!("{}.fwp", name));
+        std::fs::write(&file, src).unwrap();
+        let o = Command::new(fwp())
+            .args(&args[..args.len() - 1])
+            .arg(&file)
+            .args(args.last().unwrap().split_whitespace())
+            .output()
+            .unwrap();
+        (
+            o.status.code(),
+            String::from_utf8_lossy(&o.stdout).into_owned(),
+            String::from_utf8_lossy(&o.stderr).into_owned(),
+        )
+    };
+    let none = "export f : I64 -> I64\nf = add 1\n";
+    let hint = |iface: &str, what: &str| {
+        format!(
+            "no exported function is exposed as {}: add a comment line `# expose: {}` above the `export` (or to the file's leading comment, for every export)\n",
+            what, iface
+        )
+    };
+    assert_eq!(
+        run("none", none, &["exec", "--cli", "--interp", ""]),
+        (
+            Some(1),
+            String::new(),
+            format!("fwp exec: {}", hint("cli", "a command"))
+        )
+    );
+    assert_eq!(
+        run("none", none, &["openapi", ""]),
+        (
+            Some(1),
+            String::new(),
+            format!("error: {}", hint("rest", "an endpoint"))
+        )
+    );
+    assert_eq!(
+        run("none", none, &["serve", "--mcp", "--interp", ""]),
+        (
+            Some(1),
+            String::new(),
+            format!("error: {}", hint("mcp", "an MCP tool"))
+        )
+    );
+    // naming a function needs no exposure
+    assert_eq!(
+        run("none", none, &["exec", "--interp", "f 2"]),
+        (Some(0), "3\n".into(), String::new())
+    );
+    // a line above one function exposes it alone
+    let one =
+        "# expose: cli\nexport f : I64 -> I64\nf = add 1\n\nexport g : I64 -> I64\ng = add 2\n";
+    assert_eq!(
+        run("one", one, &["exec", "--cli", "--interp", "f 1"]).1,
+        "2\n"
+    );
+    let (code, _, err) = run("one", one, &["exec", "--cli", "--interp", "g 1"]);
+    assert_eq!(code, Some(2));
+    assert!(err.contains("unknown command `g`"), "{}", err);
+    assert_eq!(
+        run(
+            "bad",
+            "# expose: web\nexport f : I64 -> I64\nf = add 1\n",
+            &["exec", "--cli", "--interp", ""]
+        )
+        .2,
+        "fwp exec: above `f`: `# expose: web`: unknown interface `web` (expected cli, rest, mcp)\n"
+    );
+    assert_eq!(
+        run(
+            "route",
+            "# expose: cli\n# route: GET /f\nexport f : I64 -> I64\nf = add 1\n",
+            &["exec", "--cli", "--interp", ""]
+        )
+        .2,
+        "fwp exec: `# route: GET /f` above `f`: `f` is not exposed as rest (add `rest` to its `# expose:` line)\n"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }

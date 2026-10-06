@@ -1,0 +1,547 @@
+# Model Context Protocol servers (docs/mcp.md): functions as the tools of
+# a stateless MCP server, protocol version 2026-07-28. `fwp serve --mcp`
+# and `fwp build --mcp` generate one from the exported functions exposed
+# as `mcp`. Requests are independent: there is no session and no
+# `initialize`; each request names its protocol version in `_meta`, and
+# `server/discover` describes the server. The transport is standard input
+# and output (one JSON-RPC message per line), or HTTP (`--listen
+# host:port`: `POST /mcp`).
+
+# A tool: its name, and its call from the arguments of `tools/call` to
+# its result (the JSON text of a `CallToolResult`).
+McpTool = { name: String, call: Json -> String ! {Async, IO, Network, FileIO} }
+
+# How a tool reads its arguments and writes its result.
+McpToolSpec = {
+    name: String,
+    # the arguments' names, one per parameter; none when the one
+    # parameter is a record, whose fields are the arguments
+    params: List[String],
+    # whether the structured result is `{"result": ...}` (a result that is
+    # not a JSON object)
+    wrap: Bool,
+}
+
+# A server: the results of `server/discover` and `tools/list` (JSON
+# text), and its tools.
+McpServer = { discover: String, tools-list: String, tools: List[McpTool] }
+
+# A JSON-RPC error.
+McpError = { code: I64, message: String, data: String }
+
+# A JSON-RPC message: a request, or a notification (no `id`).
+# internal
+McpMessage = { id: Option[Json], method: Option[String], params: Option[Json] }
+
+# Options of an MCP server's command line.
+# internal
+McpOptions = { listen: Option[String], help: Bool }
+
+# The protocol version.
+mcp.version : String
+mcp.version = "2026-07-28"
+
+# ------------------------------------------------------------------ tools
+
+# A tool of a function: its arguments are decoded from the arguments of
+# `tools/call`, and its result (or its `Error`) is the tool's result, as
+# text and as `structuredContent`. Arguments that do not decode are an
+# error result (`isError`), which a model can correct.
+mcp.tool : McpToolSpec -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> McpTool where Decode[a], Encode[b], Encode[e]
+mcp.tool = mcp.tool-with mcp.outcome
+
+# `mcp.tool` for a function returning `Result`: `Err` is an error result,
+# like a raised `Error`.
+mcp.tool-result : McpToolSpec -> (a -> Result[b, x] ! {Async, IO, Network, FileIO, Error[e]}) -> McpTool where Decode[a], Encode[b], Encode[x], Encode[e]
+mcp.tool-result = mcp.tool-with mcp.outcome-result
+
+# a tool from how its outcome is written (whether it is wrapped, and the
+# value or error)
+# internal
+mcp.tool-with : (Bool -> Result[b, e] -> String) -> McpToolSpec -> (a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> McpTool where Decode[a]
+mcp.tool-with = curry3 (make McpTool { name = .1 | .name, call = mcp.call })
+
+# internal
+mcp.call : (Bool -> Result[b, e] -> String, McpToolSpec, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Json -> String ! {Async, IO, Network, FileIO} where Decode[a]
+mcp.call = curry (fork
+    mcp.run
+    .0
+    (fork mcp.arguments (.0 | .1 | .params) .1 | json.decode))
+
+# The JSON of the arguments: the object, one argument, or an array of
+# several (a tuple). A missing argument is `null`.
+# internal
+mcp.arguments : List[String] -> Json -> Json
+mcp.arguments = curry (match
+    (Nil, _) -> mcp.or-empty
+    (Cons _ Nil, _) -> then2 mcp.argument-of id
+    _ -> fork map (.1 | flip mcp.argument-of) .0 | Json.Arr)
+
+# internal
+mcp.argument-of : String -> Json -> Json
+mcp.argument-of = then2 json.get (option.unwrap-or Json.Null)
+
+# internal
+mcp.or-empty : Json -> Json
+mcp.or-empty = match
+    Json.Null -> Json.Obj []
+    _ -> id
+
+# internal
+mcp.run : (Bool -> Result[b, e] -> String, McpToolSpec, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Result[a, String] -> String ! {Async, IO, Network, FileIO}
+mcp.run = curry (match
+    (_, Ok _) -> mcp.invoke
+    (_, Err _) -> curry (fork rest.relabel (.0 | .1 | .params) .1
+        | flip concat "invalid arguments: "
+        | Json.Str
+        | mcp.failure))
+
+# internal
+mcp.invoke : (Bool -> Result[b, e] -> String, McpToolSpec, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> a -> String ! {Async, IO, Network, FileIO}
+mcp.invoke = curry (fork mcp.finish .0 (fork apply .1 (.0 | .2 | attempt)))
+
+# internal
+mcp.finish : (Bool -> Result[b, e] -> String, McpToolSpec, a -> b ! {Async, IO, Network, FileIO, Error[e]}) -> Result[b, e] -> String
+mcp.finish = curry (fork apply .1 (fork apply (.0 | .1 | .wrap) (.0 | .0)))
+
+# internal
+mcp.outcome : Bool -> Result[b, e] -> String where Encode[b], Encode[e]
+mcp.outcome = curry (match
+    (_, Ok _) -> curry (fork mcp.success .0 (.1 | json.encode-value))
+    (_, Err _) -> const (json.encode-value | mcp.failure))
+
+# internal
+mcp.outcome-result : Bool -> Result[Result[b, x], e] -> String where Encode[b], Encode[x], Encode[e]
+mcp.outcome-result = curry (match
+    (_, Ok (Ok _)) -> curry (fork mcp.success .0 (.1 | json.encode-value))
+    (_, Ok (Err _)) -> const (json.encode-value | mcp.failure)
+    (_, Err _) -> const (json.encode-value | mcp.failure))
+
+# The result of a call: its value as text (a string as it is, other values
+# as JSON) and as structured content.
+mcp.success : Bool -> Json -> String
+mcp.success = curry (both (.1 | mcp.text) (fork mcp.structured .0 .1)
+    | format
+        "{{\"content\":[{{\"type\":\"text\",\"text\":{}}}],\"structuredContent\":{},\"isError\":false,\"resultType\":\"complete\"}}")
+
+# The result of a call that failed: its error as text.
+mcp.failure : Json -> String
+mcp.failure =
+    mcp.text
+    | format
+        "{{\"content\":[{{\"type\":\"text\",\"text\":{}}}],\"isError\":true,\"resultType\":\"complete\"}}"
+
+# a value as the JSON string of a text content
+# internal
+mcp.text : Json -> String
+mcp.text = match
+    Json.Str _ -> Json.Str | json.encode
+    _ -> json.encode | Json.Str | json.encode
+
+# internal
+mcp.structured : Bool -> Json -> String
+mcp.structured = curry (if
+    .0
+    (.1 | json.encode | format "{{\"result\":{}}}")
+    (.1 | json.encode))
+
+# --------------------------------------------------------------- messages
+
+# The answer to a message (one line of JSON), or `None` for a
+# notification.
+mcp.handle : McpServer -> String -> Option[String] ! {Async, IO, Network, FileIO}
+mcp.handle = curry (fork mcp.handle-parsed .0 (.1 | json.parse))
+
+# internal
+mcp.handle-parsed : McpServer -> Result[Json, String] -> Option[String] ! {Async, IO, Network, FileIO}
+mcp.handle-parsed = curry (match
+    (_, Ok _) -> mcp.handle-json
+    (_, Err _) ->
+        const (const (mcp.parse-error | mcp.error-of Json.Null | Some)))
+
+# internal
+mcp.parse-error : McpError
+mcp.parse-error = McpError { code = -32700, message = "parse error", data = "" }
+
+# The answer to a parsed message.
+mcp.handle-json : McpServer -> Json -> Option[String] ! {Async, IO, Network, FileIO}
+mcp.handle-json = curry (fork mcp.handle-message .0 (.1 | json.decode))
+
+# internal
+mcp.handle-message : McpServer -> Result[McpMessage, String] -> Option[String] ! {Async, IO, Network, FileIO}
+mcp.handle-message = curry (match
+    (_, Ok _) -> mcp.request
+    (_, Err _) -> const (const
+        (McpError { code = -32600, message = "invalid request", data = "" }
+            | mcp.error-of Json.Null
+            | Some)))
+
+# a request is answered; a notification is not
+# internal
+mcp.request : McpServer -> McpMessage -> Option[String] ! {Async, IO, Network, FileIO}
+mcp.request = curry (if
+    (.1 | .id | option.is-none)
+    (const None)
+    (fork mcp.reply .0 .1 | Some))
+
+# internal
+mcp.reply : McpServer -> McpMessage -> String ! {Async, IO, Network, FileIO}
+mcp.reply = curry (fork
+    mcp.answer-to
+    (.1 | .id | option.unwrap-or Json.Null)
+    (both (.1 | mcp.version-of) id | uncurry mcp.versioned))
+
+# internal
+mcp.answer-to : Json -> Result[String, McpError] -> String
+mcp.answer-to = curry (match
+    (_, Ok _) -> curry (both (.0 | json.encode) .1
+        | format "{{\"jsonrpc\":\"2.0\",\"id\":{},\"result\":{}}}")
+    (_, Err _) -> mcp.error-of)
+
+# A JSON-RPC error response.
+mcp.error-of : Json -> McpError -> String
+mcp.error-of =
+    curry
+        (make {
+                0 = .0 | json.encode,
+                1 = .1 | .code,
+                2 = .1 | .message | Json.Str | json.encode,
+                3 =
+                    .1
+                    | .data
+                    | if string.is-empty id (flip concat ",\"data\":"),
+            }
+            | format
+                "{{\"jsonrpc\":\"2.0\",\"id\":{},\"error\":{{\"code\":{},\"message\":{}{}}}}}")
+
+# the protocol version of a request (`_meta`)
+# internal
+mcp.version-of : McpMessage -> Option[String]
+mcp.version-of =
+    .params
+    | option.and-then (json.get "_meta")
+    | option.and-then (json.get "io.modelcontextprotocol/protocolVersion")
+    | option.and-then json.as-string
+
+# internal
+mcp.versioned : Option[String] -> (McpServer, McpMessage) -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.versioned = curry (match
+    (Some "2026-07-28", _) -> mcp.dispatch
+    (Some _, _) -> curry (.0 | mcp.unsupported | Err)
+    (None, _) -> fork mcp.unversioned (.1 | .method | option.unwrap-or "") id)
+
+# `server/discover` needs no version; an `initialize` is a client of an
+# earlier, stateful version
+# internal
+mcp.unversioned : String -> (McpServer, McpMessage) -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.unversioned = curry (match
+    ("server/discover", _) -> mcp.dispatch
+    ("initialize", _) ->
+        .1
+        | .params
+        | option.and-then (json.get "protocolVersion")
+        | option.and-then json.as-string
+        | option.unwrap-or ""
+        | mcp.unsupported
+        | Err
+    _ -> const (Err
+        (mcp.invalid-params
+            "missing `_meta` `io.modelcontextprotocol/protocolVersion` (this server speaks 2026-07-28)")))
+
+# internal
+mcp.unsupported : String -> McpError
+mcp.unsupported = make McpError {
+    code = const -32022,
+    message = const "unsupported protocol version",
+    data =
+        Json.Str
+        | json.encode
+        | format "{{\"supported\":[\"2026-07-28\"],\"requested\":{}}}",
+}
+
+# internal
+mcp.invalid-params : String -> McpError
+mcp.invalid-params =
+    make McpError { code = const -32602, message = id, data = const "" }
+
+# internal
+mcp.dispatch : (McpServer, McpMessage) -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.dispatch = fork mcp.method (.1 | .method | option.unwrap-or "") id
+
+# internal
+mcp.method : String -> (McpServer, McpMessage) -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.method = curry (match
+    ("server/discover", _) -> .0 | .discover | Ok
+    ("tools/list", _) -> .0 | .tools-list | Ok
+    ("ping", _) -> const (Ok "{\"resultType\":\"complete\"}")
+    ("tools/call", _) -> mcp.call-tool
+    _ -> .0 | format "unknown method `{}`" | mcp.method-not-found | Err)
+
+# internal
+mcp.method-not-found : String -> McpError
+mcp.method-not-found =
+    make McpError { code = const -32601, message = id, data = const "" }
+
+# internal
+mcp.call-tool : (McpServer, McpMessage) -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.call-tool =
+    fork
+        mcp.call-named
+        (.1 | .params | option.unwrap-or Json.Null)
+        (.0 | .tools)
+
+# internal
+mcp.call-named : Json -> List[McpTool] -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.call-named = curry (fork
+    mcp.call-found
+    (.0 | json.get "arguments" | option.unwrap-or Json.Null)
+    (fork
+        mcp.find-tool
+        (.0 | json.get "name" | option.and-then json.as-string)
+        .1))
+
+# internal
+mcp.find-tool : Option[String] -> List[McpTool] -> Result[McpTool, McpError]
+mcp.find-tool = curry (match
+    (None, _) -> const (Err (mcp.invalid-params "missing the tool's `name`"))
+    (Some _, _) -> curry (fork mcp.found .0 (fork find (.0 | mcp.named) .1)))
+
+# internal
+mcp.named : String -> McpTool -> Bool
+mcp.named = curry (fork eq .0 (.1 | .name))
+
+# internal
+mcp.found : String -> Option[McpTool] -> Result[McpTool, McpError]
+mcp.found = curry (match
+    (_, Some _) -> curry (.1 | Ok)
+    (_, None) -> format "unknown tool `{}`" | mcp.invalid-params | Err)
+
+# internal
+mcp.call-found : Json -> Result[McpTool, McpError] -> Result[String, McpError] ! {Async, IO, Network, FileIO}
+mcp.call-found = curry (match
+    (_, Ok _) -> curry (fork apply .0 (.1 | .call) | Ok)
+    (_, Err _) -> const Err)
+
+# ------------------------------------------------------------------ stdio
+
+# Serve over standard input and output: one message per line, until the
+# end of the input (the stdio transport).
+mcp.serve-stdio : McpServer -> () ! {Async, IO, Network, FileIO}
+mcp.serve-stdio = loop mcp.line-step
+
+# internal
+mcp.line-step : McpServer -> Step[McpServer, ()] ! {Async, IO, Network, FileIO}
+mcp.line-step = fork mcp.on-line id (const () | read-line)
+
+# internal
+mcp.on-line : McpServer -> Option[String] -> Step[McpServer, ()] ! {Async, IO, Network, FileIO}
+mcp.on-line = curry (match
+    (_, None) -> const (Stop ())
+    (_, Some _) -> curry (if
+        (.1 | trim | string.is-empty)
+        (.0 | Again)
+        (tap (uncurry mcp.handle | mcp.emit) | .0 | Again)))
+
+# internal
+mcp.emit : Option[String] -> () ! {IO}
+mcp.emit = match
+    None -> ()
+    Some _ -> print
+
+# ------------------------------------------------------------------- HTTP
+
+# Serve over HTTP at `http://addr/mcp` (the Streamable HTTP transport,
+# answering each request with one JSON response).
+mcp.serve-http : String -> McpServer -> () ! {Async, IO, Network}
+mcp.serve-http = curry (attempt mcp.listen-at | mcp.stopped)
+
+# internal
+mcp.listen-at : (String, McpServer) -> () ! {Async, IO, Network, Error[IoError]}
+mcp.listen-at = fork mcp.listen-on (.0 | tcp.listen | tap mcp.announce) .1
+
+# internal
+mcp.listen-on : Listener -> McpServer -> () ! {Async, IO, Network}
+mcp.listen-on = curry (fork
+    http.serve-on
+    .0
+    (both (const (http.config "unused")) (.1 | mcp.on-request)))
+
+# internal
+mcp.announce : Listener -> () ! {IO, Network}
+mcp.announce =
+    tcp.local-addr | format "fwp: mcp listening on http://{}/mcp" | eprint
+
+# internal
+mcp.stopped : Result[(), IoError] -> () ! {IO}
+mcp.stopped = match
+    Ok _ -> id
+    Err _ -> .message | flip concat "fwp: " | eprint | const 1 | exit
+
+# The answer to an HTTP request: `POST /mcp` with one message, whose
+# `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name` headers match it.
+# Requests from a browser page of another host than this one (`Origin`)
+# are refused.
+mcp.on-request : McpServer -> Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+mcp.on-request = curry (if
+    (.1 | .path | eq "/mcp")
+    (if
+        (.1 | .method | eq "POST")
+        (if
+            (.1 | mcp.origin-ok)
+            mcp.post
+            (const (http.text 403 "forbidden origin")))
+        (const
+            (http.text 405 "method not allowed"
+                | http.with-header "allow" "POST")))
+    (const (http.text 404 "not found")))
+
+# internal
+mcp.post : (McpServer, Request) -> Response ! {Async, IO, Network, FileIO}
+mcp.post = fork mcp.post-json (.1 | http.body-text | json.parse) id
+
+# internal
+mcp.post-json : Result[Json, String] -> (McpServer, Request) -> Response ! {Async, IO, Network, FileIO}
+mcp.post-json = curry (match
+    (Err _, _) -> const (const
+        (mcp.parse-error | mcp.error-of Json.Null | mcp.json-response 400))
+    (Ok _, _) ->
+        curry (fork mcp.post-checked (fork mcp.header-problem .0 (.1 | .1)) id))
+
+# internal
+mcp.post-checked : Option[String] -> (Json, (McpServer, Request)) -> Response ! {Async, IO, Network, FileIO}
+mcp.post-checked = curry (match
+    (Some _, _) -> curry (.0
+        | make McpError { code = const -32020, message = id, data = const "" }
+        | mcp.error-of Json.Null
+        | mcp.json-response 400)
+    (None, _) -> fork mcp.handle-json (.1 | .0) .0 | mcp.http-reply)
+
+# internal
+mcp.http-reply : Option[String] -> Response
+mcp.http-reply = match
+    None -> http.text 202 ""
+    Some _ -> mcp.json-response 200
+
+# internal
+mcp.json-response : I64 -> String -> Response
+mcp.json-response = curry (both .0 (.1 | string.to-bytes)
+    | uncurry (flip http.respond "application/json"))
+
+# the first header that does not match the message
+# internal
+mcp.header-problem : Json -> Request -> Option[String]
+mcp.header-problem = curry (fork
+        find
+        (.1 | mcp.header-differs)
+        (.0 | mcp.expected-headers)
+    | option.map (.0 | format "the `{}` header does not match the request"))
+
+# internal
+mcp.expected-headers : Json -> List[(String, Option[String])]
+mcp.expected-headers =
+    fork
+        Cons
+        (both (const "MCP-Protocol-Version") mcp.json-version)
+        (fork
+            Cons
+            (both
+                (const "Mcp-Method")
+                (json.get "method" | option.and-then json.as-string))
+            (both (const "Mcp-Name") mcp.json-tool | singleton))
+
+# internal
+mcp.json-version : Json -> Option[String]
+mcp.json-version =
+    json.get "params"
+    | option.and-then (json.get "_meta")
+    | option.and-then (json.get "io.modelcontextprotocol/protocolVersion")
+    | option.and-then json.as-string
+
+# internal
+mcp.json-tool : Json -> Option[String]
+mcp.json-tool =
+    if
+        (json.get "method" | eq (Some (Json.Str "tools/call")))
+        (json.get "params"
+            | option.and-then (json.get "name")
+            | option.and-then json.as-string)
+        (const None)
+
+# internal
+mcp.header-differs : Request -> (String, Option[String]) -> Bool
+mcp.header-differs =
+    curry (fork eq (.1 | .1) (fork http.header (.1 | .0) .0) | not)
+
+# no `Origin` (not a browser), or a page of this machine
+# internal
+mcp.origin-ok : Request -> Bool
+mcp.origin-ok = http.header "origin" | match
+    None -> True
+    Some _ -> mcp.local-origin
+
+# internal
+mcp.local-origin : String -> Bool
+mcp.local-origin =
+    split "://"
+    | last
+    | option.unwrap-or ""
+    | split "/"
+    | head
+    | option.unwrap-or ""
+    | fork any (flip mcp.is-host) (const ["localhost", "127.0.0.1", "[::1]"])
+
+# internal
+mcp.is-host : String -> String -> Bool
+mcp.is-host = curry (if
+    (fork eq .0 .1)
+    (const True)
+    (fork starts-with (.0 | concat ":") .1))
+
+# ----------------------------------------------------------------- server
+
+# Serve the tools: over standard input and output, or with `--listen
+# host:port` over HTTP. The command line is `[--listen host:port]
+# [--help]`.
+mcp.serve : McpServer -> () ! {Async, IO, Network, FileIO}
+mcp.serve = fork mcp.start id (const () | args | cli.parse mcp.default-options)
+
+# internal
+mcp.default-options : McpOptions
+mcp.default-options = McpOptions { listen = None, help = False }
+
+# internal
+mcp.usage : String
+mcp.usage = "usage: server [--listen host:port] [--help]"
+
+# internal
+mcp.start : McpServer -> Result[(McpOptions, List[String]), String] -> () ! {Async, IO, Network, FileIO}
+mcp.start = curry (match
+    (_, Ok _) -> curry mcp.run-with
+    (_, Err _) -> const (cli.usage-error mcp.usage))
+
+# internal
+mcp.run-with : (McpServer, (McpOptions, List[String])) -> () ! {Async, IO, Network, FileIO}
+mcp.run-with =
+    if
+        (.1 | .1 | is-empty | not)
+        (.1
+            | .1
+            | head
+            | option.unwrap-or ""
+            | format "unexpected argument `{}`"
+            | cli.usage-error mcp.usage)
+        (if
+            (.1 | .0 | .help)
+            (const mcp.help | print)
+            (fork mcp.serve-on (.1 | .0 | .listen) .0))
+
+# internal
+mcp.serve-on : Option[String] -> McpServer -> () ! {Async, IO, Network, FileIO}
+mcp.serve-on = curry (match
+    (None, _) -> mcp.serve-stdio
+    (Some _, _) -> mcp.serve-http)
+
+# internal
+mcp.help : String
+mcp.help =
+    "usage: server [--listen host:port] [--help]\n\nServe the program's tools over the Model Context Protocol (version\n2026-07-28, stateless): on standard input and output, one JSON-RPC message\nper line, or over HTTP at http://host:port/mcp with --listen.\n\noptions:\n  --listen host:port  serve HTTP at http://host:port/mcp\n  --help              show this help"

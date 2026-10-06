@@ -1,0 +1,108 @@
+# Shipping rates: the carriers, and what they charge for a parcel.
+#
+# expose: rest
+
+export version : String
+version = "1.0.0"
+
+Size =
+    | Small
+    | Medium
+    | Large
+
+Parcel = { weight: F64, size: Size, to: String }
+
+Carrier = {
+    name: String,
+    base: F64,
+    per-kg: F64,
+    days: I64,
+    countries: List[String],
+}
+
+Rate = { carrier: String, price: F64, days: I64 }
+
+Options = {
+    # only carriers that deliver within two days
+    express: Bool,
+    # at most this many days
+    max-days: Option[I64],
+}
+
+# why a parcel cannot be shipped
+Problem =
+    | TooHeavy F64
+    | NoRoute String
+
+carriers : List[Carrier]
+carriers = [
+    Carrier {
+        name = "swift",
+        base = 9.0,
+        per-kg = 2.0,
+        days = 1,
+        countries = ["FR", "DE"],
+    },
+    Carrier {
+        name = "steady",
+        base = 4.0,
+        per-kg = 1.0,
+        days = 4,
+        countries = ["FR", "DE", "IT"],
+    },
+]
+
+# A carrier by its name.
+# route: GET /carriers/{name}
+export carrier : String -> Option[Carrier]
+carrier = eq | compose .name | find | apply carriers
+
+# The rates for a parcel, cheapest first.
+# route: POST /rates
+# error: TooHeavy 422, NoRoute 404
+export rates : Options -> Parcel -> List[Rate] ! {Error[Problem]}
+rates = curry (tap (.1 | check-weight) | fork offers .0 (.1 | routes))
+
+check-weight : Parcel -> () ! {Error[Problem]}
+check-weight = if (.weight | gt 30.0) (.weight | TooHeavy | fail) (const ())
+
+serving : String -> List[Carrier]
+serving = contains | compose .countries | filter | apply carriers
+
+routes : Parcel -> List[Rate] ! {Error[Problem]}
+routes =
+    if
+        (.to | serving | is-empty)
+        (.to | NoRoute | fail)
+        (fork map rate (.to | serving))
+
+factor : Size -> F64
+factor = match
+    Small -> 1.0
+    Medium -> 1.5
+    Large -> 2.5
+
+rate : Parcel -> Carrier -> Rate
+rate = curry (make Rate {
+    carrier = .1 | .name,
+    price =
+        fork
+            add
+            (.1 | .base)
+            (fork mul (.1 | .per-kg) (.0 | fork mul .weight (.size | factor))),
+    days = .1 | .days,
+})
+
+offers : Options -> List[Rate] -> List[Rate]
+offers = curry (fork filter (.0 | keep) .1 | sort-by .price)
+
+keep : Options -> Rate -> Bool
+keep = curry (fork
+    and
+    (if (.0 | .express) (.1 | .days | le 2) (const True))
+    (fork within (.0 | .max-days) (.1 | .days)))
+
+within : Option[I64] -> I64 -> Bool
+within = curry (match
+    (None, _) -> const True
+    (Some _, _) -> le)

@@ -271,7 +271,7 @@ routes = http.router [http.route "GET" "/ws" (http.websocket echo)]
   session's `protocol` is the one chosen, or `None`; a client refuses an
   answer naming a protocol it did not offer.
 
-`examples/server/chat.fwp` is a chat server; tutorial 20 walks through
+`examples/server/chat.fwp` is a chat server; tutorial 19 walks through
 WebSocket and HTTP/2.
 
 ### Compression

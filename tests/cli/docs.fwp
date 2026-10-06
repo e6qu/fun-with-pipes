@@ -1,4 +1,6 @@
 # Doc comments found through the syntax tree (tests/cli.rs).
+#
+# expose: cli
 
 import docmods.types
 

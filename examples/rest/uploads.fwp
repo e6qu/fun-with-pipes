@@ -7,6 +7,8 @@
 #     curl -H 'accept: text/csv' localhost:8080/guestbook
 #
 # (See docs/rest.md.)
+#
+# expose: rest
 
 # Files sent with a title (`multipart/form-data`).
 Batch = { title: String, files: List[Upload], tags: List[String] }

@@ -1,5 +1,5 @@
-Some (Book {copies = 2, isbn = "978-0", title = "Pipes"})
+Some (library.Book {copies = 2, isbn = "978-0", title = "Pipes"})
 None
-Ok (Loan {isbn = "978-0", left = 1})
-Err (NotAvailable {isbn = "978-1", reason = "all copies are out"})
-Err (NotAvailable {isbn = "978-9", reason = "no such book"})
+Ok (library.Loan {isbn = "978-0", left = 1})
+Err (library.NotAvailable {isbn = "978-1", reason = "all copies are out"})
+Err (library.NotAvailable {isbn = "978-9", reason = "no such book"})

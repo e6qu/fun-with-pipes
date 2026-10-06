@@ -1,0 +1,9 @@
+# Talk to the mirror over a WebSocket.
+
+main =
+    "ws://127.0.0.1:8720/mirror"
+    | ws.connect
+    | tap (ws.send-text "hello from fwp")
+    | tap (ws.recv | echo)
+    | tap ws.close
+    | ws.wait

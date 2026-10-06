@@ -1,8 +1,0 @@
-True
-gen.HelloReply {message = "hello, Ada"}
-["tick 1", "tick 2", "tick 3"]
-Ada+Ada
-["ADA", "ADA"]
-()
-Err (GrpcError {code = 12, message = "unknown method /helloworld.Greeter/Nope"})
-Err (GrpcError {code = 3, message = "malformed protobuf message"})

@@ -105,8 +105,6 @@ fn start(it: &mut Interp, c: &ConnRef, s: StreamRef, w: &Rc<Web>) {
     let call = wrap(Native::Grpc(Obj::Call(Rc::new(Call {
         conn: c.clone(),
         stream: s.clone(),
-        server: true,
-        deadline: None,
     }))));
     let job = Baton((c.clone(), s.clone(), w.handler.clone(), call));
     let t = it.spawn_rust(

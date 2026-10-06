@@ -1,0 +1,59 @@
+# Exact conversions and sums, for a model that should not do arithmetic
+# in its head.
+#
+# expose: mcp
+
+export version : String
+version = "1.0.0"
+
+Unit =
+    | Celsius
+    | Fahrenheit
+    | Kelvin
+
+Reading = {
+    # the temperature to convert
+    value: F64,
+    # its unit
+    from: Unit,
+    # the unit to convert it to
+    to: Unit,
+}
+
+celsius : Unit -> F64 -> F64
+celsius = match
+    Celsius -> id
+    Fahrenheit -> sub 32.0 | mul 5.0 | div 9.0
+    Kelvin -> sub 273.15
+
+from-celsius : Unit -> F64 -> F64
+from-celsius = match
+    Celsius -> id
+    Fahrenheit -> mul 9.0 | div 5.0 | add 32.0
+    Kelvin -> add 273.15
+
+# Convert a temperature from one unit to another.
+export convert : Reading -> F64
+convert = fork from-celsius .to (fork celsius .from .value)
+
+# Split a bill of CENTS between PEOPLE: equal shares in cents, the first
+# ones a cent more when it does not divide evenly.
+# args: cents people
+export split-bill : I64 -> I64 -> List[I64] ! {Error[String]}
+split-bill = curry (if
+    (.1 | le 0)
+    (const "there must be at least one person" | fail)
+    shares)
+
+Split = { base: I64, extra: I64 }
+
+shares : (I64, I64) -> List[I64]
+shares =
+    fork
+        map
+        (make Split { base = swap | uncurry div, extra = swap | uncurry rem }
+            | share)
+        (.1 | range 0)
+
+share : Split -> I64 -> I64
+share = curry (if (fork lt .1 (.0 | .extra)) (.0 | .base | add 1) (.0 | .base))

@@ -291,9 +291,11 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 Exported functions also run as command-line programs, with flags, help,
 subcommands, environment variables, shell completion and man pages
 ([cli.md](cli.md)), as REST endpoints with a JSON contract and an
-OpenAPI document ([rest.md](rest.md)), and as gRPC methods
-([grpc.md](grpc.md)); [interfaces.md](interfaces.md) compares them.
-The HTTP, REST and gRPC servers and clients also speak TLS
+OpenAPI document ([rest.md](rest.md)), and as MCP tools
+([mcp.md](mcp.md)); [interfaces.md](interfaces.md) compares them. A
+program also splits into services that call each other over gRPC
+([services.md](services.md)). The HTTP, REST and service servers and
+clients also speak TLS
 ([tls.md](tls.md)). The HTTP server and client (and so REST) speak
 HTTP/1.1 and HTTP/2, compress bodies with gzip and deflate, and carry
 WebSocket sessions ([concurrency.md](concurrency.md#http2)).
@@ -305,13 +307,13 @@ fwp build file.fwp [options]                  compile
     -o out           output path
     -O0..-O3         C optimization level
     --fn name        an exported function as an executable (see cli.md)
-    --cli            every exported function as a subcommand of one
-                     executable (see cli.md)
-    --rest           every exported function as an endpoint of one HTTP
-                     server, with /openapi.json, forms and content
-                     negotiation (see rest.md)
-    --grpc           every exported function as a method of one gRPC
-                     server, with reflection (see grpc.md)
+    --cli            the exported functions exposed as `cli` as the
+                     subcommands of one executable (see cli.md)
+    --rest           the exported functions exposed as `rest` as the
+                     endpoints of one HTTP server, with /openapi.json,
+                     forms and content negotiation (see rest.md)
+    --mcp            the exported functions exposed as `mcp` as the tools
+                     of one MCP server, on stdio or HTTP (see mcp.md)
     --target T       native (default), <arch>-linux (cross-compiled, such
                      as aarch64-linux), wasm32-wasi, wasm32-browser
     --fat            one variant per CPU feature level, chosen at startup
@@ -333,17 +335,15 @@ fwp build file.fwp [options]                  compile
                      a directory for the main and server executables
 fwp serve [--service M]... file.fwp module [--listen A]
                                               serve a module over gRPC
-fwp serve --rest file.fwp [--listen A]        serve the exported functions as REST endpoints
-fwp serve --grpc file.fwp [--listen A]        serve the exported functions over gRPC
-    --tls-cert F --tls-key F                  (any `fwp serve`, and the servers that --rest,
-                                              --grpc and --service build) serve over TLS
+fwp serve --rest file.fwp [--listen A]        serve the functions exposed as `rest` as REST endpoints
+fwp serve --mcp file.fwp [--listen A]         serve the functions exposed as `mcp` as MCP tools
+                                              (stdio; HTTP at /mcp with --listen)
+    --tls-cert F --tls-key F                  (`fwp serve`, `fwp serve --rest` and the servers that
+                                              --rest and --service build) serve over TLS
                                               with this certificate chain and key (PEM; see tls.md)
     --tls-client-ca F                         and require client certificates signed by these CAs
     --cors ORIGINS                            (REST servers) allow these origins from browsers
-fwp proto file.fwp [--service M]...           print the .proto of the services
-fwp proto --grpc file.fwp                     print the .proto of the exported functions
-fwp proto --import file.proto [-o out.fwp]    generate types, clients and routes (with descriptors
-                                              for server reflection) of a .proto file
+fwp proto file.fwp [--service M]...           print the messages of the services (.proto)
 fwp openapi [--yaml] file.fwp                 print the OpenAPI document of the REST endpoints
 fwp openapi --import spec.json [-o out.fwp]   generate a client module of an OpenAPI 3 or Swagger 2.0
                                               document (JSON or YAML)
@@ -366,7 +366,7 @@ A file argument of `-` reads the program from standard input.
 ### Compiled by default
 
 `fwp run`, `fwp exec`, `fwp test`, `fwp serve` (gRPC services, `--rest`
-and `--grpc`) and the stages of `fwp pipe` compile the program to a native
+and `--mcp`) and the stages of `fwp pipe` compile the program to a native
 executable through C, as `fwp build` would, and run it in place of `fwp`
 (on Unix the executable replaces the `fwp` process, so it has its process
 id, signals and exit status). The executable is cached under the hash of
@@ -619,11 +619,11 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_TRANSPORT` | the transport an executable reading the binary protocol asks its producer for: `shm` (the default), `uds`, or `stdio`, which keeps the stream on the pipe and makes producers not offer any (see [transports](protocol.md#transports)) |
 | `FWP_TRANSPORT_WAIT=ms` | a producer of the binary protocol waits that long after its header for the consumer to ask for a transport (`fwp pipe` sets 10000 for its stages) |
 | `FWP_TRANSPORT_REPORT=1` | a consumer of the binary protocol says on stderr when its input moves to another transport |
-| `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#grpc)) |
+| `FWP_SERVICE_<M>` | the `host:port` of service `M`, or `tls://host:port` for TLS (see [services](services.md), [tls.md](tls.md#services)) |
 | `FWP_REST_ADDR` | the `host:port` a REST server listens on without `--listen` (see [rest.md](rest.md)) |
 | `FWP_TLS_CERT`, `FWP_TLS_KEY` | the certificate chain and private key (PEM files) of REST and gRPC servers without `--tls-cert` and `--tls-key`: they serve over TLS when both are set (see [tls.md](tls.md)) |
 | `FWP_TLS_CLIENT_CA` | the CA certificates (PEM) of the client certificates that REST and gRPC servers require, without `--tls-client-ca` (see [tls.md](tls.md#mutual-tls)) |
-| `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`, `_CERT`, `_KEY` | the TLS options of the clients of service `M`: a CA file, no verification, the server name, a client certificate and key (see [tls.md](tls.md#grpc)) |
+| `FWP_SERVICE_<M>_CA`, `_INSECURE`, `_SERVER_NAME`, `_CERT`, `_KEY` | the TLS options of the clients of service `M`: a CA file, no verification, the server name, a client certificate and key (see [tls.md](tls.md#services)) |
 | `FWP_REST_CORS` | the origins (separated by commas, or `*`) that may call a REST server from browsers, without `--cors` (see [rest.md](rest.md#cors)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
 | `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |

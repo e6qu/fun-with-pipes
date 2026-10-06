@@ -1445,13 +1445,12 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
 
 /* ----------------------------------------------------------------- servers */
 
-enum { G_ROUTE_METHOD, G_ROUTE_FWP, G_ROUTE_HEALTH, G_ROUTE_WATCH, G_ROUTE_REFLECTION };
+enum { G_ROUTE_METHOD, G_ROUTE_HEALTH, G_ROUTE_WATCH, G_ROUTE_REFLECTION };
 
 typedef struct {
     const char *path;
     int kind;
     const fwp_rpc *m;
-    V handler;
 } g_route;
 
 struct g_server {
@@ -1761,17 +1760,6 @@ static int g_run_method(g_job *j, char **msg) {
     return -1;
 }
 
-static V g_call_value(g_conn *c, g_stream *s, int server, int64_t deadline);
-
-static int g_run_fwp(g_job *j, char **msg) {
-    V call = g_call_value(j->c, j->s, 1, 0);
-    V v = 0, err = 0;
-    const fwp_desc *ed = 0;
-    int k = g_apply_user(j->route->handler, 1, &call, &v, &err, &ed);
-    int in_response;
-    return g_outcome(j, k, err, ed, &in_response, msg);
-}
-
 static void g_put_bytes(h2_buf *b, uint32_t num, const void *p, size_t n) {
     pb_key(b, num, 2);
     pb_varint(b, n);
@@ -1917,7 +1905,7 @@ static void g_handle(void *arg, int cancelled) {
     char *msg = 0;
     /* calls of the program's functions (not of reflection and health
      * checking) are logged when they are cancelled */
-    int logged = j->route && (j->route->kind == G_ROUTE_METHOD || j->route->kind == G_ROUTE_FWP);
+    int logged = j->route && j->route->kind == G_ROUTE_METHOD;
     if (!cancelled) {
         const char *path = h2_get(&j->s->headers, ":path");
         if (!j->route) {
@@ -1926,7 +1914,6 @@ static void g_handle(void *arg, int cancelled) {
         } else {
             switch (j->route->kind) {
             case G_ROUTE_METHOD: code = g_run_method(j, &msg); break;
-            case G_ROUTE_FWP: code = g_run_fwp(j, &msg); break;
             case G_ROUTE_HEALTH: code = g_health(j, 0, &msg); break;
             case G_ROUTE_WATCH: code = g_health(j, 1, &msg); break;
             default: code = g_reflect(j, &msg); break;
@@ -2090,7 +2077,7 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
 
 /* -------------------------------------------------------------- primitives */
 
-/* GrpcStream: one side of a call */
+/* one side of a call (the HTTP/2 streams of runtime/fwp_rt_http2.c) */
 typedef struct {
     g_conn *c;
     g_stream *s;
@@ -2105,78 +2092,6 @@ static V g_call_value(g_conn *c, g_stream *s, int server, int64_t deadline) {
     k->server = server;
     k->deadline = deadline;
     return PTR(k);
-}
-
-#define GCALL(v) ((g_call *)(uintptr_t)(v))
-
-static V fwp_p_grpc_open(V addr, V path, const fwp_desc *gerr) {
-    fwp_tasks_init();
-    g_conn *c = 0;
-    int reused;
-    char *err = 0;
-    int64_t deadline = g_ctx_of()->deadline;
-    g_stream *s = g_open_tls(STR(addr)->d, STR(path)->d, 0, &c, &reused, &err, 0);
-    if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
-    return g_call_value(c, s, 0, deadline);
-}
-
-/* sending on a client stream failed: the status the server ended it with */
-static V g_closed_error(g_call *k, const fwp_desc *gerr) {
-    g_got g;
-    g_recv(k->c, k->s, k->deadline, &g);
-    if (g.kind == G_END && g.code != 0) return g_grpc_error(g.code, g.text, gerr);
-    if (g.kind == G_LOST) return g_grpc_error(GRPC_UNAVAILABLE, g.text, gerr);
-    return g_grpc_error(GRPC_UNAVAILABLE, "the stream is closed", gerr);
-}
-
-static V fwp_p_grpc_send(V b, V call, const fwp_desc *gerr) {
-    g_call *k = GCALL(call);
-    int ok = g_send_msg(k->c, k->s, (const unsigned char *)STR(b)->d, STR(b)->len, 0);
-    if (k->server) {
-        fwp_check_cancel();
-        return FWP_UNIT;
-    }
-    if (!ok) return g_closed_error(k, gerr);
-    return FWP_UNIT;
-}
-
-static V fwp_p_grpc_close_send(V call) {
-    g_call *k = GCALL(call);
-    if (!k->server) g_send_data(k->c, k->s, 0, 0, 1);
-    return FWP_UNIT;
-}
-
-static V fwp_p_grpc_recv(V call, const fwp_desc *gerr) {
-    g_call *k = GCALL(call);
-    g_got g;
-    g_recv(k->c, k->s, k->deadline, &g);
-    if (g.kind == G_MSG) {
-        V r = fwp_str_new((const char *)g.m->d, g.m->n);
-        free(g.m);
-        return fwp_some(r);
-    }
-    if (g.kind == G_END && g.code == 0) return FWP_NONE;
-    if (g.kind == G_END) return g_grpc_error(g.code, g.text, gerr);
-    if (k->server) {
-        if (k->s->bad) g_fail_call(GRPC_INVALID_ARGUMENT, g.text);
-        fwp_cancel_tree(fwp_cur);
-        fwp_check_cancel();
-    }
-    return g_grpc_error(GRPC_UNAVAILABLE, g.text, gerr);
-}
-
-static V fwp_p_grpc_cancel(V call) {
-    g_call *k = GCALL(call);
-    if (!k->server) g_reset(k->c, k->s, 8);
-    return FWP_UNIT;
-}
-
-static V fwp_p_grpc_response_metadata(V call) {
-    h2_hdrs md = {0};
-    g_metadata_into(GCALL(call)->s, &md);
-    V r = g_pairs_value(&md);
-    h2_hdrs_free(&md);
-    return r;
 }
 
 static int g_not_metadata(const char *k) {
@@ -2294,8 +2209,6 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     return fwp_tuple2(r, md);
 }
 
-static V fwp_p_grpc_response_metadata(V call);
-
 static V fwp_p_grpc_peer_subject(void) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv || !sv->peer) return FWP_NONE;
@@ -2323,176 +2236,6 @@ static V fwp_p_grpc_with_deadline(V d, V f) {
     *ctx = *cur;
     ctx->deadline = g_earliest(cur->deadline, fwp_after(d));
     return g_with_ctx(ctx, f);
-}
-
-/* GrpcRoute = { handler, path }; over TLS with the context `tls` */
-static V g_serve_routes(SSL_CTX *tls, V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
-    fwp_tasks_init();
-    char bound[300];
-    int fd = h2_listen(STR(addr)->d, bound, sizeof bound);
-    if (fd < 0) return fwp_io_error("listen", h2_err, ioerr);
-    size_t n;
-    V *items = fwp_list_items(routes, &n);
-    g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);
-    srv->routes = (g_route *)fwp_mem_alloc((n + 2) * sizeof(g_route));
-    srv->services = (const char **)fwp_mem_alloc((n + 1) * sizeof(char *));
-    for (size_t i = 0; i < n; i++) {
-        V r = items[i];
-        g_route *rt = &srv->routes[srv->n++];
-        rt->handler = OBJ(r)->f[0];
-        rt->path = strdup(STR(OBJ(r)->f[1])->d);
-        rt->kind = G_ROUTE_FWP;
-        const char *p = rt->path[0] == '/' ? rt->path + 1 : rt->path;
-        const char *slash = strchr(p, '/');
-        if (slash) {
-            char *svc = g_strdupf("%.*s", (int)(slash - p), p);
-            if (!g_known_service(srv, svc)) srv->services[srv->nservices++] = svc;
-        }
-    }
-    srv->routes[srv->n].path = g_builtin_paths[2];
-    srv->routes[srv->n++].kind = G_ROUTE_HEALTH;
-    srv->routes[srv->n].path = g_builtin_paths[3];
-    srv->routes[srv->n++].kind = G_ROUTE_WATCH;
-    srv->module = "";
-    srv->tls = tls;
-    g_grpc_error_desc = gerr;
-    fflush(fwp_prog_out);
-    fprintf(stderr, "fwp: gRPC server listening on %s%s\n", tls ? "tls://" : "", bound);
-    fflush(stderr);
-    g_accept_loop(fd, srv);
-    return FWP_UNIT;
-}
-
-static V fwp_p_grpc_serve(V addr, V routes, const fwp_desc *ioerr, const fwp_desc *gerr) {
-    return g_serve_routes(0, addr, routes, ioerr, gerr);
-}
-
-/* certificate, key (PEM files), client CA ("" for none), address, routes */
-static V fwp_p_grpc_serve_tls(V cert, V key, V client_ca, V addr, V routes, const fwp_desc *ioerr,
-                              const fwp_desc *gerr) {
-    SSL_CTX *tls =
-        fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, (unsigned char *)strdup("\x02h2"), 3, STR(client_ca)->d);
-    if (!tls) return fwp_io_error("tls", fwp_tls_err, ioerr);
-    return g_serve_routes(tls, addr, routes, ioerr, gerr);
-}
-
-/* the typed calls (kinds 0-3: unary, server-streaming, client-streaming,
- * bidirectional) and handlers (4-7) of lib/grpc.fwp */
-static V fwp_p_grpc_typed(int kind, int n, V *a, const fwp_desc *gerr) {
-    (void)n;
-    if (kind < 4) {
-        V enc = a[0], dec = a[1];
-        int64_t deadline = g_ctx_of()->deadline;
-        g_conn *c = 0;
-        int reused;
-        char *err = 0;
-        g_stream *s = g_open_tls(STR(a[3])->d, STR(a[2])->d, 0, &c, &reused, &err, 0);
-        if (!s) return g_grpc_error(GRPC_UNAVAILABLE, err, gerr);
-        /* a failure (an error of the encoder or decoder) resets the stream */
-        fwp_handler h;
-        h.prev = fwp_handlers;
-        h.state_depth = fwp_state_len;
-        fwp_handlers = &h;
-        if (setjmp(h.jb) != 0) {
-            fwp_handlers = h.prev;
-            fwp_state_len = h.state_depth;
-            g_reset(c, s, 8);
-            fwp_fail(h.value, h.desc);
-        }
-        V result = FWP_UNIT;
-        if (kind == 3) {
-            /* requests are sent as responses arrive */
-            g_spawn_sender(c, s, a[4], enc, 0);
-        } else if (kind == 2) {
-            V cur = a[4], x;
-            while (g_iter_next(&cur, &x)) {
-                V b = fwp_apply1(enc, x);
-                if (!g_send_msg(c, s, (const unsigned char *)STR(b)->d, STR(b)->len, 0)) {
-                    g_call k = {c, s, 0, deadline};
-                    g_closed_error(&k, gerr);
-                }
-            }
-            g_send_data(c, s, 0, 0, 1);
-        } else {
-            V b = fwp_apply1(enc, a[4]);
-            g_send_msg(c, s, (const unsigned char *)STR(b)->d, STR(b)->len, 1);
-        }
-        g_got g;
-        if (kind == 0 || kind == 2) {
-            g_recv(c, s, deadline, &g);
-            if (g.kind != G_MSG) {
-                if (g.kind == G_END && g.code == 0) g_grpc_error(GRPC_INTERNAL, "missing response message", gerr);
-                g_grpc_error(g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text, gerr);
-            }
-            g_msg *m = g.m;
-            g_got e;
-            g_recv(c, s, deadline, &e);
-            if (e.kind == G_MSG) g_grpc_error(GRPC_INTERNAL, "more than one response message", gerr);
-            if (e.kind == G_LOST) g_grpc_error(GRPC_UNAVAILABLE, e.text, gerr);
-            if (e.code != 0) g_grpc_error(e.code, e.text, gerr);
-            result = fwp_apply1(dec, fwp_str_new((const char *)m->d, m->n));
-            free(m);
-        } else {
-            V ch = a[5];
-            for (;;) {
-                g_recv(c, s, deadline, &g);
-                if (g.kind == G_MSG) {
-                    V v = fwp_apply1(dec, fwp_str_new((const char *)g.m->d, g.m->n));
-                    free(g.m);
-                    fwp_p_channel_send(ch, v);
-                    continue;
-                }
-                if (g.kind == G_LOST && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
-                if (g.kind == G_LOST) g_grpc_error(GRPC_UNAVAILABLE, g.text, gerr);
-                if (g.code != 0) g_grpc_error(g.code, g.text, gerr);
-                break;
-            }
-        }
-        fwp_handlers = h.prev;
-        return result;
-    }
-    /* handlers: (iter_fn,) dec, enc, f, stream */
-    int streaming_in = kind >= 6;
-    V *p = streaming_in ? a + 1 : a;
-    V dec = p[0], enc = p[1], f = p[2];
-    g_call *k = GCALL(p[3]);
-    V arg;
-    if (streaming_in) {
-        g_incoming *src = (g_incoming *)fwp_mem_alloc(sizeof *src);
-        src->c = k->c;
-        src->s = k->s;
-        src->server = 1;
-        g_codec d = {dec, 0, 0, 0, 0};
-        src->dec = d;
-        src->what = "";
-        g_cell *cell = (g_cell *)fwp_mem_alloc(sizeof *cell);
-        cell->src = src;
-        arg = fwp_apply1(a[0], PTR(cell));
-    } else {
-        g_job j;
-        memset(&j, 0, sizeof j);
-        j.c = k->c;
-        j.s = k->s;
-        int code;
-        char *msg = 0;
-        g_msg *m = g_recv_one(&j, &code, &msg);
-        if (!m) return g_grpc_error(code, msg, gerr);
-        V v;
-        char *why = 0;
-        g_codec d = {dec, 0, 0, 0, 0};
-        if (g_decode(&d, m->d, m->n, &v, &why) != G_DEC_OK) return g_grpc_error(GRPC_INVALID_ARGUMENT, why, gerr);
-        free(m);
-        arg = v;
-    }
-    if (kind == 5 || kind == 7) {
-        g_codec e = {enc, 0, 0, 0, 0};
-        fwp_apply2(f, arg, g_sink_value(k->c, k->s, e, 0));
-    } else {
-        V b = fwp_apply1(enc, fwp_apply1(f, arg));
-        g_send_msg(k->c, k->s, (const unsigned char *)STR(b)->d, STR(b)->len, 0);
-        fwp_check_cancel();
-    }
-    return FWP_UNIT;
 }
 
 static V fwp_p_grpc_force(V cell) {
