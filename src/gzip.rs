@@ -1,5 +1,5 @@
 //! gzip (RFC 1952) over DEFLATE (RFC 1951), written from scratch for gRPC
-//! message compression (`grpc-encoding: gzip`, docs/grpc.md). Decoding is
+//! message compression (`grpc-encoding: gzip`, docs/services.md). Decoding is
 //! complete (stored, fixed and dynamic Huffman blocks); encoding uses
 //! fixed Huffman codes with a greedy LZ77 search over a hash of three
 //! bytes, which is simple and still compresses repetitive messages well.

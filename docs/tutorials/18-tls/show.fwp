@@ -1,0 +1,6 @@
+# Show two quotes. Built with `--service quotes`, the calls go to the
+# quotes service, over TLS when its address is `tls://host:port`.
+
+import quotes
+
+main = [2 | quotes.saying | echo, () | quotes.count | echo] | ignore

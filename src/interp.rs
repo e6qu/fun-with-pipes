@@ -765,9 +765,7 @@ impl<'p> Interp<'p> {
             {
                 crate::grpc::web::prim(self, sym, &mut a)
             }
-            _ if sym.starts_with("grpc.") || sym.starts_with("pb.") => {
-                crate::grpc::prim(self, id, sym, &mut a)
-            }
+            _ if sym.starts_with("grpc.") => crate::grpc::prim(self, id, sym, &mut a),
             _ if crate::sys::handles(sym) => crate::sys::prim(sym, &a, &mut *self.out),
             "cli.parse" => {
                 let argv: Vec<String> = a[1]

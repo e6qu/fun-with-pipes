@@ -1,6 +1,0 @@
-Some "hello over HTTP/1.1\n"
-200 (content-encoding none, 2100 bytes)
-("200 (content-encoding gzip, 59 bytes)", Ok 2100)
-(101, Some "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=")
-400 (content-encoding none, 36 bytes)
-Http2

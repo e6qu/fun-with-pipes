@@ -18,10 +18,14 @@ $ ls out
 inventory  pricing  shop
 ```
 
-[Tutorial 14](tutorials/14-services/README.md) walks through a small
-example. The same exported functions can also be command-line programs
-and REST endpoints; [interfaces.md](interfaces.md) compares the three. The shop in [`examples/services`](../examples/services/main.fwp)
-splits into two services, one of which calls the other.
+[Tutorial 14](tutorials/14-services/README.md) builds a small example both
+ways. A module's exported functions are all served, with no `# expose:`
+line: that line chooses the interfaces for clients outside the program
+(command lines, REST, a gRPC server of the root file, MCP), which
+[interfaces.md](interfaces.md) compares, and has no effect on how the
+program is split. The shop in
+[`examples/services`](../examples/services/main.fwp) splits into two
+services, one of which calls the other.
 
 ## The method
 
@@ -72,11 +76,10 @@ inventory server. Splitting a subset is fine: with only
 | `fwp serve --service n... app.fwp m [--listen addr]` | serves module `m` (compiled and cached, or interpreted with `--interp`); its calls to the modules named by `--service` are remote |
 | `fwp proto app.fwp [--service m]...` | prints the `.proto` file of the named services (by default, of every imported module that exports functions) |
 
-To serve the exported functions of a file on their own, without a program
-around them, use `fwp build --grpc` or `fwp serve --grpc`
-([grpc.md](grpc.md)); a split build's servers and clients are the same
-gRPC servers and clients, with the streaming, deadlines, metadata,
-reflection and health checking that page describes.
+gRPC is only the transport between the parts of a program: to serve
+functions to other clients, expose them as REST endpoints or MCP tools
+([interfaces.md](interfaces.md)). [Calls between services](#calls-between-services)
+describes streaming, deadlines, metadata and statuses.
 
 A server executable takes one option, `--listen host:port`. It prints
 `fwp: service m listening on host:port` on stderr once it accepts
@@ -93,7 +96,7 @@ An address `tls://host:port` (or `grpcs://host:port`) is TLS: clients
 connect with TLS and verify the server's certificate, and the server,
 which then needs `--tls-cert` and `--tls-key` (or `FWP_TLS_CERT` and
 `FWP_TLS_KEY`), listens on `host:port` with TLS. See
-[tls.md](tls.md#grpc).
+[tls.md](tls.md#services).
 
 `<M>` is the module name in upper case with every other character
 replaced by `_`: `inventory` is `FWP_SERVICE_INVENTORY`, `shop.billing` is
@@ -142,7 +145,7 @@ at least one parameter, and every parameter, its result and its `Error`
 type can be encoded: numbers, `Bool`, `String`, `Bytes`, `Duration`,
 records, tuples, `()`, variants, `List`, `Array`, `Set`, `Map` and
 `Option`, in any combination. An `Iterator` result or parameter and a
-final `Channel` parameter are streams ([grpc.md](grpc.md#streaming)).
+final `Channel` parameter are streams ([below](#streaming)).
 Other functions, resources (`File`), and runtime handles (`Task`,
 `Channel`, sockets) cannot cross a process boundary; a split build that
 would send one is a compile error naming the function:
@@ -157,18 +160,196 @@ main.fwp:2:8: error: `at-one` is served by module `lib`, but values of type `I64
 Exported functions of a split module must also have distinct gRPC method
 names (`price-of` and `price.of` would both be `PriceOf`).
 
+## Calls between services
+
+The calls of a split program behave as the calls of one program; this is how the transport carries them.
+
+### Streaming
+
+Whether a call streams is decided by the function's type:
+
+| Function type | RPC | Messages |
+|---|---|---|
+| `A -> B -> R` | unary | one request `{arg1, arg2}`, one response `{value}` |
+| `A -> Iterator[R]` | server streaming | a response per element |
+| `A -> Iterator[Result[R, GrpcError]]` | server streaming | a response per `Ok`; the first `Err` ends the stream with its status |
+| `A -> Channel[R] -> ()` | server streaming | a response per value sent to the channel |
+| `Iterator[A] -> R` | client streaming | a request `{arg1}` per element |
+| `Iterator[A] -> Iterator[R]` | bidirectional | |
+| `Iterator[A] -> Channel[R] -> ()` | bidirectional | |
+
+(Element messages follow the rule above: a nominal record element is its
+own message.) A client stream must be the function's only parameter
+besides an output channel; gRPC has no other request then.
+
+* **`Iterator[R]` results** suit pure, lazy streams: the server forces
+  the iterator one element at a time and sends each as it goes, within
+  HTTP/2 flow control, so a slow client slows the computation down and an
+  infinite iterator streams until the client cancels.
+* **A final `Channel[R]` parameter** suits effectful streams: the function
+  sends to the channel (`channel.send`), which sends a message on the
+  stream; the stream ends when the function returns. `channel.send` gives
+  `False` once the client has gone. Use it when values come from tasks,
+  timers, other services or other calls.
+* **`Iterator[A]` parameters** are lazy: forcing an element waits for the
+  next request message, so a bidirectional function can answer each
+  request before the next one arrives. A request that cannot be decoded
+  fails the call with `INVALID_ARGUMENT`.
+* **`Iterator[Result[R, GrpcError]]` results** are streams that can fail
+  part way: the messages are `R`s, and an `Err` ends the stream with its
+  status (`OUT_OF_RANGE`, ...) in the trailers. A caller of such a remote
+  function gets the same iterator back: its `Ok`s, then, if the stream
+  fails (with a status, or because the connection is lost), one `Err`
+  with the status, and the end. Nothing traps. `countdown n` streams n,
+  ..., 1, then ends with a status, its first `Err`:
+
+  ```fwp
+  export countdown : I64 -> Iterator[Result[I64, GrpcError]]
+  ```
+
+On the calling side, the same rules apply in the other direction, so a
+split program behaves as one program: a remote `A -> Iterator[R]` returns a lazy
+iterator that receives as it is forced (a failure before the first element
+is raised in the caller; later failures trap, as forcing an iterator
+cannot fail: use `Iterator[Result[R, GrpcError]]` for streams that may
+fail part way), a remote `A -> Channel[R] -> ()` sends each received value
+to the caller's channel (with backpressure) and returns when the stream
+ends, and a client stream sends the elements of the caller's iterator.
+A bidirectional call sends them from a task of its own while the caller
+receives the responses, so requests and responses interleave: the request
+iterator may be infinite, or wait for time to pass, and the call ends when
+the server ends it (`iter.count-from 1 | greeter.firsts` takes three).
+
+
+### Errors and status codes
+
+| Status | When |
+|---|---|
+| `OK` (0) | the function returned; or it raised an `Error[E]` (`E` not `GrpcError`), which is in the response's `oneof` and raised again in an fwp caller |
+| the error's `code` | the function raised `Error[GrpcError]`: `grpc.fail grpc.not-found "no such book"` (codes outside 1 to 16 are `UNKNOWN`) |
+| `INVALID_ARGUMENT` (3) | the request could not be decoded |
+| `DEADLINE_EXCEEDED` (4) | the call's deadline passed (below) |
+| `FAILED_PRECONDITION` (9) | an fwp caller was built against a different version of the function (the `fwp-fingerprint` of [Versioning](#versioning)) |
+| `UNIMPLEMENTED` (12) | no such method |
+| `INTERNAL` (13) | the function trapped (`grpc-message: trap: ...`; the server logs the trap and keeps serving), or raised an error the response cannot hold |
+| `CANCELLED` (1) | the server cancelled the call |
+
+On the calling side, a function with `Error[GrpcError]` raises every
+failure as a `GrpcError`: a non-`OK` status, `UNAVAILABLE` (14) when the service cannot
+be reached or the connection is lost, `DEADLINE_EXCEEDED` for
+`grpc.with-deadline`. Other calls trap on failures, as
+[above](#what-stays-the-same-and-what-changes) describes; a trap on the server traps the caller with the same message.
+`lookup` answers `"ghost"` with the status `NOT_FOUND`:
+
+```fwp
+export lookup : String -> HelloReply ! {Error[GrpcError]}
+lookup = if
+    (eq "ghost")
+    (grpc.fail grpc.not-found)
+    (make HelloReply { message = id })
+```
+
+
+### Deadlines and cancellation
+
+Deadlines use the task machinery of [concurrency.md](concurrency.md):
+
+* **Server.** A call's `grpc-timeout` becomes the deadline of the task
+  serving it. When it passes, the task (and every task it started) is
+  cancelled at its next suspension point, and the client gets
+  `DEADLINE_EXCEEDED`. When the client cancels the call (`RST_STREAM`) or
+  its connection closes, the task is cancelled too. The server logs both:
+  `fwp: deadline exceeded (in greeter.slow)`,
+  `fwp: call cancelled by the client (in greeter.slow)`.
+* **Client.** A call made by a task with a deadline (`task.within`,
+  `task.deadline`) sends the time left as `grpc-timeout`. When the
+  deadline passes, the task is cancelled as anywhere else (`task.within`
+  gives `None`), and the call is reset. Deadlines propagate: a server
+  that calls other services does so from a task whose deadline is its
+  call's.
+* **`grpc.with-deadline d f`** gives the calls `f` makes a deadline of
+  their own: they fail with `DEADLINE_EXCEEDED` (a `GrpcError`) when it
+  passes, and the task goes on.
+
+```fwp
+task.within 2s (const 20 | greeter.slow) | echo,
+task.within 100ms (const 2000 | greeter.slow) | echo,
+()
+    | attempt (const (const 2000 | greeter.nap) | grpc.with-deadline 100ms)
+    | echo,
+```
+
+
+### Metadata
+
+| Function | |
+|---|---|
+| `grpc.metadata ()` | the request headers of the call the task serves, as `(name, value)` pairs with lower-case names (without pseudo-headers and `content-type`, `te`, `grpc-timeout`, `grpc-encoding`, `grpc-accept-encoding`, `fwp-fingerprint`); `[]` outside a call |
+| `grpc.header name` | one of them |
+| `grpc.with-metadata pairs f` | `f`'s calls send these headers too (names are lower-cased; nested uses add up) |
+| `grpc.set-header name value` | add a header to the response of the call being served; it is sent with the first response message, so set it before |
+| `grpc.set-trailer name value` | add a trailer, sent with the status |
+| `grpc.with-response-metadata f` | run `f`, and the response headers and trailers of the calls it made: `(result, pairs)` |
+| `grpc.peer-subject ()` | the subject of the client's certificate, on servers that require them ([tls.md](tls.md)) |
+
+Tasks started by a served function see its call's metadata. Binary
+headers (`-bin`) are passed as their base64 text. Response metadata leaves
+out `content-type`, `grpc-status`, `grpc-message`, `grpc-encoding` and
+`grpc-accept-encoding`. `tagged` greets with response metadata, a header
+and a trailer:
+
+```fwp
+export tagged : String -> String ! {Network}
+```
+
+`grpc.with-response-metadata (const "Ann" | greeter.tagged)` is then
+`("tagged Ann", [("x-served-by", "greeter"), ("x-length", "3")])`.
+
+
+### Compression
+
+Messages compressed with gzip (`grpc-encoding: gzip`) are accepted by
+servers and clients, which advertise `grpc-accept-encoding: gzip`.
+`grpc.with-gzip f` makes the calls `f` makes compress their requests, and
+a server compresses the responses of a call whose requests are
+compressed. Messages under 64 bytes are sent uncompressed (gRPC flags each
+message). DEFLATE is written from scratch (`src/gzip.rs`, and in C in
+`runtime/fwp_rt_h2.c`): decoding is complete; encoding uses fixed Huffman
+codes and a greedy LZ77 search, which compresses repetitive messages well
+but less than zlib. A message that decompresses to more than 64 MiB is
+rejected, and other encodings (`deflate`, `snappy`) fail the call with
+`INVALID_ARGUMENT`.
+
+
+### Concurrency
+
+* A server runs every call in a task of its own, so calls on one
+  connection and on different connections run concurrently, and a slow
+  call does not hold up a fast one.
+* A client keeps one connection per address and multiplexes calls on it:
+  each call is an HTTP/2 stream, and a call waits only in its task. Many
+  tasks can call one service at once (`task.map` over a list of requests
+  makes the calls concurrently).
+* Each connection has a reader task, which parses frames and wakes the
+  tasks waiting for them (and, on a server, starts the calls), and a
+  writer task, which sends what the others queue. Flow control holds a
+  sender back when its stream's or the connection's window is used up.
+* Native programs run tasks as green threads on an event loop (epoll on
+  Linux); the interpreter runs each task on a thread, one at a time.
+
 ## The wire format
 
 Calls are [gRPC](https://grpc.io/docs/what-is-grpc/) calls over HTTP/2
 cleartext with prior knowledge (h2c), or over TLS with ALPN `h2` for
-`tls://` addresses ([tls.md](tls.md#grpc)): any gRPC client and server can
-take part, given the `.proto` file (or server reflection).
+`tls://` addresses ([tls.md](tls.md#services)). The parts of one program
+are its only intended clients; `fwp proto` prints the messages to look
+at what goes over the wire.
 
 - **Names.** The package is `fwp`, a module `inventory` is the service
   `Inventory` (`shop.inventory` is `ShopInventory`), and a function
   `unit-price` is the method `UnitPrice`. The path of a call is
   `/fwp.Inventory/UnitPrice`. `# grpc:` lines in the module change them
-  ([grpc.md](grpc.md#names)).
+  ([below](#the-wire-format)).
 - **Requests.** The arguments of a curried function form its request
   message: `arg1 = 1`, `arg2 = 2`, ... (a `()` argument has no field). A
   single argument of a nominal record type is the request message itself.
@@ -273,7 +454,7 @@ generated from the same schema.
 Any other failure (a refused connection, a reset stream, an HTTP error)
 makes the calling fwp program trap with a message naming the service, the
 address and the cause, unless the function's error type is `GrpcError`:
-then every failure is raised as one ([grpc.md](grpc.md#errors-and-status-codes)).
+then every failure is raised as one ([above](#errors-and-status-codes)).
 
 ## Versioning
 
@@ -288,13 +469,6 @@ they are deployed separately, and an old client can meet a new server.
   `FAILED_PRECONDITION`: `interface mismatch: the caller of
   inventory.reserve was built against a different version of it`. There is
   no silent misinterpretation of fields.
-- **For other clients** protobuf's compatibility rules apply, and they do
-  not send the fingerprint. Field numbers come from declaration order, so
-  appending a field to a record keeps old clients working (they ignore the
-  new field, and the server reads its default when old clients omit it);
-  inserting, removing or reordering fields, or renaming a function or a
-  module, breaks them. Regenerate the `.proto` with `fwp proto` and treat
-  it as the published contract.
 
 ## Transport details
 
@@ -329,10 +503,17 @@ and, when Go is installed, to Go's HTTP/2 client and server.
 
 ## Limitations
 
-- See [grpc.md](grpc.md#limitations) for the limits of the gRPC
-  implementation, and [tls.md](tls.md#limitations) for those of TLS.
+- gzip is the only compression of messages; the encoder compresses less
+  than zlib. Clients compress only within `grpc.with-gzip`.
+- After the first element, a failure of a remote `Iterator[R]` result
+  traps in the client, since forcing an iterator cannot raise an error;
+  `Iterator[Result[R, GrpcError]]` reports it instead.
+- Clients retry a call only when a reused connection turns out to be
+  closed before the server saw the request; there is no retry policy, no
+  keepalive pinging and no load balancing.
+- See [tls.md](tls.md#limitations) for the limits of TLS.
   A service's clients read their TLS options from `FWP_SERVICE_<M>_CA`,
-  `_INSECURE`, `_SERVER_NAME`, `_CERT` and `_KEY` ([tls.md](tls.md#grpc)).
+  `_INSECURE`, `_SERVER_NAME`, `_CERT` and `_KEY` ([tls.md](tls.md#services)).
 - A trap inside a task spawned by a served function stops the server (a
   trap in the function itself is reported to the caller).
 - Services need the native target; WebAssembly programs cannot call them.

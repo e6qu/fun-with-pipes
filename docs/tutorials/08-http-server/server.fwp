@@ -1,0 +1,44 @@
+# A small HTTP server: `fwp run server.fwp [host:port]`.
+
+hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+hello =
+    http.param "name"
+    | option.unwrap-or "world"
+    | format "hello, {}"
+    | http.text 200
+
+sum-numbers : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+sum-numbers =
+    http.json-body
+    | json.as-array
+    | or-fail { status = 400, message = "expected an array" }
+    | filter-map json.as-number
+    | sum
+    | Json.Num
+    | json.response
+
+admin : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+admin = auth.bearer "secret" | const "welcome" | http.text 200
+
+routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes = http.router [
+    http.route "GET" "/hello" hello,
+    http.route "GET" "/hello/:name" hello,
+    http.route "POST" "/sum" sum-numbers,
+    http.route "GET" "/admin" admin,
+]
+
+handler : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+handler = timeout 2s | routes
+
+# serve until SIGINT or SIGTERM
+serve : String -> () ! {Async, IO, Network, Error[IoError]}
+serve =
+    tcp.listen
+    | tap (tcp.local-addr | format "serving on http://{}" | eprint)
+    | fork http.serve-on id (const (http.config "unused", handler))
+
+main =
+    () | args | head | option.unwrap-or "127.0.0.1:8080" | attempt serve | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit

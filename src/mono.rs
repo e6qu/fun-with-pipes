@@ -802,7 +802,6 @@ impl<'a> Mono<'a> {
             module: module.to_string(),
             methods: Vec::new(),
             default_addr: self.default_addr(module),
-            root: false,
         };
         let env = self.env;
         for (i, b) in env.bindings.iter().enumerate() {

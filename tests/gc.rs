@@ -374,12 +374,11 @@ fn grpc_server_runs_in_bounded_memory() {
     )
     .unwrap();
     std::fs::copy(root().join("tests/gc/hammer.fwp"), dir.0.join("hammer.fwp")).unwrap();
-    build(&["greeter.fwp", "--grpc", "-o", "greeter"], &dir.0);
     build(
         &["hammer.fwp", "--service", "greeter", "-o", "split"],
         &dir.0,
     );
-    let mut cmd = Command::new(dir.0.join("greeter"));
+    let mut cmd = Command::new(dir.0.join("split/greeter"));
     cmd.args(["--listen", "127.0.0.1:0"]);
     let (server, addr) = start(cmd, "listening on ");
     let client = |n: &str| {

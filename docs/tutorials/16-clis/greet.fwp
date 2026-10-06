@@ -1,0 +1,14 @@
+# Greet people, parsing the command line by hand.
+
+Flags = {
+    # -l  shout the greeting
+    loud: Bool,
+}
+
+greeting : Flags -> List[String] -> String
+greeting = curry (both (.0 | .loud) (.1 | join " " | flip concat "hello, ")
+    | if .0 (.1 | upper) .1)
+
+main = () | args | cli.parse Flags { loud = False } | match
+    Ok _ -> uncurry greeting | print
+    Err _ -> cli.usage-error "usage: greet [-l] NAME..."

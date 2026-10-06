@@ -1,76 +1,101 @@
 # 8. An HTTP server
 
+This tutorial writes an HTTP server by hand, runs it, and calls it with
+`curl`. (To serve functions as a REST API with no HTTP code at all, see
+[tutorial 17](../17-rest-and-openapi/README.md).)
+
+To follow along, go to this directory (`cd docs/tutorials/08-http-server`).
+The sessions below run exactly as shown: the test suite runs them.
+
+## Handlers
+
 A handler is an ordinary function from `Request` to `Response`. It may
 fail with `HttpError`, and the server turns that failure into a response
-with the error's status. Middleware is ordinary composition:
+with the error's status:
 
 ```fwp
-handler = timeout 2s | routes
+hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+hello =
+    http.param "name"
+    | option.unwrap-or "world"
+    | format "hello, {}"
+    | http.text 200
 ```
-
-## Routing
-
-`http.router` takes a list of routes. A route is a method, a path pattern
-and a handler. A segment that starts with `:` binds a parameter, which
-`http.param` reads. When no route matches, the router answers 404; when
-only the method is wrong, it answers 405.
-
-## Requests and responses
 
 - `http.json-body` parses the body, failing with 400 when it is not JSON.
 - `http.query-param` and `http.header` read the rest of the request.
 - `http.text`, `http.json` and `json.response` build responses.
 - `auth.bearer` requires an `Authorization: Bearer ...` header.
 
-## Serving
+## Routing and middleware
 
-`http.serve (http.config "0.0.0.0:8080") handler` serves until SIGINT or
-SIGTERM. Then it stops accepting connections, lets requests in flight
-finish, and returns. The configuration limits:
-
-- connections;
-- request header and body sizes;
-- requests per connection;
-- idle time;
-- handler time.
-
-Run as `fwp run main.fwp serve`, this program serves `handler` on
-127.0.0.1:8080:
+`http.router` takes a list of routes. A route is a method, a path pattern
+and a handler. A segment that starts with `:` binds a parameter, which
+`http.param` reads. When no route matches, the router answers 404; when
+only the method is wrong, it answers 405:
 
 ```fwp
-serve : () -> () ! {Async, IO, Network, Error[IoError]}
-serve = const ("127.0.0.1:8080" | http.config) | flip http.serve handler
+routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes = http.router [
+    http.route "GET" "/hello" hello,
+    http.route "GET" "/hello/:name" hello,
+    http.route "POST" "/sum" sum-numbers,
+    http.route "GET" "/admin" admin,
+]
 ```
 
-Any HTTP client can call it:
+Middleware is ordinary composition: `timeout 2s` answers 503 when a
+request takes longer.
 
+```fwp
+handler = timeout 2s | routes
 ```
-$ fwp run main.fwp serve &
-$ curl http://127.0.0.1:8080/hello/fwp
+
+## Serving
+
+`http.serve-on` serves a handler on a listener until SIGINT or SIGTERM.
+Then it stops accepting connections, lets requests in flight finish, and
+returns. `http.config` sets limits: connections, request header and body
+sizes, requests per connection, idle time and handler time:
+
+```fwp
+# serve until SIGINT or SIGTERM
+serve : String -> () ! {Async, IO, Network, Error[IoError]}
+serve =
+    tcp.listen
+    | tap (tcp.local-addr | format "serving on http://{}" | eprint)
+    | fork http.serve-on id (const (http.config "unused", handler))
+```
+
+Run it, in the background, and call it with any HTTP client:
+
+```console
+$ fwp run server.fwp 127.0.0.1:8708 &
+serving on http://127.0.0.1:8708
+$ curl -s -w '\n' http://127.0.0.1:8708/hello/fwp
 hello, fwp
-$ curl -d '[1, 2, 3.5]' http://127.0.0.1:8080/sum
+$ curl -s -w '\n' -d '[1, 2, 3.5]' http://127.0.0.1:8708/sum
 6.5
-$ curl -i http://127.0.0.1:8080/admin
-HTTP/1.1 401 Unauthorized
-content-type: text/plain; charset=utf-8
-content-length: 31
-connection: keep-alive
-
-missing or invalid bearer token
-$ curl -H "Authorization: Bearer secret" http://127.0.0.1:8080/admin
+$ curl -s -w ' %{http_code}\n' -d '{}' http://127.0.0.1:8708/sum
+expected an array 400
+$ curl -s -w ' %{http_code}\n' http://127.0.0.1:8708/admin
+missing or invalid bearer token 401
+$ curl -s -w '\n' -H 'Authorization: Bearer secret' http://127.0.0.1:8708/admin
 welcome
-$ kill -INT %1
+$ curl -s -w ' %{http_code}\n' http://127.0.0.1:8708/nowhere
+not found 404
 ```
 
-Without `serve`, the program checks itself: `http.serve-on` serves on a
-listener on a free port, the HTTP client makes the calls in `calls`, and
-`signal.request-shutdown` stops the server. That is the output below.
+`fwp build server.fwp -o server` builds the same program as an
+executable.
 
 ## The program
 
-[`main.fwp`](main.fwp):
+[`server.fwp`](server.fwp):
 
 ```fwp
+# A small HTTP server: `fwp run server.fwp [host:port]`.
+
 hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 hello =
     http.param "name"
@@ -102,67 +127,17 @@ routes = http.router [
 handler : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
 handler = timeout 2s | routes
 
-calls : List[(String, String, String, List[(String, String)])]
-calls = [
-    ("GET", "/hello", "", []),
-    ("GET", "/hello/fwp", "", []),
-    ("POST", "/sum", "[1, 2, 3.5]", []),
-    ("POST", "/sum", "{}", []),
-    ("GET", "/admin", "", []),
-    ("GET", "/admin", "", [("authorization", "Bearer secret")]),
-    ("GET", "/nowhere", "", []),
-]
-
-call : (String, (String, String, String, List[(String, String)])) -> String ! {Async, Network}
-call =
-    make ClientRequest {
-        method = .1 | .0,
-        url = fork concat (.1 | .1) .0,
-        body = .1 | .2 | string.to-bytes,
-        headers = .1 | .3,
-    }
-    | attempt http.send
-    | match
-        Ok _ ->
-            both .status (.body | string.from-bytes | option.unwrap-or "")
-            | format "{} {}"
-        Err _ -> .message
-
-run-calls : String -> () ! {Async, IO, Network}
-run-calls = format "http://{}" | curry id | flip map calls | each (call | print)
-
-serve : () -> () ! {Async, IO, Network, Error[IoError]}
-serve = const ("127.0.0.1:8080" | http.config) | flip http.serve handler
-
-check : () -> () ! {Async, IO, Network, Error[IoError]}
-check =
-    const "127.0.0.1:0"
-    | tcp.listen
-    | both
-        (both id (const (http.config "unused", handler))
-            | spawn-with (uncurry http.serve-on))
-        (tcp.local-addr | run-calls)
-    | tap (const () | signal.request-shutdown)
-    | .0
-    | task.await
-    | ignore
+# serve until SIGINT or SIGTERM
+serve : String -> () ! {Async, IO, Network, Error[IoError]}
+serve =
+    tcp.listen
+    | tap (tcp.local-addr | format "serving on http://{}" | eprint)
+    | fork http.serve-on id (const (http.config "unused", handler))
 
 main =
-    () | if (const () | args | contains "serve") (attempt serve | ignore) check
-```
-
-Run it with `fwp run docs/tutorials/08-http-server/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/08-http-server/main.fwp -o http-server`. The output is
-[`main.out`](main.out):
-
-```
-200 hello, world
-200 hello, fwp
-200 6.5
-400 expected an array
-401 missing or invalid bearer token
-200 welcome
-404 not found
+    () | args | head | option.unwrap-or "127.0.0.1:8080" | attempt serve | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit
 ```
 
 For a complete service, see

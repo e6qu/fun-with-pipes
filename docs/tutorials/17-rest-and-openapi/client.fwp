@@ -1,0 +1,27 @@
+# Ask the shipping API for rates through `api.fwp`, the module that
+# `fwp openapi --import` generates from its OpenAPI document.
+
+import api
+
+parcel : api.Parcel
+parcel = api.Parcel { weight = 2.0, size = api.Medium, to = "FR" }
+
+express : api.RatesQuery
+express = api.RatesQuery { express = Some True, max-days = None }
+
+calls : String -> () ! {Async, IO, Network, Error[RestError]}
+calls =
+    tap (fork api.carrier id (const "steady") | option.map .countries | echo)
+    | fork apply (const parcel) (fork api.rates id (const express))
+    | json.write
+    | print
+
+main =
+    ()
+    | args
+    | head
+    | option.unwrap-or "http://127.0.0.1:8717"
+    | attempt calls
+    | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit

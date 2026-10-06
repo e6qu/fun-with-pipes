@@ -1,4 +1,4 @@
-//! The gRPC interface of fwp functions (docs/grpc.md): how parameters and
+//! The gRPC interface of the functions of served modules (docs/services.md): how parameters and
 //! results map to request and response messages and to streams, method
 //! paths and `# grpc:` annotations, the `.proto` file of a service, and the
 //! file descriptor that server reflection returns.
@@ -223,8 +223,8 @@ fn valid_full(s: &str) -> bool {
     s.split('.').all(valid_ident)
 }
 
-/// The default service of a program served with `--grpc`: the root
-/// file's `# grpc: pkg.Service` header annotation, else `fwp.<Stem>`.
+/// The default service of a module: its file's `# grpc: pkg.Service`
+/// header annotation, else `fwp.<Stem>`.
 pub fn default_service(docs: &crate::cli::Docs, stem: &str) -> Result<(String, String), String> {
     match docs.grpc.clone() {
         Some(a) => {
@@ -243,7 +243,7 @@ pub fn default_service(docs: &crate::cli::Docs, stem: &str) -> Result<(String, S
     }
 }
 
-/// The path of an exported function served with `--grpc`: its
+/// The path of an exported function of a served module: its
 /// `# grpc: Method`, `# grpc: Service/Method` or `# grpc:
 /// pkg.Service/Method` annotation, else the default service and the
 /// function's name in CamelCase.
@@ -288,17 +288,6 @@ pub fn function_path(
         }
     }
     Ok(path.text())
-}
-
-/// Serve the root file's exported functions (`--grpc`): the service is
-/// named after the file (or its annotation).
-pub fn name_main_service(prog: &mut Program, stem: &str) -> Result<(), String> {
-    let Some(svc) = prog.service.as_mut() else {
-        return Err("no service".into());
-    };
-    svc.module = stem.to_string();
-    svc.root = true;
-    check_paths(prog)
 }
 
 /// Give served functions and client stubs the paths of their modules'
@@ -848,27 +837,4 @@ pub fn parse_timeout(s: &str) -> Option<u64> {
         _ => return None,
     };
     Some(n.saturating_mul(scale))
-}
-
-#[cfg(test)]
-mod tests {
-    /// `grpc._health-file` in lib/grpc.fwp holds the descriptor of the
-    /// health checking service.
-    #[test]
-    fn health_file_matches() {
-        let lib = include_str!("../lib/grpc.fwp");
-        let start = lib.find("grpc._health-file =").expect("grpc._health-file");
-        let rest = &lib[start..];
-        let open = rest.find("grpc.base64-bytes").expect("base64 text") + 17;
-        let open = open + rest[open..].find('"').unwrap() + 1;
-        let close = open + rest[open..].find('"').unwrap();
-        let bytes = crate::jsontype::unbase64(&rest[open..close]).unwrap_or_default();
-        let want = super::health_descriptor();
-        if bytes != want {
-            panic!(
-                "update grpc._health-file in lib/grpc.fwp: {}",
-                crate::jsontype::base64(&want)
-            );
-        }
-    }
 }

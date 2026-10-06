@@ -249,9 +249,13 @@ fn generated(
 }
 
 /// Run a multi-command program (`fwp build --cli`): the first argument
-/// names the exported function. Returns the exit code.
+/// names an exported function exposed as `cli`. Returns the exit code.
 pub fn exec_program(prog: &Program, name: &str, argv: &[String]) -> i32 {
     let cmds = match cli::commands(prog, Some(name)) {
+        Ok(c) if c.is_empty() => {
+            eprintln!("fwp exec: {}", cli::none_exposed("cli", "a command"));
+            return 1;
+        }
         Ok(c) => c,
         Err(e) => {
             eprintln!("fwp exec: {}", e);

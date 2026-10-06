@@ -47,7 +47,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    or foreign C functions are rejected there, as for the `wasm32-wasi`
    target. See [the reference](docs/reference.md#fwp-in-the-browser) and
    [tutorial 15](docs/tutorials/15-browser/README.md).
-3. **Command-line programs** (done). Any exported function is a CLI:
+3. **Command-line programs** (done). Exported functions are CLIs:
    flags from a record parameter (with short flags, typed defaults and
    `--no-` switches), `--help` from the doc comments, `--version`,
    multi-command executables (`fwp build --cli`, `fwp exec --cli`),
@@ -63,7 +63,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    from the syntax tree, and a library for CSV, prompts, progress lines,
    terminal width and streaming standard input. See
    [docs/cli.md](docs/cli.md#what-was-missing-and-what-was-added).
-5. **REST and OpenAPI** (done). Any exported function is a REST endpoint:
+5. **REST and OpenAPI** (done). Exported functions are REST endpoints:
    `fwp build --rest` and `fwp serve --rest` serve a file's functions over
    the HTTP server of `lib/http.fwp`, with routes, path and query
    parameters and statuses from doc comments (`# route:`, `# status:`,
@@ -74,7 +74,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    modules from OpenAPI documents. See [docs/rest.md](docs/rest.md),
    [docs/interfaces.md](docs/interfaces.md) and
    [tutorial 17](docs/tutorials/17-rest-and-openapi/README.md).
-6. **gRPC** (done). Any exported function is a gRPC method
+6. **gRPC** (done). Exported functions are gRPC methods
    (`fwp build --grpc`, `fwp serve --grpc`, `fwp proto --grpc`, with
    `# grpc:` names), with server, client and bidirectional streams decided
    by `Iterator` and `Channel` types, deadlines through the task
@@ -84,8 +84,9 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    run calls concurrently and clients multiplex calls on one connection,
    waiting only in the calling task. `fwp proto --import` turns `.proto`
    files into fwp types, codecs (`lib/protobuf.fwp`), clients and server
-   routes (`lib/grpc.fwp`). See [docs/grpc.md](docs/grpc.md) and
-   [tutorial 18](docs/tutorials/18-grpc/README.md).
+   routes (`lib/grpc.fwp`). (Item 29 narrowed gRPC to the calls between
+   the parts of a split program: the streams, deadlines, metadata and
+   statuses stay, in [docs/services.md](docs/services.md).)
 7. **TLS** (done). HTTPS servers and clients, REST over HTTPS
    (`--tls-cert`, `--tls-key`) and gRPC over TLS (ALPN `h2`, `tls://`
    addresses), with the system's OpenSSL 3 in both backends: native
@@ -94,7 +95,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    them unchanged, and handshakes wait on the task scheduler in the
    connection's own task. `lib/tls.fwp` has connections with
    verification, SNI and ALPN. See [docs/tls.md](docs/tls.md) and
-   [tutorial 19](docs/tutorials/19-tls/README.md).
+   [tutorial 18](docs/tutorials/18-tls/README.md).
 8. **A garbage collector for native programs** (done). A non-moving
    mark-and-sweep collector with size-segregated chunks, leaf objects
    that are never scanned, and conservative roots: registers, the running
@@ -115,7 +116,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
    results that end with a status, interleaved bidirectional clients and
    gzip (DEFLATE written from scratch). TLS has client certificates
    (mutual TLS) for servers and clients, and per-call options for gRPC
-   clients. See [docs/rest.md](docs/rest.md), [docs/grpc.md](docs/grpc.md)
+   clients. See [docs/rest.md](docs/rest.md), [docs/services.md](docs/services.md)
    and [docs/tls.md](docs/tls.md).
 10. **Tasks in the browser** (done where the engine has JavaScript Promise
     Integration). Tasks and channels run on WebAssembly, both in programs
@@ -145,7 +146,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     `http.compress`), request bodies decompressed, and the client
     decompresses responses. See
     [docs/concurrency.md](docs/concurrency.md#http2) and
-    [tutorial 20](docs/tutorials/20-websockets-and-http2/README.md).
+    [tutorial 19](docs/tutorials/19-websockets-and-http2/README.md).
 
 12. **Preemption, faster pipes, tasks without JSPI** (done). Tasks are
     preempted after a slice of 10000 safe points (function entries and
@@ -173,7 +174,7 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     kernel, with libOpenCL loaded at run time); `tensor.grad`
     differentiates them in reverse mode. A JIT and distributed execution
     were left out. See [docs/numerics.md](docs/numerics.md) and
-    [tutorial 21](docs/tutorials/21-autodiff-and-devices/README.md).
+    [tutorial 20](docs/tutorials/20-autodiff-and-devices/README.md).
 
 14. **REST bodies, formats and imports; reflection of imported routes**
     (done). REST endpoints take forms and `multipart/form-data` with
@@ -185,8 +186,8 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     forms and files and read text and bytes. `fwp proto --import` keeps
     the descriptors of the `.proto` file and its imports, and `grpc.serve`
     serves server reflection (v1 and v1alpha) for the routes that carry
-    them, so grpcurl needs no `.proto`. See [docs/rest.md](docs/rest.md)
-    and [docs/grpc.md](docs/grpc.md).
+    them, so grpcurl needs no `.proto` (removed by item 29). See
+    [docs/rest.md](docs/rest.md).
 
 14. **Compiled by default** (done). `fwp run`, `fwp exec`, `fwp test`,
     `fwp serve` and `fwp pipe` compile programs to native executables
@@ -390,6 +391,21 @@ Next in this series, toward static, zero-cost programs:
     run-time comparison and an `Option`. Packed values hold sizes of
     their own: `AnyVector[t]` and `AnyMatrix[t]` (`vector.pack`,
     `vector.unpack`), so a list may hold vectors of different lengths.
+29. **Explicit interfaces and MCP** (done). An exported function is on
+    an interface only when a `# expose: cli, rest, mcp` line (above it,
+    or in the file's leading comment) says so; `--fn`, `fwp exec`, C
+    libraries and the services of a split program need none, so a
+    program deploys as one executable or as services with no change to
+    its functions. gRPC is now only the transport between those
+    services: `fwp build --grpc`, `fwp serve --grpc`, `fwp proto --grpc`,
+    `fwp proto --import`, the client and server routes of `lib/grpc.fwp`,
+    `lib/protobuf.fwp` and server reflection of routes are gone. `fwp build --mcp` and `fwp serve --mcp` serve the
+    functions exposed as `mcp` as the tools of a stateless MCP server
+    (protocol 2026-07-28: `server/discover`, `tools/list`, `tools/call`,
+    no session), over stdio or HTTP, with JSON Schemas from the types
+    (`lib/mcp.fwp`, `src/mcp.rs`). The tutorials about building things
+    (7, 8, 14, 16 to 19, 21) are shell sessions that the test suite replays. See
+    [docs/interfaces.md](docs/interfaces.md) and [docs/mcp.md](docs/mcp.md).
 
 ## Later
 

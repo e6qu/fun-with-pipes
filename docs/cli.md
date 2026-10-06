@@ -1,11 +1,12 @@
 # Command-line programs
 
-Any exported function is a command-line program. Its parameters are the
+An exported function is a command-line program. Its parameters are the
 command line: a record parameter becomes flags, the others are positional
 arguments, the last one may come from standard input, and the comments
-above it become `--help`. One file of exported functions builds into one
-executable with a subcommand per function. There is nothing to declare
-and no argument parser to call.
+above it become `--help`. The functions of a file exposed as `cli` (a
+line `# expose: cli` above the `export`, or in the file's leading comment
+for all of them) build into one executable with a subcommand per
+function. There is no argument parser to call.
 
 ```
 $ fwp build examples/cli/todo.fwp --cli -o todo
@@ -21,8 +22,10 @@ usage: todo <command> [arguments...]
 ```
 
 This page describes the mapping. [protocol.md](protocol.md) describes the
-binary protocol between fwp programs, and the
-[tutorial](tutorials/16-clis/README.md) walks through an example.
+binary protocol between fwp programs, the
+[tutorial](tutorials/16-clis/README.md) builds a program step by step, and
+[interfaces.md](interfaces.md#exposing-functions) has the rules of
+`# expose:`.
 `examples/cli/` has five complete programs: `wc.fwp`, `grep.fwp`,
 `todo.fwp`, `dirstat.fwp` and `csvtool.fwp`.
 
@@ -30,8 +33,8 @@ binary protocol between fwp programs, and the
 
 | Command | Result |
 |---|---|
-| `fwp build file.fwp --fn f -o f` | the exported function `f` as an executable |
-| `fwp build file.fwp --cli -o tools` | every exported function as a subcommand of `tools` |
+| `fwp build file.fwp --fn f -o f` | the exported function `f` as an executable (exposed or not: naming it is enough) |
+| `fwp build file.fwp --cli -o tools` | every exported function exposed as `cli` as a subcommand of `tools` |
 | `fwp exec file.fwp f args...` | runs `f` as `--fn f` would (compiled and cached; `--interp` for the interpreter) |
 | `fwp exec --cli file.fwp args...` | runs the file as `--cli` would, named after the file |
 

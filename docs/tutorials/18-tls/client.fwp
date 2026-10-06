@@ -1,0 +1,6 @@
+# Call the HTTPS API through the client generated from its OpenAPI
+# document; the system's CA certificates (or `SSL_CERT_FILE`) are trusted.
+
+import sayings
+
+main = 2 | sayings.saying "https://localhost:8719" | echo

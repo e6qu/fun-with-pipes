@@ -1,7 +1,9 @@
-# Who the client is, by its certificate (mutual TLS), over REST and gRPC
+# Who the client is, by its certificate (mutual TLS), over REST
 # (tests/tls.rs).
 #
 # auth: client-cert
+#
+# expose: rest
 
 Who = { subject: String }
 

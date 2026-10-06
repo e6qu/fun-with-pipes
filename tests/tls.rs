@@ -14,7 +14,7 @@ use std::io::{BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 fn fwp() -> PathBuf {
@@ -201,7 +201,6 @@ struct Server {
     child: Child,
     /// What follows "listening on " in its first line of standard error.
     addr: String,
-    log: Arc<Mutex<String>>,
 }
 
 impl Drop for Server {
@@ -235,16 +234,14 @@ fn start(mut cmd: Command) -> Server {
         }
         if let Some(a) = line.trim().split("listening on ").nth(1) {
             let addr = a.to_string();
-            let log = Arc::new(Mutex::new(line.clone()));
-            let l = log.clone();
+            // keep reading its standard error, so that it never blocks
             std::thread::spawn(move || {
                 let mut line = String::new();
                 while err.read_line(&mut line).unwrap_or(0) > 0 {
-                    l.lock().unwrap().push_str(&line);
                     line.clear();
                 }
             });
-            return Server { child, addr, log };
+            return Server { child, addr };
         }
     }
 }
@@ -770,107 +767,15 @@ fn rest_with_client_certificates() {
 
 // ------------------------------------------------------------ gRPC
 
-/// gRPC servers that require client certificates (`--tls-client-ca`,
-/// FWP_TLS_CLIENT_CA natively), called by clients that present one with
-/// `grpc.with-tls` (an imported client) or FWP_SERVICE_<M>_CERT (a split
-/// build, which also trusts the CA of FWP_SERVICE_<M>_CA), and by grpcurl.
+/// A service that requires client certificates (`--tls-client-ca`),
+/// called by the client of a split build that presents one
+/// (FWP_SERVICE_<M>_CERT, trusting the CA of FWP_SERVICE_<M>_CA).
 #[test]
 fn grpc_with_client_certificates() {
     let Some(certs) = certs() else { return };
-    let d = scratch("grpc-mtls");
-    let app = root().join("tests/tls/whoami.fwp");
     let file = |n: &str| certs.join(n).to_str().unwrap().to_string();
-    // the client of the imported .proto, in the certificates' directory
-    let proto = run(
-        {
-            let mut c = Command::new(fwp());
-            c.args(["proto", "--grpc"]).arg(&app);
-            c
-        },
-        60,
-    );
-    assert!(proto.status.success());
-    std::fs::write(d.join("whoami.proto"), text(&proto)).unwrap();
-    let o = Command::new(fwp())
-        .args(["proto", "--import", "whoami.proto", "-o", "whoamigen.fwp"])
-        .current_dir(&d)
-        .output()
-        .unwrap();
-    assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
-    std::fs::copy(
-        root().join("tests/tls/whoamiclient.fwp"),
-        d.join("whoamiclient.fwp"),
-    )
-    .unwrap();
-    let mut servers = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["serve", "--grpc", "--interp"])
-        .arg(&app)
-        .args(["--listen", "127.0.0.1:0", "--tls-cert", &file("server.pem")])
-        .args([
-            "--tls-key",
-            &file("server.key"),
-            "--tls-client-ca",
-            &file("ca.pem"),
-        ]);
-    servers.push(start(cmd));
-    let mut clients = vec![{
-        let mut c = Command::new(fwp());
-        c.args(["run", "--interp"]).arg(d.join("whoamiclient.fwp"));
-        c
-    }];
-    if have_cc() {
-        let exe = d.join("server");
-        build(
-            &[app.to_str().unwrap(), "--grpc", "-o", exe.to_str().unwrap()],
-            &root(),
-        );
-        let mut cmd = Command::new(&exe);
-        cmd.args(["--listen", "127.0.0.1:0"])
-            .env("FWP_TLS_CERT", file("server.pem"))
-            .env("FWP_TLS_KEY", file("server.key"))
-            .env("FWP_TLS_CLIENT_CA", file("ca.pem"));
-        servers.push(start(cmd));
-        let exe = d.join("whoamiclient");
-        build(
-            &[
-                d.join("whoamiclient.fwp").to_str().unwrap(),
-                "-o",
-                exe.to_str().unwrap(),
-            ],
-            &d,
-        );
-        clients.push(Command::new(exe));
-    }
-    let expected = "with a certificate\n  CN=fwp client,O=fwp\nwithout a certificate\n  UNAVAILABLE\nwith the certificate again\n  CN=fwp client,O=fwp\n";
-    for srv in &servers {
-        assert!(srv.addr.starts_with("tls://"), "{}", srv.addr);
-        for c in &clients {
-            let mut c2 = Command::new(c.get_program());
-            c2.args(c.get_args())
-                .arg(format!("tls://localhost:{}", srv.port()))
-                .current_dir(certs);
-            let o = run(c2, 120);
-            assert_eq!(text(&o), expected, "{}", String::from_utf8_lossy(&o.stderr));
-        }
-        if have("grpcurl", "-version") {
-            let o = Command::new("grpcurl")
-                .args(["-cacert", &file("ca.pem"), "-cert", &file("client.pem")])
-                .args(["-key", &file("client.key")])
-                .arg(format!("localhost:{}", srv.port()))
-                .arg("fwp.Whoami/GrpcPeer")
-                .output()
-                .unwrap();
-            assert_eq!(
-                text(&o),
-                "{\n  \"value\": \"CN=fwp client,O=fwp\"\n}\n",
-                "{}",
-                String::from_utf8_lossy(&o.stderr)
-            );
-        }
-    }
     // a split build's client: the CA and the certificate of FWP_SERVICE_<M>_*
-    let ex = root().join("examples/grpc");
+    let ex = root().join("tests/tls");
     let local = run(
         {
             let mut c = Command::new(fwp());
@@ -883,9 +788,9 @@ fn grpc_with_client_certificates() {
     let mut cmd = Command::new(fwp());
     cmd.args([
         "serve",
-        "--grpc",
         "--interp",
-        "weather.fwp",
+        "forecast-client.fwp",
+        "weather",
         "--listen",
         "127.0.0.1:0",
     ])
@@ -924,7 +829,7 @@ fn grpc_with_client_certificates() {
     assert!(!text(&client(false)).contains("Lisbon"));
 }
 
-/// The weather service of examples/grpc over TLS: interpreted and native
+/// The weather service of tests/tls over TLS: interpreted and native
 /// servers (flags, environment variables) called by interpreted and native
 /// clients of a split build (`FWP_SERVICE_WEATHER=tls://...`), and by
 /// grpcurl when it is installed.
@@ -932,7 +837,7 @@ fn grpc_with_client_certificates() {
 fn grpc_over_tls() {
     let Some(certs) = certs() else { return };
     let d = scratch("grpc");
-    let ex = root().join("examples/grpc");
+    let ex = root().join("tests/tls");
     let cert = certs.join("server.pem");
     let key = certs.join("server.key");
     // what the client prints when the calls are local
@@ -951,9 +856,9 @@ fn grpc_over_tls() {
     let mut cmd = Command::new(fwp());
     cmd.args([
         "serve",
-        "--grpc",
         "--interp",
-        "weather.fwp",
+        "forecast-client.fwp",
+        "weather",
         "--listen",
         "127.0.0.1:0",
     ])
@@ -1079,67 +984,5 @@ fn grpc_over_tls() {
                 format!("tls://localhost:{}", srv.port()),
             );
         assert_eq!(text(&run(c2, 120)), expected);
-    }
-}
-
-/// Routes from a .proto file served with `grpc.serve-tls`, and called by
-/// the generated client functions at a `tls://` address.
-#[test]
-fn grpc_routes_over_tls() {
-    let Some(certs) = certs() else { return };
-    let d = scratch("routes");
-    let hello = root().join("tests/grpc/hello");
-    for f in ["gen.fwp", "client.fwp"] {
-        std::fs::copy(hello.join(f), d.join(f)).unwrap();
-    }
-    for f in ["server.pem", "server.key"] {
-        std::fs::copy(certs.join(f), d.join(f)).unwrap();
-    }
-    let server = std::fs::read_to_string(hello.join("server.fwp")).unwrap();
-    let plain = "| grpc.serve (args () | head";
-    assert!(server.contains(plain));
-    std::fs::write(
-        d.join("server.fwp"),
-        server.replace(
-            plain,
-            "| grpc.serve-tls (tls.server \"server.pem\" \"server.key\") (args () | head",
-        ),
-    )
-    .unwrap();
-    let expected = std::fs::read_to_string(hello.join("client.out")).unwrap();
-    let mut servers = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "server.fwp", "127.0.0.1:0"])
-        .current_dir(&d);
-    servers.push(start(cmd));
-    let mut clients = Vec::new();
-    let mut cmd = Command::new(fwp());
-    cmd.args(["run", "--interp", "client.fwp"]).current_dir(&d);
-    clients.push(cmd);
-    if have_cc() {
-        build(&["server.fwp", "-o", "server"], &d);
-        build(&["client.fwp", "-o", "client"], &d);
-        let mut cmd = Command::new(d.join("server"));
-        cmd.arg("127.0.0.1:0").current_dir(&d);
-        servers.push(start(cmd));
-        clients.push(Command::new(d.join("client")));
-    }
-    for srv in &servers {
-        assert!(srv.addr.starts_with("tls://"), "{}", srv.addr);
-        for c in &clients {
-            let mut c2 = Command::new(c.get_program());
-            c2.args(c.get_args())
-                .arg(&srv.addr)
-                .current_dir(&d)
-                .env("SSL_CERT_FILE", certs.join("ca.pem"));
-            let o = run(c2, 120);
-            let mut got = text(&o);
-            if !o.stderr.is_empty() {
-                got.push_str("--- stderr\n");
-                got.push_str(&String::from_utf8_lossy(&o.stderr));
-            }
-            assert_eq!(got, expected);
-        }
-        let _ = srv.log.lock().unwrap().len();
     }
 }

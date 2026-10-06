@@ -1,5 +1,7 @@
 # A program to test enumerations, environment variables, optional
 # arguments and exit statuses (tests/cli.rs).
+#
+# expose: cli
 
 Format =
     | Plain

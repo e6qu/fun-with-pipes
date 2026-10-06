@@ -1,6 +1,8 @@
 # Request bodies beyond JSON and content negotiation (tests/rest.rs):
 # forms, multipart/form-data with files, and responses as JSON, text or
 # CSV by the request's Accept header.
+#
+# expose: rest, cli
 
 # A profile, from JSON, a form or multipart/form-data.
 Profile = {

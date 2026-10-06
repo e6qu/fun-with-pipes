@@ -1,0 +1,20 @@
+# Fetch a quote over HTTPS, trusting a CA of our own.
+
+client : TlsOptions
+client = tls.options | tls.with-ca "ca.pem"
+
+fetch : I64 -> String ! {Async, Network, Error[IoError]}
+fetch =
+    format "https://localhost:8719/sayings/{}"
+    | make ClientRequest {
+        method = const "GET",
+        url = id,
+        headers = const [],
+        body = const ("" | string.to-bytes),
+    }
+    | http.send-with client
+    | .body
+    | string.from-bytes
+    | option.unwrap-or ""
+
+main = 1 | fetch | print

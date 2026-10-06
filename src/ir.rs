@@ -207,15 +207,12 @@ pub struct ServiceDef {
     /// Address to listen on when neither `--listen` nor
     /// `FWP_SERVICE_<MODULE>` is given.
     pub default_addr: String,
-    /// The root file's functions, served as module `module` (`--grpc`).
-    pub root: bool,
 }
 
 impl ServiceDef {
     /// The fingerprint of a served function, as its callers compute it.
     pub fn fingerprint(&self, prog: &Program, f: &ServedFn) -> String {
-        let main_as = self.root.then_some(self.module.as_str());
-        crate::protobuf::fingerprint_as(prog, &prog.funcs[f.func].ty, f.error.as_ref(), main_as)
+        crate::protobuf::fingerprint(prog, &prog.funcs[f.func].ty, f.error.as_ref())
     }
 }
 

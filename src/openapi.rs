@@ -59,6 +59,9 @@ fn description(lines: &[String]) -> String {
 
 struct Gen<'p> {
     prog: &'p Program,
+    /// Where named schemas are: `#/components/schemas/` (OpenAPI) or
+    /// `#/$defs/` (a JSON Schema of its own, as MCP tools have).
+    refs: &'static str,
     names: BTreeMap<MT, String>,
     used: BTreeSet<String>,
     schemas: Vec<(String, Json)>,
@@ -91,11 +94,8 @@ fn base_name(mt: &MT) -> String {
 }
 
 impl Gen<'_> {
-    fn reference(name: &str) -> Json {
-        obj(vec![(
-            "$ref",
-            Json::str(format!("#/components/schemas/{}", name)),
-        )])
+    fn reference(&self, name: &str) -> Json {
+        obj(vec![("$ref", Json::str(format!("{}{}", self.refs, name)))])
     }
 
     fn unique(&mut self, base: String) -> String {
@@ -112,7 +112,7 @@ impl Gen<'_> {
     /// A component for a named type: its `$ref`.
     fn component(&mut self, mt: &MT) -> Json {
         if let Some(n) = self.names.get(mt) {
-            return Self::reference(n);
+            return self.reference(n);
         }
         let name = self.unique(base_name(mt));
         self.names.insert(mt.clone(), name.clone());
@@ -161,11 +161,8 @@ impl Gen<'_> {
                             ("required", Json::Arr(required)),
                         ]),
                     ));
-                    mapping.push((
-                        c.clone(),
-                        Json::str(format!("#/components/schemas/{}", vname)),
-                    ));
-                    refs.push(Self::reference(&vname));
+                    mapping.push((c.clone(), Json::str(format!("{}{}", self.refs, vname))));
+                    refs.push(self.reference(&vname));
                 }
                 obj(vec![
                     ("oneOf", Json::Arr(refs)),
@@ -181,7 +178,7 @@ impl Gen<'_> {
             _ => self.schema(mt),
         };
         self.schemas[at].1 = schema;
-        Self::reference(&name)
+        self.reference(&name)
     }
 
     fn object(&mut self, mt: &MT, fs: &[(String, MT)], order: &[usize], json: &[String]) -> Json {
@@ -722,7 +719,7 @@ impl Gen<'_> {
                 ]),
             ));
         }
-        Self::reference("Error")
+        self.reference("Error")
     }
 }
 
@@ -764,6 +761,7 @@ pub fn document(prog: &Program, api: &Api, title: &str) -> Result<Json, String> 
     let eps = &api.endpoints;
     let mut g = Gen {
         prog,
+        refs: "#/components/schemas/",
         names: BTreeMap::new(),
         used: BTreeSet::new(),
         schemas: Vec::new(),
@@ -812,6 +810,68 @@ pub fn document(prog: &Program, api: &Api, title: &str) -> Result<Json, String> 
         ("paths", Json::Obj(paths)),
         ("components", obj(components)),
     ]))
+}
+
+/// The JSON Schema of a type, named types under `$defs`.
+pub fn json_schema(prog: &Program, mt: &MT) -> Json {
+    let mut g = Gen {
+        prog,
+        refs: "#/$defs/",
+        names: BTreeMap::new(),
+        used: BTreeSet::new(),
+        schemas: Vec::new(),
+    };
+    let s = g.schema(mt);
+    with_defs(s, g.schemas)
+}
+
+/// The JSON Schema of an object of named properties (the arguments of
+/// an MCP tool), named types under `$defs`.
+pub fn object_schema(prog: &Program, props: &[(String, MT, String)]) -> Json {
+    let mut g = Gen {
+        prog,
+        refs: "#/$defs/",
+        names: BTreeMap::new(),
+        used: BTreeSet::new(),
+        schemas: Vec::new(),
+    };
+    let mut ps = Vec::new();
+    let mut required = Vec::new();
+    for (name, t, doc) in props {
+        let mut s = match jsontype::shape(t, prog) {
+            Shape::Option(inner) => g.optional(&inner),
+            _ => {
+                required.push(Json::str(name));
+                g.schema(t)
+            }
+        };
+        if !doc.is_empty() {
+            if let Json::Obj(kv) = &mut s {
+                kv.push(("description".into(), Json::str(doc)));
+            }
+        }
+        ps.push((name.clone(), s));
+    }
+    let mut out = vec![("type", Json::str("object")), ("properties", Json::Obj(ps))];
+    if !required.is_empty() {
+        out.push(("required", Json::Arr(required)));
+    }
+    with_defs(obj(out), g.schemas)
+}
+
+fn with_defs(s: Json, defs: Vec<(String, Json)>) -> Json {
+    match s {
+        Json::Obj(mut kv) if !defs.is_empty() => {
+            kv.push(("$defs".into(), Json::Obj(defs)));
+            Json::Obj(kv)
+        }
+        Json::Obj(kv) => Json::Obj(kv),
+        other if defs.is_empty() => other,
+        other => obj(vec![
+            ("allOf", Json::Arr(vec![other])),
+            ("$defs", Json::Obj(defs)),
+        ]),
+    }
 }
 
 // ------------------------------------------------------------------ /docs

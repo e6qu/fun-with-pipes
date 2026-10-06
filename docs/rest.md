@@ -1,14 +1,15 @@
 # REST APIs and OpenAPI
 
-Any exported function is a REST endpoint. Its parameters are the request:
+An exported function is a REST endpoint. Its parameters are the request:
 path parameters, query parameters and a JSON body (or a form, with
 files); its result is the JSON response (or text, or CSV), and its errors
-are error responses. One file of exported
-functions builds into one HTTP server, which also serves its OpenAPI 3.1
-document. In the other direction, `fwp openapi --import` turns the OpenAPI
-document of any API (JSON or YAML, OpenAPI 3 or Swagger 2.0) into an fwp
-module of typed client functions. There
-is nothing to declare and no routing or JSON code to write.
+are error responses. The functions of a file exposed as `rest` (a line
+`# expose: rest` above the `export`, or in the file's leading comment for
+all of them) build into one HTTP server, which also serves its OpenAPI
+3.1 document. In the other direction, `fwp openapi --import` turns the
+OpenAPI document of any API (JSON or YAML, OpenAPI 3 or Swagger 2.0) into
+an fwp module of typed client functions. There is no routing or JSON code
+to write.
 
 ```
 $ fwp serve --rest examples/rest/books.fwp
@@ -23,18 +24,18 @@ $ curl localhost:8080/books/x
 {"error":"path.id: expected an integer, got \"x\""}
 ```
 
-The same functions are also a command-line program ([cli.md](cli.md))
-and a gRPC service ([services.md](services.md));
-[interfaces.md](interfaces.md) compares the three.
+The same functions can also be a command-line program ([cli.md](cli.md))
+and MCP tools ([mcp.md](mcp.md));
+[interfaces.md](interfaces.md) compares them.
 [`examples/rest`](../examples/rest/books.fwp) is a small bookstore, and
-[tutorial 17](tutorials/17-rest-and-openapi/README.md) walks through
-one.
+[tutorial 17](tutorials/17-rest-and-openapi/README.md) builds one and
+calls it with `curl` and a generated client.
 
 ## Commands
 
 | Command | Result |
 |---|---|
-| `fwp build app.fwp --rest -o server` | a native HTTP server of the exported functions |
+| `fwp build app.fwp --rest -o server` | a native HTTP server of the exported functions exposed as `rest` |
 | `fwp serve --rest app.fwp [--listen addr]` | the same server, compiled and cached (`--interp` interprets it) |
 | `fwp openapi app.fwp` | the OpenAPI document of the endpoints, as JSON (`--yaml`: as YAML) |
 | `fwp openapi --import spec.json [-o client.fwp]` | an fwp client module of an API (JSON or YAML; OpenAPI 3.0, 3.1 or Swagger 2.0) |
@@ -209,8 +210,7 @@ A parameter of type `Request` (`lib/http.fwp`) is the whole request:
 method, path, query, headers, body and the client's address
 (`http.header "x-forwarded-for"`). It is not in the document.
 
-The headers are parameters rather than a context to ask for (as
-`grpc.metadata` is for gRPC), so the document and generated clients know
+The headers are parameters rather than a context to ask for, so the document and generated clients know
 them; `Request` covers the rest.
 
 ## Replies: statuses and headers

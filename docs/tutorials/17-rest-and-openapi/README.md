@@ -1,16 +1,18 @@
 # 17. REST APIs and OpenAPI
 
-[Tutorial 16](../16-clis/README.md) made exported functions command-line
-programs. The same functions are REST endpoints: `fwp serve --rest`
-serves each one over HTTP with a JSON contract derived from its type, and
-publishes the OpenAPI document of the API. In the other direction,
-`fwp openapi --import` turns an OpenAPI document into typed fwp functions
-that call the API. [docs/rest.md](../../rest.md) has every rule.
+This tutorial serves ordinary functions as a REST API, calls it with
+`curl`, publishes its OpenAPI document, and calls it from another fwp
+program through a client generated from that document. Each endpoint's
+JSON contract comes from the function's type. [docs/rest.md](../../rest.md)
+has every rule.
+
+To follow along, go to this directory (`cd docs/tutorials/17-rest-and-openapi`).
+The sessions below run exactly as shown: the test suite runs them.
 
 ## Functions are endpoints
 
-The program quotes shipping rates. Its types are ordinary records and
-variants:
+[`shipping.fwp`](shipping.fwp) quotes shipping rates. Its types are
+ordinary records and variants:
 
 ```fwp
 Parcel = { weight: F64, size: Size, to: String }
@@ -20,9 +22,18 @@ Parcel = { weight: F64, size: Size, to: String }
 Rate = { carrier: String, price: F64, days: I64 }
 ```
 
-Each exported function is an endpoint. Without a comment it would be
-`POST /carrier` with the name as its JSON body; a line `# route:` gives
-it a method and a path, whose `{name}` segment is the parameter:
+An exported function becomes an endpoint only when it is exposed as
+`rest`. The file's leading comment exposes all of them:
+
+```fwp
+# Shipping rates: the carriers, and what they charge for a parcel.
+#
+# expose: rest
+```
+
+Without other comments an endpoint is `POST /carrier`, with the argument
+as its JSON body; a line `# route:` gives it a method and a path, whose
+`{name}` segment is the parameter:
 
 ```fwp
 # A carrier by its name.
@@ -30,20 +41,26 @@ it a method and a path, whose `{name}` segment is the parameter:
 export carrier : String -> Option[Carrier]
 ```
 
-```
-$ fwp serve --rest main.fwp
-fwp: rest listening on http://127.0.0.1:8080
-$ curl localhost:8080/carriers/swift
-{"name":"swift","base":9.0,"per-kg":2.0,"days":1,"countries":["FR","DE"]}
-$ curl -i localhost:8080/carriers/zippy
-HTTP/1.1 404 Not Found
-...
-{"error":"not found"}
+`fwp build --rest` builds the server as a native executable, which takes
+`--listen`. Start it in the background:
+
+```console
+$ fwp build shipping.fwp --rest -o shipping
+$ ./shipping --listen 127.0.0.1:8717 &
+fwp: rest listening on http://127.0.0.1:8717
 ```
 
-The result is written as JSON (records are objects, enums strings), and
-`None` is a 404. `fwp build main.fwp --rest -o shipping` builds the same
-server as a native executable.
+(`fwp serve --rest shipping.fwp` runs the same server without a separate
+build step, which is handy while you write it.) Now call it. The result
+is written as JSON (records are objects, enums strings), and `None` is a
+404:
+
+```console
+$ curl -s -w '\n' localhost:8717/carriers/swift
+{"name":"swift","base":9.0,"per-kg":2.0,"days":1,"countries":["FR","DE"]}
+$ curl -s -w ' %{http_code}\n' localhost:8717/carriers/zippy
+{"error":"not found"} 404
+```
 
 ## Query parameters and the body
 
@@ -68,95 +85,128 @@ Options = {
 export rates : Options -> Parcel -> List[Rate] ! {Error[Problem]}
 ```
 
-```
-$ curl -d '{"weight": 2, "size": "Medium", "to": "FR"}' 'localhost:8080/rates?express'
+```console
+$ curl -s -w '\n' -d '{"weight": 2, "size": "Medium", "to": "FR"}' localhost:8717/rates
+[{"carrier":"steady","price":7.0,"days":4},{"carrier":"swift","price":15.0,"days":1}]
+$ curl -s -w '\n' -d '{"weight": 2, "size": "Medium", "to": "FR"}' 'localhost:8717/rates?express'
 [{"carrier":"swift","price":15.0,"days":1}]
-$ curl -d '{"weight": 40, "size": "Small", "to": "FR"}' localhost:8080/rates
-{"error":{"type":"TooHeavy","value":40.0}}          (status 422)
-$ curl -d '{"weight": 2, "size": "Tiny", "to": "FR"}' localhost:8080/rates
-{"error":"$.size: expected one of \"Small\", \"Medium\", \"Large\", got \"Tiny\""}   (status 400)
+$ curl -s -w ' %{http_code}\n' -d '{"weight": 40, "size": "Small", "to": "FR"}' localhost:8717/rates
+{"error":{"type":"TooHeavy","value":40.0}} 422
+$ curl -s -w ' %{http_code}\n' -d '{"weight": 1, "size": "Small", "to": "JP"}' localhost:8717/rates
+{"error":{"type":"NoRoute","value":"JP"}} 404
 ```
 
 Arguments that do not decode are a 400 whose message says where the
-problem is: `$.size` in the body, `query.max-days` or `path.name`.
+problem is: `$.size` in the body, `query.max-days` or `path.name`:
 
-## The JSON codec
-
-The server reads and writes JSON with two functions of the standard
-library, which work for any type that has an `Encode` or `Decode`
-instance: `json.write` and `json.read`. A program can use them directly:
-
-```fwp
-read-parcel : String -> Result[Parcel, String]
-read-parcel = json.read
+```console
+$ curl -s -w ' %{http_code}\n' -d '{"weight": 2, "size": "Tiny", "to": "FR"}' localhost:8717/rates
+{"error":"$.size: expected one of \"Small\", \"Medium\", \"Large\", got \"Tiny\""} 400
+$ curl -s -w ' %{http_code}\n' -d '{"weight": 2, "size": "Small", "to": "FR"}' 'localhost:8717/rates?max-days=soon'
+{"error":"query.max-days: expected an integer, got \"soon\""} 400
 ```
 
-Integers are written exactly, `Option` fields that are `None` are left
-out, variants with fields are `{"type": ..., "value": ...}`, and a field
-comment `# json: name` gives a field another JSON name.
+The server reads and writes JSON with `json.read` and `json.write`, which
+a program can call on any type: integers are written exactly, `Option`
+fields that are `None` are left out, variants with fields are `{"type":
+..., "value": ...}`, and a field comment `# json: name` gives a field
+another JSON name.
 
 ## The OpenAPI document
 
-`fwp openapi main.fwp` prints the OpenAPI 3.1 document, which the server
-also serves at `/openapi.json`. The paths come from the routes, the
-schemas from the types, the descriptions from the comments:
+The server serves its OpenAPI 3.1 document at `/openapi.json`, and a page
+that shows it at `/docs` (open http://127.0.0.1:8717/docs in a browser).
+`fwp openapi` prints the same document without a server. The paths come
+from the routes, the schemas from the types, the descriptions from the
+comments:
 
-```
-$ fwp openapi main.fwp
+```console
+$ fwp openapi shipping.fwp > shipping.json
+$ curl -s localhost:8717/openapi.json | cmp - shipping.json && echo same
+same
+$ head -12 shipping.json
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "main",
+    "title": "shipping",
     "version": "1.0.0",
-    ...
+    "description": "Shipping rates: the carriers, and what they charge for a parcel."
+  },
   "paths": {
     "/carriers/{name}": {
       "get": {
         "operationId": "carrier",
         "summary": "A carrier by its name.",
-        ...
-      "Problem": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/Problem.TooHeavy"
-          },
-        ...
 ```
 
-## Calling an API
+## Calling it from fwp
 
-`fwp openapi --import` reads an OpenAPI document, this one or any other,
-and writes a module with its types and a function per operation. Each
-function takes the server's base URL first:
+`fwp openapi --import` reads an OpenAPI document, this one or any other
+service's, and writes an fwp module with its types and one function per
+operation. Each function takes the server's base URL first:
 
-```
-$ fwp openapi main.fwp > shipping.json
-$ fwp openapi --import shipping.json -o shipping.fwp
-$ grep -A1 '^# GET' shipping.fwp
+```console
+$ fwp openapi --import shipping.json -o api.fwp
+$ grep -A1 '^# GET' api.fwp
 # GET /carriers/{name}
 carrier : String -> String -> Option[Carrier] ! {Async, Network, Error[RestError]}
 ```
 
-A program then does `import shipping` and calls
-`"swift" | shipping.carrier "http://127.0.0.1:8080"`; a response that is
-not a success raises `Error[RestError]` with its status and body.
-
-## Under the hood
-
-`fwp serve --rest` adds a `main` to the file that serves a router of
-`rest.endpoint`s: each one decodes a request's arguments, calls the
-function and encodes its result. The program builds the same router to
-call the endpoints in-process, without a socket:
+[`client.fwp`](client.fwp) imports it and calls the API; a response that
+is not a success raises `Error[RestError]`, with its status and body:
 
 ```fwp
-api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+# Ask the shipping API for rates through `api.fwp`, the module that
+# `fwp openapi --import` generates from its OpenAPI document.
+
+import api
+
+parcel : api.Parcel
+parcel = api.Parcel { weight = 2.0, size = api.Medium, to = "FR" }
+
+express : api.RatesQuery
+express = api.RatesQuery { express = Some True, max-days = None }
+
+calls : String -> () ! {Async, IO, Network, Error[RestError]}
+calls =
+    tap (fork api.carrier id (const "steady") | option.map .countries | echo)
+    | fork apply (const parcel) (fork api.rates id (const express))
+    | json.write
+    | print
+
+main =
+    ()
+    | args
+    | head
+    | option.unwrap-or "http://127.0.0.1:8717"
+    | attempt calls
+    | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit
 ```
+
+```console
+$ fwp run client.fwp
+Some ["FR", "DE", "IT"]
+[{"carrier":"swift","price":15.0,"days":1}]
+```
+
+## The same functions elsewhere
+
+Nothing in the functions is about HTTP. Add `cli` to the `# expose:` line
+and `fwp build shipping.fwp --cli` makes the same functions a
+command-line program ([tutorial 16](../16-clis/README.md)); add `mcp` for
+tools that a language model can call ([tutorial 21](../21-mcp/README.md)).
 
 ## The program
 
-[`main.fwp`](main.fwp):
+[`shipping.fwp`](shipping.fwp):
 
 ```fwp
+# Shipping rates: the carriers, and what they charge for a parcel.
+#
+# expose: rest
+
 export version : String
 version = "1.0.0"
 
@@ -261,127 +311,8 @@ within : Option[I64] -> I64 -> Bool
 within = curry (match
     (None, _) -> const True
     (Some _, _) -> le)
-
-parcel : Parcel
-parcel = Parcel { weight = 2.0, size = Medium, to = "FR" }
-
-anything : Options
-anything = Options { express = False, max-days = None }
-
-read-parcel : String -> Result[Parcel, String]
-read-parcel = json.read
-
-api : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
-api = http.router [
-    rest.endpoint-option
-        RestRoute {
-            method = "GET",
-            path = "/carriers/{name}",
-            sources = [RestSource.Path "name"],
-            status = 200,
-            error-status = 500,
-            errors = [],
-        }
-        carrier,
-    rest.endpoint
-        RestRoute {
-            method = "POST",
-            path = "/rates",
-            sources = [
-                RestSource.Fields [("express", 3), ("max-days", 1)],
-                RestSource.Body False,
-            ],
-            status = 200,
-            error-status = 500,
-            errors = [("TooHeavy", 422), ("NoRoute", 404)],
-        }
-        (uncurry rates),
-]
-
-request : (String, String, String, String) -> Request
-request = make Request {
-    method = .0,
-    path = .1,
-    query = .2,
-    version = const "HTTP/1.1",
-    headers = const [],
-    body = .3 | string.to-bytes,
-    params = const [],
-    remote = const "test",
-}
-
-body-text : Body -> String
-body-text = match
-    Body.Full _ -> string.from-bytes | option.unwrap-or ""
-    _ -> const ""
-
-call : (String, String, String, String) -> () ! {Async, IO, Network, FileIO}
-call =
-    request
-    | attempt api
-    | rest.respond
-    | both .status (.body | body-text)
-    | format "{} {}"
-    | print
-
-main = [
-    "swift" | carrier | echo,
-    parcel | attempt (rates anything) | echo,
-    parcel | rates anything | json.write | print,
-    TooHeavy 40.0 | json.write | print,
-    "{\"weight\": 2, \"size\": \"Medium\", \"to\": \"IT\"}" | read-parcel | echo,
-    "{\"weight\": 2, \"size\": \"Tiny\", \"to\": \"IT\"}" | read-parcel | echo,
-    ("GET", "/carriers/swift", "", "") | call,
-    ("GET", "/carriers/zippy", "", "") | call,
-    (
-        "POST",
-        "/rates",
-        "express",
-        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"DE\"}",
-    ) | call,
-    (
-        "POST",
-        "/rates",
-        "max-days=x",
-        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"DE\"}",
-    ) | call,
-    (
-        "POST",
-        "/rates",
-        "",
-        "{\"weight\": 40, \"size\": \"Small\", \"to\": \"DE\"}",
-    ) | call,
-    (
-        "POST",
-        "/rates",
-        "",
-        "{\"weight\": 1, \"size\": \"Small\", \"to\": \"JP\"}",
-    ) | call,
-] | ignore
 ```
-
-Run it with `fwp run docs/tutorials/17-rest-and-openapi/main.fwp` (compiled to native code and cached), or
-build an executable with `fwp build docs/tutorials/17-rest-and-openapi/main.fwp -o
-rest`. The output is [`main.out`](main.out):
-
-```
-Some (Carrier {base = 9.0, countries = ["FR", "DE"], days = 1, name = "swift", per-kg = 2.0})
-Ok [Rate {carrier = "steady", days = 4, price = 7.0}, Rate {carrier = "swift", days = 1, price = 15.0}]
-[{"carrier":"steady","price":7.0,"days":4},{"carrier":"swift","price":15.0,"days":1}]
-{"type":"TooHeavy","value":40.0}
-Ok (Parcel {size = Medium, to = "IT", weight = 2.0})
-Err "$.size: expected one of \"Small\", \"Medium\", \"Large\", got \"Tiny\""
-200 {"name":"swift","base":9.0,"per-kg":2.0,"days":1,"countries":["FR","DE"]}
-404 {"error":"not found"}
-200 [{"carrier":"swift","price":11.0,"days":1}]
-400 {"error":"query.max-days: expected an integer, got \"x\""}
-422 {"error":{"type":"TooHeavy","value":40.0}}
-404 {"error":{"type":"NoRoute","value":"JP"}}
-```
-
-`main` calls the functions and the endpoints in-process, which is how the
-output is checked; the shell sessions above show them served over HTTP.
 
 ---
 
-Previous: [Command-line programs](../16-clis/README.md) · Next: [gRPC](../18-grpc/README.md) · [All tutorials](../README.md)
+Previous: [Command-line programs](../16-clis/README.md) · Next: [TLS](../18-tls/README.md) · [All tutorials](../README.md)

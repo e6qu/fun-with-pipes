@@ -3,7 +3,7 @@
 This page covers how fwp differentiates programs and where tensor kernels
 run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 *Autodiff* and *Tensors*); [tutorial 12](tutorials/12-numerics/README.md)
-and [tutorial 21](tutorials/21-autodiff-and-devices/README.md) introduce
+and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
 Numeric code in fwp is written once against the numeric traits (`Ring`,

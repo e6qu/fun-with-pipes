@@ -5,6 +5,8 @@
 # auth: api-key header X-API-Key
 # cors: https://app.example
 # timeout: 5s
+#
+# expose: rest, cli
 
 User = { name: String, admin: Bool }
 

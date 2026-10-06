@@ -1,4 +1,6 @@
 # A program to test command-line executables (tests/cli.rs).
+#
+# expose: cli
 
 export version : String
 version = "2.1.0"

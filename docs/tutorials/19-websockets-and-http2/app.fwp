@@ -1,0 +1,42 @@
+# HTTP/1.1 and HTTP/2, compressed responses, and a WebSocket:
+# `fwp run app.fwp [host:port]`.
+
+hello : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+hello = .version | format "hello over {}\n" | http.text 200
+
+report : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+report = const (string.repeat 100 "all work and no play\n") | http.text 200
+
+mirror : WebSocket -> () ! {Async, IO, Network, FileIO}
+mirror = loop mirror-step
+
+mirror-step : WebSocket -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+mirror-step = fork mirror-got id ws.recv
+
+mirror-got : WebSocket -> Option[WsMessage] -> Step[WebSocket, ()] ! {Async, IO, Network, FileIO}
+mirror-got = curry (match
+    (_, Some (WsMessage.Close _ _)) -> curry3 (const (Stop ()))
+    (_, Some _) -> curry (tap (fork ws.send .1 .0) | .0 | Again)
+    (_, None) -> const (Stop ()))
+
+routes : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+routes = http.router [
+    http.route "GET" "/hello" hello,
+    http.route "GET" "/report" report,
+    http.route "GET" "/mirror" (http.websocket mirror),
+]
+
+app : Request -> Response ! {Async, IO, Network, FileIO, Error[HttpError]}
+app = http.compress 512 routes
+
+# serve until SIGINT or SIGTERM
+serve : String -> () ! {Async, IO, Network, Error[IoError]}
+serve =
+    tcp.listen
+    | tap (tcp.local-addr | format "serving on http://{}" | eprint)
+    | fork http.serve-on id (const (http.config "unused", app))
+
+main =
+    () | args | head | option.unwrap-or "127.0.0.1:8080" | attempt serve | match
+        Ok _ -> id
+        Err _ -> .message | eprint | const 1 | exit
