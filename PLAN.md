@@ -257,7 +257,11 @@ Next in this series, toward static, zero-cost programs:
     MiB allocated and 0.58 s to nothing and 0.40 s. Closures too: one
     built per iteration and given to a function that only applies it
     went from 46 MiB allocated and 152 ms to nothing and 109 ms
-    (`tests/stack/twice.fwp`). Next: results built into the caller's
+    (`tests/stack/twice.fwp`). A match on a value built by an inlined
+    function moves into the arms that build it, where the constructor is
+    known, so the value is never built: a loop matching on a function's
+    `Option` went from 153 MiB allocated and 164 ms to nothing and 22 ms.
+    Next: results of calls that are not inlined built into the caller's
     frame.
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
