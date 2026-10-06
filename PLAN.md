@@ -37,8 +37,9 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
 ## Next
 
 1. **Tooling** (done). `fwp fmt` (a formatter that keeps comments), `fwp lint`,
-   and `fwp lsp` (diagnostics, hover, go to definition, symbols,
-   formatting, completion), with a parser that recovers from errors.
+   and `fwp lsp` (diagnostics, hover, go to definition, references,
+   rename, symbols, formatting, completion), with a parser that recovers
+   from errors.
 2. **fwp in the browser** (done). The compiler and interpreter build for
    `wasm32-wasip1`; the playground in `web/` checks, formats, tests and runs
    programs in a web worker, through a small WASI in JavaScript with an
@@ -261,8 +262,12 @@ Next in this series, toward static, zero-cost programs:
     function moves into the arms that build it, where the constructor is
     known, so the value is never built: a loop matching on a function's
     `Option` went from 153 MiB allocated and 164 ms to nothing and 22 ms.
-    Next: results of calls that are not inlined built into the caller's
-    frame.
+    Calls that are not inlined return such a variant as a struct (tag
+    and fields) when every path builds one, and a caller that only
+    matches on it keeps it as one: a recursive function's `Option`,
+    matched in a loop, went from 24 MiB allocated and 125 ms to nothing
+    and 84 ms (`tests/stack/digits.fwp`). Next: larger results built
+    into the caller's frame.
 21. **Fused list pipelines** (done for folds, `length` and `find`). A
     `fold` (and so `sum`), `length` (and so `count`) or `find` (and so
     `any` and `all`) over `map` and `filter` stages of a `range` or a list

@@ -1,0 +1,49 @@
+# Functions that build their variant result on every path return it as a
+# struct (tag and fields), so a caller that only matches on it does not
+# allocate it. The fields here hold counted values (lists, strings), whose
+# references go with them.
+Parsed =
+    | Parsed.Number I64 List[String]
+    | Parsed.Word String List[String]
+    | Parsed.End
+
+# recursive and not inlined: every tail builds a Parsed or calls itself
+rec next-token : List[String] -> Parsed
+next-token = match
+    Nil -> Parsed.End
+    Cons "" _ -> next-token
+    Cons _ _ -> curry (if
+        (.0 | parse-int | option.is-some)
+        (fork Parsed.Number (.0 | parse-int | option.unwrap-or 0) .1)
+        (fork Parsed.Word .0 .1))
+
+rec tokens : List[String] -> List[String]
+tokens = next-token | match
+    Parsed.Number _ _ ->
+        curry (fork Cons (.0 | show | concat "#") (.1 | tokens))
+    Parsed.Word _ _ -> curry (fork Cons (.0 | upper) (.1 | tokens))
+    Parsed.End -> []
+
+# a function that may return a value it was given keeps returning it
+first-some : Option[List[I64]] -> Option[List[I64]] -> Option[List[I64]]
+first-some = curry (match
+    (Some _, _) -> curry (.0 | Some)
+    (None, _) -> id)
+
+rec find-big : List[List[I64]] -> Option[List[I64]]
+find-big = match
+    Nil -> None
+    Cons _ _ -> curry (if (.0 | sum | gt 10) (.0 | Some) (.1 | find-big))
+
+main = [
+    "a 12  b 7 c" | split " " | tokens | echo,
+    [[1, 2], [5, 9], [3]] | find-big | echo,
+    [[1], [2]] | find-big | echo,
+    first-some None ([4] | Some) | echo,
+    first-some ([1] | Some) None | echo,
+    [[1, 2], [5, 9], [3]]
+    | find-big
+    | option.map length
+    | option.unwrap-or 0
+    | echo,
+] | ignore

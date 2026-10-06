@@ -1,0 +1,24 @@
+# a recursive function returning an Option (not inlined), matched by its
+# caller in a loop
+rec digit-sum-if : I64 -> Option[I64]
+digit-sum-if = match
+    0 -> Some 0
+    _ -> fork digit-step (rem 10) (div 10)
+
+rec digit-step : I64 -> I64 -> Option[I64]
+digit-step = curry (if
+    (.0 | eq 7)
+    (const None)
+    (fork option.map (.0 | add) (.1 | digit-sum-if)))
+
+step : (I64, I64) -> Step[(I64, I64), I64]
+step =
+    if
+        (.0 | eq 0)
+        (.1 | Stop)
+        (both
+                (.0 | sub 1)
+                (fork add .1 (.0 | digit-sum-if | option.unwrap-or 100))
+            | Again)
+
+main = (3000000, 0) | loop step | echo

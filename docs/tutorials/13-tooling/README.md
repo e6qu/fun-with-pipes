@@ -64,8 +64,9 @@ shout = upper | flip concat "!"
 stdin and stdout. While you type it shows syntax errors (several at once),
 type errors and lint warnings; hovering over a name shows its inferred type;
 go-to-definition jumps to top-level, imported and standard library names;
-and it lists the file's declarations, completes names with their types and
-formats the file. Point your editor's LSP client at the command `fwp lsp`
+it finds a name's references and renames it across the file; and it lists
+the file's declarations, completes names with their types and formats the
+file. Point your editor's LSP client at the command `fwp lsp`
 for `*.fwp` files; the [reference](../../reference.md#fwp-lsp) has
 configurations for Neovim, Helix and VS Code.
 

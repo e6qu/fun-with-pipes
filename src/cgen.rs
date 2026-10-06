@@ -351,6 +351,9 @@ struct Gen<'p> {
     /// on the last one the object freed with what it holds.
     drops: HashMap<MT, usize>,
     drop_defs: Vec<String>,
+    /// Per variant type returned as a struct: its helpers (`vhelper`).
+    vhelpers: HashMap<MT, usize>,
+    vhelper_defs: Vec<String>,
     strings: HashMap<Vec<u8>, usize>,
     string_defs: Vec<String>,
     consts: Vec<String>,
@@ -479,6 +482,11 @@ fn stack_enabled() -> bool {
     std::env::var("FWP_STACK").map_or(true, |v| v != "0")
 }
 
+/// Variants returned as structs (`FWP_VRET=0` when compiling turns it off).
+fn variant_returns_enabled() -> bool {
+    std::env::var("FWP_VRET").map_or(true, |v| v != "0")
+}
+
 impl Gen<'_> {
     /// An allocation of compiled code: unique when references are counted.
     fn fresh(&self, alloc: String) -> String {
@@ -534,6 +542,10 @@ struct Abi {
     params: Vec<Option<usize>>,
     /// The number of fields of a result returned as a struct.
     ret: Option<usize>,
+    /// A variant result returned as its tag and fields (`fwp_u<m>`, `m` the
+    /// most fields of a constructor): the function builds it on every path,
+    /// so a caller that only matches on it never allocates it.
+    vret: Option<usize>,
 }
 
 /// The number of fields of a record type small enough to unbox.
@@ -555,7 +567,112 @@ fn abi_of(prog: &Program, f: &Func) -> Option<Abi> {
         })
         .collect();
     let ret = small_record(prog, f.ty.params(f.arity as usize).1);
-    (ret.is_some() || params.iter().any(Option::is_some)).then_some(Abi { params, ret })
+    (ret.is_some() || params.iter().any(Option::is_some)).then_some(Abi {
+        params,
+        ret,
+        vret: None,
+    })
+}
+
+/// The most fields of a constructor of a variant type, when small enough
+/// for a struct and not 0 (a variant of constants is a word already). A
+/// recursive type (a list, a tree) is left out: its nodes are rebuilt from
+/// the cells of the old ones in place, which a struct has not.
+fn small_variant(prog: &Program, t: &MT) -> Option<usize> {
+    let Some(TypeShape::Adt(vs)) = prog.shapes.get(t) else {
+        return None;
+    };
+    if vs.iter().flat_map(|(_, fs)| fs).any(|ft| mentions(ft, t)) {
+        return None;
+    }
+    let m = vs.iter().map(|(_, fs)| fs.len()).max()?;
+    (1..=MAX_UNBOXED).contains(&m).then_some(m)
+}
+
+/// Whether type `t` appears in `ft`.
+fn mentions(ft: &MT, t: &MT) -> bool {
+    ft == t
+        || match ft {
+            MT::Con(_, args) => args.iter().any(|a| mentions(a, t)),
+            MT::Fun(a, b) => mentions(a, t) || mentions(b, t),
+            MT::Record(fs) => fs.iter().any(|(_, x)| mentions(x, t)),
+            MT::Nat(_) => false,
+        }
+}
+
+/// Which functions return their variant result as a struct: those whose
+/// every tail builds a constructor or calls such a function (a fixed point
+/// from all candidates down). A function that may return a value it was
+/// given keeps returning it as it is.
+fn variant_returns(prog: &Program, abis: &mut [Option<Abi>]) {
+    let mut cand: Vec<Option<usize>> = prog
+        .funcs
+        .iter()
+        .enumerate()
+        .map(|(id, f)| match &f.body {
+            Body::Expr(_) if f.arity > 0 && abis[id].as_ref().is_none_or(|a| a.ret.is_none()) => {
+                small_variant(prog, f.ty.params(f.arity as usize).1)
+            }
+            _ => None,
+        })
+        .collect();
+    loop {
+        let mut changed = false;
+        for (id, f) in prog.funcs.iter().enumerate() {
+            let (Some(m), Body::Expr(body)) = (cand[id], &f.body) else {
+                continue;
+            };
+            let mut ts = Vec::new();
+            tails(body, &mut ts);
+            let ok = ts.iter().all(|t| match t {
+                Expr::Construct(..) => true,
+                Expr::Call(g, _) => cand[*g] == Some(m),
+                _ => false,
+            });
+            if !ok {
+                cand[id] = None;
+                changed = true;
+            }
+        }
+        if !changed {
+            break;
+        }
+    }
+    for (id, m) in cand.into_iter().enumerate() {
+        if let Some(m) = m {
+            let n = prog.funcs[id].arity as usize;
+            abis[id]
+                .get_or_insert_with(|| Abi {
+                    params: vec![None; n],
+                    ret: None,
+                    vret: None,
+                })
+                .vret = Some(m);
+        }
+    }
+}
+
+/// Whether local `l` is used in `e` only as the scrutinee of matches whose
+/// patterns do not bind it whole (and in reference counts).
+fn only_matched(e: &Expr, l: Local) -> bool {
+    let all = |xs: &[Expr]| xs.iter().all(|x| only_matched(x, l));
+    match e {
+        Expr::Local(x) => *x != l,
+        Expr::Const(_) | Expr::Func(_) => true,
+        Expr::Dup(_, b) | Expr::Drop(_, b) => only_matched(b, l),
+        Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => all(xs),
+        Expr::Apply(f, xs) => only_matched(f, l) && all(xs),
+        Expr::Field(r, _) => only_matched(r, l),
+        Expr::SetFields(r, s) => only_matched(r, l) && s.iter().all(|(_, x)| only_matched(x, l)),
+        Expr::Let(_, v, b) => only_matched(v, l) && only_matched(b, l),
+        Expr::Match(s, arms) => {
+            let scrut = match &**s {
+                Expr::Local(x) if *x == l => arms.iter().all(|(p, _)| !matches!(p, Pat::Bind(_))),
+                s => only_matched(s, l),
+            };
+            scrut && arms.iter().all(|(_, b)| only_matched(b, l))
+        }
+    }
 }
 
 impl Abi {
@@ -567,9 +684,10 @@ impl Abi {
                 None => ps.push(format!("V l{}", i)),
             }
         }
-        let ret = match self.ret {
-            Some(n) => format!("fwp_r{}", n),
-            None => "V".into(),
+        let ret = match (self.ret, self.vret) {
+            (Some(n), _) => format!("fwp_r{}", n),
+            (None, Some(m)) => format!("fwp_u{}", m),
+            (None, None) => "V".into(),
         };
         format!("static {} w{}({})", ret, id, ps.join(", "))
     }
@@ -880,6 +998,66 @@ impl<'p> Gen<'p> {
         let def = self.drop_body(mt, id);
         self.drop_defs[id] = def;
         id
+    }
+
+    /// The helpers of a variant type `t` returned as a struct `fwp_u<m>`:
+    /// `fwp_vbox<k>` builds the value (taking the struct's references),
+    /// `fwp_vdup<k>` and `fwp_vdrop<k>` count the references its fields
+    /// hold, by its tag.
+    fn vhelper(&mut self, t: &MT, m: usize) -> usize {
+        if let Some(k) = self.vhelpers.get(t) {
+            return *k;
+        }
+        let k = self.vhelper_defs.len();
+        self.vhelpers.insert(t.clone(), k);
+        self.vhelper_defs.push(String::new());
+        let vs = match self.prog.shapes.get(t) {
+            Some(TypeShape::Adt(vs)) => vs.clone(),
+            _ => Vec::new(),
+        };
+        let mut boxes = String::new();
+        let (mut dups, mut drops) = (String::new(), String::new());
+        for (tag, (_, fs)) in vs.iter().enumerate() {
+            if fs.is_empty() {
+                let _ = writeln!(boxes, "    case {}: return (V){};", tag, tag);
+            } else {
+                let alloc = self.fresh(format!("fwp_data({}, {}, u.f)", tag, fs.len()));
+                let _ = writeln!(boxes, "    case {}: return {};", tag, alloc);
+            }
+            if !self.reuse {
+                continue;
+            }
+            let (mut d, mut r) = (String::new(), String::new());
+            for (i, ft) in fs.iter().enumerate() {
+                if !crate::rc::needs_rc(&self.prog.shapes, ft) {
+                    continue;
+                }
+                let _ = write!(d, " fwp_rc_dup(u->f[{}]);", i);
+                let name = if free_enabled() && !matches!(ft, MT::Con(n, _) if n == "?") {
+                    format!("fwp_drop{}", self.drop_id(ft))
+                } else {
+                    "fwp_rc_drop".into()
+                };
+                let _ = write!(r, " {}(u->f[{}]);", name, i);
+            }
+            if !d.is_empty() {
+                let _ = writeln!(dups, "    case {}:{} break;", tag, d);
+                let _ = writeln!(drops, "    case {}:{} break;", tag, r);
+            }
+        }
+        let def = format!(
+            "/* {t} */\nstatic V fwp_vbox{k}(fwp_u{m} u) {{\n    switch ((uint32_t)u.tag) {{\n{boxes}    }}\n    return 0;\n}}\n\
+             static void fwp_vdup{k}(fwp_u{m} *u) {{\n    (void)u;\n    switch ((uint32_t)u->tag) {{\n{dups}    }}\n}}\n\
+             static void fwp_vdrop{k}(fwp_u{m} *u) {{\n    (void)u;\n    switch ((uint32_t)u->tag) {{\n{drops}    }}\n}}\n",
+            t = t,
+            k = k,
+            m = m,
+            boxes = boxes,
+            dups = dups,
+            drops = drops
+        );
+        self.vhelper_defs[k] = def;
+        k
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
@@ -1279,6 +1457,9 @@ struct FnGen<'g, 'p> {
     /// The constructor a local is known to hold (in the arm of a match on
     /// it).
     known_tag: HashMap<Local, u32>,
+    /// Locals holding a variant as a struct (`Abi::vret`), matched only:
+    /// the C variable, the struct's size and the variant type.
+    vlocals: HashMap<Local, (String, usize, MT)>,
     /// Cells of dropped unique values, which a constructor of the same size
     /// may take (innermost last).
     tokens: Vec<Token>,
@@ -1592,8 +1773,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.expr_fields(b, n)
             }
             Expr::Match(scrut, arms) if self.unboxed(e) == Some(n) => {
-                let sv = self.expr(scrut);
-                let s = self.bind(sv);
+                let s = self.scrutinee(scrut);
                 let rs: Vec<String> = (0..n).map(|_| self.fresh()).collect();
                 for r in &rs {
                     self.line(&format!("V {};", r));
@@ -1607,7 +1787,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let next = format!("next{}", self.label);
                     self.line("{");
                     self.indent += 1;
-                    self.pattern(pat, &s, &next);
+                    self.match_pattern(scrut, pat, &s, &next);
                     let known = self.arm_start(scrut, pat, &before);
                     let fs = self.expr_fields(body, n);
                     self.arm_end(known, &mut after);
@@ -1663,11 +1843,213 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    /// The result type of function `id`.
+    fn ret_type(&self, id: FuncId) -> MT {
+        let f = &self.g.prog.funcs[id];
+        f.ty.params(f.arity as usize).1.clone()
+    }
+
+    /// The size of the struct a variant `e` of type `ty` gives without
+    /// being built: every tail of `e` builds a constructor or calls a
+    /// worker returning one (`Abi::vret`), and at least one is not a
+    /// constructor applied to nothing.
+    fn unboxed_variant(&self, e: &Expr, ty: &MT) -> Option<usize> {
+        if !variant_returns_enabled() {
+            return None;
+        }
+        let m = small_variant(self.g.prog, ty)?;
+        let mut ts = Vec::new();
+        tails(e, &mut ts);
+        let ok = ts.iter().all(|t| match t {
+            Expr::Construct(..) => true,
+            Expr::Call(id, _) => self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m),
+            _ => false,
+        });
+        let fields = ts
+            .iter()
+            .any(|t| !matches!(t, Expr::Construct(_, xs) if xs.is_empty()));
+        (ok && fields && !matches!(e, Expr::Construct(..))).then_some(m)
+    }
+
+    /// The tag and fields (C expressions) of `e`, a variant of type `ty`
+    /// returned as a struct `fwp_u<m>`, without building it. The fields
+    /// hold the references the value would.
+    fn expr_variant(&mut self, e: &Expr, m: usize, ty: &MT) -> (String, Vec<String>) {
+        let parts = |u: &str| -> (String, Vec<String>) {
+            (
+                format!("{}.tag", u),
+                (0..m).map(|k| format!("{}.f[{}]", u, k)).collect(),
+            )
+        };
+        match e {
+            Expr::Construct(tag, xs) => {
+                let mut fs = self.args(xs);
+                fs.resize(m, "0".into());
+                (format!("(V){}", tag), fs)
+            }
+            Expr::Local(l) if self.vlocals.contains_key(l) => {
+                let u = self.vlocals[l].0.clone();
+                parts(&u)
+            }
+            Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
+                let abi = self.g.abis[*id].clone().unwrap();
+                let xs = self.worker_args(*id, &abi, args);
+                let t = self.fresh();
+                self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                parts(&t)
+            }
+            Expr::Let(l, v, b) => {
+                let b = self.bind_local(*l, v, b);
+                self.expr_variant(b, m, ty)
+            }
+            Expr::Drop(l, b)
+                if self.g.reuse
+                    && !self.fields.contains_key(l)
+                    && !self.vlocals.contains_key(l) =>
+            {
+                match self.reuse_token(*l, b) {
+                    Some(t) => {
+                        self.tokens.push(t);
+                        let r = self.expr_variant(b, m, ty);
+                        self.tokens.pop();
+                        r
+                    }
+                    None => {
+                        self.count(e, *l);
+                        self.expr_variant(b, m, ty)
+                    }
+                }
+            }
+            Expr::Dup(l, b) | Expr::Drop(l, b) => {
+                self.count(e, *l);
+                self.expr_variant(b, m, ty)
+            }
+            Expr::Match(scrut, arms) => {
+                let s = self.scrutinee(scrut);
+                let u = self.fresh();
+                self.line(&format!("fwp_u{} {};", m, u));
+                self.label += 1;
+                let done = format!("done{}", self.label);
+                let before = self.arms_start();
+                let mut after = before.clone();
+                for (pat, body) in arms {
+                    self.label += 1;
+                    let next = format!("next{}", self.label);
+                    self.line("{");
+                    self.indent += 1;
+                    self.match_pattern(scrut, pat, &s, &next);
+                    let known = self.arm_start(scrut, pat, &before);
+                    let (tag, fs) = self.expr_variant(body, m, ty);
+                    self.arm_end(known, &mut after);
+                    self.line(&format!("{}.tag = {};", u, tag));
+                    for (k, f) in fs.iter().enumerate() {
+                        self.line(&format!("{}.f[{}] = {};", u, k, f));
+                    }
+                    self.line(&format!("goto {};", done));
+                    self.indent -= 1;
+                    self.line("}");
+                    self.line(&format!("{}:;", next));
+                }
+                self.line("fwp_trap(\"internal: no match arm applies\");");
+                self.line(&format!("{}:;", done));
+                self.arms_end(&after);
+                parts(&u)
+            }
+            _ => {
+                // a value: read into a struct, whose fields take over the
+                // reference to it
+                let v = self.expr(e);
+                let t = self.bind(v);
+                let u = self.fresh();
+                self.line(&format!("fwp_u{} {} = fwp_vunbox{}({});", m, u, m, t));
+                if self.g.reuse {
+                    let k = self.g.vhelper(ty, m);
+                    self.line(&format!("fwp_vdup{}(&{});", k, u));
+                    let d = self.typed_drop(ty).unwrap_or_else(|| "fwp_rc_drop".into());
+                    self.line(&format!("{}({});", d, t));
+                }
+                parts(&u)
+            }
+        }
+    }
+
+    /// The C variable a match tests: the struct of a local kept as one, or
+    /// the value of `scrut`.
+    fn scrutinee(&mut self, scrut: &Expr) -> String {
+        if let Expr::Local(l) = scrut {
+            if let Some((u, _, _)) = self.vlocals.get(l) {
+                return u.clone();
+            }
+        }
+        let sv = self.expr(scrut);
+        self.bind(sv)
+    }
+
+    /// `pattern`, on the scrutinee `s` that `scrutinee` gave.
+    fn match_pattern(&mut self, scrut: &Expr, p: &Pat, s: &str, fail: &str) {
+        if let Expr::Local(l) = scrut {
+            if let Some((u, m, t)) = self.vlocals.get(l).cloned() {
+                match p {
+                    Pat::Construct(tag, ps) => {
+                        self.line(&format!(
+                            "if ((uint32_t){}.tag != {}) goto {};",
+                            u, tag, fail
+                        ));
+                        for (i, sp) in ps.iter().enumerate() {
+                            if !matches!(sp, Pat::Wild) {
+                                let fv = format!("{}.f[{}]", u, i);
+                                self.pattern(sp, &fv, fail);
+                            }
+                        }
+                    }
+                    Pat::Wild => {}
+                    // (not kept as a struct when bound whole; built here)
+                    _ => {
+                        let v = self.vlocal_value(&u, m, &t);
+                        self.pattern(p, &v, fail);
+                    }
+                }
+                return;
+            }
+        }
+        self.pattern(p, s, fail);
+    }
+
+    /// A variant kept as a struct, built as a value of its own (with its
+    /// own references to the fields).
+    fn vlocal_value(&mut self, u: &str, m: usize, t: &MT) -> String {
+        let k = self.g.vhelper(t, m);
+        let c = self.fresh();
+        self.line(&format!("fwp_u{} {} = {};", m, c, u));
+        if self.g.reuse {
+            self.line(&format!("fwp_vdup{}(&{});", k, c));
+        }
+        self.bind(format!("fwp_vbox{}({})", k, c))
+    }
+
     /// `l = v` before `body`: a record that `body` reads only through its
     /// fields and that `v` gives unboxed is kept as its fields. Returns the
     /// rest of `body` to generate (a copy that reuses its original takes
     /// the original's `Drop`).
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
+        // a variant built or returned as a struct on every path, only
+        // matched: kept as one
+        if let Some(m) = self.unboxed_variant(v, &self.locals[l as usize].clone()) {
+            if only_matched(body, l) {
+                let t = self.locals[l as usize].clone();
+                let (tag, fs) = self.expr_variant(v, m, &t);
+                let u = self.fresh();
+                self.line(&format!(
+                    "fwp_u{} {} = {{{}, {{{}}}}};",
+                    m,
+                    u,
+                    tag,
+                    fs.join(", ")
+                ));
+                self.vlocals.insert(l, (u, m, t));
+                return body;
+            }
+        }
         if let Some(n) = self.unboxed(v) {
             if !matches!(v, Expr::Record(_)) && crate::opt::only_fields(body, l) {
                 let fs = self.expr_fields(v, n);
@@ -1849,7 +2231,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// cell becomes a token; otherwise it is an ordinary drop.
     fn reuse_token(&mut self, x: Local, body: &Expr) -> Option<Token> {
         let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record) && x == 0;
-        if self.fields.contains_key(&x) || virtual_state {
+        if self.fields.contains_key(&x) || self.vlocals.contains_key(&x) || virtual_state {
             return None;
         }
         let shapes = &self.g.prog.shapes;
@@ -1923,6 +2305,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The reference count change of a `Dup` or `Drop` of local `l`: none
     /// when the local is kept as its fields (there is no object).
     fn count(&mut self, e: &Expr, l: Local) {
+        if let Some((u, m, t)) = self.vlocals.get(&l).cloned() {
+            if self.g.reuse {
+                let k = self.g.vhelper(&t, m);
+                let op = if matches!(e, Expr::Dup(..)) {
+                    "vdup"
+                } else {
+                    "vdrop"
+                };
+                self.line(&format!("fwp_{}{}(&{});", op, k, u));
+            }
+            return;
+        }
         let op = if matches!(e, Expr::Dup(..)) {
             "fwp_rc_dup"
         } else {
@@ -2137,6 +2531,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn expr(&mut self, e: &Expr) -> String {
+        if let Expr::Local(l) = e {
+            if let Some((u, m, t)) = self.vlocals.get(l).cloned() {
+                return self.vlocal_value(&u, m, &t);
+            }
+        }
         if let Some(lg) = &self.in_loop {
             let record = lg.record;
             match e {
@@ -2229,7 +2628,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
                             let r = format!("fwp_record({}, {}.f)", n, t);
                             self.bind(self.g.fresh(r))
                         }
-                        None => self.bind(format!("w{}({})", id, xs.join(", "))),
+                        None => match abi.vret {
+                            // a value the caller needs: built from the struct
+                            Some(m) => {
+                                let t = self.fresh();
+                                self.line(&format!(
+                                    "fwp_u{} {} = w{}({});",
+                                    m,
+                                    t,
+                                    id,
+                                    xs.join(", ")
+                                ));
+                                let ty = self.ret_type(*id);
+                                let k = self.g.vhelper(&ty, m);
+                                self.bind(format!("fwp_vbox{}({})", k, t))
+                            }
+                            None => self.bind(format!("w{}({})", id, xs.join(", "))),
+                        },
                     };
                 }
                 let xs: Vec<String> = args
@@ -2327,8 +2742,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if let Some(r) = self.lookup_match(scrut, arms) {
                     return r;
                 }
-                let sv = self.expr(scrut);
-                let s = self.bind(sv);
+                let s = self.scrutinee(scrut);
                 let r = self.fresh();
                 self.line(&format!("V {};", r));
                 self.label += 1;
@@ -2340,7 +2754,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let next = format!("next{}", self.label);
                     self.line("{");
                     self.indent += 1;
-                    self.pattern(pat, &s, &next);
+                    self.match_pattern(scrut, pat, &s, &next);
                     let known = self.arm_start(scrut, pat, &before);
                     let bv = self.expr(body);
                     self.arm_end(known, &mut after);
@@ -3391,6 +3805,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             fields: HashMap::new(),
             locals: f.locals.clone(),
             known_tag: HashMap::new(),
+            vlocals: HashMap::new(),
             tokens: Vec::new(),
             me: step,
         };
@@ -3558,6 +3973,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     fields: HashMap::new(),
                     locals,
                     known_tag: HashMap::new(),
+                    vlocals: HashMap::new(),
                     tokens: Vec::new(),
                     me: id,
                 };
@@ -3602,15 +4018,21 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             fields,
             locals: f.locals.clone(),
             known_tag: HashMap::new(),
+            vlocals: HashMap::new(),
             tokens: Vec::new(),
             me: id,
         };
-        let ret = match abi.ret {
-            Some(n) => {
+        let ret = match (abi.ret, abi.vret) {
+            (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
                 format!("(fwp_r{}){{{{{}}}}}", n, fs.join(", "))
             }
-            None => fg.expr(e),
+            (None, Some(m)) => {
+                let ty = fg.ret_type(id);
+                let (tag, fs) = fg.expr_variant(e, m, &ty);
+                format!("(fwp_u{}){{{}, {{{}}}}}", m, tag, fs.join(", "))
+            }
+            (None, None) => fg.expr(e),
         };
         out.push_str(&fg.out);
         let _ = writeln!(out, "    return {};\n}}", ret);
@@ -3642,8 +4064,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 let _ = write!(post, "fwp_rc_drop(l{}); ", i);
             }
         }
-        let body = match abi.ret {
-            Some(n) => format!(
+        let body = match (abi.ret, abi.vret) {
+            (Some(n), _) => format!(
                 "{}fwp_r{} r = {}; {}return {};",
                 pre,
                 n,
@@ -3651,7 +4073,16 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 post,
                 self.fresh(format!("fwp_record({}, r.f)", n))
             ),
-            None => format!("{}V r = {}; {}return r;", pre, call, post),
+            (None, Some(m)) => {
+                let f = &self.prog.funcs[id];
+                let t = f.ty.params(f.arity as usize).1.clone();
+                let k = self.vhelper(&t, m);
+                format!(
+                    "{}fwp_u{} r = {}; {}return fwp_vbox{}(r);",
+                    pre, m, call, post, k
+                )
+            }
+            (None, None) => format!("{}V r = {}; {}return r;", pre, call, post),
         };
         let _ = writeln!(
             out,
@@ -4117,7 +4548,10 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     let main = prog.main.unwrap_or(0);
     // the calling conventions follow the bodies as they are; with counted
     // references, the code is generated from the counted bodies
-    let abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
+    let mut abis: Vec<Option<Abi>> = prog.funcs.iter().map(|f| abi_of(prog, f)).collect();
+    if variant_returns_enabled() {
+        variant_returns(prog, &mut abis);
+    }
     let reuse = reuse_enabled();
     let counted;
     let prog = if reuse {
@@ -4132,6 +4566,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         desc_defs: Vec::new(),
         drops: HashMap::new(),
         drop_defs: Vec::new(),
+        vhelpers: HashMap::new(),
+        vhelper_defs: Vec::new(),
         strings: HashMap::new(),
         string_defs: Vec::new(),
         consts: Vec::new(),
@@ -4500,6 +4936,21 @@ static const fwp_exec_spec exec_spec{i} = {{
         }
     }
     out.push_str("\n/* ---- program ---- */\n\n");
+    // variants returned in registers: tag and fields, and a value read
+    // into one (no counts change)
+    for m in 1..=MAX_UNBOXED {
+        let _ = writeln!(
+            out,
+            "typedef struct {{ V tag; V f[{m}]; }} fwp_u{m};",
+            m = m
+        );
+        let _ = writeln!(
+            out,
+            "static inline fwp_u{m} fwp_vunbox{m}(V v) {{ fwp_u{m} u = {{0}}; if (v < 4096) {{ u.tag = v; return u; }} \
+             u.tag = OBJ(v)->tag; for (uint32_t k = 0; k < OBJ(v)->n && k < {m}; k++) u.f[k] = OBJ(v)->f[k]; return u; }}",
+            m = m
+        );
+    }
     // tentative declarations, so descriptors can refer to each other
     for i in 0..g.desc_defs.len() {
         let _ = writeln!(out, "static fwp_desc d{};", i);
@@ -4512,6 +4963,10 @@ static const fwp_exec_spec exec_spec{i} = {{
         let _ = writeln!(out, "static void fwp_drop{}(V v);", i);
     }
     for d in &g.drop_defs {
+        out.push_str(d);
+        out.push('\n');
+    }
+    for d in &g.vhelper_defs {
         out.push_str(d);
         out.push('\n');
     }

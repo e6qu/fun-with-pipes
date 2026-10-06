@@ -238,6 +238,48 @@ fn language_server() {
     assert_eq!(num(&d, &["range", "start", "line"]), 2);
     assert_eq!(num(&d, &["range", "start", "character"]), 0);
 
+    // references to `double`: its signature, its binding and its use
+    let refs = |c: &mut Client, decl: bool| -> Vec<u32> {
+        let mut params = at(&uri, 4, 13);
+        if let Json::Obj(fs) = &mut params {
+            fs.push((
+                "context".into(),
+                Json::obj(vec![("includeDeclaration", Json::Bool(decl))]),
+            ));
+        }
+        let r = c.request("textDocument/references", params);
+        r.as_array()
+            .unwrap()
+            .iter()
+            .map(|l| num(l, &["range", "start", "line"]))
+            .collect()
+    };
+    assert_eq!(refs(&mut c, true), [1, 2, 4]);
+    assert_eq!(refs(&mut c, false), [4]);
+
+    // rename `double`: every occurrence; not to a capitalized name, and not
+    // a name of the standard library
+    let rename = |c: &mut Client, line: u32, ch: u32, new: &str| -> Json {
+        let mut params = at(&uri, line, ch);
+        if let Json::Obj(fs) = &mut params {
+            fs.push(("newName".into(), Json::str(new)));
+        }
+        c.request("textDocument/rename", params)
+    };
+    let edit = rename(&mut c, 4, 13, "twice");
+    let edits = edit
+        .at(&["changes", uri.as_str()])
+        .and_then(Json::as_array)
+        .unwrap();
+    assert_eq!(edits.len(), 3, "{:?}", edit);
+    assert!(edits
+        .iter()
+        .all(|e| e.get("newText").and_then(Json::as_str) == Some("twice")));
+    assert_eq!(num(&edits[2], &["range", "start", "character"]), 12);
+    assert_eq!(num(&edits[2], &["range", "end", "character"]), 18);
+    assert_eq!(rename(&mut c, 4, 13, "Twice"), Json::Null);
+    assert_eq!(rename(&mut c, 4, 22, "total2"), Json::Null);
+
     // definition of a name from an imported module
     std::fs::write(dir.join("geo.fwp"), "# areas\narea = uncurry mul | add 0\n").unwrap();
     let user = dir.join("user.fwp");
