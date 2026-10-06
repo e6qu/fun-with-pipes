@@ -716,6 +716,10 @@ over stdin and stdout. It supports:
 - go to definition: top-level and imported names, types and constructors,
   and standard library names when `lib/` is next to the compiler's
   sources;
+- references: every occurrence of a top-level name, type or constructor
+  in the document, with or without its declarations;
+- rename: a name the document declares, everywhere in the document (to a
+  name of the same kind; uses in other files are not renamed);
 - document symbols: the top-level declarations;
 - formatting: the whole document with `fwp fmt`;
 - completion: the file's top-level names and the standard library's, with

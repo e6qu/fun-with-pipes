@@ -164,6 +164,8 @@ impl<W: Write> Server<W> {
             }
             "textDocument/hover"
             | "textDocument/definition"
+            | "textDocument/references"
+            | "textDocument/rename"
             | "textDocument/documentSymbol"
             | "textDocument/formatting"
             | "textDocument/completion" => {
@@ -175,7 +177,7 @@ impl<W: Write> Server<W> {
                     let n = |k| p.get(k).and_then(Json::as_f64).unwrap_or(0.0) as u32;
                     (n("line"), n("character"))
                 });
-                Some(self.request(method, uri, pos))
+                Some(self.request(method, uri, pos, &params))
             }
             _ if id.is_some() && !method.starts_with("$/") => {
                 self.send(error_response(id.unwrap(), -32601, "method not found"));
@@ -192,7 +194,7 @@ impl<W: Write> Server<W> {
         }
     }
 
-    fn request(&mut self, method: &str, uri: &str, pos: Option<(u32, u32)>) -> Json {
+    fn request(&mut self, method: &str, uri: &str, pos: Option<(u32, u32)>, params: &Json) -> Json {
         if method == "textDocument/completion" {
             return self.completion(uri);
         }
@@ -203,6 +205,23 @@ impl<W: Write> Server<W> {
         match method {
             "textDocument/hover" => at.and_then(|(l, c)| hover(doc, l, c)),
             "textDocument/definition" => at.and_then(|(l, c)| definition(doc, l, c)),
+            "textDocument/references" => {
+                let decl =
+                    params.at(&["context", "includeDeclaration"]) != Some(&Json::Bool(false));
+                at.map(|(l, c)| {
+                    let uri = path_to_uri(&doc.path);
+                    Json::Arr(
+                        occurrences(doc, l, c, decl)
+                            .into_iter()
+                            .map(|sp| location_in(&uri, &doc.text, sp))
+                            .collect(),
+                    )
+                })
+            }
+            "textDocument/rename" => {
+                let new = params.get("newName").and_then(Json::as_str).unwrap_or("");
+                at.and_then(|(l, c)| rename(doc, l, c, new))
+            }
             "textDocument/documentSymbol" => Some(symbols(doc)),
             _ => formatting(doc),
         }
@@ -326,6 +345,8 @@ fn capabilities() -> Json {
                 ("textDocumentSync", Json::Num(1.0)),
                 ("hoverProvider", Json::Bool(true)),
                 ("definitionProvider", Json::Bool(true)),
+                ("referencesProvider", Json::Bool(true)),
+                ("renameProvider", Json::Bool(true)),
                 ("documentSymbolProvider", Json::Bool(true)),
                 ("documentFormattingProvider", Json::Bool(true)),
                 ("completionProvider", Json::obj(vec![])),
@@ -629,6 +650,98 @@ fn definition(doc: &Doc, line: u32, col: u32) -> Option<Json> {
         _ => None,
     })?;
     Some(location_in(&path_to_uri(&doc.path), &doc.text, sp))
+}
+
+/// The names a document declares: bindings, signatures, foreign
+/// functions, types and their constructors, with the line of each.
+fn declared(doc: &Doc) -> Vec<(String, u32)> {
+    let mut out = Vec::new();
+    for d in &doc.module.decls {
+        let line = d.span().line;
+        match d {
+            Decl::Bind(b) => out.push((b.name.clone(), line)),
+            Decl::Sig { sig, .. } => out.push((sig.name.clone(), line)),
+            Decl::Foreign { name, .. } => out.push((name.clone(), line)),
+            Decl::Type(t) => {
+                out.push((t.name.clone(), line));
+                if let crate::ast::TypeBody::Variants(vs) = &t.body {
+                    out.extend(vs.iter().map(|v| (v.name.clone(), line)));
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
+/// The spans of the name under a position, everywhere in the document
+/// (top-level names have no local shadows); with `decl`, also where it is
+/// declared (the first occurrence on a line that declares it).
+fn occurrences(doc: &Doc, line: u32, col: u32, decl: bool) -> Vec<Span> {
+    let Some(tok) = token_at(&doc.text, line, col) else {
+        return vec![];
+    };
+    let name = match &tok.tok {
+        Tok::Ident(n) | Tok::Upper(n) => n.clone(),
+        _ => return vec![],
+    };
+    let decl_lines: Vec<u32> = declared(doc)
+        .into_iter()
+        .filter(|(n, _)| *n == name)
+        .map(|(_, l)| l)
+        .collect();
+    let mut out = Vec::new();
+    let mut seen_lines = Vec::new();
+    for t in lex(&doc.text, 0).unwrap_or_default() {
+        if !matches!(&t.tok, Tok::Ident(n) | Tok::Upper(n) if *n == name) {
+            continue;
+        }
+        let declaring = decl_lines.contains(&t.span.line) && !seen_lines.contains(&t.span.line);
+        if declaring {
+            seen_lines.push(t.span.line);
+        }
+        if decl || !declaring {
+            out.push(t.span);
+        }
+    }
+    out
+}
+
+/// Every occurrence of a name the document declares, renamed to `new`
+/// (a name of the same kind: lowercase for values, capitalized for types
+/// and constructors). Uses in other files are not renamed.
+fn rename(doc: &Doc, line: u32, col: u32, new: &str) -> Option<Json> {
+    let tok = token_at(&doc.text, line, col)?;
+    let name = match &tok.tok {
+        Tok::Ident(n) | Tok::Upper(n) => n.clone(),
+        _ => return None,
+    };
+    if !declared(doc).iter().any(|(n, _)| *n == name) {
+        return None;
+    }
+    let same_kind = match lex(new, 0).ok()?.as_slice() {
+        [t, end] if matches!(end.tok, Tok::Eof) => matches!(
+            (&t.tok, &tok.tok),
+            (Tok::Ident(_), Tok::Ident(_)) | (Tok::Upper(_), Tok::Upper(_))
+        ),
+        _ => false,
+    };
+    if !same_kind {
+        return None;
+    }
+    let edits: Vec<Json> = occurrences(doc, line, col, true)
+        .into_iter()
+        .map(|sp| {
+            Json::obj(vec![
+                ("range", range(&doc.text, sp)),
+                ("newText", Json::str(new)),
+            ])
+        })
+        .collect();
+    Some(Json::obj(vec![(
+        "changes",
+        Json::obj(vec![(path_to_uri(&doc.path).as_str(), Json::Arr(edits))]),
+    )]))
 }
 
 fn symbols(doc: &Doc) -> Json {

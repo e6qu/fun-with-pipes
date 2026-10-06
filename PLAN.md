@@ -37,8 +37,9 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
 ## Next
 
 1. **Tooling** (done). `fwp fmt` (a formatter that keeps comments), `fwp lint`,
-   and `fwp lsp` (diagnostics, hover, go to definition, symbols,
-   formatting, completion), with a parser that recovers from errors.
+   and `fwp lsp` (diagnostics, hover, go to definition, references,
+   rename, symbols, formatting, completion), with a parser that recovers
+   from errors.
 2. **fwp in the browser** (done). The compiler and interpreter build for
    `wasm32-wasip1`; the playground in `web/` checks, formats, tests and runs
    programs in a web worker, through a small WASI in JavaScript with an
