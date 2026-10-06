@@ -34,6 +34,19 @@ pub const RULES: &[(&str, &str)] = &[
         "a top-level definition with the name of a standard library function",
     ),
     ("missing-binding", "a signature without a binding"),
+    (
+        "filter-count",
+        "`filter p | length`, which is `count p` without the list",
+    ),
+    (
+        "filter-find",
+        "`filter p | head`, which is `find p`, stopping at the first match",
+    ),
+    ("double-reverse", "`reverse | reverse`, which does nothing"),
+    (
+        "bool-if",
+        "`if p (const True) (const False)`, which is `p` (and the other way round, `p | not`)",
+    ),
 ];
 
 /// A lint warning: its rule and the diagnostic (message ending in
@@ -116,6 +129,19 @@ fn map_of(e: &Expr) -> Option<&Expr> {
     }
 }
 
+/// `name x`: the argument of a one-argument application of `name`.
+fn app1<'e>(e: &'e Expr, name: &str) -> Option<&'e Expr> {
+    match &e.kind {
+        ExprKind::App(f, args) if is_var(f, name) && args.len() == 1 => Some(&args[0]),
+        _ => None,
+    }
+}
+
+/// `const C`, for a constructor `C`.
+fn is_const_ctor(e: &Expr, ctor: &str) -> bool {
+    matches!(app1(e, "const"), Some(a) if matches!(&a.kind, ExprKind::Ctor(c) if c == ctor))
+}
+
 /// The last stage of a pipeline.
 fn last_stage(e: &Expr) -> &Expr {
     match &e.kind {
@@ -153,6 +179,38 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                             "this `| id` stage does nothing; remove it".into(),
                         );
                     }
+                    let prev = last_stage(a);
+                    if let Some(p) = app1(prev, "filter").filter(|_| !bound.contains_key("filter")) {
+                        let p = as_argument(crate::pretty::expr(p));
+                        if is_var(b, "length") && !bound.contains_key("count") {
+                            warn(
+                                &mut out,
+                                "filter-count",
+                                cover(prev.span, b.span),
+                                format!("this builds a list to count it; use `count {}`", p),
+                            );
+                        }
+                        if is_var(b, "head") && !bound.contains_key("find") {
+                            warn(
+                                &mut out,
+                                "filter-find",
+                                cover(prev.span, b.span),
+                                format!(
+                                    "this filters the whole list for its first element; use `find {}`",
+                                    p
+                                ),
+                            );
+                        }
+                    }
+                    if is_var(prev, "reverse") && is_var(b, "reverse") && !bound.contains_key("reverse")
+                    {
+                        warn(
+                            &mut out,
+                            "double-reverse",
+                            cover(prev.span, b.span),
+                            "reversing twice does nothing; remove both".into(),
+                        );
+                    }
                     if !bound.contains_key("map") {
                         if let (Some(f), Some(g)) = (map_of(last_stage(a)), map_of(b)) {
                             let f = crate::pretty::expr(f);
@@ -168,6 +226,27 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
                                 ),
                             );
                         }
+                    }
+                }
+                ExprKind::App(f, args)
+                    if is_var(f, "if") && args.len() == 3 && !bound.contains_key("if") =>
+                {
+                    let shown = crate::pretty::expr(&args[0]);
+                    let p = paren_free(&shown);
+                    let fix = if is_const_ctor(&args[1], "True") && is_const_ctor(&args[2], "False") {
+                        Some(format!("`{}`", p))
+                    } else if is_const_ctor(&args[1], "False") && is_const_ctor(&args[2], "True") {
+                        Some(format!("`{} | not`", p))
+                    } else {
+                        None
+                    };
+                    if let Some(fix) = fix {
+                        warn(
+                            &mut out,
+                            "bool-if",
+                            e.span,
+                            format!("this `if` gives its condition's own answer; use {}", fix),
+                        );
                     }
                 }
                 ExprKind::Match(arms)
@@ -237,6 +316,16 @@ pub fn lint_module(m: &Module) -> Vec<Warning> {
 }
 
 /// `(f)` printed by the pretty printer, without its outer parentheses.
+/// An expression written as an argument: in parentheses unless it is
+/// one word.
+fn as_argument(s: String) -> String {
+    if s.contains(' ') && !(s.starts_with('(') && s.ends_with(')')) {
+        format!("({})", s)
+    } else {
+        s
+    }
+}
+
 fn paren_free(s: &str) -> &str {
     s.strip_prefix('(')
         .and_then(|s| s.strip_suffix(')'))

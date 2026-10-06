@@ -21,9 +21,20 @@ apply-all = match
     _ -> const 0
 
 # shadows-std
-reverse = id
+flatten = id
 
 # missing-binding
 orphan : I64 -> I64
+
+# filter-count, filter-find
+evens = filter (rem 2 | eq 0) | length
+
+first-even = filter (rem 2 | eq 0) | head
+
+# double-reverse
+same = reverse | reverse
+
+# bool-if
+positive = if (gt 0) (const True) (const False)
 
 main = [1, 2] | map twice | echo | ignore

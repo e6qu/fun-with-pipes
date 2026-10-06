@@ -691,6 +691,10 @@ be read). It does not type-check the files; `fwp check` does. The rules:
 | `trivial-match` | a `match` whose only arm is `_ -> f`, which is just `f` |
 | `shadows-std` | a top-level definition with the name of a standard library function |
 | `missing-binding` | a signature without a binding |
+| `filter-count` | `filter p \| length`, which is `count p` without building the list |
+| `filter-find` | `filter p \| head`, which is `find p`, stopping at the first match |
+| `double-reverse` | `reverse \| reverse`, which does nothing |
+| `bool-if` | `if p (const True) (const False)`, which is `p` (and `p \| not` the other way round) |
 
 A comment `# fwp:allow(code, ...)` in the comment lines directly above a
 declaration silences those rules inside it:
