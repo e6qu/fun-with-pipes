@@ -19,12 +19,36 @@ lint/rules.fwp:20:1: warning: `apply-all` is never used [unused-binding]
 lint/rules.fwp:20:13: warning: a `match` with a single `_` arm is just its body [trivial-match]
 20 | apply-all = match
    |             ^^^^^
-lint/rules.fwp:24:1: warning: `reverse` hides the standard library function of the same name [shadows-std]
-24 | reverse = id
+lint/rules.fwp:24:1: warning: `flatten` hides the standard library function of the same name [shadows-std]
+24 | flatten = id
    | ^^^^^^^
-lint/rules.fwp:24:1: warning: `reverse` is never used [unused-binding]
-24 | reverse = id
+lint/rules.fwp:24:1: warning: `flatten` is never used [unused-binding]
+24 | flatten = id
    | ^^^^^^^
 lint/rules.fwp:27:1: warning: `orphan` has a signature but no binding [missing-binding]
 27 | orphan : I64 -> I64
    | ^^^^^^
+lint/rules.fwp:30:1: warning: `evens` is never used [unused-binding]
+30 | evens = filter (rem 2 | eq 0) | length
+   | ^^^^^
+lint/rules.fwp:30:9: warning: this builds a list to count it; use `count (rem 2 | eq 0)` [filter-count]
+30 | evens = filter (rem 2 | eq 0) | length
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lint/rules.fwp:32:1: warning: `first-even` is never used [unused-binding]
+32 | first-even = filter (rem 2 | eq 0) | head
+   | ^^^^^^^^^^
+lint/rules.fwp:32:14: warning: this filters the whole list for its first element; use `find (rem 2 | eq 0)` [filter-find]
+32 | first-even = filter (rem 2 | eq 0) | head
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lint/rules.fwp:35:1: warning: `same` is never used [unused-binding]
+35 | same = reverse | reverse
+   | ^^^^
+lint/rules.fwp:35:8: warning: reversing twice does nothing; remove both [double-reverse]
+35 | same = reverse | reverse
+   |        ^^^^^^^^^^^^^^^^^
+lint/rules.fwp:38:1: warning: `positive` is never used [unused-binding]
+38 | positive = if (gt 0) (const True) (const False)
+   | ^^^^^^^^
+lint/rules.fwp:38:12: warning: this `if` gives its condition's own answer; use `gt 0` [bool-if]
+38 | positive = if (gt 0) (const True) (const False)
+   |            ^^
