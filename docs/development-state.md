@@ -43,17 +43,21 @@ main roadmap_docs 38018179766 passes. Native macOS and selected ownership are
 delivered through map callback result/partial-spine/scratch unwind cleanup.
 Phase 2 remains incomplete; phases 3–6 remain pending; tracing is the fallback.
 
-No production PR is open. Deliver queue 30 selection unwind next, on actual
-squash base `12d03395b4e4818a4e27d2342ff677ca5fc145e1`. Its final rebase FROM
-recorded actual25eda7b completes at source `8819695137c02f0300102a8457687a616d075548`.
-All 11 docs resolve the docs-only conflicts (0.03CPU/0.14elapsed); source, native
-probes, scripts and production workflows match prior9979e9f byte-for-byte.
-All six selection/filter/prefix tests pass21.01CPU/42.15elapsed; focused
-clippy2.34/4.74s and format0.34/0.62s pass. Strong documentation audit0.43/3.47s passes. Retain prior9979e9f remotely before exact-lease publication. Copy the
-live docs into the final PR, open it only after #108's accepted squash and
-require all seven exact-head gates. Proposed subject:
+[PR #109](https://github.com/e6qu/fun-with-pipes/pull/109) delivers queue 30
+selection unwind. Frozen exact head is `8371fc50c9bfbbe57f0968b58e5a5541b60beefe`
+on actual squash base `12d03395b4e4818a4e27d2342ff677ca5fc145e1`. Its final
+rebase FROM recorded actual25eda7b preserves the implementation and all original
+probes; compiler/runtime/tests/scripts/production workflows match prior9979e9f
+byte-for-byte. Six focused tests21.01CPU/42.15elapsed, clippy2.34/4.74s,
+format0.34/0.62s and final docs audit0.43/3.40s pass. All 11 live docs are copied;
+prior9979e9f is retained under roadmap/revision-030-9979e9fd1a27 before exact-lease
+publication. Production CI 38018485993 is queued; roadmap_docs 38018485946
+passes at the frozen head. Freeze it except for real repairs, and require all
+seven exact-head gates before merging. Proposed squash subject:
 `Release selected list aliases and scratch storage on nonlocal exits`;
-explicit empty body and --match-head-commit. Keep one production PR open.
+explicit empty body and --match-head-commit. Verify its raw message/tree and
+protect the live docs before main FF; deliver queue 31 zip unwind next.
+Keep one production PR open and continue independent work while CI runs.
 
 Queue 34 is a verified duplicate of preparation code/probes delivered in #107.
 Skip its implementation PR when reached after 33; preserve its immutable anchor,
@@ -114,7 +118,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 30 ownership-selection-unwind | 8819695137c0 | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s and format0.34/0.62s pass; exact source/probe parity; strong audit0.43/3.47s passes; full exact-head gates follow |
+| 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 production CI queued, exact-head docs pass |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests 24.32/48.75s; lint 2.35/4.66s, format 0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests 22.49/45.05s; lint 2.37/4.77s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
@@ -248,7 +252,7 @@ accepts a current production head. Superseded runs are archived in history.
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 running on source112 996d5ee4ef4f; unchanged six production jobs plus roadmap_docs, mandatory actual WASI on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
+| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 running on source112 996d5ee4ef4f; bench, both macOS GC stress jobs and roadmap_docs pass; Linux and regular ARM/Intel macOS running, mandatory actual WASI on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
 | Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI 38015942823 passes on repaired source112 996d5ee4ef4f; all 21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit 0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI 37992657684 is historical |
 | Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI 38015884622 passes on repaired source100 a3d88c0b8f3d; all 21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit 0.43/3.47s passes. Prior3aca5cf/CI 37993159029 is historical |
 | Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI 38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.42/3.35s passes. Failed372375a/CI 38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
