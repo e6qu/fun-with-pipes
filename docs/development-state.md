@@ -151,7 +151,7 @@ still need their final squash rebases and six exact-head full gates.
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 46 ownership-field-context | 14772eb77e29 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 47 ownership-caf-cache | 7e507e993e58 | 3a87da04a671 | Three tests 11.54/24.96s; lint 2.38/4.80s and format 0.44/0.83s pass |
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests 12.68/26.01s; lint 2.47/4.90s and format 0.35/0.73s pass |
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests 10.19/20.78s; lint 2.33/4.82s and format 0.35/0.73s pass |

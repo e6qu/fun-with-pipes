@@ -73,7 +73,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 43 | record-conversion | `ownership-record-conversion` | `6b809877a1ac` | `614dd3b19c13` | `5c5875d30b8e` |
 | 44 | variant-alias | `ownership-variant-alias` | `b094ffbe7e46` | `de8562194d54` | `614dd3b19c13` |
 | 45 | typed-expression | `ownership-match-context` | `2b7dc81c7d1f` | `3f61f51521d9` | `de8562194d54` |
-| 46 | field-context | `ownership-field-context` | `14772eb77e29` | `085dc716d599` | `3f61f51521d9` |
+| 46 | field-context | `ownership-field-context` | `6255a8f54f54` | `085dc716d599` | `3f61f51521d9` |
 | 47 | caf-ownership | `ownership-caf-cache` | `7e507e993e58` | `68cf7bf2f7ca` | `085dc716d599` |
 | 48 | inline-caf | `ownership-inline-caf` | `3dd5219cb896` | `6734248e7c0d` | `68cf7bf2f7ca` |
 | 49 | retained-thunk | `ownership-task-thunks` | `2c14070a6347` | `7208e4a2d93e` | `6734248e7c0d` |
