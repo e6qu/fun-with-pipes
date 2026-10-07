@@ -61,7 +61,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 30 | selection-unwind | `ownership-selection-unwind` | `a17f240c9341` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `9ee50f37c5b9` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `952b906059c6` | `968dac7ed9cf` | `c2a364544d92` |
-| 33 | loop-unwind | `ownership-loop-unwind` | `ce5a51c330f3` | `988f2a3be97f` | `968dac7ed9cf` |
+| 33 | loop-unwind | `ownership-loop-unwind` | `09892c4d61ad` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `dcf18f01c2fb` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `432a3332c4f7` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `0584ab3ac77b` | `dc4f9461571b` | `608ae7bb2d24` |
