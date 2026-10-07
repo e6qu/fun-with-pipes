@@ -128,7 +128,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #94 includes the following contracts. Detailed primitive modes
+Main through PR #95 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -143,6 +143,8 @@ and measurements are in [history](roadmap-history.md).
   Unknown runtime/FFI callbacks keep the sharing fallback.
 - Concrete call temporaries and eligible stack aggregate/closure children keep
   typed ownership. Count operations address children rather than stack wrappers.
+- Scan/iterate borrow callbacks and own each stored state, retaining initial
+  aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
   own fresh spines; fold/right-fold transfer accumulators; zip owns callback
   results; prefix/copy operations preserve owned aliases. Optional list results

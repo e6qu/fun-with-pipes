@@ -7975,3 +7975,498 @@ Final scan/iterate lint (cargo clippy --test state_sequence_ownership --
 -D warnings) passes2.24 s CPU /4.49 s elapsed; format0.33 s /0.61 s.
 No open PR after94 merged. Final authoritative doc refresh changes no
 tested source/runtime; full six exact-head gates remain required.
+
+Final row17 PR head5d0a3f302e476dfada1b3ea71aa56dae4086d905 is clean
+on actual main1358267, published with exact lease against previous15743b8.
+Whole subject is one line, empty body; tested source diff remains empty.
+Sole PR95 opened; CI37901758334 has all six exact-head gates queued.
+Later row18 actual base remains15743b8, not rewritten5d0a3f3.
+
+Row36 OLDdc4f946 rebases from immutable parent608ae7b onto actual row35
+head646cca0 (initial38ed77e); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.62 s. Worker result boxing, constructor and compiler liveness tests
+started. Final serial doc audit after PR95 creation passes eleven link sets,
+82 immutable ancestry pairs and whole subjects0.12 s /0.85 s.
+
+Guarded cargo test --test worker_boxing_ownership --test
+constructor_unwind_ownership --test compiler_call_liveness passes all seven
+tests24.61 s CPU /49.42 s elapsed. Record/variant result boxing allocation
+failures release typed fields and remaining caller owners without losing
+external aliases; raw interpreter and related O1/O2 stress/verification/poison
+regressions pass. Full six gates remain necessary before sequential delivery.
+
+Worker boxing lint (cargo clippy --test worker_boxing_ownership --test
+constructor_unwind_ownership --test compiler_call_liveness -- -D warnings)
+passes2.33 s CPU /4.75 s elapsed; fmt check0.35 s /0.63 s. Nine current
+root docs copied before final amend; tested source stays unchanged.
+
+Final worker-boxing preparationdf5862861e71c84ca200a2374cab495f9cebf4d0
+is clean on actual base646cca0, published with exact lease against OLDdc4f946.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row37 OLDc97dd03 rebases from immutable parentdc4f946 onto actual row36
+headdf58628 (initiald9f680b); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.62 s. Worker preparation, boxing and compiler call-liveness checks
+started together to cover incoming-owner transfer and partial field retention.
+
+Guarded cargo test --test worker_preparation_ownership --test
+worker_boxing_ownership --test compiler_call_liveness passes all seven
+tests23.82 s CPU /47.71 s elapsed. Boxed wrappers retain original
+arguments before preparation, protect each completed field duplicate and
+transfer unboxed/scalar arguments only at entry. Partial retention failures,
+external aliases, raw interpreter and O1/O2 stress/verification/poison pass.
+
+Worker preparation lint (cargo clippy --test worker_preparation_ownership
+--test worker_boxing_ownership --test compiler_call_liveness -- -D warnings)
+passes2.34 s CPU /4.73 s elapsed; fmt check0.34 s /0.61 s. Nine current
+root docs copied before final amend; no tested source changes follow.
+
+Final worker preparation3b6bf091127c4d46af817bf717b3f5f22e96f382 is clean
+on actual basedf58628, published with exact lease against OLDc97dd03.
+Whole subject verified single line with empty body. PR95 remains sole open.
+
+Row38 OLDb879eca rebases from immutable parentc97dd03 onto actual row37
+head3b6bf09 (initial8a5a9bc); nine root docs resolve conflicts. New source
+oracle uses FWP_NO_OPT=1; cancellation probes inspect current flattened
+owner slots. Guarded clean0.00 s /0.14 s; formatting0.34 s /0.61 s.
+Loop preparation, cancellation and prior loop ownership checks started.
+
+Guarded cargo test --test loop_preparation_ownership --test
+loop_unwind_ownership --test loop_ownership passes all eight tests26.30 s
+CPU /52.71 s elapsed. Emitted four-slot state stays flattened; original
+input and completed field duplicates release through injected preparation
+failures. Cancellation, aliases/scalar bits, no-tracing reclamation, raw
+interpreter and O1/O2 stress/verification/poison controls pass. PR95 bench
+passes; both GC gates run and remaining three gates are queued.
+
+Loop preparation lint (cargo clippy --test loop_preparation_ownership
+--test loop_unwind_ownership --test loop_ownership -- -D warnings) passes
+2.41 s CPU /4.95 s elapsed; fmt check0.33 s /0.59 s. Nine current docs
+refresh final preparation without further source changes.
+
+Final loop preparation7ae78137d444c9440ada43ed04ae42035a10e375 is clean
+on actual base3b6bf09, published with exact lease against OLDb879eca.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row39 OLD1bb11be rebases from immutable parentb879eca onto actual row38
+head7ae7813 (initialf1be8c9); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.05 s /0.37 s; formatting0.33 s
+/0.60 s. Partial-retain overflow, worker preparation and wide-count tests
+started; exact new IR unit follows. Last serial doc audit passes eleven
+link sets, 82 immutable pairs and whole subjects0.12 s /0.82 s.
+
+Guarded cargo test --test retain_unwind_ownership --test
+worker_preparation_ownership --test wide_counts passes all five tests19.77 s
+CPU /39.78 s elapsed. Actual count-overflow traps release completed variant
+extras and live caller owners, preserving original aliases and scalar
+address bits. Wide-count release/reuse/collection and worker partial
+preparation regressions pass with O1/O2 stress/verification/poison and raw
+interpreter comparisons. Exact new IR retain-liveness unit follows.
+
+Exact IR retain-liveness test (cargo test --lib
+rc::tests::retain_liveness_excludes_the_unfinished_extra_reference -- --exact)
+passes one test3.28 s CPU /6.82 s elapsed; 53 unrelated tests filtered.
+The expected before/entry owners exclude the not-yet-created extra reference.
+
+Partial-retain lint (cargo clippy --test retain_unwind_ownership --test
+worker_preparation_ownership --test wide_counts -- -D warnings) passes2.28 s
+CPU /4.60 s elapsed; fmt check0.34 s /0.71 s. Nine current docs refresh
+final preparation with no changes to tested source/runtime.
+
+Final partial-retain preparationf0049c4aabe06ec3027a314ba213524592488795
+is clean on actual base7ae7813, published with exact lease against OLD1bb11be.
+Whole subject verified one line with empty body. PR95 bench passes; both
+GC, regular Intel and Linux run, regular ARM queued. No second PR.
+
+Row40 OLDb021967 rebases from immutable parent1bb11be onto actual row39
+headf0049c4 (initialafa227d); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.04 s /0.25 s; formatting0.34 s
+/0.62 s. Typed nested constructors, constructor allocation failure and
+retain-overflow regressions started; two new exact IR units follow.
+
+Guarded cargo test --test constructor_type_ownership --test
+constructor_unwind_ownership --test retain_unwind_ownership passes all three
+tests16.17 s CPU /32.40 s elapsed. Later-field failure releases nested
+constructor children using recovered monomorphic types; inferred expression
+types remain authoritative. Dynamic/source/native O1/O2 stress, verification,
+poison, allocation failure and count-overflow regressions pass. Two exact
+new IR type-context units follow before final publication.
+
+Exact IR unit rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape
+passes3.23 s CPU /6.65 s elapsed; rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types
+passes0.00 s /0.14 s. Each uses cargo test --lib NAME -- --exact, one
+matching test passes with55 unrelated tests filtered. Dynamic arguments
+and record updates preserve nested nominal constructor types.
+
+Typed constructor lint (cargo clippy --test constructor_type_ownership
+--test constructor_unwind_ownership --test retain_unwind_ownership --
+-D warnings) passes2.38 s CPU /4.85 s elapsed; fmt check0.34 s /0.61 s.
+Nine current root docs copied before final amend; tested source unchanged.
+
+Final typed constructor preparationc90fe5a9d1700918120dc7d6c294e8e30e3f77f4
+is clean on actual basef0049c4, published with exact lease against OLDb021967.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row41 OLD34873f4 rebases from immutable parentb021967 onto actual row40
+headc90fe5a (initial01430b8); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.35 s
+/0.75 s. Variant conversion, partial retain and worker boxing tests started;
+exact IR consumed-value checkpoint unit follows.
+
+Guarded cargo test --test variant_conversion_ownership --test
+retain_unwind_ownership --test worker_boxing_ownership passes all three
+tests16.53 s CPU /33.31 s elapsed. Conversion count-overflow traps release
+original boxes/typed fields and other caller owners while preserving aliases
+and scalar bits. Raw interpreter and O1/O2 stress/verification/poison,
+partial retain and boxing allocation-failure regressions pass. Exact new
+IR consumed-value checkpoint follows.
+
+Exact IR checkpoint rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners
+(cargo test --lib NAME -- --exact) passes one test3.31 s CPU /7.05 s
+elapsed;56 unrelated tests filtered. Checkpoints exclude transferred result
+owners while retaining the caller’s remaining references.
+
+Variant conversion lint (cargo clippy --test variant_conversion_ownership
+--test retain_unwind_ownership --test worker_boxing_ownership -- -D warnings)
+passes2.36 s CPU /4.76 s elapsed; fmt check0.34 s /0.60 s. Nine current
+root docs copied before final amend; tested source unchanged.
+
+Final variant conversion3956d5cadd86a9814c5919a576f6a14020d73766 is clean
+on actual basec90fe5a, published with exact lease against OLD34873f4.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row42 OLD5c5875d contains first record update commitb21203d plus its
+verification follow-up. Both replay from immutable parent34873f4 onto
+actual row41 head3956d5c (initial1b18b11c169dbf05feb1235b564323f5e2d486c3,
+follow-up0253f8cd297e83d5f855820e1162d3ec29f4079c). Nine root docs
+resolve each conflict; both new source oracles set FWP_NO_OPT=1. Guarded
+clean0.05 s /0.25 s; formatting0.43 s /0.84 s. Record/general-copy and
+variant-conversion focused tests started; exact update-liveness IR unit follows.
+
+Guarded cargo test --test record_update_ownership --test
+general_record_update_ownership --test variant_conversion_ownership passes
+all three tests19.15 s CPU /38.35 s elapsed. Unique/copied updates release
+overwritten typed fields, retain kept aliases, and protect replacements and
+partial cells through failure. General copies preserve borrowed originals;
+O1/O2 stress/verification/poison, raw interpreter, scalar address bits and
+conversion regressions pass. Exact new update-liveness IR unit follows.
+
+Exact IR update checkpoint rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners
+(cargo test --lib NAME -- --exact) passes one test3.59 s CPU /7.44 s
+elapsed;57 unrelated tests filtered. Checkpoints retain the borrowed base
+and other caller owners while transferring only replacement references.
+
+Record copy lint (cargo clippy --test record_update_ownership --test
+general_record_update_ownership --test variant_conversion_ownership --
+-D warnings) passes2.39 s CPU /4.93 s elapsed; fmt check0.34 s /0.60 s.
+Nine current root docs copied before final amend; tested source unchanged.
+
+Final record-update preparationf22b5b587de6c22b2ac92171bf3d6d011d5d6763
+is clean on actual base3956d5c, published with exact lease against OLD5c5875d.
+Both whole subjects (first1b18b11, finalf22b5b5) verified one line, empty
+body. Two preparation commits remain separate until final PR squash.
+PR95 remains sole open.
+
+Row43 OLD614dd3b rebases from immutable parent5c5875d onto actual row42
+headf22b5b5 (initial1e0905a); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.60 s. Record/variant conversion and worker preparation checks started.
+Latest serial doc audit passes eleven link sets, 82 immutable ancestry
+pairs and whole subjects0.14 s /0.96 s.
+
+Guarded cargo test --test record_conversion_ownership --test
+variant_conversion_ownership --test worker_preparation_ownership passes
+all three tests18.02 s CPU /36.18 s elapsed. Boxed record conversion
+protects original/caller owners through partial typed field retains,
+preserving aliases and scalar bits; raw interpreter and O1/O2 stress,
+verification, poison and related variant/worker regressions pass. PR95
+ARM GC stress passes in addition to bench; remaining four gates pending.
+
+Record conversion lint (cargo clippy --test record_conversion_ownership
+--test variant_conversion_ownership --test worker_preparation_ownership --
+-D warnings) passes2.41 s CPU /4.72 s elapsed; fmt check0.34 s /0.60 s.
+Nine current root docs copied before final amend; tested source unchanged.
+
+Final record conversione2f944c256b606487f32ff4d37a1d61a6b9fdd30 is clean
+on actual basef22b5b5, published with exact lease against OLD614dd3b.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row44 OLDde85621 contains code2163857 and a doc-only follow-up. Both
+rebase from immutable parent614dd3b onto actual row43 heade2f944c.
+Authoritative nine-doc resolution leaves code0af148ad80160b685e620474551149a68bc5dc26;
+doc-only follow-up becomes empty and rebase completes without replaying stale
+status. New source oracle sets FWP_NO_OPT=1; direct typed-IR interpreter
+comparison does not run optimizer passes. Guarded clean0.00 s /0.13 s.
+Variant alias/conversion and worker boxing checks started.
+
+Guarded cargo test --test variant_alias_ownership --test
+variant_conversion_ownership --test worker_boxing_ownership passes all four
+tests15.62 s CPU /31.47 s elapsed. Direct typed-IR interpreter comparison
+and raw source FWP_NO_OPT=1 agree; emitted eligible variants remain unboxed
+and transfer fields once. Alias/yield, O1/O2 stress/verification/poison and
+related conversion/boxing failures pass. Full six gates still required.
+
+Variant alias lint (cargo clippy --test variant_alias_ownership --test
+variant_conversion_ownership --test worker_boxing_ownership -- -D warnings)
+passes2.36 s CPU /4.75 s elapsed; fmt check0.35 s /0.74 s. Nine current
+root docs copied before final amend; tested source unchanged.
+
+Final variant alias610fd745b97385689f9ccbb19beff903d8f77730 is clean on
+actual basee2f944c, published with exact lease against OLDde85621. Whole
+subject verified one line with empty body; old doc-only follow-up remains
+immutable evidence, superseded by authoritative live docs. No second PR.
+
+Row45 match-context rebase from ACTUAL old parentde8562194d5461b69e6e5f3b448df0bfc1bee687
+onto current row44 head610fd745b97385689f9ccbb19beff903d8f77730
+resolves only doc conflicts with the authoritative nine root files. Source
+optimizer change autoapplies; source interpreter oracle now sets FWP_NO_OPT=1.
+Direct typed-IR interpreter comparisons run before/after optimization explicitly.
+Guarded clean passes0.07 s CPU /0.38 s elapsed. Guarded cargo test --test
+match_context_ownership --test constructor_type_ownership --test
+variant_alias_ownership passes five tests14.67 s /29.51 s, including type-erasure
+omission control, aliasing, O1/O2, stress/verification/poison and discarded
+nested-child release. Typed match elimination keeps nominal constructor field
+context and retains the original typed binding if elimination cannot safely
+recover it. Related construction and variant alias regressions pass.
+Lint with the same three test targets and -D warnings passes2.34 s /4.68 s.
+PR95 exact5d0a3f3 now passes both ARM/Intel GC stress and bench; other gates pending.
+Format check passes0.34 s CPU /0.61 s elapsed; nine authoritative docs copied
+before final amend. All six final PR gates remain required.
+Final match-context321cc3146089bcdd962b57351d7298ed85691b1e is clean
+on actual base610fd74 and published with exact lease against OLD3f61f51.
+Whole subject verified one line with empty body; no second PR. Row46
+actual base remains OLD3f61f51 until its own rebase; immutable anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.12 s CPU /0.84 s elapsed. Row46 field-context rebase from
+ACTUAL OLD3f61f51521d95527d6754c2e6c3ca01a31f64bd7 onto actual row45
+321cc3146089bcdd962b57351d7298ed85691b1e resolves only doc conflicts with
+the authoritative nine files. Source oracle now sets FWP_NO_OPT=1; direct
+typed-IR interpreter comparisons explicitly bracket optimization. Guarded
+clean0.00 /0.14 s. Guarded cargo test --test field_context_ownership --test
+match_context_ownership --test constructor_type_ownership passes five tests
+14.06 s CPU /28.50 s elapsed. Inlined field projection retains the checked
+record context for discarded nested-child ownership, without allocating its
+outer record. Type-erasure omission, alias preservation, O1/O2 and GC
+stress/verification/poison plus related match/construction regressions pass.
+PR95 now passes regular Intel macOS, both GC stress jobs and bench; Linux
+and regular ARM macOS are running at exact5d0a3f3.
+Field-context lint with the same three targets and -D warnings passes
+2.26 s CPU /4.63 s elapsed; fmt check0.34 /0.71 s. Nine current docs copied
+before final amend; tested source unchanged and sequential full gates required.
+Final field-context6d01e927c08688b6f120a6f2e12a3e38cc8376b4 is clean on
+actual base321cc31 and published with exact lease against OLD085dc71.
+Whole subject verified one line, empty body; no second PR. Row47 actual base
+remains OLD085dc71 until its own rebase; immutable queue anchors unchanged.
+
+Row47 CAF ownership rebase from ACTUAL085dc716d5994681b998f13cd619b139794539fc
+onto actual row46 head6d01e927c08688b6f120a6f2e12a3e38cc8376b4
+resolves only doc conflicts with nine authoritative files. Both source
+interpreter oracles now set FWP_NO_OPT=1; direct typed-IR oracle has no
+optimizer. Guarded clean0.00 /0.14 s. First test command named nonexistent
+compiler_call_ownership and exited101 before building (0.00 /0.14 s);
+corrected to existing compiler_call_liveness and reran serially.
+Guarded cargo test --test caf_ownership --test compiler_call_liveness
+passes all eight tests21.58 s CPU /43.40 s elapsed. CAFs retain exact typed
+cache owners and return distinct owners; scalar machine words remain uncounted.
+Initialization failure/retry, reentrant cache replacement, retain overflow,
+caller traps, task-before-cache teardown and omission controls pass at O1/O2
+with stress/verification/poison and raw source agreement. Related call
+liveness tests pass. Full sequential gates remain required.
+CAF lint with the same two targets and -D warnings passes2.33 s CPU
+/4.58 s elapsed; fmt check0.35 /0.73 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final CAF ownership762cc824fa088a7ca984be544bd8cebc80a2d9ab is clean
+on actual base6d01e92, published with exact lease against OLD68cf7bf.
+Whole subject verified one line, empty body; no second PR. Row48 actual base
+remains OLD68cf7bf until its own rebase; immutable queue anchors unchanged.
+
+Row48 rebase from ACTUAL68cf7bf2f7ca0986edf7039ff2e0bfe584e45820 onto
+actual row47 head762cc824fa088a7ca984be544bd8cebc80a2d9ab resolves only
+doc conflicts with nine authoritative files. CONTRIBUTING keeps its raw
+interpreter-oracle explanation. Both new source references already explicitly
+set FWP_NO_OPT=1, with an additional optimized-interpreter comparison.
+Guarded clean0.00 /0.14 s; inline CAF and cache checks started. Live
+preparation chronology through row46 is consolidated into the actual-base
+table; detailed hashes/checks remain here rather than competing next actions.
+PR95 exact5d0a3f3 passes Linux too; regular ARM macOS is the last gate running.
+Guarded cargo test --test inline_caf_ownership --test caf_ownership passes
+all five tests16.28 s CPU /33.20 s elapsed. Unused CAF arguments still
+evaluate before the callee, preserving first-trap order and releasing their
+owned temporary. Raw and optimized interpreter/native comparisons, O1/O2
+stress/verification/poison and missing-release control pass alongside cache
+initialization, reentry and teardown regressions.
+Inline-CAF lint with the same two targets and -D warnings passes2.34 s CPU
+/4.64 s elapsed; fmt check0.34 /0.62 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final inline-CAFaf073c78c443508c56a77465f363e1755b76dc31 is clean on
+actual base762cc82, published with exact lease against OLD6734248.
+Whole subject verified one line, empty body; no second PR. Row49 actual base
+remains OLD6734248 until its own rebase; immutable queue anchors unchanged.
+
+Row49 task-thunk rebase from ACTUAL6734248e7c0d4d53d57e5acccb9af02641713e9d
+onto actual row48af073c78c443508c56a77465f363e1755b76dc31 resolves only
+doc conflicts with nine authoritative files. Its source oracle already
+sets FWP_NO_OPT=1. Guarded clean0.00 /0.13 s. Guarded cargo test --test
+retained_thunk_ownership --test task_ownership passes all five tests
+13.40 s CPU /26.90 s elapsed. Spawn retains a typed closure owner until
+entry or cancellation; failed stack/scope preparation releases only the
+extra owner and publishes no child prematurely. O1/O2, raw agreement,
+stress/verification/poison, external aliases, scalar bits and unknown
+metadata fallback pass with omission controls and related task tests.
+Task results still use shared graph fallback in this preparation.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.58 s CPU /7.29 s elapsed. Retained-thunk lint
+with both integration targets and -D warnings passes2.53 /5.05 s; fmt
+check0.44 /0.83 s. Nine current docs copied before final amend; tested source unchanged.
+Final retained-task-thunks427076c60d2c68b557a9ffe663fd7a49fdd834d2 is
+clean on actual baseaf073c7, published with exact lease against OLD7208e4a.
+Whole subject verified one line, empty body; no second PR. Row50 actual base
+remains OLD7208e4a until its own rebase; immutable queue anchors unchanged.
+
+Row50 deadline callback rebase from ACTUAL7208e4a2d93e7e0402dee4d7f4783fe185565d74
+onto actual row49 head427076c60d2c68b557a9ffe663fd7a49fdd834d2 resolves
+only doc conflicts with the nine authoritative files. Raw source oracle
+already sets FWP_NO_OPT=1; retained-spawn omission controls follow the renamed
+shared helper. Guarded clean0.04 s CPU /0.25 s elapsed. Within, retained
+spawn and task tests started.
+Guarded cargo test --test within_thunk_ownership --test retained_thunk_ownership
+--test task_ownership passes all six tests15.44 s CPU /31.48 s elapsed.
+Deadline calls retain the same typed thunk owner as spawned tasks, preserving
+external capture aliases through completion/cancellation. Shared result graph
+fallback remains. Raw agreement, O1/O2 stress/verification/poison and legacy
+sharing control pass; refactored spawn preparation controls also pass.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.27 s CPU /6.86 s elapsed. Deadline callback
+lint with all three integration targets and -D warnings passes2.39 /4.84 s;
+fmt check0.34 /0.60 s. Nine current docs copied before final amend; tested source unchanged.
+Final deadline-callbacksaa181f8f2c3aa2540215bbcd04bb4e8760582440 is clean
+on actual base427076c, published with exact lease against OLD14a76de.
+Whole subject verified one line, empty body; no second PR. Row51 actual base
+remains OLD14a76de until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.13 s CPU /0.94 s elapsed. Row51 scoped callback rebase from
+ACTUAL14a76de5b8bbbf4e23a06b547ebaf374b931b20e onto actual row50
+aa181f8f2c3aa2540215bbcd04bb4e8760582440 resolves only doc conflicts with
+nine authoritative files. Its raw source oracle already sets FWP_NO_OPT=1.
+Guarded clean0.00 /0.13 s; scope, retained spawn and deadline tests started.
+Guarded cargo test --test scope_thunk_ownership --test retained_thunk_ownership
+--test within_thunk_ownership passes all four tests14.91 s CPU /29.90 s
+elapsed. Scoped callbacks borrow their closure and protect owned results
+until child joining and cancellation checks finish. Scope-array cleanup
+and handler restoration survive callback-entry traps/cancellation; missing
+result/scope/handler controls expose regressions. Raw agreement, O1/O2,
+stress/verification/poison, aliases, scalar words and unknown callback
+fallback pass, with related spawn/deadline checks.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.23 s CPU /6.67 s elapsed. Scope callback lint
+with all three integration targets and -D warnings passes2.29 /4.72 s; fmt
+check0.44 /0.72 s. Nine current docs copied before final amend; tested source unchanged.
+Final scoped-callbacks28de1794f39f65583dc54f5fadb94d6dbb3f7e3f is clean
+on actual baseaa181f8, published with exact lease against OLD7da15d9.
+Whole subject verified one line, empty body; no second PR. Row52 actual base
+remains OLD7da15d9 until its own rebase; immutable queue anchors unchanged.
+
+Row52 task handles rebase from ACTUAL7da15d9c8ea330bea4f876f797038627720c4c38
+onto actual row51 head28de1794f39f65583dc54f5fadb94d6dbb3f7e3f resolves
+only doc conflicts with nine authoritative files. All source oracles already
+set FWP_NO_OPT=1. Guarded clean0.00 /0.14 s; task handles, scope, retained
+spawn, deadline callbacks and previous task ownership checks started.
+Guarded cargo test --test task_handle_ownership --test scope_thunk_ownership
+--test retained_thunk_ownership --test within_thunk_ownership --test
+task_ownership passes all eight tests22.60 s CPU /46.01 s elapsed.
+Task handles own typed cached results; caller/scheduler/scope/await references
+are independent. Repeated awaits, early handle drops, cancellation before/after
+entry, old-task/young-result minor roots, overflow and failed private awaits
+pass. Six omission controls expose lost owners or cleanup. Raw agreement,
+O1/O2 stress/verification/poison and related task checks pass. Unknown/shared
+boundaries still promote the task graph to tracing fallback.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.25 s CPU /6.66 s elapsed. Task-handle lint
+with all five integration targets and -D warnings passes2.36 /4.75 s; fmt
+check0.35 /0.75 s. Nine current docs copied before final amend; tested source unchanged.
+Final task-handles4b6a2cb08da57026b13625ff7b9f727c8641ab02 is clean on
+actual base28de179, published with exact lease against OLDbb6f9c4.
+Whole subject verified one line, empty body; no second PR. Row53 actual base
+remains OLDbb6f9c4 until its own rebase; immutable queue anchors unchanged.
+
+Row53 typed-channel rebase from ACTUALbb6f9c49a0434afc9f7dd1fb9891a6fa8fb32a8a
+onto actual row52 head4b6a2cb08da57026b13625ff7b9f727c8641ab02 resolves
+only doc conflicts with nine authoritative files; existing task receiver
+probe autoapplies its helper rename. Raw source oracle sets FWP_NO_OPT=1.
+Guarded clean0.00 /0.14 s; channel queues, task handles and prior task
+ownership tests started. Close keeps queued values for later receive; cycle
+policy remains the explicit requirement in ownership/concurrency docs.
+Guarded cargo test --test channel_queue_ownership --test task_handle_ownership
+--test task_ownership passes all five tests18.97 s CPU /38.17 s elapsed.
+Typed channels own queued String/closure/task elements, preserve sender
+aliases and transfer queue references into owned receive Options. Close
+preserves queued values. Closed/timeout, scalar pointer-shaped words,
+blocked-call cancellation, receive allocation failure, retain overflow, sink/shared
+fallback and old-channel young-element roots pass with omission controls.
+Raw agreement and O1/O2 stress/verification/poison plus related task tests
+pass; automatic cycle reclamation remains unproved.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.42 s CPU /7.08 s elapsed. Channel-queue lint
+with all three integration targets and -D warnings passes2.38 /4.72 s; fmt
+check0.43 /0.84 s. Nine current docs copied before final amend; tested source unchanged.
+Final channel-queuesccbf2957f3516a2d62e291c9b7a9c7b1344be568 is clean
+on actual base4b6a2cb, published with exact lease against OLDab44b7d.
+Whole subject verified one line, empty body; no second PR. Row54 actual base
+remains OLDab44b7d until its own rebase; immutable queue anchors unchanged.
+
+Row54 C export results rebase from ACTUALab44b7de0812eb1f84d5430a303cd61ddd026219
+onto actual row53 headccbf2957f3516a2d62e291c9b7a9c7b1344be568 resolves
+doc conflicts with nine authoritative files. Reference preserves its explicit
+host-string/raw-pointee lifetime contract. Direct typed-IR interpreter
+checks bypass optimizer passes. Guarded clean0.02 /0.13 s; focused export
+result test started; full FFI/library gates remain on CI.
+Guarded cargo test --test library_result_ownership passes one test
+8.09 s CPU /17.77 s elapsed. C export conversion evaluates results once,
+releases copied scalar/record/nullable-pointer wrappers and preserves host
+string storage. Direct typed-IR interpreter values, 1000 cached calls, failed
+string conversions and four omission/evaluation controls pass at O1/O2 with
+poison. Library GC remains unarmed with zero collections: setting stress
+variables here does not establish library tracing coverage.
+Export-result lint with its integration target and -D warnings passes
+2.28 s CPU /4.61 s elapsed; fmt check0.34 /0.60 s. Nine current docs copied
+before final amend; tested source unchanged.
+Final library-results82f32b2cde036be328c769e5dcdee701ea67713a is clean
+on actual baseccbf295, published with exact lease against OLD5b34382.
+Whole subject verified one line, empty body; no second PR. Row55 actual base
+remains OLD5b34382 until its own rebase; immutable queue anchors unchanged.
+
+## Scan and iterate delivery, 2026-10-09
+
+PR95 exact5d0a3f302e476dfada1b3ea71aa56dae4086d905 passes all six
+CI37901758334 gates: Linux, bench, regular ARM/Intel macOS and dedicated
+ARM/Intel GC stress. Explicit match-head squash merged2026-10-09T09:03:35Z
+as60e5d6216d0f01306b457f65c00807df7d932cb1. Whole message verified
+exactly one line: `Own scan and iterate states while borrowing synchronous callbacks`.
+All nine root docs saved in /private/tmp/fwp-main-docs-pre95 before main
+fast-forward from1358267, then restored; current preparations preserved.
+Next delivery row18 uses ACTUAL current base15743b8, not rewritten row17
+head5d0a3f3 or immutable OLD0a90b05.
+
+Final row18 loop delivery rebase from ACTUAL15743b853d6a190a53ea4a95532eb9845b4c685a
+onto actual PR95 squash60e5d6216d0f01306b457f65c00807df7d932cb1
+resolves doc conflicts with all nine authoritative root files. The old
+doc-only consolidation follow-up becomes empty, retaining its immutable
+anchor in queue/history. Source/runtime/tests/workflows exactly match
+verified112f3c8. Four raw source oracles retain FWP_NO_OPT=1. Guarded
+clean0.00 /0.13 s; final five loop ownership checks started.
+Final guarded cargo test --test loop_ownership passes all five tests
+18.66 s CPU /37.70 s elapsed. Generic/specialized/flattened/nested loops
+transfer owned current states and selected Step payloads, release typed
+Step/ABI wrappers, preserve caller aliases and scalar address-shaped bits.
+Raw agreement, loop goldens and O1/O2 stress/verification/poison pass, with
+focused fused-consumer and callback GC-off reclamation checks. Broader
+exceptional loop cleanup remains in later preparations.
+Final exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (48 filtered)3.15 s CPU /6.61 s elapsed. Final loop lint
+passes2.30 /4.69 s; fmt check0.33 /0.60 s. Source/runtime/tests/workflows
+still match112f3c8 exactly. Nine current docs copied before final amend;
+no open PR before publishing the next sole delivery.

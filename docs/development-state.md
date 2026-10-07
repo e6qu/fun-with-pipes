@@ -26,25 +26,29 @@ Queued/skipped/cancelled/superseded/old runs are never passing gates. Squash:
 gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SHA
 ```
 
-## Main and sole open PR
+## Main and next delivery
 
-Main is1358267350dec621666e6d78e362818ad51a0341 (#94). All six
-CI37897207787 gates passed at9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df.
+Main is60e5d6216d0f01306b457f65c00807df7d932cb1 (#95). All six
+CI37901758334 gates passed at5d0a3f302e476dfada1b3ea71aa56dae4086d905.
 Explicit match-head squash has verified whole one-line message:
-`Borrow sort-by callbacks and reclaim typed keys and copied results`.
-#74–#94 deliver native macOS, selected ownership through sort-by results,
+`Own scan and iterate states while borrowing synchronous callbacks`.
+#74–#95 deliver native macOS, selected ownership through scan/iterate states,
 isolated call effects and exact native counts beyond254. Phase1 is done;
 phase2 remains incomplete; phases3–6 are pending.
 
-No open roadmap PR after #94 merged. Next delivery is row17 scan/iterate
-state ownership. Rebase CURRENT15743b8 from its ACTUAL current base
-5c19337f216d78845fada0b8c29fac98d7b18689 onto actual #94 squash1358267,
-then focused tests/lint/format, current docs and publication before sole next PR.
-Preserve immutable OLD0a90b05/parent66bc713; neither is the final rebase base.
+No open PR while preparing row18 loop-state ownership. Rebase its ACTUAL
+current base15743b853d6a190a53ea4a95532eb9845b4c685a onto actual main60e5d62,
+nine authoritative doc conflicts resolved. Source/runtime/tests/workflows
+exactly match verified112f3c8; doc-only follow-up becomes empty. Final
+five loop tests pass18.66 /37.70 s, exact unit3.15 /6.61 s, lint2.30 /4.69 s
+and format0.33 /0.60 s. Final docs and exact-lease publication follow
+against112f3c8, followed by only the next PR.
+Require six exact-head full gates before squash.
 
-All nine root docs were preserved in /private/tmp/fwp-main-docs-pre94 before
-main fast-forward from90762aa and restored afterward. Prior main/heads/messages, failed
-evidence and focused checks remain in history; no current progress was lost.
+All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
+main fast-forward from1358267 and restored afterward. Current independent
+row55 C input preparation is in doc conflicts; finish after row18 publication.
+Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
 
@@ -54,7 +58,6 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 17 ownership-state-sequences | 15743b853d6a | 5c19337f216d | 12.09 /24.23 s |
 | 18 ownership-loop-state | 112f3c8de87b | 15743b853d6a | 19.08 /38.44 s |
 | 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
 | 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 /27.47 s |
@@ -73,27 +76,40 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
 | 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 /49.89 s |
 | 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 /42.20 s + exact unit3.40 /6.85 s |
+| 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 /49.42 s |
+| 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 /47.71 s |
+| 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 /52.71 s |
+| 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 /39.78 s + exact unit3.28 /6.82 s |
+| 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 /32.40 s + two exact units |
+| 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 /33.31 s + exact unit3.31 /7.05 s |
+| 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 /38.35 s + exact unit3.59 /7.44 s |
+| 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 /36.18 s |
+| 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 /31.47 s |
+| 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 /29.51 s |
+| 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 /28.50 s |
+| 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 /43.40 s |
+| 48 ownership-inline-caf | af073c78c443 | 762cc824fa08 | 16.28 /33.20 s |
+| 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 /26.90 s + exact unit3.58 /7.29 s |
+| 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 /31.48 s + exact unit3.27 /6.86 s |
+| 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 /29.90 s + exact unit3.23 /6.67 s |
+| 52 ownership-task-handles | 4b6a2cb08da5 | 28de1794f39f | 22.60 /46.01 s + exact unit3.25 /6.66 s |
+| 53 ownership-channel-queues | ccbf2957f351 | 4b6a2cb08da5 | 18.97 /38.17 s + exact unit3.42 /7.08 s |
+| 54 ownership-library-results | 82f32b2cde03 | ccbf2957f351 | 8.09 /17.77 s |
 
-Rows17–35 are published preparations with passing focused tests, lint and
+Rows18–54 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row35 final head646cca038ed8012b012c3e10faeac96e20ddd5f7 is clean on
-actual baseada6a3a, published with exact lease against OLD608ae7b. Six tests
-pass20.98 s CPU /42.20 s elapsed plus exact IR unit3.40 s /6.85 s;
-lint2.40 s /4.71 s, format0.35 s /0.73 s. An incorrect expanded lease hash
-was rejected without remote mutation; verified actual hash retry published.
-Current priority: row17 final PR rebase from actual5c19337 onto actual #94
-squash1358267 is complete (temporary7b55bdb). Nine root docs resolve
-conflicts; source/runtime/tests/workflows diff against15743b8 is empty.
-Both focused state_sequence_ownership tests pass12.28 s CPU /24.61 s
-elapsed; lint2.24 s /4.49 s and format0.33 s /0.61 s pass. Final
-amend and sole next PR publication follow.
-Independent row36 worker-boxing remains queued; actual base is OLD608ae7b.
-PR94 is merged; row17 final delivery proceeds next.
+Row54 library-results82f32b2cde036be328c769e5dcdee701ea67713a is clean
+on actual baseccbf295, published with exact lease against OLD5b34382.
+One focused test passes8.09 /17.77 s, lint2.28 /4.61 s, format0.34 /0.60 s.
+Next independent task: row55 copied C inputs rebases from ACTUAL old
+parent5b34382 onto current row54 head82f32b2, then checks/publication.
+Preserve immutable OLD anchors; no additional PR.
+PR95 merged after all six gates; row18 final rebase is the next delivery.
 
 ## Repaired resource evidence
 
@@ -140,16 +156,16 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-state-sequence-worktree; final state-sequence checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
+belongs to /private/tmp/fwp-loop-worktree; final loop checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.11 s CPU /0.83 s elapsed).
+ancestry pairs and whole commit messages (0.13 s CPU /0.94 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:
 PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre94; refresh all nine immediately before updating
+/private/tmp/fwp-main-docs-pre95; refresh all nine immediately before updating
 main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

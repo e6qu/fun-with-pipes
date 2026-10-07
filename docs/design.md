@@ -359,6 +359,33 @@ Cleanup IDs are captured after helper generation, which can add definitions.
 Pattern bindings initialize payloads/fields from the current path's scrutinee.
 FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
+Prepared match elimination carries nominal constructor-field context into
+effectful discarded temporaries. If elimination cannot recover a safe type,
+it preserves the original typed binding rather than erasing its ownership.
+Inlined record projections similarly preserve the checked base type through
+scalar replacement so discarded nested children keep their typed destruction.
+Prepared CAF ownership retains a typed cache owner and returns a separate
+owner on each call. Initialization retry and reentrant replacement preserve
+callers; executable teardown releases caches after finishing tasks. CAF
+evaluation is a call safe point that protects existing caller owners.
+Inlining treats a zero-argument function as an evaluation, preserving unused
+argument evaluation and trap order rather than duplicating or erasing it.
+Prepared task.spawn retains counted thunks until entry or cancellation.
+Fallible stack/scope preparation protects only the extra owner and publishes
+a task after preparation succeeds. Unknown closure metadata retains sharing;
+task results still use the shared graph fallback at this stage.
+Prepared deadline callbacks use the same retained owner through completion
+or cancellation and preserve external capture aliases.
+Prepared task.scope borrows its callback and protects its owned result
+through joining/cancellation checks; unwind cleanup restores handlers and
+scope state and releases scope storage.
+A later prepared task-handle contract owns typed cached results, with
+independent scheduler, scope, caller and await references; unknown/shared
+boundaries retain tracing fallback.
+Prepared typed channels own queued elements and transfer their references
+into receive results after successful Option allocation. Close preserves
+queued values; unknown sink/runtime boundaries still share, and cycles
+require the explicit lifetime policy described in ownership.md.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of
