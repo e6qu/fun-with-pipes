@@ -7533,3 +7533,66 @@ Map/set lint (cargo clippy --test map_set_ownership -- -D warnings) passes
 2.33 s CPU /4.67 s elapsed, format0.34 s /0.61 s. Nine current docs are
 preserved before final amend/publication. Original one-line subject remains
 Own typed map and set elements across copies updates and callbacks; empty body.
+
+Final map/set preparation1689c03ff621bb2ff41759f89b42e606dd738a2a has actual
+base443524e; immutable OLDa8a7d11/parent636414f remain unchanged.
+
+## Old-value reclamation preparation, 2026-10-08
+
+Row23 ownership-old-reclamation rebases immutable OLD6774aa5bb426c4dc1e49d9eca1ff1737763498a5
+from OLD parenta8a7d119712bd3cb77d03bde1daaedcf290b22d2 onto actual current
+row22 head1689c03ff621bb2ff41759f89b42e606dd738a2a (initial c4af7a9).
+Resolve PLAN/design/state/ownership conflicts using all nine root docs.
+Three focused old_reclamation tests pass9.50 s CPU /19.72 s elapsed under
+the guard: collected/marked owned storage frees, reused cells become young,
+stale conservative roots follow verification clearing, actual typed leaf
+destructors reclaim surviving storage and O1/O2 retained-task golden behavior
+agrees under stress/verify/poison. Scoped allocation controls remain unchanged.
+The large long-loop/full GC gates stay on GitHub; no local full test/build.
+Shared target switch uses guarded clean0.00 s /0.14 s. Full sequential
+platform gates remain required before delivery.
+
+## Wide counts delivered and resource repair verified, 2026-10-09
+
+PR92 exactbd7a20bfd83369e87ca9100c75503ab4ad73e8d5 passes all six
+CI37786675129 gates. Explicit match-head squash uses subject Keep native
+reference counts exact beyond byte-sized metadata and empty body. Actual
+squash3606f2c44499cfe8f51f3af4cbc85e1c7b5e4258 merged2026-10-08T22:50:01Z;
+whole git%B verified one line, no body/trailers/attribution. All nine live docs
+saved to /private/tmp/fwp-main-docs-pre92 before root fast-forward from3c0685c
+and restored afterward.
+
+Repaired resource evidencebf05481ac5c6e60c4e05872a241a2ff436cb457f passes
+all six CI37798736754 gates at its exact head, including HTTP and the required
+actual WASI/resource/whole-stack-match regression stage. This verifies the
+combined repair; each sequential production PR still needs its own gates.
+Original failed CI37780278972 remains recorded.
+
+Row23 focused old_reclamation lint4.59 s CPU /9.15 s elapsed, format0.91 s
+/1.77 s pass after its three tests9.50 s /19.72 s. Unpublished temporary
+c4af7a9 remains on actual base1689c03; finish publication after next PR setup.
+
+## List order final PR rebase, 2026-10-09
+
+Row15 ownership-list-order rebases CURRENT5fe569218a4b3cdbdc5b756a83ffb7096aab6608
+from ACTUAL CURRENT basecb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23 onto
+ACTUAL PR92 squash3606f2c44499cfe8f51f3af4cbc85e1c7b5e4258 (initialfe8cf21).
+All nine root docs resolve conflicts; source/runtime/tests/workflows diff
+against verified5fe5692 is empty. Immutable OLDc835578/parent3a791 remain.
+Guarded clean -p fwp0.00 s /0.13 s before target switch; both final
+list_order_ownership tests pass10.26 s CPU /20.80 s elapsed. Tests retain
+explicit FWP_NO_OPT=1 raw interpreter oracles, O1/O2/stack, GC stress/verify/
+poison, retained typed aliases and scoped no-tracing reclamation control.
+Next row16 actual current base remains5fe5692, not this rewritten child head.
+
+Final row15 lint (cargo clippy --test list_order_ownership -- -D warnings)
+passes2.30 s CPU /4.64 s elapsed; format0.34 s /0.60 s. All nine root
+docs are copied before final amend/publication. Full sequential six gates
+are required on the next PR head. Source semantics remain stable sorting
+and first-occurrence unique selection, with borrowed input/typed result aliases.
+
+Row15 final head d2e0e296888d5ca3577412f5a1687af1d4a494dd on actual
+main3606f2c is published with exact lease against5fe5692. Whole message
+verified one line with empty body. Sole PR93 is open; all six CI37862207155
+gates run at this head. Next row16 actual base remains5fe5692; never substitute
+this rewritten row15 head for that anchor. Root docs preserve the current state.

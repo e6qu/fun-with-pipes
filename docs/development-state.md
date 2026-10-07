@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
+Updated 2026-10-09. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 [design](design.md) before changing code. This is the live handoff;
 [queue](roadmap-queue.md) preserves immutable anchors and
 [history](roadmap-history.md) preserves detailed checks and superseded status.
@@ -28,27 +28,29 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and sole open PR
 
-Main is 3c0685c34f9808db82ef9a9b151a6fcfb8eddb47 (#91). All six
-CI37774239006 gates passed at 7018086b8f9851f576350ba24e8af5041c3bb594.
-Whole squash message verified: `Keep call effect contexts separate from pure callback types`.
-#74–#91 deliver native macOS and ownership through synchronous optional list
-results. Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
+Main is 3606f2c44499cfe8f51f3af4cbc85e1c7b5e4258 (#92). All six
+CI37786675129 gates passed at bd7a20bfd83369e87ca9100c75503ab4ad73e8d5.
+Whole squash message verified:
+`Keep native reference counts exact beyond byte-sized metadata`.
+#74–#92 deliver native macOS, ownership through optional synchronous list
+results, isolated call effects and exact native counts beyond254. Phase1 is
+done; phase2 remains incomplete; phases3–6 are pending.
 
-Sole open [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92):
-ownership-wide-counts, /private/tmp/fwp-wide-worktree, exact
-bd7a20bfd83369e87ca9100c75503ab4ad73e8d5 on actual main 3c0685c.
-CI37786675129 passes Linux, bench and both dedicated macOS GC gates; both
-regular macOS gates are running. Final sharing check passes 7.16 s CPU /15.00 s
-elapsed; all three unfiltered wide_counts tests pass 7.28 s /14.80 s; format
-0.33 s /0.60 s. The initial filtered call ran zero wide tests; the separate
-unfiltered rerun supplies coverage. Source matches verified cb0d7e6.
+Sole open [PR #93](https://github.com/e6qu/fun-with-pipes/pull/93):
+ownership-list-order, /private/tmp/fwp-order-worktree, exact
+d2e0e296888d5ca3577412f5a1687af1d4a494dd on actual main3606f2c.
+CI37862207155: all six gates are running at this exact head. Both focused
+tests pass10.26 s CPU /20.80 s elapsed, lint2.30 s /4.64 s, format0.34 s
+/0.60 s. Source/runtime/tests/workflows match verified previous5fe5692 exactly.
+Explicit raw interpreter oracles remain intact. Whole message is one line,
+empty body. Squash only after all six pass, using subject
+`Own sorted and unique list elements and release scratch buffers`, empty body,
+matching this exact head. Then rebase row16 from ACTUAL base5fe5692 onto
+its real squash; preserve OLD66bc713/parentc835578 and current root docs.
 
-After all six pass, squash with subject
-`Keep native reference counts exact beyond byte-sized metadata`, empty body,
-matching the exact head. Preserve all nine live docs before updating main.
-Then rebase row 15 from actual base cb0d7e6 onto the real #92 squash,
-check it, refresh docs, publish and open the sole next PR. Do not rebase from
-OLD3a791 or newer bd7a20b: neither is row 15's actual current base.
+All nine root docs were preserved in /private/tmp/fwp-main-docs-pre92 before
+main fast-forward and restored afterward. Original #91 main/head/message and
+#92 focused checks are preserved in history; no current progress was discarded.
 
 ## Next sequential preparations
 
@@ -58,14 +60,14 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 14 ownership-wide-counts | bd7a20bfd833, PR92 | 3c0685c34f98 | 7.28 /14.80 s final wide tests |
-| 15 ownership-list-order | 5fe569218a4b | cb0d7e6db7e5 | 11.16 /22.44 s |
+| 15 ownership-list-order | d2e0e296888d, PR93 | 3606f2c44499 | 10.26 /20.80 s final |
 | 16 ownership-sort-callbacks | 5c19337f216d | 5fe569218a4b | 12.54 /25.46 s |
 | 17 ownership-state-sequences | 15743b853d6a | 5c19337f216d | 12.09 /24.23 s |
 | 18 ownership-loop-state | 112f3c8de87b | 15743b853d6a | 19.08 /38.44 s |
 | 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
 | 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 /27.47 s |
 | 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 /28.81 s |
+| 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 /30.15 s |
 
 Row 18 head 112f3c8 includes only doc changes after tested code 7af6961.
 Row 20 full head 7741d09dd8cf214396e7938e07fbbd1f7263d9f7 is published
@@ -76,17 +78,22 @@ payload representation remains shared. Do not claim numeric payload ownership.
 Row 21 full head 443524ef6b6d5183f010899902a94a9d53c5dc55 is clean after
 amend; all three tests, lint 2.51 s /4.99 s and format 0.33 s /0.60 s pass.
 Preserve immutable OLD636414f/parentfad9b1a; later final rebase uses actual
-current base 7741d09. Current independent preparation: row 22 map/set elements is rebased from
-OLD parent636414f onto current row21 head443524e (temporary d327ce2).
-Both raw oracles explicitly set FWP_NO_OPT=1; all three tests pass
-14.98 s CPU /30.15 s elapsed. Lint 2.33 s /4.67 s and format 0.34 s /0.61 s pass; publish without another PR.
-Preserve OLDa8a7d11 and record actual base443524e.
+current base 7741d09. Row 22 full head 1689c03ff621bb2ff41759f89b42e606dd738a2a is clean after
+amend; all three tests, lint 2.33 s /4.67 s and format 0.34 s /0.61 s pass.
+Preserve OLDa8a7d11/parent636414f; final rebase uses actual base443524e.
+Current independent preparation is row23 old-value reclamation, rebased from
+OLD parenta8a7d11 onto actual current row22 head1689c03 (temporary c4af7a9).
+All three focused tests pass9.50 s CPU /19.72 s elapsed, lint4.59 s /9.15 s,
+format0.91 s /1.77 s. It remains unpublished at c4af7a9; finish its docs
+amend/publication next; PR93 is already open.
+The full GC gate stays on CI.
+Preserve OLD6774aa5 and record actual base1689c03 before publication.
 
 ## Repaired resource evidence
 
 Current separate evidence: ownership-evidence-resource-frames,
 /private/tmp/fwp-resource-evidence-worktree, exact
-bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI37798736754 queued. It includes
+bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI37798736754: all six gates pass at this exact head. It includes
 rows 79–88 plus the required stack_match_ownership regression. No evidence PR.
 Evidence workflows and baseline repairs never enter production ancestry.
 
@@ -96,8 +103,8 @@ A whole pattern binder retained only the outer pointer of a stack aggregate,
 while its newly typed scrutinee dropped child owners. Propagating those typed
 children into the binder repairs Dup/Drop and preserves nominal File disposal.
 Omission control, raw interpreter agreement, O1/O2, related resource tests and
-exact HTTP golden in four GC-off/on poison modes pass. Full repaired gates
-remain required. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
+exact HTTP golden in four GC-off/on poison modes pass. The repaired full gates pass; each sequential production PR still needs
+its own exact-head gates. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
 retain failed logs, commands, controls and measurements.
 
 Production row 85 repair is published clean as
@@ -127,8 +134,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-map-set-worktree; all focused map/set checks pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
+belongs to /private/tmp/fwp-order-worktree; all final row15 focused checks pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.10 s CPU /0.71 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
@@ -137,6 +144,6 @@ Preserve all nine root docs before fast-forward/rebase conflict resolution:
 PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre91; refresh all nine immediately before updating
+/private/tmp/fwp-main-docs-pre92; refresh all nine immediately before updating
 main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

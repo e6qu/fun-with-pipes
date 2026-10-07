@@ -40,12 +40,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#91: native macOS, primitive contracts, owned leaves/text,
-compiled closures and cleanup, concrete temporaries, stack children and borrowed
-synchronous list callbacks/results. [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91)
-merged after all six gates passed, keeping call-effect context separate from
-pure callback types. [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92) is the sole open PR
-for rare exact native wide counts. Exact heads, gates and the next queue item are maintained in
+Main includes #74–#92: native macOS, primitive contracts, owned leaves/text,
+compiled closures and cleanup, concrete temporaries, stack children, borrowed
+synchronous list callbacks/results, separate call effects and exact native wide
+counts. [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92) merged after
+all six exact-head gates passed. Sole open [PR #93](https://github.com/e6qu/fun-with-pipes/pull/93) owns
+sorted/unique list elements and releases scratch; its six gates are running. Exact heads, gates and next actions are in
 [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
@@ -54,8 +54,8 @@ and both macOS architectures; all six TLS/listener evidence jobs passed.
 Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
 both are repaired and all six WASM/resource gates pass. The next separate
 resource-frame evidence run exposed an HTTP GC signal failure; the whole
-stack-match binder ownership repair passes focused checks and a new full
-evidence run is queued. Every sequential PR still needs
+stack-match binder ownership repair passes focused checks and all six full
+evidence gates. Every sequential PR still needs
 its own exact-head gates. Keep repairing failures.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped

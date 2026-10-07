@@ -60,11 +60,13 @@ closure ownership are merged as described below.
 
 ## Complete runtime sharing
 
-The merged byte-count implementation promotes a saturated allocation and its
-reachable graph to sharing. Interior references canonicalize to allocation
-starts; overflow of the bounded traversal stack preserves child counts while
-recursing. Prepared queue14 replaces automatic saturation with exact wide
-counts. Explicit runtime sharing still needs complete graph promotion.
+Native counts1..254 fit the existing byte. At255, rare exact size_t side
+entries keyed by canonical metadata slots track additional owners without new
+value roots. Release, sharing, free/reuse and collection remove those entries;
+count overflow traps and side-entry allocation failure exits102. Interior
+references canonicalize to allocation starts. Explicit runtime sharing still
+promotes the complete reachable graph; traversal overflow preserves child
+counts while recursing. Large fanout no longer forces automatic sharing.
 
 ## Selected String/Bytes boundaries
 
@@ -155,7 +157,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 14 | Inline counts1..254, rare exact size_t side entries keyed by canonical slots; release/sharing/free/sweep clear entries | Sequential CI; explicit overflow/OOM; no new value roots |
 | 15 | sort/unique borrow input, own copied spine and typed selected elements, release scanned scratch | Sequential CI; stable comparisons/first occurrence and aliases |
 | 16 | sort-by borrows callback/input, owns typed keys and copied result; keys evaluate once in input order | Sequential CI; alias/capture keys, scalar safety and exceptional cleanup |
 | 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
@@ -164,7 +165,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
-| 23 | Old-value reclamation | Sequential CI and complete boundary checks |
+| 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
 | 24–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
@@ -184,8 +185,8 @@ not automatic cycle reclamation or general tracing-free support.
 
 ## Validation and limits
 
-Merged contracts through #90 passed their full platform gates. Rebased focused
-checks for prepared rows14–20 pass with explicit FWP_NO_OPT=1 raw interpreter
+Merged contracts through #92 passed their full platform gates. Rebased focused
+checks for prepared rows15–22 pass with explicit FWP_NO_OPT=1 raw interpreter
 oracles; all sequential full gates remain required. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
