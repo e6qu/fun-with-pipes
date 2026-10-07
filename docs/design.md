@@ -72,7 +72,8 @@ arguments and original stack captures through nonlocal unwind. It adds a typed
 pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit
 targets); programs without possible unwind omit runtime registration. Scalar
 words stay uncounted. Merged loop cleanup protects counted current state and
-owned Step payloads; later loop argument preparation remains in the queue.
+owned Step payloads; flattened loop argument preparation now protects the original
+box and each completed field duplicate until transfer.
 
 Prepared resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable

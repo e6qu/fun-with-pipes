@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #115. Arrays, maps and sets own typed elements.
+The tables describe main through PR #116. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -274,7 +274,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
 | 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
 | 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
-| 38 | Eligible loop state stays flattened through RC preparation; initial boxed input and each completed typed field duplicate stay owned until transfer | Sequential CI; partial field failures, cancellation slots, aliases and trap/evaluation order |
+| 38 | Delivered in PR116: eligible loop state stays flattened; initial boxes and completed typed field duplicates stay owned until transfer | All seven exact-head gates pass; partial field failures, cancellation slots, aliases and trap/evaluation order preserved |
 | 39 | Multi-field typed retains protect each completed extra reference; caller liveness excludes unfinished retains through count overflow | Sequential CI; partial variant/stack retains, wide-count overflow and live aliases |
 | 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |
 | 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |

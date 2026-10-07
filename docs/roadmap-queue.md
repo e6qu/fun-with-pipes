@@ -64,7 +64,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `54249400ef16` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `759bc59437a7` | `dc4f9461571b` | `608ae7bb2d24` |
 | 37 | worker-preparation | `ownership-worker-preparation` | `0ddeedbb09a2` | `c97dd03f8d89` | `dc4f9461571b` |
-| 38 | loop-preparation | `ownership-loop-preparation` | `75e537988464` | `b879eca20812` | `c97dd03f8d89` |
+| 38 | loop-preparation | `ownership-loop-preparation` | `e44bd10ac65e` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `d98205af88df` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `5ebcb2d6b0e2` | `b0219671dca3` | `1bb11bece9ae` |
 | 41 | variant-conversion | `ownership-variant-conversion` | `cca935846750` | `34873f41a4c4` | `b0219671dca3` |

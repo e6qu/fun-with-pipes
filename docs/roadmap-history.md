@@ -14853,3 +14853,202 @@ Rebase0.10CPU/0.95elapsed, package clean0.00/0.13s, four original focused
 regressions17.43/35.01s, all14 RC units3.37/6.83s, lint2.45/4.98s and
 format0.43/0.59s pass. Final publication and seven full exact-head gates remain.
 Actual main docs38076511888 passes at25dd472; queue37 acceptance is complete.
+
+Preparation38 publishede44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 on actual25dd472a889baf61422c254eaa6b370147c81244, FROMactual8c4e9ffd71a5555298721921a1fbf3a2314411cf. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Old4289528c436b6a3cb1edf81fb45d588722277469 retained at roadmap/revision-038-4289528c436b before exact-lease publication. Final actual-squash source preserves both original feature/docs commits; four loop/preparation/worker regressions17.43CPU/35.01elapsed, all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass; original source/probes unchanged including omitted partial scope exit5, scalar bits, aliases and raw interpreter/native agreement; independent ARM/Intel binary evidence passes; exact-head full gates required
+
+PR116 https://github.com/e6qu/fun-with-pipes/pull/116 is created at frozen
+e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 on actual main
+25dd472a889baf61422c254eaa6b370147c81244. Publication passes1.83CPU/
+19.16elapsed with all three strong audits:44 link sets,106 immutable anchors
+and77 live heads/bases. All three commits (two originals, including preserved
+empty docs commit, plus appended live docs) remain; old4289528c436b retained
+remotely before exact-lease publication. Creation0.16CPU/4.04elapsed passes.
+CI38076902840 and docs38076903010 queued at the frozen head. Require all seven
+exact-head passes before explicit match-head squash with one-line subject
+`Protect flattened loop arguments during field preparation` and empty body.
+Next production queue39 variant preparation, FROMactual prepared38 4289528,
+onto PR116's eventual actual squash. Completed publication/creation helpers
+must not rerun. This is the sole open production PR.
+
+### Retain overflow machine-code evidence preparation
+
+Queue39 source d98205af88dfc2300d19d2ca12b11a71146ded9a is reviewed: actual
+SIZE_MAX overflow checks partial variant retains and original caller owners,
+with exact original omission exits3 and7. Final rebase helper is prepared but
+not executed, FROMactual4289528c436b6a3cb1edf81fb45d588722277469 onto
+PR116's actual squash after full acceptance. Source/probes remain unchanged.
+
+Evidence branch ownership-evidence-retain-layout starts at
+6b1713dd5310c3eea570e734f7444e6374031ba4, published0.12CPU/3.27elapsed.
+Static review found that merely searching for a cleanup push could classify an
+already-popped entry-tick scope as active. A diagnostic-only follow-up commit
+b0260c9d3aa72401dae338860e34c93600ec8dd1 now processes push/pop order up to
+the retain. Original C/compiler/runtime/test bytes remain unchanged; original
+negative oracles are not weakened. Both entire commit messages are exact single
+lines <=80 characters, with no body/trailers or attribution. Earlier6b1713d is
+retained at roadmap/revision-evidence-retain-layout-6b1713dd5310 before exact
+lease publication. Repair0.20CPU/6.41elapsed passes. Superseded diagnostic run
+38077259408 is cancelled, not accepted. Fresh exact-head evidence CI38077436743
+is queued; scripts parse but no runner execution or layout result claimed yet.
+
+The workflow runs the unchanged original test on ARM/Intel and retains all six
+O1/O2 positive/partial-control/caller-control binaries, C, original arguments,
+symbols/disassembly and a compiled layout driver for V, variant/pair payload,
+cleanup and wide-count metadata. These diagnostic hooks do not prove production
+frames, zero allocation, speed or collection-free support. Only three evidence
+files differ from the original source39, and this is not another production PR.
+Completed initial publication and classifier repair helpers must not rerun;
+remote branch/tag and committed tooling preserve recovery. PR116 remains the
+sole open production PR, with current exact-head gates still queued.
+
+### Actual retain overflow local binary validation
+
+After guarded package clean in last checked queue38 (88.9MiB,0.00CPU/0.13elapsed),
+unchanged queue39 d98205af88dfc2300d19d2ca12b11a71146ded9a passes
+`env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 CC=/private/tmp/fwp-retain-layout-evidence-worktree/scripts/capture-retain-layout-cc.py FWP_LAYOUT_CAPTURE=/private/tmp/fwp-retain-d982-binaries FWP_LAYOUT_REAL_CC=/usr/bin/clang python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test retain_unwind_ownership`
+from /private/tmp/fwp-variant-preparation-worktree (10.63CPU/21.45elapsed).
+The original actual SIZE_MAX overflow, scalar-bit and caller/partial-owner checks
+pass, including exact negative exits3 and7 at O1/O2 and raw interpreter/native
+agreement. Six original C/binaries were captured through unchanged compiler
+arguments. Corrected active-scope inspector from evidence b0260c9 passes through
+the same guard0.35CPU/0.93elapsed, without changing runtime/test sources.
+
+Compiled actual layout: V8/align8, variant32 with payload offset8, pair16,
+partial-owner context16, cleanup24, wide-count entry24 with count offset8.
+Hardware Apple M4 Pro/macOS15.6.1/Apple Clang17.0.0; original O1/O2, gnu11,
+ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread flags retained. Every actual
+Mach-O header is ARM64 cffaedfe0c0000010000000002000000. Inspector correctly
+classifies two positives, two omitted-partial controls and two omitted-caller
+controls. Reports, actual C/binaries, arguments, symbols, full disassembly and
+compiled layout driver are in /private/tmp/fwp-retain-d982-binaries. Helper
+bodies can be inlined; no separate helper-frame or performance guarantee claimed.
+
+Positive C hash a5352d25efe8f554ea1f21ebd3f44868ff6047a694f06f1c9de1e6733ef78b13;
+partial omission 1ed8c7d28effd6caa4bcf02b0574c639a3ab535205b34751971af2899239a317;
+caller omission d5601d1eadc791d1032b5f41b907c787009e6f85a30b7efa5323bb6e12694cd3.
+Wide entry size is a metadata layout, not total allocator cost or an absence of
+allocation. This is prepared-source/local ARM evidence, not the queued Intel
+runner result, final actual-squash checks or production acceptance. Last shared
+Rust target is now queue39 d98205af88df; clean fwp there through the absolute
+root guard before switching Rust source checkouts.
+
+## Passing retain overflow machine-code evidence
+
+CI38077436743 passes both ARM/Intel macOS jobs at diagnostic head
+b0260c9d3aa72401dae338860e34c93600ec8dd1, on unchanged source39
+d98205af88dfc2300d19d2ca12b11a71146ded9a. Only the capture script,
+inspection script and evidence workflow differ. Each platform executes the
+original wide_count_overflow_releases_partial_variant_retains_and_live_callers
+test once, with no ignored tests. Actual SIZE_MAX overflow, exact omitted partial
+and caller scope exits3/7 and raw interpreter/native O1/O2 agreement remain intact.
+
+Both runners use macOS15.7.9(24G830), Apple Clang17.0.0(1700.0.13.5);
+hardware is Apple M1(Virtual) and Intel Core i7-8700B3.20GHz. Each captures six
+actual Mach-O O1/O2 positive/control binaries, original arguments, generated C,
+symbols and complete disassembly. Compiled layouts agree: V8/align8, variant32,
+payload offset8, pair16, partial owner16, cleanup24 and wide-count entry24
+with count offset8. Helpers may be inlined; these instrumented fault/observer
+fixtures do not establish production frame size, ABI performance or zero allocation.
+
+Guarded proof and download pass0.18CPU/7.08elapsed. Proof:
+/private/tmp/fwp-retain-layout-passing-proof.json; logs:
+/private/tmp/fwp-retain-layout-b0260c9.log; artifacts:
+/private/tmp/fwp-retain-layout-b0260c9-artifacts. Source/compiler/runtime and
+original probe bytes are verified unchanged. This is preparation evidence, not
+acceptance of a later rebased production head. Superseded diagnostic run
+38077259408 remains cancelled; its earlier revision is retained remotely.
+
+The post-evidence roadmap audit passes0.43CPU/3.66elapsed with44 link sets,
+106 immutable queue pairs/tags and77 live heads/bases. An initial sandboxed
+invocation could not sample processes (`ps`: Operation not permitted); allowing
+process sampling resolved it with the same guard and unchanged resource limits.
+The current preserved11-doc snapshot is pre115, replacing a stale pre108 link
+in the live handoff. Refresh all11 documents before the next fast-forward.
+
+## Actual local gRPC allocator capacity
+
+A new bounded diagnostic main is compiled from actual captured source112
+8fe6765c9490987ae560113fe7d0ac0fe090ad96 address-fixture C, retaining all
+original probe bytes and compiler arguments. It executes the real packed
+g_tls_new and short-address g_conn_new at O1/O2 and reads Darwin malloc_size
+for malloc-owned TLS storage, and the collector metadata slot for GC-owned
+connections. malloc_size is never applied to a GC pointer. This does not rerun
+or replace the original ownership tests or weaken their negative controls.
+
+On Apple M4 Pro/macOS15.6.1(24G90)/Apple Clang17.0.0(1700.4.4.1), both
+optimizations agree: TLS requested101 uses112 malloc-usable bytes; requested8311
+uses8704. The actual short connection requests278 and occupies a320-byte GC
+slot. An allocation of the original520-byte connection header size in the same
+unchanged allocator occupies640 bytes. The old constructor is not executed;
+this comparison measures its header-size allocation, excluding its truncation
+semantics. runtime/fwp_rt_gc.c is byte-identical from prepared110 bf297ac299ea
+through prepared112 b45e93a71d40. Observed addresses meet type alignment.
+
+Guarded compile/execute/assembly capture passes0.60CPU/1.70elapsed. Actual
+Mach-O headers, generated diagnostic C, source hashes, original flags, results
+and disassembly are retained in /private/tmp/fwp-grpc-allocator-capacity-local
+with proof.json. Compiler flags retain gnu11, ffp-contract=off, OpenSSL paths,
+ssl/crypto, lm and pthread at O1/O2. Capacity excludes allocator metadata,
+collector chunk reservation, resident memory and unrelated buffers; this is
+local ARM evidence and does not establish Intel capacity, cache use or speed.
+
+Source review of the prepacking constructor at prepared110 confirms six
+allocation calls (one calloc header, four strdup strings and one malloc key);
+this count is a source finding, not a newly executed legacy measurement. The
+existing ten-to-five cache-free fixture result counts a broader workload and
+must not be described as the constructor's allocation count.
+
+## Local disk-limit refusal during allocator evidence bookkeeping
+
+The unchanged local guard refused optional proof-metadata enrichment before
+execution: less than64GiB free disk. The completed capacity compilation and
+measurements remain valid; no binary check or full gate was run after refusal.
+No limit was raised and no sampling was bypassed. The enrichment was dropped;
+hardware/compiler/OS are already recorded in the original captured evidence.
+A later read-only df sample reports68448288KiB available (65.28GiB), and the
+untracked generated target uses80888KiB. No build data or saved evidence was
+deleted. Future workloads require fresh guard acceptance; any refusal moves
+the required work to GitHub runners. Production CI continues remotely.
+
+## Archived handoff after PR #116
+
+Main is `25dd472a889baf61422c254eaa6b370147c81244` (PR #115). Accepted
+head `0ddeedbb09a29235556808a499a665178cf13d83` passes all six jobs in
+CI38072953927 and roadmap_docs38072954043. Match-head squash at
+2026-10-10T18:37:12Z has the exact62-character subject
+`Protect boxed arguments and partial fields before worker entry`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`771191d622cc13c055c08f1ba23fc50d02950ac7` and complete tree
+`dc474e5a0f457bedead913f6e963990be85267a6`, identical to the tested head.
+All11 live docs were hashed in /private/tmp/fwp-main-docs-pre115 and restored
+byte-for-byte after fast-forward. Duplicate main CI38076511839 was cancelled
+only after complete-tree proof; actual main docs38076511888 passes at the squash head.
+Merge passes0.26CPU/8.43elapsed; fetch0.04/1.08s, protection0.00/0.13s and
+cancellation0.05/1.32s pass. Queues35–37 are accepted in PRs113–115.
+Worker argument preparation now protects original boxed arguments and each
+completed typed field duplicate until transfer into the worker. Original aliases,
+scalar bits, failure controls and allocation behavior remain checked. Native
+snapshot37ab9ca19ae6d9bdfb6c418200b087d246d2c785 and old remote8c4e9ffd71a5
+remain reachable. Phase2 remains incomplete; phases3–6 pending. [PR116](https://github.com/e6qu/fun-with-pipes/pull/116) is the sole open
+production PR, delivering queue38 loop argument preparation.
+
+Queue38 loop argument preparation is next on the actual PR115 squash.
+Final native snapshot75e537988464d8f304bfdc409eb8334c46da99bd is on actual
+main25dd472a889baf61422c254eaa6b370147c81244, FROMactual old37 8c4e9ffd71a5.
+Both original feature/docs commits remain, including explicit empty docs commit
+preservation after conflict resolution; every source/probe byte matches4289528.
+Rebase passes0.10CPU/0.95elapsed; bounded package clean0.00/0.13s removes78.8MiB.
+All four original loop/preparation/worker regressions pass17.43CPU/35.01elapsed;
+all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass.
+Original alias/scalar-bit controls, exact omitted partial scope exit5 and raw
+interpreter/native agreement remain intact. Publication passes1.83CPU/19.16elapsed
+with all three strong audits (44 link sets,106 immutable pairs/tags,77 live heads).
+Frozen head `e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5` is published, with old
+4289528c436b retained remotely before exact-lease update. All three commits
+(two originals plus appended docs) and the native snapshot remain reachable.
+PR116 creation passes0.16CPU/4.04elapsed. CI38076902840 passes Linux, bench, ARM regular and both ARM/Intel GC stress jobs;
+Intel regular is still running. Docs38076903010 passes at the frozen head. Require all seven passing exact-head gates
+before squash with `Protect flattened loop arguments during field preparation`
+and empty body. Next production after acceptance is queue39 variant preparation.
+
+Accepted queue38 in PR116 at 85198cc78ee7d0cb8af5d6ec30b1c42771c91748 on 25dd472a889baf61422c254eaa6b370147c81244. Exact frozen head e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 passes all six CI38076902840 jobs and docs38076903010. Raw squash subject 'Protect flattened loop arguments during field preparation' has 57 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree f53d2fe498e3f5de928bea64991cc225e56419b6 are verified. All11 live documents were hashed and restored byte-for-byte during fast-forward.
