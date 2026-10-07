@@ -10927,3 +10927,64 @@ fresh checks move to GitHub. Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119
 CI37962382433, is queued with the stronger all44-doc/tag-identity auditor.
 Last observed disk63120268KiB available (~60.20GiB), target140856KiB (~137.55MiB).
 No local workloads remain active.
+
+Row29 callback-map unwind refreshed from actuale3c49d9 ontob5f44e8;
+published9b5eb58046551342baccc38299a587dc96560589 preserves compiler/runtime
+and ownership fixtures, inheriting only CLI and tracing-fixture repairs outside
+authoritative docs. Its final rebase uses actualb5f44e8 after row28 merges.
+Fresh checks move to GitHub under the continuing local disk refusal. Row28
+evidenceae907d63e277f8c62a07b20aee0dfecb3167a9c6, CI37962723252,
+is running with all44-doc immutable-tag checks.
+
+Row30 selection callback unwind refreshed from actual8093bf3 onto9b5eb58;
+published398503f0938a3efe723db4da9698313ec6b63ea6 preserves source and
+ownership fixtures; automated source-diff allowlist confirms only inherited
+CLI/tracing repairs. Authoritative root docs resolve all prepared conflicts.
+Fresh checks move to GitHub under the continuing disk refusal.
+Row28 evidenceae907d63e277f8c62a07b20aee0dfecb3167a9c6,
+CI37962723252 passes focused runtime calls, overapplication, compiler cleanup,
+ownership, tracing and strengthened all44-doc/tag audit. Row29 evidence
+c39c547b9a4259563ec7e454ed9463f6701ca054, CI37963280367, is running.
+
+Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119444,
+CI37962382433 passes focused call liveness, related ownership and all44-doc/tag
+identity checks. Row29 evidencec39c547b9a4259563ec7e454ed9463f6701ca054,
+CI37963280367 fails callbacks_and_partial_spines_release_results_and_scratch:
+FWP_GC_STRESS1/VERIFY1/REUSE_VERIFY0 native process has no ordinary exit code.
+Scalar control and all related integration suites pass, along with format,
+lint, strong docs audit and actual tracing churn. Log saved to
+/private/tmp/fwp-map-unwind-focused-failure.log; job113931199831.
+Diagnostic-only evidence8c29f3b7fa6e75d724fb5302d7237c906091e777 adds
+failed-fixture retention, probe.c persistence, CC debug symbols and GDB trace.
+No production implementation changed before determining the cause.
+
+Row29 current9b5eb58 guarded package clean0.00/0.14s and two macOS stress
+fixtures11.99/24.15s pass after disk recovered (113197360KiB available).
+Shared target is now /private/tmp/fwp-map-unwind-worktree; no workloads run.
+Diagnostic37964179747 at8c29f3b failed native compiler invocation: CC is a
+program path, so "cc -g" did not run. No native crash trace was produced.
+Corrected diagnostic91e0c76b77b97f5d821cbed41cef8f5d7e330a3f creates an
+executable wrapper forwarding -g; CI37965116750 queued. This remains evidence-only.
+Row30 evidencee82a135f6e5cacdd71b89a0139825cb875603a1c,
+CI37963696111 fails both inherited map and its own predicate fixture under
+Linux stress; scalar controls and related suites pass. The two failing fixtures
+share dead_string/dead_scratch observers. Saved log
+/private/tmp/fwp-selection-unwind-focused-failure.log. Root cause still requires
+native backtrace; no speculative production change or support claim.
+
+## 2026-10-09 map and selection scratch observer repair
+
+Corrected diagnostic CI37965116750 at91e0c76 produces GDB SIGSEGV at
+fwp_gc_chunk_of(ci=NULL), reached from dead_scratch, with off131072. The
+helper unconditionally writes its required output pointer. GCC emits that write;
+Clang's optimization hid the invalid fixture call. Log
+/private/tmp/fwp-map-unwind-gdb.log. This is a fixture fault, not evidence of
+failed runtime ownership. Row29 production84ef5480f4938e78c11c10823bf498a8a1a4e6f9
+passes a local ci and preserves every release/alias assertion. The initially
+publisheda44c936 symbol name was aligned with prepared row68's existing repair
+and replaced with an explicit lease before handoff publication.
+Row68 already contains these exact minimal repairs in map/selection/zip/fold/
+argument preparation fixtures. Bring them forward into each own sequential
+preparation; do not replay or overwrite subsequent ownership/harness changes.
+Normal evidence rebases from actual9b5eb58 onto84ef548 and removes failed
+fixture retention, custom compiler wrapper and GDB steps before acceptance.

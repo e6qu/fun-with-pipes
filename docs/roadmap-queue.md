@@ -47,8 +47,8 @@ resolve full hashes before publication or merge. Checkout paths use
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `b5f44e80462c` | `bee3f1659ae5` | `7392f2d67151` |
-| 29 | map-unwind | `ownership-map-unwind` | `8093bf382210` | `62add7e4a85f` | `bee3f1659ae5` |
-| 30 | selection-unwind | `ownership-selection-unwind` | `69b1ad1e33e5` | `b8f4c2469215` | `62add7e4a85f` |
+| 29 | map-unwind | `ownership-map-unwind` | `84ef5480f493` | `62add7e4a85f` | `bee3f1659ae5` |
+| 30 | selection-unwind | `ownership-selection-unwind` | `398503f0938a` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `6a0913896eb7` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `1e8d1e34bc78` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `dc9bfd5e626b` | `988f2a3be97f` | `968dac7ed9cf` |
