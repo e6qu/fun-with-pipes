@@ -6,6 +6,14 @@ work.
 
 ## Active roadmap
 
+Execution: continue through this roadmap automatically, one focused PR at a
+time. Run full gates on GitHub runners, resolve failures, then squash-merge
+with an explicitly supplied single-line subject of at most 80 characters
+and an empty body, without trailers or attribution. Update this plan and
+the session handoff with acceptance evidence and the next action; move a
+phase to done only when its criteria have been met. The user authorized
+this workflow on 2026-10-07.
+
 The goal is an efficient native language with simple pipe semantics,
 strong inference and static typing, compile-time specialization, little
 heap allocation, and deterministic ownership wherever possible. Tracing

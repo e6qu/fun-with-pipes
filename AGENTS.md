@@ -8,6 +8,13 @@ Do not treat an implemented change or a skipped test as verified support.
 
 ## Current direction
 
+The user authorized completing the active roadmap automatically, one focused
+PR at a time, with full CI before each squash merge and the commit format
+below. This authorization covers roadmap branch publication, PR creation,
+fixes and merges; keep later sessions within that scope and do not request
+the same permission again. Maintain the plan and handoff throughout. A queued,
+skipped or superseded CI run is not a passing gate for the current PR head.
+
 Finish native macOS support, then runtime ownership contracts, numeric
 representation and measured compiler/autodiff improvements, in that order.
 [docs/ownership.md](docs/ownership.md) records the memory design and its

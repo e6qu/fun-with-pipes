@@ -12,6 +12,12 @@ for priorities and contracts. Update this file before ending a work session.
 - Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
   The user explicitly authorized the push and PR creation on 2026-10-07;
   the earlier publication block is resolved. Both commits are on GitHub.
+- Continuing authorization: the user requested automatic completion of the
+  active roadmap, one PR at a time, with full CI before each squash merge.
+  Use an explicit single-line subject of at most 80 characters and an empty
+  body; no trailers, AI attribution, Co-authored-by or Authored-by lines.
+  Continue to the next roadmap task after merging. An active thread goal
+  tracks the whole roadmap; the plan/handoff carry the state across sessions.
 - User direction: macOS, ownership with minimal tracing GC, efficient native
   representations/numerics/autodiff, and stable simple pipe semantics.
 - Current scope: the first native macOS portability pass plus durable docs.
