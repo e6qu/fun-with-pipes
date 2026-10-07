@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 09:39 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 10:40 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -36,16 +36,16 @@ Queued, skipped, cancelled, superseded or earlier-head runs are not passing gate
 
 ## Merged support
 
-Current main: `49f91081113156c69e87e966dd7ef055ceeb1432`, squash #88.
-ALL SIX jobs passed in CI `37750832622` at exact
-`42cf518f2ec52dd86344f9393fbe20f4a492ac00`. Verified one-line subject
-`Own selected list prefixes and borrowed callback suffixes`, empty body.
-Root fast-forward preserved six current docs in `/private/tmp/fwp-main-docs-pre88`.
-Previous #87 squash `eae33c4` passed ALL SIX CI `37743989274`.
+Current main: `dbdaee4448d4ccd62720f04d3f866d429db800aa`, squash #89,
+merged 2026-10-08 10:33:05 UTC. ALL SIX CI 37758597151 jobs passed at exact
+`bcdfb163c565b6275be4c36389e7c226882fb319`. Whole commit message verified:
+`Own typed list copies and retain borrowed suffix references`, one line, empty body.
+Root fast-forward preserved all six live docs in /private/tmp/fwp-main-docs-pre89.
+Previous #88 squash 49f9108 passed ALL SIX CI 37750832622.
 
-#74–#88 deliver native macOS ARM/Intel, container ownership contracts, owned
+#74–#89 deliver native macOS ARM/Intel, container ownership contracts, owned
 text/byte leaves and fresh text trees, compiled closures and cleanup, concrete
-argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip, right-fold and list-prefix ownership.
+argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip, right-fold, list-prefix and list-copy ownership.
 Full earlier hashes/runs, measurements and delivered language features remain in
 [history](roadmap-history.md). Phase 1 is complete; phase 2 is incomplete;
 phases 3–6 (numeric representation, numerics/autodiff, broader evidence and
@@ -82,9 +82,19 @@ CPU 21.03 s / elapsed 42.42 s. Clippy lib/four fixtures passed 2.20 s / 4.44 s;
 real inventory one lib test passed 3.02 s / 6.43 s. Formatting initially failed
 on the corrected oracle expressions; formatted and rechecked successfully,
 CPU 0.36 s / 0.51 s. Commands use the documented fwp local guard.
-Publish the sole next PR after committing this handoff. Full six exact-head gates
-remain required. Next after its squash: list-option, rebasing from immutable
-OLD list-copy bb00baa4 onto the actual new squash. Keep failures as repair tasks.
+List-copy #89 has merged after all six current-head gates passed. Its immutable
+OLD anchor remains bb00baa4ab9577ed785e5cb2f3280c9d6697dde6.
+Next: list-option, branch ownership-list-options, checkout
+/private/tmp/fwp-list-option-worktree, OLD head 34023f35a42f9f686b6919307d83e17fd4ed7263.
+Rebased from immutable OLD list-copy bb00baa4 onto actual #89 squash dbdaee4.
+Documentation conflicts in state/primitive inventory were resolved with current
+root copies plus the new optional-list contracts. Both raw interpreter references
+now explicitly use FWP_NO_OPT=1. Seven optional-list/copy/prefix/borrowed callback
+checks passed CPU 23.21 s / elapsed 46.79 s. Clippy lib/four fixtures passes
+2.41 s / 4.92 s; real inventory one test 3.30 s / 6.89 s; format 0.35 s / 0.74 s.
+Commands used the fixed fwp local guard. Publish the sole next PR, then require
+all six exact-head full CI gates. Next after squash: inference-call effects,
+from immutable OLD list-option 34023f35 onto the actual new squash.
 
 In parallel preparation, `/private/tmp/fwp-file-runtime-owners-worktree`, branch
 `ownership-file-runtime-owners`, is published clean as `e21c92ea2f6c7bdfcf881d05e485f57683df0b85` atop resource-frame preparation
@@ -564,8 +574,8 @@ actual runner WASI evidence; native GC-off checks are not WASM support. Original
 aggregate-holder boxing and File header/path reclamation also remain required.
 
 
-Current local compiler target is `/private/tmp/fwp-file-runtime-boundaries-worktree`,
-clean at 30fe112; no local workload runs. Root now has six live doc edits (including
+Earlier boundary preparation used `/private/tmp/fwp-file-runtime-boundaries-worktree`,
+clean at 30fe112. Root now has six live doc edits (including
 prepared primitive File/effect contracts), all ours; preserve all six on the next
 main fast-forward. Next preparation base is actual 30fe112. WebAssembly's bump
 allocation remains intentional, but zero RC slots prevent last-owner resource
@@ -577,13 +587,167 @@ active phase 2 work. Prefix #88 subsequently passed all six gates and merged; li
 
 
 WebAssembly logical-count repair is in progress on `ownership-wasm-resource-counts`,
-checkout `/private/tmp/fwp-wasm-resource-counts-worktree`, parent actual 30fe112.
-Dirty edits add independent logical aggregate/task counts for resource programs
-without changing value layout, bump storage or physical reuse. No validation yet.
-A stable exact-value counter map avoids reading arbitrary value words as headers;
-64-bit counts and runtime compact-slot access cover wide aliases/overflow. Count
-entries are removed on logical destruction. The map adds metadata storage and
-lookup work, so no zero-cost or memory-reduction claim. Next: focused host execution
-of the actual GC-disabled C path, then actual WASI evidence on runners, sharing/
-callback/teardown audits and metadata-cost measurements. Keep this separate from
-list-copy's sequential PR and continue phase 2 until full acceptance.
+checkout `/private/tmp/fwp-wasm-resource-counts-worktree`, parent actual 30fe112, published clean as
+`c889479eed7aba4967b2e5f87d7a368193b18be9` (queue 77); immutable OLD
+046f7e85a9eb remains unchanged after the WASI predicate correction.
+Independent logical aggregate/task counts now apply only to File-bearing
+programs, without changing value layout, bump storage or physical reuse.
+The stable exact-value counter map avoids reading arbitrary scalar/constant words
+as headers. 64-bit counts and compact-slot access cover 300 aliases and overflow;
+Logical destruction removes entries with normal freeing enabled; disabled-free
+metadata lifetime still needs repair below. Metadata storage and lookup work increase;
+no zero-cost, heap-reduction or complete tracing-free claim follows.
+
+A generated typed (File, File) destructor is exercised on the actual non-GC C
+path at O1/O2: 300 aliases preserve the two stream owners, the last aggregate
+drop closes the descriptor, and 128 cycles leave zero counter entries. Removing
+only FWP_RESOURCE_OWNERS restores the descriptor leak (exit 4). Pointer-shaped
+scalars/constants stay uncounted; UINT64_MAX overflow leaves the count intact.
+The first fixture overflow recovery omitted fwp_trap_recover and exited 101;
+adding the required test recovery hook fixes the fixture. Runtime code was unchanged.
+
+Guarded `cargo test --test wasm_resource_counts --test file_runtime_boundaries
+--test file_discard_ownership` passed the three executed host/native tests,
+CPU 24.61 s / elapsed 49.75 s. The fourth test (actual WASI) skipped because the
+local toolchain is unavailable; an explicit nocapture rerun confirms the skip,
+CPU 0.00 s / 0.13 s. Clippy lib/three fixtures passed 2.27 s / 4.55 s; fmt
+passed 0.34 s / 0.63 s. No local workload remains running; shared target belongs
+to this checkout. Preparation is published without another PR. Run full
+separate evidence with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1 so runner skips fail.
+
+Next: real WASI runner execution, shared graphs/callback teardown and bounded
+metadata lifetime with freeing disabled; then remove aggregate frame boxes and
+finish File header/path storage lifetime. Keep phase 2 incomplete. One PR #89
+remains open; failures are repair tasks and all six current-head gates still gate
+its squash. After squash, rebase list-option from immutable OLD bb00baa4.
+
+
+Separate WASI evidence is published at `01cb806b578ec012da1065bf2887b03b5dbe96b3`,
+branch `ownership-evidence-wasm-resources`, checkout
+`/private/tmp/fwp-wasm-evidence-worktree`. CI `37759368719` is queued at that exact
+head; no result accepted yet. It restores only the already-merged root/cache/
+tutorial fixes as 1d42a67, uses the current six-job platform split, and runs the
+three focused fixtures early on Linux with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1.
+Neither its baseline/workflow commits nor passing evidence replace sequential
+PR gates or enter production ancestry. It has no PR.
+
+Next concrete preparation after 046f7e8: reproduce disabled-free metadata growth.
+Generated resource-parent destructors use fwp_rc_drop instead of physical free;
+that leaves the last count-map entry behind on WASM even after children close.
+Separate logical counter disposal from retained object storage for resource
+parents and task/channel storage, keep native exact zero-free accounting, and
+add the disabled-free omission control before publication. Unknown/shared graph
+and closure cycles remain subsequent audits; no general tracing-free claim.
+
+
+Required WASI evidence 37759368719 failed the real descriptor check; Linux bench
+passed, other gates were superseded/cancelled. Diagnostic run 37759763830 proved
+File refs had reached zero but fcntl(F_GETFD) still returned 1 with errno 0 under
+WASI, whereas EBADF was expected. The predicate now uses actual fstat validity
+and still requires EBADF after last-owner drop. Both unchanged omitted-count and
+positive assertions remain. Prepared queue 77 was rewritten with exact lease as
+c889479; its OLD 046f7e8 remains permanent. Native fstat checks pass at O1/O2.
+Repaired evidence CI 37760170473 is live at
+`1d6a5d6bedd203c4302599c4e3165412cacd6265`; no passing WASI or full gate claim yet.
+Logs: /private/tmp/fwp-wasm-evidence-37759368719-linux.log and
+/private/tmp/fwp-wasm-evidence-37759763830-linux.log. Both superseded runs were
+cancelled to conserve runner resources, never treated as successful gates.
+
+Disabled-free follow-up is prepared on ownership-wasm-count-disposal, checkout
+/private/tmp/fwp-wasm-disposal-worktree. Baseline concrete metadata-growth
+reproducer fails exit 5 (CPU 7.53 s / elapsed 15.45 s). Resource-parent and
+Task/Channel disposal helpers now remove logical counter metadata on the bump
+heap even with FWP_FREE=0; native storage retention stays count-only. Actual
+generated File-pair destructor and cached task/channel runtime destructors close
+last owners and leave no counter entries. Restoring aggregate count-only teardown
+fails exit 5; restoring runtime storage count-only teardown fails exit 9.
+
+Four executed host/native tests pass CPU 27.27 s / elapsed 54.95 s, including
+native exact zero-freed-bytes accounting. Actual WASI skips locally (unavailable
+toolchain), not support. Final task/channel matrix passes 1.58 s / 3.79 s, final
+fstat host matrix 2.29 s / 6.13 s; clippy lib/three fixtures 2.53 s / 5.15 s and
+final test refactor 0.06 s / 0.26 s; fmt 0.46 s / 0.87 s. Full runner WASI matrix
+now covers both freeing modes, aggregates and cached task/channel owners with
+omission controls. Publish this preparation after rebasing onto corrected actual
+queue 77 c889479, then add it to the separate full runner evidence. No extra PR.
+
+
+Required early WASI/host/File stage passed on repaired evidence 37760170473 at
+1d6a5d6, including actual WASI O1/O2 omitted-count failure and positive last-owner
+closure. This is focused platform evidence, not six full gates. The run was
+superseded/cancelled after adding the disabled-free repair; no full-pass claim.
+
+Queue 78 is published clean as `681dd55136b030866c28afb227f222503c21113b`,
+parent actual corrected queue 77 `c889479eed7aba4967b2e5f87d7a368193b18be9`.
+Rebase completed cleanly; final guarded focused host matrix passes CPU 9.54 s /
+elapsed 19.95 s, real WASI explicitly skipped locally. Whole subject is one line,
+empty body. Combined runner evidence head is
+`e9f31a94e018d399fc4ae5ef583abee7780cfb0c`, CI `37760628633`, queued/live without
+accepted results yet. Both freeing modes and actual cached task/channel cleanup
+now run under mandatory WASI; fix any failures. Evidence formatting passes
+0.47 s / 0.87 s. No additional PR exists.
+
+Current operations: root main remains 49f9108 with only six live doc edits, all
+ours; preserve them before the next main fast-forward. Sole PR #89 remains
+bcdfb163 at CI 37758597151; all five remaining gates must pass before squash.
+Shared compiler target belongs to /private/tmp/fwp-wasm-disposal-worktree; no
+local workload is running. Keep every immutable queue anchor, especially OLD
+prefix 376e77ae, OLD list-copy bb00baa4 and OLD WASM counts 046f7e8.
+
+Next independent audit: unknown/shared runtime graphs and retained callback
+resource aliases, then remove original resource aggregate-holder boxes and
+reclaim File header/path storage without leaving stale library finalizers.
+Current File last-drop closes only the stream; native library finalizer entries
+still retain headers. Do not add immediate storage reclamation until unregister/
+finalization and partial-construction unwind are proven safe. After #89 squash,
+rebase list-option from OLD bb00baa4 onto the actual new main and publish the
+sole next PR. Phase 2 remains incomplete; preserve the subsequent phase order.
+
+
+Required combined WASI stage passes on evidence e9f31a9 / CI 37760628633:
+O1/O2, both freeing modes, File aggregates and cached Task/Channel owners,
+positive cleanup and original-count/aggregate-disposal/runtime-disposal omission
+controls. The separate full run remains live; only bench full gate passed at the
+last check. Sequential production gates remain mandatory for each preparation.
+
+Original record-frame optimization is implemented in ownership-resource-frame-fields,
+checkout /private/tmp/fwp-resource-frame-fields-worktree, parent actual 681dd55.
+Original frame contexts retain counted fields only when a binding is eligible
+for unboxing; ordinary boxed records keep one parent retain. The compiler-only
+FWP_FRAME_FIELDS=0 comparison restores boxed holders. No surface syntax changes.
+Raw typed IR and equivalent generated C show exactly one record box in the
+control versus zero with fields at O1/O2, GC on/off and both poison modes.
+The existing source control was already unboxed and could not prove the change;
+the fixture was corrected to exercise an actual original record binding. Invalid
+initial recursive source duplicated affine File input; the final valid source
+uses a sequential read-all pipeline and matches explicit FWP_NO_OPT=1 output.
+
+Six focused frame/holder/runtime/discard tests pass under the guard CPU 37.15 s /
+elapsed 74.45 s after narrowing eligibility. A new File/String partial-retain
+probe traps before the second field retain, verifies one stream close, EBADF,
+empty unwind chain and reclaimed String; omitting owner drops restores exit 2.
+The first poison observation incorrectly demanded a zero count; the runtime's
+poisoned String payload is the correct dead-state check. Final allocation/source/
+IR/unwind matrix passes CPU 3.01 s / elapsed 7.33 s. Clippy lib/four fixtures
+passes 2.49 s / 5.03 s; format 0.46 s / 0.87 s; inventory one actual test
+3.77 s / 7.96 s. No elapsed-time speed or complete unboxed-aggregate claim.
+Published clean as 658e5b73ae1c05fe086adfd99678db5c780bf7d4 (queue 79),
+with verified one-line subject and empty body. No extra PR. Full runner evidence follows.
+Original resource variants/nested holders and header/path reclamation remain.
+
+Current main is dbdaee4 with six live doc edits, all ours. No local workload
+runs; shared compiler target belongs to /private/tmp/fwp-resource-frame-fields-worktree.
+Next sequential publication is list-option, rebased from OLD bb00baa4; preserve
+that anchor. Unknown/shared resource graphs, retained callbacks/cycles, original
+variant/nested holders and safe File header/path finalizer removal remain phase 2
+audits. Failing tests are repair work, never roadmap blockers.
+
+
+List-option focused gates have passed after rebase; publication is next. Shared
+compiler target now belongs to /private/tmp/fwp-list-option-worktree; no workload
+runs. Separate WASM evidence e9f31a9 / 37760628633 remains live with required early
+WASI stage passed; full bench passed and all five other gates were live at last
+check. Do not supersede that full evidence merely for later local preparation;
+add frame-fields to runner evidence after this run completes, while continuing
+independent ownership repairs. Root's six live docs are all ours and must survive
+main fast-forwards. Phase 2 and phases 3–6 remain incomplete.

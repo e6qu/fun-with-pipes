@@ -17,6 +17,8 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// One new record/variant allocation with typed borrowed field aliases.
+    FreshOuter,
     /// A callback-produced owned value, or the unchanged empty-fold input.
     OwnedAccumulator {
         argument: usize,
@@ -214,6 +216,14 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             None,
             &[1],
         ),
+        "nth" => (&[B, B], ResultOwnership::FreshOuter, None, &[1]),
+        "index-of" => (&[B, B], ResultOwnership::FreshOuter, None, &[]),
+        "find" => (
+            &[B, B],
+            ResultOwnership::FreshOuter,
+            Some(Callback::Borrowed(0)),
+            &[1],
+        ),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
@@ -376,7 +386,7 @@ mod tests {
             }
         }
         let lists = include_str!("../lib/list.fwp");
-        for symbol in ["map", "filter", "take-while", "drop-while"] {
+        for symbol in ["map", "filter", "take-while", "drop-while", "find"] {
             assert!(lists
                 .lines()
                 .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
@@ -385,14 +395,16 @@ mod tests {
             assert_eq!(contract.callback, Some(Callback::Borrowed(0)));
             assert_eq!(contract.arguments, &[Argument::Borrow, Argument::Borrow]);
         }
-        for symbol in ["reverse", "take", "append", "flatten", "drop"] {
+        for symbol in [
+            "reverse", "take", "append", "flatten", "drop", "nth", "index-of",
+        ] {
             assert!(lists
                 .lines()
                 .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
             let c = primitive(symbol).unwrap();
             assert!(c.arguments.iter().all(|a| *a == Argument::Borrow));
             assert!(c.callback.is_none());
-            assert!(!c.aliases.is_empty());
+            assert!(c.aliases.iter().all(|i| *i < c.arguments.len()));
             if let ResultOwnership::CopiedSpine {
                 tail: Some(argument),
                 ..

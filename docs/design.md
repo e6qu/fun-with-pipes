@@ -340,3 +340,12 @@ error. See [protocol.md](protocol.md).
 - Transports of the pipe protocol other than the pipe, `UDS_V1` and
   `SHM_V1` (which are Linux only), the WebAssembly component model and
   `wasm64`.
+
+
+Original resource-frame field holders have a separate compiler preparation:
+eligible field-only record bindings retain their typed children in the original
+frame, allowing the local record to stay unboxed. Boxed bindings retain the
+parent once. Focused allocation and failure-cleanup controls pass locally;
+full sequential CI remains required. Prepared WASM logical counts and disabled-
+free counter disposal passed required runner WASI checks; neither preparation
+establishes merged resource ownership or complete collector-free execution.

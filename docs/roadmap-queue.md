@@ -2,8 +2,8 @@
 
 Updated 2026-10-08. These published branches are preparation, not merged support.
 Open one PR at a time in this order after the previous PR passes all six gates
-and squash-merges. Merged PR #88/prefix has immutable OLD head `376e77ae`; list-copy is next (row 11).
-Completed rows remain as immutable anchors; do not reopen fold, zip, right-fold or prefix.
+and squash-merges. Merged PR #89/list-copy has immutable OLD head `bb00baa4`; list-option is next (row 12).
+Completed rows remain immutable anchors; do not reopen rows through list-copy.
 
 For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
 Preserve OLD head/parent below permanently: children were prepared from original
@@ -19,11 +19,13 @@ head `a090f1f5ac6c` passed all six CI `37728301773` gates and squash-merged as
 `90affeb3954a`. Right-fold rebased from OLD zip onto that squash and is merged PR #87 at
 `8be65d1ae2ec`, squash `eae33c4c9e50`, ALL SIX CI `37743989274` gates passed.
 Prefix final `42cf518f2ec5` passed ALL SIX CI `37750832622` gates and merged
-as `49f910811131`. List-copy is next; preserve OLD prefix 376e77ae for its rebase.
+as `49f910811131`. List-copy bcdfb163 passed ALL SIX CI 37758597151 and merged as dbdaee4448d4.
+List-option is next; preserve OLD list-copy bb00baa4 for its rebase.
 Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
 the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
-actual immutable parent, not the frame row's original dcc5bba. The pending discard
-branch now inherits row 74.
+actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
+WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
+which is its immutable parent.
 For a rewritten branch, use its actual current base
 when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
@@ -35,7 +37,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 8 | zip | `ownership-zip-callbacks` | `cf8ce6e61295` | `bdb750f6d46b` | `a180c3fb5f42` |
 | 9 | right-fold | `ownership-right-fold` | `8be65d1ae2ec` | `adc7947a25f2` | `bdb750f6d46b` |
 | 10 | prefix | `ownership-list-prefix` | `42cf518f2ec5` | `376e77ae9469` | `adc7947a25f2` |
-| 11 | list-copy | `ownership-list-copies` | `bb00baa4ab95` | `bb00baa4ab95` | `376e77ae9469` |
+| 11 | list-copy | `ownership-list-copies` | `bcdfb163c565` | `bb00baa4ab95` | `376e77ae9469` |
 | 12 | list-option | `ownership-list-options` | `34023f35a42f` | `34023f35a42f` | `bb00baa4ab95` |
 | 13 | inference | `inference-call-effects` | `89b7bde2c8f0` | `89b7bde2c8f0` | `34023f35a42f` |
 | 14 | wide | `ownership-wide-counts` | `3a791dc7e9f3` | `3a791dc7e9f3` | `89b7bde2c8f0` |
@@ -92,9 +94,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `b8f3752d236f` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
-
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
-
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `e9d575fdf990` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
@@ -103,7 +103,11 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `e21c92ea2f6c` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `923ad4a4fb07` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `30fe112db93c` | `30fe112db93c` | `923ad4a4fb07` |
+| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `c889479eed7a` | `046f7e85a9eb` | `30fe112db93c` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `681dd55136b0` | `681dd55136b0` | `c889479eed7a` |
+| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `658e5b73ae1c` | `658e5b73ae1c` | `681dd55136b0` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
 its workflow commits and equivalent baseline repairs never enter this chain.
+

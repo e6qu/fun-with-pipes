@@ -262,11 +262,11 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#88 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#89 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
 Right-fold transfers its accumulator through a typed owned argument span;
-list-prefix has passed full CI and merged; list-copy is next. Other callbacks, runtime unwind and retained owners
+List-copy has passed full CI and merged; list-option is next. Other callbacks, runtime unwind and retained owners
 remain preparation.
 
 ## Prepared work and acceptance limits
@@ -386,3 +386,12 @@ Result-retain omission is detected. FWP_FREE=0 keeps ordinary child and task/cha
 object storage from count-based freeing while still closing resource children;
 exact zero freed-byte accounting and an ordinary-child-free negative control
 verify this policy. The WebAssembly RC stubs still require an ownership repair.
+
+
+Prepared original record-frame holders can retain eligible typed fields instead
+of forcing a parent heap box. Other boxed bindings keep one parent retain.
+A typed IR allocation control verifies one parent box versus zero at O1/O2;
+source/interpreter comparisons and partial-retain cleanup checks also pass locally.
+FWP_FRAME_FIELDS=0 disables this compiler optimization for comparisons. Broader
+workload count/timing and full sequential platform gates remain required; this
+is not a general speed or zero-allocation claim. See the handoff for exact evidence.
