@@ -331,6 +331,28 @@ fn serve_runs_a_native_service() {
 }
 
 #[test]
+fn pipe_reuses_the_same_native_executable() {
+    if !have_cc() {
+        return;
+    }
+    let cache = Cache::new("pipe-same-executable");
+    let spec = format!(
+        "{t}:scale 2 | {t}:scale 5",
+        t = root().join("tests/exec/tools.fwp").display()
+    );
+    let want = output(&mut cache.fwp(&["pipe", "--interp", &spec]), b"3\n");
+    assert!(want.status.success(), "{}", render(&want));
+    assert_eq!(want.stdout, b"30\n");
+    // The cold run publishes the same cache key from both stages; warm runs
+    // execute that same file while another stage updates its usage timestamp.
+    for i in 0..8 {
+        let got = output(&mut cache.fwp(&["pipe", &spec]), b"3\n");
+        assert_eq!(render(&got), render(&want), "native run {i}");
+        assert_eq!(cache.entries().len(), 1);
+    }
+}
+
+#[test]
 fn pipe_runs_native_stages() {
     if !have_cc() {
         return;

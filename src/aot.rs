@@ -147,8 +147,10 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
         .map_err(|e| Error::Failed(format!("cannot create the cache {}: {}", dir.display(), e)))?;
     let exe = dir.join(key(c_source, opt));
     if exe.is_file() {
-        // used now: the cache drops the least recently used first
-        if let Ok(f) = std::fs::File::options().append(true).open(&exe) {
+        // used now: the cache drops the least recently used first. Open the
+        // executable read-only: a writable open can make concurrent native
+        // stages terminate on macOS, even without writing any bytes.
+        if let Ok(f) = std::fs::File::open(&exe) {
             let _ = f.set_modified(std::time::SystemTime::now());
         }
         return Ok(exe);

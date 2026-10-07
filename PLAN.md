@@ -40,7 +40,10 @@ Native macOS passed both architecture jobs, Linux full tests and benchmarks in
 run `37591744197`; PR #74 was squash-merged as `af15d26`.
 
 Current ownership branch: `ownership-contracts`, rebased onto that main commit;
-publication and its full CI gate are next. It consolidates all array/map/set contracts and borrows
+[PR #75](https://github.com/e6qu/fun-with-pipes/pull/75) is open;
+full current-head CI and any required fixes precede its squash merge. A macOS
+concurrent executable-cache failure was reproduced and repaired locally; the
+updated full gate must pass. It consolidates array/map/set contracts and borrows
 comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
 evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of
