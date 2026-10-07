@@ -49,7 +49,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   checkout clean. Seven closure/leaf/text checks, eight IR checks, inventory,
   fmt and whitespace pass. Guarded closure/leaf/text CPU 18.07 s / elapsed
   36.49 s. Full [CI 37656822169](https://github.com/e6qu/fun-with-pipes/actions/runs/37656822169)
-  has passed benchmarks and Apple Silicon macOS; Linux and Intel tests are running. Require all four exact-head gates before squash with subject
+  has passed Linux, benchmarks and Apple Silicon macOS; Intel tests are running. Require all four exact-head gates before squash with subject
   `Own compiled dynamic closures and release typed captures` and empty body.
   The closure-cleanup child later rebases from OLD `0d96bfe`, not this new head.
 - Published runtime unwind change: `ownership-unwind-runtime`, checkout
@@ -137,7 +137,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   scratch, fold/loop accumulators, retained tasks and the remaining allocator/
   boxing, CAF and inline-rewrite ownership gaps. Phase 2 remains incomplete.
 - Current selection cleanup: `/private/tmp/fwp-selection-unwind-worktree`,
-  branch `ownership-selection-unwind`, OLD base `62add7e`, uncommitted.
+  branch `ownership-selection-unwind`, OLD base `62add7e`, published as
+  `b8f4c2469215dbff241478a89fb5596ac0facec6`; checkout clean.
   Filter/take-while scopes own the selected element aliases independently of
   source elements, then transfer them into typed partial result spines.
   Dynamic, direct and captured predicates protect selected prefixes and scratch
@@ -155,6 +156,23 @@ immutable value semantics, effects and evaluation/trap order stable.
   (CPU 4.52 s / elapsed 9.28 s). Full gates remain for the future sequential PR. Next: zip-with's two scratch
   buffers and result prefix, fold/right-fold/loop accumulators, retained tasks,
   allocator/boxing failures, CAF owners and inline-rewrite coverage.
+- Current zip-with cleanup: `/private/tmp/fwp-zip-unwind-worktree`, branch
+  `ownership-zip-unwind`, OLD base `b8f4c24`, uncommitted.
+  Protect the first scratch/result-prefix owner before allocating the second
+  buffer. Protect the second buffer across callbacks, then release it before
+  result-spine construction. Dynamic/direct/captured callbacks protect completed
+  results and typed partial spines on errors, traps and cancellation; scalar
+  result bits remain uncounted. This change covers zip-with, not every zip/unzip
+  or other runtime allocation failure.
+  Both normal zip alias/counter tests pass (CPU 10.88 s / elapsed 22.12 s).
+  Two dedicated probes pass (CPU 5.57 s / elapsed 11.26 s) at O1/O2 with
+  stress/verification and both poison modes, including second-scratch allocation
+  failure, completed results, partial nodes, cancellation and scalar address bits.
+  Library clippy is warning-free (CPU 2.26 s / elapsed 4.51 s); final fmt and
+  whitespace pass. Four adjacent map/selection unwind checks pass
+  (CPU 9.58 s / elapsed 19.23 s).
+  Full gates remain for the future sequential PR. Next: fold/right-fold/loop
+  accumulators and scratch, retained tasks and allocator/boxing/CAF/inline owners.
 - Shared local Cargo target caveat: switching worktrees can reuse a CLI built
   from newer-mtime sources in another checkout. Before compiling after a switch,
   serial guarded `cargo clean -p fwp` forces the correct package rebuild without
@@ -217,6 +235,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-call-liveness | fwp-call-liveness-worktree | 7392f2d | 33cf864 |
 | ownership-runtime-call-cleanup | fwp-runtime-call-worktree | bee3f16 | 7392f2d |
 | ownership-map-unwind | fwp-map-unwind-worktree | 62add7e | bee3f16 |
+| ownership-selection-unwind | fwp-selection-unwind-worktree | b8f4c24 | 62add7e |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

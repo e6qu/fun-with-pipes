@@ -1860,6 +1860,7 @@ fn hof_def(
         return format!("{} {{\n    V source = xs;\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n        z = fwp_owned_entry{g}(args);\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return z;\n}}\n", hof_sig(i, sym, *k), k + 1, k + 1);
     }
     if reuse && sym == "zip-with" {
+        let ops = map_ops.expect("typed zip-with result operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(["b[i]".to_string(), "a[i]".to_string()])
@@ -1868,7 +1869,7 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    size_t n, m;\n    V *a = fwp_map_items(xs, &n);\n    V *b = fwp_map_items(ys, &m);\n    size_t len = n < m ? n : m;\n    for (size_t i = 0; i < len; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n    }}\n    V result = fwp_map_finish(a, len);\n    FWP_KEEP_ALIVE(b);\n    fwp_mem_free(b);\n{fences}    FWP_KEEP_ALIVE(xs);\n    FWP_KEEP_ALIVE(ys);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 2);
+        return format!("{} {{\n    size_t n, m;\n    V *a = fwp_map_items(xs, &n);\n    fwp_map_owner owner = {{a, 0, 0, {ops}}}; fwp_cleanup cleanup;\n    fwp_map_protect(&owner, &cleanup);\n    V *b = fwp_map_items(ys, &m);\n    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&b, &scratch_cleanup);\n    size_t len = n < m ? n : m;\n    for (size_t i = 0; i < len; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n        owner.count++;\n    }}\n    fwp_scratch_finish(&b, &scratch_cleanup);\n    V result = fwp_map_finish_protected(&owner, &cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    FWP_KEEP_ALIVE(ys);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 2);
     }
     if reuse && sym == "fold-right" {
         let args = (0..*k)
@@ -3322,7 +3323,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             if sym == "zip-with" {
                 let ys = self.expr(&args[1]);
                 let xs = self.expr(&args[2]);
-                return Some(format!("fwp_k_zip_with_owned(fwp_owned_k{g}, {ys}, {xs})"));
+                let result = self.g.prog.funcs[g].ty.params(2).1.clone();
+                let ops = self.g.map_ops(&result);
+                return Some(format!(
+                    "fwp_k_zip_with_owned(fwp_owned_k{g}, {ys}, {xs}, {ops})"
+                ));
             }
             let xs = self.expr(&args[1]);
             return Some(if sym == "map" {
@@ -4910,7 +4915,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         use crate::ownership::ResultOwnership;
                         match contract.result {
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
-                                if matches!(sym.as_str(), "map" | "filter" | "take-while") {
+                                if matches!(
+                                    sym.as_str(),
+                                    "map" | "filter" | "take-while" | "zip-with"
+                                ) {
                                     let result = func.ty.params(func.arity as usize).1;
                                     let MT::Con(name, elements) = &result else {
                                         return Err("list selection has a non-list result".into());
@@ -4919,10 +4927,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         return Err("list selection has a non-list result".into());
                                     }
                                     let ops = self.map_ops(&elements[0]);
+                                    let args = (0..func.arity)
+                                        .map(|i| format!("l{i}"))
+                                        .collect::<Vec<_>>()
+                                        .join(", ");
                                     s = s.replace(
-                                        &format!("fwp_p_{}(l0, l1)", sym.replace('-', "_")),
+                                        &format!("fwp_p_{}({args})", sym.replace('-', "_")),
                                         &format!(
-                                            "fwp_p_{}_owned(l0, l1, {ops})",
+                                            "fwp_p_{}_owned({args}, {ops})",
                                             sym.replace('-', "_")
                                         ),
                                     );
@@ -5997,19 +6009,20 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         } else {
             None
         };
-        let map_ops = if g.reuse && matches!(hof.0.as_str(), "map" | "filter" | "take-while") {
-            let (params, result) = prog.funcs[hof.1]
-                .ty
-                .params(prog.funcs[hof.1].arity as usize);
-            let element = if hof.0 == "map" {
-                result.clone()
+        let map_ops =
+            if g.reuse && matches!(hof.0.as_str(), "map" | "filter" | "take-while" | "zip-with") {
+                let (params, result) = prog.funcs[hof.1]
+                    .ty
+                    .params(prog.funcs[hof.1].arity as usize);
+                let element = if matches!(hof.0.as_str(), "map" | "zip-with") {
+                    result.clone()
+                } else {
+                    params[hof.2].clone()
+                };
+                Some(g.map_ops(&element))
             } else {
-                params[hof.2].clone()
+                None
             };
-            Some(g.map_ops(&element))
-        } else {
-            None
-        };
         bodies.push_str(&hof_def(
             i,
             &hof,

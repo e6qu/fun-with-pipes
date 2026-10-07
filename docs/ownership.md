@@ -447,3 +447,21 @@ A scalar fixture preserves address-shaped I64 values across prefix and partial
 list cleanup. Existing alias/counter tests pass. Full architecture and benchmark
 gates remain for this branch's future sequential PR. Zip-with scratch buffers,
 fold/loop accumulators and retained task ownership remain unfinished.
+
+
+## Prepared zip-with cleanup
+
+Zip-with protects the first scratch/result-prefix scope before allocating its
+second buffer. The second buffer borrows source elements and has its own cleanup
+scope during callbacks. Release it before building output nodes, leaving the
+first scope to transfer its completed owned results into a typed partial spine.
+This protects dynamic, direct and captured callbacks on errors, recovered traps
+and cancellation, including failure to allocate the second buffer. Scalar result
+words stay uncounted. Input aliases and callback evaluation order are preserved.
+
+Normal alias/counter tests and focused generated-code probes pass at O1/O2 with
+collection stress/verification and both poison modes. The probes inspect both
+scratch buffers, completed results, partial construction, cancellation, second
+allocation failure and scalar address bits. Full sequential CI remains required.
+General zip/unzip allocation failures, fold/loop accumulators and retained task
+lifetimes remain outside this change's acceptance evidence.

@@ -498,6 +498,7 @@ Prepared runtime application cleanup releases consumed functions, typed pending
 arguments, primitive-entry borrows and dynamic stack captures on nonlocal exits.
 Focused generated-code probes and a tracing-disabled counter comparison pass.
 Map prefix/scratch/partial-spine cleanup is published separately; filter and
-take-while selected-prefix cleanup passes focused checks in its own branch;
+take-while selected-prefix cleanup is published separately. Zip-with protects
+both scratch buffers and its result prefix with focused exceptional checks;
 full sequential CI remains required. Finish the other callback accumulators and
 retained task lifetimes before closing phase 2.
