@@ -69,6 +69,11 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 
 - Hindley–Milner inference with levels. Records and effects share one row
   unifier. Only signatures generalize: see [Generics](#generics).
+- At a call, known callee effects may run inside a larger ambient effect row.
+  Reopen only the current call's closed effect row after argument unification;
+  never copy the ambient row into function-valued arguments. Pipe application,
+  composition and ordinary application follow the same rule. Required effect
+  labels remain present, so pure signatures still reject effectful callbacks.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.

@@ -76,6 +76,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-right-fold | fwp-right-fold-worktree | adc7947 | bdb750f |
 | ownership-list-prefix | fwp-prefix-worktree | 376e77a | adc7947 |
 | ownership-list-copies | fwp-list-copy-worktree | bb00baa | 376e77a |
+| ownership-list-options | fwp-list-option-worktree | 34023f3 | bb00baa |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -117,7 +118,8 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 Synchronous map/filter/zip callbacks and left/right accumulator transfers are
 prepared after b563360, followed by take/drop-while on ownership-list-prefix.
 Ordinary drop/copy boundaries are now being prepared after prefix/suffix work.
-Next refine indexed/find optional aliases and other synchronous list callbacks,
+Call-effect inference repair is prepared separately after optional list aliases.
+Next implement exact overflow counts, then remaining synchronous list callbacks,
 then exact overflow counts and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
@@ -412,7 +414,7 @@ parents. Current #75 gate 37612412156 has ARM testing, with other jobs queued.
 ## Optional list alias ownership preparation
 
 `ownership-list-options`, checkout `/private/tmp/fwp-list-option-worktree`, base
-`bb00baa`, has no PR yet. FreshOuter owns one new structural allocation and
+`bb00baa`, is published at `34023f3` with no PR yet. FreshOuter owns one new structural allocation and
 borrows/duplicates fields by monomorphic constructor type. Nth/find retain
 selected elements; index-of borrows comparison keys and owns its optional
 scalar. Find invokes typed borrowed predicates, preserves direct/captured
@@ -422,9 +424,8 @@ captured predicates, function aliases after input cleanup, missing/negative/
 empty cases and a predicate that traps after a match. No-tracing differential:
 identical outputs/zero collections, 9.6 versus 10.4 MiB freed by counts. Focused
 run CPU 4.54 s / elapsed 9.35 s. Thirty-two related ownership regressions passed (CPU 58.04 s / elapsed
-116.52 s), as did the contract invariant, five FFI checks and the native fat
-baseline (CPU 5.25 s / elapsed 10.46 s), formatting and whitespace. Ready for
-publication;
+116.52 s), as did the contract invariant, five FFI checks and native fat
+baseline (CPU 5.25 s / elapsed 10.46 s), formatting and whitespace. Published;
 full platform gates remain required after all parents merge.
 
 Effect inference follow-up: an inline pure function-valued list pipeline in an
@@ -437,3 +438,30 @@ finds a pure stage. The lifetime fixture uses an explicitly typed pure helper
 which succeeds. This is not caused by native ownership code; preserve a focused
 reproduction and resolve effect-row inference as part of language design work.
 Do not weaken tracked effects to hide the failure.
+
+Optional list ownership published as 34023f3; no new PR. Next concrete task is
+the reproduced effect-row inference failure, then remaining synchronous callbacks
+and exact overflow counts. Current #75 gate: benchmarks passed; Linux and both
+macOS architectures are testing. All current-head gates must pass before merge.
+
+## Call effect inference repair preparation
+
+`inference-call-effects`, checkout `/private/tmp/fwp-inference-worktree`, base
+`34023f3`, has no PR yet. A focused frontend regression failed before the fix:
+known pure callbacks closed a callee's effect row during argument unification,
+then call unification either copied the IO context into callback requirements or
+closed the whole caller context to purity. Infer::open_call now retains abstract
+size opening and reopens only a closed row on this call, after resolving it.
+It never changes function-valued argument rows or removes required effect labels.
+Pipe application/composition and ordinary application use the same helper.
+
+Four focused tests pass (CPU 4.97 s / elapsed 9.92 s): inline pure callbacks in
+IO pipes and ordinary applications; three missing-IO signature rejections;
+existing effect/handler snapshots unchanged; interpreter/native output at O1/O2
+with GC stress/verification. The formerly failing source needs no helper
+annotation on this branch. Thirty-two related ownership regressions passed (CPU 60.07 s / elapsed
+120.49 s). The expanded four-test set also checks 20 existing effect/handler,
+abstract-size, comptime and resource-capture snapshots without changing their
+outputs (CPU 10.75 s / elapsed 21.48 s). Five FFI checks and the native fat baseline passed (CPU 5.54 s / elapsed
+11.08 s). Formatting and whitespace passed; ready for publication. Full type snapshots/platform CI are still required after all parents
+merge. Current #75 head f53493c has benchmark success and all test jobs running.
