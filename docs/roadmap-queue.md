@@ -76,7 +76,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 46 | field-context | `ownership-field-context` | `6255a8f54f54` | `085dc716d599` | `3f61f51521d9` |
 | 47 | caf-ownership | `ownership-caf-cache` | `7e1c164a0e81` | `68cf7bf2f7ca` | `085dc716d599` |
 | 48 | inline-caf | `ownership-inline-caf` | `36fb4e1de52e` | `6734248e7c0d` | `68cf7bf2f7ca` |
-| 49 | retained-thunk | `ownership-task-thunks` | `ceebfd0dc034` | `7208e4a2d93e` | `6734248e7c0d` |
+| 49 | retained-thunk | `ownership-task-thunks` | `215e0edec0f1` | `7208e4a2d93e` | `6734248e7c0d` |
 | 50 | task-within | `ownership-task-within` | `f35dd8c34ea4` | `14a76de5b8bb` | `7208e4a2d93e` |
 | 51 | task-scope | `ownership-task-scope` | `bb1e6b94fcfd` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `cb32c2cea9bb` | `bb6f9c49a043` | `7da15d9c8ea3` |

@@ -76,11 +76,12 @@ completed publication journals must not rerun. Returned-variant44 includes actua
 ARM64 binary/layout/disassembly evidence on Apple M4 Pro; it establishes the
 current 8-byte numeric slot baseline, not a speedup or natural-width support.
 
-Independent task49 retained thunks is locally rebasedceebfd0dc03414cbc0463b4141d632f49dbf1da9
-on current48 36fb4e1de52eeb1ad02e992c562c2595379740e5. Both original native
-controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass. Complete
-all11 docs/audit and retained-revision publication now that PR112 is open, then50.
-Remote49 still2c14070a6347; preserve the exact lease and both task controls.
+Retained thunks49 is published215e0edec0f1ef3da0cf0117a3b932b79b90754c on current48.
+Both original capture/alias and failed-spawn controls, lint/format and all audits
+pass; original source/probes preserved. Current independent task50 is deadline
+callbacks (`ownership-task-within`): rebase its actual old2c14070a6347 base onto49,
+then check both deadline and retained-thunk controls, contract inventory, lint,
+format and all11 docs/audit before retained-revision publication.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -148,7 +149,7 @@ still need their final squash rebases and six exact-head full gates.
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 47 ownership-caf-cache | 7e1c164a0e81 | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 48 ownership-inline-caf | 36fb4e1de52e | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 49 ownership-task-thunks | ceebfd0dc034 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 49 ownership-task-thunks | 215e0edec0f1 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint 2.43/4.79s and format 0.35/0.73s pass |
 | 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint 2.45/4.85s and format 0.34/0.62s pass |
 | 52 ownership-task-handles | cb32c2cea9bb | bb1e6b94fcfd | Test11.24/23.29s; lint 2.34/4.73s and format 0.44/0.74s pass |
