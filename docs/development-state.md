@@ -109,7 +109,7 @@ still need their final squash rebases and six exact-head full gates.
 | 32 ownership-fold-unwind | a8e662267bbc | 5d411a886b73 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | c37df3b0520c | a8e662267bbc | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 34 ownership-argument-preparation | 819fd83c48e2 | c37df3b0520c | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
-| 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
+| 35 ownership-constructor-unwind | 26375deb676e | 819fd83c48e2 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
 | 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
 | 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
@@ -254,12 +254,12 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows38–41 loop/retain/typed conversion | 3a9fcb512a37a745e65629b29b15e1d06ec0a992 | CI37971602336 passes Linux ownership/tracing and docs; production67e3771, actual basedd6c405 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
-| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 queued/running; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
+| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 running; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
-| Row29 map callback unwind and preparation | 79dcc10eb1806d481600d2c7ccd9141b60d7376b | CI38000551924 queued/running; all source/tests/scripts/production workflows match published4c7d5ba; prior3389a973 CI37995710137 passed on78ed19f |
-| Row28 runtime application and preparation | 44f4297f270fd57ab34a20734e4635c65c6d40b2 | CI38000484752 queued/running; all source/tests/scripts/production workflows match published3e7ab59; prior2234160 CI37994225608 passed on7cfbe03 |
+| Row29 map callback unwind and preparation | 79dcc10eb1806d481600d2c7ccd9141b60d7376b | CI38000551924 passes focused ownership/tracing/lint/docs; source/tests/scripts/production workflows match published4c7d5ba; prior3389a973 CI37995710137 passed on78ed19f |
+| Row28 runtime application and preparation | 44f4297f270fd57ab34a20734e4635c65c6d40b2 | CI38000484752 passes ownership/tracing/lint/docs; source/tests/scripts/production workflows match published3e7ab59; prior2234160 CI37994225608 passed on7cfbe03 |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
@@ -368,8 +368,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-loop-unwind-worktree after absolute-root guarded package
-clean0.00CPU/0.14elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
+to /private/tmp/fwp-constructor-unwind-worktree after absolute-root guarded package
+clean0.07CPU/0.39elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
 rebased from actual244dd2a. Compiler/runtime/original probes match687ae10;
 only inherited guard/audit and long-tail regression differ. Seven focused
 zip/preparation/reuse tests pass24.32CPU/48.75elapsed; clippy -D warnings
@@ -389,8 +389,16 @@ only inherited guard/audit and long-tail regression differ. Five focused
 loop/fold/preparation tests pass18.85CPU/37.91elapsed; clippy -D warnings
 2.24/4.52s, format0.35/0.63s and strong44/106/87 audit0.42/3.46s pass.
 Retained roadmap/revision-033-c65514a8e6d4 before exact leased publication.
-No local workload remains running. Final rebase from actuala8e6622 follows
-row32's accepted squash.
+Final rebase from actuala8e6622 follows row32's accepted squash.
+Published row3526375deb676eef4f8490b415066c8ad5168ec6a9 has actual base819fd83,
+rebased from actual9f56744. Compiler/runtime/original probes match82f58d8;
+only inherited guard/audit and long-tail regression differ. Six focused
+constructor/preparation/reuse tests pass22.36CPU/45.17elapsed, exact ownership-IR
+constructor unit3.39/7.02s, lint2.28/4.73s, format0.35/0.74s and strong44/106/87
+audit0.44/3.62s. Retained roadmap/revision-035-82f58d851b73 before exact leased
+publication. No local workload remains running. Final sequential rebase must
+use the recorded actual base819fd83 after earlier source deliveries merge;
+row34 duplicates already-covered code and is skipped only after28 acceptance.
 Published row30c17d4a693b3235b13850890af27561f0029c5142 has actual base4c7d5ba,
 rebased from actual78ed19f. Compiler/runtime/original probes match244dd2a;
 only inherited guard/audit and long-tail regression differ. Seven focused
