@@ -11142,3 +11142,10 @@ clippy2.26/4.47s and format0.34/0.72s pass. Row44 b31400d03ac742fe146e89aadc8550
 uses actual baseffbbcf9d5119. Row45 0b00524a0a03f45fd417604c8eddcb88f4d4bc87
 uses actual baseb31400d03ac7; focused checks follow. Both runtime/compiler
 match originals and old CURRENT heads are retained under immutable revision tags.
+
+Row44 guarded clean0.00/0.13s, both alias transfer/yield tests8.67/17.52s,
+clippy2.32/4.66s and format0.35/0.73s pass. Row45 guarded clean0.00/0.13s
+and two nominal match/source cleanup tests8.71/18.12s pass. Row46 refresh
+f2262f94ada45b65276df47db686933a959698e4 has actual base0b00524a0a03;
+compiler/runtime match original; focused checks follow. Previous CURRENT46
+is retained under immutable revision tag before explicit-lease publication.
