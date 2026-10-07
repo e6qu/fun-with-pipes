@@ -128,7 +128,7 @@ still need their final squash rebases and six exact-head full gates.
 | 42 ownership-record-update | 5522a2ceb038 | a59952364e22 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
 | 43 ownership-record-conversion | 1ea65661b77d | 5522a2ceb038 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
 | 44 ownership-variant-alias | 36e970682a29 | 1ea65661b77d | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
-| 45 ownership-match-context | e73b5b8e7ac7 | 8ebfe6f5d701 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
+| 45 ownership-match-context | f82fa2325d62 | 36e970682a29 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | ae8933d991cb | e73b5b8e7ac7 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | 4f75498ad664 | ae8933d991cb | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
 | 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
