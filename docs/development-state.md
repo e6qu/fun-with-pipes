@@ -108,7 +108,7 @@ for priorities and contracts. Update this file before ending a work session.
   borrow; stored keys and callback values remain runtime-shared.
 - Focused checks through the same guard and shared bounded target directory:
   `cargo test --lib ownership::tests` (one coverage/invariant check),
-  `cargo test --lib rc::tests` (eight ownership IR checks), and the two
+  `cargo test --lib rc::tests` (eight ownership IR checks), and the three
   `tests/ownership.rs` regressions. The alias/callback regression passes with
   GC stress, verification and reuse poisoning. The isolated allocation check
   reports 0.8 MiB for the restored old sharing boundary and 0.0 MiB with
@@ -116,6 +116,10 @@ for priorities and contracts. Update this file before ending a work session.
 - A loop-state experiment uncovered retained field references that can prevent
   reuse independently of primitive sharing. Recorded in primitive-ownership.md
   for later IR optimization; no unsupported performance claim.
+- Runtime sharing now protects descendants when an 8-bit reference count
+  saturates, when given an interior reference, and when the 64-entry traversal
+  stack spills. The third ownership regression passes and verifies that
+  restoring the old saturation transition corrupts a visible alias.
 - After PR #74 passes and is squash-merged, rebase the prepared branch with
   `git rebase --onto origin/main ccecf20 ownership-contracts` from its checkout
   (after fetching main), review, publish one new PR and run full gates.

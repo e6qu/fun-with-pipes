@@ -36,8 +36,8 @@ priority queue.
 | 5 | Expand allocation/ownership/performance regression evidence | Allocation, live-memory, retain/release and collection measurements alongside timings; full workloads on CI |
 | 6 | Optional execution without tracing GC, after complete ownership coverage | Supported programs reclaim memory with collection disabled, including escaping values and runtime boundaries; cycles have an explicit lifetime policy |
 
-Prepared ownership branch: `ownership-contracts`, based on PR #74, not yet
-published as a PR. It consolidates all array/map/set contracts and borrows
+Prepared ownership branch: `ownership-contracts`, based on PR #74, published as a branch but not yet
+opened as a PR. It consolidates all array/map/set contracts and borrows
 comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
 evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of
