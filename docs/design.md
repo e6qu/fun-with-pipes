@@ -430,3 +430,9 @@ Prepared inlining treats zero-argument CAFs as computations that must precede
 the callee, including ignored arguments. Static positive-arity function references
 remain trivial. Source traps and counted temporary cleanup are checked against
 an unoptimized interpreter in [ownership.md](ownership.md#prepared-caf-evaluation-during-inlining).
+
+Prepared spawned task thunks retain a counted closure owner across suspension.
+Entry transfers it to typed owned application; cancellation before entry drops
+it. Scope and stack preparation precede publication of the child. Task handles
+and counted results still share; full teardown/cycle coverage remains open.
+See [ownership.md](ownership.md#prepared-retained-task-thunks).

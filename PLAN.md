@@ -570,5 +570,18 @@ Prepared CAF inlining preserves argument evaluation even when the callee ignores
 it. Source regressions use an unoptimized reference to detect common optimizer
 trap omissions; counted temporary and cache cleanup controls pass. Five focused
 checks, four selected semantic goldens and clippy/fmt pass; full CI is required.
-PR #81 is the sole open PR: ARM macOS and benchmarks passed, Linux and Intel
-macOS running. Continue ownership preparation and repair failures before merging.
+PR #81 is the sole open PR: Linux, ARM macOS and benchmarks passed; Intel macOS
+running. Continue ownership preparation and repair failures before merging.
+
+CAF inlining preparation published as `6734248`, separate from sole PR #81.
+Source trap order and counted temporary cleanup are verified against an
+unoptimized reference; full sequential CI is still required. The handoff lists
+immutable anchors and the next aggregate/runtime lifetime audit.
+
+Prepared task.spawn keeps a counted thunk owner through task entry/cancellation,
+releasing typed captures without sharing their graph. Fallible scope/stack
+preparation precedes child publication and protects the extra reference. Ten
+focused integration checks and the contract inventory pass; final dedicated
+checks also cover unknown metadata. Task handles/results, scope/within, channels
+and cycles remain open. Full sequential CI is required; #81 is still the sole
+open PR with Linux, ARM macOS and benchmarks passing and Intel macOS running.

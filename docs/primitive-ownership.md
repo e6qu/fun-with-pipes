@@ -20,6 +20,7 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
+| task.spawn | borrow thunk; runtime retains one counted owner | shared task handle/result | retained argument 0 |
 | array.from-list | borrow list | fresh array owning typed element references | none |
 | map/set.from-list | borrow list | owned storage with selected typed key/value references | none |
 | array.to-list | borrow array | fresh owned list with typed element aliases | none |
@@ -49,7 +50,8 @@ Comparison-only keys never escape into `fwp_map_find` or structural `fwp_cmp`:
 these functions read values, allocate nothing and invoke no user callbacks.
 Their primitive wrappers therefore omit `fwp_rc_share(key)`. Insert/update retain keys by type only when stored. Synchronous container
 callbacks borrow inputs and produce owned results, including input aliases and
-closures capturing them; retained runtime callback boundaries still share.
+closures capturing them. Prepared task.spawn retains a counted thunk owner;
+other retained runtime callback boundaries still share.
 
 Native arrays/maps/sets own typed elements and release them before outer
 storage. Unmodeled runtime containers retain their conservative shared fallback. Aliasing metadata records which arguments or their
@@ -666,3 +668,17 @@ passthrough from promoting the whole input graph to runtime sharing.
 0.0 -> 0.5 MiB count reclamation with only the old deadline sharing boundary
 restored as a control. See the handoff for flags and remaining retained lifetime
 and exceptional cleanup work. Full CI remains required before merging.
+
+## Prepared retained task thunks
+
+`task.spawn` borrows its thunk and retains one counted closure owner. The task
+transfers that owner to owned application on entry, or drops it when cancelled
+before entry. Typed captures release on normal completion and nonlocal exit.
+Scope/stack preparation protects the extra owner; a failed spawn publishes no
+child. Unknown callback ownership metadata retains the conservative shared
+fallback. Escape analysis still treats the thunk as escaping.
+
+Task handles and counted results remain shared; scalar results never go through
+generic sharing. `task.scope`, `task.within`, channels, cycles and complete task
+result teardown remain separate work. Evidence and limits are recorded in
+[ownership.md](ownership.md#prepared-retained-task-thunks).

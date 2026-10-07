@@ -217,13 +217,19 @@ children of nonescaping stack values` (one line, 61 characters), empty body and
 exact head match. Then rebase borrowed callbacks from OLD `b563360`; preserve
 that original anchor rather than using the rewritten stack or squash head.
 
-Current prepared work: `ownership-inline-caf`, checkout
-`/private/tmp/fwp-inline-caf-worktree`, OLD base `68cf7bf`. CAF arguments retain
-checked evaluation bindings during inlining. Reproduced source trap omissions,
-unoptimized/optimized interpreter/native comparisons and counted temporary
-cleanup controls pass; detailed evidence is below. Publish separately without
-opening another PR while #81 is pending. Shared target contains this compiler;
-clean the package before switching checkouts. No local workload remains.
+Latest published preparation: `ownership-inline-caf`, checkout
+`/private/tmp/fwp-inline-caf-worktree`, OLD base `68cf7bf`, exact head
+`6734248e7c0d4d53d57e5acccb9af02641713e9d`; clean checkout, no additional PR.
+Verified one-line subject: 62 characters, empty body/no trailers. CAF arguments
+retain checked evaluation bindings during inlining. Source trap omissions were
+reproduced against an unoptimized interpreter; optimized interpreter/native and
+counted temporary cleanup controls now pass. Five focused checks, four selected
+semantic goldens, clippy and formatting pass. CONTRIBUTING records the need for
+an unoptimized reference. Full sequential CI remains required. Next audit nested
+state reconstruction/metadata and whole-value boxing, then retained task/library
+lifetimes. Create the next separate task from OLD `6734248`. Shared target
+contains this compiler; clean the package before switching checkouts. No local
+workload remains. PR #81 remains the sole open PR.
 
 Previous published preparation: `ownership-caf-cache`, checkout
 `/private/tmp/fwp-caf-ownership-worktree`, OLD base `085dc71`, exact head
@@ -590,6 +596,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-match-context | fwp-typed-expression-worktree | 3f61f51 | de85621 |
 | ownership-field-context | fwp-field-context-worktree | 085dc71 | 3f61f51 |
 | ownership-caf-cache | fwp-caf-ownership-worktree | 68cf7bf | 085dc71 |
+| ownership-inline-caf | fwp-inline-caf-worktree | 6734248 | 68cf7bf |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -2101,10 +2108,71 @@ includes aggregate reconstruction/metadata, whole-value variant boxing, other
 inline lifetime cases, retained task teardown/cycles and library/unload coverage.
 Phases 2–6 remain incomplete; no general ARC, tracing-free or speed claim is made.
 
-PR #81 remains the sole open PR, exact `6eeb915`, CI `37696063781`: ARM macOS and
-benchmarks passed; Linux and Intel macOS tests running. CI gates merging only;
+PR #81 remains the sole open PR, exact `6eeb915`, CI `37696063781`: Linux, ARM macOS and
+benchmarks passed; Intel macOS tests running. CI gates merging only;
 repair failures and continue separate preparation. Prepared squash subject
 `Preserve CAF argument evaluation and ownership during inlining` is one line,
 62 characters, empty body/no trailers. Publish after checks; preserve OLD
 `68cf7bf` for this child and OLD `b563360` for the immediate borrowed-callback
 rebase after #81 merges. No second PR opens while that current gate is pending.
+
+CAF inlining published as `6734248e7c0d4d53d57e5acccb9af02641713e9d`;
+checkout clean, subject verified as one line, 62 characters, no body/trailers.
+Final formatting check passes (CPU 0.44 s / elapsed 0.86 s), whitespace clean.
+PR #81 full run `37696063781` has passing Linux, ARM macOS and benchmark gates;
+Intel macOS tests are live at exact `6eeb915`. Continue separate ownership
+work, fixing any failure; merge only after all four gates pass. Preserve OLD
+`b563360` for borrowed-callback rebasing and OLD `6734248` for subsequent work.
+No local workload remains. Phases 2–6 remain incomplete.
+
+## Prepared retained task thunks
+
+Branch `ownership-task-thunks`, checkout `/private/tmp/fwp-retained-thunk-worktree`,
+OLD base `6734248e7c0d4d53d57e5acccb9af02641713e9d`. task.spawn borrows its
+callback and the runtime retains one counted closure reference. Task entry
+transfers it to owned application; cancellation before entry releases it.
+Typed captures release on completion and cancellation while suspended. Unknown
+owned-entry metadata preserves the conservative shared fallback. The callback
+still escapes, so this contract grants no stack-allocation permission.
+
+Spawn reserves scope storage and prepares its stack before publishing a child.
+Recoverable stack mapping failure previously left a partial child linked to its
+parent; the repaired path leaves parent/scope/GC task lists unchanged and
+releases only the extra thunk owner. Scope capacity and count overflow likewise
+preserve original aliases. Actual allocator OOM remains fatal; no recoverable
+allocator-OOM claim is made. Task handles and counted results still share.
+Result type metadata keeps address-shaped scalar words out of generic sharing.
+
+Two dedicated tests compare real source behavior with an unoptimized interpreter
+and probe generated C at O1/O2 with GC stress/verification and both poison modes.
+They cover normal completion, pre-entry and suspended cancellation, external
+capture aliases, scalar address bits, unknown metadata, stack failure, scope
+capacity overflow and retain-count overflow. Negative controls restoring early
+child publication and removing the extra-owner scope fail with exits 2 and 4.
+The pre-fix compiler failed the counted-closure probe with exit 1.
+
+Serial guarded checks (same bounded fwp guard as above):
+- `cargo test --test retained_thunk_ownership --test task_ownership -- --nocapture`:
+  five pass, CPU 12.65 s / elapsed 25.50 s.
+- `cargo test --test closure_ownership --test unwind_cleanup -- --nocapture`:
+  five pass, CPU 13.73 s / elapsed 27.72 s; closure counts free 1.2 MiB versus 0.
+- `cargo test --lib ownership::tests -- --nocapture`: one inventory check passes,
+  CPU 3.23 s / elapsed 6.70 s; spawned callbacks remain marked escaping.
+- Final two dedicated tests, including unknown metadata: pass, CPU 9.35 s /
+  elapsed 19.49 s.
+
+Full sequential CI remains required. Remaining tasks include task.within/scope
+callback ownership, task results/handles and channel teardown/cycles, aggregate
+reconstruction/metadata, whole-value variant boxing and library/unload lifetimes.
+Phases 2–6 remain incomplete. PR #81 is the sole open PR, exact `6eeb915`, CI
+`37696063781`: Linux, ARM macOS and benchmarks passed; Intel macOS is running.
+After all four pass, squash with the recorded subject and empty body, rebase
+borrowed callbacks from OLD `b563360` onto the new squash, then open the next PR.
+Continue separate implementation while CI runs; repair any failure. Preserve
+OLD `6734248` for this branch and its published head for its future child.
+
+Retained-thunk library/dedicated-test clippy passes, CPU 2.31 s / elapsed 4.61 s.
+Six adjacent escape-analysis checks pass, CPU 0.00 s / elapsed 0.14 s. No focused
+failure remains; no resource limits were raised or bypassed. The shared target
+contains this compiler; guarded package clean is required before switching.
+Final formatting/whitespace pass, CPU 0.36 s / elapsed 0.73 s.
