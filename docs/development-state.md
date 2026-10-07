@@ -39,8 +39,8 @@ phase2 remains incomplete; phases3–6 are pending.
 Sole open [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95):
 ownership-state-sequences, /private/tmp/fwp-state-sequence-worktree, exact
 5d0a3f302e476dfada1b3ea71aa56dae4086d905 on actual main1358267.
-CI37901758334 passes bench and both ARM/Intel GC stress at this exact head;
-regular Intel macOS passes; Linux and regular ARM macOS run. Both final focused
+CI37901758334 passes five gates at this exact head: Linux, bench, regular
+Intel macOS and both ARM/Intel GC stress jobs. Regular ARM macOS runs. Both final focused
 tests pass12.28 s CPU /24.61 s elapsed, lint2.24 s /4.49 s, format0.33 s
 /0.61 s. Source/runtime/tests/workflows match verified15743b8 exactly;
 raw FWP_NO_OPT=1 interpreter oracles remain intact. Require all six passing
@@ -91,29 +91,21 @@ still need their final squash rebases and six exact-head full gates.
 | 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 /31.47 s |
 | 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 /29.51 s |
 | 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 /28.50 s |
+| 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 /43.40 s |
 
-Rows17–46 are published preparations with passing focused tests, lint and
+Rows17–47 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row44 final head610fd745b97385689f9ccbb19beff903d8f77730 is clean on
-actual basee2f944c, published with exact lease against OLDde85621. Four tests
-pass15.62 s CPU /31.47 s elapsed, lint2.36 s /4.75 s, format0.35 s /0.74 s.
-Its old doc-only follow-up became empty when authoritative docs superseded it;
-immutable OLDde85621/parent614dd3b remain preserved.
-Row45 match-context321cc3146089bcdd962b57351d7298ed85691b1e is clean on
-actual base610fd74, published with exact lease against OLD3f61f51. Five
-focused tests pass14.67 /29.51 s, lint2.34 /4.68 s, format0.34 /0.61 s.
-Row46 field-context6d01e927c08688b6f120a6f2e12a3e38cc8376b4 is clean
-on actual base321cc31, published with exact lease against OLD085dc71.
-Five focused tests pass14.06 /28.50 s, lint2.26 /4.63 s, format0.34 /0.71 s.
-Row47 CAF cache ownership rebases from ACTUAL old parent085dc71 onto
-current row46 head6d01e92. Eight focused CAF/compiler-call tests pass21.58 /43.40 s; final lint,
-format checks, docs and publication follow. An incorrect test target was
-corrected before compilation; see history.
+Row47 CAF ownership762cc824fa088a7ca984be544bd8cebc80a2d9ab is clean
+on actual base6d01e92, published with exact lease against OLD68cf7bf.
+Eight focused tests pass21.58 /43.40 s, lint2.33 /4.58 s, format0.35 /0.73 s.
+Row48 inlined CAF evaluation rebases from ACTUAL old parent68cf7bf onto
+current row47 head762cc82. Five focused inline-CAF/cache tests pass16.28 /33.20 s; final lint,
+format checks, docs and publication follow.
 Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
@@ -162,7 +154,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-caf-ownership-worktree; focused CAF/compiler-call tests are complete; lint is active.
+belongs to /private/tmp/fwp-inline-caf-worktree; focused inline-CAF/cache tests are complete; lint is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.12 s CPU /0.84 s elapsed).

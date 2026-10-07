@@ -8278,3 +8278,26 @@ liveness tests pass. Full sequential gates remain required.
 CAF lint with the same two targets and -D warnings passes2.33 s CPU
 /4.58 s elapsed; fmt check0.35 /0.73 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final CAF ownership762cc824fa088a7ca984be544bd8cebc80a2d9ab is clean
+on actual base6d01e92, published with exact lease against OLD68cf7bf.
+Whole subject verified one line, empty body; no second PR. Row48 actual base
+remains OLD68cf7bf until its own rebase; immutable queue anchors unchanged.
+
+Row48 rebase from ACTUAL68cf7bf2f7ca0986edf7039ff2e0bfe584e45820 onto
+actual row47 head762cc824fa088a7ca984be544bd8cebc80a2d9ab resolves only
+doc conflicts with nine authoritative files. CONTRIBUTING keeps its raw
+interpreter-oracle explanation. Both new source references already explicitly
+set FWP_NO_OPT=1, with an additional optimized-interpreter comparison.
+Guarded clean0.00 /0.14 s; inline CAF and cache checks started. Live
+preparation chronology through row46 is consolidated into the actual-base
+table; detailed hashes/checks remain here rather than competing next actions.
+PR95 exact5d0a3f3 passes Linux too; regular ARM macOS is the last gate running.
+Guarded cargo test --test inline_caf_ownership --test caf_ownership passes
+all five tests16.28 s CPU /33.20 s elapsed. Unused CAF arguments still
+evaluate before the callee, preserving first-trap order and releasing their
+owned temporary. Raw and optimized interpreter/native comparisons, O1/O2
+stress/verification/poison and missing-release control pass alongside cache
+initialization, reentry and teardown regressions.
+Inline-CAF lint with the same two targets and -D warnings passes2.34 s CPU
+/4.64 s elapsed; fmt check0.34 /0.62 s. Nine current docs copied before
+final amend; tested source unchanged.
