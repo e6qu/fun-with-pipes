@@ -182,6 +182,32 @@ static V fwp_p_drop_while_owned(V f, V xs) {
     return xs;
 }
 
+/* A consumed accumulator stays here while preparing scratch or borrowed
+ * callback arguments, and moves to the callback before its entry can tick. */
+typedef struct { V value; void (*drop)(V); } fwp_value_owner;
+static void fwp_value_release(void *arg) {
+    fwp_value_owner *owner = arg;
+    V value = owner->value;
+    owner->value = 0;
+    if (owner->drop && value) owner->drop(value);
+}
+static void fwp_value_protect(fwp_value_owner *owner, fwp_cleanup *cleanup) {
+#if FWP_UNWIND
+    if (owner->drop) fwp_cleanup_push(cleanup, fwp_value_release, owner);
+#else
+    (void)owner; (void)cleanup;
+#endif
+}
+static V fwp_value_finish(fwp_value_owner *owner, fwp_cleanup *cleanup) {
+#if FWP_UNWIND
+    if (owner->drop) fwp_cleanup_pop(cleanup);
+#else
+    (void)cleanup;
+#endif
+    V value = owner->value;
+    owner->value = 0;
+    return value;
+}
 static V fwp_p_fold(V f, V z, V xs) {
     while (xs != 0) { z = fwp_apply2(f, z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
     return z;
@@ -206,18 +232,23 @@ static V fwp_p_fold_right(V f, V z, V xs) {
     return z;
 }
 
-static V fwp_p_fold_right_own(V f, V z, V xs) {
+static V fwp_p_fold_right_own(V f, V z, V xs, void (*accumulator_drop)(V)) {
+    fwp_value_owner owner = {z, accumulator_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
     size_t n;
     V *a = fwp_map_items(xs, &n);
+    fwp_cleanup scratch_cleanup;
+    fwp_scratch_protect(&a, &scratch_cleanup);
     for (size_t i = n; i > 0; i--) {
-        V args[] = {a[i - 1], z};
-        z = fwp_apply_borrowed_span(f, 2, args, 1, 1);
+        V args[] = {a[i - 1], owner.value};
+        owner.value = 0;
+        owner.value = fwp_apply_borrowed_span(f, 2, args, 1, 1);
     }
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
-    return z;
+    return fwp_value_finish(&owner, &cleanup);
 }
 
 /* stable merge sort of (key, value) pairs */
@@ -561,14 +592,22 @@ FWP_K V fwp_k_fold_right(fwp_fn2 f, V z, V xs) {
     return z;
 }
 
-FWP_K V fwp_k_fold_right_owned(fwp_fn2 f, V z, V xs) {
+FWP_K V fwp_k_fold_right_owned(fwp_fn2 f, V z, V xs, void (*accumulator_drop)(V)) {
+    fwp_value_owner owner = {z, accumulator_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
     size_t n;
     V *a = fwp_map_items(xs, &n);
-    for (size_t i = n; i > 0; i--) z = f(a[i - 1], z);
-    FWP_KEEP_ALIVE(a);
-    fwp_mem_free(a);
+    fwp_cleanup scratch_cleanup;
+    fwp_scratch_protect(&a, &scratch_cleanup);
+    for (size_t i = n; i > 0; i--) {
+        V next = owner.value;
+        owner.value = 0;
+        owner.value = f(a[i - 1], next);
+    }
+    fwp_scratch_finish(&a, &scratch_cleanup);
     FWP_KEEP_ALIVE(xs);
-    return z;
+    return fwp_value_finish(&owner, &cleanup);
 }
 
 FWP_K V fwp_k_take_while(fwp_fn1 f, V xs) {

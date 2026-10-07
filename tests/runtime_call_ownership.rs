@@ -291,19 +291,22 @@ int main(void) {
         "int main(int argc, char **argv)",
         "int original_main(int argc, char **argv)",
     );
+    let span_probe = probe.replace("fwp_apply_owned(function_value, 2, (V[]){0, pending})", "fwp_apply_borrowed_span(function_value, 2, (V[]){0, pending}, 1, 1)").replace("if (fwp_reuse_verify ? CLO(function_value)->fn != 0xdead : *fwp_rc_slot(function_value) != 0) return 4;", "if (*fwp_rc_slot(function_value) != 1) return 4; fwp_closure_drop(function_value);").replace("fwp_apply_owned(function_value, 2, (V[]){scalar_word, pending})", "fwp_apply_borrowed_span(function_value, 2, (V[]){scalar_word, pending}, 1, 1)").replace("    if (!fwp_rc_release_last(result)", "    if (*fwp_rc_slot(function_value) != 1) return 7; fwp_closure_drop(function_value);\n    if (!fwp_rc_release_last(result)");
     for opt in ["-O1", "-O2"] {
-        fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
-        for poison in ["0", "1"] {
-            let out = checked(
-                Command::new(&exe)
-                    .env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1")
-                    .env("FWP_REUSE_VERIFY", poison),
-            );
-            assert_eq!(
-                out.stdout,
-                b"overapplication owns pending typed arguments\n"
-            );
+        for probe in [&probe, &span_probe] {
+            fwp::cgen::compile_c(&format!("{runtime}\n{probe}"), &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let out = checked(
+                    Command::new(&exe)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                assert_eq!(
+                    out.stdout,
+                    b"overapplication owns pending typed arguments\n"
+                );
+            }
         }
         checked(
             Command::new(fwp)

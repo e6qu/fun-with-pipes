@@ -465,3 +465,32 @@ scratch buffers, completed results, partial construction, cancellation, second
 allocation failure and scalar address bits. Full sequential CI remains required.
 General zip/unzip allocation failures, fold/loop accumulators and retained task
 lifetimes remain outside this change's acceptance evidence.
+
+
+## Prepared fold cleanup
+
+Right fold protects its consumed accumulator before allocating scratch and
+protects that borrowed scratch buffer across callback entries. The accumulator
+moves out of the scope before the callback takes it; a successful result becomes
+the next accumulator owner. Captured folds protect their accumulator while
+preparing borrowed captures and elements. Direct callback wrappers similarly
+protect the consumed accumulator before duplicating a borrowed element.
+
+Runtime borrowed-span application protects its retained function and consumed
+arguments before duplication, including an owned suffix awaiting a returned
+function. Each successfully duplicated borrowed argument has its own typed
+preparation scope until the entry consumes it. A later duplication failure drops
+these extra references, preserving the original aliases. A borrowed-span overapplication probe checks the pending
+owned suffix and surviving original function alias on prefix failure and successful
+return. Scalar words stay
+uncounted; programs without possible unwind retain grouped duplicate operations
+and compile out runtime scope registration.
+
+Focused generated-code probes cover direct, dynamic and captured right-fold
+errors, initial scratch allocation traps, cancellation after a completed result,
+consumed argument preparation and partial borrowed duplication, retained aliases
+and scalar address bits at O1/O2 with stress/verification and both poison modes.
+Normal fold/right-fold alias and reclamation checks pass. Full sequential gates
+remain required. Loop state at cancellation ticks, multi-capture duplication
+failures in specialized helpers and owned application, constructor/boxing/CAF
+allocation lifetimes and retained tasks remain acceptance work.

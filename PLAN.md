@@ -48,8 +48,10 @@ run `37623311024`; [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) was
 squash-merged as `22994ba`. Fresh text trees and scratch cleanup passed all four
 exact-head gates in run `37636161587`, attempt 2;
 [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
-`6cdb0d1`. [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) is the sole open closure
-ownership PR; focused checks and benchmarks pass while full test jobs run. Later published branches prepare closure and
+`6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
+`37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
+as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) is the sole
+open closure-cleanup PR; post-rebase focused checks pass and full CI is queued. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
@@ -502,3 +504,11 @@ take-while selected-prefix cleanup is published separately. Zip-with protects
 both scratch buffers and its result prefix with focused exceptional checks;
 full sequential CI remains required. Finish the other callback accumulators and
 retained task lifetimes before closing phase 2.
+
+
+Prepared fold cleanup protects right-fold scratch and consumed accumulators
+before allocation/argument preparation. Typed borrowed-span scopes preserve
+original aliases when a later duplicate fails. Focused exceptional and scalar-bit
+checks pass; full sequential CI remains required. Continue with loop state at
+cancellation ticks, retained task lifetimes and the remaining allocator/boxing/
+CAF/inline ownership audit before closing phase 2.
