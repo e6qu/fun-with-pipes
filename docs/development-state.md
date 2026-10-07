@@ -105,7 +105,7 @@ still need their final squash rebases and six exact-head full gates.
 | 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
-| 31 ownership-zip-unwind | 687ae106193b | 244dd2a578af | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | 270525b5bb9a | 687ae106193b | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 33 ownership-loop-unwind | c65514a8e6d4 | 270525b5bb9a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 34 ownership-argument-preparation | 804e6a0cf9f3 | c65514a8e6d4 | Code/probe included in28; docs only relative to33; skip duplicate PR after28 full acceptance |
@@ -368,8 +368,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-selection-unwind-worktree after absolute-root guarded
-package clean0.00CPU/0.14elapsed. No local workload remains running.
+to /private/tmp/fwp-zip-unwind-worktree after absolute-root guarded package
+clean0.00CPU/0.14elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
+rebased from actual244dd2a. Compiler/runtime/original probes match687ae10;
+only inherited guard/audit and long-tail regression differ. Seven focused
+zip/preparation/reuse tests pass24.32CPU/48.75elapsed; clippy -D warnings
+2.35/4.66s, format0.36/0.75s and strong44/106/87 audit0.42/3.47s pass.
+Retained roadmap/revision-031-687ae106193b before exact leased publication.
+No local workload remains running. Final rebase from actualc17d4a6 follows
+row30's accepted squash.
 Published row30c17d4a693b3235b13850890af27561f0029c5142 has actual base4c7d5ba,
 rebased from actual78ed19f. Compiler/runtime/original probes match244dd2a;
 only inherited guard/audit and long-tail regression differ. Seven focused
