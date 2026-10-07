@@ -13811,3 +13811,13 @@ format0.34/0.61s pass. Final actual-squash rebase/full gates remain required.
 Second HTTP2 candidate8ed52165833a/38022208742 still fails the exact omitted
 owner on Linux Clang; GCC/ARM pass. Diagnostic-only follow-up exports emitted
 broken C and O2 assembly on Linux Clang. No fixture candidate is accepted.
+
+Loop handoff update briefly formed an invalid abbreviated queue hash
+37ab094371fc7. The audit fails0.22CPU/1.69elapsed; the full current cell was
+corrected and audit passes0.43/3.36s. Corrected loop docs commit0ec280e18416
+publishes after retaining exact old527f84d405b77ad33b27f9a4cf7981259e1c11e9;
+no immutable anchor changes. An attempted tag publication using a malformed
+full hash failed without remote changes; publication with the recorded exact
+old hash succeeds. Diagnostic evidence2b980af240b5 must be refreshed with the
+corrected docs before its runner can collect assembly. All original assertions
+remain intact.
