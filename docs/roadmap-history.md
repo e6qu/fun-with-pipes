@@ -11136,3 +11136,9 @@ before explicit-lease publication; original OLD anchors are unchanged.
 Row42 guarded exact update-liveness3.22/6.67s, clippy2.28/4.57s and
 format0.34/0.60s pass. Row44 refreshb31400d03ac7 has actual baseffbbcf9d5119;
 compiler/runtime match original; fresh focused checks follow.
+
+Row43 guarded clean0.00/0.13s, native record conversion10.68/21.43s,
+clippy2.26/4.47s and format0.34/0.72s pass. Row44 b31400d03ac742fe146e89aadc8550b882612e7e
+uses actual baseffbbcf9d5119. Row45 0b00524a0a03f45fd417604c8eddcb88f4d4bc87
+uses actual baseb31400d03ac7; focused checks follow. Both runtime/compiler
+match originals and old CURRENT heads are retained under immutable revision tags.
