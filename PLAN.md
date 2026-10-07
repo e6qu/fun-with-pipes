@@ -51,28 +51,24 @@ exact-head gates in run `37636161587`, attempt 2;
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) is the sole
-open closure-cleanup PR; post-rebase focused checks pass; both macOS CI jobs test, benchmarks pass and Linux queues. Later published branches prepare closure and
-synchronous list ownership, call-effect inference, exact high-fanout counts and
-scan/iterate state ownership. Prepared work needs full CI in sequence; the
-handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers retained runtime ownership/teardown. Old marked-object
-reclamation is prepared with focused survival, alias and task stress tests;
-full CI still gates publication as the next sequential PR. Task/channel
-contracts and owned result wrappers are also prepared; retained callback
-lifetimes and compiler live-owner cleanup remain open. Runtime unwind boundaries
-and scoped-file cancellation cleanup are prepared with focused evidence. Typed array and map/set element boundaries pass focused
-validation in separate prepared branches;
-repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
-state transfer is published separately; it repairs the lost reclamation in a
-map/sum sequence consumer. Full gates after parent merges still remain.
-Compiler reuse-token lifetime repair is prepared with focused checks: unused
-branches, old cells, constructor transfer and unwind release the emptied cell
-exactly once. Call liveness is published separately, covering pending arguments, incoming
-parameters, typed caller values and boxed/unboxed wrappers. Keep struct variants
-unboxed through these ownership moves. Neither change is merged yet; full CI
-still gates each sequential PR. Consumed runtime closures/accumulators, retained
-lifetimes and allocation/inline failure paths remain to be covered. Phase 2 remains
-incomplete; compiler liveness, runtime teardown and full retained lifetimes remain.
+open closure-cleanup PR. Its exact-head ARM macOS and benchmark gates passed;
+Intel macOS and Linux are running. Merge only after all four pass.
+
+Phase 2 has a published preparation chain covering typed closure/stack children,
+synchronous list/container callbacks, call-effect inference, exact high-fanout
+counts, state transfer, old-object reclamation, task result wrappers, runtime
+unwind boundaries, compiler live owners and callback accumulators. These branches
+are not merged support. Rebase and validate them in order, opening each PR only
+after the preceding one merges. The handoff records exact heads, immutable OLD
+rebase anchors and actual focused evidence.
+
+Constructor allocation is the current separate implementation. Next finish
+worker field duplication and result boxing, initial loop flattening, typed
+constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+teardown and cycles. Full sequential CI remains required. Phase 2 stays
+incomplete until its ownership and reclamation acceptance is proved; numeric
+representation, numerics/autodiff, expanded evidence and optional tracing-free
+execution follow in roadmap order.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
@@ -514,3 +510,8 @@ sequential CI is still required. Multi-capture preparation and owned application
 failure/alias checks in a separate preparation; full sequential CI remains.
 Continue with retained tasks and allocator/boxing/CAF/inline ownership before
 closing phase 2.
+
+Constructor allocation now passes focused exceptional cleanup/alias checks in a
+separate preparation. Complete worker field duplication and result boxing,
+initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
+retained tasks before phase 2 acceptance. Full sequential CI remains required.

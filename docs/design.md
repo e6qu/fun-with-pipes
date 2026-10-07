@@ -316,6 +316,11 @@ until transfer, and partial application owns its unfinished outer cell. See
 [ownership.md](ownership.md#prepared-argument-and-capture-preparation) for evidence
 and the remaining constructor/boxing and retained-runtime lifetime work.
 
+Prepared constructor allocation protects consumed typed fields and remaining
+caller owners before allocation, preserving scalar slots and the direct reuse
+path. Acceptance and remaining boxing work are recorded in
+[ownership.md](ownership.md#prepared-constructor-allocation-cleanup).
+
 ## Not implemented
 
 - Complete ownership of strings, bytes, escaping closures and runtime-shared

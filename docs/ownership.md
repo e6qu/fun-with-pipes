@@ -547,3 +547,25 @@ interpreter, and adjacent runtime/fold/loop checks pass. Full sequential CI rema
 required. Constructor/boxing/CAF/inline-rewrite allocation lifetimes, initial
 loop flattening, closure-cleanup spill failures and retained task lifetimes remain
 acceptance work; this is not complete ARC or a collector-free guarantee.
+
+## Prepared constructor allocation cleanup
+
+The ownership checker records caller liveness for non-nullary record/variant
+construction. Before allocating, the compiler protects remaining caller owners
+and consumed typed fields separately. Successful allocation unlinks both scopes:
+the fresh result now owns its fields, while other caller references remain live.
+Constructor functions similarly protect their consumed parameters before data
+allocation. Scalar fields, constant graphs and static functions have no pending
+field entry. Existing unique-young reuse writes directly into the token cell;
+only its allocating fallback registers these scopes.
+
+Focused generated-code probes pass at O1/O2 with GC stress/verification and both
+reuse modes: constructor functions, recursive variants, wide records, fresh
+field results, retained input aliases, another caller reference to a consumed
+field, and address-shaped integer bits. Restoring the missing constructor-function
+scope makes the same probe detect its leaked fields. Normal output matches the
+interpreter; ownership checker, call-liveness and reuse-token tests pass. Full
+sequential CI remains required. Worker argument preparation, record/variant
+result boxing, initial loop flattening, concrete types for unknown constructor
+argument temporaries, CAF/inline ownership, cleanup-spill failure and retained
+runtime lifetimes remain separate acceptance work.

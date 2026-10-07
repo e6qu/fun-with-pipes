@@ -50,8 +50,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   latest docs; runtime/tests applied cleanly. Head
   `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, published with exact lease; clean.
   Three closure cleanup/alias/counter checks pass (CPU 11.97 s / elapsed 24.06 s);
-  fmt/whitespace pass. Full CI `37666199241` tests on both macOS architectures;
-  Linux is queued; benchmarks passed on that exact head.
+  fmt/whitespace pass. Full CI `37666199241`: ARM macOS and benchmarks passed;
+  Intel macOS and Linux are running on that exact head.
   Require all four gates before squash with subject
   `Bound closure capture cleanup with an explicit release work list`, empty body
   and exact head match. The temporary-types child later rebases from OLD
@@ -191,7 +191,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
 with all four exact-head gates passing. PR #79 is the sole open PR, exact head
-`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241` tests on both macOS architectures; Linux queued, benchmarks passed. When all
+`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241`: ARM macOS/bench passed; Intel macOS/Linux running. When all
 four gates pass, squash with the explicit subject above and empty body, verify
 its message, and fast-forward main preserving these two docs. Rebase temporary
 ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
@@ -246,8 +246,9 @@ nested-slot cancellation coverage. Adjacent call-liveness/fold checks (7) pass, 
 Library clippy is warning-free (CPU 2.28 s / elapsed 4.52 s); fmt and whitespace
 pass. Verified subject `Protect current loop state and Step payloads across cancellation`
 is one line, 64 characters, empty body/no trailers. No local workload remains.
-Argument/capture preparation is in progress on `ownership-argument-preparation`,
-checkout `/private/tmp/fwp-argument-preparation-worktree`, OLD base `988f2a3`.
+Argument/capture preparation is published on `ownership-argument-preparation`,
+checkout `/private/tmp/fwp-argument-preparation-worktree`, OLD base `988f2a3`,
+head `49739182ecb6ef8fdf98b526fdb427bb672d7f97`; clean, no new PR.
 Generated multi-counted argument helpers protect successful duplicates until the
 whole span transfers. Capture duplication reuses that typed helper when unwind
 is possible. Full owned application transfers its pending prefix only after
@@ -271,9 +272,14 @@ Final helper context uses a compact argument pointer, typed release callback and
 span indices, without a temporary function-info table. The dedicated probe plus
 five runtime checks pass after that change, CPU 17.28 s / elapsed 34.73 s.
 Library clippy is warning-free (CPU 2.25 s / elapsed 4.51 s); final fmt and
-whitespace pass. No local workload remains. Publish this branch separately;
-full sequential CI remains required.
-Next finish argument preparation validation and publication. Then start a
+whitespace pass. No local workload remains. Verified subject
+`Release partial argument and capture preparation on unwind` is one line,
+58 characters, empty body/no trailers. Published separately; full sequential
+CI remains required. Final focused command:
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3 /private/tmp/fwp-local-guard.py cargo test --test argument_preparation_ownership --test runtime_call_ownership -- --nocapture`.
+Lint and fmt used the same bounded guard with `cargo clippy --lib -- -D warnings`
+and `cargo fmt --all -- --check`. The guard accepted all checks within limits.
+Next start a
 separate constructor/boxing checkout from this published head: FnGen::alloc,
 Body::Ctor, Gen::worker pre-call field duplication and result boxing need typed
 owners before allocations/preparation. Initial loop state flattening also needs
@@ -284,7 +290,40 @@ Phase 2 remains incomplete; phases 3–6 follow its acceptance. Failing checks a
 repair tasks, never a reason to stop. Shared target currently contains the
 argument-preparation compiler; guarded `cargo clean -p fwp` is required before another
 worktree's package build. Root main has only PLAN/handoff edits; all published
-prepared checkouts are clean. PR #79 exact-head CI now tests on both macOS architectures; Linux queued, benchmarks passed.
+prepared checkouts are clean. PR #79 exact-head CI: ARM macOS/bench passed; Intel macOS/Linux running.
+
+Constructor allocation cleanup is in progress on `ownership-constructor-unwind`,
+checkout `/private/tmp/fwp-constructor-unwind-worktree`, OLD base `4973918`;
+uncommitted. The ownership checker records non-nullary constructors too. Before
+allocating a record/variant, generated code protects remaining caller owners and
+consumed typed field values separately. Constructor functions protect their
+owned arguments. Successful allocations transfer those fields; young reuse
+stays on its existing allocation-free path. Scalars, constants and static
+functions have no pending field scope entry.
+
+Twelve ownership-checker checks pass, including transferred fields versus other
+caller owners (CPU 9.87 s / elapsed 20.24 s). The initial combined command filtered
+out the integration probe; that zero-test result was not accepted as evidence.
+The unfiltered probe plus five call-liveness checks pass, CPU 14.50 s / elapsed
+29.13 s. Actual generated C at O1/O2 under GC stress/verification and both poison
+modes covers constructor functions, recursive variants, wide records, a still-
+live caller alias, fresh field results, retained aliases and address-shaped
+scalar bits. Removing only the constructor-function scope makes the same probe
+fail with the expected field-leak code. Normal output matches the interpreter.
+Test-source declaration syntax and the injected C forward declaration were
+corrected before validation. All three reuse-token checks pass (CPU 9.29 s / elapsed 18.63 s), including
+ownership switches and bump-allocator compilation. Library clippy is warning-free
+(CPU 2.52 s / elapsed 5.03 s); fmt and whitespace pass. No local workload remains.
+Final probe/call command: `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3 /private/tmp/fwp-local-guard.py cargo test --test constructor_unwind_ownership --test compiler_call_liveness -- --nocapture`.
+Reuse-token tests, `cargo clippy --lib -- -D warnings` and fmt used the same guard.
+Next complete validation and publish this focus, then protect worker field
+preparation and record/variant result boxing, followed by initial loop flattening,
+CAF/inline-rewrite lifetimes and retained runtime tasks. Concrete constructor
+argument temporaries with unknown field types still need typed context coverage;
+do not treat a fallback outer count as full child reclamation. Shared target now
+contains the constructor-unwind compiler. The main root retains only its plan/
+handoff edits; published prepared checkouts are clean. Full sequential CI remains
+required for every prepared branch, and phases 2–6 remain incomplete.
 
 ## Current ownership evidence
 
@@ -309,7 +348,6 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-closures (PR #78) | fwp-closure-worktree | a8e0079 | bab67ea |
 | ownership-closure-cleanup | fwp-drop-worktree | e3fb2f6 | 0d96bfe |
 | ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
@@ -343,6 +381,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-zip-unwind | fwp-zip-unwind-worktree | c2a3645 | b8f4c24 |
 | ownership-fold-unwind | fwp-fold-unwind-worktree | 968dac7 | c2a3645 |
 | ownership-loop-unwind | fwp-loop-unwind-worktree | 988f2a3 | 968dac7 |
+| ownership-argument-preparation | fwp-argument-preparation-worktree | 4973918 | 988f2a3 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
