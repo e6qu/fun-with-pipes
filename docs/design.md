@@ -399,3 +399,8 @@ replaced fields when reusing unique storage. Pending fields, copied storage
 and partial retains have separate unwind owners. Evidence and remaining
 reconstruction coverage are recorded in
 [ownership.md](ownership.md#prepared-typed-record-updates).
+
+Prepared boxed-record field conversion protects the consumed input, caller
+values and partial retained fields separately. Scalar fields are uncounted.
+Evidence and remaining context/reconstruction gaps are recorded in
+[ownership.md](ownership.md#prepared-boxed-record-field-conversion).

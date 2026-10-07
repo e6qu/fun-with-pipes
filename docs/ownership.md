@@ -752,3 +752,33 @@ in `FnGen::expr` is separate: existing RC argument naming keeps the nested
 state boxed, so current fixtures do not prove that flattening path. Enabling it
 also needs precise ownership for reconstructed borrowed field bindings.
 Keep that work open rather than treating an unexercised path as verified.
+
+## Prepared boxed record field conversion
+
+`ownership-record-conversion`, `/private/tmp/fwp-record-conversion-worktree`,
+OLD base `5c5875d`. `FnGen::expr_fields` now protects the consumed boxed input
+(or typed stack children) and remaining caller values while acquiring counted
+field references. The common typed partial-retain helper releases only completed
+extras if a later retain fails. Scalars have no owner slot. On success the
+original scope unlinks before typed destruction and field owners transfer to
+the worker. Pure/no-reuse builds omit registration; no new heap allocation or
+surface syntax is introduced. Unknown type contexts remain an acceptance gap.
+
+A real source fixture prints the whole input record, then passes it to a
+recursive worker reading fields. Generated C asserts exactly one boxed scalar
+field read and one two-owner partial-retain scope. Its first/later actual wide
+count overflows preserve independent boxed-input and remaining-String aliases,
+restore exact child counts, free unique original storage and leave scalar
+address bits untouched. O1/O2, GC stress/verification, both poison modes and
+ordinary interpreter/native stdout agree. Removing the original scope fails
+with code 3, remaining-owner scope with 7, and partial-retain scope with 4.
+Dedicated check passes, CPU 4.22 s / elapsed 8.61 s, using the bounded fwp guard
+with `cargo test --test record_conversion_ownership -- --nocapture`.
+
+Nine focused caller, stack-child and record/variant conversion checks pass,
+CPU 28.95 s / elapsed 58.13 s. Library and dedicated-test clippy pass,
+CPU 2.34 s / elapsed 4.63 s; fmt/whitespace pass. Full sequential platform/benchmark CI remains
+required. Next audit vlocal alias boxing and untyped aggregate contexts;
+nested flattened loop reconstruction still requires an actual eligible source
+fixture and precise ownership of reconstructed borrowed bindings. CAF/inline,
+retained task lifetimes, teardown/cycles and later phases remain incomplete.

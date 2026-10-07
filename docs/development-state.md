@@ -199,7 +199,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 Keep goal active; phases 2–6 remain incomplete. PR #79 merged as `33d4fb1`
 with all four exact-head gates passing. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80)
 is the sole open PR, exact head `7ce23dd0acb354859948db9043ffd91e3029a55c`,
-full CI `37684140373`: benchmark and ARM macOS passed; Linux and Intel macOS are running. Queues gate merging
+full CI `37684140373`: Linux, benchmark and ARM macOS passed; Intel macOS is running. Queues gate merging
 only. When all four gates pass, squash with subject `Preserve concrete call
 argument types for ownership temporaries` (one line, 63 chars) and empty body,
 verify its message, and fast-forward main preserving these two docs. Rebase
@@ -1669,3 +1669,48 @@ is one line, 64 characters, empty body/no trailers. The old `b21203d` remains
 an immutable anchor; this is a forward coverage commit on that published branch,
 not a rewrite. The scratch reconstruction checkout has the same source and an
 uncommitted duplicate test; it is not a separate published task or next PR.
+
+## Prepared boxed record field conversion
+
+`ownership-record-conversion`, `/private/tmp/fwp-record-conversion-worktree`,
+OLD base `5c5875d`. `FnGen::expr_fields` now protects the consumed boxed input
+(or typed stack children) and remaining caller values while acquiring counted
+field references. The common typed partial-retain helper releases only completed
+extras if a later retain fails. Scalars have no owner slot. On success the
+original scope unlinks before typed destruction and field owners transfer to
+the worker. Pure/no-reuse builds omit registration; no new heap allocation or
+surface syntax is introduced. Unknown type contexts remain an acceptance gap.
+
+A real source fixture prints the whole input record, then passes it to a
+recursive worker reading fields. Generated C asserts exactly one boxed scalar
+field read and one two-owner partial-retain scope. Its first/later actual wide
+count overflows preserve independent boxed-input and remaining-String aliases,
+restore exact child counts, free unique original storage and leave scalar
+address bits untouched. O1/O2, GC stress/verification, both poison modes and
+ordinary interpreter/native stdout agree. Removing the original scope fails
+with code 3, remaining-owner scope with 7, and partial-retain scope with 4.
+Dedicated check passes, CPU 4.22 s / elapsed 8.61 s, using the bounded fwp guard
+with `cargo test --test record_conversion_ownership -- --nocapture`.
+
+All nine adjacent checks pass (record conversion, variant conversion, five
+compiler caller checks and two stack-child checks), CPU 28.95 s / elapsed
+58.13 s. Stack variant reclamation is 0.5 MiB versus 0.0 MiB in its control;
+closure reclamation is 1.7 MiB versus 1.3 MiB. These are focused fixture counters,
+not a general speed claim. Full sequential platform/benchmark CI remains
+required. Next audit vlocal alias boxing and untyped aggregate contexts;
+nested flattened loop reconstruction still requires an actual eligible source
+fixture and precise ownership of reconstructed borrowed bindings. CAF/inline,
+retained task lifetimes, teardown/cycles and later phases remain incomplete.
+
+Library and dedicated-test clippy are warning-free, CPU 2.34 s / elapsed
+4.63 s; fmt/whitespace pass. Checks used serial bounded
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py cargo ...`: `test --test record_conversion_ownership
+--test variant_conversion_ownership --test compiler_call_liveness --test
+stack_ownership -- --nocapture`, and `clippy --lib --test
+record_conversion_ownership -- -D warnings`. Guarded package clean preceded
+this checkout's build. No local workload remains; shared target contains the
+record-conversion compiler, so clean the package before changing checkouts.
+Prepared subject `Protect boxed record inputs and partial worker field conversion`
+is one line, 63 characters, with empty body/no trailers. Publication is next;
+no additional PR opens while #80 is pending.
