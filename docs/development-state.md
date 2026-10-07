@@ -92,9 +92,9 @@ still need their final squash rebases and six exact-head full gates.
 | 45 ownership-match-context | 0b00524a0a03 | b31400d03ac7 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | f2262f94ada4 | 0b00524a0a03 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | fcfa8fb2d296 | f2262f94ada4 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
-| 48 ownership-inline-caf | ece7166b7a79 | fcfa8fb2d296 | Focused checks follow; compiler/runtime unchanged |
+| 48 ownership-inline-caf | ece7166b7a79 | fcfa8fb2d296 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
 | 49 ownership-task-thunks | ec9a4133a2c1 | ece7166b7a79 | Focused checks running; compiler/runtime unchanged |
-| 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 / 31.48 s + exact unit 3.27 / 6.86 s |
+| 50 ownership-task-within | 1b5fb056fa00 | ec9a4133a2c1 | Fresh checks follow; compiler/runtime unchanged |
 | 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 / 29.90 s + exact unit 3.23 / 6.67 s |
 | 52 ownership-task-handles | 4b6a2cb08da5 | 28de1794f39f | 22.60 / 46.01 s + exact unit 3.25 / 6.66 s |
 | 53 ownership-channel-queues | ccbf2957f351 | 4b6a2cb08da5 | 18.97 / 38.17 s + exact unit 3.42 / 7.08 s |
@@ -201,7 +201,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 queued; productionf2262f9, actual base0b00524 |
+| Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows38–41 loop/retain/typed conversion | 3a9fcb512a37a745e65629b29b15e1d06ec0a992 | CI37971602336 passes Linux ownership/tracing and docs; production67e3771, actual basedd6c405 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows33–34 loop/argument cleanup | 1ac6dc99fde5f6813659be356f7f89c29b8a27b5 | CI37969742246 passes Linux ownership/tracing and docs; production9f56744, actual baseb16195b |

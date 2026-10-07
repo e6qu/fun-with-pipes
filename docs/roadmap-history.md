@@ -11163,3 +11163,12 @@ Row47 guarded clean0.00/0.13s, all three cache owner/teardown/trap tests
 ece7166b7a7982d941913b27f7e837ab84fe5b48 uses actual basefcfa8fb2d296;
 compiler/runtime match original; original CURRENTaf073c78c443 is retained
 under immutable revision tag before explicit-lease publication. Checks follow.
+
+Row48 guarded clean0.00/0.13s, both unused/ignored CAF argument tests
+12.68/26.01s, clippy2.47/4.90s and format0.35/0.73s pass. Row49 refresh
+ec9a4133a2c19a189625a53f00a23b4966f6ad4f has actual baseece7166b7a79;
+guarded clean0.00/0.14s and both spawn preparation/capture tests10.19/20.78s
+pass. Row50 refresh1b5fb056fa00d181ca7b03a436dee354169c68ab has actual
+baseec9a4133a2c1; checks follow. Both compiler/runtime match originals; old
+CURRENTs are retained under immutable revision tags before lease publication.
+Record/type-context evidenceCI37972496949 passes all focused checks.
