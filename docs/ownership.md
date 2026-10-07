@@ -376,6 +376,35 @@ Focused evidence covers actual generated code, reference counts and immediate
 free counters, normal/error results, external aliases, pending arguments,
 boxed/unboxed wrappers, cancellation before the body and struct variant payloads.
 Full architecture and benchmark gates still remain. This does not cover every
-exceptional path: consumed runtime closures and accumulators, retained task
+exceptional path: runtime callback accumulators, retained task
 owners, allocator/boxing failures, CAF ownership and inline code rewrites still
 need explicit coverage before claiming complete ARC or collector-free execution.
+
+
+## Prepared runtime application cleanup
+
+Runtime dynamic application retains its consumed function until the entry
+returns. Register that owner while an executable can unwind, and release it on
+errors, recovered traps or cancellation. Register pending supplied arguments
+until they transfer to an entry or fresh partial application; overapplication
+keeps the suffix typed along the full specialized arrow spine. Scalar words
+remain uncounted, even when their bits name an allocation. Primitive/FFI owned
+entries protect the borrowed arguments that they normally release after return.
+Consumed stack closures leave their original capture owners with the caller
+until return; dynamic application includes these in its exceptional scope.
+
+Sparse owned-function metadata gains one typed pending-argument drop pointer,
+eight bytes on 64-bit targets, without changing the ordinary function-table
+slot's pointer count. Pure programs compile out runtime cleanup registration;
+call sites without managed functions or pending typed arguments omit it.
+
+Five focused tests exercise actual generated entries at O1/O2 with collection
+stress/verification and both poison modes, external aliases, scalar address bits,
+primitive traps and cancellation before entry. A controlled 10,000-failure loop
+on Apple Silicon with Apple Clang 17 at O1 frees 0.3 MiB by counts, versus 0.0 MiB
+when only the consumed-function unwind release is removed. Both have tracing
+disabled and zero collections; counters round to 0.1 MiB. This measures immediate
+reclamation, not elapsed performance or complete collector-free support. Full
+architecture gates remain for this branch's sequential PR. Callback accumulators,
+retained task lifetimes, allocator/boxing failures, CAF ownership and inline
+rewrites still require coverage.

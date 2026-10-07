@@ -26,24 +26,32 @@ immutable value semantics, effects and evaluation/trap order stable.
   cache access is read-only; ARM's tutorial/pipeline regression is fixed.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
-- Origin/main: `22994ba794a37320aca6e5122ed1ef909a0f4148`, squash merge of
+- Earlier leaf baseline: `22994ba794a37320aca6e5122ed1ef909a0f4148`, squash merge of
   [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76). Exact head
   `2d2af62630acf9e2c25d93e6ba2209d9e126a745` passed all four jobs in
   [CI 37623311024](https://github.com/e6qu/fun-with-pipes/actions/runs/37623311024).
   Verified squash subject: `Count owned String and Bytes results with explicit alias contracts`,
   one line, 66 characters, empty body, no trailers. Local main fast-forwarded
   while preserving its current plan/handoff edits.
-- Sole open [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77):
-  `ownership-text-results`, `/private/tmp/fwp-text-worktree`, rebased from
-  OLD `2ce7a05` onto `22994ba`. Published head
-  `0221f91c9edcf0096247b69676a156d331716984`, checkout clean. Post-rebase text
-  (3), leaf (2), inventory (1), IR (8), fmt and whitespace pass. Full
-  [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587)
-  Both macOS jobs and benchmarks passed. Linux never acquired a runner in
-  attempt 1; no test step ran. Failed-job retry succeeded after the run finished;
-  attempt 2 Linux job `112894076018` is running. Re-poll the retry and fix any
-  actual failures. All four exact-head gates must pass before squash merge. Closure child
-  still rebases from OLD `bab67ea` after text squashes, not from `0221f91`.
+- Current origin/main: `6cdb0d1a10c078f1f68675ced5bcda4626b58874`, squash
+  merge of [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77).
+  Exact head `0221f91c9edcf0096247b69676a156d331716984` passed all four gates
+  in [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587),
+  attempt 2: Linux, both macOS jobs and benchmarks. Attempt 1 Linux never
+  acquired a runner; the successful retry ran actual tests. Merge completed
+  2026-10-07T17:02:17Z. Verified single-line subject:
+  `Own fresh text result trees and release conversion scratch buffers`,
+  empty body and no trailers. Local main fast-forwarded preserving its handoff.
+- Sole open [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78):
+  `ownership-closures`, `/private/tmp/fwp-closure-worktree`, rebased onto
+  `6cdb0d1` from OLD `bab67ea`. Head
+  `a8e0079a87e5e4026327f431282cc37f0aebd637`, published with exact lease;
+  checkout clean. Seven closure/leaf/text checks, eight IR checks, inventory,
+  fmt and whitespace pass. Guarded closure/leaf/text CPU 18.07 s / elapsed
+  36.49 s. Full [CI 37656822169](https://github.com/e6qu/fun-with-pipes/actions/runs/37656822169)
+  has passed benchmarks; Linux and both macOS test jobs are running. Require all four exact-head gates before squash with subject
+  `Own compiled dynamic closures and release typed captures` and empty body.
+  The closure-cleanup child later rebases from OLD `0d96bfe`, not this new head.
 - Published runtime unwind change: `ownership-unwind-runtime`, checkout
   `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
   chains are task-local, error handlers and recovered traps retain a boundary,
@@ -65,8 +73,11 @@ immutable value semantics, effects and evaluation/trap order stable.
   All three token checks pass, including bump-allocator compatibility,
   guarded CPU 15.31 s / elapsed 30.88 s. Eight IR checks, fmt and whitespace pass.
   Published head `33cf86466e2f106dcce2b3bc88cd3f10df9fa620`; no additional PR.
-  Current checkout `/private/tmp/fwp-call-liveness-worktree`, branch
-  `ownership-call-liveness`, OLD base `33cf864`, remains uncommitted preparation.
+  Committed checkout `/private/tmp/fwp-call-liveness-worktree`, branch
+  `ownership-call-liveness`, OLD base `33cf864`, head
+  `7392f2d67151ad69fa18aed33dc30271067d81db`.
+  Published successfully after three GitHub internal-server rejections; the
+  HTTP/1.1 retry succeeded. No additional PR was opened.
   It derives call ownership from the RC checker, names pending computed arguments,
   and registers live callers, incoming tick parameters and original boxed wrapper
   arguments. Struct variants stay unboxed through ownership moves. Caller alias,
@@ -77,15 +88,41 @@ immutable value semantics, effects and evaluation/trap order stable.
   selection; child reclamation remains measured. Caller scopes also protect
   stack-argument children that normal returns release in the owning frame.
   Eleven IR checks and seven array/list checks pass; fmt/whitespace pass.
-  Warning-free library clippy passes after the final repairs, guarded CPU
-  2.23 s / elapsed 4.38 s. This preparation is ready to publish; full gates
-  still remain for its future sequential PR.
-  Next: finish focused validation and publish, then protect consumed closures and
-  runtime callback accumulators, allocation/boxing failures and inline rewrites.
-  General unwind coverage and retained task lifetimes remain incomplete. This is one component of compiler liveness, not full ARC.
-  Next implement all other live compiler owners, including incoming parameters,
-  unboxed/stack values and pending arguments; then runtime callback accumulators
-  and retained task lifetimes. Phase 2 remains incomplete.
+  Library clippy passes without warnings after the final repairs, guarded
+  CPU 2.23 s / elapsed 4.38 s. All five compiler and two stack tests pass again,
+  guarded CPU 21.11 s / elapsed 42.31 s. Full CI remains for the future PR.
+  Full gates remain
+  required when its sequential PR opens. Phase 2 remains incomplete.
+- Current runtime implementation: `/private/tmp/fwp-runtime-call-worktree`,
+  `ownership-runtime-call-cleanup`, OLD base `7392f2d`, uncommitted.
+  Protects consumed functions during dynamic application, typed pending arguments
+  along the complete arrow spine, and primitive/FFI borrowed arguments normally
+  dropped after return. Dynamic stack applications also protect their original
+  captures; a generated-code trap probe found and repaired that missing owner.
+  Pure programs compile out runtime registration via FWP_UNWIND.
+  Four dedicated probes passed at O1/O2 with stress/verification and both poison
+  modes: captured functions/aliases, overapplication/scalar bits, primitive traps,
+  and cancellation before entry. Ten adjacent compiler/token/stack tests pass,
+  guarded CPU 23.75 s / elapsed 47.88 s. Added a bounded 10,000-failure counter
+  comparison: tracing off, zero collections, 0.3 MiB freed versus 0.0 MiB with
+  only consumed-function unwind release removed. Its initial 0.4 MiB threshold
+  exceeded actual measured storage; corrected to exceed counter precision.
+  All five dedicated tests pass, guarded CPU 7.81 s / elapsed 15.72 s. Eleven IR
+  checks pass (CPU 3.26 s / elapsed 6.77 s); library clippy is warning-free
+  (CPU 2.30 s / elapsed 4.59 s). Fmt/whitespace pass. Full CI remains for the
+  sequential future PR. Native wide-count metadata compatibility passes
+  (CPU 0.59 s / elapsed 2.30 s).
+  Next cover callback accumulators, retained tasks, allocation/boxing failures,
+  CAF ownership and inline rewrites. Phase 2 and collector-free support remain
+  incomplete.
+- Shared local Cargo target caveat: switching worktrees can reuse a CLI built
+  from newer-mtime sources in another checkout. Before compiling after a switch,
+  serial guarded `cargo clean -p fwp` forces the correct package rebuild without
+  clearing dependencies. This happened during closure/runtime alternation and
+  was corrected before dedicated runtime probes and the ten adjacent checks.
+  Never accept stale emitted C as evidence. A mistyped test target
+  `stack_closure_ownership` was rejected without running tests; the corrected
+  `stack_ownership` target passed.
 
 ## Current ownership evidence
 
@@ -103,14 +140,14 @@ under the guard. Full current-head CI remains required.
 
 ## Prepared sequence
 
-All tabled branches are published, have focused local evidence, and have no
-PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
+All tabled branches are published and have focused local evidence. The
+first is the sole open PR; later branches have no PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
 listed OLD base onto main, reconcile docs with the latest handoff, validate,
 push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-closures | fwp-closure-worktree | 0d96bfe | bab67ea |
+| ownership-closures (PR #78) | fwp-closure-worktree | a8e0079 | bab67ea |
 | ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
 | ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
@@ -137,6 +174,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-task-boundaries | fwp-task-boundary-worktree | 02beec3 | 6774aa5 |
 | ownership-unwind-runtime | fwp-unwind-runtime-worktree | 3e31422 | 02beec3 |
 | ownership-reuse-tokens | fwp-unwind-liveness-worktree | 33cf864 | 3e31422 |
+| ownership-call-liveness | fwp-call-liveness-worktree | 7392f2d | 33cf864 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

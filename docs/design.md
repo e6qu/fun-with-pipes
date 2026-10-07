@@ -340,3 +340,14 @@ error. See [protocol.md](protocol.md).
 - Transports of the pipe protocol other than the pipe, `UDS_V1` and
   `SHM_V1` (which are Linux only), the WebAssembly component model and
   `wasm64`.
+
+
+Prepared runtime call cleanup keeps consumed functions, pending typed arguments
+and borrowed primitive-entry owners alive until transfer or return, then releases
+them on nonlocal unwind. Dynamic stack closures protect their original captures
+in the caller. Programs without possible unwind omit runtime registration.
+Owned-function metadata adds a typed pending-argument drop pointer (eight bytes
+on 64-bit targets); scalar words remain uncounted. Focused evidence and remaining
+ownership gaps are recorded in [ownership.md](ownership.md) and
+[the handoff](development-state.md); complete ARC and collector-free support
+remain roadmap acceptance criteria.

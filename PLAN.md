@@ -45,9 +45,11 @@ Container ownership contracts passed all four jobs in run `37612412156`;
 still share. The concurrent macOS executable-cache failure was repaired and
 verified by full CI. Owned String/Bytes leaves passed all four jobs in
 run `37623311024`; [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) was
-squash-merged as `22994ba`. [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) covers fresh text result
-trees and scratch cleanup, rebased onto main with passing focused checks;
-full current-head CI gates its merge. Later published branches prepare closure and
+squash-merged as `22994ba`. Fresh text trees and scratch cleanup passed all four
+exact-head gates in run `37636161587`, attempt 2;
+[PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
+`6cdb0d1`. [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) is the sole open closure
+ownership PR; focused checks and benchmarks pass while full test jobs run. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
@@ -63,7 +65,7 @@ state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
 Compiler reuse-token lifetime repair is prepared with focused checks: unused
 branches, old cells, constructor transfer and unwind release the emptied cell
-exactly once. Call liveness is in progress, covering pending arguments, incoming
+exactly once. Call liveness is published separately, covering pending arguments, incoming
 parameters, typed caller values and boxed/unboxed wrappers. Keep struct variants
 unboxed through these ownership moves. Neither change is merged yet; full CI
 still gates each sequential PR. Consumed runtime closures/accumulators, retained

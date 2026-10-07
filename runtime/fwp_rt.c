@@ -340,6 +340,9 @@ typedef struct {
     void (*captures)(V, int);
     /* Duplicate a borrowed argument slice by its monomorphic parameter types. */
     void (*arguments)(V *, uint32_t, uint32_t);
+    /* Drop pending arguments along the complete specialized arrow spine,
+     * including arguments awaiting a returned function in overapplication. */
+    void (*drop_arguments)(V *, uint32_t, uint32_t);
 } fwp_owned_fninfo;
 typedef struct { uint32_t arity; V (*entry)(V *); const char *name;
                  const fwp_owned_fninfo *owned; } fwp_fninfo;
