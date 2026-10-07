@@ -5243,6 +5243,17 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 let func = f.clone();
                 let mut s = self.prim(&func, &sym)?;
                 if self.reuse {
+                    if matches!(
+                        crate::ownership::primitive(&sym).and_then(|c| c.callback),
+                        Some(crate::ownership::Callback::Retained(0))
+                    ) {
+                        let result = func.locals[0].params(1).1;
+                        let share_result = u8::from(crate::rc::needs_rc(&self.prog.shapes, result));
+                        s = s.replace(
+                            "fwp_p_task_spawn(l0)",
+                            &format!("fwp_p_task_spawn_retained(l0, {share_result})"),
+                        );
+                    }
                     // with counted references: arrays written in place, and
                     // new ones owned by compiled code
                     if let Some(crate::ownership::Contract {
