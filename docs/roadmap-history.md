@@ -13791,3 +13791,12 @@ format0.35/0.63s pass. Final squash rebase/full gates still required.
 HTTP fixture candidate0d54979de1ef/38021302113 Linux Clang strict omission
 still false-passes with0 (expected1); original positive controls pass.
 ARM and GCC pass. Failed candidate must not propagate.
+
+First HTTP2 candidate0d54979de1ef/38021302113 completes with ARM/GCC success
+and both x86 Clang failures of the exact omitted-owner assertion. Candidate
+is rejected. Next candidate forces only the x86 body primitive into the
+copying frame, in addition to the existing hook/register/stack isolation.
+ARM remains unchanged; all original assertions remain. Previous broad primitive
+inlining broke ARM and is explicitly not repeated. Full four-way evidence
+must pass before propagation. Fold docs commitf3585147985d is published
+on05d354f57167; original implementation plus live docs are retained.

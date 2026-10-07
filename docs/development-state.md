@@ -90,7 +90,8 @@ Candidate ownership-evidence-http2-intel is based on source177a08a204d7. The
 only probe change extends the existing x86-only isolation to Clang; all positive
 and strict negative assertions stay intact. Local ARM test7.28CPU/15.25elapsed,
 lint2.34/4.74s and format0.46/0.89s pass. Candidate0d54979de1ef runs CI38021302113: ARM and Linux GCC pass, Linux Clang
-still returns0 for the omitted-owner control, Intel runs. Four native compiler/platform runner
+still returns0 for the omitted-owner control, Intel also fails the same strict omission assertion. The next candidate forces
+only the x86 body-copy primitive into its copying frame as well. Four native compiler/platform runner
 jobs must pass before the source89 repair and later propagation.
 
 Row 33 normalizes bound/inline Again records and reads cancellation owners by
@@ -147,7 +148,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 31 ownership-zip-unwind | 05d354f57167 | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; publishing next focused PR; all seven exact-head gates required |
-| 32 ownership-fold-unwind | b98eb6f1351b | 05d354f57167 | Refreshed on frozen zip head; all original source/probes unchanged; nine tests24.44CPU/49.14elapsed, lint2.29/4.69s and format0.35/0.63s pass; actual-squash rebase and full gates required |
+| 32 ownership-fold-unwind | f3585147985d | 05d354f57167 | Refreshed on frozen zip head; all original source/probes unchanged; nine tests24.44CPU/49.14elapsed, lint2.29/4.69s and format0.35/0.63s pass; actual-squash rebase and full gates required |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
 | 34 ownership-argument-preparation | 734d3383addf | 527f84d405b7 | Source/tests/scripts/workflows identical to33; docs only; audit 0.44/3.50s passes; skip duplicate PR after 28 full acceptance |
 | 35 ownership-constructor-unwind | be0032a15ee3 | 734d3383addf | Six tests 22.36/45.17s; exact unit3.39/7.02s; lint 2.28/4.73s, format 0.35/0.74s and strong audit pass |
