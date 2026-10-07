@@ -80,7 +80,8 @@ leased publication. Audit0.43CPU/3.50elapsed passes. Runner failures: loop
 state flattening is lost when Again holds an inline Let/Record spine; two
 new IR controls select arbitrary HashMap entries after constructor recording
 is added. Preserve their exact owner assertions while selecting pending calls.
-Next finish normalization and the cancellation observer at33, propagate
+Normalization and observer repair527f84d405b77ad33b27f9a4cf7981259e1c11e9
+is published at33 on actual32c434692ccb6f; olde838 is retained remotely. Next propagate
 through34–49 with explicit call selection at35, then refresh combined41
 evidence before continuing50–112. The loop observer must read actual
 counted-owner layout: flattened string owners are not boxed records. All
@@ -131,7 +132,7 @@ still need their final squash rebases and six exact-head full gates.
 | 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 33 ownership-loop-unwind | e83800d9ac44 | c434692ccb6f | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
+| 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests10.45CPU/20.96elapsed, lint2.32/4.58s, format0.36/0.76s, audit0.44/3.37s pass; full sequential gates remain required |
 | 34 ownership-argument-preparation | d3e1f6d4ed04 | e83800d9ac44 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 1a01dd91bcfd | d3e1f6d4ed04 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | bbdcc69fe735 | 1a01dd91bcfd | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
@@ -414,7 +415,9 @@ All pass43.85CPU/87.62elapsed. Existing >10MiB baseline and <1MiB optimized
 allocation assertions remain unchanged. No local full gate was run.
 Complete patch: /private/tmp/fwp-call-liveness-complete-argument-repair.patch.
 Earlier partial patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
-Complete propagation helper: /private/tmp/fwp-refresh-complete-call-repair.py.
+Complete argument helper: /private/tmp/fwp-refresh-complete-call-repair.py.
+Loop/control propagation: /private/tmp/fwp-refresh-loop-controls.py, with
+full/case-only normalization patches and exact inherited loop observer.
 Use separate complete-call journals; partial28–35 journal is superseded, not
 a completed full refresh. Root table records every published actual base.
 Failure log: /private/tmp/fwp-pr106-arm-job.clean.log. Old ARM failures: reuse
