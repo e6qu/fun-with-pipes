@@ -425,3 +425,8 @@ reference per call. RC prepares CAF arguments and protects caller owners during
 evaluation; executables release results/caches after tasks finish. Source/IR
 cleanup controls and the remaining library/shared lifetime gaps are recorded in
 [ownership.md](ownership.md#prepared-counted-caf-caches).
+
+Prepared inlining treats zero-argument CAFs as computations that must precede
+the callee, including ignored arguments. Static positive-arity function references
+remain trivial. Source traps and counted temporary cleanup are checked against
+an unoptimized interpreter in [ownership.md](ownership.md#prepared-caf-evaluation-during-inlining).

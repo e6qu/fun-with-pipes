@@ -967,3 +967,55 @@ is one line, 58 characters, empty body/no trailers. Publication follows checks.
 Dedicated-test/library clippy passes after correcting the fixture initializer.
 Final CAF tests pass after that edit (CPU 4.18 s / elapsed 10.91 s). Formatting
 and whitespace pass; no remaining focused failure. Full sequential CI is pending.
+
+## Prepared CAF evaluation during inlining
+
+`ownership-inline-caf`, `/private/tmp/fwp-inline-caf-worktree`, OLD base
+`68cf7bf2f7ca0986edf7039ff2e0bfe584e45820`. The optimizer classified every Func
+as trivial, including zero-argument CAFs whose evaluation can allocate or trap.
+Inlining a callee that ignored such an argument skipped the CAF. A real source
+regression printed 17 and exited 0 instead of raising division by zero with exit
+101. The ordinary optimized interpreter also skipped the trap; its pipeline uses
+the same optimizer, so the reference must disable that pass. This was reproduced
+before the fix, not inferred only from IR shape.
+
+Only positive-arity static function references remain trivial. CAF arguments now
+keep a checked evaluation binding before entering the inlined callee. Existing RC
+then releases an ignored counted result; no heap object or surface syntax is added
+by the binding. Three source cases cover ignored scalar and String CAF arguments
+and the order between an earlier CAF trap and the callee's later integer overflow.
+Unoptimized interpreter (`FWP_NO_OPT=1`), optimized interpreter and native O1/O2
+agree exactly on stdout/stderr/exit in both poison modes with GC stress/verification.
+A mistaken initial negative-repeat fixture was corrected: string.repeat clamps
+negative counts to zero, so it was not a trapping reference.
+
+A successful String CAF regression proves one evaluation, count 1 before cache
+teardown (only the cache owns it), and destruction after executable cleanup.
+Removing only the ignored argument's typed release leaves an extra owner and
+makes the control fail with exit 4 at O1/O2. The two new tests and three adjacent
+CAF ownership tests pass, guarded CPU 10.47 s / elapsed 21.53 s. Four selected
+opt_constant_order, case_of_case, unboxed_records and variant_returns goldens
+agree exactly on stdout/stderr/exit at O2 in both poison modes, CPU 4.13 s /
+elapsed 8.42 s. Library/dedicated-test clippy passes, CPU 2.42 s / elapsed 4.84 s;
+formatting passes, CPU 0.36 s / elapsed 0.75 s. Full sequential CI remains required.
+CONTRIBUTING now requires an unoptimized IR/interpreter reference for optimizer
+changes, because agreement between optimized engines can miss a common bug.
+
+All local checks were serial and bounded through
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py`: `cargo test --test inline_caf_ownership --test
+caf_ownership -- --nocapture`, `cargo clippy --lib --test inline_caf_ownership --
+-D warnings`, and `python3 /private/tmp/fwp-inline-caf-goldens.py`. Guarded package
+clean preceded switching from the CAF checkout. No resource refusal or local
+workload remains; shared target contains this inlining compiler. Remaining work
+includes aggregate reconstruction/metadata, whole-value variant boxing, other
+inline lifetime cases, retained task teardown/cycles and library/unload coverage.
+Phases 2–6 remain incomplete; no general ARC, tracing-free or speed claim is made.
+
+PR #81 remains the sole open PR, exact `6eeb915`, CI `37696063781`: ARM macOS and
+benchmarks passed; Linux and Intel macOS tests running. CI gates merging only;
+repair failures and continue separate preparation. Prepared squash subject
+`Preserve CAF argument evaluation and ownership during inlining` is one line,
+62 characters, empty body/no trailers. Publish after checks; preserve OLD
+`68cf7bf` for this child and OLD `b563360` for the immediate borrowed-callback
+rebase after #81 merges. No second PR opens while that current gate is pending.

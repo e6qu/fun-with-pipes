@@ -560,3 +560,15 @@ release their result and caches after tasks finish. IR/source cleanup controls,
 library interop pass. Library/unload and shared runtime lifetime coverage remains
 open, as do aggregate reconstruction and retained tasks. Full sequential CI is
 required; phase 2 is still in progress and #81 is the sole open PR.
+
+CAF ownership preparation published as `68cf7bf`, no additional PR. The handoff
+records its exact head, OLD `085dc71` base, checks and remaining lifetime gaps.
+Continue aggregate/runtime ownership while #81's current-head CI runs; fix any
+failure and squash only after all four required gates pass.
+
+Prepared CAF inlining preserves argument evaluation even when the callee ignores
+it. Source regressions use an unoptimized reference to detect common optimizer
+trap omissions; counted temporary and cache cleanup controls pass. Five focused
+checks, four selected semantic goldens and clippy/fmt pass; full CI is required.
+PR #81 is the sole open PR: ARM macOS and benchmarks passed, Linux and Intel
+macOS running. Continue ownership preparation and repair failures before merging.
