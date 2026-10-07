@@ -7869,3 +7869,31 @@ Fold lint (cargo clippy --test fold_unwind_ownership --test
 runtime_call_ownership -- -D warnings) passes2.48 s CPU /5.06 s elapsed;
 fmt check0.34 s /0.62 s. Nine current docs copied before final amend;
 source/runtime unchanged after checks.
+
+Final fold preparation1e8d1e34bc78d752999ccdb6ce7ab9500bccdbe8 is clean
+on actual base6a09138, published with exact lease against OLD968dac7.
+Whole subject verified one line with empty body. No second PR.
+
+Row33 OLD988f2a3 rebases from immutable parent968dac7 onto actual row32
+head1e8d1e3 (initial8ceb0a9); nine root docs resolve conflicts. New source
+oracle explicitly sets FWP_NO_OPT=1. Guarded clean0.04 s /0.25 s;
+formatting0.33 s /0.60 s. Existing loop ownership tests accompany current
+state/Step payload cancellation probes. Latest serial doc audit passes
+eleven link sets, 82 immutable pairs and whole subjects0.11 s /0.83 s.
+
+Guarded cargo test --test loop_unwind_ownership --test loop_ownership
+passes all seven tests28.65 s CPU /57.61 s elapsed: current state
+releases at first/later cancellation ticks; Step releases if payload
+preparation fails; alias, scalar address bits, flattened/nested state,
+no-tracing reclamation and unchanged trap/evaluation order checks pass.
+Raw interpreter and O1/O2 stress/verification/poison evidence pass.
+
+Loop lint passes2.56 s CPU /5.10 s elapsed. The subsequent guarded fmt
+check exited1 because os.killpg raised Operation not permitted during
+SIGCONT and cleanup SIGKILL. This is not a passing format check; inspect
+leftover processes and retry the unchanged bounded guard serially.
+
+Process inspection found no remaining cargo fmt/rustfmt/guard workload.
+Unchanged serial guarded fmt retry passes0.35 s CPU /0.71 s elapsed.
+No limits were changed or bypassed; the first failed invocation is retained
+above. Final root doc refresh follows, with no tested code changes.

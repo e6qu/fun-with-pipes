@@ -48,7 +48,9 @@ Prepared runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
 pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit
 targets); programs without possible unwind omit runtime registration. Scalar
-words stay uncounted. Sequential full CI is still required.
+words stay uncounted. Prepared loop cleanup similarly protects counted current
+state at cancellation safe points and owned Step payload preparation. Sequential
+full CI is still required.
 
 Prepared resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
