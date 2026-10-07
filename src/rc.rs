@@ -729,8 +729,11 @@ impl Checker<'_> {
                 Ok(())
             }
             Expr::SetFields(r, s) => {
+                let before = self.calls.map(|_| owned_references(st));
                 self.expr(r, st, !matches!(**r, Expr::Local(_)))?;
-                s.iter().try_for_each(|(_, x)| self.expr(x, st, true))
+                s.iter().try_for_each(|(_, x)| self.expr(x, st, true))?;
+                self.record_call(e, before, st);
+                Ok(())
             }
             Expr::Field(r, _) => self.expr(r, st, !matches!(**r, Expr::Local(_))),
             Expr::Let(l, v, b) => {
@@ -1188,6 +1191,38 @@ mod tests {
             .unwrap()
             .at_entry
             .is_empty());
+    }
+
+    #[test]
+    fn update_liveness_keeps_the_borrowed_base_and_remaining_owners() {
+        let string = MT::con("std::String");
+        let record = MT::Record(vec![
+            ("kept".into(), string.clone()),
+            ("replaced".into(), string.clone()),
+        ]);
+        let body = Expr::Let(
+            3,
+            Box::new(Expr::SetFields(
+                Box::new(Expr::Local(0)),
+                vec![(1, Expr::Local(1))],
+            )),
+            Box::new(Expr::Drop(
+                0,
+                Box::new(Expr::Drop(2, Box::new(Expr::Local(3)))),
+            )),
+        );
+        let p = prog(
+            vec![record.clone(), string.clone(), string],
+            vec![record],
+            body.clone(),
+        );
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let Expr::Let(_, update, _) = &body else {
+            unreachable!()
+        };
+        let call = live.get(&(&**update as *const Expr)).unwrap();
+        assert_eq!(call.before_arguments, vec![(0, 1), (1, 1), (2, 1)]);
+        assert_eq!(call.at_entry, vec![(0, 1), (2, 1)]);
     }
 
     #[test]
