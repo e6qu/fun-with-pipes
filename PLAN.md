@@ -48,7 +48,10 @@ run `37623311024`; [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) was
 squash-merged as `22994ba`. Fresh text trees and scratch cleanup passed all four
 exact-head gates in run `37636161587`, attempt 2;
 [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
-`6cdb0d1`. Closure ownership is the next focused PR after post-rebase checks. Later published branches prepare closure and
+`6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
+`37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
+as `079e7b5`. Closure cleanup is the next sequential PR; its rebase and focused
+checks are being prepared. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
@@ -64,7 +67,7 @@ state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
 Compiler reuse-token lifetime repair is prepared with focused checks: unused
 branches, old cells, constructor transfer and unwind release the emptied cell
-exactly once. Call liveness is in progress, covering pending arguments, incoming
+exactly once. Call liveness is published separately, covering pending arguments, incoming
 parameters, typed caller values and boxed/unboxed wrappers. Keep struct variants
 unboxed through these ownership moves. Neither change is merged yet; full CI
 still gates each sequential PR. Consumed runtime closures/accumulators, retained
@@ -491,3 +494,13 @@ are prioritized in the active roadmap above:
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).
+
+
+Prepared runtime application cleanup releases consumed functions, typed pending
+arguments, primitive-entry borrows and dynamic stack captures on nonlocal exits.
+Focused generated-code probes and a tracing-disabled counter comparison pass.
+Map prefix/scratch/partial-spine cleanup is published separately; filter and
+take-while selected-prefix cleanup is published separately. Zip-with protects
+both scratch buffers and its result prefix with focused exceptional checks;
+full sequential CI remains required. Finish the other callback accumulators and
+retained task lifetimes before closing phase 2.
