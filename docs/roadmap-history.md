@@ -9060,3 +9060,551 @@ one selected test, 48 unrelated filtered; this is a real executed test.
 Final same-target lint passes 2.29 / 4.59 s CPU / elapsed.
 Final fmt check passes 0.34 / 0.60 s; ten authoritative docs copied before amend.
 Tested source unchanged; every final PR still requires all six exact-head gates.
+Final row19 65fedd8d85430216539031553f88705ea72db5b4 is published clean with
+exact lease 6ce37fb180e1d88903dd94dadaf47181085ab09e on main d174e73.
+Entire subject verifies one line and empty body; source/runtime/tests/workflows
+still exactly match verified 6ce37fb. PR97 is created as the sole open delivery;
+body records validation and general-unwind limits. Row20 ACTUAL base remains
+6ce37fb, not this rewritten head or OLD c05a5d9. Six exact-head full gates required.
+PR97 CI37917260081 is queued at exact 65fedd8d85430216539031553f88705ea72db5b4;
+queued jobs provide no passing acceptance. Guarded handoff audit passes eleven
+link/heading sets, 82 immutable OLD ancestry pairs and whole messages
+(0.16 / 1.07 s CPU / elapsed). Continue row76 while CI gates delivery.
+
+## Scoped File runtime boundary preparation refresh, 2026-10-09
+
+Row76 rebases from ACTUAL old parent 923ad4a4fb07a5f6e2211c16c219308b5bddcf56
+onto current row75 head db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0.
+Ten current docs resolve conflicts. Runtime conflict resolved by retaining the
+exact old scoped owning callback function beside the repaired file_read_impl;
+byte/text dispatch and row72 binary validation repair stay intact. Guarded clean
+passes 0.07 / 0.36 s. Guarded cargo test --test file_runtime_boundaries
+--test file_runtime_ownership --test file_read_kinds is running.
+No extra PR; PR97 exact-head CI37917260081 is the sole delivery.
+All three focused tests pass 22.08 / 46.15 s CPU / elapsed. Scoped callbacks
+borrow their input File and retain the selected result before destroying its pair;
+independent original/returned owners survive cleanup. Raw interpreter agrees for
+scoped, task and loop File results. O1/O2 reuse/free on/off × GC on/off × poison,
+32-descriptor bound, missing-result-owner controls and disabled-free accounting
+pass. Tasks/channels honor FWP_RESOURCE_NO_FREE without losing resource disposal.
+Related logical alias and arbitrary-byte regressions pass. Sequential full gates required.
+Same-target lint passes 2.48 / 5.05 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten current docs copied before amend, tested code unchanged.
+Final row76 b4860bf2c392e8dae09994d404b9a4a6f0636d73 is published clean with
+exact lease 30fe112db93c727e565fed0a4c25e4da713a10ad. Whole subject verifies
+one line and empty body. Row77 ACTUAL base remains 30fe112; preserve its current
+c889479 WASI fstat repair. No extra PR; PR97 full exact-head CI is still queued.
+
+## WASM logical count preparation refresh, 2026-10-09
+
+Row77 rebases from ACTUAL old parent 30fe112db93c727e565fed0a4c25e4da713a10ad
+onto current row76 head b4860bf2c392e8dae09994d404b9a4a6f0636d73.
+Ten current docs resolve conflicts; logical-count C runtime and test match current
+c889479eed7aba4967b2e5f87d7a368193b18be9, preserving the corrected fstat
+WASI descriptor predicate. Minimal production Linux test-step env sets
+FWP_REQUIRE_WASM_RESOURCE_COUNTS=1, so its actual WASI test cannot silently skip.
+No evidence workflow copied into production. Guarded clean passes 0.02 / 0.25 s.
+Guarded cargo test --test wasm_resource_counts
+bump_heap_aggregate_counts_release_file_children -- --exact is running.
+This selects native host bump-C evidence only; actual WASI remains on GitHub.
+Exact host bump-C test passes 7.93 / 16.79 s CPU / elapsed, one executed
+and actual WASI test explicitly filtered. It checks 128 aggregate disposal cycles,
+300 aliases, overflow, scalar/constant safety and required-count omission at O1/O2.
+Logical metadata disappears on destruction; physical bump allocations remain.
+Related native File alias test is running. This local check is not WASI acceptance.
+Related guarded cargo test --test file_runtime_ownership passes one test
+1.26 / 3.62 s CPU / elapsed. Current native semantics stay correct alongside
+bump logical metadata. Focused lint and format follow; actual WASI stays on CI.
+Same-target lint passes 2.54 / 5.09 s CPU / elapsed.
+Fmt check passes 0.46 / 0.86 s; ten docs copied before amend, tested source unchanged.
+Linux required-WASI gate is prepared and awaits its own exact-head CI.
+Final row77 b4482c259c1edf2863c146f7795b97fc168ddd4a is published clean with
+exact lease c889479eed7aba4967b2e5f87d7a368193b18be9. Whole subject verifies
+one line and empty body. Row78 actual base remains c889479; inherit required
+Linux WASI env when rebasing onto b4482c2. PR97 Intel GC stress is running;
+five remaining jobs are queued, with no failed or passing acceptance yet.
+
+## Disabled-free WASM disposal refresh, 2026-10-09
+
+Row78 rebases from actual c889479eed7aba4967b2e5f87d7a368193b18be9
+onto b4482c259c1edf2863c146f7795b97fc168ddd4a. Ten root docs resolve
+conflicts. Runtime/task/count tests match current 681dd55136b030866c28afb227f222503c21113b;
+Cgen additionally inherits repaired file.read-bytes dispatch. Required Linux
+WASI test env remains, covering both free modes and cached-task/channel owners.
+Guarded clean passes 0.05 / 0.38 s. Focused cargo test --test wasm_resource_counts
+-- --skip wasi_aggregate_counts_release_file_children is running: two native
+host bump-C tests selected, actual WASI explicitly excluded for runner validation.
+Two native bump-C tests pass 9.47 / 19.69 s CPU / elapsed. O1/O2 fixed
+aggregate, cached task and channel cleanup passes; omitted disposal fails
+with expected exits 5 and 9. Metadata is reclaimed despite disabled object
+freeing; physical bump storage remains. Related native File boundary test runs.
+Related guarded cargo test --test file_runtime_boundaries passes one test
+12.17 / 24.55 s CPU / elapsed, retaining raw interpreter agreement, O1/O2,
+reuse/free on/off, GC off/on poison and missing-owner/accounting controls.
+Focused lint for both targets runs; actual WASI remains runner-only acceptance.
+Same-target focused lint passes 2.43 / 4.90 s CPU / elapsed.
+Fmt check passes 0.45 / 0.86 s. Ten current root docs copied before amend;
+tested source unchanged. Minimal required-WASI Linux env covers actual test
+in both free modes, but this preparation still awaits sequential full gates.
+Final row78 9609b73ef5ed4a40f63181acc4e073481356a86e is published clean
+with exact lease 681dd55136b030866c28afb227f222503c21113b. Whole commit
+message is one line with empty body. Row79 actual base remains 681dd55;
+rebase from it onto 9609b73. No extra PR opened; PR97 remains sole delivery.
+
+## Original record field-holder refresh, 2026-10-09
+
+Row79 rebases from actual 681dd55136b030866c28afb227f222503c21113b
+onto 9609b73ef5ed4a40f63181acc4e073481356a86e. Ten root docs resolve
+conflicts while preserving concise field-holder design. Cgen/field test match
+658e5b73ae1c05fe086adfd99678db5c780bf7d4 except inherited byte-read dispatch.
+Required Linux WASI env remains. Guarded clean passes 0.00 / 0.14 s.
+Guarded cargo test --test resource_frame_fields --test resource_frames runs.
+Eligible record holders avoid one parent box; boxed fallback and partial-retain
+unwind remain required. No timing claim follows from the allocation control.
+Four focused field/frame tests pass 18.06 / 36.28 s CPU / elapsed. Source
+raw interpreter agreement, O1/O2 GC stress/verify and reuse poisoning pass.
+Direct typed-IR control observes one record box disabled versus zero enabled;
+partial-retain unwind closes File exactly once and releases text. Missing
+File cleanup control fails as expected. Original parameter/inline frame
+lifetimes and returned/error aliases remain valid. Same-target lint runs.
+Same-target lint passes 2.58 / 5.09 s CPU / elapsed.
+Fmt check passes 0.43 / 0.83 s. Ten root docs copied before amend; tested
+feature source unchanged. Preparation still needs its own sequential full CI.
+Final row79 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040 is published clean
+with exact lease 658e5b73ae1c05fe086adfd99678db5c780bf7d4. Whole commit
+message is one line with empty body. Row80 actual base remains 658e5b7.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Inline File path layout refresh, 2026-10-09
+
+Row80 rebases from actual 658e5b73ae1c05fe086adfd99678db5c780bf7d4
+onto 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040. Ten root docs resolve
+conflicts, preserving concise inline-path design and all prior history. Layout
+code/tests match 2d903d6617d99cec52600c8af43e4d08b5de6716 with inherited
+main keep-alives, binary-read dispatch/implementation and corrected constructor
+omission control (_Exit(3) before stale finalizer). No repaired code reverted.
+Guarded cargo test --test file_inline_path --test file_construction_ownership
+--test file_read_kinds runs; single aligned leaf path allocation, checked size
+and raw interpreter display/I/O agreement remain required.
+Guarded clean before checkout switch passes 0.04 / 0.24 s.
+Four focused tests pass 12.66 / 25.48 s CPU / elapsed: File paths use one
+allocation versus two, 16-byte header versus 24 on this 64-bit host; path
+size/terminator, open/closed display, raw interpreter I/O and binary/text
+read distinction pass. O1/O2 GC off/on stress/verify and poison controls pass.
+Constructor injected failures close exactly once and clear finalized handles;
+corrected stale-finalizer omission control remains. Same-target lint runs.
+Same-target lint passes 2.51 / 5.00 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged; no general speed claim or merged support before full CI.
+Final row80 e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 is published clean
+with exact lease 2d903d6617d99cec52600c8af43e4d08b5de6716. Whole commit
+message is one line with empty body. Row81 actual base remains 2d903d6.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Last-owner File storage refresh, 2026-10-09
+
+Row81 rebases from actual 2d903d6617d99cec52600c8af43e4d08b5de6716
+onto e7d3882b67aef89c4bcb57ed14fe600bffb1fd63. Ten root docs resolve
+conflicts, retaining concise storage/finalizer design. Finalizer/count code and
+three modified test files match 750a5cffd46b83c22fa403ed9453b9678bf77118;
+primitives inherit main keep-alives and binary-read distinction. Required-WASI
+Linux env and corrected constructor omission control remain. Guarded cargo test
+--test file_storage_disposal --test file_inline_path --test file_runtime_ownership
+--test file_runtime_boundaries runs. Shared/disabled-free/bump storage stays;
+unshared native storage reclaims only after weak finalizer removal.
+Guarded clean before checkout switch passes 0.05 / 0.25 s.
+Five focused tests pass 25.15 / 54.49 s CPU / elapsed. O1/O2 finalizer
+removal and storage-disposal omission controls fail as expected; fixed code
+passes shared/unshared, disabled-free, GC off/on stress/verify and poison
+cases. Unshared storage reuse and freed-byte counters agree. Scoped/task/loop
+results remain valid against raw interpreter; inline layout/count alias checks
+pass. Focused lint runs. Merged-main CI37916609315 bench passes, other five
+jobs run; PR97 Intel GC runs and five jobs remain queued, no observed failure.
+Same-target lint passes 2.63 / 5.23 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged. Each production preparation still needs sequential full gates.
+Final row81 faac017dc60d99fc29169ce518ef346fd0f86b9a is published clean
+with exact lease 750a5cffd46b83c22fa403ed9453b9678bf77118. Whole commit
+message is one line with empty body. Row82 actual base remains 750a5cf.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Failed File constructor storage refresh, 2026-10-09
+
+Row82 rebases from actual 750a5cffd46b83c22fa403ed9453b9678bf77118
+onto faac017dc60d99fc29169ce518ef346fd0f86b9a. Ten root docs resolve
+conflicts. Constructor test conflict uses prepared poison-only header inspection
+with _Exit(3) before stale finalization: never inspect physically freed headers.
+Finalizer growth and both constructor tests match 17869223a5022ef060e24b06b0eacb73729f9589;
+primitives preserve inherited main keep-alives and byte-read distinction.
+Guarded clean passes 0.05 / 0.25 s. Guarded cargo test
+--test file_construction_disposal --test file_construction_ownership
+--test file_storage_disposal runs. Checked finalizer registry growth commits
+only after allocation succeeds, preserving previous registrations on failure.
+Three constructor/storage tests pass 10.55 / 25.59 s CPU / elapsed.
+O1/O2 failed allocation/initialization/finalizer registration closes raw streams
+and releases headers; poisoned metadata checks avoid freed storage. Prior
+registry entries survive realloc failure; hard OOM exits 102 with retained
+finalizers. The implementation checks growth size before mutating the registry.
+Last-owner finalizer/reuse controls pass. Focused lint runs. PR97 benchmark
+job now also runs; Intel GC runs and four jobs remain queued.
+Same-target lint passes 2.49 / 5.02 s and format 0.53 / 1.09 s CPU / elapsed.
+Ten root docs copied before amend; tested feature source unchanged.
+Final row82 06c93eff77af1f55771b7d466528599096342414 is published clean
+with exact lease 17869223a5022ef060e24b06b0eacb73729f9589. Whole commit
+message is one line with empty body. Row83 actual base remains 1786922.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Tag-aware variant frame holder refresh, 2026-10-09
+
+Row83 rebases from actual 17869223a5022ef060e24b06b0eacb73729f9589
+onto 06c93eff77af1f55771b7d466528599096342414. Ten root docs resolve
+conflicts, preserving concise tag-aware holder design. Cgen/variant test match
+786e4bbb99f1732727504f415e300c80b146f0e7 except inherited byte-read dispatch.
+Guarded clean passes 0.08 / 0.57 s. Guarded cargo test
+--test resource_frame_variants --test resource_frame_fields --test resource_frames
+runs. Eligible variants avoid wrapper boxes; incoming owners survive partial
+retention, tag-aware cleanup and boxed fallback conversion.
+Five focused tests pass 26.37 / 53.88 s CPU / elapsed. Raw interpreter
+agreement and direct-IR allocation controls prove one parent variant box
+versus zero for eligible holders. Nullary/scalar active tags, incoming partial
+retain cleanup, boxed fallback and mixed record/variant cleanup IDs pass
+O1/O2 GC off/on stress/verify and poison cases. Original frame lifetime
+regressions pass. Same-target lint runs.
+Same-target lint passes 2.93 / 6.03 s CPU / elapsed.
+Fmt check passes 0.53 / 1.07 s; ten root docs copied before amend. Tested
+source unchanged. Original variant holder support still requires full sequential CI.
+Final row83 f3c9ee4ec35416d1050b98d389186434e8408b2d is published clean
+with exact lease 786e4bbb99f1732727504f415e300c80b146f0e7. Whole commit
+message is one line with empty body. Row84 actual base remains 786e4bb.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Per-path variant frame binding refresh, 2026-10-09
+
+Row84 rebases from actual 786e4bbb99f1732727504f415e300c80b146f0e7
+onto f3c9ee4ec35416d1050b98d389186434e8408b2d. Ten root docs resolve
+conflicts, preserving current-scrutinee initialization and original frame lifetime.
+Cgen/variant test match ae00e6929e8686d2d794d4cfa5600e31e169dec7 except
+inherited byte-read dispatch. Guarded clean passes 0.14 / 1.04 s.
+Guarded cargo test --test resource_frame_variants --test resource_frames runs.
+Mixed let/whole-pattern paths initialize fresh typed holders, close once on
+original frame exit and keep scalar/nullary tags safe.
+Four focused tests pass 32.57 / 65.62 s CPU / elapsed. Mixed let/pattern
+paths select the current scrutinee, preserving typed V plus variant cleanup
+slots. Direct typed interpreter and native O1/O2 agree; both paths close once,
+fstat reports EBADF after frame exit, and GC off/on stress/verify plus poison
+pass. Variant allocation/partial-retain and original frame regressions pass.
+Same-target lint runs.
+Same-target lint passes 3.41 / 10.41 s CPU / elapsed.
+
+### Archived preparation handoff through row83
+
+Row77 is published clean at b4482c259c1edf2863c146f7795b97fc168ddd4a.
+Native bump-C and related File checks pass; lint 2.54 / 5.09 s and format
+0.46 / 0.86 s pass. Corrected WASI fstat predicate remains. Minimal Linux
+CI test-step env requires actual WASI availability; local host checks supply
+no actual WASI acceptance. Metadata is reclaimed; bump storage is retained.
+Row78 is published clean at 9609b73ef5ed4a40f63181acc4e073481356a86e,
+on actual b4482c2. Both native bump tests and File boundary regression pass;
+lint 2.43 / 4.90 s and format 0.45 / 0.86 s pass. Disabled-free disposal
+reclaims logical metadata and closes File children without freeing bump storage.
+Actual WASI in both free modes remains required on Linux CI.
+Row79 is published clean at 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040,
+on actual 9609b73. Four field/frame tests, lint 2.58 / 5.09 s and format
+0.43 / 0.83 s pass. Field-only holders eliminate one parent record box;
+original lifetimes, returned/error aliases and partial-retain unwind are preserved.
+No general speed claim. Row80 is published clean at
+e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 on actual 35c2aeb. Four tests,
+lint 2.51 / 5.00 s and format 0.44 / 0.83 s pass. Inline paths use one
+allocation and a 16-byte header on this 64-bit host, preserving constructor
+failure cleanup, display and binary/text reads. Row81 is published clean at
+faac017dc60d99fc29169ce518ef346fd0f86b9a on actual e7d3882. Five tests,
+lint 2.63 / 5.23 s and format 0.44 / 0.83 s pass. Last-owner unshared File
+storage reclaims after finalizer removal; aliases, disabled-free policy and
+scoped close-before-drop remain correct. Row82 is published clean at
+06c93eff77af1f55771b7d466528599096342414 on actual faac017. Three tests,
+lint 2.49 / 5.02 s and format 0.53 / 1.09 s pass. Failed constructors reclaim
+headers and close streams; failed registry growth preserves prior finalizers,
+including hard OOM exit 102. Row83 is published clean at
+f3c9ee4ec35416d1050b98d389186434e8408b2d on actual 06c93ef. Five tests,
+lint 2.93 / 6.03 s and format 0.53 / 1.07 s pass. Eligible variant holders
+avoid wrapper boxes while preserving active tags, partial retention, boxed
+fallback and original lifetimes. 
+Fmt check passes 0.87 / 4.02 s; ten root docs copied before amend. Tested
+source unchanged. Handoff archives completed row77–83 paragraphs rather than
+retaining competing old next actions; actual bases and checks remain in its table.
+Final row84 d2936a008fd2717cb7444a5dca8df0065cb77827 is published clean
+with exact lease ae00e6929e8686d2d794d4cfa5600e31e169dec7. Whole commit
+message is one line with empty body. Row85 actual base remains ae00e69 and
+contains two commits (nominal context plus whole-stack binder repair).
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Whole-match nominal and stack ownership refresh, 2026-10-09
+
+Row85 rebases both commits from actual ae00e6929e8686d2d794d4cfa5600e31e169dec7
+onto d2936a008fd2717cb7444a5dca8df0065cb77827. First replay
+46b163cc40652ee7f565c3423e039d043a16f518 preserves nominal match context;
+second replay cb7c2d7a97aff3431b40164ec83d117ab2deb748 preserves whole-stack
+child owners. Ten root docs resolve both conflict sets without old histories
+replacing current state. RC/code/tests match 872372452a1071db124f8e4cc8ae16027cc8f337
+except inherited binary-read dispatch. Guarded clean passes 0.07 / 0.37 s.
+Guarded cargo test --test stack_match_ownership --test match_context_ownership
+--test resource_frame_variants runs. All raw source oracles explicitly disable
+optimization; required binder-retain omission control stays in production.
+Four focused stack/context/variant tests pass 15.67 / 33.72 s CPU / elapsed.
+Raw interpreter agreement, O1/O2 GC off/on stress/verify and poison plus
+required whole-binder child-retain omission control pass. Nominal File
+disposal and variant lifetimes remain correct. Same-target lint passes
+2.51 / 5.04 s. Rebuild exact HTTP golden at O2 from this current checkout,
+then compare stdout/stderr in four GC-off/on × poison modes.
+Guarded current binary build http.fwp -O2 -o /private/tmp/fwp-resource-http-fixed
+from current tests/run passes 7.37 / 14.81 s CPU / elapsed. Guarded python3
+/private/tmp/fwp-verify-resource-http.py now checks the rebuilt fixture.
+Exact rebuilt HTTP golden passes stdout, empty stderr and exit zero in all
+four GC off/on × poison modes, stress/verify enabled, seed 42. Guarded
+helper passes 1.19 / 6.75 s CPU / elapsed. This restores focused evidence
+for the actual earlier HTTP failure; each production PR still needs all six gates.
+Fmt check passes 0.43 / 0.83 s; ten current root docs copied before amend.
+Tested code unchanged; both one-line preparation commits remain in ancestry.
+Final row85 97dca7626158d867392c30bc6d6d21438eec7639 is published clean
+with exact lease 872372452a1071db124f8e4cc8ae16027cc8f337. First replay
+46b163cc40652ee7f565c3423e039d043a16f518 remains. Both whole messages
+are one line with empty bodies. Row86 actual base remains OLD3a0cbdb, not
+8723724 or rewritten97dca76; inherit the stack repair without replaying it.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Per-path record frame binding refresh, 2026-10-09
+
+Row86 rebases from actual 3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778
+onto 97dca7626158d867392c30bc6d6d21438eec7639, inheriting the stack repair
+without replaying it. Ten root docs resolve conflicts. Record test matches
+f85cc4e09db49f1ac53f1f06da40b49f189b5b56; Cgen additionally includes the
+nine-line stack-child binder repair and corrected byte-read dispatch.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test --test resource_frame_fields
+--test resource_frame_variants --test stack_match_ownership runs.
+Three focused tests pass 16.25 / 34.51 s CPU / elapsed. Mixed let/whole
+record paths close exactly once; current-scrutinee field holders preserve
+original frame lifetime, one-vs-zero boxes and partial-retain cleanup. Variant
+active tags and whole-stack binder child aliases remain valid. Raw source
+interpreter agreement and O1/O2 GC off/on stress/verify plus poison controls
+pass. Same-target lint runs.
+Same-target lint passes 2.56 / 5.14 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
+code unchanged, including inherited stack-child repair and byte-read dispatch.
+Final row86 5915ac0607acc7a06b35d6b04d3d3047e024fdd6 is published clean
+with exact lease f85cc4e09db49f1ac53f1f06da40b49f189b5b56. Whole commit
+message is one line with empty body. Row87 actual base remains f85cc4e.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Nested nominal source resource refresh, 2026-10-09
+
+Row87 rebases from actual f85cc4e09db49f1ac53f1f06da40b49f189b5b56
+onto 5915ac0607acc7a06b35d6b04d3d3047e024fdd6. Ten root docs resolve
+conflicts without old consolidation replacing current status/evidence. The
+only source/runtime/workflow delta is the intended tests/resource_match_context.rs;
+prior raw field/match oracle fixes are already inherited. No runtime change.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test
+--test resource_match_context runs, comparing raw interpreter with optimized/
+unoptimized source, O1/O2, reuse/free toggles, GC off/on stress and poison
+under a 32-descriptor child-only bound for 64 nested nominal File discards.
+Nested nominal source regression passes 13.06 / 26.28 s CPU / elapsed,
+64 discards within 32 descriptors. Raw interpreter and optimized/unoptimized
+source builds agree across O1/O2, reuse/free toggles, GC off/on stress/verify
+and poison. This confirms tested nominal File lifetimes, not no-tracing
+coverage of every resource graph. Focused lint runs.
+Focused lint passes 2.52 / 5.01 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged and compiler/runtime/workflows match predecessor.
+Final row87 f08611023cec7df7bcb114832f1cf2e292ac73c3 is published clean
+with exact lease 8abfd46b34762b0cf69e417b65a85a1d783b61ac. Whole commit
+message is one line with empty body. Row88 actual base remains 8abfd46,
+with both cycle-evidence and tracing/documentation commits to preserve.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Explicit channel cycle evidence refresh, 2026-10-09
+
+Row88 rebases from actual 8abfd46b34762b0cf69e417b65a85a1d783b61ac
+onto f08611023cec7df7bcb114832f1cf2e292ac73c3. Ten root docs resolve
+conflicts. Cycle test matches 291f8f75f19688f139b2dcae7f31482cac810643;
+tracing controls and queue-preservation docs are already inherited, making
+291f8f7 documentation-only replay empty. Its content remains in all three
+reference/concurrency/ownership docs, including host library lifetime guidance
+that the historical commit removed. Only cycle test differs from predecessor.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test
+--test channel_cycle_ownership --test channel_queue_ownership runs.
+Close preserves queued values; explicit drain/discard breaks the self-cycle.
+Automatic unreachable cycle reclamation is not established by this test.
+Two cycle/queue tests pass 13.11 / 26.29 s CPU / elapsed. 64 self-cycle
+iterations preserve queue owners on close, drain through typed receive/discard
+and reclaim counted values; normal counts and poison tombstones agree.
+Raw interpreter comparison, O1/O2 GC-off/on stress/verify and poison pass.
+Typed queue transfer/failure cleanup regressions also pass. Focused lint runs.
+Same-target focused lint passes 2.64 / 5.36 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
+cycle/queue code unchanged. Reference, concurrency and ownership all retain
+tracing toggles and explicit-drain limits without altering channel.close semantics.
+Final row88 e91dcb307c615b3330e50348a710a14b0c6be178 is published clean
+with exact lease 291f8f75f19688f139b2dcae7f31482cac810643. Whole commit
+message is one line with empty body. Historical documentation-only second
+commit is empty because current docs already retain its corrected content.
+Rows18–88 preparations remain sequential, not delivered. Next independent
+work audits remaining phase2 ownership boundaries at this actual prepared head.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Borrowed HTTP/2 body owner audit, 2026-10-09
+
+New isolated ownership-http2-body-roots branch starts at actual
+e91dcb307c615b3330e50348a710a14b0c6be178. HTTP/2 body copies bytes from
+g_stream malloc data; that pointer is outside the GC heap, and no owner is
+used after the allocating copy. Add FWP_KEEP_ALIVE(call) after copy, preserving
+its reachable stream and connection until the bytes belong to a language value.
+New forced major trace verifies actual collection and finalizer survival at
+the copy boundary; fixed O1/O2/poison and omitted-fence O2 control required.
+Guarded cargo test --test http2_body_roots runs. Full existing web interpreter/
+native gates remain runner-only; this is not yet verified support.
+Separate audit finding: native negative body max is not clamped like the Rust
+interpreter. Investigate as the next focused semantic boundary task.
+Initial root fixture test fails 101 (7.32 / 14.97 s), native signal11 before
+owner inspection: fixture passed scalar zero where Duration needs an object
+with its nanosecond field. Corrected fixture uses stack Duration {0 ns};
+no runtime workaround or weakened collection assertion. Focused test reruns.
+Corrected focused HTTP/2 body root test passes 0.57 / 2.23 s CPU / elapsed.
+Actual major trace advances collection count at copy boundary; fixed O1/O2
+with poison off/on keeps stream alive, preserves five arbitrary bytes and
+finalizes once at library teardown. O2 omitted-fence control exits1 before
+using freed buffer, proving the borrowed-root gap. Related guarded cargo test
+--test tls_alpn_roots now checks the same external-storage owner contract.
+Related TLS ALPN forced-major root regression passes 0.55 / 2.12 s CPU /
+elapsed. Actual collection, real OpenSSL/Rust ALPN agreement and omitted-fence
+control remain valid. Both focused regressions pass; focused lint runs.
+PR97 ARM regular macOS now also passes (bench and Intel GC already pass);
+Linux, Intel regular and ARM GC stress are running at exact65fedd8.
+Focused lint passes 2.69 / 5.43 s CPU / elapsed; formatting application
+passes 0.45 / 0.84 s. Tests and controls preserve external owner lifetime,
+not a new counted HTTP/2 handle contract or a performance claim.
+Fmt check passes 0.48 / 0.97 s; ten root docs copied before first preparation
+commit. Production delta is one two-line owner fence plus its focused regression.
+New row89 d29dda936dff119f226cdc720aa42da549a1427a is published clean on
+actual e91dcb307c615b3330e50348a710a14b0c6be178. Initial immutable OLD
+anchor equals this first preparation commit; later CURRENT may change only.
+Whole commit message verifies one line, empty body and no attribution.
+Next independent task repairs native/interpreter negative HTTP/2 body bound
+mismatch, then continues remaining phase2 ownership audit. No extra PR opened.
+
+## HTTP/2 body negative-bound engine agreement, 2026-10-09
+
+New isolated fix-http2-body-bounds branch starts on
+d29dda936dff119f226cdc720aa42da549a1427a. Native max now clamps negative
+values to zero, matching src/h2web.rs interpreter behavior. New focused unit
+test directly calls the raw interpreter primitive and compares native C outputs
+for thirteen limit/completion/reset/dead/timeout cases, preserving size-before-
+completion-before-reset-before-timeout order. Includes arbitrary byte payload
+and removed-clamp control at O1/O2, plus GC stress/verify and poison.
+Guarded cargo test --lib body_bounds_and_error_order_agree_with_native runs.
+Initial new unit compilation fails E0509, exit101 (2.49 / 4.92 s): Value
+implements Drop, so its payload cannot be moved by match. Test now borrows
+result fields; no production change or weaker assertion. Focused test reruns.
+Guarded clean before switching checkout passes 0.04 / 0.25 s.
+Second focused test fails exit101 (5.40 / 11.21 s): thirteen raw interpreter
+cases pass, but omission needle also matches an existing clamp elsewhere in
+the generated runtime. Scoped needle to the HTTP/2 WCALL/max prefix; assertion
+still requires exactly one match and the control removes only this fix. Rerun.
+Corrected engine-agreement unit passes 6.00 / 12.64 s CPU / elapsed,
+one selected test (63 filtered). Thirteen direct raw interpreter results match
+native O1/O2 outputs, GC stress/verify and poison. Removed-clamp control
+returns the former differing output at both optimization levels. Size checking
+still precedes completion, then reset/dead, then timeout; extreme signed
+bounds and binary bytes remain correct. Related HTTP/2 forced-major root test runs.
+Related forced-major HTTP/2 body root regression passes 7.61 / 15.92 s
+CPU / elapsed. Corrected max semantics retain borrowed call owner through
+copying at O1/O2/poison; omitted-owner control still fails before freed bytes
+are used. Formatting applied; library/test lint runs under bounded guard.
+Library/test lint cargo clippy --lib --tests -- -D warnings passes
+5.93 / 12.87 s CPU / elapsed within guard limits. This checked more lint
+targets than necessary; future local lint should select relevant targets.
+No full test gate ran locally. Formatting application passes 0.44 / 0.83 s.
+PR97 ARM GC stress also passes: four gates pass, Linux and Intel regular run.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before first preparation
+commit. Production semantic delta is one negative-limit clamp, with paired
+raw interpreter/native tests and preserved borrowed-owner regression.
+New row90 6f310b5483a8c49e2819c595a25a9a15b71190b6 is published clean on
+actual d29dda936dff119f226cdc720aa42da549a1427a. Initial immutable OLD
+anchor equals this first preparation commit; later CURRENT may change only.
+Whole commit message verifies one line, empty body and no attribution.
+Next independent work continues borrowed-runtime roots and nominal context
+audits at this actual prepared head. No extra PR opened; PR97 remains sole delivery.
+
+## HTTP/2 peer metadata unwind audit, 2026-10-09
+
+New isolated ownership-http2-peer-cleanup branch starts on actual
+6f310b5483a8c49e2819c595a25a9a15b71190b6. HTTP/2 request copies a malloc
+peer subject into String/Option; a trap skipped its normal-path free. Protect
+the temporary with existing fwp_tls_subject_free unwind cleanup until both
+allocations succeed, then release once. Native fixture injects both failures,
+checks success/absent-TLS/absent-subject behavior and omitted-cleanup failure.
+Guarded cargo test --test http2_peer_cleanup --test tls_peer_subject_ownership
+runs; related real OpenSSL certificate/BIO/Rust subject evidence remains.
+Further audit candidate: gRPC served-job peer/status-message lifetimes, ensuring
+retained task contexts are not released before task completion.
+Initial metadata/TLS check fails exit101 (7.24 / 15.22 s), fixed O1
+fixture exits1 on temporary-free counter. Added stage/counter diagnostics
+without changing runtime or assertions; focused checks rerun to identify cause.
+Guarded clean before switching passes 0.07 / 0.37 s.
+Diagnostic retest fails exit101 (0.37 / 1.29 s): stage0 reported four frees
+because the fixture retained a dangling address that malloc subsequently reused
+for unrelated allocations. Observer now clears the tracked pointer when that
+allocation is freed, preserving exactly-one release/leak assertions for its
+actual lifetime. Runtime unchanged. Metadata and real TLS checks rerun.
+Corrected metadata/TLS tests pass 1.32 / 5.17 s CPU / elapsed. HTTP/2
+string-copy and Option traps release the subject exactly once, leave no
+cleanup links, and preserve success/absent subject/TLS behavior. Omitted
+cleanup controls fail at O1/O2. Fixed GC stress/verify and poison pass.
+Related real OpenSSL certificate/BIO/Rust subject evidence remains valid.
+Focused lint runs. PR97 Linux now passes; only regular Intel macOS remains.
+
+## Structure delivery and HTTP/2 peer cleanup preparation, 2026-10-09
+
+PR97 exact65fedd8d85430216539031553f88705ea72db5b4 passes all six
+CI37917260081 jobs. Explicit match-head squash at 2026-10-09T11:43:18Z yields
+2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 with entire one-line message
+`Own typed zip unzip and chunks results and release scratch storage`.
+Ten authoritative root docs backed up to /private/tmp/fwp-main-docs-pre97,
+byte-verified, restored after main fast-forward and byte-verified again.
+
+New ownership-http2-peer-cleanup preparation starts on
+6f310b5483a8c49e2819c595a25a9a15b71190b6. Runtime HTTP/2 request metadata
+registers the existing TLS subject destructor before copying a malloc subject
+into String/Option; normal completion removes cleanup and frees exactly once.
+Focused fixture uses actual SSL/managed call structures and stubs only subject
+acquisition, inducing both copying traps, absent peer and no-TLS paths.
+O1/O2, actual stress/verification and poison modes pass; omitted-cleanup controls
+exit1 on leaked temporaries. Related TLS regression covers real X509/BIO subject
+ownership and raw interpreter agreement.
+Initial fixture fails exit101 (7.24 / 15.22 s); diagnostic rerun fails
+0.37 / 1.29 s, stage0 counted four frees instead of one. Its retained freed
+address was reused by later allocations. Forgetting the observed pointer at its
+first free fixes the test lifetime without changing runtime or release assertions.
+Guarded cargo test --test http2_peer_cleanup --test tls_peer_subject_ownership
+passes both tests 1.32 / 5.17 s CPU / elapsed. Guarded clean passes0.07 / 0.37 s;
+format application0.43 / 0.83 s, focused cargo clippy --test http2_peer_cleanup
+--test tls_peer_subject_ownership -- -D warnings2.58 / 5.15 s and cargo fmt
+--all -- --check0.44 / 0.83 s. All use the documented env/local guard.
+Further gRPC peer/status audit must respect child task context inherited until
+join after the handler returns; no early free or complete no-tracing claim.
+
+Row91 is published clean at 3c268c34d15b5ffd36b3747d1f6cee8343b34e08 on actual
+6f310b5483a8c49e2819c595a25a9a15b71190b6. Immutable OLD/parent pair records this first
+preparation; later CURRENT may change. Entire one-line message verifies:
+`Release HTTP2 peer subject temporaries when metadata copying fails`.
+No additional PR; next delivery remains row20 after the PR97 squash.
+
+Row20 final rebase from actual6ce37fb180e1d88903dd94dadaf47181085ab09e
+onto squash2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 succeeds. All doc
+conflicts resolve with ten current root docs; source/runtime/tests/workflows
+against7741d09dd8cf214396e7938e07fbbd1f7263d9f7 are byte-identical.
+Guarded cargo clean -p fwp passes0.05 / 0.25 s before checkout switch.
+Final cargo test --test list_generation_ownership runs under bounded guard.
+
+Final guarded generation tests pass all three13.79 / 27.85 s CPU / elapsed.
+Focused cargo clippy --test list_generation_ownership -- -D warnings passes
+2.38 / 4.68 s. Range owns fresh nodes; repeat retains each typed alias.
+Boxed128-bit payloads remain shared; generic unwind coverage stays later work.

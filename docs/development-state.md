@@ -28,29 +28,25 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is d174e73fecb96cb5aef85fa20eb8471a48dc0948 (#96). All six
-CI37909273494 gates passed at 03d25acc581a69c1a16f0add88e4768777072683.
-Explicit match-head squash verifies the whole one-line message:
-`Transfer owned loop states and reclaim typed Step and ABI payloads`.
-#74–#96 deliver native macOS and selected ownership through loop-state/Step/ABI
-wrappers, separate call effects and exact native wide counts. Phase 1 is done;
-phase 2 remains incomplete; phases 3–6 are pending.
+Main is 2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 (#97). All six
+CI 37917260081 gates passed at 65fedd8d85430216539031553f88705ea72db5b4.
+Explicit match-head squash at 2026-10-09T11:43:18Z verifies the entire one-line
+message: `Own typed zip unzip and chunks results and release scratch storage`.
+#74–#97 deliver native macOS and selected ownership through typed nested
+zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
+Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
 
-No PR is open. Next delivery is queue19 ownership-list-structure,
-/private/tmp/fwp-structure-worktree, final-rebased on actual main d174e73 (resolve the branch head before publication).
-Rebased from ACTUAL prior base 112f3c8de87beddab2374f51e19d6dc94846919d;
-source/runtime/tests/workflows exactly match verified previous 6ce37fb.
-Four final structural ownership tests pass 16.32 / 32.95 s. Exact contract unit
-passes 3.24 / 6.73 s; lint passes 2.29 / 4.59 s and format 0.34 / 0.60 s.
-Final docs and exact-lease publication follow; six full gates run only on GitHub.
-Preserve all ten root docs, verify tested feature source, rerun focused checks,
-exact-lease publication against 6ce37fb, then open the sole next PR.
-
-Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
-main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row75 are published with focused checks. The next independent task
-is row76 borrowed File roots.
-Prior main/heads/messages, failed evidence and focused checks remain in history.
+No open delivery PR. Next is row20 ownership-list-generation,
+/private/tmp/fwp-generation-worktree, current7741d09dd8cf214396e7938e07fbbd1f7263d9f7.
+Final rebase from ACTUAL prior base6ce37fb onto squash2c1003c completed;
+source/runtime/tests/workflows match7741d09 exactly. Historical doc conflicts
+resolved with all ten current root docs. Final three repeat/range tests pass13.79 / 27.85 s; focused lint passes
+2.38 / 4.68 s. Format checked; publish and open the next sole PR. Preserve OLD fad9b1a/parent c05a5d9.
+Ten current docs were backed up and byte-verified in
+/private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
+restored byte-for-byte afterward. Independent preparations through row90 are
+published; row91 peer cleanup is published with focused tests, lint and format
+passing. Prior checks remain in history.
 
 ## Next sequential preparations
 
@@ -61,7 +57,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
-| 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 / 32.47 s |
+| 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
 | 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 / 27.47 s |
 | 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 / 28.81 s |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
@@ -118,22 +114,66 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 3c87e1f63b51 | d4611644084a | 21.06 / 42.34 s + three units 3.93 / 8.00 s |
 | 74 ownership-file-runtime-owners | 4b5da4aa946a | 3c87e1f63b51 | 21.91 / 44.03 s |
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
+| 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
+| 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
+| 78 ownership-wasm-count-disposal | 9609b73ef5ed | b4482c259c1e | Two native bump tests 9.47 / 19.69 s + File 12.17 / 24.55 s; actual WASI awaits CI |
+| 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |
+| 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
+| 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
+| 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
+| 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
+| 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
+| 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
+| 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
+| 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
+| 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
+| 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
+| 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
 
-Rows 18–75 are published preparations with passing focused tests, lint and
+| 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
+
+Rows 18–91 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row75 mandatory original-frame release is published clean at
-db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0 on actual base 4b5da4a.
-Five tests pass 22.99 / 46.22 s, lint 2.59 / 5.18 s, format 0.44 / 0.84 s.
-Source opens/discards respect descriptor bounds without GC and with reuse/free
-disabled. Original parameter lifetimes and owned aliases remain preserved.
-Independent row76 rebases from ACTUAL old parent 923ad4a onto current row75 head db3bcf0.
-Preserve all ten current docs before main refresh or rebase; OLD anchors stay immutable.
-Delivery row19 now final-rebases from ACTUAL112f3c8 onto main d174e73 before sole next PR.
+Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
+host bump-C checks supply no actual WASI acceptance; physical bump storage
+remains allocated. Prepared layout/allocation controls establish no speed claim.
+Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
+on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
+Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
+HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
+Row88 is published clean at e91dcb307c615b3330e50348a710a14b0c6be178,
+on actual f086110. Two cycle/queue tests, lint 2.64 / 5.36 s and format
+0.45 / 0.83 s pass. Close preserves queued values; explicit drain breaks
+the counted self-cycle. Tracing docs from 291f8f7 are already inherited.
+New row89 is published clean at d29dda936dff119f226cdc720aa42da549a1427a,
+on actual e91dcb3, checkout /private/tmp/fwp-http2-body-roots-worktree.
+Body and related TLS root tests, lint 2.69 / 5.43 s and format 0.48 / 0.97 s
+pass. Actual major collection preserves stream through copying; omitted-fence
+O2 control exits1. Fixture Duration error is corrected and archived.
+Row90 is published clean at 6f310b5483a8c49e2819c595a25a9a15b71190b6,
+on actual d29dda9, checkout /private/tmp/fwp-http2-body-bounds-worktree.
+Thirteen raw interpreter/native body-bound cases agree; removed-clamp controls
+reproduce the old mismatch. Borrowed-root test, lint 5.93 / 12.87 s and format
+0.45 / 0.83 s pass. Test-only compilation/control issues are repaired and archived.
+Independent audit found HTTP/2 peer metadata buffer leak on string/Option
+copy trap. New ownership-http2-peer-cleanup branch at
+/private/tmp/fwp-http2-peer-cleanup-worktree on 6f310b5 protects the malloc
+subject with existing unwind cleanup. Both metadata/TLS ownership tests pass
+1.32 / 5.17 s; O1/O2 copy/Option traps and omitted-cleanup controls pass.
+Fixture recycled-address counter is corrected. Focused lint passes 2.58 / 5.15 s;
+format check passes 0.44 / 0.83 s. Published clean at
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08; immutable OLD equals first
+preparation head, parent6f310b5483a8c49e2819c595a25a9a15b71190b6.
+Further audit: gRPC served-job peer strings and status messages need lifetime
+review; do not free retained task context until task completion is proved.
+Do not promote phase2 or no-tracing support before sequential full acceptance.
+Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
+PR97 is merged; row20 final rebase onto actual2c1003c is the next delivery.
 
 ## Repaired resource evidence
 
@@ -153,11 +193,9 @@ exact HTTP golden in four GC-off/on poison modes pass. The repaired full gates p
 its own exact-head gates. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
 retain failed logs, commands, controls and measurements.
 
-Production row 85 repair is published clean as
-872372452a1071db124f8e4cc8ae16027cc8f337, following immutable OLD3a0cbdb.
-Its five focused tests pass 16.71 s /36.11 s, lint 2.45 s /4.96 s, format
-0.45 s /0.86 s. Row 86 actual base remains 3a0cbdb; do not replay this fix
-when rebasing row 86 onto row 85's eventual squash. OLD anchors stay unchanged.
+Production row85 repair is refreshed above, preserving the whole-stack binder
+regression and nominal File ownership. Row86 now inherits the stack repair on actual97dca76; its next final
+rebase must preserve that repair without replaying it. OLD anchors stay unchanged.
 Rows 79–88 are prepared, not delivered. Channel close preserves queued values;
 explicit drain breaks its counted cycle; automatic cycle reclamation is unproved.
 
@@ -180,16 +218,16 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-structure-worktree; row19 tests/lint complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.37 s).
-Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.14 s CPU / 1.04 s elapsed).
+belongs to /private/tmp/fwp-generation-worktree; final generation tests and lint pass; publishing next sole PR.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.25 s).
+Last guarded doc audit passes eleven link/heading sets, 84 immutable queue
+ancestry pairs and whole commit messages (0.19 s CPU / 1.29 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre96; refresh all ten
+/private/tmp/fwp-main-docs-pre97; refresh all ten
 immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

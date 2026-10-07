@@ -257,6 +257,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             None,
             &[1],
         ),
+        "range" => (&[B, B], ResultOwnership::FreshSpine, None, &[]),
+        "repeat" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
         "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
         "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
         "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
@@ -458,7 +460,7 @@ mod tests {
         }
         for symbol in [
             "reverse", "take", "append", "flatten", "drop", "nth", "index-of", "sort", "unique",
-            "zip", "unzip", "chunks",
+            "zip", "unzip", "chunks", "range", "repeat",
         ] {
             assert!(lists
                 .lines()

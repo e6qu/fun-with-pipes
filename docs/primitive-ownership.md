@@ -141,6 +141,7 @@ released explicitly. Scalar bits never select a reference destructor.
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
 | scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
 | loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |
+| zip; unzip; chunks | Borrow inputs | Counted nested spines retain typed aliases; release scratch; invalid chunk size traps before list evaluation |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
@@ -161,7 +162,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
@@ -218,7 +218,23 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Sequential CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
 | 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Sequential CI; wide counts/overflow, GC-off close, IO traps and omission controls |
 | 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Sequential CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
+| 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Sequential CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
+| 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Sequential CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Sequential CI; O1/O2 omission controls and required actual WASI in both free modes |
+| 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Sequential CI; original lifetime, partial-retain unwind and parent-box count control |
+| 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Sequential CI; display/I/O agreement, one allocation versus two and constructor rollback |
+| 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Sequential CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
+| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Sequential CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
+| 83 | Original variant holders retain active typed payloads in structs; incoming values survive partial retains and boxed fallback | Sequential CI; tag/nullary/scalar safety, cleanup IDs and parent-box count controls |
+| 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Sequential CI; mixed let/pattern arms, exact-once close and stale-local prevention |
+| 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Sequential CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
+| 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Sequential CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
+| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Sequential CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
+| 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Sequential CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
+| 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Sequential CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
+| 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Sequential CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
+| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Sequential CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

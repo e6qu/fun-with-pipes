@@ -40,14 +40,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#96: native macOS, primitive contracts, owned leaves/text,
-compiled closures and cleanup, concrete temporaries, stack children, borrowed
-synchronous list callbacks/results, separate call effects, exact native wide
-counts and owned state sequences. [PR #96](https://github.com/e6qu/fun-with-pipes/pull/96)
-merged after all six exact-head gates passed, transferring loop states and
-reclaiming typed Step/ABI wrappers. Next is list structural ownership (queue19).
-Final rebases, exact heads, checks and gates are in
-[the handoff](docs/development-state.md).
+Main includes #74–#97: native macOS and selected ownership through typed
+zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
+[PR #97](https://github.com/e6qu/fun-with-pipes/pull/97) merged after all six
+exact-head jobs passed. Next delivery is queue20, typed repeat/range ownership;
+its final rebase and focused checks precede the next sole PR. Exact heads,
+checks and gates are in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux

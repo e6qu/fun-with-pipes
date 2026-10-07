@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through18 are merged; queue19 is the next delivery.
+Updated 2026-10-09. Rows through19 are merged; queue20 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -32,7 +32,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 16 | sort-callback | `ownership-sort-callbacks` | `9f4e3bbc211c` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `5d0a3f302e47` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
-| 19 | structure | `ownership-list-structure` | `6ce37fb180e1` | `c05a5d9c7d86` | `787763d2e4b6` |
+| 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
@@ -89,19 +89,23 @@ resolve full hashes before publication or merge. Checkout paths use
 | 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `db3bcf0da8d6` | `923ad4a4fb07` | `e21c92ea2f6c` |
-| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `30fe112db93c` | `30fe112db93c` | `923ad4a4fb07` |
-| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `c889479eed7a` | `046f7e85a9eb` | `30fe112db93c` |
-| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `681dd55136b0` | `681dd55136b0` | `c889479eed7a` |
-| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `658e5b73ae1c` | `658e5b73ae1c` | `681dd55136b0` |
-| 80 | file-inline-path | `ownership-file-inline-path` | `2d903d6617d9` | `2d903d6617d9` | `658e5b73ae1c` |
-| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `750a5cffd46b` | `750a5cffd46b` | `2d903d6617d9` |
-| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `17869223a502` | `17869223a502` | `750a5cffd46b` |
-| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `786e4bbb99f1` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `ae00e6929e86` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `872372452a10` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f85cc4e09db4` | `f85cc4e09db4` | `3a0cbdb33b79` |
-| 87 | nominal-source-context | `ownership-nominal-source-context` | `8abfd46b3476` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `291f8f75f196` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `b4860bf2c392` | `30fe112db93c` | `923ad4a4fb07` |
+| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `b4482c259c1e` | `046f7e85a9eb` | `30fe112db93c` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `9609b73ef5ed` | `681dd55136b0` | `c889479eed7a` |
+| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `35c2aeb2923e` | `658e5b73ae1c` | `681dd55136b0` |
+| 80 | file-inline-path | `ownership-file-inline-path` | `e7d3882b67ae` | `2d903d6617d9` | `658e5b73ae1c` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `faac017dc60d` | `750a5cffd46b` | `2d903d6617d9` |
+| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `06c93eff77af` | `17869223a502` | `750a5cffd46b` |
+| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `f3c9ee4ec354` | `786e4bbb99f1` | `17869223a502` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `d2936a008fd2` | `ae00e6929e86` | `786e4bbb99f1` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `97dca7626158` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `5915ac0607ac` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 87 | nominal-source-context | `ownership-nominal-source-context` | `f08611023cec` | `8abfd46b3476` | `f85cc4e09db4` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e91dcb307c61` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 89 | http2-body-roots | `ownership-http2-body-roots` | `d29dda936dff` | `d29dda936dff` | `e91dcb307c61` |
+| 90 | http2-body-bounds | `fix-http2-body-bounds` | `6f310b5483a8` | `6f310b5483a8` | `d29dda936dff` |
+
+| 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `3c268c34d15b` | `3c268c34d15b` | `6f310b5483a8` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

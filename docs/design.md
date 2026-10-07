@@ -410,5 +410,43 @@ pattern's typed local, using it for scrutinee conversion and temporary destructi
 Known expression types remain authoritative. Whole-value pattern aliases of
 stack aggregates retain/drop their typed children, preserving them when the
 scrutinee releases its ownership. No new surface syntax is introduced.
+Prepared original resource-frame holders keep eligible field-only records in
+typed fields, avoiding a parent heap box while retaining children for the
+original frame lifetime. Other bindings retain the boxed parent.
+FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
+must unwind safely. This preparation supplies no general speed claim.
+Prepared File layout stores FILE*, a uint64 owner count and a NUL-terminated
+inline path in one aligned leaf allocation. The checked path length includes
+header and terminator. On 64-bit hosts the header is 16 bytes rather than
+24 bytes; constructor allocation controls and display/I/O agreement are
+required. This reduces layout/allocation overhead without a timing claim.
+Prepared last-owner File disposal removes weak library finalizers before
+reclaiming unshared native storage. Shared, bump and disabled-free storage
+keeps its allocator lifetime. Scoped cleanup closes while its constructor
+owner is live, then drops that owner; aliases must never see reclaimed storage.
+Prepared original variant holders use tag-aware typed structs for eligible
+matched bindings. Retain incoming payloads completely before replacing a frame
+slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
+before dropping the wrapper. Generate cleanup IDs after helper generation,
+which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
+Prepared whole-pattern variant bindings initialize fresh typed holders from
+the current scrutinee on each binding path. A local used by a let in another
+arm must not supply that payload. Partially failed patterns preserve original
+frame lifetime rather than releasing their File bindings early.
+Prepared record pattern holders likewise initialize typed fields from their
+current scrutinee before anchoring the original frame owner. A field mapping
+created by a let on another arm must not supply these borrowed fields.
+Prepared HTTP/2 body copying keeps its borrowed call owner live through
+allocation. The stream buffer uses malloc, so its bytes alone cannot root
+the GC-managed stream. Forced major collection and finalizer omission controls
+verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
+Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
+interpreter. Check size before completion, then reset/dead state, then timeout;
+an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
+
+Prepared HTTP/2 peer metadata protects its malloc subject temporary with the
+existing unwind cleanup stack until String/Option copying completes. Focused
+copy-trap and omitted-cleanup controls check exactly-once release; HTTP/2
+handle ownership still uses the tracing compatibility policy.
