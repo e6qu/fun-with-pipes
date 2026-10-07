@@ -74,7 +74,7 @@ still need their final squash rebases and six exact-head full gates.
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | Source unchanged; fresh local guard refused; GitHub checks follow |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
-| 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 / 32.46 s |
+| 29 ownership-map-unwind | 9b5eb5804655 | b5f44e80462c | Source unchanged; fresh checks move to GitHub after disk refusal |
 | 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 / 44.76 s |
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 / 48.48 s |
@@ -187,6 +187,7 @@ automatic unreachable-cycle reclamation remains unproved.
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 running; productionb5f44e8, actual basec4eb75e |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 queued; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 3d6102af3bffcec06a541c8e8238837ff19aad9f | CI37961205676 passes focused Linux checks; productionbb77c07, actual base6421c02 |
 | Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
