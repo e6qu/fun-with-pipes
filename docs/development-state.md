@@ -71,11 +71,20 @@ guard7.37CPU/80.51elapsed stopped at the conflict, reviewed docs continuation
 without its old blanket-temporary policy. Guard4.41CPU/47.46elapsed stops at
 that reviewed source conflict; docs continuation0.00/0.14s and exact-source
 resume2.30/25.90s pass. Fresh combined evidence0bb9762dd41b5ca3e7987d593a0650b4619e34d6 on actual
-source41a59952364e225f41d54412741a25909bf414828a runsCI38007031461. It adds
+source41a59952364e225f41d54412741a25909bf414828a failsCI38007031461. It adds
 unchanged stack/reuse allocation gates and runs the complete ownership-IR
 module; compiler/runtime/tests/scripts/production workflows match41 exactly.
 Retained oldedabbc2 under roadmap/evidence-conversion-edabbc24e57d before
-leased publication. Audit0.43CPU/3.50elapsed passes. Next refresh42–112. Each production PR still needs full gates.
+leased publication. Audit0.43CPU/3.50elapsed passes. Runner failures: loop
+state flattening is lost when Again holds an inline Let/Record spine; two
+new IR controls select arbitrary HashMap entries after constructor recording
+is added. Preserve their exact owner assertions while selecting pending calls.
+Repair normalization at33 and control selection at35, then refresh combined
+evidence. Partial42–49 refresh pauses at reviewed CAF inline-classification
+conflict47; current47 rebase is completed locally but not published. Preserve
+zero-argument CAF evaluation and protect its result during later scalar work.
+The new CAF control proves the missing owner before correction; no old gate
+accepts these unresolved prepared sources. Each production PR still needs full gates.
 
 Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
 Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
@@ -130,7 +139,7 @@ still need their final squash rebases and six exact-head full gates.
 | 44 ownership-variant-alias | 36e970682a29 | 1ea65661b77d | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
 | 45 ownership-match-context | f82fa2325d62 | 36e970682a29 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | 3ee4f29b8493 | f82fa2325d62 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
-| 47 ownership-caf-cache | 4f75498ad664 | ae8933d991cb | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
+| 47 ownership-caf-cache | 404970bff753 | 3ee4f29b8493 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
 | 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
 | 49 ownership-task-thunks | 4ab664827244 | 3b142abc5f93 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 91b625c60cb9 | 4ab664827244 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
@@ -265,7 +274,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | 0bb9762dd41b5ca3e7987d593a0650b4619e34d6 | CI38007031461 running; complete call repair, unchanged stack/reuse allocation gates, full ownership-IR module, tracing/lint/docs; source matches current41a599523 |
+| Rows26–41 callback/constructor/typed conversion | 0bb9762dd41b5ca3e7987d593a0650b4619e34d6 | CI38007031461 fails loop flattening and nondeterministic new IR selection; repair in progress; complete call repair, unchanged stack/reuse allocation gates, full ownership-IR module, tracing/lint/docs; source matches current41a599523 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
@@ -381,8 +390,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-call-liveness-worktree after absolute-root guarded package
-clean (0.07 CPU / 0.38 elapsed seconds). PR106 repair modifies only src/rc.rs:
+to /private/tmp/fwp-caf-ownership-worktree for focused IR checks after bounded
+package clean0.07CPU/0.38elapsed. No current native binary should be assumed.
+PR106 focused source checks below predate this target switch. PR106 repair modifies only src/rc.rs:
 earlier counted arguments remain owned across later evaluation. The final
 consumed argument stays inline only without pending counted arguments, keeping
 stack/worker/loop shapes visible. Both computed and duplicated pending owners
