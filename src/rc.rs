@@ -98,6 +98,7 @@ pub fn prim_fresh(sym: &str) -> bool {
             c.result,
             crate::ownership::ResultOwnership::FreshContainer
                 | crate::ownership::ResultOwnership::FreshLeaf
+                | crate::ownership::ResultOwnership::FreshTree
         )
     })
 }

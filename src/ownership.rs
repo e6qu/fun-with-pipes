@@ -1,7 +1,7 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
-//! Contracts cover outer containers and selected text/byte leaves. Stored elements and
-//! callback results still use runtime sharing, not typed element destruction.
+//! Contracts cover containers, text/byte leaves and fresh nested text results.
+//! Stored container elements and callback results still use runtime sharing.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -18,6 +18,8 @@ pub enum ResultOwnership {
     Shared,
     FreshContainer,
     FreshLeaf,
+    /// A tree of new counted allocations: no input aliases or internal sharing.
+    FreshTree,
     /// An owned reference to the indicated argument's leaf allocation.
     AliasLeaf {
         argument: usize,
@@ -78,6 +80,19 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             (args, ResultOwnership::FreshLeaf, None, &[])
         }
         "string.slice" | "bytes.slice" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "join" | "format" => (&[B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "show" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
+        "string.chars"
+        | "lines"
+        | "words"
+        | "string.codepoints"
+        | "string.from-codepoints"
+        | "string.from-bytes"
+        | "bytes.to-list" => (&[B], ResultOwnership::FreshTree, None, &[]),
+        "split" | "string.split-once" | "string.find" | "bytes.find" | "bytes.get" => {
+            (&[B, B], ResultOwnership::FreshTree, None, &[])
+        }
+        "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
             &[B, B, B],
@@ -87,8 +102,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         ),
         "string.length" | "string.byte-length" | "bytes.length" | "print" | "write" | "eprint"
         | "ewrite" => (&[B], R, None, &[]),
-        "string.contains" | "starts-with" | "ends-with" | "string.find" | "bytes.find" | "eq"
-        | "ne" | "lt" | "le" | "gt" | "ge" | "compare" => (&[B, B], R, None, &[]),
+        "string.contains" | "starts-with" | "ends-with" | "eq" | "ne" | "lt" | "le" | "gt"
+        | "ge" | "compare" => (&[B, B], R, None, &[]),
         "array.from-list" | "map.from-list" | "set.from-list" => (&[S], F, None, &[0]),
         "array.to-list" | "map.keys" | "map.values" | "map.to-list" | "set.to-list" => {
             (&[B], R, None, &[0])
@@ -180,35 +195,52 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_container_boundary_has_a_consistent_contract() {
-        let library = include_str!("../lib/collections.fwp");
-        for line in library.lines() {
-            let Some(declaration) = line.strip_prefix("foreign \"fwp\" ") else {
-                continue;
-            };
-            let symbol = declaration.split_whitespace().next().unwrap();
-            if !["array.", "map.", "set."]
-                .iter()
-                .any(|p| symbol.starts_with(p))
-            {
-                continue;
-            }
-            let c = primitive(symbol).unwrap_or_else(|| panic!("missing contract: {symbol}"));
-            assert!(c.aliases.iter().all(|i| *i < c.arguments.len()), "{symbol}");
-            if let Some(i) = c.callback {
-                assert_eq!(c.argument(i), Argument::Share, "{symbol}");
-            }
-            let consumed: Vec<_> = c
-                .arguments
-                .iter()
-                .enumerate()
-                .filter_map(|(i, a)| (*a == Argument::Consume).then_some(i))
-                .collect();
-            match c.result {
-                ResultOwnership::OwnedContainer { argument, .. } => {
-                    assert_eq!(consumed, vec![argument], "{symbol}")
+    fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        for (library, collections) in [
+            (include_str!("../lib/collections.fwp"), true),
+            (include_str!("../lib/string.fwp"), false),
+        ] {
+            for line in library.lines() {
+                let Some(declaration) = line.strip_prefix("foreign \"fwp\" ") else {
+                    continue;
+                };
+                let symbol = declaration.split_whitespace().next().unwrap();
+                if collections
+                    && !["array.", "map.", "set.", "bytes."]
+                        .iter()
+                        .any(|p| symbol.starts_with(p))
+                {
+                    continue;
                 }
-                _ => assert!(consumed.is_empty(), "{symbol}"),
+                let c = primitive(symbol).unwrap_or_else(|| panic!("missing contract: {symbol}"));
+                assert!(c.aliases.iter().all(|i| *i < c.arguments.len()), "{symbol}");
+                if let Some(i) = c.callback {
+                    assert_eq!(c.argument(i), Argument::Share, "{symbol}");
+                }
+                let consumed: Vec<_> = c
+                    .arguments
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, a)| (*a == Argument::Consume).then_some(i))
+                    .collect();
+                match c.result {
+                    ResultOwnership::OwnedContainer { argument, .. } => {
+                        assert_eq!(consumed, vec![argument], "{symbol}")
+                    }
+                    ResultOwnership::AliasLeaf { argument }
+                    | ResultOwnership::FreshOrAliasLeaf { argument } => {
+                        assert!(consumed.is_empty(), "{symbol}");
+                        assert_eq!(c.argument(argument), Argument::Borrow, "{symbol}");
+                        assert!(c.aliases.contains(&argument), "{symbol}");
+                    }
+                    ResultOwnership::FreshTree => {
+                        assert!(
+                            consumed.is_empty() && c.aliases.is_empty() && c.callback.is_none(),
+                            "{symbol}"
+                        );
+                    }
+                    _ => assert!(consumed.is_empty(), "{symbol}"),
+                }
             }
         }
         assert!(primitive("unknown").is_none());
