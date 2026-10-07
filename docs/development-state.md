@@ -17,31 +17,33 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
-- Current origin/main: `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`, squash of
-  [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), merged
-  2026-10-08T00:58:09Z. All four gates passed in CI `37703018710` at exact
-  `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`. Verified one-line subject
-  `Add typed borrowed application for synchronous callbacks`, 56 characters,
-  empty body/no trailers. Local main fast-forwarded preserving current plan/
-  handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. Sole open
-  [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83): map callbacks, exact
-  `2b0012a25da33ba777868e3755ed2127993f77e1`, full CI `37711126548` is terminal:
-  Linux, ARM macOS and benchmarks passed; Intel timed out after 90 minutes.
-  Repair in progress: separate macOS GC stress into additional required jobs,
-  retaining complete test coverage and the same timeout. All six exact-head
-  jobs (Linux, bench, regular ARM/Intel and stress ARM/Intel) must pass.
-  Rebase from OLD `029fac4` had only plan/handoff conflicts, reconciled with
-  these authoritative docs. Three map/callback tests, complete contract
-  inventory, clippy and formatting pass. Merge only after all four current-head
-  gates pass, subject `Own synchronous map results without sharing callback inputs`,
-  59 characters, one line, empty body and exact match. Then rebase filter from
-  OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
-  `1ea7f07` for the fold child. Shared target is TLS listener ownership; clean package before switching.
-  Latest published preparation: TLS listener owners `3f6154b4bf67330f15d5a01a5d603b75d33319d3`,
-  OLD base `abc1285`, checkout `/private/tmp/fwp-tls-listener-worktree`,
-  branch `ownership-tls-listeners`. Runner evidence branch `ownership-evidence-tls-listeners`
-  adds only workflow validation to that preparation. Next: fix evidence failures,
-  TLS/client/resource teardown and source-reachable cycles/aggregate gaps.
+- Current origin/main: `0f1ca9449973d9d01123a8e2958f86d79cda4ae8`, squash of
+  [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83), merged
+  2026-10-08T03:18:29Z. All six gates passed in CI `37719069685` at exact
+  `0c5bec4fc344339c03e01f2e15c5904a18361119`: Linux, bench, regular ARM/Intel
+  and dedicated GC stress ARM/Intel. Verified one-line, 59-character subject
+  `Own synchronous map results without sharing callback inputs`, empty body,
+  no trailers. Main fast-forwarded preserving current docs; backup
+  `/private/tmp/fwp-main-docs-pre83`. No open PR until filter is rebased/checked.
+  Next sequential branch `ownership-filter-callbacks`, checkout
+  `/private/tmp/fwp-filter-worktree`, OLD `1ea7f07`, rebasing from immutable
+  OLD map `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto this squash. Only
+  handoff conflicts; use authoritative root docs and preserve OLD `1ea7f07`
+  for fold. Full six-job exact-head gate remains required for the next PR.
+  Shared target is dirty connect-cleanup checkout; clean package before switching.
+  Latest published preparation: ALPN wire `f6598e440a59b1a7312ff5b62178644bec458ad8`,
+  OLD parent `4ab1f7d`. Pending TCP/TLS cancellation fix passes three focused
+  tests on `/private/tmp/fwp-connect-cleanup-worktree`, branch
+  `ownership-connect-cancellation`, OLD parent `f6598e4`; not committed yet.
+  Warning-check output needs confirmation before publication (session expired).
+  Separate evidence branch `ownership-evidence-tls-listeners`, exact `a11f9e1`,
+  CI `37719202504`: ARM regular and stress failed, other jobs still run.
+  Logs `/private/tmp/fwp-tls-current-arm-113122693830.log` and
+  `/private/tmp/fwp-tls-current-arm-gc-113122693964.log` obtained via completed
+  job API; gh run log waits for the whole run. Diagnose and repair these failures;
+  they gate acceptance of the preparation chain, never roadmap progress.
+- Previous baseline: PR #82, `181d3b3`, all four CI `37703018710` gates passed
+  at exact `3fa67f3`, one-line `Add typed borrowed application for synchronous callbacks`.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
   passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
@@ -3182,3 +3184,227 @@ Publish this focused gate repair on map, rerun full current-head CI and update P
 body/handoff. Propagate the same workflow repair to the separate ownership evidence
 branch, preserving its explicit unoptimized TLS stream step and production ancestry.
 Full local gates remain prohibited; validate workflow diff and coverage mapping.
+
+
+MacOS gate repair published on sole PR #83 at exact
+`0c5bec4fc344339c03e01f2e15c5904a18361119`; new CI `37719069685` is queued.
+PR body updated with the full-coverage split. Verified additional commit subject
+`Separate macOS GC stress gates while retaining full test coverage`, one line,
+no body/trailers. Bounded Ruby YAML parse passes, CPU 0.00 s / elapsed 0.14 s;
+workflow diff/whitespace clean. No full local gate run and shared target remains
+TLS listener (not rebuilt map). Merge only after all six exact-head jobs pass:
+Linux, bench, regular ARM/Intel and GC stress ARM/Intel. Use the unchanged explicit
+single-line squash subject `Own synchronous map results without sharing callback inputs`,
+empty body and exact head match. After merge, rebase filter from OLD `41ef82d`
+onto the new squash, preserving OLD `1ea7f07` for fold. Main remains `181d3b3`.
+
+The same scheduling repair is published only on the evidence branch, head now
+`a11f9e15d3043fe17fb0afdabcdaf94badd9ba2a`, CI `37719202504` queued. Both
+additional workflow commits remain outside production TLS ancestry (`3f6154b`).
+Bounded YAML parse passes, CPU 0.00 s / elapsed 0.13 s. Prior changed-test evidence
+run `37718591863` at `f806be8` completed the explicit unoptimized stress/verification/
+reuse TLS stream check successfully on Linux, ARM and Intel: raw interpreter/native
+stdout agrees exactly and the snapshot alias repair works. Benchmarks also passed.
+Full tests still running at that older head are not current-head gates.
+
+Superseded evidence runs `37717526510` (original failed macOS snapshot) and
+`37718591863` (fixed snapshot, obsolete serial macOS workflow) are confirmed terminal cancelled
+to free runners for current PR/evidence jobs. This is due to actual source/workflow
+repairs and superseded heads, not observation expiration. Cancellation requests completed successfully; do not restart them. Current handles `37719069685` and `37719202504` remain required.
+No local workload remains. Next fix any current-head runner failures while preparing
+library-owned file/socket/TLS teardown on clean `/private/tmp/fwp-library-resource-worktree`,
+branch `ownership-library-resources`, immutable OLD parent `3f6154b`. Clean the
+shared package before switching checks. Phases 2–6 remain unfinished.
+
+
+Library-owned external resources are now prepared on `ownership-library-resources`,
+checkout `/private/tmp/fwp-library-resource-worktree`, immutable OLD parent
+`3f6154b4bf67330f15d5a01a5d603b75d33319d3`. Native libraries register existing
+owned File/socket wrappers with the collector finalizer table. Explicit close/stop
+and HTTP/2 transfer clear owners, so unload cannot close twice. Library gRPC/HTTP2
+connection finalization disposes surviving SSL sessions/descriptors. Implicit SSL
+disposal performs no shutdown/network write; explicit close retains close_notify.
+Client-context cache owners/names/storage are released after session finalization.
+No additional per-session malloc registry or host signal changes were added.
+
+Actual repeated dlopen/dlclose probe initially failed with owned file fd 0 open
+(CPU 0.12 s / elapsed 0.73 s). The first command lacked FWP_OPENSSL_DIR and failed
+compilation, not resource evidence (CPU 6.63 s / elapsed 13.68 s); corrected command
+uses `/opt/homebrew/opt/openssl@3`. Final resource probe covers open/explicitly closed
+files, ordinary connections, raw HTTP/2 transferred TLS session/fd, unclosed listener
+and stopped listener with accepted sessions, real completed ALPN handshakes,
+client cache and host-owned peers over three load cycles, O1/O2 and reuse poisoning.
+Six omission controls detect file/socket/transfer/session/cache leaks and implicit
+TLS shutdown. Expanded final probe passes, CPU 1.21 s / elapsed 4.01 s.
+
+Three resource/unload/listener tests pass, CPU 5.14 s / elapsed 17.46 s (before
+expanding server cases). A deliberately corrupted accepted-context negative control
+would abort during newly active unload finalization after its intended observation;
+its fixture now exits immediately only on failure. Positive listener tests retain
+normal process finalization. Formatting passes CPU 0.44 s / elapsed 0.60 s.
+All commands used the bounded local guard and shared target; package clean passed
+CPU 0.00 s / elapsed 0.14 s before switching from TLS listener to resource checkout.
+Full gates and large source checks stay on GitHub; this is prepared support only.
+Current PR #83 CI `37719069685` and TLS evidence CI `37719202504` run; benchmarks
+pass on both. Require six current-head jobs before merging #83. Phase 2 stays
+incomplete. Next audit successful gRPC server cancellation and client-context
+partial malloc/realloc/name failure; preserve remaining aggregate/cycle gaps.
+
+Final expanded resource/unload/listener suite passes: 3 tests, CPU 5.18 s / elapsed
+16.36 s. Warning check `cargo clippy --lib --test library_resources --test
+tls_listener_ownership -- -D warnings` passes CPU 2.37 s / elapsed 4.73 s.
+All tests were bounded, serial and low priority with FWP_OPENSSL_DIR specified.
+Prepared resource commit subject: `Release owned files sockets and TLS resources on library unload`;
+full sequential Linux/ARM/Intel stress/reuse gates remain required before merge.
+
+Resource branch published as `07092cb06e1d1b7d11271f697bf21920ef899734` (one-line
+61-character subject, no trailers); no second PR opened. Next branch is
+`ownership-grpc-server-cleanup`, clean checkout `/private/tmp/fwp-grpc-server-worktree`,
+immutable OLD parent `07092cb`. Shared target currently resource checkout.
+Successful fwp_serve owns its bound listener and initial server TLS context across
+an infinite cancellable accept loop, with no cleanup frame. Add an actual scheduler
+cancellation fixture, then guard both owners through preparation and accept.
+Accepted sessions retain their separate protocol owner and must survive server
+cancellation. Continue current PR/evidence CI; neither is a roadmap blocker.
+
+
+gRPC server cleanup is prepared on `ownership-grpc-server-cleanup`, checkout
+`/private/tmp/fwp-grpc-server-worktree`, OLD parent `07092cb06e1d1b7d11271f697bf21920ef899734`.
+An actual scheduler cancellation of fwp_serve reproduced an open listener (exit 1,
+CPU 7.02 s / elapsed 14.34 s). A stack cleanup owner now protects the initial TLS
+context before binding and the completed listener before server preparation and
+accept. Cancellation unregisters/closes its descriptor and releases its initial
+context owner. Accepted sessions keep their protocol owner and finish a real ALPN
+handshake after server cancellation. No new surface syntax or per-server malloc.
+
+Focused fixture covers TLS with/without accepted sessions, cancellation after
+context creation and listener binding, and a plain listener. O1/O2 and reuse
+poisoning pass. Three negative controls detect missing guard, fd close and context
+release. The initial fd-close control matched an unrelated runtime close and
+incorrectly passed; its needle now includes the unique listener owner assignment
+and reliably fails exit 1. This fixture repair is recorded, not hidden acceptance.
+Expanded server/resource/listener tests all pass, CPU 5.81 s / elapsed 15.96 s;
+final server test including plain TCP passes CPU 2.85 s / elapsed 6.28 s. Formatting
+CPU 0.44 s / elapsed 0.60 s; clippy lib/server test CPU 2.34 s / elapsed 4.62 s.
+Package clean before switching was CPU 0.00 s / elapsed 0.13 s. All local checks use
+the bounded guard; no full local gate and no limits raised. Shared target is now
+gRPC server checkout. Source/stress large gates remain on GitHub. Next concrete
+action is client TLS cache partial allocation ownership and server ALPN strdup
+failure; phases 2–6 remain open. Current six-job PR/evidence CI still runs, with
+benchmarks passing; do not count queued/in-progress jobs as a merge gate.
+
+
+gRPC server preparation is published as `0d5d3098e7827e36045984adcbf859901bde4b74`,
+subject `Release service listeners and TLS context owners on cancellation` (one
+line, no trailers). TLS cache preparation is separate on `ownership-tls-cache-failures`,
+checkout `/private/tmp/fwp-tls-cache-worktree`, immutable OLD parent `0d5d309`.
+The actual failed-realloc fixture reproduced a process crash (CPU 6.81 s / elapsed
+14.32 s). Client cache creation now checks capacity, prepares a CA name, grows
+through a temporary pointer, and publishes only a complete entry. Failure releases
+name/context, keeps prior entries intact and returns a stable TLS diagnostic.
+Successful caching remains unchanged. Service ALPN strdup failure is reported
+before creating a context instead of publishing a null protocol buffer.
+
+Focused O1/O2/reuse checks cover empty/populated caches, strdup/realloc failure,
+previous pointer/name/context identity, retry, cache reuse, idempotent teardown
+and server ALPN allocation failure. Five controls detect omitted context/name
+release, incomplete publication, lost cache and missing ALPN guard. Intentionally
+losing the cache caused finalization to crash after detecting it; fixture _Exit
+now applies only after nonzero failure observation. Positive tests still finalize.
+Final dedicated test passes CPU 0.72 s / elapsed 3.66 s; first corrected production
+check passed CPU 6.90 s / elapsed 14.86 s. Adjacent server/resource probes pass in
+the combined check, which initially failed only that negative-control reporting
+case (CPU 4.96 s / elapsed 13.26 s), so it is not a fully passing suite. Clippy
+lib/cache test passes CPU 2.36 s / elapsed 4.77 s; fmt CPU 0.45 s / elapsed 0.85 s.
+Guarded clean switching target passed CPU 0.00 s / elapsed 0.14 s. Shared target
+is TLS cache checkout. Full gates, source TLS stress and reuse suites remain CI work.
+
+PR #83 current CI `37719069685`: bench and both ARM regular/stress jobs pass;
+Linux and Intel regular/stress remain in progress. TLS evidence `37719202504`
+still runs, with Intel stress queued; do not count those statuses as passing.
+Next inspect protocol wire scratch/malloc/length preparation and connect cancellation:
+native tls.connect currently opens TCP before preparing ALPN/SSL and keeps no
+cleanup frame across fallible/cancellable handshake. Keep one PR open, with all
+six exact-head jobs required before squash. Phase 2 and later phases stay open.
+
+
+TLS cache preparation is published as `4ab1f7ddd6f8f2a335f3640a229629b782e09b3b`,
+subject `Preserve TLS caches and release partial allocation owners`, one line,
+no trailers. ALPN wire preparation is separate on `ownership-tls-wire-preparation`,
+checkout `/private/tmp/fwp-tls-wire-worktree`, immutable OLD parent `4ab1f7d`.
+Failed malloc reproduced a crash (CPU 6.80 s / elapsed 14.06 s). The wire helper
+now walks borrowed list nodes directly, counting only nonempty names <=255 bytes,
+checks wire/API and allocation sizes, and fills one exact buffer. It creates no
+collector scratch array; a probe instruments the old list-items allocation to
+verify zero calls. Native bytes match the interpreter's actual alpn_wire helper.
+Allocation failure reports a TLS error; listen creates no context, and connect
+closes the already connected TCP descriptor before raising its error.
+
+Focused native O1/O2/reuse checks cover allocation failure, invalid/empty names,
+exact bytes/size, empty list, listener rejection and actual TCP client descriptor
+closure. Three controls detect unchecked malloc, counting invalid names and omitted
+client close. A reduced local wire ceiling exercises the length rejection before
+allocation, without allocating gigabytes. Its first synthetic ceiling caused
+unsigned subtraction to wrap for an entry larger than that ceiling; the production
+predicate now checks entry <= ceiling before subtracting (normal ALPN entry max256
+was already below UINT_MAX). The synthetic test now passes. No large workloads or
+limits bypassed. These are unarmed native-library probes, not host-root tracing.
+
+New primitive ALPN guards shadowed the cache fixture's old generic `if (!alpn)`
+needle. That existing negative control is now anchored to its service diagnostic,
+and fails as intended. The combined wire/cache/listener suite passes 3 tests,
+CPU 3.23 s / elapsed 10.60 s. Formatting CPU 0.34 s / elapsed 0.61 s; package clean
+CPU 0.04 s / elapsed 0.26 s. Shared target now wire checkout. Sequential full
+Linux/ARM/Intel stress/reuse gates remain required. Next actual cancellation probes
+for TCP connect (pending descriptor/resolver owners) and TLS handshake (connected
+socket/SSL owner), followed by peer-subject temporary buffers and remaining IO.
+PR #83 remains sole open; its ARM regular/stress and bench pass while Linux/Intel
+run. Keep preparing/fixing work; CI gates merge, not the roadmap.
+
+PR #83 merged after all SIX exact-head jobs passed; its macOS scheduling split
+preserves complete coverage and is now the required workflow. Separate evidence
+failure logs show REST, reuse, stack-allocation and WebSocket failures in ARM
+regular plus golden GC stress failures; inspect exact stderr/output before fixes.
+Next finish/rebase/publish filter PR, then fix prepared-chain failures while CI runs.
+Connect cancellation preparation: 3 connect/cache/wire tests pass CPU 2.40 s /
+elapsed 9.06 s; initial duration fixture was incorrectly scalar and corrected to
+Duration record before reproducing descriptor leak (CPU 0.29 s / elapsed 1.00 s).
+First fixed connect probe passes CPU 7.12 s / elapsed 14.69 s. Formatting CPU
+0.36 s / elapsed 0.73 s; confirm clippy before committing. Immutable OLD parent
+`f6598e4`; package clean CPU 0.00 s / elapsed 0.14 s. No workload currently runs.
+
+
+Filter rebased cleanly in code onto map squash `0f1ca94`; only handoff conflicted
+and was reconciled with these authoritative docs. Current unpublished head
+`9a7a34799d146c44652b50d7892b539bde15284c`. Five filter/map/borrowed-callback tests
+pass under bounded guard, CPU 15.72 s / elapsed 31.81 s; clippy lib/three tests
+CPU 2.23 s / elapsed 4.43 s; complete ownership inventory 1 test CPU 3.04 s /
+elapsed 6.43 s; fmt CPU 0.34 s / elapsed 0.62 s. Initial command named nonexistent
+borrowed_apply target and ran no checks (CPU 0.00 / elapsed 0.14); corrected to
+borrowed_callbacks. Shared target is filter; clean before switching. Use explicit
+subject `Own synchronous filter spines and selected input references` with empty
+body and all six gates, preserving OLD `1ea7f07` for fold rebase. Publication uses
+lease against original filter `1ea7f07`; next PR only after #83 merged (now done).
+
+Prepared evidence failures partly come from stale original branch ancestry:
+original map `41ef82d` lacks merged root-liveness fixes in fwp_data/fwp_str_new/
+fwp_list_items/flat-map/right-fold, read-only AOT cache usage and tutorial wc spacing.
+All are present in actual map squash and sequentially rebased filter. Comparing
+original map to validated rebased map `2b0012a` isolates these missing fixes.
+Attempted evidence-only merge had broad equivalent-commit conflicts and was
+aborted. Exact already-merged fixes apply cleanly as a narrow patch to evidence,
+including their AOT/macOS/map regressions and tutorial command; no production
+branch reset or second PR. Evidence checkout now has 7 pending files, parent
+`a11f9e1`. Verify selected traits/root tests and investigate remaining wide-record
+allocation regression (366.2 MiB) before re-running/publishing evidence. Production
+preparation retains original parents; sequential rebases inherit merged fixes.
+Current evidence run `37719202504` continues; failures are repair tasks. No tests
+have been skipped or thresholds raised. Connect cleanup remains uncommitted.
+
+Filter differential oracles now explicitly use FWP_NO_OPT=1 on the interpreter,
+while native builds use optimization. Both updated tests pass CPU 4.85 s / elapsed
+9.87 s; clippy lib/filter CPU 0.07 s / elapsed 0.26 s; fmt CPU 0.36 s / elapsed
+0.75 s. Equivalent generated shared/owned controls still show 4.6 versus 5.0 MiB
+freed by counts at reported tenth-MiB precision, with zero collections and matching
+output. No elapsed-time speed claim. GitHub confirms no open PR after #83; publish
+final filter oracle/head and create the sole next PR. Preserve OLD 1ea7f07 for fold.
