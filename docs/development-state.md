@@ -86,9 +86,9 @@ still need their final squash rebases and six exact-head full gates.
 | 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
 | 40 ownership-constructor-types | dd6c405c77eb | 5a72ba8763e4 | Native10.03/20.20s; two units; lint2.42/4.95s and format0.43/0.59s pass |
 | 41 ownership-variant-conversion | 67e37717ecf2 | dd6c405c77eb | Native10.20/20.63s; unit3.37/7.04s; lint2.29/4.47s and format0.33/0.59s pass |
-| 42 ownership-record-update | 4ea62b69a2c4 | 67e37717ecf2 | Two update tests15.01/30.20s pass; unit/lint follow |
+| 42 ownership-record-update | 4ea62b69a2c4 | 67e37717ecf2 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
 | 43 ownership-record-conversion | ffbbcf9d5119 | 4ea62b69a2c4 | Source unchanged except inherited fixes; fresh checks follow |
-| 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 / 31.47 s |
+| 44 ownership-variant-alias | b31400d03ac7 | ffbbcf9d5119 | Focused checks follow; compiler/runtime unchanged |
 | 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 / 29.51 s |
 | 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 / 28.50 s |
 | 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 / 43.40 s |

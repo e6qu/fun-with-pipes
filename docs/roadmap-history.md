@@ -11132,3 +11132,7 @@ match the original. Guarded clean0.00/0.13s and both general/typed update
 failure tests15.01/30.20s pass. Row43 refreshffbbcf9d5119 uses actual4ea62b69;
 checks follow. Prior CURRENTs42/43 are retained under immutable revision tags
 before explicit-lease publication; original OLD anchors are unchanged.
+
+Row42 guarded exact update-liveness3.22/6.67s, clippy2.28/4.57s and
+format0.34/0.60s pass. Row44 refreshb31400d03ac7 has actual baseffbbcf9d5119;
+compiler/runtime match original; fresh focused checks follow.
