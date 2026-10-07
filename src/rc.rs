@@ -163,7 +163,16 @@ impl Pass<'_> {
             Expr::Call(id, args) if consumes(self.funcs, *id) => {
                 let modes = vec![Mode::Consume; args.len()];
                 let id = *id;
-                self.seq(args, &modes, owned, borrowed, move |xs| Expr::Call(id, xs))
+                let types: Vec<MT> = self.funcs[id]
+                    .ty
+                    .params(args.len())
+                    .0
+                    .into_iter()
+                    .cloned()
+                    .collect();
+                self.seq_typed(args, &modes, &types, owned, borrowed, move |xs| {
+                    Expr::Call(id, xs)
+                })
             }
             Expr::Call(id, args) => {
                 let modes: Vec<Mode> = (0..args.len())
@@ -176,7 +185,16 @@ impl Pass<'_> {
                     })
                     .collect();
                 let id = *id;
-                self.seq(args, &modes, owned, borrowed, move |xs| Expr::Call(id, xs))
+                let types: Vec<MT> = self.funcs[id]
+                    .ty
+                    .params(args.len())
+                    .0
+                    .into_iter()
+                    .cloned()
+                    .collect();
+                self.seq_typed(args, &modes, &types, owned, borrowed, move |xs| {
+                    Expr::Call(id, xs)
+                })
             }
             Expr::Construct(tag, args) => {
                 let modes = vec![Mode::Consume; args.len()];
@@ -320,6 +338,33 @@ impl Pass<'_> {
         borrowed: &Set,
         build: impl FnOnce(Vec<Expr>) -> Expr,
     ) -> Expr {
+        self.seq_typed(parts, modes, &[], owned, borrowed, build)
+    }
+
+    /// A call supplies the concrete parameter type when a constructor has
+    /// no standalone type in IR. Keep that type on ownership temporaries so
+    /// their children are released by type, rather than by an unknown count.
+    fn seq_typed(
+        &mut self,
+        parts: &[Expr],
+        modes: &[Mode],
+        expected: &[MT],
+        owned: &Set,
+        borrowed: &Set,
+        build: impl FnOnce(Vec<Expr>) -> Expr,
+    ) -> Expr {
+        let types: Vec<MT> = parts
+            .iter()
+            .enumerate()
+            .map(|(i, p)| {
+                let known = self.ty(p);
+                if known == unknown() {
+                    expected.get(i).cloned().unwrap_or(known)
+                } else {
+                    known
+                }
+            })
+            .collect();
         let fvs: Vec<Set> = parts.iter().map(|p| self.free(p)).collect();
         // the last part that uses each owned local; a local passed to a
         // borrowing position is read by the operation itself, after every
@@ -347,10 +392,7 @@ impl Pass<'_> {
         let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
-        let uncounted: Vec<bool> = parts
-            .iter()
-            .map(|p| !needs_rc(self.shapes, &self.ty(p)))
-            .collect();
+        let uncounted: Vec<bool> = types.iter().map(|t| !needs_rc(self.shapes, t)).collect();
         let last_bound = parts
             .iter()
             .zip(modes)
@@ -381,14 +423,14 @@ impl Pass<'_> {
                     if last_bound.is_none_or(|j| i > j) {
                         xs.push(v);
                     } else {
-                        let tl = self.fresh(self.ty(p));
+                        let tl = self.fresh(types[i].clone());
                         binds.push((tl, v));
                         xs.push(Expr::Local(tl));
                     }
                 }
                 (Mode::Borrow, p) => {
                     // an owned temporary, dropped after the call
-                    let t = self.ty(p);
+                    let t = types[i].clone();
                     let v = self.conv(p, &mine, &theirs);
                     let tl = self.fresh(t);
                     binds.push((tl, v));
@@ -402,7 +444,7 @@ impl Pass<'_> {
                     if inline(&v) || last_bound.is_none_or(|j| i > j) {
                         xs.push(v);
                     } else {
-                        let t = self.ty(p);
+                        let t = types[i].clone();
                         let tl = self.fresh(t);
                         binds.push((tl, v));
                         xs.push(Expr::Local(tl));
