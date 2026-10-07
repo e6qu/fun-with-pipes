@@ -1202,3 +1202,58 @@ static void fwp_static_report(void) {
 #endif
 
 #endif /* FWP_GC */
+
+/* Compiled dynamic application consumes the function and its arguments.
+ * Runtime callbacks retain the conservative shared entry in fwp_rt.c. */
+static void fwp_closure_drop(V f) {
+    uint8_t *count = fwp_rc_slot(f);
+    if (!count || !*count) return;
+    if (*count > 1) { (*count)--; return; }
+    const fwp_owned_fninfo *owned = fwp_fns[CLO(f)->fn].owned;
+    if (!owned) fwp_trap("internal: owned closure without capture types");
+    owned->captures(f, 0);
+}
+
+static V fwp_apply_owned(V f, uint32_t n, V *args) {
+    for (;;) {
+        fwp_clo *c = CLO(f);
+        const fwp_fninfo *fi = &fwp_fns[c->fn];
+        if (!fi->owned) {
+            fwp_rc_share(f);
+            for (uint32_t i = 0; i < n; i++) fwp_rc_share(args[i]);
+            return fwp_apply(f, n, args);
+        }
+        uint32_t ar = fi->arity, have = c->n;
+        if (have + n < ar) {
+            fwp_clo *r = (fwp_clo *)fwp_alloc_init(sizeof(fwp_clo) + (have + n) * sizeof(V));
+            r->fn = c->fn;
+            r->n = have + n;
+            for (uint32_t i = 0; i < have; i++) r->a[i] = c->a[i];
+            for (uint32_t i = 0; i < n; i++) r->a[have + i] = args[i];
+            fi->owned->captures(f, 1);
+            V result = fwp_rc_fresh(PTR(r));
+            FWP_KEEP_ALIVE(f);
+            FWP_KEEP_ALIVE(args);
+            fwp_closure_drop(f);
+            return result;
+        }
+        uint32_t need = ar - have;
+        V result;
+        if (!have && ar) {
+            result = fi->owned->entry(args);
+        } else {
+            V all[ar ? ar : 1];
+            for (uint32_t i = 0; i < have; i++) all[i] = c->a[i];
+            for (uint32_t i = 0; i < need; i++) all[have + i] = args[i];
+            fi->owned->captures(f, 1);
+            result = fi->owned->entry(all);
+        }
+        FWP_KEEP_ALIVE(f);
+        FWP_KEEP_ALIVE(args);
+        fwp_closure_drop(f);
+        if (n == need) return result;
+        f = result;
+        args += need;
+        n -= need;
+    }
+}

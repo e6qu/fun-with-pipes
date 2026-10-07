@@ -37,7 +37,7 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Runtime-shared, outside current counting coverage | Owned captures and typed capture destruction |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, stack capture cleanup, bounded deep destruction and exceptional cleanup |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -136,7 +136,7 @@ the record poisoner's interpretation of that length as a field count.
 
 The focused copy loop demonstrates reclamation of young owned leaves on normal
 paths. It does not establish full ARC: other runtime-created text results, retained
-container elements, callbacks, escaping captures, handler unwind and cancellation
+container elements, callbacks, stack captures, handler unwind and cancellation
 still require ownership contracts and cleanup. Old marked objects remain under
 the collector's generational policy; WebAssembly still uses its bump allocator.
 
@@ -149,3 +149,35 @@ aliases, internal sharing and cycles; it is narrower than general graph ownershi
 Numeric parse options remain shared while representation/destruction of boxed
 numeric cases is unfinished. Full inventory and regression details are in
 [primitive-ownership.md](primitive-ownership.md).
+
+## Compiled closure ownership
+
+Function locals participate in IR Dup/Drop. Compiled dynamic application consumes
+its function reference and arguments. Partial application builds a fresh heap
+closure, duplicates existing captures by their monomorphic types and transfers
+new arguments. Full application duplicates the captured references for the
+callee, consumes supplied arguments and releases the function after the call.
+A retained function alias keeps its captures alive; overapplication continues
+with the returned owned function. Static function values remain off the heap.
+
+Each live function used as a closure has sparse metadata for an owned entry and
+typed capture handling. The function table adds one metadata pointer per slot;
+this is a layout cost, not a measured speed improvement. Capture cleanup never
+counts inline scalar bits. Primitive owned entries release borrowed arguments
+after the call, preserve their addresses as collector roots, and respect consumed
+container arguments. Unknown FFI/runtime boundaries still promote values to
+sharing. Runtime callback entries explicitly share their typed inputs and results.
+
+The focused closure regression checks retained captures and function aliases,
+partial applications and input-returning functions against the interpreter at
+-O1/-O2, with GC stress/verification and both reuse-poison modes. A 10,000-step
+heap-closure loop, with tracing off and zero collections, frees 1.2 MiB by counts
+versus 0.0 MiB with FWP_FREE=0 (Apple Silicon, Apple Clang 17, -O1,
+FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
+not complete ownership. Full architecture and benchmark gates remain required.
+
+Stack-resident aggregates still share their captured children; runtime-retained
+callbacks, exceptional paths, generational old objects, count overflow and WASI
+reclamation remain gaps. Typed closure destruction can recurse through nested
+captures: bounded deep destruction needs its own acceptance test and implementation
+before claiming general no-tracing support. Cycles still require an explicit policy.

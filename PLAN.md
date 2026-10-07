@@ -45,17 +45,31 @@ Container ownership contracts passed all four jobs in run `37612412156`;
 still share. The concurrent macOS executable-cache failure was repaired and
 verified by full CI. Owned String/Bytes leaves passed all four jobs in
 run `37623311024`; [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) was
-squash-merged as `22994ba`. Next PR: fresh text result trees and scratch cleanup,
-rebased onto main and fully validated before merging. Later published branches prepare closure and
+squash-merged as `22994ba`. Fresh text trees and scratch cleanup passed all four
+exact-head gates in run `37636161587`, attempt 2;
+[PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
+`6cdb0d1`. Closure ownership is the next focused PR after post-rebase checks. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers typed map/set elements and destruction;
-all array element boundaries are implemented in a separately validated branch;
+implementation covers retained runtime ownership/teardown. Old marked-object
+reclamation is prepared with focused survival, alias and task stress tests;
+full CI still gates publication as the next sequential PR. Task/channel
+contracts and owned result wrappers are also prepared; retained callback
+lifetimes and compiler live-owner cleanup remain open. Runtime unwind boundaries
+and scoped-file cancellation cleanup are prepared with focused evidence. Typed array and map/set element boundaries pass focused
+validation in separate prepared branches;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
-Phase 2 remains incomplete; runtime teardown and full retained lifetimes remain.
+Compiler reuse-token lifetime repair is prepared with focused checks: unused
+branches, old cells, constructor transfer and unwind release the emptied cell
+exactly once. Call liveness is in progress, covering pending arguments, incoming
+parameters, typed caller values and boxed/unboxed wrappers. Keep struct variants
+unboxed through these ownership moves. Neither change is merged yet; full CI
+still gates each sequential PR. Consumed runtime closures/accumulators, retained
+lifetimes and allocation/inline failure paths remain to be covered. Phase 2 remains
+incomplete; compiler liveness, runtime teardown and full retained lifetimes remain.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
