@@ -171,7 +171,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 26 | Detached compiler reuse cells retain a cleanup lifetime; transfer clears holders, unused cells release lexically and on unwind | Sequential CI; old/young eligibility, flags and exceptional token paths |
 | 27 | Compiler call liveness protects actual owned references before later argument failures and at callee entry; boxed/worker and variant cleanup remain typed | Sequential CI; exactly-once release, aliases and cancellation before entry tick |
 | 28 | Runtime application owns its function and pending typed arguments until transfer/return; unwind releases them, and callers protect stack captures | Sequential CI; overapplication, scalar safety, primitive traps and cancelled entry |
-| 29–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 29 | Map protects completed typed results and the partial spine until transfer, releasing them and scratch on unwind | Sequential CI; dynamic/direct/captured callbacks, scalar safety and allocation-failure ownership |
+| 30–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

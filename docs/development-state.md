@@ -39,8 +39,8 @@ phase2 remains incomplete; phases3–6 are pending.
 Sole open [PR #94](https://github.com/e6qu/fun-with-pipes/pull/94):
 ownership-sort-callbacks, /private/tmp/fwp-sort-callback-worktree, exact
 9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df on actual main90762aa.
-CI37897207787 passes bench at this exact head; the other five gates are
-pending. Three focused tests pass12.30 s CPU /24.97 s elapsed, lint2.02 s
+CI37897207787 passes bench and regular ARM macOS at this exact head;
+the other four gates are running. Three focused tests pass12.30 s CPU /24.97 s elapsed, lint2.02 s
 /4.06 s, format0.35 s /0.62 s. Source/runtime/tests/workflows match previously
 verified5c19337 exactly; raw FWP_NO_OPT=1 interpreter oracles remain intact.
 Whole subject is one line with empty body. Require all six passing gates
@@ -73,45 +73,21 @@ still need their final squash rebases and six exact-head full gates.
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 /17.94 s |
 | 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 /30.66 s |
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 /39.90 s |
+| 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 /31.57 s |
 
-Row 18 head 112f3c8 includes only doc changes after tested code 7af6961.
-Row 20 full head 7741d09dd8cf214396e7938e07fbbd1f7263d9f7 is published
-clean; all three tests, lint 2.48 s /4.89 s and format 0.43 s /0.83 s pass.
-Repeated aliases and generated spines reclaim by counting; boxed128-bit numeric
-payload representation remains shared. Do not claim numeric payload ownership.
+Rows17–28 are published preparations with passing focused tests, lint and
+format checks; detailed commands, full hashes and measurements are in history.
+Their final rebases use the actual bases above, never rewritten predecessor
+heads or immutable OLD parents. Source/runtime changes were checked before
+publication; each still needs its own six exact-head full gates. Row20 leaves
+boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row 21 full head 443524ef6b6d5183f010899902a94a9d53c5dc55 is clean after
-amend; all three tests, lint 2.51 s /4.99 s and format 0.33 s /0.60 s pass.
-Preserve immutable OLD636414f/parentfad9b1a; later final rebase uses actual
-current base 7741d09. Row 22 full head 1689c03ff621bb2ff41759f89b42e606dd738a2a is clean after
-amend; all three tests, lint 2.33 s /4.67 s and format 0.34 s /0.61 s pass.
-Preserve OLDa8a7d11/parent636414f; final rebase uses actual base443524e.
-Row23 full head f4716a027a1bf5fd632733d3cd738fea7c4dbf62 is clean after
-amend. Three focused tests pass9.50 s CPU /19.72 s elapsed, lint4.59 s
-/9.15 s, format0.91 s /1.77 s. Runtime/source checks are unchanged after
-documentation refresh; large full GC gates remain on CI. Preserve
-OLD6774aa5/parenta8a7d11; actual current base is1689c03.
-Row24 full head cde58f461f78b05a5bd1c7800e9e9f0f110c05c0 is clean after
-amend. Three task_ownership tests pass9.51 s CPU /19.21 s elapsed, lint2.45 s
-/4.88 s, format0.36 s /0.76 s. Both source oracles explicitly use FWP_NO_OPT=1.
-Preserve OLD02beec3/parent6774aa5; actual current base isf4716a0.
-Row25 full head123d8b5928aa403f61494e78023982475732f777 is clean after
-amend. Three unwind_cleanup tests pass8.80 s CPU /17.94 s elapsed, lint2.43 s
-/4.88 s, format0.33 s /0.60 s. Source oracle explicitly uses FWP_NO_OPT=1.
-Preserve OLD3e31422/parent02beec3; actual current base iscde58f4.
-Row26 final head216e673ff2dd5378fe67d22ef6fa1bb4f54016c6 is clean on
-actual base123d8b5; exact lease against OLD33cf864. Three tests pass15.26 s
-CPU /30.66 s elapsed, lint2.37 s /4.67 s, format0.35 s /0.74 s. All three
-source oracles use FWP_NO_OPT=1. Native bump-allocation C is not actual WASI.
-Row27 final head786f1700236ec23b9880436d8c512b941a44e1ec is clean on
-actual base216e673, published with exact lease against OLD7392f2d. Five
-source oracles use FWP_NO_OPT=1; all five focused tests pass19.89 s CPU
-/39.90 s elapsed, lint2.67 s /5.31 s, format0.45 s /0.83 s.
-Current independent task: row28 runtime-call-cleanup rebased from OLDparent
-7392f2d onto actual current row27 head786f170 (temporarya46fdc9). Three
-source oracles explicitly set FWP_NO_OPT=1; focused runtime_call_ownership
-tests pass all five15.73 s CPU /31.57 s elapsed; lint2.41 s /4.74 s and
-format0.35 s /0.72 s pass. Final doc amend and publication follow. Preserve immutable OLD anchors; no additional PR.
+Current independent task: row29 map-unwind rebased from OLDparentbee3f16
+onto actual row28 heade3c49d9 (temporaryf21fc27). The new source oracle
+explicitly sets FWP_NO_OPT=1. Focused map_unwind_ownership and map_ownership
+tests pass all four16.12 s CPU /32.46 s elapsed; lint2.31 s /4.72 s
+and format0.34 s /0.60 s pass. Final amend and publication follow. Preserve
+immutable OLD anchors; no additional PR.
 PR94 remains the sole open delivery.
 
 ## Repaired resource evidence
@@ -159,10 +135,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-runtime-call-worktree; focused runtime call checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.06 /0.27 s).
+belongs to /private/tmp/fwp-map-unwind-worktree; focused map checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.14 s CPU /0.93 s elapsed).
+ancestry pairs and whole commit messages (0.12 s CPU /0.84 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:

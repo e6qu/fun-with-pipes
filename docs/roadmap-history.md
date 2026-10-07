@@ -7734,3 +7734,67 @@ reclamation, not timing or general tracing-free execution.
 Runtime call lint (cargo clippy --test runtime_call_ownership -- -D warnings)
 passes2.41 s CPU /4.74 s elapsed; fmt check0.35 s /0.72 s. Final doc
 refresh changes no tested runtime/source. Full gates remain required.
+
+Runtime-call preparatione3c49d965cd003f7fa56468a948cd3c078ada725 is
+clean on actual base786f170, published with exact lease against OLDbee3f16.
+Whole subject is one line with empty body. All five remaining PR94 gates
+are running at exact9f4e3bb; bench passes. No second PR.
+
+Row29 OLD62add7e rebases from immutable parentbee3f16 onto actual row28
+heade3c49d9 (initialf21fc27); nine root docs resolve conflicts. The new
+source oracle sets FWP_NO_OPT=1, inherited map oracles already do. Existing
+map reclamation control locates the renamed protected finish helper. Guarded
+target clean0.00 s /0.14 s; formatting0.34 s /0.60 s.
+
+## Archived preparation details through runtime-call cleanup
+
+Row 18 head 112f3c8 includes only doc changes after tested code 7af6961.
+Row 20 full head 7741d09dd8cf214396e7938e07fbbd1f7263d9f7 is published
+clean; all three tests, lint 2.48 s /4.89 s and format 0.43 s /0.83 s pass.
+Repeated aliases and generated spines reclaim by counting; boxed128-bit numeric
+payload representation remains shared. Do not claim numeric payload ownership.
+
+Row 21 full head 443524ef6b6d5183f010899902a94a9d53c5dc55 is clean after
+amend; all three tests, lint 2.51 s /4.99 s and format 0.33 s /0.60 s pass.
+Preserve immutable OLD636414f/parentfad9b1a; later final rebase uses actual
+current base 7741d09. Row 22 full head 1689c03ff621bb2ff41759f89b42e606dd738a2a is clean after
+amend; all three tests, lint 2.33 s /4.67 s and format 0.34 s /0.61 s pass.
+Preserve OLDa8a7d11/parent636414f; final rebase uses actual base443524e.
+Row23 full head f4716a027a1bf5fd632733d3cd738fea7c4dbf62 is clean after
+amend. Three focused tests pass9.50 s CPU /19.72 s elapsed, lint4.59 s
+/9.15 s, format0.91 s /1.77 s. Runtime/source checks are unchanged after
+documentation refresh; large full GC gates remain on CI. Preserve
+OLD6774aa5/parenta8a7d11; actual current base is1689c03.
+Row24 full head cde58f461f78b05a5bd1c7800e9e9f0f110c05c0 is clean after
+amend. Three task_ownership tests pass9.51 s CPU /19.21 s elapsed, lint2.45 s
+/4.88 s, format0.36 s /0.76 s. Both source oracles explicitly use FWP_NO_OPT=1.
+Preserve OLD02beec3/parent6774aa5; actual current base isf4716a0.
+Row25 full head123d8b5928aa403f61494e78023982475732f777 is clean after
+amend. Three unwind_cleanup tests pass8.80 s CPU /17.94 s elapsed, lint2.43 s
+/4.88 s, format0.33 s /0.60 s. Source oracle explicitly uses FWP_NO_OPT=1.
+Preserve OLD3e31422/parent02beec3; actual current base iscde58f4.
+Row26 final head216e673ff2dd5378fe67d22ef6fa1bb4f54016c6 is clean on
+actual base123d8b5; exact lease against OLD33cf864. Three tests pass15.26 s
+CPU /30.66 s elapsed, lint2.37 s /4.67 s, format0.35 s /0.74 s. All three
+source oracles use FWP_NO_OPT=1. Native bump-allocation C is not actual WASI.
+Row27 final head786f1700236ec23b9880436d8c512b941a44e1ec is clean on
+actual base216e673, published with exact lease against OLD7392f2d. Five
+source oracles use FWP_NO_OPT=1; all five focused tests pass19.89 s CPU
+/39.90 s elapsed, lint2.67 s /5.31 s, format0.45 s /0.83 s.
+Row28 final heade3c49d965cd003f7fa56468a948cd3c078ada725 is clean on
+actual base786f170, published with exact lease against OLDbee3f16. Three
+source oracles use FWP_NO_OPT=1; five tests pass15.73 s CPU /31.57 s elapsed,
+lint2.41 s /4.74 s, format0.35 s /0.72 s.
+
+Guarded cargo test --test map_unwind_ownership --test map_ownership
+passes all four tests16.12 s CPU /32.46 s elapsed. Dynamic/direct/captured
+callback failures release completed results and scratch; typed scalar words
+remain uncounted. Existing no-tracing map reclamation omission control passes
+with protected finish helper. Raw interpreter agreement and native O1/O2
+stress/verification/poison checks pass. Regular ARM macOS and bench PR94
+gates pass; four other exact-head gates are running.
+
+Map cleanup lint (cargo clippy --test map_unwind_ownership --test
+map_ownership -- -D warnings) passes2.31 s CPU /4.72 s elapsed; fmt check
+0.34 s /0.60 s. Streamlined doc audit passes eleven link/heading sets,
+82 immutable OLD ancestry pairs and whole subjects0.12 s /0.84 s.
