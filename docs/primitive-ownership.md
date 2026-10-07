@@ -55,8 +55,8 @@ runtime cycles remain separate work in [ownership.md](ownership.md).
 
 ## Complete runtime sharing
 
-Saturating a reference count promotes the whole reachable graph to sharing,
-not just the parent. Interior references are canonicalized to the allocation's
+High-fanout counts stay exact through rare wide metadata. Explicit runtime
+sharing promotes the whole reachable graph, not just the parent. Interior references are canonicalized to the allocation's
 start before traversal. When the fixed traversal stack fills, recursive
 promotion begins while the child is still counted; clearing it first would
 skip its descendants. These transitions preserve the same alias protection
@@ -70,10 +70,11 @@ returned aliases, callbacks returning inputs and capturing them, failed
 use collection stress/verification and reuse poisoning. Generated wrappers must
 borrow comparison keys and share inserted keys.
 
-A runtime regression creates enough aliases to saturate a counted parent,
-then attempts an update of its reachable child. Restoring the previous
-saturation behavior corrupts the value observed through another alias;
-the fixed boundary preserves it. The same regression protects interior
+A runtime regression creates enough aliases to overflow the byte count,
+explicitly hands the parent to a retained runtime callback, then attempts an
+update of its reachable child. Restoring the unsafe parent-only saturation
+behavior corrupts the value observed through another alias; explicit complete
+graph sharing preserves it. The same regression protects interior
 references and a 70-branch graph exceeding the traversal stack's capacity.
 
 A second regression performs 10,000 updates of a nine-field record following a
@@ -387,3 +388,36 @@ collection stress/verification and both reuse-poison settings. The no-tracing
 loop frees 10.4 MiB by counts versus 9.6 MiB after restoring only optional-result
 sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
 0.1 MiB precision, zero collections). Full platform CI remains required.
+
+## Exact reference counts above the byte range
+
+Native count metadata remains one byte per allocation: 0 means shared, 1..254
+are inline counts, and 255 identifies an exact size_t count in rare side metadata.
+Entries use canonical count-slot addresses, not value addresses, and live outside
+the value heap. The collector metadata mapping is stable; these keys do not add
+language-value roots. The fixed 256-bucket table adds 2 KiB on 64-bit native
+platforms; each active wide entry holds three words (24 bytes before allocator
+overhead). Normal objects need no new allocation.
+
+Duplication above 254 allocates/increments one wide entry. Decrementing back to
+254 removes it. Generated typed destruction and closure work-list cleanup use
+one release helper so wide counts cannot be decremented as bytes. The ordinary
+last-reference predicate retains its existing non-consuming behavior. Raw drops
+retain their conservative outer-count behavior. Size_t overflow traps explicitly;
+side-entry allocation failure reports out of memory rather than silently sharing.
+
+Explicit graph sharing, runtime freeing, slot/chunk reuse and GC sweeping clear
+wide entries, including empty chunks and big allocations. High fanout alone no
+longer promotes descendants to tracing-managed sharing. Retained runtime
+callbacks still require their explicit graph-sharing boundary.
+
+`tests/wide_counts.rs` covers 601-reference leaf/record/function aliases,
+interior count-slot canonicalization, capture cleanup, graph sharing, runtime
+free/reuse, partial/empty-chunk and big-object sweep, overflow and injected OOM.
+An interpreter/native high-fanout function/string fixture passes O1/O2, stack
+on/off, GC stress/verification and both poison settings. The identical no-tracing
+loop frees 74.8 MiB through counts versus 73.9 MiB after restoring automatic
+sharing at saturation (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision,
+zero collections). This is reclamation evidence, not a timing result. Complete
+runtime inventories, old-object reclamation, exceptional/retained lifetimes,
+cycles and WASI remain unfinished; full platform CI is required after parents.

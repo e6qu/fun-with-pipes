@@ -177,7 +177,7 @@ FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
 not complete ownership. Full architecture and benchmark gates remain required.
 
 Eligible stack aggregates now retain typed child ownership; runtime-retained
-callbacks, exceptional paths, generational old objects, count overflow and WASI
+callbacks, exceptional paths, generational old objects and WASI
 reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
 function captures. Other aggregate destruction and incomplete temporary types
 still need coverage before general no-tracing support. Cycles still require an
@@ -251,3 +251,15 @@ and a closure loop from 1.7 to 1.3 MiB (Apple Silicon, Apple Clang 17, -O1;
 counters rounded to tenths). Fifteen focused ownership tests and the existing
 stack closure allocation elimination regression pass locally. Full architecture,
 WASI, GC/reuse sweeps and benchmark gates remain required before merging.
+
+## Exact high-fanout counts
+
+The native common case keeps one-byte counts. Counts above 254 use rare size_t
+side entries keyed by canonical metadata slots; they add no value roots.
+Typed releases, closure cleanup and raw decrements use the same wide-aware
+operation. Side entries disappear as counts shrink, sharing is explicit, storage
+is freed/reused, or the collector sweeps it. Overflow and allocation failure are
+explicit failures. High fanout no longer implicitly changes an owned graph to
+runtime-shared lifetime. See [primitive contracts](primitive-ownership.md#exact-reference-counts-above-the-byte-range)
+for overhead, tested boundaries and no-tracing reclamation evidence. This does
+not complete phase 2 or eliminate tracing at other runtime boundaries.

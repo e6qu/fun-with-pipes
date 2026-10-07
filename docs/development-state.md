@@ -29,8 +29,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75), based on `af15d26`.
   Published corrected head: `f53493c`; new full gate
   [37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156)
-  has ARM running its full test step after successful formatting/clippy;
-  other jobs remain queued. Earlier head `678abf6`, full run
+  passes ARM macOS and benchmarks; Intel macOS and Linux are testing. Earlier head `678abf6`, full run
   [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
   passed Linux and benchmarks; ARM macOS failed tutorial 7's same-executable
   native pipeline. Intel also passed. The fix is published; squash only after all current-head jobs pass.
@@ -77,6 +76,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-prefix | fwp-prefix-worktree | 376e77a | adc7947 |
 | ownership-list-copies | fwp-list-copy-worktree | bb00baa | 376e77a |
 | ownership-list-options | fwp-list-option-worktree | 34023f3 | bb00baa |
+| inference-call-effects | fwp-inference-worktree | 89b7bde | 34023f3 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -117,15 +117,15 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 
 Synchronous map/filter/zip callbacks and left/right accumulator transfers are
 prepared after b563360, followed by take/drop-while on ownership-list-prefix.
-Ordinary drop/copy boundaries are now being prepared after prefix/suffix work.
+Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
 Call-effect inference repair is prepared separately after optional list aliases.
-Next implement exact overflow counts, then remaining synchronous list callbacks,
-then exact overflow counts and typed container elements. Keep retained callbacks shared until their full
+Exact overflow counts are now being prepared. Next finish remaining synchronous
+list callbacks and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
-Byte counts at 255 still promote whole graphs to tracing-managed sharing;
-implement an exact overflow path before general no-tracing execution. Old marked
+The baseline still shares at count saturation; the prepared wide-count branch
+removes that transition and requires full platform validation before merge. Old marked
 objects still rely on generational reclamation. WASI remains a bump allocator.
 Phase 2 is incomplete. Continue numeric storage/ABI, fused numerics/autodiff,
 measured evidence and optional no-tracing phases in PLAN.md after ownership.
@@ -447,7 +447,7 @@ macOS architectures are testing. All current-head gates must pass before merge.
 ## Call effect inference repair preparation
 
 `inference-call-effects`, checkout `/private/tmp/fwp-inference-worktree`, base
-`34023f3`, has no PR yet. A focused frontend regression failed before the fix:
+`34023f3`, is published at `89b7bde` with no PR yet. A focused frontend regression failed before the fix:
 known pure callbacks closed a callee's effect row during argument unification,
 then call unification either copied the IO context into callback requirements or
 closed the whole caller context to purity. Infer::open_call now retains abstract
@@ -463,5 +463,53 @@ annotation on this branch. Thirty-two related ownership regressions passed (CPU 
 120.49 s). The expanded four-test set also checks 20 existing effect/handler,
 abstract-size, comptime and resource-capture snapshots without changing their
 outputs (CPU 10.75 s / elapsed 21.48 s). Five FFI checks and the native fat baseline passed (CPU 5.54 s / elapsed
-11.08 s). Formatting and whitespace passed; ready for publication. Full type snapshots/platform CI are still required after all parents
+11.08 s). Formatting and whitespace passed; repair published. Full type snapshots/platform CI are still required after all parents
 merge. Current #75 head f53493c has benchmark success and all test jobs running.
+
+Call-effect repair published as 89b7bde. Worktrees for copies, options and
+inference are clean; root remains main with intentional local documentation.
+No local workloads remain. Next implementation: exact count overflow on a new
+branch based on 89b7bde. Keep the one-byte common case; use rare side metadata
+keyed by the canonical count slot, so metadata cannot conservatively root a
+value. Centralize decrements for generated typed drops, raw drops and closure
+cleanup; each currently decrements the byte directly. Ordinary fwp_rc_last is
+a predicate, not a consuming decrement, so preserve its callers' semantics.
+
+Overflow metadata must disappear on count reduction, explicit graph sharing,
+freeing/reuse and GC sweeping (including whole empty-chunk reclamation).
+Handle allocator failure and size_t overflow explicitly. Cover leaf/record/
+function fanout above 255, aliases/interior addresses, callback graph-sharing,
+GC slot reuse and no-tracing reclamation. Reuse and scalar-bit safeguards must
+remain. Review runtime/fwp_rt_gc.c count resets at allocation, mem_free and sweep,
+and src/cgen.rs typed drop heads before editing. Full CI follows parent merges.
+Current #75 gate 37612412156: benchmark success; both macOS jobs and Linux
+remain running. Fix failures and merge only when all current-head gates pass.
+
+## Exact wide-count ownership preparation
+
+`ownership-wide-counts`, checkout `/private/tmp/fwp-wide-worktree`, base
+`89b7bde`, has no PR yet. Native byte counts 1..254 remain inline; 255 points to
+an exact size_t side entry keyed by canonical metadata address (no language
+value root). Metadata table is 2 KiB plus 24 bytes per entry before allocator
+overhead on 64-bit native platforms. Generated typed drops, raw decrements and
+closure cleanup share a release/decrement helper. Last-reference predicates
+retain their old semantics. Count reduction, explicit sharing, free/reuse and
+partial/empty-chunk/big-object sweeps remove side entries. Overflow traps;
+injected allocation failure reports OOM (102). WASI keeps the shared stub.
+
+Existing sharing regression still rejects the unsafe parent-only saturation
+baseline; the new counted branch explicitly shares at retained callback entry.
+Three new probes pass: 601-reference leaf/record/function aliases, interior
+metadata keys, capture destruction, free/reuse and deterministic sweep fixtures,
+size_t overflow/OOM; real high-fanout function/string collection tests at O1/O2,
+stack on/off, stress 17/verification and both poison modes; and no-tracing
+reclamation. No-tracing loop gives identical output/zero collections, 73.9
+versus 74.8 MiB freed by counts when automatic sharing is restored/removed.
+Initial two-probe run CPU 4.22 s / elapsed 9.14 s; collection check CPU 3.04 s /
+elapsed 6.23 s. All 35 related ownership regressions pass (CPU 68.22 s /
+elapsed 136.57 s), and the ownership contract inventory passes (CPU 3.47 s /
+elapsed 7.47 s). Five FFI checks and the local fat baseline pass (CPU 12.35 s /
+elapsed 24.64 s); formatting passes. Publication follows.
+All checks use the bounded guard. Full platform gates are still required after
+parent merges. Current #75 gate: ARM macOS and benchmarks pass; Intel macOS and
+Linux remain testing. This repair does not prove general no-tracing execution.

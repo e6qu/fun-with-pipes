@@ -213,6 +213,10 @@ int main(void) {
     V parent = fwp_rc_fresh(fwp_record(1, &child));
     volatile V aliases[255];
     for (int i = 0; i < 255; i++) { aliases[i] = parent; fwp_rc_dup(parent); }
+    if (*fwp_rc_slot(parent) != 255 && *fwp_rc_slot(parent) != 0) return 1;
+    /* Counts stay exact at high fanout. A retained runtime callback still
+     * requires explicit graph sharing before receiving borrowed children. */
+    fwp_rc_share(parent);
     if (*fwp_rc_slot(parent) != 0) return 1;
     V reachable = OBJ(aliases[0])->f[0];
     /* A runtime callback receiving a shared value may try a unique
@@ -242,11 +246,23 @@ int main(void) {
 }
 "#
     );
-    let previous = source.replace(
-        "if (*c == 255) fwp_rc_share(v);\n        else (*c)++;",
-        "*c = *c == 255 ? 0 : *c + 1;",
+    let start = source
+        .find("static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);")
+        .unwrap();
+    let end = start
+        + source[start..]
+            .find("\nstatic inline void fwp_rc_drop")
+            .unwrap();
+    let mut previous = source.clone();
+    previous.replace_range(
+        start..end,
+        r#"static inline void fwp_rc_dup(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (c && *c) *c = *c == 255 ? 0 : *c + 1;
+}
+"#,
     );
-    assert_ne!(previous, source, "saturation baseline was not restored");
+    assert!(previous != source, "saturation baseline was not restored");
     let old = scratch.0.join("old-saturation");
     fwp::cgen::compile_c(&previous, &old, "-O2").unwrap();
     let old_result = Command::new(&old)
