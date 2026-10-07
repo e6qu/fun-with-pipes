@@ -47,22 +47,23 @@ host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
 the ownership gap. `--memory static` provisions bounded memory, not static
 lifetimes. None of these is a general collector-free execution guarantee.
 
-## Next ownership change
+## Remaining ownership coverage
 
-The first change consolidates the array/map/set contracts and removes sharing
-for comparison-only keys. Finish inventorying the remaining primitive families,
-including their argument/result ownership, retention, callbacks and aliases.
-Then extend deterministic element/leaf/capture destruction. Keep the IR pass
-and code generator on the same contracts.
+Container contracts and comparison-key borrowing are merged. Selected leaves,
+fresh text trees, compiled captures, concrete temporaries and stack children are
+also merged; synchronous map/filter borrow callback inputs and own their fresh spines/results.
+Finish remaining primitive/runtime families, including argument/result ownership,
+retention, aliases and exceptional cleanup. The exact prepared queue and current
+verification are in [the handoff](development-state.md). Keep the IR pass and
+code generator on the same contracts.
 
 Contracts must distinguish borrowing for the call, consuming a reference,
 retaining a reference beyond the call, returning a fresh owned value, and
 returning an alias of an argument. A borrowed callback input cannot silently
 become an owned result. A slice must retain its backing buffer if it escapes.
 
-Start with read-only container primitives that currently force sharing.
-Eliminate redundant counts/transitions there, measure the result, then extend
-coverage to strings/bytes, closures and runtime structures in focused changes.
+Extend measured borrowing and deterministic cleanup to the remaining container,
+callback and runtime boundaries in focused changes.
 Do not indiscriminately count every short-lived list: the delivery history
 records a case where doing so slowed execution by 35%.
 
@@ -120,7 +121,7 @@ Generational marking restricts immediate freeing of old counted objects. Removin
 that restriction needs its own invariant and stress evidence. Define cycle
 policy and teardown before claiming general execution without tracing GC.
 
-## Prepared leaf ownership implementation
+## Counted leaf primitive families
 
 `String` and `Bytes` locals now participate in IR ownership. Selected primitive
 results establish counts: copies start fresh, `string.to-bytes` duplicates its
@@ -140,7 +141,7 @@ container elements, callbacks, stack captures, handler unwind and cancellation
 still require ownership contracts and cleanup. Old marked objects remain under
 the collector's generational policy; WebAssembly still uses its bump allocator.
 
-## Prepared nested text result ownership
+## Fresh nested text results
 
 Generated type-directed helpers own copied String/Bytes result trees returned by
 selected primitives. They install one count on every new object, skip scalar
@@ -174,7 +175,8 @@ partial applications and input-returning functions against the interpreter at
 heap-closure loop, with tracing off and zero collections, frees 1.2 MiB by counts
 versus 0.0 MiB with FWP_FREE=0 (Apple Silicon, Apple Clang 17, -O1,
 FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
-not complete ownership. Full architecture and benchmark gates remain required.
+not complete ownership. PR #78 passed its full architecture and benchmark
+gates; later ownership extensions require their own exact-head gates.
 
 Eligible stack aggregates now retain typed child ownership; runtime-retained
 callbacks, exceptional paths, generational old objects, count overflow and WASI
@@ -198,8 +200,8 @@ then releases them on a 256 KiB native worker stack. At -O0, restoring only the
 recursive release exhausts that stack; the work-list version completes, matches
 the interpreter and reports zero collections with tracing disabled. Both nodes
 and captures are released by counts; the branching graph exercises the spill
-path. Optimized GC/reuse alias tests remain passing. Full native/WASI/platform
-and benchmark gates are still required before this prepared change merges.
+path. PR #79 passed full native/WASI/platform and benchmark gates. This does
+not establish ownership of every callback or arbitrary aggregate shape.
 
 Investigation also exposed incomplete concrete typing of constructor temporaries:
 borrowed constructor arguments previously fell back to the unknown type and
@@ -223,7 +225,7 @@ Clang 17, -O1, FWP_STACK=0, 10,000 iterations, 0.1 MiB counter precision).
 Retained function/list aliases and literal leaf/Option children match both
 backends at -O1/-O2 under GC stress/verification and both poison modes. Earlier
 container/leaf/text/closure/cleanup checks and five FFI regressions pass locally.
-Full CI remains required. This covers call argument temporaries; it does not
+PR #80 passed full CI. This covers call argument temporaries; it does not
 complete type propagation into every generated constructor or aggregate.
 
 ## Owned children of stack aggregates
@@ -249,5 +251,37 @@ only the previous retained child lifetimes, with tracing off and identical
 output, changes a 10,000-step variant loop from 0.5 to 0.0 MiB freed by counts,
 and a closure loop from 1.7 to 1.3 MiB (Apple Silicon, Apple Clang 17, -O1;
 counters rounded to tenths). Fifteen focused ownership tests and the existing
-stack closure allocation elimination regression pass locally. Full architecture,
-WASI, GC/reuse sweeps and benchmark gates remain required before merging.
+stack closure allocation elimination regression passed locally. PR #81 then
+passed its full architecture, WASI, GC/reuse and benchmark gates.
+
+
+## Borrowed synchronous callbacks and map results
+
+The typed `fwp_apply_borrowed` boundary borrows callback arguments during a
+synchronous call and returns an owned result. Compiled callbacks retain returned
+aliases by their concrete types. Map owns its fresh list spine and callback
+results while borrowing input elements; direct and captured specializations keep
+the same contract. Retained runtime callbacks still require separate ownership.
+PRs #82–#84 passed their exact-head full gates. Fold is the next PR; other
+callbacks, runtime unwind and retained owners remain preparation.
+
+## Prepared work and acceptance limits
+
+[The immutable queue](roadmap-queue.md) records runtime/callback/container,
+aggregate, type, CAF, task/channel/library, OpenCL and resource cleanup work.
+These branches are not merged support. Each must rebase and pass full exact-head
+CI. No optional tracing-free mode is accepted until ownership coverage and cycle
+policy justify it.
+
+The latest worker-local repair keeps compatible complete calls and typed aliases
+unboxed while partial/dynamic captures remain boxed. Exact child/alias/trap checks
+pass, and the unchanged full wide-record allocation acceptance now passes on
+Linux and both macOS architectures in separate evidence. Prepared TLS resource
+teardown, connection cancellation and peer-subject temporary cleanup have actual
+OpenSSL/omission checks; library probes generally run with collection unarmed.
+They do not prove host-root tracing or deterministic discard of every resource.
+An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
+and reproduced loss of the owning Conn during String allocation. Its owner fence
+and fence-omission control now pass under real GC/reuse verification; production library
+tracing remains unarmed. Current work/evidence, including any unresolved failures,
+is recorded in the handoff rather than appended as another priority queue here.

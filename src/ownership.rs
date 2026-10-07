@@ -17,6 +17,11 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// A callback-produced owned value, or the unchanged empty-fold input.
+    OwnedAccumulator {
+        argument: usize,
+        runtime: &'static str,
+    },
     /// New owned list nodes containing already-owned callback results.
     FreshSpine,
     FreshLeaf,
@@ -119,6 +124,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             ResultOwnership::FreshSpine,
             Some(Callback::Borrowed(0)),
             &[0, 1],
+        ),
+        "fold" => (
+            &[B, C, B],
+            ResultOwnership::OwnedAccumulator {
+                argument: 1,
+                runtime: "fold",
+            },
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
         ),
         "filter" => (
             &[B, B],
@@ -266,7 +280,8 @@ mod tests {
                     .filter_map(|(i, a)| (*a == Argument::Consume).then_some(i))
                     .collect();
                 match c.result {
-                    ResultOwnership::OwnedContainer { argument, .. } => {
+                    ResultOwnership::OwnedContainer { argument, .. }
+                    | ResultOwnership::OwnedAccumulator { argument, .. } => {
                         assert_eq!(consumed, vec![argument], "{symbol}")
                     }
                     ResultOwnership::AliasLeaf { argument }

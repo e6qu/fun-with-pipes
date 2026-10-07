@@ -239,3 +239,29 @@ spine's shared-result boundary: identical output and zero collections,
 4.6 MiB freed by counts versus 5.0 MiB for owned filter results (Apple Silicon,
 Apple Clang 17, O1, counters rounded to 0.1 MiB). Full platform and benchmark gates
 remain required before merge; retained callbacks and exceptional cleanup remain.
+
+## Synchronous fold accumulator transfer
+
+`fold` borrows its callback/list and consumes one owned accumulator reference.
+It returns an OwnedAccumulator result, possibly an input/capture alias; an empty
+list returns the supplied accumulator unchanged. It is neither a fresh tree nor
+a fresh spine. The borrowed application helper accepts an owned prefix, avoids
+duplicating transferred arguments, and carries any remaining prefix across
+partial/overapplication boundaries. Ordinary borrowed calls use prefix zero.
+
+Direct/captured fold loops keep specialization: captures and elements acquire
+typed argument copies, the accumulator transfers, and callbacks return its
+replacement. Original callback/capture/list addresses remain roots until return.
+Unknown entries retain sharing. New two-argument callback wrappers distinguish
+accumulator transfer from map/filter's borrowed arguments.
+
+`tests/fold_ownership.rs` covers accumulator/input/capture aliases, empty inputs,
+function accumulators, dynamic and captured callbacks at O1/O2, stack on/off,
+GC stress/verification and both poison modes. The callback runtime probe adds
+owned-prefix exact/partial/overapplication and zero supplied arguments. A selected
+no-tracing differential restores only generic/specialized callback result sharing:
+identical output and zero collections, 1.3 MiB freed by counts versus 1.8 MiB with
+transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Restoring only an
+unused generic path produced no difference; the final probe covers the executed
+specialized path too. Full platform/benchmark gates remain required. Fold-right,
+zip-with, retained callbacks and exceptional cleanup are separate work.
