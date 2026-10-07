@@ -182,7 +182,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 37 | Boxed-to-worker wrappers protect original arguments before preparation and each completed typed field duplicate until worker entry | Sequential CI; partial retention failure, boxed/scalar arguments, aliases and worker entry transfer |
 | 38 | Eligible loop state stays flattened through RC preparation; initial boxed input and each completed typed field duplicate stay owned until transfer | Sequential CI; partial field failures, cancellation slots, aliases and trap/evaluation order |
 | 39 | Multi-field typed retains protect each completed extra reference; caller liveness excludes unfinished retains through count overflow | Sequential CI; partial variant/stack retains, wide-count overflow and live aliases |
-| 40–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |
+| 41–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

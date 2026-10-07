@@ -8074,3 +8074,33 @@ Partial-retain lint (cargo clippy --test retain_unwind_ownership --test
 worker_preparation_ownership --test wide_counts -- -D warnings) passes2.28 s
 CPU /4.60 s elapsed; fmt check0.34 s /0.71 s. Nine current docs refresh
 final preparation with no changes to tested source/runtime.
+
+Final partial-retain preparationf0049c4aabe06ec3027a314ba213524592488795
+is clean on actual base7ae7813, published with exact lease against OLD1bb11be.
+Whole subject verified one line with empty body. PR95 bench passes; both
+GC, regular Intel and Linux run, regular ARM queued. No second PR.
+
+Row40 OLDb021967 rebases from immutable parent1bb11be onto actual row39
+headf0049c4 (initialafa227d); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.04 s /0.25 s; formatting0.34 s
+/0.62 s. Typed nested constructors, constructor allocation failure and
+retain-overflow regressions started; two new exact IR units follow.
+
+Guarded cargo test --test constructor_type_ownership --test
+constructor_unwind_ownership --test retain_unwind_ownership passes all three
+tests16.17 s CPU /32.40 s elapsed. Later-field failure releases nested
+constructor children using recovered monomorphic types; inferred expression
+types remain authoritative. Dynamic/source/native O1/O2 stress, verification,
+poison, allocation failure and count-overflow regressions pass. Two exact
+new IR type-context units follow before final publication.
+
+Exact IR unit rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape
+passes3.23 s CPU /6.65 s elapsed; rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types
+passes0.00 s /0.14 s. Each uses cargo test --lib NAME -- --exact, one
+matching test passes with55 unrelated tests filtered. Dynamic arguments
+and record updates preserve nested nominal constructor types.
+
+Typed constructor lint (cargo clippy --test constructor_type_ownership
+--test constructor_unwind_ownership --test retain_unwind_ownership --
+-D warnings) passes2.38 s CPU /4.85 s elapsed; fmt check0.34 s /0.61 s.
+Nine current root docs copied before final amend; tested source unchanged.
