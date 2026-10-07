@@ -62,9 +62,14 @@ workflows match prior2a2458b exactly. Twelve focused integration tests pass
 format0.34/0.60s and final strong44/106/86 audit0.41/3.44s pass. All11 live docs
 are copied into the PR. Retained roadmap/revision-027-2a2458b93d6c before
 exact leased publication. Earlier preparation evidence stays in history.
-Next: prepare row28 runtime-call cleanup from its recorded actual base2a2458b
-onto currentPR1069c1b5a8; after106 merges, final-rebase from that actual new
-base9c1b5a8 onto its squash. Keep later work separate and open28's PR only then.
+Row28 preparation is now fbb3bc84847b410219a4d4f58e1f4e9ba1c79a60 on actual
+PR1069c1b5a8, rebased FROMactual2a2458b. Compiler/runtime/tests/scripts/workflows
+match earlier3e7ab59 exactly. After106 merges, final-rebase FROMnewactual9c1b5a8
+onto its squash, run focused checks and open28's PR only then. Rows29–36 also
+refresh serially onto this chain with all non-doc bytes unchanged; their table
+records actual bases. Guarded refresh passes9.24CPU/103.21elapsed, preserving
+limits. Durable journal /private/tmp/fwp-refresh-after-pr106-journal.json records
+all9 publications and audits. Do not rerun the completed helper blindly.
 
 The merged million-step native tail regression passes O1/O2 with GCoff/on
 against a200-step FWP_NO_OPT=1 oracle. Full-size raw100000 local execution
@@ -91,7 +96,7 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | ce5a51c330f3 | 1523161a7314 | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 34 ownership-argument-preparation | dcf18f01c2fb | ce5a51c330f3 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 432a3332c4f7 | dcf18f01c2fb | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
-| 36 ownership-worker-boxing | 928c619289bd | 26375deb676e | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
+| 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
 | 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
 | 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
