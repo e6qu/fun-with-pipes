@@ -134,7 +134,7 @@ still need their final squash rebases and six exact-head full gates.
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests10.45CPU/20.96elapsed, lint2.32/4.58s, format0.36/0.76s, audit0.44/3.37s pass; full sequential gates remain required |
 | 34 ownership-argument-preparation | 734d3383addf | 527f84d405b7 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
-| 35 ownership-constructor-unwind | 1a01dd91bcfd | d3e1f6d4ed04 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
+| 35 ownership-constructor-unwind | be0032a15ee3 | 734d3383addf | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | bbdcc69fe735 | 1a01dd91bcfd | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | c830f4d3175e | bbdcc69fe735 | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | cff61cd0898d | c830f4d3175e | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
