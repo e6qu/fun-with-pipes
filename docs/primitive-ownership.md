@@ -497,3 +497,48 @@ still shares its list state before consuming it. That generated/runtime loop
 boundary needs owned state transfer as separate phase-2 work; changing the
 consumer isolates this regression, but does not fix the loop ownership gap.
 Exceptional cleanup and full platform gates remain required.
+
+## Owned normal and fused loop state
+
+`loop` borrows the synchronous callback and consumes its state. Generic, direct
+and captured callback paths transfer that state into each call. They take a typed
+additional reference to the selected Step payload, then destroy the owned Step;
+this preserves payloads even when the Step is shared or aliased. Captured values
+borrow between iterations and get owned per-call copies. Existing tick placement
+and source evaluation order are preserved. Conservative compilation switches keep
+sharing/raw-drop behavior where ownership/freeing is disabled.
+
+Known loop shapes keep state in locals and avoid Step allocation. Loading a
+boxed record takes typed field references before releasing that box; nested
+record fields can remain flattened. Rebuilding a nested record from its slots
+owns additional child references, and its fresh outer reference replaces the
+field-read's initial Dup. Otherwise field cleanup would invalidate the rebuilt
+record or leave an extra outer owner. Boxed arguments passed to an unboxed
+worker similarly release their original typed fields/storage after the worker
+consumes duplicated fields.
+
+Possible heap-pointer state and next-state slots have address fences across
+allocating steps. Inline integers, F32/F64 and Bool fields need no root fences
+and remain eligible for register promotion. Boxed numerics still need roots even
+when their types have no counted destruction. Arrays start zeroed. This preserves
+root safety without forcing every scalar slot into addressable storage; actual
+register placement and speed still require assembly/benchmark evidence.
+
+`tests/loop_ownership.rs` covers generic/direct/captured/optimized loops,
+flattened records, shared/retained Step payload aliases, function states, effects,
+O1/O2, stack on/off, GC stress/verification, poison and conservative switches.
+An actual emitted scalar loop wrapper receives numerical words equal to a live
+String address and leaves its count unchanged. Focused existing loop goldens
+compare stdout, stderr and exit status, including nested state and traps.
+
+The no-tracing map/sum sequence consumer now frees 8.5 MiB by counts versus
+4.1 MiB after restoring only generated loop initial-state sharing. A fixture
+that proves it uses boxed callback entries frees 2.7 MiB versus 1.2 MiB when
+only typed boxed-to-worker argument release becomes raw outer decrement.
+Both comparisons preserve other loop/sequence behavior, identical output and
+zero collections (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). An earlier
+boxed counter was optimized past its intended callback entry; its 1.1/1.1 result
+was not evidence of that boundary. These are reclamation results, not speed
+claims or proof of exception/cancellation cleanup. Full platform gates remain
+required after parent merges; old objects, retained runtime values and cycles
+still prevent general execution without tracing.
