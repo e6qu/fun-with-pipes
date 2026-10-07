@@ -100,8 +100,13 @@ for priorities and contracts. Update this file before ending a work session.
 
 ## Current CI fixes and prepared work
 
+- Latest committed head before the Intel timer-fixture fix: `c7aeb6f`; gate
+  [37583294535](https://github.com/e6qu/fun-with-pipes/actions/runs/37583294535)
+  is queued. `37582324903` was cancelled after its head was superseded.
+  Keep preparing ownership and fixing failures; only merging waits for CI.
+
 - Full run [37576889350](https://github.com/e6qu/fun-with-pipes/actions/runs/37576889350)
-  on `ccecf20`: ARM macOS failed; Intel is still running; Linux full tests and benchmark
+  on `ccecf20`: Both macOS jobs failed; Linux full tests and benchmark
   equivalence passed. The no-fail-fast sweep exposed tutorial `wc` padding,
   OpenSSL alert wording, GC-stressed list crashes and native server crashes.
 - Reproduced native forms/format server failure locally: SIGSEGV in
@@ -131,6 +136,14 @@ for priorities and contracts. Update this file before ending a work session.
   the latest CI head. The filesystem
   golden mismatch followed a stress crash that left its scratch directory.
   Do not claim the full macOS gate passed based on focused checks.
+- Intel's additional failure in `backends_interleave_alike_for_any_slice`
+  came from comparing unsynchronized 20/40 ms wake prints at a one-entry
+  slice. Documented timer order depends on wall time. The fixture now sends
+  both results to a bounded channel, closes it after task.scope completes,
+  then drains/sorts before printing. Output stays identical; missing children
+  still fail the golden comparison. All three slice checks and stressed native
+  runs pass locally. The harness now additionally requires the golden output
+  for every slice of that fixture. Full WASM/fiber checks stay on CI.
 - Prepared/published branch: `ownership-contracts`, checkout
   `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
   No second PR is open. All 35 container contracts are centralized; comparison
@@ -140,11 +153,12 @@ for priorities and contracts. Update this file before ending a work session.
 - After #74 passes and merges, fetch main and rebase that checkout with
   `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
   push with lease, then open its PR. Run full CI before its squash merge.
-- Further preparation: local branch `ownership-leaves`, checkout
-  `/private/tmp/fwp-leaf-worktree`, base `798d2ed`. String/Bytes ownership,
-  copy/alias result contracts and safe leaf destruction are being tested.
+- Further preparation: published branch `ownership-leaves`, checkout
+  `/private/tmp/fwp-leaf-worktree`, head `f7d74ec`, base `798d2ed`. String/Bytes ownership,
+  copy/alias result contracts and safe leaf destruction are prepared.
   Its two focused regressions passed with GC/reuse verification; the copy
-  loop freed 0.9 MiB by counts versus 0.0 MiB with freeing disabled. Five FFI
+  loop, with tracing off and zero collections, freed 0.9 MiB by counts
+  versus 0.0 MiB with freeing disabled. Five FFI
   checks passed. Full ownership, exceptional cleanup and closures remain work.
   This branch has no PR; publish one PR at a time after its parent merges.
 
