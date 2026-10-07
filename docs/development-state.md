@@ -27,8 +27,11 @@ immutable value semantics, effects and evaluation/trap order stable.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
 - Next sole PR: `ownership-leaves`, checkout `/private/tmp/fwp-leaf-worktree`,
-  rebasing from old base `798d2ed` onto `5998302`. Reconcile this handoff, run
-  focused leaf/inventory checks, push with lease and create its PR/full CI.
+  rebased from old base `798d2ed` onto `5998302`; macOS/cache fixes inherited.
+  Post-rebase leaf (2) and container (3) regressions pass (CPU 13.32 s /
+  elapsed 27.06 s), eight IR ownership checks pass (CPU 3.51 s / elapsed 7.39 s).
+  Contract inventory, formatting and whitespace pass. Publish this sole PR and
+  run full current-head CI before squash-merging. No local workloads remain.
 - Separate next-task work: `ownership-loop-state`, checkout
   `/private/tmp/fwp-loop-worktree`, base `0a90b05`. Implement normal and fused
   loop state/result transfers; no code edits yet. Prepared descendants retain
@@ -57,7 +60,6 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-leaves | fwp-leaf-worktree | 2ce7a05 | 798d2ed |
 | ownership-text-results | fwp-text-worktree | bab67ea | 2ce7a05 |
 | ownership-closures | fwp-closure-worktree | 0d96bfe | bab67ea |
 | ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
