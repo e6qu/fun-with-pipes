@@ -1,160 +1,90 @@
 # Session handoff
 
-Updated: 2026-10-07. This file records current work, not permanent design.
-Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md) and [design.md](design.md)
-for priorities and contracts. Update this file before ending a work session.
+Updated: 2026-10-07. Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md)
+and [design.md](design.md). This branch is prepared work, not merged behavior.
 
-## Baseline and active work
+## Authorized workflow and priority
 
-- Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
-- Branch: `macos-portability`.
-- Implementation/docs commit: `7ec02d0`.
-- Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
-  The user explicitly authorized the push and PR creation on 2026-10-07;
-  the earlier publication block is resolved. The implementation and workflow handoff are on GitHub.
-- Continuing authorization: the user requested automatic completion of the
-  active roadmap, one PR at a time, with full CI before each squash merge.
-  Use an explicit single-line subject of at most 80 characters and an empty
-  body; no trailers, AI attribution, Co-authored-by or Authored-by lines.
-  Continue to the next roadmap task after merging. An active thread goal
-  tracks the whole roadmap; the plan/handoff carry the state across sessions.
-- User direction: macOS, ownership with minimal tracing GC, efficient native
-  representations/numerics/autodiff, and stable simple pipe semantics.
-- Current scope: the first native macOS portability pass plus durable docs.
-  Runtime ownership contracts are the next focused implementation change.
+Complete the active roadmap automatically, one focused PR at a time. Fix failing
+tests; CI queues and failures gate merging, not useful implementation. Full gates
+run on GitHub. Squash only after passing current-head CI with an explicit subject
+of at most 80 characters and an empty body, no trailers or attribution. Keep pipe
+syntax, typing, evaluation/trap order and immutable value semantics stable.
 
-## Implemented on this branch
+## Branch and PR sequence
 
-- Mach-O symbol/directive handling for the custom x86-64/AArch64 task switch.
-- Mach-O image/segment discovery for collector roots, including writable-at-load
-  constant data; Darwin peak RSS converted from bytes to KiB.
-- Actual OS page size for task guard pages.
-- Lifetime fences for list construction/append/flatten buffers. Optimized
-  Apple Clang exposed missing conservative roots when it preloaded short
-  buffers; the stressed task and reverse-autodiff cases now pass.
-- Distinct context-switch assembly symbols for each fat-binary variant.
-- Native shared library naming/linking (`.dylib`, `-dynamiclib`), including the
-  interpreter's FFI shim, and a clear rejection of native `--static` on macOS.
-- `FWP_OPENSSL_DIR` for native headers/linking and interpreter loading; Darwin
-  `RTLD_GLOBAL` corrected; the prefix participates in the native cache key.
-- OpenCL framework lookup on macOS. Hardware kernel execution is unverified.
-- Apple Silicon and Intel macOS CI jobs, with OpenSSL 3 and the full test gate.
-- Darwin regressions for real collection, global roots, tasks/autodiff and libraries.
-- Existing reuse/stack suites enabled on Darwin: portable allocation counters,
-  immediate reclamation, and the full golden reuse/GC verification sweep.
+1. Open PR [#74](https://github.com/e6qu/fun-with-pipes/pull/74), branch
+   `macos-portability`, latest head `c7aeb6f`, baseline `7a05b58` (#73).
+   Latest gate [37583294535](https://github.com/e6qu/fun-with-pipes/actions/runs/37583294535)
+   is queued. Never substitute a prior or cancelled run for this gate.
+2. Published preparation `ownership-contracts`, checkout
+   `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
+   No PR yet. Centralizes 35 container contracts and borrows comparison-only
+   keys. Runtime sharing protects saturation, interior references and spill.
+3. This published preparation `ownership-leaves`, checkout
+   `/private/tmp/fwp-leaf-worktree`, implementation `186dd1b`, base `798d2ed`.
+   No PR yet. Adds selected String/Bytes ownership and safe typed leaf drops.
 
-## Validation
+After #74 passes and squash-merges, fetch main and rebase the container checkout
+with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
+push with lease and open its PR. After that PR merges, rebase this branch from
+`798d2ed` onto main and reconcile docs before opening its PR. Inherit the latest
+macOS runtime fixes. Keep one open PR; do not combine these ownership changes
+with the macOS PR just to avoid waiting for CI.
 
-- Six focused escape-analysis unit tests passed locally.
-- Concatenated ordinary runtime passed Apple Clang syntax checking.
-- Four focused Darwin regressions passed locally on Apple Silicon, including
-  GC stress/verification, global roots, tasks/reverse autodiff, wide records,
-  shared-library defaults, static-link rejection and OpenSSL in both backends.
-- All five FFI tests passed locally: interpreted/native foreign calls, a
-  shared library from C, a static library from Rust and unsupported-type errors.
-- Fat-binary test passed locally on Apple Silicon (baseline variant only;
-  the Intel variants still need their macOS CI job).
-- Darwin wide-record allocation and counted-reclamation regressions passed
-  locally after enabling the portable suites (`cargo test --test stack
-  wide_records_are_returned_without_allocating`, `cargo test --test reuse
-  objects_are_freed_by_their_counts`). Each used the same resource guard.
-- `cargo fmt --all -- --check` and `git diff --check` passed.
-- CI run `37571212303` for `66eafb8`: Linux full tests (including WASM,
-  cross builds and GC/reuse checks) and benchmark equivalence passed. Both
-  macOS jobs passed fmt/clippy, then failed in the AOT server tests because
-  HTTP/2 listener creation used Linux-only `SOCK_CLOEXEC` without a fallback.
-  Fixed with `fcntl(FD_CLOEXEC)` where the socket flag is unavailable; failed
-  descriptor setup closes the socket and preserves the error.
-  Both failing server regressions passed locally after the fix with
-  `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
-  /private/tmp/fwp-local-guard.py cargo test --test aot serve_`. An initial
-  local invocation without the required OpenSSL prefix failed at header
-  discovery; the configured rerun passed both tests.
-  Full CI now uses `--no-fail-fast` to report all failing test targets in one
-  run while preserving every assertion and the failing exit status.
-  The latest revision needs a new full [CI gate](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
-  Do not describe either architecture as fully verified yet.
-- Workflow correction: failing tests are implementation tasks; queued CI only
-  prevents merging. Continue diagnostics, fixes and separate next-task
-  preparation, with one open PR. Do not mark the roadmap blocked for normal
-  failures or runner delays. The user reiterated this on 2026-10-07.
-- Local resource guard for this session: `/private/tmp/fwp-local-guard.py`,
-  the user's guard adapted only to this repository root, with the same limits.
-  It is temporary; recreate it or use an equivalent bounded check next session.
-  It needs process-sampling/priority permissions. Full gates belong on CI.
-  Commands completed: `cargo test --lib escape::tests`,
-  `cargo test --test macos` (with `FWP_OPENSSL_DIR` set), and
-  `cargo test --test ffi`, `cargo test --test fat`, and the formatting
-  check, each through the temporary guard. Target data was 80 MiB after
-  these focused checks; no local full gate or benchmarks were run.
+## macOS failures and fixes
 
-## Next actions
+Full run `37576889350` on `ccecf20`: ARM failed, Linux full tests and benchmarks
+passed, Intel still running at this update. ARM exposed BSD `wc` padding,
+OpenSSL alert wording, list GC crashes and native server crashes. Fixes at
+`252d6b1` and `c7aeb6f` retain constructor sources, list source/buffers, flat-map
+and generic/specialized right-fold buffers through allocating operations.
+The forms server, stressed web server, TLS stream snapshot and tutorial 19 pass
+focused checks. Traits, shortened iterator/partition and filesystem fixtures
+pass at `-O1`/`-O2`, GC stress/verification and both poison modes. Original long
+stress workloads remain on CI. Darwin full support is not yet verified.
 
-1. Inspect both macOS jobs and Linux CI on PR #74; fix failures without weakening tests
-   or silently treating missing optional tools as coverage.
-2. Check the newly enabled reuse/stack suites on both Darwin runners.
-   Static-memory and external-process RSS suites still use Linux guards;
-   `strace` and process-memory evidence need platform alternatives.
-3. Record exact CI results and remaining platform limitations here.
-4. Start the ownership-contract inventory described in `ownership.md`.
+## Ownership implementation and evidence
 
-## Prepared next branch
+[primitive-ownership.md](primitive-ownership.md) lists the contracts. String and
+Bytes locals participate in IR ownership. Copied leaves establish counts;
+identity/no-op aliases duplicate a reference. Read-only boundaries borrow;
+unknown runtime/FFI boundaries share. Typed drops free leaf storage directly;
+sharing skips byte payloads and reuse poison stays inside allocation capacity.
+Canonical monomorphic type names are `std::String` and `std::Bytes`.
 
-- Isolated checkout: `/private/tmp/fwp-ownership-worktree`, branch
-  `ownership-contracts`, base `ccecf20` (PR #74's server fix). No second PR
-  is open. Do not mix this implementation into the portability PR.
-- Shared contracts for all 35 array/map/set declarations replace independent
-  IR/codegen lists and select owning runtime wrappers. Comparison-only keys
-  borrow; stored keys and callback values remain runtime-shared.
-- Focused checks through the same guard and shared bounded target directory:
-  `cargo test --lib ownership::tests` (one coverage/invariant check),
-  `cargo test --lib rc::tests` (eight ownership IR checks), and the three
-  `tests/ownership.rs` regressions. The alias/callback regression passes with
-  GC stress, verification and reuse poisoning. The isolated allocation check
-  reports 0.8 MiB for the restored old sharing boundary and 0.0 MiB with
-  borrowing, at the runtime counter's one-decimal precision. Full CI pending.
-- A loop-state experiment uncovered retained field references that can prevent
-  reuse independently of primitive sharing. Recorded in primitive-ownership.md
-  for later IR optimization; no unsupported performance claim.
-- Runtime sharing now protects descendants when an 8-bit reference count
-  saturates, when given an interior reference, and when the 64-entry traversal
-  stack spills. The third ownership regression passes and verifies that
-  restoring the old saturation transition corrupts a visible alias.
-- After PR #74 passes and is squash-merged, rebase the prepared branch with
-  `git rebase --onto origin/main ccecf20 ownership-contracts` from its checkout
-  (after fetching main), review, publish one new PR and run full gates.
-- Continue with remaining primitive inventories and typed element/leaf/capture
-  ownership. This prepared change does not finish phase 2.
+Focused checks passed through the local resource guard:
 
-## Boundaries and deferred work
+- One container inventory check and eight IR ownership checks.
+- Three container tests: alias/callback GC/reuse verification, comparison-key
+  allocation/reuse and runtime saturation/interior-reference/spill protection.
+- Two leaf tests: retained aliases, copies and no-op paths under GC/reuse
+  verification; a 10,000-step copy loop with tracing off and zero collections.
+- All five FFI regressions; formatting and whitespace checks.
 
-Darwin cross-target spellings and universal binaries are not implemented.
-Use `--target native` on macOS. Clang PGO is not implemented; `--pgo` still
-requires GCC. Static memory on Darwin has not yet been validated. Linux UDS/SHM
-fast transports keep their existing portable pipe fallback elsewhere.
-Windows, new interfaces and new compiler backends are deferred.
+Apple Silicon, Apple Clang 17, `-O1`: the leaf loop frees 0.9 MiB by counts versus
+0.0 MiB with `FWP_FREE=0`, with identical output (0.1 MiB precision). The key
+comparison loop allocates 0.0 MiB versus 0.8 MiB when only the old sharing boundary
+is restored. These are counter results, not timing or register-placement claims.
+Full architecture and benchmark gates remain required for each ownership PR.
 
-Do not claim tracing GC is gone: strings, escaping closures and runtime-shared
-values still rely on it. WebAssembly and embedding-host reclamation remain
-separate ownership tasks. Existing published benchmark numbers are historical
-Linux measurements, not results from this branch or promises about macOS.
+## Next implementation work
 
-## Leaf preparation following the container contract branch
+Complete nested text result ownership (Option/List), typed container elements,
+escaping closure captures and retained runtime callback values. Preserve alias
+semantics and check callbacks returning inputs/captures. Add handler unwind,
+cancellation and FFI lifetime cleanup; define cycle policy. Old marked objects
+remain under generational reclamation and WASI remains a bump allocator. Phase 2
+is incomplete; these focused leaf checks do not establish general ARC or no-GC
+execution. Later numeric/AD phases remain active in PLAN.md.
 
-- Branch `ownership-leaves`, checkout `/private/tmp/fwp-leaf-worktree`, based on
-  `798d2ed` from `ownership-contracts`; this remains separate from PR #74.
-- Selected String/Bytes copies and aliases participate in ownership and typed
-  leaf destruction. Sharing does not traverse byte payloads; poison writes stay
-  within leaf storage. See primitive-ownership.md and ownership.md for scope.
-- Focused leaf regressions passed: GC/alias/reuse checks and 0.9 MiB freed by
-  counts versus 0.0 MiB with freeing disabled, with tracing off and zero
-  collections in the copy loop. The inventory check, eight IR ownership
-  checks, three container/sharing regressions and all five FFI checks passed.
-- Initial reclamation check exposed an incorrect type-name spelling: canonical
-  monomorphic names are `std::String`/`std::Bytes`. Correct classification now
-  emits drops and the counter assertion passes.
-- Parent macOS PR has additional runtime-root fixes through `c7aeb6f`; those must be
-  inherited through the eventual rebase. Full CI is required for each PR head.
-- After the container contract PR merges, rebase this branch from `798d2ed`
-  onto main, reconcile handoff/design docs and run CI through its own PR.
-  Keep one PR open; failures are work to fix, not a roadmap blocker.
+## Local resource limits
+
+Full builds, test gates and evidence generation belong on GitHub runners. Local
+checks are serial and low priority: 1 GiB sampled aggregate RSS, target below
+2 GiB, at least 64 GiB free disk, 180-second deadline, CPU toward half one core.
+The temporary `/private/tmp/fwp-local-guard.py` adapts the user's guard only to
+this repository root. It needs process-sampling/priority permissions. Use
+`CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target` in temporary
+worktrees so the guard monitors the shared target. Never run checks concurrently
+across those worktrees or increase limits after a refusal.
