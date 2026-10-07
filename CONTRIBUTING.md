@@ -48,6 +48,13 @@ Full builds, full test gates, large evidence regeneration and benchmarks
 belong on GitHub runners. A local refusal moves that work to CI; do not
 raise limits to complete it. See [AGENTS.md](AGENTS.md) for session rules.
 
+Audit the handoff and tracked Markdown links with
+`python3 scripts/local-guard.py python3 scripts/check-roadmap.py`. A clean clone
+needs full history and the immutable `roadmap/preparation-*` tags; fetch them
+without force before checking. The audit verifies tag identity, ancestry, queue
+order and whole commit messages. CI checks the actual PR head and fetches review
+heads so merged preparation references remain available.
+
 CI runs these, and all of them must pass:
 
 ```

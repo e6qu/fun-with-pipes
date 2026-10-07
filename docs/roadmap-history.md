@@ -10828,3 +10828,50 @@ Earlier formatting failure37952655033 supplied no behavior acceptance.
 Row25 at6421c02 guarded unwind tests9.45/19.08s, lint2.53/5.16s and
 fmt0.38/0.70s pass after package clean0.04/0.25s. Shared target is now
 /private/tmp/fwp-unwind-runtime-worktree. Full and Linux-focused gates follow.
+
+Row26 compiler reuse tokens refreshed from actual123d8b5 onto6421c02;
+publishedbb77c078354f14c3f8e205f17bde2edb199b945c preserves original
+runtime/compiler/tests with only inherited CLI and tracing-fixture repairs.
+Explicit lease succeeded; focused guarded checks run before more publication.
+Row25 separate evidence971d7a120eac20bd85f379159e9ca5d77fdc23ab,
+CI37960652006 queued; no competing production PR.
+
+Row24 evidence5e4fd6fe2549da35374b11838af9845c066375be,
+CI37959126658 passes focused format/lint, task ownership, reclamation, alias/
+scalar controls, actual tracing churn and current handoff audit. Production
+PR100 all six gates now run at98632b08aaad9d2564cc81c863437ff056e4574c.
+This does not authorize merging before every exact-head job succeeds.
+
+Row26 atbb77c07 guarded package clean0.05/0.25s, six reuse-token/cleanup
+tests18.92/38.09s, lint2.44/4.88s and fmt0.33/0.61s pass. Controls cover
+transfer, unused release, unwind, ownership switches and native bump codegen;
+they supply no actual-WASI disposal acceptance. Shared target is now
+/private/tmp/fwp-unwind-liveness-worktree. Fresh focused Linux checks follow.
+
+## 2026-10-09 immutable tag identity audit repair
+
+Expanded the handoff audit to all44 tracked Markdown documents, exact immutable
+tag identity, contiguous queue numbering and strict stored commit bodies.
+The first guarded run0.23/1.56s fails row112: an earlier global current-head
+replacement had also changed OLDedbc5e8d0e62 to762117573367. Restored only
+OLDedbc; CURRENT762 remains. All106 retained tags were fetched without force;
+none moved. The prior ancestry-only audit could not detect this substitution
+because both heads descend from the same original parent.
+Corrected audit0.30/2.37s passes44 link sets,106 pairs/tag identities, queue
+order and whole commit messages. scripts/check-roadmap.py and an exact-head
+roadmap_docs workflow provide durable fresh-session verification. PR100 gets
+this docs repair; compiler/runtime/tests are unchanged. Prior CI37960281416
+is superseded and cannot gate the updated PR head. All six production jobs and
+the added docs gate must pass before squash.
+
+New exact-head roadmap_docs CI37961944952 passes at PR100b5d658aa1a06,
+including clean-runner full44-doc audit and immutable tags. Six production
+jobs CI37961944703 remain required. Compiler/runtime/tests are unchanged from
+focused-accepted c9ef3d8; only docs, portable auditor and read-only workflow changed.
+Row25 evidence971d7a120eac20bd85f379159e9ca5d77fdc23ab,
+CI37960652006 passes focused Linux cleanup/task/ownership/reclamation/tracing.
+Row26 evidence3d6102af3bffcec06a541c8e8238837ff19aad9f,
+CI37961205676 passes focused Linux reuse-token/cleanup/task/ownership/reclamation/
+tracing. Those preparation snapshots used the earlier ancestry-only auditor;
+the exact tag-identity repair is independently verified at PR100 headb5d658a.
+No old or cancelled production run supplies acceptance.

@@ -381,6 +381,7 @@ struct Gen<'p> {
     /// on the last one the object freed with what it holds.
     drops: HashMap<MT, usize>,
     drop_defs: Vec<String>,
+    cleanup_defs: Vec<String>,
     /// Type-directed ownership of fresh runtime result trees.
     tree_owners: HashMap<MT, usize>,
     tree_owner_defs: Vec<String>,
@@ -498,12 +499,13 @@ fn counted_program(prog: &Program) -> Program {
     p
 }
 
-/// Whether `e` gives a record or variant built at its end (after the
-/// locals it binds).
+/// Whether `e` builds an aggregate or a known closure at its end, after
+/// the locals it binds. Hoist those bindings before choosing stack storage.
 fn ends_in_object(e: &Expr) -> bool {
     match e {
         Expr::Let(_, _, b) => ends_in_object(b),
         Expr::Record(xs) | Expr::Construct(_, xs) => !xs.is_empty(),
+        Expr::Apply(f, _) if matches!(**f, Expr::Func(_)) => true,
         _ => false,
     }
 }
@@ -526,6 +528,19 @@ fn variant_returns_enabled() -> bool {
 }
 
 impl Gen<'_> {
+    fn live_calls(&self, id: FuncId, e: &Expr) -> HashMap<*const Expr, crate::rc::CallLiveness> {
+        if !self.reuse || !self.unwind {
+            return HashMap::new();
+        }
+        crate::rc::call_liveness(
+            self.prog,
+            &self.prog.funcs[id],
+            e,
+            &self.prog.funcs[id].locals,
+        )
+        .expect("invalid ownership before C generation")
+    }
+
     /// An allocation of compiled code: unique when references are counted.
     fn fresh(&self, alloc: String) -> String {
         if self.reuse {
@@ -736,22 +751,31 @@ fn wide_record_returns(prog: &Program, abis: &mut [Option<Abi>]) {
 /// Whether local `l` is used in `e` only as the scrutinee of matches whose
 /// patterns do not bind it whole (and in reference counts).
 fn only_matched(e: &Expr, l: Local) -> bool {
-    let all = |xs: &[Expr]| xs.iter().all(|x| only_matched(x, l));
+    variant_uses(e, l, false)
+}
+
+fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
+    let all = |xs: &[Expr]| xs.iter().all(|x| variant_uses(x, l, false));
     match e {
-        Expr::Local(x) => *x != l,
+        Expr::Local(x) => *x != l || returned,
         Expr::Const(_) | Expr::Func(_) => true,
-        Expr::Dup(_, b) | Expr::Drop(_, b) => only_matched(b, l),
+        Expr::Dup(_, b) | Expr::Drop(_, b) => variant_uses(b, l, returned),
         Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => all(xs),
-        Expr::Apply(f, xs) => only_matched(f, l) && all(xs),
-        Expr::Field(r, _) => only_matched(r, l),
-        Expr::SetFields(r, s) => only_matched(r, l) && s.iter().all(|(_, x)| only_matched(x, l)),
-        Expr::Let(_, v, b) => only_matched(v, l) && only_matched(b, l),
+        Expr::Apply(f, xs) => variant_uses(f, l, false) && all(xs),
+        Expr::Field(r, _) => variant_uses(r, l, false),
+        Expr::SetFields(r, s) => {
+            variant_uses(r, l, false) && s.iter().all(|(_, x)| variant_uses(x, l, false))
+        }
+        Expr::Let(alias, v, b) if matches!(**v, Expr::Local(x) if x == l) => {
+            variant_uses(b, l, returned) && variant_uses(b, *alias, returned)
+        }
+        Expr::Let(_, v, b) => variant_uses(v, l, false) && variant_uses(b, l, returned),
         Expr::Match(s, arms) => {
             let scrut = match &**s {
                 Expr::Local(x) if *x == l => arms.iter().all(|(p, _)| !matches!(p, Pat::Bind(_))),
-                s => only_matched(s, l),
+                s => variant_uses(s, l, false),
             };
-            scrut && arms.iter().all(|(_, b)| only_matched(b, l))
+            scrut && arms.iter().all(|(_, b)| variant_uses(b, l, returned))
         }
     }
 }
@@ -1670,6 +1694,7 @@ struct FnGen<'g, 'p> {
     /// The function being generated.
     me: FuncId,
     tail_calls: std::collections::HashSet<*const Expr>,
+    live_calls: HashMap<*const Expr, crate::rc::CallLiveness>,
 }
 
 /// A dropped value's cell, which a constructor of the same size may reuse
@@ -2063,7 +2088,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let xs = self.worker_args(*id, &abi, args);
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
+                let node = self.begin_call(e as *const Expr);
                 self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                self.end_call(node);
                 self.stack_args_finish(outer);
                 (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
             }
@@ -2185,17 +2212,37 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         let m = small_variant(self.g.prog, ty)?;
-        let mut ts = Vec::new();
-        tails(e, &mut ts);
-        let ok = ts.iter().all(|t| match t {
-            Expr::Construct(..) => true,
-            Expr::Call(id, _) => self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m),
-            _ => false,
-        });
-        let fields = ts
-            .iter()
-            .any(|t| !matches!(t, Expr::Construct(_, xs) if xs.is_empty()));
-        (ok && fields && !matches!(e, Expr::Construct(..))).then_some(m)
+        fn produces(
+            fg: &FnGen<'_, '_>,
+            e: &Expr,
+            m: usize,
+            known: &HashMap<Local, bool>,
+        ) -> Option<bool> {
+            match e {
+                Expr::Let(l, v, b) => {
+                    let mut known = known.clone();
+                    if let Some(fields) = produces(fg, v, m, &known) {
+                        known.insert(*l, fields);
+                    }
+                    produces(fg, b, m, &known)
+                }
+                Expr::Drop(_, b) | Expr::Dup(_, b) => produces(fg, b, m, known),
+                Expr::Match(_, arms) => {
+                    let mut fields = false;
+                    for (_, b) in arms {
+                        fields |= produces(fg, b, m, known)?;
+                    }
+                    Some(fields)
+                }
+                Expr::Construct(_, xs) => Some(!xs.is_empty()),
+                Expr::Call(id, _) if fg.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
+                    Some(true)
+                }
+                Expr::Local(l) => known.get(l).copied(),
+                _ => None,
+            }
+        }
+        (produces(self, e, m, &HashMap::new())? && !matches!(e, Expr::Construct(..))).then_some(m)
     }
 
     /// The tag and fields (C expressions) of `e`, a variant of type `ty`
@@ -2224,13 +2271,27 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let xs = self.worker_args(*id, &abi, args);
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
+                let node = self.begin_call(e as *const Expr);
                 self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                self.end_call(node);
                 self.stack_args_finish(outer);
                 parts(&t)
             }
             Expr::Let(l, v, b) => {
-                let b = self.bind_local(*l, v, b);
-                self.expr_variant(b, m, ty)
+                let local_ty = self.locals[*l as usize].clone();
+                if self.unboxed_variant(v, &local_ty) == Some(m) && variant_uses(b, *l, true) {
+                    let (tag, fields) = self.expr_variant(v, m, &local_ty);
+                    let u = self.fresh();
+                    self.line(&format!(
+                        "fwp_u{m} {u} = {{{tag}, {{{}}}}};",
+                        fields.join(", ")
+                    ));
+                    self.vlocals.insert(*l, (u, m, local_ty));
+                    self.expr_variant(b, m, ty)
+                } else {
+                    let b = self.bind_local(*l, v, b);
+                    self.expr_variant(b, m, ty)
+                }
             }
             Expr::Drop(l, b)
                 if self.g.reuse
@@ -2371,6 +2432,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
         } else {
             self.known_callbacks.remove(&l);
         }
+        // Moving a variant through a named ownership temporary need not box
+        // it when all uses of the destination remain matches/count operations.
+        if let Expr::Local(source) = v {
+            if only_matched(body, l) {
+                if let Some(value) = self.vlocals.get(source).cloned() {
+                    self.vlocals.insert(l, value);
+                    return body;
+                }
+            }
+        }
         // a variant built or returned as a struct on every path, only
         // matched: kept as one
         if let Some(m) = self.unboxed_variant(v, &self.locals[l as usize].clone()) {
@@ -2437,7 +2508,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
         }
-        // `l = (y = a; ... Rect ..)`: y first, then l from what is left
+        // `l = (y = a; ... aggregate/closure ..)`: evaluate y first, then
+        // choose the lifetime of l without hiding its final allocation.
         if let Expr::Let(y, a, rest) = v {
             if ends_in_object(rest) {
                 let rest = self.bind_local(*y, a, rest);
@@ -2938,6 +3010,141 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    /// Save precisely the caller's remaining references for nonlocal unwind.
+    /// Consumed arguments belong to the callee, and borrowed aliases add no owner.
+    fn begin_call(&mut self, key: *const Expr) -> Option<String> {
+        let owners = self
+            .live_calls
+            .get(&key)
+            .map(|c| c.at_entry.clone())
+            .unwrap_or_default();
+        self.begin_owners(&owners)
+    }
+
+    fn begin_owners(&mut self, owners: &[(Local, u32)]) -> Option<String> {
+        if !self.g.unwind || !self.g.reuse {
+            return None;
+        }
+        let mut members = Vec::new();
+        let mut values = Vec::new();
+        let mut releases = Vec::new();
+        for &(l, count) in owners {
+            if let Some((u, m, ty)) = self.vlocals.get(&l).cloned() {
+                let k = self.g.vhelper(&ty, m);
+                let field = format!("v{}", members.len());
+                members.push(format!("fwp_u{m} {field};"));
+                values.push(u);
+                for _ in 0..count {
+                    releases.push(format!("fwp_vdrop{k}(&c->{field});"));
+                }
+                continue;
+            }
+            let ty = self.locals[l as usize].clone();
+            let parts = if let Some(children) = self.stack_children.get(&l) {
+                children.clone()
+            } else if let Some(fields) = self.fields.get(&l) {
+                fields
+                    .iter()
+                    .cloned()
+                    .zip(
+                        record_fields(&self.g.prog.shapes, &ty)
+                            .unwrap()
+                            .iter()
+                            .map(|(_, t)| t.clone()),
+                    )
+                    .collect()
+            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && l == 0) {
+                let mut parts = Vec::new();
+                for ((off, width), (_, t)) in lg
+                    .slots
+                    .iter()
+                    .zip(record_fields(&self.g.prog.shapes, &ty).unwrap())
+                {
+                    if width.is_some() {
+                        for (k, (_, ft)) in record_fields(&self.g.prog.shapes, t)
+                            .unwrap()
+                            .iter()
+                            .enumerate()
+                        {
+                            parts.push((format!("st[{}]", off + k), ft.clone()));
+                        }
+                    } else {
+                        parts.push((format!("st[{off}]"), t.clone()));
+                    }
+                }
+                parts
+            } else {
+                vec![(format!("l{l}"), ty)]
+            };
+            for (value, ty) in parts {
+                if !crate::rc::needs_rc(&self.g.prog.shapes, &ty) {
+                    continue;
+                }
+                let field = format!("v{}", members.len());
+                members.push(format!("V {field};"));
+                values.push(value);
+                let drop = self.typed_drop(&ty).unwrap_or_else(|| "fwp_rc_drop".into());
+                for _ in 0..count {
+                    releases.push(format!("{drop}(c->{field});"));
+                }
+            }
+        }
+        // Unmanaged stack arguments cannot transfer their original child
+        // references to a boxed callee drop. The caller releases those after
+        // return, so preserve that same responsibility during nonlocal unwind.
+        for (value, ty) in self.stack_args.clone() {
+            let field = format!("v{}", members.len());
+            members.push(format!("V {field};"));
+            values.push(value);
+            let drop = self.typed_drop(&ty).unwrap_or_else(|| "fwp_rc_drop".into());
+            releases.push(format!("{drop}(c->{field});"));
+        }
+        if members.is_empty() {
+            return None;
+        }
+        let id = self.g.cleanup_defs.len();
+        self.g.cleanup_defs.push(format!(
+            "typedef struct {{ {} }} fwp_owner_ctx{id};\nstatic void fwp_owner_release{id}(void *arg) {{ fwp_owner_ctx{id} *c = arg; {} }}\n",
+            members.join(" "), releases.join(" ")));
+        let ctx = self.fresh();
+        let node = self.fresh();
+        self.line(&format!(
+            "fwp_owner_ctx{id} {ctx} = {{{}}};",
+            values.join(", ")
+        ));
+        self.line(&format!("fwp_cleanup {node};"));
+        self.line(&format!(
+            "fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});"
+        ));
+        Some(node)
+    }
+
+    fn end_call(&mut self, node: Option<String>) {
+        if let Some(node) = node {
+            self.line(&format!("fwp_cleanup_pop(&{node});"));
+        }
+    }
+
+    fn entry_tick(&mut self) {
+        if !self.g.ticks {
+            return;
+        }
+        let owners: Vec<_> = (0..self.g.prog.funcs[self.me].arity)
+            .filter(|l| crate::rc::needs_rc(&self.g.prog.shapes, &self.locals[*l as usize]))
+            .map(|l| (l, 1))
+            .collect();
+        let node = self.begin_owners(&owners);
+        self.line("FWP_TICK();");
+        self.end_call(node);
+    }
+
+    fn bind_call(&mut self, key: *const Expr, call: String) -> String {
+        let node = self.begin_call(key);
+        let result = self.bind(call);
+        self.end_call(node);
+        result
+    }
+
     /// The drop function of a counted type (`Gen::drop_id`), when objects
     /// are freed by their counts.
     fn typed_drop(&mut self, t: &MT) -> Option<String> {
@@ -3200,17 +3407,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
         Some(format!("fwp_hof{}({})", i, xs.join(", ")))
     }
 
-    fn call_expr(&mut self, id: FuncId, args: &[Expr], tail: bool) -> String {
+    fn call_expr(&mut self, id: FuncId, args: &[Expr], tail: bool, key: *const Expr) -> String {
         let outer = std::mem::take(&mut self.stack_args);
-        let result = self.call_expr_inner(id, args, tail);
+        let result = self.call_expr_inner(id, args, tail, key);
         self.stack_args_finish(outer);
         result
     }
 
-    fn call_expr_inner(&mut self, id: FuncId, args: &[Expr], tail: bool) -> String {
+    fn call_expr_inner(
+        &mut self,
+        id: FuncId,
+        args: &[Expr],
+        tail: bool,
+        key: *const Expr,
+    ) -> String {
         if let Some(call) = self.owned_hof(id, args) {
             self.tail_tokens(tail);
-            let result = self.bind(call);
+            let result = self.bind_call(key, call);
             // Specialization reads captures directly; preserve the original
             // borrowed closure/list addresses until allocating calls return.
             for arg in args {
@@ -3222,7 +3435,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         if let Some(call) = self.known_hof(id, args) {
             self.tail_tokens(tail);
-            return self.bind(call);
+            return self.bind_call(key, call);
         }
         if let Some(n) = self.length_without_string(id, args) {
             self.tail_tokens(tail);
@@ -3234,7 +3447,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return match abi.ret {
                 Some(n) => {
                     let t = self.fresh();
+                    let node = self.begin_call(key);
                     self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                    self.end_call(node);
                     // a record compiled code owns, like any it builds
                     let r = format!("fwp_record({}, {}.f)", n, t);
                     self.bind(self.g.fresh(r))
@@ -3243,12 +3458,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     // a value the caller needs: built from the struct
                     Some(m) => {
                         let t = self.fresh();
+                        let node = self.begin_call(key);
                         self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                        self.end_call(node);
                         let ty = self.ret_type(id);
                         let k = self.g.vhelper(&ty, m);
                         self.bind(format!("fwp_vbox{}({})", k, t))
                     }
-                    None => self.bind(format!("w{}({})", id, xs.join(", "))),
+                    None => self.bind_call(key, format!("w{}({})", id, xs.join(", "))),
                 },
             };
         }
@@ -3259,9 +3476,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             .collect();
         self.tail_tokens(tail);
         if self.g.prog.funcs[id].arity == 0 {
-            self.bind(format!("caf{}()", id))
+            self.bind_call(key, format!("caf{}()", id))
         } else {
-            let result = self.bind(format!("f{}({})", id, xs.join(", ")));
+            let result = self.bind_call(key, format!("f{}({})", id, xs.join(", ")));
             self.keep_borrowed_args(id, &xs);
             result
         }
@@ -3365,9 +3582,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     format!("PTR(&fc{})", id)
                 }
             }
-            Expr::Call(id, args) => {
-                self.call_expr(*id, args, self.tail_calls.contains(&(e as *const Expr)))
-            }
+            Expr::Call(id, args) => self.call_expr(
+                *id,
+                args,
+                self.tail_calls.contains(&(e as *const Expr)),
+                e as *const Expr,
+            ),
             Expr::Apply(f, args) => {
                 let children = self.stack_alias(f);
                 let fv = self.expr(f);
@@ -3381,13 +3601,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     "fwp_apply"
                 };
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
-                let result = self.bind(format!(
-                    "{}({}, {}, {})",
-                    apply,
-                    fv,
-                    xs.len(),
-                    Self::array(&xs)
-                ));
+                let result = self.bind_call(
+                    e as *const Expr,
+                    format!("{}({}, {}, {})", apply, fv, xs.len(), Self::array(&xs)),
+                );
                 if let Some(children) = children {
                     self.stack_children_count(children, false);
                 }
@@ -4476,13 +4693,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         for i in 1..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
-        if self.ticks {
-            out.push_str(
-                "    FWP_TICK();
-",
-            );
-        }
         let mut fg = FnGen {
+            live_calls: self.live_calls(step, e),
             g: self,
             out: String::new(),
             tmp: 0,
@@ -4500,6 +4712,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             me: step,
             tail_calls: tail_calls(e),
         };
+        fg.entry_tick();
         let r = fg.expr(e);
         out.push_str(&fg.out);
         let _ = writeln!(
@@ -5021,11 +5234,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 if let Some(abi) = self.abis[id].clone() {
                     return Ok(self.worker(id, &abi, &e));
                 }
-                if self.ticks {
-                    out.push_str("    FWP_TICK();\n");
-                }
                 let locals = self.prog.funcs[id].locals.clone();
                 let mut fg = FnGen {
+                    live_calls: self.live_calls(id, &e),
                     g: self,
                     out: String::new(),
                     tmp: 0,
@@ -5043,6 +5254,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     me: id,
                     tail_calls: tail_calls(&e),
                 };
+                fg.entry_tick();
                 let r = fg.expr(&e);
                 let body = fg.out;
                 out.push_str(&body);
@@ -5062,9 +5274,6 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         for i in f.arity..f.nlocals() {
             let _ = writeln!(out, "    V l{} = 0;", i);
         }
-        if self.ticks {
-            out.push_str("    FWP_TICK();\n");
-        }
         let mut fields = HashMap::new();
         for (i, p) in abi.params.iter().enumerate() {
             if let Some(n) = p {
@@ -5075,6 +5284,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
         }
         let mut fg = FnGen {
+            live_calls: self.live_calls(id, e),
             g: self,
             out: String::new(),
             tmp: 0,
@@ -5092,6 +5302,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             me: id,
             tail_calls: tail_calls(e),
         };
+        fg.entry_tick();
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
                 let fs = fg.expr_fields(e, n);
@@ -5139,6 +5350,39 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     "fwp_rc_drop".into()
                 };
                 let _ = write!(post, "{release}(l{i}); ");
+            }
+        }
+        // A boxed-to-worker wrapper still owns its original aggregate while
+        // the worker consumes duplicated field references. Protect that original
+        // independently when the worker exits through a handler or cancellation.
+        if self.reuse && self.unwind {
+            let mut members = Vec::new();
+            let mut values = Vec::new();
+            let mut releases = Vec::new();
+            for (i, p) in abi.params.iter().enumerate() {
+                if p.is_none() {
+                    continue;
+                }
+                let field = format!("v{}", members.len());
+                members.push(format!("V {field};"));
+                values.push(format!("l{i}"));
+                let release = if free_enabled() {
+                    format!(
+                        "fwp_drop{}",
+                        self.drop_id(&self.prog.funcs[id].locals[i].clone())
+                    )
+                } else {
+                    "fwp_rc_drop".into()
+                };
+                releases.push(format!("{release}(c->{field});"));
+            }
+            if !members.is_empty() {
+                let k = self.cleanup_defs.len();
+                self.cleanup_defs.push(format!(
+                    "typedef struct {{ {} }} fwp_owner_ctx{k};\nstatic void fwp_owner_release{k}(void *arg) {{ fwp_owner_ctx{k} *c = arg; {} }}\n",
+                    members.join(" "), releases.join(" ")));
+                let _ = write!(pre, "fwp_owner_ctx{k} owned = {{{}}}; fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_owner_release{k}, &owned); ", values.join(", "));
+                post = format!("fwp_cleanup_pop(&cleanup); {post}");
             }
         }
         let body = match (abi.ret, abi.vret) {
@@ -5644,6 +5888,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         desc_defs: Vec::new(),
         drops: HashMap::new(),
         drop_defs: Vec::new(),
+        cleanup_defs: Vec::new(),
         tree_owners: HashMap::new(),
         tree_owner_defs: Vec::new(),
         vhelpers: HashMap::new(),
@@ -6126,6 +6371,10 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push('\n');
     }
     for d in &g.vhelper_defs {
+        out.push_str(d);
+        out.push('\n');
+    }
+    for d in &g.cleanup_defs {
         out.push_str(d);
         out.push('\n');
     }
