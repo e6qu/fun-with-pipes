@@ -54,10 +54,11 @@ Wide-count preparation is rebased on7018086; original anchors stay immutable.
 All three wide_counts checks pass14.19 s CPU /28.94 s elapsed with explicit
 FWP_NO_OPT=1 interpreter oracles. The sharing regression passes0.75 s /1.79 s;
 fmt0.35 s /0.63 s; clippy lib/two fixtures2.34 s /4.78 s.
-Publish with explicit lease against OLDwide3a791dc, then wait for #91 before
-rebasing onto the actual squash and opening the next PR.
+Published clean ascb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23 with explicit
+lease against OLDwide3a791dc. Wait for #91 before rebasing from current7018086
+onto the actual squash and opening the next PR.
 Resolve docs using current root copies; explicit raw-oracle corrections and
-focused tests and lint pass; publication is next. No second PR is open.
+focused tests/lint pass and branch is published. No second PR is open.
 
 ## Separate full evidence
 
@@ -123,6 +124,14 @@ Combined evidence publication and constructor conflict validation are archived
 in history: focused constructor check8.22 s CPU /17.58 s elapsed, fmt0.46 s
 /0.84 s. This evidence is never a production PR.
 
+Following row15 list-order is being prepared on current wide-count headcb0d7e6
+from immutable OLDparent3a791dc. Its original OLDheadc83557825d8ab49f4334e764b1cac82cd2f82057
+stays immutable. Both raw-oracle calls explicitly use FWP_NO_OPT=1. Two
+list_order_ownership checks pass11.16 s CPU /22.44 s elapsed (O1/O2, stack
+on/off, GC stress/verification, poison modes and no-tracing reclamation).
+Format0.34 s /0.62 s; clippy lib/fixture2.40 s /4.82 s. Publish without a
+second PR; its later rebase must use actual current basecb0d7e6.
+
 Next independent work: ambiguous nominal contexts without whole-value binders,
 nested holders and shared/cycle graphs. Source match functions begin with typed
 scrutinee parameters; direct IR can still lack that context. Preserve partial
@@ -142,7 +151,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to wide-counts checkout. Guarded cargo clean -p fwp before switching
+belongs to list-order checkout. Guarded cargo clean -p fwp before switching
 checkouts; last switch0.00 s /0.14 s. No local workload is active.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.

@@ -6440,3 +6440,24 @@ No additional PR opened, no merged support or timing claim from these checks.
 Rebased wide-count clippy (lib, wide_counts and ownership) passes2.34 s CPU
 /4.78 s elapsed. All focused checks complete; full exact-head CI is still
 required after final rebase onto the actual #91 squash.
+
+Published wide-count preparationcb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23
+with explicit lease against original3a791dc7e9f373a327780ded04774acd7f4825cb.
+Current base7018086 differs from immutable OLDparent89b7bde; final rebase must
+use the actual current base. No second PR was opened. Whole subject verified
+by the doc audit: Keep native reference counts exact beyond byte-sized metadata.
+
+## List-order following-task preparation on wide counts
+
+Rebased row15 ownership-list-order from immutable OLDparent3a791dc onto
+current wide-countcb0d7e6. Keep OLDheadc835578 immutable; use actual current
+basecb0d7e6 for the later squash rebase. Current root docs resolve historical
+snapshot conflicts and label the prepared sorted/unique contract explicitly.
+Both source interpreter oracles now use FWP_NO_OPT=1. Two list_order_ownership
+checks pass11.16 s CPU /22.44 s elapsed with O1/O2, stack on/off, GC stress/
+verification and poison modes. The reclamation control restores only result
+sharing and leaves scratch cleanup equivalent. Format0.34 s /0.62 s, prior
+guarded clean0.00 s /0.14 s. Full exact-head sequential CI remains required.
+
+List-order clippy lib/fixture passes2.40 s CPU /4.82 s elapsed. All focused
+checks pass; publication uses explicit lease against originalc835578.

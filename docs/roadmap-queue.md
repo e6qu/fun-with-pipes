@@ -21,6 +21,9 @@ the fusion correction. File runtime owners (row 74) inherit corrected current 36
 actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
 WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
 which is its immutable parent.
+Row14 wide is prepared on current PR91 head7018086; after that PR squashes,
+rebase its current base7018086 onto the actual squash, not OLD89b7bde.
+Its OLDhead3a791dc and row15 parent stay immutable.
 For a rewritten branch, use its actual current base
 when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
@@ -35,7 +38,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 11 | list-copy | `ownership-list-copies` | `bcdfb163c565` | `bb00baa4ab95` | `376e77ae9469` |
 | 12 | list-option | `ownership-list-options` | `8e6a891eadfa` | `34023f35a42f` | `bb00baa4ab95` |
 | 13 | inference | `inference-call-effects` | `7018086b8f98` | `89b7bde2c8f0` | `34023f35a42f` |
-| 14 | wide | `ownership-wide-counts` | `3a791dc7e9f3` | `3a791dc7e9f3` | `89b7bde2c8f0` |
+| 14 | wide | `ownership-wide-counts` | `cb0d7e6db7e5` | `3a791dc7e9f3` | `89b7bde2c8f0` |
 | 15 | order | `ownership-list-order` | `c83557825d8a` | `c83557825d8a` | `3a791dc7e9f3` |
 | 16 | sort-callback | `ownership-sort-callbacks` | `66bc713dea67` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `0a90b0520cc1` | `0a90b0520cc1` | `66bc713dea67` |
