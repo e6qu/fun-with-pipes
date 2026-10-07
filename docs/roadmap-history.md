@@ -7921,3 +7921,31 @@ Argument preparation lint (cargo clippy --test argument_preparation_ownership
 passes2.46 s CPU /4.93 s elapsed; fmt check0.35 s /0.74 s. Root docs
 refreshed before final amend; source unchanged. PR94 all four macOS gates
 and bench pass at exact9f4e3bb; Linux is running.
+
+Final argument preparationada6a3a62df1b20de42f65511a8475d71f87cf7a is
+clean on actual basedc9bfd5, published with exact lease against OLD4973918.
+Whole subject verified one line with empty body. No second PR.
+
+Row35 OLD608ae7b rebases from immutable parent4973918 onto actual row34
+headada6a3a (initial0bb385b); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.61 s. Constructor allocation-failure and compiler call-liveness tests
+started together because constructor field transfer changes IR ownership.
+
+Guarded cargo test --test constructor_unwind_ownership --test
+compiler_call_liveness passes all six tests20.98 s CPU /42.20 s elapsed.
+Injected record/variant allocation failures release consumed typed fields
+and preserve aliases; related compiler owner-liveness O1/O2 stress,
+verification, poison and raw interpreter comparisons pass. The new exact
+IR constructor-transfer unit is checked separately before final publication.
+
+PR94 passes all six CI37897207787 gates at exact9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df.
+Explicit match-head squash subject Borrow sort-by callbacks and reclaim typed
+keys and copied results, empty body. Actual squash1358267350dec621666e6d78e362818ad51a0341
+merged2026-10-09T07:49:04Z; whole git%B verified one line, no body/trailers.
+
+Constructor exact IR transfer unit (cargo test --lib
+rc::tests::constructors_transfer_fields_and_keep_other_caller_owners -- --exact)
+passes one test3.40 s CPU /6.85 s elapsed (52 unrelated tests filtered).
+Focused lint passes2.40 s /4.71 s; format0.35 s /0.73 s. Final doc refresh
+changes no tested source/runtime.

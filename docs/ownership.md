@@ -58,7 +58,9 @@ Container contracts and comparison-key borrowing are merged. Selected leaves,
 fresh text trees, compiled captures, concrete temporaries and stack children are
 also merged; synchronous map/filter borrow callback inputs and own their fresh
 spines/results. sort/unique borrow their input, retain typed selected aliases
-and release scratch after constructing their owned copied result.
+and release scratch after constructing their owned copied result. sort-by
+borrows its callback/input, evaluates keys once in input order, owns typed
+keys/copied results and releases scratch; stable ties remain unchanged.
 Finish remaining primitive/runtime families, including argument/result ownership,
 retention, aliases and exceptional cleanup. The exact prepared queue and current
 verification are in [the handoff](development-state.md). Keep the IR pass and
@@ -126,10 +128,13 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #90 includes the following contracts. Detailed primitive modes
+Main through PR #94 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
+- Native counts stay exact above254 with rare side entries. Ordered copied
+  lists retain typed aliases; sort-by owns once-per-input keys and its stable
+  copied result, releasing scratch after construction.
 - Selected String/Bytes copy and alias results are owned; leaf destruction frees
   their storage without scanning payload bytes as child pointers. Fresh nested
   text results retain owned spines and elements.
@@ -155,7 +160,6 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
-| High-fanout counts | Rare native size_t side entries; exact counts above254; canonical slot keys | Rebased focused checks and sequential full CI |
 | Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Sequential CI; aliases, traps and cancellation |
 | Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Sequential CI; ambiguous nominal contexts and nested holders |
 | Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Sequential CI; shared graph/cycle policy and actual device evidence |

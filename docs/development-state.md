@@ -28,29 +28,22 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and sole open PR
 
-Main is 90762aacd7f469cf94ad54a90ebcaa4aec79829a (#93). All six
-CI37862207155 gates passed at d2e0e296888d5ca3577412f5a1687af1d4a494dd.
-Explicit match-head squash has verified whole message:
-`Own sorted and unique list elements and release scratch buffers`.
-#74–#93 deliver native macOS, selected ownership through ordered list results,
+Main is1358267350dec621666e6d78e362818ad51a0341 (#94). All six
+CI37897207787 gates passed at9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df.
+Explicit match-head squash has verified whole one-line message:
+`Borrow sort-by callbacks and reclaim typed keys and copied results`.
+#74–#94 deliver native macOS, selected ownership through sort-by results,
 isolated call effects and exact native counts beyond254. Phase1 is done;
 phase2 remains incomplete; phases3–6 are pending.
 
-Sole open [PR #94](https://github.com/e6qu/fun-with-pipes/pull/94):
-ownership-sort-callbacks, /private/tmp/fwp-sort-callback-worktree, exact
-9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df on actual main90762aa.
-CI37897207787 passes bench, regular ARM/Intel macOS and ARM/Intel GC stress
-at this exact head; Linux is still running. Three focused tests pass12.30 s CPU /24.97 s elapsed, lint2.02 s
-/4.06 s, format0.35 s /0.62 s. Source/runtime/tests/workflows match previously
-verified5c19337 exactly; raw FWP_NO_OPT=1 interpreter oracles remain intact.
-Whole subject is one line with empty body. Require all six passing gates
-before explicit match-head squash with subject
-`Borrow sort-by callbacks and reclaim typed keys and copied results`, empty body.
-After its eventual merge, row17's ACTUAL current base remains5c19337;
-rebase from that base onto its real squash, preserving OLD0a90b05/parent66bc713.
+No open roadmap PR after #94 merged. Next delivery is row17 scan/iterate
+state ownership. Rebase CURRENT15743b8 from its ACTUAL current base
+5c19337f216d78845fada0b8c29fac98d7b18689 onto actual #94 squash1358267,
+then focused tests/lint/format, current docs and publication before sole next PR.
+Preserve immutable OLD0a90b05/parent66bc713; neither is the final rebase base.
 
-All nine root docs were preserved in /private/tmp/fwp-main-docs-pre93 before
-main fast-forward and restored afterward. Prior main/heads/messages, failed
+All nine root docs were preserved in /private/tmp/fwp-main-docs-pre94 before
+main fast-forward from90762aa and restored afterward. Prior main/heads/messages, failed
 evidence and focused checks remain in history; no current progress was lost.
 
 ## Next sequential preparations
@@ -61,7 +54,6 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 16 ownership-sort-callbacks | 9f4e3bbc211c, PR94 | 90762aacd7f4 | 12.30 /24.97 s final |
 | 17 ownership-state-sequences | 15743b853d6a | 5c19337f216d | 12.09 /24.23 s |
 | 18 ownership-loop-state | 112f3c8de87b | 15743b853d6a | 19.08 /38.44 s |
 | 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
@@ -79,26 +71,26 @@ still need their final squash rebases and six exact-head full gates.
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 /34.21 s |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 /48.48 s |
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
+| 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 /49.89 s |
 
-Rows17–33 are published preparations with passing focused tests, lint and
+Rows17–34 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row33 final headdc9bfd5e626bd1509360454edc846347e0d6cd7f is clean on
-actual base1e8d1e3, published with exact lease against OLD988f2a3. Seven tests
-pass28.65 s CPU /57.61 s elapsed, lint2.56 s /5.10 s, format0.35 s /0.71 s.
-A transient formatting guard signal failure left no process; unchanged retry
-passed, with failure evidence retained in history.
-Current independent task: row34 argument-preparation rebased from OLDparent
-988f2a3 onto actual row33 headdc9bfd5 (temporaryd133704). New source oracle
-uses FWP_NO_OPT=1; argument_preparation_ownership, fold_unwind_ownership
-and runtime_call_ownership pass all eight tests24.82 s CPU /49.89 s
-elapsed; lint2.46 s /4.93 s and format0.35 s /0.74 s pass. Final
-amend/publication follow; immutable OLD anchors remain unchanged.
-PR94 remains the sole open delivery.
+Row34 final headada6a3a62df1b20de42f65511a8475d71f87cf7a is clean on
+actual basedc9bfd5, published with exact lease against OLD4973918. Eight tests
+pass24.82 s CPU /49.89 s elapsed, lint2.46 s /4.93 s, format0.35 s /0.74 s.
+Current independent task: row35 constructor-unwind rebased from OLDparent
+4973918 onto actual row34 headada6a3a (temporary0bb385b). New source oracle
+uses FWP_NO_OPT=1; constructor_unwind_ownership and compiler_call_liveness
+pass all six tests20.98 s CPU /42.20 s elapsed. The exact IR constructor
+transfer unit passes3.40 s /6.85 s; lint2.40 s /4.71 s and format0.35 s
+/0.73 s pass. Final preparation publication follows. Preserve
+immutable OLD anchors; no additional PR.
+PR94 is merged; row17 final delivery proceeds next.
 
 ## Repaired resource evidence
 
@@ -145,8 +137,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-argument-preparation-worktree; focused argument checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 /0.37 s).
+belongs to /private/tmp/fwp-constructor-unwind-worktree; focused constructor checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.11 s CPU /0.83 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
@@ -155,6 +147,6 @@ Preserve all nine root docs before fast-forward/rebase conflict resolution:
 PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre93; refresh all nine immediately before updating
+/private/tmp/fwp-main-docs-pre94; refresh all nine immediately before updating
 main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.
