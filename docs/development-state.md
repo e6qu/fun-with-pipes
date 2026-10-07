@@ -85,7 +85,7 @@ still need their final squash rebases and six exact-head full gates.
 | 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
 | 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
 | 40 ownership-constructor-types | dd6c405c77eb | 5a72ba8763e4 | Focused checks running; compiler/runtime unchanged |
-| 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 / 33.31 s + exact unit 3.31 / 7.05 s |
+| 41 ownership-variant-conversion | 67e37717ecf2 | dd6c405c77eb | Focused checks follow; compiler/runtime unchanged |
 | 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 / 38.35 s + exact unit 3.59 / 7.44 s |
 | 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 / 36.18 s |
 | 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 / 31.47 s |
