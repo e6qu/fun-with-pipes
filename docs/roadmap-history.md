@@ -8045,3 +8045,32 @@ Loop preparation lint (cargo clippy --test loop_preparation_ownership
 --test loop_unwind_ownership --test loop_ownership -- -D warnings) passes
 2.41 s CPU /4.95 s elapsed; fmt check0.33 s /0.59 s. Nine current docs
 refresh final preparation without further source changes.
+
+Final loop preparation7ae78137d444c9440ada43ed04ae42035a10e375 is clean
+on actual base3b6bf09, published with exact lease against OLDb879eca.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row39 OLD1bb11be rebases from immutable parentb879eca onto actual row38
+head7ae7813 (initialf1be8c9); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.05 s /0.37 s; formatting0.33 s
+/0.60 s. Partial-retain overflow, worker preparation and wide-count tests
+started; exact new IR unit follows. Last serial doc audit passes eleven
+link sets, 82 immutable pairs and whole subjects0.12 s /0.82 s.
+
+Guarded cargo test --test retain_unwind_ownership --test
+worker_preparation_ownership --test wide_counts passes all five tests19.77 s
+CPU /39.78 s elapsed. Actual count-overflow traps release completed variant
+extras and live caller owners, preserving original aliases and scalar
+address bits. Wide-count release/reuse/collection and worker partial
+preparation regressions pass with O1/O2 stress/verification/poison and raw
+interpreter comparisons. Exact new IR retain-liveness unit follows.
+
+Exact IR retain-liveness test (cargo test --lib
+rc::tests::retain_liveness_excludes_the_unfinished_extra_reference -- --exact)
+passes one test3.28 s CPU /6.82 s elapsed; 53 unrelated tests filtered.
+The expected before/entry owners exclude the not-yet-created extra reference.
+
+Partial-retain lint (cargo clippy --test retain_unwind_ownership --test
+worker_preparation_ownership --test wide_counts -- -D warnings) passes2.28 s
+CPU /4.60 s elapsed; fmt check0.34 s /0.71 s. Nine current docs refresh
+final preparation with no changes to tested source/runtime.

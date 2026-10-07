@@ -82,22 +82,24 @@ still need their final squash rebases and six exact-head full gates.
 | 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 /42.20 s + exact unit3.40 /6.85 s |
 | 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 /49.42 s |
 | 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 /47.71 s |
+| 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 /52.71 s |
 
-Rows17–37 are published preparations with passing focused tests, lint and
+Rows17–38 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row37 final head3b6bf091127c4d46af817bf717b3f5f22e96f382 is clean on
-actual basedf58628, published with exact lease against OLDc97dd03. Seven tests
-pass23.82 s CPU /47.71 s elapsed, lint2.34 s /4.73 s, format0.34 s /0.61 s.
-Current independent task: row38 loop-preparation rebased from ACTUAL current
-base OLDc97dd03 onto actual row37 head3b6bf09 (temporary8a5a9bc). New raw
-source oracle uses FWP_NO_OPT=1; loop_preparation_ownership, loop_unwind_ownership
-and loop_ownership pass all eight tests26.30 s CPU /52.71 s elapsed;
-Lint and formatting pass; final doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
+Row38 final head7ae78137d444c9440ada43ed04ae42035a10e375 is clean on
+actual base3b6bf09, published with exact lease against OLDb879eca. Eight tests
+pass26.30 s CPU /52.71 s elapsed, lint2.41 s /4.95 s, format0.33 s /0.59 s.
+Current independent task: row39 variant-preparation rebased from ACTUAL current
+base OLDb879eca onto actual row38 head7ae7813 (temporaryf1be8c9). New source
+oracle uses FWP_NO_OPT=1; retain_unwind_ownership, worker_preparation_ownership
+and wide_counts pass all five tests19.77 s CPU /39.78 s elapsed. Exact
+new IR unit passes3.28 s CPU /6.82 s elapsed; lint2.28 s /4.60 s and
+format0.34 s /0.71 s pass. Final doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
@@ -145,10 +147,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-loop-preparation-worktree; focused loop field checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
+belongs to /private/tmp/fwp-variant-preparation-worktree; focused retain checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.05 /0.37 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.12 s CPU /0.85 s elapsed).
+ancestry pairs and whole commit messages (0.12 s CPU /0.82 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:
