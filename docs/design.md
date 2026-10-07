@@ -404,3 +404,8 @@ Prepared boxed-record field conversion protects the consumed input, caller
 values and partial retained fields separately. Scalar fields are uncounted.
 Evidence and remaining context/reconstruction gaps are recorded in
 [ownership.md](ownership.md#prepared-boxed-record-field-conversion).
+
+Prepared returned variant aliases transfer their existing field owners without
+boxing or extra retains. A valid nested IR regression and adjacent source
+behavior are documented separately in
+[ownership.md](ownership.md#prepared-returned-variant-aliases).

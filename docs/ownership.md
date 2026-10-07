@@ -782,3 +782,40 @@ required. Next audit vlocal alias boxing and untyped aggregate contexts;
 nested flattened loop reconstruction still requires an actual eligible source
 fixture and precise ownership of reconstructed borrowed bindings. CAF/inline,
 retained task lifetimes, teardown/cycles and later phases remain incomplete.
+
+## Prepared returned variant aliases
+
+`ownership-variant-alias`, `/private/tmp/fwp-variant-alias-worktree`, OLD base
+`614dd3b`. `expr_variant` transfers a named returned alias by reusing its
+existing unboxed representation. Previously a nested alias expression fell
+through whole-value binding, duplicated its fields, boxed it, and unboxed it
+again while the source's logical owner had already been consumed. The valid
+monomorphic IR regression reproduced unreleased String children (exit 3).
+The fix keeps field ownership intact without an extra retain or heap box.
+Evaluation order, explicit RC Dups and pipe syntax remain unchanged.
+
+The regression checks local types, compares its value with the interpreter,
+and verifies unique/shared input child counts at O1/O2 with stress/verification
+and both poison modes. Generated holder code has no vbox/vunbox. Restoring an
+extra typed retain makes the control fail with exit 3 at both optimization levels.
+A separate source fixture returns a recursive variant worker's value through
+a yield and matching alias; it remains unboxed and matches interpreter stdout
+at O1/O2 in both poison modes. This source fixture was already healthy before
+the change: it is adjacent coverage, not proof of the nested IR leak's source
+reachability. The nested valid IR case is the direct regression evidence.
+
+Eight adjacent checks pass (IR alias, two record/variant conversion checks and
+five compiler caller checks), CPU 18.67 s / elapsed 37.54 s. Both final alias
+checks pass, CPU 2.33 s / elapsed 4.86 s. The fixture first used an incorrect
+concat order and omitted the holder from main's reachable graph; those test
+setup errors were repaired before reproducing the native ownership leak.
+Checks use the bounded fwp guard with `cargo test --test variant_alias_ownership
+--test variant_conversion_ownership --test record_conversion_ownership --test
+compiler_call_liveness -- --nocapture`, then the dedicated alias test. Package
+clean preceded this checkout's compiler build. Full sequential platform and
+benchmark gates remain required; no additional PR opens while #80 is pending.
+
+Next address untyped field/scrutinee contexts, reconstructed borrowed records,
+remaining whole-value vlocal boxing, CAF/inline lifetimes and retained task
+callbacks/teardown/cycles. No complete ARC, tracing-free execution or general
+speed claim is made; phases 2–6 remain incomplete.
