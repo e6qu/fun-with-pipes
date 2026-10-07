@@ -12072,3 +12072,10 @@ audit44/106/87 pairs0.44/3.58s pass. Earlier native100000 probe passes0.00/
 0.38s; raw100000 guard stops at1GiB aggregate RSS, with no raised/bypassed limit.
 The smaller raw200 oracle passes0.37/0.74s; full-size raw evidence moves to CI.
 Post-merge guard tests pass0.18/1.36s.
+
+PR105 opens for published row269a21fd6cc844c0960cedd283fd09ab354ee32338
+on actual main1047520b8d5a1b07b07ad1a381c23be75a879470e0a. Retained
+cc297e6 remotely before leased publication. Final audit0.45CPU/3.59elapsed
+passes44/106/87 pairs and complete commit messages. Seven focused tests,
+lint/format and million-step native tail case pass as recorded above. Every
+new exact-head platform gate and roadmap_docs still must pass before squash.
