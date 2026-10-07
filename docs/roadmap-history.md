@@ -11149,3 +11149,11 @@ and two nominal match/source cleanup tests8.71/18.12s pass. Row46 refresh
 f2262f94ada45b65276df47db686933a959698e4 has actual base0b00524a0a03;
 compiler/runtime match original; focused checks follow. Previous CURRENT46
 is retained under immutable revision tag before explicit-lease publication.
+
+Row45 guarded clippy2.55/5.06s and format0.44/0.84s pass. Row46 guarded
+clean0.00/0.13s, both field projection tests9.08/18.73s, clippy2.42/4.93s
+and format0.43/0.83s pass. Record/type context Linux evidence
+20b948f8eac1c13b059e64b74d6c9a786c2fed9a starts CI37972496949. Earlier loop/retain/
+conversion evidenceCI37971602336 passes. Row47 refreshfcfa8fb2d296 uses actual
+basef2262f94ada4; checks are running. Its original CURRENT is retained under
+immutable revision tag before lease publication, with OLD anchors unchanged.
