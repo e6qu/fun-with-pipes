@@ -306,6 +306,20 @@ FWP_K V fwp_k_zip_with(fwp_fn2 f, V ys, V xs) {
     return fwp_list_from(a, k);
 }
 
+FWP_K V fwp_k_zip_with_owned(fwp_fn2 f, V ys, V xs) {
+    size_t n, m;
+    V *a = fwp_map_items(xs, &n);
+    V *b = fwp_map_items(ys, &m);
+    size_t k = n < m ? n : m;
+    for (size_t i = 0; i < k; i++) a[i] = f(b[i], a[i]);
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(b);
+    fwp_mem_free(b);
+    FWP_KEEP_ALIVE(xs);
+    FWP_KEEP_ALIVE(ys);
+    return result;
+}
+
 static V fwp_p_zip(V ys, V xs) {
     size_t n, m;
     V *a = fwp_list_items(xs, &n);
@@ -323,6 +337,24 @@ static V fwp_p_zip_with(V f, V ys, V xs) {
     size_t k = n < m ? n : m;
     for (size_t i = 0; i < k; i++) a[i] = fwp_apply2(f, b[i], a[i]);
     return fwp_list_from(a, k);
+}
+
+static V fwp_p_zip_with_owned(V f, V ys, V xs) {
+    size_t n, m;
+    V *a = fwp_map_items(xs, &n);
+    V *b = fwp_map_items(ys, &m);
+    size_t k = n < m ? n : m;
+    for (size_t i = 0; i < k; i++) {
+        V args[] = {b[i], a[i]};
+        a[i] = fwp_apply_borrowed(f, 2, args);
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(b);
+    fwp_mem_free(b);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    FWP_KEEP_ALIVE(ys);
+    return result;
 }
 
 static V fwp_p_unzip(V ps) {

@@ -40,11 +40,11 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#84: native macOS, primitive contracts, owned leaves/text,
+Main includes #74–#85: native macOS, primitive contracts, owned leaves/text,
 compiled closures, closure cleanup, concrete argument temporaries, stack children,
-borrowed synchronous callbacks, map and filter results. Exact merge/run evidence
-is in the handoff. Next PR is fold ownership. Rebase and validate the
-prepared queue in order after each preceding squash; do not open concurrent PRs.
+borrowed synchronous callbacks, map, filter and fold results. Exact merge/run evidence
+is in the handoff. Fold passed all six CI `37728301773` gates and merged. Zip is rebasing for the next
+sole PR; validate the prepared queue in order after each preceding squash.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
