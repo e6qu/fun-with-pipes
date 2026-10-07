@@ -436,3 +436,8 @@ Entry transfers it to typed owned application; cancellation before entry drops
 it. Scope and stack preparation precede publication of the child. Task handles
 and counted results still share; full teardown/cycle coverage remains open.
 See [ownership.md](ownership.md#prepared-retained-task-thunks).
+
+Prepared deadline calls use the spawned-thunk retained owner contract, preserving
+the deadline and typed capture cleanup. Counted results still use shared task
+lifetimes; evidence is in
+[ownership.md](ownership.md#prepared-retained-deadline-callbacks).

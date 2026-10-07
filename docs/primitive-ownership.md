@@ -20,6 +20,7 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
+| task.within | borrow duration/thunk; runtime retains one counted owner | fresh Option holding a shared task result | retained argument 1 |
 | task.spawn | borrow thunk; runtime retains one counted owner | shared task handle/result | retained argument 0 |
 | array.from-list | borrow list | fresh array owning typed element references | none |
 | map/set.from-list | borrow list | owned storage with selected typed key/value references | none |
@@ -682,3 +683,9 @@ Task handles and counted results remain shared; scalar results never go through
 generic sharing. `task.scope`, `task.within`, channels, cycles and complete task
 result teardown remain separate work. Evidence and limits are recorded in
 [ownership.md](ownership.md#prepared-retained-task-thunks).
+
+Prepared task.within borrows its callback and retains one counted owner through
+the deadline task, using the same protected preparation as task.spawn. Its
+Option outer remains owned; counted results still share. Success, cancellation
+and alias evidence is in
+[ownership.md](ownership.md#prepared-retained-deadline-callbacks).

@@ -1071,3 +1071,43 @@ Six adjacent escape-analysis checks pass, CPU 0.00 s / elapsed 0.14 s. No focuse
 failure remains; no resource limits were raised or bypassed. The shared target
 contains this compiler; guarded package clean is required before switching.
 Final formatting/whitespace pass, CPU 0.36 s / elapsed 0.73 s.
+
+## Prepared retained deadline callbacks
+
+`ownership-task-within`, `/private/tmp/fwp-task-within-worktree`, OLD base
+`7208e4a2d93e7e0402dee4d7f4783fe185565d74`. task.within now borrows the
+callback and uses the same retained-owner preparation as task.spawn, with its
+deadline preserved. Result metadata avoids sharing scalar address bits; counted
+results remain shared and the Option outer remains owned. Unknown callback
+metadata preserves the shared fallback. Escape analysis still treats it as
+retained. task.scope, channels, result/handle teardown and cycles remain open.
+
+A source/generated-C regression checks successful execution and immediate
+deadline cancellation, original callback owners and external capture aliases.
+The initial C fixture erroneously passed a scalar Duration and crashed; fixed to
+construct the boxed current ABI value, it reproduced the pre-fix count failure
+with exit 1. After the fix, O1/O2, both poison modes and GC stress/verification
+pass; native stdout/stderr/exit match an unoptimized interpreter. Restoring the
+legacy shared callback path makes the negative control fail with exit 1.
+The parent spawn preparation controls were updated to target the factored helper
+and still fail with their expected exits.
+
+Serial bounded checks after guarded package clean:
+- `cargo test --test within_thunk_ownership --test retained_thunk_ownership --
+  --nocapture`: three pass, CPU 11.52 s / elapsed 23.51 s.
+- `cargo test --test within_thunk_ownership --test task_ownership -- --nocapture`:
+  four pass, including final negative control, CPU 5.47 s / elapsed 11.31 s.
+
+Full sequential CI is required. #81 remains sole open PR, exact `6eeb915`, run
+`37696063781`; Linux, ARM macOS and benchmarks passed, Intel macOS is live.
+Fix any failure and continue separate preparation. After all four pass, use the
+recorded subject/empty body and exact-head squash, then rebase borrowed callbacks
+from OLD `b563360`. Next implementation: task.scope callback ownership and
+scope result protection across joining/cancellation. Preserve OLD `7208e4a` for
+this child and its published head for the next child. Phases 2–6 remain open.
+
+Deadline library/dedicated-test clippy passes, CPU 2.35 s / elapsed 4.71 s.
+Formatting/whitespace pass, CPU 0.37 s / elapsed 0.76 s. No focused failures or
+local resource-limit refusals remain. Full sequential CI and inventory execution
+after the added deadline assertion remain required; don't count clippy as a test.
+Shared target switched to borrowed-callback validation after guarded package clean.

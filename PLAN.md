@@ -585,3 +585,16 @@ focused integration checks and the contract inventory pass; final dedicated
 checks also cover unknown metadata. Task handles/results, scope/within, channels
 and cycles remain open. Full sequential CI is required; #81 is still the sole
 open PR with Linux, ARM macOS and benchmarks passing and Intel macOS running.
+
+Retained task thunks published as `7208e4a`, separate from sole PR #81.
+Continue task.within callback ownership, then task.scope and remaining teardown.
+
+Prepared task.within retains typed callback ownership through its deadline task.
+Success/cancellation, capture aliases, unoptimized semantic comparison and
+legacy-sharing controls pass; parent spawn failure checks still pass. Counted
+task results/handles remain shared. Next: task.scope and scope result cleanup
+across joining/cancellation. Full sequential CI remains required before merge.
+
+Stack-child ownership passed all four gates in CI `37696063781` and PR #81
+merged as `a4b6533`, with the required subject/empty body verified. Next PR:
+borrowed callbacks, rebased from OLD `b563360`; later preparations stay separate.
