@@ -679,7 +679,12 @@ impl Checker<'_> {
                 Ok(())
             }
             Expr::Construct(_, a) | Expr::Record(a) => {
-                a.iter().try_for_each(|x| self.expr(x, st, true))
+                let before = self.calls.map(|_| owned_references(st));
+                a.iter().try_for_each(|x| self.expr(x, st, true))?;
+                if !a.is_empty() {
+                    self.record_call(e, before, st);
+                }
+                Ok(())
             }
             Expr::Apply(f, a) => {
                 let before = self.calls.map(|_| owned_references(st));
@@ -1019,6 +1024,25 @@ mod tests {
     }
 
     #[test]
+    fn constructors_transfer_fields_and_keep_other_caller_owners() {
+        let record = MT::Record(vec![("0".into(), list())]);
+        let body = Expr::Let(
+            2,
+            Box::new(Expr::Record(vec![Expr::Local(0)])),
+            Box::new(Expr::Record(vec![Expr::Local(2), Expr::Local(1)])),
+        );
+        let p = prog(vec![list(), list()], vec![record], body.clone());
+        let calls = call_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        assert_eq!(calls.len(), 2);
+        assert!(calls
+            .values()
+            .any(|c| c.before_arguments == vec![(0, 1), (1, 1)] && c.at_entry == vec![(1, 1)]));
+        assert!(calls
+            .values()
+            .any(|c| c.before_arguments == vec![(1, 1), (2, 1)] && c.at_entry.is_empty()));
+    }
+
+    #[test]
     fn earlier_duplicate_remains_owned_during_the_final_call() {
         let mut p = prog(vec![list()], vec![], Expr::Local(0));
         p.funcs.push(Func {
@@ -1034,7 +1058,10 @@ mod tests {
         ]));
         let (body, locals) = counted(&p);
         let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
-        let call = calls.values().next().unwrap();
+        let call = calls
+            .values()
+            .find(|call| call.at_entry.iter().any(|(local, _)| *local > 0))
+            .unwrap();
         assert_eq!(call.at_entry.len(), 2);
         assert_eq!(call.at_entry[0], (0, 1));
         assert!(call.at_entry[1].0 > 0);
@@ -1057,7 +1084,10 @@ mod tests {
         ]));
         let (body, locals) = counted(&p);
         let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
-        let call = calls.values().next().unwrap();
+        let call = calls
+            .values()
+            .find(|call| call.at_entry.iter().any(|(local, _)| *local > 0))
+            .unwrap();
         assert_eq!(call.at_entry.len(), 2);
         assert_eq!(call.at_entry[0], (0, 1));
         assert!(call.at_entry[1].0 > 0);

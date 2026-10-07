@@ -13829,3 +13829,16 @@ workflow byte matches prior734d3383addf and refreshed33; no implementation
 changes relative to33. Skip its implementation PR after33 passes full gates.
 No tests rerun for this documentation-only duplicate; preserve immutable
 anchors and all later coverage.
+
+Diagnostic578830243e16/38022478422 passes docs/format/lint, retains failing
+strict omission, and uploads emitted C and O2 assembly. Artifact downloaded
+to/private/tmp/fwp-http2-clang-5788302-assembly (775261 bytes total). In body,
+Clang stores the call at48(%rsp) before remote_end; only the waiting branch
+reloads it. This obsolete alternate-path spill remains a conservative root.
+Candidate restates the fixture's already-completed stream state after timeout
+evaluation, only in x86 fixture emission; all original positive and omitted
+owner assertions remain. Diagnostic instrumentation is removed and the
+original four-way matrix restored. ARM behavior is unchanged. This candidate
+still requires all four native compiler gates before source propagation.
+Duplicate34 docs commit49705971b287 is published after retaining734d3383addf;
+audit0.42CPU/3.37elapsed passes; no implementation PR or test rerun is needed.
