@@ -8342,3 +8342,26 @@ Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_
 passes one test (57 filtered)3.27 s CPU /6.86 s elapsed. Deadline callback
 lint with all three integration targets and -D warnings passes2.39 /4.84 s;
 fmt check0.34 /0.60 s. Nine current docs copied before final amend; tested source unchanged.
+Final deadline-callbacksaa181f8f2c3aa2540215bbcd04bb4e8760582440 is clean
+on actual base427076c, published with exact lease against OLD14a76de.
+Whole subject verified one line, empty body; no second PR. Row51 actual base
+remains OLD14a76de until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.13 s CPU /0.94 s elapsed. Row51 scoped callback rebase from
+ACTUAL14a76de5b8bbbf4e23a06b547ebaf374b931b20e onto actual row50
+aa181f8f2c3aa2540215bbcd04bb4e8760582440 resolves only doc conflicts with
+nine authoritative files. Its raw source oracle already sets FWP_NO_OPT=1.
+Guarded clean0.00 /0.13 s; scope, retained spawn and deadline tests started.
+Guarded cargo test --test scope_thunk_ownership --test retained_thunk_ownership
+--test within_thunk_ownership passes all four tests14.91 s CPU /29.90 s
+elapsed. Scoped callbacks borrow their closure and protect owned results
+until child joining and cancellation checks finish. Scope-array cleanup
+and handler restoration survive callback-entry traps/cancellation; missing
+result/scope/handler controls expose regressions. Raw agreement, O1/O2,
+stress/verification/poison, aliases, scalar words and unknown callback
+fallback pass, with related spawn/deadline checks.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.23 s CPU /6.67 s elapsed. Scope callback lint
+with all three integration targets and -D warnings passes2.29 /4.72 s; fmt
+check0.44 /0.72 s. Nine current docs copied before final amend; tested source unchanged.

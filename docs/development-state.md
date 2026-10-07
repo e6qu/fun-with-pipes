@@ -94,19 +94,20 @@ still need their final squash rebases and six exact-head full gates.
 | 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 /43.40 s |
 | 48 ownership-inline-caf | af073c78c443 | 762cc824fa08 | 16.28 /33.20 s |
 | 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 /26.90 s + exact unit3.58 /7.29 s |
+| 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 /31.48 s + exact unit3.27 /6.86 s |
 
-Rows17–49 are published preparations with passing focused tests, lint and
+Rows17–50 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row49 retained-task-thunks427076c60d2c68b557a9ffe663fd7a49fdd834d2 is
-clean on actual baseaf073c7, published with exact lease against OLD7208e4a.
-Five focused tests pass13.40 /26.90 s, exact unit3.58 /7.29 s, lint2.53 /5.05 s,
-format0.44 /0.83 s. Row50 deadline callbacks rebases from ACTUAL old parent7208e4a onto
-current row49 head427076c. Six focused within/spawn/task tests pass15.44 /31.48 s; exact contract
+Row50 deadline-callbacksaa181f8f2c3aa2540215bbcd04bb4e8760582440 is
+clean on actual base427076c, published with exact lease against OLD14a76de.
+Six focused tests pass15.44 /31.48 s, exact unit3.27 /6.86 s, lint2.39 /4.84 s,
+format0.34 /0.60 s. Row51 scoped callback ownership rebases from ACTUAL old parent14a76de
+onto current row50 headaa181f8. Four focused scope/spawn/deadline tests pass14.91 /29.90 s; exact contract
 unit, lint, format, docs and publication follow.
 Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
@@ -156,10 +157,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-task-within-worktree; exact deadline contract check is active.
+belongs to /private/tmp/fwp-task-scope-worktree; exact scoped-callback contract check is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.12 s CPU /0.84 s elapsed).
+ancestry pairs and whole commit messages (0.13 s CPU /0.94 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:

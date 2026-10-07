@@ -376,6 +376,9 @@ a task after preparation succeeds. Unknown closure metadata retains sharing;
 task results still use the shared graph fallback at this stage.
 Prepared deadline callbacks use the same retained owner through completion
 or cancellation and preserve external capture aliases.
+Prepared task.scope borrows its callback and protects its owned result
+through joining/cancellation checks; unwind cleanup restores handlers and
+scope state and releases scope storage.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of
