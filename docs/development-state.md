@@ -39,8 +39,9 @@ Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
 Next delivery is row22, ownership-map-set-elements, final-rebased from actual
 dc85b679 onto main c4d820e. Source/runtime/tests/workflows match the focused
 GitHub-accepted c9ef3d88211f exactly, including inherited CLI/GC repairs.
-Publish with an explicit lease and open PR100; require six fresh exact-head
-gates. OLD anchors stay immutable. Row23 still uses actual base1689c03.
+Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
+PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
+CI37958351622 has six fresh exact-head gates queued. OLD anchors stay immutable. Row23 still uses actual base1689c03.
 
 Later preparations must inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. The repaired Linux gate actually verifies the
@@ -49,7 +50,10 @@ Ten authoritative docs backed up to /private/tmp/fwp-main-docs-pre99 were
 restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
 through112 are published. Row112 CI37952655033 failed formatting before
 lint/tests. Both fixture formatting corrections are published at762117573367;
-evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d follows the repair.
+evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
+follows the repair and is queued.
+Duplicate main CI37957464783 cancellation requested after matching
+all-six-accepted PR99 source/runtime/tests/workflows.
 Duplicate main CI37944119691 was cancelled after matching all-six-accepted
 PR98 source/runtime/tests/workflows; cancellation is not acceptance.
 Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
@@ -82,7 +86,7 @@ still need their final squash rebases and six exact-head full gates.
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
 | 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
-| 22 ownership-map-set-elements | a720dfd01cea | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
+| 22 ownership-map-set-elements | f71c002d5339 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
