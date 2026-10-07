@@ -7693,3 +7693,23 @@ release, trap unwind and FWP_FREE/REUSE/STACK controls. Guarded clippy
 cargo fmt --all -- --check passes0.35 s /0.74 s. The native C fixture
 compiled with FWP_GC=0 verifies bump cleanup compilation, not actual WASI.
 Full six runner gates remain necessary before sequential delivery.
+
+Final reuse-token preparation216e673ff2dd5378fe67d22ef6fa1bb4f54016c6
+is clean on actual base123d8b5, published with exact lease against OLD33cf864.
+Whole commit message verified one line with empty body. No second PR.
+
+Row27 rebases OLD7392f2d from OLDparent33cf864 onto actual row26
+head216e673 (initialb5eaf4d); all nine root docs resolve conflicts. Five
+source oracles explicitly set FWP_NO_OPT=1. Guarded target clean passes
+0.05 s CPU /0.26 s elapsed; format0.34 s /0.62 s. A documentation audit
+attempt while the focused test guard held its lock was refused with
+Resource temporarily unavailable; no limits bypassed, rerun serially afterward.
+
+Guarded cargo test --test compiler_call_liveness passes all five tests
+19.89 s CPU /39.90 s elapsed. Actual callers, later argument failure,
+boxed wrapper/unboxed worker owners, cancellation before entry tick and
+struct variant payload cleanup pass O1/O2 stress/verification/poison probes
+and raw interpreter comparisons. Guarded clippy --test compiler_call_liveness
+-- -D warnings passes2.67 s /5.31 s; fmt check0.45 s /0.83 s. Serial
+doc audit then passes eleven link sets, 82 immutable ancestry pairs and
+whole commit subjects0.14 s /0.93 s. Full gates remain runner-only.

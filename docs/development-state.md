@@ -71,6 +71,7 @@ still need their final squash rebases and six exact-head full gates.
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 /19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 /19.21 s |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 /17.94 s |
+| 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 /30.66 s |
 
 Row 18 head 112f3c8 includes only doc changes after tested code 7af6961.
 Row 20 full head 7741d09dd8cf214396e7938e07fbbd1f7263d9f7 is published
@@ -97,13 +98,16 @@ Row25 full head123d8b5928aa403f61494e78023982475732f777 is clean after
 amend. Three unwind_cleanup tests pass8.80 s CPU /17.94 s elapsed, lint2.43 s
 /4.88 s, format0.33 s /0.60 s. Source oracle explicitly uses FWP_NO_OPT=1.
 Preserve OLD3e31422/parent02beec3; actual current base iscde58f4.
-Current independent task: row26 ownership-reuse-tokens rebases from OLDparent
-3e31422 onto actual current row25 head123d8b5 (temporary46d02b5). Three
-source oracles explicitly set FWP_NO_OPT=1; focused reuse_token_ownership
-tests pass15.26 s CPU /30.66 s elapsed; lint2.37 s /4.67 s and format0.35 s
-/0.74 s pass. Preserve OLD33cf864 and actual base123d8b5. Final doc amend
-and publication are next, without another PR. The native bump-allocation C
-fixture checks compilation/cleanup; it is not actual WASI acceptance.
+Row26 final head216e673ff2dd5378fe67d22ef6fa1bb4f54016c6 is clean on
+actual base123d8b5; exact lease against OLD33cf864. Three tests pass15.26 s
+CPU /30.66 s elapsed, lint2.37 s /4.67 s, format0.35 s /0.74 s. All three
+source oracles use FWP_NO_OPT=1. Native bump-allocation C is not actual WASI.
+Current independent task: row27 ownership-call-liveness has rebased from
+OLDparent33cf864 onto actual current row26 head216e673 (temporaryb5eaf4d).
+Five raw source oracles explicitly set FWP_NO_OPT=1. Focused
+All five compiler_call_liveness tests pass19.89 s CPU /39.90 s elapsed;
+lint2.67 s /5.31 s and format0.45 s /0.83 s pass. Final doc amend and
+publication follow. Preserve all immutable OLD anchors; no additional PR.
 PR94 remains the sole open delivery.
 
 ## Repaired resource evidence
@@ -151,10 +155,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-unwind-liveness-worktree; focused token checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.04 /0.25 s).
+belongs to /private/tmp/fwp-call-liveness-worktree; focused call checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.05 /0.26 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.10 s CPU /0.71 s elapsed).
+ancestry pairs and whole commit messages (0.14 s CPU /0.93 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:
