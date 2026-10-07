@@ -28,9 +28,11 @@ immutable value semantics, effects and evaluation/trap order stable.
   `/private/tmp/fwp-ownership-worktree`. Three implementation commits rebased
   onto main; implementation head `ee80a7e`. Documentation commit follows.
   Remote previously held `798d2ed`; use force-with-lease for the reviewed rebase.
-  Published head `22b7e96`, [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
-  Full gate [37603180337](https://github.com/e6qu/fun-with-pipes/actions/runs/37603180337)
-  is running. Fix failures and squash only after all current-head jobs pass.
+  Published head `678abf6`, [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
+  Full gate [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
+  is queued/running. The previous run `37603180337` passed benchmarks, then
+  was superseded by corrected macOS status docs and cancelled; it is not a gate
+  for this head. Fix failures and squash only after all current-head jobs pass.
 - Scope: shared metadata for all 35 array/map/set declarations, comparison-key
   borrowing, owning-wrapper selection and safe graph sharing at saturation,
   interior references and traversal-stack spill. Stored values and callbacks
@@ -162,7 +164,7 @@ before general no-tracing execution. Do not claim phase 2 or phase 6 complete.
 ## Borrowed callback foundation preparation
 
 `ownership-borrowed-callbacks`, `/private/tmp/fwp-callback-worktree`, base
-`b563360`, has typed argument-slice duplication metadata and a borrowed dynamic
+`b563360`, published at `029fac4`, has typed argument-slice duplication metadata and a borrowed dynamic
 application entry. Exact/partial/overapplication, captured/input aliases,
 compiler-generated mixed scalar/pointer metadata and stack callbacks pass at
 O1/O2, GC stress/verification and both reuse-poison modes. The focused probe
@@ -171,3 +173,26 @@ Five FFI checks and the local fat baseline passed (CPU 5.27 s / elapsed 10.60 s)
 This foundation leaves existing map/retained callbacks unchanged. Next: owned map spines, scratch-buffer release,
 synchronous callback contracts and preserved specialized HOF loops. Full CI is
 required after all parent merges. Prepared work never completes phase 2 alone.
+
+## Synchronous map preparation in progress
+
+`ownership-map-callbacks`, `/private/tmp/fwp-map-worktree`, base `029fac4`,
+has passed focused checks and awaits final validation/commit. FreshSpine owns new list nodes
+without resetting already-owned callback elements. Generic callbacks use typed
+borrowed application; direct/captured HOF loops keep specialization and typed
+per-call ownership. Only map's synchronous function slot gets a no-escape proof;
+Borrow alone is insufficient. Scratch arrays are explicitly released.
+
+Alias checks cover new allocated captures, retained inputs and returned functions,
+O1/O2, stack on/off, GC stress/verification and poison modes. The selected
+no-tracing differential restores only the shared-result boundary: identical
+outputs and zero collections; counts free 2.7 MiB versus 4.6 MiB with owned map
+results. This is counter evidence, not a speed claim. The existing stack closure allocation regression passed (CPU 7.20 s / elapsed
+14.70 s including rebuild); six escape checks and the contract inventory passed.
+Final post-review ownership set passed: eighteen tests, CPU 33.90 s / elapsed
+68.10 s under the guard. Full current-head CI remains required after parent merges. A review added original callback/list address fences
+around specialized calls and clears stale local callback-origin information.
+
+Five FFI checks and the local fat baseline also passed for map ownership
+(CPU 5.66 s / elapsed 11.28 s). Formatting and whitespace passed after applying
+the reported formatting changes. No local full gate or benchmarks were run.

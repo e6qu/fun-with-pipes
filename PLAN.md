@@ -29,31 +29,22 @@ priority queue.
 
 | Order | Work | Acceptance |
 |---|---|---|
-| 1, in progress | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
-| 2, prepared while #74 runs | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
+| 1, done (#74) | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
+| 2, in progress | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
 | 3 | Typed contiguous numeric storage, views, scalar/aggregate ABI and measured alignment | Narrow elements use their natural width; fewer copies/boxes; allocation and assembly evidence on arm64 and x86-64; ABI/FFI tests |
 | 4 | Fused numerical loops, blocked matrix kernels and autodiff lifetime/buffer improvements | Correct gradients and exceptional cleanup; equivalent C/Rust comparisons; fixed floating-point behavior by default |
 | 5 | Expand allocation/ownership/performance regression evidence | Allocation, live-memory, retain/release and collection measurements alongside timings; full workloads on CI |
 | 6 | Optional execution without tracing GC, after complete ownership coverage | Supported programs reclaim memory with collection disabled, including escaping values and runtime boundaries; cycles have an explicit lifetime policy |
 
-Prepared ownership branch: `ownership-contracts`, based on PR #74, published as a branch but not yet
-opened as a PR. It consolidates all array/map/set contracts and borrows
+Native macOS passed both architecture jobs, Linux full tests and benchmarks in
+run `37591744197`; PR #74 was squash-merged as `af15d26`.
+
+Current ownership branch: `ownership-contracts`, rebased onto that main commit;
+publication and its full CI gate are next. It consolidates all array/map/set contracts and borrows
 comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
 evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of
 phase 2; strings, bytes, closure captures and runtime teardown are unfinished.
-
-Phase 2 is prepared in sequential branches for container contracts, text/byte
-leaves, copied text result trees and compiled escaping heap closures. Their
-focused checks and counter evidence are in the handoff; each still requires
-full CI after its parent merges. Retained runtime callbacks, typed container
-elements, exceptional cleanup, old-generation reclamation,
-exact count overflow and remaining concrete constructor/result contexts remain
-acceptance work. Call parameter types now preserve child cleanup for temporary
-constructor arguments in another prepared change. Bounded function-capture destruction is prepared separately;
-other aggregate destruction still needs coverage. Typed child cleanup for
-eligible stack locals and arguments is prepared with alias/root checks and
-counted reclamation evidence. Keep tracing as the compatibility fallback until those gaps are closed.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
@@ -417,8 +408,8 @@ are prioritized in the active roadmap above:
     76 GiB and 41 s to 5 MiB and 17 ms. Objects are freed when their
     last counted reference goes, with what they hold (drop functions per
     type): building and walking a tree 200 times went from 33
-    collections and a 37 MiB heap to none and 2 MiB. In the original implementation, lists the runtime's
-    primitives build stayed shared and were left to the collector: counting
+    collections and a 37 MiB heap to none and 2 MiB. Lists the runtime's
+    primitives build stay shared and are left to the collector: counting
     their cells (fresh results, inputs shared element by element) freed
     730 of 1101 MiB of a list-churning program but made it 35% slower, as
     the generational collector already frees short-lived lists cheaply.

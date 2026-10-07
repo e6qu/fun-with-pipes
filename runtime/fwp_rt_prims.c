@@ -13,6 +13,37 @@ static V fwp_p_map(V f, V xs) {
     return fwp_list_from(a, n);
 }
 
+/* Scratch storage remains scanned until results transfer into fresh nodes.
+ * Elements already carry callback result ownership; never reset their counts. */
+static V *fwp_map_items(V xs, size_t *n) {
+    V source = xs;
+    *n = fwp_list_len(xs);
+    if (*n >= SIZE_MAX / sizeof(V)) fwp_trap("map too large");
+    V *a = (V *)fwp_mem_alloc((*n + 1) * sizeof(V));
+    for (size_t i = 0; xs; i++, xs = OBJ(xs)->f[1]) a[i] = OBJ(xs)->f[0];
+    FWP_KEEP_ALIVE(source);
+    return a;
+}
+static V fwp_map_finish(V *a, size_t n) {
+    V result = 0;
+    for (size_t i = n; i; i--) {
+        V fields[] = {a[i - 1], result};
+        result = fwp_rc_fresh(fwp_data(1, 2, fields));
+    }
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    return result;
+}
+static V fwp_p_map_owned(V f, V xs) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = 0; i < n; i++) a[i] = fwp_apply_borrowed(f, 1, &a[i]);
+    V result = fwp_map_finish(a, n);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 static V fwp_p_filter(V f, V xs) {
     size_t n, k = 0;
     V *a = fwp_list_items(xs, &n);
@@ -152,6 +183,15 @@ FWP_K V fwp_k_map(fwp_fn1 f, V xs) {
     V *a = fwp_list_items(xs, &n);
     for (size_t i = 0; i < n; i++) a[i] = f(a[i]);
     return fwp_list_from(a, n);
+}
+
+FWP_K V fwp_k_map_owned(fwp_fn1 f, V xs) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = 0; i < n; i++) a[i] = f(a[i]);
+    V result = fwp_map_finish(a, n);
+    FWP_KEEP_ALIVE(xs);
+    return result;
 }
 
 FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {

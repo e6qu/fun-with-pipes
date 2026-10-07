@@ -87,8 +87,8 @@ On macOS, install the Xcode command line tools (`xcode-select --install`).
 For TLS, install OpenSSL 3 (`brew install openssl@3`) and set
 `FWP_OPENSSL_DIR` to the output of `brew --prefix openssl@3`; it supplies
 the headers/libraries for native builds and the interpreter's loader path.
-Native macOS portability is in progress on Apple Silicon and Intel: see the
-handoff for checks completed. Darwin cross targets and native `--static`
+Native macOS is verified on Apple Silicon and Intel by the full CI suites;
+see [the handoff](docs/development-state.md) for the exact baseline and checks. Darwin cross targets and native `--static`
 linking are unavailable; `--pgo` still requires GCC.
 
 ```
