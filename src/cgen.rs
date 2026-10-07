@@ -5243,16 +5243,26 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 let func = f.clone();
                 let mut s = self.prim(&func, &sym)?;
                 if self.reuse {
-                    if matches!(
-                        crate::ownership::primitive(&sym).and_then(|c| c.callback),
-                        Some(crate::ownership::Callback::Retained(0))
-                    ) {
-                        let result = func.locals[0].params(1).1;
+                    if let Some(crate::ownership::Callback::Retained(i)) =
+                        crate::ownership::primitive(&sym).and_then(|c| c.callback)
+                    {
+                        let result = func.locals[i].params(1).1;
                         let share_result = u8::from(crate::rc::needs_rc(&self.prog.shapes, result));
-                        s = s.replace(
-                            "fwp_p_task_spawn(l0)",
-                            &format!("fwp_p_task_spawn_retained(l0, {share_result})"),
-                        );
+                        match sym.as_str() {
+                            "task.spawn" => {
+                                s = s.replace(
+                                    "fwp_p_task_spawn(l0)",
+                                    &format!("fwp_p_task_spawn_retained(l0, {share_result})"),
+                                )
+                            }
+                            "task.within" => {
+                                s = s.replace(
+                                    "fwp_p_task_within(l0, l1)",
+                                    &format!("fwp_p_task_within_retained(l0, l1, {share_result})"),
+                                )
+                            }
+                            _ => unreachable!("unmodeled retained callback: {sym}"),
+                        }
                     }
                     // with counted references: arrays written in place, and
                     // new ones owned by compiled code
