@@ -138,7 +138,7 @@ still need their final squash rebases and six exact-head full gates.
 | 36 ownership-worker-boxing | e171da5957fd | be0032a15ee3 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | ba9f0f293ac8 | e171da5957fd | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 39 ownership-variant-preparation | 7d617f68cac0 | cff61cd0898d | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
+| 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | 1654263ed38e | 7d617f68cac0 | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
 | 41 ownership-variant-conversion | a59952364e22 | 1654263ed38e | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 5522a2ceb038 | a59952364e22 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
