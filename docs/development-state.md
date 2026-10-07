@@ -140,7 +140,7 @@ still need their final squash rebases and six exact-head full gates.
 | 45 ownership-match-context | f82fa2325d62 | 36e970682a29 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | 3ee4f29b8493 | f82fa2325d62 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | 404970bff753 | 3ee4f29b8493 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
-| 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
+| 48 ownership-inline-caf | ee6016f60507 | 404970bff753 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
 | 49 ownership-task-thunks | 4ab664827244 | 3b142abc5f93 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 91b625c60cb9 | 4ab664827244 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 935554ad52c1 | 91b625c60cb9 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
