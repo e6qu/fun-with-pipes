@@ -5621,62 +5621,74 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
         }
         let call = format!("w{}({})", id, args.join(", "));
-        // counted: the worker takes over references to the fields it is
-        // given, and this function gives up its own to the record
+        // The wrapper keeps boxed arguments, while the worker consumes
+        // duplicated fields and other arguments. Protect originals before
+        // preparation, and each completed duplicate until worker entry.
         let (mut pre, mut post) = (String::new(), String::new());
         if self.reuse {
-            let f = &self.prog.funcs[id];
-            for (i, p) in abi.params.iter().enumerate() {
-                if p.is_none() {
-                    continue;
+            let counted_fields: Vec<_> = abi
+                .params
+                .iter()
+                .enumerate()
+                .filter(|(_, p)| p.is_some())
+                .flat_map(|(i, _)| {
+                    record_fields(&self.prog.shapes, &f.locals[i])
+                        .unwrap_or_default()
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, (_, ty))| crate::rc::needs_rc(&self.prog.shapes, ty))
+                        .map(move |(j, (_, ty))| (format!("OBJ(l{i})->f[{j}]"), ty.clone()))
+                })
+                .collect();
+            let has_boxed = abi.params.iter().any(Option::is_some);
+            let originals: Vec<_> = if has_boxed {
+                f.ty.params(f.arity as usize)
+                    .0
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, ty)| (format!("l{i}"), ty.clone()))
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            let protection = self.protect_values(&originals, "owned", "cleanup");
+            pre.push_str(&protection);
+            if !protection.is_empty() {
+                post.push_str("fwp_cleanup_pop(&cleanup); ");
+            }
+            let empty_fields: Vec<_> = counted_fields
+                .iter()
+                .map(|(_, ty)| ("0".into(), ty.clone()))
+                .collect();
+            let preparing = self.protect_values(&empty_fields, "prepared", "preparation_cleanup");
+            pre.push_str(&preparing);
+            for (j, (value, _)) in counted_fields.iter().enumerate() {
+                let _ = write!(pre, " fwp_rc_dup({value}); ");
+                if !preparing.is_empty() {
+                    let _ = write!(pre, "prepared.v{j} = {value}; ");
                 }
-                let tys = record_fields(&self.prog.shapes, &f.locals[i]).unwrap_or_default();
-                for (k, (_, t)) in tys.iter().enumerate() {
-                    if crate::rc::needs_rc(&self.prog.shapes, t) {
-                        let _ = write!(pre, "fwp_rc_dup(OBJ(l{})->f[{}]); ", i, k);
+            }
+            if !preparing.is_empty() {
+                pre.push_str("fwp_cleanup_pop(&preparation_cleanup); ");
+            }
+            if !protection.is_empty() {
+                let mut slot = 0;
+                for (i, (_, ty)) in originals.iter().enumerate() {
+                    if !crate::rc::needs_rc(&self.prog.shapes, ty) {
+                        continue;
                     }
+                    if abi.params[i].is_none() {
+                        let _ = write!(pre, "owned.v{slot} = 0; ");
+                    }
+                    slot += 1;
                 }
-                // The worker consumes duplicated field references. Release
-                // the incoming boxed argument's original fields and storage.
-                let release = if free_enabled() {
-                    format!("fwp_drop{}", self.drop_id(&f.locals[i]))
-                } else {
-                    "fwp_rc_drop".into()
-                };
-                let _ = write!(post, "{release}(l{i}); ");
             }
-        }
-        // A boxed-to-worker wrapper still owns its original aggregate while
-        // the worker consumes duplicated field references. Protect that original
-        // independently when the worker exits through a handler or cancellation.
-        if self.reuse && self.unwind {
-            let mut members = Vec::new();
-            let mut values = Vec::new();
-            let mut releases = Vec::new();
             for (i, p) in abi.params.iter().enumerate() {
-                if p.is_none() {
-                    continue;
+                if p.is_some() {
+                    let ty = self.prog.funcs[id].locals[i].clone();
+                    let drop = self.value_drop(&ty);
+                    let _ = write!(post, "{drop}(l{i}); ");
                 }
-                let field = format!("v{}", members.len());
-                members.push(format!("V {field};"));
-                values.push(format!("l{i}"));
-                let release = if free_enabled() {
-                    format!(
-                        "fwp_drop{}",
-                        self.drop_id(&self.prog.funcs[id].locals[i].clone())
-                    )
-                } else {
-                    "fwp_rc_drop".into()
-                };
-                releases.push(format!("{release}(c->{field});"));
-            }
-            if !members.is_empty() {
-                let k = self.cleanup_defs.len();
-                self.cleanup_defs.push(format!(
-                    "typedef struct {{ {} }} fwp_owner_ctx{k};\nstatic void fwp_owner_release{k}(void *arg) {{ fwp_owner_ctx{k} *c = arg; {} }}\n",
-                    members.join(" "), releases.join(" ")));
-                let _ = write!(pre, "fwp_owner_ctx{k} owned = {{{}}}; fwp_cleanup cleanup; fwp_cleanup_push(&cleanup, fwp_owner_release{k}, &owned); ", values.join(", "));
-                post = format!("fwp_cleanup_pop(&cleanup); {post}");
             }
         }
         let body = match (abi.ret, abi.vret) {
