@@ -3718,7 +3718,23 @@ impl<'p> Gen<'p> {
                     MT::Fun(_, k) => *k,
                     _ => MT::unit(),
                 };
-                format!("return fwp_p_sort_by(l0, l1, {});", self.desc(&key))
+                let descriptor = self.desc(&key);
+                if self.reuse {
+                    // Keys own callback results, including aliases. Scalars must
+                    // never be interpreted as pointers by a generic release.
+                    let drop = if crate::rc::needs_rc(&self.prog.shapes, &key) {
+                        if free_enabled() && !matches!(&key, MT::Con(n, _) if n == "?") {
+                            format!("fwp_drop{}", self.drop_id(&key))
+                        } else {
+                            "fwp_rc_drop".into()
+                        }
+                    } else {
+                        "NULL".into()
+                    };
+                    format!("return fwp_p_sort_by(l0, l1, {descriptor}, {drop});")
+                } else {
+                    format!("return fwp_p_sort_by(l0, l1, {descriptor});")
+                }
             }
             "index-of" => format!("return fwp_p_index_of(l0, l1, {});", self.desc(&p(0))),
             "unique" => format!("return fwp_p_unique(l0, {});", self.desc(&elem(&p(0), 0))),

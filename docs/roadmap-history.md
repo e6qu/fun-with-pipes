@@ -6461,3 +6461,58 @@ guarded clean0.00 s /0.14 s. Full exact-head sequential CI remains required.
 
 List-order clippy lib/fixture passes2.40 s CPU /4.82 s elapsed. All focused
 checks pass; publication uses explicit lease against originalc835578.
+
+Published list-order preparation5fe569218a4b3cdbdc5b756a83ffb7096aab6608
+with explicit lease against originalc83557825d8ab49f4334e764b1cac82cd2f82057.
+Current basecb0d7e6 differs from immutable OLDparent3a791dc; use current base
+when later rebasing. No second PR was opened.
+
+## Sort callback following-task preparation on list order
+
+Rebased queue16 ownership-sort-callbacks from immutable OLDparentc835578
+onto current list-order5fe5692. Keep OLDhead66bc713 immutable; use actual
+current base5fe5692 for later squash rebase. Current root docs resolve older
+snapshots, with original measurements labeled prepared historical evidence.
+Two interpreter oracles now explicitly use FWP_NO_OPT=1. Three focused checks
+pass12.54 s CPU /25.46 s elapsed: callback effect order, stable ties, aliases/
+captures, allocated/nested keys, scalar bit safety, conservative switches and
+GC stress/verification with poison modes. No-tracing differential independently
+restores result sharing and raw key decrement; it is reclamation evidence, not
+a timing result. Format0.34 s /0.60 s; guarded clean0.00 s /0.13 s.
+Full exact-head sequential CI remains required.
+
+Sort callback clippy lib/fixture passes2.30 s CPU /4.59 s elapsed.
+
+## Archived preparation detail before compact queue14–16 table
+
+Next row14 ownership-wide-counts is being prepared on current PR head7018086
+from immutable OLD inference89b7bde2c8f035e4767fe9543b18dc6385769635.
+After #91 merges, rebase its current base7018086 onto the actual squash and
+rerun any affected checks before publication and the sole next PR.
+Original OLDwide3a791dc7e9f373a327780ded04774acd7f4825cb remains immutable.
+Wide-count preparation is rebased on7018086; original anchors stay immutable.
+All three wide_counts checks pass14.19 s CPU /28.94 s elapsed with explicit
+FWP_NO_OPT=1 interpreter oracles. The sharing regression passes0.75 s /1.79 s;
+fmt0.35 s /0.63 s; clippy lib/two fixtures2.34 s /4.78 s.
+Published clean ascb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23 with explicit
+lease against OLDwide3a791dc. Wait for #91 before rebasing from current7018086
+onto the actual squash and opening the next PR.
+Resolve docs using current root copies; explicit raw-oracle corrections and
+focused tests/lint pass and branch is published. No second PR is open.
+
+Following row15 list-order is being prepared on current wide-count headcb0d7e6
+from immutable OLDparent3a791dc. Its original OLDheadc83557825d8ab49f4334e764b1cac82cd2f82057
+stays immutable. Both raw-oracle calls explicitly use FWP_NO_OPT=1. Two
+list_order_ownership checks pass11.16 s CPU /22.44 s elapsed (O1/O2, stack
+on/off, GC stress/verification, poison modes and no-tracing reclamation).
+Format0.34 s /0.62 s; clippy lib/fixture2.40 s /4.82 s. Published clean as
+5fe569218a4b3cdbdc5b756a83ffb7096aab6608 with explicit lease against OLDc835578.
+No second PR; its later rebase must use actual current basecb0d7e6.
+
+Row16 sort-callback is being prepared from immutable OLDparentc835578 onto
+current list-order5fe5692. Original OLDhead66bc713dea67d3c811cbb54b8ac7dfab59f8edee
+remains immutable; later rebase uses actual current base5fe5692. Both source
+oracles explicitly use FWP_NO_OPT=1. Three sort_callback_ownership checks
+pass12.54 s CPU /25.46 s elapsed; format0.34 s /0.60 s. Clippy is running,
+then publish with exact lease against OLD66bc713; no additional PR.
+

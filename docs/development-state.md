@@ -39,26 +39,32 @@ Phase 1 is done, phase 2 incomplete, phases 3–6 pending.
 
 Sole open [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91):
 inference-call-effects, /private/tmp/fwp-inference-worktree, exact
-7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: benchmark passes,
-Linux and all four Mac jobs run. Four focused call_effects tests
+7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: Linux and benchmark pass;
+all four Mac jobs run. Four focused call_effects tests
 pass17.05 s CPU /34.05 s elapsed; explicit raw-oracle rerun1.72 s /3.50 s;
 clippy2.36 s /4.69 s, fmt0.34 s /0.59 s.
 After all six gates pass, squash with subject:
 `Keep call effect contexts separate from pure callback types`, empty body.
-Next row14 ownership-wide-counts is being prepared on current PR head7018086
-from immutable OLD inference89b7bde2c8f035e4767fe9543b18dc6385769635.
-After #91 merges, rebase its current base7018086 onto the actual squash and
-rerun any affected checks before publication and the sole next PR.
-Original OLDwide3a791dc7e9f373a327780ded04774acd7f4825cb remains immutable.
-Wide-count preparation is rebased on7018086; original anchors stay immutable.
-All three wide_counts checks pass14.19 s CPU /28.94 s elapsed with explicit
-FWP_NO_OPT=1 interpreter oracles. The sharing regression passes0.75 s /1.79 s;
-fmt0.35 s /0.63 s; clippy lib/two fixtures2.34 s /4.78 s.
-Published clean ascb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23 with explicit
-lease against OLDwide3a791dc. Wait for #91 before rebasing from current7018086
-onto the actual squash and opening the next PR.
-Resolve docs using current root copies; explicit raw-oracle corrections and
-focused tests/lint pass and branch is published. No second PR is open.
+After #91 merges, rebase next row14 from its actual current base7018086 onto
+the real squash, preserve current docs, rerun affected focused checks, publish
+with an exact lease and open the sole next PR. OLD anchors stay immutable.
+
+## Next sequential preparations
+
+These source oracle fixes explicitly use FWP_NO_OPT=1. Published preparations
+still need final squash rebases and six exact-head gates; original measurements
+are archived. Current bases below differ from immutable OLD queue parents.
+
+| Row / branch | Current head | Actual current base | Focused checks (CPU / elapsed) |
+|---|---|---|---|
+| 14 ownership-wide-counts | cb0d7e6db7e5, published | 7018086b8f98 | wide_counts 14.19 /28.94 s; sharing 0.75 /1.79 s; lint 2.34 /4.78 s |
+| 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
+| 16 ownership-sort-callbacks | publication pending | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
+
+Row16 is ready to publish with exact lease against OLD66bc713. No second PR.
+Worktree paths follow queue NAME; all source checks, sharing controls, format
+commands and compiler flags are preserved in history. Later rebase each current
+base onto its parent's actual squash, keeping OLD heads/parents untouched.
 
 ## Separate full evidence
 
@@ -124,14 +130,6 @@ Combined evidence publication and constructor conflict validation are archived
 in history: focused constructor check8.22 s CPU /17.58 s elapsed, fmt0.46 s
 /0.84 s. This evidence is never a production PR.
 
-Following row15 list-order is being prepared on current wide-count headcb0d7e6
-from immutable OLDparent3a791dc. Its original OLDheadc83557825d8ab49f4334e764b1cac82cd2f82057
-stays immutable. Both raw-oracle calls explicitly use FWP_NO_OPT=1. Two
-list_order_ownership checks pass11.16 s CPU /22.44 s elapsed (O1/O2, stack
-on/off, GC stress/verification, poison modes and no-tracing reclamation).
-Format0.34 s /0.62 s; clippy lib/fixture2.40 s /4.82 s. Publish without a
-second PR; its later rebase must use actual current basecb0d7e6.
-
 Next independent work: ambiguous nominal contexts without whole-value binders,
 nested holders and shared/cycle graphs. Source match functions begin with typed
 scrutinee parameters; direct IR can still lack that context. Preserve partial
@@ -151,8 +149,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to list-order checkout. Guarded cargo clean -p fwp before switching
-checkouts; last switch0.00 s /0.14 s. No local workload is active.
+belongs to sort-callback checkout. Guarded cargo clean -p fwp before switching
+checkouts; last switch0.00 s /0.13 s. No local workload is active.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
 Publication anchors and current messages are included. Handoff448→133 lines and ownership460→177 lines;
