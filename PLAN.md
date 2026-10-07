@@ -45,8 +45,7 @@ compiled closures and cleanup, concrete temporaries, stack children, borrowed
 synchronous list callbacks/results, ordered copies, separate call effects,
 owned sort-by keys/results and exact native wide counts. [PR #94](https://github.com/e6qu/fun-with-pipes/pull/94)
 merged after all six exact-head gates passed. Sole open [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95) owns
-scan/iterate state sequences; final focused checks pass and all six full gates
-are starting; bench passes. Exact heads, gates and next
+scan/iterate state sequences; final focused checks pass and four full gates pass; Linux and regular ARM macOS run. Exact heads, gates and next
 actions are in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

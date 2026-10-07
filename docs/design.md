@@ -362,6 +362,8 @@ FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 Prepared match elimination carries nominal constructor-field context into
 effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
+Inlined record projections similarly preserve the checked base type through
+scalar replacement so discarded nested children keep their typed destruction.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

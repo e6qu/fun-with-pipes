@@ -8234,3 +8234,25 @@ Lint with the same three test targets and -D warnings passes2.34 s /4.68 s.
 PR95 exact5d0a3f3 now passes both ARM/Intel GC stress and bench; other gates pending.
 Format check passes0.34 s CPU /0.61 s elapsed; nine authoritative docs copied
 before final amend. All six final PR gates remain required.
+Final match-context321cc3146089bcdd962b57351d7298ed85691b1e is clean
+on actual base610fd74 and published with exact lease against OLD3f61f51.
+Whole subject verified one line with empty body; no second PR. Row46
+actual base remains OLD3f61f51 until its own rebase; immutable anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.12 s CPU /0.84 s elapsed. Row46 field-context rebase from
+ACTUAL OLD3f61f51521d95527d6754c2e6c3ca01a31f64bd7 onto actual row45
+321cc3146089bcdd962b57351d7298ed85691b1e resolves only doc conflicts with
+the authoritative nine files. Source oracle now sets FWP_NO_OPT=1; direct
+typed-IR interpreter comparisons explicitly bracket optimization. Guarded
+clean0.00 /0.14 s. Guarded cargo test --test field_context_ownership --test
+match_context_ownership --test constructor_type_ownership passes five tests
+14.06 s CPU /28.50 s elapsed. Inlined field projection retains the checked
+record context for discarded nested-child ownership, without allocating its
+outer record. Type-erasure omission, alias preservation, O1/O2 and GC
+stress/verification/poison plus related match/construction regressions pass.
+PR95 now passes regular Intel macOS, both GC stress jobs and bench; Linux
+and regular ARM macOS are running at exact5d0a3f3.
+Field-context lint with the same three targets and -D warnings passes
+2.26 s CPU /4.63 s elapsed; fmt check0.34 /0.71 s. Nine current docs copied
+before final amend; tested source unchanged and sequential full gates required.
