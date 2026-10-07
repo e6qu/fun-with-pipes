@@ -112,6 +112,7 @@ static inline void fwp_rc_share(V v) { (void)v; }
 static inline int fwp_rc_unique(V v) { (void)v; return 0; }
 static inline int fwp_rc_unique_mut(V v) { (void)v; return 0; }
 static inline int fwp_rc_last(V v) { (void)v; return 0; }
+static inline int fwp_rc_release_last(V v) { (void)v; return 0; }
 static inline void fwp_rc_free_obj(V v) { (void)v; }
 static inline void fwp_rc_free_arr(V v) { (void)v; }
 static inline size_t fwp_rc_capacity(V v) { (void)v; return 0; }
@@ -150,13 +151,18 @@ typedef struct {
     size_t size;                   /* big: bytes */
     uint32_t recip;                /* small: 2^32 / slot, rounded up */
     uint64_t bits[GC_CHUNK / 16 / 64]; /* small: a mark bit per slot */
-    uint8_t rc[GC_CHUNK / 16];     /* small, kinds 0 and 2: references counted
-                                    * (fwp_rc_*); big: rc[0] */
+    uint8_t rc[GC_CHUNK / 16];     /* all small kinds: inline count or wide marker;
+                                    * big: rc[0] (fwp_rc_*) */
 } gc_chunk;
 
 typedef struct { char *free, *bump, *end; } gc_list;
 typedef struct { char *p; size_t n; } gc_range;
 typedef struct { void *obj; void (*fn)(void *); } gc_fin;
+typedef struct gc_rc_wide {
+    uint8_t *slot; /* metadata address, never a language value/root */
+    size_t count;
+    struct gc_rc_wide *next;
+} gc_rc_wide;
 
 /* All of the collector's state is here, so that scanning the program's
  * data for roots can skip it. */
@@ -185,11 +191,73 @@ static struct {
     double total_alloc, pause_total, pause_max, root_bytes;
     double freed;             /* bytes freed by counts (fwp_rc_free_obj) */
     intptr_t budget_given;
+    gc_rc_wide *rc_wide[256];
+    size_t rc_wide_len;
 } fwp_gc = {-1};
 
 static void fwp_gc_oom(void) {
     fprintf(stderr, "fwp: out of memory\n");
     exit(102);
+}
+
+/* 0 is shared; 1..254 are inline; 255 denotes an exact rare wide count.
+ * Side entries live outside the value heap and use stable metadata keys. */
+static gc_rc_wide **fwp_rc_wide_link(uint8_t *slot) {
+    uintptr_t hash = (uintptr_t)slot;
+    hash ^= hash >> 17;
+    hash ^= hash >> 9;
+    gc_rc_wide **link = &fwp_gc.rc_wide[hash & 255];
+    while (*link && (*link)->slot != slot) link = &(*link)->next;
+    return link;
+}
+static void fwp_rc_forget_slot(uint8_t *slot) {
+    if (*slot != 255) return;
+    gc_rc_wide **link = fwp_rc_wide_link(slot);
+    if (!*link) fwp_trap("internal: missing wide reference count");
+    gc_rc_wide *entry = *link;
+    *link = entry->next;
+    free(entry);
+    fwp_gc.rc_wide_len--;
+}
+static inline void fwp_rc_clear_slot(uint8_t *slot) {
+    if (__builtin_expect(*slot == 255, 0)) fwp_rc_forget_slot(slot);
+    *slot = 0;
+}
+static void fwp_rc_clear_chunk(gc_chunk *chunk) {
+    if (fwp_gc.rc_wide_len)
+        for (size_t i = 0; i < sizeof chunk->rc; i++)
+            if (chunk->rc[i] == 255) fwp_rc_forget_slot(&chunk->rc[i]);
+    memset(chunk->rc, 0, sizeof chunk->rc);
+}
+static void fwp_rc_wide_dup(uint8_t *slot) {
+    gc_rc_wide **link = fwp_rc_wide_link(slot);
+    if (*slot == 254) {
+        if (*link) fwp_trap("internal: stale wide reference count");
+        gc_rc_wide *entry = (gc_rc_wide *)malloc(sizeof *entry);
+        if (!entry) fwp_gc_oom();
+        entry->slot = slot;
+        entry->count = 255;
+        entry->next = NULL;
+        *link = entry;
+        *slot = 255;
+        fwp_gc.rc_wide_len++;
+    } else {
+        if (!*link) fwp_trap("internal: missing wide reference count");
+        if ((*link)->count == SIZE_MAX) fwp_trap("reference count overflow");
+        (*link)->count++;
+    }
+}
+static void fwp_rc_wide_drop(uint8_t *slot) {
+    gc_rc_wide **link = fwp_rc_wide_link(slot);
+    if (!*link) fwp_trap("internal: missing wide reference count");
+    if (--(*link)->count == 254) {
+        fwp_rc_forget_slot(slot);
+        *slot = 254;
+    }
+}
+static inline void fwp_rc_drop_slot(uint8_t *slot) {
+    if (__builtin_expect(*slot == 255, 0)) fwp_rc_wide_drop(slot);
+    else if (*slot > 1) (*slot)--;
 }
 
 static void *fwp_gc_reserve(size_t *bytes) {
@@ -342,7 +410,7 @@ static __attribute__((noinline)) void *fwp_gc_alloc_big(size_t n, int leaf) {
     m->dirty = 1;
     m->head = (uint32_t)k;
     m->size = n;
-    m->rc[0] = 0;
+    fwp_rc_clear_slot(&m->rc[0]);
     for (size_t i = 1; i < k; i++) {
         gc_chunk *t = &fwp_gc.meta[ci + i];
         t->type = GC_BIG_TAIL;
@@ -365,7 +433,7 @@ static __attribute__((noinline)) char *fwp_gc_refill(gc_list *l, unsigned c, int
     m->slot = fwp_gc.slot[c];
     m->nslots = (uint32_t)(GC_CHUNK / m->slot);
     m->recip = (uint32_t)((((uint64_t)1 << 32) + m->slot - 1) / m->slot);
-    memset(m->rc, 0, sizeof m->rc);
+    fwp_rc_clear_chunk(m);
     char *p = fwp_gc_chunk_addr(ci);
     /* verifying, a reused chunk's stale words are cleared (see the sweep) */
     if (fwp_gc.verify) memset(p, 0, GC_CHUNK);
@@ -458,14 +526,14 @@ static void fwp_mem_free(void *p) {
         /* reused unmarked: young again */
         size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
         m->bits[i >> 6] &= ~((uint64_t)1 << (i & 63));
-        m->rc[i] = 0;
+        fwp_rc_clear_slot(&m->rc[i]);
         *(uintptr_t *)p = ~(uintptr_t)l->free;
         l->free = (char *)p;
         fwp_gc.budget += m->slot;
     } else if (m->type == GC_BIG && (char *)p == fwp_gc_chunk_addr(ci)) {
         fwp_gc.budget += (intptr_t)m->size;
         m->mark = 0;
-        m->rc[0] = 0;
+        fwp_rc_clear_slot(&m->rc[0]);
         size_t k = m->head;
         for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
         fwp_gc.nfree_chunks += k;
@@ -517,7 +585,10 @@ static inline uint8_t *fwp_rc_slot(V v) {
 
 static inline V fwp_rc_fresh(V v) {
     uint8_t *c = fwp_rc_slot(v);
-    if (c) *c = 1;
+    if (c) {
+        if (__builtin_expect(*c == 255, 0)) fwp_rc_forget_slot(c);
+        *c = 1;
+    }
     return v;
 }
 
@@ -526,17 +597,22 @@ static void fwp_rc_share(V v);
 static inline void fwp_rc_dup(V v) {
     uint8_t *c = fwp_rc_slot(v);
     if (c && *c) {
-        /* Saturation hands the value to the shared runtime discipline.
-         * Its descendants must also be shared before callbacks borrow
-         * them without taking independently counted references. */
-        if (*c == 255) fwp_rc_share(v);
+        if (__builtin_expect(*c >= 254, 0)) fwp_rc_wide_dup(c);
         else (*c)++;
     }
 }
-
 static inline void fwp_rc_drop(V v) {
     uint8_t *c = fwp_rc_slot(v);
-    if (c && *c > 1) (*c)--;
+    if (c && *c > 1) fwp_rc_drop_slot(c);
+}
+/* Typed destruction consumes one reference; the last reference's fields
+ * and storage are then released by its generated type-specific caller. */
+static inline int fwp_rc_release_last(V v) {
+    uint8_t *c = fwp_rc_slot(v);
+    if (!c || !*c) return 0;
+    if (*c == 1) return 1;
+    fwp_rc_drop_slot(c);
+    return 0;
 }
 
 /* `v` and everything it reaches become shared */
@@ -545,7 +621,7 @@ static void fwp_rc_share(V v) {
     if (!c || !*c) return;
     V stack[64];
     size_t sp = 0;
-    *c = 0;
+    fwp_rc_clear_slot(c);
     stack[sp++] = v;
     while (sp) {
         V o = stack[--sp];
@@ -566,7 +642,7 @@ static void fwp_rc_share(V v) {
             uint8_t *d = fwp_rc_slot(w[k]);
             if (!d || !*d) continue;
             if (sp < 64) {
-                *d = 0;
+                fwp_rc_clear_slot(d);
                 stack[sp++] = w[k];
             } else {
                 /* The recursive entry must still see a counted root. */
@@ -926,6 +1002,7 @@ static void fwp_gc_sweep(void) {
             size_t n = m->nslots, words = (n + 63) / 64, used = 0;
             for (size_t w = 0; w < words; w++) used += (size_t)__builtin_popcountll(m->bits[w]);
             if (used == 0) {
+                fwp_rc_clear_chunk(m);
                 m->type = GC_FREE;
                 nfree++;
                 continue;
@@ -940,7 +1017,7 @@ static void fwp_gc_sweep(void) {
                  * conservative full trace would follow them through a free
                  * slot that a stale root marked */
                 if (fwp_gc.verify) memset(s, 0, m->slot);
-                m->rc[i] = 0;
+                fwp_rc_clear_slot(&m->rc[i]);
                 *(uintptr_t *)s = ~(uintptr_t)l->free;
                 l->free = s;
             }
@@ -949,7 +1026,7 @@ static void fwp_gc_sweep(void) {
             if (m->mark) {
                 live += m->size; /* the mark stays: old */
             } else {
-                m->rc[0] = 0;
+                fwp_rc_clear_slot(&m->rc[0]);
                 for (size_t i = 0; i < k; i++) fwp_gc.meta[ci + i].type = GC_FREE;
                 nfree += k;
             }
@@ -1235,9 +1312,7 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
 }
 
 static void fwp_closure_drop(V f) {
-    uint8_t *count = fwp_rc_slot(f);
-    if (!count || !*count) return;
-    if (*count > 1) { (*count)--; return; }
+    if (!fwp_rc_release_last(f)) return;
     if (fwp_closure_drop_active) {
         fwp_closure_drop_push(fwp_closure_drop_active, f);
         return;

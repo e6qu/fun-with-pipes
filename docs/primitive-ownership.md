@@ -17,6 +17,10 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
+The table below describes the merged container baseline. Typed element and
+runtime refinements remain prepared in [the queue](roadmap-queue.md); consult
+[the handoff](development-state.md) for current validation.
+
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
 | array/map/set.from-list | share list | fresh outer storage, shared elements | none |
@@ -356,3 +360,40 @@ collection stress/verification and both reuse-poison settings. The no-tracing
 loop frees 10.4 MiB by counts versus 9.6 MiB after restoring only optional-result
 sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
 0.1 MiB precision, zero collections). Full platform CI remains required.
+
+## Exact reference counts above the byte range
+
+Prepared queue14; not merged support. Rebased focused checks and all six
+exact-head gates remain required. Historical measurements below are from its
+original preparation, not verification of the current rebased head.
+
+Native count metadata remains one byte per allocation: 0 means shared, 1..254
+are inline counts, and 255 identifies an exact size_t count in rare side metadata.
+Entries use canonical count-slot addresses, not value addresses, and live outside
+the value heap. The collector metadata mapping is stable; these keys do not add
+language-value roots. The fixed 256-bucket table adds 2 KiB on 64-bit native
+platforms; each active wide entry holds three words (24 bytes before allocator
+overhead). Normal objects need no new allocation.
+
+Duplication above 254 allocates/increments one wide entry. Decrementing back to
+254 removes it. Generated typed destruction and closure work-list cleanup use
+one release helper so wide counts cannot be decremented as bytes. The ordinary
+last-reference predicate retains its existing non-consuming behavior. Raw drops
+retain their conservative outer-count behavior. Size_t overflow traps explicitly;
+side-entry allocation failure reports out of memory rather than silently sharing.
+
+Explicit graph sharing, runtime freeing, slot/chunk reuse and GC sweeping clear
+wide entries, including empty chunks and big allocations. High fanout alone no
+longer promotes descendants to tracing-managed sharing. Retained runtime
+callbacks still require their explicit graph-sharing boundary.
+
+`tests/wide_counts.rs` covers 601-reference leaf/record/function aliases,
+interior count-slot canonicalization, capture cleanup, graph sharing, runtime
+free/reuse, partial/empty-chunk and big-object sweep, overflow and injected OOM.
+An interpreter/native high-fanout function/string fixture passes O1/O2, stack
+on/off, GC stress/verification and both poison settings. The identical no-tracing
+loop frees 74.8 MiB through counts versus 73.9 MiB after restoring automatic
+sharing at saturation (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision,
+zero collections). This is reclamation evidence, not a timing result. Complete
+runtime inventories, old-object reclamation, exceptional/retained lifetimes,
+cycles and WASI remain unfinished; full platform CI is required after parents.

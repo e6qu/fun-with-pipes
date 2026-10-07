@@ -5405,3 +5405,1038 @@ PR #90 merged as cca99c07c4c35c37bcdcb19549e4027abfdcae24 after all six
 CI37765137522 gates passed at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731.
 Whole message: `Own optional list aliases and borrow synchronous find predicates`,
 one line, empty body. OLD34023f remains the inference preparation rebase anchor.
+
+Variant-frame preparation: related six focused checks25.41 s CPU /50.90 s elapsed;
+final extended dynamic-tag/partial-retain/allocation/source fixture3.49 s /9.34 s;
+clippy lib/four fixtures2.53 s /5.06 s; fmt0.45 s /0.83 s. Local guarded checks
+only. Scalar payload -1 must never be interpreted as inactive File ownership.
+Parent boxes exactly one disabled, zero enabled. Full platform gates pending.
+
+Nominal bare-constructor match cleanup baseline fails descriptor-close audit
+9.40 s CPU /20.90 s elapsed. Final direct-pattern/type-context repair passes
+10.24 s /23.52 s; seven related contexts/frame tests13.51 s /27.20 s; nineteen
+RC unit checks3.67 s /7.59 s; clippy2.47 s /5.07 s; format0.44 s /0.83 s.
+All local checks used the bounded fwp guard. Full platform acceptance pending.
+
+Mixed record binding-kind baseline fails generated C9.25 s CPU /19.12 s elapsed.
+Repair passes record allocation/actual implicit-close fixture10.42 s /22.39 s,
+five related variant/frame/discard checks18.38 s /36.82 s, clippy2.55 s /5.17 s
+and format0.45 s /0.83 s, all under the local guard. Full CI remains pending.
+
+# Archived handoff and ownership notes through queue86
+
+These snapshots preserve evidence and superseded session instructions. Current
+priorities and status are in PLAN.md and docs/development-state.md.
+
+## Handoff snapshot
+
+# Session handoff
+
+Updated 2026-10-08. Read [PLAN](../PLAN.md), [ownership](ownership.md) and the
+relevant [design](design.md) before changing code. This file is current state;
+[queue](roadmap-queue.md) preserves preparation/rebase anchors and
+[history](roadmap-history.md#session-evidence-through-2026-10-08-pr89-and-resource-preparations)
+preserves the previous detailed handoff, exact checks, failure logs and measurements.
+Prepared branch docs are historical snapshots; current root docs are authoritative.
+
+## Authorization and invariants
+
+Complete the entire active roadmap automatically, one focused PR at a time.
+Failing tests are repair tasks, never roadmap blockers. CI gates merging;
+continue diagnosis, repairs and separate preparation while it runs. Branch
+publication, PR creation, fixes and squash merges are already authorized.
+
+Preserve tacit, curried, data-last pipes, immutable values, tracked effects,
+checked arithmetic and observable evaluation/trap order. Infer ordinary types
+strongly; explicit generics specialize at compile time. Use FWP_NO_OPT=1 for
+raw interpreter oracles. Prepared work, skipped tests and partial gates do not
+prove support, ARC-only execution, tracing-free execution or performance.
+
+Every complete commit message is exactly one line, at most 80 characters,
+with no body, trailers or attribution. Use normal Git metadata. Squash only
+with an explicit subject, empty body and matching current PR head:
+
+```sh
+gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SHA
+```
+
+Require ALL SIX successful jobs at that exact head: test, bench,
+macos (macos-15), macos (macos-15-intel), macos_gc (macos-15),
+macos_gc (macos-15-intel). Regular macOS excludes only
+golden_programs_under_gc_stress; dedicated jobs execute exactly that full
+stress test. Their union preserves full coverage. Queued, skipped, cancelled,
+superseded or earlier-head runs are not passing gates.
+
+## Delivered and current PR
+
+Main is cca99c07c4c35c37bcdcb19549e4027abfdcae24, squash #90.
+All six CI37765137522 gates passed at exact
+8e6a891eadfaa500c5114ce6d598fe0c2bf66731 before merging. Whole message verified:
+`Own optional list aliases and borrow synchronous find predicates`, empty body.
+#74–#90 deliver native macOS and ownership through optional list results.
+Phase1 is done; phase2 is incomplete; phases3–6 remain pending.
+
+Next delivery: inference-call-effects (/private/tmp/fwp-inference-worktree),
+rebased from immutable OLD list-option34023f35a42f9f686b6919307d83e17fd4ed7263
+onto actual squash cca99c0. Focused cargo test --test call_effects: four pass,
+CPU17.05 s /elapsed34.05 s. Native comparison rerun with explicit FWP_NO_OPT=1:
+one passes1.72 s /3.50 s. Clippy lib/fixture2.36 s /4.69 s, fmt0.34 s /0.59 s.
+All commands used env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
+/Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo ... .
+Sole open PR #91: https://github.com/e6qu/fun-with-pipes/pull/91
+exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 benchmark passes, Linux runs, four Mac gates queued.
+All six exact-head gates are required before squash.
+Shared target switched from inference to variant checkout after guarded cargo
+clean -p fwp (0.00 s /0.13 s). No local workload is active.
+Seven live docs were preserved in /private/tmp/fwp-main-docs-pre90 before
+fast-forwarding main. Failing tests are mandatory repair work, never a roadmap
+blocker; CI gates merging while implementation and preparation continue.
+
+## Full evidence and actual repairs
+
+Separate TLS/listener evidence at 9bcae30119028b1870efb8fecfcf9746f5808acb
+passed ALL SIX CI37730777345 gates. It restored baseline roots/cache/tutorial
+fixes and the real wide-record boxing repair without weakening allocation
+thresholds. This is separate evidence; sequential PRs still need their own gates.
+Evidence workflows never enter production ancestry.
+
+Current separate WASM evidence checkout /private/tmp/fwp-wasm-evidence-worktree,
+branch ownership-evidence-wasm-resources, published
+5fd2ed65385a23f3226b2bef02eb10196f51aeb4. Fresh full CI37771769436 is running; its required WASI/File regressions pass. Full acceptance remains pending.
+Previous74a6e3f /CI37766917931 failed Linux constructor omission control;
+its concrete repair is verified/published and cancellation requested.
+Mandatory early Linux stage requires actual WASI resource-count tests including
+both free modes, FilePair, cached Task/Channel disposal and omission controls;
+File runtime boundaries/discard and file_read_kinds run there too.
+Earlier combined actual WASI stage passed on e9f31a9, but that full run failed.
+It is not acceptance evidence. No local actual-WASI support claim.
+
+CI37760628633 failed cli_fs binary reads on ARM/Intel GC and regular ARM:
+file.read-bytes wrongly selected text UTF-8 validation. Fixed in queue72,
+current22a520c262196da7e403e7cca3cc26837adda82c; OLD06419f4c59893e6b48c476c552bffee7c8f46b82
+remains immutable for queue73. Shared cleanup uses a text-validation mode;
+byte dispatch preserves arbitrary bytes. New file_read_kinds compares raw
+interpreter and native O1/O2, GC off/on/stress/verification and both poison modes.
+Original six file checks pass18.58 s /37.85 s, clippy2.56 s /5.23 s,
+fmt0.43 s /0.84 s. Combined evidence three file checks16.20 s /32.85 s.
+
+ARM regular also exposed a gRPC omission-control defect: first-match replacement
+edited connection cleanup instead of listener cleanup. Target g_listener_finish
+and assert exactly one match. Queue61 current6364bedd9a5c080963e211ed9abc43209dc0a439;
+OLD0d5d3098e7827e36045984adcbf859901bde4b74 remains immutable for queue62.
+Original positive O1/O2/both-poison and three omission controls pass10.35 s /
+20.87 s; clippy2.70 s /5.40 s; fmt0.45 s /0.85 s. Combined probe3.45 s /7.09 s,
+clippy lib/three fixtures2.69 s /5.43 s. Both repairs are in the fresh evidence.
+Failed37760628633 and intermediate byte-only37766705040 cancellation requested;
+neither supplies passing gates. Diagnose any new failure and repair its original
+queue item before updating evidence. Do not supersede live runs just to add later work.
+
+## Preparation and next ownership work
+
+Queue79 ownership-resource-frame-fields is published658e5b73ae1c05fe086adfd99678db5c780bf7d4,
+checkout /private/tmp/fwp-resource-frame-fields-worktree, parent681dd55 (queue78).
+Eligible original resource records retain typed fields instead of a forced
+parent box; already-boxed bindings keep one parent retain. FWP_FRAME_FIELDS=0
+is the equivalent compiler control. Exact IR proves1 versus0 parent allocations
+at O1/O2 with GC off/on/stress and both poison modes. Source matches raw oracle;
+partial second-field-retain traps close File and release String. Omitted File
+cleanup leaks the descriptor and fails. Six related checks37.15 s /74.45 s;
+final fixture3.01 s /7.33 s; clippy2.49 s /5.03 s; fmt0.46 s /0.89 s;
+inventory one test3.77 s /7.96 s. Full platform evidence remains required.
+
+Next independent work: audit original resource variant/nested aggregate holders,
+File header/path storage and safe finalizer unregistration, shared runtime graphs
+and cycles. Retain original File frame/trap order and affine restrictions.
+File header refs close streams independently of GC slots, but header/path storage
+still follows allocator lifetime. Do not reclaim finalized storage before proving
+no stale finalizer, partial-construction or shared-boundary use. Finish ownership
+coverage before natural numeric storage/ABI, numerics/autodiff, broader measurements
+and optional tracing-free mode. Windows/new deployment/new backend stay deferred.
+
+Use immutable OLD anchors from the queue when rebasing descendants. Exceptions:
+queue74 actually parents resource-frames current368dafc; queue78 parents WASM
+resource-counts currentc889479. Do not substitute rewritten/squash heads for OLD.
+Keep later changes separate and open the next PR only after the current one merges.
+
+## Local validation and persistence
+
+Full builds, full gates, benchmarks and large regeneration run on GitHub.
+Local checks are serial, low priority, sampled and bounded: RSS1 GiB per workload,
+target data below2 GiB, disk free at least64 GiB, deadline180 s. Stop at limits;
+move work to CI, never increase or bypass limits. Use the persistent fwp guard:
+
+```sh
+env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
+```
+
+The fun-refactor guard applies to that other repository; do not use it for fwp.
+Current shared compiler target belongs to /private/tmp/fwp-wasm-evidence-worktree.
+Guarded cargo clean -p fwp before switching checkout. All local checks above
+used this guard; no active workload remains at last handoff.
+
+Last bounded documentation audit: nine doc link sets,73 immutable queue ancestry
+pairs and inspected complete commit messages pass, CPU0.08 s /elapsed0.61 s.
+Script /private/tmp/fwp-check-handoff.py; rerun after changing anchors/docs.
+Update this handoff after meaningful progress with actual results and concrete
+next actions. Preserve current live docs when fast-forwarding or resolving old
+snapshots; archive detail in history. Temporary runner logs/check scripts are
+located in the archived snapshot; do not claim their existence as a test result.
+
+Handoff consolidation audit passes after archiving: nine link sets,73 immutable
+queue pairs and complete inspected commit messages; guard CPU0.07 s /0.59 s.
+Root now has SEVEN live doc edits, including history; preserve all seven.
+
+Next concrete storage audit finding: File path is used for display in
+runtime/fwp_rt_ops.c; it must remain valid through closed-handle display. Current
+constructor separately allocates a traced24-byte header and leaf path. Explore
+one leaf allocation with inline path and naturally aligned16-byte fixed header
+(FILE pointer plus64-bit owner count), preserving display, constructor failures,
+close order and finalizers. File has no GC-valued children once path is inline.
+This can remove one allocation without claiming safe immediate header freeing;
+finalizer unregistration and stale/shared handle coverage still require separate
+proof. Start a new focused preparation from immutable queue79 head658e5b73;
+compare equivalent allocation counts and raw interpreter output, O1/O2, stress,
+poison, free/reuse flags and library teardown before publishing.
+
+
+File inline-path preparation is implemented in
+/private/tmp/fwp-file-inline-path-worktree, branch ownership-file-inline-path,
+parent immutable658e5b73. Header/path become one leaf allocation; owned path copy
+and existing resource references/finalizers are preserved. Four related construction,
+discard, runtime ownership and frame-field checks pass CPU20.10 s /41.41 s.
+New equivalent old/new allocation and source I/O tests pass3.91 s /8.04 s,
+O1/O2, GC off/on/stress/verification, both poison modes; source also disables
+free/reuse. Initial source File display was rejected correctly by Display typing;
+replaced with valid file.read-all source, internal display remains host-probed.
+Apple arm64, Apple Clang17.0.0; one versus two constructor allocations, fixed
+header16 versus24 bytes, requested bytes eight fewer. No elapsed speed claim.
+Clippy lib/four fixtures passes2.98 s /11.62 s; format0.55 s /1.07 s.
+Final explicit header-size assertions pass with both new tests, CPU4.23 s /10.42 s;
+final fmt0.52 s /0.98 s and clippy0.07 s /0.37 s pass. Published as queue80 after final checks; no additional PR while #90 is open. Next audit:
+safe finalizer unregistration and File header storage reclamation; preserve
+closed-handle semantics, construction failure and retained/shared boundaries.
+Shared target now belongs to this inline-path checkout.
+
+Queue80 is published clean2d903d6617d99cec52600c8af43e4d08b5de6716,
+parent658e5b73. Whole message verified one line, empty body:
+`Store File paths inline in one aligned leaf allocation`. No extra PR opened.
+Full sequential CI and actual WASI remain pending; existing evidence run is
+left intact. Preserve OLD2d903d6 for the next preparation.
+
+Queue80 post-publication audit passes nine doc link sets,74 immutable queue
+pairs and complete inspected commit messages, CPU0.07 s /elapsed0.64 s.
+Latest poll: #90 benchmark passes/five gates pending; repaired evidence Linux
+live, benchmark passes/four Mac jobs queued. No merge gate yet.
+
+Next concrete reclamation audit: fwp_file.refs is independent of the GC slot;
+shared File headers can have slot0. Immediate unshared leaf freeing must not
+reuse generic record poison (it assumes an object layout) or retain a stale
+library finalizer. Existing runtime probes intentionally inspect discarded
+shared headers; preserve their defined diagnostics. Add safe finalizer removal
+before any unshared header reuse, protect construction failures, and distinguish
+shared/unknown runtime boundaries before making an ARC-only storage claim.
+Full graph/cycle coverage is still part of phase2; do not treat inline storage
+as completion of ownership or optional tracing-free execution.
+
+
+Active queue81 preparation: ownership-file-storage-disposal checkout
+/private/tmp/fwp-file-storage-disposal-worktree, parent immutable2d903d6.
+Implemented last-owner disposal of unshared native File leaf storage after
+closing and removing finalizers. Shared headers and disabled-free/bump storage
+keep allocator lifetime; poison mode leaves a closed zero-owner/empty-path
+header instead of applying String-header poison. Constructor initializes native
+storage ownership independently of File.refs. file.with_owned now closes while
+its constructor owner is live, then drops that owner in one cleanup callback.
+This avoids a scoped-close read after freeing the header on normal/error exits.
+
+Initial checks exposed an old-layout allocation control with a const path;
+restore its old destructor along with its old constructor/layout. Subsequent
+storage test detected missing native fresh count; explicitly initialized it.
+Finalizer omission caused an actual stale atexit finalizer crash; its control
+now uses _Exit(4) as soon as the stale registration is detected. New disposal
+matrix passes after repair (CPU0.98 s /4.20 s), including actual same-address
+reuse with tracing off, freed-byte accounting, shared/disabled-free/poison
+retention and final teardown. Added an unrelated retained File finalizer to
+prove removal preserves other live registrations. Final eight tests across seven fixtures pass, CPU55.88 s /elapsed123.31 s.
+The earlier failed gates are not acceptance evidence. API removal scans/compacts finalizer registrations
+without allocating; no speed claim or universal tracing-free claim.
+Shared compiler target now belongs to the storage-disposal checkout.
+
+Final adjustment limits File finalizer removal to FWP_LIBRARY, where File headers
+are registered. Executables skip the registry scan entirely. Library removal is
+linear in current registrations and allocates nothing; retained unrelated File
+finalization is verified. The final adjustment passes three storage/source tests, CPU21.35 s /46.82 s. Next exceptional-storage task: constructor failure
+still closes an initialized header but leaves storage to its allocator lifetime;
+transfer its temporary owner into close-then-drop cleanup after initialization,
+without reading released memory in failure probes. Audit finalizer registry
+realloc failure transactionality as well. Shared/cycle boundaries remain open.
+
+Final disposal clippy lib/five fixtures passes CPU2.92 s /elapsed5.97 s;
+git diff --check passes. Publish the preparation after final format check.
+Final disposal format passes CPU1.00 s /elapsed2.63 s. No active workload remains.
+
+Queue81 is published clean750a5cffd46b83c22fa403ed9453b9678bf77118,
+parent immutable2d903d6617d99cec52600c8af43e4d08b5de6716. Whole message:
+`Reclaim unshared File storage after removing library finalizers`, one line,
+empty body. No second PR; full sequential platform/WASI validation pending.
+Keep OLD750a5cf immutable for the constructor exceptional-storage preparation.
+
+Latest exact-head #90 poll: benchmark and ARM regular Mac pass; Linux, Intel
+regular and both GC gates pending. Fresh evidence Linux, ARM regular and Intel
+GC are live; bench passes; Intel regular/ARM GC queued. Continue fixing and
+preparing while CI runs, without opening the next PR before #90 squash.
+
+Queue81 post-publication audit passes nine doc link sets,75 immutable queue
+ancestry pairs and complete inspected commit messages, guard CPU0.32 s /
+elapsed3.71 s. Seven live root doc edits remain ours; preserve all on main FF.
+
+
+Active queue82 constructor-disposal preparation:
+/private/tmp/fwp-file-construction-disposal-worktree, branch
+ownership-file-construction-disposal, parent immutable750a5cf. Constructor
+cleanup now owns an initialized header, closes it while live, then drops its
+storage on recoverable traps. Before initialization, it still closes the raw
+stream. Existing failure probes inspect dead headers only under poison retention.
+Finalizer growth uses temporary pointer/capacity with overflow checking, commits
+only after successful realloc, and preserves existing entries on failure.
+
+Initial construction/storage checks pass CPU9.47 s /21.64 s. New test injects
+actual registry realloc failure with zero or64 retained File owners; recoverable
+trap mode verifies closed failed descriptor, fresh-header freed bytes (or retained
+storage under disabled-free/poison), unchanged registry and surviving sentinels.
+Production hard-OOM behavior remains exit102; an atexit audit verifies all64
+registered descriptors close after allocation failure. O1/O2 and GC off/on with
+stress/verification/both poison modes pass, CPU0.92 s /3.56 s. Added negative
+control for prematurely published capacity (must fail rollback), alongside
+close-only-constructor storage-leak control. Final four-fixture check passes CPU15.98 s /33.29 s. Format0.45 s /0.84 s passes.
+Shared target belongs to the constructor-disposal checkout. No extra PR.
+
+Queue82 final clippy lib/four fixtures passes2.71 s /5.43 s; fmt0.46 s /0.96 s;
+diff whitespace check passes. Separate full evidence74a6e3f /CI37766917931
+Linux fails constructor raw-only omission control: it reports stale handle then
+normal exit runs its deliberately invalid finalizer, triggering glibc double-free
+instead of expected exit3. Log /private/tmp/fwp-evidence-linux-37766917931.log,
+job113276719315. Use _Exit(3) after detecting stale state, preserving all positive
+close/teardown assertions. Same correction applied to original queue70, current
+e9d575f (OLD remains immutable), separate evidence and queue82. Queue82 corrected
+control passes1.04 s /3.35 s. Verify/publish queue70 correction and evidence;
+then rerun all six full gates. Failure is a repair task, not a roadmap blocker.
+
+Queue82 published clean17869223a5022ef060e24b06b0eacb73729f9589,
+parent immutable750a5cffd46b83c22fa403ed9453b9678bf77118. Whole message:
+`Release failed File constructors and preserve finalizer registry growth`,
+one line, empty body. No extra PR. Original queue70 control check runs as
+guard37700; shared target switching to
+/private/tmp/fwp-file-construction-worktree. Fix and rerun full evidence next.
+
+Original queue70 _Exit control repair passes independently:
+cargo test --test file_construction_ownership under guard, CPU8.36 s /17.47 s.
+Preserve immutable OLDe9d575f for queue71 when rewriting its current head.
+Original queue70 clippy lib/fixture2.64 s /5.32 s and fmt0.45 s /0.85 s pass.
+
+Original queue70 correction published722224705f7c65a11a2c393ddca47ad276f1a115,
+exact lease against OLDe9d575f preserved for queue71. Message one line:
+`Own file construction and stop controls before stale finalizers`, empty body.
+Evidence early required stage now also runs file_construction_ownership;
+combined control verification is guard45476. Publish then supersede failed
+CI37766917931 with six fresh exact-head gates. Shared target is WASM evidence.
+
+Combined constructor control repair passes CPU8.02 s /17.29 s; fmt0.46 s /0.94 s.
+Fresh evidence5fd2ed65385a23f3226b2bef02eb10196f51aeb4 is published clean;
+failed37766917931 cancellation requested after publication. No failed/
+superseded gate is acceptance evidence. Record the fresh run and require all six.
+
+Fresh repaired evidence CI37771769436 is queued at exact5fd2ed6. Final handoff
+audit passes nine doc link sets,76 immutable ancestry pairs and inspected whole
+commit messages (CPU0.07 s /0.60 s). No active local workload remains. Next:
+inspect six exact-head #90 gates for squash; continue original resource variant/
+nested-frame holders and shared/cycle boundary audits while CI runs. Keep all
+seven live root doc edits through fast-forward; File-preparation branch snapshots
+are historical and their full sequential/actual-WASI gates remain pending.
+
+
+Active original-variant frame optimization preparation:
+/private/tmp/fwp-resource-frame-variants-worktree, branch
+ownership-resource-frame-variants, parent immutable17869223a5022ef060e24b06b0eacb73729f9589.
+src/cgen.rs and new tests/resource_frame_variants.rs are dirty. The baseline
+proved one parent allocation with FWP_FRAME_FIELDS=0; enabled mode initially
+failed its zero-box requirement. Implemented tag/payload ResourceSlot::Variant,
+mixed typed/variant cleanup frames and protected incoming owners before retains.
+Capture cleanup IDs after helper generation. Boxed fallback transfers typed
+payload ownership before dropping the original boxed owner.
+Six related checks pass CPU25.41 s /50.90 s. Extended allocation/source and
+partial-retain trap fixture passes CPU3.04 s /7.22 s; fmt0.45 s /0.82 s.
+Actual source uses FWP_NO_OPT=1 interpreter oracle and native O1/O2, GC off/on
+stress/verification, both poison modes, with FWP_REUSE=0/FWP_FREE=0. IR fixture
+proves exact parent counts one versus zero. Injected second String retain failure
+closes the File once and releases String ownership; omitted incoming-owner drop
+leaks the descriptor as expected. No broad speed or tracing-free claim.
+Dynamic nullary/scalar tags now pass O1/O2, GC off/on/stress/verification and
+both poison modes (CPU3.49 s /9.34 s). Initial new fixture used nonexistent
+Pat::Const; corrected to Pat::Lit. Failed compile is not validation. Clippy
+lib/four fixtures passes2.53 s /5.06 s; final fmt0.45 s /0.83 s.
+Queue83 published clean786e4bbb99f1732727504f415e300c80b146f0e7,
+parent immutable17869223a5022ef060e24b06b0eacb73729f9589. Message:
+`Keep original resource variant holders unboxed and tag-aware`, one line, empty body.
+No additional PR. Next: audit nested holders, aliases and shared/cycle graphs;
+full CI remains required. Shared target is this checkout; no local work is active.
+Separate repaired evidence37771769436 passes required WASI/File stage and is
+running full gates. Continue repairing any failures while delivering inference.
+
+Final handoff audit passes nine doc link sets,77 immutable queue ancestry pairs
+and complete commit messages (guard CPU0.07 s /elapsed0.60 s). Sole open PR91
+exact7018086, CI37774239006 benchmark passes, Linux runs, four Mac gates queued. Repaired evidence37771769436 benchmark and
+required WASI/File stage pass, full other gates pending. Root maincca99c0 has
+seven live doc edits; preserve all through the next fast-forward. Variant prep
+786e4bb is published clean; shared target belongs to variant checkout and no
+local workload is active. Continue nested-holder/shared/cycle audits while CI
+runs, fix every failure, squash91 only after all six current-head gates pass,
+then rebase the next ordered queue task using immutable OLD anchors.
+
+Active mixed-binding preparation: ownership-resource-frame-binding-kinds in
+/private/tmp/fwp-resource-frame-binding-worktree, parent immutable786e4bbb99f1732727504f415e300c80b146f0e7.
+Reproduced generated C referencing the first arm’s t6 from another arm when an
+original binder is a let on one path and whole-pattern binding on another.
+Initialize that pattern’s borrowed tag/payload from the current boxed value
+before anchoring its frame retain. Preserve unboxed eligible let paths.
+Final extended fixture passes3.69 s /9.61 s and closes its actual descriptor
+exactly once without explicit file.close, O1/O2, GC off/on/stress/verification,
+both poison modes. Five related checks across resource_frames,
+resource_frame_fields and file_discard_ownership pass17.74 s /35.69 s;
+clippy lib/four fixtures2.57 s /5.16 s; format0.45 s /0.84 s.
+Earlier compile reproducer9.59 s /20.69 s failed; preliminary unbox-only test
+without deterministic-close audit was insufficient. Stronger audit exposed
+a distinct missing-type case: bare nominal constructor match scrutinees get
+unknown RC temporary types, so payload destruction leaks without tracing.
+The final binding fixture has a typed boxed local scrutinee to isolate this fix.
+Next separate task: recover scrutinee type from whole-pattern bound locals,
+reproduce without that typed local, verify actual close and typed cleanup.
+Also audit equivalent mixed record bindings and nested/shared/cycle graphs.
+Do not mark failed or narrow checks as broad tracing-free support.
+Repaired evidence37771769436 benchmark and ARM GC pass, required WASI/File
+stage passes; Linux/regular Macs run, Intel GC queued. Full acceptance pending.
+
+Queue84 published clean ae00e6929e8686d2d794d4cfa5600e31e169dec7,
+parent immutable786e4bb. Whole message one line, empty body:
+`Initialize resource variant pattern holders on their own binding path`.
+No extra PR. Shared target belongs to binding-kind checkout, no local work
+is running. Next independent repair is typed bare nominal match scrutinees;
+continue monitoring exact-head PR91 and repaired evidence full CI.
+
+Bare-constructor match cleanup preparation: ownership-match-scrutinee-types,
+/private/tmp/fwp-match-scrutinee-worktree, parent immutableae00e6929e8686d2d794d4cfa5600e31e169dec7.
+Baseline actual descriptor-close audit fails at selector1/O1/GCoff/poison0
+(CPU9.40 s /elapsed20.90 s). RC match temporary had unknown type, so dropping
+it could not release its File payload. When expression type is unknown, recover
+nominal context from a whole-value pattern binder’s monomorphic local type and
+use conv_typed for the scrutinee and its fresh temporary. Existing expression
+types stay authoritative. Other ambiguous/no-whole-binder matches still need
+context coverage; this does not prove every nominal scrutinee is typed.
+Final fixture removes its auxiliary typed local; RC temporary type assertion
+and one actual descriptor close pass O1/O2, GC off/on/stress/verification, both
+poison modes, without explicit close (10.24 s /23.52 s). Related seven context/
+resource-frame tests pass13.51 s /27.20 s. Nineteen RC unit tests pass3.67 s /
+7.59 s. Clippy lib/four fixtures2.47 s /5.07 s; format0.44 s /0.83 s.
+Publish as queue85 without a second PR. Full sequential gates remain required.
+Next: mixed original record holder bindings, then ambiguous nominal contexts,
+nested holders and shared/cycle graphs. Shared target is this checkout; no
+local workload is active. PR91 full Linux gate runs and benchmark passes; Macs
+queued. Evidence37771769436 benchmark and ARM GC pass, other gates run.
+
+Queue85 published clean3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778,
+parent immutableae00e69. Whole message one line, empty body:
+`Preserve nominal ownership types for whole-value match scrutinees`.
+No extra PR. Shared target belongs to match-scrutinee checkout, no local work
+is running. Next: mixed original record holders and broader nominal-context
+coverage while monitoring PR91 and repaired evidence exact-head full gates.
+
+Mixed record-holder binding preparation: ownership-resource-record-binding-kinds,
+/private/tmp/fwp-resource-record-binding-worktree, parent immutable3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778.
+New direct-IR descriptor audit reproduces generated C using a let arm’s t6
+while anchoring a whole-pattern binding in another arm. Baseline9.25 s CPU /
+19.12 s elapsed fails C compilation after existing allocation controls pass.
+Initialize borrowed fields from this pattern’s current scrutinee and replace
+the local field mapping before frame retains. Eligible let paths stay unboxed.
+Final original_record_holders_preserve_files_without_heap_boxes passes
+10.42 s /22.39 s, including implicit one-close/fstat-EBADF audit at O1/O2,
+GC off/on/stress/verification and both poison modes. Parent allocation counts
+remain one with FWP_FRAME_FIELDS=0 and zero with it enabled. Five related
+variant/frame/discard checks pass18.38 s /36.82 s. Clippy lib/four fixtures
+2.55 s /5.17 s, format0.45 s /0.83 s and diff whitespace pass.
+Interpreter bind writes partial pattern locals before later checks; failed
+compound patterns retain those locals until original frame exit. Native frame
+retains must preserve that lifetime, rather than moving them after full matching.
+Publish queue86 without another PR. Next: actual-source nominal-context audit,
+nested holders and shared/cycle graph coverage. Full sequential gates required.
+Shared target belongs to this checkout, no local workload is active. PR91 Linux
+runs and benchmark passes, four Mac gates queued. Repaired evidence full Linux
+and regular Macs/Intel GC run; ARM GC and benchmark pass.
+
+Queue86 published cleanf85cc4e09db49f1ac53f1f06da40b49f189b5b56,
+parent immutable3a0cbdb. Whole message one line, empty body:
+`Initialize resource record pattern fields from their own scrutinee`.
+No extra PR. Shared target belongs to record-binding checkout; no local work
+is running. Next: actual-source nominal context, nested holders and shared/
+cycle audits while monitoring the same live PR91/evidence gates.
+
+## Ownership snapshot
+
+# Ownership and efficient native execution
+
+This is the development contract for the memory work in [PLAN.md](../PLAN.md).
+It separates existing behavior from proposed changes. Current progress and
+validation are in [development-state.md](development-state.md).
+
+## Stable language behavior
+
+Keep tacit, curried, data-last pipes, composition, immutable values, strong
+static inference, tracked effects and checked arithmetic. Generic definitions
+have explicit signatures and are specialized at compile time. Storage,
+ownership and calling conventions are compiler concerns unless a separately
+reviewed language design requires a surface change.
+
+Optimization preserves evaluation order, effects, failures and trap messages.
+An internally mutable unique buffer still has immutable source semantics:
+an alias observes the original value. AD tape operations must not be duplicated
+or hoisted merely because their public types are pure.
+
+## Existing implementation
+
+`src/rc.rs` inserts and checks `Dup`/`Drop` after the other IR passes.
+Functions and constructors consume owned arguments; primitive, foreign and
+remote calls normally borrow. Selected container primitives consume their
+container argument. [The shared primitive contract inventory](primitive-ownership.md)
+drives argument modes, runtime sharing and owning wrapper selection for arrays,
+maps and sets. Comparison-only keys borrow; inserted keys remain shared.
+
+Generated drop functions free counted objects at their last reference.
+Unique records, variants and containers can reuse storage. Escape analysis,
+scalar replacement, specialized calls and pipeline fusion eliminate many
+allocations before counting is needed.
+
+| Category | Current treatment | Remaining work |
+|---|---|---|
+| Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
+| Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
+| Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
+| Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, retained callback and exceptional cleanup |
+| Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
+| AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
+
+Native executables still need a generational conservative collector for shared
+values. WebAssembly uses a bump allocator; native libraries do not trace the
+host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
+the ownership gap. `--memory static` provisions bounded memory, not static
+lifetimes. None of these is a general collector-free execution guarantee.
+
+## Remaining ownership coverage
+
+Container contracts and comparison-key borrowing are merged. Selected leaves,
+fresh text trees, compiled captures, concrete temporaries and stack children are
+also merged; synchronous map/filter borrow callback inputs and own their fresh spines/results.
+Finish remaining primitive/runtime families, including argument/result ownership,
+retention, aliases and exceptional cleanup. The exact prepared queue and current
+verification are in [the handoff](development-state.md). Keep the IR pass and
+code generator on the same contracts.
+
+Contracts must distinguish borrowing for the call, consuming a reference,
+retaining a reference beyond the call, returning a fresh owned value, and
+returning an alias of an argument. A borrowed callback input cannot silently
+become an owned result. A slice must retain its backing buffer if it escapes.
+
+Extend measured borrowing and deterministic cleanup to the remaining container,
+callback and runtime boundaries in focused changes.
+Do not indiscriminately count every short-lived list: the delivery history
+records a case where doing so slowed execution by 35%.
+
+Each change needs aliasing, escape and callback tests; branch and tail-call
+ownership checks; GC/reuse verification; and allocation/count evidence.
+Failure, handler unwind, cancellation and FFI lifetime paths are part of the
+contract. Define how runtime cycles are broken before removing tracing.
+
+## Representation and numerics
+
+Prefer elimination, registers and scalar replacement, then stack allocation,
+ownership transfer, scoped regions and reference counting for sharing. A
+heap-owned reusable buffer is appropriate for large or dynamic tensors;
+forcing them onto a stack is not the goal.
+
+Current generic array slots are 64-bit `V` words. Plan specialized contiguous
+numeric buffers with natural element widths, checked strides and bounds,
+aligned payloads where useful, and views with explicit backing lifetimes.
+Measure array-of-struct versus struct-of-arrays layouts for each workload.
+Do not pad every small object to a cache line.
+
+C ABI struct returns can use registers or caller storage. Check emitted arm64
+and x86-64 assembly for spills, floating-point register use, boxing and calls;
+the number of fields alone is not a machine-speed guarantee. The C backend
+remains the first implementation target.
+
+Keep deterministic operation/reduction order by default and contraction off.
+If relaxed floating-point arithmetic is later exposed, it needs an explicit
+contract and separate tests. Prioritize fused elementwise and gradient kernels,
+blocked matrix multiplication, reusable tape/scratch buffers and exceptional
+cleanup before adding accelerator backends. OpenCL discovery is not evidence
+that kernels executed on a real device.
+
+## Evidence required
+
+Use equivalent workloads against C and Rust, with allocation-inclusive and
+kernel-only timings separated. Record hardware, compiler/version, flags,
+input sizes, output checks, allocated bytes, peak live bytes, count operations
+and collection pauses. Keep noisy timing thresholds out of shared-runner CI;
+assert semantic results and stable allocation properties instead.
+
+Run full workloads on GitHub runners. Passing Linux tests alone does not
+validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
+
+## Remaining leaf and capture coverage
+
+Selected direct leaves and copied Option/List trees now have ownership contracts.
+Other IO/network/runtime results still share. Primitive contract coverage alone
+is not proof that every result has deterministic reclamation. Complete retained
+container elements, callbacks/captures, handlers/traps, FFI retention and young/old
+collector interaction. Typed record/variant drops release their children;
+container drops currently release only outer storage.
+
+Generational marking restricts immediate freeing of old counted objects. Removing
+that restriction needs its own invariant and stress evidence. Define cycle
+policy and teardown before claiming general execution without tracing GC.
+
+## Counted leaf primitive families
+
+`String` and `Bytes` locals now participate in IR ownership. Selected primitive
+results establish counts: copies start fresh, `string.to-bytes` duplicates its
+identity result, and padding/replacement duplicate the input when a no-op returns
+it unchanged. Their read-only arguments borrow without promoting the leaf to
+runtime sharing. Unknown runtime and FFI boundaries retain the shared fallback.
+
+Leaf allocations use the existing out-of-line count metadata. Sharing stops at
+a leaf; its bytes are not scanned as pointers. A generated typed leaf drop frees
+the allocation directly rather than reading an ADT tag. Reuse verification
+poisons only within its capacity and clears its String/Bytes length, avoiding
+the record poisoner's interpretation of that length as a field count.
+
+The focused copy loop demonstrates reclamation of young owned leaves on normal
+paths. It does not establish full ARC: other runtime-created text results, retained
+container elements, callbacks, stack captures, handler unwind and cancellation
+still require ownership contracts and cleanup. Old marked objects remain under
+the collector's generational policy; WebAssembly still uses its bump allocator.
+
+## Fresh nested text results
+
+Generated type-directed helpers own copied String/Bytes result trees returned by
+selected primitives. They install one count on every new object, skip scalar
+fields and traverse list tails in a loop. The fresh-tree contract prohibits input
+aliases, internal sharing and cycles; it is narrower than general graph ownership.
+Numeric parse options remain shared while representation/destruction of boxed
+numeric cases is unfinished. Full inventory and regression details are in
+[primitive-ownership.md](primitive-ownership.md).
+
+## Compiled closure ownership
+
+Function locals participate in IR Dup/Drop. Compiled dynamic application consumes
+its function reference and arguments. Partial application builds a fresh heap
+closure, duplicates existing captures by their monomorphic types and transfers
+new arguments. Full application duplicates the captured references for the
+callee, consumes supplied arguments and releases the function after the call.
+A retained function alias keeps its captures alive; overapplication continues
+with the returned owned function. Static function values remain off the heap.
+
+Each live function used as a closure has sparse metadata for an owned entry and
+typed capture handling. The function table adds one metadata pointer per slot;
+this is a layout cost, not a measured speed improvement. Capture cleanup never
+counts inline scalar bits. Primitive owned entries release borrowed arguments
+after the call, preserve their addresses as collector roots, and respect consumed
+container arguments. Unknown FFI/runtime boundaries still promote values to
+sharing. Runtime callback entries explicitly share their typed inputs and results.
+
+The focused closure regression checks retained captures and function aliases,
+partial applications and input-returning functions against the interpreter at
+-O1/-O2, with GC stress/verification and both reuse-poison modes. A 10,000-step
+heap-closure loop, with tracing off and zero collections, frees 1.2 MiB by counts
+versus 0.0 MiB with FWP_FREE=0 (Apple Silicon, Apple Clang 17, -O1,
+FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
+not complete ownership. PR #78 passed its full architecture and benchmark
+gates; later ownership extensions require their own exact-head gates.
+
+Eligible stack aggregates now retain typed child ownership; runtime-retained
+callbacks, exceptional paths, generational old objects, count overflow and WASI
+reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
+function captures. Other aggregate destruction and incomplete temporary types
+still need coverage before general no-tracing support. Cycles still require an
+explicit policy.
+
+## Bounded function capture cleanup
+
+An outer closure release drains a work list. Nested function capture releases
+queue their owned reference instead of recursively entering capture cleanup.
+The work list keeps 64 values in the current C frame; wider pending work spills
+into an explicitly freed allocation outside the collected heap. Neither the
+queue nor typed capture destruction invokes a collection safe point. Native
+contexts are per thread; WASI has no runtime threads and retains its no-op counts.
+This limits C call depth through function captures, not arbitrary aggregate shapes.
+
+The focused regression constructs 8,000-node linear and branching capture graphs,
+then releases them on a 256 KiB native worker stack. At -O0, restoring only the
+recursive release exhausts that stack; the work-list version completes, matches
+the interpreter and reports zero collections with tracing disabled. Both nodes
+and captures are released by counts; the branching graph exercises the spill
+path. PR #79 passed full native/WASI/platform and benchmark gates. This does
+not establish ownership of every callback or arbitrary aggregate shape.
+
+Investigation also exposed incomplete concrete typing of constructor temporaries:
+borrowed constructor arguments previously fell back to the unknown type and
+only decremented their outer count. Call parameter types now give these
+ownership temporaries concrete monomorphic types, so typed release reaches their
+children. Remaining constructor/result/field contexts still need coverage.
+
+## Concrete call argument temporaries
+
+IR constructors carry tags/fields without a standalone nominal type. When a call
+parameter supplies that type, the ownership pass retains it on new temporaries
+instead of using the unknown-type fallback. Existing inferred expression types
+take precedence. Both owned function calls and borrowing primitive/FFI calls
+provide their concrete parameter types; uncounted scalar temporaries stay scalar.
+The evaluation sequence and early/last-use ownership discipline are unchanged.
+
+A List-of-functions probe restores only the previous outer count decrement in
+emitted C. With tracing off and zero collections, typed temporary cleanup frees
+0.5 MiB versus 0.0 MiB, with identical interpreter output (Apple Silicon, Apple
+Clang 17, -O1, FWP_STACK=0, 10,000 iterations, 0.1 MiB counter precision).
+Retained function/list aliases and literal leaf/Option children match both
+backends at -O1/-O2 under GC stress/verification and both poison modes. Earlier
+container/leaf/text/closure/cleanup checks and five FFI regressions pass locally.
+PR #80 passed full CI. This covers call argument temporaries; it does not
+complete type propagation into every generated constructor or aggregate.
+
+## Owned children of stack aggregates
+
+A stack wrapper does not have a heap count slot. Cgen now tracks its concrete
+children in the frame instead. Dup/Drop of an eligible local or alias changes
+those child references directly. A consumed stack argument retains its children
+through the call and releases that owner's references after returning. Dynamic
+application does the same for stack closures. Record/variant unboxing transfers
+child ownership, and each normal or unboxed call has its own cleanup scope so
+nested argument evaluation cannot release another call's children prematurely.
+
+The stack object layout stays unchanged. Callees keep their existing behavior
+for an off-heap pointer and duplicate retained fields/captures; cleanup in the
+owning frame gives up the original references. Address fences retain children
+through allocating calls. Heap reuse tokens and the in-place-update shortcut
+are bypassed for tracked stack objects. Unknown child types retain the fallback;
+this does not implement cancellation/handler unwind or runtime callback retention.
+
+Two focused regressions compare interpreter/native aliases and record/variant
+return paths at -O1/-O2, GC stress/verification and both poison modes. Restoring
+only the previous retained child lifetimes, with tracing off and identical
+output, changes a 10,000-step variant loop from 0.5 to 0.0 MiB freed by counts,
+and a closure loop from 1.7 to 1.3 MiB (Apple Silicon, Apple Clang 17, -O1;
+counters rounded to tenths). Fifteen focused ownership tests and the existing
+stack closure allocation elimination regression passed locally. PR #81 then
+passed its full architecture, WASI, GC/reuse and benchmark gates.
+
+
+## Borrowed synchronous callbacks and map results
+
+The typed `fwp_apply_borrowed` boundary borrows callback arguments during a
+synchronous call and returns an owned result. Compiled callbacks retain returned
+aliases by their concrete types. Map owns its fresh list spine and callback
+results while borrowing input elements; direct and captured specializations keep
+the same contract. Retained runtime callbacks still require separate ownership.
+PRs #82–#90 passed their exact-head full gates. Fold transfers its owned
+accumulator through borrowed synchronous calls while input elements remain
+borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
+Right-fold transfers its accumulator through a typed owned argument span;
+List-copy and optional list results passed full CI and merged. Other callbacks, runtime unwind and retained owners
+remain preparation.
+
+## Prepared work and acceptance limits
+
+[The immutable queue](roadmap-queue.md) records runtime/callback/container,
+aggregate, type, CAF, task/channel/library, OpenCL and resource cleanup work.
+These branches are not merged support. Each must rebase and pass full exact-head
+CI. No optional tracing-free mode is accepted until ownership coverage and cycle
+policy justify it.
+
+The latest worker-local repair keeps compatible complete calls and typed aliases
+unboxed while partial/dynamic captures remain boxed. Exact child/alias/trap checks
+pass, and the unchanged full wide-record allocation acceptance now passes on
+Linux and both macOS architectures in separate evidence. File constructor cleanup
+also has fault/omission checks for stream ownership through allocation and library
+finalizer registration. Source File values remain affine: no Dup or resource
+capture is added. Implicit resource discard and arbitrary resource lifetime
+coverage still require interpreter/native evidence. Prepared TLS resource
+teardown, connection cancellation and peer-subject temporary cleanup have actual
+OpenSSL/omission checks; library probes generally run with collection unarmed.
+They do not prove host-root tracing or deterministic discard of every resource.
+Rebuilt nested loop records now also have a preparation that preserves typed
+flattened state through Again and protects original, partial and pending owners
+when Stop boxes an inner result. Alias/scalar/cancellation and omission controls
+pass locally; sequential full CI remains required. No measured speed claim follows.
+An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
+and reproduced loss of the owning Conn during String allocation. Its owner fence
+and fence-omission control now pass under real GC/reuse verification; production library
+tracing remains unarmed. Current work/evidence, including any unresolved failures,
+is recorded in the handoff rather than appended as another priority queue here.
+
+Native file.write also has a prepared visibility repair: flush checked stdio
+buffers before returning to match Rust descriptor writes, including write errors
+while the affine handle remains borrowed. General discard remains separate:
+a File parameter stays alive until its original function frame exits, even after
+ignore, because early close changes observable later I/O failures. Internal
+resource scopes must survive optimization and preserve that original lifetime.
+
+File read error/UTF-8 agreement and temporary read-buffer cleanup now also have
+a preparation. The borrowed read-all handle stays open through failure; the
+path-based read owns and closes its stream. Short write-new and buffered close
+errors are checked with the original write errno preserved. This does not
+establish general implicit resource disposal or tracing-free coverage.
+
+## Original resource lifetimes
+
+General resource discard is an active phase 2 repair, not a CI blocker. The
+current File audit has two complementary acceptance cases: 64 open/discard loop
+steps succeed under a 32-descriptor child limit without collection, and reopening
+after ignoring a File parameter still fails under a four-descriptor child limit
+until its original function frame exits. The interpreter retains original
+parameters and local bindings for that frame. Eager last-use close would turn an
+observable failure into success. Explicit file.close retains its existing effect.
+Neither descriptor limit changes the compiler, test runner or user session.
+
+A prepared compiler repair records original File owners before optimization.
+Internal resource regions must survive inlining and loop lowering; an inlined
+callee's parameter anchors must use fresh local binders rather than aliases of
+caller binders. Preserve owners for initialized original resource locals, including
+conditional pattern bindings, without retaining unrelated optimizer-generated
+argument temporaries. A stack scope can hold zero-initialized owner slots and
+release the initialized slots on normal return, effect failure, recoverable trap
+or task cancellation. Protect partially retained slots during preparation. These
+are compiler representation details, with no nullable File type or new syntax.
+
+Region anchors complement typed retain/drop rather than replacing ownership of
+returned values. Result aliases, returned aggregates, Again/Stop state, borrowed
+runtime calls and error payloads need correct ownership transfer before dropping
+the region. Optimized interpreter execution must release the same original frame
+anchors at the same boundary. Required resource cleanup must work with
+FWP_REUSE=0, FWP_FREE=0 and collection disabled; check supported WebAssembly
+resource behavior separately because its bump allocator has no native RC slots.
+Library finalization remains idempotent and must not double-close a discarded
+handle. Preserve affine File restrictions and forbidden partial resource capture.
+
+Typed ResourceRegion metadata and interpreter frame release are now prepared,
+including a reproduced inlined-helper lifetime repair. A further native preparation now retains original frame references and releases
+them on normal and nonlocal exits. File retain/drop and borrowed I/O dispatch are
+connected, with owned error-handler payloads. This is not delivered ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
+errors, cancellation and optional flags before accepting general disposal. Keep
+tracing available until complete ownership and cycle acceptance is demonstrated.
+
+Fusion treats resource regions as observable even when their original source
+arrows are pure. A controlled pipeline verifies fusion is blocked specifically
+by its frame marker; removing the marker permits fusion. Required destructor
+effects cannot be interleaved solely because the body reports no trap/effect.
+
+
+A separate File runtime preparation introduces a 64-bit header owner count,
+independent of the collector's count slot. The last owner closes the stream;
+explicit close and library teardown remain idempotent. Header/path storage still
+uses the existing allocator lifetime. The internal header grows from 16 to 24
+bytes (8-byte alignment); this is no claim of fewer bytes or allocations.
+Owned read/write wrappers retain returned File aliases and protect the extra
+reference through I/O errors and conversion/allocation traps. A fresh read String
+has its own unwind owner until the tuple takes ownership; FWP_FREE=0 leaves its
+storage to the collector. A subsequent native compiler preparation now selects those wrappers.
+Native region disposal, resource aggregates and escaped/error/cancellation owners
+remain required before accepting implicit File cleanup or tracing-free coverage.
+
+
+Native region cleanup has focused descriptor-pressure/omission evidence: 64
+open/discard iterations succeed under a 32-descriptor child limit with tracing
+and reuse/free disabled; omitting frame release fails. The original parameter's
+four-descriptor EMFILE lifetime remains unchanged. Incoming frame references,
+partially initialized binding slots, record/variant results and handled File error
+aliases have focused coverage. Original aggregate binding slots currently box
+values; retaining flattened fields without extra wrappers is a follow-up. Header
+storage, shared runtime graphs and WebAssembly aggregate ownership remain open.
+
+
+A further runtime-boundary preparation owns file.with's callback tuple, retains
+its typed result before disposing that tuple and releases the original scoped
+File owner. Actual returned File, cached task File and loop Step File sources
+match the raw interpreter under disabled reuse/free/tracing and real GC stress.
+Result-retain omission is detected. FWP_FREE=0 keeps ordinary child and task/channel
+object storage from count-based freeing while still closing resource children;
+exact zero freed-byte accounting and an ordinary-child-free negative control
+verify this policy. The WebAssembly RC stubs still require an ownership repair.
+
+
+Prepared original record-frame holders can retain eligible typed fields instead
+of forcing a parent heap box. Other boxed bindings keep one parent retain.
+A typed IR allocation control verifies one parent box versus zero at O1/O2;
+source/interpreter comparisons and partial-retain cleanup checks also pass locally.
+FWP_FRAME_FIELDS=0 disables this compiler optimization for comparisons. Broader
+workload count/timing and full sequential platform gates remain required; this
+is not a general speed or zero-allocation claim. See the handoff for exact evidence.
+
+
+A subsequent prepared File layout copies its display path into the same leaf
+allocation as the FILE pointer and64-bit owner count. The fixed native header is
+16 bytes rather than24; constructor requests eight fewer bytes and makes one
+allocation rather than two. The path remains owned and NUL-terminated; a File
+has no GC-valued children in this layout. Alignment, internal closed-handle
+display, aliases, constructor unwind, library teardown and source/native I/O
+have focused checks. This does not reclaim the header at the last owner; safe
+finalizer removal and shared/stale handle policy remain required. Sequential
+full platform gates and actual WASI evidence are still pending.
+
+
+The next prepared File disposal closes the last typed owner and frees unshared
+native leaf storage after removing its library finalizer. Executables skip the
+finalizer scan; library removal compacts its registry without allocation and
+costs linear time in registered entries. Unknown/shared headers retain their
+allocator lifetime. Disabled freeing retains storage; verification poison leaves
+a closed zero-owner/empty-path header. Scoped callbacks close while their
+constructor owner remains live, then drop that owner on return and unwind.
+Focused tests verify same-address reuse without tracing, freed-byte accounting,
+retained finalizers and omission controls. Constructor exceptional storage,
+shared graphs/cycles, actual WASI and full sequential gates remain required.
+
+
+A further prepared constructor scope owns its initialized File header through
+registration/path-copy traps: close first, then dispose the temporary reference
+and eligible storage. Before initialization it owns the raw stream. Finalizer
+registry growth checks overflow and commits pointer/capacity only after realloc
+succeeds, preserving existing owners on failure. Recoverable allocation-fault
+probes and normal hard-OOM library teardown verify both cases. These are prepared
+native checks; sequential full gates and actual WASI remain required.
+
+Original variant frame holders have a separate preparation after constructor
+storage cleanup. Eligible only-matched bindings keep tag and typed payload in
+a zero-initialized cleanup-frame struct. Tag-aware retain/drop helpers preserve
+File and ordinary child ownership, with incoming owners protected through
+partial-retain failures. FWP_FRAME_FIELDS=0 preserves the boxed control.
+Focused tests prove one versus zero parent boxes and safe dynamic nullary/scalar
+tags, without changing original parameter lifetimes. Sequential full CI, nested
+holders and shared/cycle audits remain open; this is not merged ARC support.
+
+A mixed-binding preparation initializes a variant pattern binding’s borrowed
+tag/payload from the current path before retaining it in the original frame.
+Choosing a frame representation from a let in another arm must not make the
+pattern use that arm’s C temporary. Descriptor audit proves one close through
+implicit disposal without explicit close or tracing. Full CI remains pending.
+Bare nominal match scrutinees that lose their type remain a separate cleanup
+gap; recovering context from pattern-bound locals is the next concrete repair.
+
+Bare nominal match scrutinees now have a separate RC preparation: when the
+expression has no known type, a whole-value pattern binder supplies its
+monomorphic nominal type. That type guides field ownership conversion and the
+match temporary’s destructor. Descriptor tests prove payload disposal without
+a typed scrutinee let, explicit close or tracing. Ambiguous/no-whole-binder
+patterns remain an audit item; full sequential CI is still required.
+
+A separate record binding-kind preparation reads borrowed fields from the
+current whole-pattern scrutinee before frame retains, replacing any field map
+from a different let arm. Direct descriptor tests close once through implicit
+cleanup with tracing disabled, and existing allocation controls remain intact.
+Partially failed patterns keep bound resource locals through original frame
+exit, matching interpreter behavior. Full sequential CI remains pending.
+
+Source nominal ownership verification: four existing field/match checks pass
+with explicit raw oracles in the initial combined run. New nested File source
+64 discards under32 descriptors passes6.22 s CPU /12.64 s elapsed, including
+optimized/unoptimized IR, O1/O2, reuse/free on/off, GC off/on/stress and both
+poison modes. Initial make pipeline was rejected for affine File duplication;
+corrected Held | flip Wrap 17 preserves the intended affine semantics.
+Clippy lib/three fixtures2.63 s /5.28 s; format0.44 s /0.83 s.
+Documentation streamlining archives full snapshots, retains current acceptance
+criteria and immutable anchors, and removes duplicated/stale live priorities.
+Link/fragment/ancestry/message audit0.11 s /0.85 s passes before publication.
+
+## Channel cycle preparation after queue87
+
+The guarded channel_cycle_ownership probe initially failed exit8 with poison
+mode enabled: the test expected count metadata to clear, while the runtime
+preserves tombstoned storage for use-after-drop verification. No runtime fix was
+needed. Corrected object checks use the0xdead tag; channel checks require an
+empty queue, freed/null queue buffer and poisoned array length. Regular mode
+checks cleared reference metadata. Final fixture passes1.37 s CPU /3.13 s
+elapsed under the fwp local guard. It executes64 recursive self-queued channels
+at O1/O2, GC off/on with stress/verification, and both poison modes. The raw
+interpreter oracle explicitly uses FWP_NO_OPT=1 and prints drained.
+
+The probe checks that close retains queued values, dropping the outside owner
+leaves the internal counted cycle, and typed receive/discard plus final channel
+drop releases the cycle. This verifies explicit draining, not automatic
+reclamation of unreachable cycles. Related queue/task handle tests pass9.04 s
+/18.50 s, clippy lib/new fixture2.37 s /4.87 s, format0.45 s /0.86 s.
+Full exact-head sequential CI remains required; no additional PR was opened.
+
+## Focused source and cycle checks through queue88
+
+Latest published preparation: ownership-nominal-source-context,
+/private/tmp/fwp-nominal-source-worktree, parent immutablef85cc4e09db49f1ac53f1f06da40b49f189b5b56.
+Two source context tests now use explicit FWP_NO_OPT=1 interpreter oracles;
+four existing field/match checks pass in the initial run. New resource_match_context
+passes6.22 s /12.64 s: 64 nested nominal File discards under32 descriptors,
+optimized/unoptimized native IR, O1/O2, reuse/free on/off, GC off/on/stress/
+verification and both poison modes. Initial source incorrectly duplicated File;
+changed to affine Held | flip Wrap 17. That failed draft is not verification.
+Clippy lib/three fixtures passes2.63 s /5.28 s; format0.44 s /0.83 s.
+Published as queue87 at8abfd46b34762b0cf69e417b65a85a1d783b61ac, clean.
+Whole message: `Verify nominal source ownership and streamline the roadmap handoff`,
+one line, empty body. No additional PR; full sequential CI remains required.
+
+Latest published preparation: ownership-channel-cycle-lifetimes,
+/private/tmp/fwp-channel-cycle-worktree, parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac.
+New channel_cycle_ownership passes1.37 s CPU /3.13 s elapsed: 64 recursive
+self-queued channels, explicit close, outside-owner release, typed drain and
+final destruction; O1/O2, GC off/on with stress/verification, both poison modes.
+The initial assertion incorrectly expected cleared count metadata in poison
+mode; corrected it to verify object tombstones and emptied channel storage.
+Related channel_queue_ownership and task_handle_ownership pass9.04 s /18.50 s;
+clippy lib/new fixture passes2.37 s /4.87 s; format0.45 s /0.86 s.
+Published as queue88 atdc2ad1febc5d64a588ff90a333753ab1cb688a72, clean.
+Whole message: `Verify explicit channel cycle draining and document lifetime policy`.
+No runtime change or general cycle reclamation claim; full sequential CI remains required.
+
+
+## Resource frame evidence integration
+
+Separate ownership-evidence-resource-frames extends5fd2ed6 with rows79–88.
+The constructor conflict keeps poison-only inspection of retained failed headers
+and _Exit(3) before deliberately stale library finalizers. Its focused
+file_construction_ownership check passes8.22 s CPU /17.58 s elapsed after
+guarded clean0.00 s /0.14 s; integrated fmt0.46 s /0.84 s. Required Linux
+WASI stage includes the new File storage/constructor and resource frame/nominal/
+cycle regressions; all six full gates remain required. Previous live evidence
+is preserved on its original branch. Workflow changes never enter production.
+
+WASM/resource evidence5fd2ed65385a23f3226b2bef02eb10196f51aeb4 completed all
+six CI37771769436 jobs successfully. New isolated resource-frame evidence
+ee4bd2238e078238cf1a0867e1c891cbf3170279 was published and queued as
+CI37780278972 without superseding the previous run. No second PR was opened.
+
+Queue88 documentation follow-up291f8f75f19688f139b2dcae7f31482cac810643
+corrects the public FWP_GC=off claim, adds FWP_FREE=0, and states that close
+retains the queue while explicit drain can break counted cycles. OLDdc2ad1f
+remains immutable. Eleven maintained link sets and82 queue ancestry pairs pass
+0.09 s CPU /0.62 s elapsed; all whole commit messages meet the one-line rule.
+Preserve nine live root docs, including reference and concurrency, across merges.
+
+## Wide-count next-task preparation on PR91
+
+Rebased ownership-wide-counts from immutable OLDparent89b7bde onto current
+PR91 exact7018086 while its full gates run. The local new base is7018086;
+after #91 squash-merges, rebase from that actual current base onto the real
+squash. OLDwide3a791dc stays immutable. Current docs resolve earlier snapshot
+conflicts; primitive inventory labels rare-wide metadata as prepared.
+Both source interpreter oracles now explicitly use FWP_NO_OPT=1. All three
+wide_counts checks pass14.19 s CPU /28.94 s elapsed under the guard, including
+GC stress/verification and poison modes. The sharing protection regression
+passes0.75 s /1.79 s. Format0.35 s /0.63 s; prior guarded clean0.00 s /0.14 s.
+No additional PR opened, no merged support or timing claim from these checks.
+
+Rebased wide-count clippy (lib, wide_counts and ownership) passes2.34 s CPU
+/4.78 s elapsed. All focused checks complete; full exact-head CI is still
+required after final rebase onto the actual #91 squash.
