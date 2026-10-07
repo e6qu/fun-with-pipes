@@ -6516,3 +6516,25 @@ oracles explicitly use FWP_NO_OPT=1. Three sort_callback_ownership checks
 pass12.54 s CPU /25.46 s elapsed; format0.34 s /0.60 s. Clippy is running,
 then publish with exact lease against OLD66bc713; no additional PR.
 
+
+Published sort callback preparation5c19337f216d78845fada0b8c29fac98d7b18689
+with explicit lease against original66bc713dea67d3c811cbb54b8ac7dfab59f8edee.
+Current base5fe5692 differs from immutable OLDparentc835578. Original anchors
+remain unchanged; later rebase uses the actual current base. No second PR.
+
+## State sequence following-task preparation on sort callbacks
+
+Rebased queue17 ownership-state-sequences from immutable OLDparent66bc713
+onto current sort-callback5c19337. Keep OLDhead0a90b05 immutable; use actual
+current base5c19337 for later squash rebase. Current root docs replace older
+snapshots and mark original prepared measurements explicitly. Two raw
+interpreter oracles now use FWP_NO_OPT=1. Both state_sequence_ownership
+checks pass12.09 s CPU /24.23 s elapsed with O1/O2, stack on/off, callback
+effect order, alias/replaced/function states, empty/nonpositive inputs,
+conservative switches, GC stress/verification and both poison modes. The
+no-tracing direct head consumer isolates sequence ownership; fused consumer
+ownership remains queue18 work. Format0.34 s /0.60 s, clean0.00 s /0.13 s.
+Full exact-head sequential CI remains required.
+
+State sequence clippy lib/fixture passes2.34 s CPU /4.61 s elapsed.
+Full checks remain mandatory after the final squash rebase.

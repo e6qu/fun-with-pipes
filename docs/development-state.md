@@ -39,8 +39,8 @@ Phase 1 is done, phase 2 incomplete, phases 3–6 pending.
 
 Sole open [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91):
 inference-call-effects, /private/tmp/fwp-inference-worktree, exact
-7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: Linux and benchmark pass;
-all four Mac jobs run. Four focused call_effects tests
+7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: Linux, benchmark, ARM regular and Intel GC pass;
+Intel regular and ARM GC run. Four focused call_effects tests
 pass17.05 s CPU /34.05 s elapsed; explicit raw-oracle rerun1.72 s /3.50 s;
 clippy2.36 s /4.69 s, fmt0.34 s /0.59 s.
 After all six gates pass, squash with subject:
@@ -59,9 +59,11 @@ are archived. Current bases below differ from immutable OLD queue parents.
 |---|---|---|---|
 | 14 ownership-wide-counts | cb0d7e6db7e5, published | 7018086b8f98 | wide_counts 14.19 /28.94 s; sharing 0.75 /1.79 s; lint 2.34 /4.78 s |
 | 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
-| 16 ownership-sort-callbacks | publication pending | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
+| 16 ownership-sort-callbacks | 5c19337f216d, published | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
+| 17 ownership-state-sequences | publication pending | 5c19337f216d | state_sequence_ownership 12.09 /24.23 s; lint 2.34 /4.61 s |
 
-Row16 is ready to publish with exact lease against OLD66bc713. No second PR.
+Rows14–16 are published clean with exact leases against previous remote
+heads. Row17 is ready to publish against OLD0a90b05. No second PR. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
 Worktree paths follow queue NAME; all source checks, sharing controls, format
 commands and compiler flags are preserved in history. Later rebase each current
 base onto its parent's actual squash, keeping OLD heads/parents untouched.
@@ -149,7 +151,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to sort-callback checkout. Guarded cargo clean -p fwp before switching
+belongs to state-sequence checkout. Guarded cargo clean -p fwp before switching
 checkouts; last switch0.00 s /0.13 s. No local workload is active.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
