@@ -11078,3 +11078,12 @@ remain queued/running. Superseded productionCI37968881919 is cancelled; its
 old-head docs pass is not a gate for the current head. Fold evidenceCI37969003113
 passes. Combined loop/argument evidence1ac6dc99fde5f6813659be356f7f89c29b8a27b5
 starts CI37969742246. Guarded portable all-doc audit passes0.35/2.66s.
+
+## Constructor preparation refresh
+
+Row35 82f58d851b73e3d00370adff43b1898b0e962e6a has actual base9f56744c4eb7.
+Runtime/compiler match the original preparation; repaired CLI/tracing and scratch
+observers are inherited. Guarded clean0.00/0.14s, native constructor allocation
+failure10.06/20.35s, exact rc::tests::constructors_transfer_fields_and_keep_other_caller_owners
+3.38/7.11s, clippy2.44/4.84s and format0.46/0.74s pass. The original published
+current646cca038ed8 is retained under immutable revision tag before lease publication.
