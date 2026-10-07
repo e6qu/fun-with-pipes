@@ -33,7 +33,8 @@ type Set = BTreeSet<Local>;
 /// and sets, which some primitives update in place when unique
 /// (`prim_consumes`). Strings and bytes participate when a primitive returns
 /// an owned leaf; unknown runtime/FFI boundaries still promote them to sharing.
-/// Closures and other runtime values remain shared. Never count
+/// Compiled dynamic applications own closures and typed captures. Unknown
+/// callbacks and other runtime values remain shared. Never count
 /// integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
@@ -51,7 +52,8 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
             Some(TypeShape::Record(fs)) => !fs.is_empty(),
             _ => false,
         },
-        MT::Fun(..) | MT::Nat(_) => false,
+        MT::Fun(..) => true,
+        MT::Nat(_) => false,
     }
 }
 

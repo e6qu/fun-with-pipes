@@ -26,27 +26,80 @@ immutable value semantics, effects and evaluation/trap order stable.
   cache access is read-only; ARM's tutorial/pipeline regression is fixed.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
-- Origin/main: `22994ba794a37320aca6e5122ed1ef909a0f4148`, squash merge of
+- Earlier leaf baseline: `22994ba794a37320aca6e5122ed1ef909a0f4148`, squash merge of
   [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76). Exact head
   `2d2af62630acf9e2c25d93e6ba2209d9e126a745` passed all four jobs in
   [CI 37623311024](https://github.com/e6qu/fun-with-pipes/actions/runs/37623311024).
   Verified squash subject: `Count owned String and Bytes results with explicit alias contracts`,
   one line, 66 characters, empty body, no trailers. Local main fast-forwarded
   while preserving its current plan/handoff edits.
-- Next sole PR: `ownership-text-results`, `/private/tmp/fwp-text-worktree`,
-  rebased from OLD anchor `2ce7a05` onto `22994ba`. Text (3), inherited leaf
-  (2), inventory (1), IR ownership (8), formatting and whitespace pass. Publish
-  as the sole PR and run full current-head CI before squash merging.
-  No local workload remains.
-- Latest prepared change: `ownership-list-generation`, checkout
-  `/private/tmp/fwp-generation-worktree`, base `c05a5d9`. repeat/range
-  ownership passes all focused, inventory and IR checks; published as `fad9b1a`.
-  Structural zip/unzip/chunks ownership is published as `c05a5d9`, based on
-  `787763d` (normal/fused loop transfers). No additional PR is open.
-  Current next-task checkout: `ownership-array-elements` at
-  `/private/tmp/fwp-array-element-worktree`, base `fad9b1a`, typed array creation/copies, mutations, aliases and
-  callbacks published as `636414f`. Focused semantic/scalar/ABI/IR/format checks pass; then map/set elements, old-object reclamation and retained teardown. Prepared descendants retain their
-  listed OLD anchors until sequential rebases after parent squash merges.
+- Current origin/main: `6cdb0d1a10c078f1f68675ced5bcda4626b58874`, squash
+  merge of [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77).
+  Exact head `0221f91c9edcf0096247b69676a156d331716984` passed all four gates
+  in [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587),
+  attempt 2: Linux, both macOS jobs and benchmarks. Attempt 1 Linux never
+  acquired a runner; the successful retry ran actual tests. Merge completed
+  2026-10-07T17:02:17Z. Verified single-line subject:
+  `Own fresh text result trees and release conversion scratch buffers`,
+  empty body and no trailers. Local main fast-forwarded preserving its handoff.
+- Next PR preparation: `ownership-closures`, `/private/tmp/fwp-closure-worktree`.
+  Rebase onto `6cdb0d1` from OLD `bab67ea` completed; only the handoff
+  conflicted and was reconciled with verified latest state. All seven focused
+  closure/leaf/text tests pass, guarded CPU 18.07 s / elapsed 36.49 s. Eight IR checks, inventory and formatting also pass. Whitespace is clean.
+  Publish the rebased head with lease and open the sole next PR; then require
+  current-head Linux, both macOS jobs and benchmarks before squash merging. The closure-cleanup child
+  must later rebase from OLD `0d96bfe`, not from the new rebased closure head.
+- Published runtime unwind change: `ownership-unwind-runtime`, checkout
+  `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
+  chains are task-local, error handlers and recovered traps retain a boundary,
+  and cancellation releases registered owners before longjmp. file.with now
+  closes on cancellation/traps, including a failure before handle allocation.
+  Three focused checks pass; published as
+  `3e314222ff7c0f379204a539858d73bfe1bda095`. No additional PR is open.
+  Next: compiler live-owner registration across boxed/unboxed/stack values and
+  tail calls, runtime callback accumulator cleanup, then retained task lifetimes.
+  Preserve listed OLD rebase anchors through the sequential squash workflow.
+
+- Latest published preparation: `ownership-reuse-tokens`, checkout
+  `/private/tmp/fwp-unwind-liveness-worktree`, OLD base `3e31422`.
+  Compiler-held emptied cells now release on unused branches and when old cells
+  cannot be reused; dead fields are cleared before collection. Unwind registers
+  the temporary owner; constructor transfer clears its slot; tail calls unlink
+  owners before entering the callee. Initial token (2), old-reclamation (3) and
+  runtime-unwind (3) checks pass, serial guarded CPU 20.01 s / elapsed 40.17 s.
+  All three token checks pass, including bump-allocator compatibility,
+  guarded CPU 15.31 s / elapsed 30.88 s. Eight IR checks, fmt and whitespace pass.
+  Published head `33cf86466e2f106dcce2b3bc88cd3f10df9fa620`; no additional PR.
+  Committed checkout `/private/tmp/fwp-call-liveness-worktree`, branch
+  `ownership-call-liveness`, OLD base `33cf864`, head
+  `7392f2d67151ad69fa18aed33dc30271067d81db`.
+  Published successfully after three GitHub internal-server rejections; the
+  HTTP/1.1 retry succeeded. No additional PR was opened.
+  It derives call ownership from the RC checker, names pending computed arguments,
+  and registers live callers, incoming tick parameters and original boxed wrapper
+  arguments. Struct variants stay unboxed through ownership moves. Caller alias,
+  pending-argument, wrapper and cancellation checks pass; variant error cleanup
+  also passes. All five compiler checks and both existing stack checks pass,
+  guarded CPU 21.11 s / elapsed 42.31 s. The stack-closure regression exposed
+  by argument naming was fixed by hoisting capture evaluation before storage
+  selection; child reclamation remains measured. Caller scopes also protect
+  stack-argument children that normal returns release in the owning frame.
+  Eleven IR checks and seven array/list checks pass; fmt/whitespace pass.
+  Library clippy passes without warnings after the final repairs, guarded
+  CPU 2.23 s / elapsed 4.38 s. All five compiler and two stack tests pass again,
+  guarded CPU 21.11 s / elapsed 42.31 s. Full CI remains for the future PR.
+  Full gates remain
+  required when its sequential PR opens. Phase 2 remains incomplete.
+- Current runtime implementation: `/private/tmp/fwp-runtime-call-worktree`,
+  `ownership-runtime-call-cleanup`, OLD base `7392f2d`, uncommitted.
+  Adds cleanup of a consumed function across dynamic application and typed
+  pending arguments along the complete arrow spine, including overapplication.
+  Primitive/FFI owned entries protect borrowed arguments they normally drop
+  after returning. Pure programs compile out runtime registration via FWP_UNWIND.
+  Five adjacent compiler tests pass, guarded CPU 10.94 s / elapsed 22.10 s.
+  Dedicated runtime ownership probes are still required. Next cover callback accumulators, retained tasks,
+  allocation/boxing failures, CAF ownership and inline rewrites. No full ARC or
+  collector-free guarantee is established.
 
 ## Current ownership evidence
 
@@ -93,6 +146,12 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-structure | fwp-structure-worktree | c05a5d9 | 787763d |
 | ownership-list-generation | fwp-generation-worktree | fad9b1a | c05a5d9 |
 | ownership-array-elements | fwp-array-element-worktree | 636414f | fad9b1a |
+| ownership-map-set-elements | fwp-map-set-worktree | a8a7d11 | 636414f |
+| ownership-old-reclamation | fwp-old-reclamation-worktree | 6774aa5 | a8a7d11 |
+| ownership-task-boundaries | fwp-task-boundary-worktree | 02beec3 | 6774aa5 |
+| ownership-unwind-runtime | fwp-unwind-runtime-worktree | 3e31422 | 02beec3 |
+| ownership-reuse-tokens | fwp-unwind-liveness-worktree | 33cf864 | 3e31422 |
+| ownership-call-liveness | fwp-call-liveness-worktree | 7392f2d | 33cf864 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -837,3 +896,180 @@ outputs: text counts 0 -> 2.1 MiB and scratch heap 9.2 -> 1.7 MiB. Inventory
 0.14 s; fmt/whitespace pass. Publish next sole PR/full CI at the current head.
 Closure child still rebases from its OLD bab67ea anchor, never the newly
 rebased text head. Keep remaining published chain anchors unchanged.
+
+Rebased text change published as 0221f91c9edcf0096247b69676a156d331716984,
+base 22994ba; sole PR #77 created, full exact-head gate 37636161587 queued for
+all four jobs. Its subject/body format verified; checkout clean. Next separate
+implementation is typed map/set element ownership, based on published array
+head 636414f. Continue implementation while CI runs and fix any failures.
+
+Next isolated checkout created: ownership-map-set-elements at
+/private/tmp/fwp-map-set-worktree, base 636414f, clean with no code edits yet.
+Preserve duplicate-key replacement semantics, typed key/value aliases and
+callback/insert/remove ownership when implementing. No local workload remains.
+
+## Typed map/set element ownership implemented
+
+Current checkout ownership-map-set-elements, /private/tmp/fwp-map-set-worktree,
+base 636414f: creation, insertion/replacement/removal, alias lists/Options,
+map-values/update callbacks and set union/intersect/diff have typed key/value
+owners. Unique growth/poison-copy transfers children; nonunique copies retain
+references. Replacement preserves the first stored equal key and drops the
+prior value. From-list retains the first key and last value after stable sort;
+discarded borrowed inputs are not retained. Scratch sorting/merge buffers are
+released. Empty collections remain static. Optimized map.get matches keep a
+temporary owned selected-value reference through their arm without building Some.
+
+Shared inventory (1) passes CPU 3.19 s / elapsed 6.78 s. Existing container
+regressions (3) pass CPU 8.97 s / elapsed 18.27 s; insertion assertion now checks
+typed retention rather than permanent sharing. New alias matrix passes, and
+expanded optimized lookup/growth coverage passes CPU 5.12 s / elapsed 10.59 s:
+O1/O2, stack on/off, collection/reuse verification and reuse/free-disabled paths,
+all map/set operations, duplicate keys, retained copies, functions/nested arrays
+and callbacks. A tuple fixture projection error was corrected. Count baseline
+initially included two runtime forwarding calls; restricted to the actual
+monomorphic wrappers. Identical output, zero collections: count reclamation
+16.0 -> 26.2 MiB (CPU 1.98 s / elapsed 4.35 s). Actual generated scalar wrappers
+and destruction preserve address-shaped words; a native pointer-identity probe
+proves first-key/last-value retention and balanced replacement/destruction
+(O1/O2; CPU 0.98 s / elapsed 2.07 s).
+Adjacent arrays (3), FFI (5), fat ABI (1), stack (2) checks pass (CPU 15.80 s,
+elapsed 31.99 s). IR ownership (8) passes CPU 3.18 s / elapsed 6.77 s.
+Formatting and whitespace pass. No local workload remains.
+No full local gate was run; full platform CI follows sequential parent rebases.
+Next: old marked-object reclamation, complete retained runtime ownership and
+exception/handler/cancellation teardown, cycles and WebAssembly allocation.
+
+Typed map/set change published as a8a7d119712bd3cb77d03bde1daaedcf290b22d2,
+base 636414f, checkout clean and no additional PR. Verified commit subject:
+66 characters, one line, empty body, no trailers. Sole PR #77 head 0221f91
+full gate 37636161587 remains live/queued for all four jobs. Next implementation:
+old marked-object reclamation, auditing collector metadata and runtime boundary
+sharing before releasing marked storage. Then retained ownership/exception
+teardown/cycles/WASI remain; phases 3-6 are still uncompleted.
+
+Next checkout created: ownership-old-reclamation in
+/private/tmp/fwp-old-reclamation-worktree, base a8a7d11, clean with no edits.
+Audit fwp_mem_free small/big mark/count bookkeeping, fwp_rc_unmarked gating,
+and task/runtime sharing; add forced-survival/reuse/alias tests before changing
+old-allocation reclamation. No local workload remains.
+
+## Prepared old-storage reclamation
+
+`ownership-old-reclamation` starts from OLD `a8a7d11`. Native final typed
+releases now require an exact last owned reference and reclaim small or large
+storage after it survives collections. Returning cells clears old-generation
+marks and exact-count metadata; verifier mode clears stale child words before
+linking freed small slots. Immutable reuse and updates remain young-only,
+because minor tracing does not rescan immutable old fields. Shared runtime
+and off-heap values do not enter the counted free path. Poison mode quarantines
+released cells and preserves the existing reuse diagnostics.
+
+Three new focused tests pass: actual major/minor survival and typed leaf,
+record, closure, array and map destruction with retained aliases/shared graphs;
+250 forced major collections free 4.8 MiB by counts versus 0.0 MiB with only the
+previous age restriction restored; task/channel/deadline/cancellation/scope
+and UDP golden behavior agrees at O1/O2, with collection stress, verification
+and both poison modes. The survivor measurement includes real tracing; it is
+not evidence of general collector-free execution. Latest three-test guard used
+CPU 3.10 s / elapsed 6.57 s. Adjacent array/map/wide-count checks (9) and closure/
+container checks (6) also pass; format passes. Full architecture gates remain
+required after sequential rebase and publication as the sole PR.
+
+The Linux long-loop regression now checks bounded memory/output for normal
+ownership and separately builds with FWP_REUSE=0 to require >10 actual collections,
+>800 MiB allocation and <64 MiB RSS for shared fallback. Collector-disabled
+normal output/no-collection checks remain. This large workload runs only on CI;
+its revised harness is compiled locally, not reported as runtime-validated.
+
+Old-storage branch published as `6774aa5bb426c4dc1e49d9eca1ff1737763498a5`.
+Verified commit subject: `Reclaim old owned storage and preserve young reuse invariants`
+(61 characters), one line with no body/trailers. Revised Linux GC harness compiles;
+fmt and whitespace pass. No local workload remains. Sole PR #77 exact-head CI
+still tests on both macOS architectures; Linux/bench queued. Next separate
+implementation investigates task/channel retained ownership and teardown;
+failing tests remain repair work, never a reason to stop the roadmap.
+
+## Prepared task/channel boundary contracts
+
+`ownership-task-boundaries` follows OLD `6774aa5`. The inventory now covers every
+foreign declaration in lib/task.fwp. Spawn/scope/within callbacks remain explicitly
+shared; send payloads and native handles remain shared. Await/within/recv/recv-for
+own newly allocated Option nodes with type-directed aliases. Scalar payloads
+are skipped; shared payloads stay shared. Duration arguments borrow through
+blocking calls. Deadline passthrough no longer promotes its input graph to
+sharing: a new generic alias result duplicates only RC types, never scalar bits.
+
+Three focused tests pass: interpreter/native aliases for String, records,
+functions, repeated task awaits and channels at O1/O2 under GC stress/verification
+and poison modes; actual generated scalar/String deadline and I64 receive wrappers
+using address-shaped numeric bits; and an identical generated 10,000-iteration
+loop with only the previous deadline sharing boundary restored. With tracing
+off, zero collections and FWP_STACK=0, counters free 0.0 -> 0.5 MiB (Apple Silicon,
+Apple Clang 17, O1, one-decimal counter precision). This is reclamation evidence,
+not full ARC or a speed claim. Latest guard CPU 3.31 s / elapsed 6.74 s. Existing
+old-reclamation tests (3), including task cancellation golden stress, also pass.
+Inventory (1), IR (8), formatting and whitespace pass. Adjacent leaf (2) and
+old-reclamation (3) tests pass; guard CPU 11.90 s / elapsed 24.50 s. Full CI
+follows the sequential squash/rebase workflow.
+
+CI diagnosis for sole PR #77 exact head 0221f91: Linux job 112842831422 finished
+with no runner and no steps. GitHub annotation: "The job was not started because
+it repeatedly failed to be acquired (5 attempts)." Benchmarks passed; both macOS
+jobs remain live. Individual-job retry returned HTTP 500 with an empty body,
+not accepted success. Keep the live run; retry failed gates after it becomes
+terminal. Do not treat the missing Linux runtime validation as passed or stop
+implementation for infrastructure failures.
+
+Task boundary branch published as `02beec353ec7745f6f69c1c99bb3c561725a6744`;
+subject `Own task result wrappers and preserve typed deadline aliases` is one
+line, 60 characters, empty body/no trailers. No local workload remains.
+Next independent work must coordinate typed cleanup on failure/cancellation
+before owned task callbacks can safely survive nonlocal unwind. Keep suspended
+stack roots and task/scope parent lifetimes intact. Do not reinterpret the
+explicit shared contracts as completed retained ownership.
+
+## Prepared coordinated runtime unwind
+
+`ownership-unwind-runtime` follows OLD `02beec3`. Stack cleanup nodes register a
+release callback and context without heap allocation. Normal return unlinks them;
+error/trap/cancellation invokes releases in LIFO order before longjmp invalidates
+frames. Error handlers save their cleanup boundary. All runtime handler creation
+sites and generated language-test handlers initialize it. Every gRPC recovery
+site saves/restores a per-task trap cleanup boundary. Task switches save/restore
+the cleanup chain alongside handlers; cancellation drains only the current task.
+Finished tasks clear stale links before their stack can be reused. Release
+callbacks must not suspend, throw or register another node.
+
+file.with is an actual consumer: it registers its FILE before handle allocation,
+closes/invalidate the handle on normal return, and closes through cleanup for
+errors, recovered traps and cancellation. The interpreter already closes after
+Ctl::Cancelled; no resource Dup rule or language syntax is changed.
+Three tests pass at O1/O2 under collection stress/verification and both poison
+modes: nested failure/rethrow and recovered trap cleanup; cancellation of two
+suspended tasks without releasing their parent's owner; OS descriptor EBADF and
+handle invalidation on each scoped file exit, including pre-handle cleanup; and
+normal/error file.with programs matching the interpreter. Guard CPU 2.94 s /
+elapsed 6.02 s. Earlier adjacent old-storage/task tests (6) pass; the seven-test
+runtime batch used CPU 13.20 s / elapsed 26.74 s. A focused real gRPC every-kind-of-call test passes for native/interpreted
+clients and servers, including errors/traps/deadlines; guard CPU 5.96 s /
+elapsed 13.07 s. The first run lacked OpenSSL headers; the installed
+/opt/homebrew/opt/openssl@3 works with FWP_OPENSSL_DIR set. Full gates stay on CI.
+
+This supplies runtime unwind boundaries and fixes scoped-file resource cleanup.
+It does not yet automatically register compiled local owners. Next must track
+live ownership (including Dup/Drop, moves, stack children, scalar/variant worker
+ABIs, callback accumulators and tail calls) before enabling retained owned task
+callbacks/results. Async preemption can unwind pure callees too: register
+incoming owned arguments before a tick, and preserve zero-cost scalar paths.
+Do not replace this work with wholesale sharing or claim complete ARC.
+
+Runtime unwind branch published as `3e314222ff7c0f379204a539858d73bfe1bda095`.
+Subject `Release registered owners and scoped files before nonlocal unwind` is
+one line, 65 characters, with no body/trailers. Formatting and whitespace pass.
+No local workload remains. Latest sole PR #77 CI: ARM macOS and benchmarks
+passed; Intel remains live; Linux failed runner acquisition with no test steps.
+Keep this run; retry failed gates once it is terminal. Next checkout should
+start from OLD `3e31422` for compiler live-owner tracking. Runtime nodes already
+have one actual production consumer (file.with), but all-local unwind ownership
+and retained task ARC remain required work.
