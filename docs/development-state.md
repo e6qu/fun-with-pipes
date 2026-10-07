@@ -73,8 +73,15 @@ limits. Full-size raw evidence37997457349 at5d111b2 fails only its debug interpr
 probe: stack overflow at the existing4GiB budget, exit101, peak4163152KiB,
 2.80user/1.82system/4.63elapsed. Other selected ownership/tracing/lint/docs
 checks pass. Do not raise the stack or local limits. Source-identical81362c7
-now builds a release interpreter on the GitHub runner in CI37997969782
-(running), repeating the same FWP_NO_OPT=1 program/input/output oracle. The smaller raw oracle
+builds a release interpreter on the GitHub runner in CI37997969782, which
+passes the same FWP_NO_OPT=1 program/input/output oracle and all selected
+ownership/tracing/lint/docs checks. Debug stack limitation remains documented;
+Release probe passes1.13user/0.95system/2.10elapsed with1893164KiB peak
+RSS on an AMD EPYC7763 runner with4 vCPUs, rustc1.99.0, GCC13.3.0, standard
+Rust release profile (debug=false), FWP_NO_OPT=1. Saved log:
+/private/tmp/fwp-raw-tail-release-37997969782.log. This proves the result within
+the release runner budget, not constant interpreter stack or a speedup. Peak
+RSS still exceeds the local1GiB limit; do not repeat the full-size probe locally. The smaller raw oracle
 passes0.37/0.74s. Source syntax errors in the first probe draft were corrected.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
@@ -94,7 +101,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 26 ownership-reuse-tokens | 9a21fd6cc844 | 7520b8d5a1b0 | PR105; seven tests19.40/39.06s, lint2.30/4.73s, format0.35/0.63s and strong audit pass; exact-head CI follows |
 | 27 ownership-call-liveness | 2a2458b93d6c | 9a21fd6cc844 | Twelve tests30.40/61.02s; lint2.35/4.73s, format0.35/0.62s and strong audit pass; final rebase after105 |
-| 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; Linux CI37994225608 passes; sequential full gates follow |
+| 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | 78ed19ff401a | 7cfbe030d3de | Eight tests22.28/44.73s; lint2.41/5.01s and format0.35/0.75s pass; early preparation protection inherited |
 | 30 ownership-selection-unwind | 244dd2a578af | 78ed19ff401a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 31 ownership-zip-unwind | 687ae106193b | 244dd2a578af | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
@@ -367,9 +374,13 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-call-liveness-worktree after guarded clean0.00/0.13s.
-Row27 twelve focused tests pass30.40CPU/61.02elapsed; lint2.35/4.73s,
-format0.35/0.62s and strong audit0.45/3.59s pass. No local workload is running.
+belongs to /private/tmp/fwp-runtime-call-worktree after guarded clean0.07/0.39s.
+Row28 ten focused runtime/preparation/reuse tests pass27.43CPU/55.06elapsed;
+lint2.37/4.77s, format0.34/0.63s and strong audit0.46/3.69s pass. Source is
+byte-identical to7cfbe03 except inherited tail regression/auditor/guard. Published
+head3e7ab59e89c32f056a19bec6b327709e242d8393 is on actual2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1;
+prior7cfbe03 is retained remotely before leased publication. No local workload
+is running. Keep its PR after the preceding delivery and final squash rebase.
 Row26 final seven tests pass19.40/39.06s, lint2.30/4.73s, format0.35/0.63s
 and strong audit0.45/3.59s. The local rebase70f7b111 is on
 actual main1047520b8d; published row26 is9a21fd6 on7520b8d in PR105. The full-size raw tail probe hit the1GiB RSS limit and was
