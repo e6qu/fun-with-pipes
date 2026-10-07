@@ -79,6 +79,12 @@ incomplete until its ownership and reclamation acceptance is proved; numeric
 representation, numerics/autodiff, expanded evidence and optional tracing-free
 execution follow in roadmap order.
 
+Returned variant aliases are prepared separately: a valid nested IR case now
+transfers unboxed field owners instead of boxing and leaking an extra retain.
+Interpreter/native values, unique/shared child counts, source yield behavior and
+adjacent ownership checks pass. Full sequential CI is still required. Remaining
+whole-value boxing and untyped/reconstructed aggregate lifetimes stay open.
+
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
 counting itself has a cost. Static memory provisioning is not a proof of
