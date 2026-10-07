@@ -1111,3 +1111,64 @@ Formatting/whitespace pass, CPU 0.37 s / elapsed 0.76 s. No focused failures or
 local resource-limit refusals remain. Full sequential CI and inventory execution
 after the added deadline assertion remain required; don't count clippy as a test.
 Shared target switched to borrowed-callback validation after guarded package clean.
+
+## Prepared scoped callback ownership
+
+`ownership-task-scope`, `/private/tmp/fwp-task-scope-worktree`, OLD base
+`14a76de5b8bbbf4e23a06b547ebaf374b931b20e`. task.scope now borrows its
+synchronous callback and receives a typed owned result. Owned callback entry
+metadata retains only typed captures/arguments; unknown metadata keeps the
+shared fallback. Scope state and its task array have an unwind owner, including
+restoration of the previous handler on an external recovered trap. A separate
+typed result owner protects the value across child joins and final cancellation.
+Normal return transfers it without an extra retain. Scalar address bits are
+uncounted. The callback itself does not escape; captured returned values still
+carry their own references. Pipe syntax, effects and evaluation order are unchanged.
+
+The corrected pre-fix source/generated-C fixture failed capture-count checks
+with exit 1. During test development, the probe incorrectly used rc_last as a
+release; corrected to rc_release_last (which decrements nonlast counts). This
+fixture error is not recorded as a compiler regression. The fixed probe covers
+external capture aliases, returned aliases, scalar address bits and unknown
+callback metadata. It cancels real worker tasks before callback entry and after
+result production, with a child registered in the scope, and recovers an external
+trap before callback entry. Scope task arrays are freed once, task scope pointers
+are restored and captures are destroyed; the scope's stack handler cannot survive
+a recovered trap. Probes use O1/O2, GC stress/verification and both poison modes.
+Real source stdout/stderr/exit agree with an unoptimized interpreter.
+
+Bounded serial checks after guarded package clean:
+- Scope plus three adjacent unwind tests pass, CPU 5.19 s / elapsed 10.55 s.
+- Seven scope/spawn/deadline/task ownership tests pass, CPU 18.32 s / elapsed
+  36.93 s; existing deadline count evidence remains 0.5 MiB versus zero.
+- Scope with the recovered-trap and handler restoration changes passes,
+  CPU 9.77 s / elapsed 19.82 s.
+
+Full sequential CI remains required. Task handles and spawned results still
+share; task/channel result teardown, cycles, aggregate reconstruction/metadata
+and library/unload coverage remain unfinished. Phases 2–6 remain open. Sole
+PR #82 exact `3fa67f3`, run `37703018710`, currently has both macOS jobs live
+and Linux/bench queued. Merge only after all four pass, with the recorded subject
+and empty body. Rebase the map child from OLD `029fac4` onto that squash. Next
+implementation: precise task-result/handle lifetime contracts before channel
+queue ownership. Preserve OLD `14a76de` for this branch's future rebase.
+
+The complete contract inventory passes, including the previously pending
+deadline assertion and the new scoped callback contract: guarded
+`cargo test --lib ownership::tests -- --nocapture`, CPU 4.02 s / elapsed 8.27 s.
+The final recovered-handler omission control fails with exit 4; removing result
+cleanup fails with 5 and scope-array cleanup with 6, each at O1/O2. Scope checks
+pass after adding those controls, CPU 3.37 s / elapsed 6.96 s. The added real
+source child-joining case passes too, CPU 3.66 s / elapsed 8.09 s. Formatting
+passes, CPU 0.47 s / elapsed 0.86 s. Clippy found a needless borrow in the new
+result-type lookup; corrected before rerunning lint. Full CI still required.
+All local commands used the bounded fwp guard, serial and low priority; none
+refused for resource limits. No limits were raised. The shared target is this
+scoped callback compiler; clean the package before switching checkouts.
+
+Final library/dedicated-test clippy passes, CPU 2.76 s / elapsed 5.48 s.
+No focused failures remain. Exact guarded commands included `cargo test --test
+scope_thunk_ownership --test retained_thunk_ownership --test within_thunk_ownership
+--test task_ownership -- --nocapture`, `cargo test --test scope_thunk_ownership
+--test unwind_cleanup -- --nocapture`, `cargo clippy --lib --test
+scope_thunk_ownership -- -D warnings`, and `cargo fmt --all -- --check`.

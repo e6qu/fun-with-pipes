@@ -598,3 +598,17 @@ across joining/cancellation. Full sequential CI remains required before merge.
 Stack-child ownership passed all four gates in CI `37696063781` and PR #81
 merged as `a4b6533`, with the required subject/empty body verified. Next PR:
 borrowed callbacks, rebased from OLD `b563360`; later preparations stay separate.
+
+Deadline callback ownership published as `14a76de`, separate preparation.
+Borrowed callbacks rebased onto merged #81 and pass three focused checks.
+Publish/open this sole next PR; preserve OLD `029fac4` for the map child.
+
+Sole open PR #82 publishes borrowed callbacks at exact `3fa67f3`. Full current
+head CI is required before squash with the recorded 56-character subject and
+empty body. Continue task.scope ownership while CI runs; fix all failures.
+
+Prepared task.scope borrows its synchronous callback, transfers an owned result
+and protects result/scope storage across joining, cancellation and recovered
+traps. Seven focused task ownership checks plus adjacent unwind checks pass;
+full sequential CI remains required. Task-result/handle lifetimes and channel
+queue ownership are next. #82 remains sole open, with macOS jobs running.

@@ -20,6 +20,7 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
+| task.scope | borrow callback | typed owned callback result | borrowed argument 0 |
 | task.within | borrow duration/thunk; runtime retains one counted owner | fresh Option holding a shared task result | retained argument 1 |
 | task.spawn | borrow thunk; runtime retains one counted owner | shared task handle/result | retained argument 0 |
 | array.from-list | borrow list | fresh array owning typed element references | none |
@@ -689,3 +690,9 @@ the deadline task, using the same protected preparation as task.spawn. Its
 Option outer remains owned; counted results still share. Success, cancellation
 and alias evidence is in
 [ownership.md](ownership.md#prepared-retained-deadline-callbacks).
+
+Prepared task.scope borrows its synchronous callback and transfers the typed
+owned result. Separate scope and result cleanup protects cancellation, child
+joining and recovered traps. Unknown callback metadata retains the sharing
+fallback; task handles and spawned results still share. See
+[ownership.md](ownership.md#prepared-scoped-callback-ownership).

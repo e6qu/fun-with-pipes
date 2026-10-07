@@ -441,3 +441,8 @@ Prepared deadline calls use the spawned-thunk retained owner contract, preservin
 the deadline and typed capture cleanup. Counted results still use shared task
 lifetimes; evidence is in
 [ownership.md](ownership.md#prepared-retained-deadline-callbacks).
+
+Prepared task.scope uses typed borrowed application and transfers its owned
+result after child joins. Separate owners restore scope state and release the
+result on cancellation, including handler restoration on external recovered
+traps. See [ownership.md](ownership.md#prepared-scoped-callback-ownership).
