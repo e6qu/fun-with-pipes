@@ -64,9 +64,9 @@ rebase anchors and actual focused evidence.
 
 Constructor allocation is published separately; worker result boxing passes
 focused exceptional checks. Worker field preparation now passes focused
-first/later-failure and entry cancellation checks. Next finish initial loop
-flattening, typed
-constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+first/later-failure and entry cancellation checks. Initial loop flattening now passes focused preparation and cancellation checks,
+including a repair for RC argument naming that hid literal rebuilt states. Next
+audit vlocal variant duplication and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
 representation, numerics/autodiff, expanded evidence and optional tracing-free

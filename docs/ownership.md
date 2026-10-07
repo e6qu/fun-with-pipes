@@ -506,8 +506,16 @@ inactive state scope, so a result of another type is never dropped as state.
 Specialized native loops register only their counted typed state slots, saving
 them before the outer tick and clearing them before fs takes ownership. The
 next iteration refreshes the scope from next-state slots; old consumed slots
-are never released twice. Scalar slots need no owner. Initial record flattening
-and its duplicate preparation remain part of the allocation-failure audit.
+are never released twice. Scalar slots need no owner. Initial record flattening protects the owned input
+and completed typed field duplicates separately until all slots are ready, then
+transfers the duplicates and drops the input. Before shape analysis and emission,
+an immediately consumed terminal rebuilt record is recovered from RC argument
+naming; its preparation spine keeps the same evaluation/release order. A generated
+four-slot state test checks first/later retention faults with independent input/
+leaf aliases and shared sibling leaves. Removing the partial scope detects a
+leaked field. GC stress/verification, both poison modes and O1/O2 pass; normal
+output agrees with the interpreter. Further nested-slot flattening and boxed
+field reconstruction remain an audit item; no speed claim follows from slots.
 
 Step extraction protects the consumed Step while preparing its typed payload
 duplicate, then releases it normally. A failed duplicate releases only the

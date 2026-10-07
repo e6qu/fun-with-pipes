@@ -118,9 +118,9 @@ static void cancel_at_loop_tick(void) {
         if (!owner->value) return;
         text=OBJ(owner->value)->f[1];
     } else if (fwp_cleanups->release==fwp_owner_releaseSCOPE) {
-        text=OBJ(((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0)->f[1];
+        text=((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0;
     } else if (fwp_cleanups->release==fwp_owner_releaseNSCOPE) {
-        V pair=OBJ(((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0)->f[1];
+        V pair=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0;
         text=OBJ(pair)->f[0];other=OBJ(pair)->f[1];
     } else return;
     if (++current_tick!=wanted_tick) return;

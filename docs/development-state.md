@@ -354,9 +354,9 @@ typed constructor temporaries, CAF/inline lifetime and retained tasks remain.
 The shared target contained the boxing compiler during those checks. Full sequential CI still
 gates each prepared branch; no additional PR is open.
 
-Worker argument preparation is in progress on `ownership-worker-preparation`,
-checkout `/private/tmp/fwp-worker-preparation-worktree`, OLD base `dc4f946`;
-uncommitted. Wrappers with boxed parameters now protect all consumed incoming
+Worker argument preparation is published on `ownership-worker-preparation`,
+checkout `/private/tmp/fwp-worker-preparation-worktree`, OLD base `dc4f946`, head
+`c97dd03f8d89d685be885f77cc611bb16cb0fb72`; clean, no new PR. Wrappers with boxed parameters now protect all consumed incoming
 arguments before field duplication. Each completed counted-field duplicate has
 its own typed, initially zero slot. These prepared field references transfer
 at worker entry; non-boxed arguments leave the original-owner scope then, while
@@ -372,9 +372,10 @@ address bits. The expanded control removes only the partial preparation scope
 and detects the expected earlier-duplicate leak. It and result boxing pass
 (CPU 7.10 s / elapsed 14.23 s); normal native output matches the interpreter.
 Library clippy is warning-free (CPU 2.78 s / elapsed 5.57 s); fmt and whitespace
-pass. No local workload remains. Current shared target contains
-the worker-preparation compiler; guarded `cargo clean -p fwp` is required before
-another checkout's package build. Next finish publication, then protect initial
+pass. No local workload remains. Those checks used the worker-preparation compiler. Current shared target contains
+the loop-preparation compiler; guarded `cargo clean -p fwp` is required before
+another checkout's package build. Verified subject `Protect boxed arguments and partial fields before worker entry`
+is one line, 62 characters, empty body/no trailers. Next protect initial
 loop state flattening and partial field extraction before worker entry, followed
 by vlocal variant duplication/boxing, typed constructor temporaries, CAF/inline
 lifetimes and retained tasks. Full sequential CI remains required.
@@ -438,6 +439,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-argument-preparation | fwp-argument-preparation-worktree | 4973918 | 988f2a3 |
 | ownership-constructor-unwind | fwp-constructor-unwind-worktree | 608ae7b | 4973918 |
 | ownership-worker-boxing | fwp-worker-boxing-worktree | dc4f946 | 608ae7b |
+| ownership-worker-preparation | fwp-worker-preparation-worktree | c97dd03 | dc4f946 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1359,3 +1361,41 @@ Keep this run; retry failed gates once it is terminal. Next checkout should
 start from OLD `3e31422` for compiler live-owner tracking. Runtime nodes already
 have one actual production consumer (file.with), but all-local unwind ownership
 and retained task ARC remain required work.
+
+## Latest preparation: initial flattened loop ownership
+
+`ownership-loop-preparation`, `/private/tmp/fwp-loop-preparation-worktree`,
+OLD base `c97dd03`; checked locally, pending publication. RC argument naming had
+hidden rebuilt records behind a temporary and caused field-only counted states
+to remain boxed. C generation now moves an immediately consumed terminal Again
+through the record's preparation spine, preserving field and release order.
+Both shape analysis and emitted loop bodies use that same normalized expression;
+RC call-liveness verification accepts the changed ownership tree. Initial input
+state and each completed counted-slot duplicate have separate typed scopes.
+Completed slots transfer only after all are prepared, then the boxed input drops.
+Scalars have no preparation slots. Whole-state uses remain boxed.
+
+The initial source-shape assertion failed because the fixture actually stayed
+boxed; diagnosis led to the narrow naming repair, rather than weakening the
+assertion. The generated four-slot loop now passes interpreter/native comparison.
+The fault probe injects before first/later field retention, with independent
+box/leaf aliases, shared sibling leaves and scalar pointer bits (16 cases).
+It passes O1/O2, GC stress/verification and both poison modes. Removing only
+partial cleanup fails with the expected leaked-field code 5. Three preparation/
+loop-unwind checks pass: CPU 7.15 s / elapsed 14.51 s. Existing cancellation
+probes now read the actual flat String/pair owner slots. Five loop tests pass:
+CPU 11.81 s / elapsed 23.83 s, including goldens for trap/evaluation order,
+GC-disabled reclamation, aliasing and ownership switches. Library clippy passes:
+CPU 2.31 s / elapsed 4.58 s. Formatting and whitespace pass.
+
+All checks used `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target
+python3 /private/tmp/fwp-local-guard.py` followed by `cargo test --test
+loop_preparation_ownership --test loop_unwind_ownership -- --nocapture`, `cargo
+test --test loop_ownership -- --nocapture`, `cargo clippy --lib -- -D warnings`,
+and `cargo fmt`. No local workload remains. The shared target contains this
+compiler; guarded `cargo clean -p fwp` before changing checkouts. These are focused
+checks, not full architecture support or a speed measurement. Sequential full
+CI is still required. Further nested-slot flattening and field reconstruction,
+vlocal variant duplication, typed constructor temporaries, CAF/inline lifetimes,
+retained tasks and cycles remain to audit. Continue the sole PR #79 merge gate
+and publish this preparation separately; phases 2–6 remain active.

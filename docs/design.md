@@ -307,7 +307,9 @@ error. See [protocol.md](protocol.md).
 | fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Tasks run on fibers (`src/fiber.rs`, with the same hooks as compiled programs): `World::park` switches to the next ready fiber instead of handing a baton between threads, in the same order, and traps on a deadlock. The interpreter's frames in linear memory are large (about a kilobyte per call), so the fibers of tasks share one 32 MiB stack region: a fiber that suspends copies out the part it uses, and copies it back when it resumes. Without JSPI, a program that uses tasks is rejected before it runs, unless fwp.wasm was built with `scripts/build-playground.sh --asyncify`. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
 Prepared loop cleanup protects counted current-state slots at cancellation
-safe points and owned Step payload preparation. Scalar slots stay uncounted;
+safe points, initial record-to-slot retention and owned Step payload preparation.
+RC argument naming is normalized narrowly to recover immediately consumed
+rebuilt records without changing field evaluation/release order. Scalar slots stay uncounted;
 full sequential CI and remaining allocation/retained lifetimes are tracked in
 [ownership.md](ownership.md#prepared-loop-cancellation-cleanup).
 
