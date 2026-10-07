@@ -40,7 +40,8 @@ maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pendin
 PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
 Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
 base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
-and CI37969632440 (roadmap_docs) are queued/running, not acceptance. Compiler/runtime/tests match
+and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs passes and the six production
+jobs remain queued/running, not acceptance. Compiler/runtime/tests match
 focused-accepted495411d33f60 exactly. The final publication records the merged
 map/set contracts and inherits the portable roadmap audit. Require all six
 production jobs and roadmap_docs at this exact head before squash with
@@ -78,7 +79,7 @@ still need their final squash rebases and six exact-head full gates.
 | 32 ownership-fold-unwind | 459287698745 | a282f630c790 | Two fold tests13.13/26.45s; lint2.75/5.42s and format0.44/0.82s pass |
 | 33 ownership-loop-unwind | b16195bcebf3 | 459287698745 | Two tests11.07/22.31s; lint2.42/4.93s pass; fresh Linux follows |
 | 34 ownership-argument-preparation | 9f56744c4eb7 | b16195bcebf3 | Test9.91/20.00s; lint2.69/5.35s and format0.34/0.61s pass |
-| 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 / 42.20 s + exact unit 3.40 / 6.85 s |
+| 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native constructor test10.06/20.35s passes; exact unit/lint follow |
 | 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 / 49.42 s |
 | 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 / 47.71 s |
 | 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 / 52.71 s |
@@ -200,6 +201,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows33–34 loop/argument cleanup | 1ac6dc99fde5f6813659be356f7f89c29b8a27b5 | CI37969742246 queued; production9f56744, actual baseb16195b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |

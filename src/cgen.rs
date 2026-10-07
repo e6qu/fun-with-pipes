@@ -388,6 +388,7 @@ struct Gen<'p> {
     /// Per variant type returned as a struct: its helpers (`vhelper`).
     vhelpers: HashMap<MT, usize>,
     vhelper_defs: Vec<String>,
+    vhelper_decls: Vec<String>,
     strings: HashMap<Vec<u8>, usize>,
     string_defs: Vec<String>,
     consts: Vec<String>,
@@ -1261,6 +1262,8 @@ impl<'p> Gen<'p> {
         let k = self.vhelper_defs.len();
         self.vhelpers.insert(t.clone(), k);
         self.vhelper_defs.push(String::new());
+        self.vhelper_decls
+            .push(format!("static void fwp_vdrop{k}(fwp_u{m} *u);"));
         let vs = match self.prog.shapes.get(t) {
             Some(TypeShape::Adt(vs)) => vs.clone(),
             _ => Vec::new(),
@@ -1272,7 +1275,21 @@ impl<'p> Gen<'p> {
                 let _ = writeln!(boxes, "    case {}: return (V){};", tag, tag);
             } else {
                 let alloc = self.fresh(format!("fwp_data({}, {}, u.f)", tag, fs.len()));
-                let _ = writeln!(boxes, "    case {}: return {};", tag, alloc);
+                let fields: Vec<_> = fs
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ty)| (format!("u.f[{i}]"), ty.clone()))
+                    .collect();
+                let protect = self.protect_values(&fields, "pending", "boxing_cleanup");
+                let finish = if protect.is_empty() {
+                    ""
+                } else {
+                    "fwp_cleanup_pop(&boxing_cleanup);"
+                };
+                let _ = writeln!(
+                    boxes,
+                    "    case {tag}: {{ {protect} V result = {alloc}; {finish} return result; }}"
+                );
             }
             if !self.reuse {
                 continue;
@@ -3590,7 +3607,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.end_call(node);
                     // a record compiled code owns, like any it builds
                     let r = format!("fwp_record({}, {}.f)", n, t);
-                    self.bind(self.g.fresh(r))
+                    let ty = self.ret_type(id);
+                    let fields: Vec<_> = record_fields(&self.g.prog.shapes, &ty)
+                        .expect("record ABI result")
+                        .iter()
+                        .enumerate()
+                        .map(|(i, (_, ty))| (format!("{t}.f[{i}]"), ty.clone()))
+                        .collect();
+                    let remaining = self.begin_call(key);
+                    let pending = self.begin_values(&fields);
+                    let result = self.bind(self.g.fresh(r));
+                    self.end_call(pending);
+                    self.end_call(remaining);
+                    result
                 }
                 None => match abi.vret {
                     // a value the caller needs: built from the struct
@@ -3601,7 +3630,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         self.end_call(node);
                         let ty = self.ret_type(id);
                         let k = self.g.vhelper(&ty, m);
-                        self.bind(format!("fwp_vbox{}({})", k, t))
+                        let remaining = self.begin_call(key);
+                        let result = self.bind(format!("fwp_vbox{}({})", k, t));
+                        self.end_call(remaining);
+                        result
                     }
                     None => self.bind_call(key, format!("w{}({})", id, xs.join(", "))),
                 },
@@ -5605,14 +5637,23 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             }
         }
         let body = match (abi.ret, abi.vret) {
-            (Some(n), _) => format!(
-                "{}fwp_r{} r = {}; {}return {};",
-                pre,
-                n,
-                call,
-                post,
-                self.fresh(format!("fwp_record({}, r.f)", n))
-            ),
+            (Some(n), _) => {
+                let ty = f.ty.params(f.arity as usize).1.clone();
+                let fields: Vec<_> = record_fields(&self.prog.shapes, &ty)
+                    .expect("record ABI result")
+                    .iter()
+                    .enumerate()
+                    .map(|(i, (_, ty))| (format!("r.f[{i}]"), ty.clone()))
+                    .collect();
+                let protect = self.protect_values(&fields, "pending_result", "boxing_cleanup");
+                let finish = if protect.is_empty() {
+                    ""
+                } else {
+                    "fwp_cleanup_pop(&boxing_cleanup);"
+                };
+                format!("{pre}fwp_r{n} r = {call}; {post}{protect} V result = {}; {finish}return result;",
+                    self.fresh(format!("fwp_record({n}, r.f)")))
+            }
             (None, Some(m)) => {
                 let f = &self.prog.funcs[id];
                 let t = f.ty.params(f.arity as usize).1.clone();
@@ -6112,6 +6153,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         tree_owner_defs: Vec::new(),
         vhelpers: HashMap::new(),
         vhelper_defs: Vec::new(),
+        vhelper_decls: Vec::new(),
         strings: HashMap::new(),
         string_defs: Vec::new(),
         consts: Vec::new(),
@@ -6692,11 +6734,17 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str(d);
         out.push('\n');
     }
-    for d in &g.vhelper_defs {
+    // Boxing helpers use typed cleanup contexts; other cleanup contexts may
+    // release unboxed variants. Declare those releases before either body.
+    for d in &g.vhelper_decls {
         out.push_str(d);
         out.push('\n');
     }
     for d in &g.cleanup_defs {
+        out.push_str(d);
+        out.push('\n');
+    }
+    for d in &g.vhelper_defs {
         out.push_str(d);
         out.push('\n');
     }

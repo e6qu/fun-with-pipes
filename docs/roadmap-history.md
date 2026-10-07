@@ -11071,3 +11071,10 @@ before explicit-lease publication. A guarded doc audit attempted during the
 loop check refused the serialization lock; it was not bypassed or accepted.
 
 Row34 guarded clippy2.69/5.35s and format0.34/0.61s also pass.
+
+PR101 documentation consolidation publishes6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c.
+Current roadmap_docs CI37969632440 passes; six production jobsCI37969632273
+remain queued/running. Superseded productionCI37968881919 is cancelled; its
+old-head docs pass is not a gate for the current head. Fold evidenceCI37969003113
+passes. Combined loop/argument evidence1ac6dc99fde5f6813659be356f7f89c29b8a27b5
+starts CI37969742246. Guarded portable all-doc audit passes0.35/2.66s.
