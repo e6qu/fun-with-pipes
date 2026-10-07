@@ -15067,3 +15067,217 @@ retain/loop-preparation/worker-preparation tests pass16.57CPU/33.39elapsed;
 all15 RC liveness units pass3.31CPU/6.81elapsed. No earlier disk-limit refusal
 was bypassed: these new workloads received fresh acceptance from the unchanged
 guard. Original negative exits3/7 and raw interpreter/native oracles remain.
+
+Preparation39 published3aeb9655d492253a9d4b01a604f1821a4edd9702 on actual85198cc78ee7d0cb8af5d6ec30b1c42771c91748, FROMactual4289528c436b6a3cb1edf81fb45d588722277469. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Oldd98205af88dfc2300d19d2ca12b11a71146ded9a retained at roadmap/revision-039-d98205af88df before exact-lease publication. Final actual-squash source preserves both original commits; all three retain/loop/worker regressions16.57CPU/33.39elapsed, all15 RC units3.31/6.81s, lint2.29/4.67s and format0.34/0.62s pass; original source/probes unchanged, including exact partial/caller omission exits3/7 and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required
+
+Queue39 final lint passes2.29CPU/4.67elapsed and formatting0.34/0.62s.
+Retained publication passes1.60CPU/17.90elapsed with all three audits
+(44 link sets,106 immutable pairs/tags,76 live heads/bases), publishing frozen
+3aeb9655d492253a9d4b01a604f1821a4edd9702 on actual main85198cc78ee7d0cb8af5d6ec30b1c42771c91748.
+All three commits (two originals plus appended docs) and native5c663ef544f0
+remain reachable. Old d98205af88dfc2300d19d2ca12b11a71146ded9a is retained at
+roadmap/revision-039-d98205af88df before the exact-lease update. PR117 opens
+with guard0.16CPU/4.23elapsed; CI38081959849/docs38081959890 are queued, not accepted.
+Actual PR116 squash docs38081735038 now passes at85198cc; its duplicate
+production run remains cancelled only after tested-tree proof.
+
+## Archived tensor kernel timing samples
+
+These old samples describe100 fused steps of8 operations (including sqrt, sin,
+exp, ln and cos), summed with tensor.sum-on. They ran on an unspecified shared
+4-core machine with reported load about12. Processor model, compiler/flags,
+allocations and live memory were not recorded, and input-list construction is
+included. They do not establish current macOS performance, a speedup lower
+bound or equal isolated kernel speed between interpreter and native backends.
+
+| elements | device | native | interpreter (release build) |
+|---|---|---|---|
+| 1 000 000 | `CpuParallel 1` | 3.37 s | |
+| 1 000 000 | `CpuParallel 2` | 1.84 s | |
+| 1 000 000 | `CpuParallel 4` | 1.75 s | |
+| 200 000 | `CpuParallel 1` | 0.60 s | 1.18 s |
+| 200 000 | `CpuParallel 4` | 0.26 s | 0.84 s |
+
+The live numerics page now links this archive instead of duplicating the table
+and its unverified performance inferences. Numeric lifetime source review is
+referenced to the current published source112 b45e93a71d40; runtime/fwp_rt_kernel.c
+and src/numerics.rs are byte-identical to the earlier reviewed996d5ee4ef4f.
+This documentation correction adds no numeric implementation or newly executed
+numeric regression. Ownership exit gates still precede representation/numerics.
+
+## Constructor cleanup binary evidence preparation
+
+Isolated evidence head e83b2a0b09cd1e5f8c590d4ce6707bf43f4fd9e2 is published
+on source40 5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. Only capture-constructor-layout-cc.py,
+inspect-constructor-layout.py and constructor-layout-evidence.yml differ;
+compiler/runtime/original probes/production workflows remain byte-identical.
+Worktree preparation passes0.08CPU/0.49elapsed. Static tooling validation found
+a C newline-escaping mistake (0.00CPU/0.16elapsed, exit1); fixing it before
+publication yields passing regex/C literal validation0.00CPU/0.14elapsed.
+No runtime/test oracle was changed. Publication passes0.08CPU/2.51elapsed.
+
+CI38082494104 is queued at the evidence head. It runs the unchanged original
+later_field_error_releases_nested_constructor_children test on ARM/Intel and
+retains the four actual positive/control O1/O2 binaries, source, flags, symbols,
+disassembly and a compiled layout driver. Exact outer-count-only negative exit4
+for both record/variant paths, aliases/scalar bits, GC/reuse modes and raw
+interpreter/native agreement remain mandatory. Queue40 final actual-squash
+checks and full production gates still remain. This run is not accepted yet.
+
+## Documentation audit moved to constructor evidence runners
+
+The unchanged guard refuses the next local shared-doc audit before execution:
+less than64GiB free (no workload run and no limits changed). The latest local
+docs are therefore uploaded as a snapshot to the existing evidence branch
+through a low-priority GitHub metadata operation. No local build or check runs.
+Remote commit38a013a224acfcf105c6aa77f941b0043c831e26 has one parent
+e83b2a0b09cd1e5f8c590d4ce6707bf43f4fd9e2 and a one-line subject with no body
+or trailers. The only additional changes are the11 authoritative docs and the
+evidence workflow's full-history checkout/shared audit step. Original compiler,
+runtime, probes and production workflows remain untouched.
+
+Fresh CI38082971623 is queued at38a013a; it audits the uploaded snapshot and
+executes the same original constructor test and actual layout inspection on
+both macOS architectures. Superseded queued38082494104 is cancelled and not
+accepted; e83b2a0b09cd remains its parent. The local evidence checkout remains
+at e83b2a0b09cd and must fetch/fast-forward before any later edit/publication;
+never rerun its completed initial publication helper or overwrite the remote
+metadata commit. Current production PR117/head3aeb9655d492 is unchanged.
+
+The design pipeline table now summarizes ownership/reuse and links the detailed
+contracts, instead of repeating the same lifetime policy and old measurements.
+It distinguishes borrowing from consuming primitive modes and describes reuse
+verification as poisoning released cells. The old tree33-collection/37MiB and
+constructor153MiB/164ms samples already remain in the historical changelog;
+they are removed from the live design overview as unqualified current claims.
+Platform review confirms that native --static linking and --memory static are
+different options; no new platform-support claim or runtime change is made.
+These latest documentation edits await the next focused production docs gate.
+
+## Passing constructor cleanup machine-code and docs evidence
+
+CI38082971623 passes both ARM/Intel jobs at38a013a224acfcf105c6aa77f941b0043c831e26
+on unchanged source40 5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. Remote comparison
+shows only the two capture/inspection scripts, the evidence workflow and
+authoritative docs changed. Original compiler/runtime/probes/production workflows
+remain unchanged. Remote raw commit metadata confirms a one-line subject and
+one parent e83b2a0b09cd, with tree8b8715d57b85c1569ceab9bb94e6b16a2c69875a.
+
+Actual ARM job114303516055 and Intel job114303515972 each execute
+later_field_error_releases_nested_constructor_children once:1passed/0failed/
+0ignored (7.63s ARM,15.73s Intel; runner test timing is not a performance claim).
+Original outer-count-only negative exit4 for both record/variant paths,
+alias/scalar controls, GC/reuse modes and raw interpreter/native O1/O2 agreement
+remain mandatory. Each inspection checks four actual Mach-O positive/control
+binaries and compiles/runs the layout driver. Both give V8/align8, object
+header8/payload offset8, cleanup24 and each of the nine recorded typed Inner
+owner-context definitions8/align8. Definitions do not sum to total stack usage;
+fault/observer fixtures are not production ABI/speed guarantees. Actual C,
+original flags, hardware/compiler metadata, symbols and full disassembly remain
+in artifacts constructor-layout-macos-15 and constructor-layout-macos-15-intel.
+
+Both runner shared audits pass44 link sets,106 immutable queue pairs/tags and
+76 live heads/bases, including whole commit messages, for the uploaded snapshot.
+This completes the audit moved from local disk refusal without retrying or
+bypassing the guard. Later live design/status edits await the next production
+docs gate. Local artifact downloads are deferred while local checks stay
+stopped; the saved GitHub artifacts are the primary evidence. Initial log
+lookup used an incorrect job ID and was corrected from run metadata; GH API
+log output required allowing escape sequences, which were removed before
+display. Neither read failure changed runtime code, tests or their oracles.
+Final queue40 actual-squash checks and all seven production gates still remain.
+
+## Constructor evidence collection and fresh local audit after recovery
+
+After available disk recovered to84375232KiB (80.47GiB), fresh workloads
+passed under python3 scripts/local-guard.py without changing its limits.
+Fetching passing constructor evidence38a013a224ac passes0.05CPU/1.13elapsed.
+python3 /private/tmp/fwp-record-constructor-layout-evidence.py passes
+0.22CPU/7.26elapsed; completed journal/proof must not rerun. Actual C, flags,
+compiled layouts, all eight Mach-O binaries, symbols and disassembly are in
+/private/tmp/fwp-constructor-layout-38a013a-artifacts, with proof in
+/private/tmp/fwp-constructor-layout-passing-proof.json. Both runner original
+tests execute once with zero ignored tests and both snapshot audits pass.
+Source/probe/runtime/production-workflow parity remains exact apart from the
+three evidence files and authoritative docs.
+
+A fresh shared audit of the subsequently updated root docs passes
+0.49CPU/3.65elapsed:44 link sets,106 immutable pairs/tags,76 live heads/bases.
+Deferred helper AST/doc-anchor checks pass0.00/0.14s. The isolated evidence
+checkout fast-forwards e83b2a0b09cd to38a013a224ac (0.00/0.13s). Earlier disk
+refusals remain historical; their snapshot audit moved to CI and passed there.
+No guard limit was raised and no full local build or test gate was run.
+
+Fresh current root documentation audit after constructor evidence bookkeeping passes0.55CPU/3.93elapsed through python3 scripts/local-guard.py python3 scripts/check-roadmap.py:44 link sets,106 immutable pairs/tags,76 live heads/bases and commit messages.
+
+## Archived handoff after PR #117
+
+Main is `85198cc78ee7d0cb8af5d6ec30b1c42771c91748` (PR #116). Accepted frozen head
+`e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5` passes all six jobs in CI38076902840 and
+roadmap_docs38076903010. Match-head squash at 2026-10-10T19:55:51Z has the
+exact 57-character subject `Protect flattened loop arguments during field preparation`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`25dd472a889baf61422c254eaa6b370147c81244` and complete tree `f53d2fe498e3f5de928bea64991cc225e56419b6`,
+identical to the tested head. All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre116 and restored byte-for-byte after fast-forward.
+Merge0.25CPU/6.73elapsed, fetch0.04/1.10s, protection0.05/0.25s and acceptance
+audit0.67/5.75s pass (44 link sets,106 immutable pairs/tags,76 live heads/bases).
+Duplicate main CI38081735040 was cancelled only after complete-tree proof
+(0.04CPU/1.20elapsed); actual main docs38081735038 passes at the squash head.
+Queues35–38 are accepted in PRs113–116. Flattened loop argument preparation
+now protects the original box and each completed typed field duplicate until
+transfer. Alias/scalar bits, evaluation/trap order and original allocation
+controls remain intact. Phase2 remains incomplete; phases3–6 are pending.
+
+[PR117](https://github.com/e6qu/fun-with-pipes/pull/117) is the sole open production PR,
+delivering queue39 retain overflow on actual PR116 squash85198cc78ee7.
+Frozen head `3aeb9655d492253a9d4b01a604f1821a4edd9702` is published; both original
+commits, native snapshot5c663ef544f0 and old remote d98205af88df remain reachable.
+Rebase0.09CPU/0.98elapsed, three native regressions16.57/33.39s, all15 RC units
+3.31/6.81s, lint2.29/4.67s and format0.34/0.62s pass. Publication1.60/17.90s
+passes all three audits (44 link sets,106 immutable pairs/tags,76 live heads/bases).
+Old remote revision was retained before exact-lease update. PR creation passes
+0.16CPU/4.23elapsed. CI38081959849 passes bench, both ARM/Intel regular and both GC stress jobs;
+Linux is the remaining running gate. Docs38081959890 passes at the frozen head; require all seven passing gates before match-head squash with
+`Release partial retains and caller owners on count overflow` and an empty body.
+Next production after acceptance is queue40 constructor type context, FROM
+actual prepared39 d98205af88df onto PR117's eventual actual squash. Preserve both
+original commits and all original probes; run fresh focused checks on that base.
+Independent constructor binary capture is published at
+`38a013a224acfcf105c6aa77f941b0043c831e26` on unchanged source40
+5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. CI38082971623 passes both ARM/Intel jobs at the exact evidence head;
+capture/inspection/workflow files and the11-doc handoff snapshot differ. A
+remote-only metadata commit adds full-history checkout and the shared docs audit
+to both runner jobs after a local disk-limit refusal. Original e83b2a0b09cd
+remains reachable; its superseded queued run38082494104 is cancelled. It preserves the original
+later-field error test, record/variant negative exit4, alias/scalar controls,
+GC/reuse checks and raw interpreter/native O1/O2 agreement. New tooling regex
+and C newline validation passes0.00CPU/0.14elapsed after an escaping correction;
+publication0.08/2.51s passes. Both platforms execute the original test once with zero failed/ignored tests,
+inspect four actual O1/O2 positive/control binaries and pass the uploaded snapshot
+audit (44 link sets,106 immutable pairs/tags,76 live heads/bases). Compiled sizes
+agree: V8/align8, object header8/payload offset8, cleanup24 and each of the nine
+recorded typed Inner-owner contexts8/align8. These definitions do not sum to a
+frame size. Original exit4 controls for both record/variant paths remain intact.
+C, flags, hardware/compiler metadata, symbols and disassembly are retained in
+GitHub artifacts and /private/tmp/fwp-constructor-layout-38a013a-artifacts.
+Passing-proof verification/download passes0.22CPU/7.26elapsed, with original
+source/probe/production-workflow parity and four Mach-O binaries per platform.
+The isolated evidence checkout is fast-forwarded to38a013a224ac (0.00/0.13s). No final
+constructor production support is claimed; actual-squash/full gates remain. The
+refused snapshot audit passes on CI without bypassing the guard. After disk
+recovery to80.47GiB available, a fresh audit of the subsequently updated live
+docs passes0.49CPU/3.65elapsed (44/106/76). Limits remain unchanged.
+
+
+Accepted queue39 in PR117 at 571422b54647b5c95eb1bfe2d13bb3edf0176e0d on 85198cc78ee7d0cb8af5d6ec30b1c42771c91748. Frozen 3aeb9655d492253a9d4b01a604f1821a4edd9702 passes all six CI38081959849 jobs and docs38081959890. Raw subject 'Release partial retains and caller owners on count overflow' has 59 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree 5fa63ec44f134c96443adad74c6cbd1ff7c11656 are verified. All11 live docs were hashed and restored byte-for-byte during fast-forward.
+
+Earlier queue39 focused status, now accepted:
+Queue39 retain overflow source d98205af88dfc2300d19d2ca12b11a71146ded9a
+has been reviewed, with actual SIZE_MAX overflow and exact omitted partial/caller
+scope exits3/7 preserved. Its final rebase passes0.09CPU/0.98elapsed: FROM
+actual prepared38 4289528c436b onto the actual PR116 squash. Final native
+snapshot5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits
+and every source/probe byte. All three original native regressions pass
+16.57CPU/33.39elapsed; all15 RC units3.31/6.81s, lint2.29/4.67s and
+format0.34/0.62s pass. Final docs publication passes1.60CPU/17.90elapsed at frozen3aeb9655d492; exact-head full CI remains pending.
