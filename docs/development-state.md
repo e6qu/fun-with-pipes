@@ -48,9 +48,9 @@ the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
 the fallback. Prior acceptance details and failed/superseded runs are in history.
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
-production PR, exact head9c1b5a861b156a48d9e4e55b96c336fc6e852e18 on actual
-main1052ef5510154cd52f9f4e94a4a5a2778a20e43ec01. Fresh full CI38002299110
-is running with benchmarks passing; roadmap_docs38002299186 passes. Freeze this head; update root
+production PR, exact head `9c1b5a861b156a48d9e4e55b96c336fc6e852e18` on actual
+main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Full CI38002299110 is running
+with benchmarks passing; roadmap_docs38002299186 passes. Freeze this head; update root
 status without rewriting the PR just to embed run IDs. Require all seven
 exact-head passing checks, then squash with the subject
 `Protect live compiler owners across calls and cancellation` and empty body.
@@ -99,7 +99,7 @@ still need their final squash rebases and six exact-head full gates.
 | 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | 7de346c56ec4 | 0584ab3ac77b | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | 61c5f8e91cc5 | 7de346c56ec4 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
+| 39 ownership-variant-preparation | a5ac41b405dd | 61c5f8e91cc5 | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | dd6c405c77eb | 5a72ba8763e4 | Native10.03/20.20s; two units; lint2.42/4.95s and format0.43/0.59s pass |
 | 41 ownership-variant-conversion | 67e37717ecf2 | dd6c405c77eb | Native10.20/20.63s; unit3.37/7.04s; lint2.29/4.47s and format0.33/0.59s pass |
 | 42 ownership-record-update | 4ea62b69a2c4 | 67e37717ecf2 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
@@ -354,25 +354,17 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-loop-preparation-worktree after absolute-root guarded package
-clean0.00CPU/0.14elapsed. Twelve final call/token/unwind tests pass30.59CPU/
-61.49elapsed. Eleven focused ownership-IR module tests pass3.27CPU/6.84elapsed.
-Published row377de346c56ec4e7a827edb88fa0cc49604ac530d6 has actual base0584ab3,
-rebased FROMactual6032ecf. Compiler/runtime/original probes match3bd34da;
-only inherited guard/audit and long-tail regression differ. Three focused
-worker-preparation/worker-boxing/constructor tests pass15.91CPU/31.88elapsed;
-lint2.33/4.78s, format0.35/0.63s and strong44/106/86 audit0.43/3.50s pass.
-Retained roadmap/revision-037-3bd34dafb62f before exact leased publication.
-Final rebase FROMactual0584ab3 follows row36's accepted squash.
-Published row 38 is `61c5f8e91cc5a17c9bc16b739ca9d7bff17c7a32`, actual base
-`7de346c56ec4e7a827edb88fa0cc49604ac530d6`, rebased from actual `3bd34da`.
-Compiler/runtime/original probes match `032a764`; only the inherited guard,
-audit and long-tail regression differ. Four focused loop-preparation, loop-unwind
-and worker-preparation tests pass (16.61 CPU / 33.35 elapsed seconds), lint
-2.26/4.59s, format0.34/0.62s and strong44/106/86 audit0.42/3.49s pass.
-Retained roadmap/revision-038-032a764c1d33 before exact leased publication.
-No local workload remains running. Final rebase from actual `7de346c` follows
-row 37's accepted squash.
+to /private/tmp/fwp-variant-preparation-worktree after absolute-root guarded
+package clean (0.07 CPU / 0.38 elapsed seconds). No local workload is running.
+Row 39 is published at `a5ac41b405dd62b6dcad65bc012f4621efa0e381` on actual
+base `61c5f8e91cc5a17c9bc16b739ca9d7bff17c7a32`, rebased from actual `032a764`.
+Compiler/runtime/original probes match `5a72ba8`; only inherited guard/audit and
+the long-tail regression differ. Three focused tests pass (16.18 CPU / 32.57
+elapsed seconds), exact retain-liveness unit3.33/7.00s, lint2.40/4.91s,
+format0.35/0.75s and strong44/106/86 audit0.42/3.47s pass. Prior revision is
+retained at roadmap/revision-039-5a72ba8763e4 before exact leased publication.
+Final rebase must use this actual base after row 38's accepted squash.
+
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
 samples current limits; historical observations never authorize bypassing the
