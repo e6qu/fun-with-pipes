@@ -101,6 +101,20 @@ static V fwp_p_fold_right(V f, V z, V xs) {
     return z;
 }
 
+static V fwp_p_fold_right_own(V f, V z, V xs) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = n; i > 0; i--) {
+        V args[] = {a[i - 1], z};
+        z = fwp_apply_borrowed_span(f, 2, args, 1, 1);
+    }
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return z;
+}
+
 /* stable merge sort of (key, value) pairs */
 static void fwp_msort(V *keys, V *vals, size_t n, const fwp_desc *d, V *tk, V *tv) {
     if (n < 2) return;
@@ -273,6 +287,16 @@ FWP_K V fwp_k_fold_right(fwp_fn2 f, V z, V xs) {
     V *a = fwp_list_items(xs, &n);
     for (size_t i = n; i > 0; i--) z = f(a[i - 1], z);
     FWP_KEEP_ALIVE(a);
+    return z;
+}
+
+FWP_K V fwp_k_fold_right_owned(fwp_fn2 f, V z, V xs) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = n; i > 0; i--) z = f(a[i - 1], z);
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    FWP_KEEP_ALIVE(xs);
     return z;
 }
 

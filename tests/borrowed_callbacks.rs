@@ -181,6 +181,12 @@ int main(void) {
     if (r != leaf || *fwp_rc_slot(leaf) != 2 || *fwp_rc_slot(scalar) != 1 ||
         *fwp_rc_slot(factory) != 1) return 19;
     probe_drop_leaf(r);
+    transferred = fwp_rc_fresh(fwp_cstr("span transfer"));
+    V span_args[] = {scalar, transferred};
+    r = fwp_apply_borrowed_span(factory, 2, span_args, 1, 1);
+    if (r != transferred || *fwp_rc_slot(r) != 1 || *fwp_rc_slot(scalar) != 1 ||
+        *fwp_rc_slot(factory) != 1) return 21;
+    probe_drop_leaf(r);
     fwp_rc_dup(leaf);
     V capture = probe_closure(3, 1, &leaf);
     r = fwp_apply_borrowed(capture, 1, &scalar);
