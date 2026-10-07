@@ -321,6 +321,11 @@ caller owners before allocation, preserving scalar slots and the direct reuse
 path. Acceptance and remaining boxing work are recorded in
 [ownership.md](ownership.md#prepared-constructor-allocation-cleanup).
 
+Prepared worker result boxing owns returned typed fields and remaining caller
+values across allocation; scalar and nullary variant payloads remain uncounted.
+See [ownership.md](ownership.md#prepared-worker-result-boxing) for evidence and
+remaining input preparation and runtime lifetime work.
+
 ## Not implemented
 
 - Complete ownership of strings, bytes, escaping closures and runtime-shared

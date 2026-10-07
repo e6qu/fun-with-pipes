@@ -292,9 +292,9 @@ argument-preparation compiler; guarded `cargo clean -p fwp` is required before a
 worktree's package build. Root main has only PLAN/handoff edits; all published
 prepared checkouts are clean. PR #79 exact-head CI: ARM macOS/bench passed; Intel macOS/Linux running.
 
-Constructor allocation cleanup is in progress on `ownership-constructor-unwind`,
-checkout `/private/tmp/fwp-constructor-unwind-worktree`, OLD base `4973918`;
-uncommitted. The ownership checker records non-nullary constructors too. Before
+Constructor allocation cleanup is published on `ownership-constructor-unwind`,
+checkout `/private/tmp/fwp-constructor-unwind-worktree`, OLD base `4973918`, head
+`608ae7bb2d2420f78a113a11299669a9f4821f37`; clean, no new PR. The ownership checker records non-nullary constructors too. Before
 allocating a record/variant, generated code protects remaining caller owners and
 consumed typed field values separately. Constructor functions protect their
 owned arguments. Successful allocations transfer those fields; young reuse
@@ -316,7 +316,8 @@ ownership switches and bump-allocator compilation. Library clippy is warning-fre
 (CPU 2.52 s / elapsed 5.03 s); fmt and whitespace pass. No local workload remains.
 Final probe/call command: `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3 /private/tmp/fwp-local-guard.py cargo test --test constructor_unwind_ownership --test compiler_call_liveness -- --nocapture`.
 Reuse-token tests, `cargo clippy --lib -- -D warnings` and fmt used the same guard.
-Next complete validation and publish this focus, then protect worker field
+Verified subject `Protect consumed constructor fields before allocating their storage`
+is one line, 67 characters, empty body/no trailers. Next protect worker field
 preparation and record/variant result boxing, followed by initial loop flattening,
 CAF/inline-rewrite lifetimes and retained runtime tasks. Concrete constructor
 argument temporaries with unknown field types still need typed context coverage;
@@ -324,6 +325,34 @@ do not treat a fallback outer count as full child reclamation. Shared target now
 contains the constructor-unwind compiler. The main root retains only its plan/
 handoff edits; published prepared checkouts are clean. Full sequential CI remains
 required for every prepared branch, and phases 2–6 remain incomplete.
+
+Worker result boxing is in progress on `ownership-worker-boxing`, checkout
+`/private/tmp/fwp-worker-boxing-worktree`, OLD base `608ae7b`; uncommitted.
+Record result wrappers now own returned typed fields across box allocation.
+Variant boxing protects only the active constructor's counted payloads; scalar
+and nullary variants have no payload owner. Direct worker calls re-register
+remaining caller owners during result boxing, independently of returned fields.
+Variant release declarations now precede cleanup context definitions so those
+contexts and boxing helpers can refer to each other without undeclared C types.
+
+The initial dedicated O1/O2 stress/verification/poison probe passes (CPU 10.35 s /
+elapsed 20.88 s), covering record and variant wrappers, another live caller
+reference across direct recursive worker-result boxing, surviving aliases,
+scalar payload bits and nullary variants. Normal native output matches the
+interpreter. The fixture's missing rec declaration was corrected, and the first
+C compilation exposed the definition-order bug, now fixed. An expanded probe
+restores only the missing record result scope and must detect leaked returned
+fields. The final seven-test boxing/call/constructor batch passes, CPU 18.90 s /
+elapsed 37.93 s. Library clippy is warning-free (CPU 2.58 s / elapsed 5.10 s);
+fmt and whitespace pass. No local workload remains.
+Final test command used the guard with
+`cargo test --test worker_boxing_ownership --test compiler_call_liveness --test constructor_unwind_ownership -- --nocapture`; lint/fmt used the same bounded guard.
+Next finish validation/publication, then move wrapper incoming-owner registration
+before field duplication and protect completed field duplicates until worker
+entry. Initial loop flattening, vlocal variant duplication/boxing, unknown
+typed constructor temporaries, CAF/inline lifetime and retained tasks remain.
+Shared target now contains the worker-boxing compiler. Full sequential CI still
+gates each prepared branch; no additional PR is open.
 
 ## Current ownership evidence
 
@@ -382,6 +411,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-fold-unwind | fwp-fold-unwind-worktree | 968dac7 | c2a3645 |
 | ownership-loop-unwind | fwp-loop-unwind-worktree | 988f2a3 | 968dac7 |
 | ownership-argument-preparation | fwp-argument-preparation-worktree | 4973918 | 988f2a3 |
+| ownership-constructor-unwind | fwp-constructor-unwind-worktree | 608ae7b | 4973918 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

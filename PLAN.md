@@ -62,8 +62,8 @@ are not merged support. Rebase and validate them in order, opening each PR only
 after the preceding one merges. The handoff records exact heads, immutable OLD
 rebase anchors and actual focused evidence.
 
-Constructor allocation is the current separate implementation. Next finish
-worker field duplication and result boxing, initial loop flattening, typed
+Constructor allocation is published separately; worker result boxing passes
+focused exceptional checks. Next finish worker field duplication, initial loop flattening, typed
 constructor temporaries, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
@@ -512,6 +512,6 @@ Continue with retained tasks and allocator/boxing/CAF/inline ownership before
 closing phase 2.
 
 Constructor allocation now passes focused exceptional cleanup/alias checks in a
-separate preparation. Complete worker field duplication and result boxing,
-initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
+separate preparation. Worker result boxing also passes focused exceptional checks. Complete field
+duplication, initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
 retained tasks before phase 2 acceptance. Full sequential CI remains required.

@@ -569,3 +569,27 @@ sequential CI remains required. Worker argument preparation, record/variant
 result boxing, initial loop flattening, concrete types for unknown constructor
 argument temporaries, CAF/inline ownership, cleanup-spill failure and retained
 runtime lifetimes remain separate acceptance work.
+
+## Prepared worker result boxing
+
+A record wrapper protects owned returned fields until allocation succeeds.
+Variant boxing selects the active constructor's typed fields; scalar-only and
+nullary cases register no payload owner. Direct worker callers protect their
+remaining locals again while boxing the newly returned record/variant, separately
+from its owned fields. Successful boxing transfers the fields without extra
+counts. Programs without possible unwind compile out these scopes.
+
+Variant release declarations precede cleanup contexts and boxing definitions:
+variant owners can call their releases, and boxing helpers can use typed contexts.
+A focused generated-code probe passes at O1/O2 with stress/verification and both
+reuse modes for record/variant wrappers, another caller reference across recursive
+worker result boxing, retained aliases, address-shaped scalar bits and ignored
+nullary payload slots. Restoring the missing record result scope makes the same
+probe detect unreleased fields. Normal output matches the interpreter; six
+adjacent call/constructor checks pass. Full sequential CI remains required.
+
+Wrapper input scopes still need to start before field duplication, with each
+completed duplicate protected until worker entry. Initial loop flattening,
+vlocal variant duplication/boxing, unknown constructor temporary types,
+CAF/inline lifetimes, cleanup-spill failures and retained tasks remain acceptance
+work. These focused paths do not prove complete ARC or tracing-free execution.
