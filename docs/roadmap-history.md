@@ -7511,3 +7511,25 @@ passes2.51 s CPU /4.99 s elapsed; format0.33 s /0.60 s. Nine current root
 docs preserved before final amend/publication. Original subject remains
 Own typed array elements across copies updates and callbacks, one line,
 empty body. No second PR.
+
+Final array preparation head443524ef6b6d5183f010899902a94a9d53c5dc55, actual
+base7741d09; immutable OLD636414f and OLDparentfad9b1a remain unchanged.
+
+## Raw map/set oracle preparation, 2026-10-08
+
+Row22 ownership-map-set-elements rebases immutable OLDa8a7d119712bd3cb77d03bde1daaedcf290b22d2
+from OLD parent636414fabf1802c1f3e15de3080763e997e0e135 onto actual current
+row21 head443524ef6b6d5183f010899902a94a9d53c5dc55 (initial d327ce2).
+Resolve PLAN/design/state/ownership/primitive conflicts using all nine live
+root docs. Both source oracles explicitly use FWP_NO_OPT=1. Three focused
+map_set_ownership tests pass14.98 s CPU /30.15 s elapsed under the guard,
+covering retained aliases, typed nested containers and closures, ordered
+callbacks and key identity, O1/O2/stack, GC stress/verification/poison,
+no-reuse/no-free and scalar address-shaped bits. Scoped no-tracing graph
+reclamation control is unchanged. Shared target switches with guarded
+clean0.00 s /0.13 s. Six sequential full gates still precede delivery.
+
+Map/set lint (cargo clippy --test map_set_ownership -- -D warnings) passes
+2.33 s CPU /4.67 s elapsed, format0.34 s /0.61 s. Nine current docs are
+preserved before final amend/publication. Original one-line subject remains
+Own typed map and set elements across copies updates and callbacks; empty body.

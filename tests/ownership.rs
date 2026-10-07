@@ -83,11 +83,16 @@ main = [
             );
         }
     }
-    let insert = c.find("return fwp_p_map_insert_own(l0").unwrap();
+    let insert = c.find("return fwp_p_map_insert_typed(l0").unwrap();
     let start = c[..insert].rfind("static V f").unwrap();
     assert!(
-        c[start..insert].contains("fwp_rc_share(l0)"),
-        "insert must protect the stored key"
+        !c[start..insert].contains("fwp_rc_share(l0)")
+            && c[insert..]
+                .split(';')
+                .next()
+                .unwrap()
+                .contains("fwp_map_ops){fwp_rc_dup, fwp_rc_dup,"),
+        "insert must retain stored keys and values by type"
     );
     let exe = scratch.0.join("boundaries");
     checked(

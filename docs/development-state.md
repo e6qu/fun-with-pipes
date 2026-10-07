@@ -65,6 +65,7 @@ still need their final squash rebases and six exact-head full gates.
 | 18 ownership-loop-state | 112f3c8de87b | 15743b853d6a | 19.08 /38.44 s |
 | 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
 | 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 /27.47 s |
+| 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 /28.81 s |
 
 Row 18 head 112f3c8 includes only doc changes after tested code 7af6961.
 Row 20 full head 7741d09dd8cf214396e7938e07fbbd1f7263d9f7 is published
@@ -72,13 +73,14 @@ clean; all three tests, lint 2.48 s /4.89 s and format 0.43 s /0.83 s pass.
 Repeated aliases and generated spines reclaim by counting; boxed128-bit numeric
 payload representation remains shared. Do not claim numeric payload ownership.
 
-Current independent work: row 21 ownership-array-elements is rebased from
-OLD parent fad9b1a onto current row 20 head 7741d09 (temporary da904ea).
-Both source oracles now explicitly use FWP_NO_OPT=1; all three focused tests
-pass 14.23 s CPU /28.81 s elapsed. Lint 2.51 s /4.99 s and format 0.33 s /0.60 s pass; publish without
-opening another PR.
-Its later final rebase must use actual base 7741d09; preserve OLD636414f.
-Worktree paths are in the queue/history.
+Row 21 full head 443524ef6b6d5183f010899902a94a9d53c5dc55 is clean after
+amend; all three tests, lint 2.51 s /4.99 s and format 0.33 s /0.60 s pass.
+Preserve immutable OLD636414f/parentfad9b1a; later final rebase uses actual
+current base 7741d09. Current independent preparation: row 22 map/set elements is rebased from
+OLD parent636414f onto current row21 head443524e (temporary d327ce2).
+Both raw oracles explicitly set FWP_NO_OPT=1; all three tests pass
+14.98 s CPU /30.15 s elapsed. Lint 2.33 s /4.67 s and format 0.34 s /0.61 s pass; publish without another PR.
+Preserve OLDa8a7d11 and record actual base443524e.
 
 ## Repaired resource evidence
 
@@ -125,8 +127,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-array-element-worktree; all focused array checks pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 /0.25 s).
+belongs to /private/tmp/fwp-map-set-worktree; all focused map/set checks pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.10 s CPU /0.71 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
