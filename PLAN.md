@@ -51,7 +51,7 @@ exact-head gates in run `37636161587`, attempt 2;
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) is the sole
-open closure-cleanup PR; post-rebase focused checks pass and full CI is queued. Later published branches prepare closure and
+open closure-cleanup PR; post-rebase focused checks pass; both macOS CI jobs test and Linux/bench queue. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
@@ -505,10 +505,11 @@ both scratch buffers and its result prefix with focused exceptional checks;
 full sequential CI remains required. Finish the other callback accumulators and
 retained task lifetimes before closing phase 2.
 
-
 Prepared fold cleanup protects right-fold scratch and consumed accumulators
 before allocation/argument preparation. Typed borrowed-span scopes preserve
 original aliases when a later duplicate fails. Focused exceptional and scalar-bit
-checks pass; full sequential CI remains required. Continue with loop state at
-cancellation ticks, retained task lifetimes and the remaining allocator/boxing/
-CAF/inline ownership audit before closing phase 2.
+checks pass; full sequential CI remains required. Loop state at cancellation ticks and Step payload preparation now pass focused
+alias/scalar-bit and interpreter/native checks in a separate preparation. Full
+sequential CI is still required. Continue with multi-capture preparation, owned
+application allocation, retained tasks and the allocator/boxing/CAF/inline
+ownership audit before closing phase 2.

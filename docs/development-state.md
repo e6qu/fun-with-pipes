@@ -50,7 +50,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   latest docs; runtime/tests applied cleanly. Head
   `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, published with exact lease; clean.
   Three closure cleanup/alias/counter checks pass (CPU 11.97 s / elapsed 24.06 s);
-  fmt/whitespace pass. Full CI `37666199241` is queued on that exact head.
+  fmt/whitespace pass. Full CI `37666199241` tests on both macOS architectures;
+  Linux and benchmarks are queued on that exact head.
   Require all four gates before squash with subject
   `Bound closure capture cleanup with an explicit release work list`, empty body
   and exact head match. The temporary-types child later rebases from OLD
@@ -190,15 +191,16 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
 with all four exact-head gates passing. PR #79 is the sole open PR, exact head
-`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241` queued. When all
+`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241` tests on both macOS architectures; Linux/bench queued. When all
 four gates pass, squash with the explicit subject above and empty body, verify
 its message, and fast-forward main preserving these two docs. Rebase temporary
 ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
 focused checks, publish with exact lease and open the sole next PR. Do not rebase
 children using a rewritten or squash parent as their OLD base.
 
-Fold/right-fold cleanup is in progress on `ownership-fold-unwind`, checkout
-`/private/tmp/fwp-fold-unwind-worktree`, OLD base `c2a3645`; it is uncommitted.
+Fold/right-fold cleanup is published on `ownership-fold-unwind`, checkout
+`/private/tmp/fwp-fold-unwind-worktree`, OLD base `c2a3645`, head
+`968dac7ed9cfa98ce964d889a6b54e907d9e148b`; checkout clean.
 Normal fold/right-fold tests pass (CPU 14.48 s / elapsed 29.37 s). An initial Rust
 borrow error was corrected by cloning the callback-ID list before adding typed
 drop helpers. Captured callback probes were corrected to use the optimizer’s
@@ -217,17 +219,38 @@ normal fold/right-fold/runtime checks pass (CPU 15.50 s / elapsed 31.22 s).
 A borrowed-span overapplication probe was added to verify the pending suffix
 and surviving function alias across prefix failure and successful return.
 The added overapplication probe passes (CPU 2.51 s / elapsed 5.10 s).
-Final fmt and whitespace pass. The fold branch is ready for publication; full
-sequential CI remains required. Continue with loop state cleanup. Continue with loop state and retained task lifetime cleanup. Read ownership/
-design first. Keep state transfer precise across callback entry and cancellation
-before the next call, cover direct/dynamic/captured paths and scalar bits, and
-compare native/interpreter behavior. Then retained tasks and remaining allocator,
-boxing, CAF and inline-rewrite lifetimes; the numbered roadmap follows after
-phase 2 acceptance. Failing checks are repair tasks, never a reason to stop.
-Shared target currently contains the compiler from the fold-unwind checkout;
-guarded `cargo clean -p fwp` is required before another worktree's package build.
-No local workload remains after focused checks complete. Root main has only PLAN/handoff edits; published
-runtime/map/selection/zip worktrees are clean.
+Final fmt and whitespace pass. The fold branch is published; full
+sequential CI remains required.
+
+Loop cancellation cleanup is in progress on `ownership-loop-unwind`, checkout
+`/private/tmp/fwp-loop-unwind-worktree`, OLD base `968dac7`; not yet published.
+Dynamic, known and captured loops protect the current consumed state at each
+outer tick and transfer it before owned callback entry. Specialized outer loops
+save only counted typed slots, clear them before fs entry and refresh from the
+next state before the next tick. Step payload extraction protects the owned Step
+while preparing its typed payload duplicate. Stop results never enter a state
+scope of a different type.
+
+All five existing loop checks pass (CPU 21.60 s / elapsed 43.61 s), covering
+reclamation, aliases, scalar address bits, fused consumers and trap/evaluation
+order. Two dedicated checks pass (CPU 3.93 s / elapsed 8.00 s): cancellation at
+first and second ticks on direct/generic/dynamic/captured/nested paths and Step
+payload-preparation traps for Again/Stop with surviving aliases. They compile
+actual generated C at O1/O2 with GC stress/verification and both poison modes;
+normal native output matches the interpreter. Test-source typing and optimized-
+away wrapper assumptions were corrected before accepting this evidence. The
+nested fixture holds a typed boxed nested record; it does not prove flattened
+nested-slot cancellation coverage. Adjacent call-liveness/fold checks (7) pass, CPU 15.84 s / elapsed 31.89 s.
+
+Library clippy is warning-free (CPU 2.28 s / elapsed 4.52 s); fmt and whitespace
+pass. Next publish loop cleanup separately.
+Then audit multi-capture preparation and owned application allocation, followed
+by constructor/boxing/CAF/inline-rewrite owners and retained task lifetimes.
+Phase 2 remains incomplete; phases 3–6 follow its acceptance. Failing checks are
+repair tasks, never a reason to stop. Shared target currently contains the
+loop-unwind compiler; guarded `cargo clean -p fwp` is required before another
+worktree's package build. Root main has only PLAN/handoff edits; all published
+prepared checkouts are clean. PR #79 exact-head CI now tests on both macOS architectures; Linux/bench queued.
 
 ## Current ownership evidence
 
@@ -284,6 +307,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-map-unwind | fwp-map-unwind-worktree | 62add7e | bee3f16 |
 | ownership-selection-unwind | fwp-selection-unwind-worktree | b8f4c24 | 62add7e |
 | ownership-zip-unwind | fwp-zip-unwind-worktree | c2a3645 | b8f4c24 |
+| ownership-fold-unwind | fwp-fold-unwind-worktree | 968dac7 | c2a3645 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

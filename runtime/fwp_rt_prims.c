@@ -464,30 +464,46 @@ static V fwp_p_loop(V f, V s) {
  * releasing the Step, so shared/aliased boxes are safe as well as unique ones. */
 static V fwp_loop_payload(V step, int stop, void (*dup_state)(V),
                           void (*dup_result)(V), void (*drop_step)(V)) {
+    fwp_value_owner owner = {step, drop_step};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
     V value = OBJ(step)->f[0];
     void (*duplicate)(V) = stop ? dup_result : dup_state;
     if (duplicate) duplicate(value);
+    fwp_value_finish(&owner, &cleanup);
     if (drop_step) drop_step(step);
     return value;
 }
 static V fwp_p_loop_own(V f, V s, void (*dup_state)(V),
-                         void (*dup_result)(V), void (*drop_step)(V)) {
+                         void (*dup_result)(V), void (*drop_step)(V), void (*drop_state)(V)) {
+    fwp_value_owner owner = {s, drop_state};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
     for (;;) {
         FWP_TICK();
+        s = owner.value;
+        owner.value = 0;
         V step = fwp_apply_borrowed_prefix(f, 1, &s, 1);
         int stop = fwp_tag(step) != 0;
         s = fwp_loop_payload(step, stop, dup_state, dup_result, drop_step);
-        if (stop) { FWP_KEEP_ALIVE(f); return s; }
+        if (stop) { FWP_KEEP_ALIVE(f); fwp_value_finish(&owner, &cleanup); return s; }
+        owner.value = s;
     }
 }
 static V fwp_k_loop_owned(V (*entry)(V *), V s, void (*dup_state)(V),
-                           void (*dup_result)(V), void (*drop_step)(V)) {
+                           void (*dup_result)(V), void (*drop_step)(V), void (*drop_state)(V)) {
+    fwp_value_owner owner = {s, drop_state};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
     for (;;) {
         FWP_TICK();
+        s = owner.value;
+        owner.value = 0;
         V step = entry(&s);
         int stop = fwp_tag(step) != 0;
         s = fwp_loop_payload(step, stop, dup_state, dup_result, drop_step);
-        if (stop) return s;
+        if (stop) { fwp_value_finish(&owner, &cleanup); return s; }
+        owner.value = s;
     }
 }
 

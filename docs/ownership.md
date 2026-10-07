@@ -494,3 +494,29 @@ Normal fold/right-fold alias and reclamation checks pass. Full sequential gates
 remain required. Loop state at cancellation ticks, multi-capture duplication
 failures in specialized helpers and owned application, constructor/boxing/CAF
 allocation lifetimes and retained tasks remain acceptance work.
+
+## Prepared loop cancellation cleanup
+
+Dynamic, known and captured owned loops retain a typed scope for the current
+state before each outer safe point. The state leaves that scope before callback
+entry; successful Again payloads become the next state. Captured loops retain
+the state during capture preparation. Stop payloads return after unlinking the
+inactive state scope, so a result of another type is never dropped as state.
+
+Specialized native loops register only their counted typed state slots, saving
+them before the outer tick and clearing them before fs takes ownership. The
+next iteration refreshes the scope from next-state slots; old consumed slots
+are never released twice. Scalar slots need no owner. Initial record flattening
+and its duplicate preparation remain part of the allocation-failure audit.
+
+Step extraction protects the consumed Step while preparing its typed payload
+duplicate, then releases it normally. A failed duplicate releases only the
+consumed Step reference and preserves external Step/payload aliases.
+
+Two focused generated-code checks pass at O1/O2 with GC stress/verification and
+both reuse modes: first/second-tick cancellation on five native loop paths,
+nested boxed-state destruction, Again/Stop payload-preparation traps, surviving
+aliases and scalar address bits. Normal output matches the interpreter. Existing
+loop and adjacent call/fold tests pass. Full sequential CI remains required;
+flattened nested-slot cancellation, multi-capture preparation, owned application
+allocation, boxing/constructors/CAF/inline owners and retained tasks remain open.
