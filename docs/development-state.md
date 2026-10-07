@@ -48,22 +48,23 @@ the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
 the fallback. Prior acceptance details and failed/superseded runs are in history.
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
-production PR, repaired exact head `7a550b724047a6080e8c1b80eb9383ab8c7e3124` on actual
-main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006009928 and
-roadmap_docs38006009934 are running. Require all seven passing exact-head
+production PR, repaired exact head `5683df1c8a96bad30e3c679987e87694387c3b62` on actual
+main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006543549 and
+roadmap_docs38006543521 are running. Require all seven passing exact-head
 checks, then squash with subject
 `Protect live compiler owners across calls and cancellation` and empty body.
-A focused control exposes a pending-owner gap in7a550b7 when the final
-computation returns a scalar. That published head is superseded and cannot
-merge. The complete local repair protects scalar evaluation too. Final serial
-focused verification passes43.85 CPU / 87.62 elapsed seconds: 16 native
+The complete repair is published; freeze it unless a real failure needs repair.
+All final focused checks pass43.85 CPU / 87.62 elapsed seconds: 16 native
 ownership/allocation tests (73.07 elapsed), all13 ownership-IR tests (6.81),
 exact record reuse (2.60), focused lint (4.46) and format (0.57). Native
-pending-argument failure coverage tests both counted and scalar results at
-O1/O2 with GC stress/verification and reuse poisoning, against raw interpreter.
-Next publish this complete repair, then finish propagation. Row35 is restored
-to its recorded published head after aborting the superseded rebase; the
-identified two-test insertion conflict must preserve both regressions.
+pending-argument coverage tests counted and scalar results at O1/O2 with GC
+stress/verification and reuse poisoning, against raw interpreter behavior.
+Strong audit passes0.42CPU/3.51elapsed. Superseded7a550b7 misses a final-scalar
+pending owner; its CI38006009928 is cancelled only after fresh gates launch.
+Retained roadmap/revision-027-7a550b724047 preserves it. Neither prior head is
+eligible to merge. Next propagate the complete repair through preparations.
+Row35 is restored to its recorded published head after aborting its old rebase;
+the adjacent constructor/regression test conflict must preserve both changes.
 
 Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
 Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
@@ -98,7 +99,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 27 ownership-call-liveness | 7a550b724047 | 2ef5510154cd | PR106 complete repair: 13 IR checks plus16 integration/allocation checks, exact reuse, lint/format pass43.85CPU/87.62elapsed serially; fresh full CI required |
+| 27 ownership-call-liveness | 5683df1c8a96 | 2ef5510154cd | PR106 complete repair: 13 IR checks plus16 integration/allocation checks, exact reuse, lint/format pass43.85CPU/87.62elapsed serially; fresh full CI required |
 | 28 ownership-runtime-call-cleanup | 2ec80614a045 | 7a550b724047 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | b8633382f4a6 | 2ec80614a045 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | a17f240c9341 | b8633382f4a6 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
@@ -379,7 +380,11 @@ cargo test --test reuse unique_records_are_updated_in_place -- --exact;
 focused clippy for those five integration targets; cargo fmt -- --check.
 All pass43.85CPU/87.62elapsed. Existing >10MiB baseline and <1MiB optimized
 allocation assertions remain unchanged. No local full gate was run.
-Patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
+Complete patch: /private/tmp/fwp-call-liveness-complete-argument-repair.patch.
+Earlier partial patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
+Complete propagation helper: /private/tmp/fwp-refresh-complete-call-repair.py.
+Use separate complete-call journals; partial28–35 journal is superseded, not
+a completed full refresh. Root table records every published actual base.
 Failure log: /private/tmp/fwp-pr106-arm-job.clean.log. Old ARM failures: reuse
 45.8MiB copied/30.5MiB reused; shapes61/30.5MiB, twice137.3/91.6MiB,
 wide366.2MiB, digits115.9/91.6MiB. Outputs are correct; allocation gates remain
