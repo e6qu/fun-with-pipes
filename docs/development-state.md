@@ -48,14 +48,17 @@ the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
 the fallback. Prior acceptance details and failed/superseded runs are in history.
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
-production PR, exact head `9c1b5a861b156a48d9e4e55b96c336fc6e852e18` on actual
-main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Full CI38002299110 fails regular ARM macOS allocation regressions; other jobs
-continue, and benchmarks/both GC stress/docs pass only at this old head. This
-head is not eligible to merge. Repair the cause and require all seven fresh
-exact-head checks; update root
-status without rewriting the PR just to embed run IDs. Require all seven
-exact-head passing checks, then squash with the subject
+production PR, repaired exact head `7a550b724047a6080e8c1b80eb9383ab8c7e3124` on actual
+main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006009928 and
+roadmap_docs38006009934 are running. Require all seven passing exact-head
+checks, then squash with subject
 `Protect live compiler owners across calls and cancellation` and empty body.
+Freeze this head unless a real failure needs repair; update current status here.
+
+Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
+Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
+is superseded and cancelled after fresh gates launch. Retained remote revision
+roadmap/revision-027-9c1b5a861b15 preserves it. Failure details are archived.
 
 The current repair keeps a final consumed computation inline when no earlier
 counted argument requires protection. Earlier computed and duplicated values
@@ -66,7 +69,7 @@ fixtures were weakened. Final focused checks pass: all 12 ownership-IR tests
 four stack allocation tests (34.14 / 68.60 seconds), and exact record reuse
 (1.32 / 2.83 seconds). Full platform acceptance remains required.
 
-Next, publish the repair and refresh row28 FROM its recorded actual base onto
+Next, refresh row28 FROM its recorded actual base onto
 the repaired PR106 head. Carry the exact repair into later preparations;
 previous source-parity and focused evidence predate this change. After PR106
 passes all seven exact-head gates and merges, rebase row28 onto its actual
@@ -88,7 +91,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 27 ownership-call-liveness | 9c1b5a861b15 | 2ef5510154cd | PR106 repair: 12 IR tests3.17/6.64s; 16 focused integration/allocation tests34.14/68.60s; record reuse1.32/2.83s; fresh full CI required |
+| 27 ownership-call-liveness | 7a550b724047 | 2ef5510154cd | PR106 repair: 12 IR tests3.17/6.64s; 16 focused integration/allocation tests34.14/68.60s; record reuse1.32/2.83s; fresh full CI required |
 | 28 ownership-runtime-call-cleanup | fbb3bc84847b | 9c1b5a861b15 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | 4147e018d2e0 | fbb3bc84847b | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | c0afce27ff2e | 4147e018d2e0 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
@@ -366,7 +369,8 @@ Final focused validation: 12 ownership-IR tests pass3.17CPU/6.64elapsed;
 34.14CPU/68.60elapsed; exact record reuse passes1.32CPU/2.83elapsed.
 The baseline >10MiB and optimized <1MiB allocation assertions are unchanged.
 Focused lint passes2.26CPU/4.71elapsed; final format passes0.36/0.75s
-after rustfmt. The strong audit precedes publication; full checks run on GitHub.
+after rustfmt. Strong audit passes0.43CPU/3.48elapsed before publication; full checks run
+on GitHub. Repair commit7a550b7 is published; fresh exact-head gates run.
 Patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
 Failure log: /private/tmp/fwp-pr106-arm-job.clean.log. Old ARM failures: reuse
 45.8MiB copied/30.5MiB reused; shapes61/30.5MiB, twice137.3/91.6MiB,

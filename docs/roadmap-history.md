@@ -12437,3 +12437,5 @@ refresh serially onto this chain with all non-doc bytes unchanged; their table
 records actual bases. Guarded refresh passes9.24CPU/103.21elapsed, preserving
 limits. Durable journal /private/tmp/fwp-refresh-after-pr106-journal.json records
 all9 publications and audits. Do not rerun the completed helper blindly.
+
+PR106 allocation repair published as7a550b724047a6080e8c1b80eb9383ab8c7e3124, actual base2ef5510154cd52f9f4e94a4a5a2778a20e43ec01. Retained failed9c1b5a861b156a48d9e4e55b96c336fc6e852e18 remotely under revision-027-9c1b5a861b15. Fresh full CI38006009928 and roadmap_docs38006009934 launch; superseded incomplete CI38002299110 is cancelled afterward. Final12 IR checks3.17CPU/6.64elapsed,16 integration/allocation checks34.14/68.60s, exact record reuse1.32/2.83s, focused lint2.26/4.71s, final format0.36/0.75s and strong44/106/86 audit0.43/3.48s pass. Initial format check failed whitespace only; rustfmt fixes it. Existing allocation thresholds and runtime probes unchanged; new duplicate-owner IR regression added. Fresh full exact-head acceptance remains required.
