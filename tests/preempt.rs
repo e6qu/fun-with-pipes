@@ -88,7 +88,11 @@ fn native(exe: &Path, env: &[(&str, &str)]) -> String {
 
 /// Programs with tasks that compute between their suspensions, where the
 /// slice decides the interleaving.
-const PROGRAMS: &[&str] = &["tests/run/preempt.fwp", "tests/run/tasks_local.fwp"];
+const PROGRAMS: &[&str] = &[
+    "tests/run/preempt.fwp",
+    "tests/run/tasks_local.fwp",
+    "tests/run/tasks.fwp",
+];
 
 #[test]
 fn backends_interleave_alike_for_any_slice() {
@@ -100,7 +104,7 @@ fn backends_interleave_alike_for_any_slice() {
         for slice in ["1", "37", "1000"] {
             let env = [("FWP_PREEMPT", slice)];
             let want = interpret(&path, &env);
-            if *p == "tests/run/tasks_local.fwp" {
+            if matches!(*p, "tests/run/tasks_local.fwp" | "tests/run/tasks.fwp") {
                 let expected = std::fs::read_to_string(path.with_extension("out")).unwrap();
                 assert_eq!(want, expected, "scoped results with slice {slice}");
             }

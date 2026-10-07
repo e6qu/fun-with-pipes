@@ -47,7 +47,7 @@ for priorities and contracts. Update this file before ending a work session.
 
 - Six focused escape-analysis unit tests passed locally.
 - Concatenated ordinary runtime passed Apple Clang syntax checking.
-- Four focused Darwin regressions passed locally on Apple Silicon, including
+- Five focused Darwin regressions passed locally on Apple Silicon, including
   GC stress/verification, global roots, tasks/reverse autodiff, wide records,
   shared-library defaults, static-link rejection and OpenSSL in both backends.
 - All five FFI tests passed locally: interpreted/native foreign calls, a
@@ -100,9 +100,13 @@ for priorities and contracts. Update this file before ending a work session.
 
 ## Current CI fixes and prepared work
 
-- Latest committed head before the Intel timer-fixture fix: `c7aeb6f`; gate
-  [37583294535](https://github.com/e6qu/fun-with-pipes/actions/runs/37583294535)
-  is queued. `37582324903` was cancelled after its head was superseded.
+- Current published head: `8bc372f`; gate
+  [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219).
+  ARM completed with one golden failure: the socket-enabled `tasks.fwp` also
+  printed timer results without synchronization. Its other targets passed.
+  Benchmark equivalence passed; Linux and Intel are still running.
+  Superseded runs `37582324903` and `37583294535` were cancelled after newer
+  implementation heads were published.
   Keep preparing ownership and fixing failures; only merging waits for CI.
 
 - Full run [37576889350](https://github.com/e6qu/fun-with-pipes/actions/runs/37576889350)
@@ -154,13 +158,30 @@ for priorities and contracts. Update this file before ending a work session.
   `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
   push with lease, then open its PR. Run full CI before its squash merge.
 - Further preparation: published branch `ownership-leaves`, checkout
-  `/private/tmp/fwp-leaf-worktree`, head `f7d74ec`, base `798d2ed`. String/Bytes ownership,
+  `/private/tmp/fwp-leaf-worktree`, head `2ce7a05`, base `798d2ed`. String/Bytes ownership,
   copy/alias result contracts and safe leaf destruction are prepared.
   Its two focused regressions passed with GC/reuse verification; the copy
   loop, with tracing off and zero collections, freed 0.9 MiB by counts
   versus 0.0 MiB with freeing disabled. Five FFI
   checks passed. Full ownership, exceptional cleanup and closures remain work.
+  Borrowed pointer arguments now retain their addresses across allocating
+  primitive calls, preserving conservative GC roots under optimization.
   This branch has no PR; publish one PR at a time after its parent merges.
+- Next prepared checkout: `ownership-text-results` at
+  `/private/tmp/fwp-text-worktree`, based on `2ce7a05`; implementation is
+  locally tested but not yet committed. It owns fresh nested text result
+  trees and releases text-conversion scratch buffers. Three focused text
+  tests and the earlier leaf/container regressions passed. With tracing off,
+  the text loop reclaimed 2.1 MiB by counts; releasing conversion buffers
+  reduced committed heap from 9.2 to 1.7 MiB in the equivalent focused probe.
+  Full platform gates remain required after its parent merges.
+- Apply the same scoped channel collection to `tasks.fwp`, keeping exact
+  golden output and checking both timer fixtures across slices 1/37/1000,
+  interpreter/native and GC stress. This repairs the remaining ARM failure;
+  do not relax output assertions or enforce undocumented timer wake order.
+  The expanded focused test passed locally: all three fixtures, all slices,
+  both backends and native GC stress, CPU 41.59 s / elapsed 83.89 s under
+  the guard. A new full current-head CI gate is required after publication.
 
 ## Boundaries and deferred work
 
