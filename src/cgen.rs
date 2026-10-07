@@ -1130,6 +1130,16 @@ impl<'p> Gen<'p> {
         Ok(format!("{state}, {result}, {drop}"))
     }
 
+    fn value_drop(&mut self, ty: &MT) -> String {
+        if !crate::rc::needs_rc(&self.prog.shapes, ty) {
+            "NULL".into()
+        } else if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
+            format!("fwp_drop{}", self.drop_id(ty))
+        } else {
+            "fwp_rc_drop".into()
+        }
+    }
+
     fn map_ops(&mut self, element: &MT) -> String {
         let drop = if !crate::rc::needs_rc(&self.prog.shapes, element) {
             "NULL".into()
@@ -1775,6 +1785,7 @@ fn hof_def(
     reuse: bool,
     loop_ops: Option<&str>,
     map_ops: Option<&str>,
+    fold_drop: Option<&str>,
 ) -> String {
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
@@ -1849,6 +1860,7 @@ fn hof_def(
         return format!("{} {{\n    V source = xs, result = FWP_NONE;\n    while (xs) {{\n        V element = OBJ(xs)->f[0];\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) == FWP_TRUE) {{\n            fwp_args{g}(&element, {k}, 1);\n            result = fwp_rc_fresh(fwp_some(element));\n            break;\n        }}\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
     if reuse && sym == "fold" {
+        let drop = fold_drop.expect("typed fold accumulator");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(["z".to_string(), "OBJ(xs)->f[0]".to_string()])
@@ -1857,7 +1869,7 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    V source = xs;\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n        z = fwp_owned_entry{g}(args);\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return z;\n}}\n", hof_sig(i, sym, *k), k + 1, k + 1);
+        return format!("{} {{\n    V source = xs;\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n        owner.value = 0;\n        z = fwp_owned_entry{g}(args);\n        owner.value = z;\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k), k + 1, k + 1);
     }
     if reuse && sym == "zip-with" {
         let ops = map_ops.expect("typed zip-with result operations");
@@ -1872,6 +1884,7 @@ fn hof_def(
         return format!("{} {{\n    size_t n, m;\n    V *a = fwp_map_items(xs, &n);\n    fwp_map_owner owner = {{a, 0, 0, {ops}}}; fwp_cleanup cleanup;\n    fwp_map_protect(&owner, &cleanup);\n    V *b = fwp_map_items(ys, &m);\n    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&b, &scratch_cleanup);\n    size_t len = n < m ? n : m;\n    for (size_t i = 0; i < len; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n        owner.count++;\n    }}\n    fwp_scratch_finish(&b, &scratch_cleanup);\n    V result = fwp_map_finish_protected(&owner, &cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    FWP_KEEP_ALIVE(ys);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 2);
     }
     if reuse && sym == "fold-right" {
+        let drop = fold_drop.expect("typed right-fold accumulator");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(["a[i - 1]".to_string(), "z".to_string()])
@@ -1880,7 +1893,7 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = n; i > 0; i--) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        z = fwp_owned_entry{g}(args);\n    }}\n    FWP_KEEP_ALIVE(a);\n    fwp_mem_free(a);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return z;\n}}\n", hof_sig(i, sym, *k), k + 1);
+        return format!("{} {{\n    fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    fwp_cleanup scratch_cleanup; fwp_scratch_protect(&a, &scratch_cleanup);\n    for (size_t i = n; i > 0; i--) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        owner.value = 0;\n        z = fwp_owned_entry{g}(args);\n        owner.value = z;\n    }}\n    fwp_scratch_finish(&a, &scratch_cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return fwp_value_finish(&owner, &cleanup);\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
     let body = match sym.as_str() {
         "map" => format!(
@@ -3305,8 +3318,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let z = self.expr(&args[1]);
                 let xs = self.expr(&args[2]);
+                let ty = self.g.prog.funcs[g].ty.params(2).1.clone();
+                let drop = self.g.value_drop(&ty);
                 return Some(format!(
-                    "fwp_k_fold_right_owned(fwp_owned_right_fold_k{g}, {z}, {xs})"
+                    "fwp_k_fold_right_owned(fwp_owned_right_fold_k{g}, {z}, {xs}, {drop})"
                 ));
             }
             if sym == "fold" {
@@ -4911,6 +4926,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ));
                         }
                         s = s.replacen(&borrowed, &format!("fwp_p_{}_own(", runtime), 1);
+                        if sym == "fold-right" {
+                            let ty = func.ty.params(func.arity as usize).1.clone();
+                            let drop = self.value_drop(&ty);
+                            s = s.replace(
+                                "fwp_p_fold_right_own(l0, l1, l2)",
+                                &format!("fwp_p_fold_right_own(l0, l1, l2, {drop})"),
+                            );
+                        }
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
@@ -6023,12 +6046,23 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             } else {
                 None
             };
+        let fold_drop = if g.reuse && matches!(hof.0.as_str(), "fold" | "fold-right") {
+            let ty = prog.funcs[hof.1]
+                .ty
+                .params(prog.funcs[hof.1].arity as usize)
+                .1
+                .clone();
+            Some(g.value_drop(&ty))
+        } else {
+            None
+        };
         bodies.push_str(&hof_def(
             i,
             &hof,
             g.reuse,
             loop_ops.as_deref(),
             map_ops.as_deref(),
+            fold_drop.as_deref(),
         ));
         bodies.push('\n');
     }
@@ -6552,11 +6586,15 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(out, "static V fwp_owned_k{id}({params}) {{ V a[] = {{{values}}}; fwp_args{id}(a, 0, {arity}); return fwp_owned_entry{id}(a); }}");
         }
     }
-    for &id in &g.owned_fold_callbacks {
-        let _ = writeln!(out, "static V fwp_owned_fold_k{id}(V z, V x) {{ V a[] = {{z, x}}; fwp_args{id}(a + 1, 1, 1); return fwp_owned_entry{id}(a); }}");
+    for id in g.owned_fold_callbacks.clone() {
+        let ty = prog.funcs[id].ty.params(2).0[0].clone();
+        let drop = g.value_drop(&ty);
+        let _ = writeln!(out, "static V fwp_owned_fold_k{id}(V z, V x) {{ V a[] = {{z, x}}; fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup); fwp_args{id}(a + 1, 1, 1); fwp_value_finish(&owner, &cleanup); return fwp_owned_entry{id}(a); }}");
     }
-    for &id in &g.owned_right_fold_callbacks {
-        let _ = writeln!(out, "static V fwp_owned_right_fold_k{id}(V x, V z) {{ V a[] = {{x, z}}; fwp_args{id}(a, 0, 1); return fwp_owned_entry{id}(a); }}");
+    for id in g.owned_right_fold_callbacks.clone() {
+        let ty = prog.funcs[id].ty.params(2).0[1].clone();
+        let drop = g.value_drop(&ty);
+        let _ = writeln!(out, "static V fwp_owned_right_fold_k{id}(V x, V z) {{ V a[] = {{x, z}}; fwp_value_owner owner = {{z, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup); fwp_args{id}(a, 0, 1); fwp_value_finish(&owner, &cleanup); return fwp_owned_entry{id}(a); }}");
     }
     // the functions the runtime calls back: their results are shared
     for &cb in &g.callbacks {

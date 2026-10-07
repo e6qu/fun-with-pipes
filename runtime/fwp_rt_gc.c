@@ -1432,7 +1432,7 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
 static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {
     if (owned_start > n || owned_len > n - owned_start)
         fwp_trap("internal: invalid owned callback span");
-    fwp_rc_dup(f);
+    int first = 1;
     for (;;) {
         fwp_clo *c = CLO(f);
         const fwp_fninfo *fi = &fwp_fns[c->fn];
@@ -1442,14 +1442,62 @@ static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start,
             for (uint32_t i = 0; i < n; i++) fwp_rc_share(args[i]);
             return fwp_apply(f, n, args);
         }
+#if FWP_UNWIND
+        /* Keep the duplicated function and consumed span owned while typed
+         * borrowed arguments are prepared; application takes them at entry. */
+        fwp_apply_owner pending = {first ? 0 : f, args + owned_start, fi->owned, 0, c->n + owned_start, owned_len};
+        fwp_cleanup pending_cleanup;
+        uint8_t *pending_slot = fwp_rc_slot(f);
+        int protected = (pending_slot && *pending_slot) ||
+            (owned_len && fi->owned->drop_arguments);
+        if (protected) fwp_cleanup_push(&pending_cleanup, fwp_apply_release, &pending);
+#endif
+        if (first) {
+            fwp_rc_dup(f);
+            first = 0;
+#if FWP_UNWIND
+            pending.function = f;
+#endif
+        }
         uint32_t need = fi->arity - c->n;
         uint32_t chunk = n < need ? n : need;
         uint32_t before = owned_start < chunk ? owned_start : chunk;
         uint32_t transferred = owned_len < chunk - before ? owned_len : chunk - before;
         uint32_t after = chunk - before - transferred;
+#if FWP_UNWIND
+        /* Each successful borrowed duplicate becomes owned immediately. A
+         * later duplicate can fail before application consumes that prefix. */
+        fwp_apply_owner before_owner = {0, args, fi->owned, 0, c->n, 0};
+        fwp_apply_owner after_owner = {0, args + before + transferred, fi->owned, 0, c->n + before + transferred, 0};
+        fwp_cleanup before_cleanup, after_cleanup;
+        int protect_before = before && fi->owned->drop_arguments;
+        int protect_after = after && fi->owned->drop_arguments;
+        if (protect_before) fwp_cleanup_push(&before_cleanup, fwp_apply_release, &before_owner);
+        if (protect_after) fwp_cleanup_push(&after_cleanup, fwp_apply_release, &after_owner);
+        for (uint32_t i = 0; i < before; i++) {
+            fi->owned->arguments(args + i, c->n + i, 1);
+            before_owner.n++;
+        }
+        for (uint32_t i = 0; i < after; i++) {
+            fi->owned->arguments(args + before + transferred + i, c->n + before + transferred + i, 1);
+            after_owner.n++;
+        }
+        before_owner.start = before_owner.n;
+        after_owner.start = after_owner.n;
+#else
         if (before) fi->owned->arguments(args, c->n, before);
         if (after) fi->owned->arguments(args + before + transferred, c->n + before + transferred, after);
+#endif
+#if FWP_UNWIND
+        pending.function = 0; /* application owns the function now */
+        pending.start = transferred; /* keep an overapplication suffix here */
+#endif
         V result = fwp_apply_owned(f, chunk, args);
+#if FWP_UNWIND
+        if (protect_after) fwp_cleanup_pop(&after_cleanup);
+        if (protect_before) fwp_cleanup_pop(&before_cleanup);
+        if (protected) fwp_cleanup_pop(&pending_cleanup);
+#endif
         FWP_KEEP_ALIVE(args);
         if (chunk == n) return result;
         f = result;

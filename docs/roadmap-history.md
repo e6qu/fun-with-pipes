@@ -7844,3 +7844,28 @@ Zip lint (cargo clippy --test zip_unwind_ownership --test zip_ownership
 -- -D warnings) passes2.39 s CPU /4.85 s elapsed; fmt check0.35 s /0.62 s.
 Nine authoritative docs copied before final amend/publication; no tested
 source/runtime changes follow.
+
+Final zip preparation6a0913896eb78e9e5e0077e28ddab325866501df is clean
+on actual base69b1ad1, published with exact lease against OLDc2a3645.
+Whole subject verified single line with empty body. No second PR.
+
+Row32 OLD968dac7 rebases from immutable parentc2a3645 onto actual row31
+head6a09138 (initial30676fe); nine root docs resolve conflicts. New source
+oracle explicitly sets FWP_NO_OPT=1; inherited runtime call oracles already
+do. Guarded clean0.00 s /0.14 s; formatting0.35 s /0.74 s. Full runtime
+call focused regression accompanies fold probes because borrowed argument
+span protection changes pending-overapplication ownership.
+
+Guarded cargo test --test fold_unwind_ownership --test runtime_call_ownership
+passes all seven tests24.13 s CPU /48.48 s elapsed. Current accumulators
+and right-fold scratch release on failure; borrowed argument preparation
+protects each successful typed duplicate before later failure, including
+consumed spans and pending overapplication. External aliases, scalar address
+bits, O1/O2 stress/verification/poison and raw interpreter checks pass.
+PR94 Intel GC stress passes in addition to bench/regular ARM; three gates
+remain running at exact9f4e3bb.
+
+Fold lint (cargo clippy --test fold_unwind_ownership --test
+runtime_call_ownership -- -D warnings) passes2.48 s CPU /5.06 s elapsed;
+fmt check0.34 s /0.62 s. Nine current docs copied before final amend;
+source/runtime unchanged after checks.
