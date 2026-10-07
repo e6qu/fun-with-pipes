@@ -11,6 +11,9 @@ Immutable OLD heads are retained remotely by lightweight tags
 `roadmap/preparation-007` through `roadmap/preparation-112`. Their ancestor
 parents remain reachable through those tags. On a clean clone, fetch tags
 before ancestry verification. Never move these tags or rewrite OLD anchors.
+Before force-rewriting a published current head used by a handoff snapshot,
+retain it under `roadmap/revision-NNN-SHA12`; those tags are immutable too.
+This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
@@ -48,7 +51,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `b5f44e80462c` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `84ef5480f493` | `62add7e4a85f` | `bee3f1659ae5` |
-| 30 | selection-unwind | `ownership-selection-unwind` | `398503f0938a` | `b8f4c2469215` | `62add7e4a85f` |
+| 30 | selection-unwind | `ownership-selection-unwind` | `ca33d3141a96` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `6a0913896eb7` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `1e8d1e34bc78` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `dc9bfd5e626b` | `988f2a3be97f` | `968dac7ed9cf` |

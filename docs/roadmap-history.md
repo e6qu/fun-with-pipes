@@ -10988,3 +10988,21 @@ argument preparation fixtures. Bring them forward into each own sequential
 preparation; do not replay or overwrite subsequent ownership/harness changes.
 Normal evidence rebases from actual9b5eb58 onto84ef548 and removes failed
 fixture retention, custom compiler wrapper and GDB steps before acceptance.
+
+Row30 ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 inherits the fixed map
+observer on actual84ef548 and fixes its own identical required-output-pointer
+call. Runtime/compiler code and all assertions are unchanged. Previous published
+398503f0938a remains under immutable roadmap/revision-030-398503f0938a before
+its evidence branch refresh: earlier map evidence snapshots still reference it.
+Original preparation tags and OLD anchors remain unchanged. Row29 normal
+evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 matches production84ef548
+source exactly after removing diagnostics; fresh complete focused Linux run follows.
+
+Row29 normal evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135,
+CI37966274872 passes complete focused Linux checks at production84ef548:
+format/lint, map/call/reuse/cleanup/task/ownership controls, actual tracing and
+all-doc/tag audit. No failed-fixture retention, CC wrapper, saved probe or GDB
+modifications remain in its final source. Assertions were preserved.
+Row30 normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295 refreshes
+from actual398503f onto repairedca33d31; old398 remains under an immutable
+revision tag for older evidence snapshot inputs. Fresh Linux checks follow.
