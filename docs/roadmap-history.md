@@ -7798,3 +7798,26 @@ Map cleanup lint (cargo clippy --test map_unwind_ownership --test
 map_ownership -- -D warnings) passes2.31 s CPU /4.72 s elapsed; fmt check
 0.34 s /0.60 s. Streamlined doc audit passes eleven link/heading sets,
 82 immutable OLD ancestry pairs and whole subjects0.12 s /0.84 s.
+
+Final map-unwind preparation8093bf382210adbf117f71dec644c642677cc557
+is clean on actual basee3c49d9, published with exact lease against OLD62add7e.
+Whole subject verified one line with empty body. No second PR.
+
+Row30 OLDb8f4c24 rebases from immutable parent62add7e onto actual row29
+head8093bf3 (initialb2c28a4). Nine root docs resolve conflicts; new source
+oracle explicitly sets FWP_NO_OPT=1. Filter/prefix omission controls track
+the protected finish helper; guarded clean0.00 s /0.14 s and formatting
+0.34 s /0.60 s. Focused selected-list, filter and prefix tests started.
+
+Guarded cargo test --test selection_unwind_ownership --test filter_ownership
+--test prefix_ownership passes all six tests22.29 s CPU /44.76 s elapsed.
+Predicate failures, partial selected spines and retained aliases release
+exactly once; scalar address bits remain uncounted. Existing alias/collection
+and no-tracing reclamation controls pass alongside new O1/O2 stress,
+verification, poison and raw interpreter comparisons. Full six gates remain
+required before sequential delivery.
+
+Selected-list lint (cargo clippy --test selection_unwind_ownership --test
+filter_ownership --test prefix_ownership -- -D warnings) passes2.45 s CPU
+/4.95 s elapsed; fmt check0.34 s /0.61 s. All nine root docs copied
+before final amend; tested runtime/source stays unchanged.
