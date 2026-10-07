@@ -4387,6 +4387,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 s = s
                                     .replace("fwp_p_map(", "fwp_p_map_owned(")
+                                    .replace("fwp_p_scan(", "fwp_p_scan_owned(")
+                                    .replace("fwp_p_iterate(", "fwp_p_iterate_owned(")
                                     .replace("fwp_p_filter(", "fwp_p_filter_owned(")
                                     .replace("fwp_p_zip_with(", "fwp_p_zip_with_owned(")
                                     .replace("fwp_p_take_while(", "fwp_p_take_while_owned(")

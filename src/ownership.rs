@@ -137,6 +137,18 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        "scan" => (
+            &[B, B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
+        "iterate" => (
+            &[B, B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(1)),
+            &[1, 2],
+        ),
         "zip-with" => (
             &[B, B, B],
             ResultOwnership::FreshSpine,
@@ -419,6 +431,16 @@ mod tests {
             assert!(contract.borrows_callback());
             assert_eq!(contract.callback, Some(Callback::Borrowed(0)));
             assert_eq!(contract.arguments, &[Argument::Borrow, Argument::Borrow]);
+        }
+        for (symbol, callback) in [("scan", 0), ("iterate", 1)] {
+            assert!(lists
+                .lines()
+                .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
+            let contract = primitive(symbol).unwrap();
+            assert_eq!(contract.arguments, &[Argument::Borrow; 3]);
+            assert_eq!(contract.callback, Some(Callback::Borrowed(callback)));
+            assert_eq!(contract.result, ResultOwnership::FreshSpine);
+            assert!(contract.aliases.iter().all(|i| *i < 3));
         }
         for symbol in [
             "reverse", "take", "append", "flatten", "drop", "nth", "index-of", "sort", "unique",
