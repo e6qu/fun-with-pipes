@@ -90,8 +90,9 @@ still need their final squash rebases and six exact-head full gates.
 | 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 /36.18 s |
 | 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 /31.47 s |
 | 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 /29.51 s |
+| 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 /28.50 s |
 
-Rows17–45 are published preparations with passing focused tests, lint and
+Rows17–46 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -106,9 +107,13 @@ immutable OLDde85621/parent614dd3b remain preserved.
 Row45 match-context321cc3146089bcdd962b57351d7298ed85691b1e is clean on
 actual base610fd74, published with exact lease against OLD3f61f51. Five
 focused tests pass14.67 /29.51 s, lint2.34 /4.68 s, format0.34 /0.61 s.
-Row46 field context rebases from ACTUAL old parent3f61f51 onto current
-row45 head321cc31. Five focused tests pass14.06 /28.50 s; final lint,
-format checks, docs and exact-lease publication follow.
+Row46 field-context6d01e927c08688b6f120a6f2e12a3e38cc8376b4 is clean
+on actual base321cc31, published with exact lease against OLD085dc71.
+Five focused tests pass14.06 /28.50 s, lint2.26 /4.63 s, format0.34 /0.71 s.
+Row47 CAF cache ownership rebases from ACTUAL old parent085dc71 onto
+current row46 head6d01e92. Eight focused CAF/compiler-call tests pass21.58 /43.40 s; final lint,
+format checks, docs and publication follow. An incorrect test target was
+corrected before compilation; see history.
 Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
@@ -157,7 +162,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-field-context-worktree; focused field-context checks are complete; no local workload is active.
+belongs to /private/tmp/fwp-caf-ownership-worktree; focused CAF/compiler-call tests are complete; lint is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.12 s CPU /0.84 s elapsed).

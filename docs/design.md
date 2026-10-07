@@ -364,6 +364,10 @@ effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
 Inlined record projections similarly preserve the checked base type through
 scalar replacement so discarded nested children keep their typed destruction.
+Prepared CAF ownership retains a typed cache owner and returns a separate
+owner on each call. Initialization retry and reentrant replacement preserve
+callers; executable teardown releases caches after finishing tasks. CAF
+evaluation is a call safe point that protects existing caller owners.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

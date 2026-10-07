@@ -8256,3 +8256,25 @@ and regular ARM macOS are running at exact5d0a3f3.
 Field-context lint with the same three targets and -D warnings passes
 2.26 s CPU /4.63 s elapsed; fmt check0.34 /0.71 s. Nine current docs copied
 before final amend; tested source unchanged and sequential full gates required.
+Final field-context6d01e927c08688b6f120a6f2e12a3e38cc8376b4 is clean on
+actual base321cc31 and published with exact lease against OLD085dc71.
+Whole subject verified one line, empty body; no second PR. Row47 actual base
+remains OLD085dc71 until its own rebase; immutable queue anchors unchanged.
+
+Row47 CAF ownership rebase from ACTUAL085dc716d5994681b998f13cd619b139794539fc
+onto actual row46 head6d01e927c08688b6f120a6f2e12a3e38cc8376b4
+resolves only doc conflicts with nine authoritative files. Both source
+interpreter oracles now set FWP_NO_OPT=1; direct typed-IR oracle has no
+optimizer. Guarded clean0.00 /0.14 s. First test command named nonexistent
+compiler_call_ownership and exited101 before building (0.00 /0.14 s);
+corrected to existing compiler_call_liveness and reran serially.
+Guarded cargo test --test caf_ownership --test compiler_call_liveness
+passes all eight tests21.58 s CPU /43.40 s elapsed. CAFs retain exact typed
+cache owners and return distinct owners; scalar machine words remain uncounted.
+Initialization failure/retry, reentrant cache replacement, retain overflow,
+caller traps, task-before-cache teardown and omission controls pass at O1/O2
+with stress/verification/poison and raw source agreement. Related call
+liveness tests pass. Full sequential gates remain required.
+CAF lint with the same two targets and -D warnings passes2.33 s CPU
+/4.58 s elapsed; fmt check0.35 /0.73 s. Nine current docs copied before
+final amend; tested source unchanged.
