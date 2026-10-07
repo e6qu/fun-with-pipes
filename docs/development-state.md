@@ -150,7 +150,7 @@ still need their final squash rebases and six exact-head full gates.
 | 46 ownership-field-context | 3a87da04a671 | 44e720054249 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | 7e507e993e58 | 3a87da04a671 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
-| 49 ownership-task-thunks | 49b7aa5a0c07 | be475bda31dc | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
+| 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 68a2e5f1358e | 49b7aa5a0c07 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 511721920cca | 68a2e5f1358e | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | bc6b763b3bf3 | 511721920cca | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
