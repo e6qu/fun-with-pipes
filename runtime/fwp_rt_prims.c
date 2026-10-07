@@ -76,6 +76,30 @@ static V fwp_p_filter_owned(V f, V xs) {
     return result;
 }
 
+/* Prefix selection stops at the first rejected element. The input owner
+ * remains live across predicate calls and result-node allocation. */
+static V fwp_p_take_while_owned(V f, V xs) {
+    size_t n, k = 0;
+    V *a = fwp_map_items(xs, &n);
+    while (k < n && fwp_apply_borrowed(f, 1, &a[k]) == FWP_TRUE) {
+        fwp_filter_element_dup(f, a[k]);
+        k++;
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+static V fwp_p_drop_while_owned(V f, V xs) {
+    V source = xs;
+    while (xs && fwp_apply_borrowed(f, 1, &OBJ(xs)->f[0]) == FWP_TRUE)
+        xs = OBJ(xs)->f[1];
+    fwp_rc_dup(xs);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(source);
+    return xs;
+}
+
 static V fwp_p_fold(V f, V z, V xs) {
     while (xs != 0) { z = fwp_apply2(f, z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
     return z;
@@ -264,6 +288,25 @@ FWP_K V fwp_k_filter_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_
     V result = fwp_map_finish(a, k);
     FWP_KEEP_ALIVE(xs);
     return result;
+}
+
+FWP_K V fwp_k_take_while_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs) {
+    size_t n, k = 0;
+    V *a = fwp_map_items(xs, &n);
+    while (k < n && f(a[k]) == FWP_TRUE) {
+        element_dup(&a[k], 0, 1);
+        k++;
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+FWP_K V fwp_k_drop_while_owned(fwp_fn1 f, V xs) {
+    V source = xs;
+    while (xs && f(OBJ(xs)->f[0]) == FWP_TRUE) xs = OBJ(xs)->f[1];
+    fwp_rc_dup(xs);
+    FWP_KEEP_ALIVE(source);
+    return xs;
 }
 
 FWP_K V fwp_k_fold(fwp_fn2 f, V z, V xs) {

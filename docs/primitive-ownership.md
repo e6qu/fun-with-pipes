@@ -185,7 +185,8 @@ metadata retain the conservative runtime-sharing fallback.
 The extra argument-helper pointer increases native owned metadata from two to
 three pointers per live closure function (16 to 24 bytes on 64-bit targets).
 The main function-table row remains 32 bytes; no runtime performance claim is
-made. This foundation does not yet change map or retained runtime callbacks.
+made. The synchronous list paths below use this foundation; retained runtime callbacks
+keep sharing.
 `tests/borrowed_callbacks.rs` checks the generated String/I64 argument metadata,
 scalar bits resembling an allocation, exact and partial calls, overapplication
 across a scalar-to-function boundary, captured/input aliases and a stack callback
@@ -306,3 +307,27 @@ identical output, zero collections, 1.3 MiB freed by counts versus 1.8 MiB with
 transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmarks
 remain required; retained callbacks, exceptions and remaining primitive boundaries
 still rely on conservative runtime ownership.
+
+## Synchronous prefix and suffix ownership
+
+`take-while` and `drop-while` borrow their callback and source list without
+retaining the function beyond the call. Predicates consume typed temporary
+copies and stop at the first rejected element. Direct and captured specialized
+loops preserve this order and keep original allocation addresses live across
+allocating callbacks.
+
+`take-while` duplicates each selected element's typed reference, builds fresh
+owned list nodes and releases its scanned temporary buffer. `drop-while` returns
+one owned reference to the remaining tail, including the unchanged-input path;
+the source owner's cleanup must not reclaim that tail. An empty suffix needs
+no count. The result contract records argument 1 as the possible alias.
+
+`tests/prefix_ownership.rs` checks empty/all/no-match cases, dynamic predicates,
+function elements, retained aliases, results used after source cleanup and a
+predicate that would trap if invoked after the first rejection. Interpreter and
+native outputs agree at O1/O2 with stack allocation both ways, collection
+stress/verification and both reuse-poison modes. The identical no-tracing loop
+frees 8.2 MiB by counts versus 5.0 MiB after restoring prefix and suffix result
+sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB counter precision, zero collections). Full platform CI remains required;
+this does not establish general no-tracing execution.

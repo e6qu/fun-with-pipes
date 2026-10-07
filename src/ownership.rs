@@ -1,7 +1,7 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
-//! Contracts cover containers, text/byte leaves and fresh nested text results.
-//! Stored container elements and callback results still use runtime sharing.
+//! Contracts cover containers, text/byte results and synchronous list callbacks.
+//! Stored container elements and retained callbacks still use runtime sharing.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -24,6 +24,10 @@ pub enum ResultOwnership {
     },
     /// New owned list nodes containing already-owned callback results.
     FreshSpine,
+    /// One owned reference to a borrowed list suffix.
+    AliasTail {
+        argument: usize,
+    },
     FreshLeaf,
     /// A tree of new counted allocations: no input aliases or internal sharing.
     FreshTree,
@@ -84,8 +88,8 @@ impl Contract {
 }
 
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
-/// borrow; inserted keys and values share. Callbacks retain the existing
-/// shared-input/result convention. Slices and set operations copy storage.
+/// borrow; inserted keys and values share. Synchronous list callbacks borrow;
+/// retained callbacks share. Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
     use Argument::{Borrow as B, Consume as C, Share as S};
     use ResultOwnership::{FreshContainer as F, OwnedContainer as O, Shared as R};
@@ -152,6 +156,18 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "filter" => (
             &[B, B],
             ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[1],
+        ),
+        "take-while" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[1],
+        ),
+        "drop-while" => (
+            &[B, B],
+            ResultOwnership::AliasTail { argument: 1 },
             Some(Callback::Borrowed(0)),
             &[1],
         ),
@@ -299,7 +315,8 @@ mod tests {
                     | ResultOwnership::OwnedAccumulator { argument, .. } => {
                         assert_eq!(consumed, vec![argument], "{symbol}")
                     }
-                    ResultOwnership::AliasLeaf { argument }
+                    ResultOwnership::AliasTail { argument }
+                    | ResultOwnership::AliasLeaf { argument }
                     | ResultOwnership::FreshOrAliasLeaf { argument } => {
                         assert!(consumed.is_empty(), "{symbol}");
                         assert_eq!(c.argument(argument), Argument::Borrow, "{symbol}");
@@ -316,7 +333,7 @@ mod tests {
             }
         }
         let lists = include_str!("../lib/list.fwp");
-        for symbol in ["map", "filter"] {
+        for symbol in ["map", "filter", "take-while", "drop-while"] {
             assert!(lists
                 .lines()
                 .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));

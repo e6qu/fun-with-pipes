@@ -25,14 +25,14 @@ immutable value semantics, effects and evaluation/trap order stable.
   macOS GC, socket, TLS snapshot, BSD wc and unsynchronized timer failures were
   repaired. Phase 1 meets its native-platform acceptance gate.
 - Current branch: `ownership-contracts`, checkout
-  `/private/tmp/fwp-ownership-worktree`. Three implementation commits rebased
-  onto main; implementation head `ee80a7e`. Documentation commit follows.
-  Remote previously held `798d2ed`; use force-with-lease for the reviewed rebase.
-  Published head `678abf6`, [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
-  Full gate [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
-  is queued/running. The previous run `37603180337` passed benchmarks, then
-  was superseded by corrected macOS status docs and cancelled; it is not a gate
-  for this head. Fix failures and squash only after all current-head jobs pass.
+  `/private/tmp/fwp-ownership-worktree`, sole open
+  [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75), based on `af15d26`.
+  Published corrected head: `f53493c`; new full gate
+  [37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156)
+  is queued/running. Earlier head `678abf6`, full run
+  [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
+  passed Linux and benchmarks; ARM macOS failed tutorial 7's same-executable
+  native pipeline. Intel also passed. The fix is published; squash only after all current-head jobs pass.
 - Scope: shared metadata for all 35 array/map/set declarations, comparison-key
   borrowing, owning-wrapper selection and safe graph sharing at saturation,
   interior references and traversal-stack spill. Stored values and callbacks
@@ -54,8 +54,9 @@ under the guard. Full current-head CI remains required.
 
 ## Prepared sequence
 
-All following branches are published, have focused local evidence, and have no
-PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
+All tabled branches are published, have focused local evidence, and have no
+PR yet. The prefix/suffix branch follows right-fold; publication is recorded
+below. Open each only after its parent PR merges. Fetch main, rebase from the
 listed OLD base onto main, reconcile docs with the latest handoff, validate,
 push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
@@ -72,6 +73,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-filter-callbacks | fwp-filter-worktree | 1ea7f07 | 41ef82d |
 | ownership-fold-transfers | fwp-fold-worktree | a180c3f | 1ea7f07 |
 | ownership-zip-callbacks | fwp-zip-worktree | bdb750f | a180c3f |
+| ownership-right-fold | fwp-right-fold-worktree | adc7947 | bdb750f |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -110,9 +112,11 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 
 ## Remaining acceptance work and next implementation
 
-Synchronous borrowed callback and map ownership are prepared after b563360.
-Next prepare filter callback ownership while current CI runs; keep retained
-callbacks shared until their full lifetime and exceptional cleanup are checked.
+Synchronous map/filter/zip callbacks and left/right accumulator transfers are
+prepared after b563360, followed by take/drop-while on ownership-list-prefix.
+Next refine non-callback list aliases/results (drop, head/tail and copied spines),
+then exact overflow counts and typed container elements. Keep retained callbacks shared until their full
+lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
 Byte counts at 255 still promote whole graphs to tracing-managed sharing;
@@ -138,7 +142,7 @@ worktrees. It needs process-sampling/priority permissions. Recreate the temporar
 guard with the same limits if missing. Do not bypass a refusal or increase limits;
 move the workload to CI. No full local gates were run.
 
-## Next callback change: design constraints
+## Callback design constraints retained for review
 
 Start with synchronous map callbacks, not retained task/channel/FFI callbacks.
 Add a typed borrowed application path: duplicate supplied pointer arguments
@@ -234,7 +238,7 @@ Next: other synchronous callbacks (fold/zip-with), typed container elements,
 remaining contexts, exact overflow counts, exceptional/retained runtime cleanup,
 old-generation and WASI reclamation, plus cycle policy. Phase 2 is incomplete.
 
-## Next fold design
+## Fold design constraints retained for review
 
 Start with synchronous fold. Its function/list borrow; the accumulator transfers
 one owned reference into every callback, and the returned value replaces it.
@@ -309,7 +313,7 @@ After fold merges, rebase zip from a180c3f onto main and run its own full PR gat
 ## Right-fold ownership preparation
 
 `ownership-right-fold`, `/private/tmp/fwp-right-fold-worktree`, base `bdb750f`,
-is uncommitted under final validation. Owned argument spans support transfer of
+is published at `adc7947`, with no PR yet. Owned argument spans support transfer of
 argument 1 while borrowing argument 0, including across overapplication chunks.
 Prefix and ordinary borrowed wrappers remain. fold-right consumes its accumulator,
 borrows callback/list, preserves direct/captured specialization and releases the
@@ -321,11 +325,47 @@ Five FFI checks and the local fat baseline passed (CPU 5.55 s / elapsed
 11.19 s). Formatting/whitespace passed. Full current-head CI is still required
 after all parents merge.
 
-Current PR #75 head is 678abf6; full run 37605739266 has benchmark success and
-ARM macOS completed with a test failure; Intel macOS and Linux are still
-running. Fetch the failed log and fix the ARM failure before advancing more work. Keep checking and fixing;
-only merge waits. Root is main at af15d26 with intentional local documentation
-updates. The entire roadmap goal remains active. Next: remaining synchronous
-list boundaries, typed container elements and other constructor/result contexts;
+The entire roadmap goal remains active. Next: remaining synchronous list
+boundaries, typed container elements and other constructor/result contexts;
 exact overflow counts, exceptions/retained callbacks, old-generation/WASI
 reclamation and cycle policy still precede general no-tracing execution.
+
+After zip merges, rebase right fold from bdb750f onto main and run its own full PR gate.
+
+## PR #75 macOS concurrent cache correction
+
+ARM CI tutorial 7 produced no output for two native `scale` stages using the
+same cached executable. The exact focused tutorial reproduced locally, and a
+new interpreter/native regression failed on warm run 1 before the fix. Cache
+hits opened executables for append just to touch their timestamp; opening them
+read-only preserves timestamp updates and permits concurrent execution. The
+regression's cold run and eight warm runs pass after that change (CPU 14.20 s /
+elapsed 28.43 s including incremental Rust compilation). Tutorial 7 also passes
+(CPU 3.89 s / elapsed 7.70 s). Both use the bounded local guard. An accidentally
+unfiltered tutorial check was stopped immediately before these focused checks;
+no limits were raised. Publish the correction and run all current-head gates.
+The earlier Linux/benchmark successes do not gate the new head. Full CI may
+find further failures; fix them and continue the roadmap.
+
+Cache correction published as f53493c. Both native pipe tests pass (CPU 9.30 s /
+elapsed 18.88 s); formatting and whitespace pass. New full gate 37612412156
+must pass before merging #75. The previous run is complete: only ARM failed; Intel, Linux and benchmarks
+passed. Those successes do not verify the corrected head.
+
+## Prefix/suffix ownership preparation
+
+`ownership-list-prefix`, checkout `/private/tmp/fwp-prefix-worktree`, base
+`adc7947`, has no PR yet. Synchronous take/drop-while borrow predicates/source,
+stop at the first rejected element, retain direct/captured specialization and
+protect source/capture addresses. Fresh prefix nodes own duplicated selected
+elements; returned suffixes acquire one tail reference before source cleanup.
+Two tests pass with aliases/function elements, empty/all/no-match cases,
+post-source-cleanup use and a predicate that traps if called after rejection,
+at O1/O2 with stack on/off, collection verification and reuse poisoning.
+The no-tracing differential restores result sharing in all specialization paths:
+identical output/zero collections, 5.0 versus 8.2 MiB freed by counts. Twenty-eight focused ownership regressions and the contract inventory passed
+(CPU 49.90 s / elapsed 100.17 s for the regressions). Native fat baseline passed
+(CPU 9.16 s / elapsed 18.61 s including incremental compilation). Five FFI checks passed (CPU 2.76 s / elapsed 5.46 s), formatting and
+whitespace passed. The branch is ready for publication. Full platform CI is required
+after all parents merge. Remaining list operations, typed container elements,
+exact counts and retained/exceptional lifetimes still belong to phase 2.
