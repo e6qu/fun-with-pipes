@@ -78,7 +78,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 47 | caf-ownership | `ownership-caf-cache` | `7e507e993e58` | `68cf7bf2f7ca` | `085dc716d599` |
 | 48 | inline-caf | `ownership-inline-caf` | `3dd5219cb896` | `6734248e7c0d` | `68cf7bf2f7ca` |
 | 49 | retained-thunk | `ownership-task-thunks` | `2c14070a6347` | `7208e4a2d93e` | `6734248e7c0d` |
-| 50 | task-within | `ownership-task-within` | `68a2e5f1358e` | `14a76de5b8bb` | `7208e4a2d93e` |
+| 50 | task-within | `ownership-task-within` | `f35dd8c34ea4` | `14a76de5b8bb` | `7208e4a2d93e` |
 | 51 | task-scope | `ownership-task-scope` | `511721920cca` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `bc6b763b3bf3` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `310031a5596b` | `ab44b7de0812` | `bb6f9c49a043` |
