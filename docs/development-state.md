@@ -36,11 +36,17 @@ Explicit match-head squash has verified whole one-line message:
 isolated call effects and exact native counts beyond254. Phase1 is done;
 phase2 remains incomplete; phases3–6 are pending.
 
-No open roadmap PR after #94 merged. Next delivery is row17 scan/iterate
-state ownership. Rebase CURRENT15743b8 from its ACTUAL current base
-5c19337f216d78845fada0b8c29fac98d7b18689 onto actual #94 squash1358267,
-then focused tests/lint/format, current docs and publication before sole next PR.
-Preserve immutable OLD0a90b05/parent66bc713; neither is the final rebase base.
+Sole open [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95):
+ownership-state-sequences, /private/tmp/fwp-state-sequence-worktree, exact
+5d0a3f302e476dfada1b3ea71aa56dae4086d905 on actual main1358267.
+CI37901758334 has all six gates queued at this exact head. Both final focused
+tests pass12.28 s CPU /24.61 s elapsed, lint2.24 s /4.49 s, format0.33 s
+/0.61 s. Source/runtime/tests/workflows match verified15743b8 exactly;
+raw FWP_NO_OPT=1 interpreter oracles remain intact. Require all six passing
+gates before explicit match-head squash with subject
+`Own scan and iterate states while borrowing synchronous callbacks`, empty body.
+After its eventual merge, row18 ACTUAL current base remains15743b8;
+rebase from that base onto its real squash, preserving OLD787763d/parent0a90b05.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre94 before
 main fast-forward from90762aa and restored afterward. Prior main/heads/messages, failed
@@ -54,7 +60,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 17 ownership-state-sequences | 15743b853d6a | 5c19337f216d | 12.09 /24.23 s |
+| 17 ownership-state-sequences | 5d0a3f302e47, PR95 | 1358267350de | 12.28 /24.61 s final |
 | 18 ownership-loop-state | 112f3c8de87b | 15743b853d6a | 19.08 /38.44 s |
 | 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
 | 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 /27.47 s |
@@ -72,25 +78,27 @@ still need their final squash rebases and six exact-head full gates.
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 /48.48 s |
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
 | 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 /49.89 s |
+| 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 /42.20 s + exact unit3.40 /6.85 s |
 
-Rows17–34 are published preparations with passing focused tests, lint and
+Rows17–35 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row34 final headada6a3a62df1b20de42f65511a8475d71f87cf7a is clean on
-actual basedc9bfd5, published with exact lease against OLD4973918. Eight tests
-pass24.82 s CPU /49.89 s elapsed, lint2.46 s /4.93 s, format0.35 s /0.74 s.
-Current independent task: row35 constructor-unwind rebased from OLDparent
-4973918 onto actual row34 headada6a3a (temporary0bb385b). New source oracle
-uses FWP_NO_OPT=1; constructor_unwind_ownership and compiler_call_liveness
-pass all six tests20.98 s CPU /42.20 s elapsed. The exact IR constructor
-transfer unit passes3.40 s /6.85 s; lint2.40 s /4.71 s and format0.35 s
-/0.73 s pass. Final preparation publication follows. Preserve
-immutable OLD anchors; no additional PR.
-PR94 is merged; row17 final delivery proceeds next.
+Row35 final head646cca038ed8012b012c3e10faeac96e20ddd5f7 is clean on
+actual baseada6a3a, published with exact lease against OLD608ae7b. Six tests
+pass20.98 s CPU /42.20 s elapsed plus exact IR unit3.40 s /6.85 s;
+lint2.40 s /4.71 s, format0.35 s /0.73 s. An incorrect expanded lease hash
+was rejected without remote mutation; verified actual hash retry published.
+Current independent task: row36 worker-boxing rebased from its ACTUAL current
+base OLD608ae7b onto actual current row35 head646cca0 (temporary38ed77e).
+New source oracle uses FWP_NO_OPT=1; worker_boxing_ownership,
+constructor_unwind_ownership and compiler_call_liveness pass all seven
+tests24.61 s CPU /49.42 s elapsed; lint and format pass. Final doc amend
+and publication follow. Preserve immutable OLD anchors; no additional PR.
+PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
 
@@ -137,10 +145,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-constructor-unwind-worktree; focused constructor checks are complete; no local workload is active.
+belongs to /private/tmp/fwp-worker-boxing-worktree; focused worker boxing checks are complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.11 s CPU /0.83 s elapsed).
+ancestry pairs and whole commit messages (0.12 s CPU /0.85 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:

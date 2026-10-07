@@ -178,7 +178,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 33 | Loop protects counted current state at first/later cancellation safe points and owns Step through payload preparation | Sequential CI; flattened/nested state, aliases, scalar safety and payload-retain failures |
 | 34 | Typed argument/capture preparation owns each completed duplicate; closure construction retains its empty cell until captures succeed, then transfers pending arguments | Sequential CI; partial duplicate failures, aliases and pending owned arguments |
 | 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
-| 36–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
+| 37–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

@@ -7949,3 +7949,54 @@ rc::tests::constructors_transfer_fields_and_keep_other_caller_owners -- --exact)
 passes one test3.40 s CPU /6.85 s elapsed (52 unrelated tests filtered).
 Focused lint passes2.40 s /4.71 s; format0.35 s /0.73 s. Final doc refresh
 changes no tested source/runtime.
+
+Constructor publication first rejected an incorrectly expanded lease hash
+608ae7bb2d24ff53e2c2dcf424d39285a948e224; remote was unchanged. git
+rev-parse and ls-remote both verified actual OLD608ae7bb2d2420f78a113a11299669a9f4821f37.
+Exact verified lease retry published clean646cca038ed8012b012c3e10faeac96e20ddd5f7
+on actual baseada6a3a. Whole subject verified one line with empty body.
+Nine root docs preserved in /private/tmp/fwp-main-docs-pre94 before main
+fast-forward from90762aa to1358267 and restored afterward.
+
+Row17 final delivery rebases current15743b853d6a190a53ea4a95532eb9845b4c685a
+from ACTUAL base5c19337f216d78845fada0b8c29fac98d7b18689 onto actual
+PR94 squash1358267350dec621666e6d78e362818ad51a0341 (initial7b55bdb).
+Nine root docs resolve conflicts; source/runtime/tests/workflows diff against
+15743b8 is empty. OLD0a90b05/parent66bc713 remain immutable. Later row18
+actual base remains15743b8, not this rewritten row17.
+
+Final guarded cargo test --test state_sequence_ownership passes both tests
+12.28 s CPU /24.61 s elapsed. Raw FWP_NO_OPT=1 interpreter comparisons,
+callback order, empty/nonpositive lengths, retained aliases/captures, scalar
+safety, O1/O2 stack controls, stress/verification/poison and no-tracing
+reclamation omission control pass. Target switch clean0.00 s /0.14 s.
+
+Final scan/iterate lint (cargo clippy --test state_sequence_ownership --
+-D warnings) passes2.24 s CPU /4.49 s elapsed; format0.33 s /0.61 s.
+No open PR after94 merged. Final authoritative doc refresh changes no
+tested source/runtime; full six exact-head gates remain required.
+
+Final row17 PR head5d0a3f302e476dfada1b3ea71aa56dae4086d905 is clean
+on actual main1358267, published with exact lease against previous15743b8.
+Whole subject is one line, empty body; tested source diff remains empty.
+Sole PR95 opened; CI37901758334 has all six exact-head gates queued.
+Later row18 actual base remains15743b8, not rewritten5d0a3f3.
+
+Row36 OLDdc4f946 rebases from immutable parent608ae7b onto actual row35
+head646cca0 (initial38ed77e); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.62 s. Worker result boxing, constructor and compiler liveness tests
+started. Final serial doc audit after PR95 creation passes eleven link sets,
+82 immutable ancestry pairs and whole subjects0.12 s /0.85 s.
+
+Guarded cargo test --test worker_boxing_ownership --test
+constructor_unwind_ownership --test compiler_call_liveness passes all seven
+tests24.61 s CPU /49.42 s elapsed. Record/variant result boxing allocation
+failures release typed fields and remaining caller owners without losing
+external aliases; raw interpreter and related O1/O2 stress/verification/poison
+regressions pass. Full six gates remain necessary before sequential delivery.
+
+Worker boxing lint (cargo clippy --test worker_boxing_ownership --test
+constructor_unwind_ownership --test compiler_call_liveness -- -D warnings)
+passes2.33 s CPU /4.75 s elapsed; fmt check0.35 s /0.63 s. Nine current
+root docs copied before final amend; tested source stays unchanged.
