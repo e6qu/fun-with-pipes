@@ -8022,3 +8022,26 @@ Worker preparation lint (cargo clippy --test worker_preparation_ownership
 --test worker_boxing_ownership --test compiler_call_liveness -- -D warnings)
 passes2.34 s CPU /4.73 s elapsed; fmt check0.34 s /0.61 s. Nine current
 root docs copied before final amend; no tested source changes follow.
+
+Final worker preparation3b6bf091127c4d46af817bf717b3f5f22e96f382 is clean
+on actual basedf58628, published with exact lease against OLDc97dd03.
+Whole subject verified single line with empty body. PR95 remains sole open.
+
+Row38 OLDb879eca rebases from immutable parentc97dd03 onto actual row37
+head3b6bf09 (initial8a5a9bc); nine root docs resolve conflicts. New source
+oracle uses FWP_NO_OPT=1; cancellation probes inspect current flattened
+owner slots. Guarded clean0.00 s /0.14 s; formatting0.34 s /0.61 s.
+Loop preparation, cancellation and prior loop ownership checks started.
+
+Guarded cargo test --test loop_preparation_ownership --test
+loop_unwind_ownership --test loop_ownership passes all eight tests26.30 s
+CPU /52.71 s elapsed. Emitted four-slot state stays flattened; original
+input and completed field duplicates release through injected preparation
+failures. Cancellation, aliases/scalar bits, no-tracing reclamation, raw
+interpreter and O1/O2 stress/verification/poison controls pass. PR95 bench
+passes; both GC gates run and remaining three gates are queued.
+
+Loop preparation lint (cargo clippy --test loop_preparation_ownership
+--test loop_unwind_ownership --test loop_ownership -- -D warnings) passes
+2.41 s CPU /4.95 s elapsed; fmt check0.33 s /0.59 s. Nine current docs
+refresh final preparation without further source changes.

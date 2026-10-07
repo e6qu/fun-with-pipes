@@ -72,7 +72,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 34 | argument-preparation | `ownership-argument-preparation` | `ada6a3a62df1` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `646cca038ed8` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `df5862861e71` | `dc4f9461571b` | `608ae7bb2d24` |
-| 37 | worker-preparation | `ownership-worker-preparation` | `c97dd03f8d89` | `c97dd03f8d89` | `dc4f9461571b` |
+| 37 | worker-preparation | `ownership-worker-preparation` | `3b6bf091127c` | `c97dd03f8d89` | `dc4f9461571b` |
 | 38 | loop-preparation | `ownership-loop-preparation` | `b879eca20812` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `1bb11bece9ae` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `b0219671dca3` | `b0219671dca3` | `1bb11bece9ae` |

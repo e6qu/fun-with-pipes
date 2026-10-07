@@ -2049,6 +2049,43 @@ fn state_by_fields(e: &Expr) -> bool {
     }
 }
 
+// RC names an owned state argument after preparing its fields. Move only
+// that immediately consumed record's terminal Again through its preparation
+// spine, preserving the evaluation and release order of every field.
+fn again_record(e: &Expr) -> Option<Expr> {
+    Some(match e {
+        Expr::Record(_) => Expr::Construct(0, vec![e.clone()]),
+        Expr::Let(l, v, b) => Expr::Let(*l, v.clone(), Box::new(again_record(b)?)),
+        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(again_record(b)?)),
+        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(again_record(b)?)),
+        _ => return None,
+    })
+}
+
+fn loop_state_expr(e: &Expr) -> Expr {
+    match e {
+        Expr::Let(l, v, b) => {
+            if let Expr::Construct(0, xs) = &**b {
+                if xs.len() == 1 && matches!(xs[0], Expr::Local(k) if k == *l) {
+                    if let Some(prepared) = again_record(v) {
+                        return prepared;
+                    }
+                }
+            }
+            Expr::Let(*l, v.clone(), Box::new(loop_state_expr(b)))
+        }
+        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(loop_state_expr(b))),
+        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(loop_state_expr(b))),
+        Expr::Match(s, arms) => Expr::Match(
+            s.clone(),
+            arms.iter()
+                .map(|(p, b)| (p.clone(), loop_state_expr(b)))
+                .collect(),
+        ),
+        _ => e.clone(),
+    }
+}
+
 /// How a `loop` with this step function can run in C: `None` if it
 /// cannot (it is not a known one-argument function whose every result is
 /// a literal `Again x` or `Stop x`); `Some(Some(n))` when the state is a
@@ -2060,8 +2097,9 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
     if f.arity != 1 {
         return None;
     }
+    let e = loop_state_expr(e);
     let mut ts = Vec::new();
-    tails(e, &mut ts);
+    tails(&e, &mut ts);
     let mut fields = None;
     let mut all_records = true;
     for t in &ts {
@@ -2076,7 +2114,7 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
             _ => return None,
         }
     }
-    if all_records && fields.is_some() && state_by_fields(e) {
+    if all_records && fields.is_some() && state_by_fields(&e) {
         Some(fields)
     } else {
         Some(None)
@@ -4821,9 +4859,11 @@ impl<'p> Gen<'p> {
     /// of the generic loop: one per iteration, and the step's own.
     fn loop_def(&mut self, step: FuncId, record: Option<usize>) -> String {
         let f = self.prog.funcs[step].clone();
-        let Body::Expr(e) = &f.body else {
+        let Body::Expr(original) = &f.body else {
             unreachable!()
         };
+        let normalized = loop_state_expr(original);
+        let e = &normalized;
         let mut ts = Vec::new();
         tails(e, &mut ts);
         // a field of a record state that is itself a small record, and
@@ -4939,16 +4979,36 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         };
         let mut take = String::new();
         if self.reuse && record.is_some() {
-            for (slot, ty) in &slot_types {
-                if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                    let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+            let original = self.protect_values(
+                &[("s".into(), f.locals[0].clone())],
+                "input_owner",
+                "input_cleanup",
+            );
+            take.push_str(&original);
+            let counted: Vec<_> = slot_types
+                .iter()
+                .filter(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+                .cloned()
+                .collect();
+            let empty: Vec<_> = counted
+                .iter()
+                .map(|(_, ty)| ("0".into(), ty.clone()))
+                .collect();
+            let preparing = self.protect_values(&empty, "prepared", "preparation_cleanup");
+            take.push_str(&preparing);
+            for (j, (slot, _)) in counted.iter().enumerate() {
+                let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+                if !preparing.is_empty() {
+                    let _ = write!(take, " prepared.v{j} = st[{slot}];");
                 }
             }
-            let drop = if free_enabled() {
-                format!("fwp_drop{}", self.drop_id(&f.locals[0]))
-            } else {
-                "fwp_rc_drop".into()
-            };
+            if !preparing.is_empty() {
+                take.push_str(" fwp_cleanup_pop(&preparation_cleanup);");
+            }
+            if !original.is_empty() {
+                take.push_str(" fwp_cleanup_pop(&input_cleanup);");
+            }
+            let drop = self.value_drop(&f.locals[0]);
             let _ = write!(take, " {drop}(s);");
         }
         // Keep possible heap pointers addressable. Inline numeric/Bool fields
