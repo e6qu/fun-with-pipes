@@ -439,3 +439,30 @@ sort/unique result sharing is restored (Apple Silicon, Apple Clang 17, O1,
 0.1 MiB precision, zero collections). Both variants use the same scratch cleanup;
 this difference measures result ownership, not scratch savings or execution speed.
 Sort-by callback ownership remains separate. Full platform gates remain required.
+
+## Synchronous sort-by key ownership
+
+`sort-by` borrows its source and callback; callback evaluation uses the typed
+borrowed-application path and returns one owned key per input element. Keys may
+alias source values or captures. The generated wrapper passes its monomorphic
+key destructor, or NULL for scalar keys; it never guesses ownership from bits.
+FWP_FREE=0 uses the conservative raw decrement, and FWP_REUSE=0 keeps the
+original sharing implementation. Keys are evaluated once in input order before
+the existing stable merge sort. The copied result spine owns typed element
+aliases. Scanned source/key/merge buffers stay live through allocations and are
+explicitly released after their last use; key slots are cleared before release.
+
+`tests/sort_callback_ownership.rs` checks effectful callback ordering, stable ties,
+identity/allocated/nested keys, captured function values, empty/singleton inputs,
+O1/O2, stack on/off, GC stress/verification and both reuse-poison modes. Both
+conservative compilation switches preserve interpreter output. A C probe invokes
+the actual emitted scalar-key wrapper with numeric words equal to a live counted
+String address, and verifies that neither key release nor result adoption changes
+that unrelated allocation's count.
+
+The identical no-tracing loop frees 5.1 MiB by counts, versus 4.0 MiB when only
+result sharing is restored and 4.7 MiB when only typed key destruction becomes
+raw decrement (Apple Silicon, Apple Clang 17, O1, counters rounded to tenths,
+zero collections). All variants retain the same callback and scratch-buffer
+paths. This demonstrates result and key reclamation, not execution speed or
+complete exception cleanup. Full platform gates remain required after parents.

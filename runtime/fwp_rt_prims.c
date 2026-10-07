@@ -238,6 +238,36 @@ static V fwp_p_sort_copied(V xs, const fwp_desc *elem) {
     FWP_KEEP_ALIVE(xs);
     return result;
 }
+/* Callback keys carry owned references; output values borrow the source.
+ * The monomorphic key release distinguishes scalar words from references. */
+static V fwp_p_sort_by_copied(V f, V xs, const fwp_desc *key, void (*drop_key)(V)) {
+    size_t n;
+    V *vals = fwp_map_items(xs, &n);
+    V *keys = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    for (size_t i = 0; i < n; i++) keys[i] = fwp_apply_borrowed(f, 1, &vals[i]);
+    if (n > 1) {
+        V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        fwp_msort(keys, vals, n, key, tk, tv);
+        FWP_KEEP_ALIVE(tk);
+        FWP_KEEP_ALIVE(tv);
+        fwp_mem_free(tv);
+        fwp_mem_free(tk);
+    }
+    if (drop_key) {
+        for (size_t i = 0; i < n; i++) {
+            V owned_key = keys[i];
+            keys[i] = 0;
+            drop_key(owned_key);
+        }
+    }
+    FWP_KEEP_ALIVE(keys);
+    fwp_mem_free(keys);
+    V result = fwp_copy_finish(vals, n, 0);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
 static V fwp_p_reverse_copied(V xs) {
     V source = xs, result = 0;
     while (xs) {

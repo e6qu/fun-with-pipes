@@ -179,6 +179,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[1],
         ),
+        "sort-by" => (
+            &[B, B],
+            ResultOwnership::CopiedSpine {
+                runtime: "sort_by",
+                tail: None,
+            },
+            Some(Callback::Borrowed(0)),
+            &[1],
+        ),
         "sort" | "unique" => (
             &[B],
             ResultOwnership::CopiedSpine {
@@ -395,7 +404,14 @@ mod tests {
             }
         }
         let lists = include_str!("../lib/list.fwp");
-        for symbol in ["map", "filter", "take-while", "drop-while", "find"] {
+        for symbol in [
+            "map",
+            "filter",
+            "take-while",
+            "drop-while",
+            "find",
+            "sort-by",
+        ] {
             assert!(lists
                 .lines()
                 .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
@@ -405,7 +421,7 @@ mod tests {
             assert_eq!(contract.arguments, &[Argument::Borrow, Argument::Borrow]);
         }
         for symbol in [
-            "reverse", "take", "append", "flatten", "drop", "nth", "index-of",
+            "reverse", "take", "append", "flatten", "drop", "nth", "index-of", "sort", "unique",
         ] {
             assert!(lists
                 .lines()

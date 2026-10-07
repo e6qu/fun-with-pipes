@@ -29,7 +29,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75), based on `af15d26`.
   Published corrected head: `f53493c`; new full gate
   [37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156)
-  passes ARM macOS and benchmarks; Intel macOS and Linux are testing. Earlier head `678abf6`, full run
+  passes ARM macOS, Linux and benchmarks; Intel macOS is testing. Earlier head `678abf6`, full run
   [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
   passed Linux and benchmarks; ARM macOS failed tutorial 7's same-executable
   native pipeline. Intel also passed. The fix is published; squash only after all current-head jobs pass.
@@ -78,6 +78,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-options | fwp-list-option-worktree | 34023f3 | bb00baa |
 | inference-call-effects | fwp-inference-worktree | 89b7bde | 34023f3 |
 | ownership-wide-counts | fwp-wide-worktree | 3a791dc | 89b7bde |
+| ownership-list-order | fwp-order-worktree | c835578 | 3a791dc |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -512,8 +513,8 @@ elapsed 136.57 s), and the ownership contract inventory passes (CPU 3.47 s /
 elapsed 7.47 s). Five FFI checks and the local fat baseline pass (CPU 12.35 s /
 elapsed 24.64 s); formatting passes. Published as `3a791dc`, with no new PR.
 All checks use the bounded guard. Full platform gates are still required after
-parent merges. Current #75 gate: ARM macOS and benchmarks pass; Intel macOS and
-Linux remain testing. This repair does not prove general no-tracing execution.
+parent merges. Current #75 gate: ARM macOS, Linux and benchmarks pass; Intel macOS
+remains testing. This repair does not prove general no-tracing execution.
 
 ## List ordering ownership preparation
 
@@ -530,9 +531,9 @@ no-tracing counts 4.7 -> 6.5 MiB freed after restoring/removing only result
 sharing, identical output and zero collections. CPU 11.76 s / elapsed 23.62 s
 under the guard, including compilation. All five adjacent copied-list/wide-count checks pass unchanged (CPU 12.93 s /
 elapsed 26.35 s). Contract inventory passes (CPU 3.99 s / elapsed 8.07 s),
-formatting and whitespace pass. Publish the prepared branch; full gates follow
+formatting and whitespace pass. Published as `c835578`, without another PR; full gates follow
 parent merges. No local workload remains. No second PR has been opened; #75 still awaits its
-Intel/Linux gates. Next: sort-by synchronous callback/key ownership.
+Intel gate. Next: sort-by synchronous callback/key ownership.
 
 Sort-by follow-up design: borrow the synchronous callback and source, invoke
 through fwp_apply_borrowed to obtain owned keys, keep key/value/merge buffers
@@ -544,3 +545,27 @@ captured/partially applied callbacks and collection during key evaluation.
 Exceptional cleanup remains an explicit phase-2 gap; do not claim it solved by
 normal-path scratch release. Reconcile these notes against final macOS fixes
 when rebasing each prepared branch after its parent squash merge.
+
+## Sort-by callback ownership preparation
+
+`ownership-sort-callbacks`, checkout `/private/tmp/fwp-sort-callback-worktree`,
+base `c835578`, has no PR yet. CopiedSpine source/result ownership combines with
+Borrowed callback metadata, owned callback keys and generated typed key release.
+Scalar keys use NULL; FWP_FREE=0 uses raw drops, FWP_REUSE=0 retains sharing.
+Scanned source/key/merge buffers are released normally; source/callback roots
+remain live through result construction. Three checks pass after a test-only
+Rust mutable-command borrow was corrected: callback order and stable ties,
+identity/allocated/aggregate keys, function-valued elements, O1/O2 stack on/off,
+stress/verify/poison, both conservative switches; scalar address-bit probe via
+actual emitted wrapper; no-tracing result/key reclamation. Counters 4.0 MiB
+(result sharing restored), 4.7 (typed key cleanup removed), 5.1 (both owned),
+identical stdout and zero collections. CPU 7.47 s / elapsed 15.02 s. First
+normal-path pair passed CPU 12.60 s / elapsed 25.39 s including compiler rebuild.
+Eight adjacent borrowed-callback/list-ordering/FFI checks pass (CPU 9.27 s /
+elapsed 18.68 s). The contract inventory was extended to sort/unique/sort-by;
+the extended inventory passes (CPU 3.60 s / elapsed 7.57 s). Formatting and
+whitespace pass. Publish the branch without a second PR; no local workload remains. Linux full CI now passes #75 as well as
+ARM and benchmarks; Intel is still testing. Next after this branch: scan/iterate
+owned output sequences, followed by zip/unzip/chunks structural aliases and
+retained container element lifetimes. All checks stay bounded; phase 2 remains
+incomplete, especially old-object reclamation and exceptional cleanup.
