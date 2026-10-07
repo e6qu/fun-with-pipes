@@ -67,6 +67,8 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
 | ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
+| ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
+| ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -105,7 +107,9 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 
 ## Remaining acceptance work and next implementation
 
-Prepare synchronous callback ownership after b563360 while current CI runs.
+Synchronous borrowed callback and map ownership are prepared after b563360.
+Next prepare filter callback ownership while current CI runs; keep retained
+callbacks shared until their full lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
 Byte counts at 255 still promote whole graphs to tracing-managed sharing;
@@ -177,7 +181,7 @@ required after all parent merges. Prepared work never completes phase 2 alone.
 ## Synchronous map preparation in progress
 
 `ownership-map-callbacks`, `/private/tmp/fwp-map-worktree`, base `029fac4`,
-has passed focused checks and awaits final validation/commit. FreshSpine owns new list nodes
+is published at `41ef82d`, with no PR yet. FreshSpine owns new list nodes
 without resetting already-owned callback elements. Generic callbacks use typed
 borrowed application; direct/captured HOF loops keep specialization and typed
 per-call ownership. Only map's synchronous function slot gets a no-escape proof;
@@ -196,3 +200,54 @@ around specialized calls and clears stale local callback-origin information.
 Five FFI checks and the local fat baseline also passed for map ownership
 (CPU 5.66 s / elapsed 11.28 s). Formatting and whitespace passed after applying
 the reported formatting changes. No local full gate or benchmarks were run.
+
+After stack ownership merges, rebase borrowed callbacks from b563360; after
+that merges, rebase map callbacks from 029fac4. Each gets its own full CI PR.
+For filter, duplicate a selected element by its concrete callback parameter
+type before transferring that reference into the result spine. Retain input
+list and callback roots; preserve direct/captured specialized loops and exact
+callback/trap order. A predicate consumes typed argument copies and returns Bool;
+its call alone does not acquire the reference needed by a selected output node.
+
+## Filter preparation in progress
+
+`ownership-filter-callbacks`, `/private/tmp/fwp-filter-worktree`, base `41ef82d`,
+is not committed yet. Synchronous filter borrows predicate/list, gives selected
+elements their own typed references, returns an owned fresh spine and frees
+scratch storage. Direct/captured loops retain specialization and root fences.
+
+Two focused probes pass: O1/O2, stack on/off, GC stress/verification and poison
+modes cover selected String/function aliases and newly allocated captures.
+The no-tracing differential restores only the shared-result boundary: identical
+output and zero collections; counts free 4.6 versus 5.0 MiB. The initial fixture
+needed a separate pure function-list signature; it now passes. A prematurely
+started formatting check was refused by the guard's workload lock, so no checks
+overlapped. Formatting ran only after the test completed, with unchanged limits.
+Twenty focused ownership regressions passed (CPU 38.40 s / elapsed 76.96 s).
+Five FFI checks and the local fat baseline passed (CPU 5.61 s / elapsed
+11.21 s). The contract inventory covers both map/filter declarations.
+Formatting and whitespace passed; full current-head CI remains required.
+Next: other synchronous callbacks (fold/zip-with), typed container elements,
+remaining contexts, exact overflow counts, exceptional/retained runtime cleanup,
+old-generation and WASI reclamation, plus cycle policy. Phase 2 is incomplete.
+
+## Next fold design
+
+Start with synchronous fold. Its function/list borrow; the accumulator transfers
+one owned reference into every callback, and the returned value replaces it.
+Empty input returns the incoming accumulator reference. Introduce a typed
+borrowed-application helper with an owned-prefix length: skip duplication of
+transferred prefix arguments, duplicate the remaining slice by actual function
+metadata, and carry the remaining prefix length across overapplication chunks.
+Ordinary borrowed callbacks use prefix zero. Fold uses prefix one; avoid an
+extra retain/release of the accumulator every iteration.
+
+Preserve direct/captured fold specialization: duplicate captured pointer values
+and the input element by concrete types, transfer the accumulator, invoke the
+owned entry and keep original function/capture/list roots through allocations.
+Use separate owned two-argument callback wrappers if needed; map/filter's wrappers
+borrow all supplied arguments. Define an OwnedValue result contract, not
+FreshTree/FreshSpine: the accumulator may alias a supplied element or capture.
+Add empty/alias/function-accumulator and partial/overapplication checks plus a
+no-tracing differential, then run the focused ownership and full CI gates.
+Fold-right/zip-with and retained callbacks remain separate follow-up scopes.

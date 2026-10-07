@@ -52,6 +52,30 @@ static V fwp_p_filter(V f, V xs) {
     return fwp_list_from(a, k);
 }
 
+/* A selected output element needs its own reference independently of the
+ * temporary owned copy consumed by the predicate. Its monomorphic parameter
+ * metadata distinguishes pointers from scalar words. */
+static void fwp_filter_element_dup(V f, V element) {
+    fwp_clo *c = CLO(f);
+    const fwp_fninfo *fi = &fwp_fns[c->fn];
+    if (fi->owned) fi->owned->arguments(&element, c->n, 1);
+    else fwp_rc_share(element);
+}
+static V fwp_p_filter_owned(V f, V xs) {
+    size_t n, k = 0;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = 0; i < n; i++) {
+        if (fwp_apply_borrowed(f, 1, &a[i]) == FWP_TRUE) {
+            fwp_filter_element_dup(f, a[i]);
+            a[k++] = a[i];
+        }
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 static V fwp_p_fold(V f, V z, V xs) {
     while (xs != 0) { z = fwp_apply2(f, z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
     return z;
@@ -200,6 +224,20 @@ FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {
     for (size_t i = 0; i < n; i++)
         if (f(a[i]) == FWP_TRUE) a[k++] = a[i];
     return fwp_list_from(a, k);
+}
+
+FWP_K V fwp_k_filter_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs) {
+    size_t n, k = 0;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = 0; i < n; i++) {
+        if (f(a[i]) == FWP_TRUE) {
+            element_dup(&a[i], 0, 1);
+            a[k++] = a[i];
+        }
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(xs);
+    return result;
 }
 
 FWP_K V fwp_k_fold(fwp_fn2 f, V z, V xs) {

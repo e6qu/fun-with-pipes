@@ -120,6 +120,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        "filter" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[1],
+        ),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
@@ -280,13 +286,15 @@ mod tests {
             }
         }
         let lists = include_str!("../lib/list.fwp");
-        assert!(lists
-            .lines()
-            .any(|line| line.starts_with("foreign \"fwp\" map :")));
-        let map = primitive("map").unwrap();
-        assert!(map.borrows_callback());
-        assert_eq!(map.callback, Some(Callback::Borrowed(0)));
-        assert_eq!(map.arguments, &[Argument::Borrow, Argument::Borrow]);
+        for symbol in ["map", "filter"] {
+            assert!(lists
+                .lines()
+                .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
+            let contract = primitive(symbol).unwrap();
+            assert!(contract.borrows_callback());
+            assert_eq!(contract.callback, Some(Callback::Borrowed(0)));
+            assert_eq!(contract.arguments, &[Argument::Borrow, Argument::Borrow]);
+        }
         assert!(!primitive("array.map").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
     }
