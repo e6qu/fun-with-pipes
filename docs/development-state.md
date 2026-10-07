@@ -98,7 +98,11 @@ frame pointer to exclude RBP as an uncleared heap register. Published candidate
 fails the Linux Clang strict omission. Reserve-frame inference did not repair
 it. Capture the actual Linux generated C and O2 assembly before the next change.
 Diagnostic6f5ce79118ed / CI38046362290 exports the exact negative source and
-assembly; no fixture acceptance yet.
+assembly. Linux strict omission still fails; ARM ownership controls pass but
+its assembly step lacks the OpenSSL header path (now corrected). Actual Linux
+assembly shows clear_dead_stack before clock_gettime with owner in RBX; the
+new x86 candidate also clears stale stack words at the copy boundary after
+clearing registers. Four-way tests remain required; no acceptance yet.
 Evidence branch: ownership-evidence-http2-intel. Assembly diagnostic578830243e16/
 38022478422 and rejected candidates are archived in history. Run full source112
 production-equivalent evidence only after both repairs are present.
@@ -124,7 +128,7 @@ still need their final squash rebases and six exact-head full gates.
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
-| 37 ownership-worker-preparation | c7cc3838eeb9 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs publication follows; final actual-squash rebase/full gates required |
+| 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests 16.61/33.35s; lint 2.26/4.59s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests 16.18/32.57s; exact retain unit3.33/7.00s, lint 2.40/4.91s, format 0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests 16.23/32.69s plus fifteen IR tests 3.32/6.89s; lint 2.36/4.59s, format 0.35/0.75s and strong audit pass |

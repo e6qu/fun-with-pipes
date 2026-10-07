@@ -4982,16 +4982,36 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         };
         let mut take = String::new();
         if self.reuse && record.is_some() {
-            for (slot, ty) in &slot_types {
-                if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                    let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+            let original = self.protect_values(
+                &[("s".into(), f.locals[0].clone())],
+                "input_owner",
+                "input_cleanup",
+            );
+            take.push_str(&original);
+            let counted: Vec<_> = slot_types
+                .iter()
+                .filter(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+                .cloned()
+                .collect();
+            let empty: Vec<_> = counted
+                .iter()
+                .map(|(_, ty)| ("0".into(), ty.clone()))
+                .collect();
+            let preparing = self.protect_values(&empty, "prepared", "preparation_cleanup");
+            take.push_str(&preparing);
+            for (j, (slot, _)) in counted.iter().enumerate() {
+                let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+                if !preparing.is_empty() {
+                    let _ = write!(take, " prepared.v{j} = st[{slot}];");
                 }
             }
-            let drop = if free_enabled() {
-                format!("fwp_drop{}", self.drop_id(&f.locals[0]))
-            } else {
-                "fwp_rc_drop".into()
-            };
+            if !preparing.is_empty() {
+                take.push_str(" fwp_cleanup_pop(&preparation_cleanup);");
+            }
+            if !original.is_empty() {
+                take.push_str(" fwp_cleanup_pop(&input_cleanup);");
+            }
+            let drop = self.value_drop(&f.locals[0]);
             let _ = write!(take, " {drop}(s);");
         }
         // Keep possible heap pointers addressable. Inline numeric/Bool fields

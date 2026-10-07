@@ -14032,3 +14032,17 @@ CI38046362290, preserves the reserve-frame candidate and every strict assertion.
 Optional C export and always-run O2 assembly/artifacts only; format0.51CPU/0.83s
 and strong audit0.53CPU/3.92s pass before publication.
 Worker37 lint2.48CPU/5.01elapsed and format0.38/0.73s pass after original tests.
+
+Worker37 published8c4e9ffd71a5555298721921a1fbf3a2314411cf on actualbcd3b392050b; both original feature/docs
+commits preserved, priorba9f0f293ac8 retained before exact lease. Final strong
+audit0.50CPU/3.92elapsed passes. Native source/probes/workflows unchanged.
+HTTP2 diagnostic6f5ce79/38046362290: Linux strict omission still fails; Intel/GCC
+pass. ARM ownership tests pass; only assembly export fails missing openssl/ssl.h.
+Correct that diagnostic header path, without changing ARM fixture. Actual Linux
+C/O2 assembly downloaded to /private/tmp/fwp-http2-6f5ce79-linux. Body lines3033–
+3116 show make_call intoRBX, clear_dead_stack, then clock_gettime, then dead
+register clearing and GC. Existing wipe precedes a call that can save the owner
+in dead stack storage. New x86 hook additionally calls clear_dead_stack after
+clearing registers immediately before inspect_owner. This is a testable root
+hypothesis; original positives/negative exit1 remain mandatory. Format0.50/0.94s
+passes; four-way execution still required.
