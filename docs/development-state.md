@@ -17,14 +17,25 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
-- Current origin/main: `a4b6533fd2355a5f91ffda4fceed69a28bcec392`, squash of
-  [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), merged
-  2026-10-07T23:32:12Z. All four gates passed in CI `37696063781` at exact
-  `6eeb915771abcac085c6f6cf0520fd25cbbe79ee`. Verified one-line subject
-  `Retain and release typed children of nonescaping stack values`, 61 characters,
-  empty body/no trailers. Root fast-forwarded preserving active plan/handoff;
-  backup `/private/tmp/fwp-main-docs-a4b6533`. Next PR: borrowed callbacks,
-  rebase from OLD `b563360` onto this squash; preserve OLD `029fac4` for its child.
+- Current origin/main: `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`, squash of
+  [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), merged
+  2026-10-08T00:58:09Z. All four gates passed in CI `37703018710` at exact
+  `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`. Verified one-line subject
+  `Add typed borrowed application for synchronous callbacks`, 56 characters,
+  empty body/no trailers. Local main fast-forwarded preserving current plan/
+  handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. No open PR currently;
+  map callbacks rebased from OLD `029fac4` onto this squash, checkout
+  `/private/tmp/fwp-map-worktree`, branch `ownership-map-callbacks`. Only plan/
+  handoff conflicts were resolved with these authoritative docs. Focused map/
+  callback and contract checks pass. Publish
+  with exact lease against OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc`,
+  then open the sole next PR. Preserve OLD `41ef82d` for the filter child.
+  Latest published preparation: library inputs `a6ebc1da9637b4fef866697fa766208fd2d72af1`,
+  OLD base `5b34382`, checkout `/private/tmp/fwp-library-input-worktree`,
+  branch `ownership-library-inputs`. Next preparation: native library unload
+  mappings/caches/finalizers/task stacks/worker threads, then cycles/aggregate gaps.
+- Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
+  passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
   exact head `7ce23dd`, all four gates passed in CI `37684140373`.
 - Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
@@ -2243,3 +2254,446 @@ passes all three checks, CPU 10.18 s / elapsed 20.84 s. Stack child count frees
 0.5 MiB vs 0 for variants and 1.7 vs 1.3 MiB for closures. Shared target now
 contains the borrowed-callback compiler. Preserve OLD `029fac4` for map child
 rebasing; publish with exact lease and open the sole next PR, full CI required.
+
+Sole open [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82): borrowed
+callbacks, published exact `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`.
+Verified one-line, 56-character subject `Add typed borrowed application for
+synchronous callbacks` (supplied as one line), empty body/no trailers. Rebase
+checkout clean; formatting passes CPU 0.36 s / elapsed 0.74 s. Full exact-head
+CI is newly requested; queued/unlisted is not passing. Merge only after Linux,
+ARM macOS, Intel macOS and benchmarks all pass, with the above subject, empty
+body and exact-head match. Then rebase map from OLD `029fac4` onto that squash;
+preserve OLD `41ef82d` for filter. Current root main remains `a4b6533`; only root
+PLAN/handoff are dirty. No local workload remains; shared target is callback
+compiler. Latest prepared deadline branch is clean/published `14a76de`, OLD base
+`7208e4a`; next implementation is task.scope callback/result unwind ownership.
+Continue while CI runs and fix any failures. Phases 2–6 remain incomplete.
+PR #82 full CI is [run 37703018710](https://github.com/e6qu/fun-with-pipes/actions/runs/37703018710),
+queued at exact `3fa67f3`. Observe this run; do not restart a live job merely
+for observation. No failure reported at handoff.
+
+## Prepared scoped callback ownership
+
+`ownership-task-scope`, `/private/tmp/fwp-task-scope-worktree`, OLD base
+`14a76de5b8bbbf4e23a06b547ebaf374b931b20e`. task.scope now borrows its
+synchronous callback and receives a typed owned result. Owned callback entry
+metadata retains only typed captures/arguments; unknown metadata keeps the
+shared fallback. Scope state and its task array have an unwind owner, including
+restoration of the previous handler on an external recovered trap. A separate
+typed result owner protects the value across child joins and final cancellation.
+Normal return transfers it without an extra retain. Scalar address bits are
+uncounted. The callback itself does not escape; captured returned values still
+carry their own references. Pipe syntax, effects and evaluation order are unchanged.
+
+The corrected pre-fix source/generated-C fixture failed capture-count checks
+with exit 1. During test development, the probe incorrectly used rc_last as a
+release; corrected to rc_release_last (which decrements nonlast counts). This
+fixture error is not recorded as a compiler regression. The fixed probe covers
+external capture aliases, returned aliases, scalar address bits and unknown
+callback metadata. It cancels real worker tasks before callback entry and after
+result production, with a child registered in the scope, and recovers an external
+trap before callback entry. Scope task arrays are freed once, task scope pointers
+are restored and captures are destroyed; the scope's stack handler cannot survive
+a recovered trap. Probes use O1/O2, GC stress/verification and both poison modes.
+Real source stdout/stderr/exit agree with an unoptimized interpreter.
+
+Bounded serial checks after guarded package clean:
+- Scope plus three adjacent unwind tests pass, CPU 5.19 s / elapsed 10.55 s.
+- Seven scope/spawn/deadline/task ownership tests pass, CPU 18.32 s / elapsed
+  36.93 s; existing deadline count evidence remains 0.5 MiB versus zero.
+- Scope with the recovered-trap and handler restoration changes passes,
+  CPU 9.77 s / elapsed 19.82 s.
+
+Full sequential CI remains required. Task handles and spawned results still
+share; task/channel result teardown, cycles, aggregate reconstruction/metadata
+and library/unload coverage remain unfinished. Phases 2–6 remain open. Sole
+PR #82 exact `3fa67f3`, run `37703018710`, currently has both macOS jobs live
+and Linux/bench queued. Merge only after all four pass, with the recorded subject
+and empty body. Rebase the map child from OLD `029fac4` onto that squash. Next
+implementation: precise task-result/handle lifetime contracts before channel
+queue ownership. Preserve OLD `14a76de` for this branch's future rebase.
+
+The complete contract inventory passes, including the previously pending
+deadline assertion and the new scoped callback contract: guarded
+`cargo test --lib ownership::tests -- --nocapture`, CPU 4.02 s / elapsed 8.27 s.
+The final recovered-handler omission control fails with exit 4; removing result
+cleanup fails with 5 and scope-array cleanup with 6, each at O1/O2. Scope checks
+pass after adding those controls, CPU 3.37 s / elapsed 6.96 s. The added real
+source child-joining case passes too, CPU 3.66 s / elapsed 8.09 s. Formatting
+passes, CPU 0.47 s / elapsed 0.86 s. Clippy found a needless borrow in the new
+result-type lookup; corrected before rerunning lint. Full CI still required.
+All local commands used the bounded fwp guard, serial and low priority; none
+refused for resource limits. No limits were raised. The shared target is this
+scoped callback compiler; clean the package before switching checkouts.
+
+Final library/dedicated-test clippy passes, CPU 2.76 s / elapsed 5.48 s.
+No focused failures remain. Exact guarded commands included `cargo test --test
+scope_thunk_ownership --test retained_thunk_ownership --test within_thunk_ownership
+--test task_ownership -- --nocapture`, `cargo test --test scope_thunk_ownership
+--test unwind_cleanup -- --nocapture`, `cargo clippy --lib --test
+scope_thunk_ownership -- -D warnings`, and `cargo fmt --all -- --check`.
+
+Scoped callback preparation published as
+`7da15d9c8ea330bea4f876f797038627720c4c38`, OLD base `14a76de`.
+Verified one-line, 59-character subject `Own scoped callback results and unwind
+scope storage safely` (supplied as one line), empty body/no trailers. Checkout
+clean; final formatting check CPU 0.66 s / elapsed 1.32 s. No second PR opened.
+PR #82 remains sole open, both macOS jobs live, Linux/bench queued in the same
+run `37703018710` at exact `3fa67f3`; do not restart for observation. Root only
+PLAN/handoff dirty; no local workload remains.
+
+Next task-result audit found opaque runtime lifetimes need compiler integration:
+rc::needs_rc currently counts records/ADTs, containers, text and functions, with
+no explicit Task/Channel case; Gen::drop_body has no task destructor. A precise
+task handle needs independent scheduler, external handle and scope-array owners.
+Scheduler release must wait until fwp_free_zombie has returned/unmapped the stack
+and unlinked GC task roots; a scope array must retain done tasks until its join
+completes. Typed await must duplicate the cached result into each Option, and
+last handle destruction must release the task's result. Task.within needs its
+private handle released on success/failure. Unknown/shared runtime boundaries
+retain a conservative fallback; cycles remain separate acceptance work. Build
+focused alias/repeated-await/early-handle-drop/cancellation and scalar-bit probes
+before changing those contracts. Preserve OLD `7da15d9` for the next child.
+
+## Prepared counted task handles and results
+
+Branch `ownership-task-handles`, checkout `/private/tmp/fwp-task-handle-worktree`,
+OLD base `7da15d9c8ea330bea4f876f797038627720c4c38`. Task is now a counted
+builtin type with a runtime destructor. Known owned callbacks produce counted
+task storage, one scheduler owner and one external handle owner; scope task
+arrays retain another owner. Scheduler release happens only after the finished
+stack is returned/unmapped and GC task links are removed. Last handle release
+destroys the cached typed result and private state storage. Finished child links
+are cleared so they cannot keep stale borrowed parent/sibling pointers.
+
+Await borrows the task and returns an owned Option with its own typed result
+reference, independent of other awaits and the cache. Partial Option ownership
+is protected while result retention can overflow. task.within protects its
+private handle during waiting and releases it on success and failure. task.cancel
+borrows its handle. Scalar address bits receive neither result duplication nor
+generic sharing. Task storage remains mutable kind 2 for minor-collection scans;
+poisoning uses mutable storage cleanup, never a record-header interpretation of
+its context registers. Only one result-drop callback pointer is stored per task.
+Unknown callback metadata and unmodeled runtime sharing retain the tracing
+fallback. Channels, cycles and library/unload acceptance remain unfinished.
+
+The corrected baseline count probe failed with exit 1: there was no counted task
+handle. An initial function-ID prefix accidentally matched a runtime comment;
+corrected to the generated signature marker before recording that reproduction.
+Source/generated-C checks cover handle aliases, independent repeated awaits,
+last cached-result destruction, early external-handle drops, scope retention
+after task completion, pre-entry and suspended cancellation, old-task/young-result
+minor collection, overflowing await result retention and private deadline-handle
+cleanup. Native stdout/stderr/exit are compared with an unoptimized interpreter.
+GC stress/verification and O1/O2 in both poison modes pass for completed probes.
+
+Negative controls remove result retain (exit 2), cached result destruction (6),
+scheduler release (3), scope retain (11), partial Option protection (17) and
+private deadline-handle protection (20), at both optimization levels. The await
+overflow preserves the original wide cache count and task handle, releasing only
+the fresh Option. The private-handle failure preserves the caller's callback
+and capture owner while releasing the cached extra reference.
+
+Serial bounded local checks after package clean:
+- Initial independent-handle probe passes, CPU 8.08 s / elapsed 16.32 s.
+- Three task-handle/scope/deadline tests pass, CPU 14.70 s / elapsed 30.34 s.
+- Eight adjacent spawn/task/unwind tests pass, CPU 16.15 s / elapsed 32.57 s.
+- Dedicated failure controls pass, CPU 10.67 s / elapsed 22.25 s.
+- Added minor-collection result probe passes, CPU 4.38 s / elapsed 9.59 s.
+- Ownership inventory passes, CPU 3.26 s / elapsed 6.67 s; 17 RC checks pass,
+  CPU 0.00 s / elapsed 0.13 s.
+
+Full sequential CI remains required. Sole PR #82 exact `3fa67f3`, run
+`37703018710`: benchmark passed; Linux and both macOS test jobs are live.
+Merge only after all four current-head gates pass with the recorded one-line
+subject and empty body, then rebase map from OLD `029fac4`. Next implementation:
+channel queue and handle ownership, including typed send/receive/cancellation
+and closed/drained queues; finish task/runtime cycles and library evidence
+before phase 2 acceptance. Preserve OLD `7da15d9` for this branch's rebase.
+
+Final dedicated task-result checks, including explicit sharing fallback, pass
+(CPU 4.15 s / elapsed 9.12 s). Library and three affected test targets pass
+clippy after formatting (CPU 2.32 s / elapsed 4.80 s); fmt CPU 0.34 s / elapsed
+0.61 s, whitespace clean. Commands used the bounded guard: `cargo test --test
+task_handle_ownership -- --nocapture`, `cargo test --test task_handle_ownership
+--test scope_thunk_ownership --test within_thunk_ownership -- --nocapture`,
+`cargo test --test retained_thunk_ownership --test task_ownership --test
+unwind_cleanup -- --nocapture`, `cargo test --lib ownership::tests -- --nocapture`,
+`cargo test --lib rc::tests -- --nocapture`, and `cargo clippy --lib --test
+task_handle_ownership --test retained_thunk_ownership --test
+within_thunk_ownership -- -D warnings`. No resource limits were raised/bypassed,
+no focused failure remains. Shared target contains this task-handle compiler.
+Full sequential CI is still required; phase 2 and phases 3–6 remain incomplete.
+
+Task handle/result preparation published as
+`bb6f9c49a0434afc9f7dd1fb9891a6fa8fb32a8a`, OLD base `7da15d9`.
+Commit subject verified as one line, 67 characters, empty body/no trailers.
+Final formatting check CPU 0.36 s / elapsed 0.72 s; checkout clean. No second
+PR opened. Sole #82 CI `37703018710` has passing benchmarks and live Linux/ARM/Intel
+macOS tests at exact `3fa67f3`; continue the same run and fix failures. No local
+workload remains; shared target is the counted-task compiler.
+
+Next channel work requires compiler counting/destruction for Channel[T], typed
+queue element metadata, borrowed send/recv/close boundaries, an owner per queued
+value, and transfer from dequeue to a protected owned Option. Sends blocked on
+capacity must retain no queue reference until enqueue succeeds; closed sends
+and cancelled waiters must release only their own references. Channel callers
+keep the handle alive while parked, and wait links must be removed before last
+handle destruction. Unknown C/runtime channels and sink callbacks need the
+sharing fallback; scalar address bits must avoid generic count/share operations.
+Add probes for queue/caller aliases, multiple receives, close/drain/destruction,
+bounded-send and receive cancellation, growth and generation/root safety before
+changing these contracts. Preserve OLD `bb6f9c4` for the next child branch.
+
+## Prepared counted channels and queue elements
+
+`ownership-channel-queues`, `/private/tmp/fwp-channel-queue-worktree`, OLD base
+`bb6f9c49a0434afc9f7dd1fb9891a6fa8fb32a8a`. Channel is now a counted builtin
+with typed queue duplicate/drop metadata and a runtime destructor. Send, receive,
+timed receive and close borrow the handle. Enqueue retains one typed element
+reference only after capacity is available; closed/blocked sends retain none.
+Receive allocates its owned Option before removing the queue reference, then
+transfers that reference without duplication. Last handle release destroys queued
+elements and buffer storage. Parked compiled callers hold a handle owner, and
+wait links clear before cancellation cleanup can destroy the last reference.
+Scalar address bits receive no count/share/destruction operation. Unknown C
+channels, promoted handles and sink callbacks retain the tracing fallback.
+
+The pre-fix native probe failed with exit 1 (no counted channel handle). O1/O2
+probes in both poison modes with GC stress/verification cover growth across the
+initial capacity, caller/queue/receive aliases, closed sends, last handle queue
+destruction, blocked send/receive cancellation and close, including early
+external-handle drop while a worker waits. Queue function captures and task
+cache descendants release correctly; an old channel/buffer roots young queued
+elements through minor collection. Shared/C-channel and sink fallback behavior
+is checked without counting scalar words. Native source stdout/stderr/exit
+agree with an unoptimized interpreter. A function-valued fixture initially used
+a pipe/Async scope context incorrectly; corrected to `option.map (apply ())`,
+without changing syntax/type/effect semantics.
+
+Wide retain overflow acquires no queue owner and preserves the caller. A forced
+receive allocation trap leaves the element and queue owner intact, and retry
+succeeds. This is an injected preparation failure, not a recoverable allocator
+OOM claim. Controls removing queue retain/drop fail with 2/6; adding an extra
+receive retain fails with 4; removing before allocation fails with 26. A control
+initially targeted the old allocator expression after instrumentation; corrected
+and all controls now assert they changed the generated runtime. An adjacent
+task test likewise used the former receive helper name; its lookup is updated
+to the scalar owned helper, retaining its count invariant checks.
+
+Serial bounded checks after package clean:
+- Initial queue probe passes, CPU 7.98 s / elapsed 16.37 s.
+- Channel and task-handle probes pass in a group where the adjacent helper-name
+  lookup failed; the failure was repaired, not skipped.
+- Four final channel/task ownership tests pass, CPU 6.25 s / elapsed 12.67 s.
+- Added function/task/generation/fallback probes pass, CPU 4.32 s / elapsed 8.80 s.
+
+Full sequential CI remains required. Sole PR #82 exact `3fa67f3`, CI
+`37703018710`: ARM macOS and benchmarks passed, Linux/Intel macOS tests live.
+Merge only after all four pass with the recorded subject and empty body, then
+rebase map from OLD `029fac4` onto that squash. Next acceptance work: runtime
+cycles and library/unknown retained lifetime coverage, plus remaining aggregate
+reconstruction/metadata gaps before phase 2 closes. Phases 2–6 remain incomplete.
+Preserve OLD `bb6f9c4` for this branch's rebase and its published head for its child.
+
+Final four channel/unwind tests pass, including timed receive checks, CPU
+14.17 s / elapsed 28.63 s. Complete contract inventory (including all channel
+borrow/result assertions) passes, CPU 3.26 s / elapsed 6.80 s. Library and both
+affected test targets pass clippy, CPU 2.23 s / elapsed 4.63 s. Formatting passes,
+CPU 0.34 s / elapsed 0.61 s; whitespace clean. Exact bounded commands included
+`cargo test --test channel_queue_ownership --test task_ownership -- --nocapture`,
+`cargo test --test channel_queue_ownership --test unwind_cleanup -- --nocapture`,
+`cargo test --lib ownership::tests -- --nocapture`, and `cargo clippy --lib
+--test channel_queue_ownership --test task_ownership -- -D warnings`. No resource
+limits were raised/bypassed; no focused failure remains. Shared target contains
+this channel compiler; package clean is required before checkout changes.
+
+Channel ownership preparation published as
+`ab44b7de0812eb1f84d5430a303cd61ddd026219`, OLD base `bb6f9c4`.
+Verified one-line, 72-character subject `Own typed channel queues and transfer
+receive references without sharing` (supplied as one line), empty body/no trailers.
+Checkout clean; final formatting check CPU 0.35 s / elapsed 0.73 s. No second PR
+opened. Sole #82 exact `3fa67f3`, CI `37703018710`: ARM macOS and benchmarks
+passed; Linux and Intel macOS remain live. No local workload remains; shared
+target is this channel compiler. Continue the same CI run, fixing any failure.
+
+Next concrete action: audit actual phase-2 acceptance against docs/ownership.md,
+with source-reachable runtime cycles and native library lifetime/teardown probes.
+Distinguish an explicit tracing fallback from deterministic support; do not mark
+phase 2 or optional tracing-free execution complete from these narrow checks.
+Then repair remaining aggregate reconstruction/metadata paths using typed/source
+evidence. Preserve OLD `ab44b7d` for the next prepared child. Once #82's four
+gates pass, exact-head squash with subject `Add typed borrowed application for
+synchronous callbacks` (one line, 56 characters), empty body; rebase map from
+OLD `029fac4` onto the new squash and open the sole next PR.
+
+
+## Prepared native library export result ownership (2026-10-08)
+
+Branch `ownership-library-results`, checkout `/private/tmp/fwp-library-result-worktree`,
+OLD base `ab44b7de0812eb1f84d5430a303cd61ddd026219`. Exported functions evaluate
+once, protect owned results during C conversion, release copied record/Option
+boxes and caller CAF references, and promote only escaping String results or
+String record fields to the existing library lifetime. No new release interface.
+Raw pointer payloads and scalar bits remain uncounted. NUL conversion traps
+release the result through the internal recovered-trap cleanup probe.
+
+The baseline probe failed with exit 1 (unreleased result). The first repaired
+poison probe exposed a fixture mistake: record poisoning uses tag 0xdead, not
+a zero field count; the assertion was corrected. Final probe passes at O1/O2,
+both poison modes, with four negative controls: omitted release (1), omitted
+escaping String promotion (6), omitted conversion guard (4), duplicate nullable
+pointer evaluation (11). Unoptimized IR interpreter values agree. One thousand
+CAF export calls retain exactly one cache owner. Counters confirm immediate
+box reclamation; this is not a speed or whole-program allocation claim.
+
+Native libraries actually use the collector allocator and its RC metadata, with
+tracing unarmed for unknown host roots; they do not use the WebAssembly bump
+path. The probe requests GC stress/verification and asserts collection stays
+unarmed with zero collections. Executable CAF tests exercise the armed stress
+path separately. No library host-root tracing or complete GC-free support claim.
+
+Serial commands under `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target
+python3 /private/tmp/fwp-local-guard.py`, after `cargo clean -p fwp`:
+- `cargo test --test library_result_ownership -- --nocapture`: baseline failure
+  CPU 6.87 s / elapsed 14.29 s; final pass CPU 7.28 s / elapsed 17.07 s.
+- `cargo test --test ffi --test caf_ownership -- --nocapture`: eight pass,
+  CPU 6.70 s / elapsed 15.11 s.
+- Additional `FWP_REUSE=0` environment with `cargo test --test ffi
+  shared_library_from_c -- --nocapture`: pass, CPU 0.60 s / elapsed 1.47 s.
+- `cargo fmt`: pass, CPU 0.35 s / elapsed 0.62 s.
+- `cargo clippy --lib --test library_result_ownership -- -D warnings`: final
+  pass, CPU 0.07 s / elapsed 0.25 s (initial CPU 2.34 s / elapsed 4.69 s).
+
+Full sequential architecture/benchmark CI is still required. Sole PR #82 exact
+`3fa67f3`, CI `37703018710`: Linux, ARM macOS and benchmarks passed; Intel
+macOS remains live. Merge only after all four pass, with recorded one-line
+subject/empty body and exact head. Then rebase map from OLD `029fac4`; preserve
+its OLD `41ef82d` for the filter child. Next acceptance action: typed library
+input conversion and its failure/alias lifetimes, then unload/finalizers and
+source-reachable cycles, with remaining aggregate gaps still open. Phases 2–6
+remain incomplete. Shared target now contains this library-result compiler.
+
+Native library result ownership published as
+`5b34382167da90d5677943d3ca617bf0e6a5924c`, OLD base `ab44b7d`. Verified
+one-line subject `Release copied C export results and preserve host string lifetimes`,
+66 characters, empty body/no trailers. Checkout clean; final `cargo fmt --
+--check` passes, CPU 0.35 s / elapsed 0.61 s; whitespace clean. No second PR
+opened and no local workload remains. Shared target is this library compiler.
+Root plan/handoff remain the only local main edits; preserve them on fast-forward.
+Preserve OLD `5b34382` for the next prepared child. Latest #82 gate check:
+Linux, ARM macOS and benchmarks passed; Intel macOS still running. Continue
+the same run, fix any failure, and merge only after all four current-head gates
+pass. Next concrete implementation: type-directed owned C-to-fwp library input
+conversion, protecting earlier prepared arguments/fields on failure and
+transferring them exactly once into the exported entry. Test scalar pointer
+bits, input aliases returned as C strings, multiple String/Option/record
+arguments, later conversion traps, and unchanged ordinary foreign-call
+borrowing. Then complete unload/finalizers/cycles evidence and aggregate gaps.
+
+
+## Prepared native library input ownership (2026-10-08)
+
+Branch `ownership-library-inputs`, checkout `/private/tmp/fwp-library-input-worktree`,
+OLD base `5b34382167da90d5677943d3ca617bf0e6a5924c`. C export wrappers create
+counted String copies, nullable-pointer options and record boxes. Earlier
+arguments and completed record fields remain in typed cleanup scopes during
+later conversion. Fields follow C declaration order while canonical indices
+retain the language layout. Scalar/pointer bits stay uncounted.
+
+The shared `rc::consumes_arg` contract transfers consumed inputs once into
+expression/constructor/primitive entry; borrowed inputs remain protected
+through the call and are released afterward. Export result ownership preserves
+C host string aliases. Both consuming and borrowing void exports are covered.
+Ordinary foreign converters/sharing remain unchanged. A Bytes export parameter
+now reports the missing pointer length; foreign functions still accept Bytes
+payload pointers. No new ABI or surface syntax was introduced.
+
+Baseline probe reproduced the retained input (exit 1). Fixture failures were
+repaired: the injected allocation hook needed a forward trap declaration,
+record alias ABI creates a separate result box, field workers legitimately
+drop duplicated fields and the original box, and division uses data-last
+operand order. The unoptimized interpreter now confirms the callee trap too.
+No implementation or test failure remains.
+
+Final O1/O2, both-poison input/result probes pass: direct borrowed primitive,
+consuming function, nested and direct nullable inputs, declaration/canonical
+field order, string/record aliases returned to C, retained host strings,
+scalar pointer words, null/invalid UTF-8 later input, prepared record allocation
+trap, consumed callee trap, and borrowed/consumed void results. Four negative
+controls fail as intended: absent borrowed argument release (1), uncleared
+consumed owner/double drop (2), missing earlier argument completion guard (11),
+missing record field completion guard (12). One diagnostic test confirms Bytes
+export rejection while ordinary foreign signature classification is retained.
+Previous result probe's repeated-evaluation control was adapted to named input
+locals and still detects extra evaluation. Actual allocator OOM is fatal; the
+record-allocation trap is explicitly injected, not evidence of recoverable OOM.
+
+Serial bounded commands after `cargo clean -p fwp`, using
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py`:
+- Baseline `cargo test --test library_input_ownership -- --nocapture`:
+  actual regression exit 1, CPU 0.25 s / elapsed 0.99 s after fixing the C hook.
+- Final `cargo test --test library_input_ownership --test library_result_ownership
+  -- --nocapture`: three pass, CPU 2.39 s / elapsed 8.08 s.
+- `cargo test --test ffi --test worker_preparation_ownership -- --nocapture`:
+  six pass, CPU 5.56 s / elapsed 11.36 s.
+- Additional `FWP_REUSE=0` with `cargo test --test ffi shared_library_from_c
+  -- --nocapture`: pass, CPU 0.55 s / elapsed 1.58 s.
+- `cargo fmt`: pass, CPU 0.36 s / elapsed 0.74 s.
+- Initial `cargo clippy --lib --test library_input_ownership
+  --test library_result_ownership -- -D warnings`: pass, CPU 2.33 s / elapsed
+  4.68 s; final check after optional/void cases passes, CPU 0.00 s / elapsed
+  0.14 s (cached compiler checking).
+
+Library tracing stays unarmed despite stress/verification requests; count
+reclamation is measured directly, not claimed as host-root GC verification.
+Full exact-head sequential CI remains required. Sole PR #82 exact `3fa67f3`,
+CI `37703018710`: Linux, ARM macOS and benchmarks passed; Intel macOS is live.
+Continue the same run and fix any failure. After all four pass, squash with
+recorded one-line subject and empty body, then rebase map from OLD `029fac4`
+onto that squash (preserve OLD `41ef82d` for filter). Next concrete task:
+native library unload teardown, starting with reserved heap/metadata mappings,
+CAF caches, finalizers, scheduler stacks and thread-pool lifetime. Do not unmap
+storage while background workers can still access generated code or values.
+Source-reachable cycles and remaining aggregate metadata/reconstruction gaps
+also remain before phase 2 closes; phases 2–6 are incomplete. Shared target now
+contains this input compiler. Preserve OLD `5b34382` for the branch rebase.
+
+Library inputs published as `a6ebc1da9637b4fef866697fa766208fd2d72af1`, OLD
+base `5b34382`. Verified one-line, 67-character subject `Own copied C library
+inputs and unwind partial argument preparation` (supplied as one line), empty
+body/no trailers. Checkout clean. Final formatting check CPU 0.36 s / elapsed
+0.74 s; whitespace clean. No second PR was opened. Shared target is this input
+compiler; package clean before switching to rebased map validation.
+
+PR #82 all four exact-head gates passed at `3fa67f3` in CI `37703018710`;
+squash-merged 2026-10-08T00:58:09Z as `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`.
+Verified subject `Add typed borrowed application for synchronous callbacks`,
+56 characters, one line, empty body/no trailers. Root fast-forwarded preserving
+its two local plan/handoff files, backup `/private/tmp/fwp-main-docs-181d3b3`.
+Map child rebase from OLD `029fac4` onto this squash has only plan/handoff
+conflicts; other changes apply. Resolve with current root docs, complete rebase,
+run guarded map/borrowed callback checks after package clean, then exact-lease
+push and open the sole next PR. Preserve OLD `41ef82d` for the filter child and
+OLD `a6ebc1d` for the next independently prepared library teardown child.
+
+Map callback rebase completed onto `181d3b3`; no code conflicts. After guarded
+package clean, `cargo test --test map_ownership --test borrowed_callbacks
+-- --nocapture` passes three tests, CPU 11.56 s / elapsed 23.36 s. Both map
+source references now explicitly use `FWP_NO_OPT=1` for an independent
+unoptimized interpreter oracle. O1/O2, stack on/off, GC stress/verification and
+both poison modes preserve aliases/captures. Selected no-tracing loop reports
+2.7 MiB freed by counts for the restored shared-result boundary versus 4.6 MiB
+for owned spines (same generated code otherwise, same output, O1, Apple Silicon/
+Apple Clang 17, 0.1 MiB report precision). This is not a speed claim or proof
+of complete tracing-free support. `cargo clippy --lib --test map_ownership
+--test borrowed_callbacks -- -D warnings` passes, CPU 2.31 s / elapsed 4.65 s.
+Shared target is now this rebased map compiler. Final contract inventory and
+formatting before publication; then exact-lease push against OLD `41ef82d`,
+open sole next PR and run all four current-head gates. Preserve OLD `41ef82d`
+for the filter child. Full builds/tests remain on runners; no limits bypassed.
+
+Rebased map's complete contract inventory passes, CPU 3.20 s / elapsed 6.77 s.
+One inventory test checks all declared collection/text boundaries. All focused
+checks pass; no unresolved failure. Ready for final format and publication.
