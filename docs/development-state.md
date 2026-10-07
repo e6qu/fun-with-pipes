@@ -33,7 +33,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   Verified squash subject: `Count owned String and Bytes results with explicit alias contracts`,
   one line, 66 characters, empty body, no trailers. Local main fast-forwarded
   while preserving its current plan/handoff edits.
-- Current origin/main: `079e7b58cfc2fa3a3053a1ef674a561af560fa1c`, squash
+- Earlier closure baseline: `079e7b58cfc2fa3a3053a1ef674a561af560fa1c`, squash
   merge of [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78). Exact head
   `a8e0079a87e5e4026327f431282cc37f0aebd637` passed all four gates in
   [CI 37656822169](https://github.com/e6qu/fun-with-pipes/actions/runs/37656822169):
@@ -44,13 +44,20 @@ immutable value semantics, effects and evaluation/trap order stable.
 - Previous text baseline: PR #77 merged as `6cdb0d1`, all four exact-head gates
   passed in CI `37636161587` attempt 2. Attempt 1 Linux had no runner; the retry
   executed actual tests successfully.
-- Next sequential PR: closure-cleanup, checkout `/private/tmp/fwp-drop-worktree`,
-  rebased from OLD `0d96bfe` onto `079e7b5`. PLAN/handoff conflicts were
-  reconciled with the latest root docs; runtime and tests applied cleanly. No PR
-  is open at this instant. Three post-rebase closure cleanup/alias/counter checks
-  pass (CPU 11.97 s / elapsed 24.06 s); fmt and whitespace pass. Publish with
-  exact lease and open the sole next PR; full exact-head CI gates
-  remain required. Preserve all later OLD rebase anchors.
+- Current origin/main: `33d4fb1a33ad4aad6b584b2f25c90d0f4dbbc18c`, squash
+  merge of [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79), merged
+  2026-10-07T20:40:20Z. All four exact-head gates passed in CI `37666199241`
+  for `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`. Verified one-line subject
+  `Bound closure capture cleanup with an explicit release work list`, empty body,
+  no trailers. Local main fast-forwarded; docs backup
+  `/private/tmp/fwp-main-docs-33d4fb1` preserved the active plan/handoff.
+  Next PR: concrete ownership temporary types. Rebase from OLD `7cf5c78`
+  onto this baseline, preserving OLD `0acbc06` for the stack-arguments child.
+  Rebase completed; only plan/handoff conflicts were reconciled with current docs.
+  The rebased temporary types (2) and closure cleanup (1) pass under the guard:
+  CPU 10.31 s / elapsed 20.83 s; typed children free 0.5 MiB versus 0.0 MiB
+  in the control. Package clean preceded validation. Formatting/whitespace pass.
+  Publish with exact lease and open this as the sole PR; full CI is required.
 - Published runtime unwind change: `ownership-unwind-runtime`, checkout
   `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
   chains are task-local, error handlers and recovered traps retain a boundary,
@@ -184,32 +191,196 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Immediate continuation
 
-Keep goal active; phases 2–6 remain incomplete. PR #78 has merged with all
-four exact-head gates passing. Rebase closure-cleanup from OLD `0d96bfe` onto
-`079e7b5`, reconcile latest root docs, run guarded focused checks, publish with
-exact lease and open the sole next PR. Require its full exact-head CI gates
-before the next squash. Do not rebase prepared children using a parent's rewritten
-or squash head.
+Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
+with all four exact-head gates passing. PR #79 is the sole open PR, exact head
+`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241`: Both macOS gates/bench passed; Linux running. When all
+four gates pass, squash with the explicit subject above and empty body, verify
+its message, and fast-forward main preserving these two docs. Rebase temporary
+ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
+focused checks, publish with exact lease and open the sole next PR. Do not rebase
+children using a rewritten or squash parent as their OLD base.
 
-Fold/right-fold cleanup is in progress on `ownership-fold-unwind`, checkout
-`/private/tmp/fwp-fold-unwind-worktree`, OLD base `c2a3645`; it is uncommitted.
+Fold/right-fold cleanup is published on `ownership-fold-unwind`, checkout
+`/private/tmp/fwp-fold-unwind-worktree`, OLD base `c2a3645`, head
+`968dac7ed9cfa98ce964d889a6b54e907d9e148b`; checkout clean.
 Normal fold/right-fold tests pass (CPU 14.48 s / elapsed 29.37 s). An initial Rust
 borrow error was corrected by cloning the callback-ID list before adding typed
 drop helpers. Captured callback probes were corrected to use the optimizer’s
 actual `fold-right-fn` specialization and a dynamic capture. The right-fold
 error/allocation/cancellation/preparation probe passes (CPU 4.21 s / elapsed
-8.49 s), but a subsequent borrowed-function duplication guard needs rerunning.
-Add scalar/left-fold preparation evidence, then validate, document and publish
-the fold branch. Continue with loop state and retained task lifetime cleanup. Read ownership/
-design first. Keep state transfer precise across callback entry and cancellation
-before the next call, cover direct/dynamic/captured paths and scalar bits, and
-compare native/interpreter behavior. Then retained tasks and remaining allocator,
-boxing, CAF and inline-rewrite lifetimes; the numbered roadmap follows after
-phase 2 acceptance. Failing checks are repair tasks, never a reason to stop.
-Shared target currently contains the compiler from the fold-unwind checkout;
-guarded `cargo clean -p fwp` is required before another worktree's package build.
-No local workload is running. Root main has only PLAN/handoff edits; published
-runtime/map/selection/zip worktrees are clean.
+8.49 s). Borrowed-function duplication protection now starts before retaining
+the borrowed function and keeps consumed overapplication suffixes owned during
+an earlier entry. Each successful borrowed duplicate is now protected while
+later duplicates are prepared. Final two dedicated probes pass (CPU 5.27 s /
+elapsed 10.64 s), covering direct/dynamic/captured right-fold errors, scratch
+allocation traps, cancellation, consumed and partial borrowed preparation, retained
+function/input aliases and scalar address bits. The scalar/duplicate fixture’s
+injection first targeted the unused prefix loop; corrected to the actual suffix
+loop. Library lint is warning-free (CPU 2.23 s / elapsed 4.39 s). Final nine
+normal fold/right-fold/runtime checks pass (CPU 15.50 s / elapsed 31.22 s).
+A borrowed-span overapplication probe was added to verify the pending suffix
+and surviving function alias across prefix failure and successful return.
+The added overapplication probe passes (CPU 2.51 s / elapsed 5.10 s).
+Final fmt and whitespace pass. The fold branch is published; full
+sequential CI remains required.
+
+Loop cancellation cleanup is published on `ownership-loop-unwind`, checkout
+`/private/tmp/fwp-loop-unwind-worktree`, OLD base `968dac7`, head
+`988f2a3be97f482d78cbfc5f871e58b0f118a284`; clean, no new PR.
+Dynamic, known and captured loops protect the current consumed state at each
+outer tick and transfer it before owned callback entry. Specialized outer loops
+save only counted typed slots, clear them before fs entry and refresh from the
+next state before the next tick. Step payload extraction protects the owned Step
+while preparing its typed payload duplicate. Stop results never enter a state
+scope of a different type.
+
+All five existing loop checks pass (CPU 21.60 s / elapsed 43.61 s), covering
+reclamation, aliases, scalar address bits, fused consumers and trap/evaluation
+order. Two dedicated checks pass (CPU 3.93 s / elapsed 8.00 s): cancellation at
+first and second ticks on direct/generic/dynamic/captured/nested paths and Step
+payload-preparation traps for Again/Stop with surviving aliases. They compile
+actual generated C at O1/O2 with GC stress/verification and both poison modes;
+normal native output matches the interpreter. Test-source typing and optimized-
+away wrapper assumptions were corrected before accepting this evidence. The
+nested fixture holds a typed boxed nested record; it does not prove flattened
+nested-slot cancellation coverage. Adjacent call-liveness/fold checks (7) pass, CPU 15.84 s / elapsed 31.89 s.
+
+Library clippy is warning-free (CPU 2.28 s / elapsed 4.52 s); fmt and whitespace
+pass. Verified subject `Protect current loop state and Step payloads across cancellation`
+is one line, 64 characters, empty body/no trailers. No local workload remains.
+Argument/capture preparation is published on `ownership-argument-preparation`,
+checkout `/private/tmp/fwp-argument-preparation-worktree`, OLD base `988f2a3`,
+head `49739182ecb6ef8fdf98b526fdb427bb672d7f97`; clean, no new PR.
+Generated multi-counted argument helpers protect successful duplicates until the
+whole span transfers. Capture duplication reuses that typed helper when unwind
+is possible. Full owned application transfers its pending prefix only after
+capture preparation; uncounted stack functions still protect owned arguments.
+Partial application protects a freshly counted outer cell while copied children
+remain borrowed, releasing only that cell if capture preparation fails.
+
+The dedicated O1/O2 stress/verification/poison probe passes (CPU 2.62 s / elapsed
+5.43 s), extended final CPU 2.94 s / elapsed 6.08 s:
+whole-span/offset-span failures after an earlier duplicate, heap/stack
+function capture failures, pending typed record arguments containing scalar
+address bits, partial closure-cell reclamation, partial allocation failure before a cell exists
+and exact surviving aliases.
+Removing only the generated helper scope makes the same probe fail with the
+expected leaked-reference code. Normal output matches the interpreter. The
+fixture was corrected to existing curry3 syntax and exact typed allocation
+markers. Its initial failure exposed the uncounted temporary closure cell,
+which is now fixed. Earlier runtime/fold checks (7) pass, CPU 19.15 s / elapsed
+38.47 s. Final nine runtime/fold/loop checks pass, CPU 23.55 s / elapsed 47.29 s;
+Final helper context uses a compact argument pointer, typed release callback and
+span indices, without a temporary function-info table. The dedicated probe plus
+five runtime checks pass after that change, CPU 17.28 s / elapsed 34.73 s.
+Library clippy is warning-free (CPU 2.25 s / elapsed 4.51 s); final fmt and
+whitespace pass. No local workload remains. Verified subject
+`Release partial argument and capture preparation on unwind` is one line,
+58 characters, empty body/no trailers. Published separately; full sequential
+CI remains required. Final focused command:
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3 /private/tmp/fwp-local-guard.py cargo test --test argument_preparation_ownership --test runtime_call_ownership -- --nocapture`.
+Lint and fmt used the same bounded guard with `cargo clippy --lib -- -D warnings`
+and `cargo fmt --all -- --check`. The guard accepted all checks within limits.
+Next start a
+separate constructor/boxing checkout from this published head: FnGen::alloc,
+Body::Ctor, Gen::worker pre-call field duplication and result boxing need typed
+owners before allocations/preparation. Initial loop state flattening also needs
+partial-duplicate cleanup before dropping the input record. Check these actual
+emitted paths with allocation/preparation failure, surviving aliases and scalar
+bits, then CAF/inline-rewrite owners and retained task lifetimes.
+Phase 2 remains incomplete; phases 3–6 follow its acceptance. Failing checks are
+repair tasks, never a reason to stop. At argument-preparation validation, the shared target contained that compiler; guarded `cargo clean -p fwp` is required before another
+worktree's package build. Root main has only PLAN/handoff edits; all published
+prepared checkouts are clean. PR #79 exact-head CI: Both macOS gates/bench passed; Linux running.
+
+Constructor allocation cleanup is published on `ownership-constructor-unwind`,
+checkout `/private/tmp/fwp-constructor-unwind-worktree`, OLD base `4973918`, head
+`608ae7bb2d2420f78a113a11299669a9f4821f37`; clean, no new PR. The ownership checker records non-nullary constructors too. Before
+allocating a record/variant, generated code protects remaining caller owners and
+consumed typed field values separately. Constructor functions protect their
+owned arguments. Successful allocations transfer those fields; young reuse
+stays on its existing allocation-free path. Scalars, constants and static
+functions have no pending field scope entry.
+
+Twelve ownership-checker checks pass, including transferred fields versus other
+caller owners (CPU 9.87 s / elapsed 20.24 s). The initial combined command filtered
+out the integration probe; that zero-test result was not accepted as evidence.
+The unfiltered probe plus five call-liveness checks pass, CPU 14.50 s / elapsed
+29.13 s. Actual generated C at O1/O2 under GC stress/verification and both poison
+modes covers constructor functions, recursive variants, wide records, a still-
+live caller alias, fresh field results, retained aliases and address-shaped
+scalar bits. Removing only the constructor-function scope makes the same probe
+fail with the expected field-leak code. Normal output matches the interpreter.
+Test-source declaration syntax and the injected C forward declaration were
+corrected before validation. All three reuse-token checks pass (CPU 9.29 s / elapsed 18.63 s), including
+ownership switches and bump-allocator compilation. Library clippy is warning-free
+(CPU 2.52 s / elapsed 5.03 s); fmt and whitespace pass. No local workload remains.
+Final probe/call command: `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3 /private/tmp/fwp-local-guard.py cargo test --test constructor_unwind_ownership --test compiler_call_liveness -- --nocapture`.
+Reuse-token tests, `cargo clippy --lib -- -D warnings` and fmt used the same guard.
+Verified subject `Protect consumed constructor fields before allocating their storage`
+is one line, 67 characters, empty body/no trailers. Next protect worker field
+preparation and record/variant result boxing, followed by initial loop flattening,
+CAF/inline-rewrite lifetimes and retained runtime tasks. Concrete constructor
+argument temporaries with unknown field types still need typed context coverage;
+do not treat a fallback outer count as full child reclamation. The shared target contained the constructor compiler during those checks. The main root retains only its plan/
+handoff edits; published prepared checkouts are clean. Full sequential CI remains
+required for every prepared branch, and phases 2–6 remain incomplete.
+
+Worker result boxing is published on `ownership-worker-boxing`, checkout
+`/private/tmp/fwp-worker-boxing-worktree`, OLD base `608ae7b`, head
+`dc4f9461571be7294f6ea0babc99c92847fbc5be`; clean, no new PR.
+Record result wrappers now own returned typed fields across box allocation.
+Variant boxing protects only the active constructor's counted payloads; scalar
+and nullary variants have no payload owner. Direct worker calls re-register
+remaining caller owners during result boxing, independently of returned fields.
+Variant release declarations now precede cleanup context definitions so those
+contexts and boxing helpers can refer to each other without undeclared C types.
+
+The initial dedicated O1/O2 stress/verification/poison probe passes (CPU 10.35 s /
+elapsed 20.88 s), covering record and variant wrappers, another live caller
+reference across direct recursive worker-result boxing, surviving aliases,
+scalar payload bits and nullary variants. Normal native output matches the
+interpreter. The fixture's missing rec declaration was corrected, and the first
+C compilation exposed the definition-order bug, now fixed. An expanded probe
+restores only the missing record result scope and must detect leaked returned
+fields. The final seven-test boxing/call/constructor batch passes, CPU 18.90 s /
+elapsed 37.93 s. Library clippy is warning-free (CPU 2.58 s / elapsed 5.10 s);
+fmt and whitespace pass. No local workload remains.
+Final test command used the guard with
+`cargo test --test worker_boxing_ownership --test compiler_call_liveness --test constructor_unwind_ownership -- --nocapture`; lint/fmt used the same bounded guard.
+Verified subject `Protect owned worker results until record and variant boxing succeeds`
+is one line, 69 characters, empty body/no trailers. Next move wrapper incoming-owner registration
+before field duplication and protect completed field duplicates until worker
+entry. Initial loop flattening, vlocal variant duplication/boxing, unknown
+typed constructor temporaries, CAF/inline lifetime and retained tasks remain.
+The shared target contained the boxing compiler during those checks. Full sequential CI still
+gates each prepared branch; no additional PR is open.
+
+Worker argument preparation is published on `ownership-worker-preparation`,
+checkout `/private/tmp/fwp-worker-preparation-worktree`, OLD base `dc4f946`, head
+`c97dd03f8d89d685be885f77cc611bb16cb0fb72`; clean, no new PR. Wrappers with boxed parameters now protect all consumed incoming
+arguments before field duplication. Each completed counted-field duplicate has
+its own typed, initially zero slot. These prepared field references transfer
+at worker entry; non-boxed arguments leave the original-owner scope then, while
+boxed originals remain owned until normal wrapper return or unwind. Scalar
+fields have no duplicate/cleanup slot. Programs without unwind retain grouped
+operations; wrappers without boxed parameters gain no input-preparation scope.
+
+All five existing call-liveness checks pass (CPU 18.55 s / elapsed 37.34 s).
+The dedicated probe passes at O1/O2 with stress/verification and both poison
+modes (CPU 2.62 s / elapsed 5.42 s): first/later duplication failure, worker-entry
+cancellation and normal return, with independent box/leaf aliases and scalar
+address bits. The expanded control removes only the partial preparation scope
+and detects the expected earlier-duplicate leak. It and result boxing pass
+(CPU 7.10 s / elapsed 14.23 s); normal native output matches the interpreter.
+Library clippy is warning-free (CPU 2.78 s / elapsed 5.57 s); fmt and whitespace
+pass. No local workload remains. Those checks used the worker-preparation compiler. Current shared target contains
+the loop-preparation compiler; guarded `cargo clean -p fwp` is required before
+another checkout's package build. Verified subject `Protect boxed arguments and partial fields before worker entry`
+is one line, 62 characters, empty body/no trailers. Next protect initial
+loop state flattening and partial field extraction before worker entry, followed
+by vlocal variant duplication/boxing, typed constructor temporaries, CAF/inline
+lifetimes and retained tasks. Full sequential CI remains required.
 
 ## Current ownership evidence
 
@@ -234,8 +405,6 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-closures (PR #78) | fwp-closure-worktree | a8e0079 | bab67ea |
-| ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
 | ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
 | ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
@@ -266,6 +435,13 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-map-unwind | fwp-map-unwind-worktree | 62add7e | bee3f16 |
 | ownership-selection-unwind | fwp-selection-unwind-worktree | b8f4c24 | 62add7e |
 | ownership-zip-unwind | fwp-zip-unwind-worktree | c2a3645 | b8f4c24 |
+| ownership-fold-unwind | fwp-fold-unwind-worktree | 968dac7 | c2a3645 |
+| ownership-loop-unwind | fwp-loop-unwind-worktree | 988f2a3 | 968dac7 |
+| ownership-argument-preparation | fwp-argument-preparation-worktree | 4973918 | 988f2a3 |
+| ownership-constructor-unwind | fwp-constructor-unwind-worktree | 608ae7b | 4973918 |
+| ownership-worker-boxing | fwp-worker-boxing-worktree | dc4f946 | 608ae7b |
+| ownership-worker-preparation | fwp-worker-preparation-worktree | c97dd03 | dc4f946 |
+| ownership-loop-preparation | fwp-loop-preparation-worktree | b879eca | c97dd03 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1100,7 +1276,7 @@ Old-storage branch published as `6774aa5bb426c4dc1e49d9eca1ff1737763498a5`.
 Verified commit subject: `Reclaim old owned storage and preserve young reuse invariants`
 (61 characters), one line with no body/trailers. Revised Linux GC harness compiles;
 fmt and whitespace pass. No local workload remains. Sole PR #77 exact-head CI
-still tests on both macOS architectures; Linux/bench queued. Next separate
+still tests on both macOS architectures; Linux queued, benchmarks passed. Next separate
 implementation investigates task/channel retained ownership and teardown;
 failing tests remain repair work, never a reason to stop the roadmap.
 
@@ -1187,3 +1363,65 @@ Keep this run; retry failed gates once it is terminal. Next checkout should
 start from OLD `3e31422` for compiler live-owner tracking. Runtime nodes already
 have one actual production consumer (file.with), but all-local unwind ownership
 and retained task ARC remain required work.
+
+## Latest preparation: initial flattened loop ownership
+
+`ownership-loop-preparation`, `/private/tmp/fwp-loop-preparation-worktree`,
+OLD base `c97dd03`, published head `b879eca20812651998a178fba2dae72cc46f4aed`;
+clean checkout, no additional PR. Verified subject `Restore flattened loop states
+and protect initial field preparation`: one line, 67 characters, empty body/no trailers. RC argument naming had
+hidden rebuilt records behind a temporary and caused field-only counted states
+to remain boxed. C generation now moves an immediately consumed terminal Again
+through the record's preparation spine, preserving field and release order.
+Both shape analysis and emitted loop bodies use that same normalized expression;
+RC call-liveness verification accepts the changed ownership tree. Initial input
+state and each completed counted-slot duplicate have separate typed scopes.
+Completed slots transfer only after all are prepared, then the boxed input drops.
+Scalars have no preparation slots. Whole-state uses remain boxed.
+
+The initial source-shape assertion failed because the fixture actually stayed
+boxed; diagnosis led to the narrow naming repair, rather than weakening the
+assertion. The generated four-slot loop now passes interpreter/native comparison.
+The fault probe injects before first/later field retention, with independent
+box/leaf aliases, shared sibling leaves and scalar pointer bits (16 cases).
+It passes O1/O2, GC stress/verification and both poison modes. Removing only
+partial cleanup fails with the expected leaked-field code 5. Three preparation/
+loop-unwind checks pass: CPU 7.15 s / elapsed 14.51 s. Existing cancellation
+probes now read the actual flat String/pair owner slots. Five loop tests pass:
+CPU 11.81 s / elapsed 23.83 s, including goldens for trap/evaluation order,
+GC-disabled reclamation, aliasing and ownership switches. Library clippy passes:
+CPU 2.31 s / elapsed 4.58 s. Formatting and whitespace pass.
+
+All checks used `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target
+python3 /private/tmp/fwp-local-guard.py` followed by `cargo test --test
+loop_preparation_ownership --test loop_unwind_ownership -- --nocapture`, `cargo
+test --test loop_ownership -- --nocapture`, `cargo clippy --lib -- -D warnings`,
+and `cargo fmt`. No local workload remains. The shared target contains this
+compiler; guarded `cargo clean -p fwp` before changing checkouts. These are focused
+checks, not full architecture support or a speed measurement. Sequential full
+CI is still required. Further nested-slot flattening and field reconstruction,
+vlocal variant duplication, typed constructor temporaries, CAF/inline lifetimes,
+retained tasks and cycles remain to audit. Continue the sole PR #79 merge gate
+and rebase this published preparation in its recorded order; phases 2–6 remain active.
+
+## Current retain-failure work
+
+Uncommitted `ownership-variant-preparation`, checkout
+`/private/tmp/fwp-variant-preparation-worktree`, OLD base `b879eca`.
+RC liveness now records the owners before a Dup, excluding its unfinished new
+reference. Count generation protects those owners during retention. Typed
+variant, flat-field and stack-child multi-retains protect only completed extra
+references. Existing 12 RC unit checks pass (CPU 3.26 s / elapsed 6.88 s).
+The dedicated generated-C probe passes O1/O2, stress/verification and both poison
+modes (CPU 9.67 s / elapsed 19.44 s). It uses actual wide reference-count overflow,
+not an injected retain trap: first/later field overflow preserves original
+borrowed variant fields, and a compiled function's overflowing input Dup releases
+its consumed caller reference. Removing only the variant partial scope fails
+with code 3. Normal output matches the interpreter. A new liveness unit is added
+but has not yet run; focused adjacent regression, formatting and lint remain.
+No local workload is active. Those checks used the retain-failure compiler. The shared target now contains
+the rebased temporary-types compiler; guard package clean before resuming this checkout.
+Complete that publication/PR first, then resume retain-failure validation and
+publication; retain OLD `b879eca`. Boxed-to-unboxed conversion, vlocal boxing,
+nested field reconstruction and SetFields fallback preparation still need
+separate checks. Phase 2 and all later phases remain incomplete.

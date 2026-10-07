@@ -37,7 +37,7 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, concrete temporary types, stack capture cleanup and exceptional cleanup |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, stack capture cleanup and exceptional cleanup |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -202,6 +202,26 @@ path. Optimized GC/reuse alias tests remain passing. Full native/WASI/platform
 and benchmark gates are still required before this prepared change merges.
 
 Investigation also exposed incomplete concrete typing of constructor temporaries:
-a borrowed List literal can fall back to the unknown type and only decrement
-its outer count. Carry expected parameter/result types into those temporaries
-and verify nested child cleanup before claiming complete ownership.
+borrowed constructor arguments previously fell back to the unknown type and
+only decremented their outer count. Call parameter types now give these
+ownership temporaries concrete monomorphic types, so typed release reaches their
+children. Remaining constructor/result/field contexts still need coverage.
+
+## Concrete call argument temporaries
+
+IR constructors carry tags/fields without a standalone nominal type. When a call
+parameter supplies that type, the ownership pass retains it on new temporaries
+instead of using the unknown-type fallback. Existing inferred expression types
+take precedence. Both owned function calls and borrowing primitive/FFI calls
+provide their concrete parameter types; uncounted scalar temporaries stay scalar.
+The evaluation sequence and early/last-use ownership discipline are unchanged.
+
+A List-of-functions probe restores only the previous outer count decrement in
+emitted C. With tracing off and zero collections, typed temporary cleanup frees
+0.5 MiB versus 0.0 MiB, with identical interpreter output (Apple Silicon, Apple
+Clang 17, -O1, FWP_STACK=0, 10,000 iterations, 0.1 MiB counter precision).
+Retained function/list aliases and literal leaf/Option children match both
+backends at -O1/-O2 under GC stress/verification and both poison modes. Earlier
+container/leaf/text/closure/cleanup checks and five FFI regressions pass locally.
+Full CI remains required. This covers call argument temporaries; it does not
+complete type propagation into every generated constructor or aggregate.

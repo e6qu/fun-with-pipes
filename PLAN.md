@@ -50,29 +50,27 @@ exact-head gates in run `37636161587`, attempt 2;
 [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
-as `079e7b5`. Closure cleanup is the next sequential PR; its rebase and focused
-checks are being prepared. Later published branches prepare closure and
-synchronous list ownership, call-effect inference, exact high-fanout counts and
-scan/iterate state ownership. Prepared work needs full CI in sequence; the
-handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers retained runtime ownership/teardown. Old marked-object
-reclamation is prepared with focused survival, alias and task stress tests;
-full CI still gates publication as the next sequential PR. Task/channel
-contracts and owned result wrappers are also prepared; retained callback
-lifetimes and compiler live-owner cleanup remain open. Runtime unwind boundaries
-and scoped-file cancellation cleanup are prepared with focused evidence. Typed array and map/set element boundaries pass focused
-validation in separate prepared branches;
-repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
-state transfer is published separately; it repairs the lost reclamation in a
-map/sum sequence consumer. Full gates after parent merges still remain.
-Compiler reuse-token lifetime repair is prepared with focused checks: unused
-branches, old cells, constructor transfer and unwind release the emptied cell
-exactly once. Call liveness is published separately, covering pending arguments, incoming
-parameters, typed caller values and boxed/unboxed wrappers. Keep struct variants
-unboxed through these ownership moves. Neither change is merged yet; full CI
-still gates each sequential PR. Consumed runtime closures/accumulators, retained
-lifetimes and allocation/inline failure paths remain to be covered. Phase 2 remains
-incomplete; compiler liveness, runtime teardown and full retained lifetimes remain.
+as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed all four gates
+in run `37666199241` and was squash-merged as `33d4fb1`. Next publish the rebased
+concrete temporary-type change as the sole PR; later preparations remain separate.
+
+Phase 2 has a published preparation chain covering typed closure/stack children,
+synchronous list/container callbacks, call-effect inference, exact high-fanout
+counts, state transfer, old-object reclamation, task result wrappers, runtime
+unwind boundaries, compiler live owners and callback accumulators. These branches
+are not merged support. Rebase and validate them in order, opening each PR only
+after the preceding one merges. The handoff records exact heads, immutable OLD
+rebase anchors and actual focused evidence.
+
+Constructor allocation is published separately; worker result boxing passes
+focused exceptional checks. Worker field preparation now passes focused
+first/later-failure and entry cancellation checks. Initial loop flattening now passes focused preparation and cancellation checks,
+including a repair for RC argument naming that hid literal rebuilt states. Next
+audit vlocal variant duplication and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+teardown and cycles. Full sequential CI remains required. Phase 2 stays
+incomplete until its ownership and reclamation acceptance is proved; numeric
+representation, numerics/autodiff, expanded evidence and optional tracing-free
+execution follow in roadmap order.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
@@ -504,3 +502,18 @@ take-while selected-prefix cleanup is published separately. Zip-with protects
 both scratch buffers and its result prefix with focused exceptional checks;
 full sequential CI remains required. Finish the other callback accumulators and
 retained task lifetimes before closing phase 2.
+
+Prepared fold cleanup protects right-fold scratch and consumed accumulators
+before allocation/argument preparation. Typed borrowed-span scopes preserve
+original aliases when a later duplicate fails. Focused exceptional and scalar-bit
+checks pass; full sequential CI remains required. Loop state at cancellation ticks and Step payload preparation now pass focused
+alias/scalar-bit and interpreter/native checks in a separate preparation. Full
+sequential CI is still required. Multi-capture preparation and owned application allocation now pass focused
+failure/alias checks in a separate preparation; full sequential CI remains.
+Continue with retained tasks and allocator/boxing/CAF/inline ownership before
+closing phase 2.
+
+Constructor allocation now passes focused exceptional cleanup/alias checks in a
+separate preparation. Worker result boxing also passes focused exceptional checks. Complete field
+duplication, initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
+retained tasks before phase 2 acceptance. Full sequential CI remains required.
