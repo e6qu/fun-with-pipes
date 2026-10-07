@@ -39,8 +39,8 @@ phase2 remains incomplete; phases3–6 are pending.
 Sole open [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95):
 ownership-state-sequences, /private/tmp/fwp-state-sequence-worktree, exact
 5d0a3f302e476dfada1b3ea71aa56dae4086d905 on actual main1358267.
-CI37901758334 passes bench at this exact head; both GC gates, regular
-Intel macOS and Linux run; regular ARM macOS remains queued. Both final focused
+CI37901758334 passes bench and ARM GC stress at this exact head; Intel GC,
+regular Intel macOS and Linux run; regular ARM macOS remains queued. Both final focused
 tests pass12.28 s CPU /24.61 s elapsed, lint2.24 s /4.49 s, format0.33 s
 /0.61 s. Source/runtime/tests/workflows match verified15743b8 exactly;
 raw FWP_NO_OPT=1 interpreter oracles remain intact. Require all six passing
@@ -86,26 +86,25 @@ still need their final squash rebases and six exact-head full gates.
 | 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 /39.78 s + exact unit3.28 /6.82 s |
 | 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 /32.40 s + two exact units |
 | 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 /33.31 s + exact unit3.31 /7.05 s |
+| 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 /38.35 s + exact unit3.59 /7.44 s |
 
-Rows17–41 are published preparations with passing focused tests, lint and
+Rows17–42 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row41 final head3956d5cadd86a9814c5919a576f6a14020d73766 is clean on
-actual basec90fe5a, published with exact lease against OLD34873f4. Three tests
-pass16.53 s CPU /33.31 s elapsed plus exact IR unit3.31 s /7.05 s;
-lint2.36 s /4.76 s, format0.34 s /0.60 s.
-Current independent task: row42 record-update rebased two commits from ACTUAL
-current base OLD34873f4 onto actual row41 head3956d5c (initial1b18b11,
-follow-up0253f8c). Both new source oracles use FWP_NO_OPT=1. Focused
-record_update_ownership, general_record_update_ownership and
-variant_conversion_ownership pass all three tests19.15 s CPU /38.35 s
-elapsed; exact new IR unit passes3.59 s /7.44 s; lint2.39 s /4.93 s
-and format0.34 s /0.60 s pass. Final doc amend/publication follow.
-Preserve immutable OLD anchors; no additional PR.
+Row42 final headf22b5b587de6c22b2ac92171bf3d6d011d5d6763 is clean on
+actual base3956d5c, published with exact lease against OLD5c5875d. Three tests
+pass19.15 s CPU /38.35 s elapsed plus exact IR unit3.59 s /7.44 s;
+lint2.39 s /4.93 s, format0.34 s /0.60 s. First replayed commit1b18b11
+also has verified one-line whole message; the preparation has two commits.
+Current independent task: row43 record-conversion rebased from ACTUAL current
+base OLD5c5875d onto actual row42 headf22b5b5 (temporary1e0905a). New source
+oracle uses FWP_NO_OPT=1; record_conversion_ownership, variant_conversion_ownership
+and worker_preparation_ownership pass all three tests18.02 s CPU /36.18 s
+elapsed; lint and formatting pass. Final doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
@@ -153,10 +152,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-record-update-worktree; focused record-copy checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 /0.25 s).
+belongs to /private/tmp/fwp-record-conversion-worktree; focused record conversion checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.12 s CPU /0.82 s elapsed).
+ancestry pairs and whole commit messages (0.14 s CPU /0.96 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:

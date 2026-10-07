@@ -8162,3 +8162,29 @@ Record copy lint (cargo clippy --test record_update_ownership --test
 general_record_update_ownership --test variant_conversion_ownership --
 -D warnings) passes2.39 s CPU /4.93 s elapsed; fmt check0.34 s /0.60 s.
 Nine current root docs copied before final amend; tested source unchanged.
+
+Final record-update preparationf22b5b587de6c22b2ac92171bf3d6d011d5d6763
+is clean on actual base3956d5c, published with exact lease against OLD5c5875d.
+Both whole subjects (first1b18b11, finalf22b5b5) verified one line, empty
+body. Two preparation commits remain separate until final PR squash.
+PR95 remains sole open.
+
+Row43 OLD614dd3b rebases from immutable parent5c5875d onto actual row42
+headf22b5b5 (initial1e0905a); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.60 s. Record/variant conversion and worker preparation checks started.
+Latest serial doc audit passes eleven link sets, 82 immutable ancestry
+pairs and whole subjects0.14 s /0.96 s.
+
+Guarded cargo test --test record_conversion_ownership --test
+variant_conversion_ownership --test worker_preparation_ownership passes
+all three tests18.02 s CPU /36.18 s elapsed. Boxed record conversion
+protects original/caller owners through partial typed field retains,
+preserving aliases and scalar bits; raw interpreter and O1/O2 stress,
+verification, poison and related variant/worker regressions pass. PR95
+ARM GC stress passes in addition to bench; remaining four gates pending.
+
+Record conversion lint (cargo clippy --test record_conversion_ownership
+--test variant_conversion_ownership --test worker_preparation_ownership --
+-D warnings) passes2.41 s CPU /4.72 s elapsed; fmt check0.34 s /0.60 s.
+Nine current root docs copied before final amend; tested source unchanged.
