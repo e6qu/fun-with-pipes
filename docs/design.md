@@ -326,6 +326,11 @@ values across allocation; scalar and nullary variant payloads remain uncounted.
 See [ownership.md](ownership.md#prepared-worker-result-boxing) for evidence and
 remaining input preparation and runtime lifetime work.
 
+Prepared worker argument preparation registers original owners before field
+duplication and protects each completed typed duplicate until worker entry.
+[Ownership evidence](ownership.md#prepared-worker-argument-preparation) records
+alias/scalar/cancellation checks and remaining runtime lifetime work.
+
 ## Not implemented
 
 - Complete ownership of strings, bytes, escaping closures and runtime-shared

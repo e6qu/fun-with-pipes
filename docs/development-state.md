@@ -50,8 +50,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   latest docs; runtime/tests applied cleanly. Head
   `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, published with exact lease; clean.
   Three closure cleanup/alias/counter checks pass (CPU 11.97 s / elapsed 24.06 s);
-  fmt/whitespace pass. Full CI `37666199241`: ARM macOS and benchmarks passed;
-  Intel macOS and Linux are running on that exact head.
+  fmt/whitespace pass. Full CI `37666199241`: Both macOS gates and benchmarks passed;
+  Linux is running on that exact head.
   Require all four gates before squash with subject
   `Bound closure capture cleanup with an explicit release work list`, empty body
   and exact head match. The temporary-types child later rebases from OLD
@@ -191,7 +191,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
 with all four exact-head gates passing. PR #79 is the sole open PR, exact head
-`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241`: ARM macOS/bench passed; Intel macOS/Linux running. When all
+`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241`: Both macOS gates/bench passed; Linux running. When all
 four gates pass, squash with the explicit subject above and empty body, verify
 its message, and fast-forward main preserving these two docs. Rebase temporary
 ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
@@ -287,10 +287,9 @@ partial-duplicate cleanup before dropping the input record. Check these actual
 emitted paths with allocation/preparation failure, surviving aliases and scalar
 bits, then CAF/inline-rewrite owners and retained task lifetimes.
 Phase 2 remains incomplete; phases 3–6 follow its acceptance. Failing checks are
-repair tasks, never a reason to stop. Shared target currently contains the
-argument-preparation compiler; guarded `cargo clean -p fwp` is required before another
+repair tasks, never a reason to stop. At argument-preparation validation, the shared target contained that compiler; guarded `cargo clean -p fwp` is required before another
 worktree's package build. Root main has only PLAN/handoff edits; all published
-prepared checkouts are clean. PR #79 exact-head CI: ARM macOS/bench passed; Intel macOS/Linux running.
+prepared checkouts are clean. PR #79 exact-head CI: Both macOS gates/bench passed; Linux running.
 
 Constructor allocation cleanup is published on `ownership-constructor-unwind`,
 checkout `/private/tmp/fwp-constructor-unwind-worktree`, OLD base `4973918`, head
@@ -321,13 +320,13 @@ is one line, 67 characters, empty body/no trailers. Next protect worker field
 preparation and record/variant result boxing, followed by initial loop flattening,
 CAF/inline-rewrite lifetimes and retained runtime tasks. Concrete constructor
 argument temporaries with unknown field types still need typed context coverage;
-do not treat a fallback outer count as full child reclamation. Shared target now
-contains the constructor-unwind compiler. The main root retains only its plan/
+do not treat a fallback outer count as full child reclamation. The shared target contained the constructor compiler during those checks. The main root retains only its plan/
 handoff edits; published prepared checkouts are clean. Full sequential CI remains
 required for every prepared branch, and phases 2–6 remain incomplete.
 
-Worker result boxing is in progress on `ownership-worker-boxing`, checkout
-`/private/tmp/fwp-worker-boxing-worktree`, OLD base `608ae7b`; uncommitted.
+Worker result boxing is published on `ownership-worker-boxing`, checkout
+`/private/tmp/fwp-worker-boxing-worktree`, OLD base `608ae7b`, head
+`dc4f9461571be7294f6ea0babc99c92847fbc5be`; clean, no new PR.
 Record result wrappers now own returned typed fields across box allocation.
 Variant boxing protects only the active constructor's counted payloads; scalar
 and nullary variants have no payload owner. Direct worker calls re-register
@@ -347,12 +346,38 @@ elapsed 37.93 s. Library clippy is warning-free (CPU 2.58 s / elapsed 5.10 s);
 fmt and whitespace pass. No local workload remains.
 Final test command used the guard with
 `cargo test --test worker_boxing_ownership --test compiler_call_liveness --test constructor_unwind_ownership -- --nocapture`; lint/fmt used the same bounded guard.
-Next finish validation/publication, then move wrapper incoming-owner registration
+Verified subject `Protect owned worker results until record and variant boxing succeeds`
+is one line, 69 characters, empty body/no trailers. Next move wrapper incoming-owner registration
 before field duplication and protect completed field duplicates until worker
 entry. Initial loop flattening, vlocal variant duplication/boxing, unknown
 typed constructor temporaries, CAF/inline lifetime and retained tasks remain.
-Shared target now contains the worker-boxing compiler. Full sequential CI still
+The shared target contained the boxing compiler during those checks. Full sequential CI still
 gates each prepared branch; no additional PR is open.
+
+Worker argument preparation is in progress on `ownership-worker-preparation`,
+checkout `/private/tmp/fwp-worker-preparation-worktree`, OLD base `dc4f946`;
+uncommitted. Wrappers with boxed parameters now protect all consumed incoming
+arguments before field duplication. Each completed counted-field duplicate has
+its own typed, initially zero slot. These prepared field references transfer
+at worker entry; non-boxed arguments leave the original-owner scope then, while
+boxed originals remain owned until normal wrapper return or unwind. Scalar
+fields have no duplicate/cleanup slot. Programs without unwind retain grouped
+operations; wrappers without boxed parameters gain no input-preparation scope.
+
+All five existing call-liveness checks pass (CPU 18.55 s / elapsed 37.34 s).
+The dedicated probe passes at O1/O2 with stress/verification and both poison
+modes (CPU 2.62 s / elapsed 5.42 s): first/later duplication failure, worker-entry
+cancellation and normal return, with independent box/leaf aliases and scalar
+address bits. The expanded control removes only the partial preparation scope
+and detects the expected earlier-duplicate leak. It and result boxing pass
+(CPU 7.10 s / elapsed 14.23 s); normal native output matches the interpreter.
+Library clippy is warning-free (CPU 2.78 s / elapsed 5.57 s); fmt and whitespace
+pass. No local workload remains. Current shared target contains
+the worker-preparation compiler; guarded `cargo clean -p fwp` is required before
+another checkout's package build. Next finish publication, then protect initial
+loop state flattening and partial field extraction before worker entry, followed
+by vlocal variant duplication/boxing, typed constructor temporaries, CAF/inline
+lifetimes and retained tasks. Full sequential CI remains required.
 
 ## Current ownership evidence
 
@@ -412,6 +437,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-loop-unwind | fwp-loop-unwind-worktree | 988f2a3 | 968dac7 |
 | ownership-argument-preparation | fwp-argument-preparation-worktree | 4973918 | 988f2a3 |
 | ownership-constructor-unwind | fwp-constructor-unwind-worktree | 608ae7b | 4973918 |
+| ownership-worker-boxing | fwp-worker-boxing-worktree | dc4f946 | 608ae7b |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

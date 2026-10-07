@@ -51,8 +51,8 @@ exact-head gates in run `37636161587`, attempt 2;
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) is the sole
-open closure-cleanup PR. Its exact-head ARM macOS and benchmark gates passed;
-Intel macOS and Linux are running. Merge only after all four pass.
+open closure-cleanup PR. Its exact-head macOS and benchmark gates passed;
+Linux is running. Merge only after all four pass.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -63,7 +63,9 @@ after the preceding one merges. The handoff records exact heads, immutable OLD
 rebase anchors and actual focused evidence.
 
 Constructor allocation is published separately; worker result boxing passes
-focused exceptional checks. Next finish worker field duplication, initial loop flattening, typed
+focused exceptional checks. Worker field preparation now passes focused
+first/later-failure and entry cancellation checks. Next finish initial loop
+flattening, typed
 constructor temporaries, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric

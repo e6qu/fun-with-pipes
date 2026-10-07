@@ -593,3 +593,26 @@ completed duplicate protected until worker entry. Initial loop flattening,
 vlocal variant duplication/boxing, unknown constructor temporary types,
 CAF/inline lifetimes, cleanup-spill failures and retained tasks remain acceptance
 work. These focused paths do not prove complete ARC or tracing-free execution.
+
+## Prepared worker argument preparation
+
+A boxed-to-worker wrapper protects all consumed incoming parameters before
+preparing field duplicates. Typed slots start empty and take ownership after
+each successful counted-field duplicate. A later failure releases just those
+extras and the wrapper's original references. Scalar fields need no slot.
+
+Immediately before worker entry, prepared fields and non-boxed parameters leave
+the wrapper scopes. The worker owns them and protects its entry safe point.
+Boxed originals remain with the wrapper until normal return or unwind; record
+aliases retain their original children. Wrappers with no boxed inputs gain no
+preparation scope, and programs without unwind retain grouped operations.
+
+A focused generated-code probe passes at O1/O2 with stress/verification and both
+reuse modes: first/later duplication failure, worker-entry cancellation, normal
+return, independently retained box and leaf aliases, and scalar address bits.
+Removing only the partial-preparation scope makes the same probe detect an
+unreleased earlier duplicate. Normal output matches the interpreter; adjacent
+call-liveness and boxing checks pass. Full sequential CI remains required.
+Initial loop flattening, vlocal variant preparation/boxing, concrete constructor
+temporary types, CAF/inline owners, cleanup-spill failures and retained task
+lifetimes remain acceptance work.
