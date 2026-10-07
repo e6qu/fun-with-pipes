@@ -43,27 +43,30 @@ All 11 current authoritative/modified docs were backed up and hashed in
 old-storage reclamation, task result/deadline boundaries and registered runtime
 unwind cleanup. #104 fixes guard target sampling without changing limits.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing
-remains the fallback. No production PR is open immediately after104 merged.
-Deliver row26 reuse tokens next, keeping subsequent preparations separate.
+remains the fallback. [PR105](https://github.com/e6qu/fun-with-pipes/pull/105)
+is the only open production PR, head `9a21fd6cc844c0960cedd283fd09ab354ee32338`,
+actual base main104 `7520b8d5a1b07b07ad1a381c23be75a879470e0a`.
+Fresh six-job production CI37997170222 is queued/running;
+roadmap_docs37997170102 passes at the exact PR head.
+Require all seven exact-head checks before squash with
+`Protect compiler reuse tokens through transfer and unwind` and empty body.
 
-Row26 is published at `cc297e6b31c9ea7564c1f196eddb5c06059525ec` on actual
-base `3bb34267997479794aeac9fff3447da94c16ca4d`. Compiler/runtime/tests match
-previous0a7203f exactly; it also strengthens live handoff head/base validation.
-Six focused ownership/unwind tests pass18.68CPU/37.65elapsed; clippy2.54/5.04s
-and format0.32/0.59s pass. Linux evidence37992999275 passes. Final rebase from actual3bb3426 onto main1047520b8d produces local
-70f7b11162c9f046ecb99160b167a4b3d32dafdc, with all 11 current docs preserved
-and compiler/runtime/tests/auditor byte-identical to publishedcc297e6 before
-the new tail regression. Seven focused reuse-token/unwind tests pass19.40CPU/39.06elapsed,
-including a million-step native tail case atO1/O2, GCoff/on, with a200-step raw
-oracle. Final lint2.30/4.73s, format0.35/0.63s and strong audit0.44/3.58s pass.
-Commit and publish
-with retained priorcc297e6 before opening the next PR. All OLD anchors stay fixed.
-A native100000-step tail probe passes atO1 with stack allocation and variant
-returns disabled:0.00CPU/0.38elapsed. The raw100000-step interpreter probe
-is stopped by the1GiB aggregate RSS guard; do not repeat it locally or raise
-limits. A200-step raw oracle passes0.37/0.74s with the same final result.
-Move the full-size raw probe to Linux evidence; focused native long-tail
-coverage is now being checked before final publication. Initial source syntax errors were corrected.
+Row26 final rebase from actual3bb3426 gives70f7b111 on7520b8d, with all 11
+current docs preserved. Compiler/runtime/auditor match previouscc297e6 exactly;
+the final commit adds the long-tail regression and current handoff. Seven
+focused ownership/unwind tests pass19.40CPU/39.06elapsed, lint2.30/4.73s,
+format0.35/0.63s and strong44/106/87 audit0.45/3.59s pass. Priorcc297e6 is
+retained remotely at roadmap/revision-026-cc297e6b31c9 before leased publication.
+Prepare row27 while these gates run, but open its PR only after105 merges.
+Row27 actual old base remains0a7203f until preparation/final rebase; use its
+recorded actual base, not immutable OLD parents. All OLD anchors stay fixed.
+
+The new million-step native tail regression passes atO1/O2 with GCoff/on
+against a200-step raw oracle. Native100000 probe passes0.00CPU/0.38elapsed.
+Raw100000 was stopped at1GiB aggregate RSS; do not repeat it locally or raise
+limits. Full-size raw probe is queued on Linux evidence37997457349 at
+5d111b28b81f227c954dae7ef8724dc3cc72702e, source identical to PR105. The smaller raw oracle
+passes0.37/0.74s. Source syntax errors in the first probe draft were corrected.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -80,7 +83,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 26 ownership-reuse-tokens | cc297e6b31c9 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
+| 26 ownership-reuse-tokens | 9a21fd6cc844 | 7520b8d5a1b0 | PR105; seven tests19.40/39.06s, lint2.30/4.73s, format0.35/0.63s and strong audit pass; exact-head CI follows |
 | 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
 | 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; Linux CI37994225608 passes; sequential full gates follow |
 | 29 ownership-map-unwind | 78ed19ff401a | 7cfbe030d3de | Eight tests22.28/44.73s; lint2.41/5.01s and format0.35/0.75s pass; early preparation protection inherited |
@@ -358,8 +361,7 @@ The fun-refactor guard is for the other repository. Shared target currently
 belongs to /private/tmp/fwp-unwind-liveness-worktree. Seven final reuse-token/
 unwind tests pass19.40CPU/39.06elapsed; lint2.30/4.73s, format0.35/0.63s
 and strong audit0.44/3.58s also pass. No local workload is running. The local rebase70f7b111 is on
-actual main1047520b8d; published row26 remainscc297e6 on3bb3426 until final
-checks/publication. The full-size raw tail probe hit the1GiB RSS limit and was
+actual main1047520b8d; published row26 is9a21fd6 on7520b8d in PR105. The full-size raw tail probe hit the1GiB RSS limit and was
 stopped; keep it on CI. The smaller raw oracle and native100000-step probe pass.
 Row27 eleven focused tests pass30.85CPU/62.02elapsed, lint2.52/5.06s and
 format0.35/0.63s. Row28 eleven focused tests pass29.13/58.52s, lint2.48/4.99s
