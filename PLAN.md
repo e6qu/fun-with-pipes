@@ -48,8 +48,9 @@ leaves, copied text result trees and compiled escaping heap closures. Their
 focused checks and counter evidence are in the handoff; each still requires
 full CI after its parent merges. Retained runtime callbacks, typed container
 elements, stack child cleanup, exceptional cleanup, old-generation reclamation,
-exact count overflow and concrete typing of owned constructor temporaries remain
-acceptance work. Bounded function-capture destruction is prepared separately;
+exact count overflow and remaining concrete constructor/result contexts remain
+acceptance work. Call parameter types now preserve child cleanup for temporary
+constructor arguments in another prepared change. Bounded function-capture destruction is prepared separately;
 other aggregate destruction still needs coverage. Keep tracing as the compatibility fallback until those gaps are closed.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,

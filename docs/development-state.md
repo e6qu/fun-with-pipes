@@ -20,7 +20,7 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
    Run
    [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219)
    on `8bc372f` completed ARM with one timer fixture failure; benchmark
-   equivalence passed. Never substitute an earlier run for the current head.
+   equivalence, Linux full tests and Intel full tests passed. Never substitute an earlier run for the current head.
 2. Published preparation `ownership-contracts`, checkout
    `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
    No PR yet. Centralizes 35 container contracts and borrows comparison-only
@@ -34,9 +34,12 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 5. Published preparation `ownership-closures`, checkout
    `/private/tmp/fwp-closure-worktree`, head `0d96bfe`, base `bab67ea`, no PR yet. Compiled
    dynamic calls own heap closures and typed captures; callbacks still share.
-6. This preparation `ownership-closure-cleanup`, checkout
-   `/private/tmp/fwp-drop-worktree`, base `0d96bfe`, no PR yet. Function capture
+6. Published preparation `ownership-closure-cleanup`, checkout
+   `/private/tmp/fwp-drop-worktree`, head `7cf5c78`, base `0d96bfe`, no PR yet. Function capture
    cleanup uses a bounded-depth work list with explicit spill release.
+7. This preparation `ownership-temporary-types`, checkout
+   `/private/tmp/fwp-temporary-worktree`, base `7cf5c78`, no PR yet. Call
+   parameter types preserve typed child cleanup for constructor temporaries.
 
 After #74 passes and squash-merges, fetch main and rebase the container checkout
 with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
@@ -47,7 +50,9 @@ with the macOS PR just to avoid waiting for CI. After the leaf PR merges,
 rebase the text branch from `2ce7a05` onto main and run its full CI via a PR.
 After its merge, rebase this closure branch from `bab67ea` onto main, reconcile
 docs and run full CI in the next PR. After the closure PR merges, rebase this
-cleanup branch from `0d96bfe` onto main and validate it as the next PR.
+cleanup branch from `0d96bfe` onto main and validate it as the next PR. After
+that merge, rebase this temporary-type branch from `7cf5c78` onto main and
+reconcile/validate in its own PR.
 
 ## macOS failures and fixes
 
@@ -146,8 +151,13 @@ restored, but complete with the work list, exact interpreter output and zero
 collections at O0. Three cleanup/closure checks passed (CPU 5.90 s / elapsed
 11.97 s). The branching case exercises explicit spill-buffer release.
 
-Next: carry concrete expected types into constructor temporaries. A borrowed
-List literal currently can fall back to unknown, decrementing its outer count
-without typed child release. Add counted-child evidence for this case, then
-stack aggregate cleanup and retained callbacks. Count saturation, exceptional
-paths and generational old-object reclamation still delegate to GC.
+Call parameter types now preserve concrete ownership temporaries. The List
+function-child probe frees 0.5 MiB versus the old outer-only boundary's 0.0 MiB
+with tracing off and identical output. Eight IR checks and twelve focused
+ownership tests passed (CPU 17.28 s / elapsed 34.93 s). The additional retained
+child alias regression and five FFI checks passed (CPU 11.19 s / elapsed 22.56 s),
+including O1/O2, GC stress/verification and poison modes.
+
+Next: stack aggregate argument cleanup, then retained callbacks and other
+constructor/result contexts. Count saturation, exceptional paths and
+generational old-object reclamation still delegate to GC.
