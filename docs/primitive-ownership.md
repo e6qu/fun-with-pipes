@@ -52,6 +52,15 @@ elements can be reachable from the result, including callback captures. Typed
 element ownership, leaf-string/byte ownership, closure capture destruction and
 runtime cycles remain separate work in [ownership.md](ownership.md).
 
+## Complete runtime sharing
+
+Saturating a reference count promotes the whole reachable graph to sharing,
+not just the parent. Interior references are canonicalized to the allocation's
+start before traversal. When the fixed traversal stack fills, recursive
+promotion begins while the child is still counted; clearing it first would
+skip its descendants. These transitions preserve the same alias protection
+as primitive sharing.
+
 ## Evidence and remaining work
 
 `tests/ownership.rs` checks interpreter/native agreement for record keys,
@@ -59,6 +68,12 @@ returned aliases, callbacks returning inputs and capturing them, failed
 `array.set`, missing-key removal and updates with retained aliases. Native runs
 use collection stress/verification and reuse poisoning. Generated wrappers must
 borrow comparison keys and share inserted keys.
+
+A runtime regression creates enough aliases to saturate a counted parent,
+then attempts an update of its reachable child. Restoring the previous
+saturation behavior corrupts the value observed through another alias;
+the fixed boundary preserves it. The same regression protects interior
+references and a 70-branch graph exceeding the traversal stack's capacity.
 
 A second regression performs 10,000 updates of a nine-field record following a
 map lookup. It compares identical generated code with only the previous key

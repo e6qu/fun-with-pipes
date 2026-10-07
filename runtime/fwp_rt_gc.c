@@ -522,9 +522,17 @@ static inline V fwp_rc_fresh(V v) {
     return v;
 }
 
+static void fwp_rc_share(V v);
+
 static inline void fwp_rc_dup(V v) {
     uint8_t *c = fwp_rc_slot(v);
-    if (c && *c) *c = *c == 255 ? 0 : *c + 1;
+    if (c && *c) {
+        /* Saturation hands the value to the shared runtime discipline.
+         * Its descendants must also be shared before callbacks borrow
+         * them without taking independently counted references. */
+        if (*c == 255) fwp_rc_share(v);
+        else (*c)++;
+    }
 }
 
 static inline void fwp_rc_drop(V v) {
@@ -545,13 +553,25 @@ static void fwp_rc_share(V v) {
         size_t ci = ((uintptr_t)o - (uintptr_t)fwp_gc.base) >> GC_SHIFT;
         gc_chunk *mc = &fwp_gc.meta[ci];
         size_t slot = mc->type == GC_BIG ? mc->size : mc->slot;
-        V *w = (V *)(uintptr_t)o;
+        /* rc_slot also accepts interior-looking words (counts may be
+         * too high). Always traverse from the actual object start. */
+        uintptr_t start = (uintptr_t)o;
+        if (mc->type == GC_SMALL) {
+            size_t inside = start & (GC_CHUNK - 1);
+            size_t index = (size_t)(((uint64_t)inside * mc->recip) >> 32);
+            start = (uintptr_t)fwp_gc_chunk_addr(ci) + index * mc->slot;
+        }
+        V *w = (V *)start;
         for (size_t k = 0; k < slot / sizeof(V); k++) {
             uint8_t *d = fwp_rc_slot(w[k]);
             if (!d || !*d) continue;
-            *d = 0;
-            if (sp < 64) stack[sp++] = w[k];
-            else fwp_rc_share(w[k]);
+            if (sp < 64) {
+                *d = 0;
+                stack[sp++] = w[k];
+            } else {
+                /* The recursive entry must still see a counted root. */
+                fwp_rc_share(w[k]);
+            }
         }
     }
 }

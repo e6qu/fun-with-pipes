@@ -186,3 +186,83 @@ main = (10000, key) | loop step | echo
         allocated[1]
     );
 }
+
+#[test]
+fn saturated_counts_protect_reachable_values() {
+    let scratch = Scratch::new("saturation");
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let emitted = scratch.0.join("runtime.c");
+    let hello = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/hello.fwp");
+    checked(
+        Command::new(fwp)
+            .arg("build")
+            .arg(hello)
+            .args(["--emit-c", "-o"])
+            .arg(&emitted),
+    );
+    let runtime = std::fs::read_to_string(emitted).unwrap().replace(
+        "int main(int argc, char **argv)",
+        "int original_main(int argc, char **argv)",
+    );
+    let source = format!(
+        "{runtime}\n{}",
+        r#"
+int main(void) {
+    fwp_gc_start(__builtin_frame_address(0));
+    V child = fwp_rc_fresh(fwp_record(1, (V[]){7}));
+    V parent = fwp_rc_fresh(fwp_record(1, &child));
+    volatile V aliases[255];
+    for (int i = 0; i < 255; i++) { aliases[i] = parent; fwp_rc_dup(parent); }
+    if (*fwp_rc_slot(parent) != 0) return 1;
+    V reachable = OBJ(aliases[0])->f[0];
+    /* A runtime callback receiving a shared value may try a unique
+     * update: it must copy when another alias can observe the original. */
+    V updated = reachable;
+    if (fwp_rc_unique(reachable) != 1)
+        updated = fwp_rc_fresh(fwp_data(0, OBJ(reachable)->n, OBJ(reachable)->f));
+    OBJ(updated)->f[0] = 9;
+    if (OBJ(OBJ(aliases[254])->f[0])->f[0] != 7) return 2;
+    if (OBJ(updated)->f[0] != 9) return 3;
+    V first = fwp_rc_fresh(fwp_record(1, (V[]){11}));
+    V second = fwp_rc_fresh(fwp_record(1, (V[]){12}));
+    V pair = fwp_rc_fresh(fwp_record(2, (V[]){first, second}));
+    fwp_rc_share(PTR(&OBJ(pair)->f[1]));
+    if (fwp_rc_unique(first) == 1 || fwp_rc_unique(second) == 1) return 4;
+    V branches[70];
+    for (int i = 0; i < 70; i++) {
+        V leaf = fwp_rc_fresh(fwp_record(1, (V[]){(V)i}));
+        branches[i] = fwp_rc_fresh(fwp_record(1, &leaf));
+    }
+    V wide = fwp_rc_fresh(fwp_record(70, branches));
+    fwp_rc_share(wide);
+    for (int i = 0; i < 70; i++)
+        if (fwp_rc_unique(OBJ(branches[i])->f[0]) == 1) return 5;
+    puts("shared descendants protected");
+    return 0;
+}
+"#
+    );
+    let previous = source.replace(
+        "if (*c == 255) fwp_rc_share(v);\n        else (*c)++;",
+        "*c = *c == 255 ? 0 : *c + 1;",
+    );
+    assert_ne!(previous, source, "saturation baseline was not restored");
+    let old = scratch.0.join("old-saturation");
+    fwp::cgen::compile_c(&previous, &old, "-O2").unwrap();
+    let old_result = Command::new(&old)
+        .env("FWP_REUSE_VERIFY", "0")
+        .env("FWP_GC_STRESS", "0")
+        .output()
+        .unwrap();
+    assert_eq!(
+        old_result.status.code(),
+        Some(2),
+        "old boundary must corrupt the observed child"
+    );
+    let exe = scratch.0.join("saturation");
+    fwp::cgen::compile_c(&source, &exe, "-O2").unwrap();
+    assert_eq!(
+        checked(&mut Command::new(&exe)).stdout,
+        b"shared descendants protected\n"
+    );
+}
