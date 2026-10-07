@@ -117,7 +117,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   CAF ownership and inline rewrites. Phase 2 and collector-free support remain
   incomplete.
 - Current map cleanup: `/private/tmp/fwp-map-unwind-worktree`, branch
-  `ownership-map-unwind`, OLD base `bee3f16`, uncommitted.
+  `ownership-map-unwind`, OLD base `bee3f16`, published as
+  `62add7e4a85f7648e8877b33eb67f9a70a6b3a09`; checkout clean.
   Typed scopes own only the completed result prefix; scratch suffix words borrow
   source elements. List construction transfers each prefix element into a typed
   partial spine. Errors, recovered traps and cancellation release prefix, built
@@ -135,6 +136,25 @@ immutable value semantics, effects and evaluation/trap order stable.
   for the future sequential PR. Next: typed filter/take-while/zip prefixes and
   scratch, fold/loop accumulators, retained tasks and the remaining allocator/
   boxing, CAF and inline-rewrite ownership gaps. Phase 2 remains incomplete.
+- Current selection cleanup: `/private/tmp/fwp-selection-unwind-worktree`,
+  branch `ownership-selection-unwind`, OLD base `62add7e`, uncommitted.
+  Filter/take-while scopes own the selected element aliases independently of
+  source elements, then transfer them into typed partial result spines.
+  Dynamic, direct and captured predicates protect selected prefixes and scratch
+  on errors, construction traps and cancellation. Scalar words stay uncounted.
+  Four normal filter/prefix regressions pass (CPU 15.20 s / elapsed 30.72 s).
+  Two dedicated generated-code probes pass at O1/O2 with stress/verification
+  and both poison modes (CPU 4.85 s / elapsed 9.86 s): all six predicate paths,
+  retained input aliases, partial construction, cancellation and scalar bits.
+  Initial harness failures were fixed: selection updates a prefix count rather
+  than map's increment, so the cancellation injection needed that real update;
+  a scalar fixture also needed its generated typed duplication symbol.
+  Library clippy is warning-free (CPU 2.20 s / elapsed 4.35 s). The final
+  format check required formatting the repaired test hook; applied the fix.
+  Final fmt and whitespace pass. Both adjacent map unwind checks pass
+  (CPU 4.52 s / elapsed 9.28 s). Full gates remain for the future sequential PR. Next: zip-with's two scratch
+  buffers and result prefix, fold/right-fold/loop accumulators, retained tasks,
+  allocator/boxing failures, CAF owners and inline-rewrite coverage.
 - Shared local Cargo target caveat: switching worktrees can reuse a CLI built
   from newer-mtime sources in another checkout. Before compiling after a switch,
   serial guarded `cargo clean -p fwp` forces the correct package rebuild without
@@ -196,6 +216,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-reuse-tokens | fwp-unwind-liveness-worktree | 33cf864 | 3e31422 |
 | ownership-call-liveness | fwp-call-liveness-worktree | 7392f2d | 33cf864 |
 | ownership-runtime-call-cleanup | fwp-runtime-call-worktree | bee3f16 | 7392f2d |
+| ownership-map-unwind | fwp-map-unwind-worktree | 62add7e | bee3f16 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

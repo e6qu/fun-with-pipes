@@ -428,3 +428,22 @@ an external input alias while inspecting immediate result/scratch reclamation,
 including cancellation after a completed result and a trap after the first node
 has been built. Full sequential CI remains required. Filter/take-while/zip
 prefixes, fold/loop accumulators and retained task lifetimes remain separate work.
+
+
+## Prepared predicate selection cleanup
+
+Filter and take-while duplicate selected aliases independently of the input
+list. A typed scope owns that selected prefix and its scratch buffer; each
+selected element then transfers into the partial result spine. A failed later
+predicate, recovered construction trap or cancellation releases these owners
+without dropping the untouched borrowed suffix. All dynamic, direct and captured
+predicate paths use this scope. Scalar element words stay uncounted. Normal
+returns and early predicate rejection retain their original evaluation order.
+
+Focused generated-code tests cover all six predicate paths at O1/O2 with
+collection stress/verification and both poison modes, retained input aliases,
+partial spine construction and cancellation after the first selected element.
+A scalar fixture preserves address-shaped I64 values across prefix and partial
+list cleanup. Existing alias/counter tests pass. Full architecture and benchmark
+gates remain for this branch's future sequential PR. Zip-with scratch buffers,
+fold/loop accumulators and retained task ownership remain unfinished.
