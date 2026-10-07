@@ -293,8 +293,8 @@ error. See [protocol.md](protocol.md).
   broader typed aggregate ABIs and scoped view lifetimes are planned in
   [ownership.md](ownership.md). C structs alone do not guarantee registers.
 - Darwin cross-compilation and universal binaries, Clang PGO, and Windows.
-  Native macOS is the active portability work; completion requires both
-  architectures' CI, not just successful compilation.
+  Native macOS passed both architecture suites and the Linux/benchmark gates
+  in PR #74; exact verification is recorded in [the handoff](development-state.md).
 
 - HTTP/3; HTTP/2 server push and
   WebSocket over HTTP/2 (RFC 8441); WebSocket extensions other than

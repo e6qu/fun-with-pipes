@@ -459,7 +459,7 @@ startup.
 
 | Target | Output | Runtime |
 |---|---|---|
-| native | an executable for the host | Linux; macOS portability in progress ([current checks](development-state.md)). TLS programs link OpenSSL 3 and need its headers; on macOS set `FWP_OPENSSL_DIR` ([tls.md](tls.md#openssl)) |
+| native | an executable for the host | Linux and native macOS on Apple Silicon/Intel ([verified baseline](development-state.md)). TLS programs link OpenSSL 3 and need its headers; on macOS set `FWP_OPENSSL_DIR` ([tls.md](tls.md#openssl)) |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
 | `<arch>-linux` | an executable for another 64-bit little-endian Linux: `x86_64`, `aarch64` (or `arm64`), `riscv64`, `powerpc64le`, `loongarch64`; `-gnu` and Rust's `-unknown-linux-gnu` spellings are accepted | all features, as native. See [Cross-compiling](#cross-compiling) |
@@ -505,7 +505,7 @@ callee-saved registers on the task's stack (`fwp_ctx_swap` in
 needs an OpenSSL built for musl.
 
 Cross targets currently name 64-bit little-endian Linux systems. Native
-macOS portability on Apple Silicon and Intel is in progress: use
+macOS on Apple Silicon and Intel passed the full native CI gate: use
 `--target native` with Apple Clang and consult
 [development-state.md](development-state.md) for verification. Shared libraries
 use `.dylib`; native `--static` linking is rejected. Darwin cross targets,
