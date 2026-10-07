@@ -61,7 +61,10 @@ validation in separate prepared branches;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
-Phase 2 remains incomplete; runtime teardown and full retained lifetimes remain.
+Compiler reuse-token lifetime repair is in progress: unused branches, old cells,
+constructor transfer and unwind must release the emptied cell exactly once.
+This component does not replace full live-owner registration. Phase 2 remains
+incomplete; compiler liveness, runtime teardown and full retained lifetimes remain.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference

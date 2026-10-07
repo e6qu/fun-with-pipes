@@ -39,20 +39,36 @@ immutable value semantics, effects and evaluation/trap order stable.
   `0221f91c9edcf0096247b69676a156d331716984`, checkout clean. Post-rebase text
   (3), leaf (2), inventory (1), IR (8), fmt and whitespace pass. Full
   [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587)
-  testing on ARM/Intel macOS; benchmarks passed. Linux never acquired a
-  runner and failed before any step; individual retry API returned HTTP 500.
-  Re-poll this live run, then retry failed jobs after it is terminal. All four exact-head gates
-  must pass before squash merge. No local workload remains. Closure child
+  Both macOS jobs and benchmarks passed. Linux never acquired a runner in
+  attempt 1; no test step ran. Failed-job retry succeeded after the run finished;
+  attempt 2 Linux job `112894076018` is running. Re-poll the retry and fix any
+  actual failures. All four exact-head gates must pass before squash merge. Closure child
   still rebases from OLD `bab67ea` after text squashes, not from `0221f91`.
-- Latest prepared change: `ownership-unwind-runtime`, checkout
+- Published runtime unwind change: `ownership-unwind-runtime`, checkout
   `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
   chains are task-local, error handlers and recovered traps retain a boundary,
   and cancellation releases registered owners before longjmp. file.with now
   closes on cancellation/traps, including a failure before handle allocation.
-  Three focused checks pass; publication follows. No additional PR is open.
+  Three focused checks pass; published as
+  `3e314222ff7c0f379204a539858d73bfe1bda095`. No additional PR is open.
   Next: compiler live-owner registration across boxed/unboxed/stack values and
   tail calls, runtime callback accumulator cleanup, then retained task lifetimes.
   Preserve listed OLD rebase anchors through the sequential squash workflow.
+
+- Current implementation: `ownership-reuse-tokens`, checkout
+  `/private/tmp/fwp-unwind-liveness-worktree`, OLD base `3e31422`.
+  Compiler-held emptied cells now release on unused branches and when old cells
+  cannot be reused; dead fields are cleared before collection. Unwind registers
+  the temporary owner; constructor transfer clears its slot; tail calls unlink
+  owners before entering the callee. Initial token (2), old-reclamation (3) and
+  runtime-unwind (3) checks pass, serial guarded CPU 20.01 s / elapsed 40.17 s.
+  All three token checks now pass, including bump-allocator compatibility,
+  guarded CPU 15.31 s / elapsed 30.88 s. Eight IR checks, formatting and
+  whitespace also pass. This commit is ready for the prepared sequence; full
+  current-head Linux, both macOS jobs and benchmarks still gate its future PR. This is one component of compiler liveness, not full ARC.
+  Next implement all other live compiler owners, including incoming parameters,
+  unboxed/stack values and pending arguments; then runtime callback accumulators
+  and retained task lifetimes. Phase 2 remains incomplete.
 
 ## Current ownership evidence
 
@@ -102,6 +118,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-map-set-elements | fwp-map-set-worktree | a8a7d11 | 636414f |
 | ownership-old-reclamation | fwp-old-reclamation-worktree | 6774aa5 | a8a7d11 |
 | ownership-task-boundaries | fwp-task-boundary-worktree | 02beec3 | 6774aa5 |
+| ownership-unwind-runtime | fwp-unwind-runtime-worktree | 3e31422 | 02beec3 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1013,3 +1030,13 @@ ABIs, callback accumulators and tail calls) before enabling retained owned task
 callbacks/results. Async preemption can unwind pure callees too: register
 incoming owned arguments before a tick, and preserve zero-cost scalar paths.
 Do not replace this work with wholesale sharing or claim complete ARC.
+
+Runtime unwind branch published as `3e314222ff7c0f379204a539858d73bfe1bda095`.
+Subject `Release registered owners and scoped files before nonlocal unwind` is
+one line, 65 characters, with no body/trailers. Formatting and whitespace pass.
+No local workload remains. Latest sole PR #77 CI: ARM macOS and benchmarks
+passed; Intel remains live; Linux failed runner acquisition with no test steps.
+Keep this run; retry failed gates once it is terminal. Next checkout should
+start from OLD `3e31422` for compiler live-owner tracking. Runtime nodes already
+have one actual production consumer (file.with), but all-local unwind ownership
+and retained task ARC remain required work.

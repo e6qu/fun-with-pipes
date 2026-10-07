@@ -405,6 +405,8 @@ struct Gen<'p> {
     /// Whether functions are safe points for preemption (programs with
     /// tasks): their entries spend the running task's budget.
     ticks: bool,
+    /// The runtime may return through an Error handler or task cancellation.
+    unwind: bool,
     /// Step functions of `loop`s compiled to C loops with their state in
     /// locals (`loop_shape`), with whether the state is a record kept
     /// field by field.
@@ -1667,6 +1669,7 @@ struct FnGen<'g, 'p> {
     known_callbacks: HashMap<Local, (FuncId, usize)>,
     /// The function being generated.
     me: FuncId,
+    tail_calls: std::collections::HashSet<*const Expr>,
 }
 
 /// A dropped value's cell, which a constructor of the same size may reuse
@@ -1676,6 +1679,8 @@ struct Token {
     var: String,
     /// The C variable holding `fwp_rc_unique`'s answer (2: verify instead).
     unique: String,
+    /// A cleanup node for the temporarily owned outer cell, if unwind is possible.
+    cleanup: Option<(String, String)>,
     arity: usize,
     used: bool,
 }
@@ -1886,6 +1891,15 @@ fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     }
 }
 
+fn tail_calls(e: &Expr) -> std::collections::HashSet<*const Expr> {
+    let mut out = Vec::new();
+    tails(e, &mut out);
+    out.into_iter()
+        .filter(|e| matches!(e, Expr::Call(..) | Expr::Apply(..)))
+        .map(|e| e as *const Expr)
+        .collect()
+}
+
 /// Integer types of at most 64 bits, which a `V` holds sign-extended
 /// (`Some(true)`) or zero-extended (`Some(false)`).
 fn int64_kind(t: &MT) -> Option<bool> {
@@ -2047,6 +2061,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let abi = self.g.abis[*id].clone().unwrap();
                 let outer = std::mem::take(&mut self.stack_args);
                 let xs = self.worker_args(*id, &abi, args);
+                self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
                 self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
                 self.stack_args_finish(outer);
@@ -2067,7 +2082,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Some(t) => {
                         self.tokens.push(t);
                         let r = self.expr_fields(b, n);
-                        self.tokens.pop();
+                        self.finish_token();
                         r
                     }
                     None => {
@@ -2207,6 +2222,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let abi = self.g.abis[*id].clone().unwrap();
                 let outer = std::mem::take(&mut self.stack_args);
                 let xs = self.worker_args(*id, &abi, args);
+                self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let t = self.fresh();
                 self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
                 self.stack_args_finish(outer);
@@ -2225,7 +2241,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     Some(t) => {
                         self.tokens.push(t);
                         let r = self.expr_variant(b, m, ty);
-                        self.tokens.pop();
+                        self.finish_token();
                         r
                     }
                     None => {
@@ -2728,13 +2744,71 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let t = self.locals[x as usize].clone();
         let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
+        // The token no longer owns any fields, including scalar words that
+        // could look like reused young addresses to conservative tracing.
+        self.line(&format!(
+            "    memset(OBJ(l{x})->f, 0, {} * sizeof(V));",
+            tys.len()
+        ));
         self.line(&format!("}} else {}(l{});", d, x));
+        let cleanup = if self.g.unwind {
+            let node = self.fresh();
+            let active = self.fresh();
+            self.line(&format!("fwp_cleanup {node}; int {active} = 1;"));
+            let release = self.token_release();
+            self.line(&format!("fwp_cleanup_push(&{node}, {release}, &{tok});"));
+            Some((node, active))
+        } else {
+            None
+        };
         Some(Token {
             var: tok,
             unique: u,
+            cleanup,
             arity: tys.len(),
             used: false,
         })
+    }
+
+    fn token_release(&self) -> &'static str {
+        if free_enabled() {
+            "fwp_rc_cleanup_cell"
+        } else {
+            "fwp_rc_cleanup_count"
+        }
+    }
+
+    /// End the lexical lifetime even on a branch that never used the cell.
+    fn finish_token(&mut self) {
+        let token = self.tokens.pop().expect("missing reuse token");
+        if let Some((node, active)) = token.cleanup {
+            self.line(&format!("if ({active}) fwp_cleanup_pop(&{node});"));
+        }
+        let release = self.token_release();
+        self.line(&format!("{release}(&{});", token.var));
+    }
+
+    /// Tail calls no longer need any unused token. Unlink in LIFO order
+    /// before entering the callee, so cleanup does not prevent tail transfer.
+    fn tail_tokens(&mut self, tail: bool) {
+        if !tail {
+            return;
+        }
+        let tokens: Vec<_> = self
+            .tokens
+            .iter()
+            .rev()
+            .map(|t| (t.var.clone(), t.cleanup.clone()))
+            .collect();
+        for (var, cleanup) in tokens {
+            if let Some((node, active)) = cleanup {
+                self.line(&format!(
+                    "if ({active}) {{ fwp_cleanup_pop(&{node}); {active} = 0; }}"
+                ));
+            }
+            let release = self.token_release();
+            self.line(&format!("{release}(&{var});"));
+        }
     }
 
     /// A record or variant of fields `xs`: in a token's cell when one of
@@ -2758,9 +2832,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.line(&format!("    OBJ({})->f[{}] = {};", tok, k, x));
         }
         self.line(&format!("    {} = {};", r, tok));
+        self.line(&format!("    {tok} = 0;"));
         self.line("} else {");
         self.line(&format!("    {} = {};", r, self.g.fresh(alloc)));
-        self.line(&format!("    if ({} == 2) fwp_rc_poison({});", u, tok));
+        let release = self.token_release();
+        self.line(&format!("    {release}(&{tok});"));
         self.line("}");
         r
     }
@@ -3124,15 +3200,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
         Some(format!("fwp_hof{}({})", i, xs.join(", ")))
     }
 
-    fn call_expr(&mut self, id: FuncId, args: &[Expr]) -> String {
+    fn call_expr(&mut self, id: FuncId, args: &[Expr], tail: bool) -> String {
         let outer = std::mem::take(&mut self.stack_args);
-        let result = self.call_expr_inner(id, args);
+        let result = self.call_expr_inner(id, args, tail);
         self.stack_args_finish(outer);
         result
     }
 
-    fn call_expr_inner(&mut self, id: FuncId, args: &[Expr]) -> String {
+    fn call_expr_inner(&mut self, id: FuncId, args: &[Expr], tail: bool) -> String {
         if let Some(call) = self.owned_hof(id, args) {
+            self.tail_tokens(tail);
             let result = self.bind(call);
             // Specialization reads captures directly; preserve the original
             // borrowed closure/list addresses until allocating calls return.
@@ -3144,13 +3221,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return result;
         }
         if let Some(call) = self.known_hof(id, args) {
+            self.tail_tokens(tail);
             return self.bind(call);
         }
         if let Some(n) = self.length_without_string(id, args) {
+            self.tail_tokens(tail);
             return self.bind(format!("(V)(int64_t)({})", n));
         }
         if let Some(abi) = self.g.abis[id].clone() {
             let xs = self.worker_args(id, &abi, args);
+            self.tail_tokens(tail);
             return match abi.ret {
                 Some(n) => {
                     let t = self.fresh();
@@ -3177,6 +3257,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             .enumerate()
             .map(|(j, a)| self.arg(id, j, a))
             .collect();
+        self.tail_tokens(tail);
         if self.g.prog.funcs[id].arity == 0 {
             self.bind(format!("caf{}()", id))
         } else {
@@ -3262,7 +3343,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some(t) => {
                     self.tokens.push(t);
                     let r = self.expr(b);
-                    self.tokens.pop();
+                    self.finish_token();
                     r
                 }
                 None => {
@@ -3284,7 +3365,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     format!("PTR(&fc{})", id)
                 }
             }
-            Expr::Call(id, args) => self.call_expr(*id, args),
+            Expr::Call(id, args) => {
+                self.call_expr(*id, args, self.tail_calls.contains(&(e as *const Expr)))
+            }
             Expr::Apply(f, args) => {
                 let children = self.stack_alias(f);
                 let fv = self.expr(f);
@@ -3297,6 +3380,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 } else {
                     "fwp_apply"
                 };
+                self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
                 let result = self.bind(format!(
                     "{}({}, {}, {})",
                     apply,
@@ -4414,6 +4498,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
             me: step,
+            tail_calls: tail_calls(e),
         };
         let r = fg.expr(e);
         out.push_str(&fg.out);
@@ -4956,6 +5041,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     stack_children: HashMap::new(),
                     known_callbacks: HashMap::new(),
                     me: id,
+                    tail_calls: tail_calls(&e),
                 };
                 let r = fg.expr(&e);
                 let body = fg.out;
@@ -5004,6 +5090,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
             me: id,
+            tail_calls: tail_calls(e),
         };
         let ret = match (abi.ret, abi.vret) {
             (Some(n), _) => {
@@ -5573,6 +5660,14 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         cli_defs: String::new(),
         cli_flags: HashMap::new(),
         ticks: uses_async(prog) || uses_services(prog),
+        unwind: uses_async(prog)
+            || uses_services(prog)
+            || tests
+            || matches!(mode, Mode::Library | Mode::Service | Mode::Exec(..))
+            || prog
+                .funcs
+                .iter()
+                .any(|f| matches!(&f.body, Body::Prim(s) if s == "attempt" || s == "run-state")),
         loops: Vec::new(),
         hofs: Vec::new(),
         abis,

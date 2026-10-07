@@ -321,3 +321,27 @@ callback accumulators and tail calls. Incoming owners need registration before
 Async preemption ticks, even in otherwise pure callees. Scalar paths should not
 receive cleanup frames. Retained task ownership remains incomplete until those
 paths are implemented and validated on all architectures.
+
+## Compiler reuse-token lifetime
+
+After dropping a unique record or variant's fields, the compiler may hold its
+outer cell for a later constructor of the same size. This is a separate temporary
+owner: its fields have already been released, so cleanup must never drop them
+again. Clear all dead field words before any safe point, including pointer-shaped
+scalar bits. Only young cells are reused in place. Release unused cells at scope
+exit and release cells that became old before allocating a replacement.
+
+When the executable can unwind through handlers, traps or cancellation, register
+the token's ownership slot in the task-local cleanup chain. Clear the slot on
+constructor transfer or cleanup, so each path releases at most once. Unlink and
+release dead tokens before tail calls. Programs without nonlocal unwind omit
+these registrations. Freeing-disabled comparison builds decrement counts without
+freeing; the bump allocator retains its existing shared allocation convention.
+
+Focused checks cover emitted compiler code at O1/O2, forced major collection,
+unused constructor branches, normal/error results, poison verification and
+ownership switches. These are prepared changes until the sequential PR passes
+full CI. Other live compiler locals, pending arguments, stack/unboxed values,
+runtime callback accumulators and retained task lifetimes still need unwind
+ownership coverage; token cleanup does not establish general collector-free
+execution.
