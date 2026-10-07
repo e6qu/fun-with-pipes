@@ -56,7 +56,9 @@ lifetimes. None of these is a general collector-free execution guarantee.
 
 Container contracts and comparison-key borrowing are merged. Selected leaves,
 fresh text trees, compiled captures, concrete temporaries and stack children are
-also merged; synchronous map/filter borrow callback inputs and own their fresh spines/results.
+also merged; synchronous map/filter borrow callback inputs and own their fresh
+spines/results. sort/unique borrow their input, retain typed selected aliases
+and release scratch after constructing their owned copied result.
 Finish remaining primitive/runtime families, including argument/result ownership,
 retention, aliases and exceptional cleanup. The exact prepared queue and current
 verification are in [the handoff](development-state.md). Keep the IR pass and

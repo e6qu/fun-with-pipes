@@ -7590,3 +7590,61 @@ passes2.30 s CPU /4.64 s elapsed; format0.34 s /0.60 s. All nine root
 docs are copied before final amend/publication. Full sequential six gates
 are required on the next PR head. Source semantics remain stable sorting
 and first-occurrence unique selection, with borrowed input/typed result aliases.
+
+Row15 final head d2e0e296888d5ca3577412f5a1687af1d4a494dd on actual
+main3606f2c is published with exact lease against5fe5692. Whole message
+verified one line with empty body. Sole PR93 is open; all six CI37862207155
+gates run at this head. Next row16 actual base remains5fe5692; never substitute
+this rewritten row15 head for that anchor. Root docs preserve the current state.
+
+Old-value final preparation f4716a027a1bf5fd632733d3cd738fea7c4dbf62 on
+actual base1689c03 is clean; publish with exact lease against OLD6774aa5.
+Source/runtime/tests are unchanged after final doc refresh. No second PR.
+
+## Task-boundary preparation recovery, 2026-10-09
+
+Row24 ownership-task-boundaries rebases OLD02beec353ec7745f6f69c1c99bb3c561725a6744
+from OLDparent6774aa5bb426c4dc1e49d9eca1ff1737763498a5 onto actual current
+row23 headf4716a027a1bf5fd632733d3cd738fea7c4dbf62 (initiald80ecac).
+All nine root docs resolve conflicts. Both source oracles explicitly use
+FWP_NO_OPT=1. Three focused task_ownership tests pass9.51 s CPU /19.21 s
+elapsed before the daemon restart: result/deadline aliases, scalar count
+safety, O1/O2 stress/verify/poison and scoped passthrough reclamation.
+Shared target switch clean0.05 s /0.38 s. Recovery verifies branch dirty only
+in tests/task_ownership.rs, head unchanged and no publication; resume lint,
+not repeated tests. PR93 all six exact-head gates pass at d2e0e29.
+
+## Ordered copies delivered, 2026-10-09
+
+PR93 exactd2e0e296888d5ca3577412f5a1687af1d4a494dd passes all six
+CI37862207155 gates. Explicit match-head squash subject Own sorted and unique
+list elements and release scratch buffers, empty body. Actual squash
+90762aacd7f469cf94ad54a90ebcaa4aec79829a merged2026-10-09T07:00:30Z;
+whole git%B verified exactly one line, at most80 chars, no body/trailers/AI.
+Nine current root docs preserved at /private/tmp/fwp-main-docs-pre93 before
+fast-forward from3606f2c and restored afterward. Row16 rebase uses ACTUAL
+base5fe5692 onto this actual squash, not OLDc835578 or rewrittend2e0e29.
+
+Recovered row24 task-boundary lint (cargo clippy --test task_ownership --
+-D warnings) passes2.45 s CPU /4.88 s elapsed; format0.36 s /0.76 s.
+Tests9.51 s /19.21 s were not repeated after recovery. Preparation remains
+unpublishedd80ecac on actual basef4716a0 until its doc amend/publication.
+
+## Sort callback final PR rebase, 2026-10-09
+
+Row16 CURRENT5c19337f216d78845fada0b8c29fac98d7b18689 rebases from
+ACTUAL CURRENT base5fe569218a4b3cdbdc5b756a83ffb7096aab6608 onto
+ACTUAL PR93 squash90762aacd7f469cf94ad54a90ebcaa4aec79829a (initialecc8768).
+All nine current root docs resolve conflicts; source/runtime/tests/workflows
+diff against verified5c19337 is empty. OLD66bc713/parentc835578 unchanged.
+Guarded clean0.00 s /0.14 s before target switch; three final
+sort_callback_ownership tests pass12.30 s CPU /24.97 s elapsed, preserving
+raw FWP_NO_OPT=1 interpreter comparison, once-per-input key evaluation order,
+stable ties, captured/alias keys, scalar address-shaped bits, conservative
+flags, GC stress/verification/poison and scoped no-tracing reclamation control.
+Row17 actual current base remains5c19337, not rewritten row16.
+
+Final sort-callback lint (cargo clippy --test sort_callback_ownership --
+-D warnings) passes2.02 s CPU /4.06 s elapsed, format0.35 s /0.62 s.
+Nine authoritative docs preserved before final amend/publication. No source
+changes follow these checks; all six runner gates remain required on its PR head.
