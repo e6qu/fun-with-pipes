@@ -43,13 +43,17 @@ Container ownership contracts passed all four jobs in run `37612412156`;
 [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75) was squash-merged as
 `5998302`. Comparison-only keys borrow; stored elements and retained callbacks
 still share. The concurrent macOS executable-cache failure was repaired and
-verified by full CI. [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) covers owned String/Bytes
-leaves, rebased onto main and locally validated; full current-head CI gates merging. Later published branches prepare closure and
+verified by full CI. Owned String/Bytes leaves passed all four jobs in
+run `37623311024`; [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76) was
+squash-merged as `22994ba`. [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) covers fresh text result
+trees and scratch cleanup, rebased onto main with passing focused checks;
+full current-head CI gates its merge. Later published branches prepare closure and
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers typed map/set elements and destruction;
-all array element boundaries are implemented in a separately validated branch;
+implementation covers old marked-object reclamation and retained runtime
+ownership/teardown. Typed array and map/set element boundaries pass focused
+validation in separate prepared branches;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.

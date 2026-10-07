@@ -1,8 +1,8 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array elements are typed owners; map/set elements and retained callbacks
-//! still use runtime sharing.
+//! Array/map/set elements are typed owners. Retained runtime callbacks
+//! still use conservative sharing.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -20,6 +20,10 @@ pub enum ResultOwnership {
     FreshContainer,
     /// Typed array boundary, including scalar/optional/list results.
     ArrayOperation {
+        consumed: Option<usize>,
+    },
+    /// Typed ordered map/set boundary, including alias results.
+    MapOperation {
         consumed: Option<usize>,
     },
     /// One new record/variant allocation with typed borrowed field aliases.
@@ -103,12 +107,12 @@ impl Contract {
 }
 
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
-/// borrow; map/set inserted keys and values share. Arrays own typed elements.
-/// Synchronous list/array callbacks borrow;
+/// borrow; arrays/maps/sets own typed element references.
+/// Synchronous list/container callbacks borrow;
 /// retained callbacks share. Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
-    use Argument::{Borrow as B, Consume as C, Share as S};
-    use ResultOwnership::{FreshContainer as F, OwnedContainer as O, Shared as R};
+    use Argument::{Borrow as B, Consume as C};
+    use ResultOwnership::Shared as R;
     let (arguments, result, callback, aliases): (
         &'static [Argument],
         ResultOwnership,
@@ -342,51 +346,55 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             None,
             &[0, 1],
         ),
-        "map.from-list" | "set.from-list" => (&[S], F, None, &[0]),
-        "map.keys" | "map.values" | "map.to-list" | "set.to-list" => (&[B], R, None, &[0]),
         "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
-        "map.map-values" => (&[S, B], F, Some(Callback::Shared(0)), &[0, 1]),
-        "set.union" | "set.intersect" | "set.diff" => (&[B, B], F, None, &[0, 1]),
         "map.empty" | "set.empty" => (&[], R, None, &[]),
-        "map.insert" => (
-            &[S, S, C],
-            O {
-                argument: 2,
-                runtime: "map_insert",
-                wrapped: false,
-            },
-            None,
-            &[0, 1, 2],
-        ),
-        "map.get" => (&[B, B], R, None, &[1]),
         "map.contains" | "set.contains" => (&[B, B], R, None, &[]),
-        "map.remove" | "set.remove" => (
-            &[B, C],
-            O {
-                argument: 1,
-                runtime: "map_remove",
-                wrapped: false,
-            },
+        "map.from-list" | "set.from-list" | "map.keys" | "map.values" | "map.to-list"
+        | "set.to-list" => (
+            &[B],
+            ResultOwnership::MapOperation { consumed: None },
+            None,
+            &[0],
+        ),
+        "map.get" => (
+            &[B, B],
+            ResultOwnership::MapOperation { consumed: None },
             None,
             &[1],
         ),
-        "map.update" => (
-            &[S, S, S, C],
-            O {
-                argument: 3,
-                runtime: "map_update",
-                wrapped: false,
-            },
-            Some(Callback::Shared(1)),
-            &[0, 1, 2, 3],
+        "map.insert" => (
+            &[B, B, C],
+            ResultOwnership::MapOperation { consumed: Some(2) },
+            None,
+            &[0, 1, 2],
+        ),
+        "map.remove" | "set.remove" => (
+            &[B, C],
+            ResultOwnership::MapOperation { consumed: Some(1) },
+            None,
+            &[1],
         ),
         "set.insert" => (
-            &[S, C],
-            O {
-                argument: 1,
-                runtime: "set_insert",
-                wrapped: false,
-            },
+            &[B, C],
+            ResultOwnership::MapOperation { consumed: Some(1) },
+            None,
+            &[0, 1],
+        ),
+        "map.update" => (
+            &[B, B, B, C],
+            ResultOwnership::MapOperation { consumed: Some(3) },
+            Some(Callback::Borrowed(1)),
+            &[0, 1, 2, 3],
+        ),
+        "map.map-values" => (
+            &[B, B],
+            ResultOwnership::MapOperation { consumed: None },
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
+        "set.union" | "set.intersect" | "set.diff" => (
+            &[B, B],
+            ResultOwnership::MapOperation { consumed: None },
             None,
             &[0, 1],
         ),
@@ -442,7 +450,8 @@ mod tests {
                     .filter_map(|(i, a)| (*a == Argument::Consume).then_some(i))
                     .collect();
                 match c.result {
-                    ResultOwnership::ArrayOperation { consumed: argument } => {
+                    ResultOwnership::ArrayOperation { consumed: argument }
+                    | ResultOwnership::MapOperation { consumed: argument } => {
                         assert_eq!(
                             consumed,
                             argument.into_iter().collect::<Vec<_>>(),
@@ -535,7 +544,7 @@ mod tests {
             }
         );
         assert!(primitive("array.map").unwrap().borrows_callback());
-        assert!(!primitive("map.map-values").unwrap().borrows_callback());
+        assert!(primitive("map.map-values").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
     }
 }

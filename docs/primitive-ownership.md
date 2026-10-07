@@ -20,9 +20,9 @@ Every failure path still consumes its specified reference.
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
 | array.from-list | borrow list | fresh array owning typed element references | none |
-| map/set.from-list | share list | fresh outer storage, shared elements | none |
+| map/set.from-list | borrow list | owned storage with selected typed key/value references | none |
 | array.to-list | borrow array | fresh owned list with typed element aliases | none |
-| map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
+| map.keys/values/to-list; set.to-list | borrow container | owned list/pairs with typed element aliases | none |
 | array.length; map.size; set.size | borrow container | scalar | none |
 | array.get | borrow index, borrow array | fresh owned Option with a typed element alias | none |
 | array.set | borrow index/value, consume array | owned optional array; replacement releases old element; failure consumes array | none |
@@ -30,32 +30,30 @@ Every failure path still consumes its specified reference.
 | array.make | borrow count/value | owned array with repeated typed references | none |
 | array.generate | borrow count/callback | owned array with owned callback results | borrowed argument 1 |
 | array.map | borrow callback/array | owned array with owned callback results | borrowed argument 0 |
-| map.map-values | share callback, borrow map | fresh container, shared results and aliased keys | shared argument 0 |
+| map.map-values | borrow callback/map | owned map with retained keys and owned callback results | borrowed argument 0 |
 | array.fold | borrow callback/array, consume accumulator | owned accumulator or callback result | borrowed argument 0 |
 | array.slice | borrow start, length and array | copied storage with typed owned element aliases | none |
 | array.append | borrow both arrays | copied storage with typed owned elements | none |
-| set.union/intersect/diff | borrow both sets | fresh outer storage, aliased shared elements | none |
+| set.union/intersect/diff | borrow both sets | owned storage with typed selected key aliases | none |
 | array.sort | borrow array | copied storage with typed owned element aliases | none |
 | map.empty; set.empty | none | static shared empty value | none |
-| map.insert | share key, share value, consume map | owned container, aliased stored elements | none |
-| map.get | borrow key, borrow map | shared Option containing aliased value | none |
+| map.insert | borrow key/value, consume map | owned map; equal key retains original key, replaces/releases old value | none |
+| map.get | borrow key/map | fresh owned Option with a typed value alias | none |
 | map.contains; set.contains | borrow key and container | scalar | none |
 | map.remove; set.remove | borrow key, consume container | owned container; missing key can return original | none |
-| map.update | share key, callback and default, consume map | owned container with shared callback result | argument 1 |
-| set.insert | share key, consume set | owned container with shared key | none |
+| map.update | borrow key/callback/default, consume map | owned map with owned callback result | borrowed argument 1 |
+| set.insert | borrow key, consume set | owned set with typed stored keys | none |
 
 Comparison-only keys never escape into `fwp_map_find` or structural `fwp_cmp`:
 these functions read values, allocate nothing and invoke no user callbacks.
-Their primitive wrappers therefore omit `fwp_rc_share(key)`. Insert/update still
-share keys because a key can be stored. Callback inputs/results remain shared:
-a callback can return its input or a closure capturing it.
+Their primitive wrappers therefore omit `fwp_rc_share(key)`. Insert/update retain keys by type only when stored. Synchronous container
+callbacks borrow inputs and produce owned results, including input aliases and
+closures capturing them; retained runtime callback boundaries still share.
 
-Fresh outer storage does not imply independently owned elements. Current
-map/set destruction frees the outer buffer; it does not recursively release
-its runtime-shared elements. Aliasing metadata records which arguments or their
-elements can be reachable from the result, including callback captures. Typed
-element ownership, complete leaf-result coverage, closure capture destruction, retained runtime results and
-runtime cycles remain separate work in [ownership.md](ownership.md).
+Native arrays/maps/sets own typed elements and release them before outer
+storage. Unmodeled runtime containers retain their conservative shared fallback. Aliasing metadata records which arguments or their
+elements can be reachable from the result, including callback captures. Complete runtime-owned element coverage, retained results, exceptional
+cleanup and runtime cycles remain separate work in [ownership.md](ownership.md).
 
 ## Complete runtime sharing
 
@@ -621,5 +619,32 @@ String/Bytes/function elements and 601-element sharing/growth. Native O1/O2,
 stack on/off, GC/reuse verification and ownership-disabled fallbacks agree
 with the interpreter. Actual generated scalar wrappers and destruction preserve
 address-shaped bits. With identical output and zero collections, changing only
-result sharing reduces count reclamation from 11.3 to 5.3 MiB. Map/set elements,
-old marked allocations and retained runtime boundaries remain separate work.
+result sharing reduces count reclamation from 11.3 to 5.3 MiB. Old marked allocations and retained runtime boundaries remain separate work.
+
+## Typed ordered map/set elements
+
+Map/set boundaries borrow input keys/values and own stored typed references.
+Insert/remove/update consume their collection reference; copies retain elements,
+unique growth/poison-copy transfers existing child ownership, and last-reference
+destruction releases keys/values by type. Inserting an equal key preserves the
+first stored key and releases its old value. Remove releases discarded pairs;
+a missing key transfers the unchanged input. From-list stable sorting selects
+the first key and last value, retaining only the selected references and
+releasing scratch buffers. Set merge results retain selected subject/argument
+keys and release their scratch buffer. Empty outputs remain static.
+
+Get/keys/values/to-list establish typed owned aliases. The optimized get match
+still avoids constructing Some, retaining its selected value through the arm
+and releasing that temporary owner afterward. Map-values/update invoke borrowed
+callbacks and own returned values. An update's default is only borrowed for the
+call, including the unused-default path. Duplicate/drop operations are NULL for
+scalar types; pointer-shaped bits never acquire a reference count.
+
+`tests/map_set_ownership.rs` checks all boundaries, duplicate keys, retained
+copies, missing keys, nested array/function values, callback/effect order,
+optimized lookup and unique growth under GC/reuse stress at O1/O2, stack on/off
+and fallback flags. Native emitted-wrapper probes prove scalar preservation,
+first-key/last-value identity and balanced replacement/destruction. Identical
+output and zero collections: restoring sharing only in emitted wrappers reduces
+count reclamation from 26.2 to 16.0 MiB. Retained runtime boundaries, old marked
+allocation reclamation, exceptional cleanup and cycles remain separate work.

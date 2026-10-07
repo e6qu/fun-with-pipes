@@ -42,7 +42,8 @@ Native arrays own their typed reference-bearing elements. Copies retain those
 references, unique growth transfers them, replacement releases the prior
 element, and last-reference array destruction releases its children. Array
 callbacks borrow inputs and return owned results; folds transfer accumulators.
-Map/set stored elements and retained runtime boundaries still share. The
+Maps/sets likewise own typed keys/values and synchronous callback results;
+retained runtime boundaries still share. The
 [primitive inventory](primitive-ownership.md) records the exact contracts.
 
 The C backend and the interpreter must agree byte for byte on stdout,

@@ -36,7 +36,7 @@ allocations before counting is needed.
 | Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays | Counted storage and typed element ownership across creation, copies, updates and callbacks | Natural-width storage, views and retained/exception lifetime coverage |
-| Maps, sets | Counted outer storage; stored elements shared; unique updates in place | Typed element ownership, precise results and views |
+| Maps, sets | Counted storage with typed key/value ownership, copied aliases and synchronous callbacks | Old-object reclamation, runtime lifetime and numeric layout coverage |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
 | Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, retained callback and exceptional cleanup |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
@@ -51,9 +51,9 @@ lifetimes. None of these is a general collector-free execution guarantee.
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
-keys. Arrays now own typed elements across their native boundaries. Next extend
-typed storage ownership to map/set keys and values, old marked allocations and
-retained runtime callbacks, including exception/handler teardown and aliases. Keep the IR pass
+keys. Arrays now own typed elements across their native boundaries. Maps/sets now own typed keys and values too. Next finish old marked
+allocation reclamation and retained runtime callbacks, including exception,
+handler/cancellation teardown and cycles. Keep the IR pass
 and code generator on the same contracts.
 
 Contracts must distinguish borrowing for the call, consuming a reference,
