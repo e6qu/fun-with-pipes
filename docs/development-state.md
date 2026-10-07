@@ -33,12 +33,16 @@ immutable value semantics, effects and evaluation/trap order stable.
   elapsed 27.06 s), eight IR ownership checks pass (CPU 3.51 s / elapsed 7.39 s).
   Contract inventory, formatting and whitespace pass. Published head `2d2af62`;
   full [CI 37623311024](https://github.com/e6qu/fun-with-pipes/actions/runs/37623311024)
-  passes benchmarks; Linux and both macOS jobs are running. Squash only after
+  passes benchmarks, Linux and ARM macOS; Intel macOS is running. Squash only after
   all four current-head jobs pass. No local workloads remain.
-- Separate next-task work: `ownership-loop-state`, checkout
-  `/private/tmp/fwp-loop-worktree`, base `0a90b05`. Implement normal and fused
-  loop state/result transfers; implementation is starting. Prepared descendants retain
-  their listed OLD anchors until sequential rebases after parent squash merges.
+- Latest prepared change: `ownership-list-structure`, checkout
+  `/private/tmp/fwp-structure-worktree`, base `787763d`. zip/unzip/chunks
+  ownership and scratch cleanup pass focused checks; publication follows.
+  Its parent `ownership-loop-state` is published as `787763d` and implements
+  normal/fused loop state and result transfers. No additional PR is open.
+  Next implementation: repeat/range ownership, then typed stored container
+  elements. Prepared descendants retain their listed OLD anchors until
+  sequential rebases after parent squash merges.
 
 ## Current ownership evidence
 
@@ -82,6 +86,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-order | fwp-order-worktree | c835578 | 3a791dc |
 | ownership-sort-callbacks | fwp-sort-callback-worktree | 66bc713 | c835578 |
 | ownership-state-sequences | fwp-state-sequence-worktree | 0a90b05 | 66bc713 |
+| ownership-loop-state | fwp-loop-worktree | 787763d | 0a90b05 |
 
 Example after PR #76 merges: from fwp-text-worktree,
 `git rebase --onto origin/main 2ce7a05 ownership-text-results` after fetching main.
@@ -125,8 +130,8 @@ prepared after b563360, followed by take/drop-while on ownership-list-prefix.
 Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
 Call-effect inference repair is prepared separately after optional list aliases.
 Exact overflow counts and sort/unique/sort-by ownership are published;
-scan/iterate state ownership is published. Next repair general/fused loop
-state transfer, then remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
+scan/iterate and general/fused loop state ownership are published. Next implement
+remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
@@ -663,7 +668,7 @@ MiB; it did not exercise that boundary. A revised constructor-choice step proves
 use of fwp_k_loop_owned and shows 1.2 -> 2.7 MiB after restoring/removing only
 raw outer release. Its focused check passes CPU 1.63 s / elapsed 3.49 s. This
 ABI change needs adjacent closure/stack/FFI and IR verification before publication.
-Current PR #76 passes benchmarks; Linux and ARM/Intel macOS are running.
+Current PR #76 passes benchmarks; Linux and ARM macOS passed; Intel macOS is running.
 Keep all checks bounded, fix failures, and run full gates after parent merges.
 
 All four new loop regressions and twelve adjacent closure/stack/temporary/FFI/fat
@@ -677,3 +682,38 @@ collection stress/verify/poison (CPU 19.26 s / elapsed 38.72 s). Eight IR owners
 Contract inventory passes (CPU 0.00 s / elapsed 0.14 s), formatting/whitespace
 checks precede publication. No local workload remains. No full local gate is run; #76 remains
 the sole PR and all its non-benchmark jobs are still running.
+
+Loop state repair published as `787763d` after five loop checks (including focused
+existing goldens), twelve adjacent ABI/closure/stack/temporary/FFI/fat checks,
+eight IR checks, contract inventory, formatting and whitespace. Every local
+check used the bounded guard, with no limit increase or full local gate. The
+commit subject is one line, 66 characters, without body/trailers; main's #75
+squash was likewise verified. #76 head remains `2d2af62` and is the sole open PR.
+Published descendants retain their OLD rebase anchors; do not prematurely rebase
+or replay the whole pre-squash chain. Next concrete code: zip/unzip/chunks fresh
+structural nodes must own borrowed element aliases by known types; scratch
+storage must be released, with empty/truncated/invalid-size cases and nested/
+function-valued aliases compared to interpreter under stress. Then retained
+container elements, old marked-object reclamation and exceptional lifetimes.
+No local workload remains. Full roadmap goal stays active and phase 2 incomplete.
+
+## Structural list ownership prepared
+
+`ownership-list-structure`, checkout `/private/tmp/fwp-structure-worktree`,
+base `787763d`: zip/unzip/chunks build counted structural nodes with explicitly
+typed borrowed element references and release scanned scratch buffers. Scalar
+fields get NULL duplication operations, preserving address-shaped numeric bits.
+The original truncation, data-last pair order and chunk failures remain intact.
+
+Focused bounded checks: alias matrix and no-tracing counts passed, then expanded
+invalid-size and reuse/free-disabled fallback coverage passed (3 tests, CPU
+8.42 s, elapsed 17.17 s). Counts comparison restores sharing only at emitted
+result boundaries: identical output, zero collections, 8.2 versus 12.6 MiB
+freed by counts. A Boolean fixture typo was corrected before the passing run.
+The actual scalar wrapper probe passed at O1/O2 after fixing overlapping
+probe placeholders (CPU 0.84 s, elapsed 1.99 s). Inventory (1) and IR ownership
+checks (8) passed, CPU 3.12 s / elapsed 6.42 s and CPU 0.00 s / elapsed 0.13 s.
+Formatting and whitespace pass. No local workload remains.
+No full local gate was run; all-platform gates follow parent squash/rebase.
+Next: repeat/range remaining list ownership, then typed container elements,
+old-object reclamation and retained callback/exception teardown.

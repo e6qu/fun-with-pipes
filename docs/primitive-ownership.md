@@ -542,3 +542,28 @@ was not evidence of that boundary. These are reclamation results, not speed
 claims or proof of exception/cancellation cleanup. Full platform gates remain
 required after parent merges; old objects, retained runtime values and cycles
 still prevent general execution without tracing.
+
+## Nested structural list copies
+
+`zip` borrows both lists and returns fresh counted list and pair nodes. Each
+pair owns one typed reference to each borrowed element; unequal input lengths
+still truncate to the shorter list. `unzip` borrows its pair list and returns a
+fresh counted pair of fresh counted lists, each owning its selected elements.
+`chunks` borrows its size and source list, builds counted outer and inner list
+nodes, and owns one typed reference per element. It preserves empty inputs,
+positive-size validation and failure order. The chunk count uses division and
+remainder rather than overflowing a rounded-up addition.
+
+The `CopiedStructure` contract selects wrappers with duplicate functions for
+reference-bearing element types and NULL for scalar types. Existing borrowed
+inputs remain live across allocation. Scratch item/output buffers are scanned
+while in use and released after their values transfer into counted nodes.
+Ownership-disabled builds retain the previous conservative sharing fallback.
+
+`tests/list_structure_ownership.rs` checks retained inputs, nested lists,
+function-valued elements, unequal and empty lists, large/invalid chunk sizes,
+O1/O2, stack on/off, collection/reuse verification and fallback flags. Actual
+emitted scalar wrappers are probed with numeric words equal to heap addresses.
+With tracing disabled and identical outputs, changing only the emitted result
+boundaries from owned to shared reduces count reclamation from 12.6 MiB to
+8.2 MiB. This is scoped reclamation evidence, not a speed or general no-GC claim.
