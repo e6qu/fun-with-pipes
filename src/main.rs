@@ -606,6 +606,10 @@ fn build(args: &[String]) -> ExitCode {
         eprintln!("fwp build: --pgo needs GCC as the C compiler (set CC)");
         return ExitCode::from(2);
     }
+    if static_link && cross.is_none() && cfg!(target_os = "macos") {
+        eprintln!("fwp build: --static is unavailable on macOS; use ordinary native linking or a Linux cross target");
+        return ExitCode::from(2);
+    }
     fwp::cgen::set_native_options(fwp::cgen::NativeOptions {
         static_link,
         pgo: None,
@@ -667,7 +671,7 @@ fn build(args: &[String]) -> ExitCode {
             let ext = if kind == fwp::cgen::LibKind::Static {
                 "a"
             } else {
-                "so"
+                fwp::cgen::shared_library_extension()
             };
             let name = if stem.starts_with("lib") {
                 stem

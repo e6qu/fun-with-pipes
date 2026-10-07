@@ -15,8 +15,8 @@ fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
-fn linux_cc() -> bool {
-    Path::new("/proc/self/status").exists()
+fn native_cc() -> bool {
+    cfg!(any(target_os = "linux", target_os = "macos"))
         && Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
             .arg("--version")
             .output()
@@ -81,7 +81,7 @@ fn variants_returned_as_structs_are_not_allocated() {
 /// on every path, returns it as a struct in the caller's frame.
 #[test]
 fn wide_records_are_returned_without_allocating() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("wide");
@@ -119,7 +119,7 @@ fn allocated(dir: &TempDir, name: &str, var: &str, value: &str, expected: &str) 
 /// `tests/stack/<name>.fwp` prints `expected`, allocating more than 10 MiB
 /// with `var` set to 0 when compiling and less than 1 MiB without.
 fn on_heap_and_stack(name: &str, var: &str, expected: &str) {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new(name);

@@ -7,6 +7,10 @@ on the compiler.
 
 ## Pipeline
 
+The active priorities are in [../PLAN.md](../PLAN.md), the ownership and
+representation contract in [ownership.md](ownership.md), and current checks
+and limitations in [development-state.md](development-state.md).
+
 ```
 lex → parse (offside layout) → macro expansion → name collection
     → inference (types, traits, effects, resources) → monomorphization
@@ -228,15 +232,24 @@ cost is code size, so explicit generics keep that cost visible.
   a bump allocator that never frees, because values in WebAssembly locals
   are invisible to a stack scan; libraries (`--staticlib`, `--cdylib`)
   use the collector's allocator but never collect, since the host's
-  stacks are unknown. The collector needs Linux (`dl_iterate_phdr`) to
-  find the data segments; elsewhere it never collects.
+  stacks are unknown. Linux finds program data segments with
+  `dl_iterate_phdr`; the Darwin implementation finds the Mach-O image
+  containing the runtime and scans its writable-at-load segments, including
+  `__DATA_CONST` and zero-fill storage. Other native systems do not arm
+  collection. Darwin validation is tracked in the session handoff.
+  Runtime value/string constructors and list traversals keep their source
+  objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
+  Optimized Clang can otherwise preload a short buffer and discard its
+  only root while its elements are still needed.
 - Reverse-mode autodiff records operations on tapes kept by the runtime
   outside the program's values (numbers only), and tensor kernels run on
   OS threads that never touch the collected heap; both are implemented
   twice, with the same operation order (`src/numerics.rs`,
   `runtime/fwp_rt_kernel.c`, see [numerics.md](numerics.md)).
-- Native tasks are green threads (`ucontext`) on an event loop: epoll on
-  Linux, poll elsewhere. Interpreter tasks are OS threads that pass a
+- Native tasks are green threads on an event loop: epoll on
+  Linux, poll elsewhere. glibc uses `ucontext`; musl and Darwin use the
+  runtime's custom x86-64/AArch64 context switch, with ELF and Mach-O
+  symbol/directive conventions respectively. Interpreter tasks are OS threads that pass a
   baton, so only one runs at a time and scheduling is the same.
 
 ## Executables and the pipe protocol
@@ -274,6 +287,14 @@ error. See [protocol.md](protocol.md).
 | fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Tasks run on fibers (`src/fiber.rs`, with the same hooks as compiled programs): `World::park` switches to the next ready fiber instead of handing a baton between threads, in the same order, and traps on a deadlock. The interpreter's frames in linear memory are large (about a kilobyte per call), so the fibers of tasks share one 32 MiB stack region: a fiber that suspends copies out the part it uses, and copies it back when it resumes. Without JSPI, a program that uses tasks is rejected before it runs, unless fwp.wasm was built with `scripts/build-playground.sh --asyncify`. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
 ## Not implemented
+
+- Complete ownership of strings, bytes, escaping closures and runtime-shared
+  values; general execution without tracing GC. Narrow packed numeric arrays,
+  broader typed aggregate ABIs and scoped view lifetimes are planned in
+  [ownership.md](ownership.md). C structs alone do not guarantee registers.
+- Darwin cross-compilation and universal binaries, Clang PGO, and Windows.
+  Native macOS is the active portability work; completion requires both
+  architectures' CI, not just successful compilation.
 
 - HTTP/3; HTTP/2 server push and
   WebSocket over HTTP/2 (RFC 8441); WebSocket extensions other than

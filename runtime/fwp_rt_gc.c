@@ -127,6 +127,11 @@ static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
 #ifdef __linux__
 #include <elf.h>
 #endif
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#include <mach-o/loader.h>
+#include <sys/resource.h>
+#endif
 
 #define GC_SHIFT 16
 #define GC_CHUNK ((size_t)1 << GC_SHIFT)
@@ -792,6 +797,44 @@ static int fwp_gc_find_data(struct fwp_dl_info *info, size_t size, void *arg) {
     }
     return 1;
 }
+#elif defined(__APPLE__)
+/* Only the image containing this runtime owns program globals. Libraries
+ * never arm collection: the embedding host's roots are not known. Include
+ * writable-at-load segments (also __DATA_CONST), including zero-fill data. */
+static void fwp_gc_find_data(void) {
+    uintptr_t self = (uintptr_t)&fwp_gc;
+    for (uint32_t i = 0; i < _dyld_image_count(); i++) {
+        const struct mach_header_64 *h = (const struct mach_header_64 *)_dyld_get_image_header(i);
+        if (!h || h->magic != MH_MAGIC_64) continue;
+        intptr_t slide = _dyld_get_image_vmaddr_slide(i);
+        const char *commands = (const char *)(h + 1);
+        const struct load_command *cmd = (const struct load_command *)commands;
+        int mine = 0;
+        for (uint32_t j = 0; j < h->ncmds; j++) {
+            if (cmd->cmd == LC_SEGMENT_64) {
+                const struct segment_command_64 *s = (const struct segment_command_64 *)cmd;
+                uintptr_t lo = (uintptr_t)(s->vmaddr + slide);
+                if (self >= lo && self - lo < s->vmsize) mine = 1;
+            }
+            cmd = (const struct load_command *)((const char *)cmd + cmd->cmdsize);
+        }
+        if (!mine) continue;
+        cmd = (const struct load_command *)commands;
+        for (uint32_t j = 0; j < h->ncmds; j++) {
+            if (cmd->cmd == LC_SEGMENT_64) {
+                const struct segment_command_64 *s = (const struct segment_command_64 *)cmd;
+                if ((s->initprot & (VM_PROT_READ | VM_PROT_WRITE)) == (VM_PROT_READ | VM_PROT_WRITE) && s->vmsize) {
+                    if (fwp_gc.ndata == (int)(sizeof fwp_gc.data / sizeof fwp_gc.data[0]))
+                        fwp_trap("too many program data segments for the collector");
+                    fwp_gc.data[fwp_gc.ndata].p = (char *)(uintptr_t)(s->vmaddr + slide);
+                    fwp_gc.data[fwp_gc.ndata++].n = (size_t)s->vmsize;
+                }
+            }
+            cmd = (const struct load_command *)((const char *)cmd + cmd->cmdsize);
+        }
+        return;
+    }
+}
 #endif
 
 static void fwp_gc_scan_data(void) {
@@ -1058,6 +1101,11 @@ static __attribute__((noinline)) void fwp_gc_collect(void) {
 }
 
 static long fwp_gc_status_kb(const char *key) {
+#ifdef __APPLE__
+    struct rusage usage;
+    if (strcmp(key, "VmHWM") != 0 || getrusage(RUSAGE_SELF, &usage) != 0) return -1;
+    return usage.ru_maxrss / 1024; /* Darwin reports bytes, Linux KiB. */
+#else
     FILE *f = fopen("/proc/self/status", "r");
     if (!f) return -1;
     char line[256];
@@ -1067,6 +1115,7 @@ static long fwp_gc_status_kb(const char *key) {
         if (!strncmp(line, key, kl) && line[kl] == ':') kb = atol(line + kl + 1);
     fclose(f);
     return kb;
+#endif
 }
 
 static void fwp_gc_report(void) {
@@ -1087,6 +1136,10 @@ static void fwp_gc_start(void *top) {
     fwp_gc.main_top = (char *)top;
 #ifdef __linux__
     dl_iterate_phdr(fwp_gc_find_data, 0);
+#elif defined(__APPLE__)
+    fwp_gc_find_data();
+#endif
+#if defined(__linux__) || defined(__APPLE__)
     fwp_gc.armed = fwp_gc.enabled && fwp_gc.ndata > 0;
 #endif
     if (fwp_gc.stats) atexit(fwp_gc_report);

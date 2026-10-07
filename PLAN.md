@@ -4,6 +4,49 @@ fwp implements the *Pipe Language Compact Specification*. The design
 decisions are in [docs/design.md](docs/design.md); this page tracks the
 work.
 
+## Active roadmap
+
+Execution: continue through this roadmap automatically, one focused PR at a
+time. Run full gates on GitHub runners, resolve failures, then squash-merge
+with an explicitly supplied single-line subject of at most 80 characters
+and an empty body, without trailers or attribution. Update this plan and
+the session handoff with acceptance evidence and the next action; move a
+phase to done only when its criteria have been met. The user authorized
+this workflow on 2026-10-07. Treat failing tests as work to fix and queued
+CI as a merge gate. Continue useful implementation, investigation and next-task
+preparation while CI runs; do not stop the roadmap merely for test failures
+or runner delays. Keep one PR open at a time.
+
+The goal is an efficient native language with simple pipe semantics,
+strong inference and static typing, compile-time specialization, little
+heap allocation, and deterministic ownership wherever possible. Tracing
+GC is a compatibility fallback while runtime ownership is completed.
+
+Start each session with [the handoff](docs/development-state.md) and
+[the ownership design](docs/ownership.md). The numbered history below
+records deliveries; its old "next" remarks are historical, not a second
+priority queue.
+
+| Order | Work | Acceptance |
+|---|---|---|
+| 1, in progress | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
+| 2, next | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
+| 3 | Typed contiguous numeric storage, views, scalar/aggregate ABI and measured alignment | Narrow elements use their natural width; fewer copies/boxes; allocation and assembly evidence on arm64 and x86-64; ABI/FFI tests |
+| 4 | Fused numerical loops, blocked matrix kernels and autodiff lifetime/buffer improvements | Correct gradients and exceptional cleanup; equivalent C/Rust comparisons; fixed floating-point behavior by default |
+| 5 | Expand allocation/ownership/performance regression evidence | Allocation, live-memory, retain/release and collection measurements alongside timings; full workloads on CI |
+| 6 | Optional execution without tracing GC, after complete ownership coverage | Supported programs reclaim memory with collection disabled, including escaping values and runtime boundaries; cycles have an explicit lifetime policy |
+
+Allocation elimination comes first, then registers/stack, ownership transfer,
+regions with known lifetimes, and reference counting for sharing. Reference
+counting itself has a cost. Static memory provisioning is not a proof of
+allocation-free execution. C structs are not a guarantee of register placement.
+
+Keep data-last pipes, composition, currying, immutable source semantics,
+explicit generic signatures, effects, overflow checks and trap order stable.
+Do not relax floating-point semantics globally to obtain benchmark speedups.
+Defer Windows, additional interfaces and a new backend until the foundations
+above are measured and stable.
+
 ## Done
 
 The language was delivered in twelve pull requests, each one green on
@@ -34,7 +77,7 @@ talk gRPC, with no change to the program (`fwp build --service`,
 `fwp serve`, `fwp proto`). It brought HTTP/2 (h2c), HPACK and protobuf,
 written from scratch for both backends. See [docs/services.md](docs/services.md).
 
-## Next
+## Delivery history
 
 1. **Tooling** (done). `fwp fmt` (a formatter that keeps comments), `fwp lint`,
    and `fwp lsp` (diagnostics, hover, go to definition, references,
@@ -245,7 +288,8 @@ written from scratch for both backends. See [docs/services.md](docs/services.md)
     `FWP_GC_VERIFY=1` checks every minor collection against a full trace
     under `FWP_GC_STRESS` in the tests.
 
-Next in this series, toward static, zero-cost programs:
+The optimization series delivered the following work; unfinished portions
+are prioritized in the active roadmap above:
 
 20. Escape analysis beyond loops (begun: a tuple built only to be
     matched is never built, and a `match` on `map.get` looks the key up
@@ -359,7 +403,8 @@ Next in this series, toward static, zero-cost programs:
     their cells (fresh results, inputs shared element by element) freed
     730 of 1101 MiB of a list-churning program but made it 35% slower, as
     the generational collector already frees short-lived lists cheaply.
-    Next: fewer counts where values go straight to the runtime.
+    Remaining: precise borrowing at runtime boundaries, then ownership of
+    the runtime-shared categories (active roadmap item 2).
 26. **Cross-compilation** (begun). `fwp build --target aarch64-linux`
     (or `riscv64-linux`, `x86_64-linux`, ...) builds for another 64-bit
     Linux with that system's C compiler: `FWP_CC_<triple>`,
@@ -369,8 +414,9 @@ Next in this series, toward static, zero-cost programs:
     (`--target x86_64-linux-musl`, `aarch64-linux-musl`): the runtime
     switches tasks itself there (a few instructions for x86-64 and
     AArch64), and the tests build every golden program static with musl,
-    and run the task programs on aarch64 with that switch. Next: macOS
-    (the runtime's processes, sockets and fibers on Darwin) and Windows.
+    and run the task programs on aarch64 with that switch. Native macOS is
+    now the active portability work; Darwin cross targets and Windows
+    remain deferred. Current verification is in the session handoff.
 27. **Size arithmetic** (done). Sizes in types may be sums and
     products (`Vector[t, n + m]`, `Vector[t, m * n]`), checked as
     polynomials over the size variables, with `vector.append`,

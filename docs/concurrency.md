@@ -36,7 +36,7 @@ processes.
 
 | | interpreter | native |
 |---|---|---|
-| task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread (`ucontext`) with its own stack, on one OS thread |
+| task | an OS thread; the threads take turns holding a fair baton, so only one evaluates at a time | a green thread with its own stack, on one OS thread; `ucontext` on glibc, the runtime's x86-64/AArch64 switch on musl and Darwin |
 | task, WebAssembly | a fiber that the JavaScript host switches with JavaScript Promise Integration (fwp.wasm, the playground) | a fiber, as in the interpreter (`wasm32-wasi`, `wasm32-browser`) |
 | waiting for sockets | `poll` in 50 ms slices, without the baton | non-blocking sockets on an epoll event loop (poll elsewhere) |
 | scheduling | preemptive at safe points: a task that used up its slice hands the baton to the next task waiting for it | the same, switching green threads |

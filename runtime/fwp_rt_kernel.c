@@ -472,11 +472,19 @@ static int fwp_cl_load(void) {
             return 0;
         }
     } else {
+#ifdef __APPLE__
+        h = dlopen("/System/Library/Frameworks/OpenCL.framework/OpenCL", RTLD_NOW);
+#else
         h = dlopen("libOpenCL.so.1", RTLD_NOW);
         if (!h) h = dlopen("libOpenCL.so", RTLD_NOW);
+#endif
         if (!h) {
             snprintf(fwp_cl.error, sizeof fwp_cl.error,
+#ifdef __APPLE__
+                     "no OpenCL device: the OpenCL framework could not be loaded");
+#else
                      "no OpenCL device: the OpenCL library (libOpenCL.so.1, libOpenCL.so) could not be loaded");
+#endif
             return 0;
         }
     }

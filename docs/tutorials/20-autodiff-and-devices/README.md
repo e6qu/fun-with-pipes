@@ -43,7 +43,8 @@ soft = exp | add 1.0 | ln
 ```
 
 `tensor.opencl` shows the OpenCL C that the `Gpu` device compiles. The
-GPU device loads `libOpenCL` when it is first used; without it (or
+GPU device loads `libOpenCL` (the OpenCL framework on macOS) when it is
+first used; without it (or
 without a device with double precision) `device.available Gpu` is
 `False` and `realize-on Gpu` stops with the reason.
 

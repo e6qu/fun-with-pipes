@@ -3,6 +3,8 @@
 //! programs, so the same program interleaves alike on both, whatever the
 //! slice; the collector finds the roots of tasks preempted at any safe
 //! point; and the outputs do not change from run to run.
+//! Timer wake order depends on wall time. The scoped timer fixture
+//! collects both results before reporting them in a fixed order.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -86,7 +88,11 @@ fn native(exe: &Path, env: &[(&str, &str)]) -> String {
 
 /// Programs with tasks that compute between their suspensions, where the
 /// slice decides the interleaving.
-const PROGRAMS: &[&str] = &["tests/run/preempt.fwp", "tests/run/tasks_local.fwp"];
+const PROGRAMS: &[&str] = &[
+    "tests/run/preempt.fwp",
+    "tests/run/tasks_local.fwp",
+    "tests/run/tasks.fwp",
+];
 
 #[test]
 fn backends_interleave_alike_for_any_slice() {
@@ -98,6 +104,10 @@ fn backends_interleave_alike_for_any_slice() {
         for slice in ["1", "37", "1000"] {
             let env = [("FWP_PREEMPT", slice)];
             let want = interpret(&path, &env);
+            if matches!(*p, "tests/run/tasks_local.fwp" | "tests/run/tasks.fwp") {
+                let expected = std::fs::read_to_string(path.with_extension("out")).unwrap();
+                assert_eq!(want, expected, "scoped results with slice {slice}");
+            }
             assert!(
                 !want.contains("--- exit"),
                 "{} slice {}: {}",

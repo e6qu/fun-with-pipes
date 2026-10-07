@@ -25,6 +25,20 @@ later = curry (.0
     | format "woke after {} ms"
     | print)
 
+# Timer wake order depends on wall time. Collect both results before
+# printing; closing after the scope also checks that it waited for both.
+sleep-send : (Channel[I64], I64) -> () -> () ! {Async, IO, Network, FileIO}
+sleep-send = curry (.0
+    | tap (.1 | duration.from-millis | task.sleep)
+    | fork channel.send .0 .1
+    | ignore)
+
+scope-wakes : Channel[I64] -> () -> () ! {Async, IO, Network, FileIO}
+scope-wakes = curry (.0
+    | tap (make { 0 = id, 1 = const 40 } | sleep-send | task.spawn | ignore)
+    | make { 0 = id, 1 = const 20 }
+    | sleep-send | task.spawn | ignore)
+
 main = [
     range 1 2001
     | task.map (fork mul id id)
@@ -45,7 +59,12 @@ main = [
         (const 5 | task.deadline 20ms | tap (const 1s | task.sleep))
     | echo,
     500 | later | task.spawn | tap task.cancel | task.await | echo,
-    task.scope (const [40, 20] | each (later | task.spawn | ignore))
+    2 | channel.make | the-ch
+    | tap (scope-wakes | task.scope)
+    | tap channel.close
+    | channel.drain | sort
+    | each (format "woke after {} ms" | print),
+    ()
     | const "scope done"
     | print,
     5 | channel.make | the-ch | channel.recv-for 20ms | echo,

@@ -486,6 +486,9 @@ mod opencl {
     fn library_names() -> Vec<String> {
         match std::env::var("FWP_OPENCL_LIB") {
             Ok(p) if !p.is_empty() => vec![p],
+            _ if cfg!(target_os = "macos") => {
+                vec!["/System/Library/Frameworks/OpenCL.framework/OpenCL".into()]
+            }
             _ => vec!["libOpenCL.so.1".into(), "libOpenCL.so".into()],
         }
     }

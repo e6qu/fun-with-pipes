@@ -40,6 +40,10 @@ fwp build geom.fwp --staticlib -o libgeom.a
 [tests/c-interop](../../../tests/c-interop) has a Rust program and a C
 program that use such a library.
 
+On macOS the shared-library form (`--cdylib`) uses `.dylib` and the
+interpreter loads a Darwin FFI shim. Native portability and verification
+are tracked in [the session handoff](../../development-state.md).
+
 ## The program
 
 [`main.fwp`](main.fwp):

@@ -181,7 +181,12 @@ fn run(mut cmd: Command, secs: u64) -> std::process::Output {
 }
 
 fn text(o: &std::process::Output) -> String {
-    String::from_utf8_lossy(&o.stdout).into_owned()
+    // OpenSSL 3 releases name the same TLS alert differently. Keep the
+    // complete failure checked while canonicalizing its version label.
+    String::from_utf8_lossy(&o.stdout).replace(
+        "ssl/tls alert bad certificate",
+        "sslv3 alert bad certificate",
+    )
 }
 
 fn build(args: &[&str], cwd: &Path) {

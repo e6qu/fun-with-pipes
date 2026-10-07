@@ -42,6 +42,15 @@ typedef uint64_t V;
 typedef __int128 i128;
 typedef unsigned __int128 u128;
 
+/* A conservative collector needs the owner alive while values preloaded
+ * from it cross allocations. An empty compiler fence extends that lifetime
+ * without adding machine instructions. WebAssembly has no stack tracing. */
+#if !defined(__wasi__) && !defined(__wasm__)
+#define FWP_KEEP_ALIVE(p) __asm__ volatile("" : : "r"(p) : "memory")
+#else
+#define FWP_KEEP_ALIVE(p) ((void)(p))
+#endif
+
 
 /* ------------------------------------------------------------------ alloc */
 
@@ -108,6 +117,8 @@ static V fwp_data(uint32_t tag, uint32_t n, const V *f) {
     o->tag = tag;
     o->n = n;
     for (uint32_t i = 0; i < n; i++) o->f[i] = f[i];
+    /* Inlining may preload fields before allocation: retain their owner. */
+    FWP_KEEP_ALIVE(f);
     return PTR(o);
 }
 
@@ -123,6 +134,8 @@ static V fwp_str_new(const char *s, size_t len) {
     r->len = len;
     memcpy(r->d, s, len);
     r->d[len] = 0;
+    /* A source slice can be the only remaining root of its allocation. */
+    FWP_KEEP_ALIVE(s);
     return PTR(r);
 }
 
@@ -145,15 +158,21 @@ static size_t fwp_list_len(V xs) {
 
 /* list -> temporary array of items */
 static V *fwp_list_items(V xs, size_t *n) {
+    V owner = xs;
     *n = fwp_list_len(xs);
     V *a = (V *)fwp_alloc((*n + 1) * sizeof(V));
     for (size_t i = 0; i < *n; i++) { a[i] = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1]; }
+    FWP_KEEP_ALIVE(owner);
     return a;
 }
 
 static V fwp_list_from(const V *a, size_t n) {
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_cons(a[i - 1], r);
+    /* Clang can preload the elements of an inlined, short buffer and
+     * discard its only pointer before the allocating constructors run.
+     * Keep the owning buffer reachable until every cell has been built. */
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 

@@ -6,6 +6,12 @@ run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
+Next work is prioritized in [../PLAN.md](../PLAN.md): typed contiguous
+numeric storage and views, tape cleanup on failure/cancellation and capacity
+reuse, fused gradient kernels, and cache-aware matrix multiplication.
+[ownership.md](ownership.md) records the representation and floating-point
+contract; [development-state.md](development-state.md) records current evidence.
+
 Numeric code in fwp is written once against the numeric traits (`Ring`,
 `Field`, `Floating`, `FromFloat`, ...). Floats, complex numbers, dual
 numbers, reverse-mode numbers and tensor expressions all implement them,
@@ -152,7 +158,7 @@ Device =
 - **`Gpu`** is the first OpenCL device with double precision
   (`cl_khr_fp64`), a GPU if there is one. The library is loaded with
   `dlopen` when the device is first used (`libOpenCL.so.1`, or the file
-  `FWP_OPENCL_LIB` names), in both backends, so programs neither link
+  `FWP_OPENCL_LIB` names; on macOS, the system OpenCL framework), in both backends, so programs neither link
   nor require it. `device.available Gpu` says whether one was found;
   running on an unavailable GPU is an `Err` from `tensor.try-realize-on`
   and a trap (`fwp: trap: device: no OpenCL device: ...`) from
@@ -198,6 +204,11 @@ speedups are lower bounds):
 The times include building the input from a list (most of the
 interpreter's time); the kernel itself runs at the same speed in both
 backends, since both evaluate it with compiled loops.
+
+These are historical measurements, not macOS evidence. Framework loading
+on Darwin does not prove a usable double-precision device or successful
+kernel execution. Preserve the deterministic reduction order and disabled
+contraction while measuring SIMD, buffer reuse and fused gradients.
 
 ## Not implemented
 

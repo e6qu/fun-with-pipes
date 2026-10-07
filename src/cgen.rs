@@ -106,7 +106,7 @@ pub fn parse_cross(t: &str) -> Result<String, String> {
         let what = if rest.first().is_some_and(|o| *o == "linux") {
             "the runtime needs glibc or musl"
         } else {
-            "the runtime is written for Linux; macOS and Windows are not supported yet"
+            "cross targets must name Linux; on macOS use --target native"
         };
         return Err(format!("cannot build for `{}`: {}", t, what));
     }
@@ -126,6 +126,27 @@ fn target_arch() -> String {
     match native_options().cross {
         Some(t) => t.split('-').next().unwrap_or_default().to_string(),
         None => std::env::consts::ARCH.to_string(),
+    }
+}
+
+/// Cross targets currently name Linux systems; otherwise use the host.
+pub fn native_is_macos() -> bool {
+    native_options().cross.is_none() && cfg!(target_os = "macos")
+}
+
+pub fn shared_library_extension() -> &'static str {
+    if native_is_macos() {
+        "dylib"
+    } else {
+        "so"
+    }
+}
+
+pub fn shared_library_flag() -> &'static str {
+    if native_is_macos() {
+        "-dynamiclib"
+    } else {
+        "-shared"
     }
 }
 
@@ -184,6 +205,16 @@ pub fn c_compiler() -> Result<(String, Vec<String>), String> {
 fn cc_command(cc: &(String, Vec<String>)) -> std::process::Command {
     let mut c = std::process::Command::new(&cc.0);
     c.args(&cc.1);
+    // Apply one explicit OpenSSL prefix to headers, linking and loading.
+    // Do not let a host prefix contaminate Linux cross builds.
+    if native_options().cross.is_none() {
+        if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
+            let prefix = std::path::PathBuf::from(prefix);
+            c.arg("-I").arg(prefix.join("include"));
+            c.arg("-L").arg(prefix.join("lib"));
+            c.arg(format!("-Wl,-rpath,{}", prefix.join("lib").display()));
+        }
+    }
     c
 }
 
@@ -5373,6 +5404,7 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
                 .to_string();
                 format!("\nthe program uses TLS, which needs OpenSSL 3's headers and libraries for {} (Debian and Ubuntu: libssl-dev:{}; see docs/tls.md)", t, deb)
             }
+            _ if tls && native_is_macos() => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (macOS: brew install openssl@3; set FWP_OPENSSL_DIR to brew --prefix openssl@3; see docs/tls.md)".to_string(),
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),
         };
@@ -5476,7 +5508,10 @@ pub fn compile_fat(c_source: &str, output: &std::path::Path, opt: &str) -> Resul
         let obj = dir.join(format!("fat-{}.o", i));
         let mut cmd = cc_command(&cc);
         cmd.args([opt, "-std=gnu11", "-ffp-contract=off", "-w", "-c"])
-            .arg(format!("-Dmain=fwp_variant_{}", i));
+            .arg(format!("-Dmain=fwp_variant_{}", i))
+            // Each variant embeds its own runtime, including the assembly
+            // entry on Darwin and musl; those symbols must not collide.
+            .arg(format!("-Dfwp_ctx_swap=fwp_ctx_swap_{}", i));
         if !flags.is_empty() {
             cmd.arg(flags);
         }
@@ -5586,7 +5621,7 @@ pub fn compile_library(
             }
             LibKind::Shared => run_cc(
                 cc_command(&cc)
-                    .arg("-shared")
+                    .arg(shared_library_flag())
                     .arg("-o")
                     .arg(output)
                     .arg(&obj)
