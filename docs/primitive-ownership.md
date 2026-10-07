@@ -191,6 +191,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 46 | Inlined record projections retain checked base types while removing outer storage and dropping discarded children | Sequential CI; aliases, discarded nested fields and evaluation order |
 | 47 | Typed CAF cache owners survive caller drops; calls return separate owners and executable teardown releases caches after tasks | Sequential CI; initialization failures, reentry, overflow, aliases and teardown |
 | 48 | Inlining evaluates CAF arguments before the callee, including unused arguments, and releases their temporary owners | Sequential CI; first-trap order, raw interpreter agreement and missing-release control |
+| 49 | task.spawn borrows the caller thunk and retains a typed task owner until entry or cancellation; failed preparation rolls back before publication | Sequential CI; stack/scope failures, captures, aliases and scalar results; task graph still shares |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

@@ -370,6 +370,10 @@ callers; executable teardown releases caches after finishing tasks. CAF
 evaluation is a call safe point that protects existing caller owners.
 Inlining treats a zero-argument function as an evaluation, preserving unused
 argument evaluation and trap order rather than duplicating or erasing it.
+Prepared task.spawn retains counted thunks until entry or cancellation.
+Fallible stack/scope preparation protects only the extra owner and publishes
+a task after preparation succeeds. Unknown closure metadata retains sharing;
+task results still use the shared graph fallback at this stage.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

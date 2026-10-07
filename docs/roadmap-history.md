@@ -8301,3 +8301,23 @@ initialization, reentry and teardown regressions.
 Inline-CAF lint with the same two targets and -D warnings passes2.34 s CPU
 /4.64 s elapsed; fmt check0.34 /0.62 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final inline-CAFaf073c78c443508c56a77465f363e1755b76dc31 is clean on
+actual base762cc82, published with exact lease against OLD6734248.
+Whole subject verified one line, empty body; no second PR. Row49 actual base
+remains OLD6734248 until its own rebase; immutable queue anchors unchanged.
+
+Row49 task-thunk rebase from ACTUAL6734248e7c0d4d53d57e5acccb9af02641713e9d
+onto actual row48af073c78c443508c56a77465f363e1755b76dc31 resolves only
+doc conflicts with nine authoritative files. Its source oracle already
+sets FWP_NO_OPT=1. Guarded clean0.00 /0.13 s. Guarded cargo test --test
+retained_thunk_ownership --test task_ownership passes all five tests
+13.40 s CPU /26.90 s elapsed. Spawn retains a typed closure owner until
+entry or cancellation; failed stack/scope preparation releases only the
+extra owner and publishes no child prematurely. O1/O2, raw agreement,
+stress/verification/poison, external aliases, scalar bits and unknown
+metadata fallback pass with omission controls and related task tests.
+Task results still use shared graph fallback in this preparation.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.58 s CPU /7.29 s elapsed. Retained-thunk lint
+with both integration targets and -D warnings passes2.53 /5.05 s; fmt
+check0.44 /0.83 s. Nine current docs copied before final amend; tested source unchanged.
