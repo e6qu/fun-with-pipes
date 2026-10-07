@@ -47,17 +47,24 @@ reclamation, task result/deadline boundaries, registered runtime unwind cleanup,
 the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
 the fallback. Prior acceptance details and failed/superseded runs are in history.
-No production PR is open. Row27 final rebase from actual9a21fd6 onto actual
-squash2ef5510 gives local3e82eca990cec698471b87252a75581bd17e7718. Compiler/
-runtime/tests/scripts/production workflows are byte-identical to published2a2458b.
-Final twelve focused tests pass30.59CPU/61.49elapsed. Eleven ownership-IR module
-tests pass3.27CPU/6.84elapsed. Lint2.39/4.79s and format0.34/0.60s and strong44/106/86 audit0.43/3.49s pass. Copy
-all 11 current docs, publish and open the only next production PR.
-The published preparation is2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1; compiler/
-runtime/original probe match71c2405. Twelve focused tests30.40CPU/61.02elapsed,
-lint2.35/4.73s, format0.35/0.62s and strong audit0.45/3.59s pass before final
-rebase. Retained roadmap/revision-027-71c2405dd0e0 remotely. The final PR needs
-all six fresh exact-head production jobs plus roadmap_docs before squash.
+[PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
+production PR, exact head9c1b5a861b156a48d9e4e55b96c336fc6e852e18 on actual
+main1052ef5510154cd52f9f4e94a4a5a2778a20e43ec01. Fresh full CI38002299110
+and roadmap_docs38002299186 are queued/running. Freeze this head; update root
+status without rewriting the PR just to embed run IDs. Require all seven
+exact-head passing checks, then squash with the subject
+`Protect live compiler owners across calls and cancellation` and empty body.
+
+Final rebase from actual9a21fd6 gives source3e82eca on accepted squash2ef5510;
+the final docs commit gives9c1b5a8. Compiler/runtime/tests/scripts/production
+workflows match prior2a2458b exactly. Twelve focused integration tests pass
+30.59CPU/61.49elapsed; eleven ownership-IR tests3.27/6.84s, lint2.39/4.79s,
+format0.34/0.60s and final strong44/106/86 audit0.41/3.44s pass. All11 live docs
+are copied into the PR. Retained roadmap/revision-027-2a2458b93d6c before
+exact leased publication. Earlier preparation evidence stays in history.
+Next: prepare row28 runtime-call cleanup from its recorded actual base2a2458b
+onto currentPR1069c1b5a8; after106 merges, final-rebase from that actual new
+base9c1b5a8 onto its squash. Keep later work separate and open28's PR only then.
 
 The merged million-step native tail regression passes O1/O2 with GCoff/on
 against a200-step FWP_NO_OPT=1 oracle. Full-size raw100000 local execution
@@ -75,7 +82,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 27 ownership-call-liveness | 2a2458b93d6c | 9a21fd6cc844 | Twelve tests30.40/61.02s; lint2.35/4.73s, format0.35/0.62s and strong audit pass; final rebase after105 |
+| 27 ownership-call-liveness | 9c1b5a861b15 | 2ef5510154cd | PR106; twelve tests30.59/61.49s plus eleven IR tests3.27/6.84s; lint/format/audit pass; exact-head full CI follows |
 | 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
