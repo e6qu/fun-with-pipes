@@ -417,7 +417,13 @@ impl Pass<'_> {
         // transfer directly, preserving stack, worker and loop representations.
         // Scalar computations also finish before pending owners transfer, so
         // their traps cannot strand earlier counted arguments.
-        let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
+        // A zero-argument function evaluates a CAF and returns an owned
+        // cached value. It can allocate/trap, unlike a static function closure.
+        let funcs = self.funcs;
+        let inline = |p: &Expr| {
+            matches!(p, Expr::Local(_) | Expr::Const(_))
+                || matches!(p, Expr::Func(id) if funcs[*id].arity > 0)
+        };
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
         let uncounted: Vec<bool> = types.iter().map(|t| !needs_rc(self.shapes, t)).collect();
@@ -429,7 +435,7 @@ impl Pass<'_> {
                 !inline(p)
                     && ((!uncounted[*i] && (matches!(mode, Mode::Borrow) || *i + 1 < parts.len()))
                         || parts[..*i].iter().enumerate().any(|(j, earlier)| {
-                            !uncounted[j] && !matches!(earlier, Expr::Const(_) | Expr::Func(_))
+                            !uncounted[j] && (!inline(earlier) || matches!(earlier, Expr::Local(_)))
                         }))
             })
             .map(|(i, _)| i)
@@ -449,7 +455,8 @@ impl Pass<'_> {
                     }
                     xs.push(Expr::Local(*l));
                 }
-                (Mode::Borrow, Expr::Const(_) | Expr::Func(_)) => xs.push(p.clone()),
+                (Mode::Borrow, Expr::Const(_)) => xs.push(p.clone()),
+                (Mode::Borrow, Expr::Func(id)) if self.funcs[*id].arity > 0 => xs.push(p.clone()),
                 // computed in place, unless a later part is bound before
                 // the operation (then bound too, in order)
                 (Mode::Borrow, p) if uncounted[i] => {
@@ -700,6 +707,11 @@ impl Checker<'_> {
                 }
                 // A boxed-to-struct conversion owns the consumed result while
                 // these remaining references still belong to its caller.
+                self.record_call(e, before, st);
+                Ok(())
+            }
+            Expr::Func(id) if self.funcs[*id].arity == 0 => {
+                let before = self.calls.map(|_| owned_references(st));
                 self.record_call(e, before, st);
                 Ok(())
             }
@@ -1280,7 +1292,10 @@ mod tests {
         ]));
         let (body, locals) = counted(&p);
         let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
-        let call = calls.values().next().unwrap();
+        let call = calls
+            .values()
+            .find(|call| call.at_entry.iter().any(|(local, _)| *local > 0))
+            .unwrap();
         assert_eq!(call.at_entry.len(), 2);
         assert_eq!(call.at_entry[0], (0, 1));
         assert!(call.at_entry[1].0 > 0);
@@ -1303,11 +1318,46 @@ mod tests {
         ]));
         let (body, locals) = counted(&p);
         let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
-        let call = calls.values().next().unwrap();
+        let call = calls
+            .values()
+            .find(|call| call.at_entry.iter().any(|(local, _)| *local > 0))
+            .unwrap();
         assert_eq!(call.at_entry.len(), 2);
         assert_eq!(call.at_entry[0], (0, 1));
         assert!(call.at_entry[1].0 > 0);
         assert_eq!(call.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn earlier_caf_owner_remains_owned_during_a_final_scalar_call() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "cached".into(),
+            arity: 0,
+            locals: vec![],
+            ty: list(),
+            body: Body::Expr(Expr::Construct(0, vec![])),
+        });
+        p.funcs.push(Func {
+            name: "length".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("len".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Func(1),
+            Expr::Call(2, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let scalar = calls
+            .values()
+            .find(|call| call.at_entry.iter().any(|(local, _)| *local > 0))
+            .unwrap();
+        assert_eq!(scalar.at_entry.len(), 2);
+        assert_eq!(scalar.at_entry[0], (0, 1));
+        assert_eq!(scalar.at_entry[1].1, 1);
     }
 
     #[test]
