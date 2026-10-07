@@ -86,6 +86,11 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 
 - Hindley–Milner inference with levels. Records and effects share one row
   unifier. Only signatures generalize: see [Generics](#generics).
+- At a call, known callee effects may run inside a larger ambient effect row.
+  Reopen only the current call's closed effect row after argument unification;
+  never copy the ambient row into function-valued arguments. Pipe application,
+  composition and ordinary application follow the same rule. Required effect
+  labels remain present, so pure signatures still reject effectful callbacks.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
@@ -349,3 +354,14 @@ parent once. Focused allocation and failure-cleanup controls pass locally;
 full sequential CI remains required. Prepared WASM logical counts and disabled-
 free counter disposal passed required runner WASI checks; neither preparation
 establishes merged resource ownership or complete collector-free execution.
+
+
+## Prepared File storage
+
+The inline-path preparation uses one leaf allocation for an aligned FILE pointer,
+64-bit owner count and owned path bytes. It preserves the internal display path
+through explicit close and changes no source syntax or affine restrictions.
+The interpreter remains the semantic oracle. Fixed native header size and
+constructor allocation count are compared with the previous equivalent layout;
+this is allocation evidence, not a general speed or tracing-free claim.
+Current validation and remaining finalizer/storage lifetimes are in the handoff.

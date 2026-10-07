@@ -40,16 +40,18 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#89: native macOS, primitive contracts, owned leaves/text,
+Main includes #74–#90: native macOS, primitive contracts, owned leaves/text,
 compiled closures, closure cleanup, concrete argument temporaries, stack children,
 borrowed synchronous callbacks, map, filter, fold, zip, right-fold, list-prefix and list-copy results. Exact merge/run evidence
-is in the handoff. List-copy passed all six CI `37758597151` gates and merged. List-option
+is in the handoff. List-copy passed all six CI `37758597151` gates and merged. List-option passed all six CI37765137522 gates and merged as #90. Inference call effects
 is the next focused PR; validate the queue in order after each preceding squash.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
-and both macOS architectures; all six full evidence jobs now pass. Each
-sequential PR still needs its own full gates. Keep repairing failures.
+and both macOS architectures; all six TLS/listener evidence jobs passed.
+Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
+both are repaired and its new full run is live. Every sequential PR still needs
+its own exact-head gates. Keep repairing failures.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
