@@ -179,6 +179,14 @@ blocked matrix multiplication, reusable tape/scratch buffers and exceptional
 cleanup before adding accelerator backends. OpenCL discovery is not evidence
 that kernels executed on a real device.
 
+Preserve the existing fusion guards in [src/fuse.rs](../src/fuse.rs): eager
+list stages interleave only when they are pure, terminating and have at most
+one observable trap message; early-stop `find` requires nontrapping stages.
+Keep the [distinct-trap](../tests/run/fusion_traps.fwp) and
+[early-stop](../tests/run/fusion_find_trap.fwp) oracles when extending numeric
+fusion. AD tape operations retain their evaluation order even with pure public
+types; new fused gradient kernels need raw interpreter/native order checks.
+
 ### Phase 3 delivery sequence
 
 Keep source array/value types, pipe syntax and wire behavior unchanged. Make
@@ -222,7 +230,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #119 includes the following contracts. Detailed primitive modes
+Main through PR #120 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -245,8 +253,10 @@ and measurements are in [history](roadmap-history.md).
   on count overflow in PR117, with caller owners registered before duplication.
   Nested constructor temporaries inherit known monomorphic context for typed
   child cleanup in PR118. Boxed variant conversion protects the original box
-  and remaining caller owners through typed retention in PR119. Wider callback
-  registration remains prepared.
+  and remaining caller owners through typed retention in PR119. Record updates
+  retain typed kept fields, release replaced owners and protect replacement,
+  partial retains and unfinished copies in PR120; general copies preserve the
+  borrowed original. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

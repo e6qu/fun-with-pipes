@@ -70,7 +70,10 @@ completed extras on count overflow and protects existing caller owners before
 duplication. Nested constructor temporaries inherit known monomorphic context
 for typed child cleanup; expression-inferred types remain authoritative. Boxed
 variant conversion keeps original boxed and remaining caller owners registered
-until typed payload retention succeeds. Wider callback registration stays prepared.
+until typed payload retention succeeds. Record updates retain typed kept fields
+and release replaced owners; replacement, partial retains and unfinished copies
+stay protected through failure, while general copies preserve borrowed originals.
+Wider callback registration stays prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed

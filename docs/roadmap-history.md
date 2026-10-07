@@ -7,45 +7,11 @@ not current instructions or a priority queue. Consult [the active plan](../PLAN.
 for current heads, validation requirements and next actions. Old "next" actions,
 pending statuses and former CI job counts below are superseded by the handoff.
 
-## Former plan and delivery history
+## Early deliveries
 
-# Plan
-
-fwp implements the *Pipe Language Compact Specification*. The design
-decisions are in [docs/design.md](design.md); this page tracks the
-work.
-
-## Active roadmap
-
-Execution: continue through this roadmap automatically, one focused PR at a
-time. Run full gates on GitHub runners, resolve failures, then squash-merge
-with an explicitly supplied single-line subject of at most 80 characters
-and an empty body, without trailers or attribution. Update this plan and
-the session handoff with acceptance evidence and the next action; move a
-phase to done only when its criteria have been met. The user authorized
-this workflow on 2026-10-07. Treat failing tests as work to fix and queued
-CI as a merge gate. Continue useful implementation, investigation and next-task
-preparation while CI runs; do not stop the roadmap merely for test failures
-or runner delays. Keep one PR open at a time.
-
-The goal is an efficient native language with simple pipe semantics,
-strong inference and static typing, compile-time specialization, little
-heap allocation, and deterministic ownership wherever possible. Tracing
-GC is a compatibility fallback while runtime ownership is completed.
-
-Start each session with [the handoff](development-state.md) and
-[the ownership design](ownership.md). The numbered history below
-records deliveries; its old "next" remarks are historical, not a second
-priority queue.
-
-| Order | Work | Acceptance |
-|---|---|---|
-| 1, done (#74) | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
-| 2, in progress | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
-| 3 | Typed contiguous numeric storage, views, scalar/aggregate ABI and measured alignment | Narrow elements use their natural width; fewer copies/boxes; allocation and assembly evidence on arm64 and x86-64; ABI/FFI tests |
-| 4 | Fused numerical loops, blocked matrix kernels and autodiff lifetime/buffer improvements | Correct gradients and exceptional cleanup; equivalent C/Rust comparisons; fixed floating-point behavior by default |
-| 5 | Expand allocation/ownership/performance regression evidence | Allocation, live-memory, retain/release and collection measurements alongside timings; full workloads on CI |
-| 6 | Optional execution without tracing GC, after complete ownership coverage | Supported programs reclaim memory with collection disabled, including escaping values and runtime boundaries; cycles have an explicit lifetime policy |
+Automatic sequential roadmap execution was authorized on 2026-10-07. The old
+roadmap instructions and phase table were removed as superseded by PLAN and
+the live handoff; delivery and validation evidence below is retained.
 
 Native macOS passed both architecture jobs, Linux full tests and benchmarks in
 run `37591744197`; PR #74 was squash-merged as `af15d26`.
@@ -16263,3 +16229,239 @@ record_update_ownership --test general_record_update_ownership -- -D warnings;
 cargo fmt --all -- --check. Resource limits unchanged. Publication will append
 a fresh all11 documentation snapshot, retain oldcd2c8fa4251a before exact-lease
 push, and require full exact-head runner gates before squash.
+
+Preparation42 publishedf2b2688a179d3a1209d8eec41113f8335e26162a on actual8770e73ed17ddaed44c03504faa380d1f724d070, FROMactualcca935846750b6190b6a8823eb4f55d689c75c0e. All3 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Oldcd2c8fa4251aea65354d64f09f2fab0291ac4dc8 retained at roadmap/revision-042-cd2c8fa4251a before exact-lease publication. Final actual-squash source preserves all three original commits; both original record-update/general-copy regressions15.68CPU/31.41elapsed, all19 RC units3.33/6.92s, lint2.33/4.71s and format0.44/0.82s pass; source/probes unchanged including exact unique omission exits3/8/11/7 and general original/copy/partial/replacement omission exits9/8/11/7, aliases/scalar bits and raw interpreter/native agreement; prepared ARM/Intel original-test binary evidence passes, corrected positive-fixture layout evidence running; full exact-head gates required
+
+## Archived pre-publication instructions for queue42
+
+Next production delivery is queue42 record update FROM actual prepared41
+cca935846750b6190b6a8823eb4f55d689c75c0e onto this actual PR119 squash.
+Preserve all three existing commits, including both implementation/regression
+commits, and every original source/probe byte. Run fresh record-update and
+general-copy regressions, all RC units, lint and formatting under the unchanged
+guard. Preserve exact cleanup omission controls, aliases/scalar bits, GC/reuse
+modes and raw interpreter agreement. Copy all11 docs, audit, retain the old
+remote revision and publish with an exact lease before opening the sole next
+PR. Every final head needs all seven passing gates. Independent evidence stays
+outside production ancestry.
+
+
+Final queue42 publication f2b2688a179d3a1209d8eec41113f8335e26162a on actual
+119 squash8770e73ed17d preserves all three original commits plus a fresh all11
+docs snapshot, original compiler/runtime/probes and production workflow.
+Bounded publication1.79CPU/18.43elapsed passes pre/post/root audits44/106/71;
+oldcd2c8fa4251a retained at roadmap/revision-042-cd2c8fa4251a before exact lease.
+PR120 creation0.21/4.11s passes, sole open production PR. CI38101281491 and
+docs38101281524 are queued, not passing. Subject for final match-head squash:
+`Retain typed record fields and release replaced update owners`, empty body,
+one line at most80 characters, no attribution/trailers. Complete publication
+journal /private/tmp/fwp-record-update-final-publication.json and creation
+journal /private/tmp/fwp-record-update-production-pr.json must not rerun.
+Next sequential source43 has all three original commits; wait for actual120
+squash before final rebase, then fresh checks and all seven final-head gates.
+
+## Corrected record-update positive layouts accepted, 2026-10-11
+
+CI38100176797 passes both ARM/Intel jobs at exact evidence
+b9b3f40f19d1e88e4a87fe2dbbec3cfba90ff244. Source compiler/runtime/library/
+original tests/production workflow remain byte-identical to prepared42
+cd2c8fa4251aea65354d64f09f2fab0291ac4dc8. Each of the two original native tests
+runs once per platform, zero ignored; shared snapshot audits44/106/72 pass.
+Forty actual O1/O2 Mach-O outputs with C, flags, headers, symbols, disassembly,
+hardware/OS/compiler metadata are retained. The corrected layout selector
+requires intact unique old-field drop and all six static registered scopes;
+compiled layout source hashes exactly match positive unique7fd5093fc0b79c6852ea82f3afb1406d39f29ac6f6df1b5d78fd207672f1e69d
+and general54d8750cac833962f04620236e37c911788f14f41610624a4907e2056595d3d8.
+Both platforms retain V8/align8, object header8/payload8, cleanup24, wide metadata
+24/count offset8. Unique context types8/8/8/16/24 bytes and general8/8/8/16/16
+are aligned8. Context sizes are not summed into frames; registered pushes are
+not simultaneously live scopes. No production speed, ABI, cache or register-use
+guarantee is claimed. Original exact omission tests and interpreter/native
+controls remain mandatory. Earlier7249699c8f38 passing original-test artifacts
+and qualified control-fixture layout are preserved; only the diagnostics changed.
+
+Bounded collection0.29CPU/8.37elapsed PASS. Complete proof:
+/private/tmp/fwp-record-update-layout-corrected-passing-proof.json; artifacts:
+/private/tmp/fwp-record-update-layout-b9b3f40-artifacts; full log:
+/private/tmp/fwp-record-update-layout-b9b3f40.log. Completed collector must not
+rerun. Actual PR119 squash docs38100888798 separately passes at8770e73ed17d.
+Independent evidence does not accept future final PR120 production head; all
+seven exact-head production gates remain required.
+
+## Record conversion binary evidence preparation, 2026-10-11
+
+Independent ownership-evidence-record-conversion-layout published
+342d7d47a729296ad458ad2ec6ce672cf0e6d324 on unchanged prepared43 source
+6b809877a1ac493015e1902204cc5ea72b68a875. Only capture/inspection/evidence
+workflow and refreshed all11 docs differ; original compiler/runtime/library/
+tests/production workflow remain byte-identical. CI38101505851 is queued,
+not passing. Original regression record_conversion_overflow_releases_box_and_remaining_callers
+runs once per platform with unchanged exact original-box/remaining-caller/
+partial-retain omission exits3/7/4, aliases/scalar bits, SIZE_MAX, GC/reuse and
+raw interpreter/native controls. Capture delegates original compiler flags
+unchanged and retains eight O1/O2 Mach-O fixtures per platform. Inspector models
+push/pop order up to the first typed retained field, explicitly excluding scopes
+already popped, and selects the intact positive source for compiled layouts.
+Hardware/compiler/OS, C, flags, headers, symbols and disassembly are retained.
+No production speed/ABI/cache/register-use claim is made.
+
+Bounded worktree preparation0.04CPU/0.26elapsed, syntax/shared snapshot audit
+0.48/3.57s (44/106/71), publication0.24/3.52s pass. Complete publication journal:
+/private/tmp/fwp-record-conversion-layout-evidence-publication.json; do not
+rerun it. Source43 final-squash tests and production gates remain separate.
+PR120 merge, protection and acceptance helpers are prepared and syntax/live
+anchors verified0.00CPU/0.13elapsed; all seven exact-head gates are mandatory
+before their execution. Subject/body/raw-parent/tree and fresh all11-docs
+protection checks remain strict. No PR120 merge or acceptance was attempted.
+
+## Numeric fusion acceptance review, 2026-10-11
+
+Source review confirms existing src/fuse.rs guards eager list interleaving:
+pure/terminating stages may raise at most one observable trap message; `find`
+requires nontrapping stages. Existing fusion_traps.fwp preserves a later map
+overflow before an earlier filter division-by-zero; fusion_find_trap.fwp prevents
+early stopping from erasing a later map trap. The numeric phase acceptance now
+links these original oracles and requires AD evaluation/order checks even though
+tape primitives have pure public types. No new fusion bug, runtime repair or
+extra executed test is claimed. The currently running full production gate
+includes existing golden coverage; no redundant local full gate was run.
+
+## Record-conversion binary evidence accepted, 2026-10-11
+
+CI38101505851 passes both ARM/Intel jobs at exact evidence
+342d7d47a729296ad458ad2ec6ce672cf0e6d324, unchanged prepared43 source
+6b809877a1ac493015e1902204cc5ea72b68a875. Only three diagnostic/workflow files
+and all11 documentation snapshot differ; original compiler/runtime/library/
+tests/production workflow remain unchanged. Original record-conversion test
+executes once per platform, zero ignored; snapshot audits44/106/71 pass twice.
+All sixteen real O1/O2 Mach-O fixtures are retained, including exact C, compiler
+arguments, headers, symbols, disassembly and actual compiled owner layouts.
+Hardware: ARM Apple M1 Virtual; Intel i7-8700B3.20GHz. Both macOS15.7.9/24G830,
+Apple Clang17.0.0/clang-1700.0.13.5. V8/align8, object header8/payload8,
+cleanup24, wide metadata24/count offset8. Holder contexts6/7/8/9/10/11/12/13/14
+are16/16/24/24/8/8/16/8/16 bytes, all align8; these are not summed into frames.
+
+At the first typed retain, intact positive active scopes are t19/t21/t23:
+remaining-caller owner context10 is8 bytes, original-box context11 is8 and
+partial-retained context12 is16. Earlier popped scopes are excluded. Intact C
+SHA256b7bc11c046c365bda3fbb7831bca6b4019b569ddf39da2bd907901241e36320f
+matches the selected compiled layout source. Original-box omission
+6a7520e90eeeff1dfb0658f27a75103093cf691d993ad3ec9ad533504615151e removes t21
+and exits3; remaining-caller omission
+da5111350993a29a086006f8f3ebabaf68740768e2f318a573d5fb77435abdc2 removes t19
+and exits7; partial-retain omission
+1c10de70cf3a7e33d684d49b9fc4bf580d71b0aef466f62837a92b8fcdc4a4c2 removes t23
+and exits4. Original alias/scalar, SIZE_MAX, GC/reuse and raw interpreter/native
+controls remain unchanged. Main static instructions are651/721 ARM and649/744
+Intel (O1/O2), equal between positive and controls; this is not dynamic execution,
+whole-program instruction count or speed. No production ABI/frame/cache/register
+claim is inferred from instrumented fixtures.
+
+Bounded passing-gate/source-parity/artifact collection0.21CPU/7.31elapsed;
+active-scope/context source inspection0.00/0.14s PASS. Complete proof:
+/private/tmp/fwp-record-conversion-layout-passing-proof.json; artifacts:
+/private/tmp/fwp-record-conversion-layout-342d7d4-artifacts; full log:
+/private/tmp/fwp-record-conversion-layout-342d7d4.log. Completed collector must
+not rerun. Later final queue43 requires actual PR120 squash rebase and all seven
+production gates; independent evidence does not replace them.
+
+## Returned variant alias binary evidence preparation, 2026-10-11
+
+Independent ownership-evidence-variant-alias-layout published
+ ded20c6239f657d4c47a1fa6c856fce9a9174c14 on unchanged prepared44 source
+b094ffbe7e460c9d31a276826c0c5520f9b76c27. Only capture/inspector/evidence workflow
+and all11 current docs differ; original compiler/runtime/library/tests/production
+workflow remain byte-identical. CI38104532520 is queued, not passing. Both
+original variant_alias_ownership tests execute unchanged on ARM/Intel. The
+instrumented alias-transfer fixture retains four O1/O2 Mach-O outputs per
+platform, including the exact extra-retain rejection exit3. Inspector selects
+the intact O2 positive source and records its hash, actual V/array/variant layouts,
+hardware/OS/compiler, C arguments, symbols and disassembly. It verifies absence
+of box/unbox bridges in the source holder, without inferring production speed,
+allocation count, cache behavior or general ABI from a fixture.
+
+Bounded worktree preparation0.07CPU/0.26elapsed, syntax/snapshot audit0.45/3.42s
+(44/106/71), publication0.29/3.70s PASS. Full builds and inspection run on
+GitHub. Completed publication journal:
+/private/tmp/fwp-variant-alias-layout-evidence-publication.json; do not rerun.
+Sole production PR remains120, with regular Intel macOS its only remaining gate.
+Live Intel log request0.06CPU/1.17elapsed confirmed GitHub does not expose job
+logs before completion; empty diagnostic file is not test evidence or a failure.
+Later43 focused-target manifest /private/tmp/fwp-record-conversion-final-checks.json
+preserves all seven original targets, including retain_unwind_ownership.
+
+## Returned variant alias binary evidence acceptance, 2026-10-11
+
+CI38104532520 passes both ARM/Intel jobs at exact independent evidence head
+ded20c6239f657d4c47a1fa6c856fce9a9174c14. Both unchanged original tests execute
+once per architecture, zero ignored. The source remains prepared44
+b094ffbe7e460c9d31a276826c0c5520f9b76c27; independent acceptance does not replace
+final production gates. Eight actual Mach-O binaries, generated C, flags,
+symbols, disassembly and compiled layouts are retained.
+
+Runners are Apple M1 (Virtual) and Intel Core i7-8700B 3.20GHz, macOS15.7.9
+build24G830, Apple Clang17.0.0 (clang-1700.0.13.5). Both compiled layouts use
+V8/align8, array header8/align8/slot8 and variant32/align8/payload8. The intact
+positive layout source is
+3bf5a463392338a19a9c206d7ba59ab1b03c20ecab5b8a9241f7a032679ab45e;
+the extra-retain rejection control is
+de0ad96fb5c44a2e26f3dab74b415d437576b57a51ad0a55b2b00e9ead9fb6f1.
+The holder has no box/unbox bridge, with zero extra alias retains in the positive
+fixture and one in the exact exit3 control. Original GC/reuse and raw interpreter
+checks remain unchanged. Static holder instruction counts (positive/control)
+are ARM227/295 at O1 and199/259 at O2; Intel264/348 and231/307. These are
+instrumented static counts, not dynamic execution, allocation counts or speed.
+No general production ABI, cache or frame-size claim follows.
+
+Guarded collection completed; its timing was lost in truncated tool output and
+is not reconstructed. Complete proof:
+/private/tmp/fwp-variant-alias-layout-passing-proof.json; artifacts:
+/private/tmp/fwp-variant-alias-layout-ded20c6-artifacts; full log:
+/private/tmp/fwp-variant-alias-layout-ded20c6.log. Do not rerun the completed
+publication or collector. Final queue44 awaits sequential acceptance.
+
+## Archived handoff after PR #120
+
+Main is `8770e73ed17ddaed44c03504faa380d1f724d070` (PR #119). Accepted frozen head
+`5a068dc348f3b331a262543ae4ee2b1fcf88f0ab` passes all six jobs in CI38098598991 and
+roadmap_docs38098598965. Match-head squash at 2026-10-11T01:09:42Z has the exact
+65-character subject `Protect boxed variants and caller owners during struct conversion`, one line, empty
+body and no trailers or attribution. One parent `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` and
+complete tree `c26e645934b38faa7e62bbeaf104165228731f65` match the tested head. All11 live docs were
+hashed in /private/tmp/fwp-main-docs-pre119 and restored byte-for-byte. Actual
+main docs38100888798 passes at the squash. Duplicate production CI38100888804
+was cancelled only after complete-tree parity proof.
+Queue33 and35–41 are accepted; queue34 is a verified duplicate. Boxed-to-struct
+variant conversion now protects the original boxed value and only remaining
+caller owners until typed payload retention succeeds. Original omission exits3/7,
+alias/scalar controls and raw interpreter agreement remain checked. Phase2
+is incomplete; phases3–6 are pending.
+
+[PR120](https://github.com/e6qu/fun-with-pipes/pull/120) is the sole open
+production PR, delivering queue42 record updates on actual PR119 squash.
+Frozen head `f2b2688a179d3a1209d8eec41113f8335e26162a` preserves all three
+original commits plus a fresh documentation snapshot; every original source,
+probe and production-workflow byte remains unchanged. Rebase0.13CPU/0.99elapsed,
+both original native regressions15.68/31.41s (zero ignored), all19 RC units
+3.33/6.92s, lint2.33/4.71s and format0.44/0.82s pass. Publication1.79/18.43s
+passes all three audits (44/106/71), retaining oldcd2c8fa4251a before an exact
+lease update. PR creation0.21/4.11s passes. Docs38101281524 passes at the
+frozen head. CI38101281491 passes Linux, bench, regular ARM macOS and both
+macOS GC stress jobs; regular Intel macOS is the only remaining gate and is
+running. Running jobs do not pass a gate. Require all seven exact-head passing gates before
+match-head squash with `Retain typed record fields and release replaced update owners`
+and empty body. Exact unique omission exits3/8/11/7 and general
+original/copy/partial/replacement omission exits9/8/11/7, aliases/scalar bits,
+SIZE_MAX, GC/reuse and raw interpreter agreement remain mandatory.
+After acceptance, deliver queue43 record conversion FROM actual prepared42
+cd2c8fa4251aea65354d64f09f2fab0291ac4dc8 onto PR120's actual squash. Preserve
+all three existing commits, including both conversion/checkpoint implementation
+and regression commits, then run fresh focused checks. Independent evidence
+does not replace production gates.
+
+
+Accepted queue42 in PR120 at ddef2e7a7dc22048675c4958029635f8082739db on 8770e73ed17ddaed44c03504faa380d1f724d070. Frozen f2b2688a179d3a1209d8eec41113f8335e26162a passes all six CI38101281491 jobs and docs38101281524. Raw subject 'Retain typed record fields and release replaced update owners' has 61 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree 7a74980019b2fbf9f8c39a05e1590c593edd6d45 verified. All11 live docs protected and restored byte-for-byte.
+
+Accepted primitive contract42, removed from prepared-only table:
+
+| 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
