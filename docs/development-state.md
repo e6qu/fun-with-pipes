@@ -52,37 +52,12 @@ squash with `Own typed map and set elements across copies updates and callbacks`
 and an empty body. Retrieve the actual PR head first. OLD anchors stay immutable.
 Row23 pre-delivery refresh495411d uses actual basef71c002.
 
-Later preparations must inherit both CLI early-stdin-close and tracing-fixture
-repairs on final rebases. The repaired Linux gate actually verifies the
-collector churn output, allocation/collection thresholds and RSS bound.
-Ten authoritative docs backed up to /private/tmp/fwp-main-docs-pre99 were
-restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
-through112 are published. Row112 CI37952655033 failed formatting before
-lint/tests. Both fixture formatting corrections are published at762117573367;
-evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
-passes focused format/lint/lifetime/teardown/interpreter checks.
-Duplicate main CI37957464783 cancellation confirmed after matching
-all-six-accepted PR99 source/runtime/tests/workflows.
-Duplicate main CI37944119691 was cancelled after matching all-six-accepted
-PR98 source/runtime/tests/workflows; cancellation is not acceptance.
-Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
-dc85b679. Focused GitHub evidence ownership-evidence-map-set, checkout
-/private/tmp/fwp-map-set-evidence-worktree, exact960a242d54d4a689730e7591854716ca4c5615a2,
-CI37953564015 fails before tests: OLD parent c889479eed7a is missing on
-a clean runner. Log /private/tmp/fwp-map-audit-failure.log. All106 OLD heads
-are now published atomically as lightweight roadmap/preparation-007…112
-tags, retaining their parents without source-branch changes. Refreshed map
-evidence c79544b74d30e6d285f64e0f500891434a2e91f7 follows the tag repair,
-CI37955579519 passes: handoff audit, format, lint and focused ownership tests.
-The independent checks also run if an audit fails, while preserving job failure.
-It audits current/immutable queue-head messages,
-links/anchors and focused map tests/lint/format without another PR. Its audit
-uses durable queue references and fetches retained review heads; retired c8/79bc
-preparation heads are not remote ancestors and are no longer audit inputs.
-Superseded352affa/51639d3/96e3804 evidence runs are cancelled, not acceptance.
-Workflow changes never enter production ancestry; focused evidence is not
-six-gate acceptance.
-Prior delivery checks and failures remain in history.
+Later preparations inherit both CLI early-stdin-close and tracing-fixture
+repairs on final rebases. Row112's formatting failure is repaired and focused
+Linux/native checks pass. OLD heads remain retained by immutable tags; the
+stronger tag-identity audit repairs the row112 status-update error. Detailed
+failed/superseded logs and old handoffs remain in history. Current evidence
+and resource limits are below.
 
 ## Next sequential preparations
 
@@ -98,7 +73,7 @@ still need their final squash rebases and six exact-head full gates.
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | Source unchanged; fresh local guard refused; GitHub checks follow |
-| 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 / 31.57 s |
+| 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
 | 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 / 32.46 s |
 | 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 / 44.76 s |
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
@@ -212,6 +187,7 @@ automatic unreachable-cycle reclamation remains unproved.
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 queued; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 3d6102af3bffcec06a541c8e8238837ff19aad9f | CI37961205676 passes focused Linux checks; productionbb77c07, actual base6421c02 |
 | Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
 | Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
