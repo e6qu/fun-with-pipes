@@ -225,12 +225,45 @@ static int fwp_is_signed_kind(int k) { return k == K_I8 || k == K_I16 || k == K_
 
 /* ---------------------------------------------------------------- control */
 
+/* Typed releases registered by ownership-aware callers. Nodes live in their
+ * caller's stack frame; normal return unlinks without running the callback.
+ * Unwind runs releases before longjmp invalidates those frames. A callback
+ * may release storage but must not suspend, throw or register another node. */
+typedef struct fwp_cleanup {
+    struct fwp_cleanup *prev;
+    void (*release)(void *);
+    void *arg;
+} fwp_cleanup;
+static fwp_cleanup *fwp_cleanups = 0;
+
+static void fwp_cleanup_push(fwp_cleanup *c, void (*release)(void *), void *arg) {
+    c->prev = fwp_cleanups;
+    c->release = release;
+    c->arg = arg;
+    fwp_cleanups = c;
+}
+
+static void fwp_cleanup_pop(fwp_cleanup *c) {
+    if (fwp_cleanups != c) abort(); /* internal: normal returns must be LIFO */
+    fwp_cleanups = c->prev;
+}
+
+static void fwp_cleanup_unwind(fwp_cleanup *stop) {
+    while (fwp_cleanups != stop) {
+        fwp_cleanup *c = fwp_cleanups;
+        if (!c) abort(); /* internal: the target must be an ancestor */
+        fwp_cleanups = c->prev;
+        c->release(c->arg);
+    }
+}
+
 typedef struct fwp_handler {
     jmp_buf jb;
     struct fwp_handler *prev;
     V value;
     const fwp_desc *desc;
     size_t state_depth;
+    fwp_cleanup *cleanup;
 } fwp_handler;
 
 static fwp_handler *fwp_handlers = 0;
@@ -248,12 +281,14 @@ static void fwp_flush(void) {
  * (runtime/fwp_rt_grpc.c): the predicate says whether the trap happened
  * where it can be recovered, and sets the jump target. */
 static jmp_buf *fwp_trap_jb = 0;
+static fwp_cleanup *fwp_trap_cleanup = 0;
 static int (*fwp_trap_recover)(void) = 0;
 static char fwp_trap_msg[1024];
 
 static void fwp_trap(const char *msg) {
     if (fwp_trap_recover && fwp_trap_recover() && fwp_trap_jb) {
         snprintf(fwp_trap_msg, sizeof fwp_trap_msg, "%s", msg);
+        fwp_cleanup_unwind(fwp_trap_cleanup);
         longjmp(*fwp_trap_jb, 1);
     }
     fwp_flush();
@@ -285,6 +320,7 @@ static void fwp_fail(V value, const fwp_desc *d) {
     }
     fwp_handlers->value = value;
     fwp_handlers->desc = d;
+    fwp_cleanup_unwind(fwp_handlers->cleanup);
     longjmp(fwp_handlers->jb, 1);
 }
 

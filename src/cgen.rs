@@ -6209,7 +6209,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = write!(
                 r,
                 r#"    {{
-        fwp_handler h; h.prev = fwp_handlers; h.state_depth = fwp_state_len; fwp_handlers = &h;
+        fwp_handler h; h.prev = fwp_handlers; h.state_depth = fwp_state_len; h.cleanup = fwp_cleanups; fwp_handlers = &h;
         fwp_budget = 0;
         if (setjmp(h.jb) == 0) {{
             V v = caf{id}();

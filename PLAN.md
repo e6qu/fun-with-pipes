@@ -55,7 +55,8 @@ implementation covers retained runtime ownership/teardown. Old marked-object
 reclamation is prepared with focused survival, alias and task stress tests;
 full CI still gates publication as the next sequential PR. Task/channel
 contracts and owned result wrappers are also prepared; retained callback
-lifetimes and exceptional cleanup remain open. Typed array and map/set element boundaries pass focused
+lifetimes and compiler live-owner cleanup remain open. Runtime unwind boundaries
+and scoped-file cancellation cleanup are prepared with focused evidence. Typed array and map/set element boundaries pass focused
 validation in separate prepared branches;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a

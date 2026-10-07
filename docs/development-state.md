@@ -44,13 +44,14 @@ immutable value semantics, effects and evaluation/trap order stable.
   Re-poll this live run, then retry failed jobs after it is terminal. All four exact-head gates
   must pass before squash merge. No local workload remains. Closure child
   still rebases from OLD `bab67ea` after text squashes, not from `0221f91`.
-- Latest prepared change: `ownership-task-boundaries`, checkout
-  `/private/tmp/fwp-task-boundary-worktree`, OLD base `6774aa5`. All task/channel
-  declarations have explicit contracts; fresh Option wrappers own typed aliases,
-  deadline passthrough borrows and returns a typed owned reference. Retained
-  callbacks, handles and payloads still share. Three focused tests pass;
-  publication follows. No additional PR is open. Next: retained task ownership
-  with exceptional/handler/cancellation cleanup, cycles and WASI.
+- Latest prepared change: `ownership-unwind-runtime`, checkout
+  `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
+  chains are task-local, error handlers and recovered traps retain a boundary,
+  and cancellation releases registered owners before longjmp. file.with now
+  closes on cancellation/traps, including a failure before handle allocation.
+  Three focused checks pass; publication follows. No additional PR is open.
+  Next: compiler live-owner registration across boxed/unboxed/stack values and
+  tail calls, runtime callback accumulator cleanup, then retained task lifetimes.
   Preserve listed OLD rebase anchors through the sequential squash workflow.
 
 ## Current ownership evidence
@@ -100,6 +101,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-array-elements | fwp-array-element-worktree | 636414f | fad9b1a |
 | ownership-map-set-elements | fwp-map-set-worktree | a8a7d11 | 636414f |
 | ownership-old-reclamation | fwp-old-reclamation-worktree | 6774aa5 | a8a7d11 |
+| ownership-task-boundaries | fwp-task-boundary-worktree | 02beec3 | 6774aa5 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -968,3 +970,46 @@ jobs remain live. Individual-job retry returned HTTP 500 with an empty body,
 not accepted success. Keep the live run; retry failed gates after it becomes
 terminal. Do not treat the missing Linux runtime validation as passed or stop
 implementation for infrastructure failures.
+
+Task boundary branch published as `02beec353ec7745f6f69c1c99bb3c561725a6744`;
+subject `Own task result wrappers and preserve typed deadline aliases` is one
+line, 60 characters, empty body/no trailers. No local workload remains.
+Next independent work must coordinate typed cleanup on failure/cancellation
+before owned task callbacks can safely survive nonlocal unwind. Keep suspended
+stack roots and task/scope parent lifetimes intact. Do not reinterpret the
+explicit shared contracts as completed retained ownership.
+
+## Prepared coordinated runtime unwind
+
+`ownership-unwind-runtime` follows OLD `02beec3`. Stack cleanup nodes register a
+release callback and context without heap allocation. Normal return unlinks them;
+error/trap/cancellation invokes releases in LIFO order before longjmp invalidates
+frames. Error handlers save their cleanup boundary. All runtime handler creation
+sites and generated language-test handlers initialize it. Every gRPC recovery
+site saves/restores a per-task trap cleanup boundary. Task switches save/restore
+the cleanup chain alongside handlers; cancellation drains only the current task.
+Finished tasks clear stale links before their stack can be reused. Release
+callbacks must not suspend, throw or register another node.
+
+file.with is an actual consumer: it registers its FILE before handle allocation,
+closes/invalidate the handle on normal return, and closes through cleanup for
+errors, recovered traps and cancellation. The interpreter already closes after
+Ctl::Cancelled; no resource Dup rule or language syntax is changed.
+Three tests pass at O1/O2 under collection stress/verification and both poison
+modes: nested failure/rethrow and recovered trap cleanup; cancellation of two
+suspended tasks without releasing their parent's owner; OS descriptor EBADF and
+handle invalidation on each scoped file exit, including pre-handle cleanup; and
+normal/error file.with programs matching the interpreter. Guard CPU 2.94 s /
+elapsed 6.02 s. Earlier adjacent old-storage/task tests (6) pass; the seven-test
+runtime batch used CPU 13.20 s / elapsed 26.74 s. A focused real gRPC every-kind-of-call test passes for native/interpreted
+clients and servers, including errors/traps/deadlines; guard CPU 5.96 s /
+elapsed 13.07 s. The first run lacked OpenSSL headers; the installed
+/opt/homebrew/opt/openssl@3 works with FWP_OPENSSL_DIR set. Full gates stay on CI.
+
+This supplies runtime unwind boundaries and fixes scoped-file resource cleanup.
+It does not yet automatically register compiled local owners. Next must track
+live ownership (including Dup/Drop, moves, stack children, scalar/variant worker
+ABIs, callback accumulators and tail calls) before enabling retained owned task
+callbacks/results. Async preemption can unwind pure callees too: register
+incoming owned arguments before a tick, and preserve zero-cost scalar paths.
+Do not replace this work with wholesale sharing or claim complete ARC.

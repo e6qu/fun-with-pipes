@@ -46,6 +46,13 @@ Maps/sets likewise own typed keys/values and synchronous callback results;
 retained runtime boundaries still share. The
 [primitive inventory](primitive-ownership.md) records the exact contracts.
 
+Prepared native nonlocal cleanup uses task-local stack nodes. Error handlers
+and recoverable traps retain their boundary, and cancellation releases registered
+owners before jumping out of their frames. file.with uses this mechanism to
+close on cancellation and recovered traps too. Compiler-wide live-owner
+registration is still required before retained task values can use full counted
+ownership; see [ownership.md](ownership.md).
+
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
 `tests/run/` through both.

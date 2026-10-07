@@ -2213,6 +2213,7 @@ static V fwp_p_attempt(V f, V x) {
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, x);
@@ -2245,6 +2246,7 @@ static V fwp_p_run_state(V s, V f, V x) {
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = depth - 1;
+    h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, x);
@@ -2312,23 +2314,36 @@ static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
     return h;
 }
 
+typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
+static void fwp_close_scoped_file(void *arg) {
+    fwp_file_cleanup *file = arg;
+    if (file->handle) fwp_p_file_close(file->handle);
+    else fclose(file->stream); /* allocation failed before a handle existed */
+}
+
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, "r+b");
     if (!f) f = fopen(STR(path)->d, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
+    fwp_file_cleanup file = {f, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
     V h = fwp_file_value(f, STR(path)->d);
+    file.handle = h;
     fwp_handler hd;
     hd.prev = fwp_handlers;
     hd.state_depth = fwp_state_len;
+    hd.cleanup = cleanup.prev; /* failure also releases this scoped file */
     fwp_handlers = &hd;
     if (setjmp(hd.jb) == 0) {
         V r = fwp_apply1(fn, h);
         fwp_handlers = hd.prev;
-        fwp_p_file_close(h);
+        fwp_cleanup_pop(&cleanup);
+        fwp_close_scoped_file(&file);
         return OBJ(r)->f[0];
     }
     fwp_handlers = hd.prev;
-    fwp_p_file_close(h);
+    /* The failure unwind already closed the file. */
     fwp_fail(hd.value, hd.desc);
     return 0;
 }

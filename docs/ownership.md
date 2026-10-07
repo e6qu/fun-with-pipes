@@ -298,3 +298,26 @@ Generated-wrapper probes reject count operations on address-shaped scalar bits.
 A 10,000-step tracing-disabled control loop frees 0.0 -> 0.5 MiB when only the
 old deadline sharing boundary changes. This measures the selected normal path;
 retained task lifetime, failure cleanup and full platform validation remain open.
+
+## Prepared runtime unwind boundaries
+
+Error handlers, recoverable gRPC traps and task cancellation now carry a
+boundary for stack cleanup nodes. Nodes hold a release callback/context;
+normal return unlinks them, and nonlocal unwind releases them before destroying
+frames. Chains switch with each task, isolating suspended owners from a different
+task's cancellation. Callbacks release storage synchronously without throwing,
+suspending or registering another cleanup node.
+
+file.with registers its open stream before handle allocation and closes it on
+normal/error/trap/cancellation exits. The handle is invalidated after close.
+Pre-handle failures close the raw stream. This matches the interpreter's close
+on every returned control result and keeps File's affine typing unchanged.
+The focused test checks actual descriptor closure and typed cleanup order under
+stress, and normal/error pipe programs against the interpreter.
+
+Runtime hooks do not yet register all compiled locals. Completing exceptional
+ownership requires liveness across Dup/Drop, moves, stack fields, worker ABIs,
+callback accumulators and tail calls. Incoming owners need registration before
+Async preemption ticks, even in otherwise pure callees. Scalar paths should not
+receive cleanup frames. Retained task ownership remains incomplete until those
+paths are implemented and validated on all architectures.
