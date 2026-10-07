@@ -10769,3 +10769,41 @@ CI 37771769436 (required actual WASI/File stage, both free modes).
 Each production PR still needs its own exact-head gates. Baseline root/cache/
 tutorial/boxing, WASI fstat, binary reads and listener/constructor control
 repairs are preserved in history; failed runs supply no acceptance.
+
+Row24 task boundaries refreshed from actualf4716a0 onto corrected495411d;
+production1741ab5fa64e220cecb4ae248d9670494458e178 has unchanged runtime,
+compiler and ownership tests compared with cde58f4. Only inherited CLI and
+tracing-fixture repairs differ outside the authoritative documents.
+Row23 evidence7783afaef9a7431a40cf34b530c2c43386a06d0b, CI37958839569,
+adds the current handoff audit; superseded37958631863 is cancelled, not passing.
+
+Free disk recovered above64GiB without changing limits; df observed71884308KiB
+available. Unchanged guard accepts current handoff audit0.23CPU/1.68elapsed:
+eleven link sets,106 immutable pairs and whole commit messages pass.
+Row23 at495411d guarded package clean0.00/0.14s, three reclamation tests
+9.89/20.19s, clippy old_reclamation+gc2.36/4.80s and fmt0.34/0.61s all pass.
+Commands use `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
+/Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo ...` from
+/private/tmp/fwp-old-reclamation-worktree. Linux-only churn remains required
+on GitHub; local macOS focused evidence is not full platform acceptance.
+
+Row24 at1741ab5 guarded package clean0.00/0.14s, six task/ownership tests
+13.56/27.29s, focused lint2.44/4.94s and fmt0.36/0.72s all pass. Shared target
+now belongs to /private/tmp/fwp-task-boundary-worktree. Evidence5e4fd6fe2549,
+CI37959126658, remains pending; full platform gates are still required.
+PR100 receives a separate documentation commit carrying current publication,
+merge and evidence status. Its prior source commitf71c002 stays reachable in
+branch ancestry. Superseded37958351622 must not gate the updated PR head.
+
+Row112 at7621175 guarded package clean0.00/0.13s, new long-address fixture
+7.98/16.49s, lint2.44/4.82s and fmt0.45/0.85s pass. Actual loopback/pool
+reuse, copied inputs, requested bytes and old-truncation rejection run atO1/O2
+with GC off/on stress/verify and reuse poisoning. The Rust address assertion
+agrees. Shared target now belongs to the address worktree. No elapsed-speed
+claim; Linux/full sequential gates remain pending.
+
+The primitive inventory's stale pre-array baseline is replaced with the actual
+PR99 typed array contracts. Maps/sets are explicitly the pre-PR100 shared
+baseline until merge. Reconstruction/external boundaries record conservative
+fallback and their required partial construction, cache alias and teardown
+proofs. This preserves phase2 coverage without claiming complete ARC or no GC.

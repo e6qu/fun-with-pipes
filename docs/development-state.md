@@ -41,7 +41,12 @@ dc85b679 onto main c4d820e. Source/runtime/tests/workflows match the focused
 GitHub-accepted c9ef3d88211f exactly, including inherited CLI/GC repairs.
 Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
 PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
-CI37958351622 has six fresh exact-head gates queued. OLD anchors stay immutable. Row23 pre-delivery refresh495411d now uses actual basef71c002.
+Current PR head98632b08aaad9d2564cc81c863437ff056e4574c includes the
+publication-status and typed-array inventory corrections. CI37960281416 has
+six exact-head gates queued. Superseded37958351622/37959781379 are cancelled,
+not acceptance. Source still matches focused-accepted c9ef3d88211f exactly.
+Retrieve the actual PR head before gating or squash. OLD anchors stay immutable.
+Row23 pre-delivery refresh495411d uses actual basef71c002.
 
 Later preparations must inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. The repaired Linux gate actually verifies the
@@ -51,7 +56,7 @@ restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
 through112 are published. Row112 CI37952655033 failed formatting before
 lint/tests. Both fixture formatting corrections are published at762117573367;
 evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
-follows the repair and is queued.
+follows the repair and is running.
 Duplicate main CI37957464783 cancellation confirmed after matching
 all-six-accepted PR99 source/runtime/tests/workflows.
 Duplicate main CI37944119691 was cancelled after matching all-six-accepted
@@ -83,12 +88,9 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
-| 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
-| 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
-| 22 ownership-map-set-elements | f71c002d5339 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Prior 9.50 / 19.72 s; fresh GitHub evidence pending |
-| 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
+| 22 ownership-map-set-elements | 98632b08aaad | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
+| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Refreshed tests 9.89 / 20.19 s; lint/format pass; GitHub tracing pending |
+| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Refreshed tests13.56/27.29s; lint/format pass; remote evidence pending |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
 | 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
@@ -176,7 +178,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
 | 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
-| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Formatting repaired; fresh remote evidence pending |
+| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s, lint/format pass; GitHub pending |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
 heads; rows18–21 are merged. The current row22 refresh has unchanged runtime/
@@ -200,12 +202,13 @@ automatic unreachable-cycle reclamation remains unproved.
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
 | Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
-| Row23 reclamation and tracing | c77c2b6c2e0e4844535f83c0709ce07a69a363cf | CI37958631863 queued; production495411d, actual basef71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 queued; production495411d, actual basef71c002 |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
-| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 queued after formatting repair7621175 |
+| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 running after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 queued; production1741ab5, actual base495411d |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
 
 Evidence workflows never enter production ancestry. Every sequential PR still
@@ -217,8 +220,9 @@ Row111 verifies one TLS-option allocation, exact requested bytes, alignment,
 copied inputs, last-owner release and allocation-failure cleanup. It makes no
 elapsed-speed or whole-program tracing-free claim. Row110 verifies read-once
 cache teardown after blocked tasks and finalizers; row111 changes selected
-cache releases from ten malloc allocations to five. Row112's long-address
-loopback/pool and requested-byte claims remain unverified pending fresh CI.
+cache releases from ten malloc allocations to five. Row112 locally verifies long-address loopback/pool reuse, copied inputs and
+requested bytes below the legacy short-address layout atO1/O2 with GC/reuse
+variants. Remote Linux and full sequential platform gates remain pending.
 
 Canonical C decode scratch already frees on normal success/error paths;
 reconstructed decoded aggregates remain shared. Audit typed reconstruction,
@@ -238,18 +242,20 @@ limits and move work to CI; never raise or bypass them. Use:
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
 ```
 
-The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-tls-pool-identity-worktree. The map clean
-refused before execution; no workload is running. At refusal, disk free was
-61.84 GiB and target138.93 MiB. Stop local workloads while below limits and
-move checks to GitHub. Do not bypass the guard, including for package clean.
-Last guarded doc audit passes eleven link/heading sets, 102 immutable queue
-ancestry pairs and whole commit messages (0.20 s CPU / 1.45 s elapsed).
-The queue has106 immutable pairs. CI37955579519 verifies the published
-map evidence snapshot after the disk refusal; later root doc updates require
-a fresh remote audit. /private/tmp/fwp-check-handoff.py keeps the current
-audit input; evidence runner scripts/check-handoff-evidence.py verifies its
-published snapshot. Never call an older doc audit current verification.
+The fun-refactor guard is for the other repository. Previous shared target
+belonged to /private/tmp/fwp-grpc-tls-pool-identity-worktree. The map clean
+previously refused at61.84GiB free disk and138.93MiB target. Disk subsequently
+recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
+package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
+format0.34/0.61s. Shared target now belongs to
+/private/tmp/fwp-grpc-connection-addresses-worktree; no workload is running.
+Stop at limits; do not bypass the guard, including for package clean.
+Latest guarded doc audit passes eleven link/heading sets, all106 immutable
+queue ancestry pairs and whole commit messages (0.21 s CPU / 1.57 s elapsed).
+Command: `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 scripts/local-guard.py python3 /private/tmp/fwp-check-handoff.py`.
+The helper derives current/OLD queue heads; evidence runner
+scripts/check-handoff-evidence.py verifies its published snapshot. Later doc
+updates do not inherit a passing audit without checking their changed links/refs.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,

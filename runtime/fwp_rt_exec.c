@@ -946,6 +946,7 @@ static V fwp_exec_call(const fwp_exec_spec *s, V *args, int n, int *failed) {
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
         V r = n == 0 ? s->caf() : fwp_apply(fwp_pap(s->fn, 0, 0), (uint32_t)n, args);

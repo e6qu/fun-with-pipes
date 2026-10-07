@@ -176,6 +176,7 @@ struct fwp_task {
     jmp_buf base;
     /* saved runtime state */
     fwp_handler *handlers;
+    fwp_cleanup *cleanups;
     V *st;
     size_t st_len, st_cap;
     struct fwp_scope *scope;
@@ -183,6 +184,7 @@ struct fwp_task {
      * then again with 1 if the task was cancelled while running it */
     void (*cfn)(void *arg, int cancelled);
     void *carg;
+    fwp_cleanup *trap_cleanup;
     jmp_buf *trap_jb;           /* traps recovered here (a served call) */
     void *gctx;                 /* gRPC context, inherited by children */
     /* links */
@@ -464,6 +466,7 @@ static void fwp_enter(fwp_task *to) {
     fwp_stack_low = to->stack ? (uintptr_t)to->stack + 65536 : 0;
 #endif
     fwp_handlers = to->handlers;
+    fwp_cleanups = to->cleanups;
     fwp_state = to->st;
     fwp_state_len = to->st_len;
     fwp_state_cap = to->st_cap;
@@ -473,6 +476,7 @@ static void fwp_switch(fwp_task *to) {
     fwp_task *from = fwp_cur;
     if (to == from) return;
     from->handlers = fwp_handlers;
+    from->cleanups = fwp_cleanups;
     from->st = fwp_state;
     from->st_len = fwp_state_len;
     from->st_cap = fwp_state_cap;
@@ -609,6 +613,8 @@ static void fwp_check_cancel(void) {
     if (!t || t->unwinding) return;
     if (t->deadline && !t->cancelled && fwp_now_ns() >= t->deadline) fwp_cancel_tree(t);
     if (!t->cancelled) return;
+    t->unwinding = 1;
+    fwp_cleanup_unwind(0);
     if (t == fwp_root) fwp_root_cancelled();
     longjmp(t->base, 1);
 }
@@ -688,12 +694,14 @@ static void fwp_task_main(void) {
         fwp_handlers = 0;
         fwp_state_len = 0;
         t->trap_jb = 0;
+        t->trap_cleanup = 0;
         t->cfn(t->carg, 1);
     }
     t->unwinding = 1;
     fwp_handlers = 0;
     fwp_join_children();
     t->done = 1;
+    t->cleanups = 0; /* no cleanup link may outlive its task stack */
     fwp_wake_all(&t->waiters);
     fwp_unlink_child(t);
     fwp_zombie = t;
@@ -896,6 +904,7 @@ static V fwp_p_task_scope(V body) {
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     V r = 0;
     int failed = 0;
