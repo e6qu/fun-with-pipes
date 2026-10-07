@@ -6538,3 +6538,26 @@ Full exact-head sequential CI remains required.
 
 State sequence clippy lib/fixture passes2.34 s CPU /4.61 s elapsed.
 Full checks remain mandatory after the final squash rebase.
+
+Published sequence preparation15743b853d6a190a53ea4a95532eb9845b4c685a
+with explicit lease against original0a90b0520cc1f4947137ccde8e9d0e8c26acdec3.
+Current base5c19337 differs from immutable OLDparent66bc713. Original anchors
+remain untouched; later rebase uses the actual current base. No second PR.
+
+## Loop following-task preparation on state sequences
+
+Rebased queue18 ownership-loop-state from immutable OLDparent0a90b05
+onto current state-sequence15743b8. Keep OLDhead787763d immutable; use actual
+current base15743b8 for later squash rebase. Current root docs replace old
+snapshots and label prepared historical measurements. Four interpreter oracle
+calls now explicitly use FWP_NO_OPT=1, including existing loop goldens.
+All five loop_ownership checks pass19.08 s CPU /38.44 s elapsed: boxed callback
+argument disposal, fused consumer state reclamation, trap/evaluation order,
+Step aliases and flattened/boxed state, and scalar words matching a live
+String address. O1/O2, stack on/off, conservative switches, GC stress/
+verification and poison modes are exercised. Format0.34 s /0.60 s; guarded
+clean0.00 s /0.13 s. No timing or register-placement claim; full sequential
+exact-head CI remains required.
+
+Loop clippy lib/fixture passes2.18 s CPU /4.38 s elapsed. Full exact-head
+gates remain required after the final squash rebase.

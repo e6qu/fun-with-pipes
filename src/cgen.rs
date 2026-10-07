@@ -1079,6 +1079,31 @@ impl<'p> Gen<'p> {
         id
     }
 
+    /// Select count operations from the monomorphic Step payload types.
+    fn loop_ops(&mut self, step: &MT) -> Result<String, String> {
+        let MT::Con(name, fields) = step else {
+            return Err("loop callback has a non-Step result".into());
+        };
+        if name != "std::Step" || fields.len() != 2 {
+            return Err("loop callback has a non-Step result".into());
+        }
+        let duplicate = |ty: &MT| {
+            if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                "fwp_rc_dup"
+            } else {
+                "NULL"
+            }
+        };
+        let state = duplicate(&fields[0]);
+        let result = duplicate(&fields[1]);
+        let drop = if free_enabled() {
+            format!("fwp_drop{}", self.drop_id(step))
+        } else {
+            "fwp_rc_drop".into()
+        };
+        Ok(format!("{state}, {result}, {drop}"))
+    }
+
     fn tree_owner_id(&mut self, mt: &MT) -> Result<usize, String> {
         if let Some(id) = self.tree_owners.get(mt) {
             return Ok(*id);
@@ -1670,10 +1695,27 @@ fn hof_sig(i: usize, sym: &str, k: usize) -> String {
 
 /// Its definition: the runtime's generic loop (runtime/fwp_rt_prims.c),
 /// calling the function directly with the captured values first.
-fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> String {
+fn hof_def(
+    i: usize,
+    (sym, g, k): &(String, FuncId, usize),
+    reuse: bool,
+    loop_ops: Option<&str>,
+) -> String {
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
     let call = |x: &str| shared(reuse, format!("f{}({}{})", g, caps, x));
+    if reuse && sym == "loop" {
+        let ops = loop_ops.expect("owned loop operations");
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once("s".into()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!(" FWP_KEEP_ALIVE(c{j});"))
+            .collect::<String>();
+        return format!("{} {{\n    for (;;) {{\n        FWP_TICK();\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        V step = fwp_owned_entry{g}(args);\n        int stop = fwp_tag(step) != 0;\n        s = fwp_loop_payload(step, stop, {ops});\n        if (stop) {{{fences} return s; }}\n    }}\n}}\n", hof_sig(i, sym, *k));
+    }
     if reuse && sym == "map" {
         let args = (0..*k)
             .map(|j| format!("c{j}"))
@@ -2380,6 +2422,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.stack_children.insert(l, children);
         }
         self.line(&format!("l{} = {};", l, x));
+        // RC's field read duplicates a borrowed existing record. A flattened
+        // state field was instead just rebuilt with owned children and a fresh
+        // outer reference; that reference already fulfils this initial Dup.
+        if self.g.reuse && self.state_field(v).is_some() {
+            if let Expr::Dup(duplicate, rest) = body {
+                if *duplicate == l {
+                    return rest;
+                }
+            }
+        }
         body
     }
 
@@ -2862,7 +2914,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    fn owned_list_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+    fn owned_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
         if !self.g.reuse {
             return None;
         }
@@ -2878,6 +2930,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         | "take-while"
                         | "drop-while"
                         | "find"
+                        | "loop"
                 ) =>
             {
                 s.clone()
@@ -2901,6 +2954,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         self.g.used_closures[g] = true;
+        if sym == "loop" && n == 0 {
+            let s = self.expr(&args[1]);
+            if let Some(shape) = loop_shape(&self.g.prog.funcs[g]) {
+                if !self.g.loops.iter().any(|(step, _)| *step == g) {
+                    self.g.loops.push((g, shape));
+                }
+                return Some(format!("fwp_loop{g}({s})"));
+            }
+            let step = self.g.prog.funcs[g].ty.params(1).1.clone();
+            let ops = self.g.loop_ops(&step).expect("typed loop Step");
+            return Some(format!("fwp_k_loop_owned(fwp_owned_entry{g}, {s}, {ops})"));
+        }
         if n == 0 {
             if sym == "fold-right" {
                 if !self.g.owned_right_fold_callbacks.contains(&g) {
@@ -3040,7 +3105,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn call_expr_inner(&mut self, id: FuncId, args: &[Expr]) -> String {
-        if let Some(call) = self.owned_list_hof(id, args) {
+        if let Some(call) = self.owned_hof(id, args) {
             let result = self.bind(call);
             // Specialization reads captures directly; preserve the original
             // borrowed closure/list addresses until allocating calls return.
@@ -3115,6 +3180,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         Some(m) => {
                             let fs: Vec<String> =
                                 (off..off + m).map(|k| format!("st[{}]", k)).collect();
+                            if self.g.reuse {
+                                let state_fields =
+                                    record_fields(&self.g.prog.shapes, &self.locals[0]).unwrap();
+                                let inner = &state_fields[*i as usize].1;
+                                let counted = record_fields(&self.g.prog.shapes, inner)
+                                    .unwrap()
+                                    .iter()
+                                    .enumerate()
+                                    .filter(|(_, (_, ty))| {
+                                        crate::rc::needs_rc(&self.g.prog.shapes, ty)
+                                    })
+                                    .map(|(j, _)| off + j)
+                                    .collect::<Vec<_>>();
+                                for slot in counted {
+                                    self.line(&format!("fwp_rc_dup(st[{slot}]);"));
+                                }
+                            }
                             let r = format!("fwp_record({}, {})", m, Self::array(&fs));
                             self.bind(self.g.fresh(r))
                         }
@@ -3712,6 +3794,11 @@ impl<'p> Gen<'p> {
             ),
             "format" => format!("return fwp_p_format(l0, l1, {});", self.desc(&p(1))),
             "fail" => format!("fwp_fail(l0, {}); return 0;", self.desc(&p(0))),
+            "loop" if self.reuse => {
+                let step = MT::Con("std::Step".into(), vec![p(1), result.clone()]);
+                let ops = self.loop_ops(&step)?;
+                format!("return fwp_p_loop(l0, l1, {ops});")
+            }
             "sort" => format!("return fwp_p_sort(l0, {});", self.desc(&elem(&p(0), 0))),
             "sort-by" => {
                 let key = match p(0) {
@@ -4305,16 +4392,71 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
         } else {
             "st[0] = s;".into()
         };
+        let slot_types = if record.is_some() {
+            slots
+                .iter()
+                .enumerate()
+                .flat_map(|(j, (off, width))| {
+                    let types = match width {
+                        Some(_) => record_fields(&self.prog.shapes, &field_tys[j])
+                            .unwrap()
+                            .iter()
+                            .map(|(_, ty)| ty.clone())
+                            .collect::<Vec<_>>(),
+                        None => vec![field_tys[j].clone()],
+                    };
+                    types
+                        .into_iter()
+                        .enumerate()
+                        .map(|(k, ty)| (off + k, ty))
+                        .collect::<Vec<_>>()
+                })
+                .collect::<Vec<_>>()
+        } else {
+            vec![(0, f.locals[0].clone())]
+        };
+        let mut take = String::new();
+        if self.reuse && record.is_some() {
+            for (slot, ty) in &slot_types {
+                if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                    let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+                }
+            }
+            let drop = if free_enabled() {
+                format!("fwp_drop{}", self.drop_id(&f.locals[0]))
+            } else {
+                "fwp_rc_drop".into()
+            };
+            let _ = write!(take, " {drop}(s);");
+        }
+        // Keep possible heap pointers addressable. Inline numeric/Bool fields
+        // need no roots and remain eligible for scalar register promotion.
+        // Boxed numerics still need roots even when they are not RC types.
+        let root_fences = slot_types
+            .iter()
+            .filter(|(_, ty)| {
+                int64_kind(ty).is_none()
+                    && !matches!(ty,
+                MT::Con(name, args) if args.is_empty() &&
+                    matches!(name.trim_start_matches("std::"), "F32" | "F64" | "Bool"))
+            })
+            .map(|(slot, _)| {
+                format!(
+                    "        FWP_KEEP_ALIVE(st[{slot}]);\n        FWP_KEEP_ALIVE(nx[{slot}]);\n"
+                )
+            })
+            .collect::<String>();
         // a safe point per iteration, where a task could be preempted
         let tick = if self.ticks { "FWP_TICK();" } else { "" };
         let _ = write!(
             out,
             "static V fwp_loop{id}(V s) {{
-    V st[{n}], nx[{n}], out = 0;
-    {load}
+    V st[{n}] = {{0}}, nx[{n}] = {{0}}, out = 0;
+    {load}{take}
     for (;;) {{
         {tick}
-        if (fs{id}(st, nx, &out)) return out;
+        int done = fs{id}(st, nx, &out);
+{root_fences}        if (done) return out;
         for (int i = 0; i < {n}; i++) st[i] = nx[i];
     }}
 }}
@@ -4322,6 +4464,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             id = step,
             n = n,
             load = load,
+            take = take,
+            root_fences = root_fences,
             tick = tick
         );
         out
@@ -4673,7 +4817,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         let _ = write!(pre, "fwp_rc_dup(OBJ(l{})->f[{}]); ", i, k);
                     }
                 }
-                let _ = write!(post, "fwp_rc_drop(l{}); ", i);
+                // The worker consumes duplicated field references. Release
+                // the incoming boxed argument's original fields and storage.
+                let release = if free_enabled() {
+                    format!("fwp_drop{}", self.drop_id(&f.locals[i]))
+                } else {
+                    "fwp_rc_drop".into()
+                };
+                let _ = write!(post, "{release}(l{i}); ");
             }
         }
         let body = match (abi.ret, abi.vret) {
@@ -5216,7 +5367,18 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         bodies.push('\n');
     }
     for i in 0..g.hofs.len() {
-        bodies.push_str(&hof_def(i, &g.hofs[i], g.reuse));
+        let hof = g.hofs[i].clone();
+        let loop_ops = if g.reuse && hof.0 == "loop" {
+            let step = prog.funcs[hof.1]
+                .ty
+                .params(prog.funcs[hof.1].arity as usize)
+                .1
+                .clone();
+            Some(g.loop_ops(&step)?)
+        } else {
+            None
+        };
+        bodies.push_str(&hof_def(i, &hof, g.reuse, loop_ops.as_deref()));
         bodies.push('\n');
     }
     // the specialized loops, which may use others
