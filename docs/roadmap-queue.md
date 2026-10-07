@@ -44,7 +44,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 20 | generation | `ownership-list-generation` | `de969ee71615` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
-| 23 | old-reclamation | `ownership-old-reclamation` | `6bd265486e20` | `6774aa5bb426` | `a8a7d119712b` |
+| 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `1741ab5fa64e` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
@@ -55,7 +55,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 31 | zip-unwind | `ownership-zip-unwind` | `a282f630c790` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `459287698745` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `b16195bcebf3` | `988f2a3be97f` | `968dac7ed9cf` |
-| 34 | argument-preparation | `ownership-argument-preparation` | `ada6a3a62df1` | `49739182ecb6` | `988f2a3be97f` |
+| 34 | argument-preparation | `ownership-argument-preparation` | `9f56744c4eb7` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `646cca038ed8` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `df5862861e71` | `dc4f9461571b` | `608ae7bb2d24` |
 | 37 | worker-preparation | `ownership-worker-preparation` | `3b6bf091127c` | `c97dd03f8d89` | `dc4f9461571b` |
