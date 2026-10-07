@@ -8136,3 +8136,29 @@ root docs copied before final amend; tested source unchanged.
 Final variant conversion3956d5cadd86a9814c5919a576f6a14020d73766 is clean
 on actual basec90fe5a, published with exact lease against OLD34873f4.
 Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row42 OLD5c5875d contains first record update commitb21203d plus its
+verification follow-up. Both replay from immutable parent34873f4 onto
+actual row41 head3956d5c (initial1b18b11c169dbf05feb1235b564323f5e2d486c3,
+follow-up0253f8cd297e83d5f855820e1162d3ec29f4079c). Nine root docs
+resolve each conflict; both new source oracles set FWP_NO_OPT=1. Guarded
+clean0.05 s /0.25 s; formatting0.43 s /0.84 s. Record/general-copy and
+variant-conversion focused tests started; exact update-liveness IR unit follows.
+
+Guarded cargo test --test record_update_ownership --test
+general_record_update_ownership --test variant_conversion_ownership passes
+all three tests19.15 s CPU /38.35 s elapsed. Unique/copied updates release
+overwritten typed fields, retain kept aliases, and protect replacements and
+partial cells through failure. General copies preserve borrowed originals;
+O1/O2 stress/verification/poison, raw interpreter, scalar address bits and
+conversion regressions pass. Exact new update-liveness IR unit follows.
+
+Exact IR update checkpoint rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners
+(cargo test --lib NAME -- --exact) passes one test3.59 s CPU /7.44 s
+elapsed;57 unrelated tests filtered. Checkpoints retain the borrowed base
+and other caller owners while transferring only replacement references.
+
+Record copy lint (cargo clippy --test record_update_ownership --test
+general_record_update_ownership --test variant_conversion_ownership --
+-D warnings) passes2.39 s CPU /4.93 s elapsed; fmt check0.34 s /0.60 s.
+Nine current root docs copied before final amend; tested source unchanged.

@@ -184,7 +184,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 39 | Multi-field typed retains protect each completed extra reference; caller liveness excludes unfinished retains through count overflow | Sequential CI; partial variant/stack retains, wide-count overflow and live aliases |
 | 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |
 | 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
-| 42–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
+| 43–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

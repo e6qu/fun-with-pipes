@@ -98,8 +98,13 @@ Row41 final head3956d5cadd86a9814c5919a576f6a14020d73766 is clean on
 actual basec90fe5a, published with exact lease against OLD34873f4. Three tests
 pass16.53 s CPU /33.31 s elapsed plus exact IR unit3.31 s /7.05 s;
 lint2.36 s /4.76 s, format0.34 s /0.60 s.
-Next independent task: row42 record-update rebases from ACTUAL current base
-OLD34873f4 onto actual row41 head3956d5c, then focused checks and publication.
+Current independent task: row42 record-update rebased two commits from ACTUAL
+current base OLD34873f4 onto actual row41 head3956d5c (initial1b18b11,
+follow-up0253f8c). Both new source oracles use FWP_NO_OPT=1. Focused
+record_update_ownership, general_record_update_ownership and
+variant_conversion_ownership pass all three tests19.15 s CPU /38.35 s
+elapsed; exact new IR unit passes3.59 s /7.44 s; lint2.39 s /4.93 s
+and format0.34 s /0.60 s pass. Final doc amend/publication follow.
 Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
@@ -148,8 +153,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-variant-conversion-worktree; focused conversion checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
+belongs to /private/tmp/fwp-record-update-worktree; focused record-copy checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.05 /0.25 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.12 s CPU /0.82 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
