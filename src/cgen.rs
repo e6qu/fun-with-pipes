@@ -533,7 +533,7 @@ impl Gen<'_> {
         if !self.reuse || !self.unwind {
             return HashMap::new();
         }
-        crate::rc::call_liveness(
+        crate::rc::ownership_liveness(
             self.prog,
             &self.prog.funcs[id],
             e,
@@ -2515,11 +2515,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 // reference to it
                 let v = self.expr(e);
                 let t = self.bind(v);
+                let remaining = self.begin_call(e as *const Expr);
+                let original_values = self
+                    .stack_alias(e)
+                    .unwrap_or_else(|| vec![(t.clone(), ty.clone())]);
+                let original = self.begin_values(&original_values);
                 let u = self.fresh();
                 self.line(&format!("fwp_u{} {} = fwp_vunbox{}({});", m, u, m, t));
                 if self.g.reuse {
                     let k = self.g.vhelper(ty, m);
                     self.line(&format!("fwp_vdup{}(&{});", k, u));
+                    self.end_call(original);
                     let d = self.typed_drop(ty).unwrap_or_else(|| "fwp_rc_drop".into());
                     if let Some(children) = self.stack_alias(e) {
                         self.stack_children_count(children, false);
@@ -2527,6 +2533,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         self.line(&format!("{}({});", d, t));
                     }
                 }
+                self.end_call(remaining);
                 parts(&u)
             }
         }
