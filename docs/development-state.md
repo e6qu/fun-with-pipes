@@ -57,15 +57,24 @@ the final commit adds the long-tail regression and current handoff. Seven
 focused ownership/unwind tests pass19.40CPU/39.06elapsed, lint2.30/4.73s,
 format0.35/0.63s and strong44/106/87 audit0.45/3.59s pass. Priorcc297e6 is
 retained remotely at roadmap/revision-026-cc297e6b31c9 before leased publication.
-Prepare row27 while these gates run, but open its PR only after105 merges.
-Row27 actual old base remains0a7203f until preparation/final rebase; use its
-recorded actual base, not immutable OLD parents. All OLD anchors stay fixed.
+Row27 is published at2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1 on actual
+current PR1059a21fd6, rebased from actual old0a7203f. Compiler/runtime/original
+call-liveness probe are byte-identical to71c2405; the new tail probe and strong
+audit are inherited. Twelve tests pass30.40CPU/61.02elapsed, lint2.35/4.73s,
+format0.35/0.62s and strong audit0.45/3.59s. Retained old71c2405 remotely at
+roadmap/revision-027-71c2405dd0e0 before leased publication. Open its PR only
+after105 merges, with final rebase from new actual9a21fd6 onto the actual squash.
+All OLD anchors stay fixed.
 
 The new million-step native tail regression passes atO1/O2 with GCoff/on
 against a200-step raw oracle. Native100000 probe passes0.00CPU/0.38elapsed.
 Raw100000 was stopped at1GiB aggregate RSS; do not repeat it locally or raise
-limits. Full-size raw probe is queued on Linux evidence37997457349 at
-5d111b28b81f227c954dae7ef8724dc3cc72702e, source identical to PR105. The smaller raw oracle
+limits. Full-size raw evidence37997457349 at5d111b2 fails only its debug interpreter
+probe: stack overflow at the existing4GiB budget, exit101, peak4163152KiB,
+2.80user/1.82system/4.63elapsed. Other selected ownership/tracing/lint/docs
+checks pass. Do not raise the stack or local limits. Source-identical81362c7
+now builds a release interpreter on the GitHub runner in CI37997969782
+(running), repeating the same FWP_NO_OPT=1 program/input/output oracle. The smaller raw oracle
 passes0.37/0.74s. Source syntax errors in the first probe draft were corrected.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
@@ -84,7 +93,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 26 ownership-reuse-tokens | 9a21fd6cc844 | 7520b8d5a1b0 | PR105; seven tests19.40/39.06s, lint2.30/4.73s, format0.35/0.63s and strong audit pass; exact-head CI follows |
-| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
+| 27 ownership-call-liveness | 2a2458b93d6c | 9a21fd6cc844 | Twelve tests30.40/61.02s; lint2.35/4.73s, format0.35/0.62s and strong audit pass; final rebase after105 |
 | 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; Linux CI37994225608 passes; sequential full gates follow |
 | 29 ownership-map-unwind | 78ed19ff401a | 7cfbe030d3de | Eight tests22.28/44.73s; lint2.41/5.01s and format0.35/0.75s pass; early preparation protection inherited |
 | 30 ownership-selection-unwind | 244dd2a578af | 78ed19ff401a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
@@ -358,9 +367,11 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-unwind-liveness-worktree. Seven final reuse-token/
-unwind tests pass19.40CPU/39.06elapsed; lint2.30/4.73s, format0.35/0.63s
-and strong audit0.44/3.58s also pass. No local workload is running. The local rebase70f7b111 is on
+belongs to /private/tmp/fwp-call-liveness-worktree after guarded clean0.00/0.13s.
+Row27 twelve focused tests pass30.40CPU/61.02elapsed; lint2.35/4.73s,
+format0.35/0.62s and strong audit0.45/3.59s pass. No local workload is running.
+Row26 final seven tests pass19.40/39.06s, lint2.30/4.73s, format0.35/0.63s
+and strong audit0.45/3.59s. The local rebase70f7b111 is on
 actual main1047520b8d; published row26 is9a21fd6 on7520b8d in PR105. The full-size raw tail probe hit the1GiB RSS limit and was
 stopped; keep it on CI. The smaller raw oracle and native100000-step probe pass.
 Row27 eleven focused tests pass30.85CPU/62.02elapsed, lint2.52/5.06s and

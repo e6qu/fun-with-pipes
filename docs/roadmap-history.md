@@ -12079,3 +12079,16 @@ cc297e6 remotely before leased publication. Final audit0.45CPU/3.59elapsed
 passes44/106/87 pairs and complete commit messages. Seven focused tests,
 lint/format and million-step native tail case pass as recorded above. Every
 new exact-head platform gate and roadmap_docs still must pass before squash.
+
+Published row272a2458b93d6c7d0f295cb675b5cfe6eef16a00b1 on actual PR105
+9a21fd6cc844c0960cedd283fd09ab354ee32338 after rebase from old actual0a7203f.
+Compiler/runtime/original call probe unchanged; inherited tail test and strong
+auditor. Twelve tests30.40CPU/61.02elapsed, lint2.35/4.73s, format0.35/0.62s
+and audit0.45/3.59s pass. Retained71c2405 remotely before leased publication.
+Full-size raw debug evidence37997457349 fails with interpreter stack overflow
+at unchanged4GiB budget, exit101,4163152KiB peak RSS,2.80user/1.82system/
+4.63elapsed on Linux x86_64 rustc1.99.0 GCC13.3.0. Other selected checks pass.
+Source-identical81362c76c301d4e7965e2961278c8661d178ff63 changes only evidence
+workflow to build the release interpreter on GitHub and repeat the same raw
+FWP_NO_OPT program. No limits are raised, no oracle assertion is weakened and
+no general performance/reclamation claim follows. Prior5d111b2 retained remotely.
