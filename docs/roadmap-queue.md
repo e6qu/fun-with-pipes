@@ -54,7 +54,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 30 | selection-unwind | `ownership-selection-unwind` | `ca33d3141a96` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `a282f630c790` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `459287698745` | `968dac7ed9cf` | `c2a364544d92` |
-| 33 | loop-unwind | `ownership-loop-unwind` | `dc9bfd5e626b` | `988f2a3be97f` | `968dac7ed9cf` |
+| 33 | loop-unwind | `ownership-loop-unwind` | `b16195bcebf3` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `ada6a3a62df1` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `646cca038ed8` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `df5862861e71` | `dc4f9461571b` | `608ae7bb2d24` |
