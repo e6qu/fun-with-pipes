@@ -50,8 +50,8 @@ the fallback. Prior acceptance details and failed/superseded runs are in history
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
 production PR, exact head `9c1b5a861b156a48d9e4e55b96c336fc6e852e18` on actual
 main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Full CI38002299110 is running
-with benchmarks and ARM macOS GC stress passing; roadmap_docs38002299186
-passes. Freeze this head; update root
+with benchmarks and both ARM/Intel macOS GC stress passing;
+roadmap_docs38002299186 passes. Freeze this head; update root
 status without rewriting the PR just to embed run IDs. Require all seven
 exact-head passing checks, then squash with the subject
 `Protect live compiler owners across calls and cancellation` and empty body.
@@ -110,7 +110,7 @@ still need their final squash rebases and six exact-head full gates.
 | 46 ownership-field-context | ae8933d991cb | e73b5b8e7ac7 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | 4f75498ad664 | ae8933d991cb | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
 | 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
-| 49 ownership-task-thunks | ec9a4133a2c1 | ece7166b7a79 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
+| 49 ownership-task-thunks | 4ab664827244 | 3b142abc5f93 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 1b5fb056fa00 | ec9a4133a2c1 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 245a0a24370e | 1b5fb056fa00 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | fe8ed51eb078 | 245a0a24370e | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
@@ -239,7 +239,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | edabbc24e57d71eb5e8253f25f1c1697322da56a | CI38004068610 running; source/tests/scripts/production workflows match current41 at9033d9f; earlier3a9fcb5 CI37971602336 passed on67e3771 |
+| Rows26–41 callback/constructor/typed conversion | edabbc24e57d71eb5e8253f25f1c1697322da56a | CI38004068610 passes combined ownership/tracing/lint/docs and five exact IR units; source/tests/scripts/production workflows match current41 at9033d9f; earlier3a9fcb5 CI37971602336 passed on67e3771 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
@@ -365,6 +365,13 @@ elapsed seconds), exact conversion ownership-IR unit3.23/6.74s, lint2.32/4.72s,
 format0.35/0.62s and strong44/106/86 audit0.42/3.46s pass. Prior revision is
 retained at roadmap/revision-041-67e37717ecf2 before exact leased publication.
 Final rebase must use this actual base after row 40's accepted squash.
+Rows42–49 also refreshed serially, preserving all native source and old probes;
+only exact merged guard/auditor/docs workflow/tail-test bytes are inherited.
+The first guard run stopped0.09CPU/1.14elapsed because old42 lacked roadmap.yml.
+Reviewed its25 lines against the accepted base, added only that exact inherited
+path and resumed without losing either row42 source commit. Successful bounded
+refresh8.25CPU/90.92elapsed; no tests rerun or new full gate claimed. Journal:
+/private/tmp/fwp-refresh-rows-42-49-journal.json, completed. Do not rerun it.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
