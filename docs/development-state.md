@@ -35,14 +35,14 @@ immutable value semantics, effects and evaluation/trap order stable.
   full [CI 37623311024](https://github.com/e6qu/fun-with-pipes/actions/runs/37623311024)
   passes benchmarks, Linux and ARM macOS; Intel macOS is running. Squash only after
   all four current-head jobs pass. No local workloads remain.
-- Latest prepared change: `ownership-list-structure`, checkout
-  `/private/tmp/fwp-structure-worktree`, base `787763d`. zip/unzip/chunks
-  ownership and scratch cleanup pass focused checks; publication follows.
-  Its parent `ownership-loop-state` is published as `787763d` and implements
-  normal/fused loop state and result transfers. No additional PR is open.
-  Next implementation: repeat/range ownership, then typed stored container
-  elements. Prepared descendants retain their listed OLD anchors until
-  sequential rebases after parent squash merges.
+- Latest prepared change: `ownership-list-generation`, checkout
+  `/private/tmp/fwp-generation-worktree`, base `c05a5d9`. repeat/range
+  ownership passes all focused, inventory and IR checks; publication follows.
+  Structural zip/unzip/chunks ownership is published as `c05a5d9`, based on
+  `787763d` (normal/fused loop transfers). No additional PR is open.
+  Next implementation: typed stored container elements, old-object reclamation
+  and retained callback/exception teardown. Prepared descendants retain their
+  listed OLD anchors until sequential rebases after parent squash merges.
 
 ## Current ownership evidence
 
@@ -87,6 +87,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-sort-callbacks | fwp-sort-callback-worktree | 66bc713 | c835578 |
 | ownership-state-sequences | fwp-state-sequence-worktree | 0a90b05 | 66bc713 |
 | ownership-loop-state | fwp-loop-worktree | 787763d | 0a90b05 |
+| ownership-list-structure | fwp-structure-worktree | c05a5d9 | 787763d |
 
 Example after PR #76 merges: from fwp-text-worktree,
 `git rebase --onto origin/main 2ce7a05 ownership-text-results` after fetching main.
@@ -717,3 +718,39 @@ Formatting and whitespace pass. No local workload remains.
 No full local gate was run; all-platform gates follow parent squash/rebase.
 Next: repeat/range remaining list ownership, then typed container elements,
 old-object reclamation and retained callback/exception teardown.
+
+Structural list change published as `c05a5d9c7d866286a4b778bd53b6d2c85cdbcf7f`,
+base `787763d`; checkout clean, no extra PR. Commit subject verified as one line
+with an empty body and no trailers. PR #76 remains the only open PR: full gate
+37623311024 passes Linux, ARM macOS and benchmarks, Intel still running. When
+all pass, verify head `2d2af62`, squash with explicit subject and empty body,
+fetch/verify main, then rebase text from OLD anchor `2ce7a05` and open the next
+sole PR. Continue repeat/range ownership while CI runs; failures require fixes.
+
+## Generated list ownership prepared
+
+`ownership-list-generation`, `/private/tmp/fwp-generation-worktree`, base
+`c05a5d9`: repeat borrows its count/value, owns each new list node and duplicates
+reference-bearing repeated elements by their monomorphic type. Non-positive
+counts return empty lists without duplicating the input. Range borrows both
+bounds and owns freshly generated list nodes; ordering, integer limits and
+boxed numeric representations are unchanged. Boxed 128-bit numeric payloads
+still use the conservative numeric allocation path and need phase 3 work.
+
+Focused checks pass: retained String/Bytes/nested-list/601 closure aliases,
+negative/zero repeat sizes, empty/backward ranges and signed/unsigned 8-, 64-
+and 128-bit limits, O1/O2, stack on/off, GC/reuse verification and reuse/free-
+disabled fallbacks (2 tests; CPU 5.75 s, elapsed 11.87 s). Initial fixtures used
+an ambiguous function pipe and an absent int.to-string helper; corrected to
+map over a function list and the existing show primitive. The actual scalar
+repeat/range wrapper probe passes at O1/O2 with address-shaped numeric words
+(CPU 0.69 s, elapsed 2.08 s). Identical output, zero collections: restoring only
+result sharing changes count reclamation from 4.4 MiB to 1.7 MiB. This proves
+list-node ownership in this workload, not general no-GC execution or speed.
+Inventory (1) and IR ownership (8) checks passed (CPU 3.09 s / elapsed
+6.38 s; CPU 0.00 s / elapsed 0.14 s). Investigating a potential TInt range
+width issue confirmed TInt is excluded from Integer by the type checker, so
+that unreachable path was not changed. The speculative width change/test was
+removed; the final supported matrix passed all 3 tests (CPU 12.65 s, elapsed
+25.37 s). Formatting and whitespace pass; no full local gate was run.
+Next implementation: typed stored container ownership and destruction.

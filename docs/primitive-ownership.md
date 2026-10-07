@@ -567,3 +567,24 @@ emitted scalar wrappers are probed with numeric words equal to heap addresses.
 With tracing disabled and identical outputs, changing only the emitted result
 boundaries from owned to shared reduces count reclamation from 12.6 MiB to
 8.2 MiB. This is scoped reclamation evidence, not a speed or general no-GC claim.
+
+## Generated lists
+
+`repeat` borrows its size and repeated value. Positive counts produce counted
+nodes, each holding one typed reference to the borrowed element. Zero and
+negative counts return empty without duplication. A monomorphic duplicate
+function is supplied only for reference-bearing elements; scalar words that
+look like addresses are never counted.
+
+`range` borrows both numeric bounds and returns owned fresh list nodes. Its
+backward construction preserves ascending results, empty/backward ranges and
+integer endpoints without overflow. Numeric payloads retain their existing
+representation: boxed I128/U128 allocations are still conservative numeric
+storage, so owned range nodes alone do not establish payload reclamation.
+
+`tests/list_generation_ownership.rs` checks repeated leaves/nested lists and
+601 closure aliases, integer limits through 128 bits, GC/reuse verification,
+fallback flags and actual scalar wrappers using address-shaped bits. With
+tracing disabled, identical outputs and only result sharing restored in the
+baseline, count reclamation improves from 1.7 to 4.4 MiB. Full-platform CI
+follows the prepared parent chain; these are focused local measurements.

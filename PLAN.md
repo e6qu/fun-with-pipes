@@ -48,8 +48,8 @@ leaves, rebased onto main and locally validated; full current-head CI gates merg
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers repeat/range ownership and typed stored container elements;
-zip/unzip/chunks ownership is implemented in an isolated branch with passing focused validation. General/fused loop
+implementation covers typed stored container elements and destruction;
+repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
 Phase 2 remains incomplete; runtime teardown and full retained lifetimes remain.
