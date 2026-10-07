@@ -843,7 +843,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   [run 37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156):
   Linux, ARM/Intel macOS and benchmarks. Intel completed 2026-10-07T12:38:44Z.
   Verified squash subject: `Unify container ownership contracts and borrow comparison keys`,
-  one line, 62 characters, no body or trailers. Concurrent native executable
+  one line, 61 characters, no body or trailers. Concurrent native executable
   cache access is read-only; ARM's tutorial/pipeline regression is fixed.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
@@ -1063,7 +1063,7 @@ checkouts. No local workload remains.
 Previous published preparation: `ownership-field-context`, checkout
 `/private/tmp/fwp-field-context-worktree`, OLD base `3f61f51`, exact head
 `085dc716d5994681b998f13cd619b139794539fc`; clean checkout, no additional PR.
-Commit subject verified: one line, 62 characters, empty body/no trailers.
+Commit subject verified: one line, 61 characters, empty body/no trailers.
 Checked record types survive projection inlining; two regressions and five
 adjacent checks, five selected semantic goldens, clippy and fmt/whitespace pass.
 Detailed evidence is below; full sequential CI remains required. Next audit
@@ -1339,7 +1339,7 @@ Library clippy is warning-free (CPU 2.78 s / elapsed 5.57 s); fmt and whitespace
 pass. No local workload remains. Those checks used the worker-preparation compiler. Current shared target contains
 the loop-preparation compiler; guarded `cargo clean -p fwp` is required before
 another checkout's package build. Verified subject `Protect boxed arguments and partial fields before worker entry`
-is one line, 62 characters, empty body/no trailers. Next protect initial
+is one line, 61 characters, empty body/no trailers. Next protect initial
 loop state flattening and partial field extraction before worker entry, followed
 by vlocal variant duplication/boxing, typed constructor temporaries, CAF/inline
 lifetimes and retained tasks. Full sequential CI remains required.
@@ -2788,10 +2788,10 @@ remain incomplete; no general ARC, tracing-free or speed claim is made.
 PR #81 is the sole open PR, exact `6eeb915`, full CI `37696063781`; benchmark
 passed and all three architecture test jobs are running. Prepare this branch
 separately. Future squash subject `Preserve checked record types across inlined field projections`
-is one line, 62 characters, empty body/no trailers. Publication follows checks.
+is one line, 61 characters, empty body/no trailers. Publication follows checks.
 
 Projection context published as `085dc716d5994681b998f13cd619b139794539fc`;
-checkout clean and subject verified as one line, 62 characters, no body/trailers.
+checkout clean and subject verified as one line, 61 characters, no body/trailers.
 Latest CI snapshot for sole PR #81: benchmark passed; Linux, ARM macOS and Intel
 macOS test jobs in progress at exact `6eeb915`. Failing tests remain repair tasks;
 no failure is reported by this snapshot. Preserve OLD `b563360` for the immediate
@@ -2933,7 +2933,7 @@ repair failures and continue separate preparation. Prepared squash subject
 rebase after #81 merges. No second PR opens while that current gate is pending.
 
 CAF inlining published as `6734248e7c0d4d53d57e5acccb9af02641713e9d`;
-checkout clean, subject verified as one line, 62 characters, no body/trailers.
+checkout clean, subject verified as one line, 61 characters, no body/trailers.
 Final formatting check passes (CPU 0.44 s / elapsed 0.86 s), whitespace clean.
 PR #81 full run `37696063781` has passing Linux, ARM macOS and benchmark gates;
 Intel macOS tests are live at exact `6eeb915`. Continue separate ownership
@@ -10401,3 +10401,293 @@ workflows unchanged from published c8d4b570. Guarded package clean passes
 passes all three tests 14.57 / 29.32 s; focused clippy with `-D warnings` passes
 2.44 / 4.83 s; `cargo fmt --check` passes 0.33 / 0.60 s.
 Full exact-head acceptance remains pending publication and CI.
+
+Row107 published at ea18e54f0eeeee5ec470d44e770d31d3f42456af on actual
+7a89dd017ae49f1a7deae49745e15ee807f46b2d. Tests7.45 / 16.78 s,
+lint2.68 / 5.39 s and format0.45 / 0.83 s pass. No competing PR.
+PR99 exact dc85b679407a7adda1438989051ca7eaf70072e5 starts CI37945913789.
+
+## Response metadata capture ownership preparation, 2026-10-09
+
+Row108 ownership-grpc-capture-resources starts on actual ea18e54f0eeeee5ec470d44e770d31d3f42456af,
+/private/tmp/fwp-grpc-capture-resources-worktree. Old normal callback return
+freed capture headers while inherited child contexts could still refer to them;
+typed/raw/cancel exits also lacked constructor cleanup. Constructor, scope and
+original task owners now release on last use, including failed task preparation.
+Returned metadata remains an immutable snapshot; nested forwarding preserves order.
+TLS/capture overflow validates both before incrementing either; new TLS copies
+have constructor cleanup when inherited capture acquisition traps. Existing TLS
+fixture restores two owners (constructor/scope), preserving its omission checks.
+Interpreter src/grpc.rs uses Rc capture and cloned metadata snapshots; generated
+fixture verifies corresponding native lifetimes. Full interpreter/native gRPC
+suite stays in sequential CI; no local full-gate claim. Guarded clean passes
+0.05 / 0.38 s; three capture/resources/restore tests pass11.62 / 25.50 s;
+added combined-counter/constructor rollback test passes2.08 / 5.20 s. Initial
+lint passes2.47 / 4.96 s, final lint0.07 / 0.26 s; format applications
+0.40 / 0.74 s and0.47 / 0.62 s pass. Final format0.46 / 0.86 s passes; publication follows.
+
+Row108 published at36ad634245301b069a141faec54ba7aec7a58d28 on actual
+ea18e54f0eeeee5ec470d44e770d31d3f42456af. No competing PR.
+
+## Complete TLS pool identity preparation, 2026-10-09
+
+Row109 fix-grpc-tls-pool-identity starts on actual36ad634245301b069a141faec54ba7aec7a58d28,
+/private/tmp/fwp-grpc-tls-pool-identity-worktree. Old g_strdupf serialized
+options with ambiguous separators through1024 bytes, allowing different
+TLS settings to select one pooled connection. Checked length-framed binary
+keys include all four strings and the verification flag without truncation.
+Connections copy complete bytes/length independently of scoped options;
+field semantics match interpreter pool identity. No performance claim or
+allocation reduction yet; packed storage is a separate audit. Guarded
+clean0.00 / 0.13 s and format0.46 / 0.87 s pass. Initial four-test run
+16.24 / 33.57 s passes capture/context/startup, but new identity fixture
+fails before C execution due to a startup injection needle missing spaces.
+Corrected identity passes1.15 / 3.31 s with old-encoding rejection, delimiter
+collision and every-field checks,4096-byte names, actual loopback construction
+and pool reuse after source options release. Matching exact interpreter unit
+passes5.51 / 11.41 s. Initial lint2.56 / 5.17 s and later format application
+0.52 / 0.84 s pass; final lint/format precede publication.
+
+Row109 final focused lint2.62 / 5.42 s and format0.52 / 1.07 s pass.
+Duplicate post-merge main CI37944119691 cancellation requested after verifying
+source/runtime/tests/workflows equal PR98 all-six-accepted de969ee. PR99
+current six gates remain required; no cancelled-run acceptance.
+
+## Map/set pre-delivery refresh and local resource refusal
+
+Row22 rebased from actual443524ef6b6d5183f010899902a94a9d53c5dc55 onto active
+array PR99 dc85b679407a7adda1438989051ca7eaf70072e5. Ten authoritative docs
+were preserved at/private/tmp/fwp-docs-before-map22-refresh and used to resolve
+only historical doc conflicts. Runtime/compiler/tests/workflows match prior
+1689c03 apart from inherited CLI/GC repairs. Guarded `cargo clean -p fwp`
+refuses before execution: less than64 GiB free disk. Read-only observation
+64840628 KiB free (61.84 GiB), target142264 KiB (138.93 MiB). No fresh local
+check or changed limit; focused map validation moves to separate GitHub evidence.
+Duplicate main CI37944119691 is confirmed cancelled; not current PR acceptance.
+
+Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
+dc85b679407a7adda1438989051ca7eaf70072e5 with explicit lease1689c03.
+Separate focused evidence352affa359742e997978214b19918941781d3afb adds only
+its push workflow. Production ancestry never inherits this workflow.
+
+## Environment TLS cache teardown preparation
+
+Row110 ownership-grpc-environment-cache starts on actual d178d86dca2bd8c9c0ed7f9f3fa417374c55af29,
+/private/tmp/fwp-grpc-environment-cache-worktree. Local workload checks remain
+refused due to below64 GiB free disk; no local test/format/lint claim. Cache
+values keep read-once semantics until unload; generated service/web libraries
+release malloc cache entries, names and TLS options after task draining and
+GC finalizers and before OpenSSL cache disposal. Cache/pool/hooks reset for
+reinitialization. New native fixture checks ten selected malloc releases,
+blocked child/finalizer ordering, unchanged cache despite environment changes,
+two init/finish cycles, idempotence and omitted-cleanup rejection. Focused
+validation moves to a separate GitHub evidence branch; full sequential gates
+remain required. Map evidence refreshed51639d38897d35538914da051347046c590d20f9
+at queued CI37948108555 adds handoff validation; superseded352affa run
+37947989500 cancellation requested and never acceptance.
+
+Row110 published6f4bfba80ef364d719ff58a984926922b2e826c2 on actuald178d86.
+Separate evidence46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 queues
+CI37948869170; no local checks or passing support claimed.
+
+## Archived preparation narrative before handoff consolidation
+
+The following narrative is superseded by the live handoff and supplies no
+current next actions. Full heads, failures and measurements remain evidence.
+
+Rows 18–99 are published preparations with passing focused tests, lint and
+format checks; detailed commands, full hashes and measurements are in history.
+Their final rebases use the actual bases above, never rewritten predecessor
+heads or immutable OLD parents. Source/runtime changes were checked before
+publication; each still needs its own six exact-head full gates. Row20 leaves
+boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
+
+Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
+host bump-C checks supply no actual WASI acceptance; physical bump storage
+remains allocated. Prepared layout/allocation controls establish no speed claim.
+Rows85–91 source/control details and full hashes are archived in history;
+the table above keeps actual bases and focused checks. Row91 uses unwind
+ownership for the temporary HTTP/2 subject copy; no additional PR.
+Rows92–93 publish explicit peer owners through child/detached-sender joins
+and owned final statuses through encoding/unwind. Their table entries and
+history retain full heads, commands, failures and omission controls. Network
+context storage and other buffers still use tracing; no complete ARC claim.
+Rows94–96 publish unary receive, streaming force and rendered-error scratch
+cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
+hashes and detailed checks are in history; the table keeps actual bases.
+Preparations through row106 are published with focused checks recorded in
+[history](roadmap-history.md). Row21 is published atc8d4b57092e54fe292ccc04dc0b813652fdc2617.
+Rebase to PR98 headde969ee completed from ACTUAL542fc08, inheriting the
+collector fixture repair. Three array tests pass14.39 / 29.34 s; focused
+lint2.48 / 4.88 s and format0.34 / 0.60 s pass; published without a PR. Preserve inherited CLI/GC harness fixes in source comparisons.
+Independent row103 ownership-grpc-client-receive starts on33661b2,
+/private/tmp/fwp-grpc-client-receive-worktree. Client first/next receives scope
+dequeued messages, status text and decoder why strings across retry, errors
+and cancellation. Failure-text transfer clears the old owner before raising.
+All three focused receive/failure/request tests pass13.79 / 27.82 s;
+lint2.54 / 5.14 s and format0.45 / 0.82 s pass. Published clean at
+c48864ce72313d5aff87aca59f768023e17dbd26, no competing PR.
+Independent row104 ownership-grpc-connect-cleanup starts on c48864c,
+/private/tmp/fwp-grpc-connect-cleanup-worktree. Existing connect-owner cleanup
+now protects gRPC socket/address resources, with an SSL scope through
+handshake and until transfer to the connection. Real loopback cancellation,
+refusal and handoff checks pass9.33 / 20.92 s; background startup is injected
+in the fixture. Lint2.54 / 5.15 s and format0.45 / 0.83 s pass. Published at
+b244d5f7c423edffc9159b1dd1a7fdac1934727a, no competing PR.
+Independent row105 ownership-grpc-connect-startup starts on b244d5f,
+/private/tmp/fwp-grpc-connect-startup-worktree. Temporary startup owner and
+per-task reservations protect both background spawn boundaries. Abort marks
+unpublished context dead without allocating, cancels any reader/writer and
+releases owners; its static marker is excluded from malloc finalization.
+Both actual-task/failure and pending-connect tests pass6.11 / 12.61 s;
+focused lint2.47 / 5.05 s and format0.45 / 0.83 s pass. Published clean at
+cb20833c018f8af3cd6bfb13bdb7696c503b7c6a, no competing PR.
+Independent row106 ownership-grpc-context-restore starts oncb20833,
+/private/tmp/fwp-grpc-context-restore-worktree. Existing cleanup stack now
+restores dynamic gctx on raw trap/cancellation as well as normal/typed return.
+Handler restoration remains in existing catch boundaries; cleanup changes only
+the saved context pointer. Both focused context/failure-text tests pass8.46 / 18.21 s;
+nested normal/typed/raw/cancel restoration and omission control pass.
+Focused lint2.48 / 4.94 s and final format0.45 / 0.82 s pass. Published clean
+at7a89dd017ae49f1a7deae49745e15ee807f46b2d, no competing PR.
+Independent row107 ownership-grpc-context-resources starts on7a89dd0,
+/private/tmp/fwp-grpc-context-resources-worktree. Scoped TLS options gain
+checked users held by dynamic callbacks and original inheriting task contexts.
+Task preparation reserves/rolls back context owners; completion drops them
+after child joins. Context hooks/one private pointer are emitted only for
+services/web programs. Environment options preserve read-once cache lifetime.
+All three context/resources/task-handle tests pass7.45 / 16.78 s, including
+escaped/detached/cancelled/failed-prepare and overflow owner checks.
+Focused lint2.68 / 5.39 s and format0.45 / 0.83 s pass; published at
+ea18e54f0eeeee5ec470d44e770d31d3f42456af with actual base7a89dd0.
+Independent row108 ownership-grpc-capture-resources starts on ea18e54,
+/private/tmp/fwp-grpc-capture-resources-worktree. Response captures now reserve
+constructor/scope/task owners; metadata snapshots survive later child appends.
+Both TLS/capture counters validate before either increments; new TLS options
+retain a constructor cleanup while inherited capture acquisition can trap.
+All three capture/resources/restore tests pass11.62 / 25.50 s CPU / elapsed;
+added combined-counter/TLS-constructor rollback regression passes2.08 / 5.20 s.
+Final lint passes0.07 / 0.26 s. Final formatting passes0.46 / 0.86 s; published at
+36ad634245301b069a141faec54ba7aec7a58d28 with actual baseea18e54.
+Independent row109 fix-grpc-tls-pool-identity starts on36ad634,
+/private/tmp/fwp-grpc-tls-pool-identity-worktree. Length-framed binary keys
+replace ambiguous fixed-buffer delimiter serialization; pool copies retain
+exact byte lengths independent of scoped options. Capture/context/startup tests
+pass in the initial16.24 / 33.57 s run; identity fixture fails before C execution
+because its startup injection needle omits source spaces. Corrected native
+identity passes1.15 / 3.31 s, including old-encoding rejection, actual loopback
+connection construction/pool reuse after options free, full-field differences
+and4096-byte names. Matching interpreter exact unit passes5.51 / 11.41 s.
+Initial focused lint2.56 / 5.17 s passes; final lint2.62 / 5.42 s and
+format0.52 / 1.07 s pass; published at
+d178d86dca2bd8c9c0ed7f9f3fa417374c55af29 with actual base36ad634.
+Independent row110 ownership-grpc-environment-cache starts on d178d86,
+/private/tmp/fwp-grpc-environment-cache-worktree. Read-once service TLS cache
+now has library teardown after task draining/GC finalization and before SSL
+cache disposal; hooks/pool/cache pointers reset for reinitialization. New fixture
+checks cache immutability, blocked child and finalizer ordering, ten malloc
+releases, two init/finish cycles, idempotence and omission rejection. Local
+checks remain refused by the disk guard; published6f4bfba80ef364d719ff58a984926922b2e826c2
+on actuald178d86 for isolated GitHub evidence.
+Separate evidence ownership-evidence-grpc-environment,
+/private/tmp/fwp-grpc-environment-evidence-worktree, exact46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944,
+CI37948869170 queued. It runs format/lint/cache/pool/capture/context/unload
+and interpreter identity; its workflow never enters production. No verified
+support yet.
+Remaining audit: canonical decode and packed TLS storage. Prepared
+work is not sequential full acceptance; phase2 remains incomplete.
+Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
+PR98 acceptance and its repaired collector fixture are recorded above; superseded
+failures and logs remain in history. The next delivery is PR99 arrays on actual main559f4ac. Row22 maps refreshed
+from443524e onto PR99 dc85b679; only historical doc conflicts were resolved
+using all ten authoritative docs. Source/runtime/tests/workflows equal prior
+1689c03 apart from inherited CLI/GC test repairs. Guarded clean refuses before
+execution because free disk is below64 GiB; no fresh local support claimed.
+Observed61.84 GiB free, target138.93 MiB. Stop local workloads; move focused
+map checks to a separate GitHub evidence branch, never production ancestry.
+
+## Packed immutable TLS option preparation
+
+Row111 ownership-grpc-packed-options starts on actual6f4bfba80ef364d719ff58a984926922b2e826c2,
+/private/tmp/fwp-grpc-packed-options-worktree. Header, four nul-terminated
+strings and full binary pool key share one allocation with checked total
+size. Header retains malloc alignment; unaligned key lengths use memcpy.
+Child pointers borrow slab storage; last owner frees only its base. Allocation
+failure traps before ownership transfer, with no partial child allocations.
+Existing scope/capture/cache fixtures count the packed base and preserve their
+omission, unwind and child-lifetime checks; cache fixture expects five selected
+allocations instead of ten. Pool old-encoding control writes into slab key
+storage without freeing interior pointers. New fixture instruments malloc,
+calloc, realloc and strdup during construction, checks exact allocation bytes,
+header alignment, copied input and release after last owner, plus failed
+allocation. Local workloads remain refused by the disk guard; remote checks
+are pending, with no verified allocation reduction or speed claim yet.
+
+## Complete connection address storage preparation
+
+Row112 ownership-grpc-connection-addresses starts on actual2bd17608388d270fb60437c8b32c84c66c02ae13,
+/private/tmp/fwp-grpc-connection-addresses-worktree. Connection headers replace
+256-byte inline address fields with a pointer into checked variable tail
+storage in the same managed allocation. Full addresses survive pool comparison
+and diagnostics; short addresses request fewer bytes without a second
+allocation. Connection wrappers remain tracing-compatible; no complete
+ARC or verified performance/memory claim. New fixture uses a real loopback
+connection with4096 trailing URI slashes (native/interpreter transport parsing
+strips them), checks exact stored key and pooled reuse after TLS option release,
+old truncation rejection, copied short input and requested allocation bytes
+against an equivalent legacy layout. Local checks remain refused; remote
+focused evidence follows. Canonical decode scratch review confirms existing
+normal success/error frees, while decoded aggregates retain shared fallback
+and need a separate typed-boundary audit. PR99 bench passes; its five other
+exact-head jobs run. Packed evidence refreshed823af3475560ed7709f958478580e364d89bdddf
+on preparation2bd1760 at queued CI37950759037 after static formatting repair.
+Superseded c02364d/37949993129 is cancelled and not acceptance.
+
+Environment-cache focused CI37948869170 passes at exact evidence46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944
+on production6f4bfba. Format, focused lint, cache/pool/capture/context/unload
+checks and matching interpreter identity pass; selected cache task/finalizer
+ordering, ten malloc frees, reinitialization/idempotence and omission control
+execute with GC/reuse verification. Full sequential platform acceptance remains.
+Address evidence0e16d381a81a36d95a1330b427261575ff875ec9 queues CI37952655033.
+Map/doc evidence960a242d54d4a689730e7591854716ca4c5615a2 queues CI37953564015.
+Its audit now derives current/OLD heads from the queue, replacing retired
+c8/79bc heads with no remote branch descendants, and fetches retained review
+heads for reproducibility. Earlier map evidence runs are confirmed cancelled.
+PR99 now has five passes; regular Intel macOS remains running.
+
+Map/doc CI37953564015 fails before focused tests: OLD parent c889479eed7a
+is missing from the clean clone. Full actual job113898257077 log saved
+/private/tmp/fwp-map-audit-failure.log. All106 immutable OLD heads were
+published atomically as lightweight roadmap/preparation-007 through112 tags,
+retaining their parents. Mapping /private/tmp/fwp-roadmap-anchor-refs.tsv;
+no source branch or production ancestry changed. Refreshed evidencec79544b
+also runs independent format/lint/tests despite audit failure, keeping failure
+visible. Packed evidence CI37950759037 passes at exact823af3475560ed7709f958478580e364d89bdddf
+on preparation2bd1760: one allocation/exact bytes/alignment/copied inputs,
+allocation-failure and last-owner checks pass alongside cache/pool/capture/
+context/unload and interpreter identity. Full sequential gates remain required.
+Ownership docs now state finite phase2 coverage/exit gates and phase3 delivery
+sequence; shared reconstruction/FFI/cycle boundaries keep explicit tracing
+requirements until proved, with no surface language change or speed claim.
+
+## 2026-10-09 PR99 merged and map evidence repaired
+
+PR99 exact dc85b679407a7adda1438989051ca7eaf70072e5 passed all six
+CI37945913789 gates. Explicit subject and empty-body squash at16:12:45Z
+produced c4d820e0d032a010c4fa933d879bdaeee9cefc37. Whole commit message
+is one line, 61 characters, without trailers. All ten authoritative docs were
+SHA256-verified before and after main fast-forward from559f4acc.
+
+Map evidence c79544b74d30e6d285f64e0f500891434a2e91f7,
+CI37955579519 passes handoff/immutable-anchor audit, format, lint and focused
+ownership tests after remote immutable preparation tags repaired clean-runner
+ancestry. Earlier37953564015 failed before tests and is not acceptance.
+Row112 CI37952655033 failed only formatting; lint/tests were skipped and
+remain required after its two fixture formatting corrections.
+
+Row22 final-rebased from actual dc85b679 onto squash c4d820e. Comparison
+against published c9ef3d88211f shows no src/runtime/tests/workflow differences.
+All ten current root documents replace prepared snapshots before publication.
+Row112 repair762117573367 applies exactly the two runner rustfmt differences;
+evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d triggers fresh checks.
+No local checks ran under the refused disk guard.

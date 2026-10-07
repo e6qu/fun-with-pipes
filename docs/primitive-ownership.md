@@ -158,6 +158,11 @@ counted list nodes. Range borrows bounds and owns fresh counted nodes. Scalar
 words are never counted as pointers; boxed128-bit payloads retain the shared
 compatibility lifetime. Full six-job acceptance is recorded in the handoff.
 
+Merged arrays own typed elements. Get and copies retain aliases; map/generate
+adopt callback results; fold consumes its accumulator; set/push consume the
+container while preserving immutable aliases. Scalar bits are never treated as
+pointers. PR99 passed all six platform and GC gates.
+
 ## Prepared refinements
 
 These contracts are published preparations, not main support. Exact heads and
@@ -167,7 +172,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
 | 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
 | 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
@@ -255,6 +259,11 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
 | 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
 | 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
+| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
+| 109 | TLS pool identity preserves full fields with checked length framing | Sequential CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
+| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub checks pending after disk refusal; cache immutability, blocked task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
+| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Remote focused checks pending after disk refusal; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
+| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Remote checks pending; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
