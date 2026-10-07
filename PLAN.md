@@ -48,6 +48,10 @@ comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
 evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of
 phase 2; strings, bytes, closure captures and runtime teardown are unfinished.
+Later published branches prepare leaf/closure and synchronous list ownership,
+call-effect inference, and exact high-fanout counts. Sort/unique copied-spine
+ownership is being validated separately. Prepared work still needs rebasing and
+full CI in sequence; the handoff records the branch heads and local evidence.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference

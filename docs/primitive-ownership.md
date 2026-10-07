@@ -421,3 +421,21 @@ sharing at saturation (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision,
 zero collections). This is reclamation evidence, not a timing result. Complete
 runtime inventories, old-object reclamation, exceptional/retained lifetimes,
 cycles and WASI remain unfinished; full platform CI is required after parents.
+
+## Sorted and unique copied spines
+
+`sort` and `unique` borrow their source and return fresh list nodes with typed
+additional references to retained elements. The existing CopiedSpine wrapper
+owns only the new nodes and distinguishes scalar words from references. Sorting
+retains the stable merge comparison order; unique retains the first occurrence.
+Source and merge scratch buffers remain scanned across allocating operations and
+are freed explicitly. The source root survives through result construction.
+
+`tests/list_order_ownership.rs` compares retained source/result aliases, strings,
+nested string lists, scalar values and empty/singleton inputs with the interpreter
+at O1/O2, stack on/off, GC stress/verification and both reuse-poison settings.
+The identical no-tracing loop frees 6.5 MiB by counts versus 4.7 MiB after only
+sort/unique result sharing is restored (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB precision, zero collections). Both variants use the same scratch cleanup;
+this difference measures result ownership, not scratch savings or execution speed.
+Sort-by callback ownership remains separate. Full platform gates remain required.

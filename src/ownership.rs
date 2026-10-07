@@ -179,6 +179,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[1],
         ),
+        "sort" | "unique" => (
+            &[B],
+            ResultOwnership::CopiedSpine {
+                runtime: if symbol == "sort" { "sort" } else { "unique" },
+                tail: None,
+            },
+            None,
+            &[0],
+        ),
         "reverse" | "flatten" => (
             &[B],
             ResultOwnership::CopiedSpine {

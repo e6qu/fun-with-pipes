@@ -77,6 +77,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-copies | fwp-list-copy-worktree | bb00baa | 376e77a |
 | ownership-list-options | fwp-list-option-worktree | 34023f3 | bb00baa |
 | inference-call-effects | fwp-inference-worktree | 89b7bde | 34023f3 |
+| ownership-wide-counts | fwp-wide-worktree | 3a791dc | 89b7bde |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -509,7 +510,37 @@ Initial two-probe run CPU 4.22 s / elapsed 9.14 s; collection check CPU 3.04 s /
 elapsed 6.23 s. All 35 related ownership regressions pass (CPU 68.22 s /
 elapsed 136.57 s), and the ownership contract inventory passes (CPU 3.47 s /
 elapsed 7.47 s). Five FFI checks and the local fat baseline pass (CPU 12.35 s /
-elapsed 24.64 s); formatting passes. Publication follows.
+elapsed 24.64 s); formatting passes. Published as `3a791dc`, with no new PR.
 All checks use the bounded guard. Full platform gates are still required after
 parent merges. Current #75 gate: ARM macOS and benchmarks pass; Intel macOS and
 Linux remain testing. This repair does not prove general no-tracing execution.
+
+## List ordering ownership preparation
+
+Current isolated task: `ownership-list-order`, checkout `/private/tmp/fwp-order-worktree`,
+base `3a791dc`. Give sort/unique copied spines typed element ownership and
+release their source/merge scratch buffers. Preserve stable sort order and first
+unique occurrence, and compare aliases and scalar/nested elements with the
+interpreter under collection stress. Sort-by remains a separate callback task.
+
+Sort/unique now use CopiedSpine contracts and release source/merge buffers.
+Two new checks pass: interpreter agreement at O1/O2, stack on/off, stress 1,
+verification and both poison modes for strings/nested lists/scalars/empty inputs;
+no-tracing counts 4.7 -> 6.5 MiB freed after restoring/removing only result
+sharing, identical output and zero collections. CPU 11.76 s / elapsed 23.62 s
+under the guard, including compilation. All five adjacent copied-list/wide-count checks pass unchanged (CPU 12.93 s /
+elapsed 26.35 s). Contract inventory passes (CPU 3.99 s / elapsed 8.07 s),
+formatting and whitespace pass. Publish the prepared branch; full gates follow
+parent merges. No local workload remains. No second PR has been opened; #75 still awaits its
+Intel/Linux gates. Next: sort-by synchronous callback/key ownership.
+
+Sort-by follow-up design: borrow the synchronous callback and source, invoke
+through fwp_apply_borrowed to obtain owned keys, keep key/value/merge buffers
+scanned, release each key with its monomorphic generated drop helper after
+sorting, then adopt a CopiedSpine result. Keys may alias inputs or captures;
+never freshen/reset key counts or infer pointer ownership from scalar bits.
+Test callback order/once-per-element, stable ties, allocated/string keys,
+captured/partially applied callbacks and collection during key evaluation.
+Exceptional cleanup remains an explicit phase-2 gap; do not claim it solved by
+normal-path scratch release. Reconcile these notes against final macOS fixes
+when rebasing each prepared branch after its parent squash merge.
