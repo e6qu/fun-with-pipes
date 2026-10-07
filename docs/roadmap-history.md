@@ -7654,3 +7654,25 @@ main90762aa is published with exact lease against previous5c19337. Whole
 message/clean publication/unchanged source verified. Sole PR94 is open;
 CI37897207787 starts at this exact head with all six gates required.
 Row17 actual current base remains5c19337. No second PR.
+
+Task-boundary final preparationcde58f461f78b05a5bd1c7800e9e9f0f110c05c0 is
+clean on actual basef4716a0; exact lease against immutable OLD02beec3.
+Final doc refresh changes no tested source/runtime; no second PR.
+
+## Runtime unwind raw-oracle preparation, 2026-10-09
+
+Row25 CURRENT/OLD3e314222ff7c0f379204a539858d73bfe1bda095 rebases from
+OLDparent02beec353ec7745f6f69c1c99bb3c561725a6744 onto actual current
+row24 headcde58f461f78b05a5bd1c7800e9e9f0f110c05c0 (initial2bd3ba8).
+All nine root docs resolve conflicts; the source file-handler oracle explicitly
+uses FWP_NO_OPT=1. Three unwind_cleanup tests pass8.80 s CPU /17.94 s
+elapsed: registered cleanup exactly-once/LIFO before failure/trap/cancellation,
+suspended task scopes, scoped files closing on each exit path and raw interpreter
+agreement. Guarded target switch clean0.06 s /0.38 s. No local full build/GC
+gate; all sequential full gates remain required. Automatic owner registration
+is later work, not established by these runtime manual-registration probes.
+
+Runtime unwind lint (cargo clippy --test unwind_cleanup -- -D warnings)
+passes2.43 s CPU /4.88 s elapsed; format0.33 s /0.60 s. All nine root
+docs copied before final amend/publication; source/runtime tests remain
+unchanged after these checks. Full six gates still precede sequential delivery.
