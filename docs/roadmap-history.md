@@ -8104,3 +8104,31 @@ Typed constructor lint (cargo clippy --test constructor_type_ownership
 --test constructor_unwind_ownership --test retain_unwind_ownership --
 -D warnings) passes2.38 s CPU /4.85 s elapsed; fmt check0.34 s /0.61 s.
 Nine current root docs copied before final amend; tested source unchanged.
+
+Final typed constructor preparationc90fe5a9d1700918120dc7d6c294e8e30e3f77f4
+is clean on actual basef0049c4, published with exact lease against OLDb021967.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row41 OLD34873f4 rebases from immutable parentb021967 onto actual row40
+headc90fe5a (initial01430b8); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.35 s
+/0.75 s. Variant conversion, partial retain and worker boxing tests started;
+exact IR consumed-value checkpoint unit follows.
+
+Guarded cargo test --test variant_conversion_ownership --test
+retain_unwind_ownership --test worker_boxing_ownership passes all three
+tests16.53 s CPU /33.31 s elapsed. Conversion count-overflow traps release
+original boxes/typed fields and other caller owners while preserving aliases
+and scalar bits. Raw interpreter and O1/O2 stress/verification/poison,
+partial retain and boxing allocation-failure regressions pass. Exact new
+IR consumed-value checkpoint follows.
+
+Exact IR checkpoint rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners
+(cargo test --lib NAME -- --exact) passes one test3.31 s CPU /7.05 s
+elapsed;56 unrelated tests filtered. Checkpoints exclude transferred result
+owners while retaining the caller’s remaining references.
+
+Variant conversion lint (cargo clippy --test variant_conversion_ownership
+--test retain_unwind_ownership --test worker_boxing_ownership -- -D warnings)
+passes2.36 s CPU /4.76 s elapsed; fmt check0.34 s /0.60 s. Nine current
+root docs copied before final amend; tested source unchanged.
