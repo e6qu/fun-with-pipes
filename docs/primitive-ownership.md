@@ -17,8 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR99. Arrays own typed elements; maps and
-sets retain the shared-element baseline until PR100 passes and merges.
+The tables describe main through PR100. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -41,26 +40,26 @@ updates preserve live aliases. General callback unwind remains prepared work.
 
 | Map/set primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
-| map/set.from-list | share list | fresh outer storage, shared elements | none |
-| map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
+| map/set.from-list | borrow list | counted storage retaining typed elements | none |
+| map.keys/values/to-list; set.to-list | borrow container | counted list retaining typed aliases | none |
 | map.size; set.size | borrow container | scalar | none |
-| map.map-values | share callback, borrow map | fresh container, shared callback results and aliased keys | argument0 |
-| set.union/intersect/diff | borrow both sets | fresh outer storage, aliased elements | none |
+| map.map-values | borrow callback/map | counted container retaining keys and adopting callback results | argument0 borrows values |
+| set.union/intersect/diff | borrow both sets | counted storage retaining selected typed aliases | none |
 | map.empty; set.empty | none | static shared empty value | none |
-| map.insert | share key/value, consume map | owned container, aliased stored elements | none |
-| map.get | borrow key/map | shared Option containing aliased value | none |
+| map.insert | borrow key/value, consume map | owned container retaining inserted values and copied aliases | none |
+| map.get | borrow key/map | owned Option retaining selected typed value | none |
 | map.contains; set.contains | borrow key/container | scalar | none |
 | map.remove; set.remove | borrow key, consume container | owned container; missing key can return original | none |
-| map.update | share key/callback/default, consume map | owned container with shared callback result | argument1 |
-| set.insert | share key, consume set | owned container with shared key | none |
+| map.update | borrow key/callback/default, consume map | owned container retaining keys and adopting callback result | argument1 borrows value |
+| set.insert | borrow key, consume set | owned container retaining inserted and copied keys | none |
 
 Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;
 these functions read values, allocate nothing and invoke no user callbacks.
-Their wrappers omit fwp_rc_share(key). The current map/set baseline still
-shares inserted keys/elements and callback inputs/results. Fresh outer storage
-does not imply independently owned elements; its destructor frees the buffer
-without recursively releasing shared elements. PR100 refines these contracts
-with typed owners; its pending gates are recorded in the handoff.
+Their wrappers omit fwp_rc_share(key). Typed destruction releases keys/elements
+before buffers and outer storage. Copies retain aliases; replacement/removal
+releases displaced owners. Scalar payloads are skipped and boxed128-bit values
+retain their compatibility lifetime. Ordering, key identity and immutable
+aliases are preserved. General callback unwind remains prepared work.
 
 ## Conservative reconstruction and external boundaries
 
@@ -193,7 +192,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
 | 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
 | 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
 | 25 | Runtime cleanup stack releases registered owners/scoped files before failure, trap or cancellation; task switching preserves cleanup scopes | Sequential CI; exactly-once/LIFO and handler boundaries; automatic owner registration remains later work |

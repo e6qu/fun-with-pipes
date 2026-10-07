@@ -170,13 +170,16 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #99 includes the following contracts. Detailed primitive modes
+Main through PR #100 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
+- Maps and sets own typed keys/elements across construction, copies, lookup
+  and immutable updates. Synchronous callbacks borrow inputs and adopt results;
+  typed destruction releases children and storage. General unwind remains prepared.
 - Native counts stay exact above 254 with rare side entries. Ordered copied
   lists retain typed aliases; sort-by owns once-per-input keys and its stable
   copied result, releasing scratch after construction.

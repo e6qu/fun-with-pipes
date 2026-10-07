@@ -11028,3 +11028,33 @@ Row31 a282f63 focused clippy zip/map/selection2.24/4.63s and fmt0.35/0.74s
 pass after its six tests20.69/41.60s. Shared target now belongs to
 /private/tmp/fwp-zip-unwind-worktree. No local workloads run. Fresh Linux
 acceptance follows; original fixture assertions and source semantics stay intact.
+
+## PR100 map/set ownership delivery
+
+All six CI37961944703 production jobs and roadmap_docs CI37961944952 pass
+at b5d658aa1a06391e106874bf2c3fc2b551f3a0ac. Explicit match-head squash
+merged PR100 at 2026-10-09T17:45:46Z as
+ eeef3b5d3f5386015c6dead55cc5da632f61d61d with the verified one-line subject
+`Own typed map and set elements across copies updates and callbacks`.
+The fresh pre-merge ten-doc snapshot and SHA256 manifest are preserved in
+/private/tmp/fwp-main-docs-pre100. Main fast-forward restored all ten docs
+byte-for-byte and installed the identical tracked portable roadmap auditor.
+
+## Fold preparation refresh after PR100
+
+Row32 was rebased from actual6a0913896eb7 onto row31 a282f630c790;
+459287698745aa390254180024b8ddb22ccfb7b5 includes the mandatory scratch
+observer output pointer, matching the known later fixture repair. Compiler and
+runtime are unchanged; CLI/tracing and earlier scratch-observer fixes are inherited.
+Guarded package clean0.04/0.25s; two fold tests13.13/26.45s; focused
+clippy2.75/5.42s; format0.44/0.82s all pass. Each used the fwp local guard;
+full builds/tests remain on GitHub. Original anchors are untouched; old current
+1e8d1e34bc78 is retained under roadmap/revision-032-1e8d1e34bc78 before lease publication.
+
+Duplicate post-merge main CI37968556540 was cancelled only after all accepted
+PR100 gates passed and src/runtime/tests/.github were byte-identical between
+accepted b5d658aa1a06 and actual squash eeef3b5d3f53. Cancellation is not acceptance.
+PR101 final head6bd265486e20 starts CI37968881919 and roadmap_docs37968881895.
+Fold evidenceef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 starts CI37969003113;
+queued/running evidence is not acceptance.
+
