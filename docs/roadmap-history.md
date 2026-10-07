@@ -12033,3 +12033,5 @@ remains byte-identical to0a7203f; final positive audit0.48CPU/3.69elapsed passes
 all87 live pairs. Retained roadmap/revision-026-0a7203f5c559 remotely before
 leased publication. Row27 actual base remains old0a7203f until its own final
 rebase; immutable anchors and prior bases are not silently rewritten.
+
+Sequential preparation refresh row30: ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 → 244dd2a578af002cc7316b6227f423be6bd63d8f, actual base78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8. Retained roadmap/revision-030-ca33d3141a96 before explicit leased publication. Compiler/runtime/workflow code unchanged; only the exact early row34 protection is inherited before row34; original probes are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
