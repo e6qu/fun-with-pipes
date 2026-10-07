@@ -40,8 +40,8 @@ maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pendin
 PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
 Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
 base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
-and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs passes and the six production
-jobs remain queued/running, not acceptance. Compiler/runtime/tests match
+and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs and bench pass. The five other
+production jobs are running; all six are required for acceptance. Compiler/runtime/tests match
 focused-accepted495411d33f60 exactly. The final publication records the merged
 map/set contracts and inherits the portable roadmap audit. Require all six
 production jobs and roadmap_docs at this exact head before squash with
@@ -81,8 +81,8 @@ still need their final squash rebases and six exact-head full gates.
 | 34 ownership-argument-preparation | 9f56744c4eb7 | b16195bcebf3 | Test9.91/20.00s; lint2.69/5.35s and format0.34/0.61s pass |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
-| 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Runtime/compiler unchanged; focused check running |
-| 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 / 52.71 s |
+| 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
+| 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Focused checks running; compiler/runtime unchanged |
 | 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 / 39.78 s + exact unit 3.28 / 6.82 s |
 | 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 / 32.40 s + two exact units |
 | 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 / 33.31 s + exact unit 3.31 / 7.05 s |
@@ -201,7 +201,8 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows33–34 loop/argument cleanup | 1ac6dc99fde5f6813659be356f7f89c29b8a27b5 | CI37969742246 queued; production9f56744, actual baseb16195b |
+| Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 queued; production3bd34da, actual base6032ecf |
+| Rows33–34 loop/argument cleanup | 1ac6dc99fde5f6813659be356f7f89c29b8a27b5 | CI37969742246 passes Linux ownership/tracing and docs; production9f56744, actual baseb16195b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |

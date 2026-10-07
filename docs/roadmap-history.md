@@ -11096,3 +11096,10 @@ Guarded clean0.00/0.13s, native worker boxing failure10.21/20.62s, clippy2.42/4.
 and format0.35/0.62s pass. Old currentdf5862861e71 was retained under its
 immutable revision tag before explicit-lease publication. Row37 refresh3bd34dafb62f
 uses actual6032ecff; its focused checks are still running.
+
+Row37 3bd34dafb62f4aab253549d2e6d6b863be09f2b6 has actual base6032ecffcb7d.
+Guarded clean0.00/0.13s, worker-entry preparation9.50/19.16s, clippy2.65/5.23s
+and format0.34/0.60s pass. Original current3b6bf091127c is retained under
+immutable revision tag before lease publication. Combined Linux evidence
+c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f starts CI37970487617; not acceptance yet.
+Loop/argument evidence CI37969742246 passes all focused checks.
