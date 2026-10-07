@@ -73,68 +73,22 @@ pub fn is_container(name: &str) -> bool {
     matches!(name, "std::Array" | "std::Map" | "std::Set")
 }
 
-/// The primitives' arguments they take ownership of (see `consumes_arg`).
+/// Whether the shared primitive contract transfers this reference.
 pub fn prim_consumes(sym: &str, j: usize) -> bool {
-    matches!(
-        (sym, j),
-        ("array.set", 2)
-            | ("array.push", 1)
-            | ("map.insert", 2)
-            | ("map.remove", 1)
-            | ("map.update", 3)
-            | ("set.insert", 1)
-            | ("set.remove", 1)
-    )
+    crate::ownership::primitive(sym)
+        .is_some_and(|c| c.argument(j) == crate::ownership::Argument::Consume)
 }
 
-/// Arguments of primitives that read an array without keeping it: they
-/// need not be shared, so the array may stay unique.
+/// Historical name: consumed arguments also avoid runtime sharing.
 pub fn prim_reads_only(sym: &str, j: usize) -> bool {
-    prim_consumes(sym, j)
-        || matches!(
-            (sym, j),
-            ("array.to-list", 0)
-                | ("array.length", 0)
-                | ("array.get", 1)
-                | ("array.map", 1)
-                | ("array.fold", 2)
-                | ("array.slice", 2)
-                | ("array.append", 0 | 1)
-                | ("array.sort", 0)
-                | ("map.get", 1)
-                | ("map.contains", 1)
-                | ("map.size", 0)
-                | ("map.keys", 0)
-                | ("map.values", 0)
-                | ("map.to-list", 0)
-                | ("map.map-values", 1)
-                | ("set.contains", 1)
-                | ("set.size", 0)
-                | ("set.to-list", 0)
-                | ("set.union", 0 | 1)
-                | ("set.intersect", 0 | 1)
-                | ("set.diff", 0 | 1)
-        )
+    crate::ownership::primitive(sym)
+        .is_some_and(|c| c.argument(j) != crate::ownership::Argument::Share)
 }
 
-/// Primitives whose result is a new array, which compiled code owns.
+/// Whether the primitive returns independently owned outer storage.
 pub fn prim_fresh(sym: &str) -> bool {
-    matches!(
-        sym,
-        "array.from-list"
-            | "array.make"
-            | "array.generate"
-            | "array.map"
-            | "array.slice"
-            | "array.append"
-            | "array.sort"
-            | "map.from-list"
-            | "map.map-values"
-            | "set.from-list"
-            | "set.union"
-            | "set.intersect"
-            | "set.diff"
-    )
+    crate::ownership::primitive(sym)
+        .is_some_and(|c| c.result == crate::ownership::ResultOwnership::FreshContainer)
 }
 
 struct Pass<'a> {

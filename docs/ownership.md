@@ -22,8 +22,9 @@ or hoisted merely because their public types are pure.
 `src/rc.rs` inserts and checks `Dup`/`Drop` after the other IR passes.
 Functions and constructors consume owned arguments; primitive, foreign and
 remote calls normally borrow. Selected container primitives consume their
-container argument. `prim_reads_only` and `prim_fresh` refine the runtime
-boundary for arrays, maps and sets.
+container argument. [The shared primitive contract inventory](primitive-ownership.md)
+drives argument modes, runtime sharing and owning wrapper selection for arrays,
+maps and sets. Comparison-only keys borrow; inserted keys remain shared.
 
 Generated drop functions free counted objects at their last reference.
 Unique records, variants and containers can reuse storage. Escape analysis,
@@ -47,10 +48,11 @@ lifetimes. None of these is a general collector-free execution guarantee.
 
 ## Next ownership change
 
-First inventory every primitive's argument/result ownership and whether it
-retains arguments, invokes callbacks or returns aliases. Consolidate these
-contracts so the IR pass and code generator agree, rather than expanding
-independent lists without checking their correspondence.
+The first change consolidates the array/map/set contracts and removes sharing
+for comparison-only keys. Finish inventorying the remaining primitive families,
+including their argument/result ownership, retention, callbacks and aliases.
+Then extend deterministic element/leaf/capture destruction. Keep the IR pass
+and code generator on the same contracts.
 
 Contracts must distinguish borrowing for the call, consuming a reference,
 retaining a reference beyond the call, returning a fresh owned value, and
@@ -103,3 +105,34 @@ assert semantic results and stable allocation properties instead.
 
 Run full workloads on GitHub runners. Passing Linux tests alone does not
 validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
+
+## Next leaf-value implementation
+
+The boundary review found concrete constraints for strings/bytes, not an
+implemented ownership guarantee. `fwp_str_new` allocates pointer-free leaves;
+small leaf objects are currently excluded by `fwp_rc_slot`, and `needs_rc`
+excludes both types. Enabling counts requires a leaf-specific generated drop
+path: the existing ADT drop fallback assumes an object tag and does not free
+unrecognized shapes. Runtime sharing must stop traversal at counted leaves;
+UTF-8/raw bytes are payload, not a graph of values.
+
+Result contracts must cover aliases before making those types counted:
+`string.to-bytes` returns its input; `pad-left/right` can return their subject
+unchanged; `replace` returns its subject for an empty search string. Conversely,
+`string.from-bytes` validates and copies into an optional fresh string.
+`split`, `lines` and `words` build lists of newly allocated strings whose
+ownership must survive the runtime list builder. Do not mark all textual
+results fresh or borrow every text argument before these paths are modeled.
+
+The next focused implementation should inventory these primitives, introduce
+fresh/alias leaf result handling, and verify leaf drops, constants, shared
+aliases and nested results. Cover no-op padding/replacement, String/Bytes
+identity conversion, callbacks capturing strings, handlers/traps, FFI retention
+and young/old collector interaction. Existing typed drops recursively release
+record/variant children, while container drops currently release outer buffers
+only. Generational marking restricts immediate freeing of old counted objects;
+removing that restriction needs its own invariant and stress evidence.
+
+Then complete typed container element retention/destruction and closure capture
+ownership; share-based compatibility boundaries still prevent general execution
+without tracing GC. Keep these acceptance requirements when resuming sessions.
