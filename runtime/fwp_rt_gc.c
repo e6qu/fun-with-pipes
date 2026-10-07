@@ -1205,13 +1205,57 @@ static void fwp_static_report(void) {
 
 /* Compiled dynamic application consumes the function and its arguments.
  * Runtime callbacks retain the conservative shared entry in fwp_rt.c. */
+typedef struct {
+    V *items;
+    size_t len, cap;
+    V local[64];
+} fwp_closure_drop_work;
+/* WASI has no runtime threads. Native cleanup may enter through a host
+ * callback, so its temporary work context is per thread. No safe point
+ * or collected allocation occurs while processing this queue. */
+#ifdef __wasm__
+static fwp_closure_drop_work *fwp_closure_drop_active;
+#else
+static _Thread_local fwp_closure_drop_work *fwp_closure_drop_active;
+#endif
+
+static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
+    if (work->len == work->cap) {
+        if (work->cap > SIZE_MAX / 2 / sizeof(V)) fwp_trap("closure cleanup too large");
+        size_t cap = work->cap * 2;
+        /* The spill buffer is explicitly released and never causes GC. */
+        V *items = (V *)malloc(cap * sizeof(V));
+        if (!items) fwp_trap("out of memory");
+        memcpy(items, work->items, work->len * sizeof(V));
+        if (work->items != work->local) free(work->items);
+        work->items = items;
+        work->cap = cap;
+    }
+    work->items[work->len++] = f;
+}
+
 static void fwp_closure_drop(V f) {
     uint8_t *count = fwp_rc_slot(f);
     if (!count || !*count) return;
     if (*count > 1) { (*count)--; return; }
-    const fwp_owned_fninfo *owned = fwp_fns[CLO(f)->fn].owned;
-    if (!owned) fwp_trap("internal: owned closure without capture types");
-    owned->captures(f, 0);
+    if (fwp_closure_drop_active) {
+        fwp_closure_drop_push(fwp_closure_drop_active, f);
+        return;
+    }
+    fwp_closure_drop_work work;
+    work.items = work.local;
+    work.len = 0;
+    work.cap = sizeof work.local / sizeof *work.local;
+    fwp_closure_drop_active = &work;
+    fwp_closure_drop_push(&work, f);
+    while (work.len) {
+        V next = work.items[--work.len];
+        const fwp_owned_fninfo *owned = fwp_fns[CLO(next)->fn].owned;
+        if (!owned) fwp_trap("internal: owned closure without capture types");
+        owned->captures(next, 0);
+    }
+    fwp_closure_drop_active = NULL;
+    if (work.items != work.local) free(work.items);
 }
 
 static V fwp_apply_owned(V f, uint32_t n, V *args) {

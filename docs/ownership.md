@@ -37,7 +37,7 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, stack capture cleanup, bounded deep destruction and exceptional cleanup |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, concrete temporary types, stack capture cleanup and exceptional cleanup |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -178,6 +178,30 @@ not complete ownership. Full architecture and benchmark gates remain required.
 
 Stack-resident aggregates still share their captured children; runtime-retained
 callbacks, exceptional paths, generational old objects, count overflow and WASI
-reclamation remain gaps. Typed closure destruction can recurse through nested
-captures: bounded deep destruction needs its own acceptance test and implementation
-before claiming general no-tracing support. Cycles still require an explicit policy.
+reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
+function captures. Other aggregate destruction and incomplete temporary types
+still need coverage before general no-tracing support. Cycles still require an
+explicit policy.
+
+## Bounded function capture cleanup
+
+An outer closure release drains a work list. Nested function capture releases
+queue their owned reference instead of recursively entering capture cleanup.
+The work list keeps 64 values in the current C frame; wider pending work spills
+into an explicitly freed allocation outside the collected heap. Neither the
+queue nor typed capture destruction invokes a collection safe point. Native
+contexts are per thread; WASI has no runtime threads and retains its no-op counts.
+This limits C call depth through function captures, not arbitrary aggregate shapes.
+
+The focused regression constructs 8,000-node linear and branching capture graphs,
+then releases them on a 256 KiB native worker stack. At -O0, restoring only the
+recursive release exhausts that stack; the work-list version completes, matches
+the interpreter and reports zero collections with tracing disabled. Both nodes
+and captures are released by counts; the branching graph exercises the spill
+path. Optimized GC/reuse alias tests remain passing. Full native/WASI/platform
+and benchmark gates are still required before this prepared change merges.
+
+Investigation also exposed incomplete concrete typing of constructor temporaries:
+a borrowed List literal can fall back to the unknown type and only decrement
+its outer count. Carry expected parameter/result types into those temporaries
+and verify nested child cleanup before claiming complete ownership.
