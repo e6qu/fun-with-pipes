@@ -84,7 +84,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 46 | field-context | `ownership-field-context` | `6d01e927c086` | `085dc716d599` | `3f61f51521d9` |
 | 47 | caf-ownership | `ownership-caf-cache` | `762cc824fa08` | `68cf7bf2f7ca` | `085dc716d599` |
 | 48 | inline-caf | `ownership-inline-caf` | `af073c78c443` | `6734248e7c0d` | `68cf7bf2f7ca` |
-| 49 | retained-thunk | `ownership-task-thunks` | `7208e4a2d93e` | `7208e4a2d93e` | `6734248e7c0d` |
+| 49 | retained-thunk | `ownership-task-thunks` | `427076c60d2c` | `7208e4a2d93e` | `6734248e7c0d` |
 | 50 | task-within | `ownership-task-within` | `14a76de5b8bb` | `14a76de5b8bb` | `7208e4a2d93e` |
 | 51 | task-scope | `ownership-task-scope` | `7da15d9c8ea3` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `bb6f9c49a043` | `bb6f9c49a043` | `7da15d9c8ea3` |

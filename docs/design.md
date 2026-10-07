@@ -374,6 +374,8 @@ Prepared task.spawn retains counted thunks until entry or cancellation.
 Fallible stack/scope preparation protects only the extra owner and publishes
 a task after preparation succeeds. Unknown closure metadata retains sharing;
 task results still use the shared graph fallback at this stage.
+Prepared deadline callbacks use the same retained owner through completion
+or cancellation and preserve external capture aliases.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

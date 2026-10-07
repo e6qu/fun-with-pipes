@@ -8321,3 +8321,24 @@ Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_
 passes one test (57 filtered)3.58 s CPU /7.29 s elapsed. Retained-thunk lint
 with both integration targets and -D warnings passes2.53 /5.05 s; fmt
 check0.44 /0.83 s. Nine current docs copied before final amend; tested source unchanged.
+Final retained-task-thunks427076c60d2c68b557a9ffe663fd7a49fdd834d2 is
+clean on actual baseaf073c7, published with exact lease against OLD7208e4a.
+Whole subject verified one line, empty body; no second PR. Row50 actual base
+remains OLD7208e4a until its own rebase; immutable queue anchors unchanged.
+
+Row50 deadline callback rebase from ACTUAL7208e4a2d93e7e0402dee4d7f4783fe185565d74
+onto actual row49 head427076c60d2c68b557a9ffe663fd7a49fdd834d2 resolves
+only doc conflicts with the nine authoritative files. Raw source oracle
+already sets FWP_NO_OPT=1; retained-spawn omission controls follow the renamed
+shared helper. Guarded clean0.04 s CPU /0.25 s elapsed. Within, retained
+spawn and task tests started.
+Guarded cargo test --test within_thunk_ownership --test retained_thunk_ownership
+--test task_ownership passes all six tests15.44 s CPU /31.48 s elapsed.
+Deadline calls retain the same typed thunk owner as spawned tasks, preserving
+external capture aliases through completion/cancellation. Shared result graph
+fallback remains. Raw agreement, O1/O2 stress/verification/poison and legacy
+sharing control pass; refactored spawn preparation controls also pass.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.27 s CPU /6.86 s elapsed. Deadline callback
+lint with all three integration targets and -D warnings passes2.39 /4.84 s;
+fmt check0.34 /0.60 s. Nine current docs copied before final amend; tested source unchanged.
