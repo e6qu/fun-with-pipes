@@ -1238,9 +1238,18 @@ impl<'p> Gen<'p> {
         }
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
         if container {
+            let mut elements = String::new();
+            if let MT::Con(name, types) = mt {
+                if name == "std::Array"
+                    && types.len() == 1
+                    && crate::rc::needs_rc(&self.prog.shapes, &types[0])
+                {
+                    let child = self.drop_id(&types[0]);
+                    elements = format!("        for (uint64_t i = 0; i < ARR(v)->len; i++) fwp_drop{child}(ARR(v)->d[i]);\n");
+                }
+            }
             return format!(
-                "{}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n",
-                head
+                "{head}{elements}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n"
             );
         }
         let shapes = &self.prog.shapes;
@@ -4580,6 +4589,67 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     let _ = write!(s, " fwp_rc_dup({stop});");
                                 }
                                 s.push_str(" return result;");
+                            }
+                            ResultOwnership::ArrayOperation { .. } => {
+                                let mut args: Vec<String> =
+                                    (0..func.arity).map(|i| format!("l{i}")).collect();
+                                let mut element = None;
+                                if !matches!(
+                                    sym.as_str(),
+                                    "array.generate" | "array.map" | "array.fold"
+                                ) {
+                                    let ty = if sym == "array.make" {
+                                        func.locals[1].clone()
+                                    } else {
+                                        let array = &func.locals[func.arity as usize - 1];
+                                        match array {
+                                            MT::Con(name, fields)
+                                                if (name == "std::Array"
+                                                    || name == "std::List")
+                                                    && fields.len() == 1 =>
+                                            {
+                                                fields[0].clone()
+                                            }
+                                            _ => {
+                                                return Err(format!(
+                                                    "typed array `{sym}` has an unsupported input"
+                                                ))
+                                            }
+                                        }
+                                    };
+                                    args.push(if crate::rc::needs_rc(&self.prog.shapes, &ty) {
+                                        "fwp_rc_dup".into()
+                                    } else {
+                                        "NULL".into()
+                                    });
+                                    element = Some(ty);
+                                }
+                                if matches!(sym.as_str(), "array.set" | "array.push") {
+                                    let ty = element.as_ref().unwrap();
+                                    args.push(
+                                        if free_enabled()
+                                            && crate::rc::needs_rc(&self.prog.shapes, ty)
+                                        {
+                                            format!("fwp_drop{}", self.drop_id(ty))
+                                        } else {
+                                            "NULL".into()
+                                        },
+                                    );
+                                    let array = &func.locals[func.arity as usize - 1];
+                                    args.push(if free_enabled() {
+                                        format!("fwp_drop{}", self.drop_id(array))
+                                    } else {
+                                        "fwp_rc_drop".into()
+                                    });
+                                }
+                                if sym == "array.sort" {
+                                    args.push(self.desc(element.as_ref().unwrap()));
+                                }
+                                s = format!(
+                                    "return fwp_p_{}_typed({});",
+                                    sym.replace(['.', '-'], "_"),
+                                    args.join(", ")
+                                );
                             }
                             ResultOwnership::CopiedStructure => {
                                 let element = |ty: &MT| -> Result<MT, String> {
