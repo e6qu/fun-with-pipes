@@ -353,6 +353,8 @@ FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
-Known expression types remain authoritative. No new surface syntax is introduced.
+Known expression types remain authoritative. Whole-value pattern aliases of
+stack aggregates retain/drop their typed children, preserving them when the
+scrutinee releases its ownership. No new surface syntax is introduced.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

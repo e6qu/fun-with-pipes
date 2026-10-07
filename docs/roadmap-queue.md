@@ -15,15 +15,15 @@ Publish with an explicit lease against the remote current head, then create the
 sole next PR. Full exact-head CI is required anew for every PR.
 
 Current heads change on rebase; OLD anchors never change. Rows through13 are
-merged; row14/wide is the next focused PR. Merge/run evidence is in
+merged; row14/wide is the sole open PR92. Merge/run evidence is in
 [the handoff](development-state.md) and [history](roadmap-history.md).
 Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
 the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
 actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
 WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
 which is its immutable parent.
-Row14 wide is prepared on current PR91 head7018086; after that PR squashes,
-rebase its current base7018086 onto the actual squash, not OLD89b7bde.
+Row14 wide is now final-rebased on actual main3c0685c after PR91 squash.
+Its next rebase uses actual current3c0685c, not OLD89b7bde.
 Its OLDhead3a791dc and row15 OLDparent stay immutable.
 Row15 is prepared on current widecb0d7e6; its later rebase must use that
 actual current base. OLDheadc835578 and row16 OLDparent stay immutable.
@@ -49,15 +49,15 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 11 | list-copy | `ownership-list-copies` | `bcdfb163c565` | `bb00baa4ab95` | `376e77ae9469` |
 | 12 | list-option | `ownership-list-options` | `8e6a891eadfa` | `34023f35a42f` | `bb00baa4ab95` |
 | 13 | inference | `inference-call-effects` | `7018086b8f98` | `89b7bde2c8f0` | `34023f35a42f` |
-| 14 | wide | `ownership-wide-counts` | `cb0d7e6db7e5` | `3a791dc7e9f3` | `89b7bde2c8f0` |
+| 14 | wide | `ownership-wide-counts` | `bd7a20bfd833` | `3a791dc7e9f3` | `89b7bde2c8f0` |
 | 15 | order | `ownership-list-order` | `5fe569218a4b` | `c83557825d8a` | `3a791dc7e9f3` |
 | 16 | sort-callback | `ownership-sort-callbacks` | `5c19337f216d` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `15743b853d6a` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `112f3c8de87b` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `6ce37fb180e1` | `c05a5d9c7d86` | `787763d2e4b6` |
-| 20 | generation | `ownership-list-generation` | `fad9b1ad08f6` | `fad9b1ad08f6` | `c05a5d9c7d86` |
-| 21 | array-element | `ownership-array-elements` | `636414fabf18` | `636414fabf18` | `fad9b1ad08f6` |
-| 22 | map-set | `ownership-map-set-elements` | `a8a7d119712b` | `a8a7d119712b` | `636414fabf18` |
+| 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
+| 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
+| 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `6774aa5bb426` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `02beec353ec7` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `3e314222ff7c` | `3e314222ff7c` | `02beec353ec7` |
@@ -120,7 +120,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `17869223a502` | `17869223a502` | `750a5cffd46b` |
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `786e4bbb99f1` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `ae00e6929e86` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `3a0cbdb33b79` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `872372452a10` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f85cc4e09db4` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `8abfd46b3476` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `291f8f75f196` | `dc2ad1febc5d` | `8abfd46b3476` |
