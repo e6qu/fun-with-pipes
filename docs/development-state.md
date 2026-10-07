@@ -17,25 +17,36 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
-- Origin/main: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
+- Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
   Current head `f53493c` passed all four jobs in
   [run 37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156):
   Linux, ARM/Intel macOS and benchmarks. Intel completed 2026-10-07T12:38:44Z.
   Verified squash subject: `Unify container ownership contracts and borrow comparison keys`,
-  one line, 61 characters, no body or trailers. Concurrent native executable
+  one line, 62 characters, no body or trailers. Concurrent native executable
   cache access is read-only; ARM's tutorial/pipeline regression is fixed.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
-- Next sole PR: `ownership-leaves`, checkout `/private/tmp/fwp-leaf-worktree`,
-  rebased from old base `798d2ed` onto `5998302`; macOS/cache fixes inherited.
-  Post-rebase leaf (2) and container (3) regressions pass (CPU 13.32 s /
-  elapsed 27.06 s), eight IR ownership checks pass (CPU 3.51 s / elapsed 7.39 s).
-  Contract inventory, formatting and whitespace pass. Publish this sole PR and
-  run full current-head CI before squash-merging. No local workloads remain.
-- Separate next-task work: `ownership-loop-state`, checkout
-  `/private/tmp/fwp-loop-worktree`, base `0a90b05`. Implement normal and fused
-  loop state/result transfers; no code edits yet. Prepared descendants retain
-  their listed OLD anchors until sequential rebases after parent squash merges.
+- Origin/main: `22994ba794a37320aca6e5122ed1ef909a0f4148`, squash merge of
+  [PR #76](https://github.com/e6qu/fun-with-pipes/pull/76). Exact head
+  `2d2af62630acf9e2c25d93e6ba2209d9e126a745` passed all four jobs in
+  [CI 37623311024](https://github.com/e6qu/fun-with-pipes/actions/runs/37623311024).
+  Verified squash subject: `Count owned String and Bytes results with explicit alias contracts`,
+  one line, 66 characters, empty body, no trailers. Local main fast-forwarded
+  while preserving its current plan/handoff edits.
+- Next sole PR: `ownership-text-results`, `/private/tmp/fwp-text-worktree`,
+  rebased from OLD anchor `2ce7a05` onto `22994ba`. Text (3), inherited leaf
+  (2), inventory (1), IR ownership (8), formatting and whitespace pass. Publish
+  as the sole PR and run full current-head CI before squash merging.
+  No local workload remains.
+- Latest prepared change: `ownership-list-generation`, checkout
+  `/private/tmp/fwp-generation-worktree`, base `c05a5d9`. repeat/range
+  ownership passes all focused, inventory and IR checks; published as `fad9b1a`.
+  Structural zip/unzip/chunks ownership is published as `c05a5d9`, based on
+  `787763d` (normal/fused loop transfers). No additional PR is open.
+  Current next-task checkout: `ownership-array-elements` at
+  `/private/tmp/fwp-array-element-worktree`, base `fad9b1a`, typed array creation/copies, mutations, aliases and
+  callbacks published as `636414f`. Focused semantic/scalar/ABI/IR/format checks pass; then map/set elements, old-object reclamation and retained teardown. Prepared descendants retain their
+  listed OLD anchors until sequential rebases after parent squash merges.
 
 ## Current ownership evidence
 
@@ -60,7 +71,6 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-text-results | fwp-text-worktree | bab67ea | 2ce7a05 |
 | ownership-closures | fwp-closure-worktree | 0d96bfe | bab67ea |
 | ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
 | ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
@@ -79,9 +89,13 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-order | fwp-order-worktree | c835578 | 3a791dc |
 | ownership-sort-callbacks | fwp-sort-callback-worktree | 66bc713 | c835578 |
 | ownership-state-sequences | fwp-state-sequence-worktree | 0a90b05 | 66bc713 |
+| ownership-loop-state | fwp-loop-worktree | 787763d | 0a90b05 |
+| ownership-list-structure | fwp-structure-worktree | c05a5d9 | 787763d |
+| ownership-list-generation | fwp-generation-worktree | fad9b1a | c05a5d9 |
+| ownership-array-elements | fwp-array-element-worktree | 636414f | fad9b1a |
 
-Example after this PR merges: from fwp-leaf-worktree,
-`git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
+Example after the text PR merges: from fwp-closure-worktree,
+`git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
 Review runtime changes against the latest macOS fixes and resolve documentation
 conflicts by carrying forward verified state, not by preserving stale statuses.
 Temporary worktrees are conveniences; published branches preserve the work.
@@ -122,8 +136,8 @@ prepared after b563360, followed by take/drop-while on ownership-list-prefix.
 Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
 Call-effect inference repair is prepared separately after optional list aliases.
 Exact overflow counts and sort/unique/sort-by ownership are published;
-scan/iterate state ownership is published. Next repair general/fused loop
-state transfer, then remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
+scan/iterate and general/fused loop state ownership are published. Next implement
+remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
@@ -629,3 +643,197 @@ previous fields and transfers owned next/result fields. Preserve collector roots
 and scalar-bit handling. Tests must cover all paths with callback order/ticks,
 GC/reuse verification, input/result aliases, captures and no-tracing counts,
 including the map/sum sequence consumer that currently loses reclamation.
+
+## Loop state ownership implementation
+
+`ownership-loop-state`, checkout `/private/tmp/fwp-loop-worktree`, base
+`0a90b05`, is in progress and not published. Loop contracts borrow the callback
+and consume state. Generic/captured/direct callback paths consume the state,
+retain the selected Step payload by its known type and drop the Step. Captures
+borrow between iterations and get per-call copies. Generated scalar/record
+loops keep the existing unboxed form; record loads duplicate typed flattened
+fields and release the incoming box. State/next arrays are zeroed with address
+fences across allocating step execution. Tick/evaluation order stays unchanged.
+
+New tests exposed native SIGBUS in the flattened nested-record case; nine other
+isolated expressions passed. Rebuilding a nested record from loop slots needed
+typed child references and to consume the field-read's initial Dup with its fresh
+outer owner. That repair passes two new regressions at O1/O2, stack on/off,
+stress/verify/poison, conservative switches, nested/captured/dynamic callbacks,
+Step payload aliases and function states. A baseline matcher initially mistook
+fwp_loop_payload for an optimized loop; it now matches only numbered loop calls.
+Fused map/sum sequence consumer frees 8.5 MiB versus 4.1 MiB when only generated
+loop initial-state sharing is restored, same output/zero collections (Apple
+Silicon, Apple Clang 17, O1, 0.1 MiB precision). CPU 13.64 s / elapsed 27.52 s.
+Earlier adjacent sequence tests passed CPU 11.99 s / elapsed 24.11 s.
+
+Inspection also found boxed-to-worker ABI calls duplicated field references but
+only raw-dropped the original outer argument, leaving its original child/storage
+references. Post-call cleanup now uses the typed argument destructor. The first boxed counter was optimized to the unboxed loop and showed 1.1/1.1
+MiB; it did not exercise that boundary. A revised constructor-choice step proves
+use of fwp_k_loop_owned and shows 1.2 -> 2.7 MiB after restoring/removing only
+raw outer release. Its focused check passes CPU 1.63 s / elapsed 3.49 s. This
+ABI change needs adjacent closure/stack/FFI and IR verification before publication.
+Current PR #76 passes benchmarks; Linux and ARM macOS passed; Intel macOS is running.
+Keep all checks bounded, fix failures, and run full gates after parent merges.
+
+All four new loop regressions and twelve adjacent closure/stack/temporary/FFI/fat
+checks pass (16 total, CPU 41.37 s / elapsed 82.96 s). The scalar payload probe
+uses the actual emitted loop wrapper with numeric words equal to a live String
+address and preserves that allocation's count. Root fences were then narrowed
+to possible heap-pointer slots; inline numeric/Bool slots need none, while boxed
+numerics still do even without RC destruction. All five loop regressions pass after
+that refinement, including two existing nested/trap goldens at O1/O2 with
+collection stress/verify/poison (CPU 19.26 s / elapsed 38.72 s). Eight IR ownership checks pass (CPU 3.53 s / elapsed 7.43 s).
+Contract inventory passes (CPU 0.00 s / elapsed 0.14 s), formatting/whitespace
+checks precede publication. No local workload remains. No full local gate is run; #76 remains
+the sole PR and all its non-benchmark jobs are still running.
+
+Loop state repair published as `787763d` after five loop checks (including focused
+existing goldens), twelve adjacent ABI/closure/stack/temporary/FFI/fat checks,
+eight IR checks, contract inventory, formatting and whitespace. Every local
+check used the bounded guard, with no limit increase or full local gate. The
+commit subject is one line, 66 characters, without body/trailers; main's #75
+squash was likewise verified. #76 head remains `2d2af62` and is the sole open PR.
+Published descendants retain their OLD rebase anchors; do not prematurely rebase
+or replay the whole pre-squash chain. Next concrete code: zip/unzip/chunks fresh
+structural nodes must own borrowed element aliases by known types; scratch
+storage must be released, with empty/truncated/invalid-size cases and nested/
+function-valued aliases compared to interpreter under stress. Then retained
+container elements, old marked-object reclamation and exceptional lifetimes.
+No local workload remains. Full roadmap goal stays active and phase 2 incomplete.
+
+## Structural list ownership prepared
+
+`ownership-list-structure`, checkout `/private/tmp/fwp-structure-worktree`,
+base `787763d`: zip/unzip/chunks build counted structural nodes with explicitly
+typed borrowed element references and release scanned scratch buffers. Scalar
+fields get NULL duplication operations, preserving address-shaped numeric bits.
+The original truncation, data-last pair order and chunk failures remain intact.
+
+Focused bounded checks: alias matrix and no-tracing counts passed, then expanded
+invalid-size and reuse/free-disabled fallback coverage passed (3 tests, CPU
+8.42 s, elapsed 17.17 s). Counts comparison restores sharing only at emitted
+result boundaries: identical output, zero collections, 8.2 versus 12.6 MiB
+freed by counts. A Boolean fixture typo was corrected before the passing run.
+The actual scalar wrapper probe passed at O1/O2 after fixing overlapping
+probe placeholders (CPU 0.84 s, elapsed 1.99 s). Inventory (1) and IR ownership
+checks (8) passed, CPU 3.12 s / elapsed 6.42 s and CPU 0.00 s / elapsed 0.13 s.
+Formatting and whitespace pass. No local workload remains.
+No full local gate was run; all-platform gates follow parent squash/rebase.
+Next: repeat/range remaining list ownership, then typed container elements,
+old-object reclamation and retained callback/exception teardown.
+
+Structural list change published as `c05a5d9c7d866286a4b778bd53b6d2c85cdbcf7f`,
+base `787763d`; checkout clean, no extra PR. Commit subject verified as one line
+with an empty body and no trailers. PR #76 remains the only open PR: full gate
+37623311024 passes Linux, ARM macOS and benchmarks, Intel still running. When
+all pass, verify head `2d2af62`, squash with explicit subject and empty body,
+fetch/verify main, then rebase text from OLD anchor `2ce7a05` and open the next
+sole PR. Continue repeat/range ownership while CI runs; failures require fixes.
+
+## Generated list ownership prepared
+
+`ownership-list-generation`, `/private/tmp/fwp-generation-worktree`, base
+`c05a5d9`: repeat borrows its count/value, owns each new list node and duplicates
+reference-bearing repeated elements by their monomorphic type. Non-positive
+counts return empty lists without duplicating the input. Range borrows both
+bounds and owns freshly generated list nodes; ordering, integer limits and
+boxed numeric representations are unchanged. Boxed 128-bit numeric payloads
+still use the conservative numeric allocation path and need phase 3 work.
+
+Focused checks pass: retained String/Bytes/nested-list/601 closure aliases,
+negative/zero repeat sizes, empty/backward ranges and signed/unsigned 8-, 64-
+and 128-bit limits, O1/O2, stack on/off, GC/reuse verification and reuse/free-
+disabled fallbacks (2 tests; CPU 5.75 s, elapsed 11.87 s). Initial fixtures used
+an ambiguous function pipe and an absent int.to-string helper; corrected to
+map over a function list and the existing show primitive. The actual scalar
+repeat/range wrapper probe passes at O1/O2 with address-shaped numeric words
+(CPU 0.69 s, elapsed 2.08 s). Identical output, zero collections: restoring only
+result sharing changes count reclamation from 4.4 MiB to 1.7 MiB. This proves
+list-node ownership in this workload, not general no-GC execution or speed.
+Inventory (1) and IR ownership (8) checks passed (CPU 3.09 s / elapsed
+6.38 s; CPU 0.00 s / elapsed 0.14 s). Investigating a potential TInt range
+width issue confirmed TInt is excluded from Integer by the type checker, so
+that unreachable path was not changed. The speculative width change/test was
+removed; the final supported matrix passed all 3 tests (CPU 12.65 s, elapsed
+25.37 s). Formatting and whitespace pass; no full local gate was run.
+Next implementation: typed stored container ownership and destruction.
+
+Generated list ownership published as `fad9b1a`, base `c05a5d9`; checkout clean,
+no additional PR. Commit message verified as one line with no body/trailers.
+Next task is typed array element ownership across creation, copies, alias
+results, mutations and callbacks; map/set elements follow separately. Keep
+current PR #76 gate 37623311024 and sequential old anchors as recorded above.
+
+Typed array investigation: current `Gen::drop_body` frees container storage
+without releasing elements; array creation/copies share their inputs, and
+set/push owning wrappers drop only outer array references. Complete these
+paths together before claiming typed element ownership. Copying a nonunique
+array needs one typed reference per copied element; replacement drops the
+old selected element; invalid set consumes the array without retaining the
+new value. Poison-copy (`fwp_rc_unique_mut == 2`) must transfer or duplicate
+children and clear/drop the old container consistently. Generate/map callbacks
+borrow their arguments and return owned elements; fold consumes its accumulator.
+Array get/to-list/slice/append/sort must establish typed result aliases and
+keep input roots alive. Leave scalar words untouched. Preserve GC/reuse stress,
+callback order and fallback flags, and add no-tracing allocation evidence.
+No array code edits or local workloads remain; continue in the prepared checkout.
+
+## Typed array element ownership implemented
+
+`ownership-array-elements`, `/private/tmp/fwp-array-element-worktree`, base
+`fad9b1a`: all 13 array primitive contracts now model typed ownership (length
+remains scalar). Creation/copies own element references; last-reference array
+destruction releases elements by type. Get/to-list create owned alias results;
+slice/append/sort retain copied elements. Set/push borrow inserted values and
+consume arrays; invalid set consumes without retaining its unused value.
+Unique growth/poison-copy transfers children, nonunique copies duplicate them,
+and replacement drops the old selected element. Callback generate/map borrow
+inputs and own outputs; fold consumes/transfers its accumulator. Scratch sorting
+buffers are released; capacity and slice calculations avoid overflow.
+
+Inventory (1) passed CPU 3.13 s / elapsed 6.54 s, existing container alias and
+callback regression (1) passed CPU 7.63 s / elapsed 15.54 s. Initial compile used
+a nonexistent Gen field instead of the free_enabled() helper; fixed. Initial
+new fixture used abstract ! io instead of concrete ! {IO}; fixed. Expanded
+matrix/counts tests (2) pass CPU 12.34 s / elapsed 24.74 s, covering every array
+operation, retained copies, nested arrays, String/Bytes/function elements,
+601-element sharing/growth, callbacks, O1/O2, stack on/off, GC/reuse verification,
+and reuse/free-disabled fallbacks. Function accumulator/captured fold callbacks
+added and pass CPU 4.90 s / elapsed 9.96 s. Actual scalar wrappers and destruction
+preserve address-shaped numeric words at O1/O2 (CPU 1.08 s / elapsed 2.30 s).
+Identical output and zero collections: restoring only result sharing changes
+count reclamation from 11.3 to 5.3 MiB. No general no-GC or speed claim.
+Adjacent FFI (5), fat ABI (1) and stack (2) checks pass (CPU 8.91 s, elapsed
+18.24 s). IR ownership checks (8) pass (CPU 3.10 s, elapsed 6.51 s).
+Formatting/whitespace pass. No local workload remains. Full all-platform
+CI follows the parent squash/rebase sequence; no additional PR is open.
+Next: typed map/set element ownership, old-object reclamation and runtime
+retained callbacks/exception teardown; numeric payloads still need phase 3.
+
+Typed array change published as `636414fabf1802c1f3e15de3080763e997e0e135`,
+base `fad9b1a`; checkout clean, no additional PR. Its 60-character commit
+subject is one line with an empty body and no trailers. Next implementation:
+typed map/set elements (including overwritten/duplicate keys, aliases, shared
+copies and callback updates). Base the new isolated work on `636414f`.
+PR #76 remains the only open PR; current-head run 37623311024 passes Linux,
+ARM macOS and benchmarks, Intel still live. After all four pass, verify head
+2d2af62, squash with explicit subject/empty body, verify main and rebase text
+from OLD anchor 2ce7a05. Continue implementation and fix failures meanwhile.
+
+PR #76 gate 37623311024 completed successfully on all four jobs at exact head
+2d2af62630acf9e2c25d93e6ba2209d9e126a745. Authorized squash merged as
+22994ba794a37320aca6e5122ed1ef909a0f4148; subject length 66, one line, body empty,
+no trailers. Main fast-forwarded while restoring the existing local plan/handoff.
+Text rebase is in progress from its OLD 2ce7a05 anchor; only handoff conflict,
+resolved with current root evidence. Next focused tests, publication and sole PR.
+
+Text rebase completed onto 22994ba; semantic/runtime changes merge cleanly.
+The handoff conflict was reconciled with current root evidence. Post-rebase
+text (3) and leaf (2) checks pass CPU 13.37 s / elapsed 27.10 s. Identical
+outputs: text counts 0 -> 2.1 MiB and scratch heap 9.2 -> 1.7 MiB. Inventory
+(1) passed CPU 2.99 s / elapsed 6.19 s; IR checks (8) CPU 0.00 s / elapsed
+0.14 s; fmt/whitespace pass. Publish next sole PR/full CI at the current head.
+Closure child still rebases from its OLD bab67ea anchor, never the newly
+rebased text head. Keep remaining published chain anchors unchanged.

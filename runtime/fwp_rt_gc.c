@@ -488,22 +488,21 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
 
 /* ----- unique objects, updated in place
  *
- * The collector frees memory; counted references only tell when an
- * object has exactly one, so that it can be reused in place (a record
- * copy with some fields changed writes them into the original). Records
- * and variants that compiled code allocates (kind 0) start with one
- * reference (fwp_rc_fresh); compiled code counts the references its locals
- * take and give up (fwp_rc_dup, fwp_rc_drop, from src/rc.rs). Everything
- * else is shared, count 0, forever: objects the runtime allocates, and
- * every value compiled code hands to the runtime (a primitive, a closure,
- * another thread), with everything it reaches (fwp_rc_share). A count can
- * only be too high (a word that looks like a pointer counted, a reference
+ * Counts identify unique values for updates and reclaim eligible objects
+ * when typed drops release their last reference. Compiled records/variants
+ * and selected primitive result leaves/trees start with one reference
+ * (fwp_rc_fresh). Compiled code counts references taken and given up
+ * (fwp_rc_dup, fwp_rc_drop, from src/rc.rs). Runtime allocations start
+ * shared, count 0, until an explicit ownership contract claims their fresh
+ * result. Unknown/retaining boundaries (closures, callbacks, other tasks)
+ * promote an escaping value and its descendants to sharing (fwp_rc_share).
+ * A count can only be too high (a word that looks like a pointer counted, a reference
  * dropped by a dead object never given back): an object is reused only
- * when it truly has one reference. Old objects are never reused: they must
- * not come to point to young ones. */
+ * when it truly has one reference. Complete old values must not acquire
+ * young fields; mutable kind-2 containers remain scanned by minor collections. */
 
-/* the count of the object `v` points into, or 0: a small object of kind 0
- * (records, variants) or 2 (arrays), or the start of a big one */
+/* The count of a small allocation (including pointer-free leaves), or
+ * of the start of a big allocation. An unmanaged pointer has no count. */
 static inline uint8_t *fwp_rc_slot(V v) {
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
     if (off >= fwp_gc.top << GC_SHIFT) return 0;

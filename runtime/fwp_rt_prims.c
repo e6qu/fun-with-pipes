@@ -376,14 +376,16 @@ static size_t fwp_utf8_offset(const char *d, size_t n, size_t k) {
 static V fwp_p_chars(V s) {
     const char *d = STR(s)->d;
     size_t n = STR(s)->len, cnt = fwp_utf8_count(d, n), k = 0, i = 0;
-    V *a = (V *)fwp_alloc((cnt + 1) * sizeof(V));
+    V *a = (V *)fwp_mem_alloc((cnt + 1) * sizeof(V));
     while (i < n) {
         size_t j = i + 1;
         while (j < n && fwp_is_cont((unsigned char)d[j])) j++;
         a[k++] = fwp_str_new(d + i, j - i);
         i = j;
     }
-    return fwp_list_from(a, k);
+    V result = fwp_list_from(a, k);
+    fwp_mem_free(a);
+    return result;
 }
 
 static const char *fwp_memmem(const char *h, size_t hn, const char *nd, size_t nn) {
@@ -567,9 +569,11 @@ static void fwp_utf8_put(fwp_buf *b, uint32_t c) {
 static V fwp_p_codepoints(V s) {
     const unsigned char *d = (const unsigned char *)STR(s)->d;
     size_t n = STR(s)->len, i = 0, k = 0;
-    V *a = (V *)fwp_alloc((n + 1) * sizeof(V));
+    V *a = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
     while (i < n) a[k++] = fwp_utf8_next(d, &i);
-    return fwp_list_from(a, k);
+    V result = fwp_list_from(a, k);
+    fwp_mem_free(a);
+    return result;
 }
 
 static V fwp_p_from_codepoints(V xs) {
@@ -1166,9 +1170,11 @@ static V fwp_p_bytes_from_list(V xs) {
 
 static V fwp_p_bytes_to_list(V b) {
     size_t n = STR(b)->len;
-    V *a = (V *)fwp_alloc((n + 1) * sizeof(V));
+    V *a = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
     for (size_t i = 0; i < n; i++) a[i] = (V)(unsigned char)STR(b)->d[i];
-    return fwp_list_from(a, n);
+    V result = fwp_list_from(a, n);
+    fwp_mem_free(a);
+    return result;
 }
 
 static V fwp_p_bytes_get(V i, V b) {

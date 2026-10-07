@@ -381,6 +381,9 @@ struct Gen<'p> {
     /// on the last one the object freed with what it holds.
     drops: HashMap<MT, usize>,
     drop_defs: Vec<String>,
+    /// Type-directed ownership of fresh runtime result trees.
+    tree_owners: HashMap<MT, usize>,
+    tree_owner_defs: Vec<String>,
     /// Per variant type returned as a struct: its helpers (`vhelper`).
     vhelpers: HashMap<MT, usize>,
     vhelper_defs: Vec<String>,
@@ -1071,6 +1074,63 @@ impl<'p> Gen<'p> {
         let def = self.drop_body(mt, id);
         self.drop_defs[id] = def;
         id
+    }
+
+    fn tree_owner_id(&mut self, mt: &MT) -> Result<usize, String> {
+        if let Some(id) = self.tree_owners.get(mt) {
+            return Ok(*id);
+        }
+        let id = self.tree_owner_defs.len();
+        self.tree_owners.insert(mt.clone(), id);
+        self.tree_owner_defs.push(String::new());
+        let mut body = format!("static void fwp_own_tree{id}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c) return;\n        if (*c) fwp_trap(\"internal: aliased fresh result tree\");\n        fwp_rc_fresh(v);\n");
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes")) {
+            body.push_str("        return;\n    }\n}\n");
+            self.tree_owner_defs[id] = body;
+            return Ok(id);
+        }
+        let cases: Vec<(u32, Vec<MT>)> = match (
+            record_fields(&self.prog.shapes, mt),
+            self.prog.shapes.get(mt),
+        ) {
+            (Some(fs), _) => vec![(0, fs.iter().map(|(_, t)| t.clone()).collect())],
+            (None, Some(TypeShape::Adt(vs))) => vs
+                .iter()
+                .enumerate()
+                .filter(|(_, (_, fs))| !fs.is_empty())
+                .map(|(tag, (_, fs))| (tag as u32, fs.clone()))
+                .collect(),
+            _ => {
+                return Err(format!(
+                    "fresh tree result has unsupported counted type `{mt}`"
+                ))
+            }
+        };
+        body.push_str("        switch (OBJ(v)->tag) {\n");
+        for (tag, fields) in cases {
+            let _ = writeln!(body, "        case {tag}: {{");
+            // A list spine is followed in a loop, not by C recursion.
+            let tail = fields.iter().rposition(|t| t == mt);
+            for (index, ty) in fields.iter().enumerate() {
+                if Some(index) == tail || !crate::rc::needs_rc(&self.prog.shapes, ty) {
+                    continue;
+                }
+                let owner = self.tree_owner_id(ty)?;
+                let _ = writeln!(body, "            fwp_own_tree{owner}(OBJ(v)->f[{index}]);");
+            }
+            if let Some(index) = tail {
+                let _ = writeln!(
+                    body,
+                    "            v = OBJ(v)->f[{index}];\n            continue;"
+                );
+            } else {
+                body.push_str("            return;\n");
+            }
+            body.push_str("        }\n");
+        }
+        body.push_str("        default: fwp_trap(\"internal: invalid fresh tree tag\");\n        }\n    }\n}\n");
+        self.tree_owner_defs[id] = body;
+        Ok(id)
     }
 
     /// The helpers of a variant type `t` returned as a struct `fwp_u<m>`:
@@ -3939,6 +3999,19 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::FreshTree => {
+                                let result_type = func.ty.params(func.arity as usize).1.clone();
+                                let owner = self.tree_owner_id(&result_type)?;
+                                let result = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!(
+                                            "fresh tree primitive `{sym}` has no return expression"
+                                        )
+                                    })?;
+                                s = format!("V result = {result}; fwp_own_tree{owner}(result); return result;");
+                            }
                             ResultOwnership::FreshLeaf | ResultOwnership::FreshContainer => {
                                 let r = s
                                     .strip_prefix("return ")
@@ -4619,6 +4692,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         desc_defs: Vec::new(),
         drops: HashMap::new(),
         drop_defs: Vec::new(),
+        tree_owners: HashMap::new(),
+        tree_owner_defs: Vec::new(),
         vhelpers: HashMap::new(),
         vhelper_defs: Vec::new(),
         strings: HashMap::new(),
@@ -5016,6 +5091,13 @@ static const fwp_exec_spec exec_spec{i} = {{
         let _ = writeln!(out, "static void fwp_drop{}(V v);", i);
     }
     for d in &g.drop_defs {
+        out.push_str(d);
+        out.push('\n');
+    }
+    for i in 0..g.tree_owner_defs.len() {
+        let _ = writeln!(out, "static void fwp_own_tree{i}(V v);");
+    }
+    for d in &g.tree_owner_defs {
         out.push_str(d);
         out.push('\n');
     }

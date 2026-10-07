@@ -3,7 +3,8 @@
 `src/ownership.rs` is the shared boundary inventory used by IR counting and
 native code generation. Its container inventory covers every array/map/set
 primitive declared in `lib/collections.fwp`; a coverage check detects newly
-added declarations without contracts. Selected String/Bytes contracts are listed below. Other primitives, foreign
+added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
+selected typed result ownership is listed below. Other primitives, foreign
 functions and remote calls retain the conservative default: borrow arguments, promote counted
 values to runtime sharing, and return runtime-shared values. Further inventories
 must refine that default before extending deterministic reclamation.
@@ -49,7 +50,7 @@ Fresh outer storage does not imply independently owned elements. Current
 container destruction frees the outer buffer; it does not recursively release
 its runtime-shared elements. Aliasing metadata records which arguments or their
 elements can be reachable from the result, including callback captures. Typed
-element ownership, complete leaf-result coverage, closure capture destruction and
+element ownership, complete leaf-result coverage, closure capture destruction, retained runtime results and
 runtime cycles remain separate work in [ownership.md](ownership.md).
 
 ## Complete runtime sharing
@@ -108,7 +109,7 @@ A shared input remains shared when duplicated. Slices copy and retain no view.
 | string.to-bytes | Identity alias of argument 0; duplicate its reference |
 | pad-left/right; replace | Fresh leaf or no-op alias of argument 2 |
 | string.length/byte-length; bytes.length; print/write/eprint/ewrite | Scalar/unit result |
-| string.contains/find; starts-with/ends-with; bytes.find | Scalar or shared Option of scalar indices |
+| string.contains; starts-with/ends-with | Scalar comparison result |
 | eq/ne/lt/le/gt/ge/compare | Read-only comparison, scalar result |
 
 `tests/leaf_ownership.rs` compares interpreter/native behavior for retained
@@ -118,6 +119,43 @@ copy loop, with tracing disabled and zero collections, reports 0.9 MiB freed by 
 identical output (Apple Silicon, Apple Clang 17, `-O1`, counter precision 0.1 MiB).
 Five focused FFI checks also pass. Full CI on both architectures remains required.
 
-Text results nested in runtime-created Options/lists and retained callback or
-container values remain shared until their boundaries gain typed ownership.
+Selected copied text Options/lists are owned as described below. Retained
+callback/container values and other runtime-created results remain shared.
 This change does not complete phase 2 or establish general execution without GC.
+
+## Fresh copied text result trees
+
+A `FreshTree` result guarantees a tree of new counted allocations, with no aliases
+of arguments and no internal sharing or cycles. Generated helpers establish one
+reference per node using monomorphic field types. They skip scalar fields, treat
+String/Bytes payloads as leaves and walk a list spine iteratively. A counted node
+encountered twice is a contract violation, detected before silently resetting its
+count. This contract cannot be reused for views, caches or callback results.
+
+| Primitives | Owned result |
+|---|---|
+| string.chars; split; lines; words | List of newly copied String leaves |
+| string.codepoints; bytes.to-list | List with inline scalar elements |
+| string.from-codepoints; string.from-bytes | Option containing a copied String, or None |
+| string.split-once | Option of a fresh pair of copied Strings, or None |
+| string.find; bytes.find; bytes.get | Option of an inline scalar, or None |
+| join; format; show | Fresh String leaf; arguments borrow |
+| length | Read-only list length; scalar result |
+| parse-int; parse-float | Borrow input text; result remains shared, including boxed numeric cases |
+
+Character, codepoint and byte-list conversions release their temporary arrays
+once the list is constructed. Those arrays use `fwp_mem_alloc`/`fwp_mem_free`:
+native arrays remain scanned while alive, and WASI uses a separately releasable
+allocation rather than freeing an interior pointer from its bump heap.
+
+`tests/text_ownership.rs` checks retained inputs, Unicode, empty/missing/invalid
+results, byte conversions, split/join and nested destruction against the
+interpreter at `-O1`/`-O2`, GC stress/verification and both poison modes. A word-list
+loop with tracing disabled frees 2.1 MiB by counts versus 0.0 MiB when freeing is
+disabled, with the same output. Restoring only the previous temporary-buffer lifetimes raises the conversion
+loop's committed native heap from 1.7 MiB to 9.2 MiB, with tracing off and identical
+output. Both counter comparisons used Apple Silicon, Apple Clang 17 and `-O1`. Full CI remains required before merging.
+
+IO/network-generated strings and result graphs, callbacks, captured closures,
+container element ownership and exceptional cleanup remain work. Complete text
+contract coverage does not mean every text result has counted ownership.
