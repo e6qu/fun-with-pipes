@@ -546,3 +546,17 @@ an outer record allocation. Seven focused ownership checks, five selected
 semantic goldens and clippy pass; full sequential CI remains required. Bare
 untyped/reconstructed aggregate contexts and retained runtime lifetimes remain
 open. PR #81 is the sole open PR; later preparation stays separate.
+
+Record projection preparation published as `085dc71`, separate from sole PR #81.
+The current exact-head gate has passing benchmarks and running Linux/ARM/Intel
+macOS tests. Continue reconstruction/boxing and runtime lifetime work while CI
+runs; repair any failures before merging. The handoff records the immutable
+anchors and the next concrete action.
+
+Prepared counted CAF caches keep a typed cache owner, return owned references,
+name caller temporaries and protect caller values during evaluation. Executables
+release their result and caches after tasks finish. IR/source cleanup controls,
+17 RC checks, 10 focused ownership tests, four selected semantic goldens and C
+library interop pass. Library/unload and shared runtime lifetime coverage remains
+open, as do aggregate reconstruction and retained tasks. Full sequential CI is
+required; phase 2 is still in progress and #81 is the sole open PR.

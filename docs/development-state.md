@@ -217,13 +217,24 @@ children of nonescaping stack values` (one line, 61 characters), empty body and
 exact head match. Then rebase borrowed callbacks from OLD `b563360`; preserve
 that original anchor rather than using the rewritten stack or squash head.
 
-Current prepared work: `ownership-field-context`, checkout
-`/private/tmp/fwp-field-context-worktree`, OLD base `3f61f51`. Checked record types
-now survive projection inlining; two regressions and five adjacent ownership
-checks pass, as do five selected semantic goldens and clippy. Detailed evidence
-is at the end of this handoff. Publish separately without opening another PR.
-Shared target contains this compiler; clean the package before switching checks.
-No local workload remains.
+Current prepared work: `ownership-caf-cache`, checkout
+`/private/tmp/fwp-caf-ownership-worktree`, OLD base `085dc71`. Counted cache owners,
+owned returns, typed executable teardown and CAF caller/argument lifetimes pass
+IR/source controls and focused checks. Detailed evidence is below; publish this
+branch separately, with no additional PR while #81 is open. Shared target contains
+this compiler; clean the package before switching checkouts. No workload remains.
+
+Previous published preparation: `ownership-field-context`, checkout
+`/private/tmp/fwp-field-context-worktree`, OLD base `3f61f51`, exact head
+`085dc716d5994681b998f13cd619b139794539fc`; clean checkout, no additional PR.
+Commit subject verified: one line, 62 characters, empty body/no trailers.
+Checked record types survive projection inlining; two regressions and five
+adjacent checks, five selected semantic goldens, clippy and fmt/whitespace pass.
+Detailed evidence is below; full sequential CI remains required. Next audit
+reconstructed borrowed records and remaining whole-value variant boxing before
+CAF/inline and retained task teardown/cycles. Create the next task from OLD
+`085dc71`. Shared target contains this compiler; clean the package before
+switching checks. No local workload remains.
 
 Previous published preparation: `ownership-match-context`, checkout
 `/private/tmp/fwp-typed-expression-worktree`, OLD base `de85621`, head
@@ -563,6 +574,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-record-conversion | fwp-record-conversion-worktree | 614dd3b | 5c5875d |
 | ownership-variant-alias | fwp-variant-alias-worktree | de85621 | 614dd3b |
 | ownership-match-context | fwp-typed-expression-worktree | 3f61f51 | de85621 |
+| ownership-field-context | fwp-field-context-worktree | 085dc71 | 3f61f51 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1939,3 +1951,85 @@ PR #81 is the sole open PR, exact `6eeb915`, full CI `37696063781`; benchmark
 passed and all three architecture test jobs are running. Prepare this branch
 separately. Future squash subject `Preserve checked record types across inlined field projections`
 is one line, 62 characters, empty body/no trailers. Publication follows checks.
+
+Projection context published as `085dc716d5994681b998f13cd619b139794539fc`;
+checkout clean and subject verified as one line, 62 characters, no body/trailers.
+Latest CI snapshot for sole PR #81: benchmark passed; Linux, ARM macOS and Intel
+macOS test jobs in progress at exact `6eeb915`. Failing tests remain repair tasks;
+no failure is reported by this snapshot. Preserve OLD `b563360` for the immediate
+borrowed-callback child and OLD `085dc71` for later preparation. Full CI gates
+merging only. Continue aggregate reconstruction/boxing and then runtime lifetime
+coverage while the current gate runs. Final fmt check passed, CPU 0.35 s /
+elapsed 0.63 s; all checks serial and bounded, no resource refusal.
+
+## Prepared counted CAF caches
+
+`ownership-caf-cache`, `/private/tmp/fwp-caf-ownership-worktree`, OLD base
+`085dc716d5994681b998f13cd619b139794539fc`. CAFs previously recursively shared
+cached results, discarding their counts. A native count probe failed with exit 1.
+Counted CAFs now hold one typed cache owner and return a retained owner per call.
+Scalar CAFs avoid generic share/retain operations even for pointer-looking words.
+Initialization remains lazy and memoized; failure leaves it retryable. If
+initialization reenters, replacing the earlier cached result releases that cache
+owner while preserving already returned references. This is valid IR/runtime
+coverage, not a claim of a newly reachable source reentrancy shape.
+
+RC now names CAF results in borrowed/consumed argument preparation, preserving
+evaluation order and giving borrowed calls a temporary to release. CAF evaluation
+also records caller liveness and generates a cleanup scope when unwind is enabled.
+A source test initially exposed the missing temporary, and its corrected case
+reclaims the cache. A separate trapping source fixture, with task support enabled,
+releases unique caller inputs and preserves external aliases; removing only the
+CAF caller scope makes the control fail with exit 4. Initialization-failure retry,
+actual SIZE_MAX retain overflow and cleanup boundaries pass. Cache aliases and a
+record containing two aliases of the same String have exact reference counts.
+
+Executables release the counted main result after tasks finish, then clear and
+release counted CAF caches by type. Both cleanup stages have failing controls:
+omitting root release leaves the child alive (exit 3); omitting cache teardown
+fails with exits 3/9. Missing returned retain fails with exit 11; removing replaced
+cache release fails with exit 12. Teardown is idempotent. All three CAF tests pass
+at O1/O2, with GC stress/verification and both poison modes; source stdout/stderr/
+exit agrees with the interpreter, including initialization and trapping behavior.
+Native library caches retain their loaded-program lifetime; host/unload teardown
+and shared runtime graphs remain acceptance gaps. No public interface is added.
+
+Seventeen RC unit checks pass, guarded CPU 3.28 s / elapsed 6.99 s. Ten focused
+CAF/caller/projection checks pass, CPU 23.50 s / elapsed 47.09 s. Final CAF controls
+pass (3 tests), CPU 4.10 s / elapsed 9.53 s. The shared-library C interop smoke
+check passes, CPU 0.80 s / elapsed 2.32 s. Four selected opt_constant_order,
+effects, unboxed_records and variant_returns goldens agree exactly on stdout/
+stderr/exit at O2 in both poison modes, CPU 4.03 s / elapsed 8.18 s. Full sequential
+Linux/ARM macOS/Intel macOS/benchmark CI remains required before merging.
+
+All local checks used the serial bounded fwp guard with the shared target.
+Commands: `cargo test --lib rc::tests -- --nocapture`, `cargo test --test
+caf_ownership --test compiler_call_liveness --test field_context_ownership --
+--nocapture`, `cargo test --test caf_ownership -- --nocapture`, `cargo test --test
+ffi shared_library_from_c -- --nocapture`, and
+`python3 /private/tmp/fwp-caf-goldens.py`. An initial invocation named nonexistent
+`call_liveness`; corrected to `compiler_call_liveness` before the successful run.
+The 2,000-task tasks_local interpreter workload was explicitly stopped and moved
+to full CI; it is not locally verified. At inspection it used 72 MiB RSS and
+38.32 s CPU after 75 s elapsed; no resource limit was raised or bypassed. The
+four smaller goldens above were then run serially. Package clean preceded the
+checkout switch. No local workload remains; shared target contains this CAF
+compiler. Remaining work includes reconstructed nested state, untyped contexts,
+whole-value variant boxing, inline lifetimes, retained task teardown/cycles and
+library lifetime coverage. Phase 2 and later roadmap phases remain incomplete.
+
+PR #81 remains the sole open PR, exact `6eeb915`, full CI `37696063781`;
+benchmarks passed, all three architecture test jobs running. Failing tests remain
+repair tasks; CI gates merging only. This prepared change stays separate.
+Prepared squash subject `Own cached CAF results and release executable cache owners`
+is one line, 58 characters, empty body/no trailers. Publication follows checks.
+
+CAF library/dedicated-test clippy is warning-free after replacing the fixture's
+post-default field assignments with a Program initializer. Guarded lint command:
+`cargo clippy --lib --test caf_ownership -- -D warnings`, CPU 0.00 s / elapsed
+0.14 s (cached library checking from the prior run). Final CAF tests pass after
+that fixture edit, CPU 4.18 s / elapsed 10.91 s. Formatting and whitespace pass;
+no unresolved focused-test failure remains. The large task fixture remains for
+full CI, not a passing local check. Latest run `37696063781` still has passing
+benchmarks and live architecture test jobs at exact `6eeb915`; do not restart it
+for observation delays or open another PR before #81 merges.

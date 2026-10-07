@@ -416,7 +416,13 @@ impl Pass<'_> {
         // the operation, including consumed arguments. Earlier results remain
         // visible owners if evaluation of a later argument unwinds. Bind earlier
         // computed scalar arguments too, preserving evaluation order.
-        let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
+        // A zero-argument function evaluates a CAF and returns an owned
+        // cached value. It can allocate/trap, unlike a static function closure.
+        let funcs = self.funcs;
+        let inline = |p: &Expr| {
+            matches!(p, Expr::Local(_) | Expr::Const(_))
+                || matches!(p, Expr::Func(id) if funcs[*id].arity > 0)
+        };
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
         let uncounted: Vec<bool> = types.iter().map(|t| !needs_rc(self.shapes, t)).collect();
@@ -442,7 +448,8 @@ impl Pass<'_> {
                     }
                     xs.push(Expr::Local(*l));
                 }
-                (Mode::Borrow, Expr::Const(_) | Expr::Func(_)) => xs.push(p.clone()),
+                (Mode::Borrow, Expr::Const(_)) => xs.push(p.clone()),
+                (Mode::Borrow, Expr::Func(id)) if self.funcs[*id].arity > 0 => xs.push(p.clone()),
                 // computed in place, unless a later part is bound before
                 // the operation (then bound too, in order)
                 (Mode::Borrow, p) if uncounted[i] => {
@@ -693,6 +700,11 @@ impl Checker<'_> {
                 }
                 // A boxed-to-struct conversion owns the consumed result while
                 // these remaining references still belong to its caller.
+                self.record_call(e, before, st);
+                Ok(())
+            }
+            Expr::Func(id) if self.funcs[*id].arity == 0 => {
+                let before = self.calls.map(|_| owned_references(st));
                 self.record_call(e, before, st);
                 Ok(())
             }

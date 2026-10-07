@@ -901,3 +901,69 @@ PR #81 is the sole open PR, exact `6eeb915`, full CI `37696063781`; benchmark
 passed and all three architecture test jobs are running. Prepare this branch
 separately. Future squash subject `Preserve checked record types across inlined field projections`
 is one line, 62 characters, empty body/no trailers. Publication follows checks.
+
+## Prepared counted CAF caches
+
+`ownership-caf-cache`, `/private/tmp/fwp-caf-ownership-worktree`, OLD base
+`085dc716d5994681b998f13cd619b139794539fc`. CAFs previously recursively shared
+cached results, discarding their counts. A native count probe failed with exit 1.
+Counted CAFs now hold one typed cache owner and return a retained owner per call.
+Scalar CAFs avoid generic share/retain operations even for pointer-looking words.
+Initialization remains lazy and memoized; failure leaves it retryable. If
+initialization reenters, replacing the earlier cached result releases that cache
+owner while preserving already returned references. This is valid IR/runtime
+coverage, not a claim of a newly reachable source reentrancy shape.
+
+RC now names CAF results in borrowed/consumed argument preparation, preserving
+evaluation order and giving borrowed calls a temporary to release. CAF evaluation
+also records caller liveness and generates a cleanup scope when unwind is enabled.
+A source test initially exposed the missing temporary, and its corrected case
+reclaims the cache. A separate trapping source fixture, with task support enabled,
+releases unique caller inputs and preserves external aliases; removing only the
+CAF caller scope makes the control fail with exit 4. Initialization-failure retry,
+actual SIZE_MAX retain overflow and cleanup boundaries pass. Cache aliases and a
+record containing two aliases of the same String have exact reference counts.
+
+Executables release the counted main result after tasks finish, then clear and
+release counted CAF caches by type. Both cleanup stages have failing controls:
+omitting root release leaves the child alive (exit 3); omitting cache teardown
+fails with exits 3/9. Missing returned retain fails with exit 11; removing replaced
+cache release fails with exit 12. Teardown is idempotent. All three CAF tests pass
+at O1/O2, with GC stress/verification and both poison modes; source stdout/stderr/
+exit agrees with the interpreter, including initialization and trapping behavior.
+Native library caches retain their loaded-program lifetime; host/unload teardown
+and shared runtime graphs remain acceptance gaps. No public interface is added.
+
+Seventeen RC unit checks pass, guarded CPU 3.28 s / elapsed 6.99 s. Ten focused
+CAF/caller/projection checks pass, CPU 23.50 s / elapsed 47.09 s. Final CAF controls
+pass (3 tests), CPU 4.10 s / elapsed 9.53 s. The shared-library C interop smoke
+check passes, CPU 0.80 s / elapsed 2.32 s. Four selected opt_constant_order,
+effects, unboxed_records and variant_returns goldens agree exactly on stdout/
+stderr/exit at O2 in both poison modes, CPU 4.03 s / elapsed 8.18 s. Full sequential
+Linux/ARM macOS/Intel macOS/benchmark CI remains required before merging.
+
+All local checks used the serial bounded fwp guard with the shared target.
+Commands: `cargo test --lib rc::tests -- --nocapture`, `cargo test --test
+caf_ownership --test compiler_call_liveness --test field_context_ownership --
+--nocapture`, `cargo test --test caf_ownership -- --nocapture`, `cargo test --test
+ffi shared_library_from_c -- --nocapture`, and
+`python3 /private/tmp/fwp-caf-goldens.py`. An initial invocation named nonexistent
+`call_liveness`; corrected to `compiler_call_liveness` before the successful run.
+The 2,000-task tasks_local interpreter workload was explicitly stopped and moved
+to full CI; it is not locally verified. At inspection it used 72 MiB RSS and
+38.32 s CPU after 75 s elapsed; no resource limit was raised or bypassed. The
+four smaller goldens above were then run serially. Package clean preceded the
+checkout switch. No local workload remains; shared target contains this CAF
+compiler. Remaining work includes reconstructed nested state, untyped contexts,
+whole-value variant boxing, inline lifetimes, retained task teardown/cycles and
+library lifetime coverage. Phase 2 and later roadmap phases remain incomplete.
+
+PR #81 remains the sole open PR, exact `6eeb915`, full CI `37696063781`;
+benchmarks passed, all three architecture test jobs running. Failing tests remain
+repair tasks; CI gates merging only. This prepared change stays separate.
+Prepared squash subject `Own cached CAF results and release executable cache owners`
+is one line, 58 characters, empty body/no trailers. Publication follows checks.
+
+Dedicated-test/library clippy passes after correcting the fixture initializer.
+Final CAF tests pass after that edit (CPU 4.18 s / elapsed 10.91 s). Formatting
+and whitespace pass; no remaining focused failure. Full sequential CI is pending.

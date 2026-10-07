@@ -419,3 +419,9 @@ Prepared field projection preserves the checked record base type when inlining
 would erase it. Typed scalar replacement then supplies field ownership without
 allocating the outer record. Evidence and remaining metadata/reconstruction
 gaps are recorded in [ownership.md](ownership.md#prepared-typed-record-projection).
+
+Prepared CAF ownership keeps typed cached references and provides an owned
+reference per call. RC prepares CAF arguments and protects caller owners during
+evaluation; executables release results/caches after tasks finish. Source/IR
+cleanup controls and the remaining library/shared lifetime gaps are recorded in
+[ownership.md](ownership.md#prepared-counted-caf-caches).
