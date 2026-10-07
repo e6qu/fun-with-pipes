@@ -2208,6 +2208,31 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.expr(a)
     }
 
+    /// A borrowed pointer stays a conservative root through the call.
+    /// Inlining can otherwise replace its later drop with metadata access
+    /// and discard the allocation's address before an allocating primitive.
+    fn keep_borrowed_args(&mut self, id: FuncId, args: &[String]) {
+        let f = &self.g.prog.funcs[id];
+        let Body::Prim(symbol) = &f.body else { return };
+        let Some(contract) = crate::ownership::primitive(symbol) else {
+            return;
+        };
+        let roots: Vec<String> =
+            f.ty.params(args.len())
+                .0
+                .iter()
+                .enumerate()
+                .filter(|(i, t)| {
+                    contract.argument(*i) == crate::ownership::Argument::Borrow
+                        && crate::rc::needs_rc(&self.g.prog.shapes, t)
+                })
+                .map(|(i, _)| args[i].clone())
+                .collect();
+        for root in roots {
+            self.line(&format!("FWP_KEEP_ALIVE({root});"));
+        }
+    }
+
     /// Whether `v` builds an object that can live on the stack: a record
     /// or variant with fields, or a closure (a known function applied to
     /// fewer arguments than it takes).
@@ -2734,7 +2759,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if self.g.prog.funcs[*id].arity == 0 {
                     self.bind(format!("caf{}()", id))
                 } else {
-                    self.bind(format!("f{}({})", id, xs.join(", ")))
+                    let result = self.bind(format!("f{}({})", id, xs.join(", ")));
+                    self.keep_borrowed_args(*id, &xs);
+                    result
                 }
             }
             Expr::Apply(f, args) => {

@@ -93,7 +93,10 @@ branch behavior and aliases; do not confuse this with runtime key retention.
 
 ## Selected String/Bytes boundaries
 
-All arguments below borrow for the duration of the call. Constructors returning
+All arguments below borrow for the duration of the call. Generated native
+calls retain borrowed pointer arguments as conservative roots until return:
+inlining must not discard an allocation address while its later drop has
+been reduced to metadata accesses. Constructors returning
 fresh storage establish a count; aliases acquire a count on the same allocation.
 A shared input remains shared when duplicated. Slices copy and retain no view.
 
@@ -110,7 +113,7 @@ A shared input remains shared when duplicated. Slices copy and retain no view.
 
 `tests/leaf_ownership.rs` compares interpreter/native behavior for retained
 aliases, no-op padding/replacement, copied slices/concatenation and byte identity,
-under collection stress/verification and both reuse-poison modes. A 10,000-step
+at `-O1`/`-O2`, under collection stress/verification and both reuse-poison modes. A 10,000-step
 copy loop, with tracing disabled and zero collections, reports 0.9 MiB freed by counts versus 0.0 MiB when `FWP_FREE=0`, with
 identical output (Apple Silicon, Apple Clang 17, `-O1`, counter precision 0.1 MiB).
 Five focused FFI checks also pass. Full CI on both architectures remains required.
