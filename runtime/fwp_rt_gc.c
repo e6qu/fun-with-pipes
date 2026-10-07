@@ -1301,3 +1301,30 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
         n -= need;
     }
 }
+
+/* Borrow a callback and supplied arguments, returning one owned result.
+ * Split overapplication at actual function boundaries: scalar argument bits
+ * must never be interpreted as counted pointers. Returned function values
+ * are already owned and are consumed by the next application. */
+static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
+    fwp_rc_dup(f);
+    for (;;) {
+        fwp_clo *c = CLO(f);
+        const fwp_fninfo *fi = &fwp_fns[c->fn];
+        if (!fi->owned) {
+            /* Unknown runtime entries retain the conservative convention. */
+            fwp_rc_share(f);
+            for (uint32_t i = 0; i < n; i++) fwp_rc_share(args[i]);
+            return fwp_apply(f, n, args);
+        }
+        uint32_t need = fi->arity - c->n;
+        uint32_t chunk = n < need ? n : need;
+        fi->owned->arguments(args, c->n, chunk);
+        V result = fwp_apply_owned(f, chunk, args);
+        FWP_KEEP_ALIVE(args);
+        if (chunk == n) return result;
+        f = result;
+        args += chunk;
+        n -= chunk;
+    }
+}
