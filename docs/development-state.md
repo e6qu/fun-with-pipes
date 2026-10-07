@@ -108,7 +108,7 @@ still need their final squash rebases and six exact-head full gates.
 | 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | a8e662267bbc | 5d411a886b73 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | c37df3b0520c | a8e662267bbc | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
-| 34 ownership-argument-preparation | 804e6a0cf9f3 | c65514a8e6d4 | Code/probe included in28; docs only relative to33; skip duplicate PR after28 full acceptance |
+| 34 ownership-argument-preparation | 819fd83c48e2 | c37df3b0520c | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
 | 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
@@ -254,7 +254,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows38–41 loop/retain/typed conversion | 3a9fcb512a37a745e65629b29b15e1d06ec0a992 | CI37971602336 passes Linux ownership/tracing and docs; production67e3771, actual basedd6c405 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
-| Rows33–34 loop/argument cleanup | 1ac6dc99fde5f6813659be356f7f89c29b8a27b5 | CI37969742246 passes Linux ownership/tracing and docs; production9f56744, actual baseb16195b |
+| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 queued/running; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
