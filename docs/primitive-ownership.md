@@ -265,3 +265,22 @@ transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Restoring only
 unused generic path produced no difference; the final probe covers the executed
 specialized path too. Full platform/benchmark gates remain required. Fold-right,
 zip-with, retained callbacks and exceptional cleanup are separate work.
+
+## Synchronous zip-with ownership
+
+`zip-with` borrows its callback and both lists. Generic calls duplicate arguments
+according to their distinct concrete types; direct/captured loops retain static
+specialization. New list spines contain already-owned results, including aliases
+of either input/captures or returned partial functions. Both temporary input/result
+buffers are explicitly released, with original callback/list/capture roots kept
+through allocating calls. Callback order, argument order and truncation at the
+shorter list are unchanged. Borrowed direct callback wrappers now support one or
+two supplied arguments; fold's transferring wrapper stays separate.
+
+`tests/zip_ownership.rs` checks retained aliases, mixed String/I64 inputs, dynamic
+and captured functions, empty/unequal lists and returned-function aliases at
+O1/O2, stack on/off, GC stress/verification and both poison modes. A selected
+no-tracing differential changes only result sharing: identical output and zero
+collections, counts free 2.2 MiB versus 3.6 MiB with owned results (Apple Silicon,
+Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmark gates remain required;
+other runtime callbacks and exceptional cleanup remain in phase 2.

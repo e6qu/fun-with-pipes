@@ -70,6 +70,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
 | ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
 | ownership-filter-callbacks | fwp-filter-worktree | 1ea7f07 | 41ef82d |
+| ownership-fold-transfers | fwp-fold-worktree | a180c3f | 1ea7f07 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -258,7 +259,7 @@ After map merges, rebase filter from 41ef82d onto main and validate in its own P
 ## Fold transfer preparation
 
 `ownership-fold-transfers`, `/private/tmp/fwp-fold-worktree`, base `1ea7f07`,
-is uncommitted and under final focused validation. Runtime borrowed application
+is published at `a180c3f`, with no PR yet. Runtime borrowed application
 accepts an owned-prefix length; fold transfers its accumulator, borrows element/
 callback copies, and returns an OwnedAccumulator result. Empty input preserves
 the incoming owned reference. Generic/direct/captured paths preserve specialization
@@ -276,3 +277,28 @@ Five FFI checks and the local fat baseline passed (CPU 5.35 s / elapsed
 after parents merge. Next: fold-right and zip-with, remaining contexts/container elements,
 exceptional/retained runtime cleanup, exact count overflow, old-generation/WASI
 reclamation and cycle policy. No general ARC/no-GC claim is established.
+
+After filter merges, rebase fold from 1ea7f07 onto main and run its own full PR gate.
+
+## Zip callback work in progress
+
+`ownership-zip-callbacks`, `/private/tmp/fwp-zip-worktree`, base `a180c3f`,
+is uncommitted. zip-with borrows its callback/two input lists, transfers owned
+callback results into fresh spines and releases both scratch buffers. Direct/
+captured specialization remains; direct borrowed wrappers support arity two.
+Mixed String/I64 inputs, input/capture aliases, empty/unequal lengths and dynamic
+callbacks pass O1/O2, stack on/off, GC stress/verification and poison checks.
+No-tracing differential: identical output/zero collections, counts free
+2.2 versus 3.6 MiB. Returned-function coverage and the aggregate focused suite passed:
+twenty-four ownership tests, CPU 46.53 s / elapsed 93.26 s under the guard. Five FFI checks and the local fat baseline passed (CPU 5.20 s / elapsed
+10.51 s). Formatting/whitespace passed. Full CI remains required after parent
+merges. Next: fold-right
+needs an owned argument span (accumulator is argument 1), not just an owned prefix.
+
+For fold-right, extend the borrowed transfer helper to an owned span within the
+supplied arguments: duplicate typed slices before/after that span and adjust its
+position across actual function-arity chunks. Ordinary borrow has an empty span;
+left fold transfers argument 0; right fold transfers argument 1. Keep existing
+prefix wrappers/tests. The right fold must retain and explicitly release its
+reversible input scratch buffer, preserve right-to-left callback/trap order, and
+support empty/aliased/function accumulators. Preserve direct/captured HOF paths.
