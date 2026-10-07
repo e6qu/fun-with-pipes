@@ -11117,3 +11117,9 @@ match original; original currentf0049c4aabe0 is retained under immutable revisio
 before lease publication. Row40 dd6c405c77eb has actual base5a72ba8763e4;
 constructor type test10.03/20.20s and exact nested shape3.44/7.32s plus
 argument/update types0.00/0.13s pass. Remaining checks follow.
+
+Row40 guarded clippy2.42/4.95s and format0.43/0.59s also pass. Row41
+67e37717ecf24fd5ce595e50084af805a9037ffc uses actual basedd6c405c77eb;
+guarded native variant conversion10.20/20.63s passes. Runtime/compiler remain
+unchanged from the original preparations; both prior published heads were retained
+under immutable revision tags before explicit-lease publication.
