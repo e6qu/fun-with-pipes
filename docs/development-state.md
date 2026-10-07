@@ -144,7 +144,7 @@ still need their final squash rebases and six exact-head full gates.
 | 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
 | 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 2b61f8cad333 | 172912b7b1c6 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
-| 43 ownership-record-conversion | b42bfee265ac | 2b61f8cad333 | Matched-result checkpoint repair: all20 IR controls3.25/6.97s, seven native tests26.91/53.88s, lint2.38/4.81s, format0.35/0.63s pass; publication/audit follow |
+| 43 ownership-record-conversion | 8c7450568632 | 2b61f8cad333 | Matched-result checkpoint repair: all20 IR controls3.25/6.97s, seven native tests26.91/53.88s, lint2.38/4.81s, format0.35/0.63s pass; strong audit0.43/3.47s passes; source8c74505 published with prior head retained; runner/full gates follow |
 | 44 ownership-variant-alias | 7d004381178f | b42bfee265ac | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
 | 45 ownership-match-context | 09ec9a65afdc | 7d004381178f | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | d71a2aea284c | 09ec9a65afdc | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
