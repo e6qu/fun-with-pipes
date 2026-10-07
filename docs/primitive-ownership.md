@@ -160,7 +160,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 16 | sort-by borrows callback/input, owns typed keys and copied result; keys evaluate once in input order | Sequential CI; alias/capture keys, scalar safety and exceptional cleanup |
 | 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
 | 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
-| 19–23 | Structural/generated lists, typed container elements and old-value reclamation | Sequential CI and complete boundary checks |
+| 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
+| 20–23 | Generated lists, typed container elements and old-value reclamation | Sequential CI and complete boundary checks |
 | 24–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

@@ -7115,3 +7115,53 @@ merged container/text/closure/list contracts from queued refinements, removes
 superseded pending-merge prose for delivered work and links exact archived
 contracts and measurements. Eleven maintained link sets,82 immutable queue
 pairs and whole commit messages pass0.10 s CPU /0.72 s elapsed.
+
+Published documentation-only inventory cleanup112f3c8de87beddab2374f51e19d6dc94846919d
+on ownership-loop-state. Runtime/test source stays as verified7af6961;
+immutable OLD787763d and actual current base15743b8 remain unchanged.
+No additional PR opened.
+
+## Original queue19 contract and evidence
+
+Historical preparation; not current merged support.
+
+## Nested structural list copies
+
+`zip` borrows both lists and returns fresh counted list and pair nodes. Each
+pair owns one typed reference to each borrowed element; unequal input lengths
+still truncate to the shorter list. `unzip` borrows its pair list and returns a
+fresh counted pair of fresh counted lists, each owning its selected elements.
+`chunks` borrows its size and source list, builds counted outer and inner list
+nodes, and owns one typed reference per element. It preserves empty inputs,
+positive-size validation and failure order. The chunk count uses division and
+remainder rather than overflowing a rounded-up addition.
+
+The `CopiedStructure` contract selects wrappers with duplicate functions for
+reference-bearing element types and NULL for scalar types. Existing borrowed
+inputs remain live across allocation. Scratch item/output buffers are scanned
+while in use and released after their values transfer into counted nodes.
+Ownership-disabled builds retain the previous conservative sharing fallback.
+
+`tests/list_structure_ownership.rs` checks retained inputs, nested lists,
+function-valued elements, unequal and empty lists, large/invalid chunk sizes,
+O1/O2, stack on/off, collection/reuse verification and fallback flags. Actual
+emitted scalar wrappers are probed with numeric words equal to heap addresses.
+With tracing disabled and identical outputs, changing only the emitted result
+boundaries from owned to shared reduces count reclamation from 12.6 MiB to
+8.2 MiB. This is scoped reclamation evidence, not a speed or general no-GC claim.
+
+## Structural-list following-task preparation on loop ownership
+
+Rebased queue19 ownership-list-structure from immutable OLDparent787763d onto
+current loop112f3c8. Preserve OLDheadc05a5d9 and use actual current base112f3c8
+for later squash rebase. Three raw interpreter oracle calls now use FWP_NO_OPT=1.
+Four focused checks pass16.10 s CPU /32.47 s elapsed: aliases/nested structures,
+scalar address-shaped bit safety, chunks validation/trap order and no-tracing
+result reclamation. Clippy lib/fixture2.45 s /4.99 s, format0.33 s /0.61 s;
+clean0.00 s /0.13 s. Full sequential gates remain required.
+
+Resource evidenceee4bd22 / CI37780278972 ARM GC failed http.fwp with empty
+stdout/stderr and a signal exit (-1 in the harness), not a timeout. Completed
+job113321340968 log is /private/tmp/fwp-resource-arm-gc-37780278972.log.
+Other jobs remain live; this failed run is not acceptance. Root cause is unknown
+and a focused HTTP reproduction is next.

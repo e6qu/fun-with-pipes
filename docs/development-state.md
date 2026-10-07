@@ -61,10 +61,17 @@ are archived. Current bases below differ from immutable OLD queue parents.
 | 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
 | 16 ownership-sort-callbacks | 5c19337f216d, published | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
 | 17 ownership-state-sequences | 15743b853d6a, published | 5c19337f216d | state_sequence_ownership 12.09 /24.23 s; lint 2.34 /4.61 s |
-| 18 ownership-loop-state | 7af6961802fc, published | 15743b853d6a | loop_ownership 19.08 /38.44 s; lint 2.18 /4.38 s |
+| 18 ownership-loop-state | 112f3c8de87b, published | 15743b853d6a | loop_ownership 19.08 /38.44 s; lint 2.18 /4.38 s |
 
 Rows14–18 are published clean with exact leases against previous remote
-heads. Row18 full head7af6961802fcf618c3634a58ea0abb6486a50006. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
+heads. Row18 full head112f3c8de87beddab2374f51e19d6dc94846919d
+includes the documentation-only inventory cleanup; tested runtime is unchanged. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
+Row19 structural-list is being prepared from immutable OLDparent787763d onto
+current loop112f3c8. Keep OLDheadc05a5d9c7d866286a4b778bd53b6d2c85cdbcf7f
+unchanged; its later rebase uses actual current base112f3c8. Three raw oracles
+now use FWP_NO_OPT=1. Four list_structure_ownership checks pass16.10 s CPU
+/32.47 s elapsed; clippy lib/fixture2.45 s /4.99 s; format0.33 s /0.61 s.
+Publish with exact lease against OLDc05a5d9, then diagnose HTTP. No new PR.
 Worktree paths follow queue NAME; all source checks, sharing controls, format
 commands and compiler flags are preserved in history. Later rebase each current
 base onto its parent's actual squash, keeping OLD heads/parents untouched.
@@ -85,7 +92,11 @@ Evidence workflows and baseline repairs never enter production ancestry.
 
 Current resource-frame evidence: ownership-evidence-resource-frames,
 /private/tmp/fwp-resource-evidence-worktree, exact
-ee4bd2238e078238cf1a0867e1c891cbf3170279, CI37780278972 queued at publication.
+ee4bd2238e078238cf1a0867e1c891cbf3170279, CI37780278972: ARM GC fails
+http.fwp under GC_STRESS=1/VERIFY with empty output and signal exit (-1 in
+the harness). Completed job113321340968 log is
+/private/tmp/fwp-resource-arm-gc-37780278972.log. Intel GC/regular run; other
+jobs remain queued. Diagnose a focused HTTP reproduction; no root cause yet.
 It adds rows79–88 and their required regressions to the passing WASM/resource
 baseline. Preserve live runs; diagnose failures and keep preparing separate work.
 
@@ -152,7 +163,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to loop-state checkout. Guarded cargo clean -p fwp before switching
+belongs to structural-list checkout. Guarded cargo clean -p fwp before switching
 checkouts; last switch0.00 s /0.13 s. No local workload is active.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
