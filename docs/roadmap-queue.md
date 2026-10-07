@@ -55,7 +55,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `9a21fd6cc844` | `33cf86466e2f` | `3e314222ff7c` |
-| 27 | call-liveness | `ownership-call-liveness` | `7a550b724047` | `7392f2d67151` | `33cf86466e2f` |
+| 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `2ec80614a045` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `b8633382f4a6` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `a17f240c9341` | `b8f4c2469215` | `62add7e4a85f` |
