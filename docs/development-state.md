@@ -28,34 +28,29 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `837096b9a5dc7d505fe0a988ff5135a48aac3db5` (PR #111). Accepted exact head
-`58986d22a45163dc86b9dc6ea3f03de05f201359` passes all six production jobs in
-CI38050046236 and roadmap_docs38050046274. Match-head squash at2026-10-10T12:50:41Z
-has the exact 67-character subject `Protect fold accumulators and borrowed arguments during preparation`,
-with one line, an empty body and no trailers or attribution. Raw commit has
-one parent and tree `327f156b52dc515bcd7d0d251fee9d9fa705d09a`, identical to the tested
-head. All11 live docs were hashed in /private/tmp/fwp-main-docs-pre111 and
-restored byte-for-byte after main FF. Duplicate mainCI38053458085 cancelled
-only after that proof; main docs38053458119 must finish. Native macOS and
-selected ownership are delivered through fold accumulator/borrowed-argument
-preparation and right-fold scratch unwind. Phase2 remains incomplete;
-phases3–6 remain pending and tracing remains the fallback.
+Main is `486520c141d3c26888491d1f5434a7295d8e3cd7` (PR #112). Accepted exact head
+`ac24ea45cbe03a4cb7aaa2ac1fba999fccd58b42` passes all six production jobs in
+CI38054115210 and roadmap_docs38054115151. Match-head squash at2026-10-10T14:28:32Z
+has exact 64-character subject `Protect loop state and Step payload owners across nonlocal exits`,
+one line with empty body and no trailers or attribution. Raw commit has one
+parent837096b9a5dc and tree `d999a7ec3459ab9ac02d61aef42456b0b5a551b1`, identical to the tested head.
+All11 live docs were hashed in /private/tmp/fwp-main-docs-pre112 and restored
+byte-for-byte after main FF. Duplicate mainCI38059746844 cancelled only after
+that proof; main docs38059746845 is queued. Native macOS and selected ownership
+are delivered through loop state/Step unwind and flattened Again record preservation.
+Phase2 remains incomplete; phases3–6 remain pending and tracing remains fallback.
 
-Next delivery is queue33 loop current-state/Step cleanup and flattened record
-preservation. Actual-squash rebase is complete: local2471c06afddc872d8876f9a8735bdc6d0feaab57
-on actual main837096b9a5dc7d505fe0a988ff5135a48aac3db5, FROMactual
-58986d22a45163dc86b9dc6ea3f03de05f201359. Both original native commits and all
-source/probes/workflows are byte-identical; three prepared commits survive.
-Final focused controls11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s
-pass. Copy all11 docs and append
-an audited docs commit (keep referenced pre-amend heads reachable), retain remote
-d098b98ad87a7a71b870182df162e36a61ff00c0, publish with an exact lease and open
-the sole next production PR. Require all six production jobs plus docs before
-match-head squash. Retained thunk49 publication remains an independent follow-up.
+Next production delivery is queue35 constructor cleanup (`ownership-constructor-unwind`).
+Rebase FROM actual duplicate34 `49705971b287bbaee6684a88b6de15183b3bea56`
+ONTO actual squash `486520c141d3c26888491d1f5434a7295d8e3cd7`, preserving both original
+feature and appended documentation commits. Run original constructor, retain
+and caller controls plus RC units, lint, format and all11 docs/audits; retain
+oldbbd74db2977a remotely before exact-lease publication, append fresh docs and
+open the sole next PR. All seven exact-head gates remain required before squash.
 
-Queue 34 is a verified duplicate of preparation code/probes delivered in #107.
-Skip its implementation PR when reached after 33; preserve its immutable anchor,
-current ancestry and all later regression coverage.
+Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
+delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
+Keep one production PR open; prepare/fix later tasks while CI runs.
 
 ## Active repair and independent work
 
@@ -67,17 +62,29 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–48 are refreshed and published with their original source/probes
-and multi-commit repairs preserved. Exact heads, bases and checks are in the table;
-completed publication journals must not rerun. Returned-variant44 includes actual
-ARM64 binary/layout/disassembly evidence on Apple M4 Pro; it establishes the
-current 8-byte numeric slot baseline, not a speedup or natural-width support.
+Preparations39–71 are refreshed and published on their actual predecessors.
+Original source/probes, multi-commit repairs and immutable anchors are preserved;
+focused controls, lint, format and all audits pass. Exact heads, bases and metrics
+are in the table; detailed checks and retained revisions are in history. Completed
+publication journals must not rerun. Final squash rebases/full gates still remain.
 
-Independent task49 retained thunks is locally rebasedceebfd0dc03414cbc0463b4141d632f49dbf1da9
-on current48 36fb4e1de52eeb1ad02e992c562c2595379740e5. Both original native
-controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass. Complete
-all11 docs/audit and retained-revision publication after the loop PR opens, then50.
-Remote49 still2c14070a6347; preserve the exact lease and both task controls.
+Actual ARM64 binary/layout evidence for44 and65 establishes the current8-byte
+slot baseline. The six-I64 worker value is48 bytes/aligned8 and returns through
+caller storage with192/208-byte frames; no speed or constant-stack claim.
+ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
+executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
+fake APIs, not hardware evidence. Closing channels preserves queued values;
+automatic unreachable-cycle reclamation remains unproved.
+
+File I/O preparation72 at nativebaae1a5566a6 on published71702cd9b0a69a passes
+all nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/
+42.63elapsed, lint2.44/4.90s and format0.44/0.84s. Raw interpreter/native
+stdout/stderr/exit agree for invalid UTF-8 and directory errors; binary reads
+preserve arbitrary bytes with GC on/off. Buffer/stream omission exits5 and
+omitted write-error checking exits8 remain exact under O1/O2 and both poisoning
+settings. Copy all11 docs and audit before retained publication; next73 resource
+frames must preserve both original implementation and fusion repair commits.
+Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -114,9 +121,9 @@ incomplete until sequential delivery and exit reviews pass.
 Evidence branch: ownership-evidence-http2-intel. Rejected candidates and assembly
 artifacts are archived in history.
 
-Queue32 fold and33 loop are independently refreshed and focused checks pass;
-34 is a verified docs-only duplicate. Keep these preparations separate from
-PR #110. They still need actual-squash rebases and exact-head full gates.
+Queue32 fold is merged in #111 and queue33 loop in #112. Queue34 is skipped
+as a verified docs-only duplicate; queue35 constructor cleanup is next.
+Later preparations still need actual-squash rebases and exact-head full gates.
 Preserve the earlier matched-result checkpoint, direct resource frame eligibility,
 CAF evaluation, loop layout and original allocation/omission controls during
 rebases. Their prior source-specific evidence does not accept rewritten heads.
@@ -129,7 +136,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 33 ownership-loop-unwind | 2471c06afddc | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
+| 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
@@ -145,30 +152,30 @@ still need their final squash rebases and six exact-head full gates.
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 47 ownership-caf-cache | 7e1c164a0e81 | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 48 ownership-inline-caf | 36fb4e1de52e | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests 10.19/20.78s; lint 2.33/4.82s and format 0.35/0.73s pass |
-| 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint 2.43/4.79s and format 0.35/0.73s pass |
-| 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint 2.45/4.85s and format 0.34/0.62s pass |
-| 52 ownership-task-handles | cb32c2cea9bb | bb1e6b94fcfd | Test11.24/23.29s; lint 2.34/4.73s and format 0.44/0.74s pass |
-| 53 ownership-channel-queues | 69bc96667a52 | cb32c2cea9bb | Test11.45/23.08s; inventory3.40/7.25s; lint 2.43/4.79s and format 0.45/0.87s pass |
-| 54 ownership-library-results | f53cccc88d45 | 69bc96667a52 | Test7.86/17.88s; lint 2.44/4.85s and format 0.34/0.61s pass |
-| 55 ownership-library-inputs | 067d547b3bfd | f53cccc88d45 | Two tests 8.27/18.38s; lint 2.34/4.68s and format 0.34/0.61s pass |
-| 56 ownership-library-unload | 0d30f4e3da51 | 067d547b3bfd | Test8.98/21.43s; lint 2.42/4.81s and format 0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | 9dc98a72cac1 | 0d30f4e3da51 | Fake API test 7.78/22.85s; lint 2.36/4.71s and format 0.45/0.75s pass |
-| 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint 2.32/4.69s and format 0.34/0.62s pass |
-| 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint 2.46/5.00s and format 0.35/0.75s pass |
-| 60 ownership-library-resources | aa8dfb3a703e | 64fc39f9738e | Test8.04/18.34s; lint 2.48/4.99s and format 0.41/0.86s pass |
-| 61 ownership-grpc-server-cleanup | 91f9a30742f9 | aa8dfb3a703e | Test9.94/19.99s; lint 2.46/4.95s and format 0.44/0.86s pass |
-| 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
-| 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
-| 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
-| 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
-| 66 ownership-tls-peer-subject | cfe905046796 | 60b03078c3cd | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
-| 67 ownership-tls-alpn-roots | f7a0bd2eba93 | cfe905046796 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
-| 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
-| 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
-| 70 ownership-file-construction | 823b86c74a68 | 925724e0994d | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
-| 71 ownership-file-write-visibility | de6667643951 | 823b86c74a68 | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
-| 72 ownership-file-io-errors | 4aeff2223e3f | de6667643951 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
+| 49 ownership-task-thunks | 215e0edec0f1 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 50 ownership-task-within | 5cfbbf10087a | 215e0edec0f1 | Three original deadline/retained-thunk controls5.34CPU/10.77elapsed, exact contract inventory3.62/7.53s, lint2.44/4.88s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 51 ownership-task-scope | f36bacf80bfc | 5cfbbf10087a | Four original scope/deadline/retained-thunk controls15.75CPU/31.78elapsed, exact contract inventory3.45/7.06s lint2.48/4.97s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 52 ownership-task-handles | df26a860c99f | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 54 ownership-library-results | 46afd27c986c | b304e91f628c | Original C library result control7.96CPU/17.73elapsed, lint2.47/4.88s and format0.43/0.82s pass; original source/probes unchanged, including all four reclamation/string/guard/evaluation controls; final actual-squash/full gates required |
+| 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
+| 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
+| 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | Both original fake-OpenCL/library-unload controls10.35CPU/30.64elapsed, lint2.50/5.00s and format0.44/0.82s pass; original source/probes unchanged; fake API does not verify GPU hardware; final actual-squash/full gates required |
+| 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
+| 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
+| 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
+| 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
+| 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | Three original TLS-cache/resource/gRPC controls11.72CPU/27.33elapsed, lint2.44/4.93s and format0.45/0.86s pass; original source/probes unchanged, including all five partial-owner/cache-publication controls; final actual-squash/full gates required |
+| 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | Three original wire/cache/listener controls10.61CPU/25.68elapsed, lint2.53/5.13s and format0.45/0.85s pass; original source/probes unchanged; measured 13-byte ALPN buffer without GC scratch and all original failure/length controls preserved; final actual-squash/full gates required |
+| 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | Three original connect/wire/cache controls10.02CPU/23.52elapsed, lint2.57/5.19s and format0.44/0.82s pass; original source/probes unchanged, including all four resolver/descriptor/handshake omissions; final actual-squash/full gates required |
+| 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
+| 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
+| 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
+| 68 ownership-ci-probe-repairs | c0cdb26eb99b | 6d80e63524c2 | Original timer regression10.62CPU/22.32elapsed, lint2.66/5.30s and format0.44/0.83s pass; original source/probes unchanged; raw interpreter agrees across O1/O2, three preemption slices, both reuse modes and delayed overtaking; final actual-squash/full gates required |
+| 69 ownership-nested-loop-boxing | 7a68a54d2660 | c0cdb26eb99b | All10 original nested-loop/loop-unwind/worker/caller tests22.68CPU/46.10elapsed, all21 RC units3.54/7.24s, lint2.45/4.83s and format0.45/0.86s pass; original source/probes unchanged, including all three exact omitted-scope exit2 controls; final actual-squash/full gates required |
+| 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | All four original construction/unwind tests10.29CPU/21.66elapsed, lint2.43/4.82s and format0.44/0.85s pass; original source/probes unchanged, including exact omitted-scope exit2 and stale-finalizer exit3; raw interpreter/native File behavior agrees; final actual-squash/full gates required |
+| 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | All six original write/construction/unwind tests12.54CPU/25.17elapsed, lint2.44/4.91s and format0.45/0.85s pass; original source/probes unchanged, including exact omitted-flush exit3; raw interpreter/native immediate write bytes agree; final actual-squash/full gates required |
+| 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
 | 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
 | 75 ownership-file-discard | 4b8202419941 | d3fa39b37c83 | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
@@ -339,8 +346,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-loop-unwind-worktree (row33, final2471c06),
-with both original controls11.39CPU/22.82elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-file-io-errors-worktree (row72, nativebaae1a55),
+with all nine original File tests21.27CPU/42.63elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

@@ -47,6 +47,8 @@ callback results and partial spines, plus both borrowed scratch buffers, includi
 failure while preparing the second buffer.
 Merged folds protect the current accumulator and each completed borrowed argument
 duplicate until callback transfer; right-fold scratch releases on unwind.
+Merged loops protect current state across cancellation ticks and Step payload
+preparation; flattened Again records remain unboxed.
 Other callback/runtime and exceptional ownership extensions are prepared separately.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
