@@ -1273,6 +1273,19 @@ static void fwp_static_report(void) {
 
 #endif /* FWP_GC */
 
+/* A reuse token owns only its emptied outer cell. Clear the ownership slot
+ * first, so nested unwind registrations observing it cannot release it twice. */
+static void fwp_rc_cleanup_cell(void *arg) {
+    V *slot = arg, value = *slot;
+    *slot = 0;
+    if (value) fwp_rc_free_obj(value);
+}
+static void fwp_rc_cleanup_count(void *arg) {
+    V *slot = arg, value = *slot;
+    *slot = 0;
+    if (value) fwp_rc_drop(value);
+}
+
 /* Compiled dynamic application consumes the function and its arguments.
  * Runtime callbacks retain the conservative shared entry in fwp_rt.c. */
 typedef struct {

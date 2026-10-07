@@ -7676,3 +7676,20 @@ Runtime unwind lint (cargo clippy --test unwind_cleanup -- -D warnings)
 passes2.43 s CPU /4.88 s elapsed; format0.33 s /0.60 s. All nine root
 docs copied before final amend/publication; source/runtime tests remain
 unchanged after these checks. Full six gates still precede sequential delivery.
+
+Runtime unwind final preparation123d8b5928aa403f61494e78023982475732f777
+is clean on actual basecde58f4; exact lease against OLD3e31422. Whole
+message verified single line with empty body. No second PR.
+
+## Compiler reuse-token raw-oracle preparation, 2026-10-09
+
+Row26 rebases OLD33cf864 from immutable parent3e31422 onto actual row25
+head123d8b5928aa403f61494e78023982475732f777 (initial46d02b5). All nine
+root docs resolve conflicts. Three interpreter oracles explicitly set
+FWP_NO_OPT=1. Guarded cargo test --test reuse_token_ownership passes all
+three tests15.26 s CPU /30.66 s elapsed, covering transfer, unused-cell
+release, trap unwind and FWP_FREE/REUSE/STACK controls. Guarded clippy
+--test reuse_token_ownership -- -D warnings passes2.37 s /4.67 s;
+cargo fmt --all -- --check passes0.35 s /0.74 s. The native C fixture
+compiled with FWP_GC=0 verifies bump cleanup compilation, not actual WASI.
+Full six runner gates remain necessary before sequential delivery.
