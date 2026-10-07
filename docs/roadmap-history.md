@@ -13546,3 +13546,10 @@ no broader support follows until all seven final exact-head jobs pass.
 Final selection docs audit passes0.43CPU/3.47elapsed:44 tracked Markdown
 link sets,106 immutable queue pairs/tags and83 live heads/bases, with whole
 commit messages checked. All11 live docs are copied into the final PR snapshot.
+
+Final selection docs commit8371fc50c9bfbbe57f0968b58e5a5541b60beefe passes
+strong audit0.43CPU/3.40elapsed. Before exact-lease publication, retain prior
+9979e9f remotely as roadmap/revision-030-9979e9fd1a27. PR109 opens only after
+PR108's all-gate acceptance, raw-message/tree proof and protected main FF.
+Production CI38018485993 queues; roadmap_docs38018485946 passes on exact8371fc5.
+Full gates remain required before squash; immutable source anchors stay fixed.

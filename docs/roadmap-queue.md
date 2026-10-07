@@ -57,7 +57,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `3c69084cec04` | `62add7e4a85f` | `bee3f1659ae5` |
-| 30 | selection-unwind | `ownership-selection-unwind` | `8819695137c0` | `b8f4c2469215` | `62add7e4a85f` |
+| 30 | selection-unwind | `ownership-selection-unwind` | `8371fc50c9bf` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `47776e738c26` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `c434692ccb6f` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `527f84d405b77` | `988f2a3be97f` | `968dac7ed9cf` |
