@@ -8132,3 +8132,7 @@ Variant conversion lint (cargo clippy --test variant_conversion_ownership
 --test retain_unwind_ownership --test worker_boxing_ownership -- -D warnings)
 passes2.36 s CPU /4.76 s elapsed; fmt check0.34 s /0.60 s. Nine current
 root docs copied before final amend; tested source unchanged.
+
+Final variant conversion3956d5cadd86a9814c5919a576f6a14020d73766 is clean
+on actual basec90fe5a, published with exact lease against OLD34873f4.
+Whole subject verified one line with empty body. PR95 remains sole open.

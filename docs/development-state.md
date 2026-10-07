@@ -85,24 +85,22 @@ still need their final squash rebases and six exact-head full gates.
 | 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 /52.71 s |
 | 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 /39.78 s + exact unit3.28 /6.82 s |
 | 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 /32.40 s + two exact units |
+| 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 /33.31 s + exact unit3.31 /7.05 s |
 
-Rows17–40 are published preparations with passing focused tests, lint and
+Rows17–41 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row40 final headc90fe5a9d1700918120dc7d6c294e8e30e3f77f4 is clean on
-actual basef0049c4, published with exact lease against OLDb021967. Three tests
-pass16.17 s CPU /32.40 s elapsed plus exact units3.23 s /6.65 s and0.00 s
-/0.14 s; lint2.38 s /4.85 s, format0.34 s /0.61 s.
-Current independent task: row41 variant-conversion rebased from ACTUAL current
-base OLDb021967 onto actual row40 headc90fe5a (temporary01430b8). New source
-oracle uses FWP_NO_OPT=1; variant_conversion_ownership, retain_unwind_ownership
-and worker_boxing_ownership pass all three tests16.53 s CPU /33.31 s
-elapsed. Exact new IR unit passes3.31 s CPU /7.05 s elapsed; lint2.36 s
-/4.76 s and format0.34 s /0.60 s pass. Final doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
+Row41 final head3956d5cadd86a9814c5919a576f6a14020d73766 is clean on
+actual basec90fe5a, published with exact lease against OLD34873f4. Three tests
+pass16.53 s CPU /33.31 s elapsed plus exact IR unit3.31 s /7.05 s;
+lint2.36 s /4.76 s, format0.34 s /0.60 s.
+Next independent task: row42 record-update rebases from ACTUAL current base
+OLD34873f4 onto actual row41 head3956d5c, then focused checks and publication.
+Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
