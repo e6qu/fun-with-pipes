@@ -98,7 +98,7 @@ still need their final squash rebases and six exact-head full gates.
 | 35 ownership-constructor-unwind | 432a3332c4f7 | dcf18f01c2fb | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | 7de346c56ec4 | 0584ab3ac77b | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
-| 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
+| 38 ownership-loop-preparation | 61c5f8e91cc5 | 7de346c56ec4 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
 | 40 ownership-constructor-types | dd6c405c77eb | 5a72ba8763e4 | Native10.03/20.20s; two units; lint2.42/4.95s and format0.43/0.59s pass |
 | 41 ownership-variant-conversion | 67e37717ecf2 | dd6c405c77eb | Native10.20/20.63s; unit3.37/7.04s; lint2.29/4.47s and format0.33/0.59s pass |
@@ -354,8 +354,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-worker-preparation-worktree after absolute-root guarded package
-clean0.05CPU/0.38elapsed. Twelve final call/token/unwind tests pass30.59CPU/
+to /private/tmp/fwp-loop-preparation-worktree after absolute-root guarded package
+clean0.00CPU/0.14elapsed. Twelve final call/token/unwind tests pass30.59CPU/
 61.49elapsed. Eleven focused ownership-IR module tests pass3.27CPU/6.84elapsed.
 Published row377de346c56ec4e7a827edb88fa0cc49604ac530d6 has actual base0584ab3,
 rebased FROMactual6032ecf. Compiler/runtime/original probes match3bd34da;
@@ -363,8 +363,16 @@ only inherited guard/audit and long-tail regression differ. Three focused
 worker-preparation/worker-boxing/constructor tests pass15.91CPU/31.88elapsed;
 lint2.33/4.78s, format0.35/0.63s and strong44/106/86 audit0.43/3.50s pass.
 Retained roadmap/revision-037-3bd34dafb62f before exact leased publication.
-No local workload remains running. Final rebase FROMactual0584ab3 follows
-row36's accepted squash.
+Final rebase FROMactual0584ab3 follows row36's accepted squash.
+Published row 38 is `61c5f8e91cc5a17c9bc16b739ca9d7bff17c7a32`, actual base
+`7de346c56ec4e7a827edb88fa0cc49604ac530d6`, rebased from actual `3bd34da`.
+Compiler/runtime/original probes match `032a764`; only the inherited guard,
+audit and long-tail regression differ. Four focused loop-preparation, loop-unwind
+and worker-preparation tests pass (16.61 CPU / 33.35 elapsed seconds), lint
+2.26/4.59s, format0.34/0.62s and strong44/106/86 audit0.42/3.49s pass.
+Retained roadmap/revision-038-032a764c1d33 before exact leased publication.
+No local workload remains running. Final rebase from actual `7de346c` follows
+row 37's accepted squash.
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
 samples current limits; historical observations never authorize bypassing the
