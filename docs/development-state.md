@@ -101,7 +101,7 @@ for priorities and contracts. Update this file before ending a work session.
 ## Current CI fixes and prepared work
 
 - Full run [37576889350](https://github.com/e6qu/fun-with-pipes/actions/runs/37576889350)
-  on `ccecf20`: ARM macOS failed; Intel and Linux are still running; benchmark
+  on `ccecf20`: ARM macOS failed; Intel is still running; Linux full tests and benchmark
   equivalence passed. The no-fail-fast sweep exposed tutorial `wc` padding,
   OpenSSL alert wording, GC-stressed list crashes and native server crashes.
 - Reproduced native forms/format server failure locally: SIGSEGV in
@@ -119,8 +119,16 @@ for priorities and contracts. Update this file before ending a work session.
 - Make the tutorial's byte-count command strip BSD `wc` padding. Canonicalize
   only OpenSSL's alternate `ssl/tls alert bad certificate` label in the TLS
   snapshot harness; retain all other message and behavior assertions.
-- Other full-suite failures (`stdlib_fixes`, HTTP, filesystem stress and
-  the remaining REST cases) still require the new CI head. The filesystem
+- The shortened `stdlib_fixes` reproducer still crashed after `252d6b1`.
+  A symbolized debugger traced it to `list._partition-step`, called by the
+  specialized right fold with an invalid element. Its temporary buffer lacked
+  a lifetime fence too; both generic and specialized right folds now retain it.
+  Expanded `optimized_lists_under_collection` passes for traits, the shortened
+  iterator/partition fixture and filesystem behavior at `-O1`/`-O2`, with
+  interpreter agreement, GC stress/verification and both reuse-poison modes.
+  The original 300,000-iteration fixture remains unchanged in the full CI suite.
+- Full HTTP/REST coverage and the original long stress fixture still require
+  the latest CI head. The filesystem
   golden mismatch followed a stress crash that left its scratch directory.
   Do not claim the full macOS gate passed based on focused checks.
 - Prepared/published branch: `ownership-contracts`, checkout
