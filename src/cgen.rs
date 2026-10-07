@@ -5292,6 +5292,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::OwnedCallback => {
+                                let ty = func.ty.params(func.arity as usize).1;
+                                let drop = self.value_drop(ty);
+                                s = s.replace(
+                                    "fwp_p_task_scope(l0)",
+                                    &format!("fwp_p_task_scope_borrowed(l0, {drop})"),
+                                );
+                            }
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 if matches!(
                                     sym.as_str(),

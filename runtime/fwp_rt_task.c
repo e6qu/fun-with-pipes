@@ -942,11 +942,26 @@ static V fwp_p_task_cancelled(void) {
     return t->cancelled ? FWP_TRUE : FWP_FALSE;
 }
 
-static V fwp_p_task_scope(V body) {
+typedef struct { fwp_task *task; fwp_scope *scope; fwp_handler *handlers; } fwp_scope_owner;
+static void fwp_scope_release(void *arg) {
+    fwp_scope_owner *owner = arg;
+    owner->task->scope = owner->scope->prev;
+    fwp_handlers = owner->handlers;
+    fwp_mem_free(owner->scope->tasks);
+    owner->scope->tasks = 0;
+}
+
+static V fwp_task_scope_impl(V body, int borrowed, void (*drop)(V)) {
     fwp_tasks_init();
     fwp_task *t = fwp_cur;
     fwp_scope s = {0, 0, 0, t->scope};
     t->scope = &s;
+    fwp_scope_owner scope_owner = {t, &s, fwp_handlers};
+    fwp_cleanup scope_cleanup;
+    fwp_cleanup_push(&scope_cleanup, fwp_scope_release, &scope_owner);
+    fwp_value_owner result_owner = {0, drop};
+    fwp_cleanup result_cleanup;
+    fwp_value_protect(&result_owner, &result_cleanup);
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
@@ -955,7 +970,9 @@ static V fwp_p_task_scope(V body) {
     V r = 0;
     int failed = 0;
     if (setjmp(h.jb) == 0) {
-        r = fwp_apply1(body, FWP_UNIT);
+        V unit = FWP_UNIT;
+        r = borrowed ? fwp_apply_borrowed(body, 1, &unit) : fwp_apply1(body, FWP_UNIT);
+        result_owner.value = r;
     } else {
         failed = 1;
         fwp_state_len = h.state_depth;
@@ -973,10 +990,18 @@ static V fwp_p_task_scope(V body) {
         }
     }
     t->unwinding = was;
-    fwp_mem_free(s.tasks);
     if (failed) fwp_fail(h.value, h.desc);
     fwp_check_cancel();
+    r = fwp_value_finish(&result_owner, &result_cleanup);
+    fwp_cleanup_pop(&scope_cleanup);
+    fwp_scope_release(&scope_owner);
+    FWP_KEEP_ALIVE(body);
     return r;
+}
+
+static V fwp_p_task_scope(V body) { return fwp_task_scope_impl(body, 0, NULL); }
+static V fwp_p_task_scope_borrowed(V body, void (*drop)(V)) {
+    return fwp_task_scope_impl(body, 1, drop);
 }
 
 /* ----- channels */

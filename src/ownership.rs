@@ -18,6 +18,8 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// A synchronous callback returns a typed owned value.
+    OwnedCallback,
     /// Typed array boundary, including scalar/optional/list results.
     ArrayOperation {
         consumed: Option<usize>,
@@ -128,7 +130,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         &'static [usize],
     ) = match symbol {
         "task.spawn" => (&[B], R, Some(Callback::Retained(0)), &[0]),
-        "task.scope" => (&[S], R, Some(Callback::Shared(0)), &[0]),
+        "task.scope" => (
+            &[B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0],
+        ),
         "task.within" => (
             &[B, B],
             ResultOwnership::FreshOuter,
@@ -445,6 +452,10 @@ mod tests {
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
         assert!(!spawn.borrows_callback()); // asynchronous callbacks still escape
+        let scope = primitive("task.scope").unwrap();
+        assert!(scope.borrows_callback());
+        assert_eq!(scope.argument(0), Argument::Borrow);
+        assert_eq!(scope.result, ResultOwnership::OwnedCallback);
         let within = primitive("task.within").unwrap();
         assert_eq!(within.argument(1), Argument::Borrow);
         assert_eq!(within.callback, Some(Callback::Retained(1)));
