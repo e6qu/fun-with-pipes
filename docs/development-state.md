@@ -28,35 +28,54 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` (PR #118). Accepted frozen head
-`d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` passes all six jobs in CI38087199063 and
-roadmap_docs38087199031. Observed squash at 2026-10-11T00:20:28Z has the
-exact 74-character subject `Preserve nested constructor types for exceptional ownership cleanup (#118)`, one line,
-empty body and no trailers or attribution. Raw commit has one parent
-`571422b54647b5c95eb1bfe2d13bb3edf0176e0d` and complete tree `cb50c8e69950a2936c0f2e682b3da0edce5780a3`,
-identical to the tested head. All11 live docs were hashed in
-/private/tmp/fwp-main-docs-pre118 and restored byte-for-byte after fast-forward.
-Queues35–40 are accepted in PRs113–118. Ownership temporaries now inherit
-known monomorphic constructor/field/result context when expression types are
-missing, so later-field failure releases nested children. Expression-inferred
-types remain authoritative. Exact outer-only cleanup exit4 for record/variant,
-aliases/scalar bits and raw interpreter/native agreement remain checked.
-Phase2 remains incomplete; phases3–6 are pending.
+Main is `8770e73ed17ddaed44c03504faa380d1f724d070` (PR #119). Accepted frozen head
+`5a068dc348f3b331a262543ae4ee2b1fcf88f0ab` passes all six jobs in CI38098598991 and
+roadmap_docs38098598965. Match-head squash at 2026-10-11T01:09:42Z has the exact
+65-character subject `Protect boxed variants and caller owners during struct conversion`, one line, empty
+body and no trailers or attribution. One parent `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` and
+complete tree `c26e645934b38faa7e62bbeaf104165228731f65` match the tested head. All11 live docs were
+hashed in /private/tmp/fwp-main-docs-pre119 and restored byte-for-byte.
+Queue33 and35–41 are accepted; queue34 is a verified duplicate. Boxed-to-struct
+variant conversion now protects the original boxed value and only remaining
+caller owners until typed payload retention succeeds. Original omission exits3/7,
+alias/scalar controls and raw interpreter agreement remain checked. Phase2
+is incomplete; phases3–6 are pending.
 
-Next production delivery is queue41 variant conversion FROM actual prepared40
-5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f onto this actual PR118 squash. Final
-rebase0.10CPU/1.05elapsed preserves both original commits and every source/probe/
-production-workflow byte at native78de90c921e33508119ebf09f5ab4197cdfa5f1e.
-Three original native regressions17.81/35.79s, all18 RC units3.46/7.10s,
-lint2.48/5.02s and format0.50/0.83s pass under the unchanged guard. Exact
-original-box exit3 and remaining-caller exit7, alias/scalar controls, GC/reuse
-modes and raw interpreter agreement remain intact. Copy all11 current docs,
-audit, retain the old remote revision and publish with an exact lease, then
-open the sole next production PR. After acceptance, deliver queue42 record
-update FROM actual prepared41 cca935846750 onto queue41's actual squash.
-Every final head needs all seven passing gates.
+Next production delivery is queue42 record update FROM actual prepared41
+cca935846750b6190b6a8823eb4f55d689c75c0e onto this actual PR119 squash.
+Preserve all three existing commits, including both implementation/regression
+commits, and every original source/probe byte. Run fresh record-update and
+general-copy regressions, all RC units, lint and formatting under the unchanged
+guard. Preserve exact cleanup omission controls, aliases/scalar bits, GC/reuse
+modes and raw interpreter agreement. Copy all11 docs, audit, retain the old
+remote revision and publish with an exact lease before opening the sole next
+PR. Every final head needs all seven passing gates. Independent evidence stays
+outside production ancestry.
 
 ## Evidence and preservation requirements
+
+Queue42 record-update binary evidence7249699c8f38 passes both ARM/Intel
+jobs in CI38099902933: each unchanged original test once, zero ignored, all
+forty real O1/O2 Mach-O binaries retained. The inspector selected the
+old-field-drop omission control for the unique-update layout probe; context
+types match, but a diagnostic correction now selects the intact positive
+fixture and records its source hash. Corrected headb9b3f40f19d1 is published;
+CI38100176797 is queued. Require that exact-head runner evidence before calling
+the positive-fixture layout verified. Original
+runtime/compiler/tests/production workflow remain unchanged; this does not
+replace final queue42 production gates.
+
+Portable ownership inventory669c19e7cb6779536377af7f78651f97dc1e51d9 passes
+CI38099556010 on unchanged prepared112 sourceb45e93a71d40. It checks actual
+runtime-contract metadata and IR lowering, explicit aliases, all compiler/library
+source hashes and the documentation audit (44/106/72). Counts:373 declarations,
+363 distinct symbols,40 aliases;134 contracts,19 IR templates,12 flat scalar
+signatures and208 declarations/198 symbols requiring semantic review. Scalar
+signatures do not prove absence of externally allocated state. This is a finite
+source-review inventory, not runtime acceptance or tracing-free support.
+Proof: /private/tmp/fwp-primitive-inventory-passing-proof.json. Artifact and full
+log are retained locally and on GitHub; recheck against actual merged source at
+the phase2 exit checkpoint.
 
 Queue41 binary evidence0063d4f5f5c71ab7057b6693d8c59576271ca171 passes both
 ARM/Intel jobs in CI38087378359 on original sourcecca935846750. Each unchanged
@@ -65,8 +84,8 @@ alias/scalar and raw interpreter controls remain mandatory. Six real Mach-O
 binaries per platform show V8/align8, variant32/align8, payload8, cleanup24 and
 two active8-byte owner contexts. C, layouts, flags, symbols and disassembly are
 retained in GitHub and /private/tmp/fwp-conversion-layout-0063d4f-artifacts.
-Proof: /private/tmp/fwp-conversion-layout-passing-proof.json. This accepts the
-prepared source evidence, not a future production head. All completed rebase,
+Proof: /private/tmp/fwp-conversion-layout-passing-proof.json. The independent run accepts prepared-source evidence; PR119 separately passes
+all seven production gates for the final head. All completed rebase,
 publication and collection journals must not rerun.
 
 Full prepared source112 integration0f8c53199b2c / CI38048222203 passes all seven
@@ -87,9 +106,8 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 41 ownership-variant-conversion | 78de90c921e3 | e07b03d9d404 | Final actual-squash source preserves both original commits; three original variant-conversion/constructor-type/worker-boxing regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s, lint2.48/5.02s and format0.50/0.83s pass; original source/probes unchanged including exact original-box/caller omission exits3/7, aliases/scalar bits and raw interpreter/native agreement; ARM/Intel actual binary evidence passes; exact-head full gates required |
-| 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original implementation/regression commits and the original docs commit preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits and the original docs commit preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
@@ -203,7 +221,7 @@ Protect all11 docs with a fresh hashed snapshot before each main fast-forward:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md, docs/concurrency.md and docs/numerics.md. Preserve other tracked
-user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre118, restored
+user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre119, restored
 byte-for-byte. Actual bases, immutable preparation tags and retained revision
 tags are the recovery record if temporary helpers disappear. The shared audit
 checks all tracked links, whole commit messages, immutable ancestry and live

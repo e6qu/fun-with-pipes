@@ -15896,3 +15896,326 @@ prior text archived under Archived verbose handoff at PR118. Removed duplicated
 historical evidence and superseded next actions from live docs, keeping current
 queue/base/checkouts, exact gates, finite phase2 exit review and phases3–6.
 PLAN reduced to65 lines; ownership queue completion is not whole-plan completion.
+
+Preparation41 published5a068dc348f3b331a262543ae4ee2b1fcf88f0ab on actuale07b03d9d4040ad458072c4aaf401a26c79f4fb9, FROMactual5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Oldcca935846750b6190b6a8823eb4f55d689c75c0e retained at roadmap/revision-041-cca935846750 before exact-lease publication. Final actual-squash source preserves both original commits; three original variant-conversion/constructor-type/worker-boxing regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s, lint2.48/5.02s and format0.50/0.83s pass; original source/probes unchanged including exact original-box/caller omission exits3/7, aliases/scalar bits and raw interpreter/native agreement; ARM/Intel actual binary evidence passes; exact-head full gates required
+
+## Delivered primitive contracts removed from the prepared table
+
+## Prepared refinements
+
+Rows marked delivered or skipped already have main acceptance; the remaining
+contracts are published preparations. Exact heads and immutable parent anchors
+are in [the queue](roadmap-queue.md); current commands
+and failures are in [the handoff](development-state.md). Each sequential PR needs
+its own final rebase, focused checks and six passing exact-head full gates.
+
+| Queue | Prepared contract | Remaining acceptance |
+|---|---|---|
+| 33 | Delivered in PR112: loop state/Step unwind and flattened Again preservation | All seven exact-head gates pass; later reconstruction extensions remain prepared |
+| 34 | Immutable argument/capture preparation anchor; code/probes delivered in PR107 through row28 | Skipped after33 acceptance; preserve anchor and later coverage |
+| 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
+| 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
+| 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
+| 38 | Delivered in PR116: eligible loop state stays flattened; initial boxes and completed typed field duplicates stay owned until transfer | All seven exact-head gates pass; partial field failures, cancellation slots, aliases and trap/evaluation order preserved |
+| 39 | Delivered in PR117: multi-field retains protect completed extras and existing caller owners through count overflow | All seven exact-head gates pass; unfinished references excluded, partial variant/stack retains and aliases preserved |
+| 40 | Delivered in PR118: monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | All seven exact-head gates pass; later-field failure, dynamic arguments, updates and exact IR types |
+
+Rows33 and35–40 are accepted in PRs112–118; row34 is a verified duplicate.
+Current merged contracts remain in ownership/design. Immutable queue anchors
+and all original acceptance evidence are preserved. The live prepared table
+now begins at41 and contains only remaining contracts.
+
+## Archived representation measurement detail
+
+Focused ARM64 layout evidence for returned-variant preparation44 confirms an
+8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
+variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
+positive/control binaries, compiler inputs, flags and disassembly are retained
+and recorded in [history](roadmap-history.md). The O2 alias transfers share one
+32-byte stack slot; this shape-specific evidence is not a general ABI or timing
+claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+
+The six-I64 recursive worker in preparation65 has a 48-byte value, aligned to8,
+versus56 bytes for the boxed header and fields, excluding collector metadata.
+Actual ARM64 O1/O2 binaries return it through caller storage using x8; the
+recursive worker uses192/208-byte frames respectively, including trap temporaries
+and stack protection. O2 passes six fields in x1–x6 to the next worker and uses
+vector loads/stores for the result. Its own body has no record-allocation call;
+the boxed interface wrapper remains. These measurements on Apple M4 Pro,
+macOS15.6.1 and Apple clang17 retain the original flags and strict semantic
+controls. They establish an ABI baseline, not a timing improvement, constant
+stack use or whole-program allocation freedom. Phase3 must measure caller
+storage and spill costs alongside box elimination; details are in history.
+
+Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
+box (8-byte header plus8-byte field, excluding collector metadata). The generated
+program-thread frame is1232 bytes with typed fields versus1280 in the boxed
+control at both O1/O2; the launcher frame remains144 bytes. The File header is
+24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
+counters and partial-retain controls pass, with exact binaries/flags/disassembly
+retained. These are fixture-specific representation measurements; ordinary File
+and path allocations remain, and no timing or general ABI claim follows.
+
+Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
+with refs at offset8 and path bytes at offset16. The retained legacy control is
+24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
+original counters verify one leaf allocation requesting16+n+1 bytes versus two
+allocations requesting24+n+1, excluding allocator/collector metadata. Both
+original tests retain exact interpreter behavior and closed-handle display.
+Actual binaries, C, flags and both compiled layouts are in history. This is a
+constructor/layout improvement; storage disposal and general performance remain
+separate roadmap work.
+
+Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
+its payload at offset8. Original counters verify zero parent boxes versus one
+16-byte box in the comparison path. The program-thread frame is1280 bytes at
+O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
+body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
+startup and trap paths. Original inactive scalar/nullary tags and partial-retain
+cleanup remain checked. These are representation measurements, not executed
+instruction counts or timings; File/path allocations remain. Exact source,
+flags, binaries, disassembly and compiled layout are recorded in history.
+
+Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
+insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
+one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
+4096-byte name plus other fields, with copied inputs and last-owner release.
+The payload contains both terminated strings and a length-framed identity key;
+packing removes separate allocation requests, rather than the duplicated key
+bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
+binaries, disassembly and a layout executable use unchanged compiler arguments.
+Instrumented constructor frames are 208/144 bytes; observer code affects these
+frames, so they are not production ABI or timing claims. Details are in history.
+
+Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
+520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
+offset 24; complete copied address bytes follow the header at offset 272.
+Original counters verify one request of 272+n+1 bytes for an n-byte address;
+"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
+loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
+positive/control binaries, disassembly and compiled layouts are recorded in
+history. Requested sizes exclude allocator/collector metadata; no timing,
+cache-speed or general collector-free claim follows.
+
+A separate bounded local ARM allocator check reads actual Darwin malloc usable
+bytes and GC slot metadata from the captured generated C. TLS requests101/8311
+occupy112/8704 usable bytes. The short connection request278 occupies a320-byte
+GC slot; the original520-byte header-size allocation occupies640 in the same
+unchanged allocator. The latter measures the old size, without executing the old
+constructor. These capacities exclude allocator metadata and pool reservation.
+Hardware, compiler, flags, generated diagnostic C and actual binaries are in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity); Intel capacity
+and cache/timing effects remain unmeasured.
+
+Prepared source112 also has actual ARM and Intel macOS layout evidence in
+CI38075612557 at evidence head5a56aa1ebbc2b609ebd51c675d44e454ddedba8d.
+Both original TLS-options/address probes pass without ignored tests. Both compiled
+layouts give TLS64/align8 and connection272 versus legacy520/align8; allocation
+requests remain101/8311 and278 for the stated fixtures. Actual C, Mach-O binaries,
+arguments, symbols, assembly, hardware/compiler and layout drivers are retained.
+These are prepared-source results; they do not accept later production heads.
+Instrumented frames and static instruction counts describe fixtures, not general
+speed, cache behavior or a production ABI. Full details are in history.
+
+
+Final queue41 publication1.99CPU/19.24elapsed and all three audits44/106/72
+pass at frozen5a068dc348f3b331a262543ae4ee2b1fcf88f0ab. Both original commits
+and original source/probe/workflow bytes survive; oldcca935846750 retained
+before exact lease. Sole PR119 opens0.16CPU/3.76elapsed with actualbase
+e07b03d9d404. CI38098598991/docs38098598965 queued, not accepted gates. Actual
+main118 docs38098095374 passes. Removed accepted33–40/duplicate34 rows from
+the live primitive prepared table; current contracts remain in merged ownership.
+Condensed representation measurement detail into a baseline table plus links,
+keeping exact C/binary/layout/flags and limitations in the archive. Next queue42
+has three existing commits, including both original feature/regression commits;
+its eventual final rebase must retain all three.
+
+Fresh streamlined-docs audit0.47CPU/3.94elapsed passes44 link sets,106 immutable
+pairs/tags and72 live heads/bases. Deferred PR119 merge/protection/acceptance
+and three-commit queue42 rebase helpers parse0.00/0.14s with current doc anchors.
+Recovered PR118 exact-head gate proof confirms all seven jobs completed
+successfully before the observed remote merge (0.11CPU/2.60elapsed).
+Source-only representation review of actual maine07b03d9d404 confirms fwp_arr
+uses uint64_t len plus V slots, with no spare32-bit header field. Natural-width
+acceptance now explicitly includes owned primitives, destruction, display/
+equality, JSON/binary decode, constants and callback/dynamic boundaries; it
+preserves length/overflow behavior and requires compile-time hot-loop loads
+plus explicit fallback/conversion contracts. No representation code changed.
+
+Removed stale design claim that packed TLS focused remote checks remain pending: prepared source112 now has passing original allocation probes and actual ARM/Intel binary/layout evidence, while sequential production gates remain required. Deduplicated the library-cache prepared acceptance note without changing its pre-packing ten-free control or later packing evidence.
+
+## Portable finite ownership inventory, 2026-10-11
+
+Independent evidence branch ownership-evidence-primitive-inventory has exact
+head669c19e7cb6779536377af7f78651f97dc1e51d9 on prepared112 source
+b45e93a71d400ae3872142c70b29aa8128793e07. CI38099556010 passes its sole inventory
+job and documentation audit44/106/72. Compiler, runtime, library, original tests
+and production workflow are byte-identical to the original source. Only the
+portable Rust inventory, Python checker, independent evidence workflow and the
+all11 documentation snapshot differ. Publication retains ordinary single-line
+commit metadata without trailers or attribution.
+
+The inventory imports actual ownership::primitive metadata and reads actual
+mono.rs IR lowering. It asserts373 declarations,363 distinct symbols,40 explicit
+aliases,134 known runtime contracts,19 IR templates,12 flat scalar signatures
+and208 remaining declarations representing198 symbols. Every recorded compiler
+and library source hash was compared with the unchanged prepared112 source.
+Scalar signatures can still own externally allocated state (including AD tapes).
+Remaining declarations require monomorphic wrapper, retention and teardown
+review;208 is not a count of runtime bugs. This accepts a reproducible finite
+source inventory, not sequential production ownership or tracing-free support.
+
+Bounded local checks: worktree preparation0.05CPU/0.25elapsed; standalone Rust
+formatting0.04/0.25s; Python syntax and shared snapshot audit0.59/4.01s;
+publication0.14/3.52s; passing-gate/source-hash/artifact collection0.20/5.07s.
+Rust compilation and inventory execution ran on GitHub, without local shared
+Cargo output. Guard limits remain unchanged. Complete proof:
+/private/tmp/fwp-primitive-inventory-passing-proof.json; artifact directory:
+/private/tmp/fwp-primitive-inventory-669c19e-artifacts; full log:
+/private/tmp/fwp-primitive-inventory-669c19e.log. Completed publication/collection
+journals must not rerun. Recheck this inventory on actual merged source at the
+phase2 exit checkpoint.
+
+## Record update binary evidence preparation, 2026-10-11
+
+Independent ownership-evidence-record-update-layout source
+cd2c8fa4251aea65354d64f09f2fab0291ac4dc8 is unchanged outside all11 docs and
+three capture/inspection/evidence-workflow files. Published head
+7249699c8f3896877f75e14c6fe2a3db99372d71 queues CI38099902933. Both original
+record_update_ownership and general_record_update_ownership regressions run on
+ARM/Intel; no original assertion or negative control is changed. Exact unique
+replacement/copy/partial/replacement omission exits3/8/11/7 and general
+original/copy/partial/replacement omission exits9/8/11/7 remain mandatory,
+alongside alias/scalar, SIZE_MAX, GC/reuse and raw interpreter/native controls.
+Capture delegates compiler arguments unchanged and retains ten O1/O2 Mach-O
+binaries for each fixture. Inspector retains C, flags, headers, symbols,
+disassembly and compiled layouts. Static registered scopes are not live scope
+counts; owner context sizes are not summed into frame sizes. No performance,
+ABI or passing-run support is claimed while the run is queued.
+
+Guarded worktree preparation0.04CPU/0.26elapsed, syntax/snapshot audit0.61/4.37s
+(44/106/72), publication0.24/3.54s pass. Limits unchanged; actual fixture builds
+and binary inspection run on GitHub. Completed publication journal:
+/private/tmp/fwp-record-update-layout-evidence-publication.json. Production119
+remains the sole open production PR; this evidence does not accept queue42.
+
+### Record-update layout selector correction
+
+CI38099902933 passes both platform jobs at7249699c8f38. Each of the two
+unchanged original tests executes once per platform, zero ignored. All forty
+actual Mach-O binaries, exact C, flags, symbols and disassembly are retained.
+Both platforms (macOS15.7.9/24G830, AppleClang17.0.0/1700.0.13.5; ARM Apple M1
+Virtual and Intel i7-8700B3.20GHz) show V8/align8, object header8/payload8,
+cleanup24 and wide-count metadata24/count offset8. Unique-update context types
+are8/8/8/16/24 bytes, align8; general-copy8/8/8/16/16, align8. These definitions
+are not summed into frames; six static registered pushes in an intact function
+are not six simultaneously live scopes.
+
+The layout selector chose unique-update source6bb15e95d338, whose old-field
+drop is deliberately omitted, rather than the intact7fd5093fc0b7 source.
+Definitions match, but the original result is qualified as a control-fixture
+layout. The diagnostic now requires both all six registered scopes and the
+intact unique old-field drop, records the selected layout source hash, and
+checks the two full-scope fixtures distinguish that omission. General-copy
+positive54d8750cac83 selection was already intact. Compiler/runtime/tests and
+all original exact omission controls remain unchanged. Re-run only corrected
+independent evidence; prior passing original tests and artifacts remain retained.
+
+Bounded collection0.33CPU/8.63elapsed passes. Original proof:
+/private/tmp/fwp-record-update-layout-passing-proof.json; retained artifacts:
+/private/tmp/fwp-record-update-layout-7249699-artifacts; full log:
+/private/tmp/fwp-record-update-layout-7249699.log. Corrected-head evidence is
+required before claiming positive unique-fixture compiled layout support.
+
+Positive-fixture selector correction published as
+b9b3f40f19d1e88e4a87fe2dbbec3cfba90ff244, retaining original7249699c8f38 at
+roadmap/evidence-record-update-layout-7249699c8f38 before an exact-lease update.
+CI38100176797 is queued, not passing. Syntax/snapshot audit0.51CPU/3.68elapsed
+(44/106/72), publication0.20/6.23s pass under unchanged guard. New commit message
+is a single line, at most80 characters, empty body and no attribution/trailers.
+Only the inspector and refreshed all11 doc snapshot changed; source/probes and
+production workflow remain byte-identical to prepared42. Completed journal:
+/private/tmp/fwp-record-update-layout-correction-publication.json.
+
+## Autodiff token bounds source review, 2026-10-11
+
+Actual main e07b03d9d404 exposes ad.push and ad.backward through ordinary I64
+tokens in lib/autodiff.fwp. runtime/fwp_rt_kernel.c and src/numerics.rs validate
+tape identity but do not check low-word node indices against live tape length
+before recording parents or indexing adjoints. Thus forged same-tape indices
+can reach Rust bounds panics or native out-of-allocation access. This is source
+review, not a claimed executed crash or accepted fix. Add matching-token invalid
+index regressions and cleanup checks to the numeric phase, preserving valid
+operation/reduction order and ordinary diagnostics. Existing detached-buffer,
+callback cancellation and generation-wrap findings remain pending there.
+Ownership and representation phases retain priority; no compiler/runtime source
+or public syntax was changed by this review.
+
+## Sequential delivery recovery preparation, 2026-10-11
+
+Queue42 remains next after PR119. /private/tmp/fwp-create-record-update-pr.py
+is prepared but not executed; it requires the final publication journal, clean
+exact WT/remote head, actual root/base parity and no other open production PR.
+Queue43 original6b809877a1ac493015e1902204cc5ea72b68a875 contains three commits
+FROMcd2c8fa4251aea65354d64f09f2fab0291ac4dc8: both implementation/regression
+commits (6e24b1643dd2 and5103cbe69e6d) and original docs. Later helper
+/private/tmp/fwp-prepare-record-conversion-final.py reads the actual PR120 squash
+proof and preserves all three, including an explicit docs-only commit if conflict
+resolution makes it empty. No later rebase/publication/merge was attempted.
+Bounded helper syntax checks0.00CPU/0.14elapsed pass. These are recovery
+preparations, not a second next action or verified final-squash support.
+
+Intact positive-fixture disassembly from the original retained run was inspected
+under the unchanged guard (0.00CPU/0.13elapsed). Unique-update positive C hash
+7fd5093fc0b79c6852ea82f3afb1406d39f29ac6f6df1b5d78fd207672f1e69d has O2 f15
+static606 ARM/705 Intel instructions; general-copy positive
+54d8750cac833962f04620236e37c911788f14f41610624a4907e2056595d3d8 has401/471.
+These static counts include emitted branches, not dynamic execution, and do not
+establish speed. ARM fixture prologues reserve0x120/0x110 bytes respectively;
+Intel both save six registers then reserve0xb8 bytes. Saved registers and spills
+are present in the retained assembly; no production frame/register-use guarantee
+is inferred. The corrected evidence collector additionally requires the compiled
+layout hash to match the intact O2 positive source above. Its gate remains queued,
+not passing.
+
+## Archived handoff after PR #119
+
+Main is `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` (PR #118). Accepted frozen head
+`d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` passes all six jobs in CI38087199063 and
+roadmap_docs38087199031. Observed squash at 2026-10-11T00:20:28Z has the
+exact 74-character subject `Preserve nested constructor types for exceptional ownership cleanup (#118)`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`571422b54647b5c95eb1bfe2d13bb3edf0176e0d` and complete tree `cb50c8e69950a2936c0f2e682b3da0edce5780a3`,
+identical to the tested head. Actual main docs38098095374 passes at the squash.
+All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre118 and restored byte-for-byte after fast-forward.
+Queues35–40 are accepted in PRs113–118. Ownership temporaries now inherit
+known monomorphic constructor/field/result context when expression types are
+missing, so later-field failure releases nested children. Expression-inferred
+types remain authoritative. Exact outer-only cleanup exit4 for record/variant,
+aliases/scalar bits and raw interpreter/native agreement remain checked.
+Phase2 remains incomplete; phases3–6 are pending.
+
+[PR119](https://github.com/e6qu/fun-with-pipes/pull/119) is the sole open production
+PR, delivering queue41 variant conversion on actual PR118 squashe07b03d9d404.
+Frozen head `5a068dc348f3b331a262543ae4ee2b1fcf88f0ab` preserves both original
+commits and source/probe/workflow bytes. Rebase0.10CPU/1.05elapsed, three native
+regressions17.81/35.79s, all18 RC units3.46/7.10s, lint2.48/5.02s and format
+0.50/0.83s pass. Publication1.99/19.24s passes all three audits (44/106/72),
+retaining oldcca935846750 before exact-lease update. PR creation0.16/3.76s passes.
+CI38098598991 passes Linux, bench, regular ARM macOS and both macOS GC stress
+jobs; regular Intel macOS is running. Docs38098598965 passes at the frozen head. Require all
+seven passing gates before match-head squash with
+`Protect boxed variants and caller owners during struct conversion` and empty
+body. Original-box/caller omission exits3/7 and alias/scalar/raw-interpreter
+controls remain exact. After acceptance, deliver queue42 record update FROM
+actual prepared41 cca935846750 onto PR119's actual squash. Preserve all three
+existing commits, including both implementation/regression commits, then run
+fresh focused checks. Independent evidence does not replace production gates.
+
+
+Accepted queue41 in PR119 at 8770e73ed17ddaed44c03504faa380d1f724d070 on e07b03d9d4040ad458072c4aaf401a26c79f4fb9. Frozen 5a068dc348f3b331a262543ae4ee2b1fcf88f0ab passes all six CI38098598991 jobs and docs38098598965. Raw subject 'Protect boxed variants and caller owners during struct conversion' has 65 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree c26e645934b38faa7e62bbeaf104165228731f65 verified. All11 live docs protected and restored byte-for-byte.
+
+Accepted primitive contract41, removed from prepared-only table:
+
+| 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
