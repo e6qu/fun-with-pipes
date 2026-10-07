@@ -12002,3 +12002,16 @@ contract in [ownership.md](ownership.md).
 
 
 Refreshed normal Linux evidence runs37992999275 (reuse tokens),37992657684 (storage plus repaired root controls) and37993159029 (serving plus repaired HTTP2 omission control) all pass at25fc868/e5bbfd8/3aca5cf respectively. They include their normal lint/format, selected ownership tests, actual tracing churn and shared roadmap audit. Each source matches its recorded production preparation. These focused runs do not replace sequential exact-head platform gates.
+
+## Earlier runtime argument-preparation protection
+
+The existing row34 compiler/runtime/test correction9f56744 applies cleanly to
+row28. It protects completed capture duplicates and partial closure storage,
+and defers supplied-prefix transfer until callback entry after capture
+preparation. Published7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3 on actual
+71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 includes the unchanged corrected
+row34 test. Eleven focused runtime/call/preparation tests pass29.13CPU/
+58.52elapsed, lint2.48/4.99s and format0.35/0.63s. Retained previous
+e06c447336ae97eff77b118ebaac194f6968623d remotely before leased publication.
+Later overlapping row34 implementation is reconciled on final rebase; its
+immutable anchor and coverage remain. No complete exception-ownership claim.

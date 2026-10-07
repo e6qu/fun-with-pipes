@@ -34,11 +34,61 @@ static V fwp_map_finish(V *a, size_t n) {
     fwp_mem_free(a);
     return result;
 }
-static V fwp_p_map_owned(V f, V xs) {
+/* The completed prefix owns results; the remaining scratch words borrow the
+ * source. During spine construction, each last prefix element transfers into
+ * the typed partial list, so an allocation failure has exactly one owner. */
+typedef struct {
+    V *items;
+    size_t count;
+    V built;
+    void (*element_drop)(V), (*list_drop)(V);
+} fwp_map_owner;
+static void fwp_map_release(void *arg) {
+    fwp_map_owner *owner = arg;
+    V *items = owner->items;
+    size_t count = owner->count;
+    V built = owner->built;
+    owner->items = NULL; owner->count = 0; owner->built = 0;
+    if (owner->element_drop)
+        for (size_t i = 0; i < count; i++) owner->element_drop(items[i]);
+    if (built && owner->list_drop) owner->list_drop(built);
+    if (items) fwp_mem_free(items);
+}
+static void fwp_map_protect(fwp_map_owner *owner, fwp_cleanup *cleanup) {
+#if FWP_UNWIND
+    fwp_cleanup_push(cleanup, fwp_map_release, owner);
+#else
+    (void)owner; (void)cleanup;
+#endif
+}
+static V fwp_map_finish_protected(fwp_map_owner *owner, fwp_cleanup *cleanup) {
+    while (owner->count) {
+        V fields[] = {owner->items[owner->count - 1], owner->built};
+        V node = fwp_rc_fresh(fwp_data(1, 2, fields));
+        owner->count--;
+        owner->built = node;
+    }
+    V result = owner->built;
+#if FWP_UNWIND
+    fwp_cleanup_pop(cleanup);
+#else
+    (void)cleanup;
+#endif
+    FWP_KEEP_ALIVE(owner->items);
+    fwp_mem_free(owner->items);
+    return result;
+}
+static V fwp_p_map_owned(V f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n;
     V *a = fwp_map_items(xs, &n);
-    for (size_t i = 0; i < n; i++) a[i] = fwp_apply_borrowed(f, 1, &a[i]);
-    V result = fwp_map_finish(a, n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    for (size_t i = 0; i < n; i++) {
+        a[i] = fwp_apply_borrowed(f, 1, &a[i]);
+        owner.count++;
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
     return result;
@@ -394,11 +444,17 @@ FWP_K V fwp_k_map(fwp_fn1 f, V xs) {
     return fwp_list_from(a, n);
 }
 
-FWP_K V fwp_k_map_owned(fwp_fn1 f, V xs) {
+FWP_K V fwp_k_map_owned(fwp_fn1 f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n;
     V *a = fwp_map_items(xs, &n);
-    for (size_t i = 0; i < n; i++) a[i] = f(a[i]);
-    V result = fwp_map_finish(a, n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    for (size_t i = 0; i < n; i++) {
+        a[i] = f(a[i]);
+        owner.count++;
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }

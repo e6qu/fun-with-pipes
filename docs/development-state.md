@@ -43,7 +43,8 @@ unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pendi
 Tracing remains the fallback. PR104 https://github.com/e6qu/fun-with-pipes/pull/104
 is the only open PR, current head925daae1a95e3d68f4d622b72d8f642aa5a4346b,
 actual main base3bb34267997479794aeac9fff3447da94c16ca4d. Production
-CI37991460642 is queued/running; roadmap_docs CI37991460672 passes. Guard scripts/workflow
+CI37991460642 has bench, ARM regular macOS and both GC stress jobs passing;
+Linux and Intel regular macOS remain running. roadmap_docs CI37991460672 passes. Guard scripts/workflow
 match focused-accepted063f4ca exactly; final local integration repeat passes
 0.20CPU/1.36elapsed and Linux evidence37986986407 passes. Require all six
 exact-head production jobs and roadmap_docs before explicit squash with
@@ -75,7 +76,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 26 ownership-reuse-tokens | 0a7203f5c559 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
 | 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
-| 28 ownership-runtime-call-cleanup | e06c447336ae | 71c2405dd0e0 | Rebased onto refreshed preceding delivery; source unchanged; fresh sequential gates follow |
+| 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; fresh Linux evidence follows |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
 | 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
 | 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
@@ -186,8 +187,10 @@ this boundary and partial capture duplication. Its compiler/runtime/test patch
 This moves the existing correction earlier, without changing pipe semantics.
 Eleven focused runtime/call/preparation tests pass29.13CPU/58.52elapsed,
 including the unchanged negative control. Lint2.48/4.99s and format0.35/0.63s
-also pass; e06c447 remains the
-published row28 head until they pass. Preserve row34's immutable OLD anchor;
+also pass. Row28 is published at7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3
+on actual71c2405. Prior e06c447 is retained remotely at
+roadmap/revision-028-e06c447336ae. Fresh Linux evidence223416054406a975db1524b5c6866e248df91745 is queued
+in CI37994225608 and matches published7cfbe03 source exactly. Preserve row34's immutable OLD anchor;
 its overlapping implementation will be reconciled on final rebase and its
 coverage retained. No new full gate or complete exceptional-ownership claim.
 
@@ -235,7 +238,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
 | Row29 map callback unwind | 5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 | CI37966274872 passes normal repaired checks; production84ef548, actual baseb5f44e8 |
-| Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 passes focused checks and all-doc/tag audit; productionb5f44e8, actual basec4eb75e |
+| Row28 runtime application and preparation | 223416054406a975db1524b5c6866e248df91745 | CI37994225608 queued; source matches published7cfbe03, includes early capture repair |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
