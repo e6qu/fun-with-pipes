@@ -75,23 +75,24 @@ still need their final squash rebases and six exact-head full gates.
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 /39.90 s |
 | 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 /31.57 s |
 | 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 /32.46 s |
+| 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 /44.76 s |
 
-Rows17–29 are published preparations with passing focused tests, lint and
+Rows17–30 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row29 final head8093bf382210adbf117f71dec644c642677cc557 is clean on
-actual basee3c49d9, published with exact lease against OLD62add7e. Four tests
-pass16.12 s CPU /32.46 s elapsed, lint2.31 s /4.72 s, format0.34 s /0.60 s.
-Current independent task: row30 selection-unwind rebased from OLDparent
-62add7e onto actual row29 head8093bf3 (temporaryb2c28a4). The new source
-oracle explicitly sets FWP_NO_OPT=1; selection_unwind_ownership,
-filter_ownership and prefix_ownership pass all six tests22.29 s CPU
-/44.76 s elapsed. Lint and formatting pass; final doc amend and publication follow;
-immutable OLD anchors remain unchanged.
+Row30 final head69b1ad1e33e5801a0c451c6b0f38ac4053849db1 is clean on
+actual base8093bf3, published with exact lease against OLDb8f4c24. Six tests
+pass22.29 s CPU /44.76 s elapsed, lint2.45 s /4.95 s, format0.34 s /0.61 s.
+Current independent task: row31 zip-unwind rebased from OLDparentb8f4c24
+onto actual row30 head69b1ad1 (temporarye1b9839). The new raw source
+oracle sets FWP_NO_OPT=1; zip_unwind_ownership and zip_ownership tests
+pass all four17.02 s CPU /34.21 s elapsed; lint2.39 s /4.85 s and
+format0.35 s /0.62 s pass. Final amend/publication follow. Preserve
+immutable OLD anchors; no additional PR.
 PR94 remains the sole open delivery.
 
 ## Repaired resource evidence
@@ -139,7 +140,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-selection-unwind-worktree; focused selection checks are complete; no local workload is active.
+belongs to /private/tmp/fwp-zip-unwind-worktree; focused zip checks are complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.12 s CPU /0.84 s elapsed).

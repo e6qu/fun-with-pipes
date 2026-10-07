@@ -7821,3 +7821,26 @@ Selected-list lint (cargo clippy --test selection_unwind_ownership --test
 filter_ownership --test prefix_ownership -- -D warnings) passes2.45 s CPU
 /4.95 s elapsed; fmt check0.34 s /0.61 s. All nine root docs copied
 before final amend; tested runtime/source stays unchanged.
+
+Final selected-list preparation69b1ad1e33e5801a0c451c6b0f38ac4053849db1
+is clean on actual base8093bf3, published with exact lease against OLDb8f4c24.
+Whole subject verified one line, empty body. PR94 remains sole open; bench
+and regular ARM macOS pass at exact9f4e3bb, other four gates running.
+
+Row31 OLDc2a3645 rebases from immutable parentb8f4c24 onto actual row30
+head69b1ad1 (initiale1b9839); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1; existing zip reclamation control tracks renamed
+protected finish helper. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.60 s. Focused zip ownership/unwind tests started.
+
+Guarded cargo test --test zip_unwind_ownership --test zip_ownership passes
+all four tests17.02 s CPU /34.21 s elapsed. Dynamic/direct/captured
+callbacks, partial spines, second-buffer allocation failure, cancellation
+and scalar pointer-shaped bits pass O1/O2 stress/verification/poison probes.
+Existing alias and no-tracing reclamation controls plus raw interpreter
+comparisons pass. Full six sequential runner gates remain required.
+
+Zip lint (cargo clippy --test zip_unwind_ownership --test zip_ownership
+-- -D warnings) passes2.39 s CPU /4.85 s elapsed; fmt check0.35 s /0.62 s.
+Nine authoritative docs copied before final amend/publication; no tested
+source/runtime changes follow.

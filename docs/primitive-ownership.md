@@ -173,7 +173,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 28 | Runtime application owns its function and pending typed arguments until transfer/return; unwind releases them, and callers protect stack captures | Sequential CI; overapplication, scalar safety, primitive traps and cancelled entry |
 | 29 | Map protects completed typed results and the partial spine until transfer, releasing them and scratch on unwind | Sequential CI; dynamic/direct/captured callbacks, scalar safety and allocation-failure ownership |
 | 30 | Filter/take-while protect typed selected aliases and partial result spines until transfer; unwind releases scratch and owned selections | Sequential CI; predicate order, retained aliases, scalar safety and partial construction |
-| 31–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 31 | zip-with protects completed typed results and partial spines; both borrowed scratch buffers release on unwind, including second-buffer failure | Sequential CI; aliases, scalar safety, callback traps, allocation failure and cancellation |
+| 32–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
