@@ -2329,21 +2329,32 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         let func = |id: FuncId| &funcs[id].ty;
                         crate::ir::type_of(&func, &self.g.prog.shapes, &self.locals, e)
                     };
+                    let remaining = self.begin_call(e as *const Expr);
+                    let original_values = self.stack_alias(e).unwrap_or_else(|| {
+                        vec![(t.clone(), ty.clone().unwrap_or_else(|| MT::con("?")))]
+                    });
+                    let original = self.begin_values(&original_values);
                     let tys: Option<Vec<MT>> = ty.as_ref().and_then(|t| {
                         record_fields(&self.g.prog.shapes, t)
                             .map(|fs| fs.iter().map(|(_, t)| t.clone()).collect())
                     });
-                    for (k, f) in fs.iter().enumerate() {
-                        let counted = match &tys {
-                            Some(tys) => tys
-                                .get(k)
-                                .is_some_and(|t| crate::rc::needs_rc(&self.g.prog.shapes, t)),
-                            None => true,
-                        };
-                        if counted {
-                            self.line(&format!("fwp_rc_dup({});", f));
-                        }
-                    }
+                    let values: Vec<_> = fs
+                        .iter()
+                        .enumerate()
+                        .map(|(k, value)| {
+                            let ty = tys
+                                .as_ref()
+                                .and_then(|ts| ts.get(k))
+                                .cloned()
+                                .unwrap_or_else(|| MT::con("?"));
+                            (value.clone(), ty)
+                        })
+                        .collect();
+                    let ctx = self.fresh();
+                    let node = self.fresh();
+                    let retained = self.g.duplicate_values(&values, &ctx, &node);
+                    self.line(&retained);
+                    self.end_call(original);
                     let d = ty
                         .and_then(|t| self.typed_drop(&t))
                         .unwrap_or_else(|| "fwp_rc_drop".into());
@@ -2352,6 +2363,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     } else {
                         self.line(&format!("{}({});", d, t));
                     }
+                    self.end_call(remaining);
                 }
                 fs
             }

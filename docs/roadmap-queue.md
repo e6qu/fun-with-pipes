@@ -70,7 +70,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 39 | variant-preparation | `ownership-variant-preparation` | `7d617f68cac0` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `1654263ed38e` | `b0219671dca3` | `1bb11bece9ae` |
 | 41 | variant-conversion | `ownership-variant-conversion` | `a59952364e22` | `34873f41a4c4` | `b0219671dca3` |
-| 42 | record-update | `ownership-record-update` | `00b9d0901485` | `5c5875d30b8e` | `34873f41a4c4` |
+| 42 | record-update | `ownership-record-update` | `5522a2ceb038` | `5c5875d30b8e` | `34873f41a4c4` |
 | 43 | record-conversion | `ownership-record-conversion` | `3df2c9d86059` | `614dd3b19c13` | `5c5875d30b8e` |
 | 44 | variant-alias | `ownership-variant-alias` | `8ebfe6f5d701` | `de8562194d54` | `614dd3b19c13` |
 | 45 | typed-expression | `ownership-match-context` | `e73b5b8e7ac7` | `3f61f51521d9` | `de8562194d54` |
