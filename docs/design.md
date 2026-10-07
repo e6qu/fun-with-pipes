@@ -44,6 +44,12 @@ Other callback/runtime and exceptional ownership extensions are prepared separat
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
+Prepared runtime application cleanup protects consumed functions, pending typed
+arguments and original stack captures through nonlocal unwind. It adds a typed
+pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit
+targets); programs without possible unwind omit runtime registration. Scalar
+words stay uncounted. Sequential full CI is still required.
+
 Prepared resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
 branches and the handoff records acceptance; these are not merged ARC support.

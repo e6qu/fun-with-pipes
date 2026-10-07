@@ -7713,3 +7713,24 @@ and raw interpreter comparisons. Guarded clippy --test compiler_call_liveness
 -- -D warnings passes2.67 s /5.31 s; fmt check0.45 s /0.83 s. Serial
 doc audit then passes eleven link sets, 82 immutable ancestry pairs and
 whole commit subjects0.14 s /0.93 s. Full gates remain runner-only.
+
+Final call-liveness preparation786f1700236ec23b9880436d8c512b941a44e1ec
+is clean on actual base216e673, published with exact lease against OLD7392f2d.
+Whole subject verified single line, empty body. PR94 remains sole open.
+
+Row28 OLDbee3f16 rebases from immutable parent7392f2d onto actual row27
+head786f170 (initiala46fdc9). Nine root docs resolve conflicts; three
+source oracles explicitly set FWP_NO_OPT=1. Guarded target switch clean
+passes0.06 s CPU /0.27 s elapsed; formatting0.43 s /0.82 s.
+
+Guarded cargo test --test runtime_call_ownership passes all five tests
+15.73 s CPU /31.57 s elapsed: consumed closures/captures, typed pending
+overapplication arguments, scalar pointer-shaped bits, owned primitive
+arguments and stack captures, and cancellation before callee entry.
+O1/O2 stress/verification and poison probes plus raw interpreter comparisons
+pass. The no-tracing repeated-failure omission control verifies immediate
+reclamation, not timing or general tracing-free execution.
+
+Runtime call lint (cargo clippy --test runtime_call_ownership -- -D warnings)
+passes2.41 s CPU /4.74 s elapsed; fmt check0.35 s /0.72 s. Final doc
+refresh changes no tested runtime/source. Full gates remain required.
