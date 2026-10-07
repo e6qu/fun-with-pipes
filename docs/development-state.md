@@ -46,7 +46,8 @@ Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing
 remains the fallback. [PR105](https://github.com/e6qu/fun-with-pipes/pull/105)
 is the only open production PR, head `9a21fd6cc844c0960cedd283fd09ab354ee32338`,
 actual base main104 `7520b8d5a1b07b07ad1a381c23be75a879470e0a`.
-Fresh six-job production CI37997170222 is queued/running;
+Fresh production CI37997170222 has passed benchmarks, regular ARM macOS and
+both ARM/Intel GC stress jobs; Linux and regular Intel macOS remain running;
 roadmap_docs37997170102 passes at the exact PR head.
 Require all seven exact-head checks before squash with
 `Protect compiler reuse tokens through transfer and unwind` and empty body.
@@ -102,7 +103,7 @@ still need their final squash rebases and six exact-head full gates.
 | 26 ownership-reuse-tokens | 9a21fd6cc844 | 7520b8d5a1b0 | PR105; seven tests19.40/39.06s, lint2.30/4.73s, format0.35/0.63s and strong audit pass; exact-head CI follows |
 | 27 ownership-call-liveness | 2a2458b93d6c | 9a21fd6cc844 | Twelve tests30.40/61.02s; lint2.35/4.73s, format0.35/0.62s and strong audit pass; final rebase after105 |
 | 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
-| 29 ownership-map-unwind | 78ed19ff401a | 7cfbe030d3de | Eight tests22.28/44.73s; lint2.41/5.01s and format0.35/0.75s pass; early preparation protection inherited |
+| 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | 244dd2a578af | 78ed19ff401a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 31 ownership-zip-unwind | 687ae106193b | 244dd2a578af | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 32 ownership-fold-unwind | 270525b5bb9a | 687ae106193b | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
@@ -374,13 +375,17 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-runtime-call-worktree after guarded clean0.07/0.39s.
-Row28 ten focused runtime/preparation/reuse tests pass27.43CPU/55.06elapsed;
-lint2.37/4.77s, format0.34/0.63s and strong audit0.46/3.69s pass. Source is
-byte-identical to7cfbe03 except inherited tail regression/auditor/guard. Published
-head3e7ab59e89c32f056a19bec6b327709e242d8393 is on actual2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1;
-prior7cfbe03 is retained remotely before leased publication. No local workload
-is running. Keep its PR after the preceding delivery and final squash rebase.
+belongs to /private/tmp/fwp-map-unwind-worktree after guarded clean0.05/0.37s.
+Row29 published4c7d5ba450822f36eda7de8c5b762bf0471620f6 is rebased from
+actual7cfbe03 onto new actual3e7ab59. Compiler/runtime/original probes match
+previous78ed19f exactly; long-tail test/guard/strong audit are inherited.
+Seven focused map/preparation/reuse tests pass24.26CPU/48.82elapsed; focused
+clippy -D warnings2.51/5.05s, format0.44/0.61s and strong44/106/87 audit
+0.55/4.11s pass. No local workload remains running. Retained old78ed19f at
+roadmap/revision-029-78ed19ff401a before exact leased publication.
+Final rebase from actual3e7ab59 follows row28's accepted squash.
+Row28 ten focused tests pass27.43CPU/55.06elapsed, lint2.37/4.77s, format0.34/
+0.63s and strong audit0.46/3.69s; published3e7ab59 is on actual2a2458b.
 Row26 final seven tests pass19.40/39.06s, lint2.30/4.73s, format0.35/0.63s
 and strong audit0.45/3.59s. The local rebase70f7b111 is on
 actual main1047520b8d; published row26 is9a21fd6 on7520b8d in PR105. The full-size raw tail probe hit the1GiB RSS limit and was
