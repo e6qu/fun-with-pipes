@@ -69,8 +69,9 @@ A separate CI job runs the benchmarks
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
 
-All six exact-head jobs are required before merging: Linux, bench, regular
-macOS arm64/x86-64 and separate GC stress jobs on both macOS architectures.
+All six exact-head production jobs and the roadmap documentation audit are
+required before merging: Linux, bench, regular macOS arm64/x86-64 and separate
+GC stress jobs on both macOS architectures.
 Regular macOS runs exclude only `golden_programs_under_gc_stress`; each
 dedicated stress job runs exactly that test. Their union is the full native
 test gate with OpenSSL.

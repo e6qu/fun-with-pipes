@@ -111,16 +111,20 @@ static void fwp_callback_argument_dup(V f, V element) {
     if (fi->owned) fi->owned->arguments(&element, c->n, 1);
     else fwp_rc_share(element);
 }
-static V fwp_p_filter_owned(V f, V xs) {
+static V fwp_p_filter_owned(V f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
     for (size_t i = 0; i < n; i++) {
         if (fwp_apply_borrowed(f, 1, &a[i]) == FWP_TRUE) {
             fwp_callback_argument_dup(f, a[i]);
             a[k++] = a[i];
+            owner.count = k;
         }
     }
-    V result = fwp_map_finish(a, k);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
     return result;
@@ -128,14 +132,18 @@ static V fwp_p_filter_owned(V f, V xs) {
 
 /* Prefix selection stops at the first rejected element. The input owner
  * remains live across predicate calls and result-node allocation. */
-static V fwp_p_take_while_owned(V f, V xs) {
+static V fwp_p_take_while_owned(V f, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
     while (k < n && fwp_apply_borrowed(f, 1, &a[k]) == FWP_TRUE) {
         fwp_callback_argument_dup(f, a[k]);
         k++;
+        owner.count = k;
     }
-    V result = fwp_map_finish(a, k);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(f);
     FWP_KEEP_ALIVE(xs);
     return result;
@@ -467,28 +475,36 @@ FWP_K V fwp_k_filter(fwp_fn1 f, V xs) {
     return fwp_list_from(a, k);
 }
 
-FWP_K V fwp_k_filter_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs) {
+FWP_K V fwp_k_filter_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
     for (size_t i = 0; i < n; i++) {
         if (f(a[i]) == FWP_TRUE) {
             element_dup(&a[i], 0, 1);
             a[k++] = a[i];
+            owner.count = k;
         }
     }
-    V result = fwp_map_finish(a, k);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }
 
-FWP_K V fwp_k_take_while_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs) {
+FWP_K V fwp_k_take_while_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs, void (*element_drop)(V), void (*list_drop)(V)) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
+    fwp_map_owner owner = {a, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
     while (k < n && f(a[k]) == FWP_TRUE) {
         element_dup(&a[k], 0, 1);
         k++;
+        owner.count = k;
     }
-    V result = fwp_map_finish(a, k);
+    V result = fwp_map_finish_protected(&owner, &cleanup);
     FWP_KEEP_ALIVE(xs);
     return result;
 }

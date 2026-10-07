@@ -62,7 +62,8 @@ lifetimes. None of these is a general collector-free execution guarantee.
 Container contracts and comparison-key borrowing are merged. Selected leaves,
 fresh text trees, compiled captures, concrete temporaries and stack children are
 also merged; synchronous map/filter borrow callback inputs and own their fresh
-spines/results. sort/unique borrow their input, retain typed selected aliases
+spines/results. Map callback failure, trap and cancellation now release owned
+results, partial spines and scratch through registered cleanup. sort/unique borrow their input, retain typed selected aliases
 and release scratch after constructing their owned copied result. sort-by
 borrows its callback/input, evaluates keys once in input order, owns typed
 keys/copied results and releases scratch; stable ties remain unchanged.
@@ -175,7 +176,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #107 includes the following contracts. Detailed primitive modes
+Main through PR #108 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -232,7 +233,8 @@ lifetimes, shared graph ownership or general execution without tracing.
 
 [The immutable queue](roadmap-queue.md) records the ordered published work.
 Prepared code and focused checks are not merged support. Every preparation must
-rebase and pass six exact-head full CI gates. Current failures and commands are
+rebase and pass six exact-head production jobs plus the documentation audit.
+Current failures and commands are
 in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |

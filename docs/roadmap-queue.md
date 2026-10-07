@@ -17,7 +17,7 @@ This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all11 authoritative docs listed in the
+Resolve documentation conflicts with all 11 authoritative docs listed in the
 handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
 Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
@@ -29,8 +29,8 @@ resolve full hashes before publication or merge. Checkout paths use
 
 Row34's argument/capture preparation repair and regression probe are now moved
 into row28 to protect callback entry earlier. Current34 is documentation-only
-relative to refreshed33. After28 passes its full acceptance, skip the duplicate
-implementation PR at34; keep its immutable anchor and later regression coverage.
+relative to refreshed33. Row28 passed full acceptance in PR107; skip the duplicate
+implementation PR at34 and keep its immutable anchor and later regression coverage.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -56,7 +56,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `9a21fd6cc844` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
-| 29 | map-unwind | `ownership-map-unwind` | `691c60540829` | `62add7e4a85f` | `bee3f1659ae5` |
+| 29 | map-unwind | `ownership-map-unwind` | `3c69084cec04` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `9979e9fd1a27` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `47776e738c26` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `c434692ccb6f` | `968dac7ed9cf` | `c2a364544d92` |
@@ -119,27 +119,27 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `9d8a6fb2a7df` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `71d875caed41` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `36ea28337198` | `3c268c34d15b` | `6f310b5483a8` |
-| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `307010912bf9` | `09751c8c65ac` | `3c268c34d15b` |
-| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `fec93c5ec707` | `a92c951fa6d9` | `09751c8c65ac` |
-| 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `d1f35d6121a4` | `8bd9e78743ab` | `a92c951fa6d9` |
-| 95 | grpc-force-cleanup | `ownership-grpc-force-cleanup` | `1e5a5b4f4fb3` | `6b82bc5b8b2f` | `8bd9e78743ab` |
-| 96 | grpc-render-cleanup | `ownership-grpc-render-cleanup` | `d94a2784952d` | `ea79bdee1191` | `6b82bc5b8b2f` |
-| 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `080be7e655e3` | `671ada6ec85d` | `ea79bdee1191` |
-| 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `6bddc3977352` | `663ef599a438` | `671ada6ec85d` |
-| 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `af556a1cf605` | `4114b709fb4b` | `663ef599a438` |
-| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `3bec687cea7d` | `b44f53c9a60f` | `4114b709fb4b` |
-| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `2ac08dea923a` | `2339ff08e421` | `b44f53c9a60f` |
-| 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `04e8557ca5e8` | `33661b298f96` | `2339ff08e421` |
-| 103 | grpc-client-receive | `ownership-grpc-client-receive` | `6f1f030dfcce` | `c48864ce7231` | `33661b298f96` |
-| 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `ac9558374a4d` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `2711a516ee34` | `cb20833c018f` | `b244d5f7c423` |
-| 106 | grpc-context-restore | `ownership-grpc-context-restore` | `29104d944907` | `7a89dd017ae4` | `cb20833c018f` |
-| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `c34c313ccfb0` | `ea18e54f0eee` | `7a89dd017ae4` |
-| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `8f66e28763b4` | `36ad63424530` | `ea18e54f0eee` |
-| 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `cf14552bdba5` | `d178d86dca2b` | `36ad63424530` |
-| 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `393456e6e5ca` | `6f4bfba80ef3` | `d178d86dca2b` |
-| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `a4f347499f19` | `2bb665596390` | `6f4bfba80ef3` |
-| 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `215d7badbd49` | `edbc5e8d0e62` | `2bd17608388d` |
+| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `5b15ee436b69` | `09751c8c65ac` | `3c268c34d15b` |
+| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `e7408fee761a` | `a92c951fa6d9` | `09751c8c65ac` |
+| 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `7c94141a1a9a` | `8bd9e78743ab` | `a92c951fa6d9` |
+| 95 | grpc-force-cleanup | `ownership-grpc-force-cleanup` | `279f9f73e3f3` | `6b82bc5b8b2f` | `8bd9e78743ab` |
+| 96 | grpc-render-cleanup | `ownership-grpc-render-cleanup` | `8302c3468190` | `ea79bdee1191` | `6b82bc5b8b2f` |
+| 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `351073f7254d` | `671ada6ec85d` | `ea79bdee1191` |
+| 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `1f6f668eff38` | `663ef599a438` | `671ada6ec85d` |
+| 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `96f523dfad9e` | `4114b709fb4b` | `663ef599a438` |
+| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `a3d88c0b8f3d` | `b44f53c9a60f` | `4114b709fb4b` |
+| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `e0db0123a16c` | `2339ff08e421` | `b44f53c9a60f` |
+| 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `4c58f019e707` | `33661b298f96` | `2339ff08e421` |
+| 103 | grpc-client-receive | `ownership-grpc-client-receive` | `32c500ef4444` | `c48864ce7231` | `33661b298f96` |
+| 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `f0384f82c63e` | `b244d5f7c423` | `c48864ce7231` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `c7db1b368da0` | `cb20833c018f` | `b244d5f7c423` |
+| 106 | grpc-context-restore | `ownership-grpc-context-restore` | `06b87f3c83af` | `7a89dd017ae4` | `cb20833c018f` |
+| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `d4b360f6cc71` | `ea18e54f0eee` | `7a89dd017ae4` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `1362d3a239bc` | `36ad63424530` | `ea18e54f0eee` |
+| 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `5a6b79b7a008` | `d178d86dca2b` | `36ad63424530` |
+| 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `66d7d93e57f5` | `6f4bfba80ef3` | `d178d86dca2b` |
+| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `a7d089cc5153` | `2bb665596390` | `6f4bfba80ef3` |
+| 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `996d5ee4ef4f` | `edbc5e8d0e62` | `2bd17608388d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
