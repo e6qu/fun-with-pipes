@@ -61,7 +61,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 37 | worker-preparation | `ownership-worker-preparation` | `3bd34dafb62f` | `c97dd03f8d89` | `dc4f9461571b` |
 | 38 | loop-preparation | `ownership-loop-preparation` | `032a764c1d33` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `5a72ba8763e4` | `1bb11bece9ae` | `b879eca20812` |
-| 40 | constructor-types | `ownership-constructor-types` | `c90fe5a9d170` | `b0219671dca3` | `1bb11bece9ae` |
+| 40 | constructor-types | `ownership-constructor-types` | `dd6c405c77eb` | `b0219671dca3` | `1bb11bece9ae` |
 | 41 | variant-conversion | `ownership-variant-conversion` | `3956d5cadd86` | `34873f41a4c4` | `b0219671dca3` |
 | 42 | record-update | `ownership-record-update` | `f22b5b587de6` | `5c5875d30b8e` | `34873f41a4c4` |
 | 43 | record-conversion | `ownership-record-conversion` | `e2f944c256b6` | `614dd3b19c13` | `5c5875d30b8e` |
