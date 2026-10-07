@@ -4868,6 +4868,11 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     })?;
                                 s = format!("return fwp_rc_fresh({r});");
                             }
+                            ResultOwnership::AliasArgument { argument } => {
+                                if crate::rc::needs_rc(&self.prog.shapes, &func.locals[argument]) {
+                                    s = format!("fwp_rc_dup(l{argument}); {s}");
+                                }
+                            }
                             ResultOwnership::AliasLeaf { argument } => {
                                 s = format!("fwp_rc_dup(l{argument}); {s}");
                             }
