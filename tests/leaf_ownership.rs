@@ -52,25 +52,27 @@ main = read-all () | concat "héllo" | trim | checks | echo
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
     let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
-    let exe = dir.0.join("leaves");
-    checked(
-        Command::new(fwp)
-            .arg("build")
-            .arg(&src)
-            .args(["-O1", "-o"])
-            .arg(&exe),
-    );
-    for verify in ["0", "1"] {
-        let native = checked(
-            Command::new(&exe)
-                .env("FWP_GC_STRESS", "1")
-                .env("FWP_GC_VERIFY", "1")
-                .env("FWP_REUSE_VERIFY", verify),
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(format!("leaves{opt}"));
+        checked(
+            Command::new(fwp)
+                .arg("build")
+                .arg(&src)
+                .args([opt, "-o"])
+                .arg(&exe),
         );
-        assert_eq!(
-            native.stdout, reference.stdout,
-            "reuse verification {verify}"
-        );
+        for verify in ["0", "1"] {
+            let native = checked(
+                Command::new(&exe)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", verify),
+            );
+            assert_eq!(
+                native.stdout, reference.stdout,
+                "{opt}, reuse verification {verify}"
+            );
+        }
     }
 }
 

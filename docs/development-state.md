@@ -51,7 +51,9 @@ Bytes locals participate in IR ownership. Copied leaves establish counts;
 identity/no-op aliases duplicate a reference. Read-only boundaries borrow;
 unknown runtime/FFI boundaries share. Typed drops free leaf storage directly;
 sharing skips byte payloads and reuse poison stays inside allocation capacity.
-Canonical monomorphic type names are `std::String` and `std::Bytes`.
+Borrowed pointer arguments remain conservative roots through primitive calls,
+even if an inlined drop is reduced to metadata access. Alias/copy regressions
+pass at both `-O1` and `-O2`. Canonical monomorphic type names are `std::String` and `std::Bytes`.
 
 Focused checks passed through the local resource guard:
 
