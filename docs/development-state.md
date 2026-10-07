@@ -51,7 +51,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, published with exact lease; clean.
   Three closure cleanup/alias/counter checks pass (CPU 11.97 s / elapsed 24.06 s);
   fmt/whitespace pass. Full CI `37666199241` tests on both macOS architectures;
-  Linux and benchmarks are queued on that exact head.
+  Linux is queued; benchmarks passed on that exact head.
   Require all four gates before squash with subject
   `Bound closure capture cleanup with an explicit release work list`, empty body
   and exact head match. The temporary-types child later rebases from OLD
@@ -191,7 +191,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
 with all four exact-head gates passing. PR #79 is the sole open PR, exact head
-`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241` tests on both macOS architectures; Linux/bench queued. When all
+`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241` tests on both macOS architectures; Linux queued, benchmarks passed. When all
 four gates pass, squash with the explicit subject above and empty body, verify
 its message, and fast-forward main preserving these two docs. Rebase temporary
 ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
@@ -222,8 +222,9 @@ The added overapplication probe passes (CPU 2.51 s / elapsed 5.10 s).
 Final fmt and whitespace pass. The fold branch is published; full
 sequential CI remains required.
 
-Loop cancellation cleanup is in progress on `ownership-loop-unwind`, checkout
-`/private/tmp/fwp-loop-unwind-worktree`, OLD base `968dac7`; not yet published.
+Loop cancellation cleanup is published on `ownership-loop-unwind`, checkout
+`/private/tmp/fwp-loop-unwind-worktree`, OLD base `968dac7`, head
+`988f2a3be97f482d78cbfc5f871e58b0f118a284`; clean, no new PR.
 Dynamic, known and captured loops protect the current consumed state at each
 outer tick and transfer it before owned callback entry. Specialized outer loops
 save only counted typed slots, clear them before fs entry and refresh from the
@@ -243,14 +244,47 @@ nested fixture holds a typed boxed nested record; it does not prove flattened
 nested-slot cancellation coverage. Adjacent call-liveness/fold checks (7) pass, CPU 15.84 s / elapsed 31.89 s.
 
 Library clippy is warning-free (CPU 2.28 s / elapsed 4.52 s); fmt and whitespace
-pass. Next publish loop cleanup separately.
-Then audit multi-capture preparation and owned application allocation, followed
-by constructor/boxing/CAF/inline-rewrite owners and retained task lifetimes.
+pass. Verified subject `Protect current loop state and Step payloads across cancellation`
+is one line, 64 characters, empty body/no trailers. No local workload remains.
+Argument/capture preparation is in progress on `ownership-argument-preparation`,
+checkout `/private/tmp/fwp-argument-preparation-worktree`, OLD base `988f2a3`.
+Generated multi-counted argument helpers protect successful duplicates until the
+whole span transfers. Capture duplication reuses that typed helper when unwind
+is possible. Full owned application transfers its pending prefix only after
+capture preparation; uncounted stack functions still protect owned arguments.
+Partial application protects a freshly counted outer cell while copied children
+remain borrowed, releasing only that cell if capture preparation fails.
+
+The dedicated O1/O2 stress/verification/poison probe passes (CPU 2.62 s / elapsed
+5.43 s), extended final CPU 2.94 s / elapsed 6.08 s:
+whole-span/offset-span failures after an earlier duplicate, heap/stack
+function capture failures, pending typed record arguments containing scalar
+address bits, partial closure-cell reclamation, partial allocation failure before a cell exists
+and exact surviving aliases.
+Removing only the generated helper scope makes the same probe fail with the
+expected leaked-reference code. Normal output matches the interpreter. The
+fixture was corrected to existing curry3 syntax and exact typed allocation
+markers. Its initial failure exposed the uncounted temporary closure cell,
+which is now fixed. Earlier runtime/fold checks (7) pass, CPU 19.15 s / elapsed
+38.47 s. Final nine runtime/fold/loop checks pass, CPU 23.55 s / elapsed 47.29 s;
+Final helper context uses a compact argument pointer, typed release callback and
+span indices, without a temporary function-info table. The dedicated probe plus
+five runtime checks pass after that change, CPU 17.28 s / elapsed 34.73 s.
+Library clippy is warning-free (CPU 2.25 s / elapsed 4.51 s); final fmt and
+whitespace pass. No local workload remains. Publish this branch separately;
+full sequential CI remains required.
+Next finish argument preparation validation and publication. Then start a
+separate constructor/boxing checkout from this published head: FnGen::alloc,
+Body::Ctor, Gen::worker pre-call field duplication and result boxing need typed
+owners before allocations/preparation. Initial loop state flattening also needs
+partial-duplicate cleanup before dropping the input record. Check these actual
+emitted paths with allocation/preparation failure, surviving aliases and scalar
+bits, then CAF/inline-rewrite owners and retained task lifetimes.
 Phase 2 remains incomplete; phases 3–6 follow its acceptance. Failing checks are
 repair tasks, never a reason to stop. Shared target currently contains the
-loop-unwind compiler; guarded `cargo clean -p fwp` is required before another
+argument-preparation compiler; guarded `cargo clean -p fwp` is required before another
 worktree's package build. Root main has only PLAN/handoff edits; all published
-prepared checkouts are clean. PR #79 exact-head CI now tests on both macOS architectures; Linux/bench queued.
+prepared checkouts are clean. PR #79 exact-head CI now tests on both macOS architectures; Linux queued, benchmarks passed.
 
 ## Current ownership evidence
 
@@ -308,6 +342,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-selection-unwind | fwp-selection-unwind-worktree | b8f4c24 | 62add7e |
 | ownership-zip-unwind | fwp-zip-unwind-worktree | c2a3645 | b8f4c24 |
 | ownership-fold-unwind | fwp-fold-unwind-worktree | 968dac7 | c2a3645 |
+| ownership-loop-unwind | fwp-loop-unwind-worktree | 988f2a3 | 968dac7 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1142,7 +1177,7 @@ Old-storage branch published as `6774aa5bb426c4dc1e49d9eca1ff1737763498a5`.
 Verified commit subject: `Reclaim old owned storage and preserve young reuse invariants`
 (61 characters), one line with no body/trailers. Revised Linux GC harness compiles;
 fmt and whitespace pass. No local workload remains. Sole PR #77 exact-head CI
-still tests on both macOS architectures; Linux/bench queued. Next separate
+still tests on both macOS architectures; Linux queued, benchmarks passed. Next separate
 implementation investigates task/channel retained ownership and teardown;
 failing tests remain repair work, never a reason to stop the roadmap.
 

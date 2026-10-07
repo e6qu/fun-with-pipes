@@ -520,3 +520,30 @@ aliases and scalar address bits. Normal output matches the interpreter. Existing
 loop and adjacent call/fold tests pass. Full sequential CI remains required;
 flattened nested-slot cancellation, multi-capture preparation, owned application
 allocation, boxing/constructors/CAF/inline owners and retained tasks remain open.
+
+## Prepared argument and capture preparation
+
+When unwind is possible, a generated helper that duplicates multiple counted
+arguments keeps each successful duplicate in a typed prefix scope until the
+requested span transfers. A later duplicate failure releases those extras,
+preserving original aliases. Offset spans retain the original parameter types;
+scalar fields are never interpreted as counted pointers. Capture duplication
+uses this helper too. Single-counted helpers need no partial-prefix owner,
+and programs without possible unwind retain grouped operations.
+
+Owned application transfers pending arguments only after capture preparation
+and immediately before entry. Captured stack functions still register pending
+argument ownership although the function has no heap count. Partial application
+registers its fresh outer cell while copied fields remain borrowed; failure
+releases that cell without dropping borrowed children. A successful result owns
+the prepared captures and consumed supplied arguments.
+
+A focused generated-code probe passes at O1/O2 with stress/verification and both
+poison modes: failed second/later duplicates, offset spans, heap/stack functions,
+pending records with address-shaped scalar fields, partial allocation failure,
+partial-cell reclamation and exact aliases. Removing only the helper scope makes
+the same probe detect a leaked earlier duplicate. Normal output matches the
+interpreter, and adjacent runtime/fold/loop checks pass. Full sequential CI remains
+required. Constructor/boxing/CAF/inline-rewrite allocation lifetimes, initial
+loop flattening, closure-cleanup spill failures and retained task lifetimes remain
+acceptance work; this is not complete ARC or a collector-free guarantee.

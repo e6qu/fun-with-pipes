@@ -311,6 +311,11 @@ safe points and owned Step payload preparation. Scalar slots stay uncounted;
 full sequential CI and remaining allocation/retained lifetimes are tracked in
 [ownership.md](ownership.md#prepared-loop-cancellation-cleanup).
 
+Prepared capture/argument preparation protects successful typed duplicates
+until transfer, and partial application owns its unfinished outer cell. See
+[ownership.md](ownership.md#prepared-argument-and-capture-preparation) for evidence
+and the remaining constructor/boxing and retained-runtime lifetime work.
+
 ## Not implemented
 
 - Complete ownership of strings, bytes, escaping closures and runtime-shared
