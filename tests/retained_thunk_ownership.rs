@@ -207,13 +207,13 @@ int main(void){
     );
     let extra = runtime
         .replacen(
-            "fwp_value_protect(&owner, &cleanup);\n    fwp_task *t = fwp_spawn(thunk, 0);",
-            "(void)cleanup;\n    fwp_task *t = fwp_spawn(thunk, 0);",
+            "fwp_value_protect(&owner, &cleanup);\n    fwp_task *t = fwp_spawn(thunk, deadline);",
+            "(void)cleanup;\n    fwp_task *t = fwp_spawn(thunk, deadline);",
             1,
         )
         .replacen(
-            "fwp_value_finish(&owner, &cleanup);\n    return PTR(t);",
-            "(void)owner;\n    return PTR(t);",
+            "fwp_value_finish(&owner, &cleanup);\n    return t;",
+            "(void)owner;\n    return t;",
             1,
         );
     for opt in ["-O1", "-O2"] {

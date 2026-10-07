@@ -868,20 +868,24 @@ static V fwp_p_task_spawn(V thunk) { return PTR(fwp_spawn(thunk, 0)); }
 
 /* Borrowed at the compiler boundary, retained until the task takes it.
  * Protect only the extra reference if stack/scope preparation fails. */
-static V fwp_p_task_spawn_retained(V thunk, int share_result) {
+static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, int share_result) {
     if (!fwp_fns[CLO(thunk)->fn].owned) {
         fwp_rc_share(thunk);
-        return fwp_p_task_spawn(thunk);
+        return fwp_spawn(thunk, deadline);
     }
     fwp_rc_dup(thunk);
     fwp_value_owner owner = {thunk, fwp_closure_drop};
     fwp_cleanup cleanup;
     fwp_value_protect(&owner, &cleanup);
-    fwp_task *t = fwp_spawn(thunk, 0);
+    fwp_task *t = fwp_spawn(thunk, deadline);
     t->owns_thunk = 1;
     t->share_result = share_result;
     fwp_value_finish(&owner, &cleanup);
-    return PTR(t);
+    return t;
+}
+
+static V fwp_p_task_spawn_retained(V thunk, int share_result) {
+    return PTR(fwp_spawn_retained(thunk, 0, share_result));
 }
 
 static V fwp_p_task_await(V t) {
@@ -892,6 +896,11 @@ static V fwp_p_task_await(V t) {
 static V fwp_p_task_within(V d, V thunk) {
     int64_t at = fwp_after(d);
     return fwp_await(fwp_spawn(thunk, at));
+}
+
+static V fwp_p_task_within_retained(V d, V thunk, int share_result) {
+    int64_t at = fwp_after(d);
+    return fwp_await(fwp_spawn_retained(thunk, at, share_result));
 }
 
 static V fwp_p_task_cancel(V t) {

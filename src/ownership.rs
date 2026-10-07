@@ -2,7 +2,7 @@
 //! calls and remote calls keep the conservative runtime-sharing fallback.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
 //! Array/map/set elements are typed owners. Spawned task thunks retain a
-//! counted callback owner; other retained callbacks use conservative sharing.
+//! counted callback owner, as do deadline calls; other retained callbacks share.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -116,7 +116,7 @@ impl Contract {
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; arrays/maps/sets own typed element references.
 /// Synchronous list/container callbacks borrow;
-/// spawned thunks retain a counted owner; other retained callbacks share.
+/// spawned/deadline thunks retain a counted owner; other retained callbacks share.
 /// Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
     use Argument::{Borrow as B, Consume as C, Share as S};
@@ -130,9 +130,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "task.spawn" => (&[B], R, Some(Callback::Retained(0)), &[0]),
         "task.scope" => (&[S], R, Some(Callback::Shared(0)), &[0]),
         "task.within" => (
-            &[B, S],
+            &[B, B],
             ResultOwnership::FreshOuter,
-            Some(Callback::Shared(1)),
+            Some(Callback::Retained(1)),
             &[1],
         ),
         "task.await" | "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
@@ -445,6 +445,10 @@ mod tests {
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
         assert!(!spawn.borrows_callback()); // asynchronous callbacks still escape
+        let within = primitive("task.within").unwrap();
+        assert_eq!(within.argument(1), Argument::Borrow);
+        assert_eq!(within.callback, Some(Callback::Retained(1)));
+        assert!(!within.borrows_callback());
         for (library, collections) in [
             (include_str!("../lib/collections.fwp"), true),
             (include_str!("../lib/string.fwp"), false),

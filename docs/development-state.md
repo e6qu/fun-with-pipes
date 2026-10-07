@@ -91,7 +91,10 @@ IR tests pass3.33/7.13s. Fresh evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5
 runsCI38008988824 on actualsource172912b, with compiler/runtime/tests/scripts
 and production workflows byte-identical. Retained failed0bb9762 under
 roadmap/evidence-conversion-0bb9762dd41b before exact leased publication.
-Strong audit0.42CPU/3.49elapsed passes. Next refresh42–112. The loop observer must read actual
+Strong audit0.42CPU/3.49elapsed passes. Loop/control42–49 refresh now
+finishes8.26CPU/93.23elapsed with exact code/observer/control inheritance,
+all old heads retained and all source/handoff audits passing. Current49
+is49b7aa5a0c074fa7e06364b06ddf891b46a3738d. Next refresh50–112. The loop observer must read actual
 counted-owner layout: flattened string owners are not boxed records. All
 scalar-bit, alias, finalizer and exact release assertions remain unchanged.
 Row33 both loop checks pass10.45CPU/20.96elapsed on the local repair.
@@ -156,7 +159,7 @@ still need their final squash rebases and six exact-head full gates.
 | 46 ownership-field-context | d71a2aea284c | 09ec9a65afdc | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
 | 47 ownership-caf-cache | 5f9a8bb2403b | d71a2aea284c | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
 | 48 ownership-inline-caf | be475bda31dc | 5f9a8bb2403b | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
-| 49 ownership-task-thunks | 3f0e25fb2cc7 | ee6016f60507 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
+| 49 ownership-task-thunks | 49b7aa5a0c07 | be475bda31dc | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 91b625c60cb9 | 4ab664827244 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 935554ad52c1 | 91b625c60cb9 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | 8eab3e41f8ba | 935554ad52c1 | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
