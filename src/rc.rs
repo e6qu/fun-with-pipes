@@ -71,7 +71,7 @@ fn consumes(funcs: &[Func], id: FuncId) -> bool {
 /// Whether a call of `id` takes ownership of its argument `j`: every
 /// argument of a function or constructor, and the array that
 /// `array.set` and `array.push` write in place when it is unique.
-fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
+pub fn consumes_arg(funcs: &[Func], id: FuncId, j: usize) -> bool {
     consumes(funcs, id) || matches!(&funcs[id].body, Body::Prim(s) if prim_consumes(s, j))
 }
 

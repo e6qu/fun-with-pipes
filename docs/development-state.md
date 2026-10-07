@@ -15,7 +15,8 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 
 1. Open PR [#74](https://github.com/e6qu/fun-with-pipes/pull/74), branch
    `macos-portability`, latest head `2c2a46d`, baseline `7a05b58` (#73).
-   Current-head gate is
+   Current-head gate has passed Linux full tests, ARM macOS full tests and
+   benchmarks; Intel is still running. Current-head gate is
    [37591744197](https://github.com/e6qu/fun-with-pipes/actions/runs/37591744197).
    Run
    [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219)
@@ -37,9 +38,12 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 6. Published preparation `ownership-closure-cleanup`, checkout
    `/private/tmp/fwp-drop-worktree`, head `7cf5c78`, base `0d96bfe`, no PR yet. Function capture
    cleanup uses a bounded-depth work list with explicit spill release.
-7. This preparation `ownership-temporary-types`, checkout
-   `/private/tmp/fwp-temporary-worktree`, base `7cf5c78`, no PR yet. Call
+7. Published preparation `ownership-temporary-types`, checkout
+   `/private/tmp/fwp-temporary-worktree`, head `0acbc06`, base `7cf5c78`, no PR yet. Call
    parameter types preserve typed child cleanup for constructor temporaries.
+8. This preparation `ownership-stack-arguments`, checkout
+   `/private/tmp/fwp-stack-worktree`, base `0acbc06`, no PR yet. Eligible
+   stack locals/aliases and consumed calls own typed child references.
 
 After #74 passes and squash-merges, fetch main and rebase the container checkout
 with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
@@ -52,7 +56,8 @@ After its merge, rebase this closure branch from `bab67ea` onto main, reconcile
 docs and run full CI in the next PR. After the closure PR merges, rebase this
 cleanup branch from `0d96bfe` onto main and validate it as the next PR. After
 that merge, rebase this temporary-type branch from `7cf5c78` onto main and
-reconcile/validate in its own PR.
+reconcile/validate in its own PR. After that merge, rebase this stack branch
+from `0acbc06` onto main and run its own full gate.
 
 ## macOS failures and fixes
 
@@ -158,6 +163,44 @@ ownership tests passed (CPU 17.28 s / elapsed 34.93 s). The additional retained
 child alias regression and five FFI checks passed (CPU 11.19 s / elapsed 22.56 s),
 including O1/O2, GC stress/verification and poison modes.
 
-Next: stack aggregate argument cleanup, then retained callbacks and other
+Stack locals/aliases and consumed arguments now retain/release typed children
+with address fences and separate nested call scopes. Six escape checks and
+fifteen focused ownership tests pass (CPU 22.53 s / elapsed 45.51 s), including
+O1/O2, GC stress/verification and poison modes. With tracing off and only old
+child lifetimes restored, variant/closure frees are 0.0/1.3 MiB versus 0.5/1.7 MiB
+after cleanup. The existing stack closure allocation regression still passes
+(CPU 1.21 s / elapsed 3.00 s). Five FFI checks and the local fat-binary baseline passed; full CI stays required.
+
+Next: retained callbacks and other
 constructor/result contexts. Count saturation, exceptional paths and
 generational old-object reclamation still delegate to GC.
+
+## Next callback change: design constraints
+
+Start with synchronous map callbacks, not retained task/channel/FFI callbacks.
+Add a typed borrowed application path: duplicate supplied pointer arguments
+according to function metadata, consume those copies in the owned entry, and
+retain the original function owner. Partial and overapplication must duplicate
+arguments in chunks according to each actual function's parameter types, never
+by guessing whether scalar bits resemble an address. Callback results then have
+one owned reference, including aliases of inputs/captures and returned functions.
+
+Map needs owned fresh list spines with already-owned elements; FreshTree is not
+valid for aliased callback results. Do not reset child counts or recursively
+promote borrowed inputs to sharing. Release the temporary result buffer after
+transferring its references into new nodes. Add aliases/captures/function-result,
+GC/reuse and zero-tracing reclamation tests; validate hardware/benchmark gates.
+
+Preserve specialized direct callbacks and captured HOF loops. Function locals
+are now counted, so a borrowed callback temporary can hide its known partial
+application behind a local. Recover its function/captures for specialization,
+and allow stack callbacks only when the contract proves synchronous invocation
+without retaining the function itself. A Borrow argument may still have aliased
+results; borrowing alone is not a no-escape proof. Stack caller cleanup must
+run only for consumed arguments; borrowed ones are released by their IR Drop.
+The stack change already consults rc::consumes_arg for that distinction.
+
+Byte counts still saturate into tracing-managed sharing at 255. An exact overflow
+path, other constructor/result contexts, exceptional cleanup, old-generation
+reclamation, retained runtime graphs/cycles and WASI reclamation remain required
+before general no-tracing execution. Do not claim phase 2 or phase 6 complete.

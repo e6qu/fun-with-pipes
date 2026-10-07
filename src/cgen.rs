@@ -1605,6 +1605,10 @@ struct FnGen<'g, 'p> {
     /// Cells of dropped unique values, which a constructor of the same size
     /// may take (innermost last).
     tokens: Vec<Token>,
+    /// Children owned by temporary stack arguments until their call returns.
+    stack_args: Vec<(String, MT)>,
+    /// Off-heap local owners count their children directly.
+    stack_children: HashMap<Local, Vec<(String, MT)>>,
     /// The function being generated.
     me: FuncId,
 }
@@ -1881,9 +1885,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Record(xs) if xs.len() == n => self.args(xs),
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.ret) == Some(n) => {
                 let abi = self.g.abis[*id].clone().unwrap();
+                let outer = std::mem::take(&mut self.stack_args);
                 let xs = self.worker_args(*id, &abi, args);
                 let t = self.fresh();
                 self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                self.stack_args_finish(outer);
                 (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
             }
             Expr::Let(x, v, b) if is_local_through_counts(b, *x) && self.unboxed(v) == Some(n) => {
@@ -1978,7 +1984,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let d = ty
                         .and_then(|t| self.typed_drop(&t))
                         .unwrap_or_else(|| "fwp_rc_drop".into());
-                    self.line(&format!("{}({});", d, t));
+                    if let Some(children) = self.stack_alias(e) {
+                        self.stack_children_count(children, false);
+                    } else {
+                        self.line(&format!("{}({});", d, t));
+                    }
                 }
                 fs
             }
@@ -2035,9 +2045,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             Expr::Call(id, args) if self.g.abis[*id].as_ref().and_then(|a| a.vret) == Some(m) => {
                 let abi = self.g.abis[*id].clone().unwrap();
+                let outer = std::mem::take(&mut self.stack_args);
                 let xs = self.worker_args(*id, &abi, args);
                 let t = self.fresh();
                 self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                self.stack_args_finish(outer);
                 parts(&t)
             }
             Expr::Let(l, v, b) => {
@@ -2108,7 +2120,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let k = self.g.vhelper(ty, m);
                     self.line(&format!("fwp_vdup{}(&{});", k, u));
                     let d = self.typed_drop(ty).unwrap_or_else(|| "fwp_rc_drop".into());
-                    self.line(&format!("{}({});", d, t));
+                    if let Some(children) = self.stack_alias(e) {
+                        self.stack_children_count(children, false);
+                    } else {
+                        self.line(&format!("{}({});", d, t));
+                    }
                 }
                 parts(&u)
             }
@@ -2204,7 +2220,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
         // when it is unique
         if let (Expr::SetFields(r, sets), Expr::Drop(d, rest)) = (v, body) {
             if let Expr::Local(x) = **r {
-                if self.g.reuse && x == *d && !self.fields.contains_key(&x) {
+                if self.g.reuse
+                    && x == *d
+                    && !self.fields.contains_key(&x)
+                    && !self.stack_children.contains_key(&x)
+                {
                     let xs: Vec<(u32, String)> =
                         sets.iter().map(|(i, e)| (*i, self.expr(e))).collect();
                     let u = self.fresh();
@@ -2249,11 +2269,20 @@ impl<'g, 'p> FnGen<'g, 'p> {
             && stack_enabled()
             && !crate::escape::escapes(body, l, &self.g.noesc, Some(self.me))
         {
-            let x = self.stack_object(v);
+            let types = self.stack_types(v, &self.locals[l as usize]);
+            let outer = std::mem::take(&mut self.stack_args);
+            let x = self.stack_object(v, types.clone());
+            let children = std::mem::replace(&mut self.stack_args, outer);
+            if types.is_some() {
+                self.stack_children.insert(l, children);
+            }
             self.line(&format!("l{} = {};", l, x));
             return body;
         }
         let x = self.expr(v);
+        if let Some(children) = self.stack_alias(v) {
+            self.stack_children.insert(l, children);
+        }
         self.line(&format!("l{} = {};", l, x));
         body
     }
@@ -2261,12 +2290,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// An argument of a call of `g` at parameter `j`: a record or variant
     /// built for a parameter that does not escape is built on the stack.
     fn arg(&mut self, g: FuncId, j: usize, a: &Expr) -> String {
+        if let Some(children) = self.stack_alias(a) {
+            let value = self.expr(a);
+            if crate::rc::consumes_arg(&self.g.prog.funcs, g, j) {
+                self.stack_args.extend(children);
+            }
+            return value;
+        }
         if self.stackable(a)
             && g != self.me
             && stack_enabled()
             && self.g.noesc[g].get(j).copied().unwrap_or(false)
         {
-            return self.stack_object(a);
+            let ty = self.g.prog.funcs[g].ty.params(j + 1).0[j].clone();
+            let types = self.stack_types(a, &ty);
+            if let Some(types) = types {
+                return self.stack_object(a, Some(types));
+            }
         }
         self.expr(a)
     }
@@ -2310,9 +2350,47 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    /// A record or variant in an object on the C stack (the layout of
-    /// `fwp_obj`), live until the end of the enclosing block.
-    fn stack_object(&mut self, v: &Expr) -> String {
+    /// Concrete field/capture types for ownership of a stack object.
+    fn stack_types(&self, a: &Expr, ty: &MT) -> Option<Vec<MT>> {
+        match a {
+            Expr::Apply(f, captures) => {
+                let Expr::Func(id) = **f else { unreachable!() };
+                Some(
+                    self.g.prog.funcs[id]
+                        .ty
+                        .params(captures.len())
+                        .0
+                        .into_iter()
+                        .cloned()
+                        .collect(),
+                )
+            }
+            Expr::Record(_) => record_fields(&self.g.prog.shapes, ty)
+                .map(|fields| fields.iter().map(|(_, t)| t.clone()).collect()),
+            Expr::Construct(tag, _) => match self.g.prog.shapes.get(ty) {
+                Some(TypeShape::Adt(variants)) => variants
+                    .get(*tag as usize)
+                    .map(|(_, fields)| fields.clone()),
+                Some(TypeShape::Record(fields)) => {
+                    Some(fields.iter().map(|(_, t)| t.clone()).collect())
+                }
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn stack_alias(&self, e: &Expr) -> Option<Vec<(String, MT)>> {
+        match e {
+            Expr::Local(l) => self.stack_children.get(l).cloned(),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::Let(_, _, b) => self.stack_alias(b),
+            _ => None,
+        }
+    }
+
+    /// Build the existing record/closure layout in the C frame. The owning
+    /// frame tracks children; off-heap pointers keep no runtime count slot.
+    fn stack_object(&mut self, v: &Expr, owned_children: Option<Vec<MT>>) -> String {
         let (tag, args) = match v {
             Expr::Record(args) => (0, args),
             Expr::Construct(tag, args) => (*tag, args),
@@ -2322,7 +2400,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 let Expr::Func(g) = **f else { unreachable!() };
                 self.g.used_closures[g] = true;
                 let xs = self.args(args);
-                self.share(&xs);
+                if let Some(types) = owned_children {
+                    self.stack_arg_children(&xs, &types);
+                } else {
+                    self.share(&xs);
+                }
                 let s = self.fresh();
                 self.line(&format!(
                     "struct {{ uint32_t fn; uint32_t n; V a[{n}]; }} {s} = {{{g}, {n}, {{{xs}}}}};",
@@ -2336,6 +2418,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             _ => unreachable!(),
         };
         let xs = self.args(args);
+        if let Some(types) = owned_children {
+            self.stack_arg_children(&xs, &types);
+        }
         let s = self.fresh();
         self.line(&format!(
             "struct {{ uint32_t tag; uint32_t n; V f[{n}]; }} {s} = {{{tag}, {n}, {{{xs}}}}};",
@@ -2345,6 +2430,38 @@ impl<'g, 'p> FnGen<'g, 'p> {
             xs = xs.join(", ")
         ));
         self.bind(format!("PTR(&{})", s))
+    }
+
+    fn stack_arg_children(&mut self, values: &[String], types: &[MT]) {
+        assert_eq!(values.len(), types.len());
+        if self.g.reuse {
+            self.stack_args.extend(
+                values
+                    .iter()
+                    .zip(types)
+                    .filter(|(_, ty)| crate::rc::needs_rc(&self.g.prog.shapes, ty))
+                    .map(|(value, ty)| (value.clone(), ty.clone())),
+            );
+        }
+    }
+
+    fn stack_args_finish(&mut self, outer: Vec<(String, MT)>) {
+        let children = std::mem::replace(&mut self.stack_args, outer);
+        self.stack_children_count(children, false);
+    }
+
+    fn stack_children_count(&mut self, children: Vec<(String, MT)>, duplicate: bool) {
+        for (value, ty) in children {
+            if duplicate {
+                self.line(&format!("fwp_rc_dup({value});"));
+            } else {
+                self.line(&format!(
+                    "/* stack argument child */ FWP_KEEP_ALIVE({value});"
+                ));
+                let release = self.typed_drop(&ty).unwrap_or_else(|| "fwp_rc_drop".into());
+                self.line(&format!("{release}({value});"));
+            }
+        }
     }
 
     /// Values handed to the runtime become shared (it may keep them).
@@ -2398,7 +2515,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// cell becomes a token; otherwise it is an ordinary drop.
     fn reuse_token(&mut self, x: Local, body: &Expr) -> Option<Token> {
         let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record) && x == 0;
-        if self.fields.contains_key(&x) || self.vlocals.contains_key(&x) || virtual_state {
+        if self.fields.contains_key(&x)
+            || self.vlocals.contains_key(&x)
+            || self.stack_children.contains_key(&x)
+            || virtual_state
+        {
             return None;
         }
         let shapes = &self.g.prog.shapes;
@@ -2472,6 +2593,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The reference count change of a `Dup` or `Drop` of local `l`: none
     /// when the local is kept as its fields (there is no object).
     fn count(&mut self, e: &Expr, l: Local) {
+        if let Some(children) = self.stack_children.get(&l).cloned() {
+            self.stack_children_count(children, matches!(e, Expr::Dup(..)));
+            return;
+        }
         if let Some((u, m, t)) = self.vlocals.get(&l).cloned() {
             if self.g.reuse {
                 let k = self.g.vhelper(&t, m);
@@ -2697,6 +2822,57 @@ impl<'g, 'p> FnGen<'g, 'p> {
         Some(format!("fwp_hof{}({})", i, xs.join(", ")))
     }
 
+    fn call_expr(&mut self, id: FuncId, args: &[Expr]) -> String {
+        let outer = std::mem::take(&mut self.stack_args);
+        let result = self.call_expr_inner(id, args);
+        self.stack_args_finish(outer);
+        result
+    }
+
+    fn call_expr_inner(&mut self, id: FuncId, args: &[Expr]) -> String {
+        if let Some(call) = self.known_hof(id, args) {
+            return self.bind(call);
+        }
+        if let Some(n) = self.length_without_string(id, args) {
+            return self.bind(format!("(V)(int64_t)({})", n));
+        }
+        if let Some(abi) = self.g.abis[id].clone() {
+            let xs = self.worker_args(id, &abi, args);
+            return match abi.ret {
+                Some(n) => {
+                    let t = self.fresh();
+                    self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
+                    // a record compiled code owns, like any it builds
+                    let r = format!("fwp_record({}, {}.f)", n, t);
+                    self.bind(self.g.fresh(r))
+                }
+                None => match abi.vret {
+                    // a value the caller needs: built from the struct
+                    Some(m) => {
+                        let t = self.fresh();
+                        self.line(&format!("fwp_u{} {} = w{}({});", m, t, id, xs.join(", ")));
+                        let ty = self.ret_type(id);
+                        let k = self.g.vhelper(&ty, m);
+                        self.bind(format!("fwp_vbox{}({})", k, t))
+                    }
+                    None => self.bind(format!("w{}({})", id, xs.join(", "))),
+                },
+            };
+        }
+        let xs: Vec<String> = args
+            .iter()
+            .enumerate()
+            .map(|(j, a)| self.arg(id, j, a))
+            .collect();
+        if self.g.prog.funcs[id].arity == 0 {
+            self.bind(format!("caf{}()", id))
+        } else {
+            let result = self.bind(format!("f{}({})", id, xs.join(", ")));
+            self.keep_borrowed_args(id, &xs);
+            result
+        }
+    }
+
     fn expr(&mut self, e: &Expr) -> String {
         if let Expr::Local(l) = e {
             if let Some((u, m, t)) = self.vlocals.get(l).cloned() {
@@ -2778,56 +2954,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     format!("PTR(&fc{})", id)
                 }
             }
-            Expr::Call(id, args) => {
-                if let Some(call) = self.known_hof(*id, args) {
-                    return self.bind(call);
-                }
-                if let Some(n) = self.length_without_string(*id, args) {
-                    return self.bind(format!("(V)(int64_t)({})", n));
-                }
-                if let Some(abi) = self.g.abis[*id].clone() {
-                    let xs = self.worker_args(*id, &abi, args);
-                    return match abi.ret {
-                        Some(n) => {
-                            let t = self.fresh();
-                            self.line(&format!("fwp_r{} {} = w{}({});", n, t, id, xs.join(", ")));
-                            // a record compiled code owns, like any it builds
-                            let r = format!("fwp_record({}, {}.f)", n, t);
-                            self.bind(self.g.fresh(r))
-                        }
-                        None => match abi.vret {
-                            // a value the caller needs: built from the struct
-                            Some(m) => {
-                                let t = self.fresh();
-                                self.line(&format!(
-                                    "fwp_u{} {} = w{}({});",
-                                    m,
-                                    t,
-                                    id,
-                                    xs.join(", ")
-                                ));
-                                let ty = self.ret_type(*id);
-                                let k = self.g.vhelper(&ty, m);
-                                self.bind(format!("fwp_vbox{}({})", k, t))
-                            }
-                            None => self.bind(format!("w{}({})", id, xs.join(", "))),
-                        },
-                    };
-                }
-                let xs: Vec<String> = args
-                    .iter()
-                    .enumerate()
-                    .map(|(j, a)| self.arg(*id, j, a))
-                    .collect();
-                if self.g.prog.funcs[*id].arity == 0 {
-                    self.bind(format!("caf{}()", id))
-                } else {
-                    let result = self.bind(format!("f{}({})", id, xs.join(", ")));
-                    self.keep_borrowed_args(*id, &xs);
-                    result
-                }
-            }
+            Expr::Call(id, args) => self.call_expr(*id, args),
             Expr::Apply(f, args) => {
+                let children = self.stack_alias(f);
                 let fv = self.expr(f);
                 let xs = self.args(args);
                 if !self.g.reuse {
@@ -2838,13 +2967,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 } else {
                     "fwp_apply"
                 };
-                self.bind(format!(
+                let result = self.bind(format!(
                     "{}({}, {}, {})",
                     apply,
                     fv,
                     xs.len(),
                     Self::array(&xs)
-                ))
+                ));
+                if let Some(children) = children {
+                    self.stack_children_count(children, false);
+                }
+                result
             }
             Expr::Construct(tag, args) => {
                 if args.is_empty() {
@@ -3906,6 +4039,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             known_tag: HashMap::new(),
             vlocals: HashMap::new(),
             tokens: Vec::new(),
+            stack_args: Vec::new(),
+            stack_children: HashMap::new(),
             me: step,
         };
         let r = fg.expr(e);
@@ -4110,6 +4245,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     known_tag: HashMap::new(),
                     vlocals: HashMap::new(),
                     tokens: Vec::new(),
+                    stack_args: Vec::new(),
+                    stack_children: HashMap::new(),
                     me: id,
                 };
                 let r = fg.expr(&e);
@@ -4155,6 +4292,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             known_tag: HashMap::new(),
             vlocals: HashMap::new(),
             tokens: Vec::new(),
+            stack_args: Vec::new(),
+            stack_children: HashMap::new(),
             me: id,
         };
         let ret = match (abi.ret, abi.vret) {
