@@ -1696,6 +1696,27 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
             .collect::<String>();
         return format!("{} {{\n    size_t n, kept = 0;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) == FWP_TRUE) {{\n            fwp_args{g}(&a[i], {k}, 1);\n            a[kept++] = a[i];\n        }}\n    }}\n    V result = fwp_map_finish(a, kept);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
+    if reuse && matches!(sym.as_str(), "take-while" | "drop-while") {
+        let element = if sym == "take-while" {
+            "a[kept]"
+        } else {
+            "OBJ(xs)->f[0]"
+        };
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once(element.to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        let body = if sym == "take-while" {
+            format!("size_t n, kept = 0;\n    V *a = fwp_map_items(xs, &n);\n    while (kept < n) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) != FWP_TRUE) break;\n        fwp_args{g}(&a[kept], {k}, 1);\n        kept++;\n    }}\n    V result = fwp_map_finish(a, kept);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;", k + 1)
+        } else {
+            format!("V source = xs;\n    while (xs) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) != FWP_TRUE) break;\n        xs = OBJ(xs)->f[1];\n    }}\n    fwp_rc_dup(xs);\n{fences}    FWP_KEEP_ALIVE(source);\n    return xs;", k + 1)
+        };
+        return format!("{} {{\n    {body}\n}}\n", hof_sig(i, sym, *k));
+    }
     if reuse && sym == "fold" {
         let args = (0..*k)
             .map(|j| format!("c{j}"))
@@ -2838,7 +2859,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Body::Prim(s)
                 if matches!(
                     s.as_str(),
-                    "map" | "filter" | "fold" | "fold-right" | "zip-with"
+                    "map"
+                        | "filter"
+                        | "fold"
+                        | "fold-right"
+                        | "zip-with"
+                        | "take-while"
+                        | "drop-while"
                 ) =>
             {
                 s.clone()
@@ -2892,8 +2919,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
             let xs = self.expr(&args[1]);
             return Some(if sym == "map" {
                 format!("fwp_k_map_owned(fwp_owned_k{g}, {xs})")
+            } else if sym == "drop-while" {
+                format!("fwp_k_drop_while_owned(fwp_owned_k{g}, {xs})")
             } else {
-                format!("fwp_k_filter_owned(fwp_owned_k{g}, fwp_args{g}, {xs})")
+                let runtime = if sym == "filter" {
+                    "filter"
+                } else {
+                    "take_while"
+                };
+                format!("fwp_k_{runtime}_owned(fwp_owned_k{g}, fwp_args{g}, {xs})")
             });
         }
         let mut caps = match &args[0] {
@@ -4322,11 +4356,13 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
-                            ResultOwnership::FreshSpine => {
+                            ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 s = s
                                     .replace("fwp_p_map(", "fwp_p_map_owned(")
                                     .replace("fwp_p_filter(", "fwp_p_filter_owned(")
-                                    .replace("fwp_p_zip_with(", "fwp_p_zip_with_owned(");
+                                    .replace("fwp_p_zip_with(", "fwp_p_zip_with_owned(")
+                                    .replace("fwp_p_take_while(", "fwp_p_take_while_owned(")
+                                    .replace("fwp_p_drop_while(", "fwp_p_drop_while_owned(");
                             }
                             ResultOwnership::FreshTree => {
                                 let result_type = func.ty.params(func.arity as usize).1.clone();
