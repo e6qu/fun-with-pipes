@@ -8,6 +8,11 @@ for priorities and contracts. Update this file before ending a work session.
 
 - Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
 - Branch: `macos-portability`.
+- Implementation/docs commit: `7ec02d0`.
+- Draft PR: not created. Automatic approval review rejected the push to
+  `https://github.com/e6qu/fun-with-pipes.git` as source egress without
+  explicit user authorization of that destination. Publication and full CI
+  await permission to push this branch and create its draft PR.
 - User direction: macOS, ownership with minimal tracing GC, efficient native
   representations/numerics/autodiff, and stable simple pipe semantics.
 - Current scope: the first native macOS portability pass plus durable docs.
@@ -57,7 +62,9 @@ for priorities and contracts. Update this file before ending a work session.
 
 ## Next actions
 
-1. Publish the reviewable draft PR and record its URL here.
+1. After explicit publication authorization, push `macos-portability` to
+   `e6qu/fun-with-pipes`, create the draft PR and record its URL here.
+   Do not bypass the rejected push through another tool or transport.
 2. Inspect both macOS jobs and Linux CI; fix failures without weakening tests
    or silently treating missing optional tools as coverage.
 3. Confirm collector and reuse checks actually execute on Darwin: several older
