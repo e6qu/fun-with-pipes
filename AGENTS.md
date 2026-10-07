@@ -10,7 +10,9 @@ Do not treat an implemented change or a skipped test as verified support.
 
 The user authorized completing the active roadmap automatically, one focused
 PR at a time, with full CI before each squash merge and the commit format
-below. This authorization covers roadmap branch publication, PR creation,
+below. Failing tests are tasks to fix; queued CI gates merging, not roadmap
+work. Diagnose failures and prepare the next task while CI runs. Keep later
+changes separate and open the next PR after the current one merges. This authorization covers roadmap branch publication, PR creation,
 fixes and merges; keep later sessions within that scope and do not request
 the same permission again. Maintain the plan and handoff throughout. A queued,
 skipped or superseded CI run is not a passing gate for the current PR head.

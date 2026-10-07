@@ -530,8 +530,21 @@ static int h2_listen(const char *addr, char *bound, size_t bn) {
     if (rc != 0) { h2_fail("cannot resolve %s: %s", addr, gai_strerror(rc)); return -1; }
     int fd = -1, err = 0;
     for (struct addrinfo *a = res; a; a = a->ai_next) {
+#ifdef SOCK_CLOEXEC
         fd = socket(a->ai_family, a->ai_socktype | SOCK_CLOEXEC, a->ai_protocol);
+#else
+        fd = socket(a->ai_family, a->ai_socktype, a->ai_protocol);
+#endif
         if (fd < 0) { err = errno; continue; }
+#ifndef SOCK_CLOEXEC
+        int flags = fcntl(fd, F_GETFD);
+        if (flags < 0 || fcntl(fd, F_SETFD, flags | FD_CLOEXEC) < 0) {
+            err = errno;
+            close(fd);
+            fd = -1;
+            continue;
+        }
+#endif
         int one = 1;
         setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof one);
         if (bind(fd, a->ai_addr, a->ai_addrlen) == 0 && listen(fd, 128) == 0) break;

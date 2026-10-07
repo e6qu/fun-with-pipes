@@ -59,12 +59,25 @@ for priorities and contracts. Update this file before ending a work session.
   wide_records_are_returned_without_allocating`, `cargo test --test reuse
   objects_are_freed_by_their_counts`). Each used the same resource guard.
 - `cargo fmt --all -- --check` and `git diff --check` passed.
-- Full Linux/macOS tests, clippy, GC/reuse verification and benchmark evidence:
-  pending [GitHub CI](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
-  At publication, all four jobs were queued: Apple Silicon macOS, Intel
-  macOS, Linux tests and Linux benchmarks. Check the latest PR head before
-  recording a result; this handoff update triggers a new run.
-  Do not describe either architecture as verified yet.
+- CI run `37571212303` for `66eafb8`: Linux full tests (including WASM,
+  cross builds and GC/reuse checks) and benchmark equivalence passed. Both
+  macOS jobs passed fmt/clippy, then failed in the AOT server tests because
+  HTTP/2 listener creation used Linux-only `SOCK_CLOEXEC` without a fallback.
+  Fixed with `fcntl(FD_CLOEXEC)` where the socket flag is unavailable; failed
+  descriptor setup closes the socket and preserves the error.
+  Both failing server regressions passed locally after the fix with
+  `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
+  /private/tmp/fwp-local-guard.py cargo test --test aot serve_`. An initial
+  local invocation without the required OpenSSL prefix failed at header
+  discovery; the configured rerun passed both tests.
+  Full CI now uses `--no-fail-fast` to report all failing test targets in one
+  run while preserving every assertion and the failing exit status.
+  The latest revision needs a new full [CI gate](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
+  Do not describe either architecture as fully verified yet.
+- Workflow correction: failing tests are implementation tasks; queued CI only
+  prevents merging. Continue diagnostics, fixes and separate next-task
+  preparation, with one open PR. Do not mark the roadmap blocked for normal
+  failures or runner delays. The user reiterated this on 2026-10-07.
 - Local resource guard for this session: `/private/tmp/fwp-local-guard.py`,
   the user's guard adapted only to this repository root, with the same limits.
   It is temporary; recreate it or use an equivalent bounded check next session.

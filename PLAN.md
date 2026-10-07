@@ -12,7 +12,10 @@ with an explicitly supplied single-line subject of at most 80 characters
 and an empty body, without trailers or attribution. Update this plan and
 the session handoff with acceptance evidence and the next action; move a
 phase to done only when its criteria have been met. The user authorized
-this workflow on 2026-10-07.
+this workflow on 2026-10-07. Treat failing tests as work to fix and queued
+CI as a merge gate. Continue useful implementation, investigation and next-task
+preparation while CI runs; do not stop the roadmap merely for test failures
+or runner delays. Keep one PR open at a time.
 
 The goal is an efficient native language with simple pipe semantics,
 strong inference and static typing, compile-time specialization, little
