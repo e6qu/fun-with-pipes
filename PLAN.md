@@ -29,15 +29,18 @@ priority queue.
 
 | Order | Work | Acceptance |
 |---|---|---|
-| 1, in progress | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
-| 2, prepared while #74 runs | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
+| 1, done (#74) | Native macOS on Apple Silicon and Intel: task ABI, collector roots, libraries, processes, sockets, TLS and CI | Both macOS jobs and Linux CI pass; collection really runs; interpreter/native behavior agrees; unsupported build options are explicit |
+| 2, in progress | Primitive and runtime ownership contracts; count elimination at borrowed boundaries; ownership of strings, bytes and escaping closures | Checked ownership paths and aliasing/callback tests; fewer counts without losing roots or increasing allocation; immediate reclamation demonstrated by counters |
 | 3 | Typed contiguous numeric storage, views, scalar/aggregate ABI and measured alignment | Narrow elements use their natural width; fewer copies/boxes; allocation and assembly evidence on arm64 and x86-64; ABI/FFI tests |
 | 4 | Fused numerical loops, blocked matrix kernels and autodiff lifetime/buffer improvements | Correct gradients and exceptional cleanup; equivalent C/Rust comparisons; fixed floating-point behavior by default |
 | 5 | Expand allocation/ownership/performance regression evidence | Allocation, live-memory, retain/release and collection measurements alongside timings; full workloads on CI |
 | 6 | Optional execution without tracing GC, after complete ownership coverage | Supported programs reclaim memory with collection disabled, including escaping values and runtime boundaries; cycles have an explicit lifetime policy |
 
-Prepared ownership branch: `ownership-contracts`, based on PR #74, published as a branch but not yet
-opened as a PR. It consolidates all array/map/set contracts and borrows
+Native macOS passed both architecture jobs, Linux full tests and benchmarks in
+run `37591744197`; PR #74 was squash-merged as `af15d26`.
+
+Current ownership branch: `ownership-contracts`, rebased onto that main commit;
+publication and its full CI gate are next. It consolidates all array/map/set contracts and borrows
 comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
 evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of

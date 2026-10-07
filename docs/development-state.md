@@ -1,140 +1,159 @@
 # Session handoff
 
-Updated: 2026-10-07. This file records current work, not permanent design.
-Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md) and [design.md](design.md)
-for priorities and contracts. Update this file before ending a work session.
+Updated: 2026-10-07. Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md)
+and [design.md](design.md). Prepared branches are not merged behavior.
 
-## Baseline and active work
+## Authorized workflow
 
-- Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
-- Branch: `macos-portability`.
-- Implementation/docs commit: `7ec02d0`.
-- Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
-  The user explicitly authorized the push and PR creation on 2026-10-07;
-  the earlier publication block is resolved. The implementation and workflow handoff are on GitHub.
-- Continuing authorization: the user requested automatic completion of the
-  active roadmap, one PR at a time, with full CI before each squash merge.
-  Use an explicit single-line subject of at most 80 characters and an empty
-  body; no trailers, AI attribution, Co-authored-by or Authored-by lines.
-  Continue to the next roadmap task after merging. An active thread goal
-  tracks the whole roadmap; the plan/handoff carry the state across sessions.
-- User direction: macOS, ownership with minimal tracing GC, efficient native
-  representations/numerics/autodiff, and stable simple pipe semantics.
-- Current scope: the first native macOS portability pass plus durable docs.
-  Runtime ownership contracts are the next focused implementation change.
+Complete the active roadmap automatically, one focused PR at a time. Failing
+tests are work to fix, never a roadmap blocker. Queued CI gates merging only;
+continue diagnosis, fixes and separate next-task preparation. Full builds,
+full tests, benchmarks and large evidence generation run on GitHub runners.
+Squash only after all current-head gates pass, with an explicit one-line
+subject of at most 80 characters and an empty body. No trailers, AI attribution,
+Co-authored-by or Authored-by lines. This authorization persists across sessions.
+Keep simple data-last pipes, strong typing/inference, explicit generic signatures,
+immutable value semantics, effects and evaluation/trap order stable.
 
-## Implemented on this branch
+## Merged baseline and current work
 
-- Mach-O symbol/directive handling for the custom x86-64/AArch64 task switch.
-- Mach-O image/segment discovery for collector roots, including writable-at-load
-  constant data; Darwin peak RSS converted from bytes to KiB.
-- Actual OS page size for task guard pages.
-- Lifetime fences for list construction/append/flatten buffers. Optimized
-  Apple Clang exposed missing conservative roots when it preloaded short
-  buffers; the stressed task and reverse-autodiff cases now pass.
-- Distinct context-switch assembly symbols for each fat-binary variant.
-- Native shared library naming/linking (`.dylib`, `-dynamiclib`), including the
-  interpreter's FFI shim, and a clear rejection of native `--static` on macOS.
-- `FWP_OPENSSL_DIR` for native headers/linking and interpreter loading; Darwin
-  `RTLD_GLOBAL` corrected; the prefix participates in the native cache key.
-- OpenCL framework lookup on macOS. Hardware kernel execution is unverified.
-- Apple Silicon and Intel macOS CI jobs, with OpenSSL 3 and the full test gate.
-- Darwin regressions for real collection, global roots, tasks/autodiff and libraries.
-- Existing reuse/stack suites enabled on Darwin: portable allocation counters,
-  immediate reclamation, and the full golden reuse/GC verification sweep.
+- Main: `af15d26`, squash merge of [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
+  on 2026-10-07. Verified commit message: one line, 65 characters, no body/trailers.
+- Its final head `2c2a46d` passed all four jobs in
+  [run 37591744197](https://github.com/e6qu/fun-with-pipes/actions/runs/37591744197):
+  ARM macOS, Intel macOS, Linux full tests and benchmark equivalence. Earlier
+  macOS GC, socket, TLS snapshot, BSD wc and unsynchronized timer failures were
+  repaired. Phase 1 meets its native-platform acceptance gate.
+- Current branch: `ownership-contracts`, checkout
+  `/private/tmp/fwp-ownership-worktree`. Three implementation commits rebased
+  onto main; implementation head `ee80a7e`. Documentation commit follows.
+  Remote previously held `798d2ed`; use force-with-lease for the reviewed rebase.
+  No new PR yet. Next: focused post-rebase validation, publish this branch,
+  open its PR, run full CI, fix failures and squash only after all jobs pass.
+- Scope: shared metadata for all 35 array/map/set declarations, comparison-key
+  borrowing, owning-wrapper selection and safe graph sharing at saturation,
+  interior references and traversal-stack spill. Stored values and callbacks
+  remain shared. This is the first step of phase 2, not complete ARC/no-GC.
 
-## Validation
+## Current ownership evidence
 
-- Six focused escape-analysis unit tests passed locally.
-- Concatenated ordinary runtime passed Apple Clang syntax checking.
-- Four focused Darwin regressions passed locally on Apple Silicon, including
-  GC stress/verification, global roots, tasks/reverse autodiff, wide records,
-  shared-library defaults, static-link rejection and OpenSSL in both backends.
-- All five FFI tests passed locally: interpreted/native foreign calls, a
-  shared library from C, a static library from Rust and unsupported-type errors.
-- Fat-binary test passed locally on Apple Silicon (baseline variant only;
-  the Intel variants still need their macOS CI job).
-- Darwin wide-record allocation and counted-reclamation regressions passed
-  locally after enabling the portable suites (`cargo test --test stack
-  wide_records_are_returned_without_allocating`, `cargo test --test reuse
-  objects_are_freed_by_their_counts`). Each used the same resource guard.
-- `cargo fmt --all -- --check` and `git diff --check` passed.
-- CI run `37571212303` for `66eafb8`: Linux full tests (including WASM,
-  cross builds and GC/reuse checks) and benchmark equivalence passed. Both
-  macOS jobs passed fmt/clippy, then failed in the AOT server tests because
-  HTTP/2 listener creation used Linux-only `SOCK_CLOEXEC` without a fallback.
-  Fixed with `fcntl(FD_CLOEXEC)` where the socket flag is unavailable; failed
-  descriptor setup closes the socket and preserves the error.
-  Both failing server regressions passed locally after the fix with
-  `FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
-  /private/tmp/fwp-local-guard.py cargo test --test aot serve_`. An initial
-  local invocation without the required OpenSSL prefix failed at header
-  discovery; the configured rerun passed both tests.
-  Full CI now uses `--no-fail-fast` to report all failing test targets in one
-  run while preserving every assertion and the failing exit status.
-  The latest revision needs a new full [CI gate](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
-  Do not describe either architecture as fully verified yet.
-- Workflow correction: failing tests are implementation tasks; queued CI only
-  prevents merging. Continue diagnostics, fixes and separate next-task
-  preparation, with one open PR. Do not mark the roadmap blocked for normal
-  failures or runner delays. The user reiterated this on 2026-10-07.
-- Local resource guard for this session: `/private/tmp/fwp-local-guard.py`,
-  the user's guard adapted only to this repository root, with the same limits.
-  It is temporary; recreate it or use an equivalent bounded check next session.
-  It needs process-sampling/priority permissions. Full gates belong on CI.
-  Commands completed: `cargo test --lib escape::tests`,
-  `cargo test --test macos` (with `FWP_OPENSSL_DIR` set), and
-  `cargo test --test ffi`, `cargo test --test fat`, and the formatting
-  check, each through the temporary guard. Target data was 80 MiB after
-  these focused checks; no local full gate or benchmarks were run.
+One inventory invariant, eight IR ownership checks and three container
+regressions passed before rebase. Tests cover interpreter/native agreement,
+retained aliases and callbacks with GC stress/verification and reuse poisoning.
+The comparison-key loop allocates 0.0 MiB versus 0.8 MiB with only the old sharing
+boundary restored (Apple Silicon, Apple Clang 17, O1, 0.1 MiB counter precision).
+This is allocation evidence, not a speed or register-placement claim. The runtime
+regression exercises count saturation, interior references and 70-branch traversal
+spill; restoring the previous saturation transition corrupts a visible alias.
+Post-rebase checks passed: inventory (1), IR ownership (8), container tests (3),
+formatting and whitespace. The container run used CPU 9.63 s / elapsed 19.46 s
+under the guard. Full current-head CI remains required.
 
-## Next actions
+## Prepared sequence
 
-1. Inspect both macOS jobs and Linux CI on PR #74; fix failures without weakening tests
-   or silently treating missing optional tools as coverage.
-2. Check the newly enabled reuse/stack suites on both Darwin runners.
-   Static-memory and external-process RSS suites still use Linux guards;
-   `strace` and process-memory evidence need platform alternatives.
-3. Record exact CI results and remaining platform limitations here.
-4. Start the ownership-contract inventory described in `ownership.md`.
+All following branches are published, have focused local evidence, and have no
+PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
+listed OLD base onto main, reconcile docs with the latest handoff, validate,
+push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
-## Prepared next branch
+| Branch | Checkout under /private/tmp | Head | Old base to remove |
+|---|---|---|---|
+| ownership-leaves | fwp-leaf-worktree | 2ce7a05 | 798d2ed |
+| ownership-text-results | fwp-text-worktree | bab67ea | 2ce7a05 |
+| ownership-closures | fwp-closure-worktree | 0d96bfe | bab67ea |
+| ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
+| ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
+| ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
 
-- Isolated checkout: `/private/tmp/fwp-ownership-worktree`, branch
-  `ownership-contracts`, base `ccecf20` (PR #74's server fix). No second PR
-  is open. Do not mix this implementation into the portability PR.
-- Shared contracts for all 35 array/map/set declarations replace independent
-  IR/codegen lists and select owning runtime wrappers. Comparison-only keys
-  borrow; stored keys and callback values remain runtime-shared.
-- Focused checks through the same guard and shared bounded target directory:
-  `cargo test --lib ownership::tests` (one coverage/invariant check),
-  `cargo test --lib rc::tests` (eight ownership IR checks), and the three
-  `tests/ownership.rs` regressions. The alias/callback regression passes with
-  GC stress, verification and reuse poisoning. The isolated allocation check
-  reports 0.8 MiB for the restored old sharing boundary and 0.0 MiB with
-  borrowing, at the runtime counter's one-decimal precision. Full CI pending.
-- A loop-state experiment uncovered retained field references that can prevent
-  reuse independently of primitive sharing. Recorded in primitive-ownership.md
-  for later IR optimization; no unsupported performance claim.
-- Runtime sharing now protects descendants when an 8-bit reference count
-  saturates, when given an interior reference, and when the 64-entry traversal
-  stack spills. The third ownership regression passes and verifies that
-  restoring the old saturation transition corrupts a visible alias.
-- After PR #74 passes and is squash-merged, rebase the prepared branch with
-  `git rebase --onto origin/main ccecf20 ownership-contracts` from its checkout
-  (after fetching main), review, publish one new PR and run full gates.
-- Continue with remaining primitive inventories and typed element/leaf/capture
-  ownership. This prepared change does not finish phase 2.
+Example after this PR merges: from fwp-leaf-worktree,
+`git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
+Review runtime changes against the latest macOS fixes and resolve documentation
+conflicts by carrying forward verified state, not by preserving stale statuses.
+Temporary worktrees are conveniences; published branches preserve the work.
 
-## Boundaries and deferred work
+- Leaves: String/Bytes counted ownership, fresh/copy/alias contracts, leaf-only
+  destruction/poisoning and address fences for borrowed allocating calls. Two
+  alias/copy regressions pass at O1/O2 with GC stress/verification and both poison
+  modes; no-tracing copy loop frees 0.9 MiB versus 0.0 with freeing disabled.
+- Text: copied Option/List trees use FreshTree only when no input aliases exist.
+  Conversion buffers use separately releasable memory. Three focused tests pass;
+  no-tracing word loop frees 2.1 MiB, and buffer cleanup reduces the equivalent
+  probe's committed heap from 9.2 to 1.7 MiB. All 31 string and seven byte
+  declarations are inventoried on that branch.
+- Closures: typed heap captures, consuming dynamic application and metadata
+  for owned entry/capture cleanup. Runtime callbacks still share. Aliases,
+  partial application, returned inputs and stack on/off pass O1/O2 GC/poison
+  checks. No-tracing selected loop frees 1.2 MiB versus 0.0 with freeing disabled.
+- Deep closure cleanup: work list with 64 local slots and freed spill storage.
+  Linear/branching 8,000-node graphs reclaim with zero collections on a 256 KiB
+  native worker stack at O0; restoring recursive release exhausts that stack.
+- Temporary types: concrete call parameter types preserve typed constructor
+  child cleanup. No-tracing function-list loop frees 0.5 MiB versus 0.0 when only
+  outer-only release is restored. Eight IR and twelve ownership checks pass.
+- Stack arguments: eligible stack locals/aliases and consumed calls own typed
+  child references, with nested cleanup scopes and address fences. Borrowed
+  calls keep owners until IR Drop. Six escape and fifteen ownership checks pass.
+  Restoring old child lifetimes gives variant/closure frees 0.0/1.3 MiB versus
+  0.5/1.7 MiB after cleanup. Existing stack closure allocation test, five FFI
+  checks and local fat baseline pass. Full platform gates remain required.
 
-Darwin cross-target spellings and universal binaries are not implemented.
-Use `--target native` on macOS. Clang PGO is not implemented; `--pgo` still
-requires GCC. Static memory on Darwin has not yet been validated. Linux UDS/SHM
-fast transports keep their existing portable pipe fallback elsewhere.
-Windows, new interfaces and new compiler backends are deferred.
+All counter probes use identical outputs, tracing disabled and zero collections;
+results are rounded to tenths of a MiB. None establishes general no-GC support.
 
-Do not claim tracing GC is gone: strings, escaping closures and runtime-shared
-values still rely on it. WebAssembly and embedding-host reclamation remain
-separate ownership tasks. Existing published benchmark numbers are historical
-Linux measurements, not results from this branch or promises about macOS.
+## Remaining acceptance work and next implementation
+
+Prepare synchronous callback ownership after b563360 while current CI runs.
+Other constructor/result contexts, typed container elements, retained callbacks,
+handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
+Byte counts at 255 still promote whole graphs to tracing-managed sharing;
+implement an exact overflow path before general no-tracing execution. Old marked
+objects still rely on generational reclamation. WASI remains a bump allocator.
+Phase 2 is incomplete. Continue numeric storage/ABI, fused numerics/autodiff,
+measured evidence and optional no-tracing phases in PLAN.md after ownership.
+
+Darwin cross targets/universal binaries, Clang PGO and Darwin static-memory
+validation remain deferred. Native static linking is explicitly unsupported.
+OpenCL framework discovery works; hardware execution is unverified. Linux-only
+strace/process RSS suites still need platform alternatives. Windows, new
+interfaces and new backends are outside the active roadmap. Historical Linux
+benchmark numbers are not current macOS performance evidence.
+
+## Local resource limits
+
+Checks are serial and low priority: 1 GiB sampled aggregate RSS, target below
+2 GiB, at least 64 GiB free disk, 180-second deadline, CPU toward half one core.
+Use `/private/tmp/fwp-local-guard.py`, adapted only to this repository root,
+with `CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target` in temporary
+worktrees. It needs process-sampling/priority permissions. Recreate the temporary
+guard with the same limits if missing. Do not bypass a refusal or increase limits;
+move the workload to CI. No full local gates were run.
+
+## Next callback change: design constraints
+
+Start with synchronous map callbacks, not retained task/channel/FFI callbacks.
+Add a typed borrowed application path: duplicate supplied pointer arguments
+according to function metadata, consume those copies in the owned entry, and
+retain the original function owner. Partial and overapplication must duplicate
+arguments in chunks according to each actual function's parameter types, never
+by guessing whether scalar bits resemble an address. Callback results then have
+one owned reference, including aliases of inputs/captures and returned functions.
+
+Map needs owned fresh list spines with already-owned elements; FreshTree is not
+valid for aliased callback results. Do not reset child counts or recursively
+promote borrowed inputs to sharing. Release the temporary result buffer after
+transferring its references into new nodes. Add aliases/captures/function-result,
+GC/reuse and zero-tracing reclamation tests; validate hardware/benchmark gates.
+
+Preserve specialized direct callbacks and captured HOF loops. Function locals
+are now counted, so a borrowed callback temporary can hide its known partial
+application behind a local. Recover its function/captures for specialization,
+and allow stack callbacks only when the contract proves synchronous invocation
+without retaining the function itself. A Borrow argument may still have aliased
+results; borrowing alone is not a no-escape proof. Stack caller cleanup must
+run only for consumed arguments; borrowed ones are released by their IR Drop.
+The stack change already consults rc::consumes_arg for that distinction.
+
+Byte counts still saturate into tracing-managed sharing at 255. An exact overflow
+path, other constructor/result contexts, exceptional cleanup, old-generation
+reclamation, retained runtime graphs/cycles and WASI reclamation remain required
+before general no-tracing execution. Do not claim phase 2 or phase 6 complete.
