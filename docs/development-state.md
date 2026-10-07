@@ -39,15 +39,15 @@ immutable value semantics, effects and evaluation/trap order stable.
   `0221f91c9edcf0096247b69676a156d331716984`, checkout clean. Post-rebase text
   (3), leaf (2), inventory (1), IR (8), fmt and whitespace pass. Full
   [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587)
-  queued for Linux, ARM/Intel macOS and benchmarks; all four exact-head gates
+  testing on ARM/Intel macOS; Linux and benchmarks queued. All four exact-head gates
   must pass before squash merge. No local workload remains. Closure child
   still rebases from OLD `bab67ea` after text squashes, not from `0221f91`.
-- Latest prepared change: `ownership-map-set-elements`, checkout
-  `/private/tmp/fwp-map-set-worktree`, base `636414f`. Typed map/set boundaries,
-  destruction and optimized lookup lifetimes pass focused checks; publication
-  follows. The parent array change is published as `636414f`. No additional PR
-  is open. Next: old marked-object reclamation, retained runtime ownership,
-  exceptional/handler/cancellation cleanup, cycles and WASI allocation.
+- Latest prepared change: `ownership-old-reclamation`, checkout
+  `/private/tmp/fwp-old-reclamation-worktree`, OLD base `a8a7d11`.
+  Final counted references reclaim marked storage; immutable reuse stays
+  young-only and shared runtime graphs stay with tracing. Focused checks pass;
+  publication follows. No additional PR is open. Next: retained runtime
+  ownership, exceptional/handler/cancellation cleanup, cycles and WASI.
   Preserve listed OLD rebase anchors through the sequential squash workflow.
 
 ## Current ownership evidence
@@ -95,6 +95,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-structure | fwp-structure-worktree | c05a5d9 | 787763d |
 | ownership-list-generation | fwp-generation-worktree | fad9b1a | c05a5d9 |
 | ownership-array-elements | fwp-array-element-worktree | 636414f | fad9b1a |
+| ownership-map-set-elements | fwp-map-set-worktree | a8a7d11 | 636414f |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -882,3 +883,45 @@ Formatting and whitespace pass. No local workload remains.
 No full local gate was run; full platform CI follows sequential parent rebases.
 Next: old marked-object reclamation, complete retained runtime ownership and
 exception/handler/cancellation teardown, cycles and WebAssembly allocation.
+
+Typed map/set change published as a8a7d119712bd3cb77d03bde1daaedcf290b22d2,
+base 636414f, checkout clean and no additional PR. Verified commit subject:
+66 characters, one line, empty body, no trailers. Sole PR #77 head 0221f91
+full gate 37636161587 remains live/queued for all four jobs. Next implementation:
+old marked-object reclamation, auditing collector metadata and runtime boundary
+sharing before releasing marked storage. Then retained ownership/exception
+teardown/cycles/WASI remain; phases 3-6 are still uncompleted.
+
+Next checkout created: ownership-old-reclamation in
+/private/tmp/fwp-old-reclamation-worktree, base a8a7d11, clean with no edits.
+Audit fwp_mem_free small/big mark/count bookkeeping, fwp_rc_unmarked gating,
+and task/runtime sharing; add forced-survival/reuse/alias tests before changing
+old-allocation reclamation. No local workload remains.
+
+## Prepared old-storage reclamation
+
+`ownership-old-reclamation` starts from OLD `a8a7d11`. Native final typed
+releases now require an exact last owned reference and reclaim small or large
+storage after it survives collections. Returning cells clears old-generation
+marks and exact-count metadata; verifier mode clears stale child words before
+linking freed small slots. Immutable reuse and updates remain young-only,
+because minor tracing does not rescan immutable old fields. Shared runtime
+and off-heap values do not enter the counted free path. Poison mode quarantines
+released cells and preserves the existing reuse diagnostics.
+
+Three new focused tests pass: actual major/minor survival and typed leaf,
+record, closure, array and map destruction with retained aliases/shared graphs;
+250 forced major collections free 4.8 MiB by counts versus 0.0 MiB with only the
+previous age restriction restored; task/channel/deadline/cancellation/scope
+and UDP golden behavior agrees at O1/O2, with collection stress, verification
+and both poison modes. The survivor measurement includes real tracing; it is
+not evidence of general collector-free execution. Latest three-test guard used
+CPU 3.10 s / elapsed 6.57 s. Adjacent array/map/wide-count checks (9) and closure/
+container checks (6) also pass; format passes. Full architecture gates remain
+required after sequential rebase and publication as the sole PR.
+
+The Linux long-loop regression now checks bounded memory/output for normal
+ownership and separately builds with FWP_REUSE=0 to require >10 actual collections,
+>800 MiB allocation and <64 MiB RSS for shared fallback. Collector-disabled
+normal output/no-collection checks remain. This large workload runs only on CI;
+its revised harness is compiled locally, not reported as runtime-validated.

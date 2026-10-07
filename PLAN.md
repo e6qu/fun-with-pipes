@@ -51,8 +51,9 @@ full current-head CI gates its merge. Later published branches prepare closure a
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers old marked-object reclamation and retained runtime
-ownership/teardown. Typed array and map/set element boundaries pass focused
+implementation covers retained runtime ownership/teardown. Old marked-object
+reclamation is prepared with focused survival, alias and task stress tests;
+full CI still gates publication as the next sequential PR. Typed array and map/set element boundaries pass focused
 validation in separate prepared branches;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a

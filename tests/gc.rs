@@ -188,8 +188,35 @@ fn long_loop_runs_in_bounded_memory() {
         .unwrap();
     assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout), "21768000\n");
+    let (allocated, _, rss) = stats(&String::from_utf8_lossy(&out.stderr));
+    // Counted ownership can reclaim this workload without a collection.
+    // The shared fallback below separately requires actual tracing.
+    assert!(allocated > 0.0, "allocated {} MiB", allocated);
+    assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
+
+    let shared = dir.0.join("churn-shared");
+    let built = Command::new(fwp())
+        .arg("build")
+        .arg(root().join("tests/gc/churn.fwp"))
+        .arg("-o")
+        .arg(&shared)
+        .env("FWP_REUSE", "0")
+        .current_dir(&dir.0)
+        .output()
+        .unwrap();
+    assert!(
+        built.status.success(),
+        "{}",
+        String::from_utf8_lossy(&built.stderr)
+    );
+    let out = Command::new(&shared)
+        .env("FWP_GC_STATS", "1")
+        .output()
+        .unwrap();
+    assert!(out.status.success());
+    assert_eq!(String::from_utf8_lossy(&out.stdout), "21768000\n");
     let (allocated, collections, rss) = stats(&String::from_utf8_lossy(&out.stderr));
-    // without a collector this needs about 1 GB
+    // Without ownership or a collector this needs about 1 GB.
     assert!(allocated > 800.0, "allocated {} MiB", allocated);
     assert!(collections > 10, "{} collections", collections);
     assert!(rss < 64 * 1024, "max RSS {} KiB", rss);
@@ -200,6 +227,7 @@ fn long_loop_runs_in_bounded_memory() {
         .env("FWP_GC_STATS", "1")
         .output()
         .unwrap();
+    assert!(out.status.success());
     assert_eq!(String::from_utf8_lossy(&out.stdout), "21768000\n");
     let (_, collections, _) = stats(&String::from_utf8_lossy(&out.stderr));
     assert_eq!(collections, 0);

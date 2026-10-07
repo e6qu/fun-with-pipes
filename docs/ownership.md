@@ -51,8 +51,7 @@ lifetimes. None of these is a general collector-free execution guarantee.
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
-keys. Arrays now own typed elements across their native boundaries. Maps/sets now own typed keys and values too. Next finish old marked
-allocation reclamation and retained runtime callbacks, including exception,
+keys. Arrays now own typed elements across their native boundaries. Maps/sets now own typed keys and values too. Old marked allocation reclamation is prepared. Next finish retained runtime callbacks, including exception,
 handler/cancellation teardown and cycles. Keep the IR pass
 and code generator on the same contracts.
 
@@ -138,8 +137,9 @@ the record poisoner's interpretation of that length as a field count.
 The focused copy loop demonstrates reclamation of young owned leaves on normal
 paths. It does not establish full ARC: other runtime-created text results, retained
 container elements, callbacks, stack captures, handler unwind and cancellation
-still require ownership contracts and cleanup. Old marked objects remain under
-the collector's generational policy; WebAssembly still uses its bump allocator.
+still require ownership contracts and cleanup. Prepared native releases now reclaim
+old storage at the final counted reference; immutable reuse remains young-only.
+WebAssembly still uses its bump allocator.
 
 ## Prepared nested text result ownership
 
@@ -178,8 +178,7 @@ FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
 not complete ownership. Full architecture and benchmark gates remain required.
 
 Eligible stack aggregates now retain typed child ownership; runtime-retained
-callbacks, exceptional paths, generational old objects and WASI
-reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
+callbacks, exceptional paths and WASI reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
 function captures. Other aggregate destruction and incomplete temporary types
 still need coverage before general no-tracing support. Cycles still require an
 explicit policy.
@@ -264,3 +263,22 @@ explicit failures. High fanout no longer implicitly changes an owned graph to
 runtime-shared lifetime. See [primitive contracts](primitive-ownership.md#exact-reference-counts-above-the-byte-range)
 for overhead, tested boundaries and no-tracing reclamation evidence. This does
 not complete phase 2 or eliminate tracing at other runtime boundaries.
+
+## Prepared reclamation of surviving owned storage
+
+A typed release of the last counted reference frees native storage even after
+it survives a major or minor collection. Shared graphs have count zero and
+remain with tracing. Freeing clears mark/count metadata; the next allocation
+in that cell is young. Immutable record updates and reuse tokens still require
+young storage, preserving the no-old-to-young-edge invariant. Under GC verification,
+freed small cells have stale children cleared before joining the free list.
+Reuse poisoning quarantines the cell instead of freeing it.
+
+`tests/old_reclamation.rs` exercises actual collection survival, small/large
+leaves, records, owned closure captures, arrays and maps, alias counts and shared
+graphs. A separate 250-collection leaf probe frees 4.8 MiB versus 0.0 MiB when
+only the former age gate is restored (Apple Silicon, O1, counter precision
+0.1 MiB). Task/channel/cancellation golden cases pass O1/O2 stress, verification
+and poisoning. This is focused reclamation evidence, not full ARC or a speed
+claim. The Linux long-loop test retains explicit collection coverage through
+an ownership-disabled build; its large runtime gate belongs on CI.
