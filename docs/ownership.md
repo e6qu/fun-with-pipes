@@ -36,7 +36,8 @@ allocations before counting is needed.
 | Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
-| Strings, bytes, escaping closures | Runtime-shared, outside current counting coverage | Owned results, typed destruction and captured-value lifetimes |
+| Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
+| Escaping closures | Runtime-shared, outside current counting coverage | Owned captures and typed capture destruction |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -106,33 +107,40 @@ assert semantic results and stable allocation properties instead.
 Run full workloads on GitHub runners. Passing Linux tests alone does not
 validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
-## Next leaf-value implementation
+## Remaining leaf and capture coverage
 
-The boundary review found concrete constraints for strings/bytes, not an
-implemented ownership guarantee. `fwp_str_new` allocates pointer-free leaves;
-small leaf objects are currently excluded by `fwp_rc_slot`, and `needs_rc`
-excludes both types. Enabling counts requires a leaf-specific generated drop
-path: the existing ADT drop fallback assumes an object tag and does not free
-unrecognized shapes. Runtime sharing must stop traversal at counted leaves;
-UTF-8/raw bytes are payload, not a graph of values.
+The prepared leaf change handles direct copies and identity/no-op aliases.
+`string.from-bytes` instead returns an optional copied string, and `split`,
+`lines` and `words` return lists of copied strings. These nested results still
+need explicit owned result graphs. Do not mark every textual result fresh or
+borrow every text argument before modeling its retention and aliases.
 
-Result contracts must cover aliases before making those types counted:
-`string.to-bytes` returns its input; `pad-left/right` can return their subject
-unchanged; `replace` returns its subject for an empty search string. Conversely,
-`string.from-bytes` validates and copies into an optional fresh string.
-`split`, `lines` and `words` build lists of newly allocated strings whose
-ownership must survive the runtime list builder. Do not mark all textual
-results fresh or borrow every text argument before these paths are modeled.
-
-The next focused implementation should inventory these primitives, introduce
-fresh/alias leaf result handling, and verify leaf drops, constants, shared
-aliases and nested results. Cover no-op padding/replacement, String/Bytes
-identity conversion, callbacks capturing strings, handlers/traps, FFI retention
-and young/old collector interaction. Existing typed drops recursively release
-record/variant children, while container drops currently release outer buffers
-only. Generational marking restricts immediate freeing of old counted objects;
+Continue coverage for nested results, callbacks capturing strings, handlers/traps,
+FFI retention and young/old collector interaction. Existing typed drops release
+record/variant children, while container drops release outer buffers only.
+Generational marking restricts immediate freeing of old counted objects;
 removing that restriction needs its own invariant and stress evidence.
 
 Then complete typed container element retention/destruction and closure capture
-ownership; share-based compatibility boundaries still prevent general execution
-without tracing GC. Keep these acceptance requirements when resuming sessions.
+ownership. Shared compatibility boundaries still prevent general execution
+without tracing GC. These are acceptance requirements for resumed sessions.
+
+## Prepared leaf ownership implementation
+
+`String` and `Bytes` locals now participate in IR ownership. Selected primitive
+results establish counts: copies start fresh, `string.to-bytes` duplicates its
+identity result, and padding/replacement duplicate the input when a no-op returns
+it unchanged. Their read-only arguments borrow without promoting the leaf to
+runtime sharing. Unknown runtime and FFI boundaries retain the shared fallback.
+
+Leaf allocations use the existing out-of-line count metadata. Sharing stops at
+a leaf; its bytes are not scanned as pointers. A generated typed leaf drop frees
+the allocation directly rather than reading an ADT tag. Reuse verification
+poisons only within its capacity and clears its String/Bytes length, avoiding
+the record poisoner's interpretation of that length as a field count.
+
+The focused copy loop demonstrates reclamation of young owned leaves on normal
+paths. It does not establish full ARC: optional/list text results, retained
+container elements, callbacks, escaping captures, handler unwind and cancellation
+still require ownership contracts and cleanup. Old marked objects remain under
+the collector's generational policy; WebAssembly still uses its bump allocator.

@@ -17,25 +17,25 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
-- Main: `af15d26`, squash merge of [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
-  on 2026-10-07. Verified commit message: one line, 65 characters, no body/trailers.
-- Its final head `2c2a46d` passed all four jobs in
-  [run 37591744197](https://github.com/e6qu/fun-with-pipes/actions/runs/37591744197):
-  ARM macOS, Intel macOS, Linux full tests and benchmark equivalence. Earlier
-  macOS GC, socket, TLS snapshot, BSD wc and unsynchronized timer failures were
-  repaired. Phase 1 meets its native-platform acceptance gate.
-- Current branch: `ownership-contracts`, checkout
-  `/private/tmp/fwp-ownership-worktree`, sole open
-  [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75), based on `af15d26`.
-  Published head before the cache fix: `678abf6`. Full run
-  [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
-  passed Linux and benchmarks; ARM macOS failed tutorial 7's same-executable
-  native pipeline. Intel is still running. The fix and updated full gate are
-  next; squash only after all current-head jobs pass.
-- Scope: shared metadata for all 35 array/map/set declarations, comparison-key
-  borrowing, owning-wrapper selection and safe graph sharing at saturation,
-  interior references and traversal-stack spill. Stored values and callbacks
-  remain shared. This is the first step of phase 2, not complete ARC/no-GC.
+- Origin/main: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
+  Current head `f53493c` passed all four jobs in
+  [run 37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156):
+  Linux, ARM/Intel macOS and benchmarks. Intel completed 2026-10-07T12:38:44Z.
+  Verified squash subject: `Unify container ownership contracts and borrow comparison keys`,
+  one line, 61 characters, no body or trailers. Concurrent native executable
+  cache access is read-only; ARM's tutorial/pipeline regression is fixed.
+- Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
+  merged as `af15d26`, passing all four jobs in run `37591744197`.
+- Next sole PR: `ownership-leaves`, checkout `/private/tmp/fwp-leaf-worktree`,
+  rebased from old base `798d2ed` onto `5998302`; macOS/cache fixes inherited.
+  Post-rebase leaf (2) and container (3) regressions pass (CPU 13.32 s /
+  elapsed 27.06 s), eight IR ownership checks pass (CPU 3.51 s / elapsed 7.39 s).
+  Contract inventory, formatting and whitespace pass. Publish this sole PR and
+  run full current-head CI before squash-merging. No local workloads remain.
+- Separate next-task work: `ownership-loop-state`, checkout
+  `/private/tmp/fwp-loop-worktree`, base `0a90b05`. Implement normal and fused
+  loop state/result transfers; no code edits yet. Prepared descendants retain
+  their listed OLD anchors until sequential rebases after parent squash merges.
 
 ## Current ownership evidence
 
@@ -53,14 +53,13 @@ under the guard. Full current-head CI remains required.
 
 ## Prepared sequence
 
-All following branches are published, have focused local evidence, and have no
+All tabled branches are published, have focused local evidence, and have no
 PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
 listed OLD base onto main, reconcile docs with the latest handoff, validate,
 push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-leaves | fwp-leaf-worktree | 2ce7a05 | 798d2ed |
 | ownership-text-results | fwp-text-worktree | bab67ea | 2ce7a05 |
 | ownership-closures | fwp-closure-worktree | 0d96bfe | bab67ea |
 | ownership-closure-cleanup | fwp-drop-worktree | 7cf5c78 | 0d96bfe |
@@ -72,6 +71,14 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-fold-transfers | fwp-fold-worktree | a180c3f | 1ea7f07 |
 | ownership-zip-callbacks | fwp-zip-worktree | bdb750f | a180c3f |
 | ownership-right-fold | fwp-right-fold-worktree | adc7947 | bdb750f |
+| ownership-list-prefix | fwp-prefix-worktree | 376e77a | adc7947 |
+| ownership-list-copies | fwp-list-copy-worktree | bb00baa | 376e77a |
+| ownership-list-options | fwp-list-option-worktree | 34023f3 | bb00baa |
+| inference-call-effects | fwp-inference-worktree | 89b7bde | 34023f3 |
+| ownership-wide-counts | fwp-wide-worktree | 3a791dc | 89b7bde |
+| ownership-list-order | fwp-order-worktree | c835578 | 3a791dc |
+| ownership-sort-callbacks | fwp-sort-callback-worktree | 66bc713 | c835578 |
+| ownership-state-sequences | fwp-state-sequence-worktree | 0a90b05 | 66bc713 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -111,13 +118,17 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 ## Remaining acceptance work and next implementation
 
 Synchronous map/filter/zip callbacks and left/right accumulator transfers are
-prepared after b563360. Next prepare take/drop-while callback ownership after
-adc7947 while current CI runs. Keep retained callbacks shared until their full
+prepared after b563360, followed by take/drop-while on ownership-list-prefix.
+Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
+Call-effect inference repair is prepared separately after optional list aliases.
+Exact overflow counts and sort/unique/sort-by ownership are published;
+scan/iterate state ownership is published. Next repair general/fused loop
+state transfer, then remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
-Byte counts at 255 still promote whole graphs to tracing-managed sharing;
-implement an exact overflow path before general no-tracing execution. Old marked
+The baseline still shares at count saturation; the prepared wide-count branch
+removes that transition and requires full platform validation before merge. Old marked
 objects still rely on generational reclamation. WASI remains a bump allocator.
 Phase 2 is incomplete. Continue numeric storage/ABI, fused numerics/autodiff,
 measured evidence and optional no-tracing phases in PLAN.md after ownership.
@@ -139,7 +150,11 @@ worktrees. It needs process-sampling/priority permissions. Recreate the temporar
 guard with the same limits if missing. Do not bypass a refusal or increase limits;
 move the workload to CI. No full local gates were run.
 
-## Next callback change: design constraints
+The remaining acceptance section above controls priority. Design/preparation
+notes below record evidence and earlier decisions; their old next-task remarks
+are historical and must not replace the current queue.
+
+## Callback design constraints retained for review
 
 Start with synchronous map callbacks, not retained task/channel/FFI callbacks.
 Add a typed borrowed application path: duplicate supplied pointer arguments
@@ -235,7 +250,7 @@ Next: other synchronous callbacks (fold/zip-with), typed container elements,
 remaining contexts, exact overflow counts, exceptional/retained runtime cleanup,
 old-generation and WASI reclamation, plus cycle policy. Phase 2 is incomplete.
 
-## Next fold design
+## Fold design constraints retained for review
 
 Start with synchronous fold. Its function/list borrow; the accumulator transfers
 one owned reference into every callback, and the returned value replaces it.
@@ -343,3 +358,274 @@ unfiltered tutorial check was stopped immediately before these focused checks;
 no limits were raised. Publish the correction and run all current-head gates.
 The earlier Linux/benchmark successes do not gate the new head. Full CI may
 find further failures; fix them and continue the roadmap.
+
+Cache correction published as f53493c. Both native pipe tests pass (CPU 9.30 s /
+elapsed 18.88 s); formatting and whitespace pass. New full gate 37612412156
+must pass before merging #75. The previous run is complete: only ARM failed; Intel, Linux and benchmarks
+passed. Those successes do not verify the corrected head.
+
+## Prefix/suffix ownership preparation
+
+`ownership-list-prefix`, checkout `/private/tmp/fwp-prefix-worktree`, base
+`adc7947`, is published at `376e77a` with no PR yet. Synchronous take/drop-while borrow predicates/source,
+stop at the first rejected element, retain direct/captured specialization and
+protect source/capture addresses. Fresh prefix nodes own duplicated selected
+elements; returned suffixes acquire one tail reference before source cleanup.
+Two tests pass with aliases/function elements, empty/all/no-match cases,
+post-source-cleanup use and a predicate that traps if called after rejection,
+at O1/O2 with stack on/off, collection verification and reuse poisoning.
+The no-tracing differential restores result sharing in all specialization paths:
+identical output/zero collections, 5.0 versus 8.2 MiB freed by counts. Twenty-eight focused ownership regressions and the contract inventory passed
+(CPU 49.90 s / elapsed 100.17 s for the regressions). Native fat baseline passed
+(CPU 9.16 s / elapsed 18.61 s including incremental compilation). Five FFI
+checks passed (CPU 2.76 s / elapsed 5.46 s), formatting and whitespace passed. Full platform CI is required
+after all parents merge. Remaining list operations, typed container elements,
+exact counts and retained/exceptional lifetimes still belong to phase 2.
+
+Prefix/suffix work is committed and published as 376e77a; verified subject is
+one line, 56 characters with no body/trailers. The branch and current PR worktree
+are clean. Root remains main with intentional local status documentation.
+No local workloads remain. Latest #75 gate 37612412156 is still queued; fix any
+failures, and squash only after all four jobs pass. Next concrete work: refine
+non-callback list drop/copy boundaries, preserving typed element aliases and
+releasing scratch buffers; do not rewrite head/tail/last, already language code.
+After #75 merges, rebase leaves from OLD base 798d2ed onto the squash commit and
+open the next sole PR. Continue the table in order, fixing tests at every step.
+
+## Ordinary list copy ownership preparation
+
+`ownership-list-copies`, checkout `/private/tmp/fwp-list-copy-worktree`, base
+`376e77a`, is published at `bb00baa` with no PR yet. Reverse/take/append/flatten borrow inputs and own only
+new list nodes with typed element references. Append stops ownership at its
+borrowed suffix and acquires one tail reference; drop likewise duplicates its
+returned tail, never resets aliased node counts. Scanned temporary buffers are
+released; original input addresses remain roots. Two focused tests pass with
+strings/functions/scalars, nested flattening, retained aliases, post-input-drop
+use and negative/zero/oversized/empty cases at O1/O2, stack on/off, GC verification
+and both poison settings. No-tracing loop: identical outputs/zero collections,
+7.3 versus 13.6 MiB freed by counts. Initial check CPU 11.21 s / elapsed 22.84 s
+including incremental Rust compilation. Thirty related ownership regressions passed (CPU 60.63 s / elapsed 121.63 s),
+and the declaration/alias contract invariant passed. Five FFI checks and the native fat baseline passed (CPU 5.34 s / elapsed
+10.65 s). Formatting and whitespace passed; branch published. full platform CI is still required after all parents merge.
+Next: nth/find result aliases and the remaining synchronous callbacks, exact
+counts, typed container elements and exceptional/retained lifetime cleanup.
+
+Ordinary list copy work published as bb00baa; next prepare optional nth/find
+alias results and read-only index-of. It has no PR; full CI must follow its
+parents. Current #75 gate 37612412156 has ARM testing, with other jobs queued.
+
+## Optional list alias ownership preparation
+
+`ownership-list-options`, checkout `/private/tmp/fwp-list-option-worktree`, base
+`bb00baa`, is published at `34023f3` with no PR yet. FreshOuter owns one new structural allocation and
+borrows/duplicates fields by monomorphic constructor type. Nth/find retain
+selected elements; index-of borrows comparison keys and owns its optional
+scalar. Find invokes typed borrowed predicates, preserves direct/captured
+specialization, and stops at the first match. Two focused tests pass at O1/O2,
+stack on/off, GC verification and both poison modes; they include dynamic/
+captured predicates, function aliases after input cleanup, missing/negative/
+empty cases and a predicate that traps after a match. No-tracing differential:
+identical outputs/zero collections, 9.6 versus 10.4 MiB freed by counts. Focused
+run CPU 4.54 s / elapsed 9.35 s. Thirty-two related ownership regressions passed (CPU 58.04 s / elapsed
+116.52 s), as did the contract invariant, five FFI checks and native fat
+baseline (CPU 5.25 s / elapsed 10.46 s), formatting and whitespace. Published;
+full platform gates remain required after all parents merge.
+
+Effect inference follow-up: an inline pure function-valued list pipeline in an
+IO main fails in the existing interpreter frontend:
+`"a b c" | words | map concat | find has-text | option.map (apply "!") | echo`
+with `has-text : (String -> String) -> Bool`, defined as
+`apply "!" | string.length | gt 1`. It expects IO on the option-map stage but
+finds a pure stage. The lifetime fixture uses an explicitly typed pure helper
+`selected-found : List[String -> String] -> Option[String]` for that suffix,
+which succeeds. This is not caused by native ownership code; preserve a focused
+reproduction and resolve effect-row inference as part of language design work.
+Do not weaken tracked effects to hide the failure.
+
+Optional list ownership published as 34023f3; no new PR. Next concrete task is
+the reproduced effect-row inference failure, then remaining synchronous callbacks
+and exact overflow counts. Current #75 gate: benchmarks passed; Linux and both
+macOS architectures are testing. All current-head gates must pass before merge.
+
+## Call effect inference repair preparation
+
+`inference-call-effects`, checkout `/private/tmp/fwp-inference-worktree`, base
+`34023f3`, is published at `89b7bde` with no PR yet. A focused frontend regression failed before the fix:
+known pure callbacks closed a callee's effect row during argument unification,
+then call unification either copied the IO context into callback requirements or
+closed the whole caller context to purity. Infer::open_call now retains abstract
+size opening and reopens only a closed row on this call, after resolving it.
+It never changes function-valued argument rows or removes required effect labels.
+Pipe application/composition and ordinary application use the same helper.
+
+Four focused tests pass (CPU 4.97 s / elapsed 9.92 s): inline pure callbacks in
+IO pipes and ordinary applications; three missing-IO signature rejections;
+existing effect/handler snapshots unchanged; interpreter/native output at O1/O2
+with GC stress/verification. The formerly failing source needs no helper
+annotation on this branch. Thirty-two related ownership regressions passed (CPU 60.07 s / elapsed
+120.49 s). The expanded four-test set also checks 20 existing effect/handler,
+abstract-size, comptime and resource-capture snapshots without changing their
+outputs (CPU 10.75 s / elapsed 21.48 s). Five FFI checks and the native fat baseline passed (CPU 5.54 s / elapsed
+11.08 s). Formatting and whitespace passed; repair published. Full type snapshots/platform CI are still required after all parents
+merge. Current #75 head f53493c has benchmark success and all test jobs running.
+
+Call-effect repair published as 89b7bde. Worktrees for copies, options and
+inference are clean; root remains main with intentional local documentation.
+No local workloads remain. Next implementation: exact count overflow on a new
+branch based on 89b7bde. Keep the one-byte common case; use rare side metadata
+keyed by the canonical count slot, so metadata cannot conservatively root a
+value. Centralize decrements for generated typed drops, raw drops and closure
+cleanup; each currently decrements the byte directly. Ordinary fwp_rc_last is
+a predicate, not a consuming decrement, so preserve its callers' semantics.
+
+Overflow metadata must disappear on count reduction, explicit graph sharing,
+freeing/reuse and GC sweeping (including whole empty-chunk reclamation).
+Handle allocator failure and size_t overflow explicitly. Cover leaf/record/
+function fanout above 255, aliases/interior addresses, callback graph-sharing,
+GC slot reuse and no-tracing reclamation. Reuse and scalar-bit safeguards must
+remain. Review runtime/fwp_rt_gc.c count resets at allocation, mem_free and sweep,
+and src/cgen.rs typed drop heads before editing. Full CI follows parent merges.
+Current #75 gate 37612412156: benchmark success; both macOS jobs and Linux
+remain running. Fix failures and merge only when all current-head gates pass.
+
+## Exact wide-count ownership preparation
+
+`ownership-wide-counts`, checkout `/private/tmp/fwp-wide-worktree`, base
+`89b7bde`, has no PR yet. Native byte counts 1..254 remain inline; 255 points to
+an exact size_t side entry keyed by canonical metadata address (no language
+value root). Metadata table is 2 KiB plus 24 bytes per entry before allocator
+overhead on 64-bit native platforms. Generated typed drops, raw decrements and
+closure cleanup share a release/decrement helper. Last-reference predicates
+retain their old semantics. Count reduction, explicit sharing, free/reuse and
+partial/empty-chunk/big-object sweeps remove side entries. Overflow traps;
+injected allocation failure reports OOM (102). WASI keeps the shared stub.
+
+Existing sharing regression still rejects the unsafe parent-only saturation
+baseline; the new counted branch explicitly shares at retained callback entry.
+Three new probes pass: 601-reference leaf/record/function aliases, interior
+metadata keys, capture destruction, free/reuse and deterministic sweep fixtures,
+size_t overflow/OOM; real high-fanout function/string collection tests at O1/O2,
+stack on/off, stress 17/verification and both poison modes; and no-tracing
+reclamation. No-tracing loop gives identical output/zero collections, 73.9
+versus 74.8 MiB freed by counts when automatic sharing is restored/removed.
+Initial two-probe run CPU 4.22 s / elapsed 9.14 s; collection check CPU 3.04 s /
+elapsed 6.23 s. All 35 related ownership regressions pass (CPU 68.22 s /
+elapsed 136.57 s), and the ownership contract inventory passes (CPU 3.47 s /
+elapsed 7.47 s). Five FFI checks and the local fat baseline pass (CPU 12.35 s /
+elapsed 24.64 s); formatting passes. Published as `3a791dc`, with no new PR.
+All checks use the bounded guard. Full platform gates are still required after
+parent merges. Current #75 gate: ARM macOS, Linux and benchmarks pass; Intel macOS
+remains testing. This repair does not prove general no-tracing execution.
+
+## List ordering ownership preparation
+
+Current isolated task: `ownership-list-order`, checkout `/private/tmp/fwp-order-worktree`,
+base `3a791dc`. Give sort/unique copied spines typed element ownership and
+release their source/merge scratch buffers. Preserve stable sort order and first
+unique occurrence, and compare aliases and scalar/nested elements with the
+interpreter under collection stress. Sort-by remains a separate callback task.
+
+Sort/unique now use CopiedSpine contracts and release source/merge buffers.
+Two new checks pass: interpreter agreement at O1/O2, stack on/off, stress 1,
+verification and both poison modes for strings/nested lists/scalars/empty inputs;
+no-tracing counts 4.7 -> 6.5 MiB freed after restoring/removing only result
+sharing, identical output and zero collections. CPU 11.76 s / elapsed 23.62 s
+under the guard, including compilation. All five adjacent copied-list/wide-count checks pass unchanged (CPU 12.93 s /
+elapsed 26.35 s). Contract inventory passes (CPU 3.99 s / elapsed 8.07 s),
+formatting and whitespace pass. Published as `c835578`, without another PR; full gates follow
+parent merges. No local workload remains. No second PR has been opened; #75 still awaits its
+Intel gate. Next: sort-by synchronous callback/key ownership.
+
+Sort-by follow-up design: borrow the synchronous callback and source, invoke
+through fwp_apply_borrowed to obtain owned keys, keep key/value/merge buffers
+scanned, release each key with its monomorphic generated drop helper after
+sorting, then adopt a CopiedSpine result. Keys may alias inputs or captures;
+never freshen/reset key counts or infer pointer ownership from scalar bits.
+Test callback order/once-per-element, stable ties, allocated/string keys,
+captured/partially applied callbacks and collection during key evaluation.
+Exceptional cleanup remains an explicit phase-2 gap; do not claim it solved by
+normal-path scratch release. Reconcile these notes against final macOS fixes
+when rebasing each prepared branch after its parent squash merge.
+
+## Sort-by callback ownership preparation
+
+`ownership-sort-callbacks`, checkout `/private/tmp/fwp-sort-callback-worktree`,
+base `c835578`, has no PR yet. CopiedSpine source/result ownership combines with
+Borrowed callback metadata, owned callback keys and generated typed key release.
+Scalar keys use NULL; FWP_FREE=0 uses raw drops, FWP_REUSE=0 retains sharing.
+Scanned source/key/merge buffers are released normally; source/callback roots
+remain live through result construction. Three checks pass after a test-only
+Rust mutable-command borrow was corrected: callback order and stable ties,
+identity/allocated/aggregate keys, function-valued elements, O1/O2 stack on/off,
+stress/verify/poison, both conservative switches; scalar address-bit probe via
+actual emitted wrapper; no-tracing result/key reclamation. Counters 4.0 MiB
+(result sharing restored), 4.7 (typed key cleanup removed), 5.1 (both owned),
+identical stdout and zero collections. CPU 7.47 s / elapsed 15.02 s. First
+normal-path pair passed CPU 12.60 s / elapsed 25.39 s including compiler rebuild.
+Eight adjacent borrowed-callback/list-ordering/FFI checks pass (CPU 9.27 s /
+elapsed 18.68 s). The contract inventory was extended to sort/unique/sort-by;
+the extended inventory passes (CPU 3.60 s / elapsed 7.57 s). Formatting and
+whitespace pass. Published as `66bc713`, without another PR; no local workload remains. Linux full CI now passes #75 as well as
+ARM and benchmarks; Intel is still testing. Next after this branch: scan/iterate
+owned output sequences, followed by zip/unzip/chunks structural aliases and
+retained container element lifetimes. All checks stay bounded; phase 2 remains
+incomplete, especially old-object reclamation and exceptional cleanup.
+
+Scan/iterate design to implement next: borrow callback/source/initial value.
+The first output needs a typed additional reference to the borrowed initial
+value; every later callback result already owns its output reference. Borrow the
+previous output when invoking the next callback so its stored reference survives
+argument consumption; never transfer the only output reference as fold does.
+Use actual callback argument metadata for the initial-value duplication (including
+captured/partial callbacks), scanned/released scratch and fwp_map_finish for
+owned output heads. Iterate with zero count must neither duplicate its initial
+value nor invoke the callback. Verify aliased intermediate states, functions as
+states, effect order, empty scan and non-positive iterate counts. Stored container
+elements, exceptional lifetimes and old marked objects remain separate work.
+
+## Scan and iterate ownership preparation
+
+`ownership-state-sequences`, checkout `/private/tmp/fwp-state-sequence-worktree`,
+base `66bc713`, has no PR yet. Three arguments borrow; scan callback index 0,
+iterate callback index 1. FreshSpine output owns each state. Actual callback
+argument metadata duplicates the initial state, each callback application borrows
+the previous output, and later callback results transfer directly into output
+nodes. Shared callback metadata stays conservative. Scanned scratch is released;
+initial-state, callback and list roots have address fences. Non-positive iterate
+returns without callback/refcount activity; allocation-size arithmetic is checked.
+
+First attempt found a fixture mistake (`concat | trace-step` tried to compose
+before the second curried argument; use `const trace-step` for the effectful
+callback fixture) and a real separate ownership gap: the optimized map/sum
+consumer feeds its list to a fused loop that still shares the complete state.
+Generated fwp_loop49/fwp_loop51 call sites showed fwp_rc_share on records holding
+list states. Counts were 4.1/4.1 MiB in both variants. The consumer is now direct
+head/option processing to isolate sequence lifetime; 4.1 -> 7.9 MiB are freed
+when only scan/iterate result sharing is restored/removed, identical output and
+zero collections. Both semantic/counter checks then pass (CPU 5.08 s / elapsed
+10.33 s). Expanded conservative-switch and allocated-empty-state checks plus all five
+adjacent filter/prefix/callback regressions pass: seven tests, CPU 24.56 s /
+elapsed 49.40 s. Extended contract inventory passes (CPU 3.86 s /
+elapsed 8.12 s), formatting/whitespace pass. Published as `0a90b05`, without
+another PR; no local workloads remain.
+
+Next required ownership work: general and fused loop state/result transfer and
+cleanup, preserving Step semantics, ticks, cancellation and evaluation order.
+The map/sum consumer must gain reclamation evidence after that repair. Then
+zip/unzip/chunks structural aliases, typed stored container elements, retained
+callbacks and exceptional teardown. Fused-loop sharing is not fixed by this
+sequence branch. Phase 2 remains incomplete; full CI follows parent merges.
+
+Loop repair checkout prepared: `ownership-loop-state` in
+`/private/tmp/fwp-loop-worktree`, base `0a90b05`, no edits or publication yet.
+Inspect four paths: runtime fwp_p_loop (ticks, owned Step extraction), direct
+fwp_k_loop, captured fwp_hof loop bodies, and Gen::loop_def unboxed locals.
+FnGen::known_hof currently unconditionally shares the initial state before
+fwp_loopN. Typed Step extraction must preserve aliased/shared callback results;
+when consuming an owned boxed Step, duplicate its selected typed payload before
+dropping the box, or prove unique transfer. For unboxed loop state, take typed
+field references then release the incoming outer state; each iteration consumes
+previous fields and transfers owned next/result fields. Preserve collector roots
+and scalar-bit handling. Tests must cover all paths with callback order/ticks,
+GC/reuse verification, input/result aliases, captures and no-tracing counts,
+including the map/sum sequence consumer that currently loses reclamation.

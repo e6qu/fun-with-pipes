@@ -1139,6 +1139,12 @@ impl<'p> Gen<'p> {
             mt.to_string().replace("*/", "* /"),
             id
         );
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes")) {
+            return format!(
+                "{}        fwp_rc_free_obj(v);\n        return;\n    }}\n}}\n",
+                head
+            );
+        }
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
         if container {
             return format!(
@@ -2202,6 +2208,31 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.expr(a)
     }
 
+    /// A borrowed pointer stays a conservative root through the call.
+    /// Inlining can otherwise replace its later drop with metadata access
+    /// and discard the allocation's address before an allocating primitive.
+    fn keep_borrowed_args(&mut self, id: FuncId, args: &[String]) {
+        let f = &self.g.prog.funcs[id];
+        let Body::Prim(symbol) = &f.body else { return };
+        let Some(contract) = crate::ownership::primitive(symbol) else {
+            return;
+        };
+        let roots: Vec<String> =
+            f.ty.params(args.len())
+                .0
+                .iter()
+                .enumerate()
+                .filter(|(i, t)| {
+                    contract.argument(*i) == crate::ownership::Argument::Borrow
+                        && crate::rc::needs_rc(&self.g.prog.shapes, t)
+                })
+                .map(|(i, _)| args[i].clone())
+                .collect();
+        for root in roots {
+            self.line(&format!("FWP_KEEP_ALIVE({root});"));
+        }
+    }
+
     /// Whether `v` builds an object that can live on the stack: a record
     /// or variant with fields, or a closure (a known function applied to
     /// fewer arguments than it takes).
@@ -2728,7 +2759,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 if self.g.prog.funcs[*id].arity == 0 {
                     self.bind(format!("caf{}()", id))
                 } else {
-                    self.bind(format!("f{}({})", id, xs.join(", ")))
+                    let result = self.bind(format!("f{}({})", id, xs.join(", ")));
+                    self.keep_borrowed_args(*id, &xs);
+                    result
                 }
             }
             Expr::Apply(f, args) => {
@@ -3903,10 +3936,31 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ));
                         }
                         s = s.replacen(&borrowed, &format!("fwp_p_{}_own(", runtime), 1);
-                    } else if crate::rc::prim_fresh(&sym) {
-                        let r = s.strip_prefix("return ").and_then(|r| r.strip_suffix(';'));
-                        if let Some(r) = r {
-                            s = format!("return fwp_rc_fresh({});", r);
+                    } else if let Some(contract) = crate::ownership::primitive(&sym) {
+                        use crate::ownership::ResultOwnership;
+                        match contract.result {
+                            ResultOwnership::FreshLeaf | ResultOwnership::FreshContainer => {
+                                let r = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!("fresh primitive `{sym}` has no return expression")
+                                    })?;
+                                s = format!("return fwp_rc_fresh({r});");
+                            }
+                            ResultOwnership::AliasLeaf { argument } => {
+                                s = format!("fwp_rc_dup(l{argument}); {s}");
+                            }
+                            ResultOwnership::FreshOrAliasLeaf { argument } => {
+                                let r = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!("alias primitive `{sym}` has no return expression")
+                                    })?;
+                                s = format!("V result = {r}; if (result == l{argument}) fwp_rc_dup(result); else fwp_rc_fresh(result); return result;");
+                            }
+                            _ => {}
                         }
                     }
                 }

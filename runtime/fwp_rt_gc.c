@@ -509,7 +509,7 @@ static inline uint8_t *fwp_rc_slot(V v) {
     if (off >= fwp_gc.top << GC_SHIFT) return 0;
     gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
     if (m->type == GC_BIG && (off & (GC_CHUNK - 1)) == 0) return &m->rc[0];
-    if (m->type != GC_SMALL || m->leaf == 1) return 0;
+    if (m->type != GC_SMALL) return 0;
     /* (a word pointing inside an object counts for that object: only too
      * high, never too low, as words are only dropped through values) */
     size_t i = (size_t)(((uint64_t)(off & (GC_CHUNK - 1)) * m->recip) >> 32);
@@ -552,6 +552,7 @@ static void fwp_rc_share(V v) {
         V o = stack[--sp];
         size_t ci = ((uintptr_t)o - (uintptr_t)fwp_gc.base) >> GC_SHIFT;
         gc_chunk *mc = &fwp_gc.meta[ci];
+        if (mc->leaf == 1) continue; /* payload bytes are not child references */
         size_t slot = mc->type == GC_BIG ? mc->size : mc->slot;
         /* rc_slot also accepts interior-looking words (counts may be
          * too high). Always traverse from the actual object start. */
@@ -597,6 +598,15 @@ static inline V fwp_rc_shared(V v) {
  * FWP_REUSE_VERIFY: any later use of it reads nonsense (and a match on it
  * finds no arm) */
 static void fwp_rc_poison(V v) {
+    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
+    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
+    if (m->leaf == 1) {
+        size_t size = m->type == GC_BIG ? m->size : m->slot;
+        memset((void *)(uintptr_t)v, 0xdd, size);
+        STR(v)->len = 0;
+        STR(v)->d[0] = 0;
+        return;
+    }
     fwp_obj *o = (fwp_obj *)(uintptr_t)v;
     o->tag = 0xdead;
     for (uint32_t k = 0; k < o->n; k++) o->f[k] = (V)0xdeadbeefdeadbeefULL;

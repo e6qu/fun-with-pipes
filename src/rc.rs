@@ -31,15 +31,21 @@ type Set = BTreeSet<Local>;
 /// Whether values of type `t` are counted: records and variants, which
 /// compiled code allocates and may come to own alone, and arrays, maps
 /// and sets, which some primitives update in place when unique
-/// (`prim_consumes`). Strings, byte strings, closures and the other values
-/// the runtime allocates are always shared, so they are never counted;
-/// neither are
+/// (`prim_consumes`). Strings and bytes participate when a primitive returns
+/// an owned leaf; unknown runtime/FFI boundaries still promote them to sharing.
+/// Closures and other runtime values remain shared. Never count
 /// integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
     match t {
         MT::Record(fs) => !fs.is_empty(),
-        MT::Con(n, _) if n == "?" || is_container(n) => true,
+        MT::Con(n, _)
+            if n == "?"
+                || is_container(n)
+                || matches!(n.as_str(), "std::String" | "std::Bytes") =>
+        {
+            true
+        }
         MT::Con(..) => match shapes.get(t) {
             Some(TypeShape::Adt(vs)) => vs.iter().any(|(_, fs)| !fs.is_empty()),
             Some(TypeShape::Record(fs)) => !fs.is_empty(),
@@ -85,10 +91,15 @@ pub fn prim_reads_only(sym: &str, j: usize) -> bool {
         .is_some_and(|c| c.argument(j) != crate::ownership::Argument::Share)
 }
 
-/// Whether the primitive returns independently owned outer storage.
+/// Whether the primitive returns independently owned leaf or outer storage.
 pub fn prim_fresh(sym: &str) -> bool {
-    crate::ownership::primitive(sym)
-        .is_some_and(|c| c.result == crate::ownership::ResultOwnership::FreshContainer)
+    crate::ownership::primitive(sym).is_some_and(|c| {
+        matches!(
+            c.result,
+            crate::ownership::ResultOwnership::FreshContainer
+                | crate::ownership::ResultOwnership::FreshLeaf
+        )
+    })
 }
 
 struct Pass<'a> {
