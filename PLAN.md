@@ -67,8 +67,9 @@ Constructor allocation is published separately; worker result boxing passes
 focused exceptional checks. Worker field preparation now passes focused
 first/later-failure and entry cancellation checks. Typed partial retains and caller owners now pass actual count-overflow checks.
 Initial loop flattening passes focused preparation and cancellation checks,
-including a repair for RC argument naming that hid literal rebuilt states. Next
-audit boxed-to-unboxed variant conversion, vlocal boxing and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+including a repair for RC argument naming that hid literal rebuilt states. Concrete aggregate contexts and scalar argument preparation now pass focused
+checks. Next audit boxed-to-unboxed variant conversion, vlocal boxing, remaining
+untyped field/scrutinee contexts, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
 representation, numerics/autodiff, expanded evidence and optional tracing-free

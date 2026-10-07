@@ -383,3 +383,8 @@ Prepared retain-failure cleanup records live owners before a Dup and protects
 completed typed field retains. Actual wide-count overflow checks and remaining
 conversion lifetimes are recorded in
 [ownership.md](ownership.md#prepared-retain-overflow-cleanup).
+
+Prepared aggregate ownership context keeps nested constructor temporaries typed
+and owns earlier fields during later scalar argument preparation. Evidence and
+remaining untyped contexts are in
+[ownership.md](ownership.md#prepared-concrete-aggregate-context).

@@ -645,3 +645,23 @@ RC units pass. Full architecture/benchmark gates remain required; boxed-to-
 unboxed/vlocal conversion and nested-field reconstruction require further audit.
 Metadata allocation exhaustion currently exits rather than recovering. Cleanup
 registration is a correctness cost, not a demonstrated speed improvement.
+
+## Prepared concrete aggregate context
+
+Ownership conversion carries the known monomorphic result, binding, branch,
+aggregate field, dynamic parameter and update-field context into constructor
+preparation. Existing inferred types take precedence. A nested constructor's
+ownership temporary therefore holds its concrete type, and cleanup releases its
+children rather than only decrementing the outer cell. Computed consumed scalar
+arguments are also named before final entry, keeping earlier counted fields
+owned during later preparation failures. Scalars remain uncounted locals.
+
+Fifteen RC units verify typed nested temporaries and the lifetime window during
+later scalar preparation. A generated-C check uses an actual later-field error
+for a record and a variant, independently restoring outer-only cleanup to detect
+the leaked String child. It passes O1/O2 with GC stress/verification and both
+poison modes, preserves input aliases and scalar bits, and matches successful
+and handled-error interpreter output. Adjacent constructor, boxing, temporary,
+retain, loop and caller checks pass. Full architecture/benchmark CI is required;
+this is no speed claim. Untyped field bases and match scrutinees, conversions,
+reconstruction and retained runtime lifetimes remain acceptance work.

@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated: 2026-10-07. Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md)
+Updated: 2026-10-08. Read [PLAN.md](../PLAN.md), [ownership.md](ownership.md)
 and [design.md](design.md). Prepared branches are not merged behavior.
 
 ## Authorized workflow
@@ -196,14 +196,40 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Immediate continuation
 
-Keep goal active; phases 2–6 remain incomplete. PR #78 merged as `079e7b5`
-with all four exact-head gates passing. PR #79 is the sole open PR, exact head
-`e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, full CI `37666199241`: Both macOS gates/bench passed; Linux running. When all
-four gates pass, squash with the explicit subject above and empty body, verify
-its message, and fast-forward main preserving these two docs. Rebase temporary
-ownership from OLD `7cf5c78` onto that new main, reconcile latest docs, run guarded
-focused checks, publish with exact lease and open the sole next PR. Do not rebase
-children using a rewritten or squash parent as their OLD base.
+Keep goal active; phases 2–6 remain incomplete. PR #79 merged as `33d4fb1`
+with all four exact-head gates passing. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80)
+is the sole open PR, exact head `7ce23dd0acb354859948db9043ffd91e3029a55c`,
+full CI `37684140373`: ARM macOS is running; Linux, Intel and benchmarks queued. Queues gate merging
+only. When all four gates pass, squash with subject `Preserve concrete call
+argument types for ownership temporaries` (one line, 63 chars) and empty body,
+verify its message, and fast-forward main preserving these two docs. Rebase
+stack arguments from OLD `0acbc06` onto that new main, reconcile latest docs,
+run guarded focused checks, publish with exact lease and open the sole next PR.
+Do not use a rewritten or squash parent as a child's OLD rebase anchor.
+
+Current uncommitted code: `ownership-constructor-types`, checkout
+`/private/tmp/fwp-constructor-types-worktree`, OLD base `1bb11be`. It propagates
+monomorphic function results, bindings, branches, aggregate fields, dynamic
+parameters and update fields into ownership temporaries. A new liveness unit
+found a later computed scalar still evaluated after an earlier counted argument
+was marked consumed. Computed consumed arguments are now named before the final
+operation, keeping prior owners visible while scalar preparation can unwind.
+Fifteen RC units pass (CPU 3.25 s / elapsed 6.81 s). Seven constructor/boxing/
+temporary/retain/loop preparation checks pass after that fix (CPU 25.35 s /
+elapsed 50.78 s). The actual later-field error probe has independent record and
+variant controls; outer-only cleanup leaks a String child (code 4). O1/O2,
+GC stress/verification, both poison modes, aliases and scalar bits pass. Both
+successful and handled-error native outputs match the interpreter. Current
+shared target contains this compiler. Five call-liveness checks pass: CPU 11.17 s / elapsed 22.50 s. The loop trap/order
+golden passes: CPU 4.13 s / elapsed 8.54 s. Library clippy passes: CPU 2.45 s /
+elapsed 4.91 s; fmt/whitespace pass. No local workload remains. Next publish this
+separate preparation; all prepared PRs still need full sequential CI. Then audit boxed-to-unboxed conversion,
+vlocal boxing, nested field reconstruction, SetFields fallback, CAF/inline and
+retained task lifetime/cycles. Full sequential CI remains required.
+
+The preparation notes below are historical evidence at their recorded heads.
+Their old PR statuses, target contents and next actions are not the active queue;
+use this section, the merged baseline and the immutable-anchor table.
 
 Fold/right-fold cleanup is published on `ownership-fold-unwind`, checkout
 `/private/tmp/fwp-fold-unwind-worktree`, OLD base `c2a3645`, head
@@ -447,6 +473,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-worker-boxing | fwp-worker-boxing-worktree | dc4f946 | 608ae7b |
 | ownership-worker-preparation | fwp-worker-preparation-worktree | c97dd03 | dc4f946 |
 | ownership-loop-preparation | fwp-loop-preparation-worktree | b879eca | c97dd03 |
+| ownership-variant-preparation | fwp-variant-preparation-worktree | 1bb11be | b879eca |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -485,21 +512,17 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 
 ## Remaining acceptance work and next implementation
 
-Synchronous map/filter/zip callbacks and left/right accumulator transfers are
-prepared after b563360, followed by take/drop-while on ownership-list-prefix.
-Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
-Call-effect inference repair is prepared separately after optional list aliases.
-Exact overflow counts and sort/unique/sort-by ownership are published;
-scan/iterate and general/fused loop state ownership are published. Next implement
-remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
+The immutable-anchor table records the published ownership chain through typed
+partial retains. Container/list structural aliases, old-object reclamation and
+callback unwind changes are prepared; their full sequential CI has not yet run.
+The baseline still shares at saturation; the prepared wide-count branch removes
+that transition. Phase 2 remains incomplete pending full gates and audits of
+constructor context, conversions/reconstruction, SetFields fallback, CAF/inline
+owners, retained tasks, teardown and cycles. WASI remains a bump allocator.
+After ownership acceptance, continue typed numeric storage/ABI, fused numerical
+kernels/autodiff lifetimes, measured regression evidence and optional tracing-free
+execution in PLAN.md order. Keep runtime boundaries shared until their retained
 lifetime and exceptional cleanup are checked.
-Other constructor/result contexts, typed container elements, retained callbacks,
-handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
-The baseline still shares at count saturation; the prepared wide-count branch
-removes that transition and requires full platform validation before merge. Old marked
-objects still rely on generational reclamation. WASI remains a bump allocator.
-Phase 2 is incomplete. Continue numeric storage/ABI, fused numerics/autodiff,
-measured evidence and optional no-tracing phases in PLAN.md after ownership.
 
 Darwin cross targets/universal binaries, Clang PGO and Darwin static-memory
 validation remain deferred. Native static linking is explicitly unsupported.
@@ -1406,13 +1429,16 @@ compiler; guarded `cargo clean -p fwp` before changing checkouts. These are focu
 checks, not full architecture support or a speed measurement. Sequential full
 CI is still required. Further nested-slot flattening and field reconstruction,
 vlocal variant duplication, typed constructor temporaries, CAF/inline lifetimes,
-retained tasks and cycles remain to audit. Continue the sole PR #79 merge gate
+retained tasks and cycles remain to audit. Continue the sole PR #80 merge gate
 and rebase this published preparation in its recorded order; phases 2–6 remain active.
 
 ## Current retain-failure work
 
-Checked locally, pending publication: `ownership-variant-preparation`, checkout
-`/private/tmp/fwp-variant-preparation-worktree`, OLD base `b879eca`.
+Published `ownership-variant-preparation`, checkout
+`/private/tmp/fwp-variant-preparation-worktree`, OLD base `b879eca`, head
+`1bb11bece9ae7b960dd246f7008c98d386b9cc7d`; clean checkout, no additional PR.
+Verified subject `Protect partial retains and caller owners across count overflow`,
+one line, 63 characters, empty body/no trailers.
 RC liveness now records the owners before a Dup, excluding its unfinished new
 reference. Count generation protects those owners during retention. Typed
 variant, flat-field and stack-child multi-retains protect only completed extra
@@ -1422,12 +1448,11 @@ modes (CPU 9.67 s / elapsed 19.44 s). It uses actual wide reference-count overfl
 not an injected retain trap: first/later field overflow preserves original
 borrowed variant fields, and a compiled function's overflowing input Dup releases
 its consumed caller reference. Removing only the variant partial scope fails
-with code 3. Normal output matches the interpreter. A new liveness unit is added
-but has not yet run; focused adjacent regression, formatting and lint remain.
-No local workload is active. Those checks used the retain-failure compiler. The shared target now contains
-the rebased temporary-types compiler; guard package clean before resuming this checkout.
-Complete that publication/PR first, then resume retain-failure validation and
-publication; retain OLD `b879eca`. Boxed-to-unboxed conversion, vlocal boxing,
+with code 3. Normal output matches the interpreter. Final liveness, focused adjacent regressions, formatting and lint results
+are recorded below; all pass.
+No local workload is active. Those checks used the retain-failure compiler; current target state is recorded
+in Immediate continuation. Guard package clean before changing checkouts.
+PR #80 publication is complete. Rebase these preparations in recorded order; retain OLD `b879eca`. Boxed-to-unboxed conversion, vlocal boxing,
 nested field reconstruction and SetFields fallback preparation still need
 separate checks. Phase 2 and all later phases remain incomplete.
 
@@ -1447,6 +1472,45 @@ worker_preparation_ownership -- --nocapture`, `cargo test --lib rc::tests --
 `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
 /private/tmp/fwp-local-guard.py`. This exercises recoverable count overflow;
 allocation exhaustion currently terminates via fwp_gc_oom. No complete ARC or
-performance claim is made. Full sequential CI remains required. Next publish
-this separate preparation, then propagate concrete constructor field contexts
+performance claim is made. Full sequential CI remains required. This preparation is published. Next propagate concrete constructor field contexts
 and check boxed-to-unboxed/vlocal conversion ownership while PR #80 CI runs.
+
+## Concrete aggregate context preparation
+
+`ownership-constructor-types`, `/private/tmp/fwp-constructor-types-worktree`,
+OLD base `1bb11be`; checked locally, pending publication. Ownership propagation
+uses monomorphic function result, local binding, branch, aggregate field,
+dynamic-call parameter and update-field types when expression inference returns
+unknown. Known inferred types take precedence. The new result-context unit first
+failed because a later computed scalar was still evaluated inside the final
+constructor after its earlier counted field had transferred logically. Naming
+all computed consumed arguments before the operation fixes that lifetime window
+and preserves evaluation order; scalar locals have no RC slot or allocation.
+
+Fifteen RC units pass, including nested result contexts, dynamic arguments,
+update fields and owners visible during later scalar preparation. Seven focused
+constructor/boxing/temporary/retain/loop checks pass after the correction,
+CPU 25.35 s / elapsed 50.78 s. The expanded actual error test separately restores
+outer-only cleanup for a record and a variant; both controls detect the leaked
+String child (code 4). O1/O2, GC stress/verification and both poison modes pass
+with retained aliases and scalar pointer bits. Successful and handled-error
+native output matches the interpreter. Five caller tests and the loop
+trap/evaluation-order golden pass; resource outcomes are in Immediate continuation.
+Library lint, formatting and whitespace pass. All used the serial guard with
+`CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target`; the exact commands
+were `cargo test --lib rc::tests -- --nocapture`, `cargo test --test
+constructor_type_ownership --test constructor_unwind_ownership --test
+worker_boxing_ownership --test temporary_ownership --test retain_unwind_ownership
+--test loop_preparation_ownership -- --nocapture`, `cargo test --test
+compiler_call_liveness -- --nocapture`, `cargo test --test loop_ownership
+loop_goldens_keep_trap_and_evaluation_order -- --nocapture`, `cargo fmt`, and
+`cargo clippy --lib -- -D warnings`, prefixed by the same fwp local guard.
+
+No workload remains; current target contains this compiler. Constructor types
+are checked internal context, not new surface syntax. Untyped aggregate field
+bases and match scrutinees still need coverage, as do boxed-to-unboxed/vlocal
+conversion, nested-field reconstruction, SetFields fallback, CAF/inline owners,
+retained task lifetimes and cycles. Full architecture/benchmark gates are still
+required; phase 2 and later phases remain incomplete. PR #80 remains the only
+open PR. Next publish this preparation, then start conversion cleanup while its
+current-head CI runs.
