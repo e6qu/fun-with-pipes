@@ -131,6 +131,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1, 2],
         ),
+        "fold-right" => (
+            &[B, C, B],
+            ResultOwnership::OwnedAccumulator {
+                argument: 1,
+                runtime: "fold_right",
+            },
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
         "fold" => (
             &[B, C, B],
             ResultOwnership::OwnedAccumulator {

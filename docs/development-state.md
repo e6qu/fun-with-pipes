@@ -71,6 +71,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
 | ownership-filter-callbacks | fwp-filter-worktree | 1ea7f07 | 41ef82d |
 | ownership-fold-transfers | fwp-fold-worktree | a180c3f | 1ea7f07 |
+| ownership-zip-callbacks | fwp-zip-worktree | bdb750f | a180c3f |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -283,7 +284,7 @@ After filter merges, rebase fold from 1ea7f07 onto main and run its own full PR 
 ## Zip callback work in progress
 
 `ownership-zip-callbacks`, `/private/tmp/fwp-zip-worktree`, base `a180c3f`,
-is uncommitted. zip-with borrows its callback/two input lists, transfers owned
+is published at `bdb750f`, with no PR yet. zip-with borrows its callback/two input lists, transfers owned
 callback results into fresh spines and releases both scratch buffers. Direct/
 captured specialization remains; direct borrowed wrappers support arity two.
 Mixed String/I64 inputs, input/capture aliases, empty/unequal lengths and dynamic
@@ -302,3 +303,29 @@ left fold transfers argument 0; right fold transfers argument 1. Keep existing
 prefix wrappers/tests. The right fold must retain and explicitly release its
 reversible input scratch buffer, preserve right-to-left callback/trap order, and
 support empty/aliased/function accumulators. Preserve direct/captured HOF paths.
+
+After fold merges, rebase zip from a180c3f onto main and run its own full PR gate.
+
+## Right-fold ownership preparation
+
+`ownership-right-fold`, `/private/tmp/fwp-right-fold-worktree`, base `bdb750f`,
+is uncommitted under final validation. Owned argument spans support transfer of
+argument 1 while borrowing argument 0, including across overapplication chunks.
+Prefix and ordinary borrowed wrappers remain. fold-right consumes its accumulator,
+borrows callback/list, preserves direct/captured specialization and releases the
+rooted input scratch buffer. The inventory and three span/right-fold probes passed
+(CPU 11.20 s / elapsed 22.55 s). No-tracing differential: identical output/zero
+collections, counts free 1.3 versus 1.8 MiB. Twenty-six focused ownership regressions passed (CPU 52.75 s / elapsed
+105.91 s).
+Five FFI checks and the local fat baseline passed (CPU 5.55 s / elapsed
+11.19 s). Formatting/whitespace passed. Full current-head CI is still required
+after all parents merge.
+
+Current PR #75 head is 678abf6; full run 37605739266 has benchmark success and
+ARM macOS completed with a test failure; Intel macOS and Linux are still
+running. Fetch the failed log and fix the ARM failure before advancing more work. Keep checking and fixing;
+only merge waits. Root is main at af15d26 with intentional local documentation
+updates. The entire roadmap goal remains active. Next: remaining synchronous
+list boundaries, typed container elements and other constructor/result contexts;
+exact overflow counts, exceptions/retained callbacks, old-generation/WASI
+reclamation and cycle policy still precede general no-tracing execution.
