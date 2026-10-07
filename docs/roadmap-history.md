@@ -15306,3 +15306,118 @@ cargo fmt --all -- --check0.44/0.83s pass. Original exact omitted nested-child
 cleanup exit4 on both record/variant paths, aliases/scalar bits, GC stress/
 verification, reuse verification and raw interpreter/native O1/O2 agreement
 remain unchanged. Final seven exact-head production gates still remain.
+
+Preparation40 publishedd5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f on actual571422b54647b5c95eb1bfe2d13bb3edf0176e0d, FROMactuald98205af88dfc2300d19d2ca12b11a71146ded9a. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Old5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f retained at roadmap/revision-040-5ebcb2d6b0e2 before exact-lease publication. Final actual-squash source preserves both original commits; four original constructor-type/constructor-unwind/retain/worker regressions20.27CPU/40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s pass; original source/probes unchanged including exact outer-only exit4 for record/variant, aliases/scalar bits and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required
+
+Final queue40 publication1.92CPU/19.82elapsed passes all three shared audits
+(44/106/75); frozen headd5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f has both
+original commits plus an appended current-docs commit on actual squash571422b54647.
+All source/probe/production-workflow bytes remain original. Retained revision
+roadmap/revision-040-5ebcb2d6b0e2 precedes exact-lease publication. Sole production
+PR118 opens0.16CPU/3.76elapsed; exact-head CI38087199063 and docs38087199031
+are queued, not accepted support. Next delivery is41 on the eventual actual squash.
+
+## Boxed conversion machine-code evidence preparation
+
+Isolated prepared41 sourcecca935846750b6190b6a8823eb4f55d689c75c0e is preserved
+at evidence head0063d4f5f5c71ab7057b6693d8c59576271ca171. Only capture/inspection/
+evidence-workflow files and all11 current docs differ. Worktree creation
+0.03CPU/0.25elapsed, tooling AST plus shared audit0.52/3.80s (44/106/75) and
+publication0.21/3.68s pass through the unchanged guard. Original conversion
+probe/compiler/runtime/production workflows are byte-exact. CI38087378359 is
+queued, not accepted. Both platforms must execute the original overflow test
+once, retain exact original-box exit3 and remaining-caller exit7 at O1/O2,
+alias/scalar controls, GC/reuse modes and raw interpreter/native agreement.
+Tooling captures six actual binaries each, tracks active scopes after popped
+tick scopes and compiles layout drivers. No production speed/ABI/cache claim.
+Completed journal /private/tmp/fwp-conversion-layout-evidence-publication.json
+must not rerun. Current production remainsPR118 at frozend5959b7981d9.
+Deferred PR118 merge/protection and queue41 final rebase helpers parse
+(0.00CPU/0.13elapsed); their dependent actions remain unexecuted.
+
+## Obsolete accepted and duplicate preparation rows removed
+
+Removed the two remaining obsolete live handoff rows after confirming PR112
+acceptance at486520c141d3 on frozenac24ea45cbe0, all six CI38054115210 jobs
+and docs38054115151 passing. Queue34 was already verified as a docs-only
+duplicate delivered in PR107. Their immutable queue anchors and retained
+remote revisions remain untouched. Earlier rows are preserved here:
+
+| 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
+| 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
+
+Streamlined live-handoff audit passes0.53CPU/3.94elapsed through python3 scripts/local-guard.py python3 scripts/check-roadmap.py:44 link sets,106 immutable pairs/tags,73 live heads/bases. Pending evidence snapshot audits still expect their original75 rows; no snapshot is rewritten or accepted by a newer result.
+
+## Passing boxed conversion machine-code evidence
+
+CI38087378359 passes both architecture jobs at0063d4f5f5c71ab7057b6693d8c59576271ca171
+on unchanged source41 cca935846750b6190b6a8823eb4f55d689c75c0e. Original compiler/
+runtime/probes/production workflows are byte-exact; only three evidence files
+and all11 docs differ. Original conversion_overflow_releases_box_and_remaining_callers
+executes once per platform, zero ignored, retaining exact omitted original-box
+exit3 and remaining-caller exit7 for O1/O2, aliases/scalar bits, actual SIZE_MAX
+overflow, GC/reuse modes and raw interpreter/native agreement. Both docs audits
+pass44/106/75 for the uploaded snapshot; current streamlined root has73 rows.
+
+Each architecture captures six actual Mach-O binaries with verified headers,
+C hashes, flags, symbols and disassembly. Layouts agree: V8/align8, variant32/
+align8, payload offset8, cleanup24, wide entry24/count offset8. The actual
+conversion boundary has remaining-caller context11 and original-box context12,
+each8/align8, under active scopes t21 and t23. Controls remove exactly the
+corresponding scope; popped entry-tick scopes are excluded. Twelve holder-context
+definitions range8–48 bytes; they are not summed into a stack-frame claim.
+Passing-proof/artifact collection0.25CPU/7.42elapsed passes under the unchanged
+guard, no original test rerun. Artifacts are in
+/private/tmp/fwp-conversion-layout-0063d4f-artifacts and proof in
+/private/tmp/fwp-conversion-layout-passing-proof.json; completed collectors
+must not rerun. No production ABI, speed, cache or collector-free claim.
+
+arm64: Apple M1 (Virtual); Apple clang version 17.0.0 (clang-1700.0.13.5); ProductName:		macOS; ProductVersion:		15.7.9; BuildVersion:		24G830; 
+O1 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 575 (controls have the same main count; this is not a runtime count).
+O2 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 666 (controls have the same main count; this is not a runtime count).
+
+x86_64: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz; Apple clang version 17.0.0 (clang-1700.0.13.5); ProductName:		macOS; ProductVersion:		15.7.9; BuildVersion:		24G830; 
+O1 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 582 (controls have the same main count; this is not a runtime count).
+O2 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 688 (controls have the same main count; this is not a runtime count).
+
+All seven final sequential production gates and the actual squash-base rebase remain for queue41. Current production PR118 remains frozen atd5959b7981d9.
+
+## Archived handoff after PR #118
+
+Main is `571422b54647b5c95eb1bfe2d13bb3edf0176e0d` (PR #117). Accepted frozen head
+`3aeb9655d492253a9d4b01a604f1821a4edd9702` passes all six jobs in CI38081959849 and
+roadmap_docs38081959890. Match-head squash at 2026-10-10T21:14:54Z has the
+exact 59-character subject `Release partial retains and caller owners on count overflow`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`85198cc78ee7d0cb8af5d6ec30b1c42771c91748` and complete tree `5fa63ec44f134c96443adad74c6cbd1ff7c11656`,
+identical to the tested head. All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre117 and restored byte-for-byte after fast-forward.
+Merge0.22CPU/6.85elapsed, fetch0.05/1.22s, protection0.05/0.13s and
+acceptance audit0.56/4.03s pass (44 link sets,106 immutable pairs/tags,75 live
+heads/bases). Duplicate main CI38086882594 was cancelled only after complete-tree
+proof (0.04CPU/1.24elapsed); actual main docs38086882597 passes at the squash.
+Queues35–39 are accepted in PRs113–117. Multi-field typed retains now release
+completed extras on count overflow, with existing caller owners protected and
+unfinished extras excluded from the liveness checkpoint. Exact omission exits3/7,
+alias/scalar controls and raw interpreter/native agreement remain checked.
+Phase2 remains incomplete; phases3–6 are pending.
+
+[PR118](https://github.com/e6qu/fun-with-pipes/pull/118) is the sole open production
+PR, delivering queue40 constructor type context on actual PR117 squash571422b54647.
+Frozen head `d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` preserves both original
+commits, native snapshota51b9cf7ca69 and every original source/probe/workflow byte.
+Rebase0.05CPU/1.10elapsed, four native regressions20.27/40.70s, all17 RC units
+3.60/7.51s, lint2.51/5.10s and format0.44/0.83s pass. Publication1.92/19.82s
+passes all three audits (44/106/75), retaining old5ebcb2d6b0e2 before the exact
+lease; PR creation0.16/3.76s passes. CI38087199063 has Linux, both regular macOS and both GC stress jobs running;
+bench and docs38087199031 are queued at the frozen head. Require all seven passing gates before match-head squash with
+`Preserve nested constructor types for exceptional ownership cleanup` and an
+empty body. Exact outer-only cleanup exit4 for record/variant, aliases/scalar bits,
+GC/reuse modes and raw interpreter/native O1/O2 agreement remain intact.
+Next production after acceptance is queue41 variant conversion FROM actual
+prepared40 5ebcb2d6b0e2 onto PR118's eventual actual squash. Preserve both original
+commits and all original probes, then run fresh focused checks. Independent
+binary evidence stays outside production ancestry and does not replace final gates.
+
+
+Accepted queue40 in PR118 at e07b03d9d4040ad458072c4aaf401a26c79f4fb9 on 571422b54647b5c95eb1bfe2d13bb3edf0176e0d. Frozen d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f passes all six CI38087199063 jobs and docs38087199031. Raw subject 'Preserve nested constructor types for exceptional ownership cleanup (#118)' has 74 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree cb50c8e69950a2936c0f2e682b3da0edce5780a3 are verified. All11 live docs were hashed and restored byte-for-byte during fast-forward.

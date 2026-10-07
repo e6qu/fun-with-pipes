@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #117. Arrays, maps and sets own typed elements.
+The tables describe main through PR #118. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -276,7 +276,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
 | 38 | Delivered in PR116: eligible loop state stays flattened; initial boxes and completed typed field duplicates stay owned until transfer | All seven exact-head gates pass; partial field failures, cancellation slots, aliases and trap/evaluation order preserved |
 | 39 | Delivered in PR117: multi-field retains protect completed extras and existing caller owners through count overflow | All seven exact-head gates pass; unfinished references excluded, partial variant/stack retains and aliases preserved |
-| 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |
+| 40 | Delivered in PR118: monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | All seven exact-head gates pass; later-field failure, dynamic arguments, updates and exact IR types |
 | 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
 | 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
 | 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |

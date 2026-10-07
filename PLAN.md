@@ -41,7 +41,7 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#117: native macOS, selected typed container/text/callback
+Main includes #74–#118: native macOS, selected typed container/text/callback
 ownership, exact wide reference counts and immediate last-owner reclamation.
 Registered cleanup protects caller and reuse-token references, runtime application
 and captures, and map/selection/zip/fold unwind. Loop state and Step owners
@@ -50,8 +50,9 @@ Constructor fields, worker results and boxed-to-worker arguments remain protecte
 until transfer. Flattened loop preparation protects the original box and each
 completed field duplicate. Original allocation and semantic controls remain intact.
 
-Queues35–39 are accepted; queue34 is a verified duplicate already delivered in
-#107. Multi-field retain overflow cleanup is merged. Deliver queue40 constructor type context on the actual PR117 squash, then continue the remaining ownership queue. Exact heads, checks and
+Queues35–40 are accepted; queue34 is a verified duplicate already delivered in
+#107. Multi-field retain overflow cleanup is merged. Nested constructor ownership is merged. Deliver queue41 variant conversion on
+the actual PR118 squash, then continue the remaining ownership queue. Exact heads, checks and
 the sole next action are in [the handoff](docs/development-state.md); prior
 platform evidence and repaired controls are in [history](docs/roadmap-history.md).
 

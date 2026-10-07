@@ -65,7 +65,7 @@ calls, later-argument failures and cancelled entry ticks. Consumed constructor
 fields stay protected before allocation; worker result fields and remaining
 caller references stay protected until record/variant boxing succeeds. Worker
 argument preparation now protects original boxed arguments and each completed
-field duplicate until worker transfer. Multi-field retain cleanup now releases completed extras on count overflow and protects existing caller owners before duplication. Wider callback registration remains prepared.
+field duplicate until worker transfer. Multi-field retain cleanup now releases completed extras on count overflow and protects existing caller owners before duplication. Nested constructor temporaries now inherit known monomorphic context for typed child cleanup; expression-inferred types remain authoritative. Wider callback registration remains prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
