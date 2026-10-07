@@ -1248,6 +1248,24 @@ impl<'p> Gen<'p> {
                     elements = format!("        for (uint64_t i = 0; i < ARR(v)->len; i++) fwp_drop{child}(ARR(v)->d[i]);\n");
                 }
             }
+            if let MT::Con(name, types) = mt {
+                if (name == "std::Map" && types.len() == 2)
+                    || (name == "std::Set" && types.len() == 1)
+                {
+                    let mut fields = String::new();
+                    for (i, ty) in types.iter().enumerate() {
+                        if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                            let child = self.drop_id(ty);
+                            let _ = write!(fields, " fwp_drop{child}(MAP(v)->d[2 * i + {i}]);");
+                        }
+                    }
+                    if !fields.is_empty() {
+                        elements = format!(
+                            "        for (uint64_t i = 0; i < MAP(v)->len; i++) {{{fields} }}\n"
+                        );
+                    }
+                }
+            }
             return format!(
                 "{head}{elements}        fwp_rc_free_arr(v);\n        return;\n    }}\n}}\n"
             );
@@ -3442,6 +3460,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
             m = xs[1],
             at = at
         ));
+        let value_type = match &f.locals[1] {
+            MT::Con(name, fields) if name == "std::Map" && fields.len() == 2 => {
+                Some(fields[1].clone())
+            }
+            _ => None,
+        };
+        let owned_value = self.g.reuse
+            && value_type
+                .as_ref()
+                .is_some_and(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty));
+        if owned_value {
+            self.line(&format!("if ({found}) fwp_rc_dup({v});"));
+        }
         let r = self.fresh();
         self.line(&format!("V {};", r));
         self.label += 1;
@@ -3468,6 +3499,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         self.line("fwp_trap(\"internal: no match arm applies\");");
         self.line(&format!("{}:;", done));
+        if owned_value {
+            self.line(&format!("FWP_KEEP_ALIVE({v});"));
+            let drop = self
+                .typed_drop(value_type.as_ref().unwrap())
+                .unwrap_or_else(|| "fwp_rc_drop".into());
+            self.line(&format!("if ({found}) {drop}({v});"));
+        }
         Some(r)
     }
 
@@ -4589,6 +4627,80 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     let _ = write!(s, " fwp_rc_dup({stop});");
                                 }
                                 s.push_str(" return result;");
+                            }
+                            ResultOwnership::MapOperation { .. } => {
+                                let map =
+                                    if matches!(sym.as_str(), "map.from-list" | "set.from-list") {
+                                        func.ty.params(func.arity as usize).1.clone()
+                                    } else {
+                                        func.locals[func.arity as usize - 1].clone()
+                                    };
+                                let MT::Con(name, types) = &map else {
+                                    return Err(format!("typed map `{sym}` has a non-map type"));
+                                };
+                                let value = if name == "std::Set" && types.len() == 1 {
+                                    MT::unit()
+                                } else if name == "std::Map" && types.len() == 2 {
+                                    types[1].clone()
+                                } else {
+                                    return Err(format!(
+                                        "typed map `{sym}` has unsupported fields"
+                                    ));
+                                };
+                                let key = &types[0];
+                                let duplicate = |ty: &MT| {
+                                    if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                                        "fwp_rc_dup"
+                                    } else {
+                                        "NULL"
+                                    }
+                                };
+                                let dk = duplicate(key);
+                                let dv = duplicate(&value);
+                                let drop_key = if free_enabled()
+                                    && crate::rc::needs_rc(&self.prog.shapes, key)
+                                {
+                                    format!("fwp_drop{}", self.drop_id(key))
+                                } else {
+                                    "NULL".into()
+                                };
+                                let drop_value = if free_enabled()
+                                    && crate::rc::needs_rc(&self.prog.shapes, &value)
+                                {
+                                    format!("fwp_drop{}", self.drop_id(&value))
+                                } else {
+                                    "NULL".into()
+                                };
+                                let drop_map = if free_enabled() {
+                                    format!("fwp_drop{}", self.drop_id(&map))
+                                } else {
+                                    "fwp_rc_drop".into()
+                                };
+                                let ops = format!("&(const fwp_map_ops){{{dk}, {dv}, {drop_key}, {drop_value}, {drop_map}}}");
+                                let mut args: Vec<String> =
+                                    (0..func.arity).map(|i| format!("l{i}")).collect();
+                                args.push(ops);
+                                if matches!(
+                                    sym.as_str(),
+                                    "map.insert"
+                                        | "map.get"
+                                        | "map.remove"
+                                        | "map.update"
+                                        | "map.from-list"
+                                        | "set.insert"
+                                        | "set.remove"
+                                        | "set.from-list"
+                                        | "set.union"
+                                        | "set.intersect"
+                                        | "set.diff"
+                                ) {
+                                    args.push(self.desc(key));
+                                }
+                                s = format!(
+                                    "return fwp_p_{}_typed({});",
+                                    sym.replace(['.', '-'], "_"),
+                                    args.join(", ")
+                                );
                             }
                             ResultOwnership::ArrayOperation { .. } => {
                                 let mut args: Vec<String> =

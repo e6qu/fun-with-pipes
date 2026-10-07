@@ -43,8 +43,8 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 Main includes #74–#98: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native
 wide counts. PR98 merged after all six exact-head gates passed, including its
-CLI and tracing-fixture repairs. Next delivery is queue21 array ownership;
-final rebase and focused checks pass; publication precedes six fresh gates. Exact heads, commands,
+CLI and tracing-fixture repairs. PR99 delivers queue21 array ownership;
+final rebase and focused checks pass; six fresh gates are pending. Exact heads, commands,
 failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

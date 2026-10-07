@@ -34,7 +34,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `de969ee71615` | `fad9b1ad08f6` | `c05a5d9c7d86` |
-| 21 | array-element | `ownership-array-elements` | `c8d4b57092e5` | `636414fabf18` | `fad9b1ad08f6` |
+| 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `f4716a027a1b` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `cde58f461f78` | `02beec353ec7` | `6774aa5bb426` |
@@ -120,6 +120,9 @@ resolve full hashes before publication or merge. Checkout paths use
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `b244d5f7c423` | `b244d5f7c423` | `c48864ce7231` |
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `7a89dd017ae4` | `7a89dd017ae4` | `cb20833c018f` |
+| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `ea18e54f0eee` | `ea18e54f0eee` | `7a89dd017ae4` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
+| 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `d178d86dca2b` | `d178d86dca2b` | `36ad63424530` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

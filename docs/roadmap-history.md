@@ -10401,3 +10401,66 @@ workflows unchanged from published c8d4b570. Guarded package clean passes
 passes all three tests 14.57 / 29.32 s; focused clippy with `-D warnings` passes
 2.44 / 4.83 s; `cargo fmt --check` passes 0.33 / 0.60 s.
 Full exact-head acceptance remains pending publication and CI.
+
+Row107 published at ea18e54f0eeeee5ec470d44e770d31d3f42456af on actual
+7a89dd017ae49f1a7deae49745e15ee807f46b2d. Tests7.45 / 16.78 s,
+lint2.68 / 5.39 s and format0.45 / 0.83 s pass. No competing PR.
+PR99 exact dc85b679407a7adda1438989051ca7eaf70072e5 starts CI37945913789.
+
+## Response metadata capture ownership preparation, 2026-10-09
+
+Row108 ownership-grpc-capture-resources starts on actual ea18e54f0eeeee5ec470d44e770d31d3f42456af,
+/private/tmp/fwp-grpc-capture-resources-worktree. Old normal callback return
+freed capture headers while inherited child contexts could still refer to them;
+typed/raw/cancel exits also lacked constructor cleanup. Constructor, scope and
+original task owners now release on last use, including failed task preparation.
+Returned metadata remains an immutable snapshot; nested forwarding preserves order.
+TLS/capture overflow validates both before incrementing either; new TLS copies
+have constructor cleanup when inherited capture acquisition traps. Existing TLS
+fixture restores two owners (constructor/scope), preserving its omission checks.
+Interpreter src/grpc.rs uses Rc capture and cloned metadata snapshots; generated
+fixture verifies corresponding native lifetimes. Full interpreter/native gRPC
+suite stays in sequential CI; no local full-gate claim. Guarded clean passes
+0.05 / 0.38 s; three capture/resources/restore tests pass11.62 / 25.50 s;
+added combined-counter/constructor rollback test passes2.08 / 5.20 s. Initial
+lint passes2.47 / 4.96 s, final lint0.07 / 0.26 s; format applications
+0.40 / 0.74 s and0.47 / 0.62 s pass. Final format0.46 / 0.86 s passes; publication follows.
+
+Row108 published at36ad634245301b069a141faec54ba7aec7a58d28 on actual
+ea18e54f0eeeee5ec470d44e770d31d3f42456af. No competing PR.
+
+## Complete TLS pool identity preparation, 2026-10-09
+
+Row109 fix-grpc-tls-pool-identity starts on actual36ad634245301b069a141faec54ba7aec7a58d28,
+/private/tmp/fwp-grpc-tls-pool-identity-worktree. Old g_strdupf serialized
+options with ambiguous separators through1024 bytes, allowing different
+TLS settings to select one pooled connection. Checked length-framed binary
+keys include all four strings and the verification flag without truncation.
+Connections copy complete bytes/length independently of scoped options;
+field semantics match interpreter pool identity. No performance claim or
+allocation reduction yet; packed storage is a separate audit. Guarded
+clean0.00 / 0.13 s and format0.46 / 0.87 s pass. Initial four-test run
+16.24 / 33.57 s passes capture/context/startup, but new identity fixture
+fails before C execution due to a startup injection needle missing spaces.
+Corrected identity passes1.15 / 3.31 s with old-encoding rejection, delimiter
+collision and every-field checks,4096-byte names, actual loopback construction
+and pool reuse after source options release. Matching exact interpreter unit
+passes5.51 / 11.41 s. Initial lint2.56 / 5.17 s and later format application
+0.52 / 0.84 s pass; final lint/format precede publication.
+
+Row109 final focused lint2.62 / 5.42 s and format0.52 / 1.07 s pass.
+Duplicate post-merge main CI37944119691 cancellation requested after verifying
+source/runtime/tests/workflows equal PR98 all-six-accepted de969ee. PR99
+current six gates remain required; no cancelled-run acceptance.
+
+## Map/set pre-delivery refresh and local resource refusal
+
+Row22 rebased from actual443524ef6b6d5183f010899902a94a9d53c5dc55 onto active
+array PR99 dc85b679407a7adda1438989051ca7eaf70072e5. Ten authoritative docs
+were preserved at/private/tmp/fwp-docs-before-map22-refresh and used to resolve
+only historical doc conflicts. Runtime/compiler/tests/workflows match prior
+1689c03 apart from inherited CLI/GC repairs. Guarded `cargo clean -p fwp`
+refuses before execution: less than64 GiB free disk. Read-only observation
+64840628 KiB free (61.84 GiB), target142264 KiB (138.93 MiB). No fresh local
+check or changed limit; focused map validation moves to separate GitHub evidence.
+Duplicate main CI37944119691 is confirmed cancelled; not current PR acceptance.
