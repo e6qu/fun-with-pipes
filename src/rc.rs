@@ -139,10 +139,18 @@ impl Pass<'_> {
     /// counted local `e` reads that is not in `borrowed`), with the locals
     /// in `borrowed` alive throughout. Returns an owned value.
     fn conv(&mut self, e: &Expr, owned: &Set, borrowed: &Set) -> Expr {
+        self.conv_typed(e, owned, borrowed, &self.ty(e))
+    }
+
+    /// Carry monomorphic context into constructor fields when IR omits their
+    /// nominal type. Expression-inferred types remain authoritative.
+    fn conv_typed(&mut self, e: &Expr, owned: &Set, borrowed: &Set, expected: &MT) -> Expr {
+        let known = self.ty(e);
+        let ty = if known == unknown() { expected } else { &known };
         let fv = self.free(e);
         let dead: Vec<Local> = owned.difference(&fv).copied().collect();
         let owned: Set = owned.intersection(&fv).copied().collect();
-        let out = self.exact(e, &owned, borrowed);
+        let out = self.exact(e, &owned, borrowed, ty);
         dead.into_iter()
             .rev()
             .fold(out, |b, l| Expr::Drop(l, Box::new(b)))
@@ -157,7 +165,7 @@ impl Pass<'_> {
         }
     }
 
-    fn exact(&mut self, e: &Expr, owned: &Set, borrowed: &Set) -> Expr {
+    fn exact(&mut self, e: &Expr, owned: &Set, borrowed: &Set, expected: &MT) -> Expr {
         match e {
             Expr::Local(l) => self.take(*l, owned),
             Expr::Const(_) | Expr::Func(_) => e.clone(),
@@ -200,19 +208,32 @@ impl Pass<'_> {
             Expr::Construct(tag, args) => {
                 let modes = vec![Mode::Consume; args.len()];
                 let tag = *tag;
-                self.seq(args, &modes, owned, borrowed, move |xs| {
+                let fields = match self.shapes.get(expected) {
+                    Some(TypeShape::Adt(vs)) => vs
+                        .get(tag as usize)
+                        .map(|(_, fs)| fs.clone())
+                        .unwrap_or_default(),
+                    _ => Vec::new(),
+                };
+                self.seq_typed(args, &modes, &fields, owned, borrowed, move |xs| {
                     Expr::Construct(tag, xs)
                 })
             }
             Expr::Record(args) => {
                 let modes = vec![Mode::Consume; args.len()];
-                self.seq(args, &modes, owned, borrowed, Expr::Record)
+                let fields = record_fields(self.shapes, expected)
+                    .map(|fs| fs.iter().map(|(_, ty)| ty.clone()).collect::<Vec<_>>())
+                    .unwrap_or_default();
+                self.seq_typed(args, &modes, &fields, owned, borrowed, Expr::Record)
             }
             Expr::Apply(f, args) => {
                 let mut parts = vec![(**f).clone()];
                 parts.extend(args.iter().cloned());
                 let modes = vec![Mode::Consume; parts.len()];
-                self.seq(&parts, &modes, owned, borrowed, |mut xs| {
+                let ft = self.ty(f);
+                let mut types = vec![ft.clone()];
+                types.extend(ft.params(args.len()).0.into_iter().cloned());
+                self.seq_typed(&parts, &modes, &types, owned, borrowed, |mut xs| {
                     let f = xs.remove(0);
                     Expr::Apply(Box::new(f), xs)
                 })
@@ -225,7 +246,21 @@ impl Pass<'_> {
                 let mut modes = vec![Mode::Consume; parts.len()];
                 modes[0] = Mode::Borrow;
                 let idx: Vec<u32> = sets.iter().map(|(i, _)| *i).collect();
-                self.seq(&parts, &modes, owned, borrowed, move |mut xs| {
+                let base = self.ty(r);
+                let base = if base == unknown() {
+                    expected.clone()
+                } else {
+                    base
+                };
+                let fields = record_fields(self.shapes, &base);
+                let mut types = vec![base.clone()];
+                types.extend(idx.iter().map(|i| {
+                    fields
+                        .and_then(|fs| fs.get(*i as usize))
+                        .map(|(_, ty)| ty.clone())
+                        .unwrap_or_else(unknown)
+                }));
+                self.seq_typed(&parts, &modes, &types, owned, borrowed, move |mut xs| {
                     let r = xs.remove(0);
                     Expr::SetFields(Box::new(r), idx.iter().copied().zip(xs).collect())
                 })
@@ -263,12 +298,13 @@ impl Pass<'_> {
                 let vo: Set = owned.difference(&fb).copied().collect();
                 let mut vb = borrowed.clone();
                 vb.extend(owned.intersection(&fb));
-                let v = self.conv(v, &vo, &vb);
+                let local_ty = self.locals[*x as usize].clone();
+                let v = self.conv_typed(v, &vo, &vb, &local_ty);
                 let mut bo: Set = owned.intersection(&fb).copied().collect();
                 if self.counted(*x) {
                     bo.insert(*x);
                 }
-                let b = self.conv(b, &bo, borrowed);
+                let b = self.conv_typed(b, &bo, borrowed, expected);
                 Expr::Let(*x, Box::new(v), Box::new(b))
             }
             Expr::Match(s, arms) => {
@@ -308,7 +344,7 @@ impl Pass<'_> {
                         };
                         let mut o = ao.clone();
                         o.extend(used.iter().copied());
-                        let body = self.conv(b, &o, borrowed);
+                        let body = self.conv_typed(b, &o, borrowed, expected);
                         let body = used
                             .iter()
                             .rev()
@@ -331,19 +367,8 @@ impl Pass<'_> {
     /// after `build` when this was its last use and it is owned); any
     /// other part becomes an owned value. A local several parts use is
     /// owned by the last of them and borrowed by the others.
-    fn seq(
-        &mut self,
-        parts: &[Expr],
-        modes: &[Mode],
-        owned: &Set,
-        borrowed: &Set,
-        build: impl FnOnce(Vec<Expr>) -> Expr,
-    ) -> Expr {
-        self.seq_typed(parts, modes, &[], owned, borrowed, build)
-    }
-
-    /// A call supplies the concrete parameter type when a constructor has
-    /// no standalone type in IR. Keep that type on ownership temporaries so
+    /// Monomorphic parameter/field context supplies a constructor's type
+    /// when IR has no standalone type. Keep it on ownership temporaries so
     /// their children are released by type, rather than by an unknown count.
     fn seq_typed(
         &mut self,
@@ -428,7 +453,7 @@ impl Pass<'_> {
                 // computed in place, unless a later part is bound before
                 // the operation (then bound too, in order)
                 (Mode::Borrow, p) if uncounted[i] => {
-                    let v = self.conv(p, &mine, &theirs);
+                    let v = self.conv_typed(p, &mine, &theirs, &types[i]);
                     if last_bound.is_none_or(|j| i > j) {
                         xs.push(v);
                     } else {
@@ -440,7 +465,7 @@ impl Pass<'_> {
                 (Mode::Borrow, p) => {
                     // an owned temporary, dropped after the call
                     let t = types[i].clone();
-                    let v = self.conv(p, &mine, &theirs);
+                    let v = self.conv_typed(p, &mine, &theirs, &types[i]);
                     let tl = self.fresh(t);
                     binds.push((tl, v));
                     if self.counted(tl) {
@@ -449,7 +474,7 @@ impl Pass<'_> {
                     xs.push(Expr::Local(tl));
                 }
                 (Mode::Consume, p) => {
-                    let v = self.conv(p, &mine, &theirs);
+                    let v = self.conv_typed(p, &mine, &theirs, &types[i]);
                     if inline(&v)
                         || ((uncounted[i] || i + 1 == parts.len())
                             && last_bound.is_none_or(|j| i > j))
@@ -560,7 +585,8 @@ pub fn insert(prog: &Program) -> Vec<Option<(Expr, Vec<MT>)>> {
                 locals: f.locals.clone(),
             };
             let params: Set = (0..f.arity).filter(|l| p.counted(*l)).collect();
-            let body = p.conv(e, &params, &Set::new());
+            let result = f.ty.params(f.arity as usize).1.clone();
+            let body = p.conv_typed(e, &params, &Set::new(), &result);
             Some((body, p.locals))
         })
         .collect()
@@ -1025,6 +1051,94 @@ mod tests {
         assert_eq!(second.at_entry.len(), 2); // input plus the first produced value
         assert_eq!(second.at_entry[0], (0, 1));
         assert_eq!(second.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn nested_constructor_temporaries_inherit_the_function_result_shape() {
+        let inner = MT::con("Inner");
+        let outer = MT::con("Outer");
+        let string = MT::con("std::String");
+        let i64 = MT::con("std::I64");
+        let body = Expr::Construct(
+            0,
+            vec![
+                Expr::Construct(0, vec![Expr::Local(0)]),
+                Expr::Call(1, vec![Expr::Const(Value::I64(0))]),
+            ],
+        );
+        let mut p = prog(vec![string.clone()], vec![], body);
+        p.shapes.insert(
+            inner.clone(),
+            TypeShape::Adt(vec![("Leaf".into(), vec![string.clone()])]),
+        );
+        p.shapes.insert(
+            outer.clone(),
+            TypeShape::Adt(vec![("Pair".into(), vec![inner.clone(), i64.clone()])]),
+        );
+        p.funcs[0].ty = MT::Fun(Box::new(string), Box::new(outer));
+        p.funcs.push(Func {
+            name: "guard".into(),
+            arity: 1,
+            locals: vec![i64.clone()],
+            ty: MT::Fun(Box::new(i64.clone()), Box::new(i64)),
+            body: Body::Prim("probe.guard".into()),
+        });
+        let (body, locals) = counted(&p);
+        assert!(locals.contains(&inner));
+        assert!(
+            !locals.contains(&unknown()),
+            "untyped constructor temporary: {locals:?}"
+        );
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        assert!(calls
+            .values()
+            .any(|c| c.at_entry.iter().any(|(l, _)| locals[*l as usize] == inner)));
+    }
+
+    #[test]
+    fn dynamic_arguments_and_updates_keep_nested_constructor_types() {
+        let inner = MT::con("Inner");
+        let string = MT::con("std::String");
+        let i64 = MT::con("std::I64");
+        let ft = MT::Fun(
+            Box::new(inner.clone()),
+            Box::new(MT::Fun(Box::new(i64.clone()), Box::new(inner.clone()))),
+        );
+        let body = Expr::Apply(
+            Box::new(Expr::Local(0)),
+            vec![
+                Expr::Construct(0, vec![Expr::Local(1)]),
+                Expr::Const(Value::I64(1)),
+            ],
+        );
+        let mut p = prog(vec![ft.clone(), string.clone()], vec![], body);
+        p.shapes.insert(
+            inner.clone(),
+            TypeShape::Adt(vec![("Leaf".into(), vec![string.clone()])]),
+        );
+        p.funcs[0].ty = MT::Fun(
+            Box::new(ft),
+            Box::new(MT::Fun(Box::new(string.clone()), Box::new(inner.clone()))),
+        );
+        let (_, locals) = counted(&p);
+        assert!(locals.contains(&inner));
+        assert!(!locals.contains(&unknown()));
+        let record = MT::Record(vec![
+            ("payload".into(), inner.clone()),
+            ("word".into(), i64),
+        ]);
+        p.funcs[0].locals = vec![record.clone(), string.clone()];
+        p.funcs[0].ty = MT::Fun(
+            Box::new(record.clone()),
+            Box::new(MT::Fun(Box::new(string), Box::new(record))),
+        );
+        p.funcs[0].body = Body::Expr(Expr::SetFields(
+            Box::new(Expr::Local(0)),
+            vec![(0, Expr::Construct(0, vec![Expr::Local(1)]))],
+        ));
+        let (_, locals) = counted(&p);
+        assert!(locals.contains(&inner));
+        assert!(!locals.contains(&unknown()));
     }
 
     #[test]
