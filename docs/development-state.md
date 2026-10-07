@@ -49,7 +49,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   checkout clean. Seven closure/leaf/text checks, eight IR checks, inventory,
   fmt and whitespace pass. Guarded closure/leaf/text CPU 18.07 s / elapsed
   36.49 s. Full [CI 37656822169](https://github.com/e6qu/fun-with-pipes/actions/runs/37656822169)
-  has passed benchmarks; Linux and both macOS test jobs are running. Require all four exact-head gates before squash with subject
+  has passed benchmarks and Apple Silicon macOS; Linux and Intel tests are running. Require all four exact-head gates before squash with subject
   `Own compiled dynamic closures and release typed captures` and empty body.
   The closure-cleanup child later rebases from OLD `0d96bfe`, not this new head.
 - Published runtime unwind change: `ownership-unwind-runtime`, checkout
@@ -94,7 +94,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   Full gates remain
   required when its sequential PR opens. Phase 2 remains incomplete.
 - Current runtime implementation: `/private/tmp/fwp-runtime-call-worktree`,
-  `ownership-runtime-call-cleanup`, OLD base `7392f2d`, uncommitted.
+  `ownership-runtime-call-cleanup`, OLD base `7392f2d`, published as
+  `bee3f1659ae5e09be04052126f0e0b637fa9049d`. No additional PR is open.
   Protects consumed functions during dynamic application, typed pending arguments
   along the complete arrow spine, and primitive/FFI borrowed arguments normally
   dropped after return. Dynamic stack applications also protect their original
@@ -115,6 +116,25 @@ immutable value semantics, effects and evaluation/trap order stable.
   Next cover callback accumulators, retained tasks, allocation/boxing failures,
   CAF ownership and inline rewrites. Phase 2 and collector-free support remain
   incomplete.
+- Current map cleanup: `/private/tmp/fwp-map-unwind-worktree`, branch
+  `ownership-map-unwind`, OLD base `bee3f16`, uncommitted.
+  Typed scopes own only the completed result prefix; scratch suffix words borrow
+  source elements. List construction transfers each prefix element into a typed
+  partial spine. Errors, recovered traps and cancellation release prefix, built
+  nodes and scratch exactly once. Dynamic, direct and captured callback paths use
+  the same scope; pure programs omit registration.
+  Normal map alias/counter tests pass (CPU 10.64 s / elapsed 21.67 s). The initial
+  callback/trap/cancellation probe passes at O1/O2 with stress/verification and
+  both poison modes (CPU 3.34 s / elapsed 6.92 s). Its cancellation hook first
+  referenced task declarations before their runtime include; moved the test hook
+  definition after that include and reran successfully. Final two dedicated
+  checks pass (CPU 4.66 s / elapsed 9.57 s), including scalar address bits.
+  Library clippy passes without warnings (CPU 2.24 s / elapsed 4.50 s);
+  formatting and whitespace pass. Five adjacent runtime call checks pass
+  (CPU 7.93 s / elapsed 16.13 s). Full gates remain
+  for the future sequential PR. Next: typed filter/take-while/zip prefixes and
+  scratch, fold/loop accumulators, retained tasks and the remaining allocator/
+  boxing, CAF and inline-rewrite ownership gaps. Phase 2 remains incomplete.
 - Shared local Cargo target caveat: switching worktrees can reuse a CLI built
   from newer-mtime sources in another checkout. Before compiling after a switch,
   serial guarded `cargo clean -p fwp` forces the correct package rebuild without
@@ -175,6 +195,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-unwind-runtime | fwp-unwind-runtime-worktree | 3e31422 | 02beec3 |
 | ownership-reuse-tokens | fwp-unwind-liveness-worktree | 33cf864 | 3e31422 |
 | ownership-call-liveness | fwp-call-liveness-worktree | 7392f2d | 33cf864 |
+| ownership-runtime-call-cleanup | fwp-runtime-call-worktree | bee3f16 | 7392f2d |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.

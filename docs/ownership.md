@@ -408,3 +408,23 @@ reclamation, not elapsed performance or complete collector-free support. Full
 architecture gates remain for this branch's sequential PR. Callback accumulators,
 retained task lifetimes, allocator/boxing failures, CAF ownership and inline
 rewrites still require coverage.
+
+
+## Prepared map accumulator cleanup
+
+Synchronous map owns only its completed callback-result prefix. The untouched
+scratch suffix borrows the original list; unwinding must never drop these borrowed
+words. Typed cleanup releases completed results and scratch. As result nodes are
+built in reverse order, each element transfers into the partial list before the
+next allocation; the cleanup scope owns the residual prefix and this partial
+spine separately. This covers later callback errors, recovered construction traps
+and cancellation, including dynamic, direct and captured specializations.
+Normal return transfers the finished list and releases scratch. Pure programs
+omit cleanup registration. Scalar result words need no child drops.
+
+Focused checks compare interpreter/native behavior and actual generated cleanup
+at O1/O2 with collection stress/verification and reuse poisoning. They preserve
+an external input alias while inspecting immediate result/scratch reclamation,
+including cancellation after a completed result and a trap after the first node
+has been built. Full sequential CI remains required. Filter/take-while/zip
+prefixes, fold/loop accumulators and retained task lifetimes remain separate work.

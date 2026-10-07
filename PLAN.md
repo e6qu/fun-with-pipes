@@ -492,3 +492,11 @@ are prioritized in the active roadmap above:
 ## Later
 
 See [Not implemented](docs/design.md#not-implemented).
+
+
+Prepared runtime application cleanup releases consumed functions, typed pending
+arguments, primitive-entry borrows and dynamic stack captures on nonlocal exits.
+Focused generated-code probes and a tracing-disabled counter comparison pass.
+Map prefix/scratch/partial-spine cleanup is the next separate implementation;
+full sequential CI remains required. Finish the other callback accumulators and
+retained task lifetimes before closing phase 2.
