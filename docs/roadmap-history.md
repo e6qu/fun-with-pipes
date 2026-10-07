@@ -14006,3 +14006,17 @@ target is worker_boxing_ownership, with no assertions or source changes.
 Worker36 corrected four-target lint2.46CPU/5.05elapsed and format0.41/0.60s pass.
 Original eight-test result and all code/probes remain unchanged. Documentation
 publication follows; prepared checks do not replace final exact-head full gates.
+
+Worker36 publishedbcd3b392050b30163256ad72610046a15e691dfe on actualbbd74db2977a after audit0.52CPU/3.90elapsed.
+Prior e171da5957fd retained remotely; exact lease used. Both original feature and
+documentation commit preserved; all native/probe/workflow bytes unchanged.
+
+HTTP2 reserve-frame candidate346d2cc695345faf1bfe1771ee0c4c40724aa83b,
+CI38045956375: Intel/ARM/GCC pass, Linux Clang still fails the unchanged strict
+omission with exit0 instead of1; all positive and other resource controls pass.
+Reserve-frame hypothesis did not repair it. Add optional exact negative C export
+and actual O2 assembly artifacts; assertions/runtime/compiler unchanged.
+Intel original golden context diagnosticc938d08175975904ef3889731319a3561c7635e7,
+CI38046238343 is running after audit0.50CPU/3.80elapsed. Source/probes unchanged;
+compiler wrapper retains only the exact effects input and output, and invokes
+/usr/bin/clang with unchanged arguments. Full original snapshots remain strict.

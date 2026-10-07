@@ -59,7 +59,9 @@ ARM sanitizer output agrees except for its captured ASan no-return stack warning
 that diagnostic job fails the byte comparison, not a reported memory error.
 Original Intel full-suite crash remains unresolved. Test independently generated
 C/binaries next; preserve any failing source, binary and optimized assembly.
-Fresh diagnostic75f311323722 / CI38045910841 is queued; no passing claim.
+Fresh diagnostic75f311323722 / CI38045910841 is running; no passing claim.
+Original full golden context diagnosticc938d0817597 / CI38046238343 is running
+on Intel with exact compiler input/binary capture and macOS crash reports.
 Freeze this head except for real repairs. Require all seven gates before squash
 with subject `Release zip callback results and both scratch buffers on nonlocal exits`
 and explicit empty body. Verify raw message/tree, protect all 11 live docs and
@@ -92,7 +94,9 @@ payload, finalizer and all exact positive/negative assertions remain intact.
 Four-way evidence must pass on Linux GCC/Clang and macOS ARM/Intel Clang before
 publishing source89 and propagating90–112. No candidate is accepted yet. A new x86-only experiment reserves the actual
 frame pointer to exclude RBP as an uncleared heap register. Published candidate
-346d2cc69534 / four-way CI38045956375 is queued; no acceptance yet.
+346d2cc69534 / four-way CI38045956375 passes Intel/ARM/GCC but still
+fails the Linux Clang strict omission. Reserve-frame inference did not repair
+it. Capture the actual Linux generated C and O2 assembly before the next change.
 Evidence branch: ownership-evidence-http2-intel. Assembly diagnostic578830243e16/
 38022478422 and rejected candidates are archived in history. Run full source112
 production-equivalent evidence only after both repairs are present.
@@ -117,7 +121,7 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
-| 36 ownership-worker-boxing | 2a9293881eab | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; docs publication follows; final actual-squash rebase/full gates required |
+| 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
 | 37 ownership-worker-preparation | ba9f0f293ac8 | e171da5957fd | Three tests 15.91/31.88s; lint 2.33/4.78s, format 0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests 16.61/33.35s; lint 2.26/4.59s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests 16.18/32.57s; exact retain unit3.33/7.00s, lint 2.40/4.91s, format 0.35/0.75s and strong audit pass |
