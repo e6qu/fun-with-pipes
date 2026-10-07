@@ -11087,3 +11087,12 @@ observers are inherited. Guarded clean0.00/0.14s, native constructor allocation
 failure10.06/20.35s, exact rc::tests::constructors_transfer_fields_and_keep_other_caller_owners
 3.38/7.11s, clippy2.44/4.84s and format0.46/0.74s pass. The original published
 current646cca038ed8 is retained under immutable revision tag before lease publication.
+
+## Worker result boxing refresh
+
+Row36 6032ecffcb7d8c1e663cd18bc73657bb77eae235 has actual base82f58d851b73.
+Source/runtime match the original preparation, with inherited harness repairs.
+Guarded clean0.00/0.13s, native worker boxing failure10.21/20.62s, clippy2.42/4.87s
+and format0.35/0.62s pass. Old currentdf5862861e71 was retained under its
+immutable revision tag before explicit-lease publication. Row37 refresh3bd34dafb62f
+uses actual6032ecff; its focused checks are still running.
