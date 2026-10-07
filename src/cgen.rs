@@ -2454,6 +2454,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 parts(&t)
             }
             Expr::Let(l, v, b) => {
+                // A returned alias transfers the existing field owners. Boxing
+                // it would retain an extra set whose original has been consumed.
+                if variant_uses(b, *l, true) {
+                    if let Expr::Local(source) = &**v {
+                        if let Some(value) = self.vlocals.get(source).cloned() {
+                            self.vlocals.insert(*l, value);
+                            return self.expr_variant(b, m, ty);
+                        }
+                    }
+                }
                 let local_ty = self.locals[*l as usize].clone();
                 if self.unboxed_variant(v, &local_ty) == Some(m) && variant_uses(b, *l, true) {
                     let (tag, fields) = self.expr_variant(v, m, &local_ty);
