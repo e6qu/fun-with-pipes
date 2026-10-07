@@ -81,9 +81,17 @@ state flattening is lost when Again holds an inline Let/Record spine; two
 new IR controls select arbitrary HashMap entries after constructor recording
 is added. Preserve their exact owner assertions while selecting pending calls.
 Normalization and observer repair527f84d405b77ad33b27f9a4cf7981259e1c11e9
-is published at33 on actual32c434692ccb6f; olde838 is retained remotely. Next propagate
-through34–49 with explicit call selection at35, then refresh combined41
-evidence before continuing50–112. The loop observer must read actual
+is published at33 on actual32c434692ccb6f; olde838 is retained remotely. Rows34–41 now inherit the loop repair and exact call-selection correction
+at35. Reviewed38 conflict preserves its initial-field protection and the
+representation-aware observer. Guarded refresh stops4.23CPU/46.91elapsed at
+that conflict, then docs continuation0.00/0.14s and exact-source resume
+4.27/49.20s pass. Current41 is172912b7b1c66e3d6e50a60090b8b7559ffc4ffa.
+Its three loop cleanup/preparation tests pass13.79CPU/27.69elapsed and all18
+IR tests pass3.33/7.13s. Fresh evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5
+runsCI38008988824 on actualsource172912b, with compiler/runtime/tests/scripts
+and production workflows byte-identical. Retained failed0bb9762 under
+roadmap/evidence-conversion-0bb9762dd41b before exact leased publication.
+Strong audit0.42CPU/3.49elapsed passes. Next refresh42–112. The loop observer must read actual
 counted-owner layout: flattened string owners are not boxed records. All
 scalar-bit, alias, finalizer and exact release assertions remain unchanged.
 Row33 both loop checks pass10.45CPU/20.96elapsed on the local repair.
@@ -140,7 +148,7 @@ still need their final squash rebases and six exact-head full gates.
 | 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
-| 41 ownership-variant-conversion | a59952364e22 | 1654263ed38e | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
+| 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 5522a2ceb038 | a59952364e22 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
 | 43 ownership-record-conversion | 1ea65661b77d | 5522a2ceb038 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
 | 44 ownership-variant-alias | 36e970682a29 | 1ea65661b77d | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
@@ -281,7 +289,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | 0bb9762dd41b5ca3e7987d593a0650b4619e34d6 | CI38007031461 fails loop flattening and nondeterministic new IR selection; repair in progress; complete call repair, unchanged stack/reuse allocation gates, full ownership-IR module, tracing/lint/docs; source matches current41a599523 |
+| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | Fresh CI38008988824 running on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
@@ -397,9 +405,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-loop-unwind-worktree after bounded package clean
-0.00CPU/0.14elapsed. Its focused native loop checks pass10.45CPU/20.96elapsed;
-shared native binary reflects this prepared source, not the frozen PR106 head.
+to /private/tmp/fwp-variant-conversion-worktree after bounded package clean
+0.07CPU/0.37elapsed. Three focused loop tests pass13.79CPU/27.69elapsed;
+all18 IR checks pass3.33CPU/7.13elapsed. Shared native binary reflects current
+prepared41, not the frozen PR106 head.
 PR106 focused source checks below predate this target switch. PR106 repair modifies only src/rc.rs:
 earlier counted arguments remain owned across later evaluation. The final
 consumed argument stays inline only without pending counted arguments, keeping
