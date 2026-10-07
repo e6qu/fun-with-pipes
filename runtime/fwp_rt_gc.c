@@ -527,6 +527,10 @@ static void fwp_mem_free(void *p) {
         size_t i = (size_t)((uintptr_t)p & (GC_CHUNK - 1)) / m->slot;
         m->bits[i >> 6] &= ~((uint64_t)1 << (i & 63));
         fwp_rc_clear_slot(&m->rc[i]);
+        /* A stale conservative root can still name the free slot. Under
+         * verification it must not preserve old child words that later
+         * alias freshly reused young cells. Match sweep's clearing policy. */
+        if (fwp_gc.verify) memset(p, 0, m->slot);
         *(uintptr_t *)p = ~(uintptr_t)l->free;
         l->free = (char *)p;
         fwp_gc.budget += m->slot;
@@ -728,25 +732,15 @@ static inline int fwp_rc_last(V v) {
     return c && *c == 1;
 }
 
-/* whether the object `v` starts has not survived a collection: only such
- * an object is freed by its count, as no old object points to it (the
- * collector's invariant), so its cell can be given out again; an old one
- * is left to a major collection */
-static inline int fwp_rc_unmarked(V v) {
-    uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
-    if (off >= fwp_gc.top << GC_SHIFT) return 0;
-    gc_chunk *m = &fwp_gc.meta[off >> GC_SHIFT];
-    if (m->type == GC_BIG) return (off & (GC_CHUNK - 1)) == 0 && !m->mark;
-    if (m->type != GC_SMALL) return 0;
-    size_t i = (size_t)(off & (GC_CHUNK - 1)) / m->slot;
-    return !(m->bits[i >> 6] & ((uint64_t)1 << (i & 63)));
-}
-
 /* An object whose last counted reference compiled code gave up (its
  * references gone first, by their types: the `fwp_drop` functions of the
- * program): freed, or poisoned under FWP_REUSE_VERIFY so that a wrong
- * judgment shows. The bytes freed still count as allocated. */
+ * program): freed at any age, or poisoned under FWP_REUSE_VERIFY so that a
+ * wrong judgment shows. Runtime-retained graphs have count zero and never
+ * enter this path. Returning storage clears its old-generation mark, making
+ * subsequent allocations young. Immutable updates still require young cells.
+ * The bytes freed still count as allocated. */
 static void fwp_rc_free_obj(V v) {
+    if (!fwp_rc_last(v)) return;
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -755,7 +749,6 @@ static void fwp_rc_free_obj(V v) {
         fwp_rc_poison(v);
         return;
     }
-    if (!fwp_rc_unmarked(v)) return;
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
@@ -763,6 +756,7 @@ static void fwp_rc_free_obj(V v) {
 
 /* an array, map or set, the same way (poisoned: empty) */
 static void fwp_rc_free_arr(V v) {
+    if (!fwp_rc_last(v)) return;
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {
         const char *e = getenv("FWP_REUSE_VERIFY");
         fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
@@ -771,7 +765,6 @@ static void fwp_rc_free_arr(V v) {
         ARR(v)->len = 0;
         return;
     }
-    if (!fwp_rc_unmarked(v)) return;
     intptr_t before = fwp_gc.budget;
     fwp_mem_free((void *)(uintptr_t)v);
     fwp_gc.freed += (double)(fwp_gc.budget - before);
