@@ -39,15 +39,18 @@ immutable value semantics, effects and evaluation/trap order stable.
   `0221f91c9edcf0096247b69676a156d331716984`, checkout clean. Post-rebase text
   (3), leaf (2), inventory (1), IR (8), fmt and whitespace pass. Full
   [CI 37636161587](https://github.com/e6qu/fun-with-pipes/actions/runs/37636161587)
-  testing on ARM/Intel macOS; Linux and benchmarks queued. All four exact-head gates
+  testing on ARM/Intel macOS; benchmarks passed. Linux never acquired a
+  runner and failed before any step; individual retry API returned HTTP 500.
+  Re-poll this live run, then retry failed jobs after it is terminal. All four exact-head gates
   must pass before squash merge. No local workload remains. Closure child
   still rebases from OLD `bab67ea` after text squashes, not from `0221f91`.
-- Latest prepared change: `ownership-old-reclamation`, checkout
-  `/private/tmp/fwp-old-reclamation-worktree`, OLD base `a8a7d11`.
-  Final counted references reclaim marked storage; immutable reuse stays
-  young-only and shared runtime graphs stay with tracing. Focused checks pass;
-  publication follows. No additional PR is open. Next: retained runtime
-  ownership, exceptional/handler/cancellation cleanup, cycles and WASI.
+- Latest prepared change: `ownership-task-boundaries`, checkout
+  `/private/tmp/fwp-task-boundary-worktree`, OLD base `6774aa5`. All task/channel
+  declarations have explicit contracts; fresh Option wrappers own typed aliases,
+  deadline passthrough borrows and returns a typed owned reference. Retained
+  callbacks, handles and payloads still share. Three focused tests pass;
+  publication follows. No additional PR is open. Next: retained task ownership
+  with exceptional/handler/cancellation cleanup, cycles and WASI.
   Preserve listed OLD rebase anchors through the sequential squash workflow.
 
 ## Current ownership evidence
@@ -96,6 +99,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-list-generation | fwp-generation-worktree | fad9b1a | c05a5d9 |
 | ownership-array-elements | fwp-array-element-worktree | 636414f | fad9b1a |
 | ownership-map-set-elements | fwp-map-set-worktree | a8a7d11 | 636414f |
+| ownership-old-reclamation | fwp-old-reclamation-worktree | 6774aa5 | a8a7d11 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -925,3 +929,42 @@ ownership and separately builds with FWP_REUSE=0 to require >10 actual collectio
 >800 MiB allocation and <64 MiB RSS for shared fallback. Collector-disabled
 normal output/no-collection checks remain. This large workload runs only on CI;
 its revised harness is compiled locally, not reported as runtime-validated.
+
+Old-storage branch published as `6774aa5bb426c4dc1e49d9eca1ff1737763498a5`.
+Verified commit subject: `Reclaim old owned storage and preserve young reuse invariants`
+(61 characters), one line with no body/trailers. Revised Linux GC harness compiles;
+fmt and whitespace pass. No local workload remains. Sole PR #77 exact-head CI
+still tests on both macOS architectures; Linux/bench queued. Next separate
+implementation investigates task/channel retained ownership and teardown;
+failing tests remain repair work, never a reason to stop the roadmap.
+
+## Prepared task/channel boundary contracts
+
+`ownership-task-boundaries` follows OLD `6774aa5`. The inventory now covers every
+foreign declaration in lib/task.fwp. Spawn/scope/within callbacks remain explicitly
+shared; send payloads and native handles remain shared. Await/within/recv/recv-for
+own newly allocated Option nodes with type-directed aliases. Scalar payloads
+are skipped; shared payloads stay shared. Duration arguments borrow through
+blocking calls. Deadline passthrough no longer promotes its input graph to
+sharing: a new generic alias result duplicates only RC types, never scalar bits.
+
+Three focused tests pass: interpreter/native aliases for String, records,
+functions, repeated task awaits and channels at O1/O2 under GC stress/verification
+and poison modes; actual generated scalar/String deadline and I64 receive wrappers
+using address-shaped numeric bits; and an identical generated 10,000-iteration
+loop with only the previous deadline sharing boundary restored. With tracing
+off, zero collections and FWP_STACK=0, counters free 0.0 -> 0.5 MiB (Apple Silicon,
+Apple Clang 17, O1, one-decimal counter precision). This is reclamation evidence,
+not full ARC or a speed claim. Latest guard CPU 3.31 s / elapsed 6.74 s. Existing
+old-reclamation tests (3), including task cancellation golden stress, also pass.
+Inventory (1), IR (8), formatting and whitespace pass. Adjacent leaf (2) and
+old-reclamation (3) tests pass; guard CPU 11.90 s / elapsed 24.50 s. Full CI
+follows the sequential squash/rebase workflow.
+
+CI diagnosis for sole PR #77 exact head 0221f91: Linux job 112842831422 finished
+with no runner and no steps. GitHub annotation: "The job was not started because
+it repeatedly failed to be acquired (5 attempts)." Benchmarks passed; both macOS
+jobs remain live. Individual-job retry returned HTTP 500 with an empty body,
+not accepted success. Keep the live run; retry failed gates after it becomes
+terminal. Do not treat the missing Linux runtime validation as passed or stop
+implementation for infrastructure failures.

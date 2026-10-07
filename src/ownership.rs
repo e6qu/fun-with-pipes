@@ -54,6 +54,10 @@ pub enum ResultOwnership {
     AliasLeaf {
         argument: usize,
     },
+    /// One owned reference to any typed borrowed argument; scalars need no count.
+    AliasArgument {
+        argument: usize,
+    },
     /// A copy, or the unchanged leaf argument on a no-op path.
     FreshOrAliasLeaf {
         argument: usize,
@@ -111,7 +115,7 @@ impl Contract {
 /// Synchronous list/container callbacks borrow;
 /// retained callbacks share. Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
-    use Argument::{Borrow as B, Consume as C};
+    use Argument::{Borrow as B, Consume as C, Share as S};
     use ResultOwnership::Shared as R;
     let (arguments, result, callback, aliases): (
         &'static [Argument],
@@ -119,6 +123,25 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        "task.spawn" => (&[S], R, Some(Callback::Shared(0)), &[0]),
+        "task.scope" => (&[S], R, Some(Callback::Shared(0)), &[0]),
+        "task.within" => (
+            &[B, S],
+            ResultOwnership::FreshOuter,
+            Some(Callback::Shared(1)),
+            &[1],
+        ),
+        "task.await" | "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
+        "channel.recv-for" => (&[B, S], ResultOwnership::FreshOuter, None, &[1]),
+        "task.deadline" => (
+            &[B, B],
+            ResultOwnership::AliasArgument { argument: 1 },
+            None,
+            &[1],
+        ),
+        "task.sleep" | "task.yield" | "task.cancelled" | "channel.make" => (&[B], R, None, &[]),
+        "task.cancel" | "channel.close" => (&[S], R, None, &[]),
+        "channel.send" => (&[S, S], R, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }
@@ -417,6 +440,7 @@ mod tests {
         for (library, collections) in [
             (include_str!("../lib/collections.fwp"), true),
             (include_str!("../lib/string.fwp"), false),
+            (include_str!("../lib/task.fwp"), false),
         ] {
             for line in library.lines() {
                 let Some(declaration) = line.strip_prefix("foreign \"fwp\" ") else {
@@ -463,6 +487,7 @@ mod tests {
                         assert_eq!(consumed, vec![argument], "{symbol}")
                     }
                     ResultOwnership::AliasTail { argument }
+                    | ResultOwnership::AliasArgument { argument }
                     | ResultOwnership::AliasLeaf { argument }
                     | ResultOwnership::FreshOrAliasLeaf { argument } => {
                         assert!(consumed.is_empty(), "{symbol}");

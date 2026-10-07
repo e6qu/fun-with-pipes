@@ -4,7 +4,8 @@
 native code generation. Its container inventory covers every array/map/set
 primitive declared in `lib/collections.fwp`; a coverage check detects newly
 added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
-selected typed result ownership is listed below. Other primitives, foreign
+every task/channel foreign declaration is now inventoried too. Selected typed
+result ownership is listed below. Other primitives, foreign
 functions and remote calls retain the conservative default: borrow arguments, promote counted
 values to runtime sharing, and return runtime-shared values. Further inventories
 must refine that default before extending deterministic reclamation.
@@ -648,3 +649,20 @@ first-key/last-value identity and balanced replacement/destruction. Identical
 output and zero collections: restoring sharing only in emitted wrappers reduces
 count reclamation from 26.2 to 16.0 MiB. Retained runtime boundaries, old marked
 allocation reclamation, exceptional cleanup and cycles remain separate work.
+
+## Prepared task/channel contracts
+
+Task spawn/scope/within callbacks retain explicit sharing. Channel send payloads
+and native task/channel handles also remain shared. Await, within, receive and
+timed receive own fresh Option wrappers and acquire typed payload references;
+shared payloads keep count zero, scalar payloads receive no metadata operations.
+These contracts reclaim wrapper storage while retained values still use tracing.
+
+Sleep/within/timed-receive borrow their Duration argument. Deadline borrows both
+arguments and returns an owned typed alias of the value. Scalars skip duplication;
+records, functions and leaves preserve counted ownership. This prevents an ordinary
+passthrough from promoting the whole input graph to runtime sharing.
+`tests/task_ownership.rs` checks stress aliases, actual numeric-bit wrappers and
+0.0 -> 0.5 MiB count reclamation with only the old deadline sharing boundary
+restored as a control. See the handoff for flags and remaining retained lifetime
+and exceptional cleanup work. Full CI remains required before merging.

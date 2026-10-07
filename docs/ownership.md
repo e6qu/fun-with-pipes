@@ -282,3 +282,19 @@ only the former age gate is restored (Apple Silicon, O1, counter precision
 and poisoning. This is focused reclamation evidence, not full ARC or a speed
 claim. The Linux long-loop test retains explicit collection coverage through
 an ownership-disabled build; its large runtime gate belongs on CI.
+
+## Prepared task/channel result boundaries
+
+Every task/channel foreign declaration now has an explicit ownership contract.
+Retained callbacks, handles and channel payloads still share; completing their
+lifetimes requires coordinated task ownership and exception/cancellation cleanup.
+Fresh await/within/receive Option wrappers own type-directed aliases, allowing
+normal typed destruction to reclaim wrappers without claiming payload ownership.
+Deadline passthrough returns a typed owned alias instead of promoting the input
+graph to sharing. Duration inputs borrow, with conservative roots through calls.
+
+Focused O1/O2 stress/poison checks cover retained aliases and repeated awaits.
+Generated-wrapper probes reject count operations on address-shaped scalar bits.
+A 10,000-step tracing-disabled control loop frees 0.0 -> 0.5 MiB when only the
+old deadline sharing boundary changes. This measures the selected normal path;
+retained task lifetime, failure cleanup and full platform validation remain open.
