@@ -39,8 +39,8 @@ phase2 remains incomplete; phases3–6 are pending.
 Sole open [PR #94](https://github.com/e6qu/fun-with-pipes/pull/94):
 ownership-sort-callbacks, /private/tmp/fwp-sort-callback-worktree, exact
 9f4e3bbc211cdc52229ba39429f9a2bc74d4d7df on actual main90762aa.
-CI37897207787 passes bench, regular ARM macOS and Intel GC stress at this
-exact head; the other three gates are running. Three focused tests pass12.30 s CPU /24.97 s elapsed, lint2.02 s
+CI37897207787 passes bench, regular ARM/Intel macOS and ARM/Intel GC stress
+at this exact head; Linux is still running. Three focused tests pass12.30 s CPU /24.97 s elapsed, lint2.02 s
 /4.06 s, format0.35 s /0.62 s. Source/runtime/tests/workflows match previously
 verified5c19337 exactly; raw FWP_NO_OPT=1 interpreter oracles remain intact.
 Whole subject is one line with empty body. Require all six passing gates
@@ -78,24 +78,26 @@ still need their final squash rebases and six exact-head full gates.
 | 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 /44.76 s |
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 /34.21 s |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 /48.48 s |
+| 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
 
-Rows17–32 are published preparations with passing focused tests, lint and
+Rows17–33 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row32 final head1e8d1e34bc78d752999ccdb6ce7ab9500bccdbe8 is clean on
-actual base6a09138, published with exact lease against OLD968dac7. Seven tests
-pass24.13 s CPU /48.48 s elapsed, lint2.48 s /5.06 s, format0.34 s /0.62 s.
-Current independent task: row33 loop-unwind rebased from OLDparent968dac7
-onto actual row32 head1e8d1e3 (temporary8ceb0a9). New source oracle uses
-FWP_NO_OPT=1; loop_unwind_ownership and loop_ownership pass all seven
-tests28.65 s CPU /57.61 s elapsed; lint2.56 s /5.10 s and format0.35 s
-/0.71 s pass. A transient guard signal failure left no running process;
-the unchanged serial retry passed. Final amend/publication follow. Preserve immutable OLD
-anchors; no additional PR.
+Row33 final headdc9bfd5e626bd1509360454edc846347e0d6cd7f is clean on
+actual base1e8d1e3, published with exact lease against OLD988f2a3. Seven tests
+pass28.65 s CPU /57.61 s elapsed, lint2.56 s /5.10 s, format0.35 s /0.71 s.
+A transient formatting guard signal failure left no process; unchanged retry
+passed, with failure evidence retained in history.
+Current independent task: row34 argument-preparation rebased from OLDparent
+988f2a3 onto actual row33 headdc9bfd5 (temporaryd133704). New source oracle
+uses FWP_NO_OPT=1; argument_preparation_ownership, fold_unwind_ownership
+and runtime_call_ownership pass all eight tests24.82 s CPU /49.89 s
+elapsed; lint2.46 s /4.93 s and format0.35 s /0.74 s pass. Final
+amend/publication follow; immutable OLD anchors remain unchanged.
 PR94 remains the sole open delivery.
 
 ## Repaired resource evidence
@@ -143,8 +145,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-loop-unwind-worktree; focused loop checks are complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.04 /0.25 s).
+belongs to /private/tmp/fwp-argument-preparation-worktree; focused argument checks are complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 /0.37 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.11 s CPU /0.83 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

@@ -7897,3 +7897,27 @@ Process inspection found no remaining cargo fmt/rustfmt/guard workload.
 Unchanged serial guarded fmt retry passes0.35 s CPU /0.71 s elapsed.
 No limits were changed or bypassed; the first failed invocation is retained
 above. Final root doc refresh follows, with no tested code changes.
+
+Final loop preparationdc9bfd5e626bd1509360454edc846347e0d6cd7f is clean
+on actual base1e8d1e3, published with exact lease against OLD988f2a3.
+Whole subject verified single line, empty body. PR94 now passes four exact
+gates (bench, regular ARM/Intel, Intel GC); Linux and ARM GC are running.
+
+Row34 OLD4973918 rebases from immutable parent988f2a3 onto actual row33
+headdc9bfd5 (initiald133704); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.07 s /0.37 s; formatting0.43 s
+/0.85 s. Argument, fold unwind and runtime-call focused checks started.
+
+Guarded cargo test --test argument_preparation_ownership --test
+fold_unwind_ownership --test runtime_call_ownership passes all eight tests
+24.82 s CPU /49.89 s elapsed. Forced partial duplicate failures preserve
+external aliases, release completed duplicates and keep pending owned
+arguments until actual transfer. Closure construction releases its empty
+outer cell if capture preparation fails. Related fold/runtime call O1/O2
+stress/verification/poison and raw interpreter regressions pass.
+
+Argument preparation lint (cargo clippy --test argument_preparation_ownership
+--test fold_unwind_ownership --test runtime_call_ownership -- -D warnings)
+passes2.46 s CPU /4.93 s elapsed; fmt check0.35 s /0.74 s. Root docs
+refreshed before final amend; source unchanged. PR94 all four macOS gates
+and bench pass at exact9f4e3bb; Linux is running.
