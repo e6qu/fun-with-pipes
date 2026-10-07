@@ -94,12 +94,6 @@ binding. Dedicated reclamation and selected case/record/variant semantic checks
 pass; full sequential CI is still required. Remaining field/reconstruction and
 runtime lifetime audits stay open.
 
-Nominal match context is prepared: discarded effectful constructor fields keep
-typed cleanup during optimization, and unknown scrutinees retain their typed
-binding. Dedicated reclamation and selected case/record/variant semantic checks
-pass; full sequential CI is still required. Remaining field/reconstruction and
-runtime lifetime audits stay open.
-
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
 counting itself has a cost. Static memory provisioning is not a proof of
@@ -545,3 +539,10 @@ Constructor allocation now passes focused exceptional cleanup/alias checks in a
 separate preparation. Worker result boxing also passes focused exceptional checks. Complete field
 duplication, initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
 retained tasks before phase 2 acceptance. Full sequential CI remains required.
+
+Prepared record projection preserves the checked base type when inlining erases
+it, allowing typed scalar replacement and discarded nested-child cleanup without
+an outer record allocation. Seven focused ownership checks, five selected
+semantic goldens and clippy pass; full sequential CI remains required. Bare
+untyped/reconstructed aggregate contexts and retained runtime lifetimes remain
+open. PR #81 is the sole open PR; later preparation stays separate.

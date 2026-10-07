@@ -858,3 +858,46 @@ PR #80 is merged and sole PR #81 is now in full CI `37696063781` for exact
 63 characters, empty body/no trailers. Next audit remaining field-result
 contexts, reconstructed borrowed fields, whole-value boxing, CAF/inline owners
 and retained task lifetimes/teardown/cycles. Phases 2–6 remain incomplete.
+
+## Prepared typed record projection
+
+`ownership-field-context`, `/private/tmp/fwp-field-context-worktree`, OLD base
+`3f61f51521d95527d6754c2e6c3ca01a31f64bd7`. Inlining a checked record-producing
+call under a projection erased its nominal base type. The valid IR regression
+reproduced three unknown RC locals, an inappropriate generic scalar retain and
+a live discarded nested String child (native exit 3). The optimizer now keeps
+the pre-inlining base type in a typed binding when the optimized expression no
+longer exposes a type. Existing scalar replacement gives each field its checked
+type without allocating the projected outer record. Field evaluation order is
+preserved. No inferred nominal labels, IR annotation or surface syntax is added.
+
+Two dedicated tests cover the failing IR shape and representative source
+behavior. Interpreter/native results agree; fresh discarded String children are
+dead, unique inputs release, and external input aliases survive with count 1.
+Erasing only the nested field type makes the negative control leak at O1/O2.
+Both optimization levels, GC stress/verification and both poison modes pass.
+The source fixture supplies differential coverage; source reachability of the
+specific failing IR shape is not claimed. Seven focused projection/match/alias/
+constructor checks pass, CPU 9.77 s / elapsed 19.74 s. Five selected goldens
+(case_of_case, unboxed_records, variant_returns, wide_records, loop_nested_state)
+agree exactly on stdout/stderr/exit at O2 in both poison modes, including the
+intentional trap, CPU 5.20 s / elapsed 10.65 s. Full sequential CI remains required.
+
+Library and dedicated-test clippy pass, CPU 2.34 s / elapsed 4.64 s. Formatting
+passes under the bounded guard (CPU 0.34 s / elapsed 0.60 s). Checks used
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py cargo test --test field_context_ownership --test
+match_context_ownership --test constructor_type_ownership --test
+variant_alias_ownership -- --nocapture`, the corresponding `cargo clippy --lib
+--test field_context_ownership -- -D warnings`, and
+`python3 /private/tmp/fwp-field-context-goldens.py`. Guarded package clean preceded
+the worktree switch/build. No workload remains; shared target contains this
+projection compiler. Bare projections with no checked base metadata,
+reconstructed borrowed records, remaining whole-value boxing, CAF/inline
+lifetimes and retained task lifetimes/teardown/cycles remain open. Phases 2–6
+remain incomplete; no general ARC, tracing-free or speed claim is made.
+
+PR #81 is the sole open PR, exact `6eeb915`, full CI `37696063781`; benchmark
+passed and all three architecture test jobs are running. Prepare this branch
+separately. Future squash subject `Preserve checked record types across inlined field projections`
+is one line, 62 characters, empty body/no trailers. Publication follows checks.

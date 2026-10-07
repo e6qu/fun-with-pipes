@@ -414,3 +414,8 @@ Prepared known-constructor elimination retains the checked nominal field context
 for discarded effectful fields; unresolved scrutinees keep their typed binding.
 Typed IR/native reclamation and selected source behavior are recorded in
 [ownership.md](ownership.md#prepared-nominal-match-context).
+
+Prepared field projection preserves the checked record base type when inlining
+would erase it. Typed scalar replacement then supplies field ownership without
+allocating the outer record. Evidence and remaining metadata/reconstruction
+gaps are recorded in [ownership.md](ownership.md#prepared-typed-record-projection).
