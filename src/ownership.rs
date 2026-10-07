@@ -1,8 +1,8 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array/map/set elements are typed owners. Retained runtime callbacks
-//! still use conservative sharing.
+//! Array/map/set elements are typed owners. Spawned task thunks retain a
+//! counted callback owner; other retained callbacks use conservative sharing.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -74,6 +74,9 @@ pub enum ResultOwnership {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Callback {
     Shared(usize),
+    /// Retain a counted callback reference for asynchronous invocation.
+    /// The task takes that owner on entry or releases it on cancellation.
+    Retained(usize),
     /// Invoke synchronously without retaining the callback function itself.
     /// Supplied values borrow by type; returned values carry ownership.
     Borrowed(usize),
@@ -98,7 +101,7 @@ impl Contract {
 
     pub fn callback_argument(self) -> Option<usize> {
         self.callback.map(|c| match c {
-            Callback::Shared(i) | Callback::Borrowed(i) => i,
+            Callback::Shared(i) | Callback::Borrowed(i) | Callback::Retained(i) => i,
         })
     }
 
@@ -113,7 +116,8 @@ impl Contract {
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; arrays/maps/sets own typed element references.
 /// Synchronous list/container callbacks borrow;
-/// retained callbacks share. Slices and set operations copy storage.
+/// spawned thunks retain a counted owner; other retained callbacks share.
+/// Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
     use Argument::{Borrow as B, Consume as C, Share as S};
     use ResultOwnership::Shared as R;
@@ -123,7 +127,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
-        "task.spawn" => (&[S], R, Some(Callback::Shared(0)), &[0]),
+        "task.spawn" => (&[B], R, Some(Callback::Retained(0)), &[0]),
         "task.scope" => (&[S], R, Some(Callback::Shared(0)), &[0]),
         "task.within" => (
             &[B, S],
@@ -437,6 +441,10 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        let spawn = primitive("task.spawn").unwrap();
+        assert_eq!(spawn.argument(0), Argument::Borrow);
+        assert_eq!(spawn.callback, Some(Callback::Retained(0)));
+        assert!(!spawn.borrows_callback()); // asynchronous callbacks still escape
         for (library, collections) in [
             (include_str!("../lib/collections.fwp"), true),
             (include_str!("../lib/string.fwp"), false),
@@ -459,7 +467,8 @@ mod tests {
                 if let Some(i) = c.callback_argument() {
                     assert_eq!(
                         c.argument(i),
-                        if c.borrows_callback() {
+                        if c.borrows_callback() || matches!(c.callback, Some(Callback::Retained(_)))
+                        {
                             Argument::Borrow
                         } else {
                             Argument::Share

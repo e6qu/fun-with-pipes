@@ -11157,3 +11157,9 @@ and format0.43/0.83s pass. Record/type context Linux evidence
 conversion evidenceCI37971602336 passes. Row47 refreshfcfa8fb2d296 uses actual
 basef2262f94ada4; checks are running. Its original CURRENT is retained under
 immutable revision tag before lease publication, with OLD anchors unchanged.
+
+Row47 guarded clean0.00/0.13s, all three cache owner/teardown/trap tests
+11.54/24.96s, clippy2.38/4.80s and format0.44/0.83s pass. Row48 refresh
+ece7166b7a7982d941913b27f7e837ab84fe5b48 uses actual basefcfa8fb2d296;
+compiler/runtime match original; original CURRENTaf073c78c443 is retained
+under immutable revision tag before explicit-lease publication. Checks follow.

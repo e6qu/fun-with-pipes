@@ -40,8 +40,8 @@ maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pendin
 PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
 Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
 base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
-and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs and bench pass. The five other
-production jobs are running; all six are required for acceptance. Compiler/runtime/tests match
+and CI37969632440 (roadmap_docs) are current production gates. roadmap_docs, bench, regular ARM macOS and both
+GC stress jobs pass; Linux and regular Intel macOS run. All six are required. Compiler/runtime/tests match
 focused-accepted495411d33f60 exactly. The final publication records the merged
 map/set contracts and inherits the portable roadmap audit. Require all six
 production jobs and roadmap_docs at this exact head before squash with
@@ -91,8 +91,8 @@ still need their final squash rebases and six exact-head full gates.
 | 44 ownership-variant-alias | b31400d03ac7 | ffbbcf9d5119 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
 | 45 ownership-match-context | 0b00524a0a03 | b31400d03ac7 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | f2262f94ada4 | 0b00524a0a03 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
-| 47 ownership-caf-cache | fcfa8fb2d296 | f2262f94ada4 | Focused checks running; compiler/runtime unchanged |
-| 48 ownership-inline-caf | af073c78c443 | 762cc824fa08 | 16.28 / 33.20 s |
+| 47 ownership-caf-cache | fcfa8fb2d296 | f2262f94ada4 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
+| 48 ownership-inline-caf | ece7166b7a79 | fcfa8fb2d296 | Focused checks follow; compiler/runtime unchanged |
 | 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 / 26.90 s + exact unit 3.58 / 7.29 s |
 | 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 / 31.48 s + exact unit 3.27 / 6.86 s |
 | 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 / 29.90 s + exact unit 3.23 / 6.67 s |
