@@ -39,7 +39,7 @@ phase2 remains incomplete; phases3–6 are pending.
 Sole open [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95):
 ownership-state-sequences, /private/tmp/fwp-state-sequence-worktree, exact
 5d0a3f302e476dfada1b3ea71aa56dae4086d905 on actual main1358267.
-CI37901758334 passes bench and ARM GC stress at this exact head; Intel GC,
+CI37901758334 passes bench and both ARM/Intel GC stress at this exact head;
 regular Intel macOS and Linux run; regular ARM macOS remains queued. Both final focused
 tests pass12.28 s CPU /24.61 s elapsed, lint2.24 s /4.49 s, format0.33 s
 /0.61 s. Source/runtime/tests/workflows match verified15743b8 exactly;
@@ -88,24 +88,24 @@ still need their final squash rebases and six exact-head full gates.
 | 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 /33.31 s + exact unit3.31 /7.05 s |
 | 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 /38.35 s + exact unit3.59 /7.44 s |
 | 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 /36.18 s |
+| 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 /31.47 s |
 
-Rows17–43 are published preparations with passing focused tests, lint and
+Rows17–44 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row43 final heade2f944c256b606487f32ff4d37a1d61a6b9fdd30 is clean on
-actual basef22b5b5, published with exact lease against OLD614dd3b. Three tests
-pass18.02 s CPU /36.18 s elapsed, lint2.41 s /4.72 s, format0.34 s /0.60 s.
-Current independent task: row44 variant-alias rebased from ACTUAL current
-base OLD614dd3b onto actual row43 heade2f944c (temporary0af148a). The
-doc-only follow-up became empty after authoritative doc resolution. New source
-oracle uses FWP_NO_OPT=1; variant_alias_ownership, variant_conversion_ownership
-and worker_boxing_ownership pass all four tests15.62 s CPU /31.47 s
-elapsed; lint2.36 s /4.75 s and format0.35 s /0.74 s pass. Final
-doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
+Row44 final head610fd745b97385689f9ccbb19beff903d8f77730 is clean on
+actual basee2f944c, published with exact lease against OLDde85621. Four tests
+pass15.62 s CPU /31.47 s elapsed, lint2.36 s /4.75 s, format0.35 s /0.74 s.
+Its old doc-only follow-up became empty when authoritative docs superseded it;
+immutable OLDde85621/parent614dd3b remain preserved.
+Row45 match-context rebases from ACTUAL current base OLDde85621 onto
+actual row44 head610fd74. Five focused tests pass14.67 /29.51 s; lint
+passes2.34 /4.68 s. Final docs, format check and exact-lease publication follow.
+Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
@@ -153,7 +153,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-variant-alias-worktree; focused alias checks are complete; no local workload is active.
+belongs to /private/tmp/fwp-typed-expression-worktree; focused match-context checks are complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.14 s CPU /0.96 s elapsed).

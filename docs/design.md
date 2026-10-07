@@ -359,6 +359,9 @@ Cleanup IDs are captured after helper generation, which can add definitions.
 Pattern bindings initialize payloads/fields from the current path's scrutinee.
 FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
+Prepared match elimination carries nominal constructor-field context into
+effectful discarded temporaries. If elimination cannot recover a safe type,
+it preserves the original typed binding rather than erasing its ownership.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

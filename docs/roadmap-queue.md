@@ -79,7 +79,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 41 | variant-conversion | `ownership-variant-conversion` | `3956d5cadd86` | `34873f41a4c4` | `b0219671dca3` |
 | 42 | record-update | `ownership-record-update` | `f22b5b587de6` | `5c5875d30b8e` | `34873f41a4c4` |
 | 43 | record-conversion | `ownership-record-conversion` | `e2f944c256b6` | `614dd3b19c13` | `5c5875d30b8e` |
-| 44 | variant-alias | `ownership-variant-alias` | `de8562194d54` | `de8562194d54` | `614dd3b19c13` |
+| 44 | variant-alias | `ownership-variant-alias` | `610fd745b973` | `de8562194d54` | `614dd3b19c13` |
 | 45 | typed-expression | `ownership-match-context` | `3f61f51521d9` | `3f61f51521d9` | `de8562194d54` |
 | 46 | field-context | `ownership-field-context` | `085dc716d599` | `085dc716d599` | `3f61f51521d9` |
 | 47 | caf-ownership | `ownership-caf-cache` | `68cf7bf2f7ca` | `68cf7bf2f7ca` | `085dc716d599` |

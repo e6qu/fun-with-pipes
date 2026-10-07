@@ -8212,3 +8212,25 @@ Variant alias lint (cargo clippy --test variant_alias_ownership --test
 variant_conversion_ownership --test worker_boxing_ownership -- -D warnings)
 passes2.36 s CPU /4.75 s elapsed; fmt check0.35 s /0.74 s. Nine current
 root docs copied before final amend; tested source unchanged.
+
+Final variant alias610fd745b97385689f9ccbb19beff903d8f77730 is clean on
+actual basee2f944c, published with exact lease against OLDde85621. Whole
+subject verified one line with empty body; old doc-only follow-up remains
+immutable evidence, superseded by authoritative live docs. No second PR.
+
+Row45 match-context rebase from ACTUAL old parentde8562194d5461b69e6e5f3b448df0bfc1bee687
+onto current row44 head610fd745b97385689f9ccbb19beff903d8f77730
+resolves only doc conflicts with the authoritative nine root files. Source
+optimizer change autoapplies; source interpreter oracle now sets FWP_NO_OPT=1.
+Direct typed-IR interpreter comparisons run before/after optimization explicitly.
+Guarded clean passes0.07 s CPU /0.38 s elapsed. Guarded cargo test --test
+match_context_ownership --test constructor_type_ownership --test
+variant_alias_ownership passes five tests14.67 s /29.51 s, including type-erasure
+omission control, aliasing, O1/O2, stress/verification/poison and discarded
+nested-child release. Typed match elimination keeps nominal constructor field
+context and retains the original typed binding if elimination cannot safely
+recover it. Related construction and variant alias regressions pass.
+Lint with the same three test targets and -D warnings passes2.34 s /4.68 s.
+PR95 exact5d0a3f3 now passes both ARM/Intel GC stress and bench; other gates pending.
+Format check passes0.34 s CPU /0.61 s elapsed; nine authoritative docs copied
+before final amend. All six final PR gates remain required.

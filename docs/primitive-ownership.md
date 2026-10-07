@@ -187,6 +187,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
 | 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |
 | 44 | Returned variant aliases transfer existing typed field owners directly, avoiding an extra box or retain set | Sequential CI; emitted ownership counts, aliases across yields and source/native agreement |
+| 45 | Match elimination preserves nominal types for effectful discarded constructor fields and their child destruction | Sequential CI; nested fields, aliasing, effects and evaluation order |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
