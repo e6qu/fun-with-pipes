@@ -37,11 +37,13 @@ immutable value semantics, effects and evaluation/trap order stable.
   all four current-head jobs pass. No local workloads remain.
 - Latest prepared change: `ownership-list-generation`, checkout
   `/private/tmp/fwp-generation-worktree`, base `c05a5d9`. repeat/range
-  ownership passes all focused, inventory and IR checks; publication follows.
+  ownership passes all focused, inventory and IR checks; published as `fad9b1a`.
   Structural zip/unzip/chunks ownership is published as `c05a5d9`, based on
   `787763d` (normal/fused loop transfers). No additional PR is open.
-  Next implementation: typed stored container elements, old-object reclamation
-  and retained callback/exception teardown. Prepared descendants retain their
+  Current next-task checkout: `ownership-array-elements` at
+  `/private/tmp/fwp-array-element-worktree`, base `fad9b1a`, typed array creation/copies, mutations, aliases and
+  callbacks implemented with passing focused tests. Adjacent ABI/IR/format checks pass;
+  publication follows; then map/set elements, old-object reclamation and retained teardown. Prepared descendants retain their
   listed OLD anchors until sequential rebases after parent squash merges.
 
 ## Current ownership evidence
@@ -88,6 +90,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-state-sequences | fwp-state-sequence-worktree | 0a90b05 | 66bc713 |
 | ownership-loop-state | fwp-loop-worktree | 787763d | 0a90b05 |
 | ownership-list-structure | fwp-structure-worktree | c05a5d9 | 787763d |
+| ownership-list-generation | fwp-generation-worktree | fad9b1a | c05a5d9 |
 
 Example after PR #76 merges: from fwp-text-worktree,
 `git rebase --onto origin/main 2ce7a05 ownership-text-results` after fetching main.
@@ -754,3 +757,55 @@ that unreachable path was not changed. The speculative width change/test was
 removed; the final supported matrix passed all 3 tests (CPU 12.65 s, elapsed
 25.37 s). Formatting and whitespace pass; no full local gate was run.
 Next implementation: typed stored container ownership and destruction.
+
+Generated list ownership published as `fad9b1a`, base `c05a5d9`; checkout clean,
+no additional PR. Commit message verified as one line with no body/trailers.
+Next task is typed array element ownership across creation, copies, alias
+results, mutations and callbacks; map/set elements follow separately. Keep
+current PR #76 gate 37623311024 and sequential old anchors as recorded above.
+
+Typed array investigation: current `Gen::drop_body` frees container storage
+without releasing elements; array creation/copies share their inputs, and
+set/push owning wrappers drop only outer array references. Complete these
+paths together before claiming typed element ownership. Copying a nonunique
+array needs one typed reference per copied element; replacement drops the
+old selected element; invalid set consumes the array without retaining the
+new value. Poison-copy (`fwp_rc_unique_mut == 2`) must transfer or duplicate
+children and clear/drop the old container consistently. Generate/map callbacks
+borrow their arguments and return owned elements; fold consumes its accumulator.
+Array get/to-list/slice/append/sort must establish typed result aliases and
+keep input roots alive. Leave scalar words untouched. Preserve GC/reuse stress,
+callback order and fallback flags, and add no-tracing allocation evidence.
+No array code edits or local workloads remain; continue in the prepared checkout.
+
+## Typed array element ownership implemented
+
+`ownership-array-elements`, `/private/tmp/fwp-array-element-worktree`, base
+`fad9b1a`: all 13 array primitive contracts now model typed ownership (length
+remains scalar). Creation/copies own element references; last-reference array
+destruction releases elements by type. Get/to-list create owned alias results;
+slice/append/sort retain copied elements. Set/push borrow inserted values and
+consume arrays; invalid set consumes without retaining its unused value.
+Unique growth/poison-copy transfers children, nonunique copies duplicate them,
+and replacement drops the old selected element. Callback generate/map borrow
+inputs and own outputs; fold consumes/transfers its accumulator. Scratch sorting
+buffers are released; capacity and slice calculations avoid overflow.
+
+Inventory (1) passed CPU 3.13 s / elapsed 6.54 s, existing container alias and
+callback regression (1) passed CPU 7.63 s / elapsed 15.54 s. Initial compile used
+a nonexistent Gen field instead of the free_enabled() helper; fixed. Initial
+new fixture used abstract ! io instead of concrete ! {IO}; fixed. Expanded
+matrix/counts tests (2) pass CPU 12.34 s / elapsed 24.74 s, covering every array
+operation, retained copies, nested arrays, String/Bytes/function elements,
+601-element sharing/growth, callbacks, O1/O2, stack on/off, GC/reuse verification,
+and reuse/free-disabled fallbacks. Function accumulator/captured fold callbacks
+added and pass CPU 4.90 s / elapsed 9.96 s. Actual scalar wrappers and destruction
+preserve address-shaped numeric words at O1/O2 (CPU 1.08 s / elapsed 2.30 s).
+Identical output and zero collections: restoring only result sharing changes
+count reclamation from 11.3 to 5.3 MiB. No general no-GC or speed claim.
+Adjacent FFI (5), fat ABI (1) and stack (2) checks pass (CPU 8.91 s, elapsed
+18.24 s). IR ownership checks (8) pass (CPU 3.10 s, elapsed 6.51 s).
+Formatting/whitespace pass. No local workload remains. Full all-platform
+CI follows the parent squash/rebase sequence; no additional PR is open.
+Next: typed map/set element ownership, old-object reclamation and runtime
+retained callbacks/exception teardown; numeric payloads still need phase 3.

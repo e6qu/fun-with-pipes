@@ -38,6 +38,13 @@ lex → parse (offside layout) → macro expansion → name collection
 | Values on the stack | A record, variant or closure (a known function applied to fewer arguments than it takes) that does not escape lives in the C stack frame of the function that builds it: its local is read through fields, matched, copied with fields replaced, applied (which hands the function the closure's captured values, never the closure), or passed to a parameter that does not escape either (`src/escape.rs`, a fixed point over all functions), and never returned, stored, captured or given to a primitive. Its fields are on a stack the collector scans. The wrapper has no heap count slot; generated code tracks owned child references for eligible stack locals, aliases and consumed calls, and preserves their addresses through allocation. Unknown child types retain the fallback. A value the function builds is not passed to the function itself (a tail call becomes a jump that reuses the frame), while a parameter passed on to it may be (it lives in a caller's frame). `FWP_STACK=0` when compiling turns it off |
 | Memory | Native programs have a generational, non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
 
+Native arrays own their typed reference-bearing elements. Copies retain those
+references, unique growth transfers them, replacement releases the prior
+element, and last-reference array destruction releases its children. Array
+callbacks borrow inputs and return owned results; folds transfer accumulators.
+Map/set stored elements and retained runtime boundaries still share. The
+[primitive inventory](primitive-ownership.md) records the exact contracts.
+
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
 `tests/run/` through both.

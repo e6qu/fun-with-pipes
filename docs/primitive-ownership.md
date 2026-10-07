@@ -19,19 +19,23 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
-| array/map/set.from-list | share list | fresh outer storage, shared elements | none |
-| array.to-list; map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
+| array.from-list | borrow list | fresh array owning typed element references | none |
+| map/set.from-list | share list | fresh outer storage, shared elements | none |
+| array.to-list | borrow array | fresh owned list with typed element aliases | none |
+| map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
 | array.length; map.size; set.size | borrow container | scalar | none |
-| array.get | borrow index, borrow array | shared Option containing an aliased element | none |
-| array.set | borrow index, share value, consume array | owned optional container; failure consumes array too | none |
-| array.push | share value, consume array | owned container, old/inserted elements shared | none |
-| array.make | borrow count, share value | fresh container holding repeated shared value | none |
-| array.generate | borrow count, share callback | fresh container, shared callback results | argument 1 |
-| array.map; map.map-values | share callback, borrow container | fresh container, shared callback results; map keys alias input | argument 0 |
-| array.fold | share callback, share accumulator, borrow array | accumulator or shared callback result | argument 0 |
-| array.slice | borrow start, length and array | copied outer storage, aliased elements; no backing view | none |
-| array.append; set.union/intersect/diff | borrow both containers | fresh outer storage, aliased elements | none |
-| array.sort | borrow array | copied outer storage, aliased elements | none |
+| array.get | borrow index, borrow array | fresh owned Option with a typed element alias | none |
+| array.set | borrow index/value, consume array | owned optional array; replacement releases old element; failure consumes array | none |
+| array.push | borrow value, consume array | owned array with typed old/inserted elements | none |
+| array.make | borrow count/value | owned array with repeated typed references | none |
+| array.generate | borrow count/callback | owned array with owned callback results | borrowed argument 1 |
+| array.map | borrow callback/array | owned array with owned callback results | borrowed argument 0 |
+| map.map-values | share callback, borrow map | fresh container, shared results and aliased keys | shared argument 0 |
+| array.fold | borrow callback/array, consume accumulator | owned accumulator or callback result | borrowed argument 0 |
+| array.slice | borrow start, length and array | copied storage with typed owned element aliases | none |
+| array.append | borrow both arrays | copied storage with typed owned elements | none |
+| set.union/intersect/diff | borrow both sets | fresh outer storage, aliased shared elements | none |
+| array.sort | borrow array | copied storage with typed owned element aliases | none |
 | map.empty; set.empty | none | static shared empty value | none |
 | map.insert | share key, share value, consume map | owned container, aliased stored elements | none |
 | map.get | borrow key, borrow map | shared Option containing aliased value | none |
@@ -47,7 +51,7 @@ share keys because a key can be stored. Callback inputs/results remain shared:
 a callback can return its input or a closure capturing it.
 
 Fresh outer storage does not imply independently owned elements. Current
-container destruction frees the outer buffer; it does not recursively release
+map/set destruction frees the outer buffer; it does not recursively release
 its runtime-shared elements. Aliasing metadata records which arguments or their
 elements can be reachable from the result, including callback captures. Typed
 element ownership, complete leaf-result coverage, closure capture destruction, retained runtime results and
@@ -588,3 +592,34 @@ fallback flags and actual scalar wrappers using address-shaped bits. With
 tracing disabled, identical outputs and only result sharing restored in the
 baseline, count reclamation improves from 1.7 to 4.4 MiB. Full-platform CI
 follows the prepared parent chain; these are focused local measurements.
+
+## Typed array element ownership
+
+All array operations use monomorphic typed ownership boundaries. Array storage
+owns one reference per reference-bearing element; last-reference destruction
+releases those elements before storage. Scalars receive NULL duplicate/drop
+operations, preserving words that happen to resemble heap pointers.
+
+From-list/make borrow inputs and retain stored elements. Generate/map invoke
+callbacks synchronously with borrowed inputs and store owned results. Fold
+borrows its callback and array while consuming/transferring the accumulator,
+including the unchanged empty-array result. Get returns fresh owned Some with
+an owned selected element; to-list returns fresh counted nodes with owned
+aliases. Slice/append/sort copy elements with typed references; sorting scratch
+buffers are scanned while in use and explicitly released afterward.
+
+Set/push borrow inserted values and consume arrays. Nonunique copies retain
+all elements; unique growth or poison-copy transfers existing child ownership.
+Replacing a field releases its previous reference. An invalid set releases the
+array and does not retain the unused insertion value. Element duplication
+precedes releasing a possibly aliased prior field. Poison-copy clears the old
+array before dropping it so transferred elements are not released twice.
+
+`tests/array_element_ownership.rs` exercises every array operation, retained
+copies, nested arrays, callback/function accumulators, captured callbacks,
+String/Bytes/function elements and 601-element sharing/growth. Native O1/O2,
+stack on/off, GC/reuse verification and ownership-disabled fallbacks agree
+with the interpreter. Actual generated scalar wrappers and destruction preserve
+address-shaped bits. With identical output and zero collections, changing only
+result sharing reduces count reclamation from 11.3 to 5.3 MiB. Map/set elements,
+old marked allocations and retained runtime boundaries remain separate work.

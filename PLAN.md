@@ -48,7 +48,8 @@ leaves, rebased onto main and locally validated; full current-head CI gates merg
 synchronous list ownership, call-effect inference, exact high-fanout counts and
 scan/iterate state ownership. Prepared work needs full CI in sequence; the
 handoff records heads, old rebase anchors and local evidence. Next separate
-implementation covers typed stored container elements and destruction;
+implementation covers typed map/set elements and destruction;
+all array element boundaries are implemented in a separately validated branch;
 repeat/range and zip/unzip/chunks ownership pass focused validation in separate branches. General/fused loop
 state transfer is published separately; it repairs the lost reclamation in a
 map/sum sequence consumer. Full gates after parent merges still remain.
