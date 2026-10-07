@@ -1139,6 +1139,12 @@ impl<'p> Gen<'p> {
             mt.to_string().replace("*/", "* /"),
             id
         );
+        if matches!(mt, MT::Con(n, _) if matches!(n.as_str(), "std::String" | "std::Bytes")) {
+            return format!(
+                "{}        fwp_rc_free_obj(v);\n        return;\n    }}\n}}\n",
+                head
+            );
+        }
         let container = matches!(mt, MT::Con(n, _) if crate::rc::is_container(n));
         if container {
             return format!(
@@ -3903,10 +3909,31 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ));
                         }
                         s = s.replacen(&borrowed, &format!("fwp_p_{}_own(", runtime), 1);
-                    } else if crate::rc::prim_fresh(&sym) {
-                        let r = s.strip_prefix("return ").and_then(|r| r.strip_suffix(';'));
-                        if let Some(r) = r {
-                            s = format!("return fwp_rc_fresh({});", r);
+                    } else if let Some(contract) = crate::ownership::primitive(&sym) {
+                        use crate::ownership::ResultOwnership;
+                        match contract.result {
+                            ResultOwnership::FreshLeaf | ResultOwnership::FreshContainer => {
+                                let r = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!("fresh primitive `{sym}` has no return expression")
+                                    })?;
+                                s = format!("return fwp_rc_fresh({r});");
+                            }
+                            ResultOwnership::AliasLeaf { argument } => {
+                                s = format!("fwp_rc_dup(l{argument}); {s}");
+                            }
+                            ResultOwnership::FreshOrAliasLeaf { argument } => {
+                                let r = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!("alias primitive `{sym}` has no return expression")
+                                    })?;
+                                s = format!("V result = {r}; if (result == l{argument}) fwp_rc_dup(result); else fwp_rc_fresh(result); return result;");
+                            }
+                            _ => {}
                         }
                     }
                 }

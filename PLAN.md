@@ -39,15 +39,18 @@ priority queue.
 Native macOS passed both architecture jobs, Linux full tests and benchmarks in
 run `37591744197`; PR #74 was squash-merged as `af15d26`.
 
-Current ownership branch: `ownership-contracts`, rebased onto that main commit;
-[PR #75](https://github.com/e6qu/fun-with-pipes/pull/75) is open;
-full current-head CI and any required fixes precede its squash merge. A macOS
-concurrent executable-cache failure was reproduced and repaired locally; the
-updated full gate must pass. It consolidates array/map/set contracts and borrows
-comparison-only keys. Focused alias/callback/GC/reuse tests and allocation
-evidence pass locally; full CI and merge remain pending. See
-[primitive contracts](docs/primitive-ownership.md). This is the first part of
-phase 2; strings, bytes, closure captures and runtime teardown are unfinished.
+Container ownership contracts passed all four jobs in run `37612412156`;
+[PR #75](https://github.com/e6qu/fun-with-pipes/pull/75) was squash-merged as
+`5998302`. Comparison-only keys borrow; stored elements and retained callbacks
+still share. The concurrent macOS executable-cache failure was repaired and
+verified by full CI. Next PR: owned String/Bytes leaves, rebased onto main and
+validated before publication. Later published branches prepare closure and
+synchronous list ownership, call-effect inference, exact high-fanout counts and
+scan/iterate state ownership. Prepared work needs full CI in sequence; the
+handoff records heads, old rebase anchors and local evidence. Next separate
+implementation is general/fused loop state transfer: a map/sum counter probe
+showed that its fused loop still shares list state and loses reclamation.
+Phase 2 remains incomplete; runtime teardown and full retained lifetimes remain.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
