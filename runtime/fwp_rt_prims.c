@@ -307,6 +307,7 @@ static V fwp_p_flat_map(V f, V xs) {
     for (size_t i = 0; i < n; i++) a[i] = fwp_apply1(f, a[i]);
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_p_append(r, a[i - 1]);
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 

@@ -237,8 +237,8 @@ cost is code size, so explicit generics keep that cost visible.
   containing the runtime and scans its writable-at-load segments, including
   `__DATA_CONST` and zero-fill storage. Other native systems do not arm
   collection. Darwin validation is tracked in the session handoff.
-  Runtime list builders keep their source buffers reachable until the last
-  allocating constructor: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
+  Runtime value/string constructors and list traversals keep their source
+  objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
   Optimized Clang can otherwise preload a short buffer and discard its
   only root while its elements are still needed.
 - Reverse-mode autodiff records operations on tapes kept by the runtime

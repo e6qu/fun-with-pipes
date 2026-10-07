@@ -94,7 +94,7 @@ $ curl -s http://127.0.0.1:8720/hello
 hello over HTTP/1.1
 $ curl -s --http2-prior-knowledge http://127.0.0.1:8720/hello
 hello over HTTP/2
-$ curl -s http://127.0.0.1:8720/report | wc -c
+$ curl -s http://127.0.0.1:8720/report | wc -c | tr -d ' '
 2100
 $ curl -s -H 'Accept-Encoding: gzip' -D - -o /dev/null http://127.0.0.1:8720/report | tr -d '\r'
 HTTP/1.1 200 OK

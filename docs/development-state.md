@@ -9,7 +9,7 @@ for priorities and contracts. Update this file before ending a work session.
 - Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
 - Branch: `macos-portability`.
 - Implementation/docs commit: `7ec02d0`.
-- Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
+- Published PR (ready for review): [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
   The user explicitly authorized the push and PR creation on 2026-10-07;
   the earlier publication block is resolved. The implementation and workflow handoff are on GitHub.
 - Continuing authorization: the user requested automatic completion of the
@@ -97,6 +97,48 @@ for priorities and contracts. Update this file before ending a work session.
    `strace` and process-memory evidence need platform alternatives.
 3. Record exact CI results and remaining platform limitations here.
 4. Start the ownership-contract inventory described in `ownership.md`.
+
+## Current CI fixes and prepared work
+
+- Full run [37576889350](https://github.com/e6qu/fun-with-pipes/actions/runs/37576889350)
+  on `ccecf20`: ARM macOS failed; Intel and Linux are still running; benchmark
+  equivalence passed. The no-fail-fast sweep exposed tutorial `wc` padding,
+  OpenSSL alert wording, GC-stressed list crashes and native server crashes.
+- Reproduced native forms/format server failure locally: SIGSEGV in
+  `fwp_list_items`, reached from `fwp_p_flat_map`. Preserving constructor
+  source buffers, the list source and the flat-map buffer fixes the focused
+  forms test and the stressed web test. The optimized traits program also
+  changed from SIGSEGV to the expected output. A focused Darwin regression
+  now covers `-O1`/`-O2`, GC stress/verification and both reuse-poison modes.
+- Focused fixes checked locally: `cargo test --test rest forms_and_formats_native`,
+  `cargo test --test web native_under_gc_stress`,
+  `cargo test --test macos optimized_lists_under_collection` and
+  `cargo test --test tls streams` and
+  `FWP_TUTORIAL=19 cargo test --test examples tutorial_sessions`, all through the same resource guard with
+  the installed OpenSSL prefix where needed. All passed.
+- Make the tutorial's byte-count command strip BSD `wc` padding. Canonicalize
+  only OpenSSL's alternate `ssl/tls alert bad certificate` label in the TLS
+  snapshot harness; retain all other message and behavior assertions.
+- Other full-suite failures (`stdlib_fixes`, HTTP, filesystem stress and
+  the remaining REST cases) still require the new CI head. The filesystem
+  golden mismatch followed a stress crash that left its scratch directory.
+  Do not claim the full macOS gate passed based on focused checks.
+- Prepared/published branch: `ownership-contracts`, checkout
+  `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
+  No second PR is open. All 35 container contracts are centralized; comparison
+  keys borrow. Tests cover aliases/callbacks, count saturation, interior
+  references and traversal spill. Twelve focused checks passed. The key loop
+  allocated 0.0 MiB versus the old boundary's 0.8 MiB, rounded to tenths.
+- After #74 passes and merges, fetch main and rebase that checkout with
+  `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
+  push with lease, then open its PR. Run full CI before its squash merge.
+- Further preparation: local branch `ownership-leaves`, checkout
+  `/private/tmp/fwp-leaf-worktree`, base `798d2ed`. String/Bytes ownership,
+  copy/alias result contracts and safe leaf destruction are being tested.
+  Its two focused regressions passed with GC/reuse verification; the copy
+  loop freed 0.9 MiB by counts versus 0.0 MiB with freeing disabled. Five FFI
+  checks passed. Full ownership, exceptional cleanup and closures remain work.
+  This branch has no PR; publish one PR at a time after its parent merges.
 
 ## Boundaries and deferred work
 

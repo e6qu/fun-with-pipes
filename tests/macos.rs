@@ -76,6 +76,34 @@ fn native_tasks_and_autodiff_under_collection() {
 }
 
 #[test]
+fn optimized_lists_under_collection() {
+    let scratch = Scratch::new("optimized-lists");
+    let src = root().join("tests/run/traits.fwp");
+    let expected = std::fs::read(src.with_extension("out")).unwrap();
+    // Includes list bind/flat-map, constructors and copied display strings.
+    // Apple Clang previously discarded buffer roots before allocation.
+    for opt in ["-O1", "-O2"] {
+        let exe = scratch.0.join(opt);
+        checked(
+            Command::new(fwp())
+                .arg("build")
+                .arg(&src)
+                .args([opt, "-o"])
+                .arg(&exe),
+        );
+        for poison in ["0", "1"] {
+            let output = checked(
+                Command::new(&exe)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison),
+            );
+            assert_eq!(output.stdout, expected, "{opt}, poison={poison}");
+        }
+    }
+}
+
+#[test]
 fn openssl_prefix_is_usable_in_both_backends() {
     // The macOS CI jobs always provide this prefix. A developer without
     // OpenSSL can still run the other platform regressions locally.
