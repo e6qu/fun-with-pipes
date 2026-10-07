@@ -22,8 +22,9 @@ or hoisted merely because their public types are pure.
 `src/rc.rs` inserts and checks `Dup`/`Drop` after the other IR passes.
 Functions and constructors consume owned arguments; primitive, foreign and
 remote calls normally borrow. Selected container primitives consume their
-container argument. `prim_reads_only` and `prim_fresh` refine the runtime
-boundary for arrays, maps and sets.
+container argument. [The shared primitive contract inventory](primitive-ownership.md)
+drives argument modes, runtime sharing and owning wrapper selection for arrays,
+maps and sets. Comparison-only keys borrow; inserted keys remain shared.
 
 Generated drop functions free counted objects at their last reference.
 Unique records, variants and containers can reuse storage. Escape analysis,
@@ -47,10 +48,11 @@ lifetimes. None of these is a general collector-free execution guarantee.
 
 ## Next ownership change
 
-First inventory every primitive's argument/result ownership and whether it
-retains arguments, invokes callbacks or returns aliases. Consolidate these
-contracts so the IR pass and code generator agree, rather than expanding
-independent lists without checking their correspondence.
+The first change consolidates the array/map/set contracts and removes sharing
+for comparison-only keys. Finish inventorying the remaining primitive families,
+including their argument/result ownership, retention, callbacks and aliases.
+Then extend deterministic element/leaf/capture destruction. Keep the IR pass
+and code generator on the same contracts.
 
 Contracts must distinguish borrowing for the call, consuming a reference,
 retaining a reference beyond the call, returning a fresh owned value, and

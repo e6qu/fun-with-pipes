@@ -9,7 +9,7 @@ for priorities and contracts. Update this file before ending a work session.
 - Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
 - Branch: `macos-portability`.
 - Implementation/docs commit: `7ec02d0`.
-- Published PR (ready for review): [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
+- Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
   The user explicitly authorized the push and PR creation on 2026-10-07;
   the earlier publication block is resolved. The implementation and workflow handoff are on GitHub.
 - Continuing authorization: the user requested automatic completion of the
@@ -47,7 +47,7 @@ for priorities and contracts. Update this file before ending a work session.
 
 - Six focused escape-analysis unit tests passed locally.
 - Concatenated ordinary runtime passed Apple Clang syntax checking.
-- Five focused Darwin regressions passed locally on Apple Silicon, including
+- Four focused Darwin regressions passed locally on Apple Silicon, including
   GC stress/verification, global roots, tasks/reverse autodiff, wide records,
   shared-library defaults, static-link rejection and OpenSSL in both backends.
 - All five FFI tests passed locally: interpreted/native foreign calls, a
@@ -98,90 +98,29 @@ for priorities and contracts. Update this file before ending a work session.
 3. Record exact CI results and remaining platform limitations here.
 4. Start the ownership-contract inventory described in `ownership.md`.
 
-## Current CI fixes and prepared work
+## Prepared next branch
 
-- Current published head: `8bc372f`; gate
-  [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219).
-  ARM completed with one golden failure: the socket-enabled `tasks.fwp` also
-  printed timer results without synchronization. Its other targets passed.
-  Benchmark equivalence passed; Linux and Intel are still running.
-  Superseded runs `37582324903` and `37583294535` were cancelled after newer
-  implementation heads were published.
-  Keep preparing ownership and fixing failures; only merging waits for CI.
-
-- Full run [37576889350](https://github.com/e6qu/fun-with-pipes/actions/runs/37576889350)
-  on `ccecf20`: Both macOS jobs failed; Linux full tests and benchmark
-  equivalence passed. The no-fail-fast sweep exposed tutorial `wc` padding,
-  OpenSSL alert wording, GC-stressed list crashes and native server crashes.
-- Reproduced native forms/format server failure locally: SIGSEGV in
-  `fwp_list_items`, reached from `fwp_p_flat_map`. Preserving constructor
-  source buffers, the list source and the flat-map buffer fixes the focused
-  forms test and the stressed web test. The optimized traits program also
-  changed from SIGSEGV to the expected output. A focused Darwin regression
-  now covers `-O1`/`-O2`, GC stress/verification and both reuse-poison modes.
-- Focused fixes checked locally: `cargo test --test rest forms_and_formats_native`,
-  `cargo test --test web native_under_gc_stress`,
-  `cargo test --test macos optimized_lists_under_collection` and
-  `cargo test --test tls streams` and
-  `FWP_TUTORIAL=19 cargo test --test examples tutorial_sessions`, all through the same resource guard with
-  the installed OpenSSL prefix where needed. All passed.
-- Make the tutorial's byte-count command strip BSD `wc` padding. Canonicalize
-  only OpenSSL's alternate `ssl/tls alert bad certificate` label in the TLS
-  snapshot harness; retain all other message and behavior assertions.
-- The shortened `stdlib_fixes` reproducer still crashed after `252d6b1`.
-  A symbolized debugger traced it to `list._partition-step`, called by the
-  specialized right fold with an invalid element. Its temporary buffer lacked
-  a lifetime fence too; both generic and specialized right folds now retain it.
-  Expanded `optimized_lists_under_collection` passes for traits, the shortened
-  iterator/partition fixture and filesystem behavior at `-O1`/`-O2`, with
-  interpreter agreement, GC stress/verification and both reuse-poison modes.
-  The original 300,000-iteration fixture remains unchanged in the full CI suite.
-- Full HTTP/REST coverage and the original long stress fixture still require
-  the latest CI head. The filesystem
-  golden mismatch followed a stress crash that left its scratch directory.
-  Do not claim the full macOS gate passed based on focused checks.
-- Intel's additional failure in `backends_interleave_alike_for_any_slice`
-  came from comparing unsynchronized 20/40 ms wake prints at a one-entry
-  slice. Documented timer order depends on wall time. The fixture now sends
-  both results to a bounded channel, closes it after task.scope completes,
-  then drains/sorts before printing. Output stays identical; missing children
-  still fail the golden comparison. All three slice checks and stressed native
-  runs pass locally. The harness now additionally requires the golden output
-  for every slice of that fixture. Full WASM/fiber checks stay on CI.
-- Prepared/published branch: `ownership-contracts`, checkout
-  `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
-  No second PR is open. All 35 container contracts are centralized; comparison
-  keys borrow. Tests cover aliases/callbacks, count saturation, interior
-  references and traversal spill. Twelve focused checks passed. The key loop
-  allocated 0.0 MiB versus the old boundary's 0.8 MiB, rounded to tenths.
-- After #74 passes and merges, fetch main and rebase that checkout with
-  `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
-  push with lease, then open its PR. Run full CI before its squash merge.
-- Further preparation: published branch `ownership-leaves`, checkout
-  `/private/tmp/fwp-leaf-worktree`, head `2ce7a05`, base `798d2ed`. String/Bytes ownership,
-  copy/alias result contracts and safe leaf destruction are prepared.
-  Its two focused regressions passed with GC/reuse verification; the copy
-  loop, with tracing off and zero collections, freed 0.9 MiB by counts
-  versus 0.0 MiB with freeing disabled. Five FFI
-  checks passed. Full ownership, exceptional cleanup and closures remain work.
-  Borrowed pointer arguments now retain their addresses across allocating
-  primitive calls, preserving conservative GC roots under optimization.
-  This branch has no PR; publish one PR at a time after its parent merges.
-- Next prepared checkout: `ownership-text-results` at
-  `/private/tmp/fwp-text-worktree`, based on `2ce7a05`; implementation is
-  locally tested but not yet committed. It owns fresh nested text result
-  trees and releases text-conversion scratch buffers. Three focused text
-  tests and the earlier leaf/container regressions passed. With tracing off,
-  the text loop reclaimed 2.1 MiB by counts; releasing conversion buffers
-  reduced committed heap from 9.2 to 1.7 MiB in the equivalent focused probe.
-  Full platform gates remain required after its parent merges.
-- Apply the same scoped channel collection to `tasks.fwp`, keeping exact
-  golden output and checking both timer fixtures across slices 1/37/1000,
-  interpreter/native and GC stress. This repairs the remaining ARM failure;
-  do not relax output assertions or enforce undocumented timer wake order.
-  The expanded focused test passed locally: all three fixtures, all slices,
-  both backends and native GC stress, CPU 41.59 s / elapsed 83.89 s under
-  the guard. A new full current-head CI gate is required after publication.
+- Isolated checkout: `/private/tmp/fwp-ownership-worktree`, branch
+  `ownership-contracts`, base `ccecf20` (PR #74's server fix). No second PR
+  is open. Do not mix this implementation into the portability PR.
+- Shared contracts for all 35 array/map/set declarations replace independent
+  IR/codegen lists and select owning runtime wrappers. Comparison-only keys
+  borrow; stored keys and callback values remain runtime-shared.
+- Focused checks through the same guard and shared bounded target directory:
+  `cargo test --lib ownership::tests` (one coverage/invariant check),
+  `cargo test --lib rc::tests` (eight ownership IR checks), and the two
+  `tests/ownership.rs` regressions. The alias/callback regression passes with
+  GC stress, verification and reuse poisoning. The isolated allocation check
+  reports 0.8 MiB for the restored old sharing boundary and 0.0 MiB with
+  borrowing, at the runtime counter's one-decimal precision. Full CI pending.
+- A loop-state experiment uncovered retained field references that can prevent
+  reuse independently of primitive sharing. Recorded in primitive-ownership.md
+  for later IR optimization; no unsupported performance claim.
+- After PR #74 passes and is squash-merged, rebase the prepared branch with
+  `git rebase --onto origin/main ccecf20 ownership-contracts` from its checkout
+  (after fetching main), review, publish one new PR and run full gates.
+- Continue with remaining primitive inventories and typed element/leaf/capture
+  ownership. This prepared change does not finish phase 2.
 
 ## Boundaries and deferred work
 

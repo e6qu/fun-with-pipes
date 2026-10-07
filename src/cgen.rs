@@ -3890,17 +3890,19 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 if self.reuse {
                     // with counted references: arrays written in place, and
                     // new ones owned by compiled code
-                    if sym == "array.set" {
-                        s = "return fwp_p_array_set_own(l0, l1, l2);".into();
-                    } else if sym == "array.push" {
-                        s = "return fwp_p_array_push_own(l0, l1);".into();
-                    } else if matches!(
-                        sym.as_str(),
-                        "map.insert" | "map.remove" | "map.update" | "set.insert" | "set.remove"
-                    ) {
-                        for f in ["map_insert", "map_remove", "map_update", "set_insert"] {
-                            s = s.replace(&format!("fwp_p_{}(", f), &format!("fwp_p_{}_own(", f));
+                    if let Some(crate::ownership::Contract {
+                        result: crate::ownership::ResultOwnership::OwnedContainer { runtime, .. },
+                        ..
+                    }) = crate::ownership::primitive(&sym)
+                    {
+                        let borrowed = format!("fwp_p_{}(", runtime);
+                        if !s.contains(&borrowed) {
+                            return Err(format!(
+                                "owning primitive `{}` has no `{}` call",
+                                sym, runtime
+                            ));
                         }
+                        s = s.replacen(&borrowed, &format!("fwp_p_{}_own(", runtime), 1);
                     } else if crate::rc::prim_fresh(&sym) {
                         let r = s.strip_prefix("return ").and_then(|r| r.strip_suffix(';'));
                         if let Some(r) = r {
