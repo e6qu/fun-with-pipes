@@ -69,6 +69,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
 | ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
 | ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
+| ownership-filter-callbacks | fwp-filter-worktree | 1ea7f07 | 41ef82d |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -212,7 +213,7 @@ its call alone does not acquire the reference needed by a selected output node.
 ## Filter preparation in progress
 
 `ownership-filter-callbacks`, `/private/tmp/fwp-filter-worktree`, base `41ef82d`,
-is not committed yet. Synchronous filter borrows predicate/list, gives selected
+is published at `1ea7f07`, with no PR yet. Synchronous filter borrows predicate/list, gives selected
 elements their own typed references, returns an owned fresh spine and frees
 scratch storage. Direct/captured loops retain specialization and root fences.
 
@@ -251,3 +252,27 @@ FreshTree/FreshSpine: the accumulator may alias a supplied element or capture.
 Add empty/alias/function-accumulator and partial/overapplication checks plus a
 no-tracing differential, then run the focused ownership and full CI gates.
 Fold-right/zip-with and retained callbacks remain separate follow-up scopes.
+
+After map merges, rebase filter from 41ef82d onto main and validate in its own PR.
+
+## Fold transfer preparation
+
+`ownership-fold-transfers`, `/private/tmp/fwp-fold-worktree`, base `1ea7f07`,
+is uncommitted and under final focused validation. Runtime borrowed application
+accepts an owned-prefix length; fold transfers its accumulator, borrows element/
+callback copies, and returns an OwnedAccumulator result. Empty input preserves
+the incoming owned reference. Generic/direct/captured paths preserve specialization
+and original roots. Contract checks, aliases and exact/partial/overapplication
+probes passed. Fixture argument-order errors and a wrapper `_own`/`_owned` naming
+mismatch were fixed. Zero-argument application avoids arithmetic on a null pointer.
+
+The final no-tracing differential restores result sharing in generic and
+specialized fold paths: identical output/zero collections, counts free 1.3 versus
+1.8 MiB. Changing only the unused generic path initially showed no difference;
+the final probe covers the executed specialized path. The focused aggregate regression set passed: twenty-two ownership tests
+(CPU 42.25 s / elapsed 84.77 s under the guard).
+Five FFI checks and the local fat baseline passed (CPU 5.35 s / elapsed
+10.69 s). Formatting and whitespace passed. Full current-head CI remains required
+after parents merge. Next: fold-right and zip-with, remaining contexts/container elements,
+exceptional/retained runtime cleanup, exact count overflow, old-generation/WASI
+reclamation and cycle policy. No general ARC/no-GC claim is established.

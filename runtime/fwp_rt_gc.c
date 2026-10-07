@@ -1306,7 +1306,8 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
  * Split overapplication at actual function boundaries: scalar argument bits
  * must never be interpreted as counted pointers. Returned function values
  * are already owned and are consumed by the next application. */
-static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
+static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_prefix) {
+    if (owned_prefix > n) fwp_trap("internal: invalid owned callback prefix");
     fwp_rc_dup(f);
     for (;;) {
         fwp_clo *c = CLO(f);
@@ -1319,12 +1320,19 @@ static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
         }
         uint32_t need = fi->arity - c->n;
         uint32_t chunk = n < need ? n : need;
-        fi->owned->arguments(args, c->n, chunk);
+        uint32_t transferred = owned_prefix < chunk ? owned_prefix : chunk;
+        V *borrowed = transferred ? args + transferred : args;
+        fi->owned->arguments(borrowed, c->n + transferred, chunk - transferred);
         V result = fwp_apply_owned(f, chunk, args);
         FWP_KEEP_ALIVE(args);
         if (chunk == n) return result;
         f = result;
         args += chunk;
         n -= chunk;
+        owned_prefix -= transferred;
     }
+}
+
+static V fwp_apply_borrowed(V f, uint32_t n, V *args) {
+    return fwp_apply_borrowed_prefix(f, n, args, 0);
 }

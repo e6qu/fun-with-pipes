@@ -81,6 +81,18 @@ static V fwp_p_fold(V f, V z, V xs) {
     return z;
 }
 
+static V fwp_p_fold_own(V f, V z, V xs) {
+    V source = xs;
+    while (xs != 0) {
+        V args[] = {z, OBJ(xs)->f[0]};
+        z = fwp_apply_borrowed_prefix(f, 2, args, 1);
+        xs = OBJ(xs)->f[1];
+    }
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(source);
+    return z;
+}
+
 static V fwp_p_fold_right(V f, V z, V xs) {
     size_t n;
     V *a = fwp_list_items(xs, &n);
@@ -242,6 +254,16 @@ FWP_K V fwp_k_filter_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_
 
 FWP_K V fwp_k_fold(fwp_fn2 f, V z, V xs) {
     while (xs != 0) { z = f(z, OBJ(xs)->f[0]); xs = OBJ(xs)->f[1]; }
+    return z;
+}
+
+FWP_K V fwp_k_fold_owned(fwp_fn2 f, V z, V xs) {
+    V source = xs;
+    while (xs != 0) {
+        z = f(z, OBJ(xs)->f[0]);
+        xs = OBJ(xs)->f[1];
+    }
+    FWP_KEEP_ALIVE(source);
     return z;
 }
 
