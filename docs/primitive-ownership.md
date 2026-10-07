@@ -170,3 +170,23 @@ promotes typed inputs and the result to conservative runtime management.
 Function table metadata exists only for live functions used as closure values;
 it does not change source currying or pipe semantics. See [ownership.md](ownership.md)
 for evidence and the remaining capture/exceptional-cleanup gaps.
+
+## Borrowed dynamic callback foundation
+
+Owned function metadata also describes duplication of a borrowed argument slice
+by monomorphic parameter type. `fwp_apply_borrowed` retains the original function
+owner, duplicates only pointer-bearing supplied parameters and consumes those
+copies through the owned entry. Partial application transfers copies into a new
+closure. Overapplication splits at each actual function's arity and uses the
+returned function's types for the next slice; scalar bits are never used to guess
+pointer ownership. Returned aliases carry an owned reference. Entries without
+metadata retain the conservative runtime-sharing fallback.
+
+The extra argument-helper pointer increases native owned metadata from two to
+three pointers per live closure function (16 to 24 bytes on 64-bit targets).
+The main function-table row remains 32 bytes; no runtime performance claim is
+made. This foundation does not yet change map or retained runtime callbacks.
+`tests/borrowed_callbacks.rs` checks the generated String/I64 argument metadata,
+scalar bits resembling an allocation, exact and partial calls, overapplication
+across a scalar-to-function boundary, captured/input aliases and a stack callback
+at O1/O2 with collection stress/verification and both reuse-poison settings.

@@ -5184,11 +5184,16 @@ static const fwp_exec_spec exec_spec{i} = {{
             let f = &prog.funcs[id];
             let mut caps = String::new();
             let mut cleanup = String::new();
+            let mut arguments = String::from("    (void)a; (void)start; (void)n;\n");
             let params = f.ty.params(f.arity as usize).0;
             for (j, ty) in params.iter().enumerate() {
                 if !crate::rc::needs_rc(&prog.shapes, ty) {
                     continue;
                 }
+                let _ = writeln!(
+                    arguments,
+                    "    if (start <= {j} && {j} - start < n) fwp_rc_dup(a[{j} - start]);"
+                );
                 let drop = if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
                     format!("fwp_drop{}", g.drop_id(ty))
                 } else {
@@ -5217,7 +5222,7 @@ static const fwp_exec_spec exec_spec{i} = {{
             };
             caps.insert_str(0, "    (void)v; (void)duplicate;\n");
             let args: Vec<String> = (0..f.arity).map(|j| format!("a[{j}]")).collect();
-            let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n    V result = f{id}({});\n{cleanup}    return result;\n}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}}};", args.join(", "));
+            let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n    V result = f{id}({});\n{cleanup}    return result;\n}}\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n) {{\n{arguments}}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}, fwp_args{id}}};", args.join(", "));
         }
     }
     let mut out = String::new();
