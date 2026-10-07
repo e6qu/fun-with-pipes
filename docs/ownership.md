@@ -262,11 +262,12 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#86 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#88 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
-Right-fold is next; other callbacks, runtime unwind and retained owners remain
-preparation.
+Right-fold transfers its accumulator through a typed owned argument span;
+list-prefix has passed full CI and merged; list-copy is next. Other callbacks, runtime unwind and retained owners
+remain preparation.
 
 ## Prepared work and acceptance limits
 
@@ -342,10 +343,9 @@ Library finalization remains idempotent and must not double-close a discarded
 handle. Preserve affine File restrictions and forbidden partial resource capture.
 
 Typed ResourceRegion metadata and interpreter frame release are now prepared,
-including a reproduced inlined-helper lifetime repair. Native regions currently
-evaluate their bodies without implicit destruction; connecting typed File
-ownership is the next required implementation step. This is not delivered
-ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
+including a reproduced inlined-helper lifetime repair. A further native preparation now retains original frame references and releases
+them on normal and nonlocal exits. File retain/drop and borrowed I/O dispatch are
+connected, with owned error-handler payloads. This is not delivered ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
 errors, cancellation and optional flags before accepting general disposal. Keep
 tracing available until complete ownership and cycle acceptance is demonstrated.
 
@@ -353,3 +353,36 @@ Fusion treats resource regions as observable even when their original source
 arrows are pure. A controlled pipeline verifies fusion is blocked specifically
 by its frame marker; removing the marker permits fusion. Required destructor
 effects cannot be interleaved solely because the body reports no trap/effect.
+
+
+A separate File runtime preparation introduces a 64-bit header owner count,
+independent of the collector's count slot. The last owner closes the stream;
+explicit close and library teardown remain idempotent. Header/path storage still
+uses the existing allocator lifetime. The internal header grows from 16 to 24
+bytes (8-byte alignment); this is no claim of fewer bytes or allocations.
+Owned read/write wrappers retain returned File aliases and protect the extra
+reference through I/O errors and conversion/allocation traps. A fresh read String
+has its own unwind owner until the tuple takes ownership; FWP_FREE=0 leaves its
+storage to the collector. A subsequent native compiler preparation now selects those wrappers.
+Native region disposal, resource aggregates and escaped/error/cancellation owners
+remain required before accepting implicit File cleanup or tracing-free coverage.
+
+
+Native region cleanup has focused descriptor-pressure/omission evidence: 64
+open/discard iterations succeed under a 32-descriptor child limit with tracing
+and reuse/free disabled; omitting frame release fails. The original parameter's
+four-descriptor EMFILE lifetime remains unchanged. Incoming frame references,
+partially initialized binding slots, record/variant results and handled File error
+aliases have focused coverage. Original aggregate binding slots currently box
+values; retaining flattened fields without extra wrappers is a follow-up. Header
+storage, shared runtime graphs and WebAssembly aggregate ownership remain open.
+
+
+A further runtime-boundary preparation owns file.with's callback tuple, retains
+its typed result before disposing that tuple and releases the original scoped
+File owner. Actual returned File, cached task File and loop Step File sources
+match the raw interpreter under disabled reuse/free/tracing and real GC stress.
+Result-retain omission is detected. FWP_FREE=0 keeps ordinary child and task/channel
+object storage from count-based freeing while still closing resource children;
+exact zero freed-byte accounting and an ordinary-child-free negative control
+verify this policy. The WebAssembly RC stubs still require an ownership repair.

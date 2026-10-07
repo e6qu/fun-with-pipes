@@ -47,8 +47,13 @@ for their exact status; prepared changes are not merged support.
 Original File frame anchors now have a preparation: ResourceRegion records typed
 parameter/local binders before optimization, protects them during inlining, and
 releases interpreted frame slots on return/error. Returned aliases keep their
-owners. Native region destruction is still the next ownership step; this does
-not establish implicit resource disposal or tracing-free execution.
+owners. Native frame retain/release now also has a subsequent preparation, including
+mandatory typed File ownership, borrowed I/O dispatch and owned effect-handler
+payloads. Descriptor-pressure and trap-order checks pass locally; sequential full
+CI, shared runtime/WASM resource ownership and storage reclamation remain open.
+A further scoped-callback preparation transfers file.with results precisely and
+respects FWP_FREE=0 for ordinary children of resource-bearing owners.
+This does not establish merged File ARC or tracing-free execution.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in

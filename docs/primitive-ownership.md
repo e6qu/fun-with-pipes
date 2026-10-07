@@ -185,8 +185,7 @@ metadata retain the conservative runtime-sharing fallback.
 The extra argument-helper pointer increases native owned metadata from two to
 three pointers per live closure function (16 to 24 bytes on 64-bit targets).
 The main function-table row remains 32 bytes; no runtime performance claim is
-made. The synchronous list paths below use this foundation; retained runtime callbacks
-keep sharing.
+made. This foundation does not yet change map or retained runtime callbacks.
 `tests/borrowed_callbacks.rs` checks the generated String/I64 argument metadata,
 scalar bits resembling an allocation, exact and partial calls, overapplication
 across a scalar-to-function boundary, captured/input aliases and a stack callback
@@ -308,26 +307,24 @@ transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchm
 remain required; retained callbacks, exceptions and remaining primitive boundaries
 still rely on conservative runtime ownership.
 
-## Synchronous prefix and suffix ownership
 
-`take-while` and `drop-while` borrow their callback and source list without
-retaining the function beyond the call. Predicates consume typed temporary
-copies and stop at the first rejected element. Direct and captured specialized
-loops preserve this order and keep original allocation addresses live across
-allocating callbacks.
+## Prepared File and effect boundaries
 
-`take-while` duplicates each selected element's typed reference, builds fresh
-owned list nodes and releases its scanned temporary buffer. `drop-while` returns
-one owned reference to the remaining tail, including the unchanged-input path;
-the source owner's cleanup must not reclaim that tail. An empty suffix needs
-no count. The result contract records argument 1 as the possible alias.
+The following contracts are prepared in queue rows 74–76; they require their
+sequential full CI and merges. They are not current main support. Original File
+frame anchors preserve interpreter lifetimes alongside these ordinary owners.
 
-`tests/prefix_ownership.rs` checks empty/all/no-match cases, dynamic predicates,
-function elements, retained aliases, results used after source cleanup and a
-predicate that would trap if invoked after the first rejection. Interpreter and
-native outputs agree at O1/O2 with stack allocation both ways, collection
-stress/verification and both reuse-poison modes. The identical no-tracing loop
-frees 8.2 MiB by counts versus 5.0 MiB after restoring prefix and suffix result
-sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
-0.1 MiB counter precision, zero collections). Full platform CI remains required;
-this does not establish general no-tracing execution.
+| Primitive | Arguments | Result |
+|---|---|---|
+| file.open/create | borrowed path | new File header owner |
+| file.read-all | borrowed File | owned String/File tuple; File alias retained through errors |
+| file.write | borrowed String and File | owned File alias; failed I/O releases only its extra owner |
+| file.close | borrowed File | unit; closes stream idempotently |
+| file.with | borrowed path and synchronous callback | owned callback result transferred before disposing its tuple and scoped File |
+| fail | borrowed typed payload | retained error owner transferred before unwinding |
+| attempt | borrowed callback and argument | owned Result containing either callback output or retained error payload |
+
+File header references are independent of native GC slots. FWP_FREE=0 keeps
+ordinary children and task/channel object storage from count-based freeing while
+still disposing resource children. Header/path storage and WebAssembly aggregate
+logical ownership remain open; retain the fallback and phase 2 acceptance checks.
