@@ -79,25 +79,23 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
 | 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 /49.89 s |
 | 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 /42.20 s + exact unit3.40 /6.85 s |
+| 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 /49.42 s |
 
-Rows17–35 are published preparations with passing focused tests, lint and
+Rows17–36 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row35 final head646cca038ed8012b012c3e10faeac96e20ddd5f7 is clean on
-actual baseada6a3a, published with exact lease against OLD608ae7b. Six tests
-pass20.98 s CPU /42.20 s elapsed plus exact IR unit3.40 s /6.85 s;
-lint2.40 s /4.71 s, format0.35 s /0.73 s. An incorrect expanded lease hash
-was rejected without remote mutation; verified actual hash retry published.
-Current independent task: row36 worker-boxing rebased from its ACTUAL current
-base OLD608ae7b onto actual current row35 head646cca0 (temporary38ed77e).
-New source oracle uses FWP_NO_OPT=1; worker_boxing_ownership,
-constructor_unwind_ownership and compiler_call_liveness pass all seven
-tests24.61 s CPU /49.42 s elapsed; lint and format pass. Final doc amend
-and publication follow. Preserve immutable OLD anchors; no additional PR.
+Row36 final headdf5862861e71c84ca200a2374cab495f9cebf4d0 is clean on
+actual base646cca0, published with exact lease against OLDdc4f946. Seven tests
+pass24.61 s CPU /49.42 s elapsed, lint2.33 s /4.75 s, format0.35 s /0.63 s.
+Current independent task: row37 worker-preparation rebased from ACTUAL current
+base OLDdc4f946 onto actual row36 headdf58628 (temporaryd9f680b). New source
+oracle uses FWP_NO_OPT=1; worker_preparation_ownership, worker_boxing_ownership
+and compiler_call_liveness pass all seven tests23.82 s CPU /47.71 s
+elapsed; lint and formatting pass. Final doc amend/publication follow. Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
@@ -145,7 +143,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-worker-boxing-worktree; focused worker boxing checks are complete; no local workload is active.
+belongs to /private/tmp/fwp-worker-preparation-worktree; focused worker argument checks are complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.12 s CPU /0.85 s elapsed).

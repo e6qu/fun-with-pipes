@@ -8000,3 +8000,25 @@ Worker boxing lint (cargo clippy --test worker_boxing_ownership --test
 constructor_unwind_ownership --test compiler_call_liveness -- -D warnings)
 passes2.33 s CPU /4.75 s elapsed; fmt check0.35 s /0.63 s. Nine current
 root docs copied before final amend; tested source stays unchanged.
+
+Final worker-boxing preparationdf5862861e71c84ca200a2374cab495f9cebf4d0
+is clean on actual base646cca0, published with exact lease against OLDdc4f946.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row37 OLDc97dd03 rebases from immutable parentdc4f946 onto actual row36
+headdf58628 (initiald9f680b); nine root docs resolve conflicts. New source
+oracle sets FWP_NO_OPT=1. Guarded clean0.00 s /0.14 s; formatting0.34 s
+/0.62 s. Worker preparation, boxing and compiler call-liveness checks
+started together to cover incoming-owner transfer and partial field retention.
+
+Guarded cargo test --test worker_preparation_ownership --test
+worker_boxing_ownership --test compiler_call_liveness passes all seven
+tests23.82 s CPU /47.71 s elapsed. Boxed wrappers retain original
+arguments before preparation, protect each completed field duplicate and
+transfer unboxed/scalar arguments only at entry. Partial retention failures,
+external aliases, raw interpreter and O1/O2 stress/verification/poison pass.
+
+Worker preparation lint (cargo clippy --test worker_preparation_ownership
+--test worker_boxing_ownership --test compiler_call_liveness -- -D warnings)
+passes2.34 s CPU /4.73 s elapsed; fmt check0.34 s /0.61 s. Nine current
+root docs copied before final amend; no tested source changes follow.
