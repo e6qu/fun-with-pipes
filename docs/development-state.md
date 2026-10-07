@@ -50,7 +50,7 @@ the fallback. Prior acceptance details and failed/superseded runs are in history
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
 production PR, repaired exact head `5683df1c8a96bad30e3c679987e87694387c3b62` on actual
 main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006543549 and
-roadmap_docs38006543521 are running. Require all seven passing exact-head
+roadmap_docs38006543521 passes; full CI is running. Require all seven passing exact-head
 checks, then squash with subject
 `Protect live compiler owners across calls and cancellation` and empty body.
 The complete repair is published; freeze it unless a real failure needs repair.
@@ -63,8 +63,12 @@ Strong audit passes0.42CPU/3.51elapsed. Superseded7a550b7 misses a final-scalar
 pending owner; its CI38006009928 is cancelled only after fresh gates launch.
 Retained roadmap/revision-027-7a550b724047 preserves it. Neither prior head is
 eligible to merge. Next propagate the complete repair through preparations.
-Row35 is restored to its recorded published head after aborting its old rebase;
-the adjacent constructor/regression test conflict must preserve both changes.
+Rows28–35 inherit the exact complete repair. Row35 test-insertion conflict
+preserves its constructor test and both new argument controls; strict source
+parity and handoff audits pass. Complete journal28–35 is finished: initial
+guard7.37CPU/80.51elapsed stopped at the conflict, reviewed docs continuation
+0.00/0.14s and guarded resume1.24/16.34s pass. Next refresh36–41, then run
+fresh combined scoped Linux evidence. Each production PR still needs full gates.
 
 Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
 Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
@@ -77,8 +81,8 @@ transfer, preserving failure cleanup. Earlier computed and duplicated values
 retain typed owners during later evaluation. Stack/worker/loop shapes remain
 visible. No allocation thresholds or existing assertions were weakened.
 
-Next, refresh row28 FROM its recorded actual base onto
-the repaired PR106 head. Carry the exact repair into later preparations;
+Row28 is now131ec8ebdd0691571eab15924dd598b921fbc6c1 on actualPR1065683df1.
+Carry the exact repair into later preparations;
 previous source-parity and focused evidence predate this change. After PR106
 passes all seven exact-head gates and merges, rebase row28 onto its actual
 squash, validate it and open the next PR. Keep only one production PR open.
@@ -107,7 +111,7 @@ still need their final squash rebases and six exact-head full gates.
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | e83800d9ac44 | c434692ccb6f | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 34 ownership-argument-preparation | d3e1f6d4ed04 | e83800d9ac44 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
-| 35 ownership-constructor-unwind | 432a3332c4f7 | dcf18f01c2fb | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
+| 35 ownership-constructor-unwind | 1a01dd91bcfd | d3e1f6d4ed04 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
 | 37 ownership-worker-preparation | 7de346c56ec4 | 0584ab3ac77b | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | 61c5f8e91cc5 | 7de346c56ec4 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
