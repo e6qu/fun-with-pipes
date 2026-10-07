@@ -82,7 +82,10 @@ impl<'p> Opt<'p> {
     /// Cheap expressions that can be duplicated freely.
     fn trivial(&self, e: &Expr) -> bool {
         match e {
-            Expr::Local(_) | Expr::Func(_) => true,
+            Expr::Local(_) => true,
+            // CAF evaluation may allocate or trap and must occur before the
+            // callee, even when its argument is unused after inlining.
+            Expr::Func(id) => self.arity(*id) > 0,
             Expr::Const(v) => {
                 !matches!(
                     v,
