@@ -161,7 +161,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
 | 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
 | 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
-| 20–23 | Generated lists, typed container elements and old-value reclamation | Sequential CI and complete boundary checks |
+| 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
+| 21–23 | Typed container elements and old-value reclamation | Sequential CI and complete boundary checks |
 | 24–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
@@ -182,7 +183,7 @@ not automatic cycle reclamation or general tracing-free support.
 ## Validation and limits
 
 Merged contracts through #90 passed their full platform gates. Rebased focused
-checks for prepared rows14–18 pass with explicit FWP_NO_OPT=1 raw interpreter
+checks for prepared rows14–20 pass with explicit FWP_NO_OPT=1 raw interpreter
 oracles; all sequential full gates remain required. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison

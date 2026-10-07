@@ -7165,3 +7165,109 @@ stdout/stderr and a signal exit (-1 in the harness), not a timeout. Completed
 job113321340968 log is /private/tmp/fwp-resource-arm-gc-37780278972.log.
 Other jobs remain live; this failed run is not acceptance. Root cause is unknown
 and a focused HTTP reproduction is next.
+
+PR91 passed all six CI37774239006 gates at7018086b8f9851f576350ba24e8af5041c3bb594
+and explicitly squash-merged as3c0685c34f9808db82ef9a9b151a6fcfb8eddb47.
+Whole message verified: Keep call effect contexts separate from pure callback types,
+one line, empty body. Nine authoritative docs were refreshed/saved in
+/private/tmp/fwp-main-docs-pre91 before main fast-forward; merged call-effect
+design text is retained in the streamlined design. Next wide-count final
+rebase uses actual current7018086 onto3c0685c, not immutable OLD89b7bde.
+
+Wide counts final-rebased from actual current7018086 onto real squash3c0685c.
+Source/runtime/tests/workflow match verifiedcb0d7e6 exactly. Sharing regression
+passes7.16 s CPU /15.00 s elapsed. The initial filtered invocation ran zero
+wide_counts tests; a separate unfiltered focused command runs all three and
+passes7.28 s /14.80 s. No skipped check supplies verification. Current root
+docs preserve the merged call-effect rule and streamlined primitive inventory.
+
+Final wide-count branchbd7a20bfd83369e87ca9100c75503ab4ad73e8d5 published
+with exact lease against previouscb0d7e6. PR92 is the sole open PR, created
+after PR91 merge and final focused checks. Final fmt0.33 s /0.60 s.
+Source/test differences from verifiedcb0d7e6 are empty; current docs preserve
+all later preparation status and evidence failure.
+
+## Resource evidence HTTP ownership repair, 2026-10-08
+
+Combined resource-frame evidence ee4bd2238e078238cf1a0867e1c891cbf3170279
+(CI37780278972) passes bench and fails Linux plus all four macOS gates.
+Full logs: /private/tmp/fwp-resource-all-failures-37780278972.log. HTTP,
+REST/TLS/web and native standard-library behavior regress. Focused HTTP build
+passes13.91 s CPU /27.91 s elapsed; stress execution signals SIGSEGV (-11).
+LLDB identifies null Bytes passed to string.from-bytes from the successful
+HTTP client response branch. Debugger exit0 is not program success. Emitting
+C passes0.98 s /1.97 s. FWP_FRAME_FIELDS=0 build7.23 s /14.51 s still crashes.
+
+Temporarily reverting only row85 match context (guarded cargo run -- build
+tests/run/http.fwp -O2) passes13.79 s /27.54 s and restores golden output
+under GC_STRESS=1/VERIFY/SEED=42, run0.31 s /1.90 s. Restored src/rc.rs
+after diagnosis. Typed stack scrutinee children were released while whole
+pattern aliases retained only an off-heap outer pointer. Propagating the
+stack child owners into whole binders repairs their Dup/Drop. Fixed HTTP
+build13.62 s /27.15 s; stress run0.31 s /1.73 s.
+
+Focused tests/stack_match_ownership.rs compares FWP_NO_OPT=1 interpreter
+with O1/O2 native on both constructor/literal and whole-value paths, GC-off/on
+and poison modes. Omitting only whole-binder child retains exposes the old
+invalid lifetime at both optimization levels. Initial expected-output strings
+had concatenation order reversed; the raw oracle caught this test error,
+corrected to data-last behavior before testing the lifetime control. Final
+check1.64 s CPU /3.89 s elapsed passes. Related match_context_ownership,
+resource_frame_fields, resource_frame_variants and resource_match_context
+checks (five tests) pass15.17 s /30.59 s. All local invocations use the fwp
+resource guard. Full builds/tests remain on GitHub; failed evidence is not a gate.
+
+The repaired HTTP executable matches tests/run/http.out exactly with empty
+stderr in four GC-off/on × REUSE_VERIFY-off/on combinations, GC_STRESS=1,
+VERIFY=1, SEED=42. Guarded python3 /private/tmp/fwp-verify-resource-http.py
+passes1.18 s CPU /6.64 s elapsed. Evidence lint (cargo clippy --test
+stack_match_ownership -- -D warnings) passes2.47 s /4.99 s, format0.45 s
+/0.85 s. Transfer repair to production row85; clean shared fwp artifacts
+0.00 s /0.14 s before production checks. Full runner gates remain required.
+
+On actual production row85 parent3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778,
+all five stack_match_ownership, match_context_ownership, resource_frame_fields
+and resource_frame_variants tests pass16.71 s CPU /36.11 s elapsed. The source
+match_context oracle now explicitly uses FWP_NO_OPT=1 (the field-frame oracle
+already did). Repaired evidence includes later87 raw-oracle and source tests;
+its distinct checks do not substitute for the production-ancestry check.
+
+Production lint (cargo clippy --test stack_match_ownership --test
+match_context_ownership -- -D warnings) passes2.45 s /4.96 s, format0.45 s
+/0.86 s. Production follow-up subject: Preserve stack children through
+whole-value match binders. Whole messages remain one line, at most80 chars,
+empty body. Nine authoritative docs are preserved in its publication snapshot.
+
+Production row85 follow-up872372452a1071db124f8e4cc8ae16027cc8f337 preserves
+immutable OLD3a0cbdb/parentae00e69. Row86 remains based on3a0cbdb; later
+rebasing it onto row85's actual squash must not replay this follow-up.
+Evidence already contains the raw match_context oracle fix from row87, so its
+repair delta is the identical nine-line cgen change plus the new focused test.
+
+Production repair872372452a1071db124f8e4cc8ae16027cc8f337 is published clean.
+Combined evidence repairbf05481ac5c6e60c4e05872a241a2ff436cb457f is published
+clean and queued as CI37798736754. The required Linux WASI/resource stage
+now includes stack_match_ownership; all six complete gates remain required.
+Earlier failed CI37780278972 stays recorded and was not cancelled or accepted.
+
+## Raw generation oracle preparation, 2026-10-08
+
+Row20 ownership-list-generation rebases immutable OLDfad9b1ad08f65c7602c9e9c898d7f8afce438d32
+from OLD parentc05a5d9c7d866286a4b778bd53b6d2c85cdbcf7f onto current
+row19 head6ce37fb180e1d88903dd94dadaf47181085ab09e (initial4b5186f).
+Resolve only PLAN/state/primitive conflicts using all nine authoritative docs.
+Both source interpreter oracles now explicitly use FWP_NO_OPT=1. Three
+list_generation_ownership tests pass13.69 s CPU /27.47 s elapsed under the
+fwp guard, including repeated601 closure aliases, O1/O2 and stack modes,
+GC stress/verification/poison, no-reuse/no-free and scalar address-shaped bits.
+The unchanged focused no-tracing control measures released graph storage;
+boxed128-bit numeric payload ownership remains a separate gap, not solved
+by fresh list spines. Full sequential gates remain required. Shared target
+was switched with guarded cargo clean -p fwp,0.05 s /0.37 s.
+
+Generation lint (cargo clippy --test list_generation_ownership -- -D warnings)
+passes2.48 s CPU /4.89 s elapsed. Compact primitive inventory now distinguishes
+row20 typed repeat aliases/fresh range spines from pending21–23 container work,
+including the unchanged boxed128-bit shared payload limitation.
+
+Generation format passes0.43 s CPU /0.83 s elapsed. No local workload is active.

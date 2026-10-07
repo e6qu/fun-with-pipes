@@ -372,6 +372,27 @@ static V fwp_p_range(int k, V lo, V hi) {
     return r;
 }
 
+/* Numeric payload representation is unchanged; only list nodes are owned. */
+static V fwp_p_range_owned(int k, V lo, V hi) {
+    V r = 0;
+    if (k == K_U128) {
+        u128 a = fwp_u128(lo);
+        for (u128 i = fwp_u128(hi); i > a;) {
+            i--;
+            r = fwp_rc_fresh(fwp_cons(fwp_box_u128(i), r));
+        }
+        return r;
+    }
+    i128 a = fwp_as_i128(k, lo);
+    for (i128 i = fwp_as_i128(k, hi); i > a;) {
+        i--;
+        V x;
+        fwp_int_fits(i, k, 0, &x);
+        r = fwp_rc_fresh(fwp_cons(x, r));
+    }
+    return r;
+}
+
 static int fwp_str_eq(V a, V b) {
     return STR(a)->len == STR(b)->len && memcmp(STR(a)->d, STR(b)->d, STR(a)->len) == 0;
 }

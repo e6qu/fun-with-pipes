@@ -31,23 +31,26 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Delivered and sole open PR
 
-Main: cca99c07c4c35c37bcdcb19549e4027abfdcae24, squash #90. All six
-CI37765137522 gates passed at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731.
-Verified whole message: `Own optional list aliases and borrow synchronous find predicates`.
-#74–#90 deliver native macOS and ownership through optional list results.
-Phase 1 is done, phase 2 incomplete, phases 3–6 pending.
+Main: 3c0685c34f9808db82ef9a9b151a6fcfb8eddb47, squash #91. All six
+CI37774239006 gates passed at7018086b8f9851f576350ba24e8af5041c3bb594.
+Verified whole message: `Keep call effect contexts separate from pure callback types`,
+one line, empty body. #74–#91 deliver native macOS, selected ownership through
+optional list results, and separate call-effect contexts. Phase1 is done,
+phase2 incomplete, phases3–6 pending. Nine live docs were refreshed/preserved
+before the fast-forward; current design retains the merged call-effect rule.
 
-Sole open [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91):
-inference-call-effects, /private/tmp/fwp-inference-worktree, exact
-7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: five gates pass;
-Intel regular is the last running gate. Four focused call_effects tests
-pass17.05 s CPU /34.05 s elapsed; explicit raw-oracle rerun1.72 s /3.50 s;
-clippy2.36 s /4.69 s, fmt0.34 s /0.59 s.
-After all six gates pass, squash with subject:
-`Keep call effect contexts separate from pure callback types`, empty body.
-After #91 merges, rebase next row14 from its actual current base7018086 onto
-the real squash, preserve current docs, rerun affected focused checks, publish
-with an exact lease and open the sole next PR. OLD anchors stay immutable.
+Sole open [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92):
+ownership-wide-counts, /private/tmp/fwp-wide-worktree, exact
+bd7a20bfd83369e87ca9100c75503ab4ad73e8d5 on actual main3c0685c. Source/tests
+match verifiedcb0d7e6 exactly. Final sharing check passes7.16 s /15.00 s;
+all three wide_counts checks7.28 s /14.80 s, fmt0.33 s /0.60 s. Initial
+filtered invocation ran zero wide tests; separate unfiltered rerun supplies
+coverage. CI37786675129: bench and both dedicated macOS GC gates pass at the
+exact head; Linux also passes; both regular macOS gates remain in progress. All six are required. Squash subject:
+`Keep native reference counts exact beyond byte-sized metadata`, empty body.
+After it passes and merges, rebase row15 from actual current basecb0d7e6 onto
+its real squash; preserve OLD anchors and current docs. Separate HTTP GC crash
+repair is active; failed evidence is not acceptance.
 
 ## Next sequential preparations
 
@@ -57,7 +60,7 @@ are archived. Current bases below differ from immutable OLD queue parents.
 
 | Row / branch | Current head | Actual current base | Focused checks (CPU / elapsed) |
 |---|---|---|---|
-| 14 ownership-wide-counts | cb0d7e6db7e5, published | 7018086b8f98 | wide_counts 14.19 /28.94 s; sharing 0.75 /1.79 s; lint 2.34 /4.78 s |
+| 14 ownership-wide-counts | bd7a20bfd833, PR92 | 3c0685c34f98 | wide_counts 14.19 /28.94 s; sharing 0.75 /1.79 s; lint 2.34 /4.78 s |
 | 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
 | 16 ownership-sort-callbacks | 5c19337f216d, published | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
 | 17 ownership-state-sequences | 15743b853d6a, published | 5c19337f216d | state_sequence_ownership 12.09 /24.23 s; lint 2.34 /4.61 s |
@@ -66,12 +69,14 @@ are archived. Current bases below differ from immutable OLD queue parents.
 Rows14–18 are published clean with exact leases against previous remote
 heads. Row18 full head112f3c8de87beddab2374f51e19d6dc94846919d
 includes the documentation-only inventory cleanup; tested runtime is unchanged. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
-Row19 structural-list is being prepared from immutable OLDparent787763d onto
-current loop112f3c8. Keep OLDheadc05a5d9c7d866286a4b778bd53b6d2c85cdbcf7f
-unchanged; its later rebase uses actual current base112f3c8. Three raw oracles
-now use FWP_NO_OPT=1. Four list_structure_ownership checks pass16.10 s CPU
-/32.47 s elapsed; clippy lib/fixture2.45 s /4.99 s; format0.33 s /0.61 s.
-Publish with exact lease against OLDc05a5d9, then diagnose HTTP. No new PR.
+Row19 published clean as6ce37fb180e1d88903dd94dadaf47181085ab09e on actual
+current base112f3c8; preserve immutable OLDc05a5d9/parent787763d. Three raw
+oracles, four structural checks16.10 s /32.47 s, lint2.45 s /4.99 s and
+format0.33 s /0.61 s pass. HTTP GC repair is published and full evidence is queued. Row20 generation
+is rebased onto actual current19 base6ce37fb (temporary head4b5186f);
+both source interpreter oracles now explicitly use FWP_NO_OPT=1. Its three
+focused tests pass13.69 s CPU /27.47 s elapsed, with shared target switched using
+guarded clean0.05 s /0.37 s. Preserve OLDfad9b1a/parentc05a5d9.
 Worktree paths follow queue NAME; all source checks, sharing controls, format
 commands and compiler flags are preserved in history. Later rebase each current
 base onto its parent's actual squash, keeping OLD heads/parents untouched.
@@ -91,14 +96,23 @@ not production delivery. Each sequential PR still needs its exact-head gates.
 Evidence workflows and baseline repairs never enter production ancestry.
 
 Current resource-frame evidence: ownership-evidence-resource-frames,
-/private/tmp/fwp-resource-evidence-worktree, exact
-ee4bd2238e078238cf1a0867e1c891cbf3170279, CI37780278972: ARM GC fails
-http.fwp under GC_STRESS=1/VERIFY with empty output and signal exit (-1 in
-the harness). Completed job113321340968 log is
-/private/tmp/fwp-resource-arm-gc-37780278972.log. Intel GC/regular run; other
-jobs remain queued. Diagnose a focused HTTP reproduction; no root cause yet.
-It adds rows79–88 and their required regressions to the passing WASM/resource
-baseline. Preserve live runs; diagnose failures and keep preparing separate work.
+/private/tmp/fwp-resource-evidence-worktree, repaired exact
+bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI37798736754 queued. It adds
+rows79–88 and a required stack_match_ownership regression to the passing
+WASM/resource baseline. Row85 production repair is published as
+872372452a1071db124f8e4cc8ae16027cc8f337, parent OLD3a0cbdb. Both
+publications have verified one-line messages and empty bodies. No second PR.
+
+Previous exactee4bd2238e078238cf1a0867e1c891cbf3170279, CI37780278972:
+bench passes, all five other gates fail (HTTP, REST/TLS/web and native std).
+The focused HTTP GC crash was traced to whole pattern aliases retaining only
+a stack aggregate's outer pointer while its newly typed scrutinee dropped
+children. Propagating child owners repairs Dup/Drop without reverting nominal
+File disposal. Omission control, raw interpreter agreement, related ownership
+checks and exact HTTP golden in GC-off/on poison modes pass; detailed commands
+and failed logs are in [history](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08).
+Full repaired gates remain required; prior failures supply no acceptance.
+Evidence workflows and baseline repairs never enter production ancestry.
 
 Repaired failures preserved in history: WASI descriptor audit uses fstat rather
 than fcntl(F_GETFD); byte reads bypass UTF-8 validation (queue72 current22a520c);
@@ -118,7 +132,7 @@ Rows79–88 are published with focused evidence; full sequential CI remains requ
 | 82 | Constructor disposal | 17869223a502 | Allocation/registration failure; intact registry growth |
 | 83 | Variant frame holders | 786e4bbb99f1 | Parent boxes, dynamic tags and partial-retain traps |
 | 84 | Variant binding kinds | ae00e6929e86 | Per-path payload initialization; implicit one-close audit |
-| 85 | Match scrutinee types | 3a0cbdb33b79 | Whole-pattern context; typed temporary; implicit close |
+| 85 | Match scrutinee types | 872372452a10 | Typed context plus whole stack binder child owners |
 | 86 | Record binding kinds | f85cc4e09db4 | Per-path field initialization; allocation and close audits |
 | 87 | Nominal source context | 8abfd46b3476 | Explicit raw oracles; 64 nested File discards under32 descriptors |
 | 88 | Channel cycles | 291f8f75f196 | Close retains queue; typed drain breaks counted cycle |
@@ -163,8 +177,23 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to structural-list checkout. Guarded cargo clean -p fwp before switching
-checkouts; last switch0.00 s /0.13 s. No local workload is active.
+belongs to resource-evidence checkout. Guarded cargo clean -p fwp before switching
+checkouts; last switch0.00 s /0.13 s. Focused HTTP build passes13.91 s CPU /27.91 s elapsed; emitted C passes
+0.98 s /1.97 s. The stress run crashes; debugger exit success is not a passing
+program check. Boxed-frame control builds7.23 s /14.51 s and crashes too.
+The temporary row85 revert is restored; src/rc.rs matches the evidence head.
+The cgen fix and tests/stack_match_ownership.rs pass focused validation.
+Exact HTTP golden matches in all four GC-off/on and poison combinations
+(guarded python3 /private/tmp/fwp-verify-resource-http.py:1.18 s /6.64 s).
+Evidence lint2.47 s /4.99 s and format0.45 s /0.85 s pass. Shared target now belongs to row20 generation; prior row85 switch used
+guarded clean0.00 s /0.14 s. Production five focused checks pass16.71 s CPU /36.11 s elapsed,
+including the existing source match oracle corrected to explicit FWP_NO_OPT=1.
+Production lint2.45 s /4.96 s and format0.45 s /0.86 s pass; row20 focused tests and lint2.48 s /4.89 s pass as recorded above. Row85 repair is committed as872372452a1071db124f8e4cc8ae16027cc8f337,
+following immutable OLD3a0cbdb; row86 actual base remains3a0cbdb. Separate
+full evidence CI37798736754 atbf05481 is queued; no production change is merged by evidence publication.
+Published production8723724 and isolated evidencebf05481 are clean.
+Keep all OLD ancestry anchors unchanged. Continue sequential preparation
+while the repaired six gates and remaining PR92 platform checks run.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
 Publication anchors and current messages are included. Original handoff/ownership
