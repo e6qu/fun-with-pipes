@@ -107,7 +107,7 @@ still need their final squash rebases and six exact-head full gates.
 | 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | a8e662267bbc | 5d411a886b73 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 33 ownership-loop-unwind | c65514a8e6d4 | 270525b5bb9a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 33 ownership-loop-unwind | c37df3b0520c | a8e662267bbc | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 34 ownership-argument-preparation | 804e6a0cf9f3 | c65514a8e6d4 | Code/probe included in28; docs only relative to33; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
@@ -368,7 +368,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-fold-unwind-worktree after absolute-root guarded package
+to /private/tmp/fwp-loop-unwind-worktree after absolute-root guarded package
 clean0.00CPU/0.14elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
 rebased from actual244dd2a. Compiler/runtime/original probes match687ae10;
 only inherited guard/audit and long-tail regression differ. Seven focused
@@ -382,8 +382,15 @@ only inherited guard/audit and long-tail regression differ. Eight focused
 fold/runtime-call/preparation tests pass22.49CPU/45.05elapsed; clippy -D warnings
 2.37/4.77s, format0.34/0.62s and strong44/106/87 audit0.42/3.36s pass.
 Retained roadmap/revision-032-270525b5bb9a before exact leased publication.
-No local workload remains running. Final rebase from actual5d411a8 follows
-row31's accepted squash.
+Final rebase from actual5d411a8 follows row31's accepted squash.
+Published row33c37df3b0520c9a6f5b452bd416398cfb7992b119 has actual basea8e6622,
+rebased from actual270525b. Compiler/runtime/original probes matchc65514a;
+only inherited guard/audit and long-tail regression differ. Five focused
+loop/fold/preparation tests pass18.85CPU/37.91elapsed; clippy -D warnings
+2.24/4.52s, format0.35/0.63s and strong44/106/87 audit0.42/3.46s pass.
+Retained roadmap/revision-033-c65514a8e6d4 before exact leased publication.
+No local workload remains running. Final rebase from actuala8e6622 follows
+row32's accepted squash.
 Published row30c17d4a693b3235b13850890af27561f0029c5142 has actual base4c7d5ba,
 rebased from actual78ed19f. Compiler/runtime/original probes match244dd2a;
 only inherited guard/audit and long-tail regression differ. Seven focused
