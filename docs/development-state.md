@@ -43,18 +43,37 @@ Duplicate main CI38049760508 was cancelled only after that proof; main docs
 through zip callback result/spine and both scratch-buffer unwind. Phase2
 remains incomplete; phases3–6 remain pending and tracing remains the fallback.
 
-Next delivery is queue32 fold accumulator/argument cleanup. Rebase its two
-prepared commits FROMactual05d354f5716744000d1f5177a861ad4a74f0173a ONTO
-the actual squash `be5f96be51eb48df2e9e08007d42b62cfefac22f`. Preserve every source/probe
-byte, update all11 docs, run focused checks and audit, retain the prior remote
-head before exact-lease publication, then open the sole next production PR.
-Require all six production jobs plus docs at its exact head before squash.
+[PR #111](https://github.com/e6qu/fun-with-pipes/pull/111) delivers queue32 fold
+cleanup. Frozen exact head `58986d22a45163dc86b9dc6ea3f03de05f201359` is on
+actual squash base `be5f96be51eb48df2e9e08007d42b62cfefac22f`. All nine original
+native controls25.20CPU/50.65elapsed, lint2.47/5.09s, format0.43/0.82s and the
+strong docs audit pass; every original source/probe/workflow byte is preserved.
+Previous f3585147985dacacadf5380286ec4583508fb116 is retained remotely before
+exact-lease publication. Production CI38050046236 and docs38050046274 are
+queued; require all seven exact-head gates before match-head squash with subject
+`Protect fold accumulators and borrowed arguments during preparation` and empty
+body. Fix any failures. Verify raw message/tree, protect all11 live docs and
+advance main, then deliver queue33 loop. Keep one production PR open.
 
 Queue 34 is a verified duplicate of preparation code/probes delivered in #107.
 Skip its implementation PR when reached after 33; preserve its immutable anchor,
 current ancestry and all later regression coverage.
 
 ## Active repair and independent work
+
+Effects diagnostic7bfc46903ce8ed35c3cd7049c633423a8b100113 passes all three
+platforms in CI38048799853: Linux and ARM/Intel macOS. Strict original program
+stdout/stderr/exit and normal/fresh compilation trials pass; separate sanitizer
+logs preserve the known ARM no-return stack-instrumentation limitation. Actual
+injected heap-use-after-free is rejected independently on each platform even
+when program output/exit still match. Compiler/runtime/production tests unchanged.
+This does not establish complete ASan stack coverage or fix the old signal.
+
+Typed constructor preparation40 is locally rebased a5152227f99a on actual39
+d98205af88df. Three original native controls and all17 compiler ownership units,
+lint and format pass. Publication/docs audit are next; remote40 remainscccbe406449f.
+Exact checks/bases are archived in history. Continue preparing independently
+while PR111 CI runs; do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
 exact source112 `0da68ea8cdb1`, after both repairs propagated. Require all six
@@ -100,7 +119,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 32 ownership-fold-unwind | 72ab8ee42df1 | be5f96be51eb | Final actual-squash rebase preserves all source/probes/workflows; nine original tests25.20CPU/50.65elapsed, lint2.47/5.09s and format0.43/0.82s pass; audited docs precede sole next PR; all exact-head full gates required |
+| 32 ownership-fold-unwind | 58986d22a451 | be5f96be51eb | Final actual-squash rebase preserves all source/probes/workflows; nine original tests25.20CPU/50.65elapsed, lint2.47/5.09s and format0.43/0.82s pass; audited docs precede sole next PR; all exact-head full gates required |
 | 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
@@ -108,7 +127,7 @@ still need their final squash rebases and six exact-head full gates.
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
-| 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests 16.23/32.69s plus fifteen IR tests 3.32/6.89s; lint 2.36/4.59s, format 0.35/0.75s and strong audit pass |
+| 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests 16.62/33.51s; exact conversion IR unit3.23/6.74s, lint 2.32/4.72s, format 0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 2b61f8cad333 | 172912b7b1c6 | Two updates15.01/30.20s; unit3.22/6.67s; lint 2.28/4.57s and format 0.34/0.60s pass |
 | 43 ownership-record-conversion | 8c7450568632 | 2b61f8cad333 | Matched-result checkpoint repair: all 20 IR controls 3.25/6.97s, seven native tests 26.91/53.88s, lint 2.38/4.81s, format 0.35/0.63s pass; strong audit 0.43/3.47s passes; source8c74505 published with prior head retained; runner/full gates follow |
