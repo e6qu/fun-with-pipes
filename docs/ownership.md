@@ -36,7 +36,8 @@ allocations before counting is needed.
 | Scalars and nullary variants | Inline words; no counting | Preserve typed arithmetic and improve native ABI where measured |
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
-| Strings, bytes, escaping closures | Runtime-shared, outside current counting coverage | Owned results, typed destruction and captured-value lifetimes |
+| Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
+| Escaping closures | Runtime-shared, outside current counting coverage | Owned captures and typed capture destruction |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -136,3 +137,23 @@ removing that restriction needs its own invariant and stress evidence.
 Then complete typed container element retention/destruction and closure capture
 ownership; share-based compatibility boundaries still prevent general execution
 without tracing GC. Keep these acceptance requirements when resuming sessions.
+
+## Prepared leaf ownership implementation
+
+`String` and `Bytes` locals now participate in IR ownership. Selected primitive
+results establish counts: copies start fresh, `string.to-bytes` duplicates its
+identity result, and padding/replacement duplicate the input when a no-op returns
+it unchanged. Their read-only arguments borrow without promoting the leaf to
+runtime sharing. Unknown runtime and FFI boundaries retain the shared fallback.
+
+Leaf allocations use the existing out-of-line count metadata. Sharing stops at
+a leaf; its bytes are not scanned as pointers. A generated typed leaf drop frees
+the allocation directly rather than reading an ADT tag. Reuse verification
+poisons only within its capacity and clears its String/Bytes length, avoiding
+the record poisoner's interpretation of that length as a field count.
+
+The focused copy loop demonstrates reclamation of young owned leaves on normal
+paths. It does not establish full ARC: optional/list text results, retained
+container elements, callbacks, escaping captures, handler unwind and cancellation
+still require ownership contracts and cleanup. Old marked objects remain under
+the collector's generational policy; WebAssembly still uses its bump allocator.

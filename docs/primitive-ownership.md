@@ -3,15 +3,15 @@
 `src/ownership.rs` is the shared boundary inventory used by IR counting and
 native code generation. Its container inventory covers every array/map/set
 primitive declared in `lib/collections.fwp`; a coverage check detects newly
-added declarations without contracts. Other primitives, foreign functions and
-remote calls retain the conservative default: borrow arguments, promote counted
+added declarations without contracts. Selected String/Bytes contracts are listed below. Other primitives, foreign
+functions and remote calls retain the conservative default: borrow arguments, promote counted
 values to runtime sharing, and return runtime-shared values. Further inventories
 must refine that default before extending deterministic reclamation.
 
 Arguments have three modes: **borrow** for the call, **consume** an owned
 reference, or **share** a borrowed value because it may escape into runtime
 storage. Consume is checked by `src/rc.rs`; share is emitted by `src/cgen.rs`.
-Result metadata distinguishes shared results, fresh outer containers and
+Result metadata distinguishes shared results, owned leaf copies/aliases, fresh outer containers and
 containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
@@ -49,7 +49,7 @@ Fresh outer storage does not imply independently owned elements. Current
 container destruction frees the outer buffer; it does not recursively release
 its runtime-shared elements. Aliasing metadata records which arguments or their
 elements can be reachable from the result, including callback captures. Typed
-element ownership, leaf-string/byte ownership, closure capture destruction and
+element ownership, complete leaf-result coverage, closure capture destruction and
 runtime cycles remain separate work in [ownership.md](ownership.md).
 
 ## Complete runtime sharing
@@ -90,3 +90,31 @@ keeps an extra reference to the key until the remaining map field is read. That
 prevents key reuse even with a borrowing comparison boundary. Later IR work
 should release dead projected fields earlier while preserving argument order,
 branch behavior and aliases; do not confuse this with runtime key retention.
+
+## Selected String/Bytes boundaries
+
+All arguments below borrow for the duration of the call. Constructors returning
+fresh storage establish a count; aliases acquire a count on the same allocation.
+A shared input remains shared when duplicated. Slices copy and retain no view.
+
+| Primitives | Result ownership |
+|---|---|
+| trim/start/end; lower/upper; string.reverse | Fresh copied leaf |
+| concat; bytes.append; string.repeat; bytes.from-list | Fresh copied leaf |
+| string.slice; bytes.slice | Fresh copied leaf |
+| string.to-bytes | Identity alias of argument 0; duplicate its reference |
+| pad-left/right; replace | Fresh leaf or no-op alias of argument 2 |
+| string.length/byte-length; bytes.length; print/write/eprint/ewrite | Scalar/unit result |
+| string.contains/find; starts-with/ends-with; bytes.find | Scalar or shared Option of scalar indices |
+| eq/ne/lt/le/gt/ge/compare | Read-only comparison, scalar result |
+
+`tests/leaf_ownership.rs` compares interpreter/native behavior for retained
+aliases, no-op padding/replacement, copied slices/concatenation and byte identity,
+under collection stress/verification and both reuse-poison modes. A 10,000-step
+copy loop, with tracing disabled and zero collections, reports 0.9 MiB freed by counts versus 0.0 MiB when `FWP_FREE=0`, with
+identical output (Apple Silicon, Apple Clang 17, `-O1`, counter precision 0.1 MiB).
+Five focused FFI checks also pass. Full CI on both architectures remains required.
+
+Text results nested in runtime-created Options/lists and retained callback or
+container values remain shared until their boundaries gain typed ownership.
+This change does not complete phase 2 or establish general execution without GC.

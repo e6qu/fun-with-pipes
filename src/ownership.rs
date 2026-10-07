@@ -1,6 +1,6 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
-//! These contracts describe outer container ownership; stored elements and
+//! Contracts cover outer containers and selected text/byte leaves. Stored elements and
 //! callback results still use runtime sharing, not typed element destruction.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -17,6 +17,15 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    FreshLeaf,
+    /// An owned reference to the indicated argument's leaf allocation.
+    AliasLeaf {
+        argument: usize,
+    },
+    /// A copy, or the unchanged leaf argument on a no-op path.
+    FreshOrAliasLeaf {
+        argument: usize,
+    },
     /// The wrapper consumes the indicated argument on every path. It may
     /// reuse that container or return a copy; array.set wraps it in Option.
     OwnedContainer {
@@ -45,7 +54,7 @@ impl Contract {
     }
 }
 
-/// The complete array/map/set boundary inventory. Comparison-only keys
+/// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; inserted keys and values share. Callbacks retain the existing
 /// shared-input/result convention. Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
@@ -57,6 +66,29 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<usize>,
         &'static [usize],
     ) = match symbol {
+        "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
+            (&[B], ResultOwnership::FreshLeaf, None, &[])
+        }
+        "concat" | "bytes.append" | "string.repeat" | "bytes.from-list" => {
+            let args: &'static [Argument] = if symbol == "bytes.from-list" {
+                &[B]
+            } else {
+                &[B, B]
+            };
+            (args, ResultOwnership::FreshLeaf, None, &[])
+        }
+        "string.slice" | "bytes.slice" => (&[B, B, B], ResultOwnership::FreshLeaf, None, &[]),
+        "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
+        "pad-left" | "pad-right" | "replace" => (
+            &[B, B, B],
+            ResultOwnership::FreshOrAliasLeaf { argument: 2 },
+            None,
+            &[2],
+        ),
+        "string.length" | "string.byte-length" | "bytes.length" | "print" | "write" | "eprint"
+        | "ewrite" => (&[B], R, None, &[]),
+        "string.contains" | "starts-with" | "ends-with" | "string.find" | "bytes.find" | "eq"
+        | "ne" | "lt" | "le" | "gt" | "ge" | "compare" => (&[B, B], R, None, &[]),
         "array.from-list" | "map.from-list" | "set.from-list" => (&[S], F, None, &[0]),
         "array.to-list" | "map.keys" | "map.values" | "map.to-list" | "set.to-list" => {
             (&[B], R, None, &[0])

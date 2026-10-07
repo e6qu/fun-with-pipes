@@ -138,3 +138,23 @@ Do not claim tracing GC is gone: strings, escaping closures and runtime-shared
 values still rely on it. WebAssembly and embedding-host reclamation remain
 separate ownership tasks. Existing published benchmark numbers are historical
 Linux measurements, not results from this branch or promises about macOS.
+
+## Leaf preparation following the container contract branch
+
+- Branch `ownership-leaves`, checkout `/private/tmp/fwp-leaf-worktree`, based on
+  `798d2ed` from `ownership-contracts`; this remains separate from PR #74.
+- Selected String/Bytes copies and aliases participate in ownership and typed
+  leaf destruction. Sharing does not traverse byte payloads; poison writes stay
+  within leaf storage. See primitive-ownership.md and ownership.md for scope.
+- Focused leaf regressions passed: GC/alias/reuse checks and 0.9 MiB freed by
+  counts versus 0.0 MiB with freeing disabled, with tracing off and zero
+  collections in the copy loop. The inventory check, eight IR ownership
+  checks, three container/sharing regressions and all five FFI checks passed.
+- Initial reclamation check exposed an incorrect type-name spelling: canonical
+  monomorphic names are `std::String`/`std::Bytes`. Correct classification now
+  emits drops and the counter assertion passes.
+- Parent macOS PR has additional runtime-root fixes through `c7aeb6f`; those must be
+  inherited through the eventual rebase. Full CI is required for each PR head.
+- After the container contract PR merges, rebase this branch from `798d2ed`
+  onto main, reconcile handoff/design docs and run CI through its own PR.
+  Keep one PR open; failures are work to fix, not a roadmap blocker.
