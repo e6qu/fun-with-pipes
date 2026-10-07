@@ -83,7 +83,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 27 ownership-call-liveness | 9c1b5a861b15 | 2ef5510154cd | PR106; twelve tests30.59/61.49s plus eleven IR tests3.27/6.84s; lint/format/audit pass; exact-head full CI follows |
-| 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
+| 28 ownership-runtime-call-cleanup | fbb3bc84847b | 9c1b5a861b15 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
