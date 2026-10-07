@@ -9,10 +9,9 @@ for priorities and contracts. Update this file before ending a work session.
 - Baseline: `7a05b58`, PR #73, explicit interfaces and stateless MCP.
 - Branch: `macos-portability`.
 - Implementation/docs commit: `7ec02d0`.
-- Draft PR: not created. Automatic approval review rejected the push to
-  `https://github.com/e6qu/fun-with-pipes.git` as source egress without
-  explicit user authorization of that destination. Publication and full CI
-  await permission to push this branch and create its draft PR.
+- Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
+  The user explicitly authorized the push and PR creation on 2026-10-07;
+  the earlier publication block is resolved. Both commits are on GitHub.
 - User direction: macOS, ownership with minimal tracing GC, efficient native
   representations/numerics/autodiff, and stable simple pipe semantics.
 - Current scope: the first native macOS portability pass plus durable docs.
@@ -49,7 +48,11 @@ for priorities and contracts. Update this file before ending a work session.
   the Intel variants still need their macOS CI job).
 - `cargo fmt --all -- --check` and `git diff --check` passed.
 - Full Linux/macOS tests, clippy, GC/reuse verification and benchmark evidence:
-  pending GitHub CI. Do not describe either architecture as verified yet.
+  pending [GitHub CI](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
+  At publication, all four jobs were queued: Apple Silicon macOS, Intel
+  macOS, Linux tests and Linux benchmarks. Check the latest PR head before
+  recording a result; this handoff update triggers a new run.
+  Do not describe either architecture as verified yet.
 - Local resource guard for this session: `/private/tmp/fwp-local-guard.py`,
   the user's guard adapted only to this repository root, with the same limits.
   It is temporary; recreate it or use an equivalent bounded check next session.
@@ -62,16 +65,13 @@ for priorities and contracts. Update this file before ending a work session.
 
 ## Next actions
 
-1. After explicit publication authorization, push `macos-portability` to
-   `e6qu/fun-with-pipes`, create the draft PR and record its URL here.
-   Do not bypass the rejected push through another tool or transport.
-2. Inspect both macOS jobs and Linux CI; fix failures without weakening tests
+1. Inspect both macOS jobs and Linux CI on PR #74; fix failures without weakening tests
    or silently treating missing optional tools as coverage.
-3. Confirm collector and reuse checks actually execute on Darwin: several older
+2. Confirm collector and reuse checks actually execute on Darwin: several older
    suites still guard themselves with `/proc` checks. Linux-only `strace` and
    external-process RSS tests need platform alternatives, not blanket enablement.
-4. Record exact CI results and remaining platform limitations here.
-5. Start the ownership-contract inventory described in `ownership.md`.
+3. Record exact CI results and remaining platform limitations here.
+4. Start the ownership-contract inventory described in `ownership.md`.
 
 ## Boundaries and deferred work
 
