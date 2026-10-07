@@ -175,7 +175,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #106 includes the following contracts. Detailed primitive modes
+Main through PR #107 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -187,7 +187,8 @@ and measurements are in [history](roadmap-history.md).
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
   Compiler live caller/pending-argument and incoming-parameter cleanup is
-  merged in PR106. Constructor and wider runtime registration remains prepared.
+  merged in PR106; runtime application and partial capture preparation in PR107.
+  Constructor and wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

@@ -55,7 +55,7 @@ cleanup now protects typed caller and incoming-parameter references across
 calls, later-argument failures and cancelled entry ticks. Wider constructor
 and runtime registration remains prepared work.
 
-Prepared runtime application cleanup protects consumed functions, pending typed
+Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
 pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit
 targets); programs without possible unwind omit runtime registration. Scalar
