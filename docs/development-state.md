@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-09. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
+Updated 2026-10-10. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 [design](design.md) before changing code. This is the live handoff;
 [queue](roadmap-queue.md) preserves immutable anchors and
 [history](roadmap-history.md) preserves detailed checks and superseded status.
@@ -28,24 +28,31 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is c7b3e3f7433b47686c82426173b97f368b792c56 (#102). All six
-CI37975866229 production gates and roadmap_docs CI37975866346 pass at
-51cf1c6987888ddbe69fdeb79455208fb1eb077a. Explicit match-head squash at
-2026-10-09T19:41:46Z verifies the entire one-line message:
-`Own task result wrappers and preserve typed deadline aliases`.
-#74–#102 deliver native macOS and selected ownership through typed collections,
-old-storage reclamation and task result/deadline boundaries. Phase1 is done;
-phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback.
+Main is3bb34267997479794aeac9fff3447da94c16ca4d (#103). All six
+production jobs in CI37982307280 and roadmap_docs CI37982307209 pass at
+1537961db5da753e123162aa8441cb4488d9a66b. Explicit match-head squash at
+2026-10-09T21:00:38Z has the entire one-line message:
+`Release registered owners before nonlocal unwind`.
+Its complete tree77e1008656d4330285a658cc111e596a9fda720f matches the accepted
+PR head. Raw Git message verification passes. Duplicate post-merge main
+CI37990763675 is cancelled only after this parity check, not acceptance.
 
-No production PR is open. Row25 registered runtime-unwind cleanup is next.
-Final source1e9a5495d44f7e9b4fca2709b5e7059a452548f2 has actual main base
-c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
-focused-accepted6421c025b3d5 exactly. Finish publication docs, publish and create
-its PR. All six production jobs and roadmap_docs at the final exact head must
-pass before explicit squash with `Release registered owners before nonlocal unwind`
-and empty body. OLD anchors stay fixed. Duplicate post-merge main CI37981976609
-is cancelled after accepted-source/workflow parity; it is not acceptance.
-Superseded PR101 CI37968881919 and duplicate main CI37975529386 remain cancelled.
+#74–#103 deliver native macOS and selected ownership through typed collections,
+old-storage reclamation, task result/deadline boundaries and registered runtime
+unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
+Tracing remains the fallback. PR104 https://github.com/e6qu/fun-with-pipes/pull/104
+is the only open PR, current head925daae1a95e3d68f4d622b72d8f642aa5a4346b,
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. Guard scripts/workflow
+match focused-accepted063f4ca exactly; final local integration repeat passes
+0.20CPU/1.36elapsed and Linux evidence37986986407 passes. Require all six
+exact-head production jobs and roadmap_docs before explicit squash with
+`Pause guarded compiler workloads while sampling target size` and empty body.
+A timing-only doc correction supersedes3f72a0d; old CI37991334046 is cancelled
+and old docs37991334167 passed but neither is this head's acceptance.
+Prepare row26 on actual main103 while these fresh gates run; keep its next PR
+separate until104 merges. Row26 actual prepared base remains6421c025 until its
+preparation rebase below; final-rebase onto the actual guard squash afterward.
+OLD anchors stay fixed.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -65,7 +72,7 @@ still need their final squash rebases and six exact-head full gates.
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
 | 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
-| 25 ownership-unwind-runtime | 1e9a5495d44f | c7b3e3f7433b | Final source matches focused-accepted6421c025; new production gates follow |
+| 25 ownership-unwind-runtime | 1537961db5da | c7b3e3f7433b | Merged PR103 after all six jobs and roadmap_docs passed |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
@@ -127,35 +134,35 @@ still need their final squash rebases and six exact-head full gates.
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
-| 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Refreshed source unchanged; fresh raw source checks follow |
-| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Refreshed source unchanged; explicit draining checks follow |
-| 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
-| 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
-| 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
-| 92 ownership-grpc-peer-completion | 09751c8c65ac | 3c268c34d15b | Peer/server14.18 / 28.39 s + task4.65 / 10.14 s |
-| 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
-| 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
-| 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
-| 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
-| 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
-| 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
-| 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
-| 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
-| 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
-| 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
-| 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
-| 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
-| 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
-| 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
-| 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
-| 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
-| 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
-| 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
-| 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
-| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
+| 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
+| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
+| 89 ownership-http2-body-roots | 59c59a882d67 | e15c6fc1f0c3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
+| 90 fix-http2-body-bounds | fb5765a9ec36 | 59c59a882d67 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 91 ownership-http2-peer-cleanup | 05f1a8841609 | fb5765a9ec36 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 92 ownership-grpc-peer-completion | 84b6d877fa9b | 05f1a8841609 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 93 ownership-grpc-status-cleanup | a36f5538df30 | 84b6d877fa9b | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 94 ownership-grpc-receive-cleanup | 01de4770d750 | a36f5538df30 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 95 ownership-grpc-force-cleanup | 6a4ceee25582 | 01de4770d750 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 96 ownership-grpc-render-cleanup | 05d8c33dc305 | 6a4ceee25582 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 97 ownership-grpc-send-cleanup | 9330eab6253e | 05d8c33dc305 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 98 ownership-grpc-request-encoding | 6e2236f73519 | 9330eab6253e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 99 ownership-grpc-canonical-encoding | b0d7d1b7d2a9 | 6e2236f73519 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 100 ownership-grpc-response-encoding | e6ae6c83dc46 | b0d7d1b7d2a9 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 101 ownership-grpc-client-requests | b1c6a68771c7 | e6ae6c83dc46 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 102 ownership-grpc-client-failure-text | 5f4c3b2423ac | b1c6a68771c7 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 103 ownership-grpc-client-receive | e25cebbd8ac3 | 5f4c3b2423ac | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 104 ownership-grpc-connect-cleanup | 9f6e7092f00c | e25cebbd8ac3 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 105 ownership-grpc-connect-startup | a8ed839d69f5 | 9f6e7092f00c | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 106 ownership-grpc-context-restore | 29104d944907 | a8ed839d69f5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 107 ownership-grpc-context-resources | c34c313ccfb0 | 29104d944907 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 108 ownership-grpc-capture-resources | 8f66e28763b4 | c34c313ccfb0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 109 fix-grpc-tls-pool-identity | cf14552bdba5 | 8f66e28763b4 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 110 ownership-grpc-environment-cache | 393456e6e5ca | cf14552bdba5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–24 are merged. Row25 is the next focused delivery. Detailed commands, full hashes,
+heads; rows18–25 are merged. The guard repair is next, then row26. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
@@ -196,6 +203,10 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 fails client failure-text fixture at typed handler check; other checks pass |
+| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 fails only the inherited HTTP2 omission control; repair in progress |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 fails the HTTP2 omission control on GCC; other checks pass |
+| Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
@@ -237,6 +248,71 @@ reclamation against the finite phase2 exit criteria in ownership.md. Channel
 close preserves queued values; explicit drain alone proves its counted cycle
 can be broken. Preserve raw interpreter comparisons and original pipe semantics.
 
+## Current guard repair
+
+Row105 lint stopped when rustc removed temporary rmetaJAcTae during target du.
+This is incomplete verification, not a resource-limit waiver. No workload remains.
+Separate branch fix-local-guard-sampling in /private/tmp/fwp-guard-sampling-worktree
+has final sourced4c832188d3563e85410adeb8763bf6a74f4833b on actual
+main3bb34267997479794aeac9fff3447da94c16ca4d, with scripts/workflow identical
+to focused-accepted063f4ca. Pause the guarded workload during target sampling; keep
+RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
+All three deterministic integration checks pass under the original root guard:
+Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.20CPU/1.36elapsed. They verify suspension/resumption, sampler errors and the
+unchanged target-size limit. Negative control against the original guard fails
+all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
+The initial test fixture escaping failure was corrected before this acceptance.
+The roadmap_docs workflow runs these checks on Linux too. PR103 is merged;
+final-rebase and publish this guard repair as the next focused PR, then row26.
+Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
+passes all three integration checks (0.688s) and the documentation audit.
+
+## Active evidence repairs
+
+HTTP2 CI37983077375 and serving CI37984431678 fail only the inherited
+body-owner omission control on GCC. GCC assembly in diagnostic37988293141
+shows omitted call/stream roots retained in callee-saved registers. Construction
+isolation alone fails. Register-clobber evidenceeec7ef8 passes Linux37989065155,
+but its ARM macOS omission control fails (7.71CPU/15.94elapsed); forcing both
+hooks inline also fails locally0.76CPU/2.33elapsed. These are rejected fixture
+approaches and stay out of production.
+
+Independent Clang fallback5ca597d also fails on Linux37989581687 and is
+rejected. Normal HTTP2 evidence8e79458951a8b148e3a3c6a1df488e7f09470fba,
+CI37990203134, passes normal Linux lint/format, body roots/limits/peer cleanup,
+related resources, actual tracing churn and docs. It scopes the stale-register
+control to GCC x86-64 and keeps the original probe on other compilers. ARM
+focused checks pass15.46CPU/31.62elapsed after guarded clean. All positive
+and strict omission assertions remain; no diagnostics or extra compiler
+dependency remains. Fixture repair is published in row8959c59a882d67d1f8ea191a1cf576c395e3a22522,
+unchanged actual basee15c6fc. Revision089-f45a7dbbd33d retains the prior head.
+Serial guarded propagation through90–112 completed3.50CPU/98.11elapsed.
+All current heads and actual bases are in the table; prior heads are retained
+under immutable revision tags. Compiler/runtime/workflows are unchanged.
+
+Client CI37985348012 fails its typed handler check. Static handler alone fails
+37987135273. Diagnostic37987861321 shows correct code14 and transport-failure
+text, but descriptor identity mismatch. Static fixture descriptorsf1318ed pass
+Linux37988968135. Normal evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0,
+CI37989574765, passes normal format/lint, exact trap/typed error/omission checks,
+related ownership/context/startup tests, actual tracing churn and docs. ARM
+focused checks pass8.63CPU/17.84elapsed under the original root guard.
+Validated static fixture objects are published in row102488801a9f2f74734b60e9516edd8ca92a32edf1d,
+with unchanged actual basec6b5ad8. Revision102-222e199ca735 retains the prior head.
+Current row102 is5f4c3b2423ac after propagation; the table is authoritative.
+All90–112 inherit the accepted fixtures, preserving original OLD anchors.
+
+Rows109–112 are published with actual refreshed predecessor bases in the table.
+Combined storage evidencefb9e59fef93ead188c8b8f82ce7147290a9b5e6e,
+CI37988444009, passes scoped TLS/captures/full pool identities/environment
+teardown/packed options/full-address checks, interpreter identity, lint/format,
+actual tracing churn and the documentation audit. Compiler/runtime/tests match
+row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
+before tests; superseded37987994602 is cancelled. Neither is acceptance.
+Validated HTTP2/client fixture repairs still need propagation through later
+preparations, preserving every immutable OLD anchor. Each eventual production
+PR requires its own final rebase and six exact-head gates plus roadmap_docs.
+
 ## Local limits and durable docs
 
 Full builds/tests, benchmarks and large regeneration run on GitHub. Focused
@@ -249,15 +325,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-record-binding-worktree; no local workload
-is running. Row86 focused checks completed within limits. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-http2-roots-evidence-worktree; final focused
+HTTP2 checks passed and no local workload is running. See the repairs above. Row86 focused checks completed within limits. Latest disk observation113625788KiB available; target143120KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.37CPU/2.81elapsed). It caught a status update
+and entire commit messages (latest0.31CPU/2.52elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
