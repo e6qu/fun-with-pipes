@@ -97,7 +97,7 @@ still need their final squash rebases and six exact-head full gates.
 | 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
-| 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
+| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | Source unchanged; fresh local guard refused; GitHub checks follow |
 | 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 / 31.57 s |
 | 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 / 32.46 s |
 | 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 / 44.76 s |
@@ -255,6 +255,8 @@ recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
 package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
 format0.34/0.61s. Shared target now belongs to
 /private/tmp/fwp-unwind-liveness-worktree; no workload is running.
+Row27 package clean subsequently refused again below64GiB; no local test/lint
+ran and shared target remains the reuse-token worktree. Move checks to GitHub.
 Stop at limits; do not bypass the guard, including for package clean.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
