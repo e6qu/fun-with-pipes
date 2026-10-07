@@ -42,6 +42,15 @@ typedef uint64_t V;
 typedef __int128 i128;
 typedef unsigned __int128 u128;
 
+/* A conservative collector needs the owner alive while values preloaded
+ * from it cross allocations. An empty compiler fence extends that lifetime
+ * without adding machine instructions. WebAssembly has no stack tracing. */
+#if !defined(__wasi__) && !defined(__wasm__)
+#define FWP_KEEP_ALIVE(p) __asm__ volatile("" : : "r"(p) : "memory")
+#else
+#define FWP_KEEP_ALIVE(p) ((void)(p))
+#endif
+
 
 /* ------------------------------------------------------------------ alloc */
 
@@ -154,6 +163,10 @@ static V *fwp_list_items(V xs, size_t *n) {
 static V fwp_list_from(const V *a, size_t n) {
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_cons(a[i - 1], r);
+    /* Clang can preload the elements of an inlined, short buffer and
+     * discard its only pointer before the allocating constructors run.
+     * Keep the owning buffer reachable until every cell has been built. */
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 

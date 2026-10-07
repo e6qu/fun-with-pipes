@@ -1,5 +1,19 @@
 # Benchmarks
 
+These tables record historical Linux measurements. Current priorities and
+verification are in [../PLAN.md](../PLAN.md) and
+[development-state.md](development-state.md). They do not establish macOS
+performance or general C/Rust parity.
+
+The next evidence set adds numerics, gradients, escaping closures and
+allocation churn, with allocated/peak-live bytes, count operations and
+collection pauses alongside throughput. Separate allocation-inclusive and
+kernel-only times, record compiler/flags/hardware, and ensure equivalent
+work in comparisons: the string-length optimization below intentionally
+avoids formatting work that its existing C/Rust counterparts still do.
+Run full workloads on GitHub runners; assert results and stable allocation
+properties, not noisy elapsed-time thresholds.
+
 `bench/<name>/` holds one program three times: `main.fwp`, `main.c` and
 `main.rs`, which print the same output. `tests/bench.rs` builds them with
 `fwp build -O2`, `cc -O2` and `rustc -O`, checks that the three agree,

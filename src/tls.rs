@@ -136,13 +136,26 @@ mod dl {
         pub fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
     }
     pub const RTLD_NOW: c_int = 2;
+    #[cfg(target_vendor = "apple")]
+    pub const RTLD_GLOBAL: c_int = 0x8;
+    #[cfg(not(target_vendor = "apple"))]
     pub const RTLD_GLOBAL: c_int = 0x100;
 }
 
 #[cfg(not(target_family = "wasm"))]
 fn open_lib(names: &[&str]) -> Option<Ptr> {
-    names.iter().find_map(|n| {
-        let c = CString::new(*n).ok()?;
+    let mut paths = Vec::new();
+    if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
+        let lib = std::path::PathBuf::from(prefix).join("lib");
+        paths.extend(
+            names
+                .iter()
+                .map(|n| lib.join(n).to_string_lossy().into_owned()),
+        );
+    }
+    paths.extend(names.iter().map(|n| n.to_string()));
+    paths.iter().find_map(|n| {
+        let c = CString::new(n.as_str()).ok()?;
         let h = unsafe { dl::dlopen(c.as_ptr(), dl::RTLD_NOW | dl::RTLD_GLOBAL) };
         (!h.is_null()).then_some(h)
     })

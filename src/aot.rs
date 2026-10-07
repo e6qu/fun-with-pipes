@@ -116,6 +116,10 @@ fn key(c_source: &str, opt: &str) -> String {
         k.extend_from_slice(part.as_bytes());
         k.push(0);
     }
+    if let Some(prefix) = std::env::var_os("FWP_OPENSSL_DIR") {
+        k.extend_from_slice(prefix.as_encoded_bytes());
+    }
+    k.push(0);
     for l in crate::ffi::links() {
         k.extend_from_slice(l.as_bytes());
         k.push(0);

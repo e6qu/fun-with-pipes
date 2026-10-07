@@ -20,6 +20,21 @@ $ SSL_CERT_FILE=ca.pem FWP_SERVICE_WEATHER=tls://localhost:50051 fwp run --servi
 
 ## OpenSSL
 
+For native macOS development, install OpenSSL 3 with Homebrew and set its
+prefix for both compilation and interpreter loading:
+
+```sh
+brew install openssl@3
+export FWP_OPENSSL_DIR="$(brew --prefix openssl@3)"
+```
+
+The compiler uses the prefix's `include` and `lib` directories and records
+the library search path in the executable. The interpreter tries libraries
+in its `lib` directory before ordinary loader names. The prefix is included
+in the native compile-cache key. It is ignored for Linux cross builds,
+which need the target's libraries. Current Darwin validation is recorded
+in [development-state.md](development-state.md).
+
 | | |
 |---|---|
 | interpreter (`--interp`) | loads `libssl.so.3` and `libcrypto.so.3` with `dlopen` the first time a program uses TLS; the `fwp` executable does not link them, so it runs (and programs without TLS run) where they are missing, and TLS then fails with an `IoError` of kind `"tls"`: `TLS needs OpenSSL 3 (libssl.so.3), which could not be loaded` |
@@ -287,6 +302,6 @@ needs the `openssl` command and skips without it.
   client certificates; use `http.send-with` with `tls.with-cert` by hand.
 * No DTLS (TLS over UDP) and no QUIC.
 * OpenSSL 3 only, found under its usual names (`libssl.so.3`, then
-  `libssl.so`; `libssl.3.dylib` on macOS, which the test suite does not
-  cover). Error reasons are OpenSSL's, and may differ between its
+  `libssl.so`; `libssl.3.dylib` on macOS), or under `FWP_OPENSSL_DIR/lib`.
+  macOS CI installs OpenSSL 3 for both architectures. Error reasons are OpenSSL's, and may differ between its
   versions.

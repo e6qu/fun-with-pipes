@@ -1,5 +1,11 @@
 # fwp ("foop")
 
+Current development focuses on native macOS, precise runtime ownership,
+efficient numeric layouts and autodiff while preserving simple pipe semantics.
+See [PLAN.md](PLAN.md) for the ordered roadmap and
+[docs/development-state.md](docs/development-state.md) for the session handoff
+and actual validation status.
+
 fwp is a tacit, curried, pipe-oriented programming language. It has static
 types, tracked effects, structured concurrency, and two execution engines:
 an interpreter and native code through C. It implements the *Pipe Language
@@ -77,6 +83,14 @@ TLS): OpenSSL 3 (`libssl3`; to build native programs that use it, also
 `libssl-dev`). Optionally, for WebAssembly: clang with a WASI sysroot
 (Debian/Ubuntu: `wasi-libc`, `libclang-rt-18-dev-wasm32`, `lld`) and node.
 
+On macOS, install the Xcode command line tools (`xcode-select --install`).
+For TLS, install OpenSSL 3 (`brew install openssl@3`) and set
+`FWP_OPENSSL_DIR` to the output of `brew --prefix openssl@3`; it supplies
+the headers/libraries for native builds and the interpreter's loader path.
+Native macOS portability is in progress on Apple Silicon and Intel: see the
+handoff for checks completed. Darwin cross targets and native `--static`
+linking are unavailable; `--pgo` still requires GCC.
+
 ```
 cargo build --release
 export PATH=$PWD/target/release:$PATH
@@ -130,6 +144,8 @@ python3 -m http.server -d web 8000
 | [docs/services.md](docs/services.md) | one program as one executable or as services that talk gRPC: streams, deadlines, metadata, statuses |
 | [docs/benchmarks.md](docs/benchmarks.md) | fwp against C and Rust on five programs, and what the gaps come from |
 | [docs/design.md](docs/design.md) | how the compiler is built, and what is not implemented |
+| [docs/ownership.md](docs/ownership.md) | memory/representation design, stable semantics and acceptance criteria |
+| [docs/development-state.md](docs/development-state.md) | current branch, checks, remaining failures and next session's actions |
 | [PLAN.md](PLAN.md) | what was delivered and what comes next |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | setting up, testing, the rules the code follows, and how changes are merged |
 

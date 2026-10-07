@@ -63,12 +63,24 @@ typedef struct { void *sp; } fwp_ctx_t;
  * the stack, store the stack pointer in *from, switch to `to` and
  * restore what it saved */
 void fwp_ctx_swap(void **from, void *to);
+#define FWP_CTX_STRING_(s) #s
+#define FWP_CTX_STRING(s) FWP_CTX_STRING_(s)
+#ifdef __APPLE__
+#define FWP_CTX_NAME "_" FWP_CTX_STRING(fwp_ctx_swap)
+#define FWP_CTX_BEGIN ".text\n.globl " FWP_CTX_NAME "\n.private_extern " FWP_CTX_NAME "\n" FWP_CTX_NAME ":\n"
+#define FWP_CTX_END ""
+#else
+#define FWP_CTX_NAME FWP_CTX_STRING(fwp_ctx_swap)
 #if defined(__x86_64__)
-__asm__(".text\n"
-        ".globl fwp_ctx_swap\n"
-        ".hidden fwp_ctx_swap\n"
-        ".type fwp_ctx_swap,@function\n"
-        "fwp_ctx_swap:\n"
+#define FWP_CTX_TYPE ".type " FWP_CTX_NAME ",@function\n"
+#else
+#define FWP_CTX_TYPE ".type " FWP_CTX_NAME ",%function\n"
+#endif
+#define FWP_CTX_BEGIN ".text\n.globl " FWP_CTX_NAME "\n.hidden " FWP_CTX_NAME "\n" FWP_CTX_TYPE FWP_CTX_NAME ":\n"
+#define FWP_CTX_END ".size " FWP_CTX_NAME ", .-" FWP_CTX_NAME "\n"
+#endif
+#if defined(__x86_64__)
+__asm__(FWP_CTX_BEGIN
         "    pushq %rbp\n"
         "    pushq %rbx\n"
         "    pushq %r12\n"
@@ -90,16 +102,12 @@ __asm__(".text\n"
         "    popq %rbx\n"
         "    popq %rbp\n"
         "    ret\n"
-        ".size fwp_ctx_swap, .-fwp_ctx_swap\n");
+        FWP_CTX_END);
 /* bytes fwp_ctx_swap keeps on the stack, and where it returns to */
 #define FWP_CTX_FRAME 72
 #define FWP_CTX_RET 56
 #elif defined(__aarch64__)
-__asm__(".text\n"
-        ".globl fwp_ctx_swap\n"
-        ".hidden fwp_ctx_swap\n"
-        ".type fwp_ctx_swap,%function\n"
-        "fwp_ctx_swap:\n"
+__asm__(FWP_CTX_BEGIN
         "    sub sp, sp, #176\n"
         "    stp x19, x20, [sp, #0]\n"
         "    stp x21, x22, [sp, #16]\n"
@@ -130,11 +138,19 @@ __asm__(".text\n"
         "    ldp d14, d15, [sp, #144]\n"
         "    add sp, sp, #176\n"
         "    ret\n"
-        ".size fwp_ctx_swap, .-fwp_ctx_swap\n");
+        FWP_CTX_END);
 #define FWP_CTX_FRAME 176
 #define FWP_CTX_RET 88
 #else
 #error "FWP_OWN_CONTEXT is written for x86-64 and AArch64"
+#endif
+#undef FWP_CTX_BEGIN
+#undef FWP_CTX_END
+#undef FWP_CTX_NAME
+#undef FWP_CTX_STRING
+#undef FWP_CTX_STRING_
+#ifndef __APPLE__
+#undef FWP_CTX_TYPE
 #endif
 #endif
 
@@ -753,7 +769,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
         t->stack = (char *)mmap(0, t->stack_size, PROT_READ | PROT_WRITE,
                                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0);
         if (t->stack == MAP_FAILED) fwp_trap("cannot allocate a task stack");
-        mprotect(t->stack, 4096, PROT_NONE); /* guard page */
+        mprotect(t->stack, (size_t)sysconf(_SC_PAGESIZE), PROT_NONE); /* guard page */
     }
 #endif
     t->gc_next = fwp_gc_tasks;
@@ -1544,7 +1560,7 @@ static void fwp_segv(int sig, siginfo_t *si, void *uc) {
     int overflow = 0;
     if (fwp_cur && fwp_cur->stack) {
         uintptr_t lo = (uintptr_t)fwp_cur->stack;
-        overflow = fwp_near(a, lo > slack ? lo - slack : 0, lo + 4096);
+        overflow = fwp_near(a, lo > slack ? lo - slack : 0, lo + (uintptr_t)sysconf(_SC_PAGESIZE));
     } else if (fwp_main_stack_top) {
         uintptr_t end = (uintptr_t)fwp_main_stack_top - fwp_main_stack_size;
         overflow = fwp_near(a, end - slack, end + slack);

@@ -129,7 +129,7 @@ fn shared_library_from_c() {
         .arg(dir().join("geom.fwp"))
         .arg("--cdylib")
         .arg("-o")
-        .arg(d.join("libgeom.so"));
+        .arg(d.join(format!("libgeom.{}", fwp::cgen::shared_library_extension())));
     stdout(build);
     let exe = d.join("geom-c");
     let mut c = Command::new(cc());

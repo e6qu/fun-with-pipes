@@ -89,6 +89,7 @@ static V fwp_p_append(V ys, V xs) {
     V *a = fwp_list_items(xs, &n);
     V r = ys;
     for (size_t i = n; i > 0; i--) r = fwp_cons(a[i - 1], r);
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 
@@ -97,6 +98,7 @@ static V fwp_p_flatten(V xss) {
     V *a = fwp_list_items(xss, &n);
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_p_append(r, a[i - 1]);
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 

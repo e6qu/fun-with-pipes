@@ -1,5 +1,10 @@
 # Contributing to fwp
 
+Start with [PLAN.md](PLAN.md), [the session handoff](docs/development-state.md)
+and [the ownership contract](docs/ownership.md). Update the handoff with the
+actual validation and next action before ending a session. Keep unfinished
+work and historical benchmark evidence separate from verified deliveries.
+
 Thank you for helping. This guide covers setting up, the rules the code
 follows, how to test a change, and how changes are merged. How the
 compiler is built is described in [docs/design.md](docs/design.md), and
@@ -13,6 +18,10 @@ You need:
 - A C compiler (`cc`; GCC or clang). Native programs, and most tests,
   are built with it.
 - OpenSSL 3 with headers (`libssl-dev`), for TLS.
+- On macOS: Xcode command line tools (`xcode-select --install`), and
+  OpenSSL 3 from Homebrew (`brew install openssl@3`). Set `FWP_OPENSSL_DIR`
+  to the output of `brew --prefix openssl@3` for native TLS builds and the
+  interpreter. CI uses Apple Clang on Apple Silicon and Intel.
 - Optional, for the WebAssembly tests: clang with a WASI sysroot and lld
   (Debian/Ubuntu: `clang lld wasi-libc libclang-rt-18-dev-wasm32`), the
   `wasm32-wasip1` Rust target (`rustup target add wasm32-wasip1`), node 24,
@@ -29,6 +38,13 @@ fwp run examples/hello.fwp
 
 ## Before you open a pull request
 
+Run focused checks locally, serially and at low priority, with sampled
+resource monitoring. Stop at 1 GiB aggregate RSS, 2 GiB generated target
+data, less than 64 GiB free disk or a 180-second workload deadline.
+Full builds, full test gates, large evidence regeneration and benchmarks
+belong on GitHub runners. A local refusal moves that work to CI; do not
+raise limits to complete it. See [AGENTS.md](AGENTS.md) for session rules.
+
 CI runs these, and all of them must pass:
 
 ```
@@ -42,6 +58,12 @@ A separate CI job runs the benchmarks
 (`cargo test --release --test bench -- --ignored --nocapture`). It
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
+
+The macOS jobs run the native test gate with OpenSSL on arm64 and x86-64.
+Optional-tool skips are not platform coverage. Some older memory suites
+still require Linux `/proc` or `strace`; Darwin-specific regressions in
+`tests/macos.rs` assert that collection is armed and really runs, rather
+than accepting a stress variable with collection disabled.
 
 ## Rules the code follows
 
@@ -163,6 +185,10 @@ explanation of any gap.
   why and how it was checked.
 - One topic per pull request. A refactor needed for a feature can go in
   the same pull request; unrelated clean-ups get their own.
+- Every commit message is exactly one line, at most 80 characters, with
+  no body, trailers or AI attribution. When authorized to merge, wait
+  for passing CI and squash-merge with an explicitly supplied subject
+  and empty body; ordinary Git author metadata only.
 
 ## Vendored code and licenses
 

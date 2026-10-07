@@ -40,11 +40,17 @@ fn load(prog: &Program) -> Result<FfiLib, String> {
     // library stays loaded
     let dir = crate::cgen::TempDir::new("fwp-ffi")?;
     let c_path = dir.join("shim.c");
-    let so_path = dir.join("shim.so");
+    let so_path = dir.join(format!("shim.{}", crate::cgen::shared_library_extension()));
     std::fs::write(&c_path, src).map_err(|e| e.to_string())?;
     let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
     let out = std::process::Command::new(&cc)
-        .args(["-shared", "-fPIC", "-O1", "-w", "-o"])
+        .args([
+            crate::cgen::shared_library_flag(),
+            "-fPIC",
+            "-O1",
+            "-w",
+            "-o",
+        ])
         .arg(&so_path)
         .arg(&c_path)
         .args(ffi::links())

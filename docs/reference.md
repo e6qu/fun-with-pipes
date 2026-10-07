@@ -328,7 +328,7 @@ fwp build file.fwp [options]                  compile
                      --task-stack S and --threads N
     --wasm-async A   jspi (default) or asyncify: how tasks switch on WebAssembly
     --staticlib      lib<name>.a and lib<name>.h of the exported functions
-    --cdylib         lib<name>.so and lib<name>.h
+    --cdylib         lib<name>.so (.dylib on macOS) and lib<name>.h
     --link X         C code or libraries for foreign functions
     --emit-c         write the generated C instead of compiling it
     --service M[=A]  split M into a gRPC service (repeatable); -o is then
@@ -459,7 +459,7 @@ startup.
 
 | Target | Output | Runtime |
 |---|---|---|
-| native | an executable | all features; a program that uses TLS ([tls.md](tls.md): HTTPS, HTTP clients, REST servers, gRPC) is linked with OpenSSL and depends on `libssl.so.3`, and building it needs OpenSSL's headers (`libssl-dev`) |
+| native | an executable for the host | Linux; macOS portability in progress ([current checks](development-state.md)). TLS programs link OpenSSL 3 and need its headers; on macOS set `FWP_OPENSSL_DIR` ([tls.md](tls.md#openssl)) |
 | `wasm32-wasi` | a module for wasmtime or `node:wasi` | needs clang with a WASI sysroot; no sockets or processes, and programs that use them are rejected at compile time; files only in preopened directories; tasks need a JavaScript host with JSPI, or `--wasm-async=asyncify` (see below) |
 | `wasm32-browser` | the module plus a JavaScript loader (`run({ stdout, stderr, args, env, stdin })`, resolving to the exit code) | as `wasm32-wasi`, but no files: standard streams, clocks and random numbers; the page must be served over HTTP; tasks run in browsers with JSPI, or in any browser with `--wasm-async=asyncify` (see below) |
 | `<arch>-linux` | an executable for another 64-bit little-endian Linux: `x86_64`, `aarch64` (or `arm64`), `riscv64`, `powerpc64le`, `loongarch64`; `-gnu` and Rust's `-unknown-linux-gnu` spellings are accepted | all features, as native. See [Cross-compiling](#cross-compiling) |
@@ -504,8 +504,14 @@ callee-saved registers on the task's stack (`fwp_ctx_swap` in
 `runtime/fwp_rt_task.c`, for x86-64 and AArch64). A program that uses TLS
 needs an OpenSSL built for musl.
 
-The runtime is written for Linux on 64-bit little-endian processors;
-macOS and Windows are not supported yet. To try an ARM executable on an x86 machine,
+Cross targets currently name 64-bit little-endian Linux systems. Native
+macOS portability on Apple Silicon and Intel is in progress: use
+`--target native` with Apple Clang and consult
+[development-state.md](development-state.md) for verification. Shared libraries
+use `.dylib`; native `--static` linking is rejected. Darwin cross targets,
+universal binaries and Windows are not implemented; `--pgo` requires GCC.
+For TLS set `FWP_OPENSSL_DIR` as described in [tls.md](tls.md#openssl).
+To try an ARM executable on an x86 machine,
 run it with qemu: `qemu-aarch64 -L /usr/aarch64-linux-gnu ./main`.
 
 #### Tasks on WebAssembly
@@ -627,6 +633,7 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_REST_CORS` | the origins (separated by commas, or `*`) that may call a REST server from browsers, without `--cors` (see [rest.md](rest.md#cors)) |
 | `SSL_CERT_FILE`, `SSL_CERT_DIR` | OpenSSL's: the CA certificates TLS clients trust instead of the system's (see [tls.md](tls.md#client-options)) |
 | `FWP_OPENCL_LIB` | the OpenCL library of the `Gpu` device instead of `libOpenCL.so.1` (see [numerics.md](numerics.md#devices)) |
+| `FWP_OPENSSL_DIR` | OpenSSL prefix for host native include/link paths and the interpreter's loader; ignored by Linux cross builds (see [tls.md](tls.md#openssl)) |
 | `FWP_NO_OPT=1` | disables the IR optimizer (inlining, specialization, fusion) |
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
 | `FWP_REUSE=0` | when compiling: native code does not count references, so it copies every record it updates. By default it counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again), and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
