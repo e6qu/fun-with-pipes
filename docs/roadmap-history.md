@@ -10105,3 +10105,299 @@ PR98 tracing fixture repair passes focused cargo clippy --test gc -- -D
 warnings2.32 / 4.59 s and format0.34 / 0.60 s. Guarded clean before switching
 0.00 / 0.13 s. Linux-specific runtime test is not locally verified; require
 fresh exact-head Linux and all five other gates before squash.
+
+PR98 repair published atde969ee7161531406fecf1812e11ddb4ad03078c on actual
+2c1003cad114a544aa3f5ba7386b9a46dcb0dc47. The third message is one line,
+`Keep the GC churn test independent of ownership reclamation`. PR description
+updated; require six fresh gates. Row21 ACTUAL base remains542fc08 until its
+own refresh. Linux failed prior-head run supplies no merge acceptance.
+
+## Archived detailed preparation handoff through row102, 2026-10-09
+
+The following records superseded preparation chronology, not live next actions.
+
+Independent ownership-grpc-send-cleanup at
+/private/tmp/fwp-grpc-send-cleanup-worktree starts on ea79bde. Encoded
+message buffers have typed h2_buf cleanup through cancellable flow-control
+waits. Focused actual scheduler tests cover zero/partial windows, cancellation,
+wake/resume, closed streams and exact decoded plain/gzip payloads. Send/force
+checks pass 10.02 / 21.56 s, lint 2.74 / 5.52 s and format 0.45 / 0.82 s.
+Published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8
+on actual ea79bde.
+Independent queue98 ownership-grpc-request-encoding starts on671ada6,
+/private/tmp/fwp-grpc-request-encoding-worktree. Detached sender owns request
+scratch before encoding and keeps its cleanup through sending. Focused
+actual sender tests cover encoding trap, cancelled send and normal request
+bytes/end marker; both tests pass 2.03 / 4.93 s, lint 2.51 / 4.92 s and
+format 0.47 / 0.96 s. Fixture shadowing corrected; published clean at
+663ef599a4385b394964fc92017c03cb57c1ddd8 on actual671ada6.
+Independent ownership-grpc-canonical-encoding starts on663ef59,
+/private/tmp/fwp-grpc-canonical-encoding-worktree. Message/request encoders
+protect canonical fwp_buf scratch before serialization and transcoding.
+Focused tests use real I64 serialization and injected partial/transcoder
+failures, checking exact canonical bytes/diagnostics and omitted cleanup.
+Canonical/request tests pass 8.38 / 17.93 s, lint 2.46 / 4.87 s and format
+0.47 / 0.74 s. Published clean at
+4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual663ef59.
+Next delivery preparation refreshes row21 arrays on the actual current PR98
+head542fc08, inheriting its CLI repair. Rebase completed from actual7741d09;
+source/runtime/array tests/workflows match443524e exactly; only inherited
+CLI test repair differs. Three array tests pass14.02 / 28.13 s; focused lint
+passes2.30 / 4.61 s and format0.34 / 0.62 s. Published clean at
+79bc00f136491ee8beb6d51674d3ed4faf7d5303, without a competing PR. Independent row100 ownership-grpc-response-encoding starts on actual4114b70,
+/private/tmp/fwp-grpc-response-encoding-worktree. Served unary/stream/error
+response buffers get cleanup across encoding traps and cancellable sends;
+error canonical scratch is protected before serialization. Both response/request
+tests pass2.95 / 6.01 s; lint2.39 / 4.91 s and format0.47 / 0.75 s pass.
+Published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6, no competing PR.
+Independent row101 ownership-grpc-client-requests starts on actualb44f53c,
+/private/tmp/fwp-grpc-client-requests-worktree. Both synchronous client request
+buffers now scope encoding and cancellable sends. Both client/request tests
+pass9.19 / 18.71 s; lint2.38 / 4.86 s and format0.48 / 0.75 s pass.
+Published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93, no competing PR.
+Independent row102 ownership-grpc-client-failure-text starts on2339ff0,
+/private/tmp/fwp-grpc-client-failure-text-worktree. Client failure helper now
+accepts ownership of copied transport/status/iterator failure text, with
+cleanup across raw traps and typed GrpcError raising. All eight callers supply
+owned copies; both focused tests pass9.02 / 18.93 s, lint2.54 / 5.16 s and
+format0.45 / 0.83 s. Published clean at33661b298f96afcae268bfa278d62e452cebd3c8.
+Prioritize PR98 collector repair.
+Remaining audit: canonical decode and client receive/status cleanup.
+Do not promote phase2 or no-tracing support before sequential full acceptance.
+
+## Array preparation refresh after collector workload repair, 2026-10-09
+
+Rebase ownership-array-elements from ACTUAL542fc08 onto current PR98
+de969ee completed; historical doc conflicts resolve with all ten authoritative
+root docs. Runtime/compiler/array tests/workflows match79bc00f exactly; only
+inherited gc.rs tracing fixture repair differs. Actual base is nowde969ee;
+final squash rebase must use it after preparation publication. Guarded clean
+0.00 / 0.13 s; focused array tests run. No competing PR.
+
+All three refreshed array ownership tests pass14.39 CPU / 29.34 elapsed s,
+including tracing-off immediate disposal and scalar address-shaped bit safety.
+Focused lint/format precede preparation republishing.
+
+Refreshed array lint passes2.48 / 4.88 s, format0.34 / 0.60 s; no resource
+limits exceeded. Runtime/compiler/array tests/workflows match79bc00f; inherited
+GC fixture repair alone differs in source.
+
+Row21 refreshed preparation published clean atc8d4b57092e54fe292ccc04dc0b813652fdc2617
+on actualde969ee7161531406fecf1812e11ddb4ad03078c with explicit lease79bc00f.
+Entire one-line message verified; final rebase uses actualde969ee. Row22
+ACTUAL base remains443524e until its own refresh. PR98 remains sole delivery.
+
+## Client receive cleanup preparation, 2026-10-09
+
+Independent ownership-grpc-client-receive starts on33661b298f96afcae268bfa278d62e452cebd3c8,
+/private/tmp/fwp-grpc-client-receive-worktree. First/next g_got owners protect
+dequeued responses/status text across decode, second wait, callbacks and
+cancellation. Retry releases the first copied reset text before reopening.
+Decoder why strings are scoped; transfer to the failure helper clears g.text.
+Actual g_recv/scheduler fixture injects connection/codec/channel boundaries,
+covering success, extra/missing response, transport failure, malformed/decode
+trap, retry, channel callback/trap and parked cancellation. Three cleanup
+omission controls prove first/next/decoder leaks. Full protocol acceptance
+remains sequential CI. Guarded clean0.00 / 0.13 s; focused three tests run.
+
+All three focused client receive/failure/request tests pass13.79 CPU /
+27.82 elapsed s. Actual receive/scheduler ownership and unchanged injected
+codec boundary diagnostics pass, including all three omission controls under
+O1/O2. Fixed fixtures pass GC off/on, stress/verification and poison.
+
+Client receive/failure/request lint passes2.54 / 5.14 s; format apply
+0.45 / 0.83 s and check0.45 / 0.82 s. No resource limit exceeded.
+
+Row103 preparation published clean atc48864ce72313d5aff87aca59f768023e17dbd26
+on actual33661b298f96afcae268bfa278d62e452cebd3c8. Immutable anchors recorded;
+entire commit message one line. PR98 remains the sole delivery.
+
+Streamlined live handoff after publishing rows100–103, retaining actual bases
+and checks in its table and archiving chronology. Consolidated prepared
+network ownership design to remove superseded audit-next statements; current
+remaining decode/connection/callback audits stay explicit.
+
+## Pending gRPC connection cleanup preparation, 2026-10-09
+
+Independent ownership-grpc-connect-cleanup starts on c48864ce72313d5aff87aca59f768023e17dbd26,
+/private/tmp/fwp-grpc-connect-cleanup-worktree. Reuse fwp_connect_owner for
+pending address/socket cleanup; SSL scope releases a partially completed
+handshake. Transfer both owners after g_conn_new succeeds. Real loopback
+fixture covers pending connect, TLS handshake, cancellation before wrapper
+creation, refusal and descriptor handoff, with omitted fd/SSL cleanup controls.
+Background reader/writer publication is injected; partial startup remains
+a separate audit and full protocol acceptance remains on sequential CI.
+Guarded clean0.00 / 0.14 s; focused connect/primitive tests run.
+
+Both gRPC/primitive connect tests pass9.33 CPU / 20.92 elapsed s. Real
+loopback pending connect, TLS handshake and post-connect cancellation close
+fd/free resolver/SSL once. Refusal and successful descriptor transfer preserve
+normal lifetimes; omission controls catch missing fd/SSL cleanup. Fixed
+O1/O2 cases pass GC off/on, stress/verification and poison.
+
+Focused gRPC/primitive connect lint passes2.54 / 5.15 s; format apply
+0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.
+
+Row104 preparation published clean atb244d5f7c423edffc9159b1dd1a7fdac1934727a
+on actualc48864ce72313d5aff87aca59f768023e17dbd26. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## gRPC background startup ownership preparation, 2026-10-09
+
+Independent ownership-grpc-connect-startup starts onb244d5f7c423edffc9159b1dd1a7fdac1934727a,
+/private/tmp/fwp-grpc-connect-startup-worktree. Startup has a temporary
+connection owner; each spawn has a scoped reserved reference. Abort uses a
+static unpublished-connection dead marker, shuts down and cancels published
+tasks without allocating, then drops its owner. Last background task closes
+the descriptor; no child runs against an already reclaimed socket. Finalizer
+excludes the static marker from free. Actual reader/writer fixture injects
+first/second spawn traps, checks publication/refs/descriptor and finalization,
+and normal two-task transfer. Existing pending-connect fixture now injects
+background publication at the explicit assignment boundaries.
+Guarded clean0.07 / 0.36 s; focused tests run.
+
+Initial startup-related pending-connect regression failed C compilation
+(7.17 CPU / 14.74 elapsed s, exit101): its old fixture replaced only the
+spawn call, leaving an integer assignment to the new task pointer. Updated
+asserted fixture needles to replace each complete startup assignment and
+set injected task handles to NULL. Production source was unchanged by this
+fixture repair; startup test had not yet run.
+
+A second startup fixture run passed pending-connect checks but failed its
+fixed-case ref expectation (3.53 CPU / 7.33 elapsed s, exit101). FIFO scheduling
+can finish the cancelled reader before the waiting caller resumes. Assert its
+reference count against actual task completion, then require the final zero
+refs/closed descriptor after await. Both tests pass6.11 / 12.61 s; normal
+production source was unchanged by the fixture correction.
+
+Focused startup/pending-connect lint passes2.47 / 5.05 s; format apply
+0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.
+
+Row105 preparation published clean atcb20833c018f8af3cd6bfb13bdb7696c503b7c6a
+on actualb244d5f7c423edffc9159b1dd1a7fdac1934727a. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## Dynamic gRPC context restoration preparation, 2026-10-09
+
+Independent ownership-grpc-context-restore starts oncb20833c018f8af3cd6bfb13bdb7696c503b7c6a,
+/private/tmp/fwp-grpc-context-restore-worktree. g_with_ctx scopes saved task
+context on existing cleanup stack, restoring raw traps/cancellation as well
+as normal/typed returns. Cleanup changes only gctx: fwp_fail reads the active
+handler again after unwinding, so handler restoration must remain in catch
+boundaries. Actual cleanup/scheduler fixture injects user callback outcomes;
+nested typed/raw failures and parked cancellation prove pointer restoration.
+Guarded clean0.07 / 0.38 s; focused context/failure-text checks run.
+
+Both context/failure-text tests pass8.46 CPU / 18.21 elapsed s. Actual
+cleanup stack and scheduler restore saved gctx under normal, typed, raw trap,
+nested typed/raw and cancelled callback paths. Omitted unwind restore fails
+with exact exit1; fixed O1/O2 cases pass GC off/on, stress/verification/poison.
+
+Context/failure-text lint passes2.48 / 4.94 s. Initial format check flagged
+unformatted new Rust fixture (0.45 / 0.84 s, exit1); guarded format apply
+0.47 / 0.94 s and final check0.45 / 0.82 s pass. No resource limit exceeded.
+
+Row106 preparation published clean at7a89dd017ae49f1a7deae49745e15ee807f46b2d
+on actualcb20833c018f8af3cd6bfb13bdb7696c503b7c6a. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## Scoped TLS context resource ownership preparation, 2026-10-09
+
+Independent ownership-grpc-context-resources starts on7a89dd017ae49f1a7deae49745e15ee807f46b2d,
+/private/tmp/fwp-grpc-context-resources-worktree. Scoped g_tls users are checked
+counts; dynamic callbacks and inheriting tasks own references. Preparation
+protects and rolls back acquired context ownership; post-join task completion
+releases the original retained context, even if current gctx was replaced.
+Last owner frees five malloc strings and option storage without tracing.
+Read-once environment options keep their sentinel cache lifetime. One private
+Task pointer/hooks compile only for service/web programs; plain tasks omit
+them. Context/value wrappers still use existing tracing compatibility.
+Actual callback/task fixture covers return, typed/raw trap, cancel, structured/
+detached escape, preparation trap, overflow rollback, manual context replacement,
+cache lifetime and omitted scope/pending/completion cleanup.
+Guarded clean0.07 / 0.37 s; focused context/resources/task-handle tests run.
+
+CI37936505408 atde969ee now passes Linux, benchmarks, both ARM macOS and
+Intel GC. Regular Intel macOS still runs; require it before match-head squash.
+Linux has actually executed and verified the tracing fixture RSS bound.
+Initial TLS resource fixture fails only its final cache manual-release counter
+(8.27 CPU / 17.15 elapsed s, exit101): #undef free left those six manual
+frees outside the observer. Use observed_free for fixture-only cleanup; prior
+owner/escape/cancellation/overflow checks passed before this last assertion.
+
+All three resource/context/task-handle focused tests pass7.45 CPU /
+16.78 elapsed s. Each scoped TLS object releases its five copied strings and
+struct exactly once after callback/task users finish, including GC-off paths.
+Three omission controls detect missing scope, failed-prepare and completion
+release; checked overflow preserves the previous count. Plain task compilation
+omits context-owner marker and succeeds. No general tracing-free claim.
+
+## PR98 merged after both harness repairs, 2026-10-09
+
+All six exact-head CI37936505408 jobs pass atde969ee7161531406fecf1812e11ddb4ad03078c.
+Explicit match-head squash at2026-10-09T14:25:51Z yields actual main
+559f4acc3d279755c42be0e0fbc7de92348b9813. Entire subject verifies exactly
+`Own repeated aliases and generated numeric list nodes`; one line, empty body
+and no trailers/attribution. Ten root docs preserved in/private/tmp/fwp-main-docs-pre98
+and restored byte-for-byte after main2c1003c→559f4ac. CLI and GC fixture
+failures are repaired and fully gated, including actual Linux RSS acceptance.
+
+### Archived PR98 pre-merge handoff
+
+The following records old checks/status, not live next actions.
+
+Main is 2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 (#97). All six
+CI 37917260081 gates passed at 65fedd8d85430216539031553f88705ea72db5b4.
+Explicit match-head squash at 2026-10-09T11:43:18Z verifies the entire one-line
+message: `Own typed zip unzip and chunks results and release scratch storage`.
+#74–#97 deliver native macOS and selected ownership through typed nested
+zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
+Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
+
+Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
+ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
+de969ee7161531406fecf1812e11ddb4ad03078c on actual main2c1003c.
+Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/generation tests/workflows exactly against7741d09.
+Second commit542fc08 repairs only the CLI helper and adds its regression;
+third commitde969ee repairs the tracing-only GC churn fixture. All ten current root docs resolve historical
+conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
+and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
+`Own repeated aliases and generated numeric list nodes`, empty body.
+Completed previous-main CI37916609315 at d174e73 fails Linux only:
+cli::multi_command_program panics writing stdin with BrokenPipe. All other
+five jobs pass; full logs /private/tmp/fwp-main96-failure.log. Legal add-all
+case ignores supplied stdin and exits0. The helper must tolerate only closed
+stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout passes focused multi-command23.59 / 47.48 s and
+deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
+0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
+new exact-head gates atde969ee; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
+After merge, row21 ACTUAL refreshed base isde969ee7161531406fecf1812e11ddb4ad03078c;
+rebase onto the real squash, preserving immutable OLD anchors. Later branches
+prepared before CLI and collector-fixture fixes must inherit both on final
+rebase; source comparisons against older preparations should allow these
+explicitly inherited repairs.
+Ten current docs were backed up and byte-verified in
+/private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
+restored byte-for-byte afterward. Independent preparations through row106 are published with focused checks;
+row21 is refreshed against the repaired delivery. Prior checks remain in history.
+
+
+## Final array delivery rebase after PR98 squash, 2026-10-09
+
+ownership-array-elements rebases from ACTUALde969ee onto actual
+559f4acc3d279755c42be0e0fbc7de92348b9813; no conflicts. Source/runtime/
+tests/workflows match publishedc8d4b57 exactly, preserving both CLI/GC harness
+repairs. Ten root docs preserved before rebase in/private/tmp/fwp-docs-before-array99.
+Focused final array tests run; no competing delivery PR while preparing PR99.
+
+Final array guarded clean before switching passes0.07 / 0.37 s; source
+parity againstc8d4b57 includes all compiler/runtime/test/workflow files.
+
+## Final array delivery preparation after PR98
+
+Row21 rebased from actual de969ee onto main559f4acc, with source/runtime/tests/
+workflows unchanged from published c8d4b570. Guarded package clean passes
+0.07 / 0.37 s CPU / elapsed. Final `cargo test --test array_element_ownership`
+passes all three tests 14.57 / 29.32 s; focused clippy with `-D warnings` passes
+2.44 / 4.83 s; `cargo fmt --check` passes 0.33 / 0.60 s.
+Full exact-head acceptance remains pending publication and CI.

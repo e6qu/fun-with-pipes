@@ -40,17 +40,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#97: native macOS and selected ownership through typed
-zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
-[PR #97](https://github.com/e6qu/fun-with-pipes/pull/97) merged after all six
-exact-head jobs passed. Sole [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98) delivers queue20,
-typed repeat/range ownership. Final focused checks pass; six exact-head CI
-jobs gate its merge. The completed previous-main Linux run exposed an early
-stdin-close panic in the CLI harness; focused repair checks pass and the
-updated PR head must receive six fresh gates. Its Linux collector fixture
-also requires tracing-specific compilation: immediate reclamation/reuse can
-otherwise produce zero collections. Preserve its original assertions. Exact heads,
-checks and gates are in [the handoff](docs/development-state.md).
+Main includes #74–#98: native macOS and selected ownership through typed
+repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native
+wide counts. PR98 merged after all six exact-head gates passed, including its
+CLI and tracing-fixture repairs. Next delivery is queue21 array ownership;
+final rebase and focused checks pass; publication precedes six fresh gates. Exact heads, commands,
+failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux

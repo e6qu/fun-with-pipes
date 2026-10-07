@@ -1,7 +1,8 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Stored container elements and retained callbacks still use runtime sharing.
+//! Array elements are typed owners; map/set elements and retained callbacks
+//! still use runtime sharing.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -17,6 +18,10 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// Typed array boundary, including scalar/optional/list results.
+    ArrayOperation {
+        consumed: Option<usize>,
+    },
     /// One new record/variant allocation with typed borrowed field aliases.
     FreshOuter,
     /// A callback-produced owned value, or the unchanged empty-fold input.
@@ -98,7 +103,8 @@ impl Contract {
 }
 
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
-/// borrow; inserted keys and values share. Synchronous list callbacks borrow;
+/// borrow; map/set inserted keys and values share. Arrays own typed elements.
+/// Synchronous list/array callbacks borrow;
 /// retained callbacks share. Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
     use Argument::{Borrow as B, Consume as C, Share as S};
@@ -282,39 +288,65 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         | "ewrite" => (&[B], R, None, &[]),
         "string.contains" | "starts-with" | "ends-with" | "eq" | "ne" | "lt" | "le" | "gt"
         | "ge" | "compare" => (&[B, B], R, None, &[]),
-        "array.from-list" | "map.from-list" | "set.from-list" => (&[S], F, None, &[0]),
-        "array.to-list" | "map.keys" | "map.values" | "map.to-list" | "set.to-list" => {
-            (&[B], R, None, &[0])
-        }
-        "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
-        "array.get" => (&[B, B], R, None, &[1]),
+        "array.from-list" | "array.to-list" | "array.sort" => (
+            &[B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            None,
+            &[0],
+        ),
+        "array.get" | "array.make" => (
+            &[B, B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            None,
+            &[1],
+        ),
         "array.set" => (
-            &[B, S, C],
-            O {
-                argument: 2,
-                runtime: "array_set",
-                wrapped: true,
-            },
+            &[B, B, C],
+            ResultOwnership::ArrayOperation { consumed: Some(2) },
             None,
             &[1, 2],
         ),
         "array.push" => (
-            &[S, C],
-            O {
-                argument: 1,
-                runtime: "array_push",
-                wrapped: false,
-            },
+            &[B, C],
+            ResultOwnership::ArrayOperation { consumed: Some(1) },
             None,
             &[0, 1],
         ),
-        "array.make" => (&[B, S], F, None, &[1]),
-        "array.generate" => (&[B, S], F, Some(Callback::Shared(1)), &[1]),
-        "array.map" | "map.map-values" => (&[S, B], F, Some(Callback::Shared(0)), &[0, 1]),
-        "array.fold" => (&[S, S, B], R, Some(Callback::Shared(0)), &[0, 1, 2]),
-        "array.slice" => (&[B, B, B], F, None, &[2]),
-        "array.append" | "set.union" | "set.intersect" | "set.diff" => (&[B, B], F, None, &[0, 1]),
-        "array.sort" => (&[B], F, None, &[0]),
+        "array.generate" => (
+            &[B, B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            Some(Callback::Borrowed(1)),
+            &[1],
+        ),
+        "array.map" => (
+            &[B, B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
+        "array.fold" => (
+            &[B, C, B],
+            ResultOwnership::ArrayOperation { consumed: Some(1) },
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
+        "array.slice" => (
+            &[B, B, B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            None,
+            &[2],
+        ),
+        "array.append" => (
+            &[B, B],
+            ResultOwnership::ArrayOperation { consumed: None },
+            None,
+            &[0, 1],
+        ),
+        "map.from-list" | "set.from-list" => (&[S], F, None, &[0]),
+        "map.keys" | "map.values" | "map.to-list" | "set.to-list" => (&[B], R, None, &[0]),
+        "array.length" | "map.size" | "set.size" => (&[B], R, None, &[]),
+        "map.map-values" => (&[S, B], F, Some(Callback::Shared(0)), &[0, 1]),
+        "set.union" | "set.intersect" | "set.diff" => (&[B, B], F, None, &[0, 1]),
         "map.empty" | "set.empty" => (&[], R, None, &[]),
         "map.insert" => (
             &[S, S, C],
@@ -410,6 +442,13 @@ mod tests {
                     .filter_map(|(i, a)| (*a == Argument::Consume).then_some(i))
                     .collect();
                 match c.result {
+                    ResultOwnership::ArrayOperation { consumed: argument } => {
+                        assert_eq!(
+                            consumed,
+                            argument.into_iter().collect::<Vec<_>>(),
+                            "{symbol}"
+                        );
+                    }
                     ResultOwnership::OwnedContainer { argument, .. }
                     | ResultOwnership::OwnedAccumulator { argument, .. } => {
                         assert_eq!(consumed, vec![argument], "{symbol}")
@@ -495,7 +534,8 @@ mod tests {
                 runtime: "loop",
             }
         );
-        assert!(!primitive("array.map").unwrap().borrows_callback());
+        assert!(primitive("array.map").unwrap().borrows_callback());
+        assert!(!primitive("map.map-values").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
     }
 }
