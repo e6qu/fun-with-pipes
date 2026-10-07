@@ -51,7 +51,7 @@ probes; compiler/runtime/tests/scripts/production workflows match prior9979e9f
 byte-for-byte. Six focused tests21.01CPU/42.15elapsed, clippy2.34/4.74s,
 format0.34/0.62s and final docs audit0.43/3.40s pass. All 11 live docs are copied;
 prior9979e9f is retained under roadmap/revision-030-9979e9fd1a27 before exact-lease
-publication. Production CI 38018485993 is queued; roadmap_docs 38018485946
+publication. Production CI 38018485993 passes bench; platform jobs run or queue. Roadmap_docs 38018485946
 passes at the frozen head. Freeze it except for real repairs, and require all
 seven exact-head gates before merging. Proposed squash subject:
 `Release selected list aliases and scratch storage on nonlocal exits`;
@@ -119,7 +119,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 production CI queued, exact-head docs pass |
-| 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests 24.32/48.75s; lint 2.35/4.66s, format 0.36/0.75s and strong audit pass; final sequential gates follow |
+| 31 ownership-zip-unwind | ff84318a416d | 8371fc50c9bf | Six zip/selection checks20.99CPU/42.22elapsed, lint2.27/4.62s, format0.35/0.63s and audit0.44/3.48s pass; exact original source/probe parity; prior47776e7 retained before publication; final actual-squash rebase and all gates required |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests 22.49/45.05s; lint 2.37/4.77s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
 | 34 ownership-argument-preparation | 734d3383addf | 527f84d405b7 | Source/tests/scripts/workflows identical to33; docs only; audit 0.44/3.50s passes; skip duplicate PR after 28 full acceptance |
@@ -329,10 +329,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Current shared target
-belongs to /private/tmp/fwp-selection-unwind-worktree after bounded package
-clean of the map checkout (0.06CPU/0.37elapsed). Focused command:
-cargo test --test selection_unwind_ownership --test filter_ownership --test prefix_ownership,
-through the absolute-root guard with OpenSSL; all six tests pass21.01/42.15s.
+belongs to /private/tmp/fwp-zip-unwind-worktree after bounded selection-package
+clean0.06CPU/0.37elapsed. Focused command:
+cargo test --test zip_unwind_ownership --test zip_ownership --test selection_unwind_ownership,
+through the absolute-root guard with OpenSSL; all six tests pass20.99/42.22s.
 Before switching Rust checkouts, bounded cargo clean -p fwp in this checkout
 then rebuild the requested target. Earlier switches/checks are in history;
 never infer source identity from a shared target directory. Full gates run on

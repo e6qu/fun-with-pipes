@@ -13553,3 +13553,18 @@ strong audit0.43CPU/3.40elapsed. Before exact-lease publication, retain prior
 PR108's all-gate acceptance, raw-message/tree proof and protected main FF.
 Production CI38018485993 queues; roadmap_docs38018485946 passes on exact8371fc5.
 Full gates remain required before squash; immutable source anchors stay fixed.
+
+## Independent zip preparation while PR109 tests
+
+Rebase FROM recorded9979e9fd1a27f2cbf208e3497cd090f607f1c077 ONTO frozen
+PR109 head8371fc50c9bfbbe57f0968b58e5a5541b60beefe. Guarded rebase0.02CPU/
+0.25elapsed stops only at docs; all11 root docs resolve them, continue0.00/0.14s
+passes. New zip sourceff84318a416d1d7fb9b2d30279597486524c17fc preserves its
+implementation commit and matches all source/native probes/scripts/production
+workflows to prior47776e7 byte-for-byte. Previous selection-package clean
+0.06/0.37s, six zip/selection controls20.99/42.22s, focused clippy2.27/4.62s,
+format0.35/0.63s and strong audit0.44/3.48s pass. Preserve original two-buffer
+allocation-failure/release, aliases, scalar bits, raw interpreter/O1O2/GC/reuse
+controls. Retain prior47776e7 remotely under revision-031-47776e738c26 before
+exact-lease publication. No additional PR opens; final rebase FROM actual8371fc5
+ONTO accepted PR109 squash and all seven exact-head gates remain required.
