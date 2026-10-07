@@ -11,7 +11,7 @@ for priorities and contracts. Update this file before ending a work session.
 - Implementation/docs commit: `7ec02d0`.
 - Published draft PR: [#74](https://github.com/e6qu/fun-with-pipes/pull/74).
   The user explicitly authorized the push and PR creation on 2026-10-07;
-  the earlier publication block is resolved. Both commits are on GitHub.
+  the earlier publication block is resolved. The implementation and workflow handoff are on GitHub.
 - Continuing authorization: the user requested automatic completion of the
   active roadmap, one PR at a time, with full CI before each squash merge.
   Use an explicit single-line subject of at most 80 characters and an empty
@@ -40,6 +40,8 @@ for priorities and contracts. Update this file before ending a work session.
 - OpenCL framework lookup on macOS. Hardware kernel execution is unverified.
 - Apple Silicon and Intel macOS CI jobs, with OpenSSL 3 and the full test gate.
 - Darwin regressions for real collection, global roots, tasks/autodiff and libraries.
+- Existing reuse/stack suites enabled on Darwin: portable allocation counters,
+  immediate reclamation, and the full golden reuse/GC verification sweep.
 
 ## Validation
 
@@ -52,6 +54,10 @@ for priorities and contracts. Update this file before ending a work session.
   shared library from C, a static library from Rust and unsupported-type errors.
 - Fat-binary test passed locally on Apple Silicon (baseline variant only;
   the Intel variants still need their macOS CI job).
+- Darwin wide-record allocation and counted-reclamation regressions passed
+  locally after enabling the portable suites (`cargo test --test stack
+  wide_records_are_returned_without_allocating`, `cargo test --test reuse
+  objects_are_freed_by_their_counts`). Each used the same resource guard.
 - `cargo fmt --all -- --check` and `git diff --check` passed.
 - Full Linux/macOS tests, clippy, GC/reuse verification and benchmark evidence:
   pending [GitHub CI](https://github.com/e6qu/fun-with-pipes/pull/74/checks).
@@ -73,9 +79,9 @@ for priorities and contracts. Update this file before ending a work session.
 
 1. Inspect both macOS jobs and Linux CI on PR #74; fix failures without weakening tests
    or silently treating missing optional tools as coverage.
-2. Confirm collector and reuse checks actually execute on Darwin: several older
-   suites still guard themselves with `/proc` checks. Linux-only `strace` and
-   external-process RSS tests need platform alternatives, not blanket enablement.
+2. Check the newly enabled reuse/stack suites on both Darwin runners.
+   Static-memory and external-process RSS suites still use Linux guards;
+   `strace` and process-memory evidence need platform alternatives.
 3. Record exact CI results and remaining platform limitations here.
 4. Start the ownership-contract inventory described in `ownership.md`.
 

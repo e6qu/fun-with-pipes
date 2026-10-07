@@ -19,8 +19,8 @@ fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
-fn linux_cc() -> bool {
-    Path::new("/proc/self/status").exists()
+fn native_cc() -> bool {
+    cfg!(any(target_os = "linux", target_os = "macos"))
         && Command::new(std::env::var("CC").unwrap_or_else(|_| "cc".into()))
             .arg("--version")
             .output()
@@ -72,7 +72,7 @@ fn run(exe: &Path, cwd: &Path, input: &[u8], env: &[(&str, &str)]) -> Output {
 
 #[test]
 fn golden_programs_with_reuse_verified() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("golden");
@@ -131,7 +131,7 @@ fn golden_programs_with_reuse_verified() {
 /// registers) allocates a copy per iteration, and nothing with reuse.
 #[test]
 fn unique_records_are_updated_in_place() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("inplace");
@@ -185,7 +185,7 @@ fn unique_records_are_updated_in_place() {
 /// new node into the old one when the tree is unique.
 #[test]
 fn variant_cells_are_reused() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("cells");
@@ -243,7 +243,7 @@ fn variant_cells_are_reused() {
 /// per step.
 #[test]
 fn unique_arrays_are_written_in_place() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("arrays");
@@ -292,7 +292,7 @@ fn unique_arrays_are_written_in_place() {
 /// trees to the collector takes many.
 #[test]
 fn objects_are_freed_by_their_counts() {
-    if !linux_cc() {
+    if !native_cc() {
         return;
     }
     let dir = TempDir::new("free");
