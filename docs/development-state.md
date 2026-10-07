@@ -41,11 +41,16 @@ Duplicate main CI 38020842761 was cancelled only after that proof; main docs
 selection alias/partial-spine/scratch unwind. Phase 2 remains incomplete;
 phases 3–6 remain pending and tracing remains the fallback.
 
-Next concrete delivery: finalize queue 31 zip unwind on this actual squash base,
-preserve original source/probes, run bounded focused checks, copy all 11 live
-docs, publish with an exact lease and open the next focused PR. Require all
-seven exact-head gates before squash. Queue 32 fold is independently prepared.
-Keep one production PR open and continue repairing later evidence while CI runs.
+[PR #110](https://github.com/e6qu/fun-with-pipes/pull/110) delivers queue 31 zip unwind.
+Frozen exact head `05d354f5716744000d1f5177a861ad4a74f0173a` is on actual
+squash base `b5bf33c43144f663c7da77c1f0735e372d2bc6dd`. All six focused tests,
+lint, format and final documentation audit pass; all original source/probe bytes
+are preserved. Prior ff84318a416d is retained remotely before exact-lease publication.
+CI 38021138247 passes bench; five platform jobs run. Docs 38021138429 passes.
+Freeze this head except for real repairs. Require all seven gates before squash
+with subject `Release zip callback results and both scratch buffers on nonlocal exits`
+and explicit empty body. Verify raw message/tree, protect all 11 live docs and
+advance main; deliver queue 32 fold next. Keep one production PR open.
 
 Queue 34 is a verified duplicate of preparation code/probes delivered in #107.
 Skip its implementation PR when reached after 33; preserve its immutable anchor,
@@ -66,8 +71,9 @@ retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
 pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
 0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
 native probes:66–73 refresh passes8.39CPU/91.73elapsed, preserving both
-resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed and82–89 passes8.69/92.92s; 90–97 refresh is complete; 98–105 refresh passes8.58CPU/91.68elapsed; continue106–112 in batches of at most eight through
-/private/tmp/fwp-refresh-counted-worker-arguments.py, then repair the Intel HTTP/2 fixture and refresh failed full
+resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed and82–89 passes8.69/92.92s; 90–97 refresh is complete; 98–105 refresh passes8.58CPU/91.68elapsed; 106–112 refresh passes7.58CPU/79.22elapsed. All worker repairs now propagate
+through 112. The completed batches used
+/private/tmp/fwp-refresh-counted-worker-arguments.py, Repair the Intel HTTP/2 fixture before refreshing failed full
 evidence. Completed fwp-counted-worker-refresh journals must not be rerun. Full runs and
 production deliveries continue; failed evidence never establishes support. Raw/clean logs:
 /private/tmp/fwp-full-ownership-38016929326-arm-failure[.clean].log; emitted C:
@@ -80,6 +86,11 @@ Extend only the existing x86-64 fixture isolation to Clang, retaining the ARM
 fixture and every original assertion. Verify on Intel Clang, Linux GCC/Clang
 and ARM before publication and propagation from row 89 through 112. This is a
 fixture repair, not verified runtime support. Old full evidence remains failed.
+Candidate ownership-evidence-http2-intel is based on source177a08a204d7. The
+only probe change extends the existing x86-only isolation to Clang; all positive
+and strict negative assertions stay intact. Local ARM test7.28CPU/15.25elapsed,
+lint2.34/4.74s and format0.46/0.89s pass. Four native compiler/platform runner
+jobs must pass before the source89 repair and later propagation.
 
 Row 33 normalizes bound/inline Again records and reads cancellation owners by
 the actual emitted layout;35 selects the intended pending-call IR checkpoints;
@@ -134,7 +145,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 31 ownership-zip-unwind | b4a83d5d022c | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; publishing next focused PR; all seven exact-head gates required |
+| 31 ownership-zip-unwind | 05d354f57167 | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; publishing next focused PR; all seven exact-head gates required |
 | 32 ownership-fold-unwind | 9aed23988b19 | ff84318a416d | Nine fold/runtime-call checks24.14CPU/48.48elapsed, lint2.33/4.77s, format0.35/0.62s and audit0.44/3.58s pass; exact original source/probe parity; priorc434692 retained before publication; final actual-squash rebase and all gates required |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
 | 34 ownership-argument-preparation | 734d3383addf | 527f84d405b7 | Source/tests/scripts/workflows identical to33; docs only; audit 0.44/3.50s passes; skip duplicate PR after 28 full acceptance |
@@ -209,13 +220,13 @@ still need their final squash rebases and six exact-head full gates.
 | 103 ownership-grpc-client-receive | b7961a14d5dd | 7e011508db02 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 104 ownership-grpc-connect-cleanup | 392a5721e544 | b7961a14d5dd | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 105 ownership-grpc-connect-startup | 96174aaaf6be | 392a5721e544 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 106 ownership-grpc-context-restore | 06b87f3c83af | c7db1b368da0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 107 ownership-grpc-context-resources | d4b360f6cc71 | 06b87f3c83af | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 108 ownership-grpc-capture-resources | 1362d3a239bc | d4b360f6cc71 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 109 fix-grpc-tls-pool-identity | 5a6b79b7a008 | 1362d3a239bc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 110 ownership-grpc-environment-cache | 66d7d93e57f5 | 5a6b79b7a008 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 111 ownership-grpc-packed-options | a7d089cc5153 | 66d7d93e57f5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 112 ownership-grpc-connection-addresses | 996d5ee4ef4f | a7d089cc5153 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 106 ownership-grpc-context-restore | 8c53b11ae1d0 | 96174aaaf6be | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 107 ownership-grpc-context-resources | e36c9af3743f | 8c53b11ae1d0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 108 ownership-grpc-capture-resources | edac8c6a96dc | e36c9af3743f | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 109 fix-grpc-tls-pool-identity | 1c471fb6b348 | edac8c6a96dc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 110 ownership-grpc-environment-cache | 93d088fb187d | 1c471fb6b348 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 111 ownership-grpc-packed-options | 73e37788e5c6 | 93d088fb187d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 112 ownership-grpc-connection-addresses | 12a2f3a988b2 | 73e37788e5c6 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
 remain in history. The Main and next delivery section supplies the sole live
