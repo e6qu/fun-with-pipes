@@ -8188,3 +8188,27 @@ Record conversion lint (cargo clippy --test record_conversion_ownership
 --test variant_conversion_ownership --test worker_preparation_ownership --
 -D warnings) passes2.41 s CPU /4.72 s elapsed; fmt check0.34 s /0.60 s.
 Nine current root docs copied before final amend; tested source unchanged.
+
+Final record conversione2f944c256b606487f32ff4d37a1d61a6b9fdd30 is clean
+on actual basef22b5b5, published with exact lease against OLD614dd3b.
+Whole subject verified one line with empty body. PR95 remains sole open.
+
+Row44 OLDde85621 contains code2163857 and a doc-only follow-up. Both
+rebase from immutable parent614dd3b onto actual row43 heade2f944c.
+Authoritative nine-doc resolution leaves code0af148ad80160b685e620474551149a68bc5dc26;
+doc-only follow-up becomes empty and rebase completes without replaying stale
+status. New source oracle sets FWP_NO_OPT=1; direct typed-IR interpreter
+comparison does not run optimizer passes. Guarded clean0.00 s /0.13 s.
+Variant alias/conversion and worker boxing checks started.
+
+Guarded cargo test --test variant_alias_ownership --test
+variant_conversion_ownership --test worker_boxing_ownership passes all four
+tests15.62 s CPU /31.47 s elapsed. Direct typed-IR interpreter comparison
+and raw source FWP_NO_OPT=1 agree; emitted eligible variants remain unboxed
+and transfer fields once. Alias/yield, O1/O2 stress/verification/poison and
+related conversion/boxing failures pass. Full six gates still required.
+
+Variant alias lint (cargo clippy --test variant_alias_ownership --test
+variant_conversion_ownership --test worker_boxing_ownership -- -D warnings)
+passes2.36 s CPU /4.75 s elapsed; fmt check0.35 s /0.74 s. Nine current
+root docs copied before final amend; tested source unchanged.
