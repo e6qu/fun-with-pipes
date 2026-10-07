@@ -378,3 +378,8 @@ on 64-bit targets); scalar words remain uncounted. Focused evidence and remainin
 ownership gaps are recorded in [ownership.md](ownership.md) and
 [the handoff](development-state.md); complete ARC and collector-free support
 remain roadmap acceptance criteria.
+
+Prepared retain-failure cleanup records live owners before a Dup and protects
+completed typed field retains. Actual wide-count overflow checks and remaining
+conversion lifetimes are recorded in
+[ownership.md](ownership.md#prepared-retain-overflow-cleanup).

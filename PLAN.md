@@ -50,9 +50,10 @@ exact-head gates in run `37636161587`, attempt 2;
 [PR #77](https://github.com/e6qu/fun-with-pipes/pull/77) was squash-merged as
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
-as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) is the sole
-open closure-cleanup PR. Its exact-head macOS and benchmark gates passed;
-Linux is running. Merge only after all four pass.
+as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed all four gates
+in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
+types, is the sole open PR. CI run `37684140373` gates its merge; continue
+separate ownership preparation meanwhile.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -64,9 +65,10 @@ rebase anchors and actual focused evidence.
 
 Constructor allocation is published separately; worker result boxing passes
 focused exceptional checks. Worker field preparation now passes focused
-first/later-failure and entry cancellation checks. Initial loop flattening now passes focused preparation and cancellation checks,
+first/later-failure and entry cancellation checks. Typed partial retains and caller owners now pass actual count-overflow checks.
+Initial loop flattening passes focused preparation and cancellation checks,
 including a repair for RC argument naming that hid literal rebuilt states. Next
-audit vlocal variant duplication and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+audit boxed-to-unboxed variant conversion, vlocal boxing and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
 representation, numerics/autodiff, expanded evidence and optional tracing-free

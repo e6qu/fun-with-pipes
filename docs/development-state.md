@@ -33,7 +33,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   Verified squash subject: `Count owned String and Bytes results with explicit alias contracts`,
   one line, 66 characters, empty body, no trailers. Local main fast-forwarded
   while preserving its current plan/handoff edits.
-- Current origin/main: `079e7b58cfc2fa3a3053a1ef674a561af560fa1c`, squash
+- Earlier closure baseline: `079e7b58cfc2fa3a3053a1ef674a561af560fa1c`, squash
   merge of [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78). Exact head
   `a8e0079a87e5e4026327f431282cc37f0aebd637` passed all four gates in
   [CI 37656822169](https://github.com/e6qu/fun-with-pipes/actions/runs/37656822169):
@@ -44,18 +44,25 @@ immutable value semantics, effects and evaluation/trap order stable.
 - Previous text baseline: PR #77 merged as `6cdb0d1`, all four exact-head gates
   passed in CI `37636161587` attempt 2. Attempt 1 Linux had no runner; the retry
   executed actual tests successfully.
-- Sole open [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79):
-  `ownership-closure-cleanup`, `/private/tmp/fwp-drop-worktree`, rebased from
-  OLD `0d96bfe` onto `079e7b5`. PLAN/handoff conflicts were reconciled with the
-  latest docs; runtime/tests applied cleanly. Head
-  `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`, published with exact lease; clean.
-  Three closure cleanup/alias/counter checks pass (CPU 11.97 s / elapsed 24.06 s);
-  fmt/whitespace pass. Full CI `37666199241`: Both macOS gates and benchmarks passed;
-  Linux is running on that exact head.
-  Require all four gates before squash with subject
-  `Bound closure capture cleanup with an explicit release work list`, empty body
-  and exact head match. The temporary-types child later rebases from OLD
-  `7cf5c78`, not the new head or squash commit.
+- Current origin/main: `33d4fb1a33ad4aad6b584b2f25c90d0f4dbbc18c`, squash
+  merge of [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79), merged
+  2026-10-07T20:40:20Z. All four exact-head gates passed in CI `37666199241`
+  for `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`. Verified one-line subject
+  `Bound closure capture cleanup with an explicit release work list`, empty body,
+  no trailers. Local main fast-forwarded; docs backup
+  `/private/tmp/fwp-main-docs-33d4fb1` preserved the active plan/handoff.
+  Next PR: concrete ownership temporary types. Rebase from OLD `7cf5c78`
+  onto this baseline, preserving OLD `0acbc06` for the stack-arguments child.
+  Rebase completed; only plan/handoff conflicts were reconciled with current docs.
+  The rebased temporary types (2) and closure cleanup (1) pass under the guard:
+  CPU 10.31 s / elapsed 20.83 s; typed children free 0.5 MiB versus 0.0 MiB
+  in the control. Package clean preceded validation. Formatting/whitespace pass.
+  Published with exact lease as `7ce23dd0acb354859948db9043ffd91e3029a55c`;
+  clean checkout. Sole open [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80),
+  full CI `37684140373`, initially queued, exact head above. All four gates are
+  required before squash with subject `Preserve concrete call argument types for
+  ownership temporaries` (63 characters, supplied as one line), empty body and
+  exact head match. The stack-argument child later rebases from OLD `0acbc06`.
 - Published runtime unwind change: `ownership-unwind-runtime`, checkout
   `/private/tmp/fwp-unwind-runtime-worktree`, OLD base `02beec3`. Runtime cleanup
   chains are task-local, error handlers and recovered traps retain a boundary,
@@ -403,8 +410,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
-| ownership-closure-cleanup | fwp-drop-worktree | e3fb2f6 | 0d96bfe |
-| ownership-temporary-types | fwp-temporary-worktree | 0acbc06 | 7cf5c78 |
+| ownership-temporary-types | fwp-temporary-worktree | 7ce23dd | 7cf5c78 |
 | ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
 | ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
 | ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
@@ -440,6 +446,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-constructor-unwind | fwp-constructor-unwind-worktree | 608ae7b | 4973918 |
 | ownership-worker-boxing | fwp-worker-boxing-worktree | dc4f946 | 608ae7b |
 | ownership-worker-preparation | fwp-worker-preparation-worktree | c97dd03 | dc4f946 |
+| ownership-loop-preparation | fwp-loop-preparation-worktree | b879eca | c97dd03 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1365,7 +1372,9 @@ and retained task ARC remain required work.
 ## Latest preparation: initial flattened loop ownership
 
 `ownership-loop-preparation`, `/private/tmp/fwp-loop-preparation-worktree`,
-OLD base `c97dd03`; checked locally, pending publication. RC argument naming had
+OLD base `c97dd03`, published head `b879eca20812651998a178fba2dae72cc46f4aed`;
+clean checkout, no additional PR. Verified subject `Restore flattened loop states
+and protect initial field preparation`: one line, 67 characters, empty body/no trailers. RC argument naming had
 hidden rebuilt records behind a temporary and caused field-only counted states
 to remain boxed. C generation now moves an immediately consumed terminal Again
 through the record's preparation spine, preserving field and release order.
@@ -1398,4 +1407,46 @@ checks, not full architecture support or a speed measurement. Sequential full
 CI is still required. Further nested-slot flattening and field reconstruction,
 vlocal variant duplication, typed constructor temporaries, CAF/inline lifetimes,
 retained tasks and cycles remain to audit. Continue the sole PR #79 merge gate
-and publish this preparation separately; phases 2–6 remain active.
+and rebase this published preparation in its recorded order; phases 2–6 remain active.
+
+## Current retain-failure work
+
+Checked locally, pending publication: `ownership-variant-preparation`, checkout
+`/private/tmp/fwp-variant-preparation-worktree`, OLD base `b879eca`.
+RC liveness now records the owners before a Dup, excluding its unfinished new
+reference. Count generation protects those owners during retention. Typed
+variant, flat-field and stack-child multi-retains protect only completed extra
+references. Existing 12 RC unit checks pass (CPU 3.26 s / elapsed 6.88 s).
+The dedicated generated-C probe passes O1/O2, stress/verification and both poison
+modes (CPU 9.67 s / elapsed 19.44 s). It uses actual wide reference-count overflow,
+not an injected retain trap: first/later field overflow preserves original
+borrowed variant fields, and a compiled function's overflowing input Dup releases
+its consumed caller reference. Removing only the variant partial scope fails
+with code 3. Normal output matches the interpreter. A new liveness unit is added
+but has not yet run; focused adjacent regression, formatting and lint remain.
+No local workload is active. Those checks used the retain-failure compiler. The shared target now contains
+the rebased temporary-types compiler; guard package clean before resuming this checkout.
+Complete that publication/PR first, then resume retain-failure validation and
+publication; retain OLD `b879eca`. Boxed-to-unboxed conversion, vlocal boxing,
+nested field reconstruction and SetFields fallback preparation still need
+separate checks. Phase 2 and all later phases remain incomplete.
+
+Retain-failure final validation: all eight integration checks pass (five compiler
+call-liveness, loop preparation, worker preparation, actual retain overflow),
+CPU 27.40 s / elapsed 54.98 s. Both independent controls at O1/O2 demonstrate
+missing cleanup: removing the variant partial scope returns code 3; removing
+only the compiled worker's Dup owner scope returns code 7. Thirteen RC units
+including the new unfinished-reference liveness case pass: CPU 3.27 s / elapsed
+6.81 s. Library clippy passes: CPU 2.34 s / elapsed 4.61 s; fmt/whitespace pass.
+All used the same local guard, with a package clean after the temporary-types
+checkout. No local workload remains; the shared target contains retain-failure
+code. Check commands: `cargo test --test retain_unwind_ownership --test
+compiler_call_liveness --test loop_preparation_ownership --test
+worker_preparation_ownership -- --nocapture`, `cargo test --lib rc::tests --
+--nocapture`, `cargo clippy --lib -- -D warnings`, `cargo fmt`, each prefixed by
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py`. This exercises recoverable count overflow;
+allocation exhaustion currently terminates via fwp_gc_oom. No complete ARC or
+performance claim is made. Full sequential CI remains required. Next publish
+this separate preparation, then propagate concrete constructor field contexts
+and check boxed-to-unboxed/vlocal conversion ownership while PR #80 CI runs.

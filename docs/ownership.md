@@ -624,3 +624,24 @@ call-liveness and boxing checks pass. Full sequential CI remains required.
 Initial loop flattening, vlocal variant preparation/boxing, concrete constructor
 temporary types, CAF/inline owners, cleanup-spill failures and retained task
 lifetimes remain acceptance work.
+
+## Prepared retain overflow cleanup
+
+A Dup checkpoint records exactly the caller's existing references before the
+extra reference is acquired. Generated count operations register these live
+owners until the operation completes. Multi-field variant, flattened record and
+stack-child retention uses typed, initially zero slots for completed extras;
+an interrupted retain releases those extras independently of the original value.
+Scalar fields never enter that scope. Single-field retention needs only the
+caller's original-owner scope. Programs without unwind omit scope registration.
+
+The generated-C regression uses actual wide-count overflow at the first/later
+variant field and at a compiled worker input Dup, at O1/O2 under GC stress/
+verification with both poison modes. Original borrowed fields and scalar pointer
+bits survive. Independent controls remove the variant partial scope or the
+worker Dup scope and detect the respective unreleased references. Normal native
+output matches the interpreter. Eight adjacent integration checks and thirteen
+RC units pass. Full architecture/benchmark gates remain required; boxed-to-
+unboxed/vlocal conversion and nested-field reconstruction require further audit.
+Metadata allocation exhaustion currently exits rather than recovering. Cleanup
+registration is a correctness cost, not a demonstrated speed improvement.
