@@ -388,3 +388,8 @@ Prepared aggregate ownership context keeps nested constructor temporaries typed
 and owns earlier fields during later scalar argument preparation. Evidence and
 remaining untyped contexts are in
 [ownership.md](ownership.md#prepared-concrete-aggregate-context).
+
+Prepared boxed variant conversion owns the consumed input separately from the
+caller's remaining values during typed field retention. Consumed-value
+checkpoints and overflow evidence are documented in
+[ownership.md](ownership.md#prepared-boxed-variant-conversion).

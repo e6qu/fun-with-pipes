@@ -665,3 +665,23 @@ and handled-error interpreter output. Adjacent constructor, boxing, temporary,
 retain, loop and caller checks pass. Full architecture/benchmark CI is required;
 this is no speed claim. Untyped field bases and match scrutinees, conversions,
 reconstruction and retained runtime lifetimes remain acceptance work.
+
+## Prepared boxed variant conversion
+
+Boxed-to-struct conversion protects the consumed boxed input and all remaining
+caller owners separately while typed fields acquire their new references.
+Compiler consumed-value checkpoints exclude the transferred input from the
+remaining-owner scope. A stack original protects its counted children directly.
+Successful conversion unlinks the original scope before normal typed destruction;
+the partial-retain helper protects only completed extras if a later retain fails.
+
+A real source fixture prints the whole variant before matching it and asserts
+that generated C performs a boxed conversion. Its actual first/later count
+overflow traps preserve boxed/remaining-value aliases, restore field counts,
+release unique input storage and leave scalar bits untouched. Independent
+controls remove the original or remaining-owner scope and detect the respective
+unreleased owner at O1/O2. GC stress/verification, both poison modes and normal
+interpreter/native stdout agree. Sixteen ownership units and nine focused
+integration checks pass. Full sequential platform/benchmark gates remain required;
+vlocal boxing, field reconstruction, updates, untyped contexts and retained
+runtime lifetimes remain audits. No complete ARC or speed claim is made.

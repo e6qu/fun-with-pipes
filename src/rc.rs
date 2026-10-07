@@ -601,10 +601,13 @@ struct Checker<'a> {
     shapes: &'a Shapes,
     locals: &'a [MT],
     calls: Option<&'a RefCell<HashMap<*const Expr, CallLiveness>>>,
+    include_values: bool,
 }
 
 /// The references still held by the caller before and after argument evaluation.
-/// Borrowed pattern/field aliases never represent a separate owner. These maps
+/// Consumed-value checkpoints also describe the caller after transferring the
+/// result reference. Borrowed pattern/field aliases are never separate owners.
+/// These maps
 /// refer to this exact IR tree; they must not be reused after replacing it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct CallLiveness {
@@ -681,11 +684,17 @@ impl Checker<'_> {
     fn expr(&self, e: &Expr, st: &mut State, consume: bool) -> Result<(), String> {
         match e {
             Expr::Local(l) => {
+                let before = (self.include_values && consume && self.counted(*l))
+                    .then(|| owned_references(st));
                 if consume {
-                    self.release(st, *l, "is consumed")
+                    self.release(st, *l, "is consumed")?;
                 } else {
-                    self.need_alive(st, *l, "is read")
+                    self.need_alive(st, *l, "is read")?;
                 }
+                // A boxed-to-struct conversion owns the consumed result while
+                // these remaining references still belong to its caller.
+                self.record_call(e, before, st);
+                Ok(())
             }
             Expr::Const(_) | Expr::Func(_) => Ok(()),
             Expr::Call(id, args) => {
@@ -804,17 +813,37 @@ impl Checker<'_> {
 /// more often than it is held, none is read after its last reference, and
 /// every one is released on every path.
 pub fn check(prog: &Program, f: &Func, body: &Expr, locals: &[MT]) -> Result<(), String> {
-    check_with_calls(prog, f, body, locals, None)
+    check_with_calls(prog, f, body, locals, None, false)
 }
 
-pub(crate) fn call_liveness(
+#[cfg(test)]
+fn call_liveness(
     prog: &Program,
     f: &Func,
     body: &Expr,
     locals: &[MT],
 ) -> Result<HashMap<*const Expr, CallLiveness>, String> {
+    liveness(prog, f, body, locals, false)
+}
+
+pub(crate) fn ownership_liveness(
+    prog: &Program,
+    f: &Func,
+    body: &Expr,
+    locals: &[MT],
+) -> Result<HashMap<*const Expr, CallLiveness>, String> {
+    liveness(prog, f, body, locals, true)
+}
+
+fn liveness(
+    prog: &Program,
+    f: &Func,
+    body: &Expr,
+    locals: &[MT],
+    include_values: bool,
+) -> Result<HashMap<*const Expr, CallLiveness>, String> {
     let calls = RefCell::new(HashMap::new());
-    check_with_calls(prog, f, body, locals, Some(&calls))?;
+    check_with_calls(prog, f, body, locals, Some(&calls), include_values)?;
     Ok(calls.into_inner())
 }
 
@@ -824,12 +853,14 @@ fn check_with_calls(
     body: &Expr,
     locals: &[MT],
     calls: Option<&RefCell<HashMap<*const Expr, CallLiveness>>>,
+    include_values: bool,
 ) -> Result<(), String> {
     let c = Checker {
         funcs: &prog.funcs,
         shapes: &prog.shapes,
         locals,
         calls,
+        include_values,
     };
     let mut st = State::new();
     for l in 0..f.arity {
@@ -1132,6 +1163,24 @@ mod tests {
         let (_, locals) = counted(&p);
         assert!(locals.contains(&inner));
         assert!(!locals.contains(&unknown()));
+    }
+
+    #[test]
+    fn consumed_value_conversion_keeps_only_remaining_caller_owners() {
+        let body = Expr::Record(vec![Expr::Local(0), Expr::Local(1)]);
+        let p = prog(vec![list(), list()], vec![], body.clone());
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let Expr::Record(fields) = &body else {
+            unreachable!()
+        };
+        let first = live.get(&(&fields[0] as *const Expr)).unwrap();
+        assert_eq!(first.before_arguments, vec![(0, 1), (1, 1)]);
+        assert_eq!(first.at_entry, vec![(1, 1)]);
+        assert!(live
+            .get(&(&fields[1] as *const Expr))
+            .unwrap()
+            .at_entry
+            .is_empty());
     }
 
     #[test]
