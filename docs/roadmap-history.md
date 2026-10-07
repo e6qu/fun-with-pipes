@@ -11123,3 +11123,12 @@ Row40 guarded clippy2.42/4.95s and format0.43/0.59s also pass. Row41
 guarded native variant conversion10.20/20.63s passes. Runtime/compiler remain
 unchanged from the original preparations; both prior published heads were retained
 under immutable revision tags before explicit-lease publication.
+
+Row41 exact consumed-conversion liveness3.37/7.04s, clippy2.29/4.47s and
+format0.33/0.59s pass. Combined Linux evidence3a9fcb512a37a745e65629b29b15e1d06ec0a992
+starts CI37971602336. Row42 4ea62b69a2c4ee9f1fa142485c67458e5d80120f uses
+actual base67e37717ecf2, preserving both preparation commits. Compiler/runtime
+match the original. Guarded clean0.00/0.13s and both general/typed update
+failure tests15.01/30.20s pass. Row43 refreshffbbcf9d5119 uses actual4ea62b69;
+checks follow. Prior CURRENTs42/43 are retained under immutable revision tags
+before explicit-lease publication; original OLD anchors are unchanged.
