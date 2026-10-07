@@ -12015,3 +12015,21 @@ row34 test. Eleven focused runtime/call/preparation tests pass29.13CPU/
 e06c447336ae97eff77b118ebaac194f6968623d remotely before leased publication.
 Later overlapping row34 implementation is reconciled on final rebase; its
 immutable anchor and coverage remain. No complete exception-ownership claim.
+
+Row29 refreshed84ef5480f4938e78c11c10823bf498a8a1a4e6f9 → 78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 on actual7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3. Exact early row34 patch accounts for compiler/runtime changes; inherited audit matches the new base and the original map regression is byte-identical. Eight focused map/preparation/runtime tests pass22.28CPU/44.73elapsed; lint2.41/5.01s and format0.35/0.75s. Retained revision-029-84ef5480f493 remotely before leased publication; full sequential gates remain required.
+
+Row26 strengthens the shared handoff audit after stale next-action bases were
+found in the live documentation. It verifies live branch/head agreement with
+the queue and actual-base ancestry, without modifying immutable anchors.
+Positive audit passes44 link sets/106 immutable pairs/87 live pairs0.47CPU/
+3.69elapsed. Isolated stale-head and stale-base controls both fail as expected,
+then corrected data passes; combined1.19CPU/9.17elapsed. Compiler/runtime/tests
+remain identical to0a7203f. Runtime evidence37994225608 also passes at2234160
+with exact source parity to7cfbe03, including early partial-capture protection.
+
+Published row26 audit/docs refreshcc297e6b31c9ea7564c1f196eddb5c06059525ec
+on actual main1033bb34267997479794aeac9fff3447da94c16ca4d. Native source
+remains byte-identical to0a7203f; final positive audit0.48CPU/3.69elapsed passes
+all87 live pairs. Retained roadmap/revision-026-0a7203f5c559 remotely before
+leased publication. Row27 actual base remains old0a7203f until its own final
+rebase; immutable anchors and prior bases are not silently rewritten.
