@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through22 are merged; queue23 is the next delivery.
+Updated 2026-10-09. Rows through23 are merged; queue24 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -44,7 +44,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 20 | generation | `ownership-list-generation` | `de969ee71615` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
-| 23 | old-reclamation | `ownership-old-reclamation` | `6bd265486e20` | `6774aa5bb426` | `a8a7d119712b` |
+| 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `1741ab5fa64e` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
@@ -56,33 +56,33 @@ resolve full hashes before publication or merge. Checkout paths use
 | 32 | fold-unwind | `ownership-fold-unwind` | `459287698745` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `b16195bcebf3` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `9f56744c4eb7` | `49739182ecb6` | `988f2a3be97f` |
-| 35 | constructor-unwind | `ownership-constructor-unwind` | `646cca038ed8` | `608ae7bb2d24` | `49739182ecb6` |
-| 36 | worker-boxing | `ownership-worker-boxing` | `df5862861e71` | `dc4f9461571b` | `608ae7bb2d24` |
-| 37 | worker-preparation | `ownership-worker-preparation` | `3b6bf091127c` | `c97dd03f8d89` | `dc4f9461571b` |
-| 38 | loop-preparation | `ownership-loop-preparation` | `7ae78137d444` | `b879eca20812` | `c97dd03f8d89` |
-| 39 | variant-preparation | `ownership-variant-preparation` | `f0049c4aabe0` | `1bb11bece9ae` | `b879eca20812` |
-| 40 | constructor-types | `ownership-constructor-types` | `c90fe5a9d170` | `b0219671dca3` | `1bb11bece9ae` |
-| 41 | variant-conversion | `ownership-variant-conversion` | `3956d5cadd86` | `34873f41a4c4` | `b0219671dca3` |
-| 42 | record-update | `ownership-record-update` | `f22b5b587de6` | `5c5875d30b8e` | `34873f41a4c4` |
-| 43 | record-conversion | `ownership-record-conversion` | `e2f944c256b6` | `614dd3b19c13` | `5c5875d30b8e` |
-| 44 | variant-alias | `ownership-variant-alias` | `610fd745b973` | `de8562194d54` | `614dd3b19c13` |
-| 45 | typed-expression | `ownership-match-context` | `321cc3146089` | `3f61f51521d9` | `de8562194d54` |
-| 46 | field-context | `ownership-field-context` | `6d01e927c086` | `085dc716d599` | `3f61f51521d9` |
-| 47 | caf-ownership | `ownership-caf-cache` | `762cc824fa08` | `68cf7bf2f7ca` | `085dc716d599` |
-| 48 | inline-caf | `ownership-inline-caf` | `af073c78c443` | `6734248e7c0d` | `68cf7bf2f7ca` |
-| 49 | retained-thunk | `ownership-task-thunks` | `427076c60d2c` | `7208e4a2d93e` | `6734248e7c0d` |
-| 50 | task-within | `ownership-task-within` | `aa181f8f2c3a` | `14a76de5b8bb` | `7208e4a2d93e` |
-| 51 | task-scope | `ownership-task-scope` | `28de1794f39f` | `7da15d9c8ea3` | `14a76de5b8bb` |
-| 52 | task-handle | `ownership-task-handles` | `4b6a2cb08da5` | `bb6f9c49a043` | `7da15d9c8ea3` |
-| 53 | channel-queue | `ownership-channel-queues` | `ccbf2957f351` | `ab44b7de0812` | `bb6f9c49a043` |
-| 54 | library-result | `ownership-library-results` | `82f32b2cde03` | `5b34382167da` | `ab44b7de0812` |
-| 55 | library-input | `ownership-library-inputs` | `f240ecd56f3b` | `a6ebc1da9637` | `5b34382167da` |
-| 56 | library-unload | `ownership-library-unload` | `878b25aad627` | `5d0dc220fa1c` | `a6ebc1da9637` |
-| 57 | opencl | `ownership-opencl-lifetime` | `5b6e65f365d6` | `d8b4d88da98d` | `5d0dc220fa1c` |
-| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `00013d55d078` | `abc128581b61` | `d8b4d88da98d` |
-| 59 | tls-listener | `ownership-tls-listeners` | `838cf5dee220` | `3f6154b4bf67` | `abc128581b61` |
-| 60 | library-resource | `ownership-library-resources` | `d56a24e48d7e` | `07092cb06e1d` | `3f6154b4bf67` |
-| 61 | grpc-server | `ownership-grpc-server-cleanup` | `c299edbc33eb` | `0d5d3098e782` | `07092cb06e1d` |
+| 35 | constructor-unwind | `ownership-constructor-unwind` | `82f58d851b73` | `608ae7bb2d24` | `49739182ecb6` |
+| 36 | worker-boxing | `ownership-worker-boxing` | `6032ecffcb7d` | `dc4f9461571b` | `608ae7bb2d24` |
+| 37 | worker-preparation | `ownership-worker-preparation` | `3bd34dafb62f` | `c97dd03f8d89` | `dc4f9461571b` |
+| 38 | loop-preparation | `ownership-loop-preparation` | `032a764c1d33` | `b879eca20812` | `c97dd03f8d89` |
+| 39 | variant-preparation | `ownership-variant-preparation` | `5a72ba8763e4` | `1bb11bece9ae` | `b879eca20812` |
+| 40 | constructor-types | `ownership-constructor-types` | `dd6c405c77eb` | `b0219671dca3` | `1bb11bece9ae` |
+| 41 | variant-conversion | `ownership-variant-conversion` | `67e37717ecf2` | `34873f41a4c4` | `b0219671dca3` |
+| 42 | record-update | `ownership-record-update` | `4ea62b69a2c4` | `5c5875d30b8e` | `34873f41a4c4` |
+| 43 | record-conversion | `ownership-record-conversion` | `ffbbcf9d5119` | `614dd3b19c13` | `5c5875d30b8e` |
+| 44 | variant-alias | `ownership-variant-alias` | `b31400d03ac7` | `de8562194d54` | `614dd3b19c13` |
+| 45 | typed-expression | `ownership-match-context` | `0b00524a0a03` | `3f61f51521d9` | `de8562194d54` |
+| 46 | field-context | `ownership-field-context` | `f2262f94ada4` | `085dc716d599` | `3f61f51521d9` |
+| 47 | caf-ownership | `ownership-caf-cache` | `fcfa8fb2d296` | `68cf7bf2f7ca` | `085dc716d599` |
+| 48 | inline-caf | `ownership-inline-caf` | `ece7166b7a79` | `6734248e7c0d` | `68cf7bf2f7ca` |
+| 49 | retained-thunk | `ownership-task-thunks` | `ec9a4133a2c1` | `7208e4a2d93e` | `6734248e7c0d` |
+| 50 | task-within | `ownership-task-within` | `1b5fb056fa00` | `14a76de5b8bb` | `7208e4a2d93e` |
+| 51 | task-scope | `ownership-task-scope` | `245a0a24370e` | `7da15d9c8ea3` | `14a76de5b8bb` |
+| 52 | task-handle | `ownership-task-handles` | `fe8ed51eb078` | `bb6f9c49a043` | `7da15d9c8ea3` |
+| 53 | channel-queue | `ownership-channel-queues` | `a30c1829d0d0` | `ab44b7de0812` | `bb6f9c49a043` |
+| 54 | library-result | `ownership-library-results` | `f4d3784f4657` | `5b34382167da` | `ab44b7de0812` |
+| 55 | library-input | `ownership-library-inputs` | `625ac7793f84` | `a6ebc1da9637` | `5b34382167da` |
+| 56 | library-unload | `ownership-library-unload` | `ac6de597fddc` | `5d0dc220fa1c` | `a6ebc1da9637` |
+| 57 | opencl | `ownership-opencl-lifetime` | `4ae80b641da1` | `d8b4d88da98d` | `5d0dc220fa1c` |
+| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `a5ebb52578e3` | `abc128581b61` | `d8b4d88da98d` |
+| 59 | tls-listener | `ownership-tls-listeners` | `99b769bff921` | `3f6154b4bf67` | `abc128581b61` |
+| 60 | library-resource | `ownership-library-resources` | `ac17bf61276c` | `07092cb06e1d` | `3f6154b4bf67` |
+| 61 | grpc-server | `ownership-grpc-server-cleanup` | `044ceae9f0c5` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
