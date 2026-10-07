@@ -133,7 +133,7 @@ main = (10000, 0) | loop step | echo
             .env("FWP_STACK", "0"),
     );
     let owned = std::fs::read_to_string(&emitted).unwrap();
-    let start = owned.find("static V fwp_map_finish(").unwrap();
+    let start = owned.find("static V fwp_map_finish_protected(").unwrap();
     let end = start + owned[start..].find("\n}\n").unwrap();
     let mut shared = owned.clone();
     shared.replace_range(
