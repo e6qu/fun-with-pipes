@@ -46,8 +46,8 @@ Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing
 remains the fallback. [PR105](https://github.com/e6qu/fun-with-pipes/pull/105)
 is the only open production PR, head `9a21fd6cc844c0960cedd283fd09ab354ee32338`,
 actual base main104 `7520b8d5a1b07b07ad1a381c23be75a879470e0a`.
-Fresh production CI37997170222 has passed benchmarks, regular ARM macOS and
-both ARM/Intel GC stress jobs; Linux and regular Intel macOS remain running;
+Fresh production CI37997170222 has passed benchmarks and all four ARM/Intel
+regular/GC macOS jobs; Linux remains running;
 roadmap_docs37997170102 passes at the exact PR head.
 Require all seven exact-head checks before squash with
 `Protect compiler reuse tokens through transfer and unwind` and empty body.
@@ -106,7 +106,7 @@ still need their final squash rebases and six exact-head full gates.
 | 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
-| 32 ownership-fold-unwind | 270525b5bb9a | 687ae106193b | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 32 ownership-fold-unwind | a8e662267bbc | 5d411a886b73 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | c65514a8e6d4 | 270525b5bb9a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
 | 34 ownership-argument-preparation | 804e6a0cf9f3 | c65514a8e6d4 | Code/probe included in28; docs only relative to33; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
@@ -368,15 +368,22 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-zip-unwind-worktree after absolute-root guarded package
+to /private/tmp/fwp-fold-unwind-worktree after absolute-root guarded package
 clean0.00CPU/0.14elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
 rebased from actual244dd2a. Compiler/runtime/original probes match687ae10;
 only inherited guard/audit and long-tail regression differ. Seven focused
 zip/preparation/reuse tests pass24.32CPU/48.75elapsed; clippy -D warnings
 2.35/4.66s, format0.36/0.75s and strong44/106/87 audit0.42/3.47s pass.
 Retained roadmap/revision-031-687ae106193b before exact leased publication.
-No local workload remains running. Final rebase from actualc17d4a6 follows
-row30's accepted squash.
+Final rebase from actualc17d4a6 follows row30's accepted squash.
+Published row32a8e662267bbc4d050c2eb544fb1ade65b2dbfb11 has actual base5d411a8,
+rebased from actual687ae10. Compiler/runtime/original probes match270525b;
+only inherited guard/audit and long-tail regression differ. Eight focused
+fold/runtime-call/preparation tests pass22.49CPU/45.05elapsed; clippy -D warnings
+2.37/4.77s, format0.34/0.62s and strong44/106/87 audit0.42/3.36s pass.
+Retained roadmap/revision-032-270525b5bb9a before exact leased publication.
+No local workload remains running. Final rebase from actual5d411a8 follows
+row31's accepted squash.
 Published row30c17d4a693b3235b13850890af27561f0029c5142 has actual base4c7d5ba,
 rebased from actual78ed19f. Compiler/runtime/original probes match244dd2a;
 only inherited guard/audit and long-tail regression differ. Seven focused
