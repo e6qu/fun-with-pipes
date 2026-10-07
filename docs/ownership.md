@@ -114,10 +114,11 @@ Other IO/network/runtime results still share. Primitive contract coverage alone
 is not proof that every result has deterministic reclamation. Complete retained
 container elements, callbacks/captures, handlers/traps, FFI retention and young/old
 collector interaction. Typed record/variant drops release their children;
-container drops currently release only outer storage.
+prepared typed container drops release elements as well as outer storage.
 
-Generational marking restricts immediate freeing of old counted objects. Removing
-that restriction needs its own invariant and stress evidence. Define cycle
+The prepared old-object change permits final counted references to free marked
+storage; immutable in-place reuse remains young-only and has separate stress
+evidence. Define cycle
 policy and teardown before claiming general execution without tracing GC.
 
 ## Prepared leaf ownership implementation
@@ -345,3 +346,36 @@ full CI. Other live compiler locals, pending arguments, stack/unboxed values,
 runtime callback accumulators and retained task lifetimes still need unwind
 ownership coverage; token cleanup does not establish general collector-free
 execution.
+
+## Prepared call liveness and unwind ownership
+
+Call ownership facts come from the same checked reference accounting as IR
+Dup/Drop, including reference multiplicity. A borrowed field or pattern alias
+adds no separate owner. Computed counted arguments become named temporaries
+before the operation; earlier computed scalar arguments keep their evaluation
+order. This preserves earlier owned results while a later argument can fail.
+
+Generated call scopes save the caller's references that have not transferred to
+the callee, using type-directed drops on nonlocal unwind. Scalar bits are never
+counted. Unboxed records save only counted fields; struct variants retain their
+tag-directed cleanup. Stack aggregates save their owned children. A consumed unmanaged stack argument
+also leaves its original children with the caller until return; include those
+references in the exceptional scope. Hoist capture evaluation before choosing
+closure storage so named arguments do not force stack closures onto the heap. Pure programs
+without possible unwind and call sites without live owners need no such scope.
+Normal returns pop the scope without releasing its saved references.
+
+Incoming parameters are registered before a cancellable entry tick. A wrapper
+that passes unboxed fields to its worker has two separate owners: the original
+boxed argument and the duplicated child references consumed by the worker.
+Protect the original across the worker call as well. Named variant moves can
+stay in structs when the destination is only matched or returned as struct
+parts; avoid introducing a heap box merely for unwind bookkeeping.
+
+Focused evidence covers actual generated code, reference counts and immediate
+free counters, normal/error results, external aliases, pending arguments,
+boxed/unboxed wrappers, cancellation before the body and struct variant payloads.
+Full architecture and benchmark gates still remain. This does not cover every
+exceptional path: consumed runtime closures and accumulators, retained task
+owners, allocator/boxing failures, CAF ownership and inline code rewrites still
+need explicit coverage before claiming complete ARC or collector-free execution.

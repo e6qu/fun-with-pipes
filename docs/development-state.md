@@ -55,17 +55,34 @@ immutable value semantics, effects and evaluation/trap order stable.
   tail calls, runtime callback accumulator cleanup, then retained task lifetimes.
   Preserve listed OLD rebase anchors through the sequential squash workflow.
 
-- Current implementation: `ownership-reuse-tokens`, checkout
+- Latest published preparation: `ownership-reuse-tokens`, checkout
   `/private/tmp/fwp-unwind-liveness-worktree`, OLD base `3e31422`.
   Compiler-held emptied cells now release on unused branches and when old cells
   cannot be reused; dead fields are cleared before collection. Unwind registers
   the temporary owner; constructor transfer clears its slot; tail calls unlink
   owners before entering the callee. Initial token (2), old-reclamation (3) and
   runtime-unwind (3) checks pass, serial guarded CPU 20.01 s / elapsed 40.17 s.
-  All three token checks now pass, including bump-allocator compatibility,
-  guarded CPU 15.31 s / elapsed 30.88 s. Eight IR checks, formatting and
-  whitespace also pass. This commit is ready for the prepared sequence; full
-  current-head Linux, both macOS jobs and benchmarks still gate its future PR. This is one component of compiler liveness, not full ARC.
+  All three token checks pass, including bump-allocator compatibility,
+  guarded CPU 15.31 s / elapsed 30.88 s. Eight IR checks, fmt and whitespace pass.
+  Published head `33cf86466e2f106dcce2b3bc88cd3f10df9fa620`; no additional PR.
+  Current checkout `/private/tmp/fwp-call-liveness-worktree`, branch
+  `ownership-call-liveness`, OLD base `33cf864`, remains uncommitted preparation.
+  It derives call ownership from the RC checker, names pending computed arguments,
+  and registers live callers, incoming tick parameters and original boxed wrapper
+  arguments. Struct variants stay unboxed through ownership moves. Caller alias,
+  pending-argument, wrapper and cancellation checks pass; variant error cleanup
+  also passes. All five compiler checks and both existing stack checks pass,
+  guarded CPU 21.11 s / elapsed 42.31 s. The stack-closure regression exposed
+  by argument naming was fixed by hoisting capture evaluation before storage
+  selection; child reclamation remains measured. Caller scopes also protect
+  stack-argument children that normal returns release in the owning frame.
+  Eleven IR checks and seven array/list checks pass; fmt/whitespace pass.
+  Warning-free library clippy passes after the final repairs, guarded CPU
+  2.23 s / elapsed 4.38 s. This preparation is ready to publish; full gates
+  still remain for its future sequential PR.
+  Next: finish focused validation and publish, then protect consumed closures and
+  runtime callback accumulators, allocation/boxing failures and inline rewrites.
+  General unwind coverage and retained task lifetimes remain incomplete. This is one component of compiler liveness, not full ARC.
   Next implement all other live compiler owners, including incoming parameters,
   unboxed/stack values and pending arguments; then runtime callback accumulators
   and retained task lifetimes. Phase 2 remains incomplete.
@@ -119,6 +136,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-old-reclamation | fwp-old-reclamation-worktree | 6774aa5 | a8a7d11 |
 | ownership-task-boundaries | fwp-task-boundary-worktree | 02beec3 | 6774aa5 |
 | ownership-unwind-runtime | fwp-unwind-runtime-worktree | 3e31422 | 02beec3 |
+| ownership-reuse-tokens | fwp-unwind-liveness-worktree | 33cf864 | 3e31422 |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
