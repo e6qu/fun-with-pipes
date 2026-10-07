@@ -93,11 +93,12 @@ ancestor of the appended docs commit; completed publication journal must not rer
 Cached CAF47 is published7e1c164a0e81af3955608cde1641bc28f3b9ede5 on current46.
 Three original controls and all21 ownership units, lint/format and pre/post-commit/
 root audits pass; original pending-CAF scalar control is preserved.
-Current independent task is CAF inlining48: local native
-feeb5d6888d234705651d7d032a495dd4577b89e on current47. Original code/probes
-unchanged; both unused-argument evaluation/release tests are running. Finish
-lint/format, all11 docs/audit and retained-revision publication, then prepare49.
-Do not open another production PR before111 merges.
+CAF inline48 is published36fb4e1de52eeb1ad02e992c562c2595379740e5 on current47.
+Both original unused-argument/evaluation-order/release controls, lint/format and
+pre/post-commit/root audits pass. Next independent task is retained task thunks49:
+rebase FROMactual3dd5219cb896 ONTOcurrent48, preserving all original code/probes,
+then run retained_thunk_ownership, lint/format, docs/audit and retained-revision
+publication. Do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
 exact source112 `0da68ea8cdb1`, after both repairs propagated. Require all six
@@ -160,7 +161,7 @@ still need their final squash rebases and six exact-head full gates.
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 47 ownership-caf-cache | 7e1c164a0e81 | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 48 ownership-inline-caf | feeb5d6888d2 | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 48 ownership-inline-caf | 36fb4e1de52e | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests 10.19/20.78s; lint 2.33/4.82s and format 0.35/0.73s pass |
 | 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint 2.43/4.79s and format 0.35/0.73s pass |
 | 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint 2.45/4.85s and format 0.34/0.62s pass |
