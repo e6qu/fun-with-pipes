@@ -28,26 +28,37 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is3bb34267997479794aeac9fff3447da94c16ca4d (#103). All six
-production jobs in CI37982307280 and roadmap_docs CI37982307209 pass at
-1537961db5da753e123162aa8441cb4488d9a66b. Explicit match-head squash at
-2026-10-09T21:00:38Z has the entire one-line message:
-`Release registered owners before nonlocal unwind`.
-Its complete tree77e1008656d4330285a658cc111e596a9fda720f matches the accepted
-PR head. Raw Git message verification passes. Duplicate post-merge main
-CI37990763675 is cancelled only after this parity check, not acceptance.
+Main is `7520b8d5a1b07b07ad1a381c23be75a879470e0a` (#104).
+All six production jobs in CI37991460642 and roadmap_docs CI37991460672
+pass at `925daae1a95e3d68f4d622b72d8f642aa5a4346b`. Explicit match-head
+squash at 2026-10-09T21:53:51Z has the entire one-line message:
+`Pause guarded compiler workloads while sampling target size` (59 characters).
+Its complete tree `39c93dd86e37638896f5df08c6392ebe1e50bcd1` matches the
+accepted PR head. Raw message verification passes. Duplicate post-merge main
+CI37996159178 is cancelled only after all accepted gates and tree parity.
+All 11 current authoritative/modified docs were backed up and hashed in
+/private/tmp/fwp-main-docs-pre104, then restored byte-for-byte after main FF.
 
 #74–#103 deliver native macOS and selected ownership through typed collections,
 old-storage reclamation, task result/deadline boundaries and registered runtime
-unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
-Tracing remains the fallback. There is currently no open PR. Guard repair sourced4c832188d3563e85410adeb8763bf6a74f4833b
-is finally rebased on this actual squash; its scripts/workflow match focused
-accepted063f4ca exactly. Copy the ten authoritative docs, audit and publish its
-focused PR next. Require
-all six exact-head production jobs and roadmap_docs before explicit squash with
-`Pause guarded compiler workloads while sampling target size` and empty body.
-Then deliver row26. Its actual prepared base remains6421c025; rebase from that
-base onto the actual guard squash when available. OLD anchors stay fixed.
+unwind cleanup. #104 fixes guard target sampling without changing limits.
+Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing
+remains the fallback. No production PR is open immediately after104 merged.
+Deliver row26 reuse tokens next, keeping subsequent preparations separate.
+
+Row26 is published at `cc297e6b31c9ea7564c1f196eddb5c06059525ec` on actual
+base `3bb34267997479794aeac9fff3447da94c16ca4d`. Compiler/runtime/tests match
+previous0a7203f exactly; it also strengthens live handoff head/base validation.
+Six focused ownership/unwind tests pass18.68CPU/37.65elapsed; clippy2.54/5.04s
+and format0.32/0.59s pass. Linux evidence37992999275 passes. Final-rebase from
+actual3bb3426 onto main1047520b8d, copy all 11 current docs, rerun focused checks
+and strong audit, then publish and open the next PR. All OLD anchors stay fixed.
+A native100000-step tail probe passes atO1 with stack allocation and variant
+returns disabled:0.00CPU/0.38elapsed. The raw100000-step interpreter probe
+is stopped by the1GiB aggregate RSS guard; do not repeat it locally or raise
+limits. A200-step raw oracle passes0.37/0.74s with the same final result.
+Move the full-size raw probe to Linux evidence and add focused native long-tail
+coverage before final publication. Initial source syntax errors were corrected.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -64,19 +75,15 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
-| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
-| 25 ownership-unwind-runtime | 1537961db5da | c7b3e3f7433b | Merged PR103 after all six jobs and roadmap_docs passed |
-| 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
-| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
-| 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
-| 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
-| 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
-| 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
-| 32 ownership-fold-unwind | 459287698745 | a282f630c790 | Two fold tests13.13/26.45s; lint2.75/5.42s and format0.44/0.82s pass |
-| 33 ownership-loop-unwind | b16195bcebf3 | 459287698745 | Two tests11.07/22.31s; lint2.42/4.93s pass; fresh Linux follows |
-| 34 ownership-argument-preparation | 9f56744c4eb7 | b16195bcebf3 | Test9.91/20.00s; lint2.69/5.35s and format0.34/0.61s pass |
+| 26 ownership-reuse-tokens | cc297e6b31c9 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
+| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
+| 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; Linux CI37994225608 passes; sequential full gates follow |
+| 29 ownership-map-unwind | 78ed19ff401a | 7cfbe030d3de | Eight tests22.28/44.73s; lint2.41/5.01s and format0.35/0.75s pass; early preparation protection inherited |
+| 30 ownership-selection-unwind | 244dd2a578af | 78ed19ff401a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 31 ownership-zip-unwind | 687ae106193b | 244dd2a578af | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 32 ownership-fold-unwind | 270525b5bb9a | 687ae106193b | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 33 ownership-loop-unwind | c65514a8e6d4 | 270525b5bb9a | Early preparation protection inherited; original probes unchanged; sequential full gates remain required |
+| 34 ownership-argument-preparation | 804e6a0cf9f3 | c65514a8e6d4 | Code/probe included in28; docs only relative to33; skip duplicate PR after28 full acceptance |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
 | 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
@@ -156,20 +163,39 @@ still need their final squash rebases and six exact-head full gates.
 | 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
-Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–25 are merged. The guard repair is next, then row26. Detailed commands, full hashes,
+Prepared focused evidence and source-parity proofs remain in history.
+The guard repair is current, then row26. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row25 is now rebased from prepared1741ab5 onto actual row24 squashc7b3e3f.
-Row26 actual prepared base remains6421c025; use that base when its turn arrives.
+inherited CLI/GC harness fixes. Row26 is based on main1033bb3426; rows27–28
+are refreshed onto their current preceding preparations. The table records
+actual bases; historical evidence bases below do not override them.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
 close preserves queued values; explicit drain breaks its counted cycle, while
 automatic unreachable-cycle reclamation remains unproved.
+
+## Earlier argument-preparation repair
+
+Review of row28 found that a capture duplicate can trap before the callback
+entry takes its argument prefix. The later row34 correction already protects
+this boundary and partial capture duplication. Its compiler/runtime/test patch
+9f56744 applies cleanly to row28 and is now copied locally into that preparation.
+This moves the existing correction earlier, without changing pipe semantics.
+Eleven focused runtime/call/preparation tests pass29.13CPU/58.52elapsed,
+including the unchanged negative control. Lint2.48/4.99s and format0.35/0.63s
+also pass. Row28 is published at7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3
+on actual71c2405. Prior e06c447 is retained remotely at
+roadmap/revision-028-e06c447336ae. Fresh Linux evidence223416054406a975db1524b5c6866e248df91745 passes
+CI37994225608 and matches published7cfbe03 source exactly. Preserve row34's immutable OLD anchor;
+its implementation and probe are already included in28. Propagation through
+30–34 passes0.82CPU/21.38elapsed; current34 differs from33 only in documents.
+After28 passes full acceptance, skip a duplicate implementation PR at34 while
+retaining its anchor and regression coverage. No new full gate or complete exceptional-ownership claim.
 
 ## Fixture repair status
 
@@ -191,16 +217,15 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
-| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
+| Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; source matches current row112215d7ba |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 fails client failure-text fixture at typed handler check; other checks pass |
-| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 fails only the inherited HTTP2 omission control; repair in progress |
-| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 fails the HTTP2 omission control on GCC; other checks pass |
+| Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
+| Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; source matches current row100e6ae6c8, inherited HTTP2 control repaired |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
@@ -216,11 +241,9 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
 | Row29 map callback unwind | 5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 | CI37966274872 passes normal repaired checks; production84ef548, actual baseb5f44e8 |
-| Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 passes focused checks and all-doc/tag audit; productionb5f44e8, actual basec4eb75e |
+| Row28 runtime application and preparation | 223416054406a975db1524b5c6866e248df91745 | CI37994225608 passes; source matches published7cfbe03, includes early capture repair |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
-| Row26 compiler reuse tokens | 3d6102af3bffcec06a541c8e8238837ff19aad9f | CI37961205676 passes focused Linux checks; productionbb77c07, actual base6421c02 |
-| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
-| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
+| Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
 
 Evidence workflows never enter production ancestry. Every sequential PR still
@@ -258,7 +281,8 @@ unchanged target-size limit. Negative control against the original guard fails
 all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
 The initial test fixture escaping failure was corrected before this acceptance.
 The roadmap_docs workflow runs these checks on Linux too. PR103 is merged;
-final-rebase and publish this guard repair as the next focused PR, then row26.
+PR104 is merged after all six exact-head gates and roadmap_docs pass.
+Post-merge root guard integration repeat passes0.18CPU/1.36elapsed.
 Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
 passes all three integration checks (0.688s) and the documentation audit.
 
@@ -304,8 +328,14 @@ teardown/packed options/full-address checks, interpreter identity, lint/format,
 actual tracing churn and the documentation audit. Compiler/runtime/tests match
 row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
 before tests; superseded37987994602 is cancelled. Neither is acceptance.
-Validated HTTP2/client fixture repairs still need propagation through later
-preparations, preserving every immutable OLD anchor. Each eventual production
+Validated HTTP2/client fixture repairs are propagated through rows90–112,
+preserving every immutable OLD anchor. Refreshed evidencee5bbfd8 passes
+CI37992657684 against current215d7ba, including both accepted root controls.
+Fresh serving evidence3aca5cf passes CI37993159029; source matches current
+row100e6ae6c8 and only its inherited HTTP2 fixture differs from old accepted
+production source. Reuse evidence25fc868 passes CI37992999275 against
+current0a7203f. Old evidence heads are retained remotely under roadmap/evidence-*
+tags before leased publication. Each eventual production
 PR requires its own final rebase and six exact-head gates plus roadmap_docs.
 
 ## Local limits and durable docs
@@ -320,28 +350,55 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-http2-roots-evidence-worktree; final focused
-HTTP2 checks passed and no local workload is running. See the repairs above. Row86 focused checks completed within limits. Latest disk observation113625788KiB available; target143120KiB.
-Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
+belongs to /private/tmp/fwp-map-unwind-worktree after guarded clean0.06/0.38s.
+Row29 map/preparation/runtime-call tests pass:8 tests22.28CPU/44.73elapsed.
+Lint2.41/5.01s and format0.35/0.75s pass; no local workload is running.
+Published head78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 is based on
+published row287cfbe03. Only the exact early row34 preparation patch and the
+inherited main auditor differ from original84ef548; the map probe is unchanged.
+Old84ef548 is retained remotely at roadmap/revision-029-84ef5480f493;
+current table refs are updated after successful checks and leased publication.
+Row27 eleven focused tests pass30.85CPU/62.02elapsed, lint2.52/5.06s and
+format0.35/0.63s. Row28 eleven focused tests pass29.13/58.52s, lint2.48/4.99s
+and format0.35/0.63s. Row26 six tests pass18.68/37.65s, lint2.54/5.04s and
+format0.32/0.59s. All used the bounded guard with the named tests and -D warnings.
+Latest recorded disk observation is113625788KiB available and target143120KiB;
+these are historical samples, not current authorization.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.31CPU/2.52elapsed). It caught a status update
+and entire commit messages (latest0.38CPU/2.92elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
 The portable script and exact-head roadmap_docs workflow merged in PR100.
-Run `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`; fetch
+Row26 now prepares a stronger shared audit:87 live heads must match the queue
+and their recorded actual bases must be ancestors of those heads. It passes
+44 link sets/106 immutable tags/87 live pairs0.47CPU/3.69elapsed. Isolated stale
+head and stale base controls both fail as expected; restoring correct values
+passes (combined1.19CPU/9.17elapsed). Native compiler/runtime/tests are unchanged
+from source0a7203f. The audit/documentation refresh is published in row26 at
+cc297e6b31c9ea7564c1f196eddb5c06059525ec; it is not yet merged. Prior0a7203f
+is retained remotely at roadmap/revision-026-0a7203f5c559 before publication.
+Latest authoritative root audit uses the prepared stronger checker without
+changing main: `python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-root-with-prepared-checker.py`.
+It passes44 link sets/106 immutable pairs/87 live pairs0.49CPU/3.84elapsed after
+the early protection propagation. After row26 merges, use the shared script
+directly. Run `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`; fetch
 full history, immutable tags and retained PR heads on a fresh clone. Its workflow
 checks the actual PR head rather than GitHub's synthetic merge message. Later
 updates need fresh audit when links, refs or subjects change.
 
-Preserve all ten current root docs before fast-forward/rebase conflict resolution:
+Preserve all ten authoritative root docs plus any additional modified tracked
+documents before fast-forward/rebase conflict resolution. docs/numerics.md is
+currently also modified: it points to phase2 completion before numeric work and
+moves incomplete historical timing samples to history. The authoritative ten:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. The portable auditor is tracked on main.
-Latest ten-doc snapshot is /private/tmp/fwp-main-docs-pre101; refresh all ten
-immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
+Latest 11-doc snapshot is /private/tmp/fwp-main-docs-pre104 with sha256.json;
+all were restored byte-for-byte after updating main. Refresh before the next
+main update. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.
