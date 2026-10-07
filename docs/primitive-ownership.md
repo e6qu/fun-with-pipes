@@ -156,6 +156,17 @@ disabled, with the same output. Restoring only the previous temporary-buffer lif
 loop's committed native heap from 1.7 MiB to 9.2 MiB, with tracing off and identical
 output. Both counter comparisons used Apple Silicon, Apple Clang 17 and `-O1`. Full CI remains required before merging.
 
-IO/network-generated strings and result graphs, callbacks, captured closures,
+IO/network-generated strings and result graphs, retained callbacks, stack captures,
 container element ownership and exceptional cleanup remain work. Complete text
 contract coverage does not mean every text result has counted ownership.
+
+## Closure entries
+
+Compiled dynamic calls use an owned entry with typed capture duplication and
+release. Primitive entries preserve borrowed arguments through allocation and
+release them after obtaining the result; consumed container arguments are
+transferred. Calls from runtime callbacks keep a separate sharing entry, which
+promotes typed inputs and the result to conservative runtime management.
+Function table metadata exists only for live functions used as closure values;
+it does not change source currying or pipe semantics. See [ownership.md](ownership.md)
+for evidence and the remaining capture/exceptional-cleanup gaps.

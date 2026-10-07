@@ -15,7 +15,9 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 
 1. Open PR [#74](https://github.com/e6qu/fun-with-pipes/pull/74), branch
    `macos-portability`, latest head `2c2a46d`, baseline `7a05b58` (#73).
-   Full current-head CI is required. Run
+   Current-head gate is
+   [37591744197](https://github.com/e6qu/fun-with-pipes/actions/runs/37591744197).
+   Run
    [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219)
    on `8bc372f` completed ARM with one timer fixture failure; benchmark
    equivalence passed. Never substitute an earlier run for the current head.
@@ -26,9 +28,12 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 3. Published preparation `ownership-leaves`, checkout
    `/private/tmp/fwp-leaf-worktree`, head `2ce7a05`, base `798d2ed`.
    No PR yet. Adds direct String/Bytes ownership and borrowed-root lifetimes.
-4. This preparation `ownership-text-results`, checkout
-   `/private/tmp/fwp-text-worktree`, base `2ce7a05`, no PR yet. Owns selected
+4. Published preparation `ownership-text-results`, checkout
+   `/private/tmp/fwp-text-worktree`, head `bab67ea`, base `2ce7a05`, no PR yet. Owns selected
    copied Option/List text trees and releases conversion scratch arrays.
+5. This preparation `ownership-closures`, checkout
+   `/private/tmp/fwp-closure-worktree`, base `bab67ea`, no PR yet. Compiled
+   dynamic calls own heap closures and typed captures; callbacks still share.
 
 After #74 passes and squash-merges, fetch main and rebase the container checkout
 with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
@@ -36,7 +41,9 @@ push with lease and open its PR. After that PR merges, rebase the leaf branch fr
 `798d2ed` onto main and reconcile docs before opening its PR. Inherit the latest
 macOS runtime fixes. Keep one open PR; do not combine these ownership changes
 with the macOS PR just to avoid waiting for CI. After the leaf PR merges,
-rebase this text branch from `2ce7a05` onto main and run its full CI via a PR.
+rebase the text branch from `2ce7a05` onto main and run its full CI via a PR.
+After its merge, rebase this closure branch from `bab67ea` onto main, reconcile
+docs and run full CI in the next PR.
 
 ## macOS failures and fixes
 
@@ -94,8 +101,9 @@ Full architecture and benchmark gates remain required for each ownership PR.
 
 ## Next implementation work
 
-Complete other runtime-generated text results, typed container elements,
-escaping closure captures and retained runtime callback values. Preserve alias
+Complete other runtime-generated text results, typed container elements and
+retained runtime callback values. Compiled escaping heap captures are prepared
+here; their default stack and task-callback regressions passed locally. Preserve alias
 semantics and check callbacks returning inputs/captures. Add typed cleanup for stack aggregate fields, handler unwind,
 cancellation and FFI lifetimes; define cycle policy. Add an exact overflow
 count path before general no-tracing execution: current byte counts saturate
@@ -114,3 +122,20 @@ this repository root. It needs process-sampling/priority permissions. Use
 `CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target` in temporary
 worktrees so the guard monitors the shared target. Never run checks concurrently
 across those worktrees or increase limits after a refusal.
+
+## Prepared closure validation
+
+Eight IR ownership checks and ten focused closure/leaf/container/text tests
+passed through the guard. Retained aliases, partial applications, capture
+sharing and functions returning their inputs pass interpreter/native comparisons
+with GC stress/verification and both poison modes. The heap-closure loop with
+tracing disabled reports zero collections and 1.2 MiB freed by counts versus
+0.0 MiB with freeing disabled. Five FFI checks and the local fat-binary baseline
+passed. Task callback output and both FWP_STACK=0/1 closure paths passed locally,
+including O1/O2, GC stress/verification and both poison modes. The strengthened
+closure check used CPU 4.39 s / elapsed 8.85 s under the guard. No full local gate was run. Full CI must cover WASI,
+x86-64, both Darwin jobs, runtime stress and benchmark equivalence before merge.
+
+The next implementation must handle bounded destruction of deep capture chains,
+stack aggregate child cleanup and runtime-retained callbacks, rather than claim
+all closure lifetimes are complete. Byte-count saturation still delegates to GC.

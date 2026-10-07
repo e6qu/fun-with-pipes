@@ -43,6 +43,14 @@ evidence pass locally; full CI and merge remain pending. See
 [primitive contracts](docs/primitive-ownership.md). This is the first part of
 phase 2; strings, bytes, closure captures and runtime teardown are unfinished.
 
+Phase 2 is prepared in sequential branches for container contracts, text/byte
+leaves, copied text result trees and compiled escaping heap closures. Their
+focused checks and counter evidence are in the handoff; each still requires
+full CI after its parent merges. Retained runtime callbacks, typed container
+elements, stack child cleanup, exceptional cleanup, old-generation reclamation,
+exact count overflow and bounded deep capture destruction remain acceptance
+work. Keep tracing as the compatibility fallback until those gaps are closed.
+
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
 counting itself has a cost. Static memory provisioning is not a proof of
@@ -405,8 +413,8 @@ are prioritized in the active roadmap above:
     76 GiB and 41 s to 5 MiB and 17 ms. Objects are freed when their
     last counted reference goes, with what they hold (drop functions per
     type): building and walking a tree 200 times went from 33
-    collections and a 37 MiB heap to none and 2 MiB. Lists the runtime's
-    primitives build stay shared and are left to the collector: counting
+    collections and a 37 MiB heap to none and 2 MiB. In the original implementation, lists the runtime's
+    primitives build stayed shared and were left to the collector: counting
     their cells (fresh results, inputs shared element by element) freed
     730 of 1101 MiB of a list-churning program but made it 35% slower, as
     the generational collector already frees short-lived lists cheaply.

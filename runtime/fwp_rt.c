@@ -299,7 +299,9 @@ static void fwp_state_push(V s) {
 
 /* ------------------------------------------------------------- application */
 
-typedef struct { uint32_t arity; V (*entry)(V *); const char *name; } fwp_fninfo;
+typedef struct { V (*entry)(V *); void (*captures)(V, int); } fwp_owned_fninfo;
+typedef struct { uint32_t arity; V (*entry)(V *); const char *name;
+                 const fwp_owned_fninfo *owned; } fwp_fninfo;
 static const fwp_fninfo *fwp_fns; /* set by the generated main */
 
 static V fwp_apply(V f, uint32_t n, V *args) {
