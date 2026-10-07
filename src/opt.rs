@@ -161,7 +161,36 @@ impl<'p> Opt<'p> {
             }
             Expr::Record(a) => Expr::Record(a.into_iter().map(|x| self.expr(x, depth)).collect()),
             Expr::Field(r, i) => {
+                // Inlining a record-producing call can leave a bare Record,
+                // whose nominal field types the expression does not carry.
+                // Keep the checked base type for scalar replacement and RC.
+                let base_ty = type_of(
+                    &|id: FuncId| &self.funcs[id].ty,
+                    self.shapes,
+                    &self.locals,
+                    &r,
+                );
                 let r = self.expr(*r, depth);
+                if let Some(ty) = base_ty {
+                    if type_of(
+                        &|id: FuncId| &self.funcs[id].ty,
+                        self.shapes,
+                        &self.locals,
+                        &r,
+                    )
+                    .is_none()
+                    {
+                        let l = self.fresh(&ty);
+                        return self.expr(
+                            Expr::Let(
+                                l,
+                                Box::new(r),
+                                Box::new(Expr::Field(Box::new(Expr::Local(l)), i)),
+                            ),
+                            depth,
+                        );
+                    }
+                }
                 match r {
                     Expr::Record(mut fs) if fs.iter().all(|x| self.pure(x)) => {
                         fs.swap_remove(i as usize)
