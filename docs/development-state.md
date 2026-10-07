@@ -14,35 +14,49 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 ## Branch and PR sequence
 
 1. Open PR [#74](https://github.com/e6qu/fun-with-pipes/pull/74), branch
-   `macos-portability`, latest head `c7aeb6f`, baseline `7a05b58` (#73).
-   Latest gate [37583294535](https://github.com/e6qu/fun-with-pipes/actions/runs/37583294535)
-   is queued. Never substitute a prior or cancelled run for this gate.
+   `macos-portability`, latest head `2c2a46d`, baseline `7a05b58` (#73).
+   Full current-head CI is required. Run
+   [37584632219](https://github.com/e6qu/fun-with-pipes/actions/runs/37584632219)
+   on `8bc372f` completed ARM with one timer fixture failure; benchmark
+   equivalence passed. Never substitute an earlier run for the current head.
 2. Published preparation `ownership-contracts`, checkout
    `/private/tmp/fwp-ownership-worktree`, head `798d2ed`, base `ccecf20`.
    No PR yet. Centralizes 35 container contracts and borrows comparison-only
    keys. Runtime sharing protects saturation, interior references and spill.
-3. This published preparation `ownership-leaves`, checkout
-   `/private/tmp/fwp-leaf-worktree`, implementation `186dd1b`, base `798d2ed`.
-   No PR yet. Adds selected String/Bytes ownership and safe typed leaf drops.
+3. Published preparation `ownership-leaves`, checkout
+   `/private/tmp/fwp-leaf-worktree`, head `2ce7a05`, base `798d2ed`.
+   No PR yet. Adds direct String/Bytes ownership and borrowed-root lifetimes.
+4. This preparation `ownership-text-results`, checkout
+   `/private/tmp/fwp-text-worktree`, base `2ce7a05`, no PR yet. Owns selected
+   copied Option/List text trees and releases conversion scratch arrays.
 
 After #74 passes and squash-merges, fetch main and rebase the container checkout
 with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
-push with lease and open its PR. After that PR merges, rebase this branch from
+push with lease and open its PR. After that PR merges, rebase the leaf branch from
 `798d2ed` onto main and reconcile docs before opening its PR. Inherit the latest
 macOS runtime fixes. Keep one open PR; do not combine these ownership changes
-with the macOS PR just to avoid waiting for CI.
+with the macOS PR just to avoid waiting for CI. After the leaf PR merges,
+rebase this text branch from `2ce7a05` onto main and run its full CI via a PR.
 
 ## macOS failures and fixes
 
-Full run `37576889350` on `ccecf20`: ARM failed, Linux full tests and benchmarks
-passed, Intel still running at this update. ARM exposed BSD `wc` padding,
-OpenSSL alert wording, list GC crashes and native server crashes. Fixes at
+Full run `37576889350` on `ccecf20`: both macOS jobs failed; Linux full tests
+and benchmarks passed. ARM exposed BSD `wc` padding,
+OpenSSL alert wording, list GC crashes and native server crashes. Runtime fixes at
 `252d6b1` and `c7aeb6f` retain constructor sources, list source/buffers, flat-map
 and generic/specialized right-fold buffers through allocating operations.
 The forms server, stressed web server, TLS stream snapshot and tutorial 19 pass
 focused checks. Traits, shortened iterator/partition and filesystem fixtures
 pass at `-O1`/`-O2`, GC stress/verification and both poison modes. Original long
-stress workloads remain on CI. Darwin full support is not yet verified.
+stress workloads remain on CI. Intel also exposed unsynchronized timer print
+order; `8bc372f` collects scoped
+wake results in a channel and prints sorted results after the scope completes.
+All slice/GC checks and exact golden outputs pass locally; full WASM/fiber
+validation stays on CI. ARM then exposed the same assumption in the
+socket-enabled `tasks.fwp`; `2c2a46d` applies scoped result collection there
+and adds it to every slice/backend/GC-stress check. The expanded focused
+test passed locally (CPU 41.59 s / elapsed 83.89 s). Its other ARM targets
+passed. Darwin full support still requires the new current-head gate.
 
 ## Ownership implementation and evidence
 
@@ -68,14 +82,24 @@ Apple Silicon, Apple Clang 17, `-O1`: the leaf loop frees 0.9 MiB by counts vers
 0.0 MiB with `FWP_FREE=0`, with identical output (0.1 MiB precision). The key
 comparison loop allocates 0.0 MiB versus 0.8 MiB when only the old sharing boundary
 is restored. These are counter results, not timing or register-placement claims.
+Fresh-tree checks pass for copied Option/List results, retained inputs,
+Unicode and invalid/missing cases at `-O1`/`-O2`, GC stress/verification and
+both poison modes. All 31 string declarations, seven byte declarations and
+35 container declarations have consistent argument/result contracts. Numeric
+parse options stay shared. A word-list loop frees 2.1 MiB by counts versus
+0.0 MiB with freeing disabled, with tracing off. Conversion scratch buffers use
+releasable allocations; restoring only their previous lifetime grows the same
+no-tracing workload's heap from 1.7 MiB to 9.2 MiB with identical output.
 Full architecture and benchmark gates remain required for each ownership PR.
 
 ## Next implementation work
 
-Complete nested text result ownership (Option/List), typed container elements,
+Complete other runtime-generated text results, typed container elements,
 escaping closure captures and retained runtime callback values. Preserve alias
-semantics and check callbacks returning inputs/captures. Add handler unwind,
-cancellation and FFI lifetime cleanup; define cycle policy. Old marked objects
+semantics and check callbacks returning inputs/captures. Add typed cleanup for stack aggregate fields, handler unwind,
+cancellation and FFI lifetimes; define cycle policy. Add an exact overflow
+count path before general no-tracing execution: current byte counts saturate
+at 255 and promote the graph to tracing-managed sharing. Old marked objects
 remain under generational reclamation and WASI remains a bump allocator. Phase 2
 is incomplete; these focused leaf checks do not establish general ARC or no-GC
 execution. Later numeric/AD phases remain active in PLAN.md.

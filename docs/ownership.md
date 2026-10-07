@@ -109,21 +109,16 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Remaining leaf and capture coverage
 
-The prepared leaf change handles direct copies and identity/no-op aliases.
-`string.from-bytes` instead returns an optional copied string, and `split`,
-`lines` and `words` return lists of copied strings. These nested results still
-need explicit owned result graphs. Do not mark every textual result fresh or
-borrow every text argument before modeling its retention and aliases.
+Selected direct leaves and copied Option/List trees now have ownership contracts.
+Other IO/network/runtime results still share. Primitive contract coverage alone
+is not proof that every result has deterministic reclamation. Complete retained
+container elements, callbacks/captures, handlers/traps, FFI retention and young/old
+collector interaction. Typed record/variant drops release their children;
+container drops currently release only outer storage.
 
-Continue coverage for nested results, callbacks capturing strings, handlers/traps,
-FFI retention and young/old collector interaction. Existing typed drops release
-record/variant children, while container drops release outer buffers only.
-Generational marking restricts immediate freeing of old counted objects;
-removing that restriction needs its own invariant and stress evidence.
-
-Then complete typed container element retention/destruction and closure capture
-ownership. Shared compatibility boundaries still prevent general execution
-without tracing GC. These are acceptance requirements for resumed sessions.
+Generational marking restricts immediate freeing of old counted objects. Removing
+that restriction needs its own invariant and stress evidence. Define cycle
+policy and teardown before claiming general execution without tracing GC.
 
 ## Prepared leaf ownership implementation
 
@@ -140,7 +135,17 @@ poisons only within its capacity and clears its String/Bytes length, avoiding
 the record poisoner's interpretation of that length as a field count.
 
 The focused copy loop demonstrates reclamation of young owned leaves on normal
-paths. It does not establish full ARC: optional/list text results, retained
+paths. It does not establish full ARC: other runtime-created text results, retained
 container elements, callbacks, escaping captures, handler unwind and cancellation
 still require ownership contracts and cleanup. Old marked objects remain under
 the collector's generational policy; WebAssembly still uses its bump allocator.
+
+## Prepared nested text result ownership
+
+Generated type-directed helpers own copied String/Bytes result trees returned by
+selected primitives. They install one count on every new object, skip scalar
+fields and traverse list tails in a loop. The fresh-tree contract prohibits input
+aliases, internal sharing and cycles; it is narrower than general graph ownership.
+Numeric parse options remain shared while representation/destruction of boxed
+numeric cases is unfinished. Full inventory and regression details are in
+[primitive-ownership.md](primitive-ownership.md).
