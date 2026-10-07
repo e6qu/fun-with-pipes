@@ -51,8 +51,10 @@ exact-head gates in run `37636161587`, attempt 2;
 `6cdb0d1`. Compiled dynamic closures passed all four exact-head gates in run
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed all four gates
-in run `37666199241` and was squash-merged as `33d4fb1`. Next publish the rebased
-concrete temporary-type change as the sole PR; later preparations remain separate.
+in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
+types, passed all four exact-head gates in CI `37684140373` and was squash-merged
+as `50ab17a`. Stack-child ownership is the next sequential PR; separate compiler
+ownership preparation continues while full CI runs.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -64,13 +66,26 @@ rebase anchors and actual focused evidence.
 
 Constructor allocation is published separately; worker result boxing passes
 focused exceptional checks. Worker field preparation now passes focused
-first/later-failure and entry cancellation checks. Initial loop flattening now passes focused preparation and cancellation checks,
-including a repair for RC argument naming that hid literal rebuilt states. Next
-audit vlocal variant duplication and typed constructor temporaries, CAF/inline lifetimes and retained task callbacks,
+first/later-failure and entry cancellation checks. Typed partial retains and caller owners now pass actual count-overflow checks.
+Initial loop flattening passes focused preparation and cancellation checks,
+including a repair for RC argument naming that hid literal rebuilt states. Concrete aggregate contexts and scalar argument preparation now pass focused
+checks. Boxed-to-unboxed conversion now passes actual overflow cleanup checks.
+Record-update copies, including the general path with a surviving original,
+and overwritten-field release now pass focused checks.
+Boxed record field conversion is published after overflow and nine adjacent
+checks pass. Returned variant aliases now pass an IR leak regression and
+source differential checks. Next audit remaining whole-value boxing and
+untyped field/scrutinee contexts, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
 representation, numerics/autodiff, expanded evidence and optional tracing-free
 execution follow in roadmap order.
+
+Returned variant aliases are prepared separately: a valid nested IR case now
+transfers unboxed field owners instead of boxing and leaking an extra retain.
+Interpreter/native values, unique/shared child counts, source yield behavior and
+adjacent ownership checks pass. Full sequential CI is still required. Remaining
+whole-value boxing and untyped/reconstructed aggregate lifetimes stay open.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference

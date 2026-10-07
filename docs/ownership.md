@@ -37,7 +37,7 @@ allocations before counting is needed.
 | Eligible records/variants | Fields/structs or stack; otherwise counted heap objects | Broader layout and escape evidence; remove unnecessary counts |
 | Arrays, maps, sets | Counted where supported; unique updates in place | More precise borrowing/results, typed storage and views |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
-| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, stack capture cleanup and exceptional cleanup |
+| Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, retained callback and exceptional cleanup |
 | Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
@@ -176,7 +176,7 @@ versus 0.0 MiB with FWP_FREE=0 (Apple Silicon, Apple Clang 17, -O1,
 FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
 not complete ownership. Full architecture and benchmark gates remain required.
 
-Stack-resident aggregates still share their captured children; runtime-retained
+Eligible stack aggregates now retain typed child ownership; runtime-retained
 callbacks, exceptional paths, generational old objects, count overflow and WASI
 reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
 function captures. Other aggregate destruction and incomplete temporary types
@@ -225,3 +225,29 @@ backends at -O1/-O2 under GC stress/verification and both poison modes. Earlier
 container/leaf/text/closure/cleanup checks and five FFI regressions pass locally.
 Full CI remains required. This covers call argument temporaries; it does not
 complete type propagation into every generated constructor or aggregate.
+
+## Owned children of stack aggregates
+
+A stack wrapper does not have a heap count slot. Cgen now tracks its concrete
+children in the frame instead. Dup/Drop of an eligible local or alias changes
+those child references directly. A consumed stack argument retains its children
+through the call and releases that owner's references after returning. Dynamic
+application does the same for stack closures. Record/variant unboxing transfers
+child ownership, and each normal or unboxed call has its own cleanup scope so
+nested argument evaluation cannot release another call's children prematurely.
+
+The stack object layout stays unchanged. Callees keep their existing behavior
+for an off-heap pointer and duplicate retained fields/captures; cleanup in the
+owning frame gives up the original references. Address fences retain children
+through allocating calls. Heap reuse tokens and the in-place-update shortcut
+are bypassed for tracked stack objects. Unknown child types retain the fallback;
+this does not implement cancellation/handler unwind or runtime callback retention.
+
+Two focused regressions compare interpreter/native aliases and record/variant
+return paths at -O1/-O2, GC stress/verification and both poison modes. Restoring
+only the previous retained child lifetimes, with tracing off and identical
+output, changes a 10,000-step variant loop from 0.5 to 0.0 MiB freed by counts,
+and a closure loop from 1.7 to 1.3 MiB (Apple Silicon, Apple Clang 17, -O1;
+counters rounded to tenths). Fifteen focused ownership tests and the existing
+stack closure allocation elimination regression pass locally. Full architecture,
+WASI, GC/reuse sweeps and benchmark gates remain required before merging.
