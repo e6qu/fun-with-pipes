@@ -51,14 +51,14 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 13 | inference | `inference-call-effects` | `7018086b8f98` | `89b7bde2c8f0` | `34023f35a42f` |
 | 14 | wide | `ownership-wide-counts` | `bd7a20bfd833` | `3a791dc7e9f3` | `89b7bde2c8f0` |
 | 15 | order | `ownership-list-order` | `d2e0e296888d` | `c83557825d8a` | `3a791dc7e9f3` |
-| 16 | sort-callback | `ownership-sort-callbacks` | `5c19337f216d` | `66bc713dea67` | `c83557825d8a` |
+| 16 | sort-callback | `ownership-sort-callbacks` | `9f4e3bbc211c` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `15743b853d6a` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `112f3c8de87b` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `6ce37fb180e1` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
-| 23 | old-reclamation | `ownership-old-reclamation` | `6774aa5bb426` | `6774aa5bb426` | `a8a7d119712b` |
+| 23 | old-reclamation | `ownership-old-reclamation` | `f4716a027a1b` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `02beec353ec7` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `3e314222ff7c` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `33cf86466e2f` | `33cf86466e2f` | `3e314222ff7c` |

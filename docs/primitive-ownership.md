@@ -137,6 +137,7 @@ released explicitly. Scalar bits never select a reference destructor.
 | fold-right | Borrow callback/list, consume accumulator | Return owned accumulator; transfer callback argument1 |
 | drop-while | Borrow predicate/list | Retained input tail; stop predicate calls at first failure |
 | reverse; flatten; take | Borrow inputs | Copied fresh spine retaining selected elements |
+| sort; unique | Borrow list | Copied spine retaining typed selected elements; release scanned scratch; stable comparisons/first occurrence |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
@@ -157,7 +158,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 15 | sort/unique borrow input, own copied spine and typed selected elements, release scanned scratch | Sequential CI; stable comparisons/first occurrence and aliases |
 | 16 | sort-by borrows callback/input, owns typed keys and copied result; keys evaluate once in input order | Sequential CI; alias/capture keys, scalar safety and exceptional cleanup |
 | 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
 | 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
@@ -166,7 +166,8 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
 | 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
-| 24–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
+| 25–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
@@ -185,8 +186,8 @@ not automatic cycle reclamation or general tracing-free support.
 
 ## Validation and limits
 
-Merged contracts through #92 passed their full platform gates. Rebased focused
-checks for prepared rows15–22 pass with explicit FWP_NO_OPT=1 raw interpreter
+Merged contracts through #93 passed their full platform gates. Rebased focused
+checks for prepared rows16–22 pass with explicit FWP_NO_OPT=1 raw interpreter
 oracles; all sequential full gates remain required. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
