@@ -82,8 +82,8 @@ still need their final squash rebases and six exact-head full gates.
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
 | 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
 | 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
-| 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Focused checks running; compiler/runtime unchanged |
-| 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 / 39.78 s + exact unit 3.28 / 6.82 s |
+| 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
+| 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Focused retain checks running; runtime/compiler unchanged |
 | 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 / 32.40 s + two exact units |
 | 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 / 33.31 s + exact unit 3.31 / 7.05 s |
 | 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 / 38.35 s + exact unit 3.59 / 7.44 s |

@@ -11103,3 +11103,9 @@ and format0.34/0.60s pass. Original current3b6bf091127c is retained under
 immutable revision tag before lease publication. Combined Linux evidence
 c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f starts CI37970487617; not acceptance yet.
 Loop/argument evidence CI37969742246 passes all focused checks.
+
+Row38 032a764c1d3364a67cc0f8fa0beb1a54ef85c0b6 uses actual base3bd34dafb62f.
+Guarded clean0.00/0.13s, flattened-loop preparation9.88/19.92s, clippy2.40/4.81s
+and format0.34/0.71s pass. Compiler/runtime match original; original current
+7ae78137d444 is retained under immutable revision tag before lease publication.
+Row39 refresh5a72ba8763e4 uses actual032a764c; checks are still running.
