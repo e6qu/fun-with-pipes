@@ -104,7 +104,7 @@ still need their final squash rebases and six exact-head full gates.
 | 40 ownership-constructor-types | 5376d4a1f4ed | a5ac41b405dd | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
 | 41 ownership-variant-conversion | 9033d9f1072e | 5376d4a1f4ed | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 00b9d0901485 | 9033d9f1072e | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
-| 43 ownership-record-conversion | ffbbcf9d5119 | 4ea62b69a2c4 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
+| 43 ownership-record-conversion | 3df2c9d86059 | 00b9d0901485 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
 | 44 ownership-variant-alias | b31400d03ac7 | ffbbcf9d5119 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
 | 45 ownership-match-context | 0b00524a0a03 | b31400d03ac7 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
 | 46 ownership-field-context | f2262f94ada4 | 0b00524a0a03 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
