@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #112. Arrays, maps and sets own typed elements.
+The tables describe main through PR #113. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -226,8 +226,9 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-These contracts are published preparations, not main support. Exact heads and
-immutable parent anchors are in [the queue](roadmap-queue.md); current commands
+Rows marked delivered or skipped already have main acceptance; the remaining
+contracts are published preparations. Exact heads and immutable parent anchors
+are in [the queue](roadmap-queue.md); current commands
 and failures are in [the handoff](development-state.md). Each sequential PR needs
 its own final rebase, focused checks and six passing exact-head full gates.
 

@@ -153,6 +153,35 @@ controls. They establish an ABI baseline, not a timing improvement, constant
 stack use or whole-program allocation freedom. Phase3 must measure caller
 storage and spill costs alongside box elimination; details are in history.
 
+Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
+box (8-byte header plus8-byte field, excluding collector metadata). The generated
+program-thread frame is1232 bytes with typed fields versus1280 in the boxed
+control at both O1/O2; the launcher frame remains144 bytes. The File header is
+24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
+counters and partial-retain controls pass, with exact binaries/flags/disassembly
+retained. These are fixture-specific representation measurements; ordinary File
+and path allocations remain, and no timing or general ABI claim follows.
+
+Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
+with refs at offset8 and path bytes at offset16. The retained legacy control is
+24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
+original counters verify one leaf allocation requesting16+n+1 bytes versus two
+allocations requesting24+n+1, excluding allocator/collector metadata. Both
+original tests retain exact interpreter behavior and closed-handle display.
+Actual binaries, C, flags and both compiled layouts are in history. This is a
+constructor/layout improvement; storage disposal and general performance remain
+separate roadmap work.
+
+Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
+its payload at offset8. Original counters verify zero parent boxes versus one
+16-byte box in the comparison path. The program-thread frame is1280 bytes at
+O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
+body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
+startup and trap paths. Original inactive scalar/nullary tags and partial-retain
+cleanup remain checked. These are representation measurements, not executed
+instruction counts or timings; File/path allocations remain. Exact source,
+flags, binaries, disassembly and compiled layout are recorded in history.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -196,20 +225,22 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #112 includes the following contracts. Detailed primitive modes
+Main through PR #113 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Compiler reuse tokens clear dead fields before retaining empty young cells,
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
-  Compiler call liveness is merged; remaining constructor/callback paths stay prepared.
+  Compiler call liveness and consumed constructor-field protection are merged;
+  remaining worker/callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
   Compiler live caller/pending-argument and incoming-parameter cleanup is
   merged in PR106; runtime application and partial capture preparation in PR107.
-  Constructor and wider callback registration remains prepared.
+  Constructor fields and remaining caller references are registered before allocation
+  in PR113; wider worker/callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
