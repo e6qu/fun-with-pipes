@@ -29,7 +29,8 @@ immutable value semantics, effects and evaluation/trap order stable.
   [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75), based on `af15d26`.
   Published corrected head: `f53493c`; new full gate
   [37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156)
-  is queued/running. Earlier head `678abf6`, full run
+  has ARM running its full test step after successful formatting/clippy;
+  other jobs remain queued. Earlier head `678abf6`, full run
   [37605739266](https://github.com/e6qu/fun-with-pipes/actions/runs/37605739266)
   passed Linux and benchmarks; ARM macOS failed tutorial 7's same-executable
   native pipeline. Intel also passed. The fix is published; squash only after all current-head jobs pass.
@@ -55,8 +56,7 @@ under the guard. Full current-head CI remains required.
 ## Prepared sequence
 
 All tabled branches are published, have focused local evidence, and have no
-PR yet. The prefix/suffix branch follows right-fold; publication is recorded
-below. Open each only after its parent PR merges. Fetch main, rebase from the
+PR yet. Open each only after its parent PR merges. Fetch main, rebase from the
 listed OLD base onto main, reconcile docs with the latest handoff, validate,
 push with lease and run full CI. Do not replay the parent's pre-squash commits.
 
@@ -74,6 +74,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-fold-transfers | fwp-fold-worktree | a180c3f | 1ea7f07 |
 | ownership-zip-callbacks | fwp-zip-worktree | bdb750f | a180c3f |
 | ownership-right-fold | fwp-right-fold-worktree | adc7947 | bdb750f |
+| ownership-list-prefix | fwp-prefix-worktree | 376e77a | adc7947 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -114,7 +115,8 @@ results are rounded to tenths of a MiB. None establishes general no-GC support.
 
 Synchronous map/filter/zip callbacks and left/right accumulator transfers are
 prepared after b563360, followed by take/drop-while on ownership-list-prefix.
-Next refine non-callback list aliases/results (drop, head/tail and copied spines),
+Ordinary drop/copy boundaries are now being prepared after prefix/suffix work.
+Next refine indexed/find optional aliases and other synchronous list callbacks,
 then exact overflow counts and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
@@ -141,6 +143,10 @@ with `CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target` in temporar
 worktrees. It needs process-sampling/priority permissions. Recreate the temporary
 guard with the same limits if missing. Do not bypass a refusal or increase limits;
 move the workload to CI. No full local gates were run.
+
+The remaining acceptance section above controls priority. Design/preparation
+notes below record evidence and earlier decisions; their old next-task remarks
+are historical and must not replace the current queue.
 
 ## Callback design constraints retained for review
 
@@ -355,7 +361,7 @@ passed. Those successes do not verify the corrected head.
 ## Prefix/suffix ownership preparation
 
 `ownership-list-prefix`, checkout `/private/tmp/fwp-prefix-worktree`, base
-`adc7947`, has no PR yet. Synchronous take/drop-while borrow predicates/source,
+`adc7947`, is published at `376e77a` with no PR yet. Synchronous take/drop-while borrow predicates/source,
 stop at the first rejected element, retain direct/captured specialization and
 protect source/capture addresses. Fresh prefix nodes own duplicated selected
 elements; returned suffixes acquire one tail reference before source cleanup.
@@ -365,7 +371,35 @@ at O1/O2 with stack on/off, collection verification and reuse poisoning.
 The no-tracing differential restores result sharing in all specialization paths:
 identical output/zero collections, 5.0 versus 8.2 MiB freed by counts. Twenty-eight focused ownership regressions and the contract inventory passed
 (CPU 49.90 s / elapsed 100.17 s for the regressions). Native fat baseline passed
-(CPU 9.16 s / elapsed 18.61 s including incremental compilation). Five FFI checks passed (CPU 2.76 s / elapsed 5.46 s), formatting and
-whitespace passed. The branch is ready for publication. Full platform CI is required
+(CPU 9.16 s / elapsed 18.61 s including incremental compilation). Five FFI
+checks passed (CPU 2.76 s / elapsed 5.46 s), formatting and whitespace passed. Full platform CI is required
 after all parents merge. Remaining list operations, typed container elements,
 exact counts and retained/exceptional lifetimes still belong to phase 2.
+
+Prefix/suffix work is committed and published as 376e77a; verified subject is
+one line, 56 characters with no body/trailers. The branch and current PR worktree
+are clean. Root remains main with intentional local status documentation.
+No local workloads remain. Latest #75 gate 37612412156 is still queued; fix any
+failures, and squash only after all four jobs pass. Next concrete work: refine
+non-callback list drop/copy boundaries, preserving typed element aliases and
+releasing scratch buffers; do not rewrite head/tail/last, already language code.
+After #75 merges, rebase leaves from OLD base 798d2ed onto the squash commit and
+open the next sole PR. Continue the table in order, fixing tests at every step.
+
+## Ordinary list copy ownership preparation
+
+`ownership-list-copies`, checkout `/private/tmp/fwp-list-copy-worktree`, base
+`376e77a`, has no PR yet. Reverse/take/append/flatten borrow inputs and own only
+new list nodes with typed element references. Append stops ownership at its
+borrowed suffix and acquires one tail reference; drop likewise duplicates its
+returned tail, never resets aliased node counts. Scanned temporary buffers are
+released; original input addresses remain roots. Two focused tests pass with
+strings/functions/scalars, nested flattening, retained aliases, post-input-drop
+use and negative/zero/oversized/empty cases at O1/O2, stack on/off, GC verification
+and both poison settings. No-tracing loop: identical outputs/zero collections,
+7.3 versus 13.6 MiB freed by counts. Initial check CPU 11.21 s / elapsed 22.84 s
+including incremental Rust compilation. Thirty related ownership regressions passed (CPU 60.63 s / elapsed 121.63 s),
+and the declaration/alias contract invariant passed. Five FFI checks and the native fat baseline passed (CPU 5.34 s / elapsed
+10.65 s). Formatting and whitespace passed; ready for publication. full platform CI is still required after all parents merge.
+Next: nth/find result aliases and the remaining synchronous callbacks, exact
+counts, typed container elements and exceptional/retained lifetime cleanup.

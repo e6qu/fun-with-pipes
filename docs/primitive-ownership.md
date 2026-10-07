@@ -331,3 +331,34 @@ frees 8.2 MiB by counts versus 5.0 MiB after restoring prefix and suffix result
 sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
 0.1 MiB counter precision, zero collections). Full platform CI remains required;
 this does not establish general no-tracing execution.
+
+## Typed ordinary list copies and suffixes
+
+`reverse`, `take`, `append`, `flatten` and `drop` borrow their arguments.
+CopiedSpine distinguishes new nodes containing aliases of borrowed elements from
+FreshTree (independent copies) and FreshSpine (already-owned callback results).
+The generated monomorphic wrapper owns each new node and duplicates only
+pointer-bearing element references according to its List element type. It
+never examines scalar bits to decide ownership.
+
+`append` copies the subject's nodes and ends at its other list argument. The
+wrapper stops at that existing suffix and acquires one reference to it, including
+the empty-subject path. `drop` likewise returns one owned reference to the
+remaining suffix; negative/zero counts retain the original list, and past-end
+counts return Nil. Neither operation resets counts on aliased nodes.
+
+Copies use separately releasable, scanned temporary buffers where needed;
+reverse constructs directly without a buffer. Flatten keeps its outer source
+and intermediate results rooted while copying inner lists and releases both
+outer and per-inner scratch storage. Original input addresses remain live
+through allocating calls. Tracked effects, count clamping and pipe order stay
+unchanged. Head, tail and last remain their existing language implementations.
+
+`tests/list_copy_ownership.rs` checks string/function elements, retained aliases,
+results after input cleanup, nested flattening, append's shared suffix,
+empty/negative/zero/oversized cases and scalar elements. Interpreter/native
+outputs agree at O1/O2, stack on/off, collection stress/verification and both
+reuse-poison settings. An identical no-tracing loop frees 13.6 MiB by counts
+versus 7.3 MiB after restoring result sharing in all five emitted wrappers
+(Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision, zero collections).
+This is reclamation evidence; full platform and benchmark gates remain required.

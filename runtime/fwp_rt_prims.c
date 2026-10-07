@@ -207,6 +207,44 @@ static V fwp_p_flatten(V xss) {
     return r;
 }
 
+/* Copies leave their new nodes uncounted until the monomorphic wrapper
+ * duplicates element references by type. The optional suffix is borrowed. */
+static V fwp_copy_finish(V *a, size_t n, V tail) {
+    V result = tail;
+    for (size_t i = n; i; i--) result = fwp_cons(a[i - 1], result);
+    FWP_KEEP_ALIVE(a);
+    FWP_KEEP_ALIVE(tail);
+    fwp_mem_free(a);
+    return result;
+}
+static V fwp_p_reverse_copied(V xs) {
+    V source = xs, result = 0;
+    while (xs) {
+        result = fwp_cons(OBJ(xs)->f[0], result);
+        xs = OBJ(xs)->f[1];
+    }
+    FWP_KEEP_ALIVE(source);
+    return result;
+}
+static V fwp_p_append_copied(V ys, V xs) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    V result = fwp_copy_finish(a, n, ys);
+    FWP_KEEP_ALIVE(xs);
+    FWP_KEEP_ALIVE(ys);
+    return result;
+}
+static V fwp_p_flatten_copied(V xss) {
+    size_t n;
+    V *a = fwp_map_items(xss, &n);
+    V result = 0;
+    for (size_t i = n; i; i--) result = fwp_p_append_copied(result, a[i - 1]);
+    FWP_KEEP_ALIVE(a);
+    FWP_KEEP_ALIVE(xss);
+    fwp_mem_free(a);
+    return result;
+}
+
 static size_t fwp_count_arg(V n) { return (int64_t)n < 0 ? 0 : (size_t)(int64_t)n; }
 
 static V fwp_p_take(V n, V xs) {
@@ -219,6 +257,20 @@ static V fwp_p_drop(V n, V xs) {
     size_t k = fwp_count_arg(n);
     while (k-- > 0 && xs != 0) xs = OBJ(xs)->f[1];
     return xs;
+}
+
+static V fwp_p_take_copied(V n, V xs) {
+    size_t len;
+    V *a = fwp_map_items(xs, &len);
+    size_t k = fwp_count_arg(n);
+    V result = fwp_copy_finish(a, k < len ? k : len, 0);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+static V fwp_p_drop_owned(V n, V xs) {
+    V result = fwp_p_drop(n, xs);
+    fwp_rc_dup(result);
+    return result;
 }
 
 static V fwp_p_take_while(V f, V xs) {
