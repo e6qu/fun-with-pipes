@@ -31,9 +31,12 @@ syntax, typing, evaluation/trap order and immutable value semantics stable.
 4. Published preparation `ownership-text-results`, checkout
    `/private/tmp/fwp-text-worktree`, head `bab67ea`, base `2ce7a05`, no PR yet. Owns selected
    copied Option/List text trees and releases conversion scratch arrays.
-5. This preparation `ownership-closures`, checkout
-   `/private/tmp/fwp-closure-worktree`, base `bab67ea`, no PR yet. Compiled
+5. Published preparation `ownership-closures`, checkout
+   `/private/tmp/fwp-closure-worktree`, head `0d96bfe`, base `bab67ea`, no PR yet. Compiled
    dynamic calls own heap closures and typed captures; callbacks still share.
+6. This preparation `ownership-closure-cleanup`, checkout
+   `/private/tmp/fwp-drop-worktree`, base `0d96bfe`, no PR yet. Function capture
+   cleanup uses a bounded-depth work list with explicit spill release.
 
 After #74 passes and squash-merges, fetch main and rebase the container checkout
 with `git rebase --onto origin/main ccecf20 ownership-contracts`, reconcile docs,
@@ -43,7 +46,8 @@ macOS runtime fixes. Keep one open PR; do not combine these ownership changes
 with the macOS PR just to avoid waiting for CI. After the leaf PR merges,
 rebase the text branch from `2ce7a05` onto main and run its full CI via a PR.
 After its merge, rebase this closure branch from `bab67ea` onto main, reconcile
-docs and run full CI in the next PR.
+docs and run full CI in the next PR. After the closure PR merges, rebase this
+cleanup branch from `0d96bfe` onto main and validate it as the next PR.
 
 ## macOS failures and fixes
 
@@ -136,6 +140,14 @@ including O1/O2, GC stress/verification and both poison modes. The strengthened
 closure check used CPU 4.39 s / elapsed 8.85 s under the guard. No full local gate was run. Full CI must cover WASI,
 x86-64, both Darwin jobs, runtime stress and benchmark equivalence before merge.
 
-The next implementation must handle bounded destruction of deep capture chains,
-stack aggregate child cleanup and runtime-retained callbacks, rather than claim
-all closure lifetimes are complete. Byte-count saturation still delegates to GC.
+Bounded deep function capture cleanup is prepared here: the 8,000-node linear
+and branching probes exhaust a 256 KiB worker stack with only recursive release
+restored, but complete with the work list, exact interpreter output and zero
+collections at O0. Three cleanup/closure checks passed (CPU 5.90 s / elapsed
+11.97 s). The branching case exercises explicit spill-buffer release.
+
+Next: carry concrete expected types into constructor temporaries. A borrowed
+List literal currently can fall back to unknown, decrementing its outer count
+without typed child release. Add counted-child evidence for this case, then
+stack aggregate cleanup and retained callbacks. Count saturation, exceptional
+paths and generational old-object reclamation still delegate to GC.
