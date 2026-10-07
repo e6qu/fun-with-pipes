@@ -75,6 +75,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-zip-callbacks | fwp-zip-worktree | bdb750f | a180c3f |
 | ownership-right-fold | fwp-right-fold-worktree | adc7947 | bdb750f |
 | ownership-list-prefix | fwp-prefix-worktree | 376e77a | adc7947 |
+| ownership-list-copies | fwp-list-copy-worktree | bb00baa | 376e77a |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -389,7 +390,7 @@ open the next sole PR. Continue the table in order, fixing tests at every step.
 ## Ordinary list copy ownership preparation
 
 `ownership-list-copies`, checkout `/private/tmp/fwp-list-copy-worktree`, base
-`376e77a`, has no PR yet. Reverse/take/append/flatten borrow inputs and own only
+`376e77a`, is published at `bb00baa` with no PR yet. Reverse/take/append/flatten borrow inputs and own only
 new list nodes with typed element references. Append stops ownership at its
 borrowed suffix and acquires one tail reference; drop likewise duplicates its
 returned tail, never resets aliased node counts. Scanned temporary buffers are
@@ -400,6 +401,39 @@ and both poison settings. No-tracing loop: identical outputs/zero collections,
 7.3 versus 13.6 MiB freed by counts. Initial check CPU 11.21 s / elapsed 22.84 s
 including incremental Rust compilation. Thirty related ownership regressions passed (CPU 60.63 s / elapsed 121.63 s),
 and the declaration/alias contract invariant passed. Five FFI checks and the native fat baseline passed (CPU 5.34 s / elapsed
-10.65 s). Formatting and whitespace passed; ready for publication. full platform CI is still required after all parents merge.
+10.65 s). Formatting and whitespace passed; branch published. full platform CI is still required after all parents merge.
 Next: nth/find result aliases and the remaining synchronous callbacks, exact
 counts, typed container elements and exceptional/retained lifetime cleanup.
+
+Ordinary list copy work published as bb00baa; next prepare optional nth/find
+alias results and read-only index-of. It has no PR; full CI must follow its
+parents. Current #75 gate 37612412156 has ARM testing, with other jobs queued.
+
+## Optional list alias ownership preparation
+
+`ownership-list-options`, checkout `/private/tmp/fwp-list-option-worktree`, base
+`bb00baa`, has no PR yet. FreshOuter owns one new structural allocation and
+borrows/duplicates fields by monomorphic constructor type. Nth/find retain
+selected elements; index-of borrows comparison keys and owns its optional
+scalar. Find invokes typed borrowed predicates, preserves direct/captured
+specialization, and stops at the first match. Two focused tests pass at O1/O2,
+stack on/off, GC verification and both poison modes; they include dynamic/
+captured predicates, function aliases after input cleanup, missing/negative/
+empty cases and a predicate that traps after a match. No-tracing differential:
+identical outputs/zero collections, 9.6 versus 10.4 MiB freed by counts. Focused
+run CPU 4.54 s / elapsed 9.35 s. Thirty-two related ownership regressions passed (CPU 58.04 s / elapsed
+116.52 s), as did the contract invariant, five FFI checks and the native fat
+baseline (CPU 5.25 s / elapsed 10.46 s), formatting and whitespace. Ready for
+publication;
+full platform gates remain required after all parents merge.
+
+Effect inference follow-up: an inline pure function-valued list pipeline in an
+IO main fails in the existing interpreter frontend:
+`"a b c" | words | map concat | find has-text | option.map (apply "!") | echo`
+with `has-text : (String -> String) -> Bool`, defined as
+`apply "!" | string.length | gt 1`. It expects IO on the option-map stage but
+finds a pure stage. The lifetime fixture uses an explicitly typed pure helper
+`selected-found : List[String -> String] -> Option[String]` for that suffix,
+which succeeds. This is not caused by native ownership code; preserve a focused
+reproduction and resolve effect-row inference as part of language design work.
+Do not weaken tracked effects to hide the failure.

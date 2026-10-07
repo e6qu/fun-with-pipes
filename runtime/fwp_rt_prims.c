@@ -503,6 +503,37 @@ static V fwp_p_find(V f, V xs) {
     return FWP_NONE;
 }
 
+/* The wrapper owns the new Option node and duplicates its typed field.
+ * The predicate consumes only temporary argument copies, never the source. */
+static V fwp_p_find_borrowed(V f, V xs) {
+    V source = xs, result = FWP_NONE;
+    while (xs) {
+        V element = OBJ(xs)->f[0];
+        if (fwp_apply_borrowed(f, 1, &element) == FWP_TRUE) {
+            result = fwp_some(element);
+            break;
+        }
+        xs = OBJ(xs)->f[1];
+    }
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(source);
+    return result;
+}
+FWP_K V fwp_k_find_owned(fwp_fn1 f, void (*element_dup)(V *, uint32_t, uint32_t), V xs) {
+    V source = xs, result = FWP_NONE;
+    while (xs) {
+        V element = OBJ(xs)->f[0];
+        if (f(element) == FWP_TRUE) {
+            element_dup(&element, 0, 1);
+            result = fwp_rc_fresh(fwp_some(element));
+            break;
+        }
+        xs = OBJ(xs)->f[1];
+    }
+    FWP_KEEP_ALIVE(source);
+    return result;
+}
+
 static V fwp_p_index_of(V x, V xs, const fwp_desc *d) {
     for (int64_t i = 0; xs != 0; i++, xs = OBJ(xs)->f[1])
         if (fwp_eq(OBJ(xs)->f[0], x, d)) return fwp_some((V)i);

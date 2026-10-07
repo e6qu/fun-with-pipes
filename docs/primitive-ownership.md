@@ -362,3 +362,28 @@ reuse-poison settings. An identical no-tracing loop frees 13.6 MiB by counts
 versus 7.3 MiB after restoring result sharing in all five emitted wrappers
 (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision, zero collections).
 This is reclamation evidence; full platform and benchmark gates remain required.
+
+## Optional list aliases and synchronous find
+
+`nth`, `find` and `index-of` borrow their arguments and own newly allocated
+Option nodes. FreshOuter identifies one new structural allocation whose fields
+may alias borrowed inputs: the generated wrapper duplicates pointer-bearing
+fields by monomorphic constructor type and leaves scalar words alone. This
+is distinct from FreshTree, which owns an independent allocation tree. None
+requires no allocation or count.
+
+`nth`/`find` acquire one reference to the selected input element. `index-of`
+returns an owned optional scalar and borrows its comparison key. Negative or
+past-end indices, empty inputs and missing values preserve existing behavior.
+Find predicates use synchronous borrowed application, stop at the first match
+and do not retain the callback. Direct/captured specializations keep typed
+argument copies, selected-element references and original source/capture roots.
+
+`tests/list_option_ownership.rs` checks retained aliases, selected functions,
+results after input cleanup, dynamic/captured predicates, missing/negative/
+past-end/empty cases, scalar elements and a predicate that traps if invoked
+after a match. Interpreter/native outputs agree at O1/O2, stack on/off,
+collection stress/verification and both reuse-poison settings. The no-tracing
+loop frees 10.4 MiB by counts versus 9.6 MiB after restoring only optional-result
+sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB precision, zero collections). Full platform CI remains required.

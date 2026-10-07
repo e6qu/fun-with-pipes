@@ -1717,6 +1717,17 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
         };
         return format!("{} {{\n    {body}\n}}\n", hof_sig(i, sym, *k));
     }
+    if reuse && sym == "find" {
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once("element".to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        return format!("{} {{\n    V source = xs, result = FWP_NONE;\n    while (xs) {{\n        V element = OBJ(xs)->f[0];\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) == FWP_TRUE) {{\n            fwp_args{g}(&element, {k}, 1);\n            result = fwp_rc_fresh(fwp_some(element));\n            break;\n        }}\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
+    }
     if reuse && sym == "fold" {
         let args = (0..*k)
             .map(|j| format!("c{j}"))
@@ -2866,6 +2877,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         | "zip-with"
                         | "take-while"
                         | "drop-while"
+                        | "find"
                 ) =>
             {
                 s.clone()
@@ -2922,10 +2934,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
             } else if sym == "drop-while" {
                 format!("fwp_k_drop_while_owned(fwp_owned_k{g}, {xs})")
             } else {
-                let runtime = if sym == "filter" {
-                    "filter"
-                } else {
-                    "take_while"
+                let runtime = match sym.as_str() {
+                    "filter" => "filter",
+                    "find" => "find",
+                    _ => "take_while",
                 };
                 format!("fwp_k_{runtime}_owned(fwp_owned_k{g}, fwp_args{g}, {xs})")
             });
@@ -4405,6 +4417,50 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     let _ = write!(s, " fwp_rc_dup({stop});");
                                 }
                                 s.push_str(" return result;");
+                            }
+                            ResultOwnership::FreshOuter => {
+                                if contract.borrows_callback() {
+                                    s = s.replace("fwp_p_find(", "fwp_p_find_borrowed(");
+                                }
+                                let result_type = func.ty.params(func.arity as usize).1;
+                                let cases: Vec<(u32, Vec<MT>)> = match (
+                                    record_fields(&self.prog.shapes, result_type),
+                                    self.prog.shapes.get(result_type),
+                                ) {
+                                    (Some(fs), _) => {
+                                        vec![(0, fs.iter().map(|(_, t)| t.clone()).collect())]
+                                    }
+                                    (None, Some(TypeShape::Adt(vs))) => vs
+                                        .iter()
+                                        .enumerate()
+                                        .filter(|(_, (_, fs))| !fs.is_empty())
+                                        .map(|(tag, (_, fs))| (tag as u32, fs.clone()))
+                                        .collect(),
+                                    _ => {
+                                        return Err(format!(
+                                            "fresh outer `{sym}` has an unsupported result"
+                                        ))
+                                    }
+                                };
+                                let result = s
+                                    .strip_prefix("return ")
+                                    .and_then(|r| r.strip_suffix(';'))
+                                    .ok_or_else(|| {
+                                        format!("fresh outer `{sym}` has no return expression")
+                                    })?;
+                                let mut body = format!("V result = fwp_rc_fresh({result}); if (result) {{ switch (OBJ(result)->tag) {{");
+                                for (tag, fields) in cases {
+                                    let _ = write!(body, " case {tag}:");
+                                    for (i, ty) in fields.iter().enumerate() {
+                                        if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                                            let _ =
+                                                write!(body, " fwp_rc_dup(OBJ(result)->f[{i}]);");
+                                        }
+                                    }
+                                    body.push_str(" break;");
+                                }
+                                body.push_str(" } } return result;");
+                                s = body;
                             }
                             ResultOwnership::FreshTree => {
                                 let result_type = func.ty.params(func.arity as usize).1.clone();
