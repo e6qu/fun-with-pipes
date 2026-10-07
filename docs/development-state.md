@@ -95,7 +95,7 @@ still need their final squash rebases and six exact-head full gates.
 | 28 ownership-runtime-call-cleanup | 2ec80614a045 | 7a550b724047 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
 | 29 ownership-map-unwind | b8633382f4a6 | 2ec80614a045 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | a17f240c9341 | b8633382f4a6 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
-| 31 ownership-zip-unwind | eadec76e75e7 | c0afce27ff2e | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
+| 31 ownership-zip-unwind | 9ee50f37c5b9 | a17f240c9341 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | 1523161a7314 | eadec76e75e7 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | ce5a51c330f3 | 1523161a7314 | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
 | 34 ownership-argument-preparation | dcf18f01c2fb | ce5a51c330f3 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
