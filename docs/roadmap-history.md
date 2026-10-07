@@ -11963,3 +11963,5 @@ is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
 reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
 format0.32/0.59s. This preparation is not a production gate or merge; final
 rebase starts from actual3bb3426 after the guard repair merges.
+
+Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
