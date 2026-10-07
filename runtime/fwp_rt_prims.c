@@ -530,6 +530,25 @@ static V fwp_p_zip(V ys, V xs) {
     return fwp_list_from(a, k);
 }
 
+/* Duplicate only statically reference-bearing fields, never scalar bits. */
+static V fwp_p_zip_owned(V ys, V xs, void (*dup_x)(V), void (*dup_y)(V)) {
+    size_t n, m;
+    V *a = fwp_map_items(xs, &n);
+    V *b = fwp_map_items(ys, &m);
+    size_t k = n < m ? n : m;
+    for (size_t i = 0; i < k; i++) {
+        if (dup_x) dup_x(a[i]);
+        if (dup_y) dup_y(b[i]);
+        a[i] = fwp_rc_fresh(fwp_tuple2(a[i], b[i]));
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(b);
+    fwp_mem_free(b);
+    FWP_KEEP_ALIVE(xs);
+    FWP_KEEP_ALIVE(ys);
+    return result;
+}
+
 /* data-last: the subject's element is the last argument (f y x) */
 static V fwp_p_zip_with(V f, V ys, V xs) {
     size_t n, m;
@@ -565,6 +584,25 @@ static V fwp_p_unzip(V ps) {
     V *r = (V *)fwp_alloc((n + 1) * sizeof(V));
     for (size_t i = 0; i < n; i++) { l[i] = OBJ(a[i])->f[0]; r[i] = OBJ(a[i])->f[1]; }
     return fwp_tuple2(fwp_list_from(l, n), fwp_list_from(r, n));
+}
+
+static V fwp_p_unzip_owned(V ps, void (*dup_x)(V), void (*dup_y)(V)) {
+    size_t n;
+    V *a = fwp_map_items(ps, &n);
+    V *l = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    V *r = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+    for (size_t i = 0; i < n; i++) {
+        l[i] = OBJ(a[i])->f[0]; r[i] = OBJ(a[i])->f[1];
+        if (dup_x) dup_x(l[i]);
+        if (dup_y) dup_y(r[i]);
+    }
+    V left = fwp_map_finish(l, n);
+    V right = fwp_map_finish(r, n);
+    V result = fwp_rc_fresh(fwp_tuple2(left, right));
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    FWP_KEEP_ALIVE(ps);
+    return result;
 }
 
 static V fwp_p_repeat(V n, V x) {
@@ -692,6 +730,32 @@ static V fwp_p_chunks(V n, V xs) {
         cs[c] = fwp_list_from(a + s, e - s);
     }
     return fwp_list_from(cs, nc);
+}
+
+static V fwp_p_chunks_owned(V n, V xs, void (*dup_element)(V)) {
+    if ((int64_t)n <= 0) fwp_trap("chunks: size must be positive");
+    size_t k = (size_t)(int64_t)n, len;
+    V *a = fwp_map_items(xs, &len);
+    /* Avoid overflowing len + k - 1, including very large valid sizes. */
+    size_t nc = len / k + (len % k != 0);
+    V *cs = (V *)fwp_mem_alloc((nc + 1) * sizeof(V));
+    for (size_t c = 0, start = 0; c < nc; c++) {
+        size_t count = len - start < k ? len - start : k;
+        V chunk = 0;
+        for (size_t j = count; j; j--) {
+            V value = a[start + j - 1];
+            if (dup_element) dup_element(value);
+            V fields[] = {value, chunk};
+            chunk = fwp_rc_fresh(fwp_data(1, 2, fields));
+        }
+        cs[c] = chunk;
+        start += count;
+    }
+    V result = fwp_map_finish(cs, nc);
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    FWP_KEEP_ALIVE(xs);
+    return result;
 }
 
 static V fwp_p_iterate(V n, V f, V x) {

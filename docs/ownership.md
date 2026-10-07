@@ -128,11 +128,11 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #95 includes the following contracts. Detailed primitive modes
+Main through PR #96 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
-- Native counts stay exact above254 with rare side entries. Ordered copied
+- Native counts stay exact above 254 with rare side entries. Ordered copied
   lists retain typed aliases; sort-by owns once-per-input keys and its stable
   copied result, releasing scratch after construction.
 - Selected String/Bytes copy and alias results are owned; leaf destruction frees
@@ -143,6 +143,9 @@ and measurements are in [history](roadmap-history.md).
   Unknown runtime/FFI callbacks keep the sharing fallback.
 - Concrete call temporaries and eligible stack aggregate/closure children keep
   typed ownership. Count operations address children rather than stack wrappers.
+- Loop consumes its state and transfers callback inputs; it retains selected
+  typed Step payloads before destroying wrappers. Specialized/flattened workers
+  reclaim typed boxed inputs and ABI wrappers; general unwind work remains prepared.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter

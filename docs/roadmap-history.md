@@ -8470,3 +8470,593 @@ passes one test (48 filtered)3.15 s CPU /6.61 s elapsed. Final loop lint
 passes2.30 /4.69 s; fmt check0.33 /0.60 s. Source/runtime/tests/workflows
 still match112f3c8 exactly. Nine current docs copied before final amend;
 no open PR before publishing the next sole delivery.
+Final loop head03d25acc581a69c1a16f0add88e4768777072683 is clean on actual
+main60e5d62, published with exact lease against112f3c8. Whole message
+verified one line, empty body; source/runtime/tests/workflows unchanged.
+Sole PR96 https://github.com/e6qu/fun-with-pipes/pull/96 created with focused
+validation and full gate requirements. Row19 ACTUAL current base remains
+112f3c8; immutable OLDc05a5d9/parent787763d anchors remain unchanged.
+
+Row55 C input rebase from ACTUAL5b34382167da90d5677943d3ca617bf0e6a5924c
+onto actual row54 head82f32b2cde036be328c769e5dcdee701ea67713a resolves
+doc conflicts with nine authoritative files after PR96 publication. Current
+reference marks input ownership and missing-length Bytes rejection as
+prepared; foreign-call convention stays unchanged. Direct typed-IR interpreter
+checks bypass optimization. Input/result checks started.
+PR96 CI37909273494 is queued at exact03d25acc581a69c1a16f0add88e4768777072683;
+a queued run is not a passing gate. Row55 guarded clean0.00 /0.13 s.
+Guarded cargo test --test library_input_ownership --test library_result_ownership
+passes all three tests9.42 s CPU /22.58 s elapsed. Copied C string/record
+inputs transfer or release exactly once; partial argument/field conversion,
+null/invalid UTF8, allocation failure and callee traps clean earlier owners.
+Scalar/raw-pointer values retain their external lifetime; exported aliases
+keep library string storage. Direct typed-IR values, O1/O2 poison and four
+omission controls pass alongside result conversion regressions. Bytes export
+parameters report missing ABI length while ordinary foreign signatures remain
+accepted. Library GC stays unarmed; these are ownership/cleanup checks.
+C input/result lint with both targets and -D warnings passes2.54 s CPU
+/4.95 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final library-inputsf240ecd56f3b765074b5c2c06e2a4757560eb9fc is clean
+on actual base82f32b2, published with exact lease against OLDa6ebc1d.
+Whole subject verified one line, empty body; no second PR. Row56 actual base
+remains OLDa6ebc1d until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.15 s CPU /1.05 s elapsed. Row56 library teardown rebase
+from ACTUALa6ebc1da9637b4fef866697fa766208fd2d72af1 onto actual row55
+f240ecd56f3b765074b5c2c06e2a4757560eb9fc resolves doc conflicts with nine
+authoritative files. Reference links to maintained prepared ownership section
+rather than the archived teardown heading. Guarded clean0.00 /0.13 s.
+Actual loader unload and static-archive exit checks started with related
+input/result tests. Library tracing remains unarmed.
+Guarded cargo test --test library_unload --test library_input_ownership
+--test library_result_ownership passes all four tests12.24 s CPU /31.36 s
+elapsed. Actual Darwin dlopen/dlclose reloads and static-archive exit verify
+suspended/detached task cancellation, finalizer order, cache release, heap/metadata/
+stack unmapping, wide-count and auxiliary buffers, deleted pthread cleanup key,
+poll descriptor closure and host signal restoration/preservation. Six omission
+controls detect missing cleanup. O1/O2 poison and related input/result tests
+pass. Library tracing stays unarmed; full Linux/ARM/Intel gates still required.
+Library-unload lint with all three targets and -D warnings passes2.50 s
+CPU /5.05 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final library-unload878b25aad6278469a3ac3e57a0ce6a2c9ec00f95 is clean
+on actual basef240ecd, published with exact lease against OLD5d0dc22.
+Whole subject verified one line, empty body; no second PR. Row57 actual base
+remains OLD5d0dc22 until its own rebase; immutable queue anchors unchanged.
+
+Row57 native OpenCL lifetime rebase from ACTUAL5d0dc220fa1cfc3699cef88224c61d42cf8e66fc
+onto actual row56 head878b25aad6278469a3ac3e57a0ce6a2c9ec00f95 resolves
+only doc conflicts with nine authoritative files. A loader-visible fake OpenCL
+implementation checks API ownership and teardown, not actual GPU execution.
+OpenCL lifetime and related library-unload checks started. PR96 exact03d25ac
+runs Linux and ARM GC stress; other gates queued, none yet passing.
+Row57 guarded clean passes0.06 s CPU /0.26 s elapsed.
+Guarded cargo test --test opencl_lifetime --test library_unload passes
+both tests10.33 s CPU /32.03 s elapsed. Loader-visible fake OpenCL checks
+missing-symbol/device/context/queue failures and cached diagnostics, queue
+finish before release/context/library teardown, actual dynamic unload,
+static-archive exit and executable exit. O1/O2 omission controls and Darwin
+early-atexit ordering pass; actual library-unload regression also passes.
+This verifies API ownership, not hardware GPU/kernel execution.
+Native OpenCL lint with both targets and -D warnings passes2.44 s CPU
+/4.93 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final native-OpenCL5b6e65f365d6befce32e96665f62dbbd4625dece is clean
+on actual base878b25a, published with exact lease against OLDd8b4d88.
+Whole subject verified one line, empty body; no second PR. Row58 actual base
+remains OLDd8b4d88 until its own rebase; immutable queue anchors unchanged.
+
+Row58 interpreter OpenCL rebase from ACTUALd8b4d88da98d91183577a71dd65d2d17a375e7d6
+onto actual row57 head5b6e65f365d6befce32e96665f62dbbd4625dece resolves
+only doc conflicts with nine authoritative files. Source interpreter and
+native availability probes both set FWP_NO_OPT=1. Rust staged library/GPU
+owners clean failed initialization before caching diagnostics; successful
+interpreter GPU cache intentionally remains process-lived. Combined fake
+API/native/interpreter lifetime and related library-unload checks started.
+Row58 guarded clean passes0.00 s CPU /0.13 s elapsed.
+Guarded cargo test --test opencl_lifetime --test library_unload passes
+both tests14.19 s CPU /34.79 s elapsed. Fake API failure modes compare
+raw native and interpreter stdout/stderr with cleanup before cached
+availability diagnostics; staged Rust owners release partial library/context/
+queue construction. O1/O2 native cleanup controls and actual loader/static
+unload regression pass. Successful interpreter GPU cache stays process-lived;
+no real-device/kernel claim is made.
+Interpreter OpenCL lint with both targets and -D warnings passes2.48 s CPU
+/4.84 s elapsed; fmt check0.45 /0.62 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final interpreter-OpenCL00013d55d078ef3276255055517d7ca6ee660221 is clean
+on actual base5b6e65f, published with exact lease against OLDabc1285.
+Whole subject verified one line, empty body; no second PR. Row59 actual base
+remains OLDabc1285 until its own rebase; immutable queue anchors unchanged.
+
+Row59 TLS listener ownership rebase from ACTUALabc128581b615530ba2f3bc43de0c8d708d340ea
+onto actual row58 head00013d55d078ef3276255055517d7ca6ee660221 resolves
+doc conflicts with nine authoritative files. Real OpenSSL listener/session
+probe started. Full TLS streams stay on GitHub under resource limits; its
+snapshot correction requires exact engine agreement before normalizing only
+OpenSSL bad-certificate alert vendor wording. No full source TLS gate is
+claimed by this focused local probe.
+Row59 guarded clean passes0.00 s CPU /0.14 s elapsed. Guarded cargo test
+--test tls_listener_ownership passes one test8.83 s CPU /20.03 s elapsed.
+Real OpenSSL ALPN handshakes survive listener stop and raw HTTP/2 session
+transfer; last accepted session releases server context and ALPN storage.
+Certificate/CA/app-data/owner allocation/address/bind failures release
+completed owners. O1/O2 poison and six omission controls pass. Library GC
+stays unarmed in this fixture; source TLS/stress suites remain on CI.
+TLS listener/source-target lint with -D warnings passes2.66 s CPU /5.35 s
+elapsed; fmt check0.46 /0.63 s. Linting tls does not run the full source
+suite. Nine current docs copied before final amend; tested source unchanged.
+Final TLS-listeners838cf5dee220bf2e368c24b2ee45c22df10e35e6 is clean
+on actual base00013d5, published with exact lease against OLD3f6154b.
+Whole subject verified one line, empty body; no second PR. Row60 actual base
+remains OLD3f6154b until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.15 s CPU /1.08 s elapsed. Row60 library resource teardown
+rebase from ACTUAL3f6154b4bf67330f15d5a01a5d603b75d33319d3 onto actual
+row59 head838cf5dee220bf2e368c24b2ee45c22df10e35e6 resolves only doc
+conflicts with nine authoritative files. Actual loader resources, TLS
+listener and library-unload checks started; implicit TLS disposal does not
+send close_notify, preserving host signal policy.
+Row60 guarded clean passes0.00 s CPU /0.14 s elapsed. Guarded cargo test
+--test library_resources --test tls_listener_ownership --test library_unload
+passes all three tests11.76 s CPU /31.49 s elapsed. Actual Darwin reload
+closes owned File/socket/transferred HTTP2 descriptors and releases server
+protocol/client cache/session owners without implicit TLS shutdown traffic.
+Host peer descriptors remain open; explicit close is idempotent. O1/O2
+poison and six ownership/traffic omission controls pass; related real
+OpenSSL listener and library-unload regressions pass. Library tracing
+stays unarmed; full source resource/TLS suites remain on CI.
+Library-resource lint with all three targets and -D warnings passes2.46 s
+CPU /4.97 s elapsed; fmt check0.45 /0.86 s. Nine current docs copied before
+final amend; tested source unchanged.
+Final library-resourcesd56a24e48d7ea44634220c28375502ea71c15bfd is clean
+on actual base838cf5d, published with exact lease against OLD07092cb.
+Whole subject verified one line, empty body; no second PR. Row61 actual base
+remains OLD07092cb until its own rebase; immutable queue anchors unchanged.
+
+Row61 gRPC server cleanup rebase from ACTUAL07092cb06e1d1b7d11271f697bf21920ef899734
+onto actual row60 headd56a24e48d7ea44634220c28375502ea71c15bfd resolves
+all doc conflicts with nine authoritative files, replacing stale long plan/
+state and add/add queue snapshots. Current6364bed retains the repaired
+listener-scoped omission control; immutable OLD0d5d309 remains untouched.
+Guarded clean0.05 /0.26 s; gRPC/listener/resource checks started. PR96
+exact03d25ac now passes bench; Linux and ARM GC run, other three gates queued.
+Guarded cargo test --test grpc_server_ownership --test tls_listener_ownership
+--test library_resources passes all three tests12.59 s CPU /28.85 s elapsed.
+Scheduler cancellation closes plain/TLS service listeners and releases
+protocol owners while accepted sessions remain usable. Cancellation before
+listen and before server allocation cleans completed owners. O1/O2 poison
+and listener-scoped guard/close/context omission controls pass with related
+real OpenSSL/library resources. gRPC runtime and its new test exactly match
+verified6364bed; earlier ancestor repairs remain inherited. Full source
+gRPC/TLS suites still require each sequential PR's CI.
+gRPC listener lint with all three targets and -D warnings passes2.34 s
+CPU /4.78 s elapsed; fmt check0.35 /0.63 s. Nine current docs copied before
+final amend; tested feature source unchanged.
+Final gRPC-listenersc299edbc33eb27f1b136a0f1c3b664784282ea13 is clean
+on actual based56a24e, published with exact lease against previous6364bed.
+Whole subject verified one line, empty body; no second PR. Row62 ACTUAL base
+remains immutable OLD0d5d3098e7827e36045984adcbf859901bde4b74, so its
+rebase does not replay the control repair; queue OLD anchors unchanged.
+
+Row62 TLS cache rebase from ACTUAL0d5d3098e7827e36045984adcbf859901bde4b74
+onto actual row61 headc299edbc33eb27f1b136a0f1c3b664784282ea13 resolves
+only doc conflicts with nine authoritative files. Current repaired listener
+controls remain inherited, without replaying their fix. Guarded clean0.00
+/0.14 s; TLS cache, gRPC server and library resource tests started.
+PR96 passes bench; Linux, regular ARM macOS and both GC stress jobs run,
+regular Intel macOS remains queued at exact03d25ac.
+Guarded cargo test --test tls_cache_ownership --test grpc_server_ownership
+--test library_resources passes all three tests11.21 s CPU /26.06 s elapsed.
+TLS client cache publication follows completed name/context/allocation
+preparation, preserving old cache entries on strdup/realloc failure and
+releasing only partial owners. Retry and cached identity work; server ALPN
+allocation failure creates no context. O1/O2 poison and five failure
+controls pass with related gRPC/library resources. Full source TLS suites
+remain on CI; this fixture uses real OpenSSL with library tracing unarmed.
+TLS cache lint with all three targets and -D warnings passes2.35 s CPU
+/4.74 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
+final amend; tested source unchanged. Live handoff spacing is normalized
+for readable heads, measurements and phase labels; archived evidence preserved.
+
+## TLS cache preparation refresh, 2026-10-09
+
+Row62 ownership-tls-cache-failures is published clean at
+0be50830806456a5ab175bad19149ccb6329145d on actual base
+c299edbc33eb27f1b136a0f1c3b664784282ea13. Rebased from actual old parent
+0d5d3098e7827e36045984adcbf859901bde4b74; exact publication lease was
+4ab1f7ddd6f8f2a335f3640a229629b782e09b3b. Immutable anchors unchanged.
+Guarded cargo clean -p fwp passes 0.00 / 0.14 s. Guarded cargo test
+--test tls_cache_ownership --test grpc_server_ownership --test library_resources
+passes 11.21 / 26.06 s; focused clippy passes 2.35 / 4.74 s and fmt
+--all -- --check passes 0.35 / 0.75 s. CPU / elapsed recorded.
+Real OpenSSL cache failures preserve existing entries, release partial names and
+contexts, and allow retry; ALPN allocation failure precedes server-context creation.
+Library fixtures do not arm tracing; full source TLS gates remain on GitHub.
+Subject: Preserve TLS caches and release partial allocation owners.
+No additional PR; PR96 remains the sole open delivery.
+
+## ALPN wire preparation refresh, 2026-10-09
+
+Row63 rebases from actual old parent 4ab1f7ddd6f8f2a335f3640a229629b782e09b3b
+onto current row62 head 0be50830806456a5ab175bad19149ccb6329145d.
+Nine authoritative docs resolve historical conflicts; TLS runtime and tests
+exactly match immutable f6598e440a59b1a7312ff5b62178644bec458ad8.
+Guarded cargo clean -p fwp passes 0.05 / 0.37 s. Guarded cargo test
+--test tls_wire_ownership --test tls_cache_ownership --test grpc_server_ownership
+passes all three tests 11.65 / 26.15 s. Same-target clippy -- -D warnings
+passes 2.79 / 5.61 s. CPU / elapsed recorded.
+ALPN packing borrows list elements in two passes without collector scratch;
+checks UINT_MAX, SIZE_MAX and allocation; skips invalid names; and closes
+new connection descriptors on preparation failure. O1/O2 poison checks,
+three omission controls and reduced-limit overflow probe pass. Rust ALPN
+packing agrees on the valid wire bytes. Library fixtures do not arm tracing;
+full TLS source/interpreter and stress coverage stays on GitHub.
+Guarded fmt --all -- --check passes 0.52 / 1.07 s. Tested code unchanged.
+Final row63 66e80d399e656ea91247edb61d0cf21609048e30 is clean and published
+with exact lease f6598e440a59b1a7312ff5b62178644bec458ad8. Subject verified
+one line with empty body. No extra PR. Row64 actual base remains f6598e4.
+
+## Connection cancellation preparation refresh, 2026-10-09
+
+Row64 rebases from actual old parent f6598e440a59b1a7312ff5b62178644bec458ad8
+onto current row63 head 66e80d399e656ea91247edb61d0cf21609048e30.
+Nine authoritative docs resolve historical conflicts; feature runtime/tests
+exactly match immutable 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392.
+Guarded cargo clean -p fwp passes 0.05 / 0.25 s. Guarded cargo test
+--test connect_cleanup --test tls_wire_ownership --test tls_listener_ownership
+passes all three tests 12.36 / 27.82 s CPU / elapsed.
+Pending TCP preparation protects resolver storage and descriptors until socket
+wrapper transfer; TLS sockets/SSL remain owned through cancellation while
+handshaking. Four cancellation boundary probes, success/refusal paths,
+idempotent close, O1/O2 poison and four omission controls pass. Library tracing
+is unarmed; full source and GC stress gates still require sequential GitHub CI.
+Focused same-target lint passes 3.06 / 6.16 s; fmt check passes 0.63 / 1.62 s.
+Final row64 ae05b2bfc32c131059ca22559b1d9a20c5aa5375 is published clean with
+exact lease 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392. Whole subject verifies
+one line and empty body. No additional PR; row65 actual base remains 0cc6126.
+
+## Unboxed worker preparation refresh, 2026-10-09
+
+Row65 rebases from actual old parent 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392
+onto current row64 head ae05b2bfc32c131059ca22559b1d9a20c5aa5375.
+Nine authoritative docs resolve conflicts; feature source/tests exactly match
+immutable b8f3752d236f217385923a06dacd1afcdaf716ca. Guarded clean passes
+0.09 / 0.62 s. First focused command used nonexistent worker_argument_ownership
+and exited 101 before compilation (0.01 / 0.13 s); corrected target is
+worker_preparation_ownership. Corrected guarded cargo test --test unboxed_worker_locals
+--test worker_preparation_ownership --test worker_boxing_ownership is running.
+Corrected three-target test command passes all four tests 20.34 / 58.06 s.
+Reduced recursive wide source agrees with FWP_NO_OPT=1 raw interpreter;
+compatible worker locals emit no intermediate record box. Direct typed IR
+checks ownership aliases, pointer-like scalar bits, transfer/trap cleanup and
+boxed partial captures. O1/O2 GC stress/verification and poison checks pass;
+related worker boxing/preparation regressions pass. This is allocation-shape
+and ownership evidence, not a speed claim or full wide-record benchmark.
+Same-target lint passes 2.99 / 8.45 s; fmt check passes 0.52 / 1.60 s.
+Nine authoritative docs copied before final amend; tested code unchanged.
+Final row65 2ba7084abe25d8d26ab9a86a4a70dcf881888efe is published clean with
+exact lease b8f3752d236f217385923a06dacd1afcdaf716ca. Subject verifies one
+line and empty body. No additional PR; row66 actual base remains b8f3752.
+
+## TLS peer-subject preparation refresh, 2026-10-09
+
+Row66 rebases from actual old parent b8f3752d236f217385923a06dacd1afcdaf716ca
+onto current row65 head 2ba7084abe25d8d26ab9a86a4a70dcf881888efe.
+Nine authoritative docs resolve historical conflicts. Guarded cargo clean -p fwp
+passes 0.07 / 0.38 s; guarded cargo test --test tls_peer_subject_ownership
+--test connect_cleanup --test tls_cache_ownership is running.
+All three focused tests pass 10.79 / 25.73 s CPU / elapsed. Feature source/tests
+exactly match immutable 6bda2c815a7107c059370d83f1f090b50996d152.
+Real OpenSSL BIO-pair handshake agrees with Rust Session peer metadata.
+Certificate, BIO and native subject buffers release through preparation failure
+and injected String copy trap; absent peer, retry, O1/O2 poison and four omission
+controls pass. Library tracing is unarmed; full source TLS and stress remain CI work.
+PR96 now passes bench and both regular/GC stress ARM macOS; Linux and both
+Intel macOS jobs remain running at exact 03d25ac.
+Same-target lint passes 3.78 / 7.59 s CPU / elapsed.
+Fmt check passes 0.48 / 0.98 s; nine docs copied before amend, tested code unchanged.
+Final row66 b728cf5f2adb4d0957b108545df187013cf8f912 is published clean with
+exact lease 6bda2c815a7107c059370d83f1f090b50996d152. Whole subject is one
+line with empty body. No additional PR; row67 actual base remains 6bda2c8.
+
+## Borrowed ALPN root preparation refresh, 2026-10-09
+
+Row67 rebases from actual old parent 6bda2c815a7107c059370d83f1f090b50996d152
+onto current row66 head b728cf5f2adb4d0957b108545df187013cf8f912.
+Nine authoritative docs plus current AGENTS/CONTRIBUTING/README/local guard
+resolve historical consolidation; guard limits stay unchanged. Guarded clean
+passes 0.05 / 0.38 s. Guarded cargo test --test tls_alpn_roots
+--test tls_peer_subject_ownership --test tls_listener_ownership is running.
+Feature TLS runtime/test match immutable e0f11626f60955d080669a4e38e2e81ac06fff9f.
+Historical row67 consolidation would remove the prepared CONTRIBUTING raw
+optimizer oracle guidance from row48. Restored that paragraph in the current
+root and row67; preserve this additional root doc during future main refresh.
+No source or limits changed by this documentation repair.
+All three focused tests pass 11.12 / 26.13 s CPU / elapsed. ALPN probe explicitly
+arms tracing and forces a major collection at the copy boundary, checking the
+collection counter advances and SSL remains alive through its borrowed bytes.
+Missing-owner-fence control fails as intended. Real BIO handshake metadata agrees
+with Rust Session; O1/O2 stress/verification and poison checks pass. Related
+library fixtures remain unarmed; this specific probe establishes actual tracing.
+Same-target lint passes 2.97 / 5.99 s CPU / elapsed.
+Fmt check passes 0.52 / 0.99 s. Ten current docs copied before amend; tested code unchanged.
+Final row67 22b95b0ddb74c4a58cd7c236184e5e183b8fb019 is published clean with
+exact lease e0f11626f60955d080669a4e38e2e81ac06fff9f. Whole subject verifies
+one line and empty body. No additional PR; row68 actual base remains e0f1162.
+
+## Ownership probe and timer preparation refresh, 2026-10-09
+
+Row68 rebases from actual old parent e0f11626f60955d080669a4e38e2e81ac06fff9f
+onto current row67 head 22b95b0ddb74c4a58cd7c236184e5e183b8fb019.
+Ten current docs resolve conflicts. Raw interpreter flags already match; five
+GC chunk probes now supply their required index output. Golden task fixtures
+already synchronize via joining children, draining and sorting their results;
+retain those merged fixtures and adapt the timer regression to that behavior.
+The delayed case adds 100 ms before the shorter timer, verifies its injection,
+and checks raw interpreter/O1/O2 outputs across preemption and poison modes.
+PR96 passes four exact-head jobs, including both macOS stress; Linux and regular
+Intel macOS are running. No additional PR.
+Guarded clean passes 0.07 / 0.38 s. First six-target test command exits 101
+at compile time (7.32 / 14.64 s): adapted source has a literal {} inside Rust
+format!. Escaped those braces; retrying the same bounded command. This failure
+is repaired work, not a roadmap blocker.
+Corrected six-target test command passes all ten tests 30.99 / 62.26 s.
+Five repaired probe files exactly match immutable e503e10a; golden task fixtures
+and CONTRIBUTING exactly match current row67. New timer regression is adapted
+and passes both deliberate-overrun cases with raw interpreter/O1/O2 and
+preemption 1/37/1000 × poison 0/1 × GC stress/verification.
+Same-target lint passes 2.59 / 5.35 s CPU / elapsed.
+Fmt check passes 0.45 / 0.86 s. Ten docs copied before final amend; tested code unchanged.
+Final row68 7d8ab6719e55b5b8a5e93c0471cd374adcd0b38b is published clean with
+exact lease e503e10a97807a91f0ce1794f5b8b3e7cb955114. Whole subject verifies
+one line and empty body. No additional PR; row69 actual base remains e503e10.
+
+## Nested loop boxing preparation refresh, 2026-10-09
+
+Row69 rebases from actual old parent e503e10a97807a91f0ce1794f5b8b3e7cb955114
+onto current row68 head 7d8ab6719e55b5b8a5e93c0471cd374adcd0b38b.
+Ten authoritative docs resolve historical conflicts. Feature compiler/tests
+exactly match immutable b00215dc10f561747f2adbfb04e404e81581f598.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test --test nested_loop_boxing
+--test loop_preparation_ownership --test loop_unwind_ownership is running.
+All four focused tests pass 18.32 / 36.87 s CPU / elapsed. Rebuilt nested records
+stay in five flat state slots without boxing on Again; whole Stop results keep
+original owners, progressive retains and completed children protected until box
+allocation succeeds. Caller liveness includes field reconstruction. Raw interpreter,
+O1/O2, GC stress/verification, reuse poison, 64 alias/fault cases and three removed
+cleanup scopes per optimization level pass. Related cancellation and preparation
+regressions pass. Emitted box removal is not an elapsed-speed claim.
+Same-target lint passes 2.56 / 5.18 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s. Ten docs copied before amend; tested code unchanged.
+Final row69 821e6c1baaef7300383449de580473ff1643f189 is published clean with
+exact lease b00215dc10f561747f2adbfb04e404e81581f598. Whole subject verifies
+one line and empty body. No extra PR. Row70 actual base remains b00215d;
+its current 7222247 preserves repaired stale-finalizer controls.
+PR96 now passes five exact-head jobs; regular Intel macOS remains running.
+
+## File construction preparation refresh, 2026-10-09
+
+Row70 rebases from actual old parent b00215dc10f561747f2adbfb04e404e81581f598
+onto current row69 head 821e6c1baaef7300383449de580473ff1643f189.
+Ten current docs resolve conflicts. Previous current 7222247 contains the repaired
+stale-finalizer control, retained here. File construction and unwind tests match
+7222247 exactly; whole runtime additionally retains existing main keep-alive
+fences for two right-fold paths and flat-map, unrelated to this feature.
+Guarded clean passes 0.04 / 0.25 s. Guarded cargo test
+--test file_construction_ownership --test unwind_cleanup is running.
+All four focused tests pass 11.09 / 22.39 s CPU / elapsed. Raw streams are owned
+before handle allocation; constructed handles take over before path storage and
+finalizer registration. Failed construction closes exactly once and clears stream
+pointers before later finalization; scoped callbacks preserve close-on-return,
+error, trap and cancellation. Direct create/open raw interpreter agreement passes.
+O1/O2 explicitly armed tracing, stress/verification, poison, direct/scoped/create/open
+failure matrices and two omission controls per optimization level pass. The
+stale-handle control exits before intentionally unsafe finalization, as repaired.
+Same-target lint passes 2.49 / 5.01 s CPU / elapsed.
+Fmt check passes 0.43 / 0.82 s; ten current docs copied before amend, tested code unchanged.
+Final row70 0d09a61aaab76f5fde3d7f27a3ba1289f5d26f1c is published clean with
+exact lease 722224705f7c65a11a2c393ddca47ad276f1a115. Whole subject verifies
+one line and empty body. OLD e9d575f/parent b00215d are immutable. Row71 ACTUAL
+base remains OLD e9d575f, avoiding replay of the row70 control repair.
+
+## File write visibility preparation refresh, 2026-10-09
+
+Row71 rebases from ACTUAL old parent e9d575fdf990d28ae899c7562b369fe6b4f4401d
+onto current row70 head 0d09a61aaab76f5fde3d7f27a3ba1289f5d26f1c.
+Ten current docs resolve historical conflicts; row70 control repair is not replayed.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test --test file_write_visibility
+--test file_construction_ownership --test unwind_cleanup is running.
+Latest guarded handoff audit passes eleven doc-link sets, 82 immutable queue
+ancestry pairs and whole one-line subjects (0.14 / 1.04 s CPU / elapsed).
+All six focused tests pass 12.72 / 25.58 s CPU / elapsed. File write fixture
+matches immutable 5ac7103; feature runtime diff is only write-through flushing.
+Writes flush before return, preserving raw interpreter visibility and reporting
+short-write/flush errors without closing the borrowed handle. O1/O2 stress,
+verification, poison and omitted-flush controls pass with constructor/unwind
+regressions. Closed handles retain existing empty-read/no-op-write behavior; row72 addresses read errors and byte/text kinds.
+Same-target lint passes 2.55 / 5.13 s CPU / elapsed.
+Fmt check passes 0.44 / 0.82 s; ten docs copied before amend, tested code unchanged.
+Final row71 8a061cb9b8ab0836674ffca28923f7542a29196b is published clean with
+exact lease 5ac710398a14f68453c2cb9f0bf1477ca08d8b81. Whole subject verifies
+one line and empty body. No extra PR; row72 ACTUAL base remains 5ac7103.
+
+## File IO and binary-kind preparation refresh, 2026-10-09
+
+Row72 rebases from ACTUAL old parent 5ac710398a14f68453c2cb9f0bf1477ca08d8b81
+onto current row71 head 8a061cb9b8ab0836674ffca28923f7542a29196b.
+Ten current docs resolve historical conflicts; current 22a520c binary-read repair
+remains intact. Guarded clean passes 0.07 / 0.37 s. Guarded cargo test
+--test file_io_errors --test file_read_kinds --test file_write_visibility
+--test file_construction_ownership is running.
+All six focused tests pass 18.47 / 37.02 s CPU / elapsed. Feature C generator and
+both new fixtures exactly match current repaired 22a520c. Native read buffers and
+owned pathname streams release on failure; borrowed handles remain open. Directory
+and invalid-UTF8 text errors agree byte-for-byte with the raw interpreter. Binary
+reads preserve [0,255,192,128,10], valid text and empty data in GC on/off × poison
+modes. Read-buffer/stream/write-error omission controls and related construction/
+visibility regressions pass at O1/O2. Full sequential source/stress gates remain CI work.
+Inspected interpreter File operations: explicitly closed handles return empty reads
+and no-op writes, matching native behavior. Preserve this existing semantic contract.
+Same-target lint passes 2.48 / 5.11 s CPU / elapsed.
+Fmt check passes 0.45 / 0.84 s; ten docs copied before amend, tested code unchanged.
+Final row72 d4611644084ab89c2bcd981ed93d857f9017fe35 is published clean with
+exact lease 22a520c262196da7e403e7cca3cc26837adda82c. Whole subject verifies
+one line and empty body. OLD 06419f4/parent 5ac7103 remain immutable. Row73
+ACTUAL base remains OLD 06419f4; preserve its current corrected barrier 368dafc.
+
+## Original resource-frame preparation refresh, 2026-10-09
+
+Row73 rebases from ACTUAL old parent 06419f4c59893e6b48c476c552bffee7c8f46b82
+onto current row72 head d4611644084ab89c2bcd981ed93d857f9017fe35.
+Replayed original dcc5bbac then corrected fusion barrier 368dafc; ten current docs
+resolve both historical conflicts. Relevant compiler/tests match 368dafc except
+C-generator file.read-bytes keeps row72's repaired binary dispatch. No replay of
+row72 binary repair from its old current 22a520c. Guarded clean passes 0.07 / 0.37 s.
+Guarded cargo test --test resource_frames --test file_io_errors
+--test file_construction_ownership is running; focused resource unit controls follow.
+All six integration tests pass 21.06 / 42.34 s CPU / elapsed. ResourceRegion
+anchors preserve original parameter lifetimes, including descriptor-limit failure
+order; inlined helpers release local Files before subsequent calls. Returned and
+handled-error aliases survive. Raw and optimized interpreter/O1/O2 agreement
+passes with related File IO/construction regressions. Focused resource::tests::
+unit command is running; fusion control must still fuse the unanchored pipeline.
+Guarded cargo test --lib resource::tests:: passes all three selected tests
+(58 unrelated filtered) 3.93 / 8.00 s. Nominal recursive resources are detected,
+nonowning arrows remain unanchored and invalid metadata slots reject. Pure
+unanchored control pipeline fuses; ResourceRegion pipeline does not interleave
+its observable cleanup, preserving its stage boundary.
+Same-target lint passes 2.52 / 5.06 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.
+Final row73 3c87e1f63b515922a57a559a445d775f3cdeac35 follows first replay
+cf45252340ea815a0bd7af83a2458d35432fd0ec on actual base d461164. Published
+clean with exact lease 368dafc5567dab757e779017784ce347c908593c. Both entire
+subjects verify one line with empty bodies. OLD dcc5bba/parent06419f4 stay
+immutable. Row74 ACTUAL base is previous current 368dafc, not OLD dcc5bba.
+
+## File logical owner preparation refresh, 2026-10-09
+
+Row74 rebases from ACTUAL old parent 368dafc5567dab757e779017784ce347c908593c
+onto current row73 head 3c87e1f63b515922a57a559a445d775f3cdeac35.
+Ten current docs resolve conflicts. File runtime fixture matches immutable e21c92e.
+Inherited main constructor/String/list keep-alive fences remain, as do repaired
+row72 byte-read dispatch and file_read_impl instrumentation; no source rollback.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test --test file_runtime_ownership
+--test resource_frames --test file_io_errors is running.
+All six focused tests pass 21.91 / 44.03 s CPU / elapsed. File header refs survive
+collector sharing/cleared count metadata, handle 300 extra aliases exactly, and
+trap overflow before touching the stream. Borrowed write/read results get owned
+aliases; IO/conversion/tuple failures discard only those extras and typed String
+results. Last logical release closes once independently of tracing. O1/O2 GC
+off/on × poison, FWP_RESOURCE_NO_FREE and three omission controls pass with
+original-frame and repaired IO regressions. Library probes need no tracing proof
+for logical close; sequential full gates still required.
+Same-target lint passes 2.57 / 5.18 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.
+Final row74 4b5da4aa946a54788aaf6fc0a2356122ed53155d is published clean with
+exact lease e21c92ea2f6c7bdfcf881d05e485f57683df0b85. Whole subject verifies
+one line and empty body. No extra PR; row75 ACTUAL base remains e21c92e.
+
+## Mandatory original-frame release preparation refresh, 2026-10-09
+
+Row75 rebases from ACTUAL old parent e21c92ea2f6c7bdfcf881d05e485f57683df0b85
+onto current row74 head 4b5da4aa946a54788aaf6fc0a2356122ed53155d.
+Ten current docs resolve conflicts; feature compiler/tests match immutable
+923ad4a except C generator preserves repaired row72 binary-read dispatch.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test
+--test file_discard_ownership --test resource_frames --test file_runtime_ownership
+is running. Mandatory resource drops stay distinct from optional storage freeing.
+
+## Loop delivery and queue streamlining, 2026-10-09
+
+PR96 merged at 2026-10-09T10:16:42Z after all six CI37909273494 jobs passed
+at exact 03d25acc581a69c1a16f0add88e4768777072683. Explicit match-head
+squash produced d174e73fecb96cb5aef85fa20eb8471a48dc0948; fetched actual
+main verifies entire one-line subject, no body/trailers:
+Transfer owned loop states and reclaim typed Step and ABI payloads.
+All ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96,
+main fast-forwarded from 60e5d62 and all ten restored with byte verification.
+Queue intro now delegates live delivery/bases solely to the handoff; superseded
+instructions below are archived without changing any immutable OLD anchors.
+
+### Archived queue instructions before PR96 delivery
+
+# Prepared roadmap queue
+
+Updated 2026-10-08. These published branches are preparation, not merged support.
+Open one PR at a time in this order after the previous PR passes all six gates
+and squash-merges. Merged PR #91/inference retains immutable OLD head `89b7bde2`; wide counts
+are next (row14).
+Completed rows remain immutable anchors; do not reopen rows through inference.
+
+For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
+Preserve OLD head/parent below permanently: children were prepared from original
+heads, not later rewrites or squash commits. Replace outdated plan/handoff copies
+with current root docs when resolving documentation conflicts. Re-run focused
+checks after rebasing; original evidence is in [the history](roadmap-history.md).
+Publish with an explicit lease against the remote current head, then create the
+sole next PR. Full exact-head CI is required anew for every PR.
+
+Current heads change on rebase; OLD anchors never change. Rows through13 are
+merged; row14/wide is the sole open PR92. Merge/run evidence is in
+[the handoff](development-state.md) and [history](roadmap-history.md).
+Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
+the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
+actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
+WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
+which is its immutable parent.
+Row14 wide is now final-rebased on actual main3c0685c after PR91 squash.
+Its next rebase uses actual current3c0685c, not OLD89b7bde.
+Its OLDhead3a791dc and row15 OLDparent stay immutable.
+Row15 is prepared on current widecb0d7e6; its later rebase must use that
+actual current base. OLDheadc835578 and row16 OLDparent stay immutable.
+Row16 is prepared on current list-order5fe5692; use that actual current base
+for its later squash rebase. OLDhead66bc713 and row17 OLDparent stay immutable.
+Row17 is prepared on current sort-callback5c19337; use that actual current
+base later. OLDhead0a90b05 and row18 OLDparent stay immutable.
+Row18 is prepared on current sequence15743b8; use that actual current base
+later. OLDhead787763d and row19 OLDparent stay immutable.
+Row19 is prepared on current loop112f3c8; use that actual current base later.
+OLDheadc05a5d9 and row20 OLDparent stay immutable.
+For a rewritten branch, use its actual current base
+when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
+in this repository; use resolved full hashes for publication/merge head checks.
+Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
+
+
+## Mandatory frame release focused checks, 2026-10-09
+
+All five selected tests pass 22.99 / 46.22 s CPU / elapsed. Sixty-four source
+opens/discards stay within 32 descriptors across O1/O2 × reuse/free on/off ×
+GC on/off × poison modes; omitting original frame drops fails with descriptor
+exhaustion. Original parameter lifetime, alias and runtime count regressions pass.
+Same-target lint passes 2.59 / 5.18 s and fmt check 0.44 / 0.84 s.
+Ordinary heap freeing remains optional; mandatory File resource release is preserved.
+Final row75 db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0 is published clean with
+exact lease 923ad4a4fb07a5f6e2211c16c219308b5bddcf56. Whole subject verifies
+one line and empty body. Row76 ACTUAL base remains 923ad4a. No open PR yet;
+next delivery is row19 final rebase on verified #96 squash d174e73.
+
+## Structural list final delivery rebase, 2026-10-09
+
+Row19 final-rebases from ACTUAL prior base 112f3c8de87beddab2374f51e19d6dc94846919d
+onto verified #96 squash d174e73fecb96cb5aef85fa20eb8471a48dc0948.
+Ten current docs resolve conflicts; source/runtime/tests/workflows exactly match
+previous verified 6ce37fb180e1d88903dd94dadaf47181085ab09e. Guarded clean
+passes 0.05 / 0.37 s. Guarded cargo test --test list_structure_ownership is running.
+No PR is open; exact-lease publication and sole next PR follow final checks.
+All four final structural list tests pass 16.32 / 32.95 s CPU / elapsed.
+Typed input lists borrow; fresh nested spine/pair/chunk structure retains only
+reference-bearing aliases and frees scratch after construction. Raw FWP_NO_OPT=1
+source oracles, alias stress, GC-off counted reclamation, scalar address bits,
+invalid-size trap ordering and O1/O2 poison coverage pass. Generic exceptional
+cleanup remains later work; no general tracing-free or speed claim.
+Exact ownership contract unit is running; no other PR open.
+Guarded exact ownership contract unit passes 3.24 / 6.73 s CPU / elapsed:
+one selected test, 48 unrelated filtered; this is a real executed test.
+Final same-target lint passes 2.29 / 4.59 s CPU / elapsed.
+Final fmt check passes 0.34 / 0.60 s; ten authoritative docs copied before amend.
+Tested source unchanged; every final PR still requires all six exact-head gates.

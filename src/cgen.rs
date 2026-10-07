@@ -4580,6 +4580,44 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 }
                                 s.push_str(" return result;");
                             }
+                            ResultOwnership::CopiedStructure => {
+                                let element = |ty: &MT| -> Result<MT, String> {
+                                    if let MT::Con(name, args) = ty {
+                                        if name == "std::List" && args.len() == 1 {
+                                            return Ok(args[0].clone());
+                                        }
+                                    }
+                                    Err(format!("structural copy `{sym}` has a non-list input"))
+                                };
+                                let fields = match sym.as_str() {
+                                    "zip" => {
+                                        vec![element(&func.locals[1])?, element(&func.locals[0])?]
+                                    }
+                                    "unzip" => {
+                                        let pair = element(&func.locals[0])?;
+                                        let fs = record_fields(&self.prog.shapes, &pair)
+                                            .ok_or_else(|| {
+                                                "unzip has a non-record element".to_string()
+                                            })?;
+                                        if fs.len() != 2 {
+                                            return Err("unzip has a non-pair element".into());
+                                        }
+                                        fs.iter().map(|(_, ty)| ty.clone()).collect()
+                                    }
+                                    "chunks" => vec![element(&func.locals[1])?],
+                                    _ => return Err(format!("unknown structural copy `{sym}`")),
+                                };
+                                let mut args: Vec<String> =
+                                    (0..func.arity).map(|i| format!("l{i}")).collect();
+                                args.extend(fields.iter().map(|ty| {
+                                    if crate::rc::needs_rc(&self.prog.shapes, ty) {
+                                        "fwp_rc_dup".into()
+                                    } else {
+                                        "NULL".into()
+                                    }
+                                }));
+                                s = format!("return fwp_p_{sym}_owned({});", args.join(", "));
+                            }
                             ResultOwnership::FreshOuter => {
                                 if contract.borrows_callback() {
                                     s = s.replace("fwp_p_find(", "fwp_p_find_borrowed(");

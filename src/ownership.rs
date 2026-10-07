@@ -32,6 +32,8 @@ pub enum ResultOwnership {
         runtime: &'static str,
         tail: Option<usize>,
     },
+    /// New nested structural nodes with typed borrowed element aliases.
+    CopiedStructure,
     /// One owned reference to a borrowed list suffix.
     AliasTail {
         argument: usize,
@@ -255,6 +257,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             None,
             &[1],
         ),
+        "zip" => (&[B, B], ResultOwnership::CopiedStructure, None, &[0, 1]),
+        "unzip" => (&[B], ResultOwnership::CopiedStructure, None, &[0]),
+        "chunks" => (&[B, B], ResultOwnership::CopiedStructure, None, &[1]),
         "nth" => (&[B, B], ResultOwnership::FreshOuter, None, &[1]),
         "index-of" => (&[B, B], ResultOwnership::FreshOuter, None, &[]),
         "find" => (
@@ -453,6 +458,7 @@ mod tests {
         }
         for symbol in [
             "reverse", "take", "append", "flatten", "drop", "nth", "index-of", "sort", "unique",
+            "zip", "unzip", "chunks",
         ] {
             assert!(lists
                 .lines()
