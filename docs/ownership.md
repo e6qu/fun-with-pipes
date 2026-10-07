@@ -819,3 +819,42 @@ Next address untyped field/scrutinee contexts, reconstructed borrowed records,
 remaining whole-value vlocal boxing, CAF/inline lifetimes and retained task
 callbacks/teardown/cycles. No complete ARC, tracing-free execution or general
 speed claim is made; phases 2–6 remain incomplete.
+
+## Prepared nominal match context
+
+`ownership-match-context`, `/private/tmp/fwp-typed-expression-worktree`, OLD
+base `de85621`. The optimizer previously removed a typed binding before matching
+a bare aggregate. Discarded effectful nested constructors then had unknown
+ownership locals, so their children could remain live. The regression reproduced
+`?` locals after optimization and RC insertion. Known-constructor elimination
+now inherits the checked binding's nominal field types when it must evaluate
+a discarded field. It keeps a typed binding when elimination cannot recover
+the scrutinee's type. Existing trivial-record match elimination remains enabled.
+No new IR annotation node, surface syntax or runtime allocation is introduced.
+
+Two dedicated checks cover typed IR and real source. They compare interpreter
+and native values, prove the outer matched value has no heap allocation, and
+check that a freshly repeated String child is destroyed while external input
+aliases survive. Erasing the retained nominal field type makes the control fail
+with exit 3. O1/O2, GC stress/verification and both poison modes pass. Five focused
+match/alias/constructor checks pass, CPU 8.06 s / elapsed 16.35 s. Selected
+case_of_case, unboxed_records and variant_returns goldens agree exactly with
+the interpreter, including stdout/stderr/exit and both poison modes at O2,
+CPU 3.11 s / elapsed 6.42 s. This is selected semantic evidence, not a full gate
+or speed claim. Full sequential architecture/benchmark CI remains required.
+
+Library and dedicated-test clippy pass without warnings, CPU 2.34 s / elapsed
+4.64 s; fmt/whitespace pass. Checks used the serial bounded fwp guard with
+`cargo test --test match_context_ownership --test variant_alias_ownership --test
+constructor_type_ownership -- --nocapture`, `cargo clippy --lib --test
+match_context_ownership -- -D warnings`, and
+`python3 /private/tmp/fwp-match-context-goldens.py`. Package clean and rebuild
+preceded checks after switching from the stack checkout. No local workload
+remains; shared target contains the match-context compiler.
+
+PR #80 is merged and sole PR #81 is now in full CI `37696063781` for exact
+`6eeb915`. This context change remains separate. Prepared squash subject
+`Preserve nominal match context for discarded constructor fields` is one line,
+63 characters, empty body/no trailers. Next audit remaining field-result
+contexts, reconstructed borrowed fields, whole-value boxing, CAF/inline owners
+and retained task lifetimes/teardown/cycles. Phases 2–6 remain incomplete.

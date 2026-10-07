@@ -409,3 +409,8 @@ Prepared returned variant aliases transfer their existing field owners without
 boxing or extra retains. A valid nested IR regression and adjacent source
 behavior are documented separately in
 [ownership.md](ownership.md#prepared-returned-variant-aliases).
+
+Prepared known-constructor elimination retains the checked nominal field context
+for discarded effectful fields; unresolved scrutinees keep their typed binding.
+Typed IR/native reclamation and selected source behavior are recorded in
+[ownership.md](ownership.md#prepared-nominal-match-context).

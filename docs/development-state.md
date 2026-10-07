@@ -17,6 +17,11 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
+- Current origin/main: `50ab17aba07e798d39818ad4fa423edff6e4b895`, squash of
+  [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), all four exact-head
+  gates passed in CI `37684140373`; verified one-line, 63-character subject,
+  empty body/no trailers. Local main fast-forwarded, active docs preserved.
+  Stack-child PR #81 is the sole open PR after the rebase described below.
 - Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
   Current head `f53493c` passed all four jobs in
   [run 37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156):
@@ -44,7 +49,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 - Previous text baseline: PR #77 merged as `6cdb0d1`, all four exact-head gates
   passed in CI `37636161587` attempt 2. Attempt 1 Linux had no runner; the retry
   executed actual tests successfully.
-- Current origin/main: `33d4fb1a33ad4aad6b584b2f25c90d0f4dbbc18c`, squash
+- Earlier origin/main: `33d4fb1a33ad4aad6b584b2f25c90d0f4dbbc18c`, squash
   merge of [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79), merged
   2026-10-07T20:40:20Z. All four exact-head gates passed in CI `37666199241`
   for `e3fb2f6d84be7c24f0009121f1183ec8ba1e5fc3`. Verified one-line subject
@@ -196,19 +201,64 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Immediate continuation
 
-Keep goal active; phases 2–6 remain incomplete. PR #79 merged as `33d4fb1`
-with all four exact-head gates passing. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80)
-is the sole open PR, exact head `7ce23dd0acb354859948db9043ffd91e3029a55c`,
-full CI `37684140373`: Linux, benchmark and ARM macOS passed; Intel macOS is running. Queues gate merging
-only. When all four gates pass, squash with subject `Preserve concrete call
-argument types for ownership temporaries` (one line, 63 chars) and empty body,
-verify its message, and fast-forward main preserving these two docs. Rebase
-stack arguments from OLD `0acbc06` onto that new main, reconcile latest docs,
-run guarded focused checks, publish with exact lease and open the sole next PR.
-Do not use a rewritten or squash parent as a child's OLD rebase anchor.
+Keep goal active; phases 2–6 remain incomplete. PR #80 merged as
+`50ab17aba07e798d39818ad4fa423edff6e4b895` at 2026-10-07T22:21:01Z after
+all four exact-head gates passed in CI `37684140373` for
+`7ce23dd0acb354859948db9043ffd91e3029a55c`. Verified subject
+`Preserve concrete call argument types for ownership temporaries` is one line,
+63 characters, empty body/no trailers. Local main fast-forwarded while preserving
+these two docs; backup `/private/tmp/fwp-main-docs-50ab17a`.
+Rebased stack arguments from OLD `0acbc06` onto this main; only plan/handoff
+conflicts required reconciliation. Four focused checks and fmt/whitespace pass.
+Sole open [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), exact head
+`6eeb915771abcac085c6f6cf0520fd25cbbe79ee`, full CI `37696063781`, queued.
+All four gates must pass before squash with subject `Retain and release typed
+children of nonescaping stack values` (one line, 61 characters), empty body and
+exact head match. Then rebase borrowed callbacks from OLD `b563360`; preserve
+that original anchor rather than using the rewritten stack or squash head.
 
-Current checked preparation: `ownership-variant-conversion`, checkout
-`/private/tmp/fwp-variant-conversion-worktree`, OLD base `b021967`, pending publication.
+Current local work: `ownership-match-context`, checkout
+`/private/tmp/fwp-typed-expression-worktree`, OLD base `de85621`; prepared
+optimizer change and two tests. Typed match bindings carry nominal field context
+through known-constructor elimination; uneliminated untyped scrutinees keep their
+binding. A reproduced unknown-context regression, native child reclamation and
+source differential checks pass along with alias/constructor neighbors (5 tests,
+CPU 8.06 s / elapsed 16.35 s). Lint and selected case/record/variant golden checks
+also pass; publication is next; keep this work separate from #81. Shared target
+contains this context compiler after the stack validation and bounded rebuild.
+
+
+Latest published preparation: `ownership-variant-alias`, checkout
+`/private/tmp/fwp-variant-alias-worktree`, OLD base `614dd3b`, head
+`de8562194d5461b69e6e5f3b448df0bfc1bee687`; clean checkout, no new PR.
+Nested returned aliases now transfer unboxed field owners without extra retains
+or boxing. The valid IR leak regression, source differential check and eight
+adjacent checks pass; lint/fmt pass. Source reachability of the nested IR shape
+remains unproved and is not claimed. Next handle untyped field/scrutinee contexts,
+reconstructed borrowed values, whole-value boxing and retained runtime lifetimes.
+Full sequential CI remains required.
+
+Previous published preparation: `ownership-record-conversion`, checkout
+`/private/tmp/fwp-record-conversion-worktree`, OLD base `5c5875d`, head
+`614dd3b19c1340dd1f3b32f299a7ccdb51b5a7ef`; clean checkout, no new PR.
+Boxed records and remaining owners are protected during typed field retention;
+partial completed extras release on overflow. Dedicated O1/O2 stress/poison
+checks and all nine adjacent checks pass; lint/fmt pass. Next audit vlocal
+alias boxing, untyped contexts and reconstructed borrowed field lifetimes.
+Full sequential CI is still required; phase 2 remains incomplete.
+
+Previous preparation: `ownership-record-update`, checkout
+`/private/tmp/fwp-record-update-worktree`, OLD base `34873f4`. Typed kept-field
+retains, replaced-field release and partial-copy unwind checks pass. Published
+as `5c5875d30b8ef0a513dd4d23d7f691b4636e35ea`; clean checkout, no new PR.
+General exceptional-copy coverage now passes too. Next protect active
+boxed-record-to-worker field conversion, then revisit nested reconstruction. Detailed evidence is in the final section below.
+
+Previous published preparation: `ownership-variant-conversion`, checkout
+`/private/tmp/fwp-variant-conversion-worktree`, OLD base `b021967`, published head
+`34873f41a4c4c9dad3228132787f5bbb94ecbc28`; clean checkout, no new PR.
+Verified subject `Protect boxed variants and caller owners during struct conversion`:
+one line, 65 characters, empty body/no trailers.
 Conversion now protects the consumed boxed value (or owned stack children) during
 field retention and separately protects all remaining caller owners. The RC
 checker records consumed-value checkpoints before/after transfer; the caller
@@ -225,7 +275,7 @@ are fixed. Nine integration tests pass (CPU 23.78 s / elapsed 47.71 s), sixteen
 RC units pass (CPU 3.35 s / elapsed 7.02 s), library lint passes (CPU 2.32 s /
 elapsed 4.58 s); fmt/whitespace pass. No local workload remains. Shared target
 contains this compiler; guarded package clean before switching checkouts.
-Next publish separately, then audit vlocal boxing/aliases, nested reconstruction,
+Next audit vlocal boxing/aliases, nested reconstruction,
 SetFields fallback, untyped field/scrutinee contexts, CAF/inline owners and
 retained tasks/cycles. Full sequential CI still gates each merge; phases 2–6
 remain active.
@@ -463,7 +513,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | Branch | Checkout under /private/tmp | Head | Old base to remove |
 |---|---|---|---|
 | ownership-temporary-types | fwp-temporary-worktree | 7ce23dd | 7cf5c78 |
-| ownership-stack-arguments | fwp-stack-worktree | b563360 | 0acbc06 |
+| ownership-stack-arguments | fwp-stack-worktree | 6eeb915 | 0acbc06 |
 | ownership-borrowed-callbacks | fwp-callback-worktree | 029fac4 | b563360 |
 | ownership-map-callbacks | fwp-map-worktree | 41ef82d | 029fac4 |
 | ownership-filter-callbacks | fwp-filter-worktree | 1ea7f07 | 41ef82d |
@@ -501,6 +551,10 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | ownership-loop-preparation | fwp-loop-preparation-worktree | b879eca | c97dd03 |
 | ownership-variant-preparation | fwp-variant-preparation-worktree | 1bb11be | b879eca |
 | ownership-constructor-types | fwp-constructor-types-worktree | b021967 | 1bb11be |
+| ownership-variant-conversion | fwp-variant-conversion-worktree | 34873f4 | b021967 |
+| ownership-record-update | fwp-record-update-worktree | 5c5875d | 34873f4 |
+| ownership-record-conversion | fwp-record-conversion-worktree | 614dd3b | 5c5875d |
+| ownership-variant-alias | fwp-variant-alias-worktree | de85621 | 614dd3b |
 
 Example after the text PR merges: from fwp-closure-worktree,
 `git rebase --onto origin/main bab67ea ownership-closures` after fetching main.
@@ -1545,7 +1599,8 @@ open PR. Next start conversion cleanup while PR #80 current-head CI runs.
 ## Boxed variant conversion preparation
 
 `ownership-variant-conversion`, `/private/tmp/fwp-variant-conversion-worktree`,
-OLD base `b021967`; focused checks pass, pending publication. Consume checkpoints
+OLD base `b021967`, published head `34873f41a4c4c9dad3228132787f5bbb94ecbc28`;
+clean checkout, no additional PR. Focused checks pass. Consume checkpoints
 add compiler ownership facts, not a surface language construct. The original
 boxed value and the caller's remaining owners have separate scopes while typed
 field duplicates are prepared. Stack originals use their owned children instead
@@ -1624,8 +1679,9 @@ elapsed 4.68 s; fmt/whitespace pass. Checks used serial bounded
 preceded the checkout's build; no workload remains. Shared target now contains
 the record-update compiler; clean the package before changing checkouts.
 Prepared subject `Retain typed record fields and release overwritten update owners`
-is one line, 64 characters, with empty body/no trailers. Publication follows
-these checks; no additional PR opens while #80 is pending.
+is one line, 64 characters, with empty body/no trailers. Published as
+`b21203da65d30000ada50f3e2a92b1877153062f`; checkout is clean. No additional
+PR opens while #80 is pending.
 
 
 ## General record copy coverage
@@ -1670,6 +1726,12 @@ an immutable anchor; this is a forward coverage commit on that published branch,
 not a rewrite. The scratch reconstruction checkout has the same source and an
 uncommitted duplicate test; it is not a separate published task or next PR.
 
+General-copy coverage published as `5c5875d30b8ef0a513dd4d23d7f691b4636e35ea`;
+record-update checkout is clean and no additional PR is open. Preserve OLD
+`b21203d` if resuming the scratch child; create the next real conversion task
+from current `5c5875d`. Its eventual squash subject remains `Retain typed
+record fields and release overwritten update owners` (one line, 64 chars).
+
 ## Prepared boxed record field conversion
 
 `ownership-record-conversion`, `/private/tmp/fwp-record-conversion-worktree`,
@@ -1712,8 +1774,9 @@ record_conversion_ownership -- -D warnings`. Guarded package clean preceded
 this checkout's build. No local workload remains; shared target contains the
 record-conversion compiler, so clean the package before changing checkouts.
 Prepared subject `Protect boxed record inputs and partial worker field conversion`
-is one line, 63 characters, with empty body/no trailers. Publication is next;
-no additional PR opens while #80 is pending.
+is one line, 63 characters, with empty body/no trailers. Published as
+`614dd3b19c1340dd1f3b32f299a7ccdb51b5a7ef`; clean checkout. No additional
+PR opens while #80 is pending.
 
 ## Prepared returned variant aliases
 
@@ -1759,3 +1822,102 @@ No local workload remains; shared target contains the variant-alias compiler.
 Prepared subject `Transfer returned variant aliases without boxing or extra retains`
 is one line, 65 characters, empty body/no trailers. Publication follows these
 checks; preserve OLD `614dd3b` and the forthcoming alias head as rebase anchors.
+
+Variant-alias code published as `2163857a303b414ee097103e5ff75a7d8ce3aed5`,
+followed by the plan-only forward commit `de8562194d5461b69e6e5f3b448df0bfc1bee687`.
+Both subjects are single lines under 80 characters with no body/trailers.
+The future squash subject is `Transfer returned variant aliases without boxing
+or extra retains` (one line, 65 characters). Create the next task from OLD
+`de85621`. No source workload remains. Removed only the obsolete untracked
+duplicate fixture from the scratch reconstruction checkout after its final
+copy was published on record-update; scratch checkout is now clean.
+
+Rebased stack ownership and concrete temporary checks all pass (4 tests),
+CPU 12.51 s / elapsed 25.24 s; guarded package clean preceded the rebuild.
+Variant/closure stack child frees are 0.5/1.7 MiB versus 0.0/1.3 MiB in controls;
+temporary child frees are 0.5 MiB versus 0.0 MiB. Formatting/whitespace pass.
+Use `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py cargo test --test stack_ownership --test
+temporary_ownership -- --nocapture` for this focused check. The subject
+`Retain and release typed children of nonescaping stack values` is one line,
+61 characters, empty body/no trailers. Preserve OLD `b563360` for the borrowed
+callback child; its later rebase must not use this rewritten stack head.
+No local workload remains; shared target currently contains the stack compiler.
+
+## Prepared nominal match context
+
+`ownership-match-context`, `/private/tmp/fwp-typed-expression-worktree`, OLD
+base `de85621`. The optimizer previously removed a typed binding before matching
+a bare aggregate. Discarded effectful nested constructors then had unknown
+ownership locals, so their children could remain live. The regression reproduced
+`?` locals after optimization and RC insertion. Known-constructor elimination
+now inherits the checked binding's nominal field types when it must evaluate
+a discarded field. It keeps a typed binding when elimination cannot recover
+the scrutinee's type. Existing trivial-record match elimination remains enabled.
+No new IR annotation node, surface syntax or runtime allocation is introduced.
+
+Two dedicated checks cover typed IR and real source. They compare interpreter
+and native values, prove the outer matched value has no heap allocation, and
+check that a freshly repeated String child is destroyed while external input
+aliases survive. Erasing the retained nominal field type makes the control fail
+with exit 3. O1/O2, GC stress/verification and both poison modes pass. Five focused
+match/alias/constructor checks pass, CPU 8.06 s / elapsed 16.35 s. Selected
+case_of_case, unboxed_records and variant_returns goldens agree exactly with
+the interpreter, including stdout/stderr/exit and both poison modes at O2,
+CPU 3.11 s / elapsed 6.42 s. This is selected semantic evidence, not a full gate
+or speed claim. Full sequential architecture/benchmark CI remains required.
+
+Library and dedicated-test clippy pass without warnings, CPU 2.34 s / elapsed
+4.64 s; fmt/whitespace pass. Checks used the serial bounded fwp guard with
+`cargo test --test match_context_ownership --test variant_alias_ownership --test
+constructor_type_ownership -- --nocapture`, `cargo clippy --lib --test
+match_context_ownership -- -D warnings`, and
+`python3 /private/tmp/fwp-match-context-goldens.py`. Package clean and rebuild
+preceded checks after switching from the stack checkout. No local workload
+remains; shared target contains the match-context compiler.
+
+PR #80 is merged and sole PR #81 is now in full CI `37696063781` for exact
+`6eeb915`. This context change remains separate. Prepared squash subject
+`Preserve nominal match context for discarded constructor fields` is one line,
+63 characters, empty body/no trailers. Next audit remaining field-result
+contexts, reconstructed borrowed fields, whole-value boxing, CAF/inline owners
+and retained task lifetimes/teardown/cycles. Phases 2–6 remain incomplete.
+
+## Prepared nominal match context
+
+`ownership-match-context`, `/private/tmp/fwp-typed-expression-worktree`, OLD
+base `de85621`. The optimizer previously removed a typed binding before matching
+a bare aggregate. Discarded effectful nested constructors then had unknown
+ownership locals, so their children could remain live. The regression reproduced
+`?` locals after optimization and RC insertion. Known-constructor elimination
+now inherits the checked binding's nominal field types when it must evaluate
+a discarded field. It keeps a typed binding when elimination cannot recover
+the scrutinee's type. Existing trivial-record match elimination remains enabled.
+No new IR annotation node, surface syntax or runtime allocation is introduced.
+
+Two dedicated checks cover typed IR and real source. They compare interpreter
+and native values, prove the outer matched value has no heap allocation, and
+check that a freshly repeated String child is destroyed while external input
+aliases survive. Erasing the retained nominal field type makes the control fail
+with exit 3. O1/O2, GC stress/verification and both poison modes pass. Five focused
+match/alias/constructor checks pass, CPU 8.06 s / elapsed 16.35 s. Selected
+case_of_case, unboxed_records and variant_returns goldens agree exactly with
+the interpreter, including stdout/stderr/exit and both poison modes at O2,
+CPU 3.11 s / elapsed 6.42 s. This is selected semantic evidence, not a full gate
+or speed claim. Full sequential architecture/benchmark CI remains required.
+
+Library and dedicated-test clippy pass without warnings, CPU 2.34 s / elapsed
+4.64 s; fmt/whitespace pass. Checks used the serial bounded fwp guard with
+`cargo test --test match_context_ownership --test variant_alias_ownership --test
+constructor_type_ownership -- --nocapture`, `cargo clippy --lib --test
+match_context_ownership -- -D warnings`, and
+`python3 /private/tmp/fwp-match-context-goldens.py`. Package clean and rebuild
+preceded checks after switching from the stack checkout. No local workload
+remains; shared target contains the match-context compiler.
+
+PR #80 is merged and sole PR #81 is now in full CI `37696063781` for exact
+`6eeb915`. This context change remains separate. Prepared squash subject
+`Preserve nominal match context for discarded constructor fields` is one line,
+63 characters, empty body/no trailers. Next audit remaining field-result
+contexts, reconstructed borrowed fields, whole-value boxing, CAF/inline owners
+and retained task lifetimes/teardown/cycles. Phases 2–6 remain incomplete.

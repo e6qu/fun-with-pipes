@@ -52,8 +52,10 @@ exact-head gates in run `37636161587`, attempt 2;
 `37656822169`; [PR #78](https://github.com/e6qu/fun-with-pipes/pull/78) was squash-merged
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed all four gates
 in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
-types, is the sole open PR. CI run `37684140373` gates its merge; continue
-separate ownership preparation meanwhile.
+types, passed all four exact-head gates in CI `37684140373` and was squash-merged
+as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-child ownership,
+is the sole open PR. Its exact-head CI `37696063781` gates merging; separate
+compiler ownership preparation continues meanwhile.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -71,8 +73,9 @@ including a repair for RC argument naming that hid literal rebuilt states. Concr
 checks. Boxed-to-unboxed conversion now passes actual overflow cleanup checks.
 Record-update copies, including the general path with a surviving original,
 and overwritten-field release now pass focused checks.
-Boxed record field conversion passes overflow and nine adjacent checks;
-publication is next. Next audit vlocal boxing, remaining
+Boxed record field conversion is published after overflow and nine adjacent
+checks pass. Returned variant aliases now pass an IR leak regression and
+source differential checks. Next audit remaining whole-value boxing and
 untyped field/scrutinee contexts, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
@@ -84,6 +87,18 @@ transfers unboxed field owners instead of boxing and leaking an extra retain.
 Interpreter/native values, unique/shared child counts, source yield behavior and
 adjacent ownership checks pass. Full sequential CI is still required. Remaining
 whole-value boxing and untyped/reconstructed aggregate lifetimes stay open.
+
+Nominal match context is prepared: discarded effectful constructor fields keep
+typed cleanup during optimization, and unknown scrutinees retain their typed
+binding. Dedicated reclamation and selected case/record/variant semantic checks
+pass; full sequential CI is still required. Remaining field/reconstruction and
+runtime lifetime audits stay open.
+
+Nominal match context is prepared: discarded effectful constructor fields keep
+typed cleanup during optimization, and unknown scrutinees retain their typed
+binding. Dedicated reclamation and selected case/record/variant semantic checks
+pass; full sequential CI is still required. Remaining field/reconstruction and
+runtime lifetime audits stay open.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
