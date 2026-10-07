@@ -12035,3 +12035,5 @@ leased publication. Row27 actual base remains old0a7203f until its own final
 rebase; immutable anchors and prior bases are not silently rewritten.
 
 Sequential preparation refresh row30: ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 → 244dd2a578af002cc7316b6227f423be6bd63d8f, actual base78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8. Retained roadmap/revision-030-ca33d3141a96 before explicit leased publication. Compiler/runtime/workflow code unchanged; only the exact early row34 protection is inherited before row34; original probes are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row31: a282f630c7902b1239e87e8d300a271d5960d252 → 687ae106193bb472e4db399907131a65fa571ff2, actual base244dd2a578af002cc7316b6227f423be6bd63d8f. Retained roadmap/revision-031-a282f630c790 before explicit leased publication. Compiler/runtime/workflow code unchanged; only the exact early row34 protection is inherited before row34; original probes are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
