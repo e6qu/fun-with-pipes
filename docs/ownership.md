@@ -685,3 +685,35 @@ interpreter/native stdout agree. Sixteen ownership units and nine focused
 integration checks pass. Full sequential platform/benchmark gates remain required;
 vlocal boxing, field reconstruction, updates, untyped contexts and retained
 runtime lifetimes remain audits. No complete ARC or speed claim is made.
+
+## Prepared typed record updates
+
+`ownership-record-update`, `/private/tmp/fwp-record-update-worktree`, OLD base
+`34873f4`. Record copies now retain only typed kept fields: scalar words and
+replaced fields acquire no reference. Unique updates release overwritten typed
+fields before assignment. Poison-copy verification uses ordinary typed
+original destruction, including its children. Both generated copy paths use
+one helper; the checker records update liveness with a borrowed base and
+consumed replacements. The helper protects remaining owners and replacements,
+then its raw copied outer cell and partial completed field retains separately.
+Allocation still precedes retained-field acquisition; field evaluation order
+is unchanged. No speed or complete ARC claim is made.
+
+Seventeen ownership units pass (CPU 3.24 s / elapsed 6.71 s). Eight focused
+integration checks (record update, boxed conversion, constructor context and
+five compiler caller checks) pass, CPU 28.28 s / elapsed 56.77 s. Dedicated
+update probes cover unique/shared normal results and actual first/later wide
+count overflow, aliases, exact counts and scalar address bits at O1/O2,
+GC stress/verification and both poison modes. The C probe supplies a counted
+replacement through the fixture's captured constant slot; ordinary source
+behavior also agrees with the interpreter. Independent controls removing the
+unique overwritten-field drop, raw-cell scope, partial-retain scope or
+replacement scope fail with codes 3, 8, 11 and 7 respectively. A mistyped
+`call_unwind_ownership` target was rejected without running checks; the
+corrected compiler-call target passed in the batch above.
+
+Full sequential CI remains required. Remaining work includes direct exceptional
+coverage of the general copy path, reconstruction from flattened records,
+vlocal boxing, untyped field/scrutinee contexts, CAF/inline ownership and
+retained task lifetimes/cycles. Do not mistake this focused evidence for all
+update/reconstruction ownership coverage.

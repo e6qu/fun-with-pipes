@@ -393,3 +393,9 @@ Prepared boxed variant conversion owns the consumed input separately from the
 caller's remaining values during typed field retention. Consumed-value
 checkpoints and overflow evidence are documented in
 [ownership.md](ownership.md#prepared-boxed-variant-conversion).
+
+Prepared record updates retain only typed fields kept by a copy and release
+replaced fields when reusing unique storage. Pending fields, copied storage
+and partial retains have separate unwind owners. Evidence and remaining
+reconstruction coverage are recorded in
+[ownership.md](ownership.md#prepared-typed-record-updates).

@@ -2650,27 +2650,23 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let u = self.fresh();
                     self.line(&format!("int {} = fwp_rc_unique(l{});", u, x));
                     self.line(&format!("if ({} == 1) {{", u));
+                    let original_ty = self.locals[x as usize].clone();
+                    let original_fields = record_fields(&self.g.prog.shapes, &original_ty)
+                        .unwrap()
+                        .to_vec();
                     for (i, xv) in &xs {
+                        if let Some(drop) = self.typed_drop(&original_fields[*i as usize].1) {
+                            self.line(&format!("{drop}(OBJ(l{x})->f[{i}]);"));
+                        }
                         self.line(&format!("    OBJ(l{})->f[{}] = {};", x, i, xv));
                     }
                     self.line(&format!("    l{} = l{};", l, x));
                     self.line("} else {");
-                    self.line(&format!(
-                        "    l{l} = fwp_rc_fresh(fwp_data(0, OBJ(l{x})->n, OBJ(l{x})->f));",
-                        l = l,
-                        x = x
-                    ));
-                    self.line(&format!(
-                        "    for (uint32_t k = 0; k < OBJ(l{l})->n; k++) fwp_rc_dup(OBJ(l{l})->f[k]);",
-                        l = l
-                    ));
-                    for (i, xv) in &xs {
-                        self.line(&format!("    OBJ(l{})->f[{}] = {};", l, i, xv));
-                    }
+                    let copy = self.record_update(v, r, &format!("l{x}"), sets, &xs);
+                    self.line(&format!("l{l} = {copy};"));
                     let t = self.locals[x as usize].clone();
                     let d = self.typed_drop(&t).unwrap_or_else(|| "fwp_rc_drop".into());
-                    self.line(&format!("    if ({} == 2) fwp_rc_poison(l{});", u, x));
-                    self.line(&format!("    else {}(l{});", d, x));
+                    self.line(&format!("{d}(l{x});"));
                     self.line("}");
                     return rest;
                 }
@@ -3123,6 +3119,64 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.end_call(pending);
         self.end_call(remaining);
         result
+    }
+
+    /// A copied record borrows its original and consumes only replacement fields.
+    /// Keep the outer cell separate until its retained children are complete.
+    fn record_update(
+        &mut self,
+        e: &Expr,
+        base: &Expr,
+        rv: &str,
+        sets: &[(u32, Expr)],
+        xs: &[(u32, String)],
+    ) -> String {
+        let ty = type_of(
+            &|id| &self.g.prog.funcs[id].ty,
+            &self.g.prog.shapes,
+            &self.locals,
+            base,
+        )
+        .expect("record update base must have a concrete type");
+        let fields = record_fields(&self.g.prog.shapes, &ty)
+            .expect("record update base must be a record")
+            .to_vec();
+        let remaining = self.begin_call(e as *const Expr);
+        let replacements: Vec<_> = xs
+            .iter()
+            .map(|(i, value)| (value.clone(), fields[*i as usize].1.clone()))
+            .collect();
+        let pending = self.begin_values(&replacements);
+        let copy = format!("fwp_data(0, OBJ({rv})->n, OBJ({rv})->f)");
+        let t = self.bind(self.g.fresh(copy));
+        let cell = if self.g.reuse && self.g.unwind {
+            let node = self.fresh();
+            self.line(&format!(
+                "fwp_cleanup {node}; fwp_cleanup_push(&{node}, fwp_rc_cleanup_cell, &{t});"
+            ));
+            Some(node)
+        } else {
+            None
+        };
+        if self.g.reuse {
+            let kept: Vec<_> = fields
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !sets.iter().any(|(j, _)| *j as usize == *i))
+                .map(|(i, (_, ty))| (format!("OBJ({t})->f[{i}]"), ty.clone()))
+                .collect();
+            let ctx = self.fresh();
+            let node = self.fresh();
+            let retain = self.g.duplicate_values(&kept, &ctx, &node);
+            self.line(&retain);
+        }
+        for (i, value) in xs {
+            self.line(&format!("OBJ({t})->f[{i}] = {value};"));
+        }
+        self.end_call(cell);
+        self.end_call(pending);
+        self.end_call(remaining);
+        t
     }
 
     fn begin_values(&mut self, values: &[(String, MT)]) -> Option<String> {
@@ -3916,24 +3970,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.bind(format!("OBJ({})->f[{}]", rv, i))
             }
             Expr::SetFields(r, sets) => {
-                // the new fields first: the copy is a complete object (kind
-                // 0 in runtime/fwp_rt_gc.c), written only before anything
-                // else is allocated
                 let rv = self.expr(r);
                 let xs: Vec<(u32, String)> = sets.iter().map(|(i, x)| (*i, self.expr(x))).collect();
-                let copy = format!("fwp_data(0, OBJ({rv})->n, OBJ({rv})->f)", rv = rv);
-                let t = self.bind(self.g.fresh(copy));
-                if self.g.reuse {
-                    // the copy refers to the fields it keeps too
-                    self.line(&format!(
-                        "for (uint32_t k = 0; k < OBJ({t})->n; k++) fwp_rc_dup(OBJ({t})->f[k]);",
-                        t = t
-                    ));
-                }
-                for (i, xv) in xs {
-                    self.line(&format!("OBJ({})->f[{}] = {};", t, i, xv));
-                }
-                t
+                self.record_update(e, r, &rv, sets, &xs)
             }
             Expr::Let(l, v, body) => {
                 // `let o = map.get k m in match o ...`, with only o's

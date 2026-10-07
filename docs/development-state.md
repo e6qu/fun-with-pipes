@@ -199,7 +199,7 @@ immutable value semantics, effects and evaluation/trap order stable.
 Keep goal active; phases 2–6 remain incomplete. PR #79 merged as `33d4fb1`
 with all four exact-head gates passing. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80)
 is the sole open PR, exact head `7ce23dd0acb354859948db9043ffd91e3029a55c`,
-full CI `37684140373`: benchmark passed; Linux and both macOS jobs are running. Queues gate merging
+full CI `37684140373`: benchmark and ARM macOS passed; Linux and Intel macOS are running. Queues gate merging
 only. When all four gates pass, squash with subject `Preserve concrete call
 argument types for ownership temporaries` (one line, 63 chars) and empty body,
 verify its message, and fast-forward main preserving these two docs. Rebase
@@ -1579,3 +1579,50 @@ constructor_type_ownership --test retain_unwind_ownership -- --nocapture`,
 /private/tmp/fwp-local-guard.py`. No local workload remains. Full architecture/
 benchmark gates still have to run sequentially; vlocal boxing, reconstruction,
 SetFields fallback, untyped context and retained runtime lifetime remain audits.
+
+## Prepared record update ownership
+
+`ownership-record-update`, `/private/tmp/fwp-record-update-worktree`, OLD base
+`34873f4`. Record copies now retain only typed kept fields: scalar words and
+replaced fields acquire no reference. Unique updates release overwritten typed
+fields before assignment. Poison-copy verification uses ordinary typed
+original destruction, including its children. Both generated copy paths use
+one helper; the checker records update liveness with a borrowed base and
+consumed replacements. The helper protects remaining owners and replacements,
+then its raw copied outer cell and partial completed field retains separately.
+Allocation still precedes retained-field acquisition; field evaluation order
+is unchanged. No speed or complete ARC claim is made.
+
+Seventeen ownership units pass (CPU 3.24 s / elapsed 6.71 s). Eight focused
+integration checks (record update, boxed conversion, constructor context and
+five compiler caller checks) pass, CPU 28.28 s / elapsed 56.77 s. Dedicated
+update probes cover unique/shared normal results and actual first/later wide
+count overflow, aliases, exact counts and scalar address bits at O1/O2,
+GC stress/verification and both poison modes. The C probe supplies a counted
+replacement through the fixture's captured constant slot; ordinary source
+behavior also agrees with the interpreter. Independent controls removing the
+unique overwritten-field drop, raw-cell scope, partial-retain scope or
+replacement scope fail with codes 3, 8, 11 and 7 respectively. A mistyped
+`call_unwind_ownership` target was rejected without running checks; the
+corrected compiler-call target passed in the batch above.
+
+Full sequential CI remains required. Remaining work includes direct exceptional
+coverage of the general copy path, reconstruction from flattened records,
+vlocal boxing, untyped field/scrutinee contexts, CAF/inline ownership and
+retained task lifetimes/cycles. Do not mistake this focused evidence for all
+update/reconstruction ownership coverage.
+
+The existing in-place record regression also passes, CPU 7.84 s / elapsed
+15.88 s. Library and dedicated-test clippy are warning-free, CPU 2.34 s /
+elapsed 4.68 s; fmt/whitespace pass. Checks used serial bounded
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py cargo ...` invocations: `test --lib rc::tests`,
+`test --test record_update_ownership --test variant_conversion_ownership
+--test constructor_type_ownership --test compiler_call_liveness`,
+`test --test reuse unique_records_are_updated_in_place`, and
+`clippy --lib --test record_update_ownership -- -D warnings`. Package clean
+preceded the checkout's build; no workload remains. Shared target now contains
+the record-update compiler; clean the package before changing checkouts.
+Prepared subject `Retain typed record fields and release overwritten update owners`
+is one line, 64 characters, with empty body/no trailers. Publication follows
+these checks; no additional PR opens while #80 is pending.

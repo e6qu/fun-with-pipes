@@ -69,7 +69,8 @@ first/later-failure and entry cancellation checks. Typed partial retains and cal
 Initial loop flattening passes focused preparation and cancellation checks,
 including a repair for RC argument naming that hid literal rebuilt states. Concrete aggregate contexts and scalar argument preparation now pass focused
 checks. Boxed-to-unboxed conversion now passes actual overflow cleanup checks.
-Next audit vlocal boxing, remaining
+Record-update copies and overwritten-field release now pass focused checks.
+Next audit reconstruction, vlocal boxing, remaining
 untyped field/scrutinee contexts, CAF/inline lifetimes and retained task callbacks,
 teardown and cycles. Full sequential CI remains required. Phase 2 stays
 incomplete until its ownership and reclamation acceptance is proved; numeric
