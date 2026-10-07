@@ -541,6 +541,33 @@ impl Gen<'_> {
         .expect("invalid ownership before C generation")
     }
 
+    /// A temporary typed owner for values awaiting an allocating operation.
+    /// Scalar fields have no scope entry and cannot be mistaken for pointers.
+    fn protect_values(&mut self, values: &[(String, MT)], ctx: &str, node: &str) -> String {
+        if !self.reuse || !self.unwind {
+            return String::new();
+        }
+        let mut members = Vec::new();
+        let mut initial = Vec::new();
+        let mut releases = Vec::new();
+        for (value, ty) in values {
+            if !crate::rc::needs_rc(&self.prog.shapes, ty) {
+                continue;
+            }
+            let j = members.len();
+            members.push(format!("V v{j};"));
+            initial.push(value.clone());
+            let drop = self.value_drop(ty);
+            releases.push(format!("{drop}(c->v{j});"));
+        }
+        if members.is_empty() {
+            return String::new();
+        }
+        let id = self.cleanup_defs.len();
+        self.cleanup_defs.push(format!("typedef struct {{ {} }} fwp_owner_ctx{id};\nstatic void fwp_owner_release{id}(void *arg) {{ fwp_owner_ctx{id} *c = arg; {} }}\n", members.join(" "), releases.join(" ")));
+        format!("fwp_owner_ctx{id} {ctx} = {{{}}}; fwp_cleanup {node}; fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});", initial.join(", "))
+    }
+
     /// An allocation of compiled code: unique when references are counted.
     fn fresh(&self, alloc: String) -> String {
         if self.reuse {
@@ -2972,13 +2999,20 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// A record or variant of fields `xs`: in a token's cell when one of
     /// that size is free and still young (a cell that became old may not
     /// point to young values), else allocated by `alloc`.
-    fn alloc(&mut self, tag: u32, xs: &[String], alloc: String) -> String {
+    fn alloc(
+        &mut self,
+        key: *const Expr,
+        args: &[Expr],
+        tag: u32,
+        xs: &[String],
+        alloc: String,
+    ) -> String {
         let Some(i) = self
             .tokens
             .iter()
             .rposition(|t| !t.used && t.arity == xs.len())
         else {
-            return self.bind(self.g.fresh(alloc));
+            return self.construct_alloc(key, args, xs, alloc);
         };
         self.tokens[i].used = true;
         let (tok, u) = (self.tokens[i].var.clone(), self.tokens[i].unique.clone());
@@ -2992,11 +3026,56 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.line(&format!("    {} = {};", r, tok));
         self.line(&format!("    {tok} = 0;"));
         self.line("} else {");
-        self.line(&format!("    {} = {};", r, self.g.fresh(alloc)));
+        let fresh = self.construct_alloc(key, args, xs, alloc);
+        self.line(&format!("    {} = {};", r, fresh));
         let release = self.token_release();
         self.line(&format!("    {release}(&{tok});"));
         self.line("}");
         r
+    }
+
+    fn construct_alloc(
+        &mut self,
+        key: *const Expr,
+        args: &[Expr],
+        xs: &[String],
+        alloc: String,
+    ) -> String {
+        let remaining = self.begin_call(key);
+        let values: Vec<_> = args
+            .iter()
+            .zip(xs)
+            .filter_map(|(arg, value)| {
+                // Constant graphs and static functions have no consumed count.
+                if matches!(arg, Expr::Const(_) | Expr::Func(_)) {
+                    return None;
+                }
+                let ty = type_of(
+                    &|id| &self.g.prog.funcs[id].ty,
+                    &self.g.prog.shapes,
+                    &self.locals,
+                    arg,
+                )
+                .unwrap_or_else(|| MT::con("?"));
+                Some((value.clone(), ty))
+            })
+            .collect();
+        let pending = self.begin_values(&values);
+        let result = self.bind(self.g.fresh(alloc));
+        self.end_call(pending);
+        self.end_call(remaining);
+        result
+    }
+
+    fn begin_values(&mut self, values: &[(String, MT)]) -> Option<String> {
+        let ctx = self.fresh();
+        let node = self.fresh();
+        let protect = self.g.protect_values(values, &ctx, &node);
+        if protect.is_empty() {
+            return None;
+        }
+        self.line(&protect);
+        Some(node)
     }
 
     /// The reference count change of a `Dup` or `Drop` of local `l`: none
@@ -3723,7 +3802,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let xs = self.args(args);
                 let alloc = format!("fwp_data({}, {}, {})", tag, xs.len(), Self::array(&xs));
-                self.alloc(*tag, &xs, alloc)
+                self.alloc(e as *const Expr, args, *tag, &xs, alloc)
             }
             Expr::Record(args) => {
                 if args.is_empty() {
@@ -3731,7 +3810,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
                 let xs = self.args(args);
                 let alloc = format!("fwp_record({}, {})", xs.len(), Self::array(&xs));
-                self.alloc(0, &xs, alloc)
+                self.alloc(e as *const Expr, args, 0, &xs, alloc)
             }
             Expr::Field(r, i) => {
                 if let Expr::Local(l) = &**r {
@@ -5394,7 +5473,22 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         args.len(),
                         args.join(", ")
                     );
-                    let _ = writeln!(out, "    return {};", self.fresh(alloc));
+                    let values: Vec<_> = args
+                        .iter()
+                        .cloned()
+                        .zip(f.ty.params(f.arity as usize).0.into_iter().cloned())
+                        .collect();
+                    let protect = self.protect_values(&values, "pending", "allocation_cleanup");
+                    let finish = if protect.is_empty() {
+                        ""
+                    } else {
+                        "fwp_cleanup_pop(&allocation_cleanup);"
+                    };
+                    let _ = writeln!(
+                        out,
+                        "    {protect}\n    V result = {}; {finish} return result;",
+                        self.fresh(alloc)
+                    );
                 }
             }
             Body::Expr(e) => {
