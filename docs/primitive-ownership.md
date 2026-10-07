@@ -466,3 +466,34 @@ raw decrement (Apple Silicon, Apple Clang 17, O1, counters rounded to tenths,
 zero collections). All variants retain the same callback and scratch-buffer
 paths. This demonstrates result and key reclamation, not execution speed or
 complete exception cleanup. Full platform gates remain required after parents.
+
+## Owned scan and iterate state sequences
+
+`scan` and `iterate` borrow their callback, initial state and list inputs. The
+initial output takes an extra typed reference through actual callback parameter
+metadata. Each later callback result already owns its output reference. Later
+calls borrow the previous output, rather than transferring the reference stored
+in that output as fold does. Repeated aliases and function states therefore
+retain every earlier state. Output nodes are fresh and adopt those owned heads;
+input/output scratch is scanned and released explicitly. Initial value addresses,
+callbacks and input lists remain collector roots through allocating operations.
+
+Scan returns its initial state even for an empty list. Iterate returns empty for
+non-positive counts, taking no initial reference and invoking no callback; count
+one returns only the initial state. Size arithmetic is checked before scratch
+allocation. Conservative callback metadata retains sharing when its types are
+unknown. Conservative compilation switches preserve their existing behavior.
+
+`tests/state_sequence_ownership.rs` compares input/output aliases, unchanged and
+replaced states, function states, callback effect order, empty scan and
+non-positive/singleton iterate, including allocated initial values. Checks cover
+O1/O2, stack on/off, collection stress/verification and both reuse-poison modes.
+The no-tracing loop uses a direct head consumer to isolate sequence ownership:
+7.9 MiB freed by counts versus 4.1 MiB when only scan/iterate result sharing is
+restored (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision, zero collections).
+
+An earlier map/sum consumer measured 4.1 MiB in both variants: its fused loop
+still shares its list state before consuming it. That generated/runtime loop
+boundary needs owned state transfer as separate phase-2 work; changing the
+consumer isolates this regression, but does not fix the loop ownership gap.
+Exceptional cleanup and full platform gates remain required.

@@ -79,6 +79,7 @@ push with lease and run full CI. Do not replay the parent's pre-squash commits.
 | inference-call-effects | fwp-inference-worktree | 89b7bde | 34023f3 |
 | ownership-wide-counts | fwp-wide-worktree | 3a791dc | 89b7bde |
 | ownership-list-order | fwp-order-worktree | c835578 | 3a791dc |
+| ownership-sort-callbacks | fwp-sort-callback-worktree | 66bc713 | c835578 |
 
 Example after this PR merges: from fwp-leaf-worktree,
 `git rebase --onto origin/main 798d2ed ownership-leaves` after fetching main.
@@ -121,8 +122,9 @@ Synchronous map/filter/zip callbacks and left/right accumulator transfers are
 prepared after b563360, followed by take/drop-while on ownership-list-prefix.
 Ordinary drop/copy and optional list boundaries are published after prefix/suffix work.
 Call-effect inference repair is prepared separately after optional list aliases.
-Exact overflow counts are now being prepared. Next finish remaining synchronous
-list callbacks and typed container elements. Keep retained callbacks shared until their full
+Exact overflow counts and sort/unique/sort-by ownership are published;
+scan/iterate state ownership is in preparation. Next repair general/fused loop
+state transfer, then remaining structural list aliases and typed container elements. Keep retained callbacks shared until their full
 lifetime and exceptional cleanup are checked.
 Other constructor/result contexts, typed container elements, retained callbacks,
 handler unwind, cancellation and FFI lifetimes remain. Define cycle policy.
@@ -564,8 +566,53 @@ normal-path pair passed CPU 12.60 s / elapsed 25.39 s including compiler rebuild
 Eight adjacent borrowed-callback/list-ordering/FFI checks pass (CPU 9.27 s /
 elapsed 18.68 s). The contract inventory was extended to sort/unique/sort-by;
 the extended inventory passes (CPU 3.60 s / elapsed 7.57 s). Formatting and
-whitespace pass. Publish the branch without a second PR; no local workload remains. Linux full CI now passes #75 as well as
+whitespace pass. Published as `66bc713`, without another PR; no local workload remains. Linux full CI now passes #75 as well as
 ARM and benchmarks; Intel is still testing. Next after this branch: scan/iterate
 owned output sequences, followed by zip/unzip/chunks structural aliases and
 retained container element lifetimes. All checks stay bounded; phase 2 remains
 incomplete, especially old-object reclamation and exceptional cleanup.
+
+Scan/iterate design to implement next: borrow callback/source/initial value.
+The first output needs a typed additional reference to the borrowed initial
+value; every later callback result already owns its output reference. Borrow the
+previous output when invoking the next callback so its stored reference survives
+argument consumption; never transfer the only output reference as fold does.
+Use actual callback argument metadata for the initial-value duplication (including
+captured/partial callbacks), scanned/released scratch and fwp_map_finish for
+owned output heads. Iterate with zero count must neither duplicate its initial
+value nor invoke the callback. Verify aliased intermediate states, functions as
+states, effect order, empty scan and non-positive iterate counts. Stored container
+elements, exceptional lifetimes and old marked objects remain separate work.
+
+## Scan and iterate ownership preparation
+
+`ownership-state-sequences`, checkout `/private/tmp/fwp-state-sequence-worktree`,
+base `66bc713`, has no PR yet. Three arguments borrow; scan callback index 0,
+iterate callback index 1. FreshSpine output owns each state. Actual callback
+argument metadata duplicates the initial state, each callback application borrows
+the previous output, and later callback results transfer directly into output
+nodes. Shared callback metadata stays conservative. Scanned scratch is released;
+initial-state, callback and list roots have address fences. Non-positive iterate
+returns without callback/refcount activity; allocation-size arithmetic is checked.
+
+First attempt found a fixture mistake (`concat | trace-step` tried to compose
+before the second curried argument; use `const trace-step` for the effectful
+callback fixture) and a real separate ownership gap: the optimized map/sum
+consumer feeds its list to a fused loop that still shares the complete state.
+Generated fwp_loop49/fwp_loop51 call sites showed fwp_rc_share on records holding
+list states. Counts were 4.1/4.1 MiB in both variants. The consumer is now direct
+head/option processing to isolate sequence lifetime; 4.1 -> 7.9 MiB are freed
+when only scan/iterate result sharing is restored/removed, identical output and
+zero collections. Both semantic/counter checks then pass (CPU 5.08 s / elapsed
+10.33 s). Expanded conservative-switch and allocated-empty-state checks plus all five
+adjacent filter/prefix/callback regressions pass: seven tests, CPU 24.56 s /
+elapsed 49.40 s. Extended contract inventory passes (CPU 3.86 s /
+elapsed 8.12 s), formatting/whitespace pass. Publish this prepared branch without
+another PR; no local workloads remain.
+
+Next required ownership work: general and fused loop state/result transfer and
+cleanup, preserving Step semantics, ticks, cancellation and evaluation order.
+The map/sum consumer must gain reclamation evidence after that repair. Then
+zip/unzip/chunks structural aliases, typed stored container elements, retained
+callbacks and exceptional teardown. Fused-loop sharing is not fixed by this
+sequence branch. Phase 2 remains incomplete; full CI follows parent merges.
