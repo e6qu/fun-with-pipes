@@ -717,3 +717,38 @@ coverage of the general copy path, reconstruction from flattened records,
 vlocal boxing, untyped field/scrutinee contexts, CAF/inline ownership and
 retained task lifetimes/cycles. Do not mistake this focused evidence for all
 update/reconstruction ownership coverage.
+
+
+## General record copy coverage
+
+Extended `ownership-record-update` after `b21203d` in the same focused change.
+The source fixture `both (with { old = "new" }) id` performs its copy before
+consuming the original. Generated C is asserted to have no unique-update
+branch, proving coverage of the general `ExprSetFields` path. Normal result
+contains the updated record and untouched original; their exact child counts,
+independent external aliases and scalar address bits are checked. Actual
+first/later wide-count overflows release partial retained fields, replacement,
+copied outer storage and original owners. Removing the remaining-owner scope
+fails with code 9; raw-cell/partial/replacement controls fail with 8/11/7.
+O1/O2, stress/verification, both poison modes and ordinary interpreter/native
+stdout agree. Both update tests pass, CPU 8.32 s / elapsed 16.78 s.
+
+The added remaining-owner control initially assumed the context declaration
+and registration occupied one C line; its lookup failed before compilation.
+The lookup now follows the context variable to its registration. Clippy's
+iterator-style warning was repaired with `rfind`; warning-free library and
+new-test lint passes (CPU 0.00 s / elapsed 0.14 s). No product failure remains.
+Validation used the bounded fwp guard with `cargo test --test
+record_update_ownership --test general_record_update_ownership -- --nocapture`
+and `cargo clippy --lib --test general_record_update_ownership -- -D warnings`.
+Full sequential CI remains required; no new PR is open.
+
+Reconstruction audit identified the active boxed-record-to-worker field
+conversion in `FnGen::expr_fields`: it retains counted fields and drops its
+input without protecting originals, remaining owners or completed extras.
+This is the next implementation task; prove a real source fixture and add
+first/later overflow checks before claiming it fixed. Nested loop reconstruction
+in `FnGen::expr` is separate: existing RC argument naming keeps the nested
+state boxed, so current fixtures do not prove that flattening path. Enabling it
+also needs precise ownership for reconstructed borrowed field bindings.
+Keep that work open rather than treating an unexercised path as verified.
