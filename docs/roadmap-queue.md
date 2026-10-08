@@ -98,7 +98,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `c0cdb26eb99b` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7a68a54d2660` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `ab3a93780dc3` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `c41525bcf849` | `5ac710398a14` | `e9d575fdf990` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `702cd9b0a69a` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `4aeff2223e3f` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `c5bc20fc095b` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `d3fa39b37c83` | `e21c92ea2f6c` | `368dafc5567d` |
