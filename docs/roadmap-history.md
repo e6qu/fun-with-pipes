@@ -11193,3 +11193,11 @@ Row53 refresha30c1829d0d0 uses actual basefe8ed51eb078. Row54 refresh
 f4d3784f4657f2bc1d6fe159f5c130dcf0e14d7c uses actual basea30c1829d0d0.
 Compiler/runtime match originals; old CURRENT53/54 are retained under immutable
 revision tags before lease publication. Fresh checks follow.
+
+Row53 guarded clean0.00/0.14s, channel queue11.45/23.08s, exact primitive
+inventory3.40/7.25s, clippy2.43/4.79s and format0.45/0.87s pass. Row55
+refresh625ac7793f8467ce03acaf9258df6c61ab23b823 uses actual basef4d3784f4657.
+Row56 refreshac6de597fddcecfe5b548b30213725e897ce1454 uses actual
+base625ac7793f84. Compiler/runtime match originals; old CURRENT55/56 are
+retained under immutable revision tags before explicit-lease publication.
+Fresh library input/unload checks follow.
