@@ -25,6 +25,17 @@ later = curry (.0
     | format "woke after {} ms"
     | print)
 
+# Both children sleep concurrently; the channel makes print order explicit.
+# Relative wall-clock wake times alone do not establish an output order.
+ordered-later : Channel[()] -> I64 -> () -> () ! {Async, IO, Network, FileIO}
+ordered-later = curry3 (if (.1 | eq 40)
+    (both (.0 | channel.recv | ignore) (fork later .1 .2) | ignore)
+    (both (fork later .1 .2) (.0 | flip channel.send ()) | ignore))
+spawn-later : Channel[()] -> I64 -> () ! {Async, IO, Network, FileIO}
+spawn-later = then2 ordered-later (task.spawn | ignore)
+scoped-later : Channel[()] -> () ! {Async, IO, Network, FileIO}
+scoped-later = fork each spawn-later (const [40, 20])
+
 main = [
     range 1 2001
     | task.map (fork mul id id)
@@ -45,7 +56,7 @@ main = [
         (const 5 | task.deadline 20ms | tap (const 1s | task.sleep))
     | echo,
     500 | later | task.spawn | tap task.cancel | task.await | echo,
-    task.scope (const [40, 20] | each (later | task.spawn | ignore))
+    task.scope (const 1 | channel.make | scoped-later)
     | const "scope done"
     | print,
     5 | channel.make | the-ch | channel.recv-for 20ms | echo,

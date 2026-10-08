@@ -69,7 +69,12 @@ fn zip_callbacks_partial_spines_and_allocation_failure_release_owners() {
     let exe = dir.0.join("callbacks");
     let fwp = env!("CARGO_BIN_EXE_fwp");
     std::fs::write(&src, SOURCE).unwrap();
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
     checked(
         Command::new(fwp)
             .arg("build")
@@ -87,7 +92,8 @@ static volatile V source_list, input_leaf, input_alias;
 static int recover_map_trap(void) { return 1; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 static int dead_scratch(V v) {
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, NULL);
+    size_t ci;
+    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, &ci);
     if (!chunk) return 1;
     if (chunk->type == GC_FREE) return 1;
     if (chunk->type != GC_SMALL) return 0;
