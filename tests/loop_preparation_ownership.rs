@@ -27,7 +27,12 @@ main = [task.yield (), (1, "left", "right", 17) | loop step | echo] | ignore
 "#,
     )
     .unwrap();
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
     checked(
         Command::new(fwp)
             .arg("build")

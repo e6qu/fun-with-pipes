@@ -280,6 +280,10 @@ Linux and both macOS architectures in separate evidence. Prepared TLS resource
 teardown, connection cancellation and peer-subject temporary cleanup have actual
 OpenSSL/omission checks; library probes generally run with collection unarmed.
 They do not prove host-root tracing or deterministic discard of every resource.
+Rebuilt nested loop records now also have a preparation that preserves typed
+flattened state through Again and protects original, partial and pending owners
+when Stop boxes an inner result. Alias/scalar/cancellation and omission controls
+pass locally; sequential full CI remains required. No measured speed claim follows.
 An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
 and reproduced loss of the owning Conn during String allocation. Its owner fence
 and fence-omission control now pass under real GC/reuse verification; production library

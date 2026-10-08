@@ -83,10 +83,9 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
 
-| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | pending | pending | `e0f11626f609` |
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
 
-Nested-loop boxing remains dirty and will be rebased onto preparation 68 before
-publication as 69; preserve its current source/test changes.
+| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | pending | pending | `e503e10a9780` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

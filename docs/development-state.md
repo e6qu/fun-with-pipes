@@ -171,19 +171,32 @@ unarmed and no host-root tracing claim follows. Warning check passes CPU 2.40 s 
 no body/trailers; full sequential CI remains required.
 
 Nested-loop preparation is in progress on `ownership-nested-loop-boxing`,
-checkout `/private/tmp/fwp-nested-loop-boxing-worktree`, parent OLD `e0f1162`.
-Only `src/cgen.rs` is modified plus new `tests/nested_loop_boxing.rs`; no commit.
+checkout `/private/tmp/fwp-nested-loop-boxing-worktree`, now based on published
+CI repair `e503e10a97807a91f0ce1794f5b8b3e7cb955114`. Preserved dirty work
+through stash/rebase/pop; only src/cgen.rs, src/rc.rs and its new test are modified.
 Typed prepared aliases now let rebuilt inner records stay flattened (st[5]
 instead of st[3]); Again stops boxing the inner tuple. A real source/C fixture
 then exposes a leaked original/partial owner when that inner value is boxed on
 Stop and preparation traps (exit 2). Initial fixture compile errors (missing
 trap declaration and selecting a vbox rather than vdrop definition) were corrected
-before leak evidence. Restore cleanup with a precise Field ownership checkpoint,
-progressive retains and allocation scope, then test aliases/scalar words/reuse.
+before leak evidence. Precise Field ownership checkpoint, progressive retains and
+allocation scopes now fix that leak: all alias/scalar/fault cases pass O1/O2 with
+stress/verification and both reuse modes (CPU 8.50 s / 17.32 s). The small
+generated-code inspection passes CPU 0.35 s / 0.74 s. Three omission controls
+now detect missing original, partial and pending boxed-field scopes (exit 2).
+Six loop/preparation/worker checks pass CPU 11.78 s / elapsed 24.05 s;
+17 compiler ownership analysis tests pass CPU 3.32 s / 6.84 s. Clippy lib/four
+tests passes CPU 2.35 s / 4.77 s; format CPU 0.34 s / 0.62 s. The first adjacent
+run crashed because its old cancellation probe treated the now-flattened String
+fields as a boxed pair; the updated typed-field probe passes with unchanged
+release/alias/scalar assertions. An initial mistyped target ran no checks and
+was corrected. Prepare/publish this as queue 69, then audit resource discard
+and retained cycles while sequential full CI continues.
 Small emitted-code checks only; no full allocation workload ran locally.
 
 CI repair is prepared separately in `/private/tmp/fwp-ci-probe-repairs-worktree`,
-branch `ownership-ci-probe-repairs`, parent OLD `e0f1162` (not committed yet).
+branch `ownership-ci-probe-repairs`, parent OLD `e0f1162`, published clean as
+`e503e10a97807a91f0ce1794f5b8b3e7cb955114` (no extra PR).
 All five Linux failing probes call `fwp_gc_chunk_of` with a null index output;
 that helper unconditionally writes the index for managed pointers. Replace the
 invalid calls with actual `size_t` output storage; no runtime ownership rule or
@@ -198,7 +211,8 @@ verification and both reuse modes. Initial curried composition errors corrected;
 small raw oracle prints the unchanged expected order. Ten focused checks pass
 under the persistent guard, CPU 27.31 s / elapsed 54.75 s; clippy lib/six tests
 passes CPU 2.38 s / 4.92 s; format CPU 0.43 s / 0.87 s.
-Linux runner confirmation and all six evidence gates remain required.
+Linux early runner confirmation now PASS for all ten tests under BOTH GCC and
+Clang in CI `37730777345`; all six full evidence gates remain required.
 
 Priority now: validate completed evidence Linux/Intel repairs while sole PR #85 runs,
 then finish this aggregate repair. General File/socket resource discard, retained
@@ -213,7 +227,7 @@ interface or backend, or claim speed without equivalent workload evidence.
 
 Root main has ONLY our pending live docs/history/queue/guard changes; preserve
 those on fast-forward. Prepared published production checkouts are clean. Current
-shared compiler target belongs to `/private/tmp/fwp-ci-probe-repairs-worktree`; use
+shared compiler target belongs to `/private/tmp/fwp-nested-loop-boxing-worktree`; use
 guarded `cargo clean -p fwp` before switching compiler checkouts. Never run local
 workloads concurrently.
 

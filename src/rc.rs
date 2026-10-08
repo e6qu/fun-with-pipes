@@ -744,7 +744,14 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 Ok(())
             }
-            Expr::Field(r, _) => self.expr(r, st, !matches!(**r, Expr::Local(_))),
+            Expr::Field(r, _) => {
+                // Reading flattened loop state may reconstruct a boxed value,
+                // retaining its typed children before an allocating constructor.
+                let before = self.include_values.then(|| owned_references(st));
+                self.expr(r, st, !matches!(**r, Expr::Local(_)))?;
+                self.record_call(e, before, st);
+                Ok(())
+            }
             Expr::Let(l, v, b) => {
                 self.expr(v, st, true)?;
                 if self.counted(*l) {
