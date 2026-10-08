@@ -6630,8 +6630,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let mut lib_defs = String::new();
     if let Mode::Library = mode {
+        // Register exit cleanup before runtime dependencies can be loaded.
+        // Darwin terminates dlopened images before archive destructors. The
+        // guarded finish also runs at dynamic unload; repeated calls are safe.
         lib_defs.push_str(
-            "static int fwp_lib_ready = 0;\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
         );
         for (cname, fid, ps, r) in export_sigs(prog)? {
             let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
@@ -7356,7 +7359,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_gc_finish();\n    fwp_closure_drop_finish();\n}}\n#endif\n",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n    fwp_closure_drop_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);
@@ -7432,6 +7435,7 @@ static void *fwp_main_thread(void *arg) {{
     fwp_init_consts();
 {run}
     fwp_caf_finish();
+    fwp_cl_finish();
     fflush(stdout);
     return 0;
 }}

@@ -419,6 +419,8 @@ static struct {
     int32_t (*release_mem)(fwp_clp);
     int32_t (*release_kernel)(fwp_clp);
     int32_t (*release_program)(fwp_clp);
+    void *library;
+    int32_t (*release_queue)(fwp_clp), (*release_context)(fwp_clp);
     fwp_clp device, context, queue;
 } fwp_cl;
 
@@ -459,6 +461,25 @@ static int fwp_cl_pick(void) {
     return 0;
 }
 
+/* Calls finish before releasing a successful queue, then release the context
+ * while the dynamically loaded entry points are still valid. Partial load
+ * failure uses the same ownership path and preserves the cached diagnostic. */
+static void fwp_cl_finish(void) {
+    if (fwp_cl.queue) {
+        fwp_cl.finish(fwp_cl.queue);
+        fwp_cl.release_queue(fwp_cl.queue);
+        fwp_cl.queue = 0;
+    }
+    if (fwp_cl.context) {
+        fwp_cl.release_context(fwp_cl.context);
+        fwp_cl.context = 0;
+    }
+    if (fwp_cl.library) {
+        dlclose(fwp_cl.library);
+        fwp_cl.library = 0;
+    }
+}
+
 static int fwp_cl_load(void) {
     if (fwp_cl.tried) return fwp_cl.queue != 0;
     fwp_cl.tried = 1;
@@ -488,9 +509,11 @@ static int fwp_cl_load(void) {
             return 0;
         }
     }
+    fwp_cl.library = h;
 #define FWP_CL_SYM(field, name) \
     if (!(*(void **)&fwp_cl.field = dlsym(h, name))) { \
         snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: the OpenCL library has no `%s`", name); \
+        fwp_cl_finish(); \
         return 0; \
     }
     FWP_CL_SYM(get_platforms, "clGetPlatformIDs")
@@ -510,20 +533,23 @@ static int fwp_cl_load(void) {
     FWP_CL_SYM(release_mem, "clReleaseMemObject")
     FWP_CL_SYM(release_kernel, "clReleaseKernel")
     FWP_CL_SYM(release_program, "clReleaseProgram")
+    FWP_CL_SYM(release_queue, "clReleaseCommandQueue")
+    FWP_CL_SYM(release_context, "clReleaseContext")
 #undef FWP_CL_SYM
-    if (!fwp_cl_pick()) return 0;
+    if (!fwp_cl_pick()) { fwp_cl_finish(); return 0; }
     int32_t err = 0;
     fwp_cl.context = fwp_cl.create_context(0, 1, &fwp_cl.device, 0, 0, &err);
     if (!fwp_cl.context || err) {
         snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: clCreateContext failed (%d)", (int)err);
+        fwp_cl_finish();
         return 0;
     }
-    fwp_clp q = fwp_cl.create_queue(fwp_cl.context, fwp_cl.device, 0, &err);
-    if (!q || err) {
+    fwp_cl.queue = fwp_cl.create_queue(fwp_cl.context, fwp_cl.device, 0, &err);
+    if (!fwp_cl.queue || err) {
         snprintf(fwp_cl.error, sizeof fwp_cl.error, "no OpenCL device: clCreateCommandQueue failed (%d)", (int)err);
+        fwp_cl_finish();
         return 0;
     }
-    fwp_cl.queue = q;
     return 1;
 }
 
@@ -622,6 +648,7 @@ done:
 
 #else
 
+static void fwp_cl_finish(void) {}
 static V fwp_p_gpu_available(void) { return FWP_FALSE; }
 
 static V fwp_p_gpu_run(V src, V nv, V consts, V inputs) {
