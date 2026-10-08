@@ -93,7 +93,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `52bc4e64547b` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `d364e70df274` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `60b03078c3cd` | `b8f3752d236f` | `0cc612650ab9` |
-| 66 | peer-subject | `ownership-tls-peer-subject` | `d8b4e2407fb1` | `6bda2c815a71` | `b8f3752d236f` |
+| 66 | peer-subject | `ownership-tls-peer-subject` | `cfe905046796` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `221d8fa6ffcc` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `4f37224b0f6f` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `04d75ff8a0e1` | `b00215dc10f5` | `e503e10a9780` |
