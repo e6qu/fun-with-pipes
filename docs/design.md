@@ -349,6 +349,13 @@ error. See [protocol.md](protocol.md).
 
 ## Prepared ownership implementation
 
+Prepared record-worker calls keep returned locals as fields when every use is a
+field read or a complete call with the matching record ABI. Typed aliases and
+trap cleanup preserve field owners; partial and dynamic calls retain boxed
+captures. The ordinary worker/wrapper ABI is unchanged. Sequential full CI
+is still required; emitted box removal alone is not a speed claim.
+
+
 [Ownership](ownership.md#prepared-ownership-work) summarizes prepared contracts
 and acceptance limits; [the handoff](development-state.md) records current checks.
 Original ResourceRegion markers preserve source resource lifetimes through

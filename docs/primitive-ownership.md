@@ -206,6 +206,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Sequential CI; source TLS behavior, allocation controls and cached identity |
 | 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Sequential CI; source TLS behavior, bounds and allocation/descriptor omission controls |
 | 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Sequential CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
+| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Sequential CI; emitted box removal, interpreter agreement and field cleanup |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

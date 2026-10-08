@@ -50,8 +50,8 @@ After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row63 are published with focused checks;
-row64 connection cancellation cleanup is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row64 are published with focused checks;
+row65 unboxed worker locals is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -108,21 +108,22 @@ still need their final squash rebases and six exact-head full gates.
 | 61 ownership-grpc-server-cleanup | c299edbc33eb | d56a24e48d7e | 12.59 / 28.85 s |
 | 62 ownership-tls-cache-failures | 0be508308064 | c299edbc33eb | 11.21 / 26.06 s |
 | 63 ownership-tls-wire-preparation | 66e80d399e65 | 0be508308064 | 11.65 / 26.15 s |
+| 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
 
-Rows 18–63 are published preparations with passing focused tests, lint and
+Rows 18–64 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row63 ALPN wire preparation is published clean at
-66e80d399e656ea91247edb61d0cf21609048e30 on actual base 0be5083.
-Three focused tests pass 11.65 / 26.15 s, lint 2.79 / 5.61 s, format 0.52 / 1.07 s.
-Bounds and allocation omission controls pass; library tracing is unarmed.
-Row64 rebased from actual old parent f6598e4 onto current row63 head 66e80d3;
-focused connection cancellation, TLS wire and listener tests pass 12.36 / 27.82 s,
-lint 3.06 / 6.16 s and format 0.63 / 1.62 s.
+Row64 connection cancellation is published clean at
+ae05b2bfc32c131059ca22559b1d9a20c5aa5375 on actual base 66e80d3.
+Three focused tests pass 12.36 / 27.82 s, lint 3.06 / 6.16 s, format 0.63 / 1.62 s.
+Cancellation, refusal and cleanup omission controls pass; library tracing is unarmed.
+Row65 rebased from actual old parent 0cc6126 onto current row64 head ae05b2b;
+four focused unboxed worker, preparation and boxing tests pass 20.34 / 58.06 s,
+lint 2.99 / 8.45 s and format 0.52 / 1.60 s.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
 row19 final rebase follows its eventual squash.
 
@@ -171,7 +172,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-connect-cleanup-worktree; connection cleanup checks complete; no local workload is active.
+belongs to /private/tmp/fwp-unboxed-worker-worktree; worker checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.17 s elapsed).

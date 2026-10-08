@@ -8715,3 +8715,26 @@ handshaking. Four cancellation boundary probes, success/refusal paths,
 idempotent close, O1/O2 poison and four omission controls pass. Library tracing
 is unarmed; full source and GC stress gates still require sequential GitHub CI.
 Focused same-target lint passes 3.06 / 6.16 s; fmt check passes 0.63 / 1.62 s.
+Final row64 ae05b2bfc32c131059ca22559b1d9a20c5aa5375 is published clean with
+exact lease 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392. Whole subject verifies
+one line and empty body. No additional PR; row65 actual base remains 0cc6126.
+
+## Unboxed worker preparation refresh, 2026-10-09
+
+Row65 rebases from actual old parent 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392
+onto current row64 head ae05b2bfc32c131059ca22559b1d9a20c5aa5375.
+Nine authoritative docs resolve conflicts; feature source/tests exactly match
+immutable b8f3752d236f217385923a06dacd1afcdaf716ca. Guarded clean passes
+0.09 / 0.62 s. First focused command used nonexistent worker_argument_ownership
+and exited 101 before compilation (0.01 / 0.13 s); corrected target is
+worker_preparation_ownership. Corrected guarded cargo test --test unboxed_worker_locals
+--test worker_preparation_ownership --test worker_boxing_ownership is running.
+Corrected three-target test command passes all four tests 20.34 / 58.06 s.
+Reduced recursive wide source agrees with FWP_NO_OPT=1 raw interpreter;
+compatible worker locals emit no intermediate record box. Direct typed IR
+checks ownership aliases, pointer-like scalar bits, transfer/trap cleanup and
+boxed partial captures. O1/O2 GC stress/verification and poison checks pass;
+related worker boxing/preparation regressions pass. This is allocation-shape
+and ownership evidence, not a speed claim or full wide-record benchmark.
+Same-target lint passes 2.99 / 8.45 s; fmt check passes 0.52 / 1.60 s.
+Nine authoritative docs copied before final amend; tested code unchanged.
