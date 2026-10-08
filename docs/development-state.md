@@ -99,7 +99,7 @@ still need their final squash rebases and six exact-head full gates.
 | 52 ownership-task-handles | fe8ed51eb078 | 245a0a24370e | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
 | 53 ownership-channel-queues | a30c1829d0d0 | fe8ed51eb078 | Focused checks follow; compiler/runtime unchanged |
 | 54 ownership-library-results | f4d3784f4657 | a30c1829d0d0 | Focused checks follow; compiler/runtime unchanged |
-| 55 ownership-library-inputs | f240ecd56f3b | 82f32b2cde03 | 9.42 / 22.58 s |
+| 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Focused checks follow; compiler/runtime unchanged |
 | 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 / 31.36 s |
 | 57 ownership-opencl-lifetime | 5b6e65f365d6 | 878b25aad627 | 10.33 / 32.03 s |
 | 58 ownership-interpreter-opencl | 00013d55d078 | 5b6e65f365d6 | 14.19 / 34.79 s |
