@@ -11300,3 +11300,14 @@ clippy2.31/4.60s and format0.44/0.60s pass. Row67 refresh
 bbde0fa9c2544399bdff36a5f308d17a7c2fa8af uses actual baseec16c6630686;
 compiler/runtime match original. Old CURRENT22b95b0ddb74 is retained under
 immutable revision tag before explicit-lease publication; protocol-root checks follow.
+
+Row65 guarded clean0.00/0.14s, both unboxed worker/field transfer tests
+8.07/16.86s, clippy2.36/4.73s and format0.35/0.62s pass. These are controlled
+ownership/allocation checks, not a general elapsed-speed claim. Row68 refresh
+933deb78f600c935ff01a1101a2b55c72c152620 uses actual basebbde0fa9c254.
+The five mandatory scratch output-pointer fixes are already inherited identically;
+the retained timer oracle compares raw interpreter and native output under
+preemption, stress, verification and poison variants, including reversed wake order.
+Only CLI/tracing harness repairs differ from original source/tests. Old CURRENT
+7d8ab6719e55 remains under its immutable revision before lease publication.
+Fresh timer checks follow.
