@@ -43,7 +43,7 @@ Rebased from ACTUAL prior base 112f3c8; source/runtime/tests/workflows exactly
 match verified 6ce37fb. Four final tests pass 16.32 / 32.95 s, exact contract unit
 3.24 / 6.73 s, lint 2.29 / 4.59 s and format 0.34 / 0.60 s.
 CI 37917260081 bench passes; Linux, Intel regular and Intel GC stress run;
-two ARM macOS jobs remain queued at this exact head. Require all six full gates before
+ARM regular macOS also runs; ARM GC stress remains queued at this exact head. Require all six full gates before
 explicit match-head squash:
 `Own typed zip unzip and chunks results and release scratch storage`, empty body.
 After merge, row20 ACTUAL current base remains 6ce37fb180e1d88903dd94dadaf47181085ab09e;
@@ -51,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row82 are published with focused checks. The next independent task
-is row83 typed variant frame holders.
+through row83 are published with focused checks. The next independent task
+is row84 per-path variant bindings.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -128,44 +128,22 @@ still need their final squash rebases and six exact-head full gates.
 | 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
 | 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
 | 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
+| 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
 
-Rows 18–82 are published preparations with passing focused tests, lint and
+Rows 18–83 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row77 is published clean at b4482c259c1edf2863c146f7795b97fc168ddd4a.
-Native bump-C and related File checks pass; lint 2.54 / 5.09 s and format
-0.46 / 0.86 s pass. Corrected WASI fstat predicate remains. Minimal Linux
-CI test-step env requires actual WASI availability; local host checks supply
-no actual WASI acceptance. Metadata is reclaimed; bump storage is retained.
-Row78 is published clean at 9609b73ef5ed4a40f63181acc4e073481356a86e,
-on actual b4482c2. Both native bump tests and File boundary regression pass;
-lint 2.43 / 4.90 s and format 0.45 / 0.86 s pass. Disabled-free disposal
-reclaims logical metadata and closes File children without freeing bump storage.
-Actual WASI in both free modes remains required on Linux CI.
-Row79 is published clean at 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040,
-on actual 9609b73. Four field/frame tests, lint 2.58 / 5.09 s and format
-0.43 / 0.83 s pass. Field-only holders eliminate one parent record box;
-original lifetimes, returned/error aliases and partial-retain unwind are preserved.
-No general speed claim. Row80 is published clean at
-e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 on actual 35c2aeb. Four tests,
-lint 2.51 / 5.00 s and format 0.44 / 0.83 s pass. Inline paths use one
-allocation and a 16-byte header on this 64-bit host, preserving constructor
-failure cleanup, display and binary/text reads. Row81 is published clean at
-faac017dc60d99fc29169ce518ef346fd0f86b9a on actual e7d3882. Five tests,
-lint 2.63 / 5.23 s and format 0.44 / 0.83 s pass. Last-owner unshared File
-storage reclaims after finalizer removal; aliases, disabled-free policy and
-scoped close-before-drop remain correct. Row82 is published clean at
-06c93eff77af1f55771b7d466528599096342414 on actual faac017. Three tests,
-lint 2.49 / 5.02 s and format 0.53 / 1.09 s pass. Failed constructors reclaim
-headers and close streams; failed registry growth preserves prior finalizers,
-including hard OOM exit 102. Independent row83 is rebased; five variant/record/frame tests pass 26.37 / 53.88 s; focused lint passes 2.93 / 6.03 s; format 0.53 / 1.07 s.
+Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
+host bump-C checks supply no actual WASI acceptance; physical bump storage
+remains allocated. Prepared layout/allocation controls establish no speed claim.
+Independent row84 is rebased; four variant/frame tests pass 32.57 / 65.62 s; focused lint passes 3.41 / 10.41 s; format 0.87 / 4.02 s.
 Its previous actual base is
-17869223a5022ef060e24b06b0eacb73729f9589; new base is 06c93ef,
-retaining inherited binary-read and safe constructor test controls.
+786e4bbb99f1732727504f415e300c80b146f0e7; new base is f3c9ee4,
+retaining inherited binary-read, constructor and required-WASI repairs.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -214,8 +192,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-frame-variants-worktree; five variant/record/frame tests, lint and format pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.08 / 0.57 s).
+belongs to /private/tmp/fwp-resource-frame-binding-worktree; four variant/frame tests, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.14 / 1.04 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

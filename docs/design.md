@@ -429,5 +429,9 @@ matched bindings. Retain incoming payloads completely before replacing a frame
 slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
 before dropping the wrapper. Generate cleanup IDs after helper generation,
 which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
+Prepared whole-pattern variant bindings initialize fresh typed holders from
+the current scrutinee on each binding path. A local used by a let in another
+arm must not supply that payload. Partially failed patterns preserve original
+frame lifetime rather than releasing their File bindings early.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

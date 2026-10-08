@@ -9273,3 +9273,62 @@ regressions pass. Same-target lint runs.
 Same-target lint passes 2.93 / 6.03 s CPU / elapsed.
 Fmt check passes 0.53 / 1.07 s; ten root docs copied before amend. Tested
 source unchanged. Original variant holder support still requires full sequential CI.
+Final row83 f3c9ee4ec35416d1050b98d389186434e8408b2d is published clean
+with exact lease 786e4bbb99f1732727504f415e300c80b146f0e7. Whole commit
+message is one line with empty body. Row84 actual base remains 786e4bb.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Per-path variant frame binding refresh, 2026-10-09
+
+Row84 rebases from actual 786e4bbb99f1732727504f415e300c80b146f0e7
+onto f3c9ee4ec35416d1050b98d389186434e8408b2d. Ten root docs resolve
+conflicts, preserving current-scrutinee initialization and original frame lifetime.
+Cgen/variant test match ae00e6929e8686d2d794d4cfa5600e31e169dec7 except
+inherited byte-read dispatch. Guarded clean passes 0.14 / 1.04 s.
+Guarded cargo test --test resource_frame_variants --test resource_frames runs.
+Mixed let/whole-pattern paths initialize fresh typed holders, close once on
+original frame exit and keep scalar/nullary tags safe.
+Four focused tests pass 32.57 / 65.62 s CPU / elapsed. Mixed let/pattern
+paths select the current scrutinee, preserving typed V plus variant cleanup
+slots. Direct typed interpreter and native O1/O2 agree; both paths close once,
+fstat reports EBADF after frame exit, and GC off/on stress/verify plus poison
+pass. Variant allocation/partial-retain and original frame regressions pass.
+Same-target lint runs.
+Same-target lint passes 3.41 / 10.41 s CPU / elapsed.
+
+### Archived preparation handoff through row83
+
+Row77 is published clean at b4482c259c1edf2863c146f7795b97fc168ddd4a.
+Native bump-C and related File checks pass; lint 2.54 / 5.09 s and format
+0.46 / 0.86 s pass. Corrected WASI fstat predicate remains. Minimal Linux
+CI test-step env requires actual WASI availability; local host checks supply
+no actual WASI acceptance. Metadata is reclaimed; bump storage is retained.
+Row78 is published clean at 9609b73ef5ed4a40f63181acc4e073481356a86e,
+on actual b4482c2. Both native bump tests and File boundary regression pass;
+lint 2.43 / 4.90 s and format 0.45 / 0.86 s pass. Disabled-free disposal
+reclaims logical metadata and closes File children without freeing bump storage.
+Actual WASI in both free modes remains required on Linux CI.
+Row79 is published clean at 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040,
+on actual 9609b73. Four field/frame tests, lint 2.58 / 5.09 s and format
+0.43 / 0.83 s pass. Field-only holders eliminate one parent record box;
+original lifetimes, returned/error aliases and partial-retain unwind are preserved.
+No general speed claim. Row80 is published clean at
+e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 on actual 35c2aeb. Four tests,
+lint 2.51 / 5.00 s and format 0.44 / 0.83 s pass. Inline paths use one
+allocation and a 16-byte header on this 64-bit host, preserving constructor
+failure cleanup, display and binary/text reads. Row81 is published clean at
+faac017dc60d99fc29169ce518ef346fd0f86b9a on actual e7d3882. Five tests,
+lint 2.63 / 5.23 s and format 0.44 / 0.83 s pass. Last-owner unshared File
+storage reclaims after finalizer removal; aliases, disabled-free policy and
+scoped close-before-drop remain correct. Row82 is published clean at
+06c93eff77af1f55771b7d466528599096342414 on actual faac017. Three tests,
+lint 2.49 / 5.02 s and format 0.53 / 1.09 s pass. Failed constructors reclaim
+headers and close streams; failed registry growth preserves prior finalizers,
+including hard OOM exit 102. Row83 is published clean at
+f3c9ee4ec35416d1050b98d389186434e8408b2d on actual 06c93ef. Five tests,
+lint 2.93 / 6.03 s and format 0.53 / 1.07 s pass. Eligible variant holders
+avoid wrapper boxes while preserving active tags, partial retention, boxed
+fallback and original lifetimes. 
+Fmt check passes 0.87 / 4.02 s; ten root docs copied before amend. Tested
+source unchanged. Handoff archives completed row77–83 paragraphs rather than
+retaining competing old next actions; actual bases and checks remain in its table.
