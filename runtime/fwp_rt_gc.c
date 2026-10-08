@@ -1066,9 +1066,13 @@ static int fwp_gc_marked(void *p) {
  * of gRPC connections and streams); they must not allocate. */
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) {
     if (fwp_gc.nfins == fwp_gc.fins_cap) {
-        fwp_gc.fins_cap = fwp_gc.fins_cap ? fwp_gc.fins_cap * 2 : 64;
-        fwp_gc.fins = (gc_fin *)realloc(fwp_gc.fins, fwp_gc.fins_cap * sizeof(gc_fin));
-        if (!fwp_gc.fins) fwp_gc_oom();
+        if (fwp_gc.fins_cap > SIZE_MAX / sizeof(gc_fin) / 2) fwp_gc_oom();
+        size_t cap = fwp_gc.fins_cap ? fwp_gc.fins_cap * 2 : 64;
+        gc_fin *fins = (gc_fin *)realloc(fwp_gc.fins, cap * sizeof(gc_fin));
+        if (!fins) fwp_gc_oom();
+        /* Commit growth only after allocation succeeds. */
+        fwp_gc.fins = fins;
+        fwp_gc.fins_cap = cap;
     }
     fwp_gc.fins[fwp_gc.nfins].obj = obj;
     fwp_gc.fins[fwp_gc.nfins].fn = fn;
