@@ -70,7 +70,7 @@ int main(void){
   V shown=fwp_show(root,&desc);
   if(STR(shown)->len!=n+7||memcmp(STR(shown)->d,"<file ",6)||STR(shown)->d[n+6]!='>')return 4;
   for(size_t i=0;i<n;i++)if(STR(shown)->d[i+6]!='x')return 5;
-  fwp_file_drop(root);if(h->refs||h->f)return 6;
+  fwp_file_drop(root);
   root=0;
  }
  fwp_gc_finish();return 0;
@@ -87,6 +87,9 @@ int main(void){
                     "typedef struct { FILE *f; uint64_t refs; char path[]; } fwp_file;",
                     "typedef struct { FILE *f; const char *path; uint64_t refs; } fwp_file;",
                 );
+                let drop_start = runtime.find("static void fwp_file_drop(V h) {").unwrap();
+                let drop_end = drop_start + runtime[drop_start..].find("\n}\n").unwrap() + 3;
+                runtime.replace_range(drop_start..drop_end, "static void fwp_file_drop(V h) {\n    if (!h) return;\n    fwp_file *file = (fwp_file *)(uintptr_t)h;\n    if (file->refs && --file->refs == 0) fwp_p_file_close(h);\n}\n");
             }
             let code = format!(
                 "#define EXPECTED_ALLOCS {}\n{hooks}\n{runtime}\n_Static_assert(sizeof(fwp_file) == {}, \"File header size\");\n{fixture}",

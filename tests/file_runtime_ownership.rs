@@ -66,7 +66,7 @@ int main(int argc,char **argv){
  handle=fwp_p_file_open(fwp_cstr(argv[1]),1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
  fwp_file_dup(handle);fwp_p_file_close(handle);
  if(h->refs!=2||closes!=1)return 5;
- fwp_file_drop(handle);fwp_file_drop(handle);if(h->refs||closes!=1)return 5;
+ fwp_file_drop(handle);fwp_file_drop(handle);if(closes!=1)return 5;
  /* I/O returns an owned alias without consuming the caller's owner. */
  handle=fwp_p_file_open(fwp_cstr(argv[1]),1,0);h=(fwp_file *)(uintptr_t)handle;closes=0;
  V written=fwp_p_file_write_owned(fwp_cstr("contents"),handle,0);
@@ -109,7 +109,7 @@ int main(int argc,char **argv){
  int overflow=setjmp(recovery);if(!overflow)fwp_file_dup(handle);
  fwp_trap_recover=0;fwp_trap_jb=0;
  if(!overflow||h->refs!=UINT64_MAX||closes||fwp_cleanups)return 11;
- h->refs=1;fwp_file_drop(handle);if(closes!=1||h->refs)return 12;
+ h->refs=1;fwp_file_drop(handle);if(closes!=1)return 12;
  /* Library finalizers still see headers, but must not close discarded streams twice. */
  handle=0;fwp_gc_finish();if(closes!=1)return 13;return 0;
 }

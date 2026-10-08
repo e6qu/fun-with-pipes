@@ -104,6 +104,7 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
 static void fwp_mem_free(void *p) { free(p); }
 static void fwp_gc_start(void *top) { (void)top; }
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
+static void fwp_gc_forget_finalizer(void *obj) { (void)obj; }
 /* Resource programs need logical aggregate/task ownership even on the bump
  * heap. Entries track live counted owners; value layouts and reuse stay unchanged.
  * No counter operation reads arbitrary value words as allocation headers. */
@@ -1072,6 +1073,16 @@ static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) {
     fwp_gc.fins[fwp_gc.nfins].obj = obj;
     fwp_gc.fins[fwp_gc.nfins].fn = fn;
     fwp_gc.nfins++;
+}
+
+/* Explicit destruction must remove weak finalizer registrations before storage
+ * reuse. No allocation or callback occurs during removal. */
+static void fwp_gc_forget_finalizer(void *obj) {
+    for (size_t i = 0; i < fwp_gc.nfins;) {
+        if (fwp_gc.fins[i].obj == obj)
+            fwp_gc.fins[i] = fwp_gc.fins[--fwp_gc.nfins];
+        else i++;
+    }
 }
 
 static void fwp_gc_finalize(void) {
