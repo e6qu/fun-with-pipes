@@ -2499,7 +2499,9 @@ static V fwp_p_file_read_all(V h, const fwp_desc *err) {
 
 static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
     fwp_file *f = (fwp_file *)(uintptr_t)h;
-    if (f->f && fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len)
+    /* Rust File::write_all writes through to the descriptor. Flush stdio's
+     * buffer before returning so later reads see the same effects and errors. */
+    if (f->f && (fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len || fflush(f->f) != 0))
         return fwp_io_error("write", strerror(errno), err);
     return h;
 }
