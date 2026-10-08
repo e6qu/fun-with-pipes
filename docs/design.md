@@ -48,7 +48,9 @@ Original File frame anchors now have a preparation: ResourceRegion records typed
 parameter/local binders before optimization, protects them during inlining, and
 releases interpreted frame slots on return/error. Returned aliases keep their
 owners. Native region destruction is still the next ownership step; this does
-not establish implicit resource disposal or tracing-free execution.
+not establish implicit resource disposal or tracing-free execution. A separate
+File runtime preparation uses an independent header count and owned borrowed-I/O
+wrappers. Compiler selection and native region destruction remain pending.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in

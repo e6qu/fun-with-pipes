@@ -262,11 +262,12 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#86 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#87 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
-Right-fold is next; other callbacks, runtime unwind and retained owners remain
-preparation.
+Right-fold transfers its accumulator through a typed owned argument span;
+list-prefix is sole PR #88. Other callbacks, runtime unwind and retained owners
+remain preparation.
 
 ## Prepared work and acceptance limits
 
@@ -353,3 +354,16 @@ Fusion treats resource regions as observable even when their original source
 arrows are pure. A controlled pipeline verifies fusion is blocked specifically
 by its frame marker; removing the marker permits fusion. Required destructor
 effects cannot be interleaved solely because the body reports no trap/effect.
+
+
+A separate File runtime preparation introduces a 64-bit header owner count,
+independent of the collector's count slot. The last owner closes the stream;
+explicit close and library teardown remain idempotent. Header/path storage still
+uses the existing allocator lifetime. The internal header grows from 16 to 24
+bytes (8-byte alignment); this is no claim of fewer bytes or allocations.
+Owned read/write wrappers retain returned File aliases and protect the extra
+reference through I/O errors and conversion/allocation traps. A fresh read String
+has its own unwind owner until the tuple takes ownership; FWP_FREE=0 leaves its
+storage to the collector. The wrappers are not yet selected by compiler lowering.
+Native region disposal, resource aggregates and escaped/error/cancellation owners
+remain required before accepting implicit File cleanup or tracing-free coverage.

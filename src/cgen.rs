@@ -7302,6 +7302,9 @@ static const fwp_exec_spec exec_spec{i} = {{
         out.push_str("#define FWP_LIBRARY 1\n");
     }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
+    if !free_enabled() {
+        out.push_str("#define FWP_RESOURCE_NO_FREE 1\n");
+    }
     let web = uses_web(prog);
     let tls = uses_services || web || uses_tls(prog);
     if tls {
