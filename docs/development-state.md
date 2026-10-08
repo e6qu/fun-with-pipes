@@ -180,7 +180,7 @@ still need their final squash rebases and six exact-head full gates.
 | 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
 | 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | aa8dfb3a703e | 64fc39f9738e | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
-| 61 ownership-grpc-server-cleanup | 15ed94b82b00 | b2b3e2d73da8 | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
+| 61 ownership-grpc-server-cleanup | 91f9a30742f9 | aa8dfb3a703e | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | 004eccb1f092 | 15ed94b82b00 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | f1915b15033e | 004eccb1f092 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
 | 64 ownership-connect-cancellation | 04811432dc3d | f1915b15033e | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
