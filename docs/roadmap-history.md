@@ -11294,3 +11294,9 @@ clippy2.45/4.96s and format0.45/0.86s pass. Row66 refreshec16c66306869d0b7626150
 uses actual base46f7f4b17226; compiler/runtime match original. Old CURRENT
 b728cf5f2adb is retained under immutable revision tag before lease publication.
 Peer-subject allocation/buffer checks follow.
+
+Row64 guarded clean0.00/0.14s, connection/handshake cancellation7.77/17.05s,
+clippy2.31/4.60s and format0.44/0.60s pass. Row67 refresh
+bbde0fa9c2544399bdff36a5f308d17a7c2fa8af uses actual baseec16c6630686;
+compiler/runtime match original. Old CURRENT22b95b0ddb74 is retained under
+immutable revision tag before explicit-lease publication; protocol-root checks follow.

@@ -88,7 +88,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `446d60c378dc` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `46f7f4b17226` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `ec16c6630686` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `22b95b0ddb74` | `e0f11626f609` | `6bda2c815a71` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `bbde0fa9c254` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `7d8ab6719e55` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `821e6c1baaef` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `0d09a61aaab7` | `e9d575fdf990` | `b00215dc10f5` |
