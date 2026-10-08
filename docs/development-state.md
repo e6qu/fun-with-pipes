@@ -102,10 +102,10 @@ still need their final squash rebases and six exact-head full gates.
 | 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
-| 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Fresh focused checks follow; compiler/runtime unchanged |
+| 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Fresh focused checks follow; compiler/runtime unchanged |
 | 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Fresh checks follow; compiler/runtime unchanged |
-| 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
+| 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Fresh focused checks follow; compiler/runtime unchanged |
 | 65 ownership-unboxed-worker-locals | 2ba7084abe25 | ae05b2bfc32c | 20.34 / 58.06 s |
 | 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
 | 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
@@ -197,6 +197,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 queued; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 queued; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 queued; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |

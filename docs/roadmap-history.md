@@ -11273,3 +11273,10 @@ Row60 guarded clean0.00/0.13s, library File/session/HTTP2 resource disposal
 d0e29ddbf1825d05d6866622420d68117c4e9e26 has actual basec61df653dfb2;
 compiler/runtime match original. Old CURRENT66e80d399e65 is retained under
 immutable revision tag before lease publication; fresh checks follow.
+
+Row61 guarded clean0.02/0.14s, gRPC listener cancellation9.94/19.99s,
+clippy2.46/4.95s and format0.44/0.86s pass. External lifetimes evidence
+cd3a9d666bb21d6a682e541ae985e9f10de2e096 starts CI37976525768. Row64 refresh
+446d60c378dccac6c44b75d10f4d52f4bfeb98c4 uses actual based0e29ddbf182;
+compiler/runtime match original. Old CURRENTae05b2bfc32c is retained under
+immutable revision tag before explicit-lease publication; fresh checks follow.

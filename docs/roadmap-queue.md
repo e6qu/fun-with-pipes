@@ -85,7 +85,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `044ceae9f0c5` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `c61df653dfb2` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `d0e29ddbf182` | `f6598e440a59` | `4ab1f7ddd6f8` |
-| 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
+| 64 | connect-cleanup | `ownership-connect-cancellation` | `446d60c378dc` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `2ba7084abe25` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `b728cf5f2adb` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `22b95b0ddb74` | `e0f11626f609` | `6bda2c815a71` |
