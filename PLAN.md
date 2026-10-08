@@ -57,8 +57,12 @@ as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-ch
 passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
 [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
 now merged as `181d3b3` after all four exact-head gates passed in CI
-`37703018710` at `3fa67f3`. Rebase and validate the map callback child from
-OLD `029fac4` onto that squash, then open the sole next PR.
+`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
+map callbacks, is the sole open PR at exact `2b0012a`; full CI `37711126548`
+ended with Intel's 90-minute timeout after its GC stress suite passed but took
+57.5 minutes. Separate that suite into required macOS stress jobs while retaining
+full coverage; require all six exact-head jobs before merge. Continue ownership
+preparation and fix runner failures.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -672,3 +676,43 @@ Map callback rebase onto `181d3b3` applies without code conflicts. Three focused
 map/borrowed-callback checks and clippy pass; independent unoptimized interpreter
 values agree, and the selected no-tracing control frees 2.7 versus 4.6 MiB by
 counts. Final inventory/format checks precede publication and the sole next PR.
+
+Map callbacks published as `2b0012a` after guarded tests, inventory, clippy and
+formatting pass; sole PR #83 runs full exact-head CI `37711126548`. All four
+gates precede squash merge with the one-line, 59-character subject and empty
+body. Next independent preparation: native library unload lifecycle on OLD
+`a6ebc1d`; then cycles/aggregate gaps. The filter child rebases from OLD
+`41ef82d` after #83 merges; preserve OLD `1ea7f07` for its child.
+
+
+Native library unload is in focused preparation. Actual macOS loader cycles and
+ordinary static-archive exit pass at O1/O2 with reuse poisoning. Cleanup drains
+attached/detached tasks before finalizers and unmapping, restores host signals,
+frees idle stacks/metrics/side metadata and deletes the library pthread key.
+Negative controls verify missing cleanup is detected. General external resource
+lifetimes, cycles and remaining aggregate paths remain open; no complete tracing-
+free execution claim. Full sequential cross-platform CI remains required.
+
+
+Native OpenCL owner cleanup is prepared next: release completed owners on failed
+initialization and drain/release queue, context and loader on native completion
+or library exit/unload. Archive exit ordering is checked on macOS. Hardware GPU
+validation and interpreter cache/failure lifetimes remain distinct; sequential
+cross-platform CI is still required before merging this preparation.
+
+
+Interpreter OpenCL failed initialization now has staged loader/context/queue
+owners in preparation. Actual-loader controls detect omitted release, and
+unoptimized native/interpreter checks cover failed availability caching. The
+successful interpreter cache keeps its existing process lifetime. Next audit TLS
+listener context/ALPN cleanup and partial listen failure while accepted sessions
+keep their OpenSSL context references. Full sequential CI remains required.
+
+
+TLS listener owners are prepared: stop releases its context reference, accepted
+sessions retain protocol state through raw HTTP/2 transfer, and final session
+close releases the remaining context/wire/descriptor owners. Actual OpenSSL
+handshakes and partial-failure controls pass focused checks. The larger unoptimized
+source comparison exceeded the local memory limit and moves to runner evidence;
+full sequential CI remains required. TLS client caches, resource discard/unload,
+server cancellation and cycles remain open.

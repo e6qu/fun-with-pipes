@@ -23,17 +23,25 @@ immutable value semantics, effects and evaluation/trap order stable.
   `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`. Verified one-line subject
   `Add typed borrowed application for synchronous callbacks`, 56 characters,
   empty body/no trailers. Local main fast-forwarded preserving current plan/
-  handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. No open PR currently;
-  map callbacks rebased from OLD `029fac4` onto this squash, checkout
-  `/private/tmp/fwp-map-worktree`, branch `ownership-map-callbacks`. Only plan/
-  handoff conflicts were resolved with these authoritative docs. Focused map/
-  callback and contract checks pass. Publish
-  with exact lease against OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc`,
-  then open the sole next PR. Preserve OLD `41ef82d` for the filter child.
-  Latest published preparation: library inputs `a6ebc1da9637b4fef866697fa766208fd2d72af1`,
-  OLD base `5b34382`, checkout `/private/tmp/fwp-library-input-worktree`,
-  branch `ownership-library-inputs`. Next preparation: native library unload
-  mappings/caches/finalizers/task stacks/worker threads, then cycles/aggregate gaps.
+  handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. Sole open
+  [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83): map callbacks, exact
+  `2b0012a25da33ba777868e3755ed2127993f77e1`, full CI `37711126548` is terminal:
+  Linux, ARM macOS and benchmarks passed; Intel timed out after 90 minutes.
+  Repair in progress: separate macOS GC stress into additional required jobs,
+  retaining complete test coverage and the same timeout. All six exact-head
+  jobs (Linux, bench, regular ARM/Intel and stress ARM/Intel) must pass.
+  Rebase from OLD `029fac4` had only plan/handoff conflicts, reconciled with
+  these authoritative docs. Three map/callback tests, complete contract
+  inventory, clippy and formatting pass. Merge only after all four current-head
+  gates pass, subject `Own synchronous map results without sharing callback inputs`,
+  59 characters, one line, empty body and exact match. Then rebase filter from
+  OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
+  `1ea7f07` for the fold child. Shared target is TLS listener ownership; clean package before switching.
+  Latest published preparation: TLS listener owners `3f6154b4bf67330f15d5a01a5d603b75d33319d3`,
+  OLD base `abc1285`, checkout `/private/tmp/fwp-tls-listener-worktree`,
+  branch `ownership-tls-listeners`. Runner evidence branch `ownership-evidence-tls-listeners`
+  adds only workflow validation to that preparation. Next: fix evidence failures,
+  TLS/client/resource teardown and source-reachable cycles/aggregate gaps.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
   passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
@@ -2697,3 +2705,480 @@ for the filter child. Full builds/tests remain on runners; no limits bypassed.
 Rebased map's complete contract inventory passes, CPU 3.20 s / elapsed 6.77 s.
 One inventory test checks all declared collection/text boundaries. All focused
 checks pass; no unresolved failure. Ready for final format and publication.
+
+Map callbacks published after rebase as
+`2b0012a25da33ba777868e3755ed2127993f77e1` using exact lease against OLD
+`41ef82d87769596f99bde2081dc5ac00a514ffbc`. Verified one-line, 59-character
+subject `Own synchronous map results without sharing callback inputs`, empty
+body/no trailers; clean checkout. Final `cargo fmt -- --check` passes, CPU
+0.34 s / elapsed 0.63 s; whitespace clean. Sole new PR #83:
+https://github.com/e6qu/fun-with-pipes/pull/83 . Full exact-head runner CI
+`37711126548` is queued at that head. Follow the same run, fix failures and
+merge only after all four gates actually pass. Explicit squash subject above,
+empty body and exact match. Filter child then rebases from OLD `41ef82d` onto
+that squash; preserve OLD `1ea7f07` for fold.
+
+Next independent task while CI proceeds: native library unload lifecycle on a
+new prepared child of OLD `a6ebc1da9637b4fef866697fa766208fd2d72af1`. Read
+actual collector reservation/metadata, CAF, finalizer, scheduler stack and
+thread-pool code. Prove no worker can access unloaded code/storage before
+unmapping; preserve loaded-library host pointers. Native libraries have RC
+metadata but tracing is unarmed. Check actual `dlopen`/`dlclose` and static
+exit behavior on runners, with bounded focused local probes. Cycles and
+aggregate gaps remain before closing phase 2; phases 2–6 are incomplete. No
+local workload remains. Main's only local edits are active plan/handoff;
+preserve them during the next fast-forward.
+
+Latest verified #83 run `37711126548` is in progress at exact `2b0012a`: bench
+passed; Linux, ARM macOS and Intel macOS are running. It is not a passing
+merge gate yet. Continue teardown preparation while following this same run.
+
+
+## Native library unload preparation (2026-10-08)
+
+Branch `ownership-library-unload`, checkout `/private/tmp/fwp-library-unload-worktree`,
+OLD parent `a6ebc1da9637b4fef866697fa766208fd2d72af1`. Ready for publication after focused validation; exact head will be recorded below.
+Generated native libraries now have an idempotent unload/exit destructor. It
+cancels and drains all scheduler tasks, including detached tasks, releases idle
+stack mappings, restores saved host signal actions when the host has not replaced
+them, closes the runtime polling descriptor, frees metrics, releases CAF owners,
+runs registered finalizers with their objects still mapped, releases collector
+side allocations and the complete original heap/meta mappings, and deletes the
+closure cleanup pthread key. Host-owned file descriptors stay open.
+
+The audit found no persistent numerical thread pool: each started pthread is
+joined before its kernel call returns. Do not invent a pool teardown API.
+A native TLS closure work-list pointer kept the dylib resident on Darwin, so an
+initial destructor implementation did not execute on dlclose. A library-only,
+explicitly deleted pthread key preserves per-thread release work and allows the
+actual loader destructor to run. Executable TLS and WASM behavior stay unchanged.
+The full raw collector reservation, before alignment, is now tracked for unmap.
+
+`cargo test --test library_unload -- --nocapture` passes under the fwp local guard:
+CPU 8.68 s / elapsed 20.21 s, one test. Actual dlopen/dlclose executes three cycles
+per case, O1/O2 and reuse verification off/on. Native archives prove process-exit
+ordering (`main`, `finalized`, `finished`) with the same optimization/poison cases.
+The finalizer verifies both blocked task cancellations and cached-owner release
+before object storage disappears; it reenters finish to verify idempotence.
+Heap/meta and active/idle stack mappings are checked absent, five external heap
+allocations and the pthread key are checked released once, saved full SIGINT/TERM
+actions are checked restored, and a subsequent host signal override is preserved.
+Six negative controls fail with the expected status when heap unmap, stack unmap,
+CAF cleanup, wide-count cleanup, signal restoration or key deletion is removed.
+
+Repaired probe failures: initial fixture lacked size_t's header; Darwin TLS
+prevented unload; mincore on macOS was insufficient to prove mapping absence.
+The macOS probe now uses mach_vm_region to prove the complete range absent;
+Linux uses mincore/ENOMEM at both range ends. The earlier dynamic-only pass was
+CPU 0.35 s / elapsed 1.84 s; the final test adds archive exit and six controls.
+Formatting passes, CPU 0.34 s / elapsed 0.60 s. Eight adjacent CAF, bounded
+closure-release, C input/output ownership and task-handle checks pass under the
+guard: CPU 12.34 s / elapsed 31.04 s. Command: `cargo test --test
+library_input_ownership --test library_result_ownership --test closure_cleanup
+--test caf_ownership --test task_handle_ownership -- --nocapture`.
+
+Native-library tracing remains unarmed (asserted zero collections); this proves
+region teardown, not host-root tracing or complete GC-free ownership. Registered
+finalizers do not establish general File/socket/TLS/GPU cleanup. Raw escaping
+pointers retain their manual host lifetime; no new public ABI is introduced.
+Static-memory provisioning is not covered by the mapping assertions; ordinary
+static archives are. Hosts must finish calls before unload. Cycles and remaining
+aggregate/reconstruction paths still require acceptance evidence before phase 2
+closes. Full Linux/ARM/Intel/benchmark CI is required when this branch reaches the
+sole-PR position. Shared target is this unload compiler; clean package on switch.
+Next: finish adjacent validation and publish this preparation, then audit actual
+runtime external resource lifetimes and source-reachable cycles/aggregate gaps.
+
+
+Library unload final validation: clippy of library and unload/input/result tests
+passes with `-D warnings`, CPU 2.35 s / elapsed 4.69 s. Shared-library C smoke
+also passes with `FWP_REUSE=0`, CPU 0.63 s / elapsed 1.82 s. All commands use
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py ...`; no full local gates or skipped checks.
+Formatting/whitespace pass. No local workload remains. Next audit actual external
+resource cleanup and source-reachable runtime cycles; keep this preparation
+separate from sole PR #83 and require full exact-head CI at its sequential turn.
+
+
+Native library unload publication: `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`,
+branch `ownership-library-unload`, OLD parent `a6ebc1d`, clean checkout
+`/private/tmp/fwp-library-unload-worktree`. Verified one-line 64-character subject
+`Drain native library tasks and release runtime storage on unload`, empty body.
+No additional PR opened. All focused checks above pass; full sequential CI remains
+required. Sole PR #83 exact `2b0012a`, CI `37711126548` still live with benchmarks
+passed and Linux/ARM/Intel tests running. Next preparation audit found persistent
+OpenCL loader/context/queue ownership missing, including initialization failures;
+fix those lifetimes next, then external files/sockets/TLS and cycles/aggregate gaps.
+
+
+## Native OpenCL lifetime preparation (2026-10-08)
+
+Branch `ownership-opencl-lifetime`, checkout `/private/tmp/fwp-opencl-worktree`,
+OLD parent `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`. Not yet published.
+The actual-loader regression first failed at O1 with exit 2: generated-library
+unload left a live context. Baseline check CPU 6.54 s / elapsed 14.12 s. Runtime
+now records its dlopen owner and requires queue/context release entry points.
+A common finish path drains/releases the queue, releases the context, then closes
+the loader reference. Failed symbol lookup, platform/device selection and
+context/queue creation run this path immediately, preserving the cached failure
+diagnostic and preventing a second creation attempt. Library unload and normal
+native executable completion invoke finish after CAF release.
+
+The first corrected dynamic loader probe passes five modes (success, no platform,
+context failure, queue failure after context creation, missing required symbol)
+at O1/O2: CPU 6.91 s / elapsed 16.68 s. A fake OpenCL library records API ownership
+and actual loader destruction; this is not hardware GPU validation. Additional
+archive/executable exit checks, five negative controls and adjacent unload checks
+are running. Rust interpreter OpenCL uses a process-lifetime OnceLock cache; its
+partial-failure cleanup also needs audit, recorded separately from native unload.
+Shared target is this OpenCL compiler, following guarded package clean (128.9 MiB).
+Sole PR #83 CI stays live; failures remain repairs and do not block this work.
+
+
+OpenCL archive exit exposed a real ordering failure: the OpenCL image's
+termination ran before the archive's ordinary destructor (stdout `main`, `bad
+cleanup`). Combined unload/GPU check failed, CPU 2.47 s / elapsed 10.05 s;
+unload test itself still passed. Library initialization now also registers its
+idempotent finish through atexit, retaining the unload destructor as fallback.
+This must be proved safe across actual repeated dynamic unload and process exit;
+checks are running before any publication. Do not treat the initial dynamic-only
+pass as complete archive support. Executable completion explicitly finishes its
+OpenCL cache; native-library exit/unload shares its guarded finish path.
+
+
+OpenCL early-exit registration now passes the combined two-test check, CPU 10.01 s /
+elapsed 29.61 s: repeated dynamic unload, static archive exit and native executable
+completion all release API owners before loader teardown, at O1/O2. Five dynamic
+negative controls detect missing queue/context/loader release, drain and library
+finish. Final added controls also check Darwin archive exit registration and native
+executable finish. Full sequential CI remains required. Current sole PR #83 CI
+`37711126548`: Linux, Apple Silicon and benchmarks passed; Intel macOS remains live.
+
+
+OpenCL final dedicated check (including executable and Darwin archive-exit
+negative controls) passes, CPU 1.24 s / elapsed 9.03 s; formatting passes,
+CPU 0.35 s / elapsed 0.74 s. The archive registration negative control is
+Darwin-specific; all platforms still run positive static-archive and dynamic
+loader ownership assertions. The native code change preserves the cached error
+message and availability behavior. Unoptimized interpreter/native no-OpenCL
+semantic comparison is running before publication.
+
+
+Unoptimized no-OpenCL semantic comparison passes: `FWP_NO_OPT=1 cargo test
+--test numerics gpu_without_opencl -- --nocapture`, CPU 9.62 s / elapsed 19.26 s.
+Interpreter/native stdout, stderr and exit status agree for absent loader and
+no-platform implementations. No hardware GPU claim and no full local test gate.
+
+
+OpenCL publication validation: library/unload/GPU clippy passes with `-D warnings`,
+CPU 2.34 s / elapsed 4.70 s. Three adjacent C input/output checks still pass after
+exit registration: `cargo test --test library_input_ownership --test
+library_result_ownership -- --nocapture`, CPU 2.97 s / elapsed 8.92 s. Final format
+check passes, CPU 0.35 s / elapsed 0.72 s; whitespace clean. No local workload
+remains. Publish this native preparation separately, then implement interpreter
+OpenCL partial-load cleanup without changing process-lifetime availability/cache
+semantics. Current target is OpenCL; package clean before the next checkout.
+
+
+Native OpenCL preparation published as `d8b4d88da98d91183577a71dd65d2d17a375e7d6`,
+branch `ownership-opencl-lifetime`, OLD parent `5d0dc22`, clean checkout
+`/private/tmp/fwp-opencl-worktree`. Verified single-line 63-character subject
+`Release native OpenCL owners on load failure and program teardown`, empty body.
+No additional PR opened; sole #83 still requires Intel current-head CI before
+squash. Next interpreter preparation uses immutable OLD `d8b4d88` as parent.
+
+
+## Interpreter OpenCL failure ownership preparation (2026-10-08)
+
+Branch `ownership-interpreter-opencl`, checkout
+`/private/tmp/fwp-interpreter-opencl-worktree`, immutable OLD parent
+`d8b4d88da98d91183577a71dd65d2d17a375e7d6`. Not yet published.
+The loader regression now also runs an unoptimized source program twice through
+availability in separate native/interpreter processes. Its actual fake-loader
+finalizer checks owner balance and destruction timing. Baseline failed at O1,
+no-platform mode: interpreter retained the loader until process termination,
+while native failure released it before printing the first False. CPU 7.41 s /
+elapsed 15.87 s. The source audit shows a missing owner guard; the initial buffered observation
+alone did not prove its release timing (see corrected controls below).
+
+Rust now gives the dlopen result a guard before symbol lookup; Cl retains that
+owner while its function pointers are usable. A partially constructed Gpu owns
+completed context/queue stages before the next fallible call. Its drop drains and
+releases queue, releases context, then lets Cl close the loader. A successful
+OnceLock cache retains its existing process lifetime and availability behavior;
+this change does not claim deterministic interpreter shutdown of that cache.
+Focused checks are running for no platform, context failure, later queue failure
+and missing entry point, with O1/O2 native unoptimized oracle comparison. Existing
+native loader/archive/executable checks and negative controls remain in the test.
+Package clean before switching removed 126.3 MiB; shared target is this compiler.
+Next finish this validation/publication, then file/socket/TLS external ownership
+and source-reachable cycles/aggregate gaps. Sole PR #83 still awaits Intel CI.
+
+
+Interpreter probe repair: C's fully buffered puts and Rust's line-buffered println
+initially made a real early dlclose appear late even after guards were implemented
+(repeated failure CPU 7.60 s / elapsed 16.00 s). The fake-loader destructor now
+flushes its observation explicitly. Corrected O1/O2 check passes, CPU 4.83 s /
+elapsed 14.45 s. Two temporary source controls prove the regression independently:
+omitting Rust dlclose fails no-platform mode with release after both False lines,
+CPU 7.48 s / elapsed 15.70 s; omitting context release fails later queue-creation
+mode with `bad cleanup`, CPU 8.31 s / elapsed 16.72 s. Both controls have been
+restored; their intentional unused-code warnings are absent from the product.
+Formatting passes, CPU 0.34 s / elapsed 0.62 s. Final restored checks are running.
+
+Next external resource audit: File is affine (`lib/prelude.fwp`) and scoped
+file.with already closes on unwind, but affine discard versus native close needs
+a concrete source-reachable lifetime test before new implicit cleanup contracts.
+TLS listener stop currently closes only the descriptor; its SSL_CTX and allocated
+ALPN callback context remain live. Accepted SSL sessions retain their context,
+so listener cleanup must release its owner while preserving callback storage
+until the last OpenSSL context reference disappears. TLS listen failure after
+context creation also lacks a guard. Start with explicit listener stop/failure
+and actual OpenSSL owner counters; do not free callback storage prematurely or
+claim all sockets/files/cycles covered by library region teardown.
+
+
+Restored no-OpenCL comparison passes, CPU 8.50 s / elapsed 17.15 s: `cargo test
+--test opencl_lifetime --test numerics gpu -- --nocapture` ran the one existing
+numerics GPU test; its name filter excluded the new loader test. That filtered
+invocation is not counted as new-loader validation. The new loader test is running
+separately with `cargo test --test opencl_lifetime -- --nocapture` after restoration.
+
+
+Interpreter OpenCL final restored test passes, CPU 4.47 s / elapsed 13.21 s, one
+loader test with O1/O2 source comparisons plus the existing native positives and
+negative controls. `cargo clippy --lib --test opencl_lifetime -- -D warnings`
+passes, CPU 2.32 s / elapsed 4.60 s. Final formatting passes, CPU 0.35 s / elapsed
+0.74 s; whitespace clean. All local checks used the fwp guard and limits; no local
+workload remains. Publish this focused preparation; next is TLS listener owner
+release and failure guarding with accepted-session lifetime evidence. Current
+shared target is this interpreter OpenCL compiler; clean package before switching.
+
+
+Interpreter OpenCL preparation published as
+`abc128581b615530ba2f3bc43de0c8d708d340ea`, branch
+`ownership-interpreter-opencl`, OLD parent `d8b4d88`, clean checkout
+`/private/tmp/fwp-interpreter-opencl-worktree`. Verified single-line 67-character
+subject `Guard interpreter OpenCL initialization with staged resource owners`,
+empty body. No additional PR. At 02:00:32Z sole #83 CI `37711126548` still has
+Linux/ARM/bench passing and Intel running. Continue same live run; do not restart.
+Next implementation: TLS listener stop must release its context owner without
+invalidating accepted SSL sessions; attach ALPN callback storage to SSL_CTX's
+last-reference lifetime and guard listen failure after context creation. Add
+actual OpenSSL reference/heap-owner probes and interpreter/native behavior checks.
+
+
+TLS listener task checkout created: `/private/tmp/fwp-tls-listener-worktree`,
+branch `ownership-tls-listeners`, exact/immutable OLD parent
+`abc128581b615530ba2f3bc43de0c8d708d340ea`. Clean, no implementation changes yet.
+Shared target still contains interpreter OpenCL; guarded package clean must
+precede validation in this checkout. No local workload remains.
+
+Concrete TLS design audit: native Listener currently stores a raw SSL_CTX; its
+stop closes the fd but never releases the context/ALPN malloc owners. Rust uses
+Arc<Ctx> for sessions, retaining stable ALPN storage. Prefer the same internal
+owner relation natively: a small context owner with reference count, SSL_CTX and
+ALPN state; Listener owns one, and each accepted connection owns another alongside
+its SSL session. Stop releases the listener reference; connection close frees SSL
+before releasing its context reference; the final context owner frees SSL_CTX,
+ALPN wire/descriptor and itself. Client SSL sessions need no server ALPN owner.
+Guard the newly created context across tcp.listen failure and cancellation.
+Preserve repeated stop/close idempotence and active accepted-session behavior.
+
+Do not register a library-local SSL_CTX ex-data free callback without a complete
+unload protocol: OpenSSL's process-global index can keep that function pointer
+past the generated library's unload and call into unmapped code. The explicit
+owner relation avoids that new global callback lifetime. Inspect all accepted
+session callers and existing server/grpc paths before changing internal layout.
+Prove release counts with actual OpenSSL, accepted session survival/ALPN after
+listener stop, first/later initialization failure and a source interpreter/native
+comparison. Runtime resource GC/finalizer coverage, affine File discard, cycles
+and aggregate contexts remain separate unfinished tasks.
+
+
+## Native TLS listener ownership preparation (2026-10-08)
+
+Branch `ownership-tls-listeners`, checkout `/private/tmp/fwp-tls-listener-worktree`,
+immutable OLD parent `abc128581b615530ba2f3bc43de0c8d708d340ea`. Not yet published.
+Baseline actual-OpenSSL probe failed O1/reuse verification off with exit 1:
+listener stop leaked its context and ALPN owners, CPU 6.84 s / elapsed 14.13 s.
+
+Further call-site audit found HTTP/2 transfers raw SSL pointers from sockets
+(`w_take`) and gRPC uses the server-context helper directly. The implementation
+therefore keeps the raw SSL/SSL_CTX interfaces: a small counted server owner in
+SSL_CTX's existing app-data slot owns the ALPN state. Accepted SSL sessions retain
+it, session release frees SSL before dropping its context owner, and listener
+stop releases its owner and clears the pointer. No new process-global callback
+index and no extra socket-layout field. gRPC/HTTP2 raw-session transfer preserves
+the owner through SSL's context; client contexts have no server owner.
+
+Server context validation precedes ALPN-owner allocation. Its incoming wire
+buffer transfers only on successful return. Allocation/app-data setup failure
+releases the completed context and leaves wire ownership with the caller.
+TLS listen protects a completed context across actual address/bind Error paths;
+gRPC server setup frees the wire on context failure and its context on bind failure.
+General server cancellation/shutdown and TLS client caches remain separate gaps.
+Do not claim a new cancellation point: current tcp.listen does not suspend the
+scheduler; the cleanup scope guards nonlocal failure without changing effects.
+
+Corrected first probe passes O1/O2 with reuse poisoning off/on, CPU 6.93 s /
+elapsed 14.65 s. Real OpenSSL 3.6.3 (Homebrew) completes accepted-session ALPN
+handshakes after listener stop for one/two/three sessions, including HTTP/2 raw
+transfer; context/wire/descriptor owners release once only after the final SSL
+session. Repeated stop/close is idempotent. Six later failure probes are running
+(cert validation, CA validation, app-data setup, owner allocation, invalid address,
+occupied bind). Shared target is TLS listener compiler after guarded package clean
+removed 93.7 MiB. Full cross-platform sequential CI remains required.
+
+
+TLS expanded probe passes all six failure cases and O1/O2/poison positives,
+CPU 0.40 s / elapsed 1.45 s. Six generated-source negative controls then pass
+(expected failure statuses), CPU 1.95 s / elapsed 6.04 s: missing listener release
+(exit 1), session retain (2), session context release (5), listen guard (15),
+ALPN wire free (1), and descriptor free (1). Actual BIO-pair handshakes negotiate
+h2 after stop and raw HTTP/2 transfer; observed context/wire/descriptor frees are
+exactly once. No poisoned/shared pointer fallback is accepted as reclamation.
+
+`FWP_NO_OPT=1 cargo test --test tls streams -- --exact --nocapture` is running
+under the same guard with OpenSSL 3.6.3. This compares actual source-level TLS
+connections/ALPN/errors in interpreter and native against the existing expected
+output. Native library probe tracing is unarmed; no host-root tracing claim.
+Full stress/verification and architecture checks stay required on CI.
+
+
+TLS source stream comparison was stopped by the local guard at sampled aggregate
+RSS >1 GiB. The check did not complete and is not passing evidence. Do not raise
+limits, bypass the guard or rerun this larger local workload. Move it to GitHub
+runners on a separate evidence branch, retaining sole PR #83 and exact-head merge
+gates. Publish the focused TLS preparation after formatting/clippy; fork an
+`ownership-evidence-tls-listeners` branch with CI push trigger for that branch,
+run full CI there and explicitly add the unoptimized/stress TLS stream comparison.
+The evidence branch's workflow-only commit must not enter the sequential TLS PR.
+Future PRs still require their own four exact-head passing gates after rebasing.
+
+The actual context/session ownership probe and all six failure/negative controls
+are complete and passing; no local workload remains. Normal optimized source and
+GC stress/verification behavior still need runner evidence, not a claim inferred
+from the unarmed library probe. Keep failures as repair work throughout.
+
+
+TLS focused final formatting passes, CPU 0.37 s / elapsed 0.74 s; clippy of
+library and dedicated listener test passes with `-D warnings`, CPU 2.37 s /
+elapsed 4.73 s. Whitespace clean. Larger source comparisons must run on GitHub
+because the guard refused the unoptimized stream check. No local workload remains.
+Full tests, stress/verification and architecture evidence are still pending;
+publish preparation and the separate runner evidence branch, then fix actual
+runner failures before claiming verified support or merging anything.
+
+
+TLS listener preparation published as `73f4f9828738dd99308619275ba0f259b73f5553`,
+branch `ownership-tls-listeners`, OLD parent `abc1285`, clean checkout
+`/private/tmp/fwp-tls-listener-worktree`. Verified one-line 66-character subject
+`Own TLS listener protocol state through accepted session lifetimes`, empty body.
+The runner evidence branch `ownership-evidence-tls-listeners` is exact
+`4fda8214cf43706d75197a7613057b685c9fee10`, checkout
+`/private/tmp/fwp-tls-evidence-worktree`, clean. Its sole additional commit modifies
+CI push triggers for this evidence branch and adds an explicit unoptimized TLS
+stream step with GC stress/verification and reuse verification on Linux/ARM/Intel,
+as well as the ordinary full gates. Do not merge this workflow-only commit into
+the sequential TLS PR. It carries the full prepared ownership chain; passing it
+still does not replace the later rebased PR's exact-head four gates.
+
+At 02:22:10Z PR #83 remains the sole PR with Linux/ARM/bench passing and Intel live;
+continue CI `37711126548`, not a replacement run. Shared target is TLS listener;
+no local workload remains. Next use runner failures as concrete fixes, while
+continuing runtime teardown: TLS client context/name cache, listener/session
+unload, gRPC server cancellation, affine resource discard and cycles. Keep old
+immutable parent/head anchors for every sequential rebase (including new
+`abc1285` for TLS listener, `73f4f98` for its later child).
+
+
+Runner evidence CI is live: `37717526510`, exact
+`4fda8214cf43706d75197a7613057b685c9fee10`. Poll the same handle and fix failures;
+observation expiration is not a terminal job. Keep production TLS branch
+`73f4f98` free of the evidence-only workflow commit. No new PR opened.
+
+Next library resource teardown audit: register library-only finalizers for
+owned FILE/socket wrappers in the existing collector finalizer table, releasing
+external handles before region unmap. Closed wrappers must remain idempotent,
+and raw HTTP/2 transfer must clear fd/SSL so socket teardown cannot double close.
+Split SSL disposal (no network write) from explicit close_notify shutdown;
+unload finalizers should dispose without sending so they do not introduce SIGPIPE
+through host signal policy. g_conn library finalization must dispose any surviving
+SSL/fd as well as buffers. Finish the cached TLS client contexts/names/array after
+all finalizers, while entry points remain valid. General executable affine
+resource discard, gRPC server cancellation and cycles remain later acceptance.
+Do not add a separate per-session registry/heap node when existing owned wrapper
+finalizers suffice. Confirm every wrapper constructor owns its incoming handle.
+TLS library tests that intentionally break retains may need negative exits via
+_Exit after their observation, avoiding destructor traversal of intentionally
+corrupted graphs; keep positive process-exit teardown tested normally.
+
+
+Runner evidence `37717526510` at `4fda821`: ARM job `113117345850` and Intel job
+`113117345602` both failed the unoptimized TLS stream snapshot before reaching
+ordinary full tests. Logs: `/private/tmp/fwp-tls-evidence-arm-113117345850.log`,
+`/private/tmp/fwp-tls-evidence-intel-113117345602.log`. Actual output differs only
+in the bad-certificate vendor alert name (`ssl/tls` versus snapshot `sslv3`);
+certificate/hostname rejection and all other lines match. The logs show OpenSSL
+3.6.4 on ARM and 3.6.3 on Intel, so do not attribute this solely to 3.6.4. Ordinary
+PR #83 ARM streams passed with 3.6.4. Linux's explicit unoptimized stress/reuse
+stream step passed; its full tests remain live. Benchmarks passed. None of these
+partial/skipped/superseded checks is a current PR merge gate.
+
+Prepared repair: streams now first requires byte-for-byte raw interpreter/native
+output agreement, then canonicalizes only the exact bad-certificate alert alias
+for the existing portable snapshot. Language diagnostics remain unchanged;
+certificate failures/ALPN/order and all other error lines stay exact. Formatting
+passes, CPU 0.35 s / elapsed 0.74 s. Clippy is running. The larger stream check
+stays on runners (prior local RSS refusal); do not rerun it locally. Amend/publish
+TLS preparation with this test repair, preserving OLD `73f4f98`, and rebase the
+evidence-only workflow commit from OLD `73f4f98` onto the new production head.
+Push exact leases for both heads to run the genuinely changed test on GitHub.
+Keep PR #83's live Intel job separate; it is not a source-repair rerun.
+
+
+TLS snapshot repair published with exact lease: production head now
+`3f6154b4bf67330f15d5a01a5d603b75d33319d3`, same one-line 66-character subject,
+OLD parent `abc1285`, clean checkout. Preserve original OLD `73f4f98` for any
+child already based on it; no production child exists yet. Evidence workflow
+commit rebased cleanly from OLD `73f4f98` to new production head; evidence head
+now `f806be807d0a4d48a3f4be847503c63d6c066a92`, published by exact lease against
+OLD `4fda821`. Clippy (library/TLS/listener tests) passes, CPU 2.44 s / elapsed
+4.74 s. New push is warranted by an actual test repair, not observation timeout.
+The previous evidence run `37717526510` stays live for its Linux full checks;
+ARM/Intel failed snapshot steps and skipped remaining tests. New current-head
+runner evidence is required and its handle must be recorded when visible.
+
+
+Current changed-head evidence run is `37718591863`, exact `f806be807d0a4d48a3f4be847503c63d6c066a92`,
+live. Poll it alongside sole PR #83 `37711126548`; retain prior evidence
+`37717526510` for actual Linux results, not current-head acceptance. New next-task
+checkout `/private/tmp/fwp-library-resource-worktree`, branch
+`ownership-library-resources`, clean at immutable OLD
+`3f6154b4bf67330f15d5a01a5d603b75d33319d3`. No resource implementation yet;
+shared target still TLS listener compiler. Clean package before switching checks.
+Start with actual loader/unload owned file/socket/TLS handle probes and partial
+close/transfer cases, then library-only finalizers and no-write SSL disposal plus
+cached client contexts/names release after finalization. Keep evidence-only
+workflow commit out of production ancestry. No local workload remains.
+
+
+PR #83 CI `37711126548` is now terminal cancelled: Intel job `113097042606`
+reached its 90-minute limit at 02:35:28Z. Actual log
+`/private/tmp/fwp-map-intel-113097042606.log` shows no preceding test failures:
+GC stress golden suite passed but took 3452.08 s (57.5 minutes); normal golden
+check/run, gRPC, HTTP, leaves, lint and LSP then passed, and cancellation interrupted
+macOS-specific tests. Do not merge or count the cancelled Intel run as passing.
+
+Concrete gate repair on existing sole PR #83: separate the one GC stress golden
+test into `macos_gc` jobs for ARM and Intel, still with 90-minute limits. Regular
+macOS runs all targets excluding only that named test; dedicated jobs execute it
+exactly. Together each architecture still executes the full suite. Linux and
+bench remain full. All six current-head jobs must pass before squash, with each
+architecture's regular and stress results required; no skipped stress acceptance.
+This is runner scheduling, not fewer assertions or raised local/CI resource limits.
+Publish this focused gate repair on map, rerun full current-head CI and update PR
+body/handoff. Propagate the same workflow repair to the separate ownership evidence
+branch, preserving its explicit unoptimized TLS stream step and production ancestry.
+Full local gates remain prohibited; validate workflow diff and coverage mapping.
