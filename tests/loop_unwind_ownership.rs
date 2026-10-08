@@ -132,6 +132,12 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
         3 => "text=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0; other=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v1;",
         _ => panic!("unexpected nested state width {nested_slots}"),
     };
+    assert!(
+        emitted.contains(&format!(
+            "typedef struct {{ V v0; V v1; }} fwp_owner_ctx{nested_scope};"
+        )),
+        "nested state must own its flattened String fields directly"
+    );
     let probe=r#"
 static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
