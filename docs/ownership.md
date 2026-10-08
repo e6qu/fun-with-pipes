@@ -262,8 +262,10 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#84 passed their exact-head full gates. Fold is the next PR; other
-callbacks, runtime unwind and retained owners remain preparation.
+PRs #82–#85 passed their exact-head full gates. Fold transfers its owned
+accumulator through borrowed synchronous calls while input elements remain
+borrowed. Zip is next; other callbacks, runtime unwind and retained owners remain
+preparation.
 
 ## Prepared work and acceptance limits
 
@@ -293,3 +295,10 @@ and reproduced loss of the owning Conn during String allocation. Its owner fence
 and fence-omission control now pass under real GC/reuse verification; production library
 tracing remains unarmed. Current work/evidence, including any unresolved failures,
 is recorded in the handoff rather than appended as another priority queue here.
+
+Native file.write also has a prepared visibility repair: flush checked stdio
+buffers before returning to match Rust descriptor writes, including write errors
+while the affine handle remains borrowed. General discard remains separate:
+a File parameter stays alive until its original function frame exits, even after
+ignore, because early close changes observable later I/O failures. Internal
+resource scopes must survive optimization and preserve that original lifetime.

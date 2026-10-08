@@ -2,7 +2,8 @@
 
 Updated 2026-10-08. These published branches are preparation, not merged support.
 Open one PR at a time in this order after the previous PR passes all six gates
-and squash-merges. Merged PR #84/filter has immutable OLD head `1ea7f07`.
+and squash-merges. Merged PR #85/fold has immutable OLD head `a180c3f`; zip is next (row 8).
+Completed rows remain as immutable anchors; do not reopen fold.
 
 For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
 Preserve OLD head/parent below permanently: children were prepared from original
@@ -12,9 +13,10 @@ checks after rebasing; original evidence is in [the history](roadmap-history.md)
 Publish with an explicit lease against the remote current head, then create the
 sole next PR. Full exact-head CI is required anew for every PR.
 
-Current head changes on rebase; OLD anchors never change. Fold is already rebased
-onto `01c6f5807e14`, published as sole PR #85, CI `37728301773`; do not
-repeat its original rebase. For a rewritten branch, use its actual current base
+Current head changes on rebase; OLD anchors never change. Fold's final published
+head `a090f1f5ac6c` passed all six CI `37728301773` gates and squash-merged as
+`d4e52617eac2`. Zip is now rebased from OLD fold onto that squash and published as sole PR #86.
+For a rewritten branch, use its actual current base
 when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
 Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
@@ -22,7 +24,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
 | 7 | fold | `ownership-fold-transfers` | `a090f1f5ac6c` | `a180c3fb5f42` | `1ea7f079043c` |
-| 8 | zip | `ownership-zip-callbacks` | `bdb750f6d46b` | `bdb750f6d46b` | `a180c3fb5f42` |
+| 8 | zip | `ownership-zip-callbacks` | `cf8ce6e61295` | `bdb750f6d46b` | `a180c3fb5f42` |
 | 9 | right-fold | `ownership-right-fold` | `adc7947a25f2` | `adc7947a25f2` | `bdb750f6d46b` |
 | 10 | prefix | `ownership-list-prefix` | `376e77ae9469` | `376e77ae9469` | `adc7947a25f2` |
 | 11 | list-copy | `ownership-list-copies` | `bb00baa4ab95` | `bb00baa4ab95` | `376e77ae9469` |
@@ -86,7 +88,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
 
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
-| 70 | file-construction | `ownership-file-construction` | pending | pending | `b00215dc10f5` |
+| 70 | file-construction | `ownership-file-construction` | `e9d575fdf990` | `e9d575fdf990` | `b00215dc10f5` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
