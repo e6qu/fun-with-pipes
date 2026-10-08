@@ -11432,3 +11432,13 @@ Row81 storage disposal/finalizer removal test8.53/19.18s passes. Row82 refresh
 compiler/runtime and failed-construction/registry fixture match original, with
 inherited CLI/tracing harness repairs. Previous CURRENT06c93eff77af is retained
 under an immutable revision before lease publication. Fresh focused checks follow.
+
+Row81 clippy6.72/13.84s and format0.45/0.84s pass after storage disposal
+test8.53/19.18s. Shared package clean0.00/0.14s precedes the bounded row82
+failed-constructor disposal check. No local full gate was run.
+
+Row82 failed constructor storage and finalizer-registry test8.16/18.70s passes.
+Row83 refresh6d3fcd7444ad1c3fb78efbef9e500873fc5dd10b uses actual base47abf911f844.
+Compiler/runtime and unboxed resource variant fixtures match original with
+inherited CLI/tracing harness repairs preserved. Previous CURRENTf3c9ee4ec354
+is retained under its immutable revision before lease publication. Checks follow.
