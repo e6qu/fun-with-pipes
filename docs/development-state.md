@@ -182,7 +182,7 @@ still need their final squash rebases and six exact-head full gates.
 | 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
 | 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | Both original implementation/fusion repair commits preserved; all11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | All nine File-owner/I/O/frame/unwind tests24.61CPU/49.55elapsed, lint2.62/5.40s and format0.44/0.82s pass; original source/probes unchanged, including exact owner/alias/text omission exits6/7/10 with GC on/off and no-free comparison; storage retains compatibility lifetime; final actual-squash/full gates required |
-| 75 ownership-file-discard | 2e3288510b14 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
+| 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
 | 76 ownership-file-runtime-boundaries | b5aee4eb6e95 | 4b8202419941 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 231568d07731 | b5aee4eb6e95 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | c7ba897d8d9c | 231568d07731 | Actual WASI gates required; source unchanged except inherited harness repairs |
@@ -351,7 +351,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 
 The fun-refactor guard applies to the other repository. The shared target was
 last checked in /private/tmp/fwp-file-discard-worktree (row75, native2e328851),
-with all10 focused tests37.88CPU/75.92elapsed, all23 RC/resource/contract units
+with all10 focused tests37.88CPU/75.92elapsed, all23 RC units plus resource/contract checks
 passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
