@@ -148,7 +148,7 @@ int main(int argc,char **argv){
 }
 "#;
     let mut runtime = generated.clone();
-    for name in ["fwp_p_file_read_all", "fwp_p_file_read"] {
+    for name in ["fwp_p_file_read_all", "fwp_p_file_read_impl"] {
         let start = runtime.find(&format!("static V {name}(V ")).unwrap();
         let end = start + runtime[start..].find("\n}\n").unwrap() + 3;
         let original = runtime[start..end].to_string();

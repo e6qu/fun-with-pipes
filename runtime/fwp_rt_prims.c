@@ -2671,7 +2671,7 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
     return 0;
 }
 
-static V fwp_p_file_read(V path, const fwp_desc *err) {
+static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
     FILE *f = fopen(STR(path)->d, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);
     fwp_file_cleanup file = {f, 0};
@@ -2692,7 +2692,7 @@ static V fwp_p_file_read(V path, const fwp_desc *err) {
         errno = error;
         return fwp_io_error_path("read", STR(path)->d, err);
     }
-    if (!fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) {
+    if (text && !fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) {
         fwp_file_buffer_cleanup(&b);
         char message[1024];
         snprintf(message, sizeof message, "%s: stream did not contain valid UTF-8", STR(path)->d);
@@ -2703,6 +2703,13 @@ static V fwp_p_file_read(V path, const fwp_desc *err) {
     b.d = 0;
     fwp_cleanup_pop(&buffer_cleanup);
     return result;
+}
+
+static V fwp_p_file_read(V path, const fwp_desc *err) {
+    return fwp_p_file_read_impl(path, err, 1);
+}
+static V fwp_p_file_read_bytes(V path, const fwp_desc *err) {
+    return fwp_p_file_read_impl(path, err, 0);
 }
 
 static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
