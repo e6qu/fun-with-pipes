@@ -225,6 +225,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 79 | Eligible field-only original record holders retain typed children without a parent box; boxed holders retain the parent | Sequential CI; original lifetime, partial-retain unwind and parent-box count control |
 | 80 | File handle, count and inline path share one aligned leaf allocation; checked size includes terminator | Sequential CI; display/I/O agreement, one allocation versus two and constructor rollback |
 | 81 | Last File owner closes the stream, removes weak finalizers and reclaims unshared native storage; shared/bump or disabled-free storage remains | Sequential CI; finalizer omission, reuse, freed-byte and scoped close-before-drop controls |
+| 82 | Failed File construction closes raw streams and releases allocated headers; finalizer growth commits only after checked allocation succeeds | Sequential CI; constructor fault stages, retained registry, overflow and stale-finalizer controls |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

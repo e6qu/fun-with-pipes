@@ -9223,3 +9223,29 @@ jobs run; PR97 Intel GC runs and five jobs remain queued, no observed failure.
 Same-target lint passes 2.63 / 5.23 s CPU / elapsed.
 Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
 source unchanged. Each production preparation still needs sequential full gates.
+Final row81 faac017dc60d99fc29169ce518ef346fd0f86b9a is published clean
+with exact lease 750a5cffd46b83c22fa403ed9453b9678bf77118. Whole commit
+message is one line with empty body. Row82 actual base remains 750a5cf.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Failed File constructor storage refresh, 2026-10-09
+
+Row82 rebases from actual 750a5cffd46b83c22fa403ed9453b9678bf77118
+onto faac017dc60d99fc29169ce518ef346fd0f86b9a. Ten root docs resolve
+conflicts. Constructor test conflict uses prepared poison-only header inspection
+with _Exit(3) before stale finalization: never inspect physically freed headers.
+Finalizer growth and both constructor tests match 17869223a5022ef060e24b06b0eacb73729f9589;
+primitives preserve inherited main keep-alives and byte-read distinction.
+Guarded clean passes 0.05 / 0.25 s. Guarded cargo test
+--test file_construction_disposal --test file_construction_ownership
+--test file_storage_disposal runs. Checked finalizer registry growth commits
+only after allocation succeeds, preserving previous registrations on failure.
+Three constructor/storage tests pass 10.55 / 25.59 s CPU / elapsed.
+O1/O2 failed allocation/initialization/finalizer registration closes raw streams
+and releases headers; poisoned metadata checks avoid freed storage. Prior
+registry entries survive realloc failure; hard OOM exits 102 with retained
+finalizers. The implementation checks growth size before mutating the registry.
+Last-owner finalizer/reuse controls pass. Focused lint runs. PR97 benchmark
+job now also runs; Intel GC runs and four jobs remain queued.
+Same-target lint passes 2.49 / 5.02 s and format 0.53 / 1.09 s CPU / elapsed.
+Ten root docs copied before amend; tested feature source unchanged.
