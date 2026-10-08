@@ -86,7 +86,9 @@ and both row73 commits survive. Serial bounded parts:3.28CPU/37.18elapsed stoppe
 at69;4.55/51.41s stopped at73;1.24/16.12s completes. Documentation-only continuations
 pass0.00/0.13–0.14s; an initial resolver invoked from root safely refuses without
 changing files. Current73 is006aba78f1f5f16406a4c7cca5864781f959cdcf on2990083331a2.
-Next independent work refresh74–112 and corresponding scoped evidence.
+Rows74–81 refresh passes8.66CPU/93.03elapsed with exact reviewed source
+inheritance; original probes and actual-WASI requirements remain unchanged.
+Next independent work refresh82–112 and corresponding scoped evidence.
 The table records actual bases; all earlier focused evidence predates these
 repairs unless stated otherwise. Each production delivery still needs its own
 final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
@@ -161,7 +163,7 @@ still need their final squash rebases and six exact-head full gates.
 | 78 ownership-wasm-count-disposal | e037bc5a06dc | 8d4ba07d6def | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | d6eabb576bd2 | e037bc5a06dc | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
 | 80 ownership-file-inline-path | 19ed00f179a3 | d6eabb576bd2 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
-| 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
+| 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 47abf911f844 | d39b6145cb55 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
@@ -255,12 +257,12 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
-| Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
-| Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
+| Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 running on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
+| Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 running on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
-| Rows47–52 cache and task runtime | 329e8db140771d33fa7be2946ab3cf1d1d9978ec | Fresh runner pending; source52bc6b763b3bf3 byte-identical; all20 ownership IR controls and original stack/reuse gates; strong audit0.42/3.44s passes. Prior7dfe/CI37973911726 predates the repairs |
+| Rows47–52 cache and task runtime | 329e8db140771d33fa7be2946ab3cf1d1d9978ec | CI38011548324 running; source52bc6b763b3bf3 byte-identical; all20 ownership IR controls and original stack/reuse gates; strong audit0.42/3.44s passes. Prior7dfe/CI37973911726 predates the repairs |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
