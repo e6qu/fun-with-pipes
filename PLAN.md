@@ -40,10 +40,10 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#88: native macOS, primitive contracts, owned leaves/text,
+Main includes #74–#89: native macOS, primitive contracts, owned leaves/text,
 compiled closures, closure cleanup, concrete argument temporaries, stack children,
-borrowed synchronous callbacks, map, filter, fold, zip, right-fold and list-prefix results. Exact merge/run evidence
-is in the handoff. List-prefix passed all six CI `37750832622` gates and merged. List-copy
+borrowed synchronous callbacks, map, filter, fold, zip, right-fold, list-prefix and list-copy results. Exact merge/run evidence
+is in the handoff. List-copy passed all six CI `37758597151` gates and merged. List-option
 is the next focused PR; validate the queue in order after each preceding squash.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
