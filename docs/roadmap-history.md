@@ -8612,3 +8612,27 @@ stays unarmed; full source resource/TLS suites remain on CI.
 Library-resource lint with all three targets and -D warnings passes2.46 s
 CPU /4.97 s elapsed; fmt check0.45 /0.86 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final library-resourcesd56a24e48d7ea44634220c28375502ea71c15bfd is clean
+on actual base838cf5d, published with exact lease against OLD07092cb.
+Whole subject verified one line, empty body; no second PR. Row61 actual base
+remains OLD07092cb until its own rebase; immutable queue anchors unchanged.
+
+Row61 gRPC server cleanup rebase from ACTUAL07092cb06e1d1b7d11271f697bf21920ef899734
+onto actual row60 headd56a24e48d7ea44634220c28375502ea71c15bfd resolves
+all doc conflicts with nine authoritative files, replacing stale long plan/
+state and add/add queue snapshots. Current6364bed retains the repaired
+listener-scoped omission control; immutable OLD0d5d309 remains untouched.
+Guarded clean0.05 /0.26 s; gRPC/listener/resource checks started. PR96
+exact03d25ac now passes bench; Linux and ARM GC run, other three gates queued.
+Guarded cargo test --test grpc_server_ownership --test tls_listener_ownership
+--test library_resources passes all three tests12.59 s CPU /28.85 s elapsed.
+Scheduler cancellation closes plain/TLS service listeners and releases
+protocol owners while accepted sessions remain usable. Cancellation before
+listen and before server allocation cleans completed owners. O1/O2 poison
+and listener-scoped guard/close/context omission controls pass with related
+real OpenSSL/library resources. gRPC runtime and its new test exactly match
+verified6364bed; earlier ancestor repairs remain inherited. Full source
+gRPC/TLS suites still require each sequential PR's CI.
+gRPC listener lint with all three targets and -D warnings passes2.34 s
+CPU /4.78 s elapsed; fmt check0.35 /0.63 s. Nine current docs copied before
+final amend; tested feature source unchanged.
