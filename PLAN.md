@@ -40,18 +40,21 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#90: native macOS, primitive contracts, owned leaves/text,
+Main includes #74–#91: native macOS, primitive contracts, owned leaves/text,
 compiled closures and cleanup, concrete temporaries, stack children and borrowed
 synchronous list callbacks/results. [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91)
-keeps call-effect context separate from pure callback types; focused checks pass,
-full CI is running. Exact heads, gates and the next queue item are maintained in
+merged after all six gates passed, keeping call-effect context separate from
+pure callback types. [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92) is the sole open PR
+for rare exact native wide counts. Exact heads, gates and the next queue item are maintained in
 [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
 and both macOS architectures; all six TLS/listener evidence jobs passed.
 Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
-both are repaired and its new full run is live. Every sequential PR still needs
+both are repaired and all six WASM/resource gates pass. The next separate
+resource-frame evidence run exposed an HTTP GC signal failure; diagnose and
+repair it while the other gates run. Every sequential PR still needs
 its own exact-head gates. Keep repairing failures.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped

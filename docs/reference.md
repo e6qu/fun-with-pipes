@@ -285,17 +285,6 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 - `fwp build --staticlib` or `--cdylib` turns the exported functions into
   a C library with a header. Any language with a C FFI can call it; see
   `tests/c-interop/main.rs` for Rust.
-  Returned strings and string fields of returned structs borrow library storage
-  and remain valid while the library is loaded; the host must not free them.
-  Prepared native teardown cancels library tasks and releases cached values and
-  runtime regions at unload (or static-archive process exit). The host must finish
-  all calls before unloading. Cross-platform CI for this change is still pending;
-  see [the ownership contract](ownership.md#prepared-native-library-teardown).
-  Scalar/struct results are copied into C values. A nullable pointer copies the
-  raw pointer; the pointee follows its own allocation/lifetime contract.
-  Library input strings and `repr(C)` records are copied into language values.
-  `Bytes` can be passed to foreign functions, but cannot be a library export
-  parameter: a byte pointer alone does not specify its length.
 
 ## The `fwp` command
 
@@ -649,7 +638,8 @@ The WebAssembly build has no threads, sockets, processes or `dlopen`:
 | `FWP_DUMP_IR=1` | prints the program's own functions in optimized IR to stderr when it is compiled (`all`: the standard library's too; `rc`: with their references counted) |
 | `FWP_REUSE=0` | when compiling: native code does not count references, so it copies every record it updates. By default it counts references to the records and variants it allocates, updates a unique record in place (`{r with ...}` where `r` is not used again), and builds a new variant in the cell of a unique one it no longer uses (a tree or list rebuilt by a recursive function); the collector still frees memory |
 | `FWP_REUSE_VERIFY=1` | native programs: a value judged unique is copied and the original poisoned instead of reused, so that a wrong judgment shows (for testing) |
-| `FWP_GC=off` | native programs: disables the garbage collector (memory is never freed) |
+| `FWP_FREE=0` | when compiling: disables eligible value storage reclamation by counted drops, leaving that storage to the collector; this does not disable tracing |
+| `FWP_GC=off` | native programs: disables tracing collection. Eligible counted drops can still reclaim values; shared/unmodeled storage may remain allocated. This is not a general tracing-free execution guarantee ([ownership](ownership.md)) |
 | `FWP_GC=full` | native programs: every collection is a major one (no generations) |
 | `FWP_GC_VERIFY=1` | native programs: check each minor collection against a full trace, and abort at the first object it missed (for testing the runtime) |
 | `FWP_GC_STATS=1` | native programs: print the collector's statistics to stderr at exit (collections, bytes allocated, heap and live sizes, pauses, peak RSS) |

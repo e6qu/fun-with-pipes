@@ -31,23 +31,51 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Delivered and sole open PR
 
-Main: cca99c07c4c35c37bcdcb19549e4027abfdcae24, squash #90. All six
-CI37765137522 gates passed at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731.
-Verified whole message: `Own optional list aliases and borrow synchronous find predicates`.
-#74–#90 deliver native macOS and ownership through optional list results.
-Phase 1 is done, phase 2 incomplete, phases 3–6 pending.
+Main: 3c0685c34f9808db82ef9a9b151a6fcfb8eddb47, squash #91. All six
+CI37774239006 gates passed at7018086b8f9851f576350ba24e8af5041c3bb594.
+Verified whole message: `Keep call effect contexts separate from pure callback types`,
+one line, empty body. #74–#91 deliver native macOS, selected ownership through
+optional list results, and separate call-effect contexts. Phase1 is done,
+phase2 incomplete, phases3–6 pending. Nine live docs were refreshed/preserved
+before the fast-forward; current design retains the merged call-effect rule.
 
-Sole open [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91):
-inference-call-effects, /private/tmp/fwp-inference-worktree, exact
-7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: benchmark passes,
-Linux and three Mac jobs run; ARM GC remains queued. Four focused call_effects tests
-pass17.05 s CPU /34.05 s elapsed; explicit raw-oracle rerun1.72 s /3.50 s;
-clippy2.36 s /4.69 s, fmt0.34 s /0.59 s.
-After all six gates pass, squash with subject:
-`Keep call effect contexts separate from pure callback types`, empty body.
-Then rebase next row14 ownership-wide-counts from immutable OLD inference
-89b7bde2c8f035e4767fe9543b18dc6385769635 onto the actual squash, resolve docs
-using current root copies and rerun focused checks before publication/PR creation.
+Sole open [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92):
+ownership-wide-counts, /private/tmp/fwp-wide-worktree, exact
+bd7a20bfd83369e87ca9100c75503ab4ad73e8d5 on actual main3c0685c. Source/tests
+match verifiedcb0d7e6 exactly. Final sharing check passes7.16 s /15.00 s;
+all three wide_counts checks7.28 s /14.80 s, fmt0.33 s /0.60 s. Initial
+filtered invocation ran zero wide tests; separate unfiltered rerun supplies
+coverage. CI37786675129: bench and both dedicated macOS GC gates pass at the
+exact head; Linux also passes; both regular macOS gates remain in progress. All six are required. Squash subject:
+`Keep native reference counts exact beyond byte-sized metadata`, empty body.
+After it passes and merges, rebase row15 from actual current basecb0d7e6 onto
+its real squash; preserve OLD anchors and current docs. Separate HTTP GC crash
+repair is active; failed evidence is not acceptance.
+
+## Next sequential preparations
+
+These source oracle fixes explicitly use FWP_NO_OPT=1. Published preparations
+still need final squash rebases and six exact-head gates; original measurements
+are archived. Current bases below differ from immutable OLD queue parents.
+
+| Row / branch | Current head | Actual current base | Focused checks (CPU / elapsed) |
+|---|---|---|---|
+| 14 ownership-wide-counts | bd7a20bfd833, PR92 | 3c0685c34f98 | wide_counts 14.19 /28.94 s; sharing 0.75 /1.79 s; lint 2.34 /4.78 s |
+| 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
+| 16 ownership-sort-callbacks | 5c19337f216d, published | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
+| 17 ownership-state-sequences | 15743b853d6a, published | 5c19337f216d | state_sequence_ownership 12.09 /24.23 s; lint 2.34 /4.61 s |
+| 18 ownership-loop-state | 112f3c8de87b, published | 15743b853d6a | loop_ownership 19.08 /38.44 s; lint 2.18 /4.38 s |
+
+Rows14–18 are published clean with exact leases against previous remote
+heads. Row18 full head112f3c8de87beddab2374f51e19d6dc94846919d
+includes the documentation-only inventory cleanup; tested runtime is unchanged. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
+Row19 published clean as6ce37fb180e1d88903dd94dadaf47181085ab09e on actual
+current base112f3c8; preserve immutable OLDc05a5d9/parent787763d. Three raw
+oracles, four structural checks16.10 s /32.47 s, lint2.45 s /4.99 s and
+format0.33 s /0.61 s pass. Next active task: repair the evidence HTTP GC crash.
+Worktree paths follow queue NAME; all source checks, sharing controls, format
+commands and compiler flags are preserved in history. Later rebase each current
+base onto its parent's actual squash, keeping OLD heads/parents untouched.
 
 ## Separate full evidence
 
@@ -55,14 +83,38 @@ TLS/listener evidence9bcae30119028b1870efb8fecfcf9746f5808acb passed all six
 CI37730777345 jobs, including the unchanged wide-record allocation threshold.
 Baseline roots/cache/tutorial and real boxing repairs are recorded in history.
 
-Current WASM/resource evidence: ownership-evidence-wasm-resources,
+WASM/resource evidence: ownership-evidence-wasm-resources,
 /private/tmp/fwp-wasm-evidence-worktree, exact
-5fd2ed65385a23f3226b2bef02eb10196f51aeb4, CI37771769436. Five gates pass: Linux, benchmark, ARM regular and both GC suites. Intel regular
-still runs. Required actual-WASI/File stage
-passes, including both free modes and FilePair/cached Task/Channel disposal.
-Full acceptance remains pending. Do not supersede a live run merely to add later work.
-Evidence workflows and baseline repair commits never enter production ancestry.
-Every sequential PR still requires its own exact-head six gates.
+5fd2ed65385a23f3226b2bef02eb10196f51aeb4, CI37771769436: all six gates pass.
+Required actual-WASI/File stage passes, including both free modes and
+FilePair/cached Task/Channel disposal. This validates the combined evidence,
+not production delivery. Each sequential PR still needs its exact-head gates.
+Evidence workflows and baseline repairs never enter production ancestry.
+
+Current resource-frame evidence: ownership-evidence-resource-frames,
+/private/tmp/fwp-resource-evidence-worktree, exact
+ee4bd2238e078238cf1a0867e1c891cbf3170279, CI37780278972: ARM GC fails
+http.fwp under GC_STRESS=1/VERIFY with empty output and signal exit (-1 in
+the harness). Completed job113321340968 log is
+/private/tmp/fwp-resource-arm-gc-37780278972.log. The completed run has five failing gates and a passing bench gate; HTTP,
+REST/TLS/web and native standard-library checks fail. Full failed logs are
+/private/tmp/fwp-resource-all-failures-37780278972.log. Focused HTTP reproduces
+SIGSEGV (-11) locally with GC_STRESS=1/VERIFY/SEED=42. LLDB identifies a null
+Bytes argument to string.from-bytes (generated f62), from the successful
+http.send response branch in w2372. Disabling FWP_FRAME_FIELDS still crashes,
+so frame-field optimization alone does not explain it. Reverting only row85 restores the full HTTP golden under stress
+(13.79 s /27.54 s build;0.31 s /1.90 s run). Root cause: its newly typed
+stack scrutinee owns children, but whole-value pattern aliases previously
+retained only the off-heap outer pointer. Propagate typed stack children into
+whole binders before their Dup and scrutinee Drop. The focused HTTP fix
+builds13.62 s /27.15 s and runs0.31 s /1.73 s with golden output. A dedicated
+regression passes1.64 s /3.89 s, including an omission control at O1/O2,
+raw interpreter agreement, both pattern paths and GC-off/on poison modes. Five
+related nominal-context/resource-frame checks pass15.17 s /30.59 s. The row85
+production preparation has the repair copied; full evidence rerun follows
+production validation/publication. Earlier five failing gates remain failures.
+It adds rows79–88 and their required regressions to the passing WASM/resource
+baseline. Preserve live runs; diagnose failures and keep preparing separate work.
 
 Repaired failures preserved in history: WASI descriptor audit uses fstat rather
 than fcntl(F_GETFD); byte reads bypass UTF-8 validation (queue72 current22a520c);
@@ -82,30 +134,31 @@ Rows79–88 are published with focused evidence; full sequential CI remains requ
 | 82 | Constructor disposal | 17869223a502 | Allocation/registration failure; intact registry growth |
 | 83 | Variant frame holders | 786e4bbb99f1 | Parent boxes, dynamic tags and partial-retain traps |
 | 84 | Variant binding kinds | ae00e6929e86 | Per-path payload initialization; implicit one-close audit |
-| 85 | Match scrutinee types | 3a0cbdb33b79 | Whole-pattern context; typed temporary; implicit close |
+| 85 | Match scrutinee types | 872372452a10 | Typed context plus whole stack binder child owners |
 | 86 | Record binding kinds | f85cc4e09db4 | Per-path field initialization; allocation and close audits |
 | 87 | Nominal source context | 8abfd46b3476 | Explicit raw oracles; 64 nested File discards under32 descriptors |
-| 88 | Channel cycles | dc2ad1febc5d | Close retains queue; typed drain breaks counted cycle |
+| 88 | Channel cycles | 291f8f75f196 | Close retains queue; typed drain breaks counted cycle |
 
 Immutable full heads/parents are in the queue. Rows74 and78 inherit corrected
 current bases368dafc andc889479 respectively; their OLD parents reflect this.
 Never substitute a rewritten/squash head for an immutable descendant anchor.
 
 Latest preparation: ownership-channel-cycle-lifetimes,
-/private/tmp/fwp-channel-cycle-worktree, exactdc2ad1febc5d64a588ff90a333753ab1cb688a72,
+/private/tmp/fwp-channel-cycle-worktree, exact291f8f75f19688f139b2dcae7f31482cac810643,
 parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac, published clean.
 Channel fixture passes1.37 s /3.13 s, related queue/task tests9.04 s /18.50 s,
 clippy2.37 s /4.87 s, fmt0.45 s /0.86 s. Poison assertions verify tombstones
 rather than cleared metadata. Detailed checks are archived in history.
 This verifies explicit draining, not automatic cycle reclamation.
+A follow-up doc sweep corrects the stale reference claim that GC-off prevents
+all freeing, adds FWP_FREE=0, and states close/drain semantics in concurrency.
+Published follow-up291f8f7 includes these user docs and current roadmap copies.
+Immutable OLDdc2ad1f remains the original preparation; runtime/test evidence
+is unchanged. Whole subject: `Clarify tracing controls and queued channel lifetime documentation`.
 
-Next combined evidence is prepared separately at
-/private/tmp/fwp-resource-evidence-worktree, ownership-evidence-resource-frames,
-adding rows79–88 to5fd2ed6. Constructor conflict preserves poison-only header
-inspection and _Exit(3) before stale finalizers. Focused constructor validation
-passes8.22 s CPU /17.58 s elapsed; integrated fmt0.46 s /0.84 s.
-Publish the isolated six-gate workflow and record its exact head/run. The previous
-resource evidence run remains intact. This evidence is never a production PR.
+Combined evidence publication and constructor conflict validation are archived
+in history: focused constructor check8.22 s CPU /17.58 s elapsed, fmt0.46 s
+/0.84 s. This evidence is never a production PR.
 
 Next independent work: ambiguous nominal contexts without whole-value binders,
 nested holders and shared/cycle graphs. Source match functions begin with typed
@@ -127,16 +180,38 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 
 The fun-refactor guard applies to the other repository. Shared target currently
 belongs to resource-evidence checkout. Guarded cargo clean -p fwp before switching
-checkouts; last switch0.00 s /0.14 s. No local workload is active.
-Last doc audit: nine link sets including heading fragments,82 immutable queue
-ancestry pairs and whole commit messages pass0.08 s /0.61 s under the guard.
-Publication anchors and current messages are included. Handoff448→133 lines and ownership460→177 lines;
-exact previous snapshots are archived in history.
+checkouts; last switch0.00 s /0.13 s. Focused HTTP build passes13.91 s CPU /27.91 s elapsed; emitted C passes
+0.98 s /1.97 s. The stress run crashes; debugger exit success is not a passing
+program check. Boxed-frame control builds7.23 s /14.51 s and crashes too.
+The temporary row85 revert is restored; src/rc.rs matches the evidence head.
+The cgen fix and tests/stack_match_ownership.rs pass focused validation.
+Exact HTTP golden matches in all four GC-off/on and poison combinations
+(guarded python3 /private/tmp/fwp-verify-resource-http.py:1.18 s /6.64 s).
+Evidence lint2.47 s /4.99 s and format0.45 s /0.85 s pass. Shared target
+now belongs to row85 /private/tmp/fwp-match-scrutinee-worktree after guarded
+clean0.00 s /0.14 s. Production five focused checks pass16.71 s CPU /36.11 s elapsed,
+including the existing source match oracle corrected to explicit FWP_NO_OPT=1.
+Production lint2.45 s /4.96 s and format0.45 s /0.86 s pass; no local
+workload remains active. Row85 repair is committed as872372452a1071db124f8e4cc8ae16027cc8f337,
+following immutable OLD3a0cbdb; row86 actual base remains3a0cbdb. Separate
+full evidence rerun is next; no production change is merged by evidence publication.
+Publish the row85 follow-up, then publish the identical cgen/test repair
+in separate evidence (its match_context raw oracle is already corrected);
+keep all OLD ancestry anchors unchanged.
+Last doc audit: eleven link sets including heading fragments,82 immutable queue
+ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
+Publication anchors and current messages are included. Original handoff/ownership
+snapshots are archived; current tables keep the handoff compact. Primitive
+inventory536→195 lines removes stale pending-merge claims and preserves exact
+contract/evidence notes in history. User-facing GC-off and channel docs agree
+with the current ownership plan.
 
-Preserve all seven live root docs before fast-forward/rebase conflict resolution:
+Preserve all nine live root docs before fast-forward/rebase conflict resolution:
 PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
-docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md.
-Previous preservation snapshot: /private/tmp/fwp-main-docs-pre90.
+docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
+docs/reference.md, docs/concurrency.md.
+Latest preservation snapshot: /private/tmp/fwp-main-docs-pre91; refresh all nine
+files immediately before updating main to include later progress.
 Update current sections after progress; archive chronology in history rather
 than appending contradictory next actions. Windows, new deployment interfaces
 and a new backend remain deferred.

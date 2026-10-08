@@ -26,7 +26,14 @@ tasks are cancelled first.
 
 Channels are bounded FIFO queues: `channel.send` returns `False` once the
 channel is closed, and `channel.recv` returns `None` once it is closed and
-empty. A sender that finds the channel full waits, which propagates backpressure.
+empty. Closing preserves queued values: receives continue to return them until
+the queue is empty. A sender that finds the channel full waits, which propagates
+backpressure.
+
+A queued value can contain the channel itself. Closing alone does not break
+that reference cycle. The prepared ownership implementation verifies explicit
+draining and typed destruction; automatic reclamation of unreachable cycles
+remains an open requirement in [the ownership plan](ownership.md).
 
 `loop : (s -> Step[s, r] ! e) -> s -> r ! e` runs a step function in
 constant stack space, which suits accept loops and other long-running

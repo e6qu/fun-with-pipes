@@ -148,6 +148,7 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
+| High-fanout counts | Rare native size_t side entries; exact counts above254; canonical slot keys | Rebased focused checks and sequential full CI |
 | Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Sequential CI; aliases, traps and cancellation |
 | Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Sequential CI; ambiguous nominal contexts and nested holders |
 | Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Sequential CI; shared graph/cycle policy and actual device evidence |

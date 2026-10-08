@@ -6411,3 +6411,835 @@ guarded clean0.00 s /0.14 s; integrated fmt0.46 s /0.84 s. Required Linux
 WASI stage includes the new File storage/constructor and resource frame/nominal/
 cycle regressions; all six full gates remain required. Previous live evidence
 is preserved on its original branch. Workflow changes never enter production.
+
+WASM/resource evidence5fd2ed65385a23f3226b2bef02eb10196f51aeb4 completed all
+six CI37771769436 jobs successfully. New isolated resource-frame evidence
+ee4bd2238e078238cf1a0867e1c891cbf3170279 was published and queued as
+CI37780278972 without superseding the previous run. No second PR was opened.
+
+Queue88 documentation follow-up291f8f75f19688f139b2dcae7f31482cac810643
+corrects the public FWP_GC=off claim, adds FWP_FREE=0, and states that close
+retains the queue while explicit drain can break counted cycles. OLDdc2ad1f
+remains immutable. Eleven maintained link sets and82 queue ancestry pairs pass
+0.09 s CPU /0.62 s elapsed; all whole commit messages meet the one-line rule.
+Preserve nine live root docs, including reference and concurrency, across merges.
+
+## Wide-count next-task preparation on PR91
+
+Rebased ownership-wide-counts from immutable OLDparent89b7bde onto current
+PR91 exact7018086 while its full gates run. The local new base is7018086;
+after #91 squash-merges, rebase from that actual current base onto the real
+squash. OLDwide3a791dc stays immutable. Current docs resolve earlier snapshot
+conflicts; primitive inventory labels rare-wide metadata as prepared.
+Both source interpreter oracles now explicitly use FWP_NO_OPT=1. All three
+wide_counts checks pass14.19 s CPU /28.94 s elapsed under the guard, including
+GC stress/verification and poison modes. The sharing protection regression
+passes0.75 s /1.79 s. Format0.35 s /0.63 s; prior guarded clean0.00 s /0.14 s.
+No additional PR opened, no merged support or timing claim from these checks.
+
+Rebased wide-count clippy (lib, wide_counts and ownership) passes2.34 s CPU
+/4.78 s elapsed. All focused checks complete; full exact-head CI is still
+required after final rebase onto the actual #91 squash.
+
+Published wide-count preparationcb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23
+with explicit lease against original3a791dc7e9f373a327780ded04774acd7f4825cb.
+Current base7018086 differs from immutable OLDparent89b7bde; final rebase must
+use the actual current base. No second PR was opened. Whole subject verified
+by the doc audit: Keep native reference counts exact beyond byte-sized metadata.
+
+## List-order following-task preparation on wide counts
+
+Rebased row15 ownership-list-order from immutable OLDparent3a791dc onto
+current wide-countcb0d7e6. Keep OLDheadc835578 immutable; use actual current
+basecb0d7e6 for the later squash rebase. Current root docs resolve historical
+snapshot conflicts and label the prepared sorted/unique contract explicitly.
+Both source interpreter oracles now use FWP_NO_OPT=1. Two list_order_ownership
+checks pass11.16 s CPU /22.44 s elapsed with O1/O2, stack on/off, GC stress/
+verification and poison modes. The reclamation control restores only result
+sharing and leaves scratch cleanup equivalent. Format0.34 s /0.62 s, prior
+guarded clean0.00 s /0.14 s. Full exact-head sequential CI remains required.
+
+List-order clippy lib/fixture passes2.40 s CPU /4.82 s elapsed. All focused
+checks pass; publication uses explicit lease against originalc835578.
+
+Published list-order preparation5fe569218a4b3cdbdc5b756a83ffb7096aab6608
+with explicit lease against originalc83557825d8ab49f4334e764b1cac82cd2f82057.
+Current basecb0d7e6 differs from immutable OLDparent3a791dc; use current base
+when later rebasing. No second PR was opened.
+
+## Sort callback following-task preparation on list order
+
+Rebased queue16 ownership-sort-callbacks from immutable OLDparentc835578
+onto current list-order5fe5692. Keep OLDhead66bc713 immutable; use actual
+current base5fe5692 for later squash rebase. Current root docs resolve older
+snapshots, with original measurements labeled prepared historical evidence.
+Two interpreter oracles now explicitly use FWP_NO_OPT=1. Three focused checks
+pass12.54 s CPU /25.46 s elapsed: callback effect order, stable ties, aliases/
+captures, allocated/nested keys, scalar bit safety, conservative switches and
+GC stress/verification with poison modes. No-tracing differential independently
+restores result sharing and raw key decrement; it is reclamation evidence, not
+a timing result. Format0.34 s /0.60 s; guarded clean0.00 s /0.13 s.
+Full exact-head sequential CI remains required.
+
+Sort callback clippy lib/fixture passes2.30 s CPU /4.59 s elapsed.
+
+## Archived preparation detail before compact queue14–16 table
+
+Next row14 ownership-wide-counts is being prepared on current PR head7018086
+from immutable OLD inference89b7bde2c8f035e4767fe9543b18dc6385769635.
+After #91 merges, rebase its current base7018086 onto the actual squash and
+rerun any affected checks before publication and the sole next PR.
+Original OLDwide3a791dc7e9f373a327780ded04774acd7f4825cb remains immutable.
+Wide-count preparation is rebased on7018086; original anchors stay immutable.
+All three wide_counts checks pass14.19 s CPU /28.94 s elapsed with explicit
+FWP_NO_OPT=1 interpreter oracles. The sharing regression passes0.75 s /1.79 s;
+fmt0.35 s /0.63 s; clippy lib/two fixtures2.34 s /4.78 s.
+Published clean ascb0d7e6db7e57a0369c5aecc7ecb70d7b19c0e23 with explicit
+lease against OLDwide3a791dc. Wait for #91 before rebasing from current7018086
+onto the actual squash and opening the next PR.
+Resolve docs using current root copies; explicit raw-oracle corrections and
+focused tests/lint pass and branch is published. No second PR is open.
+
+Following row15 list-order is being prepared on current wide-count headcb0d7e6
+from immutable OLDparent3a791dc. Its original OLDheadc83557825d8ab49f4334e764b1cac82cd2f82057
+stays immutable. Both raw-oracle calls explicitly use FWP_NO_OPT=1. Two
+list_order_ownership checks pass11.16 s CPU /22.44 s elapsed (O1/O2, stack
+on/off, GC stress/verification, poison modes and no-tracing reclamation).
+Format0.34 s /0.62 s; clippy lib/fixture2.40 s /4.82 s. Published clean as
+5fe569218a4b3cdbdc5b756a83ffb7096aab6608 with explicit lease against OLDc835578.
+No second PR; its later rebase must use actual current basecb0d7e6.
+
+Row16 sort-callback is being prepared from immutable OLDparentc835578 onto
+current list-order5fe5692. Original OLDhead66bc713dea67d3c811cbb54b8ac7dfab59f8edee
+remains immutable; later rebase uses actual current base5fe5692. Both source
+oracles explicitly use FWP_NO_OPT=1. Three sort_callback_ownership checks
+pass12.54 s CPU /25.46 s elapsed; format0.34 s /0.60 s. Clippy is running,
+then publish with exact lease against OLD66bc713; no additional PR.
+
+
+Published sort callback preparation5c19337f216d78845fada0b8c29fac98d7b18689
+with explicit lease against original66bc713dea67d3c811cbb54b8ac7dfab59f8edee.
+Current base5fe5692 differs from immutable OLDparentc835578. Original anchors
+remain unchanged; later rebase uses the actual current base. No second PR.
+
+## State sequence following-task preparation on sort callbacks
+
+Rebased queue17 ownership-state-sequences from immutable OLDparent66bc713
+onto current sort-callback5c19337. Keep OLDhead0a90b05 immutable; use actual
+current base5c19337 for later squash rebase. Current root docs replace older
+snapshots and mark original prepared measurements explicitly. Two raw
+interpreter oracles now use FWP_NO_OPT=1. Both state_sequence_ownership
+checks pass12.09 s CPU /24.23 s elapsed with O1/O2, stack on/off, callback
+effect order, alias/replaced/function states, empty/nonpositive inputs,
+conservative switches, GC stress/verification and both poison modes. The
+no-tracing direct head consumer isolates sequence ownership; fused consumer
+ownership remains queue18 work. Format0.34 s /0.60 s, clean0.00 s /0.13 s.
+Full exact-head sequential CI remains required.
+
+State sequence clippy lib/fixture passes2.34 s CPU /4.61 s elapsed.
+Full checks remain mandatory after the final squash rebase.
+
+Published sequence preparation15743b853d6a190a53ea4a95532eb9845b4c685a
+with explicit lease against original0a90b0520cc1f4947137ccde8e9d0e8c26acdec3.
+Current base5c19337 differs from immutable OLDparent66bc713. Original anchors
+remain untouched; later rebase uses the actual current base. No second PR.
+
+## Loop following-task preparation on state sequences
+
+Rebased queue18 ownership-loop-state from immutable OLDparent0a90b05
+onto current state-sequence15743b8. Keep OLDhead787763d immutable; use actual
+current base15743b8 for later squash rebase. Current root docs replace old
+snapshots and label prepared historical measurements. Four interpreter oracle
+calls now explicitly use FWP_NO_OPT=1, including existing loop goldens.
+All five loop_ownership checks pass19.08 s CPU /38.44 s elapsed: boxed callback
+argument disposal, fused consumer state reclamation, trap/evaluation order,
+Step aliases and flattened/boxed state, and scalar words matching a live
+String address. O1/O2, stack on/off, conservative switches, GC stress/
+verification and poison modes are exercised. Format0.34 s /0.60 s; guarded
+clean0.00 s /0.13 s. No timing or register-placement claim; full sequential
+exact-head CI remains required.
+
+Loop clippy lib/fixture passes2.18 s CPU /4.38 s elapsed. Full exact-head
+gates remain required after the final squash rebase.
+
+Published loop preparation7af6961802fcf618c3634a58ea0abb6486a50006 with
+explicit lease against original787763d2e4b6d3b53f7a4c2c02678f7cb8fab411.
+Current base15743b8 differs from immutable OLDparent0a90b05. Original anchors
+remain unchanged; later rebase uses actual current base. No second PR.
+
+# Archived primitive contract notes through queue18
+
+These are exact prior notes, including superseded pending-merge statements.
+Use the current inventory and handoff for status; measurements retain their
+original workload, platform, flags and scope.
+
+# Native primitive ownership contracts
+
+`src/ownership.rs` is the shared boundary inventory used by IR counting and
+native code generation. Its container inventory covers every array/map/set
+primitive declared in `lib/collections.fwp`; a coverage check detects newly
+added declarations without contracts. All 31 string-module declarations and seven byte primitives now have contracts;
+selected typed result ownership is listed below. Other primitives, foreign
+functions and remote calls retain the conservative default: borrow arguments, promote counted
+values to runtime sharing, and return runtime-shared values. Further inventories
+must refine that default before extending deterministic reclamation.
+
+Arguments have three modes: **borrow** for the call, **consume** an owned
+reference, or **share** a borrowed value because it may escape into runtime
+storage. Consume is checked by `src/rc.rs`; share is emitted by `src/cgen.rs`.
+Result metadata distinguishes shared results, owned leaf copies/aliases, fresh outer containers and
+containers returned by an owning wrapper. That last category includes copies,
+in-place updates, missing-key no-ops and `array.set`'s optional container.
+Every failure path still consumes its specified reference.
+
+The table below describes the merged container baseline. Typed element and
+runtime refinements remain prepared in [the queue](roadmap-queue.md); consult
+[the handoff](development-state.md) for current validation.
+
+| Primitives | Arguments in data-last order | Result / aliasing | Callback |
+|---|---|---|---|
+| array/map/set.from-list | share list | fresh outer storage, shared elements | none |
+| array.to-list; map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
+| array.length; map.size; set.size | borrow container | scalar | none |
+| array.get | borrow index, borrow array | shared Option containing an aliased element | none |
+| array.set | borrow index, share value, consume array | owned optional container; failure consumes array too | none |
+| array.push | share value, consume array | owned container, old/inserted elements shared | none |
+| array.make | borrow count, share value | fresh container holding repeated shared value | none |
+| array.generate | borrow count, share callback | fresh container, shared callback results | argument 1 |
+| array.map; map.map-values | share callback, borrow container | fresh container, shared callback results; map keys alias input | argument 0 |
+| array.fold | share callback, share accumulator, borrow array | accumulator or shared callback result | argument 0 |
+| array.slice | borrow start, length and array | copied outer storage, aliased elements; no backing view | none |
+| array.append; set.union/intersect/diff | borrow both containers | fresh outer storage, aliased elements | none |
+| array.sort | borrow array | copied outer storage, aliased elements | none |
+| map.empty; set.empty | none | static shared empty value | none |
+| map.insert | share key, share value, consume map | owned container, aliased stored elements | none |
+| map.get | borrow key, borrow map | shared Option containing aliased value | none |
+| map.contains; set.contains | borrow key and container | scalar | none |
+| map.remove; set.remove | borrow key, consume container | owned container; missing key can return original | none |
+| map.update | share key, callback and default, consume map | owned container with shared callback result | argument 1 |
+| set.insert | share key, consume set | owned container with shared key | none |
+
+Comparison-only keys never escape into `fwp_map_find` or structural `fwp_cmp`:
+these functions read values, allocate nothing and invoke no user callbacks.
+Their primitive wrappers therefore omit `fwp_rc_share(key)`. Insert/update still
+share keys because a key can be stored. Callback inputs/results remain shared:
+a callback can return its input or a closure capturing it.
+
+Fresh outer storage does not imply independently owned elements. Current
+container destruction frees the outer buffer; it does not recursively release
+its runtime-shared elements. Aliasing metadata records which arguments or their
+elements can be reachable from the result, including callback captures. Typed
+element ownership, complete leaf-result coverage, closure capture destruction, retained runtime results and
+runtime cycles remain separate work in [ownership.md](ownership.md).
+
+## Complete runtime sharing
+
+Saturating a reference count promotes the whole reachable graph to sharing,
+not just the parent. Interior references are canonicalized to the allocation's
+start before traversal. When the fixed traversal stack fills, recursive
+promotion begins while the child is still counted; clearing it first would
+skip its descendants. These transitions preserve the same alias protection
+as primitive sharing.
+
+## Evidence and remaining work
+
+`tests/ownership.rs` checks interpreter/native agreement for record keys,
+returned aliases, callbacks returning inputs and capturing them, failed
+`array.set`, missing-key removal and updates with retained aliases. Native runs
+use collection stress/verification and reuse poisoning. Generated wrappers must
+borrow comparison keys and share inserted keys.
+
+A runtime regression creates enough aliases to saturate a counted parent,
+then attempts an update of its reachable child. Restoring the previous
+saturation behavior corrupts the value observed through another alias;
+the fixed boundary preserves it. The same regression protects interior
+references and a 70-branch graph exceeding the traversal stack's capacity.
+
+A second regression performs 10,000 updates of a nine-field record following a
+map lookup. It compares identical generated code with only the previous key
+sharing boundary restored. Stack placement is disabled to expose heap behavior;
+all other ownership optimizations remain enabled. On the local Apple Silicon
+host with Apple Clang 17.0.0 (`clang-1700.4.4.1`), `arm64-apple-darwin24.6.0`
+and `-O1`, counters report 0.8 MiB allocated with sharing and
+0.0 MiB with borrowing (one-decimal counter precision), with identical output.
+Full architecture gates and benchmark equivalence are still required on CI.
+This is an allocation result, not a timing or register-placement claim.
+
+A three-field loop state retaining a key and map across update evaluation still
+keeps an extra reference to the key until the remaining map field is read. That
+prevents key reuse even with a borrowing comparison boundary. Later IR work
+should release dead projected fields earlier while preserving argument order,
+branch behavior and aliases; do not confuse this with runtime key retention.
+
+## Selected String/Bytes boundaries
+
+All arguments below borrow for the duration of the call. Generated native
+calls retain borrowed pointer arguments as conservative roots until return:
+inlining must not discard an allocation address while its later drop has
+been reduced to metadata accesses. Constructors returning
+fresh storage establish a count; aliases acquire a count on the same allocation.
+A shared input remains shared when duplicated. Slices copy and retain no view.
+
+| Primitives | Result ownership |
+|---|---|
+| trim/start/end; lower/upper; string.reverse | Fresh copied leaf |
+| concat; bytes.append; string.repeat; bytes.from-list | Fresh copied leaf |
+| string.slice; bytes.slice | Fresh copied leaf |
+| string.to-bytes | Identity alias of argument 0; duplicate its reference |
+| pad-left/right; replace | Fresh leaf or no-op alias of argument 2 |
+| string.length/byte-length; bytes.length; print/write/eprint/ewrite | Scalar/unit result |
+| string.contains; starts-with/ends-with | Scalar comparison result |
+| eq/ne/lt/le/gt/ge/compare | Read-only comparison, scalar result |
+
+`tests/leaf_ownership.rs` compares interpreter/native behavior for retained
+aliases, no-op padding/replacement, copied slices/concatenation and byte identity,
+at `-O1`/`-O2`, under collection stress/verification and both reuse-poison modes. A 10,000-step
+copy loop, with tracing disabled and zero collections, reports 0.9 MiB freed by counts versus 0.0 MiB when `FWP_FREE=0`, with
+identical output (Apple Silicon, Apple Clang 17, `-O1`, counter precision 0.1 MiB).
+Five focused FFI checks also pass. Full CI on both architectures remains required.
+
+Selected copied text Options/lists are owned as described below. Retained
+callback/container values and other runtime-created results remain shared.
+This change does not complete phase 2 or establish general execution without GC.
+
+## Fresh copied text result trees
+
+A `FreshTree` result guarantees a tree of new counted allocations, with no aliases
+of arguments and no internal sharing or cycles. Generated helpers establish one
+reference per node using monomorphic field types. They skip scalar fields, treat
+String/Bytes payloads as leaves and walk a list spine iteratively. A counted node
+encountered twice is a contract violation, detected before silently resetting its
+count. This contract cannot be reused for views, caches or callback results.
+
+| Primitives | Owned result |
+|---|---|
+| string.chars; split; lines; words | List of newly copied String leaves |
+| string.codepoints; bytes.to-list | List with inline scalar elements |
+| string.from-codepoints; string.from-bytes | Option containing a copied String, or None |
+| string.split-once | Option of a fresh pair of copied Strings, or None |
+| string.find; bytes.find; bytes.get | Option of an inline scalar, or None |
+| join; format; show | Fresh String leaf; arguments borrow |
+| length | Read-only list length; scalar result |
+| parse-int; parse-float | Borrow input text; result remains shared, including boxed numeric cases |
+
+Character, codepoint and byte-list conversions release their temporary arrays
+once the list is constructed. Those arrays use `fwp_mem_alloc`/`fwp_mem_free`:
+native arrays remain scanned while alive, and WASI uses a separately releasable
+allocation rather than freeing an interior pointer from its bump heap.
+
+`tests/text_ownership.rs` checks retained inputs, Unicode, empty/missing/invalid
+results, byte conversions, split/join and nested destruction against the
+interpreter at `-O1`/`-O2`, GC stress/verification and both poison modes. A word-list
+loop with tracing disabled frees 2.1 MiB by counts versus 0.0 MiB when freeing is
+disabled, with the same output. Restoring only the previous temporary-buffer lifetimes raises the conversion
+loop's committed native heap from 1.7 MiB to 9.2 MiB, with tracing off and identical
+output. Both counter comparisons used Apple Silicon, Apple Clang 17 and `-O1`. Full CI remains required before merging.
+
+IO/network-generated strings and result graphs, retained callbacks, stack captures,
+container element ownership and exceptional cleanup remain work. Complete text
+contract coverage does not mean every text result has counted ownership.
+
+## Closure entries
+
+Compiled dynamic calls use an owned entry with typed capture duplication and
+release. Primitive entries preserve borrowed arguments through allocation and
+release them after obtaining the result; consumed container arguments are
+transferred. Calls from runtime callbacks keep a separate sharing entry, which
+promotes typed inputs and the result to conservative runtime management.
+Function table metadata exists only for live functions used as closure values;
+it does not change source currying or pipe semantics. See [ownership.md](ownership.md)
+for evidence and the remaining capture/exceptional-cleanup gaps.
+
+## Borrowed dynamic callback foundation
+
+Owned function metadata also describes duplication of a borrowed argument slice
+by monomorphic parameter type. `fwp_apply_borrowed` retains the original function
+owner, duplicates only pointer-bearing supplied parameters and consumes those
+copies through the owned entry. Partial application transfers copies into a new
+closure. Overapplication splits at each actual function's arity and uses the
+returned function's types for the next slice; scalar bits are never used to guess
+pointer ownership. Returned aliases carry an owned reference. Entries without
+metadata retain the conservative runtime-sharing fallback.
+
+The extra argument-helper pointer increases native owned metadata from two to
+three pointers per live closure function (16 to 24 bytes on 64-bit targets).
+The main function-table row remains 32 bytes; no runtime performance claim is
+made. This foundation does not yet change map or retained runtime callbacks.
+`tests/borrowed_callbacks.rs` checks the generated String/I64 argument metadata,
+scalar bits resembling an allocation, exact and partial calls, overapplication
+across a scalar-to-function boundary, captured/input aliases and a stack callback
+at O1/O2 with collection stress/verification and both reuse-poison settings.
+
+## Synchronous owned map results
+
+`map` borrows the callback and input list. Its explicit Borrowed callback
+contract proves synchronous invocation without retaining the function itself;
+other callbacks keep Shared contracts. Escape analysis uses that proof only
+for the function slot, never for every borrowed argument. The result has a
+FreshSpine contract: new counted list nodes containing already-owned callback
+results. Callback results may alias inputs/captures or be functions; neither
+child counts nor shared children are reset. FreshTree is inappropriate here.
+
+Generic map invokes the typed borrowed entry. Direct and captured HOF variants
+still call statically known functions, taking typed argument copies per iteration.
+Known partial callbacks hidden behind counted locals retain specialization.
+Original callback/list addresses and captured pointer values stay roots through
+allocating calls. Result buffers use separately releasable memory and transfer
+owned element references into new nodes before release. The interpreter and
+legacy uncounted execution retain their existing behavior.
+
+`tests/map_ownership.rs` covers retained inputs, newly allocated captures,
+identity/constant aliases, partial callbacks returning functions, dynamic
+callbacks and scalar/aggregate results at O1/O2, stack on/off, collection stress
+and verification, and both poison modes. A selected 10,000-step loop compares
+identical generated code with only the old shared-result boundary restored:
+zero collections, identical output, 2.7 MiB freed by counts versus 4.6 MiB for
+owned map results (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision).
+This is reclamation evidence, not a timing claim. Full CI and benchmarks remain
+required. Other list/container callbacks, retained runtime callbacks, cycles,
+exceptional cleanup, exact overflow counts and WASI reclamation remain work.
+
+## Synchronous owned filter results
+
+`filter` has the same explicit synchronous borrowed callback policy as map,
+while its result spine contains selected aliases of input elements. A predicate
+consumes typed temporary argument copies and returns Bool. Selection therefore
+acquires an additional reference by the actual element parameter type before
+transferring it into a result node. Pointer-bearing functions/aggregates are
+counted; inline scalars are not guessed from their bits. Unknown function entries
+retain conservative sharing. Direct and captured predicate loops preserve
+specialization and address fences. Scratch storage is explicitly released.
+
+`tests/filter_ownership.rs` checks retained input/capture aliases, selected
+functions with shared captures, dynamic predicates, scalar elements, empty
+inputs and no matches at O1/O2, stack on/off, GC stress/verification and both
+poison settings. A selected no-tracing differential changes only the returned
+spine's shared-result boundary: identical output and zero collections,
+4.6 MiB freed by counts versus 5.0 MiB for owned filter results (Apple Silicon,
+Apple Clang 17, O1, counters rounded to 0.1 MiB). Full platform and benchmark gates
+remain required before merge; retained callbacks and exceptional cleanup remain.
+
+## Synchronous fold accumulator transfer
+
+`fold` borrows its callback/list and consumes one owned accumulator reference.
+It returns an OwnedAccumulator result, possibly an input/capture alias; an empty
+list returns the supplied accumulator unchanged. It is neither a fresh tree nor
+a fresh spine. The borrowed application helper accepts an owned prefix, avoids
+duplicating transferred arguments, and carries any remaining prefix across
+partial/overapplication boundaries. Ordinary borrowed calls use prefix zero.
+
+Direct/captured fold loops keep specialization: captures and elements acquire
+typed argument copies, the accumulator transfers, and callbacks return its
+replacement. Original callback/capture/list addresses remain roots until return.
+Unknown entries retain sharing. New two-argument callback wrappers distinguish
+accumulator transfer from map/filter's borrowed arguments.
+
+`tests/fold_ownership.rs` covers accumulator/input/capture aliases, empty inputs,
+function accumulators, dynamic and captured callbacks at O1/O2, stack on/off,
+GC stress/verification and both poison modes. The callback runtime probe adds
+owned-prefix exact/partial/overapplication and zero supplied arguments. A selected
+no-tracing differential restores only generic/specialized callback result sharing:
+identical output and zero collections, 1.3 MiB freed by counts versus 1.8 MiB with
+transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Restoring only an
+unused generic path produced no difference; the final probe covers the executed
+specialized path too. Full platform/benchmark gates remain required. Fold-right,
+zip-with, retained callbacks and exceptional cleanup are separate work.
+
+## Synchronous zip-with ownership
+
+`zip-with` borrows its callback and both lists. Generic calls duplicate arguments
+according to their distinct concrete types; direct/captured loops retain static
+specialization. New list spines contain already-owned results, including aliases
+of either input/captures or returned partial functions. Both temporary input/result
+buffers are explicitly released, with original callback/list/capture roots kept
+through allocating calls. Callback order, argument order and truncation at the
+shorter list are unchanged. Borrowed direct callback wrappers now support one or
+two supplied arguments; fold's transferring wrapper stays separate.
+
+`tests/zip_ownership.rs` checks retained aliases, mixed String/I64 inputs, dynamic
+and captured functions, empty/unequal lists and returned-function aliases at
+O1/O2, stack on/off, GC stress/verification and both poison modes. A selected
+no-tracing differential changes only result sharing: identical output and zero
+collections, counts free 2.2 MiB versus 3.6 MiB with owned results (Apple Silicon,
+Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmark gates remain required;
+other runtime callbacks and exceptional cleanup remain in phase 2.
+
+## Owned spans and right-fold transfer
+
+Borrowed application can transfer a contiguous span of supplied arguments,
+duplicating only typed slices before/after it. Span positions and lengths adjust
+at each actual function boundary during overapplication. Prefix transfer remains
+a wrapper; ordinary borrowing has an empty span. Zero-argument calls avoid null
+pointer arithmetic. `fold-right` borrows callback/list, consumes the accumulator,
+and transfers callback argument 1 while borrowing argument 0. Empty input returns
+the original owned accumulator. Direct/captured right-fold loops keep specialization.
+The input scratch buffer remains a root and is explicitly released on completion.
+
+`tests/right_fold_ownership.rs` covers input/capture/accumulator aliases, returned
+functions, empty input and dynamic/captured callbacks at O1/O2, stack on/off,
+GC stress/verification and both poison modes. Interpreter agreement verifies
+right-to-left callback behavior. The runtime probe transfers an owned second
+argument across a scalar-to-function overapplication boundary. A selected
+no-tracing differential restores only generic/specialized result sharing:
+identical output, zero collections, 1.3 MiB freed by counts versus 1.8 MiB with
+transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmarks
+remain required; retained callbacks, exceptions and remaining primitive boundaries
+still rely on conservative runtime ownership.
+
+
+## Prepared File and effect boundaries
+
+The following contracts are prepared in queue rows 74–76; they require their
+sequential full CI and merges. They are not current main support. Original File
+frame anchors preserve interpreter lifetimes alongside these ordinary owners.
+
+| Primitive | Arguments | Result |
+|---|---|---|
+| file.open/create | borrowed path | new File header owner |
+| file.read-all | borrowed File | owned String/File tuple; File alias retained through errors |
+| file.write | borrowed String and File | owned File alias; failed I/O releases only its extra owner |
+| file.close | borrowed File | unit; closes stream idempotently |
+| file.with | borrowed path and synchronous callback | owned callback result transferred before disposing its tuple and scoped File |
+| fail | borrowed typed payload | retained error owner transferred before unwinding |
+| attempt | borrowed callback and argument | owned Result containing either callback output or retained error payload |
+
+File header references are independent of native GC slots. FWP_FREE=0 keeps
+ordinary children and task/channel object storage from count-based freeing while
+still disposing resource children. Header/path storage and WebAssembly aggregate
+logical ownership remain open; retain the fallback and phase 2 acceptance checks.
+
+
+## Optional list aliases and synchronous find
+
+Prepared for the next focused list-option PR; full exact-head gates are pending.
+
+`nth`, `find` and `index-of` borrow their arguments and own newly allocated
+Option nodes. FreshOuter identifies one new structural allocation whose fields
+may alias borrowed inputs: the generated wrapper duplicates pointer-bearing
+fields by monomorphic constructor type and leaves scalar words alone. This
+is distinct from FreshTree, which owns an independent allocation tree. None
+requires no allocation or count.
+
+`nth`/`find` acquire one reference to the selected input element. `index-of`
+returns an owned optional scalar and borrows its comparison key. Negative or
+past-end indices, empty inputs and missing values preserve existing behavior.
+Find predicates use synchronous borrowed application, stop at the first match
+and do not retain the callback. Direct/captured specializations keep typed
+argument copies, selected-element references and original source/capture roots.
+
+`tests/list_option_ownership.rs` checks retained aliases, selected functions,
+results after input cleanup, dynamic/captured predicates, missing/negative/
+past-end/empty cases, scalar elements and a predicate that traps if invoked
+after a match. Interpreter/native outputs agree at O1/O2, stack on/off,
+collection stress/verification and both reuse-poison settings. The no-tracing
+loop frees 10.4 MiB by counts versus 9.6 MiB after restoring only optional-result
+sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB precision, zero collections). Full platform CI remains required.
+
+## Exact reference counts above the byte range
+
+Prepared queue14; not merged support. Rebased focused checks and all six
+exact-head gates remain required. Historical measurements below are from its
+original preparation, not verification of the current rebased head.
+
+Native count metadata remains one byte per allocation: 0 means shared, 1..254
+are inline counts, and 255 identifies an exact size_t count in rare side metadata.
+Entries use canonical count-slot addresses, not value addresses, and live outside
+the value heap. The collector metadata mapping is stable; these keys do not add
+language-value roots. The fixed 256-bucket table adds 2 KiB on 64-bit native
+platforms; each active wide entry holds three words (24 bytes before allocator
+overhead). Normal objects need no new allocation.
+
+Duplication above 254 allocates/increments one wide entry. Decrementing back to
+254 removes it. Generated typed destruction and closure work-list cleanup use
+one release helper so wide counts cannot be decremented as bytes. The ordinary
+last-reference predicate retains its existing non-consuming behavior. Raw drops
+retain their conservative outer-count behavior. Size_t overflow traps explicitly;
+side-entry allocation failure reports out of memory rather than silently sharing.
+
+Explicit graph sharing, runtime freeing, slot/chunk reuse and GC sweeping clear
+wide entries, including empty chunks and big allocations. High fanout alone no
+longer promotes descendants to tracing-managed sharing. Retained runtime
+callbacks still require their explicit graph-sharing boundary.
+
+`tests/wide_counts.rs` covers 601-reference leaf/record/function aliases,
+interior count-slot canonicalization, capture cleanup, graph sharing, runtime
+free/reuse, partial/empty-chunk and big-object sweep, overflow and injected OOM.
+An interpreter/native high-fanout function/string fixture passes O1/O2, stack
+on/off, GC stress/verification and both poison settings. The identical no-tracing
+loop frees 74.8 MiB through counts versus 73.9 MiB after restoring automatic
+sharing at saturation (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision,
+zero collections). This is reclamation evidence, not a timing result. Complete
+runtime inventories, old-object reclamation, exceptional/retained lifetimes,
+cycles and WASI remain unfinished; full platform CI is required after parents.
+
+## Sorted and unique copied spines
+
+Prepared queue15; not merged support. Historical measurements below are from
+the original preparation. Rebased focused checks and full sequential CI remain
+required.
+
+`sort` and `unique` borrow their source and return fresh list nodes with typed
+additional references to retained elements. The existing CopiedSpine wrapper
+owns only the new nodes and distinguishes scalar words from references. Sorting
+retains the stable merge comparison order; unique retains the first occurrence.
+Source and merge scratch buffers remain scanned across allocating operations and
+are freed explicitly. The source root survives through result construction.
+
+`tests/list_order_ownership.rs` compares retained source/result aliases, strings,
+nested string lists, scalar values and empty/singleton inputs with the interpreter
+at O1/O2, stack on/off, GC stress/verification and both reuse-poison settings.
+The identical no-tracing loop frees 6.5 MiB by counts versus 4.7 MiB after only
+sort/unique result sharing is restored (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB precision, zero collections). Both variants use the same scratch cleanup;
+this difference measures result ownership, not scratch savings or execution speed.
+Sort-by callback ownership remains separate. Full platform gates remain required.
+
+## Synchronous sort-by key ownership
+
+Prepared queue16; not merged support. Historical measurements below are from
+the original preparation. Rebased focused checks and full sequential CI remain
+required.
+
+`sort-by` borrows its source and callback; callback evaluation uses the typed
+borrowed-application path and returns one owned key per input element. Keys may
+alias source values or captures. The generated wrapper passes its monomorphic
+key destructor, or NULL for scalar keys; it never guesses ownership from bits.
+FWP_FREE=0 uses the conservative raw decrement, and FWP_REUSE=0 keeps the
+original sharing implementation. Keys are evaluated once in input order before
+the existing stable merge sort. The copied result spine owns typed element
+aliases. Scanned source/key/merge buffers stay live through allocations and are
+explicitly released after their last use; key slots are cleared before release.
+
+`tests/sort_callback_ownership.rs` checks effectful callback ordering, stable ties,
+identity/allocated/nested keys, captured function values, empty/singleton inputs,
+O1/O2, stack on/off, GC stress/verification and both reuse-poison modes. Both
+conservative compilation switches preserve interpreter output. A C probe invokes
+the actual emitted scalar-key wrapper with numeric words equal to a live counted
+String address, and verifies that neither key release nor result adoption changes
+that unrelated allocation's count.
+
+The identical no-tracing loop frees 5.1 MiB by counts, versus 4.0 MiB when only
+result sharing is restored and 4.7 MiB when only typed key destruction becomes
+raw decrement (Apple Silicon, Apple Clang 17, O1, counters rounded to tenths,
+zero collections). All variants retain the same callback and scratch-buffer
+paths. This demonstrates result and key reclamation, not execution speed or
+complete exception cleanup. Full platform gates remain required after parents.
+
+## Owned scan and iterate state sequences
+
+Prepared queue17; not merged support. Historical measurements below are from
+the original preparation. Rebased focused checks and full sequential CI remain
+required.
+
+`scan` and `iterate` borrow their callback, initial state and list inputs. The
+initial output takes an extra typed reference through actual callback parameter
+metadata. Each later callback result already owns its output reference. Later
+calls borrow the previous output, rather than transferring the reference stored
+in that output as fold does. Repeated aliases and function states therefore
+retain every earlier state. Output nodes are fresh and adopt those owned heads;
+input/output scratch is scanned and released explicitly. Initial value addresses,
+callbacks and input lists remain collector roots through allocating operations.
+
+Scan returns its initial state even for an empty list. Iterate returns empty for
+non-positive counts, taking no initial reference and invoking no callback; count
+one returns only the initial state. Size arithmetic is checked before scratch
+allocation. Conservative callback metadata retains sharing when its types are
+unknown. Conservative compilation switches preserve their existing behavior.
+
+`tests/state_sequence_ownership.rs` compares input/output aliases, unchanged and
+replaced states, function states, callback effect order, empty scan and
+non-positive/singleton iterate, including allocated initial values. Checks cover
+O1/O2, stack on/off, collection stress/verification and both reuse-poison modes.
+The no-tracing loop uses a direct head consumer to isolate sequence ownership:
+7.9 MiB freed by counts versus 4.1 MiB when only scan/iterate result sharing is
+restored (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision, zero collections).
+
+An earlier map/sum consumer measured 4.1 MiB in both variants: its fused loop
+still shares its list state before consuming it. That generated/runtime loop
+boundary needs owned state transfer as separate phase-2 work; changing the
+consumer isolates this regression, but does not fix the loop ownership gap.
+Exceptional cleanup and full platform gates remain required.
+
+## Owned normal and fused loop state
+
+Prepared queue18; not merged support. Historical measurements below are from
+the original preparation. Rebased focused checks and full sequential CI remain
+required.
+
+`loop` borrows the synchronous callback and consumes its state. Generic, direct
+and captured callback paths transfer that state into each call. They take a typed
+additional reference to the selected Step payload, then destroy the owned Step;
+this preserves payloads even when the Step is shared or aliased. Captured values
+borrow between iterations and get owned per-call copies. Existing tick placement
+and source evaluation order are preserved. Conservative compilation switches keep
+sharing/raw-drop behavior where ownership/freeing is disabled.
+
+Known loop shapes keep state in locals and avoid Step allocation. Loading a
+boxed record takes typed field references before releasing that box; nested
+record fields can remain flattened. Rebuilding a nested record from its slots
+owns additional child references, and its fresh outer reference replaces the
+field-read's initial Dup. Otherwise field cleanup would invalidate the rebuilt
+record or leave an extra outer owner. Boxed arguments passed to an unboxed
+worker similarly release their original typed fields/storage after the worker
+consumes duplicated fields.
+
+Possible heap-pointer state and next-state slots have address fences across
+allocating steps. Inline integers, F32/F64 and Bool fields need no root fences
+and remain eligible for register promotion. Boxed numerics still need roots even
+when their types have no counted destruction. Arrays start zeroed. This preserves
+root safety without forcing every scalar slot into addressable storage; actual
+register placement and speed still require assembly/benchmark evidence.
+
+`tests/loop_ownership.rs` covers generic/direct/captured/optimized loops,
+flattened records, shared/retained Step payload aliases, function states, effects,
+O1/O2, stack on/off, GC stress/verification, poison and conservative switches.
+An actual emitted scalar loop wrapper receives numerical words equal to a live
+String address and leaves its count unchanged. Focused existing loop goldens
+compare stdout, stderr and exit status, including nested state and traps.
+
+The no-tracing map/sum sequence consumer now frees 8.5 MiB by counts versus
+4.1 MiB after restoring only generated loop initial-state sharing. A fixture
+that proves it uses boxed callback entries frees 2.7 MiB versus 1.2 MiB when
+only typed boxed-to-worker argument release becomes raw outer decrement.
+Both comparisons preserve other loop/sequence behavior, identical output and
+zero collections (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). An earlier
+boxed counter was optimized past its intended callback entry; its 1.1/1.1 result
+was not evidence of that boundary. These are reclamation results, not speed
+claims or proof of exception/cancellation cleanup. Full platform gates remain
+required after parent merges; old objects, retained runtime values and cycles
+still prevent general execution without tracing.
+
+Primitive inventory was streamlined536→195 lines. The current page separates
+merged container/text/closure/list contracts from queued refinements, removes
+superseded pending-merge prose for delivered work and links exact archived
+contracts and measurements. Eleven maintained link sets,82 immutable queue
+pairs and whole commit messages pass0.10 s CPU /0.72 s elapsed.
+
+Published documentation-only inventory cleanup112f3c8de87beddab2374f51e19d6dc94846919d
+on ownership-loop-state. Runtime/test source stays as verified7af6961;
+immutable OLD787763d and actual current base15743b8 remain unchanged.
+No additional PR opened.
+
+## Original queue19 contract and evidence
+
+Historical preparation; not current merged support.
+
+## Nested structural list copies
+
+`zip` borrows both lists and returns fresh counted list and pair nodes. Each
+pair owns one typed reference to each borrowed element; unequal input lengths
+still truncate to the shorter list. `unzip` borrows its pair list and returns a
+fresh counted pair of fresh counted lists, each owning its selected elements.
+`chunks` borrows its size and source list, builds counted outer and inner list
+nodes, and owns one typed reference per element. It preserves empty inputs,
+positive-size validation and failure order. The chunk count uses division and
+remainder rather than overflowing a rounded-up addition.
+
+The `CopiedStructure` contract selects wrappers with duplicate functions for
+reference-bearing element types and NULL for scalar types. Existing borrowed
+inputs remain live across allocation. Scratch item/output buffers are scanned
+while in use and released after their values transfer into counted nodes.
+Ownership-disabled builds retain the previous conservative sharing fallback.
+
+`tests/list_structure_ownership.rs` checks retained inputs, nested lists,
+function-valued elements, unequal and empty lists, large/invalid chunk sizes,
+O1/O2, stack on/off, collection/reuse verification and fallback flags. Actual
+emitted scalar wrappers are probed with numeric words equal to heap addresses.
+With tracing disabled and identical outputs, changing only the emitted result
+boundaries from owned to shared reduces count reclamation from 12.6 MiB to
+8.2 MiB. This is scoped reclamation evidence, not a speed or general no-GC claim.
+
+## Structural-list following-task preparation on loop ownership
+
+Rebased queue19 ownership-list-structure from immutable OLDparent787763d onto
+current loop112f3c8. Preserve OLDheadc05a5d9 and use actual current base112f3c8
+for later squash rebase. Three raw interpreter oracle calls now use FWP_NO_OPT=1.
+Four focused checks pass16.10 s CPU /32.47 s elapsed: aliases/nested structures,
+scalar address-shaped bit safety, chunks validation/trap order and no-tracing
+result reclamation. Clippy lib/fixture2.45 s /4.99 s, format0.33 s /0.61 s;
+clean0.00 s /0.13 s. Full sequential gates remain required.
+
+Resource evidenceee4bd22 / CI37780278972 ARM GC failed http.fwp with empty
+stdout/stderr and a signal exit (-1 in the harness), not a timeout. Completed
+job113321340968 log is /private/tmp/fwp-resource-arm-gc-37780278972.log.
+Other jobs remain live; this failed run is not acceptance. Root cause is unknown
+and a focused HTTP reproduction is next.
+
+PR91 passed all six CI37774239006 gates at7018086b8f9851f576350ba24e8af5041c3bb594
+and explicitly squash-merged as3c0685c34f9808db82ef9a9b151a6fcfb8eddb47.
+Whole message verified: Keep call effect contexts separate from pure callback types,
+one line, empty body. Nine authoritative docs were refreshed/saved in
+/private/tmp/fwp-main-docs-pre91 before main fast-forward; merged call-effect
+design text is retained in the streamlined design. Next wide-count final
+rebase uses actual current7018086 onto3c0685c, not immutable OLD89b7bde.
+
+Wide counts final-rebased from actual current7018086 onto real squash3c0685c.
+Source/runtime/tests/workflow match verifiedcb0d7e6 exactly. Sharing regression
+passes7.16 s CPU /15.00 s elapsed. The initial filtered invocation ran zero
+wide_counts tests; a separate unfiltered focused command runs all three and
+passes7.28 s /14.80 s. No skipped check supplies verification. Current root
+docs preserve the merged call-effect rule and streamlined primitive inventory.
+
+Final wide-count branchbd7a20bfd83369e87ca9100c75503ab4ad73e8d5 published
+with exact lease against previouscb0d7e6. PR92 is the sole open PR, created
+after PR91 merge and final focused checks. Final fmt0.33 s /0.60 s.
+Source/test differences from verifiedcb0d7e6 are empty; current docs preserve
+all later preparation status and evidence failure.
+
+## Resource evidence HTTP ownership repair, 2026-10-08
+
+Combined resource-frame evidence ee4bd2238e078238cf1a0867e1c891cbf3170279
+(CI37780278972) passes bench and fails Linux plus all four macOS gates.
+Full logs: /private/tmp/fwp-resource-all-failures-37780278972.log. HTTP,
+REST/TLS/web and native standard-library behavior regress. Focused HTTP build
+passes13.91 s CPU /27.91 s elapsed; stress execution signals SIGSEGV (-11).
+LLDB identifies null Bytes passed to string.from-bytes from the successful
+HTTP client response branch. Debugger exit0 is not program success. Emitting
+C passes0.98 s /1.97 s. FWP_FRAME_FIELDS=0 build7.23 s /14.51 s still crashes.
+
+Temporarily reverting only row85 match context (guarded cargo run -- build
+tests/run/http.fwp -O2) passes13.79 s /27.54 s and restores golden output
+under GC_STRESS=1/VERIFY/SEED=42, run0.31 s /1.90 s. Restored src/rc.rs
+after diagnosis. Typed stack scrutinee children were released while whole
+pattern aliases retained only an off-heap outer pointer. Propagating the
+stack child owners into whole binders repairs their Dup/Drop. Fixed HTTP
+build13.62 s /27.15 s; stress run0.31 s /1.73 s.
+
+Focused tests/stack_match_ownership.rs compares FWP_NO_OPT=1 interpreter
+with O1/O2 native on both constructor/literal and whole-value paths, GC-off/on
+and poison modes. Omitting only whole-binder child retains exposes the old
+invalid lifetime at both optimization levels. Initial expected-output strings
+had concatenation order reversed; the raw oracle caught this test error,
+corrected to data-last behavior before testing the lifetime control. Final
+check1.64 s CPU /3.89 s elapsed passes. Related match_context_ownership,
+resource_frame_fields, resource_frame_variants and resource_match_context
+checks (five tests) pass15.17 s /30.59 s. All local invocations use the fwp
+resource guard. Full builds/tests remain on GitHub; failed evidence is not a gate.
+
+The repaired HTTP executable matches tests/run/http.out exactly with empty
+stderr in four GC-off/on × REUSE_VERIFY-off/on combinations, GC_STRESS=1,
+VERIFY=1, SEED=42. Guarded python3 /private/tmp/fwp-verify-resource-http.py
+passes1.18 s CPU /6.64 s elapsed. Evidence lint (cargo clippy --test
+stack_match_ownership -- -D warnings) passes2.47 s /4.99 s, format0.45 s
+/0.85 s. Transfer repair to production row85; clean shared fwp artifacts
+0.00 s /0.14 s before production checks. Full runner gates remain required.
+
+On actual production row85 parent3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778,
+all five stack_match_ownership, match_context_ownership, resource_frame_fields
+and resource_frame_variants tests pass16.71 s CPU /36.11 s elapsed. The source
+match_context oracle now explicitly uses FWP_NO_OPT=1 (the field-frame oracle
+already did). Repaired evidence includes later87 raw-oracle and source tests;
+its distinct checks do not substitute for the production-ancestry check.
+
+Production lint (cargo clippy --test stack_match_ownership --test
+match_context_ownership -- -D warnings) passes2.45 s /4.96 s, format0.45 s
+/0.86 s. Production follow-up subject: Preserve stack children through
+whole-value match binders. Whole messages remain one line, at most80 chars,
+empty body. Nine authoritative docs are preserved in its publication snapshot.
+
+Production row85 follow-up872372452a1071db124f8e4cc8ae16027cc8f337 preserves
+immutable OLD3a0cbdb/parentae00e69. Row86 remains based on3a0cbdb; later
+rebasing it onto row85's actual squash must not replay this follow-up.
+Evidence already contains the raw match_context oracle fix from row87, so its
+repair delta is the identical nine-line cgen change plus the new focused test.

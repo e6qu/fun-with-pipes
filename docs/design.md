@@ -79,6 +79,10 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 
 - Hindley–Milner inference with levels. Records and effects share one row
   unifier. Only signatures generalize: see [Generics](#generics).
+- Calls reopen only their own closed effect row after argument unification,
+  allowing callee effects in a larger ambient context without contaminating
+  function-valued argument types. Pipe application, composition and ordinary
+  application use this rule; required callback effects remain checked.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
@@ -349,6 +353,8 @@ FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
-Known expression types remain authoritative. No new surface syntax is introduced.
+Known expression types remain authoritative. Whole-value pattern aliases of
+stack aggregates retain/drop their typed children, preserving them when the
+scrutinee releases its ownership. No new surface syntax is introduced.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
