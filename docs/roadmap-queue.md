@@ -89,7 +89,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 58 | interpreter-opencl | `ownership-interpreter-opencl` | `e9bddcdc78b7` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `2184aa897572` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `b2b3e2d73da8` | `07092cb06e1d` | `3f6154b4bf67` |
-| 61 | grpc-server | `ownership-grpc-server-cleanup` | `044ceae9f0c5` | `0d5d3098e782` | `07092cb06e1d` |
+| 61 | grpc-server | `ownership-grpc-server-cleanup` | `15ed94b82b00` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `c61df653dfb2` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `d0e29ddbf182` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `446d60c378dc` | `0cc612650ab9` | `f6598e440a59` |
