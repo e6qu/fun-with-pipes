@@ -11323,3 +11323,18 @@ Fresh nested-loop checks follow.
 Row67 guarded clean0.00/0.14s, ALPN owning-session root test6.99/14.97s,
 clippy5.72/11.65s and format0.44/0.84s pass. Shared target switched with
 guarded package clean0.00/0.13s to row68; focused timer-order check is running.
+
+Row68 timer-order test10.28/21.81s, clippy5.61/11.71s and format0.46/0.87s
+pass. Linux evidenceb9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a preserves
+source933deb78f600 byte-for-byte; CI37978789380 is queued, not acceptance.
+Row70 refresh41a76ee080e51b150df86ccef357c90b8ef21418 uses actual base
+7047b100dbbe. Compiler/runtime/File fixture match original; only inherited
+CLI/tracing harness repairs differ. Prior CURRENT0d09a61aaab7 is retained
+under its immutable revision tag before lease publication. Focused checks follow.
+
+CI37973911726 at7dfe64894b1dc1107859a5cde550850fdb672973 and
+CI37976525768 atcd3a9d666bb21d6a682e541ae985e9f10de2e096 pass the
+focused Linux cache/task and external resource lifetimes, actual tracing churn,
+primitive consistency and strong handoff audit. Neither replaces sequential
+production gates. Row69 nested boxing and both loop unwind tests14.44/29.19s
+pass; lint/format follow.
