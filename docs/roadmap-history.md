@@ -8696,3 +8696,22 @@ three omission controls and reduced-limit overflow probe pass. Rust ALPN
 packing agrees on the valid wire bytes. Library fixtures do not arm tracing;
 full TLS source/interpreter and stress coverage stays on GitHub.
 Guarded fmt --all -- --check passes 0.52 / 1.07 s. Tested code unchanged.
+Final row63 66e80d399e656ea91247edb61d0cf21609048e30 is clean and published
+with exact lease f6598e440a59b1a7312ff5b62178644bec458ad8. Subject verified
+one line with empty body. No extra PR. Row64 actual base remains f6598e4.
+
+## Connection cancellation preparation refresh, 2026-10-09
+
+Row64 rebases from actual old parent f6598e440a59b1a7312ff5b62178644bec458ad8
+onto current row63 head 66e80d399e656ea91247edb61d0cf21609048e30.
+Nine authoritative docs resolve historical conflicts; feature runtime/tests
+exactly match immutable 0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392.
+Guarded cargo clean -p fwp passes 0.05 / 0.25 s. Guarded cargo test
+--test connect_cleanup --test tls_wire_ownership --test tls_listener_ownership
+passes all three tests 12.36 / 27.82 s CPU / elapsed.
+Pending TCP preparation protects resolver storage and descriptors until socket
+wrapper transfer; TLS sockets/SSL remain owned through cancellation while
+handshaking. Four cancellation boundary probes, success/refusal paths,
+idempotent close, O1/O2 poison and four omission controls pass. Library tracing
+is unarmed; full source and GC stress gates still require sequential GitHub CI.
+Focused same-target lint passes 3.06 / 6.16 s; fmt check passes 0.63 / 1.62 s.

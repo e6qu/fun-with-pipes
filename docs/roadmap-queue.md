@@ -98,7 +98,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 60 | library-resource | `ownership-library-resources` | `d56a24e48d7e` | `07092cb06e1d` | `3f6154b4bf67` |
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `c299edbc33eb` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
-| 63 | tls-wire | `ownership-tls-wire-preparation` | `f6598e440a59` | `f6598e440a59` | `4ab1f7ddd6f8` |
+| 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `0cc612650ab9` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `b8f3752d236f` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
