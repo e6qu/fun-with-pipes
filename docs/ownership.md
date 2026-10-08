@@ -262,11 +262,11 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#87 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#88 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
 Right-fold transfers its accumulator through a typed owned argument span;
-list-prefix is sole PR #88. Other callbacks, runtime unwind and retained owners
+list-prefix has passed full CI and merged; list-copy is next. Other callbacks, runtime unwind and retained owners
 remain preparation.
 
 ## Prepared work and acceptance limits
