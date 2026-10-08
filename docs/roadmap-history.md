@@ -11419,3 +11419,10 @@ format0.55/1.08s pass. Row80 refresh8454a97667bb668b9c75221b55e5d57356b45745
 uses actual base76374abb1077; compiler/runtime and aligned path fixture match
 original with inherited CLI/tracing repairs intact. Previous CURRENTe7d3882b67ae
 is retained under its immutable revision before lease publication. Checks run.
+
+Row80 both aligned path/allocation and raw interpreter source tests10.54/21.29s,
+clippy6.87/13.94s and format0.54/1.07s pass. Row81 refresh
+d39b6145cb559e17ac3c1005959f2cabd6c22980 uses actual base8454a97667bb.
+Compiler/runtime and disposal fixture match original, with inherited CLI/tracing
+repairs preserved. Old CURRENTfaac017dc60d remains under its immutable revision
+before lease publication. Fresh focused storage disposal check runs.

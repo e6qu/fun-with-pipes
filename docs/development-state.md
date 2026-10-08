@@ -123,8 +123,8 @@ still need their final squash rebases and six exact-head full gates.
 | 77 ownership-wasm-resource-counts | 295b0da5c1f0 | da4acc398637 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | 1a5f5ba98a32 | 295b0da5c1f0 | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | 76374abb1077 | 1a5f5ba98a32 | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
-| 80 ownership-file-inline-path | 8454a97667bb | 76374abb1077 | Refreshed source unchanged; focused path checks running |
-| 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
+| 80 ownership-file-inline-path | 8454a97667bb | 76374abb1077 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
+| 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Refreshed source unchanged; focused disposal check running |
 | 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
 | 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
 | 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
@@ -252,8 +252,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-inline-path-worktree; the guarded aligned
-File path storage check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-file-storage-disposal-worktree; the guarded last-owner
+File storage disposal check is running. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
