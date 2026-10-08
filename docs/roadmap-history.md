@@ -8832,3 +8832,29 @@ cleanup scopes per optimization level pass. Related cancellation and preparation
 regressions pass. Emitted box removal is not an elapsed-speed claim.
 Same-target lint passes 2.56 / 5.18 s CPU / elapsed.
 Fmt check passes 0.45 / 0.83 s. Ten docs copied before amend; tested code unchanged.
+Final row69 821e6c1baaef7300383449de580473ff1643f189 is published clean with
+exact lease b00215dc10f561747f2adbfb04e404e81581f598. Whole subject verifies
+one line and empty body. No extra PR. Row70 actual base remains b00215d;
+its current 7222247 preserves repaired stale-finalizer controls.
+PR96 now passes five exact-head jobs; regular Intel macOS remains running.
+
+## File construction preparation refresh, 2026-10-09
+
+Row70 rebases from actual old parent b00215dc10f561747f2adbfb04e404e81581f598
+onto current row69 head 821e6c1baaef7300383449de580473ff1643f189.
+Ten current docs resolve conflicts. Previous current 7222247 contains the repaired
+stale-finalizer control, retained here. File construction and unwind tests match
+7222247 exactly; whole runtime additionally retains existing main keep-alive
+fences for two right-fold paths and flat-map, unrelated to this feature.
+Guarded clean passes 0.04 / 0.25 s. Guarded cargo test
+--test file_construction_ownership --test unwind_cleanup is running.
+All four focused tests pass 11.09 / 22.39 s CPU / elapsed. Raw streams are owned
+before handle allocation; constructed handles take over before path storage and
+finalizer registration. Failed construction closes exactly once and clears stream
+pointers before later finalization; scoped callbacks preserve close-on-return,
+error, trap and cancellation. Direct create/open raw interpreter agreement passes.
+O1/O2 explicitly armed tracing, stress/verification, poison, direct/scoped/create/open
+failure matrices and two omission controls per optimization level pass. The
+stale-handle control exits before intentionally unsafe finalization, as repaired.
+Same-target lint passes 2.49 / 5.01 s CPU / elapsed.
+Fmt check passes 0.43 / 0.82 s; ten current docs copied before amend, tested code unchanged.

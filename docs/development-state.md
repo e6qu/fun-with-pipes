@@ -42,16 +42,16 @@ ownership-loop-state, /private/tmp/fwp-loop-worktree, exact
 Source/runtime/tests/workflows exactly match verified 112f3c8; four raw
 interpreter oracles keep FWP_NO_OPT=1. Five final tests pass 18.66 / 37.70 s,
 exact contract unit 3.15 / 6.61 s, lint 2.30 / 4.69 s, format 0.33 / 0.60 s.
-CI 37909273494 passes bench, regular ARM macOS and ARM/Intel GC stress
-at this exact head. Linux and regular Intel macOS run. Require each to pass before
+CI 37909273494 passes Linux, bench, regular ARM macOS and ARM/Intel GC stress
+at this exact head. Regular Intel macOS runs. Require it to pass before
 explicit match-head squash with subject
 `Transfer owned loop states and reclaim typed Step and ABI payloads`, empty body.
 After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row68 are published with focused checks;
-row69 nested loop records is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row69 are published with focused checks;
+row70 File construction is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -113,23 +113,24 @@ still need their final squash rebases and six exact-head full gates.
 | 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
 | 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
 | 68 ownership-ci-probe-repairs | 7d8ab6719e55 | 22b95b0ddb74 | 30.99 / 62.26 s |
+| 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |
 
-Rows 18–68 are published preparations with passing focused tests, lint and
+Rows 18–69 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row68 ownership probes and timer output is published clean at
-7d8ab6719e55b5b8a5e93c0471cd374adcd0b38b on actual base 22b95b0.
-Ten tests across six targets pass 30.99 / 62.26 s, lint 2.59 / 5.35 s,
-format 0.45 / 0.86 s. Literal-brace compile failure is repaired.
-Probe metadata outputs are valid; timer regression follows already merged
-join/drain/sort behavior with deliberate wake-order overtaking.
-Row69 rebased from actual old parent e503e10 onto current row68 head 7d8ab67;
-four focused nested boxing, loop preparation and cancellation tests pass
-18.32 / 36.87 s; lint passes 2.56 / 5.18 s.
+Row69 nested loop boxing is published clean at
+821e6c1baaef7300383449de580473ff1643f189 on actual base 7d8ab67.
+Four focused tests pass 18.32 / 36.87 s, lint 2.56 / 5.18 s, format 0.45 / 0.83 s.
+Raw interpreter, aliases/scalar bits and retain/allocation trap controls pass;
+Again state remains flat. Emitted box removal is not a speed claim.
+Row70 rebased from actual old parent b00215d onto current row69 head 821e6c1;
+four focused File construction and unwind tests pass 11.09 / 22.39 s;
+lint passes 2.49 / 5.01 s. Prior 7222247
+stale-finalizer control repair remains intact.
 Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
 alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
@@ -180,7 +181,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-nested-loop-boxing-worktree; nested loop checks complete; no local workload is active.
+belongs to /private/tmp/fwp-file-construction-worktree; File checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.17 s elapsed).
