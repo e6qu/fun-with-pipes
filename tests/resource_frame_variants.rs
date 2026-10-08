@@ -244,6 +244,79 @@ main = "{}" | file.open | pack | close | const "closed" | echo
             }
         }
     }
+    // One original binder may be a let on one path and a whole-pattern binding
+    // on another. Its frame representation must work for both binding kinds.
+    for selector in [0, 1] {
+        let mut mixed = program.clone();
+        let variant = mixed.funcs[0].locals[0].clone();
+        mixed.funcs[0].locals.push(variant);
+        let Body::Expr(Expr::ResourceRegion { body, bindings, .. }) = &mut mixed.funcs[0].body
+        else {
+            panic!()
+        };
+        bindings.push(1); // Also exercise typed V and variant cleanup slots together.
+        let Expr::Let(_, value, matched) = &mut **body else {
+            panic!()
+        };
+        let Expr::Match(_, arms) = &mut **matched else {
+            panic!()
+        };
+        arms[0].1 = Expr::Record(vec![]); // Disposal without explicit file.close.
+        let pattern_path = Expr::Let(
+            2,
+            value.clone(),
+            Box::new(Expr::Match(
+                Box::new(Expr::Local(2)),
+                vec![(Pat::Bind(0), (**matched).clone())],
+            )),
+        );
+        **body = Expr::Match(
+            Box::new(Expr::Const(fwp::value::Value::I64(selector))),
+            vec![
+                (Pat::Lit(fwp::value::Value::I64(0)), (**body).clone()),
+                (Pat::Wild, pattern_path),
+            ],
+        );
+        assert_eq!(fwp::interp::run_main(&mixed, vec![]).exit_code, 0);
+        let code = fwp::cgen::generate(&mixed).unwrap();
+        let hooks = r#"
+#include <stdio.h>
+#include <sys/stat.h>
+static FILE *binding_open(const char *,const char *);
+static int binding_close(FILE *);
+static int binding_fd, binding_closes;
+#define fopen binding_open
+#define fclose binding_close
+"#;
+        let audit = r#"
+#undef fopen
+#undef fclose
+static FILE *binding_stream;
+static FILE *binding_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f){binding_stream=f;binding_fd=fileno(f);}return f;}
+static int binding_close(FILE *f){if(f==binding_stream)binding_closes++;return fclose(f);}
+"#;
+        let code = code.replace("return fwp_exit_code;", "struct stat binding_status;if(binding_closes!=1||fstat(binding_fd,&binding_status)!=-1||errno!=EBADF)return 34;return fwp_exit_code;");
+        let code = format!("{hooks}\n{code}\n{audit}");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        out.status.success(),
+                        "binding selector={selector}, {opt}, gc={gc}, poison={poison}: {}",
+                        String::from_utf8_lossy(&out.stderr)
+                    );
+                }
+            }
+        }
+    }
     // A File retain succeeds before the String retain traps. Both the extra
     // reference and the incoming owned payload must be released exactly once.
     let mut fault_program = program.clone();
