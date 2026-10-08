@@ -702,6 +702,10 @@ static int fwp_reuse_verify = -1;
 /* 1: `v` has one reference and may be written in place; 2: it would be,
  * but is to be copied and poisoned (FWP_REUSE_VERIFY) */
 static inline int fwp_rc_unique(V v) {
+#ifdef FWP_NO_REUSE
+    (void)v; return 0;
+#endif
+
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
     uintptr_t off = (uintptr_t)v - (uintptr_t)fwp_gc.base;
@@ -720,6 +724,10 @@ static inline int fwp_rc_unique(V v) {
  * by every minor collection); 2: it would be, but is to be copied and
  * poisoned (FWP_REUSE_VERIFY) */
 static inline int fwp_rc_unique_mut(V v) {
+#ifdef FWP_NO_REUSE
+    (void)v; return 0;
+#endif
+
     uint8_t *c = fwp_rc_slot(v);
     if (!c || *c != 1) return 0;
     if (__builtin_expect(fwp_reuse_verify < 0, 0)) {

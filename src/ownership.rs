@@ -17,6 +17,10 @@ pub enum Argument {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResultOwnership {
     Shared,
+    /// An owned resource or resource-bearing result prepared by the runtime.
+    OwnedResource,
+    /// Synchronous effect handler owns either callback result or error payload.
+    OwnedAttempt,
     FreshContainer,
     /// A synchronous callback returns a typed owned value.
     OwnedCallback,
@@ -141,6 +145,17 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Retained(0)),
             &[0],
         ),
+        "fail" => (&[B], R, None, &[]),
+        "attempt" => (
+            &[B, B],
+            ResultOwnership::OwnedAttempt,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
+        "file.open" | "file.create" => (&[B], ResultOwnership::OwnedResource, None, &[]),
+        "file.read-all" => (&[B], ResultOwnership::OwnedResource, None, &[0]),
+        "file.write" => (&[B, B], ResultOwnership::OwnedResource, None, &[1]),
+        "file.close" => (&[B], R, None, &[]),
         "task.scope" => (
             &[B],
             ResultOwnership::OwnedCallback,
