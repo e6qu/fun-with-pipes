@@ -8636,3 +8636,28 @@ gRPC/TLS suites still require each sequential PR's CI.
 gRPC listener lint with all three targets and -D warnings passes2.34 s
 CPU /4.78 s elapsed; fmt check0.35 /0.63 s. Nine current docs copied before
 final amend; tested feature source unchanged.
+Final gRPC-listenersc299edbc33eb27f1b136a0f1c3b664784282ea13 is clean
+on actual based56a24e, published with exact lease against previous6364bed.
+Whole subject verified one line, empty body; no second PR. Row62 ACTUAL base
+remains immutable OLD0d5d3098e7827e36045984adcbf859901bde4b74, so its
+rebase does not replay the control repair; queue OLD anchors unchanged.
+
+Row62 TLS cache rebase from ACTUAL0d5d3098e7827e36045984adcbf859901bde4b74
+onto actual row61 headc299edbc33eb27f1b136a0f1c3b664784282ea13 resolves
+only doc conflicts with nine authoritative files. Current repaired listener
+controls remain inherited, without replaying their fix. Guarded clean0.00
+/0.14 s; TLS cache, gRPC server and library resource tests started.
+PR96 passes bench; Linux, regular ARM macOS and both GC stress jobs run,
+regular Intel macOS remains queued at exact03d25ac.
+Guarded cargo test --test tls_cache_ownership --test grpc_server_ownership
+--test library_resources passes all three tests11.21 s CPU /26.06 s elapsed.
+TLS client cache publication follows completed name/context/allocation
+preparation, preserving old cache entries on strdup/realloc failure and
+releasing only partial owners. Retry and cached identity work; server ALPN
+allocation failure creates no context. O1/O2 poison and five failure
+controls pass with related gRPC/library resources. Full source TLS suites
+remain on CI; this fixture uses real OpenSSL with library tracing unarmed.
+TLS cache lint with all three targets and -D warnings passes2.35 s CPU
+/4.74 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
+final amend; tested source unchanged. Live handoff spacing is normalized
+for readable heads, measurements and phase labels; archived evidence preserved.

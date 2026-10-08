@@ -28,30 +28,30 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is60e5d6216d0f01306b457f65c00807df7d932cb1 (#95). All six
-CI37901758334 gates passed at5d0a3f302e476dfada1b3ea71aa56dae4086d905.
+Main is 60e5d6216d0f01306b457f65c00807df7d932cb1 (#95). All six
+CI 37901758334 gates passed at 5d0a3f302e476dfada1b3ea71aa56dae4086d905.
 Explicit match-head squash has verified whole one-line message:
 `Own scan and iterate states while borrowing synchronous callbacks`.
 #74–#95 deliver native macOS, selected ownership through scan/iterate states,
-isolated call effects and exact native counts beyond254. Phase1 is done;
-phase2 remains incomplete; phases3–6 are pending.
+isolated call effects and exact native counts beyond 254. Phase 1 is done;
+phase 2 remains incomplete; phases 3–6 are pending.
 
 Sole open [PR #96](https://github.com/e6qu/fun-with-pipes/pull/96),
 ownership-loop-state, /private/tmp/fwp-loop-worktree, exact
-03d25acc581a69c1a16f0add88e4768777072683 on actual main60e5d62.
-Source/runtime/tests/workflows exactly match verified112f3c8; four raw
-interpreter oracles keep FWP_NO_OPT=1. Five final tests pass18.66 /37.70 s,
-exact contract unit3.15 /6.61 s, lint2.30 /4.69 s, format0.33 /0.60 s.
-CI37909273494 runs Linux and ARM GC stress at this exact head; remaining
-bench passes; regular ARM/Intel macOS and Intel GC stress remain queued; require each to pass at this exact head before
+03d25acc581a69c1a16f0add88e4768777072683 on actual main 60e5d62.
+Source/runtime/tests/workflows exactly match verified 112f3c8; four raw
+interpreter oracles keep FWP_NO_OPT=1. Five final tests pass 18.66 / 37.70 s,
+exact contract unit 3.15 / 6.61 s, lint 2.30 / 4.69 s, format 0.33 / 0.60 s.
+CI 37909273494 passes bench at this exact head. Linux, regular ARM macOS
+and ARM/Intel GC stress run; regular Intel macOS remains queued. Require each to pass at this exact head before
 explicit match-head squash with subject
 `Transfer owned loop states and reclaim typed Step and ABI payloads`, empty body.
 After its eventual merge, row19 ACTUAL current base remains112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from1358267 and restored afterward. Independent preparations through row60 are published with focused checks;
-row61 gRPC listener cleanup is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row61 are published with focused checks;
+row62 TLS client cache lifetime is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -62,64 +62,65 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 18 ownership-loop-state | 03d25acc581a, PR96 | 60e5d6216d0f | 18.66 /37.70 s final + exact unit3.15 /6.61 s |
-| 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 /32.47 s |
-| 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 /27.47 s |
-| 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 /28.81 s |
-| 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 /30.15 s |
-| 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 /19.72 s |
-| 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 /19.21 s |
-| 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 /17.94 s |
-| 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 /30.66 s |
-| 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 /39.90 s |
-| 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 /31.57 s |
-| 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 /32.46 s |
-| 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 /44.76 s |
-| 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 /34.21 s |
-| 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 /48.48 s |
-| 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 /57.61 s |
-| 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 /49.89 s |
-| 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 /42.20 s + exact unit3.40 /6.85 s |
-| 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 /49.42 s |
-| 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 /47.71 s |
-| 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 /52.71 s |
-| 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 /39.78 s + exact unit3.28 /6.82 s |
-| 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 /32.40 s + two exact units |
-| 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 /33.31 s + exact unit3.31 /7.05 s |
-| 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 /38.35 s + exact unit3.59 /7.44 s |
-| 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 /36.18 s |
-| 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 /31.47 s |
-| 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 /29.51 s |
-| 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 /28.50 s |
-| 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 /43.40 s |
-| 48 ownership-inline-caf | af073c78c443 | 762cc824fa08 | 16.28 /33.20 s |
-| 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 /26.90 s + exact unit3.58 /7.29 s |
-| 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 /31.48 s + exact unit3.27 /6.86 s |
-| 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 /29.90 s + exact unit3.23 /6.67 s |
-| 52 ownership-task-handles | 4b6a2cb08da5 | 28de1794f39f | 22.60 /46.01 s + exact unit3.25 /6.66 s |
-| 53 ownership-channel-queues | ccbf2957f351 | 4b6a2cb08da5 | 18.97 /38.17 s + exact unit3.42 /7.08 s |
-| 54 ownership-library-results | 82f32b2cde03 | ccbf2957f351 | 8.09 /17.77 s |
-| 55 ownership-library-inputs | f240ecd56f3b | 82f32b2cde03 | 9.42 /22.58 s |
-| 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 /31.36 s |
-| 57 ownership-opencl-lifetime | 5b6e65f365d6 | 878b25aad627 | 10.33 /32.03 s |
-| 58 ownership-interpreter-opencl | 00013d55d078 | 5b6e65f365d6 | 14.19 /34.79 s |
-| 59 ownership-tls-listeners | 838cf5dee220 | 00013d55d078 | 8.83 /20.03 s |
-| 60 ownership-library-resources | d56a24e48d7e | 838cf5dee220 | 11.76 /31.49 s |
+| 18 ownership-loop-state | 03d25acc581a, PR96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
+| 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 / 32.47 s |
+| 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 / 27.47 s |
+| 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 / 28.81 s |
+| 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
+| 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
+| 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
+| 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
+| 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
+| 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
+| 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 / 31.57 s |
+| 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 / 32.46 s |
+| 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 / 44.76 s |
+| 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
+| 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 / 48.48 s |
+| 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 / 57.61 s |
+| 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 / 49.89 s |
+| 35 ownership-constructor-unwind | 646cca038ed8 | ada6a3a62df1 | 20.98 / 42.20 s + exact unit 3.40 / 6.85 s |
+| 36 ownership-worker-boxing | df5862861e71 | 646cca038ed8 | 24.61 / 49.42 s |
+| 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 / 47.71 s |
+| 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 / 52.71 s |
+| 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 / 39.78 s + exact unit 3.28 / 6.82 s |
+| 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 / 32.40 s + two exact units |
+| 41 ownership-variant-conversion | 3956d5cadd86 | c90fe5a9d170 | 16.53 / 33.31 s + exact unit 3.31 / 7.05 s |
+| 42 ownership-record-update | f22b5b587de6 | 3956d5cadd86 | 19.15 / 38.35 s + exact unit 3.59 / 7.44 s |
+| 43 ownership-record-conversion | e2f944c256b6 | f22b5b587de6 | 18.02 / 36.18 s |
+| 44 ownership-variant-alias | 610fd745b973 | e2f944c256b6 | 15.62 / 31.47 s |
+| 45 ownership-match-context | 321cc3146089 | 610fd745b973 | 14.67 / 29.51 s |
+| 46 ownership-field-context | 6d01e927c086 | 321cc3146089 | 14.06 / 28.50 s |
+| 47 ownership-caf-cache | 762cc824fa08 | 6d01e927c086 | 21.58 / 43.40 s |
+| 48 ownership-inline-caf | af073c78c443 | 762cc824fa08 | 16.28 / 33.20 s |
+| 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 / 26.90 s + exact unit 3.58 / 7.29 s |
+| 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 / 31.48 s + exact unit 3.27 / 6.86 s |
+| 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 / 29.90 s + exact unit 3.23 / 6.67 s |
+| 52 ownership-task-handles | 4b6a2cb08da5 | 28de1794f39f | 22.60 / 46.01 s + exact unit 3.25 / 6.66 s |
+| 53 ownership-channel-queues | ccbf2957f351 | 4b6a2cb08da5 | 18.97 / 38.17 s + exact unit 3.42 / 7.08 s |
+| 54 ownership-library-results | 82f32b2cde03 | ccbf2957f351 | 8.09 / 17.77 s |
+| 55 ownership-library-inputs | f240ecd56f3b | 82f32b2cde03 | 9.42 / 22.58 s |
+| 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 / 31.36 s |
+| 57 ownership-opencl-lifetime | 5b6e65f365d6 | 878b25aad627 | 10.33 / 32.03 s |
+| 58 ownership-interpreter-opencl | 00013d55d078 | 5b6e65f365d6 | 14.19 / 34.79 s |
+| 59 ownership-tls-listeners | 838cf5dee220 | 00013d55d078 | 8.83 / 20.03 s |
+| 60 ownership-library-resources | d56a24e48d7e | 838cf5dee220 | 11.76 / 31.49 s |
+| 61 ownership-grpc-server-cleanup | c299edbc33eb | d56a24e48d7e | 12.59 / 28.85 s |
 
-Rows18–60 are published preparations with passing focused tests, lint and
+Rows18–61 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row60 library-resourcesd56a24e48d7ea44634220c28375502ea71c15bfd is clean
-on actual base838cf5d, published with exact lease against OLD07092cb.
-Three focused tests pass11.76 /31.49 s, lint2.46 /4.97 s, format0.45 /0.86 s.
-Row61 gRPC server cleanup rebases from ACTUAL old parent07092cb onto
-current row60 headd56a24e, preserving current6364bed control repair and
-immutable OLD0d5d309. Three focused gRPC/listener/library resource tests pass12.59 /28.85 s;
-final lint, format, docs and publication follow.
+Row61 gRPC-listenersc299edbc33eb27f1b136a0f1c3b664784282ea13 is clean
+on actual base d56a24e, published with exact lease against previous6364bed.
+Three focused tests pass 12.59 / 28.85 s, lint 2.34 / 4.78 s, format 0.35 / 0.63 s.
+Immutable OLD0d5d309/control repair remain preserved. Row62 TLS client cache rebases from ACTUAL old parent0d5d309 onto current
+row61 head c299edb. Three focused cache/gRPC/library-resource tests pass 11.21 / 26.06 s;
+final lint, format, docs and publication follow; repaired
+listener controls remain inherited.
 Preserve immutable OLD anchors; no additional PR.
 PR96 is the sole open delivery; row19 final rebase follows its eventual squash.
 
@@ -127,11 +128,11 @@ PR96 is the sole open delivery; row19 final rebase follows its eventual squash.
 
 Current separate evidence: ownership-evidence-resource-frames,
 /private/tmp/fwp-resource-evidence-worktree, exact
-bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI37798736754: all six gates pass at this exact head. It includes
+bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI 37798736754: all six gates pass at this exact head. It includes
 rows 79–88 plus the required stack_match_ownership regression. No evidence PR.
 Evidence workflows and baseline repairs never enter production ancestry.
 
-Previous ee4bd2238e078238cf1a0867e1c891cbf3170279 /CI37780278972 passes
+Previous ee4bd2238e078238cf1a0867e1c891cbf3170279 /CI 37780278972 passes
 bench and fails all five other gates (HTTP, REST/TLS/web and native std).
 A whole pattern binder retained only the outer pointer of a stack aggregate,
 while its newly typed scrutinee dropped child owners. Propagating those typed
@@ -150,8 +151,8 @@ Rows 79–88 are prepared, not delivered. Channel close preserves queued values;
 explicit drain breaks its counted cycle; automatic cycle reclamation is unproved.
 
 Earlier combined evidence passed all six: TLS/listener 9bcae30119028b1870efb8fecfcf9746f5808acb,
-CI37730777345; WASM/resource 5fd2ed65385a23f3226b2bef02eb10196f51aeb4,
-CI37771769436 (required actual WASI/File stage, both free modes).
+CI 37730777345; WASM/resource 5fd2ed65385a23f3226b2bef02eb10196f51aeb4,
+CI 37771769436 (required actual WASI/File stage, both free modes).
 Each production PR still needs its own exact-head gates. Baseline root/cache/
 tutorial/boxing, WASI fstat, binary reads and listener/constructor control
 repairs are preserved in history; failed runs supply no acceptance.
@@ -168,8 +169,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-server-worktree; gRPC/listener/resource tests complete; lint is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
+belongs to /private/tmp/fwp-tls-cache-worktree; TLS cache tests complete; lint is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.15 s CPU /1.08 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
