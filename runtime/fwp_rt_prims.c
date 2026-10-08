@@ -2477,8 +2477,9 @@ static V fwp_p_file_close(V h) {
 }
 
 /* Resource ownership is independent of tracing/count metadata. Explicit close
- * closes the stream; dropping the last value owner also closes it. Storage still
- * follows the allocator's existing lifetime until compiler coverage is complete. */
+ * closes the stream; dropping the last value owner also closes it. Unshared
+ * native storage is released after removing finalizers; shared/bump storage
+ * keeps its allocator lifetime. */
 static void fwp_file_dup(V h) {
     if (!h) return;
     fwp_file *file = (fwp_file *)(uintptr_t)h;
@@ -2489,7 +2490,27 @@ static void fwp_file_dup(V h) {
 static void fwp_file_drop(V h) {
     if (!h) return;
     fwp_file *file = (fwp_file *)(uintptr_t)h;
-    if (file->refs && --file->refs == 0) fwp_p_file_close(h);
+    if (!file->refs || --file->refs) return;
+    fwp_p_file_close(h);
+#ifdef FWP_LIBRARY
+    fwp_gc_forget_finalizer(file);
+#endif
+#if FWP_GC && !defined(FWP_RESOURCE_NO_FREE)
+    /* Unknown runtime sharing keeps storage under the collector's lifetime. */
+    if (!fwp_rc_last(h)) return;
+    if (fwp_reuse_verify < 0) {
+        const char *e = getenv("FWP_REUSE_VERIFY");
+        fwp_reuse_verify = e && *e && strcmp(e, "0") != 0;
+    }
+    if (fwp_reuse_verify) {
+        /* File is a leaf, but its header is not a String header. */
+        file->path[0] = 0;
+        return;
+    }
+    intptr_t before = fwp_gc.budget;
+    fwp_mem_free(file);
+    fwp_gc.freed += (double)(fwp_gc.budget - before);
+#endif
 }
 
 typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
@@ -2497,6 +2518,15 @@ static void fwp_close_scoped_file(void *arg) {
     fwp_file_cleanup *file = arg;
     if (file->handle) fwp_p_file_close(file->handle);
     else fclose(file->stream); /* allocation failed before a handle existed */
+}
+
+/* Close while the constructor owner is still live, then release its storage. */
+static void fwp_close_owned_scoped_file(void *arg) {
+    fwp_file_cleanup *file = arg;
+    fwp_close_scoped_file(file);
+    V handle = file->handle;
+    file->handle = 0;
+    fwp_file_drop(handle);
 }
 
 static V fwp_file_value(FILE *f, const char *path) {
@@ -2509,6 +2539,10 @@ static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);
     h->f = f;
     h->refs = 1;
+#if FWP_GC
+    /* The header's storage starts unshared; File owners use their own count. */
+    fwp_rc_fresh(PTR(h));
+#endif
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
@@ -2636,10 +2670,7 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
     V h = fwp_file_value(f, STR(path)->d);
     fwp_file_cleanup file = {f, h};
     fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
-    fwp_value_owner handle_owner = {h, fwp_file_drop};
-    fwp_cleanup handle_cleanup;
-    fwp_value_protect(&handle_owner, &handle_cleanup);
+    fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);
     fwp_handler hd;
     hd.prev = fwp_handlers;
     hd.state_depth = fwp_state_len;
@@ -2655,10 +2686,8 @@ static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pa
         if (dup_result) dup_result(result);
         fwp_value_finish(&pair_owner, &pair_cleanup);
         if (drop_pair) drop_pair(r);
-        fwp_value_release(&handle_owner);
-        fwp_value_finish(&handle_owner, &handle_cleanup);
         fwp_cleanup_pop(&cleanup);
-        fwp_close_scoped_file(&file);
+        fwp_close_owned_scoped_file(&file);
         FWP_KEEP_ALIVE(path); FWP_KEEP_ALIVE(fn);
         return result;
     }

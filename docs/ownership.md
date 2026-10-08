@@ -406,3 +406,15 @@ display, aliases, constructor unwind, library teardown and source/native I/O
 have focused checks. This does not reclaim the header at the last owner; safe
 finalizer removal and shared/stale handle policy remain required. Sequential
 full platform gates and actual WASI evidence are still pending.
+
+
+The next prepared File disposal closes the last typed owner and frees unshared
+native leaf storage after removing its library finalizer. Executables skip the
+finalizer scan; library removal compacts its registry without allocation and
+costs linear time in registered entries. Unknown/shared headers retain their
+allocator lifetime. Disabled freeing retains storage; verification poison leaves
+a closed zero-owner/empty-path header. Scoped callbacks close while their
+constructor owner remains live, then drop that owner on return and unwind.
+Focused tests verify same-address reuse without tracing, freed-byte accounting,
+retained finalizers and omission controls. Constructor exceptional storage,
+shared graphs/cycles, actual WASI and full sequential gates remain required.
