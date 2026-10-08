@@ -73,7 +73,8 @@ int main(int argc,char **argv){
   }else if(!mode)return 8;
   fault=0;fwp_trap_recover=0;fwp_trap_jb=0;fwp_handlers=0;
   if(fwp_cleanups||closes!=1||watched_fd<0||fcntl(watched_fd,F_GETFD)!=-1||errno!=EBADF)return 2;
-  if(observed_handle&&((fwp_file *)observed_handle)->f)return 3;
+  // Inspect the header only while storage was retained by poison mode.
+  if(observed_handle&&getenv("FWP_REUSE_VERIFY")&&strcmp(getenv("FWP_REUSE_VERIFY"),"0")&&((fwp_file *)observed_handle)->f)_Exit(3);
   if(mode&&mode<4&&callbacks)return 4;
   if(mode==4&&callbacks!=1)return 5;
   // A failed but registered handle must not close the stream again.
@@ -102,7 +103,7 @@ int main(int argc,char **argv){
     let exe = dir.0.join("probe");
     let no_scope = injected
         .replace(
-            "fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);",
+            "fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);",
             "(void)cleanup;",
         )
         .replace("fwp_cleanup_pop(&cleanup);", "(void)file;");

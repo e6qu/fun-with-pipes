@@ -107,6 +107,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `681dd55136b0` | `681dd55136b0` | `c889479eed7a` |
 | 79 | resource-frame-fields | `ownership-resource-frame-fields` | `658e5b73ae1c` | `658e5b73ae1c` | `681dd55136b0` |
 | 80 | file-inline-path | `ownership-file-inline-path` | `2d903d6617d9` | `2d903d6617d9` | `658e5b73ae1c` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `750a5cffd46b` | `750a5cffd46b` | `2d903d6617d9` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
