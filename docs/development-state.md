@@ -142,7 +142,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to that other repository; do not use it for fwp.
-Current shared compiler target belongs to /private/tmp/fwp-grpc-server-worktree.
+Current shared compiler target belongs to /private/tmp/fwp-file-inline-path-worktree.
 Guarded cargo clean -p fwp before switching checkout. All local checks above
 used this guard; no active workload remains at last handoff.
 
@@ -184,8 +184,65 @@ Apple arm64, Apple Clang17.0.0; one versus two constructor allocations, fixed
 header16 versus24 bytes, requested bytes eight fewer. No elapsed speed claim.
 Clippy lib/four fixtures passes2.98 s /11.62 s; format0.55 s /1.07 s.
 Final explicit header-size assertions pass with both new tests, CPU4.23 s /10.42 s;
-final fmt0.52 s /0.98 s and clippy0.07 s /0.37 s pass. Publish
-as queue80 after final checks; no additional PR while #90 is open. Next audit:
+final fmt0.52 s /0.98 s and clippy0.07 s /0.37 s pass. Published as queue80 after final checks; no additional PR while #90 is open. Next audit:
 safe finalizer unregistration and File header storage reclamation; preserve
 closed-handle semantics, construction failure and retained/shared boundaries.
 Shared target now belongs to this inline-path checkout.
+
+Queue80 is published clean2d903d6617d99cec52600c8af43e4d08b5de6716,
+parent658e5b73. Whole message verified one line, empty body:
+`Store File paths inline in one aligned leaf allocation`. No extra PR opened.
+Full sequential CI and actual WASI remain pending; existing evidence run is
+left intact. Preserve OLD2d903d6 for the next preparation.
+
+Queue80 post-publication audit passes nine doc link sets,74 immutable queue
+pairs and complete inspected commit messages, CPU0.07 s /elapsed0.64 s.
+Latest poll: #90 benchmark passes/five gates pending; repaired evidence Linux
+live, benchmark passes/four Mac jobs queued. No merge gate yet.
+
+Next concrete reclamation audit: fwp_file.refs is independent of the GC slot;
+shared File headers can have slot0. Immediate unshared leaf freeing must not
+reuse generic record poison (it assumes an object layout) or retain a stale
+library finalizer. Existing runtime probes intentionally inspect discarded
+shared headers; preserve their defined diagnostics. Add safe finalizer removal
+before any unshared header reuse, protect construction failures, and distinguish
+shared/unknown runtime boundaries before making an ARC-only storage claim.
+Full graph/cycle coverage is still part of phase2; do not treat inline storage
+as completion of ownership or optional tracing-free execution.
+
+
+Active queue81 preparation: ownership-file-storage-disposal checkout
+/private/tmp/fwp-file-storage-disposal-worktree, parent immutable2d903d6.
+Implemented last-owner disposal of unshared native File leaf storage after
+closing and removing finalizers. Shared headers and disabled-free/bump storage
+keep allocator lifetime; poison mode leaves a closed zero-owner/empty-path
+header instead of applying String-header poison. Constructor initializes native
+storage ownership independently of File.refs. file.with_owned now closes while
+its constructor owner is live, then drops that owner in one cleanup callback.
+This avoids a scoped-close read after freeing the header on normal/error exits.
+
+Initial checks exposed an old-layout allocation control with a const path;
+restore its old destructor along with its old constructor/layout. Subsequent
+storage test detected missing native fresh count; explicitly initialized it.
+Finalizer omission caused an actual stale atexit finalizer crash; its control
+now uses _Exit(4) as soon as the stale registration is detected. New disposal
+matrix passes after repair (CPU0.98 s /4.20 s), including actual same-address
+reuse with tracing off, freed-byte accounting, shared/disabled-free/poison
+retention and final teardown. Added an unrelated retained File finalizer to
+prove removal preserves other live registrations. Final eight tests across seven fixtures pass, CPU55.88 s /elapsed123.31 s.
+The earlier failed gates are not acceptance evidence. API removal scans/compacts finalizer registrations
+without allocating; no speed claim or universal tracing-free claim.
+Shared compiler target now belongs to the storage-disposal checkout.
+
+Final adjustment limits File finalizer removal to FWP_LIBRARY, where File headers
+are registered. Executables skip the registry scan entirely. Library removal is
+linear in current registrations and allocates nothing; retained unrelated File
+finalization is verified. The final adjustment passes three storage/source tests, CPU21.35 s /46.82 s. Next exceptional-storage task: constructor failure
+still closes an initialized header but leaves storage to its allocator lifetime;
+transfer its temporary owner into close-then-drop cleanup after initialization,
+without reading released memory in failure probes. Audit finalizer registry
+realloc failure transactionality as well. Shared/cycle boundaries remain open.
+
+Final disposal clippy lib/five fixtures passes CPU2.92 s /elapsed5.97 s;
+git diff --check passes. Publish the preparation after final format check.
+Final disposal format passes CPU1.00 s /elapsed2.63 s. No active workload remains.
