@@ -44,16 +44,9 @@ Other callback/runtime and exceptional ownership extensions are prepared separat
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
-Original File frame anchors now have a preparation: ResourceRegion records typed
-parameter/local binders before optimization, protects them during inlining, and
-releases interpreted frame slots on return/error. Returned aliases keep their
-owners. Native frame retain/release now also has a subsequent preparation, including
-mandatory typed File ownership, borrowed I/O dispatch and owned effect-handler
-payloads. Descriptor-pressure and trap-order checks pass locally; sequential full
-CI, shared runtime/WASM resource ownership and storage reclamation remain open.
-A further scoped-callback preparation transfers file.with results precisely and
-respects FWP_FREE=0 for ordinary children of resource-bearing owners.
-This does not establish merged File ARC or tracing-free execution.
+Prepared resource lifetimes and storage are summarized in
+[ownership](ownership.md#original-resource-semantics). The queue records immutable
+branches and the handoff records acceptance; these are not merged ARC support.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -342,46 +335,20 @@ error. See [protocol.md](protocol.md).
   `wasm64`.
 
 
-Original resource-frame field holders have a separate compiler preparation:
-eligible field-only record bindings retain their typed children in the original
-frame, allowing the local record to stay unboxed. Boxed bindings retain the
-parent once. Focused allocation and failure-cleanup controls pass locally;
-full sequential CI remains required. Prepared WASM logical counts and disabled-
-free counter disposal passed required runner WASI checks; neither preparation
-establishes merged resource ownership or complete collector-free execution.
+## Prepared ownership implementation
 
+[Ownership](ownership.md#prepared-ownership-work) summarizes prepared contracts
+and acceptance limits; [the handoff](development-state.md) records current checks.
+Original ResourceRegion markers preserve source resource lifetimes through
+optimization. Eligible original record holders use typed fields; variants use
+fwp_u structs with existing tag-aware vdup/vdrop helpers. Incoming owners remain
+protected during partial retains, and frame assignment follows successful retain.
+Cleanup IDs are captured after helper generation, which can add definitions.
+Pattern bindings initialize payloads/fields from the current path's scrutinee.
+FWP_FRAME_FIELDS=0 preserves the boxed comparison path.
 
-## Prepared File storage
-
-The inline-path preparation uses one leaf allocation for an aligned FILE pointer,
-64-bit owner count and owned path bytes. It preserves the internal display path
-through explicit close and changes no source syntax or affine restrictions.
-The interpreter remains the semantic oracle. Fixed native header size and
-constructor allocation count are compared with the previous equivalent layout;
-this is allocation evidence, not a general speed or tracing-free claim.
-Current validation and remaining finalizer/storage lifetimes are in the handoff.
-
-Original resource-frame variant preparation keeps eligible only-matched binders
-as fwp_u structs alongside typed V holders. Existing vdup/vdrop helpers dispatch
-by tag; zero payloads are safe before initialization. Retain the incoming owner
-until all field retains complete, then replace the frame slot. Generate cleanup
-definition IDs after helper generation because helpers can add nested cleanup
-definitions. Boxed fallback transfers payload ownership before dropping its box.
-FWP_FRAME_FIELDS=0 retains the comparison path. Full CI is pending.
-
-When an original binder uses a variant holder, whole-value pattern binding
-initializes its own borrowed fwp_u payload with vunbox before anchoring it.
-Reference-count IR still owns the used pattern reference and boxed scrutinee.
-This avoids cross-arm references to an eligible let’s C temporary. Native
-descriptor cleanup is tested independently of explicit close and collection.
-
-The RC match-scrutinee preparation recovers missing nominal context from a
-whole-value pattern’s typed local. It uses that type during scrutinee conversion
-and for the generated temporary, allowing typed child destruction. A known
-expression type remains authoritative. This is compiler-internal ownership
-context recovery and adds no language syntax or evaluation-order change.
-
-Original record holders likewise initialize a pattern’s borrowed fields from
-its current scrutinee, replacing the let arm’s field mapping before retaining
-frame ownership. Partial pattern bindings survive until original frame exit:
-the interpreter writes those locals before checking later subpatterns.
+The RC match preparation recovers missing nominal context from a whole-value
+pattern's typed local, using it for scrutinee conversion and temporary destruction.
+Known expression types remain authoritative. No new surface syntax is introduced.
+File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
+remain subject to full sequential CI and the ownership acceptance criteria.

@@ -188,6 +188,7 @@ main = "input" | choose (read-all () | string.length | eq 0) | echo
     )
     .unwrap();
     let reference = Command::new(fwp)
+        .env("FWP_NO_OPT", "1")
         .args(["run", "--interp"])
         .arg(&src)
         .output()
