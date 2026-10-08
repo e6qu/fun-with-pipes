@@ -105,7 +105,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 81 | file-storage-disposal | `ownership-file-storage-disposal` | `d39b6145cb55` | `750a5cffd46b` | `2d903d6617d9` |
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `47abf911f844` | `17869223a502` | `750a5cffd46b` |
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `6d3fcd7444ad` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `d2936a008fd2` | `ae00e6929e86` | `786e4bbb99f1` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `2f67969e9985` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `97dca7626158` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `5915ac0607ac` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `f08611023cec` | `8abfd46b3476` | `f85cc4e09db4` |

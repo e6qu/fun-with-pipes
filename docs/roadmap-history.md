@@ -11442,3 +11442,12 @@ Row83 refresh6d3fcd7444ad1c3fb78efbef9e500873fc5dd10b uses actual base47abf911f8
 Compiler/runtime and unboxed resource variant fixtures match original with
 inherited CLI/tracing harness repairs preserved. Previous CURRENTf3c9ee4ec354
 is retained under its immutable revision before lease publication. Checks follow.
+
+Row82 clippy6.09/12.99s and format0.44/0.83s pass after failed-constructor
+storage disposal8.16/18.70s. Shared package clean0.00/0.14s precedes the
+guarded row83 resource variant check. No local full gate was run.
+
+Row84 refresh2f67969e9985f96584601447080c4bb84bf572e8 uses actual base6d3fcd7444ad.
+Compiler/runtime and binding-path fixtures match original, with inherited CLI/GC
+harness repairs intact. Previous CURRENTd2936a008fd2 remains under its immutable
+revision before explicit-lease publication. Fresh focused checks follow.

@@ -248,8 +248,6 @@ main = "{}" | file.open | pack | close | const "closed" | echo
     // on another. Its frame representation must work for both binding kinds.
     for selector in [0, 1] {
         let mut mixed = program.clone();
-        let variant = mixed.funcs[0].locals[0].clone();
-        mixed.funcs[0].locals.push(variant);
         let Body::Expr(Expr::ResourceRegion { body, bindings, .. }) = &mut mixed.funcs[0].body
         else {
             panic!()
@@ -262,14 +260,7 @@ main = "{}" | file.open | pack | close | const "closed" | echo
             panic!()
         };
         arms[0].1 = Expr::Record(vec![]); // Disposal without explicit file.close.
-        let pattern_path = Expr::Let(
-            2,
-            value.clone(),
-            Box::new(Expr::Match(
-                Box::new(Expr::Local(2)),
-                vec![(Pat::Bind(0), (**matched).clone())],
-            )),
-        );
+        let pattern_path = Expr::Match(value.clone(), vec![(Pat::Bind(0), (**matched).clone())]);
         **body = Expr::Match(
             Box::new(Expr::Const(fwp::value::Value::I64(selector))),
             vec![
@@ -278,6 +269,16 @@ main = "{}" | file.open | pack | close | const "closed" | echo
             ],
         );
         assert_eq!(fwp::interp::run_main(&mixed, vec![]).exit_code, 0);
+        let counted = fwp::rc::insert(&mixed);
+        let (_, locals) = counted[0].as_ref().unwrap();
+        assert!(
+            locals
+                .iter()
+                .filter(|ty| **ty == mixed.funcs[0].locals[0])
+                .count()
+                > 1,
+            "bare nominal match scrutinee must keep its typed owner: {locals:?}"
+        );
         let code = fwp::cgen::generate(&mixed).unwrap();
         let hooks = r#"
 #include <stdio.h>
