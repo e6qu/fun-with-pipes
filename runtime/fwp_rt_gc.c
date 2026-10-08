@@ -104,6 +104,91 @@ static void *fwp_mem_realloc(void *p, size_t old, size_t n) {
 static void fwp_mem_free(void *p) { free(p); }
 static void fwp_gc_start(void *top) { (void)top; }
 static void fwp_gc_finalizer(void *obj, void (*fn)(void *)) { (void)obj; (void)fn; }
+/* Resource programs need logical aggregate/task ownership even on the bump
+ * heap. Entries track live counted owners; value layouts and reuse stay unchanged.
+ * No counter operation reads arbitrary value words as allocation headers. */
+#ifdef FWP_RESOURCE_OWNERS
+#define FWP_WASM_RC_BUCKETS 4096
+typedef struct fwp_wasm_rc {
+    V value;
+    uint64_t count;
+    struct fwp_wasm_rc *next;
+    uint8_t slot;
+} fwp_wasm_rc;
+static fwp_wasm_rc *fwp_wasm_counts[FWP_WASM_RC_BUCKETS];
+static size_t fwp_wasm_counts_live;
+static fwp_wasm_rc **fwp_wasm_count_link(V value) {
+    uintptr_t hash = (uintptr_t)value >> 4;
+    hash ^= hash >> 13;
+    fwp_wasm_rc **link = &fwp_wasm_counts[hash & (FWP_WASM_RC_BUCKETS - 1)];
+    while (*link && (*link)->value != value) link = &(*link)->next;
+    return link;
+}
+static uint64_t fwp_wasm_count(fwp_wasm_rc *entry) {
+    /* Runtime code can clear/read the compact slot just as on native targets. */
+    if (entry->slot != 255) entry->count = entry->slot;
+    return entry->count;
+}
+static void fwp_wasm_set_count(fwp_wasm_rc *entry, uint64_t count) {
+    entry->count = count;
+    entry->slot = count < 255 ? (uint8_t)count : 255;
+}
+static inline uint8_t *fwp_rc_slot(V value) {
+    if (value < 4096) return NULL;
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    return entry ? &entry->slot : NULL;
+}
+static inline V fwp_rc_fresh(V value) {
+    if (value < 4096) return value;
+    fwp_wasm_rc **link = fwp_wasm_count_link(value);
+    if (!*link) {
+        fwp_wasm_rc *entry = (fwp_wasm_rc *)malloc(sizeof *entry);
+        if (!entry) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+        entry->value = value; entry->next = NULL;
+        *link = entry; fwp_wasm_counts_live++;
+    }
+    fwp_wasm_set_count(*link, 1);
+    return value;
+}
+static inline void fwp_rc_dup(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (!entry) return;
+    uint64_t count = fwp_wasm_count(entry);
+    if (!count) return;
+    if (count == UINT64_MAX) fwp_trap("reference count overflow");
+    fwp_wasm_set_count(entry, count + 1);
+}
+static inline void fwp_rc_drop(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (entry && fwp_wasm_count(entry) > 1) fwp_wasm_set_count(entry, entry->count - 1);
+}
+static inline void fwp_rc_share(V value) {
+    fwp_wasm_rc **link = fwp_wasm_count_link(value);
+    if (*link) {
+        fwp_wasm_rc *entry = *link; *link = entry->next;
+        free(entry); fwp_wasm_counts_live--;
+    }
+}
+static inline int fwp_rc_last(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    return entry && fwp_wasm_count(entry) == 1;
+}
+static inline int fwp_rc_release_last(V value) {
+    fwp_wasm_rc *entry = *fwp_wasm_count_link(value);
+    if (!entry || !fwp_wasm_count(entry)) return 0;
+    if (entry->count == 1) return 1;
+    fwp_wasm_set_count(entry, entry->count - 1); return 0;
+}
+/* Logical destruction forgets its count; physical bump storage stays allocated. */
+static inline void fwp_rc_free_obj(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
+static inline void fwp_rc_free_arr(V value) { if (fwp_rc_last(value)) fwp_rc_share(value); }
+static inline V fwp_rc_shared(V value) { fwp_rc_share(value); return value; }
+static inline int fwp_rc_unique(V value) { (void)value; return 0; }
+static inline int fwp_rc_unique_mut(V value) { (void)value; return 0; }
+static inline size_t fwp_rc_capacity(V value) { (void)value; return 0; }
+static inline void fwp_rc_poison(V value) { (void)value; }
+static inline int fwp_rc_young(V value) { (void)value; return 0; }
+#else
 /* without the collector's metadata, everything is shared */
 static inline V fwp_rc_fresh(V v) { return v; }
 static inline void fwp_rc_dup(V v) { (void)v; }
@@ -120,6 +205,8 @@ static inline void fwp_rc_poison(V v) { (void)v; }
 static inline V fwp_rc_shared(V v) { return v; }
 static inline int fwp_rc_young(V v) { (void)v; return 0; }
 static inline uint8_t *fwp_rc_slot(V v) { (void)v; return NULL; }
+
+#endif /* FWP_RESOURCE_OWNERS */
 
 #else /* FWP_GC */
 
