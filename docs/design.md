@@ -374,3 +374,9 @@ initializes its own borrowed fwp_u payload with vunbox before anchoring it.
 Reference-count IR still owns the used pattern reference and boxed scrutinee.
 This avoids cross-arm references to an eligible let’s C temporary. Native
 descriptor cleanup is tested independently of explicit close and collection.
+
+The RC match-scrutinee preparation recovers missing nominal context from a
+whole-value pattern’s typed local. It uses that type during scrutinee conversion
+and for the generated temporary, allowing typed child destruction. A known
+expression type remains authoritative. This is compiler-internal ownership
+context recovery and adds no language syntax or evaluation-order change.
