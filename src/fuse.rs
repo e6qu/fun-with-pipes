@@ -122,9 +122,10 @@ impl<'p> Behaviors<'p> {
 
     fn expr(&mut self, e: &Expr) -> Traps {
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
-                self.expr(b)
-            }
+            // Resource release is observable even when the source arrow is
+            // pure. Fusion must not interleave an original frame's cleanup.
+            Expr::ResourceRegion { .. } => None,
+            Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
             Expr::Local(_) | Expr::Const(_) => none(),
             // a constant binding is evaluated; a function is a value
             Expr::Func(id) if self.funcs[*id].arity == 0 => self.call(*id, &[]),
