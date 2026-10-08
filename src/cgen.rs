@@ -4720,7 +4720,7 @@ impl<'p> Gen<'p> {
                     "dir.remove" => ("fwp_p_dir_remove", 1),
                     "file.rename" => ("fwp_p_file_rename", 2),
                     "file.append" => ("fwp_p_file_append", 2),
-                    "file.read-bytes" => ("fwp_p_file_read", 1),
+                    "file.read-bytes" => ("fwp_p_file_read_bytes", 1),
                     "file.write-bytes" => ("fwp_p_file_write_bytes", 2),
                     "dir.list" => ("fwp_p_dir_list", 1),
                     "dir.create" => ("fwp_p_dir_create", 1),
