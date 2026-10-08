@@ -380,3 +380,8 @@ whole-value pattern’s typed local. It uses that type during scrutinee conversi
 and for the generated temporary, allowing typed child destruction. A known
 expression type remains authoritative. This is compiler-internal ownership
 context recovery and adds no language syntax or evaluation-order change.
+
+Original record holders likewise initialize a pattern’s borrowed fields from
+its current scrutinee, replacing the let arm’s field mapping before retaining
+frame ownership. Partial pattern bindings survive until original frame exit:
+the interpreter writes those locals before checking later subpatterns.

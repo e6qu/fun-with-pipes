@@ -410,3 +410,32 @@ Next: mixed original record holder bindings, then ambiguous nominal contexts,
 nested holders and shared/cycle graphs. Shared target is this checkout; no
 local workload is active. PR91 full Linux gate runs and benchmark passes; Macs
 queued. Evidence37771769436 benchmark and ARM GC pass, other gates run.
+
+Queue85 published clean3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778,
+parent immutableae00e69. Whole message one line, empty body:
+`Preserve nominal ownership types for whole-value match scrutinees`.
+No extra PR. Shared target belongs to match-scrutinee checkout, no local work
+is running. Next: mixed original record holders and broader nominal-context
+coverage while monitoring PR91 and repaired evidence exact-head full gates.
+
+Mixed record-holder binding preparation: ownership-resource-record-binding-kinds,
+/private/tmp/fwp-resource-record-binding-worktree, parent immutable3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778.
+New direct-IR descriptor audit reproduces generated C using a let arm’s t6
+while anchoring a whole-pattern binding in another arm. Baseline9.25 s CPU /
+19.12 s elapsed fails C compilation after existing allocation controls pass.
+Initialize borrowed fields from this pattern’s current scrutinee and replace
+the local field mapping before frame retains. Eligible let paths stay unboxed.
+Final original_record_holders_preserve_files_without_heap_boxes passes
+10.42 s /22.39 s, including implicit one-close/fstat-EBADF audit at O1/O2,
+GC off/on/stress/verification and both poison modes. Parent allocation counts
+remain one with FWP_FRAME_FIELDS=0 and zero with it enabled. Five related
+variant/frame/discard checks pass18.38 s /36.82 s. Clippy lib/four fixtures
+2.55 s /5.17 s, format0.45 s /0.83 s and diff whitespace pass.
+Interpreter bind writes partial pattern locals before later checks; failed
+compound patterns retain those locals until original frame exit. Native frame
+retains must preserve that lifetime, rather than moving them after full matching.
+Publish queue86 without another PR. Next: actual-source nominal-context audit,
+nested holders and shared/cycle graph coverage. Full sequential gates required.
+Shared target belongs to this checkout, no local workload is active. PR91 Linux
+runs and benchmark passes, four Mac gates queued. Repaired evidence full Linux
+and regular Macs/Intel GC run; ARM GC and benchmark pass.

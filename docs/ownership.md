@@ -451,3 +451,10 @@ monomorphic nominal type. That type guides field ownership conversion and the
 match temporary’s destructor. Descriptor tests prove payload disposal without
 a typed scrutinee let, explicit close or tracing. Ambiguous/no-whole-binder
 patterns remain an audit item; full sequential CI is still required.
+
+A separate record binding-kind preparation reads borrowed fields from the
+current whole-pattern scrutinee before frame retains, replacing any field map
+from a different let arm. Direct descriptor tests close once through implicit
+cleanup with tracing disabled, and existing allocation controls remain intact.
+Partially failed patterns keep bound resource locals through original frame
+exit, matching interpreter behavior. Full sequential CI remains pending.
