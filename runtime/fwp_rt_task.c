@@ -1477,14 +1477,33 @@ static V fwp_p_tcp_stop(V l) {
     return FWP_UNIT;
 }
 
+typedef struct { int fd; struct addrinfo *addresses; } fwp_connect_owner;
+static void fwp_connect_finish(void *p) {
+    fwp_connect_owner *owner = (fwp_connect_owner *)p;
+    int saved = errno;
+    if (owner->fd >= 0) {
+        int fd = owner->fd;
+        owner->fd = -1;
+        fwp_fd_closing(fd);
+        close(fd);
+    }
+    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
+    errno = saved;
+}
+
 static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
     fwp_tasks_init();
     fwp_check_cancel();
+    fwp_connect_owner owner = {-1, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 0, "connect", err);
+    owner.addresses = res;
     int fd = -1;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        owner.fd = fd;
         if (fd < 0) continue;
         fwp_nonblock(fd);
         if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
@@ -1497,15 +1516,24 @@ static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
             errno = e;
         }
         int e = errno;
+        owner.fd = -1;
+        fwp_fd_closing(fd);
         close(fd);
         errno = e;
         fd = -1;
     }
     freeaddrinfo(res);
-    if (fd < 0) return fwp_os_error("connect", STR(addr)->d, err);
+    owner.addresses = 0;
+    if (fd < 0) {
+        fwp_cleanup_pop(&cleanup);
+        return fwp_os_error("connect", STR(addr)->d, err);
+    }
     int one = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
-    return fwp_sock_new(fd, 1);
+    V result = fwp_sock_new(fd, 1);
+    owner.fd = -1; /* the socket wrapper now owns it */
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 /* returns 0 on timeout */
