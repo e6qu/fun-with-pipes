@@ -61,10 +61,10 @@ are archived. Current bases below differ from immutable OLD queue parents.
 | 15 ownership-list-order | 5fe569218a4b, published | cb0d7e6db7e5 | list_order_ownership 11.16 /22.44 s; lint 2.40 /4.82 s |
 | 16 ownership-sort-callbacks | 5c19337f216d, published | 5fe569218a4b | sort_callback_ownership 12.54 /25.46 s; lint 2.30 /4.59 s |
 | 17 ownership-state-sequences | 15743b853d6a, published | 5c19337f216d | state_sequence_ownership 12.09 /24.23 s; lint 2.34 /4.61 s |
-| 18 ownership-loop-state | publication pending | 15743b853d6a | loop_ownership 19.08 /38.44 s; lint 2.18 /4.38 s |
+| 18 ownership-loop-state | 7af6961802fc, published | 15743b853d6a | loop_ownership 19.08 /38.44 s; lint 2.18 /4.38 s |
 
-Rows14–17 are published clean with exact leases against previous remote
-heads. Row18 is ready to publish against OLD787763d. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
+Rows14–18 are published clean with exact leases against previous remote
+heads. Row18 full head7af6961802fcf618c3634a58ea0abb6486a50006. No second PR. Row17 full head15743b853d6a190a53ea4a95532eb9845b4c685a. Row16 full head5c19337f216d78845fada0b8c29fac98d7b18689.
 Worktree paths follow queue NAME; all source checks, sharing controls, format
 commands and compiler flags are preserved in history. Later rebase each current
 base onto its parent's actual squash, keeping OLD heads/parents untouched.
@@ -156,14 +156,18 @@ belongs to loop-state checkout. Guarded cargo clean -p fwp before switching
 checkouts; last switch0.00 s /0.13 s. No local workload is active.
 Last doc audit: eleven link sets including heading fragments,82 immutable queue
 ancestry pairs and whole commit messages pass0.09 s /0.62 s under the guard.
-Publication anchors and current messages are included. Handoff448→133 lines and ownership460→177 lines;
-exact previous snapshots are archived in history.
+Publication anchors and current messages are included. Original handoff/ownership
+snapshots are archived; current tables keep the handoff compact. Primitive
+inventory536→195 lines removes stale pending-merge claims and preserves exact
+contract/evidence notes in history. User-facing GC-off and channel docs agree
+with the current ownership plan.
 
 Preserve all nine live root docs before fast-forward/rebase conflict resolution:
 PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md, docs/concurrency.md.
-Previous preservation snapshot: /private/tmp/fwp-main-docs-pre90.
+Latest preservation snapshot: /private/tmp/fwp-main-docs-pre91; refresh all nine
+files immediately before updating main to include later progress.
 Update current sections after progress; archive chronology in history rather
 than appending contradictory next actions. Windows, new deployment interfaces
 and a new backend remain deferred.

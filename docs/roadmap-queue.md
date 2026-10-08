@@ -30,6 +30,8 @@ Row16 is prepared on current list-order5fe5692; use that actual current base
 for its later squash rebase. OLDhead66bc713 and row17 OLDparent stay immutable.
 Row17 is prepared on current sort-callback5c19337; use that actual current
 base later. OLDhead0a90b05 and row18 OLDparent stay immutable.
+Row18 is prepared on current sequence15743b8; use that actual current base
+later. OLDhead787763d and row19 OLDparent stay immutable.
 For a rewritten branch, use its actual current base
 when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
@@ -48,7 +50,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 15 | order | `ownership-list-order` | `5fe569218a4b` | `c83557825d8a` | `3a791dc7e9f3` |
 | 16 | sort-callback | `ownership-sort-callbacks` | `5c19337f216d` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `15743b853d6a` | `0a90b0520cc1` | `66bc713dea67` |
-| 18 | loop | `ownership-loop-state` | `787763d2e4b6` | `787763d2e4b6` | `0a90b0520cc1` |
+| 18 | loop | `ownership-loop-state` | `7af6961802fc` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `c05a5d9c7d86` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `fad9b1ad08f6` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `636414fabf18` | `636414fabf18` | `fad9b1ad08f6` |
