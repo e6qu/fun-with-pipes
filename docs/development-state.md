@@ -40,7 +40,7 @@ Phase 1 is done, phase 2 incomplete, phases 3–6 pending.
 Sole open [PR #91](https://github.com/e6qu/fun-with-pipes/pull/91):
 inference-call-effects, /private/tmp/fwp-inference-worktree, exact
 7018086b8f9851f576350ba24e8af5041c3bb594. CI37774239006: benchmark passes,
-Linux runs, four Mac gates queued at last poll. Four focused call_effects tests
+Linux and three Mac jobs run; ARM GC remains queued. Four focused call_effects tests
 pass17.05 s CPU /34.05 s elapsed; explicit raw-oracle rerun1.72 s /3.50 s;
 clippy2.36 s /4.69 s, fmt0.34 s /0.59 s.
 After all six gates pass, squash with subject:
@@ -57,8 +57,8 @@ Baseline roots/cache/tutorial and real boxing repairs are recorded in history.
 
 Current WASM/resource evidence: ownership-evidence-wasm-resources,
 /private/tmp/fwp-wasm-evidence-worktree, exact
-5fd2ed65385a23f3226b2bef02eb10196f51aeb4, CI37771769436. Benchmark and ARM GC
-pass; Linux, regular Macs and Intel GC run. Required actual-WASI/File stage
+5fd2ed65385a23f3226b2bef02eb10196f51aeb4, CI37771769436. Five gates pass: Linux, benchmark, ARM regular and both GC suites. Intel regular
+still runs. Required actual-WASI/File stage
 passes, including both free modes and FilePair/cached Task/Channel disposal.
 Full acceptance remains pending. Do not supersede a live run merely to add later work.
 Evidence workflows and baseline repair commits never enter production ancestry.
@@ -89,7 +89,7 @@ Immutable full heads/parents are in the queue. Rows74 and78 inherit corrected
 current bases368dafc andc889479 respectively; their OLD parents reflect this.
 Never substitute a rewritten/squash head for an immutable descendant anchor.
 
-Active preparation: ownership-nominal-source-context,
+Latest published preparation: ownership-nominal-source-context,
 /private/tmp/fwp-nominal-source-worktree, parent immutablef85cc4e09db49f1ac53f1f06da40b49f189b5b56.
 Two source context tests now use explicit FWP_NO_OPT=1 interpreter oracles;
 four existing field/match checks pass in the initial run. New resource_match_context
@@ -98,7 +98,20 @@ optimized/unoptimized native IR, O1/O2, reuse/free on/off, GC off/on/stress/
 verification and both poison modes. Initial source incorrectly duplicated File;
 changed to affine Held | flip Wrap 17. That failed draft is not verification.
 Clippy lib/three fixtures passes2.63 s /5.28 s; format0.44 s /0.83 s.
-Publish this verification and streamlined docs as queue87 without another PR.
+Published as queue87 at8abfd46b34762b0cf69e417b65a85a1d783b61ac, clean.
+Whole message: `Verify nominal source ownership and streamline the roadmap handoff`,
+one line, empty body. No additional PR; full sequential CI remains required.
+
+Active preparation: ownership-channel-cycle-lifetimes,
+/private/tmp/fwp-channel-cycle-worktree, parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac.
+New channel_cycle_ownership passes1.37 s CPU /3.13 s elapsed: 64 recursive
+self-queued channels, explicit close, outside-owner release, typed drain and
+final destruction; O1/O2, GC off/on with stress/verification, both poison modes.
+The initial assertion incorrectly expected cleared count metadata in poison
+mode; corrected it to verify object tombstones and emptied channel storage.
+Related channel_queue_ownership and task_handle_ownership pass9.04 s /18.50 s;
+clippy lib/new fixture passes2.37 s /4.87 s; format0.45 s /0.86 s.
+No runtime change or general cycle reclamation claim; full sequential CI remains required.
 
 Next independent work: ambiguous nominal contexts without whole-value binders,
 nested holders and shared/cycle graphs. Source match functions begin with typed
@@ -119,11 +132,11 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to nominal-source checkout. Guarded cargo clean -p fwp before switching
+belongs to channel-cycle checkout. Guarded cargo clean -p fwp before switching
 checkouts; last switch0.00 s /0.13 s. No local workload is active.
-Last doc audit: nine link sets including heading fragments,80 immutable queue
-ancestry pairs and whole commit messages pass0.11 s /0.85 s under the guard.
-Rerun after publication. Handoff448→133 lines and ownership460→177 lines;
+Last doc audit: nine link sets including heading fragments,81 immutable queue
+ancestry pairs and whole commit messages pass0.10 s /0.71 s under the guard.
+Publication anchors and current messages are included. Handoff448→133 lines and ownership460→177 lines;
 exact previous snapshots are archived in history.
 
 Preserve all seven live root docs before fast-forward/rebase conflict resolution:

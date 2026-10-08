@@ -6352,3 +6352,22 @@ Clippy lib/three fixtures2.63 s /5.28 s; format0.44 s /0.83 s.
 Documentation streamlining archives full snapshots, retains current acceptance
 criteria and immutable anchors, and removes duplicated/stale live priorities.
 Link/fragment/ancestry/message audit0.11 s /0.85 s passes before publication.
+
+## Channel cycle preparation after queue87
+
+The guarded channel_cycle_ownership probe initially failed exit8 with poison
+mode enabled: the test expected count metadata to clear, while the runtime
+preserves tombstoned storage for use-after-drop verification. No runtime fix was
+needed. Corrected object checks use the0xdead tag; channel checks require an
+empty queue, freed/null queue buffer and poisoned array length. Regular mode
+checks cleared reference metadata. Final fixture passes1.37 s CPU /3.13 s
+elapsed under the fwp local guard. It executes64 recursive self-queued channels
+at O1/O2, GC off/on with stress/verification, and both poison modes. The raw
+interpreter oracle explicitly uses FWP_NO_OPT=1 and prints drained.
+
+The probe checks that close retains queued values, dropping the outside owner
+leaves the internal counted cycle, and typed receive/discard plus final channel
+drop releases the cycle. This verifies explicit draining, not automatic
+reclamation of unreachable cycles. Related queue/task handle tests pass9.04 s
+/18.50 s, clippy lib/new fixture2.37 s /4.87 s, format0.45 s /0.86 s.
+Full exact-head sequential CI remains required; no additional PR was opened.

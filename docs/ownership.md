@@ -72,6 +72,15 @@ ownership checks; GC/reuse verification; and allocation/count evidence.
 Failure, handler unwind, cancellation and FFI lifetime paths are part of the
 contract. Define how runtime cycles are broken before removing tracing.
 
+Immutable source values alone do not account for runtime cycles: a channel can
+queue a value containing that same channel. Closing must preserve queued values
+for later receives. A prepared regression verifies that explicit draining and
+typed destruction break this counted cycle, including GC-off execution. Losing
+the last external handle without draining leaves an internal counted owner;
+this does not establish automatic cycle reclamation. Tracing-free eligibility
+therefore needs proved scoped/drained lifetimes or another explicit cycle policy;
+unproved shared cycles retain the tracing fallback.
+
 ## Representation and numerics
 
 Prefer elimination, registers and scalar replacement, then stack allocation,
