@@ -176,6 +176,8 @@ static struct {
     size_t live_after_major, nminor;
     long stress, stress_count;
     char *base;               /* the reserved region */
+    void *reservation;        /* before size-class alignment, for unload */
+    size_t reservation_bytes;
     uintptr_t heap_bytes;     /* chunks in use (high-water), in bytes */
     size_t nchunks, top, committed, rover, big_rover;
     gc_chunk *meta;
@@ -295,6 +297,8 @@ static void fwp_gc_init(void) {
     size_t bytes = sizeof(void *) == 8 ? (size_t)1 << 36 : (size_t)1 << 30;
     char *r = (char *)fwp_gc_reserve(&bytes);
     if (!r) fwp_gc_oom();
+    fwp_gc.reservation = r;
+    fwp_gc.reservation_bytes = bytes + GC_CHUNK;
     fwp_gc.base = (char *)(((uintptr_t)r + GC_CHUNK - 1) & ~(uintptr_t)(GC_CHUNK - 1));
     fwp_gc.nchunks = bytes >> GC_SHIFT;
     fwp_gc.meta_bytes = fwp_gc.nchunks * sizeof(gc_chunk);
@@ -984,6 +988,35 @@ static void fwp_gc_finalize(void) {
     }
 }
 
+#ifdef FWP_LIBRARY
+/* The host has finished its calls and the scheduler has drained. Finalizers
+ * still see live objects; only then give up the complete loaded-program region,
+ * including shared graphs and wide-count metadata. No host roots are traced. */
+static void fwp_gc_finish(void) {
+    if (!fwp_gc.ready) return;
+    while (fwp_gc.nfins) {
+        gc_fin f = fwp_gc.fins[--fwp_gc.nfins];
+        f.fn(f.obj);
+    }
+    free(fwp_gc.fins);
+    free(fwp_gc.mstack);
+    for (size_t i = 0; i < 256; i++) {
+        gc_rc_wide *entry = fwp_gc.rc_wide[i];
+        while (entry) {
+            gc_rc_wide *next = entry->next;
+            free(entry);
+            entry = next;
+        }
+    }
+#ifndef FWP_STATIC_MEMORY
+    if (fwp_gc.meta) munmap(fwp_gc.meta, fwp_gc.meta_bytes);
+    if (fwp_gc.reservation) munmap(fwp_gc.reservation, fwp_gc.reservation_bytes);
+#endif
+    memset(&fwp_gc, 0, sizeof fwp_gc);
+    fwp_gc.budget = -1;
+}
+#endif
+
 /* ----- sweeping */
 
 static void fwp_gc_sweep(void) {
@@ -1296,10 +1329,37 @@ typedef struct {
 /* WASI has no runtime threads. Native cleanup may enter through a host
  * callback, so its temporary work context is per thread. No safe point
  * or collected allocation occurs while processing this queue. */
+#if defined(FWP_LIBRARY) && !defined(__wasm__)
+/* A native TLS descriptor can keep a dylib resident after dlclose on Darwin.
+ * Libraries use an explicitly deleted pthread key for the same per-thread
+ * temporary context. Initialization happens before accepting any export call. */
+#include <pthread.h>
+static pthread_key_t fwp_closure_drop_key;
+static int fwp_closure_drop_key_ready;
+static void fwp_closure_drop_init(void) {
+    if (fwp_closure_drop_key_ready) return;
+    if (pthread_key_create(&fwp_closure_drop_key, 0)) fwp_trap("cannot create closure cleanup key");
+    fwp_closure_drop_key_ready = 1;
+}
+static fwp_closure_drop_work *fwp_closure_drop_get(void) {
+    return fwp_closure_drop_key_ready ? pthread_getspecific(fwp_closure_drop_key) : NULL;
+}
+static void fwp_closure_drop_set(fwp_closure_drop_work *work) {
+    if (!fwp_closure_drop_key_ready || pthread_setspecific(fwp_closure_drop_key, work)) abort();
+}
+static void fwp_closure_drop_finish(void) {
+    if (!fwp_closure_drop_key_ready) return;
+    pthread_key_delete(fwp_closure_drop_key);
+    fwp_closure_drop_key_ready = 0;
+}
+#else
 #ifdef __wasm__
 static fwp_closure_drop_work *fwp_closure_drop_active;
 #else
 static _Thread_local fwp_closure_drop_work *fwp_closure_drop_active;
+#endif
+static fwp_closure_drop_work *fwp_closure_drop_get(void) { return fwp_closure_drop_active; }
+static void fwp_closure_drop_set(fwp_closure_drop_work *work) { fwp_closure_drop_active = work; }
 #endif
 
 static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
@@ -1319,15 +1379,16 @@ static void fwp_closure_drop_push(fwp_closure_drop_work *work, V f) {
 
 static void fwp_closure_drop(V f) {
     if (!fwp_rc_release_last(f)) return;
-    if (fwp_closure_drop_active) {
-        fwp_closure_drop_push(fwp_closure_drop_active, f);
+    fwp_closure_drop_work *active = fwp_closure_drop_get();
+    if (active) {
+        fwp_closure_drop_push(active, f);
         return;
     }
     fwp_closure_drop_work work;
     work.items = work.local;
     work.len = 0;
     work.cap = sizeof work.local / sizeof *work.local;
-    fwp_closure_drop_active = &work;
+    fwp_closure_drop_set(&work);
     fwp_closure_drop_push(&work, f);
     while (work.len) {
         V next = work.items[--work.len];
@@ -1335,7 +1396,7 @@ static void fwp_closure_drop(V f) {
         if (!owned) fwp_trap("internal: owned closure without capture types");
         owned->captures(next, 0);
     }
-    fwp_closure_drop_active = NULL;
+    fwp_closure_drop_set(NULL);
     if (work.items != work.local) free(work.items);
 }
 
