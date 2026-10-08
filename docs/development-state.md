@@ -166,7 +166,7 @@ still need their final squash rebases and six exact-head full gates.
 | 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 1dc8cfe230fc | 5a4d180478bb | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 8bf7da674bb5 | 1dc8cfe230fc | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
-| 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
+| 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
