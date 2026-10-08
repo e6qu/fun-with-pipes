@@ -100,7 +100,7 @@ typedef struct { uint32_t fn; uint32_t n; V a[]; } fwp_clo;
 typedef struct { uint64_t len; V d[]; } fwp_arr;
 /* map: len entries, keys and values interleaved; sets use values of 0 */
 typedef struct { uint64_t len; V d[]; } fwp_map;
-typedef struct { FILE *f; const char *path; uint64_t refs; } fwp_file;
+typedef struct { FILE *f; uint64_t refs; char path[]; } fwp_file;
 
 #define OBJ(v) ((fwp_obj *)(uintptr_t)(v))
 #define STR(v) ((fwp_str *)(uintptr_t)(v))

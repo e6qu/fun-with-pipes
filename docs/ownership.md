@@ -395,3 +395,14 @@ source/interpreter comparisons and partial-retain cleanup checks also pass local
 FWP_FRAME_FIELDS=0 disables this compiler optimization for comparisons. Broader
 workload count/timing and full sequential platform gates remain required; this
 is not a general speed or zero-allocation claim. See the handoff for exact evidence.
+
+
+A subsequent prepared File layout copies its display path into the same leaf
+allocation as the FILE pointer and64-bit owner count. The fixed native header is
+16 bytes rather than24; constructor requests eight fewer bytes and makes one
+allocation rather than two. The path remains owned and NUL-terminated; a File
+has no GC-valued children in this layout. Alignment, internal closed-handle
+display, aliases, constructor unwind, library teardown and source/native I/O
+have focused checks. This does not reclaim the header at the last owner; safe
+finalizer removal and shared/stale handle policy remain required. Sequential
+full platform gates and actual WASI evidence are still pending.

@@ -349,3 +349,14 @@ parent once. Focused allocation and failure-cleanup controls pass locally;
 full sequential CI remains required. Prepared WASM logical counts and disabled-
 free counter disposal passed required runner WASI checks; neither preparation
 establishes merged resource ownership or complete collector-free execution.
+
+
+## Prepared File storage
+
+The inline-path preparation uses one leaf allocation for an aligned FILE pointer,
+64-bit owner count and owned path bytes. It preserves the internal display path
+through explicit close and changes no source syntax or affine restrictions.
+The interpreter remains the semantic oracle. Fixed native header size and
+constructor allocation count are compared with the previous equivalent layout;
+this is allocation evidence, not a general speed or tracing-free claim.
+Current validation and remaining finalizer/storage lifetimes are in the handoff.

@@ -48,8 +48,10 @@ is the next focused PR; validate the queue in order after each preceding squash.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
-and both macOS architectures; all six full evidence jobs now pass. Each
-sequential PR still needs its own full gates. Keep repairing failures.
+and both macOS architectures; all six TLS/listener evidence jobs passed.
+Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
+both are repaired and its new full run is live. Every sequential PR still needs
+its own exact-head gates. Keep repairing failures.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
