@@ -697,3 +697,11 @@ initialization and drain/release queue, context and loader on native completion
 or library exit/unload. Archive exit ordering is checked on macOS. Hardware GPU
 validation and interpreter cache/failure lifetimes remain distinct; sequential
 cross-platform CI is still required before merging this preparation.
+
+
+Interpreter OpenCL failed initialization now has staged loader/context/queue
+owners in preparation. Actual-loader controls detect omitted release, and
+unoptimized native/interpreter checks cover failed availability caching. The
+successful interpreter cache keeps its existing process lifetime. Next audit TLS
+listener context/ALPN cleanup and partial listen failure while accepted sessions
+keep their OpenSSL context references. Full sequential CI remains required.

@@ -33,11 +33,11 @@ immutable value semantics, effects and evaluation/trap order stable.
   gates pass, subject `Own synchronous map results without sharing callback inputs`,
   59 characters, one line, empty body and exact match. Then rebase filter from
   OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
-  `1ea7f07` for the fold child. Shared target is OpenCL ownership; clean package before switching.
-  Latest published preparation: library unload `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`,
-  OLD base `a6ebc1d`, checkout `/private/tmp/fwp-library-unload-worktree`,
-  branch `ownership-library-unload`. Current preparation: native OpenCL loader,
-  queue and context ownership, then external resources/cycles/aggregate gaps.
+  `1ea7f07` for the fold child. Shared target is interpreter OpenCL ownership; clean package before switching.
+  Latest published preparation: native OpenCL `d8b4d88da98d91183577a71dd65d2d17a375e7d6`,
+  OLD base `5d0dc22`, checkout `/private/tmp/fwp-opencl-worktree`,
+  branch `ownership-opencl-lifetime`. Next preparation: interpreter OpenCL
+  partial-load cleanup, then external resources/cycles/aggregate gaps.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
   passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
@@ -2874,3 +2874,78 @@ check passes, CPU 0.35 s / elapsed 0.72 s; whitespace clean. No local workload
 remains. Publish this native preparation separately, then implement interpreter
 OpenCL partial-load cleanup without changing process-lifetime availability/cache
 semantics. Current target is OpenCL; package clean before the next checkout.
+
+
+Native OpenCL preparation published as `d8b4d88da98d91183577a71dd65d2d17a375e7d6`,
+branch `ownership-opencl-lifetime`, OLD parent `5d0dc22`, clean checkout
+`/private/tmp/fwp-opencl-worktree`. Verified single-line 63-character subject
+`Release native OpenCL owners on load failure and program teardown`, empty body.
+No additional PR opened; sole #83 still requires Intel current-head CI before
+squash. Next interpreter preparation uses immutable OLD `d8b4d88` as parent.
+
+
+## Interpreter OpenCL failure ownership preparation (2026-10-08)
+
+Branch `ownership-interpreter-opencl`, checkout
+`/private/tmp/fwp-interpreter-opencl-worktree`, immutable OLD parent
+`d8b4d88da98d91183577a71dd65d2d17a375e7d6`. Not yet published.
+The loader regression now also runs an unoptimized source program twice through
+availability in separate native/interpreter processes. Its actual fake-loader
+finalizer checks owner balance and destruction timing. Baseline failed at O1,
+no-platform mode: interpreter retained the loader until process termination,
+while native failure released it before printing the first False. CPU 7.41 s /
+elapsed 15.87 s. The source audit shows a missing owner guard; the initial buffered observation
+alone did not prove its release timing (see corrected controls below).
+
+Rust now gives the dlopen result a guard before symbol lookup; Cl retains that
+owner while its function pointers are usable. A partially constructed Gpu owns
+completed context/queue stages before the next fallible call. Its drop drains and
+releases queue, releases context, then lets Cl close the loader. A successful
+OnceLock cache retains its existing process lifetime and availability behavior;
+this change does not claim deterministic interpreter shutdown of that cache.
+Focused checks are running for no platform, context failure, later queue failure
+and missing entry point, with O1/O2 native unoptimized oracle comparison. Existing
+native loader/archive/executable checks and negative controls remain in the test.
+Package clean before switching removed 126.3 MiB; shared target is this compiler.
+Next finish this validation/publication, then file/socket/TLS external ownership
+and source-reachable cycles/aggregate gaps. Sole PR #83 still awaits Intel CI.
+
+
+Interpreter probe repair: C's fully buffered puts and Rust's line-buffered println
+initially made a real early dlclose appear late even after guards were implemented
+(repeated failure CPU 7.60 s / elapsed 16.00 s). The fake-loader destructor now
+flushes its observation explicitly. Corrected O1/O2 check passes, CPU 4.83 s /
+elapsed 14.45 s. Two temporary source controls prove the regression independently:
+omitting Rust dlclose fails no-platform mode with release after both False lines,
+CPU 7.48 s / elapsed 15.70 s; omitting context release fails later queue-creation
+mode with `bad cleanup`, CPU 8.31 s / elapsed 16.72 s. Both controls have been
+restored; their intentional unused-code warnings are absent from the product.
+Formatting passes, CPU 0.34 s / elapsed 0.62 s. Final restored checks are running.
+
+Next external resource audit: File is affine (`lib/prelude.fwp`) and scoped
+file.with already closes on unwind, but affine discard versus native close needs
+a concrete source-reachable lifetime test before new implicit cleanup contracts.
+TLS listener stop currently closes only the descriptor; its SSL_CTX and allocated
+ALPN callback context remain live. Accepted SSL sessions retain their context,
+so listener cleanup must release its owner while preserving callback storage
+until the last OpenSSL context reference disappears. TLS listen failure after
+context creation also lacks a guard. Start with explicit listener stop/failure
+and actual OpenSSL owner counters; do not free callback storage prematurely or
+claim all sockets/files/cycles covered by library region teardown.
+
+
+Restored no-OpenCL comparison passes, CPU 8.50 s / elapsed 17.15 s: `cargo test
+--test opencl_lifetime --test numerics gpu -- --nocapture` ran the one existing
+numerics GPU test; its name filter excluded the new loader test. That filtered
+invocation is not counted as new-loader validation. The new loader test is running
+separately with `cargo test --test opencl_lifetime -- --nocapture` after restoration.
+
+
+Interpreter OpenCL final restored test passes, CPU 4.47 s / elapsed 13.21 s, one
+loader test with O1/O2 source comparisons plus the existing native positives and
+negative controls. `cargo clippy --lib --test opencl_lifetime -- -D warnings`
+passes, CPU 2.32 s / elapsed 4.60 s. Final formatting passes, CPU 0.35 s / elapsed
+0.74 s; whitespace clean. All local checks used the fwp guard and limits; no local
+workload remains. Publish this focused preparation; next is TLS listener owner
+release and failure guarding with accepted-session lifetime evidence. Current
+shared target is this interpreter OpenCL compiler; clean package before switching.

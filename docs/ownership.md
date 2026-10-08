@@ -148,6 +148,23 @@ Interpreter OpenCL retains a process-lifetime cache; its partial-failure resourc
 cleanup remains separate acceptance work. File/socket/TLS ownership, remaining
 aggregate paths and cycles still require evidence before tracing can be optional.
 
+## Prepared interpreter OpenCL failure owners
+
+An interpreter dlopen result is guarded before resolving entry points. The
+function table retains the loader while those pointers remain usable. Gpu
+construction owns each completed context/queue stage before proceeding, and
+failed construction releases queue/context before closing the loader. Its
+OnceLock still caches a failed diagnostic or a successful process-lifetime GPU;
+this adds no new shutdown interface or concurrency contract.
+
+An actual fake-loader destructor checks balanced API owners and flushes its
+observation before unoptimized availability output. Native and interpreted
+programs agree through no-platform, failed context, failed queue and missing
+entry-point cases at O1/O2. Temporary source controls independently prove missing
+loader/context release is detected. Successful interpreter process-cache teardown
+and hardware GPU execution remain separate from this focused failure coverage.
+Full sequential CI is required before merging this preparation.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
