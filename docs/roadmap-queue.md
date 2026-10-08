@@ -78,7 +78,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 54 | library-result | `ownership-library-results` | `f4d3784f4657` | `5b34382167da` | `ab44b7de0812` |
 | 55 | library-input | `ownership-library-inputs` | `625ac7793f84` | `a6ebc1da9637` | `5b34382167da` |
 | 56 | library-unload | `ownership-library-unload` | `ac6de597fddc` | `5d0dc220fa1c` | `a6ebc1da9637` |
-| 57 | opencl | `ownership-opencl-lifetime` | `5b6e65f365d6` | `d8b4d88da98d` | `5d0dc220fa1c` |
+| 57 | opencl | `ownership-opencl-lifetime` | `4ae80b641da1` | `d8b4d88da98d` | `5d0dc220fa1c` |
 | 58 | interpreter-opencl | `ownership-interpreter-opencl` | `00013d55d078` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `838cf5dee220` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `d56a24e48d7e` | `07092cb06e1d` | `3f6154b4bf67` |

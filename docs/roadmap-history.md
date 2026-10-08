@@ -11201,3 +11201,10 @@ Row56 refreshac6de597fddcecfe5b548b30213725e897ce1454 uses actual
 base625ac7793f84. Compiler/runtime match originals; old CURRENT55/56 are
 retained under immutable revision tags before explicit-lease publication.
 Fresh library input/unload checks follow.
+
+Row54 guarded clean0.00/0.14s, C export result7.86/17.88s, clippy2.44/4.85s
+and format0.34/0.61s pass. Row57 refresh4ae80b641da159e2ef059e7c70b682b46a156173
+uses actual baseac6de597fddc; runtime/compiler match original. Its loader-visible
+fake OpenCL implementation tests external API ownership, not hardware numerical
+throughput. Old CURRENT5b6e65f365d6 is retained under immutable revision before
+explicit-lease publication. Focused checks follow.
