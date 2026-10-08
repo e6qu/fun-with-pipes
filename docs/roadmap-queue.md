@@ -113,7 +113,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `ed1091ff988c` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `26f529e6ba91` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `719905a41225` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `807afa9962aa` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `8ebd4cbcc3ba` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `67f022e93858` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `f194c55d4351` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `c2c14e491c30` | `d29dda936dff` | `e91dcb307c61` |
