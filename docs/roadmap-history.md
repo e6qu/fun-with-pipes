@@ -9146,3 +9146,27 @@ Same-target focused lint passes 2.43 / 4.90 s CPU / elapsed.
 Fmt check passes 0.45 / 0.86 s. Ten current root docs copied before amend;
 tested source unchanged. Minimal required-WASI Linux env covers actual test
 in both free modes, but this preparation still awaits sequential full gates.
+Final row78 9609b73ef5ed4a40f63181acc4e073481356a86e is published clean
+with exact lease 681dd55136b030866c28afb227f222503c21113b. Whole commit
+message is one line with empty body. Row79 actual base remains 681dd55;
+rebase from it onto 9609b73. No extra PR opened; PR97 remains sole delivery.
+
+## Original record field-holder refresh, 2026-10-09
+
+Row79 rebases from actual 681dd55136b030866c28afb227f222503c21113b
+onto 9609b73ef5ed4a40f63181acc4e073481356a86e. Ten root docs resolve
+conflicts while preserving concise field-holder design. Cgen/field test match
+658e5b73ae1c05fe086adfd99678db5c780bf7d4 except inherited byte-read dispatch.
+Required Linux WASI env remains. Guarded clean passes 0.00 / 0.14 s.
+Guarded cargo test --test resource_frame_fields --test resource_frames runs.
+Eligible record holders avoid one parent box; boxed fallback and partial-retain
+unwind remain required. No timing claim follows from the allocation control.
+Four focused field/frame tests pass 18.06 / 36.28 s CPU / elapsed. Source
+raw interpreter agreement, O1/O2 GC stress/verify and reuse poisoning pass.
+Direct typed-IR control observes one record box disabled versus zero enabled;
+partial-retain unwind closes File exactly once and releases text. Missing
+File cleanup control fails as expected. Original parameter/inline frame
+lifetimes and returned/error aliases remain valid. Same-target lint runs.
+Same-target lint passes 2.58 / 5.09 s CPU / elapsed.
+Fmt check passes 0.43 / 0.83 s. Ten root docs copied before amend; tested
+feature source unchanged. Preparation still needs its own sequential full CI.

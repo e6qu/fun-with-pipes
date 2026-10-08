@@ -410,5 +410,10 @@ pattern's typed local, using it for scrutinee conversion and temporary destructi
 Known expression types remain authoritative. Whole-value pattern aliases of
 stack aggregates retain/drop their typed children, preserving them when the
 scrutinee releases its ownership. No new surface syntax is introduced.
+Prepared original resource-frame holders keep eligible field-only records in
+typed fields, avoiding a parent heap box while retaining children for the
+original frame lifetime. Other bindings retain the boxed parent.
+FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
+must unwind safely. This preparation supplies no general speed claim.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

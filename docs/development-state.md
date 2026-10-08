@@ -50,8 +50,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row77 are published with focused checks. The next independent task
-is row78 WASM count disposal.
+through row78 are published with focused checks. The next independent task
+is row79 typed resource frame fields.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -122,8 +122,9 @@ still need their final squash rebases and six exact-head full gates.
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
 | 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
 | 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
+| 78 ownership-wasm-count-disposal | 9609b73ef5ed | b4482c259c1e | Two native bump tests 9.47 / 19.69 s + File 12.17 / 24.55 s; actual WASI awaits CI |
 
-Rows 18–77 are published preparations with passing focused tests, lint and
+Rows 18–78 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -135,11 +136,14 @@ Native bump-C and related File checks pass; lint 2.54 / 5.09 s and format
 0.46 / 0.86 s pass. Corrected WASI fstat predicate remains. Minimal Linux
 CI test-step env requires actual WASI availability; local host checks supply
 no actual WASI acceptance. Metadata is reclaimed; bump storage is retained.
-Row78 is rebased; its two native bump-C tests pass 9.47 / 19.69 s.
-Related scoped/task/loop File check passes 12.17 / 24.55 s.
-Focused lint passes 2.43 / 4.90 s; format passes 0.45 / 0.86 s. Its previous actual base is c889479eed7aba4967b2e5f87d7a368193b18be9;
-The new base is b4482c2, preserving the required-WASI CI env. Runtime/count
-tests match 681dd55; only inherited file.read-bytes dispatch differs in Cgen.
+Row78 is published clean at 9609b73ef5ed4a40f63181acc4e073481356a86e,
+on actual b4482c2. Both native bump tests and File boundary regression pass;
+lint 2.43 / 4.90 s and format 0.45 / 0.86 s pass. Disabled-free disposal
+reclaims logical metadata and closes File children without freeing bump storage.
+Actual WASI in both free modes remains required on Linux CI.
+Independent row79 is rebased; four field/frame tests pass 18.06 / 36.28 s.
+Focused lint passes 2.58 / 5.09 s; format 0.43 / 0.83 s. Its previous actual base is 681dd55136b030866c28afb227f222503c21113b;
+New base is 9609b73, retaining inherited byte reads and required WASI env.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -188,8 +192,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-wasm-disposal-worktree; native bump/File, lint and format checks pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.38 s).
+belongs to /private/tmp/fwp-resource-frame-fields-worktree; four field/frame tests, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.07 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
