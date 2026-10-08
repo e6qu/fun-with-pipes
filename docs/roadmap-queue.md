@@ -106,7 +106,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `7d8ab6719e55` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `821e6c1baaef` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `0d09a61aaab7` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `8a061cb9b8ab` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `22a520c26219` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `368dafc5567d` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `e21c92ea2f6c` | `e21c92ea2f6c` | `368dafc5567d` |

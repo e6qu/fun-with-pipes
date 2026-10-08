@@ -8877,6 +8877,29 @@ matches immutable 5ac7103; feature runtime diff is only write-through flushing.
 Writes flush before return, preserving raw interpreter visibility and reporting
 short-write/flush errors without closing the borrowed handle. O1/O2 stress,
 verification, poison and omitted-flush controls pass with constructor/unwind
-regressions. Closed-handle error semantics are a separate later row72 repair.
+regressions. Closed handles retain existing empty-read/no-op-write behavior; row72 addresses read errors and byte/text kinds.
 Same-target lint passes 2.55 / 5.13 s CPU / elapsed.
 Fmt check passes 0.44 / 0.82 s; ten docs copied before amend, tested code unchanged.
+Final row71 8a061cb9b8ab0836674ffca28923f7542a29196b is published clean with
+exact lease 5ac710398a14f68453c2cb9f0bf1477ca08d8b81. Whole subject verifies
+one line and empty body. No extra PR; row72 ACTUAL base remains 5ac7103.
+
+## File IO and binary-kind preparation refresh, 2026-10-09
+
+Row72 rebases from ACTUAL old parent 5ac710398a14f68453c2cb9f0bf1477ca08d8b81
+onto current row71 head 8a061cb9b8ab0836674ffca28923f7542a29196b.
+Ten current docs resolve historical conflicts; current 22a520c binary-read repair
+remains intact. Guarded clean passes 0.07 / 0.37 s. Guarded cargo test
+--test file_io_errors --test file_read_kinds --test file_write_visibility
+--test file_construction_ownership is running.
+All six focused tests pass 18.47 / 37.02 s CPU / elapsed. Feature C generator and
+both new fixtures exactly match current repaired 22a520c. Native read buffers and
+owned pathname streams release on failure; borrowed handles remain open. Directory
+and invalid-UTF8 text errors agree byte-for-byte with the raw interpreter. Binary
+reads preserve [0,255,192,128,10], valid text and empty data in GC on/off × poison
+modes. Read-buffer/stream/write-error omission controls and related construction/
+visibility regressions pass at O1/O2. Full sequential source/stress gates remain CI work.
+Inspected interpreter File operations: explicitly closed handles return empty reads
+and no-op writes, matching native behavior. Preserve this existing semantic contract.
+Same-target lint passes 2.48 / 5.11 s CPU / elapsed.
+Fmt check passes 0.45 / 0.84 s; ten docs copied before amend, tested code unchanged.
