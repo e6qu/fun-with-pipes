@@ -43,8 +43,8 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 Main includes #74–#86: native macOS, primitive contracts, owned leaves/text,
 compiled closures, closure cleanup, concrete argument temporaries, stack children,
 borrowed synchronous callbacks, map, filter, fold and zip results. Exact merge/run evidence
-is in the handoff. Zip passed all six CI `37733658893` gates and merged. Prepare right-fold
-as the sole next PR; validate the queue in order after each preceding squash.
+is in the handoff. Zip passed all six CI `37733658893` gates and merged. Right-fold
+is sole PR #87; validate the queue in order after each preceding squash.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux

@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 07:28 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 07:52 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -63,13 +63,27 @@ verifies more than 0.8 MiB additional reclamation, identical outputs and no
 collections; no speed claim. All 64 immutable queue pairs through construction
 and all links in nine docs verify; verify new publication pairs too.
 
-Next sole PR is right-fold, branch `ownership-right-fold`, checkout
-`/private/tmp/fwp-right-fold-worktree`, OLD head `adc7947a25f297d5de53d587a4bcdeb11d29fdb7`.
-Rebase from immutable OLD zip `bdb750f6d46b69153fb9f577a5fa4cbe12b7e523`
+Sole [PR #87](https://github.com/e6qu/fun-with-pipes/pull/87) is right-fold, branch `ownership-right-fold`, checkout
+`/private/tmp/fwp-right-fold-worktree`, OLD head `adc7947a25f297d5de53d587a4bcdeb11d29fdb7`; clean published exact
+head `8be65d1ae2eccda2f3e8059e77c7f9b59e3f899b`.
+Rebased from immutable OLD zip `bdb750f6d46b69153fb9f577a5fa4cbe12b7e523`
 onto actual #86 squash `90affeb3954a8d5da9f4f66a2cbcdc235f57a6f7`.
-Never use rewritten zip `cf8ce6e` as the OLD anchor. Resolve historical docs with
-current root docs, verify explicit no-opt oracles and focused checks, then publish
-with an exact lease and open the sole PR. Keep later preparations separate.
+Never use rewritten zip `cf8ce6e` as the OLD anchor. Only state conflicted;
+resolved with current root docs, then staged all refreshed docs before completing
+rebase. Both right-fold oracles now explicitly use FWP_NO_OPT=1. Seven right-fold,
+zip, fold and borrowed callback tests pass CPU 19.42 s / elapsed 39.03 s;
+clippy lib/four tests CPU 2.39 s / 4.77 s; format CPU 0.35 s / 0.75 s.
+The first mistyped inventory filter ran zero tests and is not evidence; the real
+lib inventory passes one test, CPU 3.28 s / elapsed 6.79 s. Equivalent right-fold owned/shared
+controls verify identical output, no collections and >0.3 MiB extra reclamation;
+no speed claim. Published with exact lease against OLD adc7947a; sole PR #87
+is open. Require all six full exact-head gates before explicit squash with
+subject `Transfer right-fold accumulators with typed owned argument spans`,
+empty body. Full CI `37743989274` is active at exact `8be65d1`: bench passes; Linux and
+ARM regular run; Intel regular and both GC jobs queue. Require all six passes;
+queued/running jobs do not establish acceptance.
+Next afterwards: prefix rebase from immutable OLD right-fold adc7947a onto
+actual right-fold squash. Keep later preparations separate.
 
 Fold local evidence: five fold/filter/borrowed checks CPU 15.84 s / 31.87 s;
 clippy lib/three tests CPU 2.20 s / 4.51 s; inventory CPU 3.08 s / 6.51 s;
@@ -239,7 +253,7 @@ Queue 70 is published (no extra PR). #86 passed ALL SIX and merged; right-fold i
 the next sequential task. Full separate evidence now passes all six gates.
 
 After finishing the file I/O error preparation, repair affine File discard on `ownership-file-discard`, checkout
-`/private/tmp/fwp-file-discard-worktree`, parent OLD `e9d575f`, with bounded file
+`/private/tmp/fwp-file-discard-worktree`, current parent OLD `06419f4`, with bounded file
 descriptor pressure and compare raw interpreter/native before changing lifetimes. Current affine File discard reproducer is `tests/file_discard_ownership.rs` in
 that checkout, untracked and intentionally failing until repaired; no commit or
 second PR. It lowers ONLY each interpreted/native child descriptor limit to 32
@@ -255,13 +269,54 @@ until the function frame ends. File lifetime/discard therefore needs either prec
 frame ownership/transfer or an explicit consistent internal ownership policy,
 with raw interpreter evaluation/flush/close order tests. Surface File remains
 affine and partial resource capture forbidden. No implementation is accepted yet.
-The tight 4-descriptor parameter-lifetime counterexample also passes current
-raw interpreter/O1/O2 native: reopening after ignore still fails until the original
-File parameter frame exits (CPU 7.89 s / 15.97 s). A blind last-use destructor
+The tight 4-descriptor parameter-lifetime counterexample passes raw AND optimized
+interpreter plus O1/O2 native after both I/O repairs: reopening after ignore still
+fails until the original File parameter frame exits (CPU 9.02 s / 18.20 s). A blind last-use destructor
 would incorrectly make it succeed. Any fix must preserve this trap behavior.
 Resource lifetime anchors must survive function inlining and loop lowering;
 optional count/reuse/free flags must not disable required resource disposal.
-Current compiler target is the separate file-write visibility checkout below.
+The File-discard 32-descriptor native failure reproduced again after both I/O
+repairs (CPU 0.88 s / elapsed 2.03 s). This remains an active repair target,
+not a blocker. A separate four-descriptor helper test exposes an optimized
+interpreter bug: two inlined helpers incorrectly retain the first helper's File
+into the second call, whereas raw execution closes its frame (baseline CPU
+1.02 s / elapsed 2.24 s). Original frame metadata fixes this below.
+
+Resource-frame preparation is on `ownership-resource-frames`, checkout
+`/private/tmp/fwp-resource-frames-worktree`, parent OLD `06419f4`. The original
+File-containing parameters/bindings are recorded as typed ResourceRegion nodes
+before optimization. Optimizer protects their binders while still optimizing the
+body; inlining binds resource parameters to fresh locals and substitution retains
+those anchors. Type checking rejects missing, repeated and scalar owner slots.
+Recursive nominal/resource aggregate classification excludes nonowning arrows.
+Interpreter clears only the region's slots on return/error; returned aliases and
+handled Error[File] payloads remain owners. IR walkers, specialization/fusion and
+loop-state rewriting preserve the markers. Native tail-call jumps cannot erase
+an original resource frame. The C backend otherwise currently evaluates each
+region body without emitting resource destruction; this is NOT accepted File ARC
+or native discard coverage.
+
+The three resource-frame checks cover the reproduced helper mismatch, original
+parameter trap lifetime, returned File/record aliases and handled File error
+payloads. The last two compare raw/optimized interpreter and native O1/O2; result/
+error checks run armed GC stress/verification with both reuse modes. Ten file I/O,
+visibility, frame and unwind checks pass CPU 25.48 s / elapsed 52.96 s. Two
+resource classification/type-metadata unit checks pass CPU 3.60 s / 7.54 s;
+clippy lib/four tests CPU 2.49 s / 5.03 s; final lib/frame warning check CPU
+2.37 s / 4.77 s; fmt CPU 0.45 s / 0.86 s. Initial test fixture used invalid
+match syntax; corrected to tacit holes before error-alias evidence. A nonexistent
+opt::tests filter ran zero tests and is not acceptance evidence. All compiler
+edits were copied/byte-verified into the separate frame checkout before restoring
+the discard checkout's tracked files; its untracked audit remained preserved.
+
+Publish frames separately without another PR, then rebase the dirty File-discard
+checkout from 06419f4 onto its published head and connect native typed File
+ownership. The region direction and required flags/escape/error/cancellation
+acceptance are durable in ownership.md. Required disposal must work without GC
+and with FWP_REUSE=0/FWP_FREE=0; supported WASM needs a count representation
+independent of native GC slots. Preserve the four-descriptor parameter trap while
+making the 32-descriptor native discard succeed. General retained resources and
+cycle teardown remain phase 2 work. No accepted File ARC implementation yet.
 
 File-write visibility is prepared on `ownership-file-write-visibility`, checkout
 `/private/tmp/fwp-file-write-visibility-worktree`, immutable parent `e9d575f`.
@@ -296,8 +351,9 @@ catch lost buffer cleanup, lost stream cleanup and ignored write errors. O1/O2
 with actual armed GC stress/verification and both reuse modes pass. Eight read,
 visibility, construction and unwind tests pass CPU 11.73 s / elapsed 24.14 s;
 clippy lib/four tests CPU 2.27 s / 4.55 s, format CPU 0.44 s / 0.89 s.
-Publish separately without another PR, then rebase dirty File-discard from
-5ac7103 onto that published head. Allocation fault probes prove recoverable-trap
+Published clean as `06419f4c59893e6b48c476c552bffee7c8f46b82` with a verified
+one-line subject and empty body, no extra PR. Dirty File-discard was preserved through stash/rebase/pop from
+5ac7103 onto that published head; only its untracked two-test reproducer remains. Allocation fault probes prove recoverable-trap
 cleanup, not a new recoverable OOM interface. General File discard is still open.
 
 General File/socket resource discard, retained
@@ -310,9 +366,9 @@ interface or backend, or claim speed without equivalent workload evidence.
 
 ## Local operation and durable documentation
 
-Root main has ONLY our pending five live doc changes; preserve
+Root main has ONLY our pending four live doc changes; preserve
 those on fast-forward. Prepared published production checkouts are clean. Current
-shared compiler target belongs to `/private/tmp/fwp-file-io-errors-worktree`; use
+shared compiler target belongs to `/private/tmp/fwp-resource-frames-worktree`; use
 guarded `cargo clean -p fwp` before switching compiler checkouts. Never run local
 workloads concurrently.
 
@@ -335,8 +391,8 @@ All local links in the live/archived documents resolve.
 
 The live plan/handoff now contain current priorities rather than repeated old
 "next" actions. Historical notes are preserved verbatim except relative link
-adjustments. Queue verification passes all 64 immutable OLD parent/head relationships
-through File construction; verify the next published pair after publication. All local links in nine current/archived docs resolve.
+adjustments. Queue verification passes all 66 immutable OLD parent/head relationships
+through File I/O errors. All local links in nine current/archived docs resolve.
 The root README/design/ownership docs now distinguish delivered #74–#84 work
 from preparation, removing obsolete first-task/CI-pending claims.
 The guard and compact documents landed with #85. Include current updates in

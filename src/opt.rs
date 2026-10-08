@@ -18,7 +18,7 @@ const ROUNDS: usize = 4;
 
 fn size(e: &Expr) -> usize {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) => 1 + size(b),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => 1 + size(b),
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => 1,
         Expr::Call(_, a) | Expr::Construct(_, a) | Expr::Record(a) => {
             1 + a.iter().map(size).sum::<usize>()
@@ -33,7 +33,7 @@ fn size(e: &Expr) -> usize {
 
 fn calls(e: &Expr, id: FuncId) -> bool {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) => calls(b, id),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => calls(b, id),
         Expr::Local(_) | Expr::Const(_) => false,
         Expr::Func(f) => *f == id,
         Expr::Call(f, a) => *f == id || a.iter().any(|x| calls(x, id)),
@@ -48,6 +48,11 @@ fn calls(e: &Expr, id: FuncId) -> bool {
 
 pub(crate) fn uses(e: &Expr, l: Local) -> usize {
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => (parameters.contains(&l) || bindings.contains(&l)) as usize + uses(body, l),
         Expr::Dup(x, b) | Expr::Drop(x, b) => (*x == l) as usize + uses(b, l),
         Expr::Local(x) => (*x == l) as usize,
         Expr::Const(_) | Expr::Func(_) => 0,
@@ -72,6 +77,7 @@ struct Opt<'p> {
     locals: Vec<MT>,
     /// Remaining number of IR nodes this function may grow by inlining.
     budget: isize,
+    resource_locals: Vec<Local>,
 }
 
 impl<'p> Opt<'p> {
@@ -148,6 +154,22 @@ impl<'p> Opt<'p> {
 
     fn expr(&mut self, e: Expr, depth: usize) -> Expr {
         match e {
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                let previous = self.resource_locals.len();
+                self.resource_locals
+                    .extend(parameters.iter().chain(&bindings));
+                let body = Box::new(self.expr(*body, depth));
+                self.resource_locals.truncate(previous);
+                Expr::ResourceRegion {
+                    parameters,
+                    bindings,
+                    body,
+                }
+            }
             Expr::Dup(..) | Expr::Drop(..) => e,
             Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => e,
             Expr::Call(id, args) => {
@@ -209,6 +231,9 @@ impl<'p> Opt<'p> {
             ),
             Expr::Let(l, v, b) => {
                 let v = self.expr(*v, depth);
+                if self.resource_locals.contains(&l) || crate::resource::anchored(&b, l) {
+                    return Expr::Let(l, Box::new(v), Box::new(self.expr(*b, depth)));
+                }
                 // `Let(l, v, Match(l, arms))` with `l` used nowhere else
                 // and `v` a record or variant built here: matched directly
                 // (backends may then avoid building `v`); any other `v`
@@ -447,7 +472,8 @@ impl<'p> Opt<'p> {
         let mut subst: Vec<Option<Expr>> = vec![None; types.len()];
         for (i, a) in args.into_iter().enumerate() {
             let n = uses(&body, i as u32);
-            if self.trivial(&a) || (n <= 1 && self.pure(&a)) {
+            let anchored = matches!(&body, Expr::ResourceRegion { parameters, .. } if parameters.contains(&(i as Local)));
+            if !anchored && (self.trivial(&a) || (n <= 1 && self.pure(&a))) {
                 subst[i] = Some(a);
             } else {
                 let l = self.fresh(&types[i]);
@@ -562,6 +588,11 @@ pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
     match e {
         // (a reference count change of a record kept as its fields applies
         // to the fields)
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => !parameters.contains(&l) && !bindings.contains(&l) && only_fields(body, l),
         Expr::Dup(_, b) | Expr::Drop(_, b) => only_fields(b, l),
         Expr::Local(x) => *x != l,
         Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
@@ -581,6 +612,15 @@ pub(crate) fn only_fields(e: &Expr, l: Local) -> bool {
 fn replace_fields(e: &Expr, l: Local, ls: &[Local]) -> Expr {
     let r = |x: &Expr| replace_fields(x, l, ls);
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(r(body)),
+        },
         Expr::Dup(x, b) => Expr::Dup(*x, Box::new(r(b))),
         Expr::Drop(x, b) => Expr::Drop(*x, Box::new(r(b))),
         Expr::Field(b, i) if matches!(**b, Expr::Local(x) if x == l) => {
@@ -625,6 +665,15 @@ fn substitute(e: &Expr, s: &[Option<Expr>]) -> Expr {
         _ => *l,
     };
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.iter().map(local).collect(),
+            bindings: bindings.iter().map(local).collect(),
+            body: Box::new(substitute(body, s)),
+        },
         Expr::Dup(x, b) => Expr::Dup(local(x), Box::new(substitute(b, s))),
         Expr::Drop(x, b) => Expr::Drop(local(x), Box::new(substitute(b, s))),
         Expr::Local(l) => s[*l as usize].clone().unwrap_or(Expr::Local(*l)),
@@ -683,6 +732,7 @@ pub fn optimize(prog: &mut Program) {
                 current: id,
                 locals: prog.funcs[id].locals.clone(),
                 budget: 600,
+                resource_locals: Vec::new(),
             };
             let new = o.expr(body.clone(), 0);
             let f = &mut prog.funcs[id];
@@ -706,6 +756,7 @@ pub(crate) fn simplify(
         current: usize::MAX,
         locals,
         budget: 600,
+        resource_locals: Vec::new(),
     };
     let mut body = body;
     for _ in 0..ROUNDS {
@@ -727,6 +778,18 @@ pub fn hof_arity(sym: &str) -> Option<usize> {
 /// The locals an expression reads, in order of first use.
 fn free_locals(e: &Expr, out: &mut Vec<Local>) {
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => {
+            for l in parameters.iter().chain(bindings) {
+                if !out.contains(l) {
+                    out.push(*l);
+                }
+            }
+            free_locals(body, out);
+        }
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !out.contains(l) {
                 out.push(*l)
@@ -796,7 +859,7 @@ fn rewrite_hofs(
 ) {
     // children first
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) => {
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
             rewrite_hofs(b, funcs, shapes, locals, base, made, seen)
         }
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
@@ -839,6 +902,7 @@ fn rewrite_hofs(
         current: usize::MAX,
         locals: vec![],
         budget: 0,
+        resource_locals: Vec::new(),
     };
     if !matches!(fexpr, Expr::Apply(..)) || !o.pure(fexpr) {
         return;
@@ -865,6 +929,7 @@ fn rewrite_hofs(
                 current: usize::MAX,
                 locals: ty.params(k + n).0.into_iter().cloned().collect(),
                 budget: 600,
+                resource_locals: Vec::new(),
             };
             let mut body = Expr::Apply(Box::new(renamed), params);
             for _ in 0..ROUNDS {

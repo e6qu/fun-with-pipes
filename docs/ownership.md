@@ -309,3 +309,42 @@ a preparation. The borrowed read-all handle stays open through failure; the
 path-based read owns and closes its stream. Short write-new and buffered close
 errors are checked with the original write errno preserved. This does not
 establish general implicit resource disposal or tracing-free coverage.
+
+## Original resource lifetimes
+
+General resource discard is an active phase 2 repair, not a CI blocker. The
+current File audit has two complementary acceptance cases: 64 open/discard loop
+steps succeed under a 32-descriptor child limit without collection, and reopening
+after ignoring a File parameter still fails under a four-descriptor child limit
+until its original function frame exits. The interpreter retains original
+parameters and local bindings for that frame. Eager last-use close would turn an
+observable failure into success. Explicit file.close retains its existing effect.
+Neither descriptor limit changes the compiler, test runner or user session.
+
+A prepared compiler repair records original File owners before optimization.
+Internal resource regions must survive inlining and loop lowering; an inlined
+callee's parameter anchors must use fresh local binders rather than aliases of
+caller binders. Preserve owners for initialized original resource locals, including
+conditional pattern bindings, without retaining unrelated optimizer-generated
+argument temporaries. A stack scope can hold zero-initialized owner slots and
+release the initialized slots on normal return, effect failure, recoverable trap
+or task cancellation. Protect partially retained slots during preparation. These
+are compiler representation details, with no nullable File type or new syntax.
+
+Region anchors complement typed retain/drop rather than replacing ownership of
+returned values. Result aliases, returned aggregates, Again/Stop state, borrowed
+runtime calls and error payloads need correct ownership transfer before dropping
+the region. Optimized interpreter execution must release the same original frame
+anchors at the same boundary. Required resource cleanup must work with
+FWP_REUSE=0, FWP_FREE=0 and collection disabled; check supported WebAssembly
+resource behavior separately because its bump allocator has no native RC slots.
+Library finalization remains idempotent and must not double-close a discarded
+handle. Preserve affine File restrictions and forbidden partial resource capture.
+
+Typed ResourceRegion metadata and interpreter frame release are now prepared,
+including a reproduced inlined-helper lifetime repair. Native regions currently
+evaluate their bodies without implicit destruction; connecting typed File
+ownership is the next required implementation step. This is not delivered
+ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
+errors, cancellation and optional flags before accepting general disposal. Keep
+tracing available until complete ownership and cycle acceptance is demonstrated.
