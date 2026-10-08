@@ -52,7 +52,7 @@ one passes1.72 s /3.50 s. Clippy lib/fixture2.36 s /4.69 s, fmt0.34 s /0.59 s.
 All commands used env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo ... .
 Sole open PR #91: https://github.com/e6qu/fun-with-pipes/pull/91
-exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 benchmark passes; other five gates queued.
+exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 benchmark passes, Linux runs, four Mac gates queued.
 All six exact-head gates are required before squash.
 Shared target switched from inference to variant checkout after guarded cargo
 clean -p fwp (0.00 s /0.13 s). No local workload is active.
@@ -353,7 +353,7 @@ running full gates. Continue repairing any failures while delivering inference.
 
 Final handoff audit passes nine doc link sets,77 immutable queue ancestry pairs
 and complete commit messages (guard CPU0.07 s /elapsed0.60 s). Sole open PR91
-exact7018086, CI37774239006 benchmark passes; other five gates queued. Repaired evidence37771769436 benchmark and
+exact7018086, CI37774239006 benchmark passes, Linux runs, four Mac gates queued. Repaired evidence37771769436 benchmark and
 required WASI/File stage pass, full other gates pending. Root maincca99c0 has
 seven live doc edits; preserve all through the next fast-forward. Variant prep
 786e4bb is published clean; shared target belongs to variant checkout and no
@@ -383,3 +383,30 @@ Also audit equivalent mixed record bindings and nested/shared/cycle graphs.
 Do not mark failed or narrow checks as broad tracing-free support.
 Repaired evidence37771769436 benchmark and ARM GC pass, required WASI/File
 stage passes; Linux/regular Macs run, Intel GC queued. Full acceptance pending.
+
+Queue84 published clean ae00e6929e8686d2d794d4cfa5600e31e169dec7,
+parent immutable786e4bb. Whole message one line, empty body:
+`Initialize resource variant pattern holders on their own binding path`.
+No extra PR. Shared target belongs to binding-kind checkout, no local work
+is running. Next independent repair is typed bare nominal match scrutinees;
+continue monitoring exact-head PR91 and repaired evidence full CI.
+
+Bare-constructor match cleanup preparation: ownership-match-scrutinee-types,
+/private/tmp/fwp-match-scrutinee-worktree, parent immutableae00e6929e8686d2d794d4cfa5600e31e169dec7.
+Baseline actual descriptor-close audit fails at selector1/O1/GCoff/poison0
+(CPU9.40 s /elapsed20.90 s). RC match temporary had unknown type, so dropping
+it could not release its File payload. When expression type is unknown, recover
+nominal context from a whole-value pattern binder’s monomorphic local type and
+use conv_typed for the scrutinee and its fresh temporary. Existing expression
+types stay authoritative. Other ambiguous/no-whole-binder matches still need
+context coverage; this does not prove every nominal scrutinee is typed.
+Final fixture removes its auxiliary typed local; RC temporary type assertion
+and one actual descriptor close pass O1/O2, GC off/on/stress/verification, both
+poison modes, without explicit close (10.24 s /23.52 s). Related seven context/
+resource-frame tests pass13.51 s /27.20 s. Nineteen RC unit tests pass3.67 s /
+7.59 s. Clippy lib/four fixtures2.47 s /5.07 s; format0.44 s /0.83 s.
+Publish as queue85 without a second PR. Full sequential gates remain required.
+Next: mixed original record holder bindings, then ambiguous nominal contexts,
+nested holders and shared/cycle graphs. Shared target is this checkout; no
+local workload is active. PR91 full Linux gate runs and benchmark passes; Macs
+queued. Evidence37771769436 benchmark and ARM GC pass, other gates run.

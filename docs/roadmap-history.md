@@ -5411,3 +5411,9 @@ final extended dynamic-tag/partial-retain/allocation/source fixture3.49 s /9.34 
 clippy lib/four fixtures2.53 s /5.06 s; fmt0.45 s /0.83 s. Local guarded checks
 only. Scalar payload -1 must never be interpreted as inactive File ownership.
 Parent boxes exactly one disabled, zero enabled. Full platform gates pending.
+
+Nominal bare-constructor match cleanup baseline fails descriptor-close audit
+9.40 s CPU /20.90 s elapsed. Final direct-pattern/type-context repair passes
+10.24 s /23.52 s; seven related contexts/frame tests13.51 s /27.20 s; nineteen
+RC unit checks3.67 s /7.59 s; clippy2.47 s /5.07 s; format0.44 s /0.83 s.
+All local checks used the bounded fwp guard. Full platform acceptance pending.

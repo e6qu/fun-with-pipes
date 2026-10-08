@@ -444,3 +444,10 @@ pattern use that arm’s C temporary. Descriptor audit proves one close through
 implicit disposal without explicit close or tracing. Full CI remains pending.
 Bare nominal match scrutinees that lose their type remain a separate cleanup
 gap; recovering context from pattern-bound locals is the next concrete repair.
+
+Bare nominal match scrutinees now have a separate RC preparation: when the
+expression has no known type, a whole-value pattern binder supplies its
+monomorphic nominal type. That type guides field ownership conversion and the
+match temporary’s destructor. Descriptor tests prove payload disposal without
+a typed scrutinee let, explicit close or tracing. Ambiguous/no-whole-binder
+patterns remain an audit item; full sequential CI is still required.
