@@ -112,9 +112,9 @@ still need their final squash rebases and six exact-head full gates.
 | 67 ownership-tls-alpn-roots | bbde0fa9c254 | ec16c6630686 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 933deb78f600 | bbde0fa9c254 | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
-| 70 ownership-file-construction | 41a76ee080e5 | 7047b100dbbe | Refreshed source unchanged; fresh focused checks follow |
+| 70 ownership-file-construction | 41a76ee080e5 | 7047b100dbbe | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 6fdf20ca82a9 | 41a76ee080e5 | Refreshed source unchanged; fresh focused checks follow |
-| 72 ownership-file-io-errors | d4611644084a | 8a061cb9b8ab | 18.47 / 37.02 s |
+| 72 ownership-file-io-errors | 82e51ba8ea16 | 6fdf20ca82a9 | Refreshed source unchanged; fresh focused checks follow |
 | 73 ownership-resource-frames | 3c87e1f63b51 | d4611644084a | 21.06 / 42.34 s + three units 3.93 / 8.00 s |
 | 74 ownership-file-runtime-owners | 4b5da4aa946a | 3c87e1f63b51 | 21.91 / 44.03 s |
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
@@ -249,8 +249,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-construction-worktree; the guarded File construction
-failure/cleanup check is running. Latest disk observation114505676KiB available; target137684KiB.
+belongs to /private/tmp/fwp-file-write-visibility-worktree; the guarded File write
+visibility check is running. Latest disk observation114505676KiB available; target137684KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

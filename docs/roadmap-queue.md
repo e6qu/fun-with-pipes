@@ -93,7 +93,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7047b100dbbe` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `41a76ee080e5` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `6fdf20ca82a9` | `5ac710398a14` | `e9d575fdf990` |
-| 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
+| 72 | file-io-errors | `ownership-file-io-errors` | `82e51ba8ea16` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `db3bcf0da8d6` | `923ad4a4fb07` | `e21c92ea2f6c` |

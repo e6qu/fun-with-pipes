@@ -439,6 +439,15 @@ fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
     let all = |es: &[Expr]| es.iter().map(go).collect::<Option<Vec<Expr>>>();
     Some(match e {
         Expr::Dup(l, b) | Expr::Drop(l, b) if *l == x => go(b)?,
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(go(body)?),
+        },
         Expr::Dup(l, b) => Expr::Dup(*l, Box::new(go(b)?)),
         Expr::Drop(l, b) => Expr::Drop(*l, Box::new(go(b)?)),
         Expr::Local(l) if *l == x => return None,
@@ -468,7 +477,9 @@ fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
         Expr::Local(l) => *l == x,
-        Expr::Dup(_, b) | Expr::Drop(_, b) => is_local_through_counts(b, x),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            is_local_through_counts(b, x)
+        }
         _ => false,
     }
 }
@@ -626,7 +637,10 @@ impl Gen<'_> {
         match e {
             Expr::Call(id, _) => self.abis[*id].as_ref()?.ret,
             Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
-            Expr::Let(_, _, b) | Expr::Dup(_, b) | Expr::Drop(_, b) => self.unboxed_value(b),
+            Expr::Let(_, _, b)
+            | Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::ResourceRegion { body: b, .. } => self.unboxed_value(b),
             Expr::Match(_, arms) => {
                 let n = self.unboxed_value(&arms.first()?.1)?;
                 arms.iter()
@@ -647,7 +661,9 @@ impl Gen<'_> {
     ) -> Option<usize> {
         match e {
             Expr::Local(l) => known.get(l).copied(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.local_record_width(b, locals, known),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.local_record_width(b, locals, known)
+            }
             Expr::Let(l, v, b) => {
                 let mut known = known.clone();
                 if let Some(n) = self
@@ -691,7 +707,7 @@ impl Gen<'_> {
                 }
                 self.loop_field_unboxed(b, field, n, locals, &known)
             }
-            Expr::Dup(_, b) | Expr::Drop(_, b) => {
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
                 self.loop_field_unboxed(b, field, n, locals, known)
             }
             Expr::Match(_, arms) => arms
@@ -885,7 +901,9 @@ fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
     match e {
         Expr::Local(x) => *x != l || returned,
         Expr::Const(_) | Expr::Func(_) => true,
-        Expr::Dup(_, b) | Expr::Drop(_, b) => variant_uses(b, l, returned),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            variant_uses(b, l, returned)
+        }
         Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => all(xs),
         Expr::Apply(f, xs) => variant_uses(f, l, false) && all(xs),
         Expr::Field(r, _) => variant_uses(r, l, false),
@@ -1911,7 +1929,9 @@ fn allocates(e: &Expr, n: usize) -> bool {
         Expr::SetFields(r, xs) => allocates(r, n) || xs.iter().any(|(_, x)| allocates(x, n)),
         Expr::Let(_, v, b) => allocates(v, n) || allocates(b, n),
         Expr::Match(s, arms) => allocates(s, n) || arms.iter().any(|(_, b)| allocates(b, n)),
-        Expr::Dup(_, b) | Expr::Drop(_, b) => allocates(b, n),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            allocates(b, n)
+        }
     }
 }
 
@@ -2104,7 +2124,10 @@ fn hof_def(
 /// The tail positions of an expression: what it can evaluate to last.
 fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match e {
-        Expr::Let(_, _, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => tails(body, out),
+        Expr::Let(_, _, body)
+        | Expr::Dup(_, body)
+        | Expr::Drop(_, body)
+        | Expr::ResourceRegion { body, .. } => tails(body, out),
         Expr::Match(_, arms) => {
             for (_, b) in arms {
                 tails(b, out);
@@ -2115,12 +2138,22 @@ fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
 }
 
 fn tail_calls(e: &Expr) -> std::collections::HashSet<*const Expr> {
+    fn gather(e: &Expr, out: &mut Vec<*const Expr>) {
+        match e {
+            Expr::ResourceRegion { .. } => {}
+            Expr::Let(_, _, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => gather(body, out),
+            Expr::Match(_, arms) => {
+                for (_, body) in arms {
+                    gather(body, out);
+                }
+            }
+            Expr::Call(..) | Expr::Apply(..) => out.push(e as *const Expr),
+            _ => {}
+        }
+    }
     let mut out = Vec::new();
-    tails(e, &mut out);
-    out.into_iter()
-        .filter(|e| matches!(e, Expr::Call(..) | Expr::Apply(..)))
-        .map(|e| e as *const Expr)
-        .collect()
+    gather(e, &mut out);
+    out.into_iter().collect()
 }
 
 /// Integer types of at most 64 bits, which a `V` holds sign-extended
@@ -2141,7 +2174,9 @@ fn int64_kind(t: &MT) -> Option<bool> {
 fn state_by_fields(e: &Expr) -> bool {
     match e {
         // the state's own references: no object when it is kept by fields
-        Expr::Dup(_, b) | Expr::Drop(_, b) => state_by_fields(b),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            state_by_fields(b)
+        }
         Expr::Local(0) => false,
         Expr::Field(r, _) if matches!(**r, Expr::Local(0)) => true,
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => true,
@@ -2163,6 +2198,15 @@ fn state_by_fields(e: &Expr) -> bool {
 // spine, preserving the evaluation and release order of every field.
 fn again_record(e: &Expr) -> Option<Expr> {
     Some(match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(again_record(body)?),
+        },
         Expr::Record(_) => Expr::Construct(0, vec![e.clone()]),
         Expr::Let(l, v, b) => Expr::Let(*l, v.clone(), Box::new(again_record(b)?)),
         Expr::Dup(l, b) => Expr::Dup(*l, Box::new(again_record(b)?)),
@@ -2173,6 +2217,15 @@ fn again_record(e: &Expr) -> Option<Expr> {
 
 fn loop_state_expr(e: &Expr) -> Expr {
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(loop_state_expr(body)),
+        },
         Expr::Let(l, v, b) => {
             if let Expr::Construct(0, xs) = &**b {
                 if xs.len() == 1 && matches!(xs[0], Expr::Local(k) if k == *l) {
@@ -2290,7 +2343,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return Some(m);
         }
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.unboxed(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.unboxed(b)
+            }
             Expr::Local(l) if self.fields.contains_key(l) => Some(self.fields[l].len()),
             // `let x = v in x` (with its reference counts)
             Expr::Let(x, v, b) if is_local_through_counts(b, *x) => self.unboxed(v),
@@ -2354,6 +2409,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
+            Expr::ResourceRegion { body, .. } => self.expr_fields(body, n),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -2569,6 +2625,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
+            Expr::ResourceRegion { body, .. } => self.expr_variant(body, m, ty),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_variant(b, m, ty)
@@ -2692,7 +2749,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn field_uses(&self, e: &Expr, l: Local, n: usize) -> bool {
         let reads = |e: &Expr| self.field_uses(e, l, n);
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => reads(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => reads(b),
             Expr::Local(x) => *x != l,
             Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
             Expr::Const(_) | Expr::Func(_) => true,
@@ -3661,7 +3718,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some((g, xs.len()))
             }
             Expr::Local(l) => self.known_callbacks.get(l).copied(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.callback_origin(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.callback_origin(b)
+            }
             _ => None,
         }
     }
@@ -4043,6 +4102,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.expr(b)
                 }
             },
+            Expr::ResourceRegion { body, .. } => self.expr(body),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr(b)
@@ -6566,7 +6626,9 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
     }
     fn refs(e: &Expr, out: &mut Vec<FuncId>) {
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => refs(b, out),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                refs(b, out)
+            }
             Expr::Local(_) => {}
             Expr::Const(v) => value_refs(v, out),
             Expr::Func(f) => out.push(*f),

@@ -11345,3 +11345,10 @@ nested-boxing/loop-unwind tests14.44/29.19s. Row71 refresh
 compiler/runtime/File write fixture match original, with inherited CLI/tracing
 harness repairs preserved. Prior CURRENT8a061cb9b8ab is retained under an
 immutable revision tag before explicit-lease publication. Focused checks follow.
+
+Row70 guarded construction failure/cleanup test7.49/16.08s, clippy5.42/11.61s
+and format0.36/0.76s pass. Row72 refresh82e51ba8ea16294e1356e10e56993a1f7250e482
+uses actual base6fdf20ca82a9. Compiler/runtime and File I/O/byte-read fixtures
+match original; inherited CLI/tracing repairs remain. Prior CURRENTd4611644084a
+is retained under its immutable revision before explicit-lease publication.
+Fresh File I/O checks follow.
