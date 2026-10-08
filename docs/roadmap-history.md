@@ -8907,3 +8907,27 @@ Final row72 d4611644084ab89c2bcd981ed93d857f9017fe35 is published clean with
 exact lease 22a520c262196da7e403e7cca3cc26837adda82c. Whole subject verifies
 one line and empty body. OLD 06419f4/parent 5ac7103 remain immutable. Row73
 ACTUAL base remains OLD 06419f4; preserve its current corrected barrier 368dafc.
+
+## Original resource-frame preparation refresh, 2026-10-09
+
+Row73 rebases from ACTUAL old parent 06419f4c59893e6b48c476c552bffee7c8f46b82
+onto current row72 head d4611644084ab89c2bcd981ed93d857f9017fe35.
+Replayed original dcc5bbac then corrected fusion barrier 368dafc; ten current docs
+resolve both historical conflicts. Relevant compiler/tests match 368dafc except
+C-generator file.read-bytes keeps row72's repaired binary dispatch. No replay of
+row72 binary repair from its old current 22a520c. Guarded clean passes 0.07 / 0.37 s.
+Guarded cargo test --test resource_frames --test file_io_errors
+--test file_construction_ownership is running; focused resource unit controls follow.
+All six integration tests pass 21.06 / 42.34 s CPU / elapsed. ResourceRegion
+anchors preserve original parameter lifetimes, including descriptor-limit failure
+order; inlined helpers release local Files before subsequent calls. Returned and
+handled-error aliases survive. Raw and optimized interpreter/O1/O2 agreement
+passes with related File IO/construction regressions. Focused resource::tests::
+unit command is running; fusion control must still fuse the unanchored pipeline.
+Guarded cargo test --lib resource::tests:: passes all three selected tests
+(58 unrelated filtered) 3.93 / 8.00 s. Nominal recursive resources are detected,
+nonowning arrows remain unanchored and invalid metadata slots reject. Pure
+unanchored control pipeline fuses; ResourceRegion pipeline does not interleave
+its observable cleanup, preserving its stage boundary.
+Same-target lint passes 2.52 / 5.06 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.

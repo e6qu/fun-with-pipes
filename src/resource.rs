@@ -152,4 +152,76 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn fusion_preserves_resource_stage_frames_even_with_pure_bodies() {
+        let file = MT::con("std::File");
+        let int = MT::con("std::I64");
+        let files = MT::Con("std::List".into(), vec![file.clone()]);
+        let ints = MT::Con("std::List".into(), vec![int.clone()]);
+        let arrow = |a: MT, b: MT| MT::Fun(Box::new(a), Box::new(b));
+        let stage_type = arrow(file.clone(), int.clone());
+        let mut p = Program {
+            funcs: vec![
+                Func {
+                    name: "stage".into(),
+                    arity: 1,
+                    locals: vec![file.clone()],
+                    ty: stage_type.clone(),
+                    body: Body::Expr(Expr::ResourceRegion {
+                        parameters: vec![0],
+                        bindings: vec![],
+                        body: Box::new(Expr::Const(crate::value::Value::I64(1))),
+                    }),
+                },
+                Func {
+                    name: "map".into(),
+                    arity: 2,
+                    locals: vec![stage_type.clone(), files.clone()],
+                    ty: arrow(stage_type, arrow(files.clone(), ints.clone())),
+                    body: Body::Prim("map".into()),
+                },
+                Func {
+                    name: "length".into(),
+                    arity: 1,
+                    locals: vec![ints.clone()],
+                    ty: arrow(ints.clone(), int.clone()),
+                    body: Body::Prim("length".into()),
+                },
+                Func {
+                    name: "main".into(),
+                    arity: 1,
+                    locals: vec![files.clone()],
+                    ty: arrow(files.clone(), int.clone()),
+                    body: Body::Expr(Expr::Call(
+                        2,
+                        vec![Expr::Call(1, vec![Expr::Func(0), Expr::Local(0)])],
+                    )),
+                },
+            ],
+            ..Program::default()
+        };
+        for (list, element) in [(files, file), (ints, int)] {
+            p.shapes.insert(
+                list.clone(),
+                TypeShape::Adt(vec![
+                    ("Nil".into(), vec![]),
+                    ("Cons".into(), vec![element, list]),
+                ]),
+            );
+        }
+        crate::ir::check_locals(&p).unwrap();
+        let mut unscoped = p.clone();
+        unscoped.funcs[0].body = Body::Expr(Expr::Const(crate::value::Value::I64(1)));
+        crate::fuse::fuse(&mut unscoped);
+        assert!(
+            unscoped.funcs.iter().any(|f| f.name == "fused"),
+            "control pipeline must fuse"
+        );
+        crate::fuse::fuse(&mut p);
+        assert!(
+            !p.funcs.iter().any(|f| f.name == "fused"),
+            "cleanup must keep its original stage boundary"
+        );
+        crate::ir::check_locals(&p).unwrap();
+    }
 }

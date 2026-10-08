@@ -130,8 +130,11 @@ d4611644084ab89c2bcd981ed93d857f9017fe35 on actual base 8a061cb.
 Six tests pass 18.47 / 37.02 s, lint 2.48 / 5.11 s, format 0.45 / 0.84 s.
 Directory/invalid-UTF8 errors agree with raw interpreter; binary reads preserve
 arbitrary bytes. Borrowed handles remain open; temporary buffers/owned streams release.
-Next rebase row73 from ACTUAL old parent 06419f4 onto current row72 head d461164;
-previous current 368dafc includes the corrected original-frame fusion barrier.
+Row73 rebased from ACTUAL old parent 06419f4 onto current row72 head d461164;
+six tests across three resource-frame/IO/construction targets pass 21.06 / 42.34 s.
+Three resource units pass 3.93 / 8.00 s, including the pure fusion control;
+lint passes 2.52 / 5.06 s. Both original-frame
+and corrected fusion-barrier commits replayed; binary-read dispatch stays repaired.
 Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
 alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
@@ -182,7 +185,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-io-errors-worktree; IO checks complete; no local workload is active.
+belongs to /private/tmp/fwp-resource-frames-worktree; resource frame checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.14 s CPU / 1.04 s elapsed).
