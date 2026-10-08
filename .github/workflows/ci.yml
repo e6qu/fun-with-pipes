@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, ownership-evidence-tls-listeners]
   pull_request:
 
 jobs:
@@ -31,6 +31,13 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
+      - name: Unoptimized TLS stream ownership under GC and reuse verification
+        env:
+          FWP_NO_OPT: '1'
+          FWP_GC_STRESS: '1'
+          FWP_GC_VERIFY: '1'
+          FWP_REUSE_VERIFY: '1'
+        run: cargo test --test tls streams -- --exact --nocapture
       - name: test
         run: cargo test --all-targets --no-fail-fast
 
@@ -58,6 +65,13 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
+      - name: Unoptimized TLS stream ownership under GC and reuse verification
+        env:
+          FWP_NO_OPT: '1'
+          FWP_GC_STRESS: '1'
+          FWP_GC_VERIFY: '1'
+          FWP_REUSE_VERIFY: '1'
+        run: cargo test --test tls streams -- --exact --nocapture
       - name: test
         run: cargo test --all-targets --no-fail-fast
 
