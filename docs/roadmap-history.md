@@ -11413,3 +11413,9 @@ CI37980359907 is queued, not acceptance. Row79 refresh
 compiler/runtime and resource-field fixtures match original with inherited
 CLI/tracing repairs intact. Previous CURRENT35c2aeb2923e is retained under
 its immutable revision before lease publication. Fresh focused checks run.
+
+Row79 resource frame field test10.09/21.47s, clippy6.10/13.03s and
+format0.55/1.08s pass. Row80 refresh8454a97667bb668b9c75221b55e5d57356b45745
+uses actual base76374abb1077; compiler/runtime and aligned path fixture match
+original with inherited CLI/tracing repairs intact. Previous CURRENTe7d3882b67ae
+is retained under its immutable revision before lease publication. Checks run.
