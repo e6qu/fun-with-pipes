@@ -91,7 +91,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `ca75ca461682` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0b51abc49371` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `2c2c562401ab` | `f6598e440a59` | `4ab1f7ddd6f8` |
-| 64 | connect-cleanup | `ownership-connect-cancellation` | `f7523c2ec82c` | `0cc612650ab9` | `f6598e440a59` |
+| 64 | connect-cleanup | `ownership-connect-cancellation` | `d7641a1ab055` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `60b03078c3cd` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `cfe905046796` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `f7a0bd2eba93` | `e0f11626f609` | `6bda2c815a71` |
