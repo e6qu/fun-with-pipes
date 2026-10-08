@@ -9035,3 +9035,58 @@ GC on/off × poison modes; omitting original frame drops fails with descriptor
 exhaustion. Original parameter lifetime, alias and runtime count regressions pass.
 Same-target lint passes 2.59 / 5.18 s and fmt check 0.44 / 0.84 s.
 Ordinary heap freeing remains optional; mandatory File resource release is preserved.
+Final row75 db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0 is published clean with
+exact lease 923ad4a4fb07a5f6e2211c16c219308b5bddcf56. Whole subject verifies
+one line and empty body. Row76 ACTUAL base remains 923ad4a. No open PR yet;
+next delivery is row19 final rebase on verified #96 squash d174e73.
+
+## Structural list final delivery rebase, 2026-10-09
+
+Row19 final-rebases from ACTUAL prior base 112f3c8de87beddab2374f51e19d6dc94846919d
+onto verified #96 squash d174e73fecb96cb5aef85fa20eb8471a48dc0948.
+Ten current docs resolve conflicts; source/runtime/tests/workflows exactly match
+previous verified 6ce37fb180e1d88903dd94dadaf47181085ab09e. Guarded clean
+passes 0.05 / 0.37 s. Guarded cargo test --test list_structure_ownership is running.
+No PR is open; exact-lease publication and sole next PR follow final checks.
+All four final structural list tests pass 16.32 / 32.95 s CPU / elapsed.
+Typed input lists borrow; fresh nested spine/pair/chunk structure retains only
+reference-bearing aliases and frees scratch after construction. Raw FWP_NO_OPT=1
+source oracles, alias stress, GC-off counted reclamation, scalar address bits,
+invalid-size trap ordering and O1/O2 poison coverage pass. Generic exceptional
+cleanup remains later work; no general tracing-free or speed claim.
+Exact ownership contract unit is running; no other PR open.
+Guarded exact ownership contract unit passes 3.24 / 6.73 s CPU / elapsed:
+one selected test, 48 unrelated filtered; this is a real executed test.
+Final same-target lint passes 2.29 / 4.59 s CPU / elapsed.
+Final fmt check passes 0.34 / 0.60 s; ten authoritative docs copied before amend.
+Tested source unchanged; every final PR still requires all six exact-head gates.
+Final row19 65fedd8d85430216539031553f88705ea72db5b4 is published clean with
+exact lease 6ce37fb180e1d88903dd94dadaf47181085ab09e on main d174e73.
+Entire subject verifies one line and empty body; source/runtime/tests/workflows
+still exactly match verified 6ce37fb. PR97 is created as the sole open delivery;
+body records validation and general-unwind limits. Row20 ACTUAL base remains
+6ce37fb, not this rewritten head or OLD c05a5d9. Six exact-head full gates required.
+PR97 CI37917260081 is queued at exact 65fedd8d85430216539031553f88705ea72db5b4;
+queued jobs provide no passing acceptance. Guarded handoff audit passes eleven
+link/heading sets, 82 immutable OLD ancestry pairs and whole messages
+(0.16 / 1.07 s CPU / elapsed). Continue row76 while CI gates delivery.
+
+## Scoped File runtime boundary preparation refresh, 2026-10-09
+
+Row76 rebases from ACTUAL old parent 923ad4a4fb07a5f6e2211c16c219308b5bddcf56
+onto current row75 head db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0.
+Ten current docs resolve conflicts. Runtime conflict resolved by retaining the
+exact old scoped owning callback function beside the repaired file_read_impl;
+byte/text dispatch and row72 binary validation repair stay intact. Guarded clean
+passes 0.07 / 0.36 s. Guarded cargo test --test file_runtime_boundaries
+--test file_runtime_ownership --test file_read_kinds is running.
+No extra PR; PR97 exact-head CI37917260081 is the sole delivery.
+All three focused tests pass 22.08 / 46.15 s CPU / elapsed. Scoped callbacks
+borrow their input File and retain the selected result before destroying its pair;
+independent original/returned owners survive cleanup. Raw interpreter agrees for
+scoped, task and loop File results. O1/O2 reuse/free on/off × GC on/off × poison,
+32-descriptor bound, missing-result-owner controls and disabled-free accounting
+pass. Tasks/channels honor FWP_RESOURCE_NO_FREE without losing resource disposal.
+Related logical alias and arbitrary-byte regressions pass. Sequential full gates required.
+Same-target lint passes 2.48 / 5.05 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten current docs copied before amend, tested code unchanged.

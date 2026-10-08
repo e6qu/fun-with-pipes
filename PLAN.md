@@ -45,7 +45,8 @@ compiled closures and cleanup, concrete temporaries, stack children, borrowed
 synchronous list callbacks/results, separate call effects, exact native wide
 counts and owned state sequences. [PR #96](https://github.com/e6qu/fun-with-pipes/pull/96)
 merged after all six exact-head gates passed, transferring loop states and
-reclaiming typed Step/ABI wrappers. Next is list structural ownership (queue19).
+reclaiming typed Step/ABI wrappers. Sole open [PR #97](https://github.com/e6qu/fun-with-pipes/pull/97) adds typed
+zip/unzip/chunks ownership (queue19); final focused checks pass and full CI begins.
 Final rebases, exact heads, checks and gates are in
 [the handoff](docs/development-state.md).
 

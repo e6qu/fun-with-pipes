@@ -32,7 +32,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 16 | sort-callback | `ownership-sort-callbacks` | `9f4e3bbc211c` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `5d0a3f302e47` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
-| 19 | structure | `ownership-list-structure` | `6ce37fb180e1` | `c05a5d9c7d86` | `787763d2e4b6` |
+| 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
@@ -88,7 +88,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
-| 75 | file-discard | `ownership-file-discard` | `923ad4a4fb07` | `923ad4a4fb07` | `e21c92ea2f6c` |
+| 75 | file-discard | `ownership-file-discard` | `db3bcf0da8d6` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `30fe112db93c` | `30fe112db93c` | `923ad4a4fb07` |
 | 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `c889479eed7a` | `046f7e85a9eb` | `30fe112db93c` |
 | 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `681dd55136b0` | `681dd55136b0` | `c889479eed7a` |
