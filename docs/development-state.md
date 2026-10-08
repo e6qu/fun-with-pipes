@@ -94,12 +94,14 @@ audits pass. Interpreter/native OpenCL failures and actual TLS stream outputs
 agree; the stream check executed without skip. Real resource disposal preserves
 unrelated host handles and sends no implicit TLS shutdown traffic. Old revisions
 and source/probes are preserved; fake OpenCL is not GPU hardware coverage.
-Current independent task61 is gRPC listener cleanup (`ownership-grpc-server-cleanup`),
-rebased FROM actualaa8dfb3a703e ONTO published603eb64f54869f at nativef4aeaf8efcb2.
-All three original gRPC/listener/resource controls pass13.67CPU/30.41elapsed,
-including scheduler cancellation and guard/fd/context omissions. Lint2.61/5.23s
-and format0.46/0.86s pass. Finish all11 docs/audit before retained-revision
-publication, then prepare queue62 TLS cache allocation failure cleanup.
+gRPC listener61 is publishedca75ca461682ad05511d13d9496d822cc7177c02 on
+actual603eb64f54869f. All three original gRPC/listener/resource controls,
+lint, format and all audits pass; source/probes and old revision are preserved.
+Current independent task62 is TLS cache failure cleanup (`ownership-tls-cache-failures`):
+rebase FROM actual91f9a30742f9 ONTO published61. Preserve prior cached contexts,
+partial context/name/cache/protocol owners, retry behavior and all five original
+omission/incomplete-publication controls. Check cache plus library-resource/gRPC
+regressions, lint, format and all11 docs/audit before retained-revision publication.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -179,7 +181,7 @@ still need their final squash rebases and six exact-head full gates.
 | 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
 | 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
 | 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
-| 61 ownership-grpc-server-cleanup | f4aeaf8efcb2 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
+| 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
 | 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
