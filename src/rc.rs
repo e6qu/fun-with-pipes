@@ -323,8 +323,23 @@ impl Pass<'_> {
                         let so: Set = owned.difference(&fa).copied().collect();
                         let mut sb = borrowed.clone();
                         sb.extend(owned.intersection(&fa));
-                        let t = self.ty(s);
-                        let v = self.conv(s, &so, &sb);
+                        let mut t = self.ty(s);
+                        if t == unknown() {
+                            // Whole-value patterns carry the nominal type even
+                            // when their constructor scrutinee has no typed local.
+                            t = arms
+                                .iter()
+                                .find_map(|(pat, _)| match pat {
+                                    Pat::Bind(l) => self
+                                        .locals
+                                        .get(*l as usize)
+                                        .filter(|ty| **ty != unknown())
+                                        .cloned(),
+                                    _ => None,
+                                })
+                                .unwrap_or(t);
+                        }
+                        let v = self.conv_typed(s, &so, &sb, &t);
                         (self.fresh(t), Some(v))
                     }
                 };
