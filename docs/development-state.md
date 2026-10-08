@@ -73,7 +73,8 @@ all20 row43 IR controls and seven original native tests then pass, including all
 three exact omission controls, O1/O2, raw interpreter, GC verification and reuse
 poisoning. Original native probes are unchanged. Repaired cache/task evidence
 `2d5d52fd941c` runs CI38013532481 on repaired source52 `cb32c2cea9bb` and includes
-all21 IR controls and the original stack/reuse gates. It is not accepted yet.
+all21 IR controls and the original stack/reuse gates. The scoped run passes;
+this validates its Linux source, while each production PR still needs full gates.
 
 Typed-holder evidence372375a/CI38011999875 exposed a parent-box allocation
 regression for a direct resource variant constructor. Row83 repair
@@ -83,11 +84,12 @@ frame tests, lint, format and audit pass. Zero/one parent-box, File lifetime,
 alias and inactive-payload assertions are unchanged. Refresh and rerun holder
 source88 after both repairs propagate; failed evidence is not support.
 
-Matched-result refresh44–67 is complete, including both CAF/converted-result
-controls;60–67 passes8.35CPU/92.10elapsed. Refresh68–75 is complete:5.27CPU/58.64elapsed stops safely at the strict73
-expected-patch layout check;3.26/38.44s completes after preserving the resource
-handler layout and both original resource commits. Continue76–112 using
-/private/tmp/fwp-refresh-matched-conversion.py and actual bases in the table.
+Both repairs now propagate through83. Matched-result refresh44–59 is complete,
+including both CAF/converted-result controls. Refresh60–67 passes8.35CPU/92.10elapsed;
+68–75 passes after the strict resource-layout adjustment (5.27/58.64s stopped,
+3.26/38.44s completed);76–83 passes8.42/92.36s. Both original resource commits
+and the additional frame-holder repair survive. Continue84–112 in bounded
+batches using /private/tmp/fwp-refresh-matched-conversion.py and actual bases.
 It verifies exact inherited code, original probes and commit counts, retains each
 prior head remotely, publishes with an exact lease and audits the handoff.
 It additionally carries the exact row83 frame-holder patch into84 and later.
@@ -166,7 +168,7 @@ still need their final squash rebases and six exact-head full gates.
 | 80 ownership-file-inline-path | 143444f5c43e | ec96643bfe26 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | c4110b410f56 | 143444f5c43e | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | af8561c68820 | c4110b410f56 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
-| 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published, prior head retained; propagation/runner/full gates follow |
+| 83 ownership-resource-frame-variants | ed1091ff988c | af8561c68820 | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
@@ -263,7 +265,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
-| Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | Fresh repaired run pending on source52 cb32c2cea9bb; all21 IR controls and unchanged native conversion/stack/reuse gates; strong audit0.43/3.46s passes. Prior329e8db/CI38011548324 failed matched conversion and is retained |
+| Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | CI38013532481 passes on repaired source52 cb32c2cea9bb; all21 IR controls and unchanged native conversion/stack/reuse gates; strong audit0.43/3.46s passes. Prior329e8db/CI38011548324 failed matched conversion and is retained |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |

@@ -4738,7 +4738,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
         match p {
             Pat::Wild => {}
             Pat::Bind(l) => {
-                self.line(&format!("l{} = {};", l, v));
+                if let Some(ResourceSlot::Variant(_, m)) = self.resource_slots.get(l).cloned() {
+                    // A binder can be a let in another arm. Initialize this
+                    // path's borrowed payload rather than using that arm's C local.
+                    let ty = self.locals[*l as usize].clone();
+                    let u = self.fresh();
+                    self.line(&format!("fwp_u{m} {u} = fwp_vunbox{m}({v});"));
+                    self.vlocals.insert(*l, (u, m, ty));
+                } else {
+                    self.line(&format!("l{} = {};", l, v));
+                }
                 self.anchor_resource_binding(*l, false);
             }
             Pat::Lit(lit) => {
