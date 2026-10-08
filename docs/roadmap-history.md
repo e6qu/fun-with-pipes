@@ -8858,3 +8858,25 @@ failure matrices and two omission controls per optimization level pass. The
 stale-handle control exits before intentionally unsafe finalization, as repaired.
 Same-target lint passes 2.49 / 5.01 s CPU / elapsed.
 Fmt check passes 0.43 / 0.82 s; ten current docs copied before amend, tested code unchanged.
+Final row70 0d09a61aaab76f5fde3d7f27a3ba1289f5d26f1c is published clean with
+exact lease 722224705f7c65a11a2c393ddca47ad276f1a115. Whole subject verifies
+one line and empty body. OLD e9d575f/parent b00215d are immutable. Row71 ACTUAL
+base remains OLD e9d575f, avoiding replay of the row70 control repair.
+
+## File write visibility preparation refresh, 2026-10-09
+
+Row71 rebases from ACTUAL old parent e9d575fdf990d28ae899c7562b369fe6b4f4401d
+onto current row70 head 0d09a61aaab76f5fde3d7f27a3ba1289f5d26f1c.
+Ten current docs resolve historical conflicts; row70 control repair is not replayed.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test --test file_write_visibility
+--test file_construction_ownership --test unwind_cleanup is running.
+Latest guarded handoff audit passes eleven doc-link sets, 82 immutable queue
+ancestry pairs and whole one-line subjects (0.14 / 1.04 s CPU / elapsed).
+All six focused tests pass 12.72 / 25.58 s CPU / elapsed. File write fixture
+matches immutable 5ac7103; feature runtime diff is only write-through flushing.
+Writes flush before return, preserving raw interpreter visibility and reporting
+short-write/flush errors without closing the borrowed handle. O1/O2 stress,
+verification, poison and omitted-flush controls pass with constructor/unwind
+regressions. Closed-handle error semantics are a separate later row72 repair.
+Same-target lint passes 2.55 / 5.13 s CPU / elapsed.
+Fmt check passes 0.44 / 0.82 s; ten docs copied before amend, tested code unchanged.

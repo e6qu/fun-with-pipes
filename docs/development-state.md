@@ -50,8 +50,8 @@ After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row69 are published with focused checks;
-row70 File construction is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row70 are published with focused checks;
+row71 File write visibility is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -114,23 +114,24 @@ still need their final squash rebases and six exact-head full gates.
 | 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
 | 68 ownership-ci-probe-repairs | 7d8ab6719e55 | 22b95b0ddb74 | 30.99 / 62.26 s |
 | 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |
+| 70 ownership-file-construction | 0d09a61aaab7 | 821e6c1baaef | 11.09 / 22.39 s |
 
-Rows 18–69 are published preparations with passing focused tests, lint and
+Rows 18–70 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row69 nested loop boxing is published clean at
-821e6c1baaef7300383449de580473ff1643f189 on actual base 7d8ab67.
-Four focused tests pass 18.32 / 36.87 s, lint 2.56 / 5.18 s, format 0.45 / 0.83 s.
-Raw interpreter, aliases/scalar bits and retain/allocation trap controls pass;
-Again state remains flat. Emitted box removal is not a speed claim.
-Row70 rebased from actual old parent b00215d onto current row69 head 821e6c1;
-four focused File construction and unwind tests pass 11.09 / 22.39 s;
-lint passes 2.49 / 5.01 s. Prior 7222247
-stale-finalizer control repair remains intact.
+Row70 File construction is published clean at
+0d09a61aaab76f5fde3d7f27a3ba1289f5d26f1c on actual base 821e6c1.
+Four tests pass 11.09 / 22.39 s, lint 2.49 / 5.01 s, format 0.43 / 0.82 s.
+Raw/managed stream ownership, failure close-once, scoped cancellation, raw
+interpreter and poison controls pass; stale-finalizer control remains repaired.
+Row71 rebased from ACTUAL old parent e9d575f onto current row70 head 0d09a61;
+six focused File write visibility/construction/unwind tests pass 12.72 / 25.58 s;
+lint passes 2.55 / 5.13 s.
+The row70 control repair was not replayed.
 Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
 alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
@@ -181,10 +182,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-construction-worktree; File checks complete; no local workload is active.
+belongs to /private/tmp/fwp-file-write-visibility-worktree; write checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.20 s CPU / 1.17 s elapsed).
+ancestry pairs and whole commit messages (0.14 s CPU / 1.04 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all nine root docs before fast-forward/rebase conflict resolution:
