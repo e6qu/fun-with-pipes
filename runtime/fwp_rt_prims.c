@@ -2629,6 +2629,45 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
     return 0;
 }
 
+static V fwp_p_file_with_owned(V path, V fn, const fwp_desc *err, void (*drop_pair)(V), void (*dup_result)(V)) {
+    FILE *f = fopen(STR(path)->d, "r+b");
+    if (!f) f = fopen(STR(path)->d, "w+b");
+    if (!f) return fwp_io_error_path("open", STR(path)->d, err);
+    V h = fwp_file_value(f, STR(path)->d);
+    fwp_file_cleanup file = {f, h};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
+    fwp_value_owner handle_owner = {h, fwp_file_drop};
+    fwp_cleanup handle_cleanup;
+    fwp_value_protect(&handle_owner, &handle_cleanup);
+    fwp_handler hd;
+    hd.prev = fwp_handlers;
+    hd.state_depth = fwp_state_len;
+    hd.cleanup = cleanup.prev; /* failure also releases this scoped file */
+    fwp_handlers = &hd;
+    if (setjmp(hd.jb) == 0) {
+        V r = fwp_apply_borrowed(fn, 1, &h);
+        fwp_handlers = hd.prev;
+        fwp_value_owner pair_owner = {r, drop_pair};
+        fwp_cleanup pair_cleanup;
+        fwp_value_protect(&pair_owner, &pair_cleanup);
+        V result = OBJ(r)->f[0];
+        if (dup_result) dup_result(result);
+        fwp_value_finish(&pair_owner, &pair_cleanup);
+        if (drop_pair) drop_pair(r);
+        fwp_value_release(&handle_owner);
+        fwp_value_finish(&handle_owner, &handle_cleanup);
+        fwp_cleanup_pop(&cleanup);
+        fwp_close_scoped_file(&file);
+        FWP_KEEP_ALIVE(path); FWP_KEEP_ALIVE(fn);
+        return result;
+    }
+    fwp_handlers = hd.prev;
+    /* The failure unwind already closed the file. */
+    fwp_fail(hd.value, hd.desc);
+    return 0;
+}
+
 static V fwp_p_file_read(V path, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);

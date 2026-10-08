@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 09:00 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 09:22 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -77,7 +77,7 @@ Focused seven prefix/right-fold/zip/borrowed checks pass CPU 21.41 s / elapsed
 42.98 s; clippy lib/four tests 2.32 s / 4.76 s; real inventory one test
 3.30 s / 6.88 s; format 0.32 s / 0.61 s. Both prefix oracles now use
 FWP_NO_OPT=1. Sole PR #88 is open at exact `42cf518f2ec52dd86344f9393fbe20f4a492ac00`.
-CI `37750832622` is active; bench passes and five gates remain pending; require all six exact-head gates. Squash subject:
+CI `37750832622` is active; Linux, bench and regular ARM pass; Intel regular and ARM GC remain pending; Intel GC passes; require all six exact-head gates. Squash subject:
 `Own selected list prefixes and borrowed callback suffixes`, empty body.
 After its merge, rebase list-copy from OLD prefix `376e77ae94690057ededafd3468e72075cd4bb1c`
 onto the actual prefix squash.
@@ -497,8 +497,9 @@ Nineteen RC invariants pass 3.64 s / 7.54 s; actual primitive inventory one test
 passes 0.00 s / 0.13 s; clippy lib/four fixtures 2.35 s / 4.77 s; fmt 0.45 s /
 0.87 s. Final thirteen typed File/frame/effect/task/channel/map/set checks pass CPU
 34.92 s / elapsed 70.20 s. Final format passes 0.34 s / 0.63 s; final
-compiler/six-fixture warning check passes 2.26 s / 4.68 s. Publishing queue 75
-without a second PR. All local checks used the same serial, low-priority fwp guard. The standalone discard audit now contains
+compiler/six-fixture warning check passes 2.26 s / 4.68 s. Published queue 75 as `923ad4a4fb07a5f6e2211c16c219308b5bddcf56`, clean
+with verified one-line subject `Release native File owners at original resource frame boundaries`
+and empty body; no second PR. All local checks used the same serial, low-priority fwp guard. The standalone discard audit now contains
 only its new descriptor-pressure/flags/omission check; its other three cases are
 maintained in tests/resource_frames.rs, with native helper coverage added.
 
@@ -507,6 +508,52 @@ its allocator lifetime; File-bearing WebAssembly aggregates still need logical
 ownership despite stub native count slots. Unknown/shared runtime graphs,
 resource-bearing callback teardown, error/cancellation scopes and original
 aggregate-holder allocation need further audit. Do not claim optional tracing-free
-execution. Continue these phase 2 repairs while PR #88 full CI runs, then publish
-this focused preparation without opening a second PR. Next sequential PR after
+execution. Continue these phase 2 repairs while PR #88 full CI runs, the native preparation is published without a second PR. Next sequential PR after
 prefix remains list-copy from immutable OLD prefix 376e77ae9469.
+
+
+Current compiler preparation is clean at 923ad4a; no local workload is running.
+Next concrete audit: File-bearing runtime results/borrowed containers and
+WebAssembly aggregate ownership (the latter cannot rely on native RC slots),
+then remove unnecessary boxes from original aggregate frame holders and complete
+header/path storage lifetime. Preserve the exact native/interpreter cleanup/trap
+order; keep phase 2 incomplete. Prefix #88 still needs Intel regular and ARM GC exact-head gates;
+Linux, bench, regular ARM and Intel GC pass. Failures remain repair tasks.
+
+
+File runtime-boundary preparation is ready on `ownership-file-runtime-boundaries`,
+checkout `/private/tmp/fwp-file-runtime-boundaries-worktree`, parent OLD/current
+`923ad4a4fb07a5f6e2211c16c219308b5bddcf56` (queue 75). Native actual-source
+checks cover an independently opened File returned through file.with, cached task
+File results and loop Step File results. The final loop callback selection depends
+on runtime read-all input and has distinct step branches, preventing constant
+callback folding; its final matrix passes CPU 11.56 s / elapsed 23.30 s. Raw interpreter references use
+FWP_NO_OPT=1. O1/O2, reuse/free disabled and enabled, tracing off and armed stress/
+verification, and both poison modes pass. Initial task fixture had an invalid
+no-hole None arm using const; corrected before recording semantic evidence.
+
+file.with now borrows its synchronous callback, receives an owned tuple, retains
+its returned typed value, drops the tuple and both File owners, and closes the
+scoped stream idempotently. The raw scoped stream remains registered through
+errors/traps/cancellation; no new surface resource duplication is permitted.
+Omitting only the result retain is detected at O1/O2 (exit 101, duplicate discarded
+File). Header/path storage still follows the existing allocator lifetime.
+
+The audit also found FWP_FREE=0 was bypassed by ordinary child drop functions
+inside a resource-bearing parent. Such children now have count-only drop bodies;
+resource children still close. Task/channel object storage also honors the no-free
+macro while releasing their owned resource results/queued values. Exact generated
+C accounting verifies fwp_gc.freed == 0.0 for all three sources with tracing off,
+at O1/O2, without rounded counters. Restoring ordinary child frees in the scoped
+probe fails that accounting check (exit 29). These are flag semantics checks,
+not a heap reduction or speed claim.
+
+Eleven focused File/frame/effect/task checks pass CPU 36.83 s / elapsed 73.76 s.
+Final boundary matrix with both omission controls and exact no-free accounting
+passes 17.60 s / 35.40 s. Format 0.44 s / 0.62 s and clippy lib/five fixtures
+2.33 s / 4.77 s pass. The actual inventory check passes one test, CPU 3.48 s / 7.34 s.
+Publish this preparation without a second PR. Same fixed serial/low-priority fwp guard throughout.
+Next: WebAssembly resource-bearing aggregates and runtime owners cannot use their
+stub RC operations (fresh/dup/drop/release-last are currently no-ops). Require
+actual runner WASI evidence; native GC-off checks are not WASM support. Original
+aggregate-holder boxing and File header/path reclamation also remain required.

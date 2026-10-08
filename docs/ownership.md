@@ -376,3 +376,13 @@ partially initialized binding slots, record/variant results and handled File err
 aliases have focused coverage. Original aggregate binding slots currently box
 values; retaining flattened fields without extra wrappers is a follow-up. Header
 storage, shared runtime graphs and WebAssembly aggregate ownership remain open.
+
+
+A further runtime-boundary preparation owns file.with's callback tuple, retains
+its typed result before disposing that tuple and releases the original scoped
+File owner. Actual returned File, cached task File and loop Step File sources
+match the raw interpreter under disabled reuse/free/tracing and real GC stress.
+Result-retain omission is detected. FWP_FREE=0 keeps ordinary child and task/channel
+object storage from count-based freeing while still closing resource children;
+exact zero freed-byte accounting and an ordinary-child-free negative control
+verify this policy. The WebAssembly RC stubs still require an ownership repair.

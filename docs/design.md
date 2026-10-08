@@ -51,6 +51,8 @@ owners. Native frame retain/release now also has a subsequent preparation, inclu
 mandatory typed File ownership, borrowed I/O dispatch and owned effect-handler
 payloads. Descriptor-pressure and trap-order checks pass locally; sequential full
 CI, shared runtime/WASM resource ownership and storage reclamation remain open.
+A further scoped-callback preparation transfers file.with results precisely and
+respects FWP_FREE=0 for ordinary children of resource-bearing owners.
 This does not establish merged File ARC or tracing-free execution.
 
 The C backend and the interpreter must agree byte for byte on stdout,
