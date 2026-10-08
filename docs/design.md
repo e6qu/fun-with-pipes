@@ -29,7 +29,7 @@ lex → parse (offside layout) → macro expansion → name collection
 | Higher-order primitives | `map`, `filter`, `fold`, `fold-right`, `take-while`, `drop-while`, `zip-with` and `loop` called with a known function that captured nothing compile to `fwp_k_*` (runtime/fwp_rt_prims.c), which take a C function pointer and are always inlined, so the function is called directly. A known function applied to captured values (`map (mul 3)`) gets a specialized loop of its own, `fwp_hof<i>`, which takes the captured values and calls the function directly (`opt::specialize_hofs` in `src/opt.rs`, `hof_def` in `src/cgen.rs`); compiled dynamic calls use `fwp_apply_owned` with typed captures; runtime callbacks use the shared `fwp_apply` entry |
 | Records that do not escape | A record bound to a local and read only through its fields becomes one local per field (`only_fields` and `replace_fields` in `src/opt.rs`), and copies of locals and constants are propagated, so the tuples that `curry`, `uncurry` and `curry3` build are never allocated. A `match` on `map.get` branches on the lookup without building the `Some` (`lookup_match` in `src/cgen.rs`) |
 | Records in registers | A direct call passes a record of up to eight fields as its fields when the callee reads it only field by field, and a function returning such a record returns a C struct (`fwp_r<n>`: two fields come back in registers, more in the caller's stack frame, which the C ABI provides). A record of more than four fields is returned so only by a function whose every tail builds one, so that one it passes on is not read into a struct and built again (`wide_record_returns`). Its caller reads the struct's fields when it only reads fields (`let`, `.i`, a tail call), so recursion over pairs allocates nothing. Each such function has a worker with this convention (`w<id>`) and keeps its usual entry (`f<id>`), which boxes, for closures and primitives (`Abi` in `src/cgen.rs`). A function whose every tail builds a variant of a non-recursive type with up to eight fields per constructor (`Option`, `Result`, a parser's token), or calls such a function, returns its tag and fields as a struct (`fwp_u<m>`, `variant_returns`); a caller that only matches on the result keeps it as one, counting the fields' references by tag (`fwp_vdup<k>`, `fwp_vdrop<k>`), and any other builds it (`fwp_vbox<k>`). Lists and trees are left out, as their nodes are rebuilt in the cells of the old ones. `FWP_VRET=0` when compiling turns it off |
-| Reuse in place | Counted references free what compiled code gives up and find records with a single reference, so that an update writes into the record instead of copying it, as in Perceus's "functional but in place". `src/rc.rs` makes ownership explicit in the IR: `Dup` and `Drop` of locals of record, variant, array, map, set, String, Bytes and function types (unknown runtime boundaries still share), with functions and constructors owning their arguments and primitives borrowing them, and a local dropped as soon as the rest of its scope does not use it. A checker (`rc::check`) verifies every path of every function, and debug builds check every program. Native code keeps a count per object in the collector's metadata (`fwp_rc_*` in runtime/fwp_rt_gc.c): records and variants it allocates start unique, and whatever it hands to the runtime (unmodeled primitives, retained callbacks, other threads) becomes shared with everything it reaches, so counts are never too low. A unique, young record is updated in place, and the cell of a unique variant or record that a function drops is reused by a constructor of the same size that follows (`FnGen::reuse_token`): a function written in fwp that rebuilds a tree or a list writes each new node into the old one. `array.set` and `array.push`, `map.insert`, `map.remove` and `map.update`, and `set.insert` and `set.remove` own the array, map or set they are given (`rc::prim_consumes`) and write into it when it is unique, at any age (these are objects of kind 2, which every minor collection scans), an insertion growing it by doubling; the primitives that make them give them counted, those that only read one leave it unique (`rc::prim_reads_only`), and the last reference to an object holding them gives up their references (`fwp_rc_last`). A loop of 100 000 pushes or map insertions went from O(n²) to O(n). An object compiled code gives up its last counted reference to is freed at once, even after surviving collection (prepared old-storage reclamation): the drop functions generated per type (`Gen::drop_id`) give up the references it holds, by their types (a list's tail in a loop, not by recursion), and return its cell to the free lists (`fwp_rc_free_obj`); objects the runtime shares, and those off the heap, are left to the collector. A program that builds and walks a tree 200 times went from 33 collections and a 37 MiB heap to none and 2 MiB. `FWP_FREE=0` when compiling leaves freeing to the collector. `FWP_REUSE_VERIFY=1` poisons such a record instead of reusing or freeing it, and the tests run every program both ways (`tests/reuse.rs`). `FWP_REUSE=0` when compiling turns it off |
+| Reuse in place | Counted references free what compiled code gives up and find records with a single reference, so that an update writes into the record instead of copying it, as in Perceus's "functional but in place". `src/rc.rs` makes ownership explicit in the IR: `Dup` and `Drop` of locals of record, variant, array, map, set, String, Bytes and function types (unknown runtime boundaries still share), with functions and constructors owning their arguments and primitives borrowing them, and a local dropped as soon as the rest of its scope does not use it. A checker (`rc::check`) verifies every path of every function, and debug builds check every program. Native code keeps a count per object in the collector's metadata (`fwp_rc_*` in runtime/fwp_rt_gc.c): records and variants it allocates start unique, and whatever it hands to the runtime (unmodeled primitives, retained callbacks, other threads) becomes shared with everything it reaches, so counts are never too low. A unique, young record is updated in place, and the cell of a unique variant or record that a function drops is reused by a constructor of the same size that follows (`FnGen::reuse_token`): a function written in fwp that rebuilds a tree or a list writes each new node into the old one. `array.set` and `array.push`, `map.insert`, `map.remove` and `map.update`, and `set.insert` and `set.remove` own the array, map or set they are given (`rc::prim_consumes`) and write into it when it is unique, at any age (these are objects of kind 2, which every minor collection scans), an insertion growing it by doubling; the primitives that make them give them counted, those that only read one leave it unique (`rc::prim_reads_only`), and the last reference to an object holding them gives up their references (`fwp_rc_last`). A loop of 100 000 pushes or map insertions went from O(n²) to O(n). An eligible young object compiled code gives up its last counted reference to is freed at once (old marked storage still awaits collection): the drop functions generated per type (`Gen::drop_id`) give up the references it holds, by their types (a list's tail in a loop, not by recursion), and return its cell to the free lists (`fwp_rc_free_obj`); objects the runtime shares, and those off the heap, are left to the collector. A program that builds and walks a tree 200 times went from 33 collections and a 37 MiB heap to none and 2 MiB. `FWP_FREE=0` when compiling leaves freeing to the collector. `FWP_REUSE_VERIFY=1` poisons such a record instead of reusing or freeing it, and the tests run every program both ways (`tests/reuse.rs`). `FWP_REUSE=0` when compiling turns it off |
 | Typed locals | Every IR function records the type of each local, its parameters first (`Func::locals` in `src/ir.rs`). Monomorphization gives them, the optimizer and fusion keep them as they add locals, and debug builds check after each pass that each local's type agrees with what it is bound to (`ir::check_locals`). They are what a value's size and layout are read from |
 | Known constructors | After inlining, a match on a value whose constructor is known (`Some x`, a record of locals) selects its arm and binds the fields to the arm's names, so the value is never built. A match on a match whose every arm ends in a constructor (`half \| option.unwrap-or 0`, with `half` returning `Some` or `None`) first moves into those arms, as long as the copies are small (`case_of_case` and `known_ctor` in `src/opt.rs`): a loop over such a call went from 153 MiB allocated and 164 ms to nothing and 22 ms |
 | Dead functions | After inlining, most instances of small combinators (`fork`, `curry`, `const`) are reached by nothing. The C backend generates code only for the functions reachable from `main`, the tests, the exports and the served methods (`live_functions` in `src/cgen.rs`); the others keep their place in the function table, without code |
@@ -38,27 +38,11 @@ lex → parse (offside layout) → macro expansion → name collection
 | Values on the stack | A record, variant or closure (a known function applied to fewer arguments than it takes) that does not escape lives in the C stack frame of the function that builds it: its local is read through fields, matched, copied with fields replaced, applied (which hands the function the closure's captured values, never the closure), or passed to a parameter that does not escape either (`src/escape.rs`, a fixed point over all functions), and never returned, stored, captured or given to a primitive. Its fields are on a stack the collector scans. The wrapper has no heap count slot; generated code tracks owned child references for eligible stack locals, aliases and consumed calls, and preserves their addresses through allocation. Unknown child types retain the fallback. A value the function builds is not passed to the function itself (a tail call becomes a jump that reuses the frame), while a parameter passed on to it may be (it lives in a caller's frame). `FWP_STACK=0` when compiling turns it off |
 | Memory | Native programs have a generational, non-moving mark-and-sweep collector with conservative roots (`runtime/fwp_rt_gc.c`, see [Runtime](#runtime)); with `--memory static` its heap, a `malloc` pool and every stack are mapped once at startup (`runtime/fwp_rt_static.c`, see [Static memory](reference.md#static-memory)); WebAssembly builds allocate from a bump heap that is never freed. The interpreter uses Rust reference counting |
 
-Native arrays own their typed reference-bearing elements. Copies retain those
-references, unique growth transfers them, replacement releases the prior
-element, and last-reference array destruction releases its children. Array
-callbacks borrow inputs and return owned results; folds transfer accumulators.
-Maps/sets likewise own typed keys/values and synchronous callback results;
-retained runtime boundaries still share. The
-[primitive inventory](primitive-ownership.md) records the exact contracts.
-
-Prepared native nonlocal cleanup uses task-local stack nodes. Error handlers
-and recoverable traps retain their boundary, and cancellation releases registered
-owners before jumping out of their frames. file.with uses this mechanism to
-close on cancellation and recovered traps too. Compiler-wide live-owner
-registration is still required before retained task values can use full counted
-ownership; see [ownership.md](ownership.md).
-
-Prepared TLS server owners retain SSL_CTX/ALPN state across listener stop and
-accepted-session transfer into HTTP/2. They follow the interpreter's retained
-context lifetime internally, without a surface ownership annotation. Actual
-OpenSSL ownership probes pass; source/stress and architecture evidence remains
-pending on GitHub runners after the bounded local stream check was refused.
-See [ownership.md](ownership.md#prepared-tls-listener-and-accepted-session-owners).
+Merged synchronous callback entries borrow typed inputs and return owned results;
+map/filter own fresh spines and results without promoting input elements to sharing.
+Other callback/runtime and exceptional ownership extensions are prepared separately.
+Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
+for their exact status; prepared changes are not merged support.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
@@ -91,11 +75,6 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
 
 - Hindley–Milner inference with levels. Records and effects share one row
   unifier. Only signatures generalize: see [Generics](#generics).
-- At a call, known callee effects may run inside a larger ambient effect row.
-  Reopen only the current call's closed effect row after argument unification;
-  never copy the ambient row into function-valued arguments. Pipe application,
-  composition and ordinary application follow the same rule. Required effect
-  labels remain present, so pure signatures still reject effectful callbacks.
 - Tuples are records with numeric labels, and unit is the empty record.
 - Nominal records are distinct from each other but unify structurally with
   open rows, so `.name` accepts both `User {…}` and `{name = "x"}`.
@@ -264,8 +243,8 @@ cost is code size, so explicit generics keep that cost visible.
   containing the runtime and scans its writable-at-load segments, including
   `__DATA_CONST` and zero-fill storage. Other native systems do not arm
   collection. Darwin validation is tracked in the session handoff.
-  Runtime list builders keep their source buffers reachable until the last
-  allocating constructor: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
+  Runtime value/string constructors and list traversals keep their source
+  objects/buffers reachable until the last allocating operation: `FWP_KEEP_ALIVE` is a compiler lifetime fence.
   Optimized Clang can otherwise preload a short buffer and discard its
   only root while its elements are still needed.
 - Reverse-mode autodiff records operations on tapes kept by the runtime
@@ -313,33 +292,6 @@ error. See [protocol.md](protocol.md).
 | `--target wasm32-wasi`, `wasm32-browser` | WebAssembly through clang; `setjmp`/`longjmp` use the WebAssembly exception proposal. Effects the target lacks (`Network`, `Process`) are compile errors. Tasks are fibers (`FWP_FIBERS` in `runtime/fwp_rt_task.c`): the scheduler is the native one, but `swapcontext` becomes a call to a hook that the JavaScript host installs in the function table (`web/fibers.js`), which suspends the calling fiber with JavaScript Promise Integration and resumes the next one; each task has its own 1 MiB region of linear memory for C's stack, and the stack pointer is saved and restored around each switch. Waiting for a timer with every task parked is another hook, a JavaScript timer |
 | fwp itself, `--target wasm32-wasip1` | `cargo build --release --target wasm32-wasip1`: the compiler and interpreter as one WASI command, `fwp.wasm`, which the playground (`web/`) runs in a web worker through a small WASI written in JavaScript (`web/wasi.js`). There are no threads, so `with_big_stack` runs inline on a 512 MiB stack set at link time (`.cargo/config.toml`), and a program that uses `Network`, services or foreign C functions is rejected after lowering, before it runs (`driver::wasm_host_unsupported`), as the `wasm32-wasi` target rejects it. Tasks run on fibers (`src/fiber.rs`, with the same hooks as compiled programs): `World::park` switches to the next ready fiber instead of handing a baton between threads, in the same order, and traps on a deadlock. The interpreter's frames in linear memory are large (about a kilobyte per call), so the fibers of tasks share one 32 MiB stack region: a fiber that suspends copies out the part it uses, and copies it back when it resumes. Without JSPI, a program that uses tasks is rejected before it runs, unless fwp.wasm was built with `scripts/build-playground.sh --asyncify`. Commands that compile C or start processes report that they are unavailable. Stdout is line-buffered there, so the output before an engine stack overflow is kept; values are dropped iteratively, so long lists do not need a deep stack |
 
-Prepared loop cleanup protects counted current-state slots at cancellation
-safe points, initial record-to-slot retention and owned Step payload preparation.
-RC argument naming is normalized narrowly to recover immediately consumed
-rebuilt records without changing field evaluation/release order. Scalar slots stay uncounted;
-full sequential CI and remaining allocation/retained lifetimes are tracked in
-[ownership.md](ownership.md#prepared-loop-cancellation-cleanup).
-
-Prepared capture/argument preparation protects successful typed duplicates
-until transfer, and partial application owns its unfinished outer cell. See
-[ownership.md](ownership.md#prepared-argument-and-capture-preparation) for evidence
-and the remaining constructor/boxing and retained-runtime lifetime work.
-
-Prepared constructor allocation protects consumed typed fields and remaining
-caller owners before allocation, preserving scalar slots and the direct reuse
-path. Acceptance and remaining boxing work are recorded in
-[ownership.md](ownership.md#prepared-constructor-allocation-cleanup).
-
-Prepared worker result boxing owns returned typed fields and remaining caller
-values across allocation; scalar and nullary variant payloads remain uncounted.
-See [ownership.md](ownership.md#prepared-worker-result-boxing) for evidence and
-remaining input preparation and runtime lifetime work.
-
-Prepared worker argument preparation registers original owners before field
-duplication and protects each completed typed duplicate until worker entry.
-[Ownership evidence](ownership.md#prepared-worker-argument-preparation) records
-alias/scalar/cancellation checks and remaining runtime lifetime work.
-
 ## Not implemented
 
 - Complete ownership of strings, bytes, escaping closures and runtime-shared
@@ -374,123 +326,3 @@ alias/scalar/cancellation checks and remaining runtime lifetime work.
 - Transports of the pipe protocol other than the pipe, `UDS_V1` and
   `SHM_V1` (which are Linux only), the WebAssembly component model and
   `wasm64`.
-
-
-Prepared runtime call cleanup keeps consumed functions, pending typed arguments
-and borrowed primitive-entry owners alive until transfer or return, then releases
-them on nonlocal unwind. Dynamic stack closures protect their original captures
-in the caller. Programs without possible unwind omit runtime registration.
-Owned-function metadata adds a typed pending-argument drop pointer (eight bytes
-on 64-bit targets); scalar words remain uncounted. Focused evidence and remaining
-ownership gaps are recorded in [ownership.md](ownership.md) and
-[the handoff](development-state.md); complete ARC and collector-free support
-remain roadmap acceptance criteria.
-
-Prepared retain-failure cleanup records live owners before a Dup and protects
-completed typed field retains. Actual wide-count overflow checks and remaining
-conversion lifetimes are recorded in
-[ownership.md](ownership.md#prepared-retain-overflow-cleanup).
-
-Prepared aggregate ownership context keeps nested constructor temporaries typed
-and owns earlier fields during later scalar argument preparation. Evidence and
-remaining untyped contexts are in
-[ownership.md](ownership.md#prepared-concrete-aggregate-context).
-
-Prepared boxed variant conversion owns the consumed input separately from the
-caller's remaining values during typed field retention. Consumed-value
-checkpoints and overflow evidence are documented in
-[ownership.md](ownership.md#prepared-boxed-variant-conversion).
-
-Prepared record updates retain only typed fields kept by a copy and release
-replaced fields when reusing unique storage. Pending fields, copied storage
-and partial retains have separate unwind owners. Evidence and remaining
-reconstruction coverage are recorded in
-[ownership.md](ownership.md#prepared-typed-record-updates).
-
-Prepared boxed-record field conversion protects the consumed input, caller
-values and partial retained fields separately. Scalar fields are uncounted.
-Evidence and remaining context/reconstruction gaps are recorded in
-[ownership.md](ownership.md#prepared-boxed-record-field-conversion).
-
-Prepared returned variant aliases transfer their existing field owners without
-boxing or extra retains. A valid nested IR regression and adjacent source
-behavior are documented separately in
-[ownership.md](ownership.md#prepared-returned-variant-aliases).
-
-Prepared known-constructor elimination retains the checked nominal field context
-for discarded effectful fields; unresolved scrutinees keep their typed binding.
-Typed IR/native reclamation and selected source behavior are recorded in
-[ownership.md](ownership.md#prepared-nominal-match-context).
-
-Prepared field projection preserves the checked record base type when inlining
-would erase it. Typed scalar replacement then supplies field ownership without
-allocating the outer record. Evidence and remaining metadata/reconstruction
-gaps are recorded in [ownership.md](ownership.md#prepared-typed-record-projection).
-
-Prepared CAF ownership keeps typed cached references and provides an owned
-reference per call. RC prepares CAF arguments and protects caller owners during
-evaluation; executables release results/caches after tasks finish. Source/IR
-cleanup controls and the remaining library/shared lifetime gaps are recorded in
-[ownership.md](ownership.md#prepared-counted-caf-caches).
-
-Prepared inlining treats zero-argument CAFs as computations that must precede
-the callee, including ignored arguments. Static positive-arity function references
-remain trivial. Source traps and counted temporary cleanup are checked against
-an unoptimized interpreter in [ownership.md](ownership.md#prepared-caf-evaluation-during-inlining).
-
-Prepared spawned task thunks retain a counted closure owner across suspension.
-Entry transfers it to typed owned application; cancellation before entry drops
-it. Scope and stack preparation precede publication of the child. Task handles
-and counted results still share; full teardown/cycle coverage remains open.
-See [ownership.md](ownership.md#prepared-retained-task-thunks).
-
-Prepared deadline calls use the spawned-thunk retained owner contract, preserving
-the deadline and typed capture cleanup. Counted results still use shared task
-lifetimes; evidence is in
-[ownership.md](ownership.md#prepared-retained-deadline-callbacks).
-
-Prepared task.scope uses typed borrowed application and transfers its owned
-result after child joins. Separate owners restore scope state and release the
-result on cancellation, including handler restoration on external recovered
-traps. See [ownership.md](ownership.md#prepared-scoped-callback-ownership).
-
-Prepared task handles use compiler counting and a runtime destructor. Separate
-scheduler/scope/caller owners keep a task alive until stack cleanup and joining
-finish; each await owns an alias of its cached typed result. Deadline helpers
-protect their private handles during waiting and release them on failure.
-Unknown boundaries retain tracing. Evidence and remaining acceptance work are in
-[ownership.md](ownership.md#prepared-counted-task-handles-and-results).
-
-Prepared channels own typed queued values and transfer them into receive results.
-Separate caller handles keep parked operations alive through cancellation; last
-handle destruction releases queued values and storage. Unknown/sink boundaries
-retain tracing. Evidence and remaining cycle/library acceptance are in
-[ownership.md](ownership.md#prepared-counted-channels-and-queue-elements).
-
-
-Prepared native-library resource finalizers release owned File/socket/HTTP2
-handles before unmapping the heap. Session disposal during unload avoids network
-writes, then releases cached TLS contexts; explicit close retains close_notify.
-See [the ownership evidence](ownership.md#prepared-native-library-resource-teardown).
-This is prepared work pending sequential CI; general affine discard and remaining
-runtime/cycle coverage remain open.
-
-Prepared service listener cleanup uses a stack frame across preparation and the
-cancellable accept loop. It releases the listener/context owner while accepted TLS
-sessions keep their own references; [cancellation evidence](ownership.md#prepared-service-listener-cancellation-cleanup)
-records actual scheduler and ALPN checks. Full sequential CI remains required.
-
-Prepared TLS client cache growth publishes completed entries and releases partial
-owners on allocation failure; prior entries remain usable. Service ALPN preparation
-handles strdup failure before context creation. [Allocation-failure evidence](ownership.md#prepared-tls-cache-partial-allocation-owners)
-records the focused probes; sequential CI and remaining TLS lifetime work are pending.
-
-Prepared ALPN packing uses direct borrowed list walks and one bounded buffer,
-with interpreter-compatible bytes and explicit allocation failure cleanup.
-[Wire preparation evidence](ownership.md#prepared-alpn-wire-preparation) records
-focused probes; full sequential gates and handshake cancellation remain pending.
-
-Prepared TCP/TLS connection setup uses stack cleanup owners through resolver,
-pending-connect, wrapper and handshake preparation, transferring to the returned
-connection on success. [Cancellation evidence](ownership.md#prepared-connection-cancellation-owners)
-records focused scheduler probes; full sequential gates remain required.
