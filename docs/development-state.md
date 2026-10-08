@@ -42,16 +42,16 @@ ownership-loop-state, /private/tmp/fwp-loop-worktree, exact
 Source/runtime/tests/workflows exactly match verified 112f3c8; four raw
 interpreter oracles keep FWP_NO_OPT=1. Five final tests pass 18.66 / 37.70 s,
 exact contract unit 3.15 / 6.61 s, lint 2.30 / 4.69 s, format 0.33 / 0.60 s.
-CI 37909273494 passes bench and ARM macOS GC stress at this exact head.
-Linux, regular ARM/Intel macOS and Intel GC stress run. Require each to pass before
+CI 37909273494 passes bench and regular/GC stress ARM macOS at this exact head.
+Linux, regular Intel macOS and Intel GC stress run. Require each to pass before
 explicit match-head squash with subject
 `Transfer owned loop states and reclaim typed Step and ABI payloads`, empty body.
 After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row64 are published with focused checks;
-row65 unboxed worker locals is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row65 are published with focused checks;
+row66 TLS peer-subject cleanup is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -109,21 +109,23 @@ still need their final squash rebases and six exact-head full gates.
 | 62 ownership-tls-cache-failures | 0be508308064 | c299edbc33eb | 11.21 / 26.06 s |
 | 63 ownership-tls-wire-preparation | 66e80d399e65 | 0be508308064 | 11.65 / 26.15 s |
 | 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
+| 65 ownership-unboxed-worker-locals | 2ba7084abe25 | ae05b2bfc32c | 20.34 / 58.06 s |
 
-Rows 18–64 are published preparations with passing focused tests, lint and
+Rows 18–65 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row64 connection cancellation is published clean at
-ae05b2bfc32c131059ca22559b1d9a20c5aa5375 on actual base 66e80d3.
-Three focused tests pass 12.36 / 27.82 s, lint 3.06 / 6.16 s, format 0.63 / 1.62 s.
-Cancellation, refusal and cleanup omission controls pass; library tracing is unarmed.
-Row65 rebased from actual old parent 0cc6126 onto current row64 head ae05b2b;
-four focused unboxed worker, preparation and boxing tests pass 20.34 / 58.06 s,
-lint 2.99 / 8.45 s and format 0.52 / 1.60 s.
+Row65 unboxed worker locals is published clean at
+2ba7084abe25d8d26ab9a86a4a70dcf881888efe on actual base ae05b2b.
+Four focused tests pass 20.34 / 58.06 s, lint 2.99 / 8.45 s, format 0.52 / 1.60 s.
+Raw source interpreter, typed aliases, scalar bits, trap and partial captures agree.
+GC stress/verification and reuse poison pass; emitted box removal is not a speed claim.
+Row66 rebased from actual old parent b8f3752 onto current row65 head 2ba7084;
+three focused TLS subject, connection cancellation and cache tests pass
+10.79 / 25.73 s; lint passes 3.78 / 7.59 s.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
 row19 final rebase follows its eventual squash.
 
@@ -172,7 +174,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-unboxed-worker-worktree; worker checks complete; no local workload is active.
+belongs to /private/tmp/fwp-peer-subject-worktree; peer metadata checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.17 s elapsed).

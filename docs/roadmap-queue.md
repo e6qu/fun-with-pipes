@@ -100,7 +100,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `b8f3752d236f` | `b8f3752d236f` | `0cc612650ab9` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `2ba7084abe25` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |

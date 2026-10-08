@@ -8738,3 +8738,24 @@ related worker boxing/preparation regressions pass. This is allocation-shape
 and ownership evidence, not a speed claim or full wide-record benchmark.
 Same-target lint passes 2.99 / 8.45 s; fmt check passes 0.52 / 1.60 s.
 Nine authoritative docs copied before final amend; tested code unchanged.
+Final row65 2ba7084abe25d8d26ab9a86a4a70dcf881888efe is published clean with
+exact lease b8f3752d236f217385923a06dacd1afcdaf716ca. Subject verifies one
+line and empty body. No additional PR; row66 actual base remains b8f3752.
+
+## TLS peer-subject preparation refresh, 2026-10-09
+
+Row66 rebases from actual old parent b8f3752d236f217385923a06dacd1afcdaf716ca
+onto current row65 head 2ba7084abe25d8d26ab9a86a4a70dcf881888efe.
+Nine authoritative docs resolve historical conflicts. Guarded cargo clean -p fwp
+passes 0.07 / 0.38 s; guarded cargo test --test tls_peer_subject_ownership
+--test connect_cleanup --test tls_cache_ownership is running.
+All three focused tests pass 10.79 / 25.73 s CPU / elapsed. Feature source/tests
+exactly match immutable 6bda2c815a7107c059370d83f1f090b50996d152.
+Real OpenSSL BIO-pair handshake agrees with Rust Session peer metadata.
+Certificate, BIO and native subject buffers release through preparation failure
+and injected String copy trap; absent peer, retry, O1/O2 poison and four omission
+controls pass. Library tracing is unarmed; full source TLS and stress remain CI work.
+PR96 now passes bench and both regular/GC stress ARM macOS; Linux and both
+Intel macOS jobs remain running at exact 03d25ac.
+Same-target lint passes 3.78 / 7.59 s CPU / elapsed.
+Fmt check passes 0.48 / 0.98 s; nine docs copied before amend, tested code unchanged.
