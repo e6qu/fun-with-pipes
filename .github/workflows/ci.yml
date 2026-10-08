@@ -86,7 +86,7 @@ jobs:
       - name: Required WASI and File ownership regressions
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
-        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_read_kinds -- --nocapture
+        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_read_kinds --test file_construction_ownership -- --nocapture
       - name: test
         run: cargo test --all-targets --no-fail-fast
 
