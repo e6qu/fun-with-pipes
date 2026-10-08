@@ -47,7 +47,7 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
                 || is_container(n)
                 || matches!(
                     n.as_str(),
-                    "std::String" | "std::Bytes" | "std::Task" | "std::Channel"
+                    "std::String" | "std::Bytes" | "std::Task" | "std::Channel" | "std::File"
                 ) =>
         {
             true
@@ -566,7 +566,14 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
                 free_in(b, bound, out);
             }
         }
-        Expr::ResourceRegion { body, .. } => free_in(body, bound, out),
+        Expr::ResourceRegion {
+            parameters, body, ..
+        } => {
+            // Entry owners must survive until the region establishes its frame
+            // references. Binding slots are initialized later inside the body.
+            out.extend(parameters.iter().filter(|l| !bound.contains(l)).copied());
+            free_in(body, bound, out);
+        }
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !bound.contains(l) {
                 out.insert(*l);
@@ -821,7 +828,11 @@ impl Checker<'_> {
                 *st = after.unwrap_or_default();
                 Ok(())
             }
-            Expr::ResourceRegion { body, .. } => self.expr(body, st, consume),
+            Expr::ResourceRegion { body, .. } => {
+                let before = self.calls.map(|_| owned_references(st));
+                self.record_call(e, before, st);
+                self.expr(body, st, consume)
+            }
             Expr::Dup(l, b) => {
                 // A retain can allocate wide-count metadata. Protect existing
                 // references before it runs; the new reference does not exist yet.
@@ -984,6 +995,51 @@ mod tests {
     fn an_unused_parameter_is_dropped() {
         let p = prog(vec![list()], vec![], Expr::Construct(0, vec![]));
         assert!(matches!(counted(&p).0, Expr::Drop(0, _)));
+    }
+
+    #[test]
+    fn original_resource_parameters_enter_the_frame_before_dead_drops() {
+        let resource = MT::Record(vec![("file".into(), MT::con("std::File"))]);
+        let p = prog(
+            vec![resource],
+            vec![],
+            Expr::ResourceRegion {
+                parameters: vec![0],
+                bindings: vec![],
+                body: Box::new(Expr::Construct(0, vec![])),
+            },
+        );
+        let (e, locals) = counted(&p);
+        let Expr::ResourceRegion { body, .. } = &e else {
+            panic!("parameter dropped before the original region: {e:?}");
+        };
+        assert!(matches!(**body, Expr::Drop(0, _)), "{e:?}");
+        let calls = call_liveness(&p, &p.funcs[0], &e, &locals).unwrap();
+        assert_eq!(calls[&(&e as *const Expr)].at_entry, vec![(0, 1)]);
+    }
+
+    #[test]
+    fn uninitialized_region_bindings_are_not_entry_owners() {
+        let resource = MT::Record(vec![("file".into(), MT::con("std::File"))]);
+        let p = prog(
+            vec![resource.clone()],
+            vec![resource],
+            Expr::ResourceRegion {
+                parameters: vec![],
+                bindings: vec![1],
+                body: Box::new(Expr::Let(
+                    1,
+                    Box::new(Expr::Local(0)),
+                    Box::new(Expr::Construct(0, vec![])),
+                )),
+            },
+        );
+        let (e, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &e, &locals).unwrap();
+        assert!(calls[&(&e as *const Expr)]
+            .at_entry
+            .iter()
+            .all(|(l, _)| *l != 1));
     }
 
     #[test]

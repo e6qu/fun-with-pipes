@@ -11366,3 +11366,10 @@ Fresh focused resource frame checks follow.
 Row72 all three File I/O and binary/text semantic tests14.85/30.79s pass.
 The raw interpreter oracle uses FWP_NO_OPT=1; native O1/O2 comparisons include
 GC on/off, stress/verification and reuse poison variants. Lint/format follow.
+
+Row72 clippy5.53/11.82s and format0.35/0.62s pass after the three focused
+semantic tests. Row74 refresh4155bc9fce74b0971b6ebd98cb6aea586fc18e49
+uses actual base3dc1c36adbad. Compiler/runtime and File count fixtures match
+original; inherited CLI/tracing repairs remain. Prior CURRENT4b5da4aa946a
+is retained under its immutable revision before lease publication.
+Fresh owner-count checks follow.

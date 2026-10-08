@@ -114,9 +114,9 @@ still need their final squash rebases and six exact-head full gates.
 | 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
 | 70 ownership-file-construction | 41a76ee080e5 | 7047b100dbbe | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 6fdf20ca82a9 | 41a76ee080e5 | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
-| 72 ownership-file-io-errors | 82e51ba8ea16 | 6fdf20ca82a9 | Three native/raw interpreter tests14.85/30.79s pass; lint/format follow |
+| 72 ownership-file-io-errors | 82e51ba8ea16 | 6fdf20ca82a9 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
 | 73 ownership-resource-frames | 3dc1c36adbad | 82e51ba8ea16 | Both source commits preserved; fresh focused checks follow |
-| 74 ownership-file-runtime-owners | 4b5da4aa946a | 3c87e1f63b51 | 21.91 / 44.03 s |
+| 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Refreshed source unchanged; fresh focused checks follow |
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
 | 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
 | 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
@@ -249,8 +249,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-io-errors-worktree; the guarded File I/O and
-byte/text read checks are running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-resource-frames-worktree; the guarded original resource
+frame checks are running. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
