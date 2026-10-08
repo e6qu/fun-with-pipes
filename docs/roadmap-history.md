@@ -8931,3 +8931,28 @@ unanchored control pipeline fuses; ResourceRegion pipeline does not interleave
 its observable cleanup, preserving its stage boundary.
 Same-target lint passes 2.52 / 5.06 s CPU / elapsed.
 Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.
+Final row73 3c87e1f63b515922a57a559a445d775f3cdeac35 follows first replay
+cf45252340ea815a0bd7af83a2458d35432fd0ec on actual base d461164. Published
+clean with exact lease 368dafc5567dab757e779017784ce347c908593c. Both entire
+subjects verify one line with empty bodies. OLD dcc5bba/parent06419f4 stay
+immutable. Row74 ACTUAL base is previous current 368dafc, not OLD dcc5bba.
+
+## File logical owner preparation refresh, 2026-10-09
+
+Row74 rebases from ACTUAL old parent 368dafc5567dab757e779017784ce347c908593c
+onto current row73 head 3c87e1f63b515922a57a559a445d775f3cdeac35.
+Ten current docs resolve conflicts. File runtime fixture matches immutable e21c92e.
+Inherited main constructor/String/list keep-alive fences remain, as do repaired
+row72 byte-read dispatch and file_read_impl instrumentation; no source rollback.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test --test file_runtime_ownership
+--test resource_frames --test file_io_errors is running.
+All six focused tests pass 21.91 / 44.03 s CPU / elapsed. File header refs survive
+collector sharing/cleared count metadata, handle 300 extra aliases exactly, and
+trap overflow before touching the stream. Borrowed write/read results get owned
+aliases; IO/conversion/tuple failures discard only those extras and typed String
+results. Last logical release closes once independently of tracing. O1/O2 GC
+off/on × poison, FWP_RESOURCE_NO_FREE and three omission controls pass with
+original-frame and repaired IO regressions. Library probes need no tracing proof
+for logical close; sequential full gates still required.
+Same-target lint passes 2.57 / 5.18 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.

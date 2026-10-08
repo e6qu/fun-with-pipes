@@ -50,8 +50,8 @@ After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row72 are published with focused checks;
-row73 original resource frame fusion is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row73 are published with focused checks;
+row74 File alias counts is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -117,24 +117,26 @@ still need their final squash rebases and six exact-head full gates.
 | 70 ownership-file-construction | 0d09a61aaab7 | 821e6c1baaef | 11.09 / 22.39 s |
 | 71 ownership-file-write-visibility | 8a061cb9b8ab | 0d09a61aaab7 | 12.72 / 25.58 s |
 | 72 ownership-file-io-errors | d4611644084a | 8a061cb9b8ab | 18.47 / 37.02 s |
+| 73 ownership-resource-frames | 3c87e1f63b51 | d4611644084a | 21.06 / 42.34 s + three units 3.93 / 8.00 s |
 
-Rows 18–72 are published preparations with passing focused tests, lint and
+Rows 18–73 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row72 File IO and binary reads is published clean at
-d4611644084ab89c2bcd981ed93d857f9017fe35 on actual base 8a061cb.
-Six tests pass 18.47 / 37.02 s, lint 2.48 / 5.11 s, format 0.45 / 0.84 s.
-Directory/invalid-UTF8 errors agree with raw interpreter; binary reads preserve
-arbitrary bytes. Borrowed handles remain open; temporary buffers/owned streams release.
-Row73 rebased from ACTUAL old parent 06419f4 onto current row72 head d461164;
-six tests across three resource-frame/IO/construction targets pass 21.06 / 42.34 s.
-Three resource units pass 3.93 / 8.00 s, including the pure fusion control;
-lint passes 2.52 / 5.06 s. Both original-frame
-and corrected fusion-barrier commits replayed; binary-read dispatch stays repaired.
+Row73 original resource frames is published clean at
+3c87e1f63b515922a57a559a445d775f3cdeac35 on actual base d461164.
+Its first replay is cf45252340ea815a0bd7af83a2458d35432fd0ec.
+Six integrations pass 21.06 / 42.34 s, three units 3.93 / 8.00 s,
+lint 2.52 / 5.06 s and format 0.44 / 0.83 s. Source frames preserve parameter,
+local/result/error owners; fusion control keeps observable cleanup boundaries.
+Row72 repaired binary dispatch stays intact.
+Row74 rebased from ACTUAL old parent 368dafc onto current row73 head 3c87e1f;
+six focused File counts, original frames and IO cleanup tests pass 21.91 / 44.03 s;
+lint passes 2.57 / 5.18 s.
+Inherited main keep-alive fences and row72 binary dispatch/probe repair remain intact.
 Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
 alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
@@ -185,16 +187,16 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-frames-worktree; resource frame checks complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
+belongs to /private/tmp/fwp-file-runtime-owners-worktree; File owner checks complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.14 s CPU / 1.04 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
-Preserve all nine root docs before fast-forward/rebase conflict resolution:
-PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
+Preserve all ten current root docs before fast-forward/rebase conflict resolution:
+CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre95; refresh all nine immediately before updating
-main. Keep live status concise; archive chronology and superseded handoffs in
+/private/tmp/fwp-main-docs-pre95 (older nine-doc snapshot); refresh all ten
+immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.
