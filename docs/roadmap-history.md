@@ -8497,3 +8497,27 @@ accepted. Library GC stays unarmed; these are ownership/cleanup checks.
 C input/result lint with both targets and -D warnings passes2.54 s CPU
 /4.95 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final library-inputsf240ecd56f3b765074b5c2c06e2a4757560eb9fc is clean
+on actual base82f32b2, published with exact lease against OLDa6ebc1d.
+Whole subject verified one line, empty body; no second PR. Row56 actual base
+remains OLDa6ebc1d until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.15 s CPU /1.05 s elapsed. Row56 library teardown rebase
+from ACTUALa6ebc1da9637b4fef866697fa766208fd2d72af1 onto actual row55
+f240ecd56f3b765074b5c2c06e2a4757560eb9fc resolves doc conflicts with nine
+authoritative files. Reference links to maintained prepared ownership section
+rather than the archived teardown heading. Guarded clean0.00 /0.13 s.
+Actual loader unload and static-archive exit checks started with related
+input/result tests. Library tracing remains unarmed.
+Guarded cargo test --test library_unload --test library_input_ownership
+--test library_result_ownership passes all four tests12.24 s CPU /31.36 s
+elapsed. Actual Darwin dlopen/dlclose reloads and static-archive exit verify
+suspended/detached task cancellation, finalizer order, cache release, heap/metadata/
+stack unmapping, wide-count and auxiliary buffers, deleted pthread cleanup key,
+poll descriptor closure and host signal restoration/preservation. Six omission
+controls detect missing cleanup. O1/O2 poison and related input/result tests
+pass. Library tracing stays unarmed; full Linux/ARM/Intel gates still required.
+Library-unload lint with all three targets and -D warnings passes2.50 s
+CPU /5.05 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
+final amend; tested source unchanged.

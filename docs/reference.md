@@ -287,6 +287,10 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
   `tests/c-interop/main.rs` for Rust.
   Returned strings and string fields of returned structs borrow library storage
   and remain valid while the library is loaded; the host must not free them.
+  Prepared native teardown cancels library tasks and releases cached values and
+  runtime regions at unload (or static-archive process exit). The host must finish
+  all calls before unloading; see [the prepared ownership work](ownership.md#prepared-ownership-work)
+  and [current validation](development-state.md).
   Scalar/struct results are copied into C values. A nullable pointer copies the
   raw pointer; the pointee follows its own allocation/lifetime contract.
   Prepared C input ownership copies strings and `repr(C)` records into owned
