@@ -2506,17 +2506,17 @@ static V fwp_file_value(FILE *f, const char *path) {
     fwp_file_cleanup file = {f, 0};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
-    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
+    size_t len = strlen(path);
+    if (len > SIZE_MAX - sizeof(fwp_file) - 1) fwp_trap("file path too long");
+    /* No heap-valued children: the path belongs to this leaf allocation. */
+    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);
     h->f = f;
-    h->path = path;
     h->refs = 1;
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
 #endif
-    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
-    strcpy(p, path);
-    h->path = p;
+    memcpy(h->path, path, len + 1);
     FWP_KEEP_ALIVE(path);
     fwp_cleanup_pop(&cleanup);
     return PTR(h);

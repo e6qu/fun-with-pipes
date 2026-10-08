@@ -88,10 +88,10 @@ int main(int argc,char **argv){
         .unwrap();
     let end = start + generated[start..].find("\n}\n").unwrap() + 3;
     let value = &generated[start..end];
-    let injected = value.replace("    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));",
-        "    if(fault==1)fwp_trap(\"file handle allocation\");\n    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file)); observed_handle=h;")
-        .replace("    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);",
-            "    if(fault==2)fwp_trap(\"file path allocation\");\n    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);")
+    let injected = value.replace("    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1);",
+        "    if(fault==1)fwp_trap(\"file handle allocation\");\n    fwp_file *h = (fwp_file *)fwp_alloc_leaf(sizeof(fwp_file) + len + 1); observed_handle=h;")
+        .replace("    memcpy(h->path, path, len + 1);",
+            "    if(fault==2)fwp_trap(\"file path initialization\");\n    memcpy(h->path, path, len + 1);")
         .replace("    fwp_gc_finalizer(h, fwp_file_final);",
             "    if(fault==3)fwp_trap(\"file finalizer registration\");\n    fwp_gc_finalizer(h, fwp_file_final);");
     assert_ne!(value, injected);
