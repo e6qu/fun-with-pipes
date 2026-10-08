@@ -1201,7 +1201,7 @@ impl<'p> Gen<'p> {
             return format!("static void fwp_drop{id}(V v) {{ fwp_closure_drop(v); }}\n");
         }
         let head = format!(
-            "/* {} */\nstatic void fwp_drop{}(V v) {{\n    for (;;) {{\n        uint8_t *c = fwp_rc_slot(v);\n        if (!c || !*c) return;\n        if (*c > 1) {{ (*c)--; return; }}\n",
+            "/* {} */\nstatic void fwp_drop{}(V v) {{\n    for (;;) {{\n        if (!fwp_rc_release_last(v)) return;\n",
             mt.to_string().replace("*/", "* /"),
             id
         );
