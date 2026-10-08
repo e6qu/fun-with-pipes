@@ -96,20 +96,21 @@ still need their final squash rebases and six exact-head full gates.
 | 49 ownership-task-thunks | 427076c60d2c | af073c78c443 | 13.40 /26.90 s + exact unit3.58 /7.29 s |
 | 50 ownership-task-within | aa181f8f2c3a | 427076c60d2c | 15.44 /31.48 s + exact unit3.27 /6.86 s |
 | 51 ownership-task-scope | 28de1794f39f | aa181f8f2c3a | 14.91 /29.90 s + exact unit3.23 /6.67 s |
+| 52 ownership-task-handles | 4b6a2cb08da5 | 28de1794f39f | 22.60 /46.01 s + exact unit3.25 /6.66 s |
 
-Rows17–51 are published preparations with passing focused tests, lint and
+Rows17–52 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row51 scoped-callbacks28de1794f39f65583dc54f5fadb94d6dbb3f7e3f is clean
-on actual baseaa181f8, published with exact lease against OLD7da15d9.
-Four focused tests pass14.91 /29.90 s, exact unit3.23 /6.67 s, lint2.29 /4.72 s,
-format0.44 /0.72 s. Row52 task handles/cached results rebases from ACTUAL old parent7da15d9
-onto current row51 head28de179. Eight focused handle/scope/spawn/deadline/task tests pass22.60 /46.01 s;
-exact contract unit, lint, format, docs and publication follow.
+Row52 task-handles4b6a2cb08da57026b13625ff7b9f727c8641ab02 is clean on
+actual base28de179, published with exact lease against OLDbb6f9c4.
+Eight focused tests pass22.60 /46.01 s, exact unit3.25 /6.66 s, lint2.36 /4.75 s,
+format0.35 /0.75 s. Row53 typed channel queues rebases from ACTUAL old parentbb6f9c4 onto
+current row52 head4b6a2cb. Five focused channel/handle/task tests pass18.97 /38.17 s; exact contract
+unit, lint, format, docs and publication follow.
 Preserve immutable OLD anchors; no additional PR.
 PR95 is the sole open delivery; row18 final rebase follows its eventual squash.
 
@@ -158,7 +159,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-task-handle-worktree; exact task-handle contract check is active.
+belongs to /private/tmp/fwp-channel-queue-worktree; exact channel contract check is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.13 s CPU /0.94 s elapsed).

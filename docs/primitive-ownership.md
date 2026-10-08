@@ -195,6 +195,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 50 | task.within borrows the caller thunk and retains typed captures through deadline completion or cancellation | Sequential CI; external aliases and rollback; task results still share |
 | 51 | task.scope borrows its callback, returns an owned result and protects result/scope storage through joining, traps and cancellation | Sequential CI; handler restoration, aliases and cleanup omission controls |
 | 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Sequential CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
+| 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Sequential CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

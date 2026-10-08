@@ -8388,3 +8388,28 @@ Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_
 passes one test (57 filtered)3.25 s CPU /6.66 s elapsed. Task-handle lint
 with all five integration targets and -D warnings passes2.36 /4.75 s; fmt
 check0.35 /0.75 s. Nine current docs copied before final amend; tested source unchanged.
+Final task-handles4b6a2cb08da57026b13625ff7b9f727c8641ab02 is clean on
+actual base28de179, published with exact lease against OLDbb6f9c4.
+Whole subject verified one line, empty body; no second PR. Row53 actual base
+remains OLDbb6f9c4 until its own rebase; immutable queue anchors unchanged.
+
+Row53 typed-channel rebase from ACTUALbb6f9c49a0434afc9f7dd1fb9891a6fa8fb32a8a
+onto actual row52 head4b6a2cb08da57026b13625ff7b9f727c8641ab02 resolves
+only doc conflicts with nine authoritative files; existing task receiver
+probe autoapplies its helper rename. Raw source oracle sets FWP_NO_OPT=1.
+Guarded clean0.00 /0.14 s; channel queues, task handles and prior task
+ownership tests started. Close keeps queued values for later receive; cycle
+policy remains the explicit requirement in ownership/concurrency docs.
+Guarded cargo test --test channel_queue_ownership --test task_handle_ownership
+--test task_ownership passes all five tests18.97 s CPU /38.17 s elapsed.
+Typed channels own queued String/closure/task elements, preserve sender
+aliases and transfer queue references into owned receive Options. Close
+preserves queued values. Closed/timeout, scalar pointer-shaped words,
+blocked-call cancellation, receive allocation failure, retain overflow, sink/shared
+fallback and old-channel young-element roots pass with omission controls.
+Raw agreement and O1/O2 stress/verification/poison plus related task tests
+pass; automatic cycle reclamation remains unproved.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.42 s CPU /7.08 s elapsed. Channel-queue lint
+with all three integration targets and -D warnings passes2.38 /4.72 s; fmt
+check0.43 /0.84 s. Nine current docs copied before final amend; tested source unchanged.

@@ -382,6 +382,10 @@ scope state and releases scope storage.
 A later prepared task-handle contract owns typed cached results, with
 independent scheduler, scope, caller and await references; unknown/shared
 boundaries retain tracing fallback.
+Prepared typed channels own queued elements and transfer their references
+into receive results after successful Option allocation. Close preserves
+queued values; unknown sink/runtime boundaries still share, and cycles
+require the explicit lifetime policy described in ownership.md.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of
