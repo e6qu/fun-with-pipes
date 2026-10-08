@@ -1401,6 +1401,24 @@ static void fwp_static_report(void) {
 
 #endif /* FWP_GC */
 
+/* A resource parent must finish its logical lifetime even when object storage
+ * is deliberately retained. On the bump heap this also disposes counter metadata;
+ * native disabled-free behavior continues to leave object storage untouched. */
+static inline void fwp_rc_resource_free_obj(V value) {
+#if FWP_GC && defined(FWP_RESOURCE_NO_FREE)
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_obj(value);
+#endif
+}
+static inline void fwp_rc_resource_free_arr(V value) {
+#if FWP_GC && defined(FWP_RESOURCE_NO_FREE)
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_arr(value);
+#endif
+}
+
 /* A reuse token owns only its emptied outer cell. Clear the ownership slot
  * first, so nested unwind registrations observing it cannot release it twice. */
 static void fwp_rc_cleanup_cell(void *arg) {
