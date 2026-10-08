@@ -42,8 +42,7 @@ application and capture-preparation cleanup. Its frozen head is
 `1dcbe79ac0777b83cad6f49b8ab4b28ad140c854` on actual squash base `ff29c268eed8`.
 All14 focused integration tests,13 IR controls, focused lint, format and strong
 handoff audit pass; commands and timings are in history. CI38011227462 has
-passing bench, ARM macOS and both dedicated macOS GC jobs. Linux and regular
-Intel macOS are running. Roadmap_docs38011227532 passes at the same head.
+passing bench, ARM macOS and both dedicated macOS GC jobs. Regular Intel macOS also passes; Linux is still running. Roadmap_docs38011227532 passes at the same head.
 Require all seven exact-head gates; fix any failure. Use the explicit squash
 subject `Protect runtime application owners through preparation and unwind`,
 with an empty body and --match-head-commit. A prepared local gate-check/merge
@@ -85,7 +84,10 @@ alias and inactive-payload assertions are unchanged. Refresh and rerun holder
 source88 after both repairs propagate; failed evidence is not support.
 
 Matched-result refresh44–67 is complete, including both CAF/converted-result
-controls;60–67 passes8.35CPU/92.10elapsed. Continue68–112 in bounded batches using
+controls;60–67 passes8.35CPU/92.10elapsed. Refresh68–72 passes;73 validation stopped on the exact expected-match patch
+layout after its source rebase (resource handling follows match completion).
+Keep the original compiler scopes and update the strict verifier context, then
+continue73–112 in bounded batches using
 /private/tmp/fwp-refresh-matched-conversion.py and actual bases in the table.
 It verifies exact inherited code, original probes and commit counts, retains each
 prior head remotely, publishes with an exact lease and audits the handoff.
@@ -155,7 +157,7 @@ still need their final squash rebases and six exact-head full gates.
 | 70 ownership-file-construction | fa6e27813f3d | 04d75ff8a0e1 | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 55a6b0c6c7c5 | fa6e27813f3d | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
 | 72 ownership-file-io-errors | 54d816de6a93 | 55a6b0c6c7c5 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
-| 73 ownership-resource-frames | 006aba78f1f5 | 2990083331a2 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
+| 73 ownership-resource-frames | e3bfb67a9244 | 54d816de6a93 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 38d83189cedb | 006aba78f1f5 | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | f7b57915dd7a | 38d83189cedb | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | 4c6618c4eb91 | f7b57915dd7a | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
@@ -330,28 +332,15 @@ limits and move work to CI; never raise or bypass them. Use:
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
 ```
 
-The fun-refactor guard applies to the other repository. The shared target is
-last belonged to /private/tmp/fwp-runtime-call-worktree after the final
-squash-base rebase and bounded rebuild. Four focused integration targets pass
-14 tests33.34CPU/67.02elapsed; all13 IR controls3.29/6.83s, focused lint2.34/4.66s
-and format0.34/0.61s pass. Commands: cargo test --test runtime_call_ownership
---test argument_preparation_ownership --test compiler_call_liveness --test unwind_cleanup;
-cargo test --lib rc::tests; cargo clippy for those four targets -- -D warnings;
-cargo fmt --all -- --check, all through the absolute-root guard with OpenSSL.
-It subsequently belonged to /private/tmp/fwp-record-conversion-worktree after bounded
-clean of source52(0.00CPU/0.14elapsed) and rebuild for the matched-result repair.
-The runtime28 clean before source52 reproduction passed0.07/0.38s.
-Current target belongs to /private/tmp/fwp-resource-frame-variants-worktree after
-bounded source43 clean0.07/0.38s and rebuild for the frame-holder repair.
-Prior compiler/loop target switches, failures and measurements are archived in
-[history](roadmap-history.md). Never assume a shared native binary belongs to a
-checkout until its bounded package clean and rebuild finish.
-
-The complete argument repair and later loop/control refresh preserve original
-allocation and alias assertions. Temporary helpers and their journals live in
-/private/tmp; the table, actual bases and retained remote tags are the durable
-recovery record. Completed journals must not be rerun blindly. Full-size raw
-tail evidence stays on GitHub because it exceeds local RSS limits.
+The fun-refactor guard applies to the other repository. Current shared target
+belongs to /private/tmp/fwp-resource-frame-variants-worktree, after bounded
+package clean of source43(0.07CPU/0.38elapsed) and rebuild for the verified
+frame-holder repair. Commands and earlier target switches are in history.
+Before switching Rust checkouts, run bounded cargo clean -p fwp in this checkout
+and rebuild the requested target. Never infer binary/source identity from a
+shared target directory. Temporary helper paths can disappear; the table,
+actual bases and retained tags are the durable recovery record. No local full
+gate or full-size raw tail run is authorized by historical resource observations.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
@@ -371,8 +360,8 @@ python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 
 Fetch full history, immutable tags and retained PR heads on a fresh clone.
 The roadmap_docs workflow checks the actual PR head. Audit again after changes
-to links, refs or commit subjects. Merged row26 is archived and removed from
-the live preparation table; its queue anchor and accepted source head stay fixed.
+to links, refs or commit subjects. Merged rows26–27 are archived and removed from
+the live preparation table; their queue anchors and accepted heads stay fixed.
 
 Preserve all 11 authoritative docs before fast-forward/rebase conflict resolution:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,

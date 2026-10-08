@@ -1,7 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-10. Rows through25 are merged. Queue26 is next after merged
-local guard sampling repair #104.
+Updated 2026-10-10. This file preserves preparation ancestry.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -18,10 +17,10 @@ This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all ten current root docs plus additional
-modified tracked documents, including current docs/numerics.md. Rerun focused
+Resolve documentation conflicts with all11 authoritative docs listed in the
+handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
-Every final PR needs new six-job exact-head CI. Prior evidence and superseded
+Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
 queue instructions are preserved in [history](roadmap-history.md).
 
 Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
@@ -101,7 +100,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 70 | file-construction | `ownership-file-construction` | `fa6e27813f3d` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `55a6b0c6c7c5` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `54d816de6a93` | `06419f4c5989` | `5ac710398a14` |
-| 73 | resource-frames | `ownership-resource-frames` | `006aba78f1f5` | `dcc5bbac318f` | `06419f4c5989` |
+| 73 | resource-frames | `ownership-resource-frames` | `e3bfb67a9244` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `38d83189cedb` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `f7b57915dd7a` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `4c6618c4eb91` | `30fe112db93c` | `923ad4a4fb07` |
