@@ -1472,3 +1472,20 @@ missing ownership, disposal/cache cleanup and implicit shutdown. Native library
 tracing remains unarmed; these checks do not prove general affine-drop, cycle or
 tracing-free support. Full sequential CI remains required. Successful gRPC server
 cancellation and client-cache allocation failures are the next resource tasks.
+
+
+## Prepared service listener cancellation cleanup
+
+fwp_serve protects its initial TLS context and completed listener with a stack
+cleanup frame through server preparation and the cancellable accept loop. Cleanup
+unregisters/closes the listener and releases its protocol owner; accepted sessions
+keep their separate owner. Completed ALPN handshakes after cancellation verify
+that the context and wire remain live until those sessions finish. Plain service
+listeners use the same descriptor cleanup without allocating a TLS owner.
+
+Actual scheduler cancellation covers ordinary accept waits, stages after context
+creation/binding, and TLS/plain listeners at O1/O2 with reuse poisoning. Negative
+controls detect missing cleanup registration, descriptor close and context release.
+This is prepared support pending full sequential gates. Remaining TLS cache/name
+allocation failures and runtime lifetime/cycle gaps stay open; it adds no tracing
+or ownership claim beyond these paths.

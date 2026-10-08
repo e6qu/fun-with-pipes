@@ -3254,3 +3254,39 @@ tls_listener_ownership -- -D warnings` passes CPU 2.37 s / elapsed 4.73 s.
 All tests were bounded, serial and low priority with FWP_OPENSSL_DIR specified.
 Prepared resource commit subject: `Release owned files sockets and TLS resources on library unload`;
 full sequential Linux/ARM/Intel stress/reuse gates remain required before merge.
+
+Resource branch published as `07092cb06e1d1b7d11271f697bf21920ef899734` (one-line
+61-character subject, no trailers); no second PR opened. Next branch is
+`ownership-grpc-server-cleanup`, clean checkout `/private/tmp/fwp-grpc-server-worktree`,
+immutable OLD parent `07092cb`. Shared target currently resource checkout.
+Successful fwp_serve owns its bound listener and initial server TLS context across
+an infinite cancellable accept loop, with no cleanup frame. Add an actual scheduler
+cancellation fixture, then guard both owners through preparation and accept.
+Accepted sessions retain their separate protocol owner and must survive server
+cancellation. Continue current PR/evidence CI; neither is a roadmap blocker.
+
+
+gRPC server cleanup is prepared on `ownership-grpc-server-cleanup`, checkout
+`/private/tmp/fwp-grpc-server-worktree`, OLD parent `07092cb06e1d1b7d11271f697bf21920ef899734`.
+An actual scheduler cancellation of fwp_serve reproduced an open listener (exit 1,
+CPU 7.02 s / elapsed 14.34 s). A stack cleanup owner now protects the initial TLS
+context before binding and the completed listener before server preparation and
+accept. Cancellation unregisters/closes its descriptor and releases its initial
+context owner. Accepted sessions keep their protocol owner and finish a real ALPN
+handshake after server cancellation. No new surface syntax or per-server malloc.
+
+Focused fixture covers TLS with/without accepted sessions, cancellation after
+context creation and listener binding, and a plain listener. O1/O2 and reuse
+poisoning pass. Three negative controls detect missing guard, fd close and context
+release. The initial fd-close control matched an unrelated runtime close and
+incorrectly passed; its needle now includes the unique listener owner assignment
+and reliably fails exit 1. This fixture repair is recorded, not hidden acceptance.
+Expanded server/resource/listener tests all pass, CPU 5.81 s / elapsed 15.96 s;
+final server test including plain TCP passes CPU 2.85 s / elapsed 6.28 s. Formatting
+CPU 0.44 s / elapsed 0.60 s; clippy lib/server test CPU 2.34 s / elapsed 4.62 s.
+Package clean before switching was CPU 0.00 s / elapsed 0.13 s. All local checks use
+the bounded guard; no full local gate and no limits raised. Shared target is now
+gRPC server checkout. Source/stress large gates remain on GitHub. Next concrete
+action is client TLS cache partial allocation ownership and server ALPN strdup
+failure; phases 2–6 remain open. Current six-job PR/evidence CI still runs, with
+benchmarks passing; do not count queued/in-progress jobs as a merge gate.

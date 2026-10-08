@@ -474,3 +474,8 @@ writes, then releases cached TLS contexts; explicit close retains close_notify.
 See [the ownership evidence](ownership.md#prepared-native-library-resource-teardown).
 This is prepared work pending sequential CI; general affine discard and remaining
 runtime/cycle coverage remain open.
+
+Prepared service listener cleanup uses a stack frame across preparation and the
+cancellable accept loop. It releases the listener/context owner while accepted TLS
+sessions keep their own references; [cancellation evidence](ownership.md#prepared-service-listener-cancellation-cleanup)
+records actual scheduler and ALPN checks. Full sequential CI remains required.

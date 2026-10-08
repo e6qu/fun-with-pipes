@@ -730,3 +730,9 @@ client cache, with no implicit close_notify. Repeated loader cycles and omission
 controls pass focused checks. Full sequential CI is required; gRPC server
 cancellation, client cache partial failures and remaining lifetime/cycle gaps stay
 open. Continue repairs while PR #83's six gates run.
+
+gRPC server cancellation is prepared after library resources. A stack cleanup
+owner protects the bound listener and initial TLS protocol context, including
+preparation cancellation; accepted sessions keep their own context references.
+Actual scheduler cancellation and post-cancellation ALPN checks pass. Full
+sequential gates remain required. Next repair TLS cache/ALPN allocation failures.
