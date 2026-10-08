@@ -48,9 +48,10 @@ main = "unused" | flip file.with other | ignore
     );
     let fixture = r#"
 #include <fcntl.h>
+#include <sys/stat.h>
 static int recover(void){return 1;}
 int main(int argc,char **argv) {
- if(argc!=2)return 30;
+ if(argc!=2)return 30;struct stat descriptor_status;
  for(int cycle=0;cycle<128;cycle++) {
   V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
   fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
@@ -58,9 +59,9 @@ int main(int argc,char **argv) {
   V pair=fwp_rc_fresh(fwp_tuple2(h,h));
   for(int i=0;i<300;i++)fwp_rc_dup(pair);
   for(int i=0;i<300;i++)DROP_PAIR(pair);
-  if(file->refs!=2||fcntl(fd,F_GETFD)==-1)return 3;
+  if(file->refs!=2||fstat(fd,&descriptor_status)==-1)return 3;
   DROP_PAIR(pair);
-  int observed=fcntl(fd,F_GETFD), saved_errno=errno;
+  int observed=fstat(fd,&descriptor_status), saved_errno=errno;
   if(file->refs||observed!=-1||saved_errno!=EBADF){fprintf(stderr,"refs=%llu fd=%d observed=%d errno=%d expected=%d\n",(unsigned long long)file->refs,fd,observed,saved_errno,EBADF);return 4;}
 #ifdef FWP_RESOURCE_OWNERS
   if(fwp_wasm_counts_live||fwp_rc_slot(pair))return 5;
