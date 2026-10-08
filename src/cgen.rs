@@ -2801,6 +2801,15 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     /// `pattern`, on the scrutinee `s` that `scrutinee` gave.
     fn match_pattern(&mut self, scrut: &Expr, p: &Pat, s: &str, fail: &str) {
+        if let Pat::Bind(l) = p {
+            // A whole binder aliases the stack aggregate, including its typed
+            // child owners. Its Dup must retain them before the scrutinee drops.
+            if let Some(children) = self.stack_alias(scrut) {
+                self.stack_children.insert(*l, children);
+            } else {
+                self.stack_children.remove(l);
+            }
+        }
         if let Expr::Local(l) = scrut {
             if let Some((u, m, t)) = self.vlocals.get(l).cloned() {
                 match p {
