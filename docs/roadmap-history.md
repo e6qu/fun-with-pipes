@@ -8661,3 +8661,38 @@ TLS cache lint with all three targets and -D warnings passes2.35 s CPU
 /4.74 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
 final amend; tested source unchanged. Live handoff spacing is normalized
 for readable heads, measurements and phase labels; archived evidence preserved.
+
+## TLS cache preparation refresh, 2026-10-09
+
+Row62 ownership-tls-cache-failures is published clean at
+0be50830806456a5ab175bad19149ccb6329145d on actual base
+c299edbc33eb27f1b136a0f1c3b664784282ea13. Rebased from actual old parent
+0d5d3098e7827e36045984adcbf859901bde4b74; exact publication lease was
+4ab1f7ddd6f8f2a335f3640a229629b782e09b3b. Immutable anchors unchanged.
+Guarded cargo clean -p fwp passes 0.00 / 0.14 s. Guarded cargo test
+--test tls_cache_ownership --test grpc_server_ownership --test library_resources
+passes 11.21 / 26.06 s; focused clippy passes 2.35 / 4.74 s and fmt
+--all -- --check passes 0.35 / 0.75 s. CPU / elapsed recorded.
+Real OpenSSL cache failures preserve existing entries, release partial names and
+contexts, and allow retry; ALPN allocation failure precedes server-context creation.
+Library fixtures do not arm tracing; full source TLS gates remain on GitHub.
+Subject: Preserve TLS caches and release partial allocation owners.
+No additional PR; PR96 remains the sole open delivery.
+
+## ALPN wire preparation refresh, 2026-10-09
+
+Row63 rebases from actual old parent 4ab1f7ddd6f8f2a335f3640a229629b782e09b3b
+onto current row62 head 0be50830806456a5ab175bad19149ccb6329145d.
+Nine authoritative docs resolve historical conflicts; TLS runtime and tests
+exactly match immutable f6598e440a59b1a7312ff5b62178644bec458ad8.
+Guarded cargo clean -p fwp passes 0.05 / 0.37 s. Guarded cargo test
+--test tls_wire_ownership --test tls_cache_ownership --test grpc_server_ownership
+passes all three tests 11.65 / 26.15 s. Same-target clippy -- -D warnings
+passes 2.79 / 5.61 s. CPU / elapsed recorded.
+ALPN packing borrows list elements in two passes without collector scratch;
+checks UINT_MAX, SIZE_MAX and allocation; skips invalid names; and closes
+new connection descriptors on preparation failure. O1/O2 poison checks,
+three omission controls and reduced-limit overflow probe pass. Rust ALPN
+packing agrees on the valid wire bytes. Library fixtures do not arm tracing;
+full TLS source/interpreter and stress coverage stays on GitHub.
+Guarded fmt --all -- --check passes 0.52 / 1.07 s. Tested code unchanged.

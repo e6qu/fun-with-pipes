@@ -145,8 +145,8 @@ int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(statu
             1,
         ),
         (
-            "    if (!alpn) {",
-            "    if (0) { /* omit protocol allocation guard */",
+            "    if (!alpn) {\n        fprintf(stderr, \"fwp serve:",
+            "    if (0) { /* omit protocol allocation guard */\n        fprintf(stderr, \"fwp serve:",
             7,
         ),
     ] {

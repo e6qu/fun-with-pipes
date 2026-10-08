@@ -46,7 +46,7 @@ synchronous list callbacks/results, ordered copies, separate call effects,
 owned sort-by keys/results and exact native wide counts. [PR #95](https://github.com/e6qu/fun-with-pipes/pull/95)
 merged after all six exact-head gates passed, adding owned scan/iterate state
 sequences. Sole open [PR #96](https://github.com/e6qu/fun-with-pipes/pull/96)
-adds loop-state ownership; final focused checks pass and full CI is starting. Exact heads,
+adds loop-state ownership; final focused checks pass and full CI is running. Exact heads,
 gates and next
 actions are in [the handoff](docs/development-state.md).
 
