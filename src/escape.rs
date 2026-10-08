@@ -96,7 +96,7 @@ pub fn escapes(e: &Expr, x: Local, noesc: &[Vec<bool>], me: Option<FuncId>) -> b
             };
             scrut || arms.iter().any(|(_, b)| go(b))
         }
-        Expr::Dup(_, b) | Expr::Drop(_, b) => go(b),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => go(b),
     }
 }
 
