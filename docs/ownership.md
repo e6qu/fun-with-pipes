@@ -196,7 +196,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #111 includes the following contracts. Detailed primitive modes
+Main through PR #112 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -238,7 +238,10 @@ and measurements are in [history](roadmap-history.md).
   preserves trap order. General unwind protection remains prepared work.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
-  reclaim typed boxed inputs and ABI wrappers; general unwind work remains prepared.
+  reclaim typed boxed inputs and ABI wrappers. Registered cleanup protects current
+  state during first/later cancellation ticks and Step owners during payload
+  preparation; flattened Again records remain unboxed. Later reconstruction
+  and retained-callback extensions remain prepared.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
@@ -276,8 +279,9 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
-when ignored; early close would change later IO failures. Internal ResourceRegion
-anchors are recorded before optimization and must survive inlining and fusion.
+when ignored; early close would change later IO failures. Prepared internal ResourceRegion
+anchors record these lifetimes before optimization and preserve them through
+inlining and fusion; their implementation still requires sequential delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 
