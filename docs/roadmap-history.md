@@ -11208,3 +11208,13 @@ uses actual baseac6de597fddc; runtime/compiler match original. Its loader-visibl
 fake OpenCL implementation tests external API ownership, not hardware numerical
 throughput. Old CURRENT5b6e65f365d6 is retained under immutable revision before
 explicit-lease publication. Focused checks follow.
+
+Row55 guarded clean0.00/0.14s, both library input transfer/unsupported-byte
+checks8.27/18.38s, clippy2.34/4.68s and format0.34/0.61s pass. Row56
+guarded clean0.00/0.14s and library task drain/signal restore/storage unload
+8.98/21.43s pass. Combined channel/library evidence
+3d80e4fa8e2bd3c7927abe36013187db381378f0 starts CI37974795204. Row58 refresh
+a5ebb52578e36663791a51754b4b9fa14474ed4a uses actual base4ae80b641da1;
+compiler/runtime match original, and native/interpreter fake API tests use
+FWP_NO_OPT=1. Old CURRENT00013d55d078 is retained under immutable revision
+before explicit-lease publication; fresh checks follow.

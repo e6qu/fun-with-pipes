@@ -69,6 +69,21 @@ static unsigned char *fwp_alpn_wire(V protos, unsigned *len) {
 
 typedef struct { unsigned char *w; unsigned n; } fwp_alpn;
 
+/* SSL sessions keep this server owner alive after its listener stops. The
+ * existing context app-data slot carries no process-global free callback, so
+ * raw session transfer into HTTP/2/gRPC preserves the same ownership. */
+typedef struct { fwp_alpn alpn; size_t refs; } fwp_tls_server_owner;
+
+static void fwp_tls_server_drop(void *p) {
+    SSL_CTX *ctx = (SSL_CTX *)p;
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)SSL_CTX_get_app_data(ctx);
+    if (!owner || !owner->refs) abort();
+    if (--owner->refs) return;
+    SSL_CTX_free(ctx);
+    free(owner->alpn.w);
+    free(owner);
+}
+
 /* the server's choice among the client's protocols: the first of its own
  * that the client offers; none (the handshake goes on) otherwise */
 static int fwp_alpn_select(SSL *ssl, const unsigned char **out, unsigned char *outlen, const unsigned char *in,
@@ -90,8 +105,9 @@ static int fwp_alpn_select(SSL *ssl, const unsigned char **out, unsigned char *o
     return SSL_TLSEXT_ERR_NOACK;
 }
 
-/* a server context; 0 with the reason in fwp_tls_err. Contexts live as
- * long as the program (they are few: one per listener). With a CA file
+/* A server context owns ALPN storage only on success; on failure the caller
+ * still owns the wire buffer. Listener and accepted-session owners release it.
+ * With a CA file
  * (`client_ca`, "" for none), clients must present a certificate that the
  * CA signed (mutual TLS). */
 static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned char *alpn, unsigned alpn_n,
@@ -117,12 +133,6 @@ static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned c
         SSL_CTX_free(ctx);
         return 0;
     }
-    if (alpn_n) {
-        fwp_alpn *a = (fwp_alpn *)malloc(sizeof *a);
-        a->w = alpn;
-        a->n = alpn_n;
-        SSL_CTX_set_alpn_select_cb(ctx, fwp_alpn_select, a);
-    }
     if (*client_ca) {
         if (SSL_CTX_load_verify_locations(ctx, client_ca, 0) != 1) {
             snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: cannot load CA certificates: %s", client_ca,
@@ -136,6 +146,22 @@ static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned c
         ERR_clear_error();
         SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0);
     }
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)malloc(sizeof *owner);
+    if (!owner) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS protocol state");
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+    owner->alpn.w = alpn;
+    owner->alpn.n = alpn_n;
+    owner->refs = 1;
+    if (!SSL_CTX_set_app_data(ctx, owner)) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot store TLS protocol state");
+        free(owner);
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+    if (alpn_n) SSL_CTX_set_alpn_select_cb(ctx, fwp_alpn_select, &owner->alpn);
     return ctx;
 }
 
@@ -346,14 +372,21 @@ static ssize_t fwp_tls_send(void *p, const char *buf, size_t n, int *ww) {
 /* send close_notify (without waiting for the peer's) and free the session */
 static void fwp_tls_free(void *p) {
     SSL *ssl = (SSL *)p;
+    SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
+    int server = SSL_CTX_get_app_data(ctx) != 0;
     if (SSL_is_init_finished(ssl)) SSL_shutdown(ssl);
     ERR_clear_error();
     SSL_free(ssl);
+    if (server) fwp_tls_server_drop(ctx);
 }
 
 static void *fwp_tls_accepted(void *ctx, int fd) {
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)SSL_CTX_get_app_data((SSL_CTX *)ctx);
+    if (!owner || !owner->refs) abort();
+    if (owner->refs == SIZE_MAX) fwp_trap("too many TLS context references");
     SSL *ssl = SSL_new((SSL_CTX *)ctx);
     if (!ssl) return 0;
+    owner->refs++;
     SSL_set_fd(ssl, fd);
     SSL_set_accept_state(ssl);
     return ssl;
@@ -423,8 +456,11 @@ static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fw
         free(alpn);
         return fwp_io_error("tls", fwp_tls_err, err);
     }
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_server_drop, ctx);
     V l = fwp_p_tcp_listen(addr, err);
     SOCK(l)->tls = ctx;
+    fwp_cleanup_pop(&cleanup);
     return l;
 }
 
