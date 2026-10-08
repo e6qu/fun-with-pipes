@@ -163,7 +163,7 @@ still need their final squash rebases and six exact-head full gates.
 | 77 ownership-wasm-resource-counts | 8a2d845523c5 | f0034b6ab7c1 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | 43773a07a269 | 8a2d845523c5 | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | ec96643bfe26 | 43773a07a269 | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
-| 80 ownership-file-inline-path | 19ed00f179a3 | d6eabb576bd2 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
+| 80 ownership-file-inline-path | 143444f5c43e | ec96643bfe26 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 1dc8cfe230fc | 5a4d180478bb | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published, prior head retained; propagation/runner/full gates follow |
