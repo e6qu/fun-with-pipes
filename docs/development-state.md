@@ -172,7 +172,7 @@ still need their final squash rebases and six exact-head full gates.
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
 | 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
 | 66 ownership-tls-peer-subject | cfe905046796 | 60b03078c3cd | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
-| 67 ownership-tls-alpn-roots | 221d8fa6ffcc | d8b4e2407fb1 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
+| 67 ownership-tls-alpn-roots | f7a0bd2eba93 | cfe905046796 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 4f37224b0f6f | 221d8fa6ffcc | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 04d75ff8a0e1 | 4f37224b0f6f | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
 | 70 ownership-file-construction | fa6e27813f3d | 04d75ff8a0e1 | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
