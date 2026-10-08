@@ -6013,6 +6013,70 @@ fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
 }
 
 impl Gen<'_> {
+    /// Copy a C export argument into owned language storage. Ordinary foreign
+    /// calls keep their existing converters and borrowing convention.
+    fn library_arg(
+        &mut self,
+        out: &mut String,
+        name: &str,
+        c: &crate::ffi::CType,
+        ty: &MT,
+        value: &str,
+    ) {
+        use crate::ffi::CType;
+        if !self.reuse {
+            let _ = writeln!(out, "    V {name} = {};", ffi_from_c(c, value));
+            return;
+        }
+        if let CType::Struct { fields, .. } = c {
+            let types = record_fields(&self.prog.shapes, ty)
+                .expect("exported C record shape")
+                .to_vec();
+            let ctx = format!("{name}_fields_owner");
+            let node = format!("{name}_fields_cleanup");
+            let empty: Vec<_> = fields
+                .iter()
+                .map(|(_, i, _)| ("0".into(), types[*i].1.clone()))
+                .collect();
+            let protect = self.protect_values(&empty, &ctx, &node);
+            let _ = writeln!(
+                out,
+                "    V {name}_fields[{}] = {{0}};\n    {protect}",
+                fields.len()
+            );
+            let mut slot = 0;
+            for (field, index, ft) in fields {
+                let converted = ffi_from_c(ft, &format!("{value}.{field}"));
+                let converted = if matches!(ft, CType::Str | CType::OptPtr) {
+                    self.fresh(converted)
+                } else {
+                    converted
+                };
+                let _ = writeln!(out, "    {name}_fields[{index}] = {converted};");
+                if crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
+                    let _ = writeln!(out, "    {ctx}.v{slot} = {name}_fields[{index}];");
+                    slot += 1;
+                }
+            }
+            let _ = writeln!(
+                out,
+                "    V {name} = {};",
+                self.fresh(format!("fwp_record({}, {name}_fields)", fields.len()))
+            );
+            if !protect.is_empty() {
+                let _ = writeln!(out, "    fwp_cleanup_pop(&{node});");
+            }
+        } else {
+            let converted = ffi_from_c(c, value);
+            let converted = if matches!(c, CType::Str | CType::OptPtr) {
+                self.fresh(converted)
+            } else {
+                converted
+            };
+            let _ = writeln!(out, "    V {name} = {converted};");
+        }
+    }
+
     /// Struct definitions and converters for the structs among `types`.
     fn ffi_structs(&mut self, types: &[crate::ffi::CType]) {
         use crate::ffi::CType;
@@ -6222,6 +6286,11 @@ fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
             return Err(format!(
                 "exported function `{}`: functions cannot cross the C boundary as values",
                 name
+            ));
+        }
+        if params.iter().any(|(_, c)| *c == crate::ffi::CType::Bytes) {
+            return Err(format!(
+                "exported function `{name}`: `Bytes` parameters have no length in the C export ABI"
             ));
         }
         out.push((c_export_name(name), *fid, params, ret));
@@ -6571,10 +6640,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 .collect();
             let f = &prog.funcs[fid];
             let args: Vec<String> = (0..f.arity as usize)
-                .map(|i| match ps.iter().find(|(j, _)| *j == i) {
-                    Some((_, c)) => ffi_from_c(c, &format!("a{}", i)),
-                    None => "FWP_UNIT".into(),
-                })
+                .map(|i| format!("input_arg{i}"))
                 .collect();
             let call = if f.arity == 0 {
                 format!("caf{}()", fid)
@@ -6592,8 +6658,36 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                     decl.join(", ")
                 }
             );
+            let types = f.ty.params(f.arity as usize).0;
+            let empty: Vec<_> = types.iter().map(|ty| ("0".into(), (*ty).clone())).collect();
+            let protection = g.protect_values(&empty, "inputs_owner", "inputs_cleanup");
+            let _ = writeln!(lib_defs, "    {protection}");
+            let mut slot = 0;
+            let mut consumed_slots = Vec::new();
+            for (i, ty) in types.iter().enumerate() {
+                if let Some((_, c)) = ps.iter().find(|(j, _)| *j == i) {
+                    g.library_arg(&mut lib_defs, &args[i], c, ty, &format!("a{i}"));
+                } else {
+                    let _ = writeln!(lib_defs, "    V {} = FWP_UNIT;", args[i]);
+                }
+                if !protection.is_empty() && crate::rc::needs_rc(&prog.shapes, ty) {
+                    let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = {};", args[i]);
+                    if crate::rc::consumes_arg(&prog.funcs, fid, i) {
+                        consumed_slots.push(slot);
+                    }
+                    slot += 1;
+                }
+            }
+            for slot in consumed_slots {
+                let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = 0;");
+            }
+            let finish_inputs = if protection.is_empty() {
+                ""
+            } else {
+                "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
+            };
             if r == crate::ffi::CType::Void {
-                let _ = writeln!(lib_defs, "    (void){};\n}}\n", call);
+                let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
             } else {
                 // The C result copies scalars and records, but string pointers
                 // escape into host storage for the lifetime of the library.
@@ -6606,7 +6700,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                     "NULL".into()
                 };
                 let _ = writeln!(lib_defs,
-                    "    V result = {call};\n    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
+                    "    V result = {call};\n{finish_inputs}    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
                     crate::ffi::c_name(&r), ffi_to_c(&r, "result"));
                 if g.reuse {
                     match &r {
