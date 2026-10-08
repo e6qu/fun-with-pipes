@@ -196,6 +196,19 @@ typedef struct { char *ca; int verify; SSL_CTX *ctx; } fwp_tls_client;
 static fwp_tls_client *fwp_tls_clients = 0;
 static size_t fwp_tls_nclients = 0;
 
+#ifdef FWP_LIBRARY
+/* Sessions are finalized first; then give up the cache's context owners. */
+static void fwp_tls_clients_finish(void) {
+    for (size_t i = 0; i < fwp_tls_nclients; i++) {
+        SSL_CTX_free(fwp_tls_clients[i].ctx);
+        free(fwp_tls_clients[i].ca);
+    }
+    free(fwp_tls_clients);
+    fwp_tls_clients = 0;
+    fwp_tls_nclients = 0;
+}
+#endif
+
 static SSL_CTX *fwp_tls_client_ctx(const char *ca, int verify) {
     for (size_t i = 0; i < fwp_tls_nclients; i++)
         if (fwp_tls_clients[i].verify == verify && strcmp(fwp_tls_clients[i].ca, ca) == 0)
@@ -369,15 +382,21 @@ static ssize_t fwp_tls_send(void *p, const char *buf, size_t n, int *ww) {
     return k;
 }
 
-/* send close_notify (without waiting for the peer's) and free the session */
-static void fwp_tls_free(void *p) {
+/* Dispose without network traffic, including during library unload. */
+static void fwp_tls_dispose(void *p) {
     SSL *ssl = (SSL *)p;
     SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
     int server = SSL_CTX_get_app_data(ctx) != 0;
-    if (SSL_is_init_finished(ssl)) SSL_shutdown(ssl);
-    ERR_clear_error();
     SSL_free(ssl);
     if (server) fwp_tls_server_drop(ctx);
+}
+
+/* Explicit close sends close_notify without waiting for the peer. */
+static void fwp_tls_free(void *p) {
+    SSL *ssl = (SSL *)p;
+    if (SSL_is_init_finished(ssl)) SSL_shutdown(ssl);
+    ERR_clear_error();
+    fwp_tls_dispose(p);
 }
 
 static void *fwp_tls_accepted(void *ctx, int fd) {
