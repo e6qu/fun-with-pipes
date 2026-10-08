@@ -84,7 +84,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 53 | channel-queue | `ownership-channel-queues` | `310031a5596b` | `ab44b7de0812` | `bb6f9c49a043` |
 | 54 | library-result | `ownership-library-results` | `ff3bfedf26cd` | `5b34382167da` | `ab44b7de0812` |
 | 55 | library-input | `ownership-library-inputs` | `b0a593982767` | `a6ebc1da9637` | `5b34382167da` |
-| 56 | library-unload | `ownership-library-unload` | `ac74568b0113` | `5d0dc220fa1c` | `a6ebc1da9637` |
+| 56 | library-unload | `ownership-library-unload` | `400d11c0b317` | `5d0dc220fa1c` | `a6ebc1da9637` |
 | 57 | opencl | `ownership-opencl-lifetime` | `47992a27c193` | `d8b4d88da98d` | `5d0dc220fa1c` |
 | 58 | interpreter-opencl | `ownership-interpreter-opencl` | `a5ebb52578e3` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `99b769bff921` | `3f6154b4bf67` | `abc128581b61` |
