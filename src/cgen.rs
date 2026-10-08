@@ -2618,6 +2618,40 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.bind(format!("fwp_vbox{}({})", k, c))
     }
 
+    /// Field reads and complete calls to workers with the matching record ABI
+    /// can consume fields directly. Partial/dynamic calls still need a box.
+    fn field_uses(&self, e: &Expr, l: Local, n: usize) -> bool {
+        let reads = |e: &Expr| self.field_uses(e, l, n);
+        match e {
+            Expr::Dup(_, b) | Expr::Drop(_, b) => reads(b),
+            Expr::Local(x) => *x != l,
+            Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
+            Expr::Const(_) | Expr::Func(_) => true,
+            Expr::Call(id, args) => {
+                let abi = self.g.abis[*id]
+                    .as_ref()
+                    .filter(|a| a.params.len() == args.len());
+                args.iter().enumerate().all(|(i, a)| {
+                    (matches!(a, Expr::Local(x) if *x == l)
+                        && abi.is_some_and(|a| a.params[i] == Some(n)))
+                        || reads(a)
+                })
+            }
+            Expr::Construct(_, args) | Expr::Record(args) => args.iter().all(reads),
+            Expr::Apply(f, args) => reads(f) && args.iter().all(reads),
+            Expr::Field(r, _) => reads(r),
+            Expr::SetFields(r, fs) => reads(r) && fs.iter().all(|(_, e)| reads(e)),
+            Expr::Let(x, v, b) if is_local_through_counts(v, l) => {
+                *x != l
+                    && small_record(self.g.prog, &self.locals[*x as usize]) == Some(n)
+                    && reads(b)
+                    && self.field_uses(b, *x, n)
+            }
+            Expr::Let(_, v, b) => reads(v) && reads(b),
+            Expr::Match(s, arms) => reads(s) && arms.iter().all(|(_, b)| reads(b)),
+        }
+    }
+
     /// `l = v` before `body`: a record that `body` reads only through its
     /// fields and that `v` gives unboxed is kept as its fields. Returns the
     /// rest of `body` to generate (a copy that reuses its original takes
@@ -2657,7 +2691,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         if let Some(n) = self.unboxed(v) {
-            if !matches!(v, Expr::Record(_)) && crate::opt::only_fields(body, l) {
+            if !matches!(v, Expr::Record(_)) && self.field_uses(body, l, n) {
                 let fs = self.expr_fields(v, n);
                 let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
                 self.fields.insert(l, names);

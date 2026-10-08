@@ -31,6 +31,8 @@ jobs:
         run: cargo fmt --all -- --check
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
+      - name: Full wide record allocation acceptance
+        run: cargo test --test stack wide_records_are_returned_without_allocating -- --exact --nocapture
       - name: Unoptimized TLS stream ownership under GC and reuse verification
         env:
           FWP_NO_OPT: '1'
@@ -90,6 +92,8 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
+      - name: Full wide record allocation acceptance
+        run: cargo test --test stack wide_records_are_returned_without_allocating -- --exact --nocapture
       - name: Unoptimized TLS stream ownership under GC and reuse verification
         env:
           FWP_NO_OPT: '1'
