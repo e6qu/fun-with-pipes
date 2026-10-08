@@ -32,23 +32,23 @@ immutable value semantics, effects and evaluation/trap order stable.
   OLD map `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto this squash. Only
   handoff conflicts; use authoritative root docs and preserve OLD `1ea7f07`
   for fold. Full six-job exact-head gate remains required for the next PR.
-  Shared target currently belongs to `/private/tmp/fwp-unboxed-worker-worktree`;
+  Shared target currently belongs to `/private/tmp/fwp-peer-subject-worktree`;
   clean the package under the guard before switching compiler checkouts.
   Connect cancellation is published as `0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392`
   on `ownership-connect-cancellation`, OLD parent `f6598e4`.
   Next preparation is ABI-aware record worker locals on
   `ownership-unboxed-worker-locals`, parent immutable OLD `0cc6126`;
-  `src/cgen.rs` and `tests/unboxed_worker_locals.rs` are uncommitted.
-  Separate evidence `ownership-evidence-tls-listeners` now has local head
-  `8e5fb6a99c74aace434fbaec0faf442dfcaca2dc`, restoring already-merged
-  GC roots, cache access and tutorial fixes; remote is still `a11f9e1`.
+  Published exact head `b8f3752d236f217385923a06dacd1afcdaf716ca`;
+  checkout is clean. Full sequential gates remain required.
+  Separate evidence `ownership-evidence-tls-listeners` is published at
+  `283a0cf5170cd683399e6aea1ed51531d1fa91af`, including restored baseline
+  fixes and the worker-local compiler repair; six-job CI `37725214652` queued.
   CI `37719202504` is terminal cancelled after concrete failures were diagnosed;
   it supplies no passing gate. Logs are `/private/tmp/fwp-tls-current-arm-113122693830.log`
   and `/private/tmp/fwp-tls-current-arm-gc-113122693964.log`.
-  The restored focused macOS roots check passes. Fix the real wide-record
-  boxing regression, apply that compiler repair to evidence, then publish
-  a new exact head and run all six gates. Keep the full <1 MiB allocation
-  acceptance on CI. Sequential PR #84 remains independent and requires
+  Restored focused macOS roots and both worker regressions pass. The full
+  unchanged <1 MiB wide allocation acceptance now runs early on CI.
+  Fix any remaining exact-head failures while continuing preparation. Sequential PR #84 remains independent and requires
   all six passing exact-head jobs before its squash.
 - Previous baseline: PR #82, `181d3b3`, all four CI `37703018710` gates passed
   at exact `3fa67f3`, one-line `Add typed borrowed application for synchronous callbacks`.
@@ -3470,3 +3470,42 @@ CPU 0.01 s / elapsed 0.14 s; final fmt check CPU 0.35 s / elapsed 0.74 s.
 All local checks used `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3
 CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
 /private/tmp/fwp-local-guard.py cargo ...` serially. No local limits were raised.
+
+The prepared worker repair is published as `b8f3752d236f217385923a06dacd1afcdaf716ca`
+on `ownership-unboxed-worker-locals`, with verified single-line 58-character
+subject `Keep record locals unboxed between compatible worker calls` and clean
+checkout. Evidence receives only compiler/test changes, retaining its restored
+baseline `8e5fb6a`. Both focused tests pass there: CPU 8.04 s / elapsed 16.69 s,
+following guarded package clean CPU 0.00 s / elapsed 0.13 s. Evidence-only workflow
+now runs the unchanged full wide allocation test early on Linux and both macOS
+regular jobs, followed by TLS raw-oracle and full tests. Production ancestry does
+not receive this workflow. Next publish evidence with exact lease against remote
+`a11f9e15d3043fe17fb0afdabcdaf94badd9ba2a`, inspect its six exact-head jobs and
+fix any remaining failures. Shared target currently belongs to evidence.
+
+Prepared TLS peer-subject temporary cleanup (`ownership-tls-peer-subject`,
+immutable OLD parent `b8f3752d236f217385923a06dacd1afcdaf716ca`): checked subject
+allocation avoids a null memcpy and size+1 overflow; a stack cleanup node owns
+the copied malloc buffer through conversion to a language String. Normal return
+and recovered traps release it exactly once. Existing Option/formatting semantics
+remain stable. A real OpenSSL BIO handshake reproduces the original allocation
+crash before repair (CPU 6.56 s / elapsed 13.82 s) and now passes O1/O2/reuse
+checks, with certificate/BIO/copy-buffer omission controls and null-allocation
+control. BIO/name/data preparation failure, absent peer, pre-handshake metadata,
+retries and an injected copy trap are checked. Three peer/cache/connect checks
+pass CPU 2.40 s / elapsed 8.96 s. Actual interpreter TLS sessions over a local
+nonblocking socket pair now agree with native RFC2253 metadata and absent-peer
+results; final focused test passes CPU 0.67 s / elapsed 2.45 s. Final clippy lib/
+three tests passes CPU 0.00 s / elapsed 0.13 s; fmt CPU 0.36 s / elapsed 0.75 s.
+One automatic permission-review timeout delayed fmt; its permitted single retry
+succeeded. These library fixture checks run with GC unarmed and do not establish
+host-root tracing or tracing-free coverage. Full sequential source/stress gates
+remain required. Next audit borrowed TLS ALPN metadata roots during allocation,
+then remaining aggregate reconstruction, resource discard and cycle policy.
+
+Repaired evidence CI `37725214652`, exact `283a0cf5170cd683399e6aea1ed51531d1fa91af`,
+has Linux and Intel macOS unchanged full wide allocation acceptance PASS, plus
+the unoptimized TLS stream differential under GC/reuse verification PASS there.
+Bench PASS; regular/stress full jobs still run or queue. Sole PR #84 CI
+`37722779465` still requires Linux, Intel regular and both stress gates; ARM
+regular and bench have passed. No cancelled/skipped gate counts as success.

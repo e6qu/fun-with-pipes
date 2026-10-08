@@ -1559,3 +1559,17 @@ acquire reference counts. Adjacent worker preparation/boxing and variant alias
 checks pass. The full allocation regression is unchanged and requires GitHub
 runner evidence; no speed or complete ownership-coverage claim follows from
 these focused checks.
+
+
+## Prepared TLS peer-subject temporary ownership
+
+Certificate and memory BIO references are released after metadata extraction on
+success and preparation failures. A checked subject buffer allocation preserves
+None on failure. A stack cleanup node owns that malloc buffer while it is copied
+to a language String, releasing it on normal return and recovered traps.
+
+Actual OpenSSL handshakes, failure injection and omission controls check these
+owners at O1/O2 with both reuse modes. The interpreter's actual TLS implementation
+agrees on RFC2253 subject text, pre-handshake and absent-peer metadata. Library
+probes use unarmed collection; they do not prove host-root tracing or general
+resource discard. Full sequential architecture/stress gates remain required.

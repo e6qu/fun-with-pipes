@@ -759,3 +759,11 @@ counts and exceptional cleanup pass. The full wide-record <1 MiB allocation gate
 remains unchanged and will run on CI after the evidence branch receives the fix.
 Continue peer-subject temporary ownership and aggregate/cycle audits while
 sequential PR gates run; prepared changes are not merged support.
+
+
+TLS peer-subject preparation is checked: allocation failure returns existing
+None behavior, and stack cleanup releases copied metadata on traps. Real native
+and interpreter TLS metadata agree, with failure/omission/retry checks passing.
+Full sequential gates remain required. Repaired evidence has passed the unchanged
+wide allocation test on Linux/Intel; keep fixing remaining failures while PR #84
+runs. Next inspect borrowed TLS metadata roots and aggregate/cycle lifetimes.
