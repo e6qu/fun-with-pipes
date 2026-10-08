@@ -705,3 +705,12 @@ unoptimized native/interpreter checks cover failed availability caching. The
 successful interpreter cache keeps its existing process lifetime. Next audit TLS
 listener context/ALPN cleanup and partial listen failure while accepted sessions
 keep their OpenSSL context references. Full sequential CI remains required.
+
+
+TLS listener owners are prepared: stop releases its context reference, accepted
+sessions retain protocol state through raw HTTP/2 transfer, and final session
+close releases the remaining context/wire/descriptor owners. Actual OpenSSL
+handshakes and partial-failure controls pass focused checks. The larger unoptimized
+source comparison exceeded the local memory limit and moves to runner evidence;
+full sequential CI remains required. TLS client caches, resource discard/unload,
+server cancellation and cycles remain open.

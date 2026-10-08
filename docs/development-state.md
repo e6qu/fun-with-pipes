@@ -33,11 +33,12 @@ immutable value semantics, effects and evaluation/trap order stable.
   gates pass, subject `Own synchronous map results without sharing callback inputs`,
   59 characters, one line, empty body and exact match. Then rebase filter from
   OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
-  `1ea7f07` for the fold child. Shared target is interpreter OpenCL ownership; clean package before switching.
-  Latest published preparation: native OpenCL `d8b4d88da98d91183577a71dd65d2d17a375e7d6`,
-  OLD base `5d0dc22`, checkout `/private/tmp/fwp-opencl-worktree`,
-  branch `ownership-opencl-lifetime`. Next preparation: interpreter OpenCL
-  partial-load cleanup, then external resources/cycles/aggregate gaps.
+  `1ea7f07` for the fold child. Shared target is TLS listener ownership; clean package before switching.
+  Latest published preparation: TLS listener owners `73f4f9828738dd99308619275ba0f259b73f5553`,
+  OLD base `abc1285`, checkout `/private/tmp/fwp-tls-listener-worktree`,
+  branch `ownership-tls-listeners`. Runner evidence branch `ownership-evidence-tls-listeners`
+  adds only workflow validation to that preparation. Next: fix evidence failures,
+  TLS/client/resource teardown and source-reachable cycles/aggregate gaps.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
   passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
@@ -2949,3 +2950,186 @@ passes, CPU 2.32 s / elapsed 4.60 s. Final formatting passes, CPU 0.35 s / elaps
 workload remains. Publish this focused preparation; next is TLS listener owner
 release and failure guarding with accepted-session lifetime evidence. Current
 shared target is this interpreter OpenCL compiler; clean package before switching.
+
+
+Interpreter OpenCL preparation published as
+`abc128581b615530ba2f3bc43de0c8d708d340ea`, branch
+`ownership-interpreter-opencl`, OLD parent `d8b4d88`, clean checkout
+`/private/tmp/fwp-interpreter-opencl-worktree`. Verified single-line 67-character
+subject `Guard interpreter OpenCL initialization with staged resource owners`,
+empty body. No additional PR. At 02:00:32Z sole #83 CI `37711126548` still has
+Linux/ARM/bench passing and Intel running. Continue same live run; do not restart.
+Next implementation: TLS listener stop must release its context owner without
+invalidating accepted SSL sessions; attach ALPN callback storage to SSL_CTX's
+last-reference lifetime and guard listen failure after context creation. Add
+actual OpenSSL reference/heap-owner probes and interpreter/native behavior checks.
+
+
+TLS listener task checkout created: `/private/tmp/fwp-tls-listener-worktree`,
+branch `ownership-tls-listeners`, exact/immutable OLD parent
+`abc128581b615530ba2f3bc43de0c8d708d340ea`. Clean, no implementation changes yet.
+Shared target still contains interpreter OpenCL; guarded package clean must
+precede validation in this checkout. No local workload remains.
+
+Concrete TLS design audit: native Listener currently stores a raw SSL_CTX; its
+stop closes the fd but never releases the context/ALPN malloc owners. Rust uses
+Arc<Ctx> for sessions, retaining stable ALPN storage. Prefer the same internal
+owner relation natively: a small context owner with reference count, SSL_CTX and
+ALPN state; Listener owns one, and each accepted connection owns another alongside
+its SSL session. Stop releases the listener reference; connection close frees SSL
+before releasing its context reference; the final context owner frees SSL_CTX,
+ALPN wire/descriptor and itself. Client SSL sessions need no server ALPN owner.
+Guard the newly created context across tcp.listen failure and cancellation.
+Preserve repeated stop/close idempotence and active accepted-session behavior.
+
+Do not register a library-local SSL_CTX ex-data free callback without a complete
+unload protocol: OpenSSL's process-global index can keep that function pointer
+past the generated library's unload and call into unmapped code. The explicit
+owner relation avoids that new global callback lifetime. Inspect all accepted
+session callers and existing server/grpc paths before changing internal layout.
+Prove release counts with actual OpenSSL, accepted session survival/ALPN after
+listener stop, first/later initialization failure and a source interpreter/native
+comparison. Runtime resource GC/finalizer coverage, affine File discard, cycles
+and aggregate contexts remain separate unfinished tasks.
+
+
+## Native TLS listener ownership preparation (2026-10-08)
+
+Branch `ownership-tls-listeners`, checkout `/private/tmp/fwp-tls-listener-worktree`,
+immutable OLD parent `abc128581b615530ba2f3bc43de0c8d708d340ea`. Not yet published.
+Baseline actual-OpenSSL probe failed O1/reuse verification off with exit 1:
+listener stop leaked its context and ALPN owners, CPU 6.84 s / elapsed 14.13 s.
+
+Further call-site audit found HTTP/2 transfers raw SSL pointers from sockets
+(`w_take`) and gRPC uses the server-context helper directly. The implementation
+therefore keeps the raw SSL/SSL_CTX interfaces: a small counted server owner in
+SSL_CTX's existing app-data slot owns the ALPN state. Accepted SSL sessions retain
+it, session release frees SSL before dropping its context owner, and listener
+stop releases its owner and clears the pointer. No new process-global callback
+index and no extra socket-layout field. gRPC/HTTP2 raw-session transfer preserves
+the owner through SSL's context; client contexts have no server owner.
+
+Server context validation precedes ALPN-owner allocation. Its incoming wire
+buffer transfers only on successful return. Allocation/app-data setup failure
+releases the completed context and leaves wire ownership with the caller.
+TLS listen protects a completed context across actual address/bind Error paths;
+gRPC server setup frees the wire on context failure and its context on bind failure.
+General server cancellation/shutdown and TLS client caches remain separate gaps.
+Do not claim a new cancellation point: current tcp.listen does not suspend the
+scheduler; the cleanup scope guards nonlocal failure without changing effects.
+
+Corrected first probe passes O1/O2 with reuse poisoning off/on, CPU 6.93 s /
+elapsed 14.65 s. Real OpenSSL 3.6.3 (Homebrew) completes accepted-session ALPN
+handshakes after listener stop for one/two/three sessions, including HTTP/2 raw
+transfer; context/wire/descriptor owners release once only after the final SSL
+session. Repeated stop/close is idempotent. Six later failure probes are running
+(cert validation, CA validation, app-data setup, owner allocation, invalid address,
+occupied bind). Shared target is TLS listener compiler after guarded package clean
+removed 93.7 MiB. Full cross-platform sequential CI remains required.
+
+
+TLS expanded probe passes all six failure cases and O1/O2/poison positives,
+CPU 0.40 s / elapsed 1.45 s. Six generated-source negative controls then pass
+(expected failure statuses), CPU 1.95 s / elapsed 6.04 s: missing listener release
+(exit 1), session retain (2), session context release (5), listen guard (15),
+ALPN wire free (1), and descriptor free (1). Actual BIO-pair handshakes negotiate
+h2 after stop and raw HTTP/2 transfer; observed context/wire/descriptor frees are
+exactly once. No poisoned/shared pointer fallback is accepted as reclamation.
+
+`FWP_NO_OPT=1 cargo test --test tls streams -- --exact --nocapture` is running
+under the same guard with OpenSSL 3.6.3. This compares actual source-level TLS
+connections/ALPN/errors in interpreter and native against the existing expected
+output. Native library probe tracing is unarmed; no host-root tracing claim.
+Full stress/verification and architecture checks stay required on CI.
+
+
+TLS source stream comparison was stopped by the local guard at sampled aggregate
+RSS >1 GiB. The check did not complete and is not passing evidence. Do not raise
+limits, bypass the guard or rerun this larger local workload. Move it to GitHub
+runners on a separate evidence branch, retaining sole PR #83 and exact-head merge
+gates. Publish the focused TLS preparation after formatting/clippy; fork an
+`ownership-evidence-tls-listeners` branch with CI push trigger for that branch,
+run full CI there and explicitly add the unoptimized/stress TLS stream comparison.
+The evidence branch's workflow-only commit must not enter the sequential TLS PR.
+Future PRs still require their own four exact-head passing gates after rebasing.
+
+The actual context/session ownership probe and all six failure/negative controls
+are complete and passing; no local workload remains. Normal optimized source and
+GC stress/verification behavior still need runner evidence, not a claim inferred
+from the unarmed library probe. Keep failures as repair work throughout.
+
+
+TLS focused final formatting passes, CPU 0.37 s / elapsed 0.74 s; clippy of
+library and dedicated listener test passes with `-D warnings`, CPU 2.37 s /
+elapsed 4.73 s. Whitespace clean. Larger source comparisons must run on GitHub
+because the guard refused the unoptimized stream check. No local workload remains.
+Full tests, stress/verification and architecture evidence are still pending;
+publish preparation and the separate runner evidence branch, then fix actual
+runner failures before claiming verified support or merging anything.
+
+
+TLS listener preparation published as `73f4f9828738dd99308619275ba0f259b73f5553`,
+branch `ownership-tls-listeners`, OLD parent `abc1285`, clean checkout
+`/private/tmp/fwp-tls-listener-worktree`. Verified one-line 66-character subject
+`Own TLS listener protocol state through accepted session lifetimes`, empty body.
+The runner evidence branch `ownership-evidence-tls-listeners` is exact
+`4fda8214cf43706d75197a7613057b685c9fee10`, checkout
+`/private/tmp/fwp-tls-evidence-worktree`, clean. Its sole additional commit modifies
+CI push triggers for this evidence branch and adds an explicit unoptimized TLS
+stream step with GC stress/verification and reuse verification on Linux/ARM/Intel,
+as well as the ordinary full gates. Do not merge this workflow-only commit into
+the sequential TLS PR. It carries the full prepared ownership chain; passing it
+still does not replace the later rebased PR's exact-head four gates.
+
+At 02:22:10Z PR #83 remains the sole PR with Linux/ARM/bench passing and Intel live;
+continue CI `37711126548`, not a replacement run. Shared target is TLS listener;
+no local workload remains. Next use runner failures as concrete fixes, while
+continuing runtime teardown: TLS client context/name cache, listener/session
+unload, gRPC server cancellation, affine resource discard and cycles. Keep old
+immutable parent/head anchors for every sequential rebase (including new
+`abc1285` for TLS listener, `73f4f98` for its later child).
+
+
+Runner evidence CI is live: `37717526510`, exact
+`4fda8214cf43706d75197a7613057b685c9fee10`. Poll the same handle and fix failures;
+observation expiration is not a terminal job. Keep production TLS branch
+`73f4f98` free of the evidence-only workflow commit. No new PR opened.
+
+Next library resource teardown audit: register library-only finalizers for
+owned FILE/socket wrappers in the existing collector finalizer table, releasing
+external handles before region unmap. Closed wrappers must remain idempotent,
+and raw HTTP/2 transfer must clear fd/SSL so socket teardown cannot double close.
+Split SSL disposal (no network write) from explicit close_notify shutdown;
+unload finalizers should dispose without sending so they do not introduce SIGPIPE
+through host signal policy. g_conn library finalization must dispose any surviving
+SSL/fd as well as buffers. Finish the cached TLS client contexts/names/array after
+all finalizers, while entry points remain valid. General executable affine
+resource discard, gRPC server cancellation and cycles remain later acceptance.
+Do not add a separate per-session registry/heap node when existing owned wrapper
+finalizers suffice. Confirm every wrapper constructor owns its incoming handle.
+TLS library tests that intentionally break retains may need negative exits via
+_Exit after their observation, avoiding destructor traversal of intentionally
+corrupted graphs; keep positive process-exit teardown tested normally.
+
+
+Runner evidence `37717526510` at `4fda821`: ARM job `113117345850` and Intel job
+`113117345602` both failed the unoptimized TLS stream snapshot before reaching
+ordinary full tests. Logs: `/private/tmp/fwp-tls-evidence-arm-113117345850.log`,
+`/private/tmp/fwp-tls-evidence-intel-113117345602.log`. Actual output differs only
+in the bad-certificate vendor alert name (`ssl/tls` versus snapshot `sslv3`);
+certificate/hostname rejection and all other lines match. The logs show OpenSSL
+3.6.4 on ARM and 3.6.3 on Intel, so do not attribute this solely to 3.6.4. Ordinary
+PR #83 ARM streams passed with 3.6.4. Linux's explicit unoptimized stress/reuse
+stream step passed; its full tests remain live. Benchmarks passed. None of these
+partial/skipped/superseded checks is a current PR merge gate.
+
+Prepared repair: streams now first requires byte-for-byte raw interpreter/native
+output agreement, then canonicalizes only the exact bad-certificate alert alias
+for the existing portable snapshot. Language diagnostics remain unchanged;
+certificate failures/ALPN/order and all other error lines stay exact. Formatting
+passes, CPU 0.35 s / elapsed 0.74 s. Clippy is running. The larger stream check
+stays on runners (prior local RSS refusal); do not rerun it locally. Amend/publish
+TLS preparation with this test repair, preserving OLD `73f4f98`, and rebase the
+evidence-only workflow commit from OLD `73f4f98` onto the new production head.
+Push exact leases for both heads to run the genuinely changed test on GitHub.
+Keep PR #83's live Intel job separate; it is not a source-repair rerun.

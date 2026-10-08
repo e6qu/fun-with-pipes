@@ -165,6 +165,30 @@ loader/context release is detected. Successful interpreter process-cache teardow
 and hardware GPU execution remain separate from this focused failure coverage.
 Full sequential CI is required before merging this preparation.
 
+## Prepared TLS listener and accepted-session owners
+
+A native server SSL_CTX carries a counted owner of its protocol state in its
+existing app-data slot. The listener owns one reference; each accepted SSL owns
+another. Listener stop releases its owner and clears the pointer. Session close
+releases SSL before its context owner, so the final reference frees SSL_CTX, ALPN
+wire and descriptor storage. Raw SSL transfer into HTTP/2/gRPC preserves that
+owner relation. Client contexts remain separate, without a server owner.
+
+Context validation completes before protocol-owner allocation. Wire storage
+transfers only when context construction succeeds. Failure returns it to its
+caller, while completed context/descriptor storage is released. TLS listen guards
+its completed context across address/bind failure; gRPC setup honors the same
+wire/context protocol on configuration and bind failure. Existing effects and
+scheduler suspension points are preserved.
+
+Actual OpenSSL handshakes select ALPN after listener stop, including raw HTTP/2
+transfer. O1/O2 probes check delayed and exactly-once release, repeated stop/close,
+six preparation failures and six negative controls. The unoptimized source stream
+comparison exceeded the local RSS limit and requires GitHub runner evidence.
+Native library tracing remains unarmed; these probes do not prove host-root GC.
+Full sequential CI, client cache/unload and general resource/cycle coverage remain
+required. No process-global library-local OpenSSL free callback is registered.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only

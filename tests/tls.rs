@@ -286,10 +286,23 @@ fn streams() {
     let d = scratch("streams");
     let file = root().join("tests/tls/streams.fwp");
     let expected = root().join("tests/tls/streams.out");
+    let mut reference = None;
     for (i, mut cmd) in both_ways(&file, &d, "streams").into_iter().enumerate() {
         cmd.current_dir(certs);
         let o = run(cmd, 120);
-        let got = text(&o);
+        let raw = text(&o);
+        if let Some(expected) = &reference {
+            assert_eq!(&raw, expected, "native and interpreter TLS output differs");
+        } else {
+            reference = Some(raw.clone());
+        }
+        // OpenSSL emits both names for the same bad-certificate alert. Keep
+        // exact engine agreement above; canonicalize only this vendor wording
+        // for the portable snapshot, without changing language diagnostics.
+        let got = raw.replace(
+            "TLS handshake failed: ssl/tls alert bad certificate",
+            "TLS handshake failed: sslv3 alert bad certificate",
+        );
         assert!(
             o.status.success(),
             "{}{}",

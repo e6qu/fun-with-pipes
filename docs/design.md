@@ -53,6 +53,13 @@ close on cancellation and recovered traps too. Compiler-wide live-owner
 registration is still required before retained task values can use full counted
 ownership; see [ownership.md](ownership.md).
 
+Prepared TLS server owners retain SSL_CTX/ALPN state across listener stop and
+accepted-session transfer into HTTP/2. They follow the interpreter's retained
+context lifetime internally, without a surface ownership annotation. Actual
+OpenSSL ownership probes pass; source/stress and architecture evidence remains
+pending on GitHub runners after the bounded local stream check was refused.
+See [ownership.md](ownership.md#prepared-tls-listener-and-accepted-session-owners).
+
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
 `tests/run/` through both.
