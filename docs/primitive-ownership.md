@@ -20,9 +20,11 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
+| task.await | borrow task handle | owned Option and typed cached-result alias | none |
+| task.cancel | borrow task handle | scalar | none |
 | task.scope | borrow callback | typed owned callback result | borrowed argument 0 |
-| task.within | borrow duration/thunk; runtime retains one counted owner | fresh Option holding a shared task result | retained argument 1 |
-| task.spawn | borrow thunk; runtime retains one counted owner | shared task handle/result | retained argument 0 |
+| task.within | borrow duration/thunk; runtime retains one counted owner | owned Option and typed result alias | retained argument 1 |
+| task.spawn | borrow thunk; runtime retains one counted owner | owned task handle and cached typed result | retained argument 0 |
 | array.from-list | borrow list | fresh array owning typed element references | none |
 | map/set.from-list | borrow list | owned storage with selected typed key/value references | none |
 | array.to-list | borrow array | fresh owned list with typed element aliases | none |
@@ -696,3 +698,14 @@ owned result. Separate scope and result cleanup protects cancellation, child
 joining and recovered traps. Unknown callback metadata retains the sharing
 fallback; task handles and spawned results still share. See
 [ownership.md](ownership.md#prepared-scoped-callback-ownership).
+
+## Prepared counted task handles and results
+
+Task handles now participate in IR counting with a runtime destructor. Caller,
+scheduler and scope arrays own separate references; the scheduler releases its
+owner only after stack/GC-link cleanup. A counted task owns its cached typed
+result, and each await owns its returned alias. Scoped result and private
+deadline-handle preparation protect failure paths. task.cancel borrows the handle.
+Unknown callbacks/sharing retain the tracing fallback; channel queues, cycles
+and library/unload acceptance remain open. See
+[ownership.md](ownership.md#prepared-counted-task-handles-and-results).

@@ -446,3 +446,10 @@ Prepared task.scope uses typed borrowed application and transfers its owned
 result after child joins. Separate owners restore scope state and release the
 result on cancellation, including handler restoration on external recovered
 traps. See [ownership.md](ownership.md#prepared-scoped-callback-ownership).
+
+Prepared task handles use compiler counting and a runtime destructor. Separate
+scheduler/scope/caller owners keep a task alive until stack cleanup and joining
+finish; each await owns an alias of its cached typed result. Deadline helpers
+protect their private handles during waiting and release them on failure.
+Unknown boundaries retain tracing. Evidence and remaining acceptance work are in
+[ownership.md](ownership.md#prepared-counted-task-handles-and-results).

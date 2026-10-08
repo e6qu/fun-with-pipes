@@ -612,3 +612,14 @@ and protects result/scope storage across joining, cancellation and recovered
 traps. Seven focused task ownership checks plus adjacent unwind checks pass;
 full sequential CI remains required. Task-result/handle lifetimes and channel
 queue ownership are next. #82 remains sole open, with macOS jobs running.
+
+Scoped callback ownership published as `7da15d9`, separate from sole PR #82.
+Next: task handle/scheduler/scope owners, typed repeated awaits and result
+destruction, then channel queue ownership. The handoff records audit findings.
+
+Prepared task handles/results have independent scheduler, scope and caller
+owners. Repeated awaits own their returned aliases; the last handle releases
+the cached result after stack cleanup. Deadline private handles and partial
+Options unwind on failure. Focused aliases, cancellation, generation and
+failure controls pass; full sequential CI remains required. Next: channel
+queue/handle ownership, then remaining cycles/library lifetime acceptance.

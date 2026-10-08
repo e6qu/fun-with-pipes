@@ -39,7 +39,7 @@ allocations before counting is needed.
 | Maps, sets | Counted storage with typed key/value ownership, copied aliases and synchronous callbacks | Old-object reclamation, runtime lifetime and numeric layout coverage |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
 | Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, retained callback and exceptional cleanup |
-| Tasks, channels, networking, callbacks | Runtime structures and shared value boundaries | Explicit retained ownership, teardown and cancellation paths |
+| Tasks, channels, networking, callbacks | Prepared Task scheduler/scope/caller owners and typed cached results; channel/unknown boundaries still share | Channel queues, cycles, library/unload and full sequential CI |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
 Native executables still need a generational conservative collector for shared
@@ -1172,3 +1172,73 @@ scope_thunk_ownership --test retained_thunk_ownership --test within_thunk_owners
 --test task_ownership -- --nocapture`, `cargo test --test scope_thunk_ownership
 --test unwind_cleanup -- --nocapture`, `cargo clippy --lib --test
 scope_thunk_ownership -- -D warnings`, and `cargo fmt --all -- --check`.
+
+## Prepared counted task handles and results
+
+Branch `ownership-task-handles`, checkout `/private/tmp/fwp-task-handle-worktree`,
+OLD base `7da15d9c8ea330bea4f876f797038627720c4c38`. Task is now a counted
+builtin type with a runtime destructor. Known owned callbacks produce counted
+task storage, one scheduler owner and one external handle owner; scope task
+arrays retain another owner. Scheduler release happens only after the finished
+stack is returned/unmapped and GC task links are removed. Last handle release
+destroys the cached typed result and private state storage. Finished child links
+are cleared so they cannot keep stale borrowed parent/sibling pointers.
+
+Await borrows the task and returns an owned Option with its own typed result
+reference, independent of other awaits and the cache. Partial Option ownership
+is protected while result retention can overflow. task.within protects its
+private handle during waiting and releases it on success and failure. task.cancel
+borrows its handle. Scalar address bits receive neither result duplication nor
+generic sharing. Task storage remains mutable kind 2 for minor-collection scans;
+poisoning uses mutable storage cleanup, never a record-header interpretation of
+its context registers. Only one result-drop callback pointer is stored per task.
+Unknown callback metadata and unmodeled runtime sharing retain the tracing
+fallback. Channels, cycles and library/unload acceptance remain unfinished.
+
+The corrected baseline count probe failed with exit 1: there was no counted task
+handle. An initial function-ID prefix accidentally matched a runtime comment;
+corrected to the generated signature marker before recording that reproduction.
+Source/generated-C checks cover handle aliases, independent repeated awaits,
+last cached-result destruction, early external-handle drops, scope retention
+after task completion, pre-entry and suspended cancellation, old-task/young-result
+minor collection, overflowing await result retention and private deadline-handle
+cleanup. Native stdout/stderr/exit are compared with an unoptimized interpreter.
+GC stress/verification and O1/O2 in both poison modes pass for completed probes.
+
+Negative controls remove result retain (exit 2), cached result destruction (6),
+scheduler release (3), scope retain (11), partial Option protection (17) and
+private deadline-handle protection (20), at both optimization levels. The await
+overflow preserves the original wide cache count and task handle, releasing only
+the fresh Option. The private-handle failure preserves the caller's callback
+and capture owner while releasing the cached extra reference.
+
+Serial bounded local checks after package clean:
+- Initial independent-handle probe passes, CPU 8.08 s / elapsed 16.32 s.
+- Three task-handle/scope/deadline tests pass, CPU 14.70 s / elapsed 30.34 s.
+- Eight adjacent spawn/task/unwind tests pass, CPU 16.15 s / elapsed 32.57 s.
+- Dedicated failure controls pass, CPU 10.67 s / elapsed 22.25 s.
+- Added minor-collection result probe passes, CPU 4.38 s / elapsed 9.59 s.
+- Ownership inventory passes, CPU 3.26 s / elapsed 6.67 s; 17 RC checks pass,
+  CPU 0.00 s / elapsed 0.13 s.
+
+Full sequential CI remains required. Sole PR #82 exact `3fa67f3`, run
+`37703018710`: benchmark passed; Linux and both macOS test jobs are live.
+Merge only after all four current-head gates pass with the recorded one-line
+subject and empty body, then rebase map from OLD `029fac4`. Next implementation:
+channel queue and handle ownership, including typed send/receive/cancellation
+and closed/drained queues; finish task/runtime cycles and library evidence
+before phase 2 acceptance. Preserve OLD `7da15d9` for this branch's rebase.
+
+Final dedicated task-result checks, including explicit sharing fallback, pass
+(CPU 4.15 s / elapsed 9.12 s). Library and three affected test targets pass
+clippy after formatting (CPU 2.32 s / elapsed 4.80 s); fmt CPU 0.34 s / elapsed
+0.61 s, whitespace clean. Commands used the bounded guard: `cargo test --test
+task_handle_ownership -- --nocapture`, `cargo test --test task_handle_ownership
+--test scope_thunk_ownership --test within_thunk_ownership -- --nocapture`,
+`cargo test --test retained_thunk_ownership --test task_ownership --test
+unwind_cleanup -- --nocapture`, `cargo test --lib ownership::tests -- --nocapture`,
+`cargo test --lib rc::tests -- --nocapture`, and `cargo clippy --lib --test
+task_handle_ownership --test retained_thunk_ownership --test
+within_thunk_ownership -- -D warnings`. No resource limits were raised/bypassed,
+no focused failure remains. Shared target contains this task-handle compiler.
+Full sequential CI is still required; phase 2 and phases 3–6 remain incomplete.
