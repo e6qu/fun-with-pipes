@@ -79,7 +79,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 48 | inline-caf | `ownership-inline-caf` | `3dd5219cb896` | `6734248e7c0d` | `68cf7bf2f7ca` |
 | 49 | retained-thunk | `ownership-task-thunks` | `2c14070a6347` | `7208e4a2d93e` | `6734248e7c0d` |
 | 50 | task-within | `ownership-task-within` | `f35dd8c34ea4` | `14a76de5b8bb` | `7208e4a2d93e` |
-| 51 | task-scope | `ownership-task-scope` | `511721920cca` | `7da15d9c8ea3` | `14a76de5b8bb` |
+| 51 | task-scope | `ownership-task-scope` | `bb1e6b94fcfd` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `bc6b763b3bf3` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `310031a5596b` | `ab44b7de0812` | `bb6f9c49a043` |
 | 54 | library-result | `ownership-library-results` | `ff3bfedf26cd` | `5b34382167da` | `ab44b7de0812` |
@@ -111,7 +111,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 80 | file-inline-path | `ownership-file-inline-path` | `19ed00f179a3` | `2d903d6617d9` | `658e5b73ae1c` |
 | 81 | file-storage-disposal | `ownership-file-storage-disposal` | `5a4d180478bb` | `750a5cffd46b` | `2d903d6617d9` |
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `1dc8cfe230fc` | `17869223a502` | `750a5cffd46b` |
-| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `8bf7da674bb5` | `786e4bbb99f1` | `17869223a502` |
+| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `06215746caae` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `9a4fb29ee416` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `b7e0cc99cf22` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `807afa9962aa` | `f85cc4e09db4` | `3a0cbdb33b79` |

@@ -115,11 +115,27 @@ pass3.25/6.97s; seven native conversion/caller/partial-retain tests pass26.91/53
 including every original positive and exact negative assertion at O1/O2 with
 GC stress/verification and reuse poisoning. Focused lint2.38/4.81s, format0.35/0.63s
 pass. Original native probes and compiler allocation gates are unchanged.
-Publish the row43 repair, refresh44–112 from their actual bases, and rerun the
+Row43 repair8c74505 is published with prior b42bfee retained. Refresh44–51
+passes in two bounded parts:3.23CPU/35.30elapsed stops at a CAF control insertion
+conflict;5.25/60.14s completes after preserving both exact controls.
+Refresh52–112 from their actual bases and rerun the
 failed cache/task evidence on repaired52. Prior later source passes do not
 accept this new checkpoint. Keep PR107 frozen; its source lacks the later row43
 conversion feature. Log /private/tmp/fwp-task-runtime-38011548324-failure.clean.log
 and /private/tmp/fwp-match-conversion-owner-control.rs preserve local diagnosis.
+
+Typed-holder evidence372375a/CI38011999875 fails the original zero-parent-box
+variant-frame assertion (mode1 exit33). Local row83 reproduces8.96CPU/18.63elapsed.
+The general variant heuristic excludes direct constructors; the frame-holder
+analysis reused it after the argument repair made this constructor direct.
+Allow direct nonempty, eligible variant constructors only for original frame
+holders, respecting the variant-return flag. All five original variant/record/frame
+tests pass20.72CPU/41.72elapsed, preserving zero-parent-box and boxed controls,
+File lifetimes, returned aliases, inactive tags, GCoff/on, O1/O2 and reuse modes.
+Focused lint2.34CPU/4.77elapsed and format0.45/0.86s pass.
+No probe or allocation assertion changes. Publish this row83 repair and include
+its exact code in later preparation refreshes, then rerun typed-holder evidence.
+Log /private/tmp/fwp-holders-38011999875-failure.clean.log preserves the failure.
 
 ## Next sequential preparations
 
@@ -152,7 +168,7 @@ still need their final squash rebases and six exact-head full gates.
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
-| 51 ownership-task-scope | 511721920cca | 68a2e5f1358e | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
+| 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | bc6b763b3bf3 | 511721920cca | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
 | 53 ownership-channel-queues | 310031a5596b | bc6b763b3bf3 | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
 | 54 ownership-library-results | ff3bfedf26cd | 310031a5596b | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
@@ -184,7 +200,7 @@ still need their final squash rebases and six exact-head full gates.
 | 80 ownership-file-inline-path | 19ed00f179a3 | d6eabb576bd2 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 1dc8cfe230fc | 5a4d180478bb | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
-| 83 ownership-resource-frame-variants | 8bf7da674bb5 | 1dc8cfe230fc | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
+| 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; audit/publication follow |
 | 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
@@ -275,7 +291,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
 | Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
-| Rows79–88 typed holders and explicit cycles | 372375a15557b0c295cb5365b5536b4f3fe7f8ab | CI38011999875 running on repaired source88 f194c55d4351; original holder/cycle/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.43/3.49s passes. Prior3f0c430/CI37982696642 predates the repairs; explicit draining does not prove automatic cycle reclamation |
+| Rows79–88 typed holders and explicit cycles | 372375a15557b0c295cb5365b5536b4f3fe7f8ab | CI38011999875 fails the original variant-frame zero-parent-box check (mode1 exit33) on source88 f194c55d4351; original holder/cycle/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.43/3.49s passes. Prior3f0c430/CI37982696642 predates the repairs; explicit draining does not prove automatic cycle reclamation |
 | Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 passes on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
 | Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 passes on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
@@ -357,9 +373,11 @@ and format0.34/0.61s pass. Commands: cargo test --test runtime_call_ownership
 --test argument_preparation_ownership --test compiler_call_liveness --test unwind_cleanup;
 cargo test --lib rc::tests; cargo clippy for those four targets -- -D warnings;
 cargo fmt --all -- --check, all through the absolute-root guard with OpenSSL.
-It now belongs to /private/tmp/fwp-record-conversion-worktree after bounded
+It subsequently belonged to /private/tmp/fwp-record-conversion-worktree after bounded
 clean of source52(0.00CPU/0.14elapsed) and rebuild for the matched-result repair.
 The runtime28 clean before source52 reproduction passed0.07/0.38s.
+Current target belongs to /private/tmp/fwp-resource-frame-variants-worktree after
+bounded source43 clean0.07/0.38s and rebuild for the frame-holder repair.
 Prior compiler/loop target switches, failures and measurements are archived in
 [history](roadmap-history.md). Never assume a shared native binary belongs to a
 checkout until its bounded package clean and rebuild finish.
