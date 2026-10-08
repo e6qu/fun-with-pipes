@@ -11426,3 +11426,9 @@ d39b6145cb559e17ac3c1005959f2cabd6c22980 uses actual base8454a97667bb.
 Compiler/runtime and disposal fixture match original, with inherited CLI/tracing
 repairs preserved. Old CURRENTfaac017dc60d remains under its immutable revision
 before lease publication. Fresh focused storage disposal check runs.
+
+Row81 storage disposal/finalizer removal test8.53/19.18s passes. Row82 refresh
+47abf911f844825e2ab05f328b57e237c7471298 uses actual based39b6145cb55;
+compiler/runtime and failed-construction/registry fixture match original, with
+inherited CLI/tracing harness repairs. Previous CURRENT06c93eff77af is retained
+under an immutable revision before lease publication. Fresh focused checks follow.
