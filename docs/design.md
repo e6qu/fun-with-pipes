@@ -379,6 +379,9 @@ or cancellation and preserve external capture aliases.
 Prepared task.scope borrows its callback and protects its owned result
 through joining/cancellation checks; unwind cleanup restores handlers and
 scope state and releases scope storage.
+A later prepared task-handle contract owns typed cached results, with
+independent scheduler, scope, caller and await references; unknown/shared
+boundaries retain tracing fallback.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of

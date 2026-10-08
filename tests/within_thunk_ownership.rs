@@ -82,8 +82,8 @@ int main(void){
 }
 "#.replace("SLEEPING", &id("sleeping")).replace("PLAIN", &id("plain")).replace("WITHIN", &id("task.within"));
     let legacy = runtime.replace(
-        "return fwp_await(fwp_spawn_retained(thunk, at, share_result));",
-        "(void)share_result;fwp_rc_share(thunk);return fwp_await(fwp_spawn(thunk, at));",
+        "fwp_task *t = fwp_spawn_retained(thunk, at, drop);",
+        "(void)drop;fwp_rc_share(thunk);fwp_task *t = fwp_spawn(thunk, at);",
     );
     assert_ne!(legacy, runtime);
     for opt in ["-O1", "-O2"] {

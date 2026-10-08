@@ -8365,3 +8365,26 @@ Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_
 passes one test (57 filtered)3.23 s CPU /6.67 s elapsed. Scope callback lint
 with all three integration targets and -D warnings passes2.29 /4.72 s; fmt
 check0.44 /0.72 s. Nine current docs copied before final amend; tested source unchanged.
+Final scoped-callbacks28de1794f39f65583dc54f5fadb94d6dbb3f7e3f is clean
+on actual baseaa181f8, published with exact lease against OLD7da15d9.
+Whole subject verified one line, empty body; no second PR. Row52 actual base
+remains OLD7da15d9 until its own rebase; immutable queue anchors unchanged.
+
+Row52 task handles rebase from ACTUAL7da15d9c8ea330bea4f876f797038627720c4c38
+onto actual row51 head28de1794f39f65583dc54f5fadb94d6dbb3f7e3f resolves
+only doc conflicts with nine authoritative files. All source oracles already
+set FWP_NO_OPT=1. Guarded clean0.00 /0.14 s; task handles, scope, retained
+spawn, deadline callbacks and previous task ownership checks started.
+Guarded cargo test --test task_handle_ownership --test scope_thunk_ownership
+--test retained_thunk_ownership --test within_thunk_ownership --test
+task_ownership passes all eight tests22.60 s CPU /46.01 s elapsed.
+Task handles own typed cached results; caller/scheduler/scope/await references
+are independent. Repeated awaits, early handle drops, cancellation before/after
+entry, old-task/young-result minor roots, overflow and failed private awaits
+pass. Six omission controls expose lost owners or cleanup. Raw agreement,
+O1/O2 stress/verification/poison and related task checks pass. Unknown/shared
+boundaries still promote the task graph to tracing fallback.
+Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (57 filtered)3.25 s CPU /6.66 s elapsed. Task-handle lint
+with all five integration targets and -D warnings passes2.36 /4.75 s; fmt
+check0.35 /0.75 s. Nine current docs copied before final amend; tested source unchanged.
