@@ -508,6 +508,23 @@ impl<'a> Infer<'a> {
         }
     }
 
+    /// A call may run inside a larger effect context without changing effects
+    /// on function-valued arguments. Argument unification can close a row that
+    /// was open when the callee was instantiated; reopen only this call's row.
+    fn open_call(&mut self, ty: &Type) -> Type {
+        let called = self.env.table.open_call(ty, self.level);
+        match called {
+            Type::Fun(a, b, e) => {
+                let mut e = self.env.table.zonk_row(&e);
+                if e.tail.is_none() {
+                    e.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
+                }
+                Type::Fun(a, b, e)
+            }
+            other => other,
+        }
+    }
+
     // ----- binding groups ------------------------------------------------------
 
     fn check_group(&mut self, group: &[usize]) {
@@ -1035,7 +1052,7 @@ impl<'a> Infer<'a> {
         let f = Type::fun(lhs.clone(), result.clone(), eff);
         match self.env.table.resolve(rhs) {
             Type::Fun(..) | Type::Var(_) | Type::App(..) => {
-                let rhs = self.env.table.open_call(rhs, self.level);
+                let rhs = self.open_call(rhs);
                 self.unify(span, &f, &rhs, "the stage after `|`")
             }
             other => Err(Diagnostic::error(
@@ -1060,7 +1077,7 @@ impl<'a> Infer<'a> {
         // each call of the composition calls both stages once, choosing
         // their abstract sizes again
         let start = self.env.table.vars.len();
-        let lhs = &self.env.table.open_call(lhs, self.level);
+        let lhs = &self.open_call(lhs);
         let Type::Fun(a, b, e) = self.env.table.resolve(lhs) else {
             unreachable!()
         };
@@ -1082,7 +1099,7 @@ impl<'a> Infer<'a> {
         if let Type::Fun(param, _, _) = self.env.table.resolve(rhs) {
             self.unify(span, &param, &b, "pipe input (composition)")?;
         }
-        let rhs = self.env.table.open_call(rhs, self.level);
+        let rhs = self.open_call(rhs);
         self.unify(span, &g, &rhs, "the stage after `|`")?;
         let composed = self.reabstract(start, Type::Fun(a, Box::new(c), e));
         self.unify(span, result, &composed, "composition")
@@ -1514,7 +1531,7 @@ impl<'a> Infer<'a> {
             }
             self.captures.push((arg.span, ta.clone(), r.clone()));
             let want = Type::fun(ta, r.clone(), ctx.clone());
-            let opened = self.env.table.open_call(&tf, self.level);
+            let opened = self.open_call(&tf);
             self.unify(e.span, &want, &opened, "application")?;
             tf = r;
         }

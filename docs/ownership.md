@@ -262,11 +262,11 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#89 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#90 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
 Right-fold transfers its accumulator through a typed owned argument span;
-List-copy has passed full CI and merged; list-option is next. Other callbacks, runtime unwind and retained owners
+List-copy and optional list results passed full CI and merged. Other callbacks, runtime unwind and retained owners
 remain preparation.
 
 ## Prepared work and acceptance limits
@@ -395,3 +395,35 @@ source/interpreter comparisons and partial-retain cleanup checks also pass local
 FWP_FRAME_FIELDS=0 disables this compiler optimization for comparisons. Broader
 workload count/timing and full sequential platform gates remain required; this
 is not a general speed or zero-allocation claim. See the handoff for exact evidence.
+
+
+A subsequent prepared File layout copies its display path into the same leaf
+allocation as the FILE pointer and64-bit owner count. The fixed native header is
+16 bytes rather than24; constructor requests eight fewer bytes and makes one
+allocation rather than two. The path remains owned and NUL-terminated; a File
+has no GC-valued children in this layout. Alignment, internal closed-handle
+display, aliases, constructor unwind, library teardown and source/native I/O
+have focused checks. This does not reclaim the header at the last owner; safe
+finalizer removal and shared/stale handle policy remain required. Sequential
+full platform gates and actual WASI evidence are still pending.
+
+
+The next prepared File disposal closes the last typed owner and frees unshared
+native leaf storage after removing its library finalizer. Executables skip the
+finalizer scan; library removal compacts its registry without allocation and
+costs linear time in registered entries. Unknown/shared headers retain their
+allocator lifetime. Disabled freeing retains storage; verification poison leaves
+a closed zero-owner/empty-path header. Scoped callbacks close while their
+constructor owner remains live, then drop that owner on return and unwind.
+Focused tests verify same-address reuse without tracing, freed-byte accounting,
+retained finalizers and omission controls. Constructor exceptional storage,
+shared graphs/cycles, actual WASI and full sequential gates remain required.
+
+
+A further prepared constructor scope owns its initialized File header through
+registration/path-copy traps: close first, then dispose the temporary reference
+and eligible storage. Before initialization it owns the raw stream. Finalizer
+registry growth checks overflow and commits pointer/capacity only after realloc
+succeeds, preserving existing owners on failure. Recoverable allocation-fault
+probes and normal hard-OOM library teardown verify both cases. These are prepared
+native checks; sequential full gates and actual WASI remain required.
