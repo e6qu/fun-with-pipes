@@ -77,7 +77,10 @@ and dynamic applications still box. All nine original worker/conversion/caller/
 retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
 pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
 0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
-native probes, propagate through66–112 and refresh the failed full evidence. Full runs and
+native probes:66–73 refresh passes8.39CPU/91.73elapsed, preserving both
+resource-frame commits. Continue74–112 in batches of at most eight through
+/private/tmp/fwp-refresh-counted-worker-arguments.py, then refresh failed full
+evidence. Completed fwp-counted-worker-refresh journals must not be rerun. Full runs and
 PR #109 continue; failed evidence never establishes support. Raw/clean logs:
 /private/tmp/fwp-full-ownership-38016929326-arm-failure[.clean].log; emitted C:
 /private/tmp/fwp-worker-alias-886f8b-generated.c.
@@ -135,7 +138,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 production CI queued, exact-head docs pass |
+| 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 bench/regular ARM/ARM GC/docs pass; remaining exact-head gates running |
 | 31 ownership-zip-unwind | ff84318a416d | 8371fc50c9bf | Six zip/selection checks20.99CPU/42.22elapsed, lint2.27/4.62s, format0.35/0.63s and audit0.44/3.48s pass; exact original source/probe parity; prior47776e7 retained before publication; final actual-squash rebase and all gates required |
 | 32 ownership-fold-unwind | 9aed23988b19 | ff84318a416d | Nine fold/runtime-call checks24.14CPU/48.48elapsed, lint2.33/4.77s, format0.35/0.62s and audit0.44/3.58s pass; exact original source/probe parity; priorc434692 retained before publication; final actual-squash rebase and all gates required |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
@@ -179,7 +182,7 @@ still need their final squash rebases and six exact-head full gates.
 | 71 ownership-file-write-visibility | de6667643951 | 823b86c74a68 | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
 | 72 ownership-file-io-errors | 4aeff2223e3f | de6667643951 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
 | 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
-| 74 ownership-file-runtime-owners | ddbee893478e | e3bfb67a9244 | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
+| 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
 | 75 ownership-file-discard | ef04da0f3049 | ddbee893478e | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | f0034b6ab7c1 | ef04da0f3049 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 8a2d845523c5 | f0034b6ab7c1 | Actual WASI gates remain required; native bump checks are not WASI proof |
@@ -269,7 +272,7 @@ accepts a current production head. Superseded runs are archived in history.
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 has an ARM regular failure on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. Other jobs continue; bench, both macOS GC stress jobs and roadmap_docs pass; Linux and regular ARM/Intel macOS running, mandatory actual WASI on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
+| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 has an ARM regular failure on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. Other jobs continue; bench, both macOS GC stress jobs and roadmap_docs pass; Linux and regular Intel macOS running; ARM regular failed; mandatory actual WASI on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
 | Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI 38015942823 passes on repaired source112 996d5ee4ef4f; all 21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit 0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI 37992657684 is historical |
 | Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI 38015884622 passes on repaired source100 a3d88c0b8f3d; all 21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit 0.43/3.47s passes. Prior3aca5cf/CI 37993159029 is historical |
 | Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI 38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.42/3.35s passes. Failed372375a/CI 38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
