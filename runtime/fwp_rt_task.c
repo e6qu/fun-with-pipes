@@ -1241,6 +1241,7 @@ static char fwp_tls_err[512];
 static ssize_t fwp_tls_recv(void *ssl, char *buf, size_t n, int *ww);
 static ssize_t fwp_tls_send(void *ssl, const char *buf, size_t n, int *ww);
 static void fwp_tls_free(void *ssl);
+static void fwp_tls_dispose(void *ssl);
 static void fwp_tls_server_drop(void *ctx);
 static void *fwp_tls_accepted(void *ctx, int fd);
 #endif
@@ -1299,11 +1300,29 @@ static void fwp_nonblock(int fd) {
     fcntl(fd, F_SETFD, FD_CLOEXEC);
 }
 
+#ifdef FWP_LIBRARY
+/* Implicit teardown must not send close_notify or alter host SIGPIPE policy. */
+static void fwp_sock_final(void *p) {
+    fwp_sock *s = (fwp_sock *)p;
+#ifdef FWP_TLS
+    if (s->tls) {
+        if (s->kind == 0) fwp_tls_server_drop(s->tls);
+        else fwp_tls_dispose(s->tls);
+        s->tls = 0;
+    }
+#endif
+    if (s->fd >= 0) { close(s->fd); s->fd = -1; }
+}
+#endif
+
 static V fwp_sock_new(int fd, int kind) {
     fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
     s->tls = 0;
+#ifdef FWP_LIBRARY
+    fwp_gc_finalizer(s, fwp_sock_final);
+#endif
     return PTR(s);
 }
 

@@ -8588,3 +8588,27 @@ stays unarmed in this fixture; source TLS/stress suites remain on CI.
 TLS listener/source-target lint with -D warnings passes2.66 s CPU /5.35 s
 elapsed; fmt check0.46 /0.63 s. Linting tls does not run the full source
 suite. Nine current docs copied before final amend; tested source unchanged.
+Final TLS-listeners838cf5dee220bf2e368c24b2ee45c22df10e35e6 is clean
+on actual base00013d5, published with exact lease against OLD3f6154b.
+Whole subject verified one line, empty body; no second PR. Row60 actual base
+remains OLD3f6154b until its own rebase; immutable queue anchors unchanged.
+
+Guarded doc audit passes eleven link sets, 82 immutable ancestry pairs and
+whole messages0.15 s CPU /1.08 s elapsed. Row60 library resource teardown
+rebase from ACTUAL3f6154b4bf67330f15d5a01a5d603b75d33319d3 onto actual
+row59 head838cf5dee220bf2e368c24b2ee45c22df10e35e6 resolves only doc
+conflicts with nine authoritative files. Actual loader resources, TLS
+listener and library-unload checks started; implicit TLS disposal does not
+send close_notify, preserving host signal policy.
+Row60 guarded clean passes0.00 s CPU /0.14 s elapsed. Guarded cargo test
+--test library_resources --test tls_listener_ownership --test library_unload
+passes all three tests11.76 s CPU /31.49 s elapsed. Actual Darwin reload
+closes owned File/socket/transferred HTTP2 descriptors and releases server
+protocol/client cache/session owners without implicit TLS shutdown traffic.
+Host peer descriptors remain open; explicit close is idempotent. O1/O2
+poison and six ownership/traffic omission controls pass; related real
+OpenSSL listener and library-unload regressions pass. Library tracing
+stays unarmed; full source resource/TLS suites remain on CI.
+Library-resource lint with all three targets and -D warnings passes2.46 s
+CPU /4.97 s elapsed; fmt check0.45 /0.86 s. Nine current docs copied before
+final amend; tested source unchanged.
