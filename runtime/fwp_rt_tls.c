@@ -536,7 +536,10 @@ static V fwp_p_tls_alpn(V c) {
     const unsigned char *p = 0;
     unsigned n = 0;
     if (SOCK(c)->tls && SOCK(c)->kind == 1) SSL_get0_alpn_selected((SSL *)SOCK(c)->tls, &p, &n);
-    return fwp_str_new(p ? (const char *)p : "", p ? n : 0);
+    V result = fwp_str_new(p ? (const char *)p : "", p ? n : 0);
+    /* Protocol bytes live in SSL storage, outside the collector's heap. */
+    FWP_KEEP_ALIVE(c);
+    return result;
 }
 
 static V fwp_p_tls_secure(V c) { return SOCK(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
