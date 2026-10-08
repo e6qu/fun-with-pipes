@@ -1362,6 +1362,9 @@ impl<'p> Gen<'p> {
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        if matches!(mt, MT::Con(n, _) if n == "std::Task") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_task_drop(v); }}\n");
+        }
         if matches!(mt, MT::Fun(..)) {
             return format!("static void fwp_drop{id}(V v) {{ fwp_closure_drop(v); }}\n");
         }
@@ -5244,18 +5247,23 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         crate::ownership::primitive(&sym).and_then(|c| c.callback)
                     {
                         let result = func.locals[i].params(1).1;
-                        let share_result = u8::from(crate::rc::needs_rc(&self.prog.shapes, result));
+                        let drop = self.value_drop(result);
+                        let dup = if crate::rc::needs_rc(&self.prog.shapes, result) {
+                            "fwp_rc_dup"
+                        } else {
+                            "NULL"
+                        };
                         match sym.as_str() {
                             "task.spawn" => {
                                 s = s.replace(
                                     "fwp_p_task_spawn(l0)",
-                                    &format!("fwp_p_task_spawn_retained(l0, {share_result})"),
+                                    &format!("fwp_p_task_spawn_retained(l0, {drop})"),
                                 )
                             }
                             "task.within" => {
                                 s = s.replace(
                                     "fwp_p_task_within(l0, l1)",
-                                    &format!("fwp_p_task_within_retained(l0, l1, {share_result})"),
+                                    &format!("fwp_p_task_within_retained(l0, l1, {drop}, {dup})"),
                                 )
                             }
                             _ => unreachable!("unmodeled retained callback: {sym}"),
@@ -5289,6 +5297,24 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::OwnedTaskOption if sym == "task.await" => {
+                                let ty = func.ty.params(func.arity as usize).1;
+                                let MT::Con(_, args) = ty else {
+                                    return Err("task await result is not an Option".into());
+                                };
+                                let [element] = args.as_slice() else {
+                                    return Err("task await result lacks its element type".into());
+                                };
+                                let dup = if crate::rc::needs_rc(&self.prog.shapes, element) {
+                                    "fwp_rc_dup"
+                                } else {
+                                    "NULL"
+                                };
+                                s = s.replace(
+                                    "fwp_p_task_await(l0)",
+                                    &format!("fwp_p_task_await_owned(l0, {dup})"),
+                                );
+                            }
                             ResultOwnership::OwnedCallback => {
                                 let ty = func.ty.params(func.arity as usize).1;
                                 let drop = self.value_drop(ty);
