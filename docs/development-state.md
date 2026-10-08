@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 04:30 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 05:07 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -55,17 +55,29 @@ interfaces/new backend remain deferred.
 
 ## Next sequential PR
 
-No PR is open after #84 merged. Fold is next: `/private/tmp/fwp-fold-worktree`,
-branch `ownership-fold-transfers`, original head
-`a180c3fb5f429edc79facd340577c5115f1a78cf`. Rebase from immutable OLD filter
-`1ea7f079043c` onto current main `01c6f5807e1462fe97763a125dbfb70acc1fcde7`;
-resolve docs with authoritative current root files. Run focused fold/adjacent
-checks under the guard, clippy/inventory/fmt; use an explicit unoptimized
-interpreter oracle. Include the live docs/history/queue/persistent guard cleanup
-in this next PR. Publish with an explicit lease and create the sole next PR.
-Require all six successful exact-head gates before its explicit squash. Preserve
-OLD `a180c3f` for zip. See queue for all later OLD anchors; never substitute a
-rewritten/squashed parent for an original anchor.
+Sole [PR #85](https://github.com/e6qu/fun-with-pipes/pull/85) is fold ownership:
+branch `ownership-fold-transfers`, checkout `/private/tmp/fwp-fold-worktree`,
+clean published exact head `a090f1f5ac6cae78f569c28b13d68c72b36e1ae2`.
+Full six-job CI `37728301773` is running (bench passed; other gates pending). Require all six exact-head jobs to pass;
+fix failures and prepare later work while it runs. Squash subject:
+`Transfer owned accumulators through synchronous fold callbacks` (one line,
+62 characters), empty body and exact head match. Verify complete commit `%B`.
+
+Rebased from immutable OLD filter `1ea7f079043c` onto main `01c6f58`;
+only plan/handoff conflicts, reconciled with authoritative root docs. Both fold
+references explicitly use FWP_NO_OPT=1. Five focused fold/filter/borrowed checks
+pass CPU 15.84 s / 31.87 s; clippy lib/three tests CPU 2.20 s / 4.51 s;
+shared inventory (one test) CPU 3.08 s / 6.51 s; final fmt CPU 0.35 s / 0.75 s.
+Document links and all 61 immutable OLD anchors verify. Commit/checkout clean;
+published with an exact lease against original `a180c3f`. New docs/history/queue/
+persistent guard are included in this PR. PR body `/private/tmp/fwp-fold-pr.md`.
+
+After #85 passes and squash-merges, fast-forward root main while preserving
+current docs. Zip is next: `/private/tmp/fwp-zip-worktree`, original
+`bdb750f6d46b69153fb9f577a5fa4cbe12b7e523`; rebase from immutable OLD fold
+`a180c3fb5f429edc79facd340577c5115f1a78cf`, preserve OLD zip `bdb750f6` for
+right-fold, then focused checks/raw interpreter/clippy/inventory/fmt and the next
+sole PR. Never rebase zip from rewritten fold `a090f1f` or its squash.
 
 Filter validation: five filter/map/borrowed-callback checks CPU 15.72 s / elapsed
 31.81 s; warning/inventory/fmt checks pass. Both corrected explicit-no-opt
@@ -78,10 +90,14 @@ ran zero tests and was corrected; it is not acceptance evidence.
 
 Checkout `/private/tmp/fwp-tls-evidence-worktree`, branch
 `ownership-evidence-tls-listeners`, clean published exact head
-`283a0cf5170cd683399e6aea1ed51531d1fa91af`. Full CI `37725214652` in progress.
-Bench and ARM GC PASS. Unchanged full wide allocation acceptance and raw
+`9bcae30119028b1870efb8fecfcf9746f5808acb`. Repaired full CI `37730777345`
+is queued; early Linux probes run under both GCC and Clang, and both regular
+macOS jobs run the delayed-timer regression. Require all six gates. Prior
+full CI `37725214652` at `283a0cf` completed with failures: Linux and Intel regular
+FAIL; ARM regular, bench and both ARM/Intel GC PASS. Failure logs are
+`/private/tmp/fwp-evidence-37725214652-failures.log`; diagnose and fix next. Unchanged full wide allocation acceptance and raw
 unoptimized TLS streams with GC/reuse verification PASS on Linux AND both macOS
-architectures. Other full regular/GC jobs still run. This evidence is not a PR,
+architectures. Full regular failures remain repair tasks; this run is not an acceptance gate. This evidence is not a PR,
 never replaces sequential exact-head gates, and its workflow never enters
 production ancestry.
 
@@ -142,7 +158,8 @@ Latest published preparations:
 
 Borrowed TLS ALPN owner fence is now prepared on `ownership-tls-alpn-roots`,
 checkout `/private/tmp/fwp-tls-alpn-root-worktree`, immutable parent OLD
-`6bda2c815a7107c059370d83f1f090b50996d152`; not yet committed. A standalone
+`6bda2c815a7107c059370d83f1f090b50996d152`; published as
+`e0f11626f60955d080669a4e38e2e81ac06fff9f`, clean checkout. A standalone
 fixture explicitly arms a real major trace before String copy and observes
 whether the actual TLS session is finalized. Baseline loses that owner (exit 1,
 CPU 7.02 s / 14.82 s). The fence fixes it; removing only the fence restores
@@ -150,11 +167,42 @@ exit 1. O1/O2 with actual GC stress/verification and both poison modes passes,
 with matching interpreter TLS protocol results. Three ALPN/peer-subject/library
 resource checks pass CPU 2.79 s / 8.91 s; fmt CPU 0.37 s / 0.74 s. This fixture
 proves the boundary when collection is armed; production library tracing stays
-unarmed and no host-root tracing claim follows. Warning check now passes CPU 2.40 s / 4.77 s; publish the preparation separately.
+unarmed and no host-root tracing claim follows. Warning check passes CPU 2.40 s / 4.77 s. Verified single-line subject and
+no body/trailers; full sequential CI remains required.
 
-Next audit remaining reconstructed/untyped aggregate owners (in particular
-boxed nested loop-state fields), general File/socket resource discard, retained
-callback teardown and cycle lifetime policy. Implicit effectful resource release
+Nested-loop preparation is in progress on `ownership-nested-loop-boxing`,
+checkout `/private/tmp/fwp-nested-loop-boxing-worktree`, parent OLD `e0f1162`.
+Only `src/cgen.rs` is modified plus new `tests/nested_loop_boxing.rs`; no commit.
+Typed prepared aliases now let rebuilt inner records stay flattened (st[5]
+instead of st[3]); Again stops boxing the inner tuple. A real source/C fixture
+then exposes a leaked original/partial owner when that inner value is boxed on
+Stop and preparation traps (exit 2). Initial fixture compile errors (missing
+trap declaration and selecting a vbox rather than vdrop definition) were corrected
+before leak evidence. Restore cleanup with a precise Field ownership checkpoint,
+progressive retains and allocation scope, then test aliases/scalar words/reuse.
+Small emitted-code checks only; no full allocation workload ran locally.
+
+CI repair is prepared separately in `/private/tmp/fwp-ci-probe-repairs-worktree`,
+branch `ownership-ci-probe-repairs`, parent OLD `e0f1162` (not committed yet).
+All five Linux failing probes call `fwp_gc_chunk_of` with a null index output;
+that helper unconditionally writes the index for managed pointers. Replace the
+invalid calls with actual `size_t` output storage; no runtime ownership rule or
+assertion is weakened. All five references also now explicitly disable optimizer
+for interpreter oracles. Both Intel mismatches are independent 20/40-ms child
+prints: relative timers establish no happens-before relationship. The fixtures
+now share a channel: the 40-ms child waits until the 20-ms child prints and sends.
+Both children still sleep concurrently and the scope still joins both. A focused
+regression intentionally delays the shorter timer's start by 100 ms, checking
+raw interpreter/native O1/O2 equality across three preemption slices, stress,
+verification and both reuse modes. Initial curried composition errors corrected;
+small raw oracle prints the unchanged expected order. Ten focused checks pass
+under the persistent guard, CPU 27.31 s / elapsed 54.75 s; clippy lib/six tests
+passes CPU 2.38 s / 4.92 s; format CPU 0.43 s / 0.87 s.
+Linux runner confirmation and all six evidence gates remain required.
+
+Priority now: validate completed evidence Linux/Intel repairs while sole PR #85 runs,
+then finish this aggregate repair. General File/socket resource discard, retained
+callback teardown and cycle lifetime policy follow. Implicit effectful resource release
 must preserve observable lifetime/evaluation order; it is distinct from harmless
 memory reclamation and needs a language/interpreter contract before widening it.
 Keep
@@ -165,7 +213,7 @@ interface or backend, or claim speed without equivalent workload evidence.
 
 Root main has ONLY our pending live docs/history/queue/guard changes; preserve
 those on fast-forward. Prepared published production checkouts are clean. Current
-shared compiler target belongs to `/private/tmp/fwp-tls-alpn-root-worktree`; use
+shared compiler target belongs to `/private/tmp/fwp-ci-probe-repairs-worktree`; use
 guarded `cargo clean -p fwp` before switching compiler checkouts. Never run local
 workloads concurrently.
 
@@ -184,11 +232,12 @@ fun-refactor guard against fwp. Prior checks used the equivalent temporary guard
 `/private/tmp/fwp-local-guard.py`; persistent guard syntax and real child success/
 exit-7 forwarding checks pass (CPU 0.01 s / 0.27 s and 0.00 s / 0.14 s).
 A real persistent-guard cargo fmt check passes CPU 0.34 s / 0.63 s.
-All local links in the live/archived documents resolve; queue has 60 entries.
+All local links in the live/archived documents resolve.
 
 The live plan/handoff now contain current priorities rather than repeated old
 "next" actions. Historical notes are preserved verbatim except relative link
-adjustments. Queue generation verified all 60 published parent/head ancestry relationships.
+adjustments. Queue verification now passes all 61 immutable OLD parent/head relationships,
+including published ALPN. All local links in nine current/archived docs resolve.
 The root README/design/ownership docs now distinguish delivered #74–#84 work
 from preparation, removing obsolete first-task/CI-pending claims.
 Include these docs and persistent guard in the next sequential PR, reconcile

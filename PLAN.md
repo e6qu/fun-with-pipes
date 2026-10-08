@@ -43,7 +43,7 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 Main includes #74–#84: native macOS, primitive contracts, owned leaves/text,
 compiled closures, closure cleanup, concrete argument temporaries, stack children,
 borrowed synchronous callbacks, map and filter results. Exact merge/run evidence
-is in the handoff. Next PR is fold ownership. Rebase and validate the
+is in the handoff. Sole PR #85 is fold ownership (CI `37728301773`). Rebase and validate the
 prepared queue in order after each preceding squash; do not open concurrent PRs.
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

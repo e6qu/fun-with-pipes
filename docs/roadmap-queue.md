@@ -12,13 +12,16 @@ checks after rebasing; original evidence is in [the history](roadmap-history.md)
 Publish with an explicit lease against the remote current head, then create the
 sole next PR. Full exact-head CI is required anew for every PR.
 
-Current head changes on rebase; OLD anchors never change. Prefixes uniquely resolve
+Current head changes on rebase; OLD anchors never change. Fold is already rebased
+onto `01c6f5807e14`, published as sole PR #85, CI `37728301773`; do not
+repeat its original rebase. For a rewritten branch, use its actual current base
+when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
 Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
-| 7 | fold | `ownership-fold-transfers` | `a180c3fb5f42` | `a180c3fb5f42` | `1ea7f079043c` |
+| 7 | fold | `ownership-fold-transfers` | `a090f1f5ac6c` | `a180c3fb5f42` | `1ea7f079043c` |
 | 8 | zip | `ownership-zip-callbacks` | `bdb750f6d46b` | `bdb750f6d46b` | `a180c3fb5f42` |
 | 9 | right-fold | `ownership-right-fold` | `adc7947a25f2` | `adc7947a25f2` | `bdb750f6d46b` |
 | 10 | prefix | `ownership-list-prefix` | `376e77ae9469` | `376e77ae9469` | `adc7947a25f2` |
@@ -78,7 +81,12 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `0cc612650ab9` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `b8f3752d236f` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | uncommitted | pending | `6bda2c815a71` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
+
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | pending | pending | `e0f11626f609` |
+
+Nested-loop boxing remains dirty and will be rebased onto preparation 68 before
+publication as 69; preserve its current source/test changes.
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

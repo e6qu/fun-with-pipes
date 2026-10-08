@@ -25,13 +25,24 @@ later = curry (.0 | tap (duration.from-millis | task.sleep) | format "woke after
 udp-echo : UdpSocket -> String ! {Async, Network, Error[IoError]}
 udp-echo = tap (fork (flip udp.send-to ("ping" | string.to-bytes)) udp.local-addr id) | udp.recv-from 100 | .0 | string.from-bytes | option.unwrap-or "?"
 
+# Both children sleep concurrently; the channel makes print order explicit.
+# Relative wall-clock wake times alone do not establish an output order.
+ordered-later : Channel[()] -> I64 -> () -> () ! {Async, IO, Network, FileIO}
+ordered-later = curry3 (if (.1 | eq 40)
+    (both (.0 | channel.recv | ignore) (fork later .1 .2) | ignore)
+    (both (fork later .1 .2) (.0 | flip channel.send ()) | ignore))
+spawn-later : Channel[()] -> I64 -> () ! {Async, IO, Network, FileIO}
+spawn-later = then2 ordered-later (task.spawn | ignore)
+scoped-later : Channel[()] -> () ! {Async, IO, Network, FileIO}
+scoped-later = fork each spawn-later (const [40, 20])
+
 main = [
     2 | channel.make | the-ch | tap (produce | task.spawn) | flip (curry id) [] | loop drain-step | echo,
     [30, 10, 20] | task.map (tap (duration.from-millis | task.sleep)) | echo,
     10s | flip task.within (const 5 | task.deadline 20ms | tap (const 1s | task.sleep)) | echo,
     10s | flip task.within (const 5 | task.deadline 1s | tap (const 5ms | task.sleep)) | echo,
     500 | later | task.spawn | tap task.cancel | task.await | echo,
-    task.scope (const [40, 20] | each (later | task.spawn | ignore)) | const "scope done" | print,
+    task.scope (const 1 | channel.make | scoped-later) | const "scope done" | print,
     5 | channel.make | the-ch | channel.recv-for 20ms | echo,
     "127.0.0.1:0" | udp.bind | udp-echo | print,
 ] | ignore

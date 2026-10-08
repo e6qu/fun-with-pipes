@@ -281,6 +281,7 @@ teardown, connection cancellation and peer-subject temporary cleanup have actual
 OpenSSL/omission checks; library probes generally run with collection unarmed.
 They do not prove host-root tracing or deterministic discard of every resource.
 An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
-and exposes loss of the owning Conn during String allocation; production library
+and reproduced loss of the owning Conn during String allocation. Its owner fence
+and fence-omission control now pass under real GC/reuse verification; production library
 tracing remains unarmed. Current work/evidence, including any unresolved failures,
 is recorded in the handoff rather than appended as another priority queue here.

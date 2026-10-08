@@ -45,7 +45,12 @@ fn partial_duplicate_failures_preserve_aliases_and_pending_owned_arguments() {
     let exe = dir.0.join("failures");
     std::fs::write(&src, SOURCE).unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
     checked(
         Command::new(fwp)
             .arg("build")
@@ -96,7 +101,8 @@ static jmp_buf preparing;
 static int recover_preparation(void) { return 1; }
 static int dead_cell(V v) {
     if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
-    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,NULL);
+    size_t ci;
+    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,&ci);
     if (!chunk || chunk->type==GC_FREE) return 1;
     if (chunk->type!=GC_SMALL) return 0;
     for (char *p=fwp_gc.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
