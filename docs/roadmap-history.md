@@ -11387,3 +11387,12 @@ test8.17/18.29s passes. Row76 refreshda4acc3986370cb2e2efca1e294cd7674f19ad52
 uses actual base5179067d6635; compiler/runtime and File boundary fixtures match
 original with inherited CLI/tracing repairs preserved. Prior CURRENTb4860bf2c392
 is retained under an immutable revision before lease publication. Checks follow.
+
+Row74 clippy5.82/12.43s and format0.43/0.83s pass. Row75 discard test
+13.04/26.17s and clippy5.83/12.17s pass. Linux evidence
+4a448ea21e5ca197b8e7efed1796a8578d7e0761 is source-identical toda4acc398637;
+CI37980022336 is queued, not acceptance. Row77 refresh
+295b0da5c1f02b448a62d425da69f359d3e70932 uses actual baseda4acc398637.
+Compiler/runtime/tests and actual WASI workflow match original, except inherited
+CLI/tracing harness repairs. Previous CURRENTb4482c259c1e is retained under
+its immutable revision before lease publication. Actual WASI proof needs CI.
