@@ -116,9 +116,9 @@ still need their final squash rebases and six exact-head full gates.
 | 71 ownership-file-write-visibility | 6fdf20ca82a9 | 41a76ee080e5 | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
 | 72 ownership-file-io-errors | 82e51ba8ea16 | 6fdf20ca82a9 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
 | 73 ownership-resource-frames | 3dc1c36adbad | 82e51ba8ea16 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
-| 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Refreshed source unchanged; fresh focused checks follow |
+| 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Test8.17/18.29s passes; lint/format follow |
 | 75 ownership-file-discard | 5179067d6635 | 4155bc9fce74 | Refreshed source unchanged; fresh focused checks follow |
-| 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
+| 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Refreshed source unchanged; fresh focused checks follow |
 | 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
 | 78 ownership-wasm-count-disposal | 9609b73ef5ed | b4482c259c1e | Two native bump tests 9.47 / 19.69 s + File 12.17 / 24.55 s; actual WASI awaits CI |
 | 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |

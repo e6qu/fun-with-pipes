@@ -11380,3 +11380,10 @@ metadata/fusion units3.81/7.73s pass. Row75 refresh
 Compiler/runtime and discard fixtures match original, with inherited CLI/tracing
 repairs intact. Previous CURRENTdb3bcf0da8d6 is retained under its immutable
 revision before explicit-lease publication. Fresh focused checks follow.
+
+Row73 clippy6.13/12.55s and format0.44/0.84s pass after integration and
+metadata/fusion units. Row74 independent File aliases/borrowed-I/O unwind
+test8.17/18.29s passes. Row76 refreshda4acc3986370cb2e2efca1e294cd7674f19ad52
+uses actual base5179067d6635; compiler/runtime and File boundary fixtures match
+original with inherited CLI/tracing repairs preserved. Prior CURRENTb4860bf2c392
+is retained under an immutable revision before lease publication. Checks follow.
