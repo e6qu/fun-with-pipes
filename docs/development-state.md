@@ -118,7 +118,8 @@ pass. Original native probes and compiler allocation gates are unchanged.
 Row43 repair8c74505 is published with prior b42bfee retained. Refresh44–51
 passes in two bounded parts:3.23CPU/35.30elapsed stops at a CAF control insertion
 conflict;5.25/60.14s completes after preserving both exact controls.
-Refresh52–112 from their actual bases and rerun the
+Rows52–59 now refresh successfully8.33CPU/93.48elapsed.
+Refresh60–112 from their actual bases and rerun the
 failed cache/task evidence on repaired52. Prior later source passes do not
 accept this new checkpoint. Keep PR107 frozen; its source lacks the later row43
 conversion feature. Log /private/tmp/fwp-task-runtime-38011548324-failure.clean.log
@@ -133,7 +134,8 @@ holders, respecting the variant-return flag. All five original variant/record/fr
 tests pass20.72CPU/41.72elapsed, preserving zero-parent-box and boxed controls,
 File lifetimes, returned aliases, inactive tags, GCoff/on, O1/O2 and reuse modes.
 Focused lint2.34CPU/4.77elapsed and format0.45/0.86s pass.
-No probe or allocation assertion changes. Publish this row83 repair and include
+No probe or allocation assertion changes. Row83 repair0621574 is published
+with prior8bf7da6 retained; strong audit0.42CPU/3.47elapsed passes. Include
 its exact code in later preparation refreshes, then rerun typed-holder evidence.
 Log /private/tmp/fwp-holders-38011999875-failure.clean.log preserves the failure.
 
@@ -176,7 +178,7 @@ still need their final squash rebases and six exact-head full gates.
 | 56 ownership-library-unload | 0d30f4e3da51 | 067d547b3bfd | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
 | 57 ownership-opencl-lifetime | 9dc98a72cac1 | 0d30f4e3da51 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
-| 59 ownership-tls-listeners | 2184aa897572 | e9bddcdc78b7 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
+| 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | b2b3e2d73da8 | 2184aa897572 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 15ed94b82b00 | b2b3e2d73da8 | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | 004eccb1f092 | 15ed94b82b00 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
@@ -200,7 +202,7 @@ still need their final squash rebases and six exact-head full gates.
 | 80 ownership-file-inline-path | 19ed00f179a3 | d6eabb576bd2 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 1dc8cfe230fc | 5a4d180478bb | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
-| 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; audit/publication follow |
+| 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published, prior head retained; propagation/runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
@@ -297,7 +299,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
-| Rows47–52 cache and task runtime | 329e8db140771d33fa7be2946ab3cf1d1d9978ec | CI38011548324 fails the record-conversion negative control: exit7 instead of expected4; source52bc6b763b3bf3 byte-identical; all20 ownership IR controls and original stack/reuse gates; strong audit0.42/3.44s passes. Prior7dfe/CI37973911726 predates the repairs |
+| Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | Fresh repaired run pending on source52 cb32c2cea9bb; all21 IR controls and unchanged native conversion/stack/reuse gates; strong audit0.43/3.46s passes. Prior329e8db/CI38011548324 failed matched conversion and is retained |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
