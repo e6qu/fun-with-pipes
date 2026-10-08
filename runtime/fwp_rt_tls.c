@@ -50,19 +50,34 @@ static SSL_CTX *fwp_tls_ctx_new(int server) {
 /* protocols in ALPN's wire format; names that are empty or longer than
  * 255 bytes are left out */
 static unsigned char *fwp_alpn_wire(V protos, unsigned *len) {
-    size_t n;
-    V *items = fwp_list_items(protos, &n);
+    *len = 0;
     size_t total = 0;
-    for (size_t i = 0; i < n; i++) total += 1 + STR(items[i])->len;
-    unsigned char *w = (unsigned char *)malloc(total + 1);
-    size_t k = 0;
-    for (size_t i = 0; i < n; i++) {
-        size_t l = STR(items[i])->len;
+    const size_t limit = UINT_MAX;
+    for (V xs = protos; xs; xs = OBJ(xs)->f[1]) {
+        uint64_t l = STR(OBJ(xs)->f[0])->len;
         if (l == 0 || l > 255) continue;
+        size_t entry = (size_t)l + 1;
+        if (entry > limit || total > limit - entry || total > SIZE_MAX - 1 - entry) {
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "TLS protocol list is too large");
+            return 0;
+        }
+        total += entry;
+    }
+    unsigned char *w = (unsigned char *)malloc(total + 1);
+    if (!w) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS protocol list");
+        return 0;
+    }
+    size_t k = 0;
+    for (V xs = protos; xs; xs = OBJ(xs)->f[1]) {
+        fwp_str *s = STR(OBJ(xs)->f[0]);
+        if (s->len == 0 || s->len > 255) continue;
+        size_t l = (size_t)s->len;
         w[k++] = (unsigned char)l;
-        memcpy(w + k, STR(items[i])->d, l);
+        memcpy(w + k, s->d, l);
         k += l;
     }
+    w[k] = 0;
     *len = (unsigned)k;
     return w;
 }
@@ -464,6 +479,10 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
     else fwp_host_of(STR(addr)->d, host, sizeof host);
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
+    if (!alpn) {
+        fwp_p_sock_close(c);
+        return fwp_io_error("tls", fwp_tls_err, err);
+    }
     SSL *ssl = fwp_tls_client_new(SOCK(c)->fd, STR(ca)->d, insecure == FWP_FALSE, host, alpn, alpn_n, STR(cert)->d,
                                   STR(key)->d);
     free(alpn);
@@ -481,6 +500,7 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
 static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fwp_desc *err) {
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
+    if (!alpn) return fwp_io_error("tls", fwp_tls_err, err);
     SSL_CTX *ctx = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, alpn, alpn_n, STR(client_ca)->d);
     if (!ctx) {
         free(alpn);
