@@ -2535,7 +2535,7 @@ static void fwp_close_owned_scoped_file(void *arg) {
 static V fwp_file_value(FILE *f, const char *path) {
     fwp_file_cleanup file = {f, 0};
     fwp_cleanup cleanup;
-    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
+    fwp_cleanup_push(&cleanup, fwp_close_owned_scoped_file, &file);
     size_t len = strlen(path);
     if (len > SIZE_MAX - sizeof(fwp_file) - 1) fwp_trap("file path too long");
     /* No heap-valued children: the path belongs to this leaf allocation. */
