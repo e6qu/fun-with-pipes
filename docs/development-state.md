@@ -184,7 +184,7 @@ still need their final squash rebases and six exact-head full gates.
 | 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
-| 65 ownership-unboxed-worker-locals | 98f5c04f6260 | 04811432dc3d | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
+| 65 ownership-unboxed-worker-locals | 886f8b0083c9 | d364e70df274 | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
 | 66 ownership-tls-peer-subject | bde11299c626 | 98f5c04f6260 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
 | 67 ownership-tls-alpn-roots | ff4e98c6979e | bde11299c626 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 3135b0d66ba3 | ff4e98c6979e | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
