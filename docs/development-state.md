@@ -68,7 +68,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–83 are refreshed and published on their actual predecessors.
+Preparations39–84 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -84,18 +84,15 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task84 initializes variant frame holders on their own
-pattern-binding path (`ownership-resource-frame-binding-kinds`). Preparation83
-published7b7e45b20230790ffaee482c627bf9ca59792bb1 on actual82ecfd9a28c39e;
-both original feature/repair commits, all original source/probes and all11 docs
-are preserved. Three audits and publication1.74CPU/18.02elapsed pass.
-Rebase84 FROM actual83old53440f785f65 ONTO published837b7e45b20230 succeeded
-at native57d27683b3f3, preserving all original source/probes. Ten variant/frame/
-caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s
-and format0.44/0.84s pass. Both let/pattern paths close their File exactly once;
-original zero/one boxes, inactive tags and exact omitted cleanup exit2 remain.
-Copy all11 docs/audit and retain/publish; next85 nominal whole-value match context,
-preserving both original feature and stack-child ownership repair commits.
+Current independent task85 preserves nominal whole-value match context
+(`ownership-match-scrutinee-types`) and stack child ownership. Preparation84
+publishede2a2baa977fadeda1815d733709c02797c547d16 on actual837b7e45b20230;
+original source/probes and all11 docs preserved. Three audits and publication
+1.71CPU/18.28elapsed pass. Rebase85 FROM actual84old073a20c8d7ef ONTO
+published84e2a2baa977fa, preserving both original implementation/repair commits.
+Run original whole-stack binder, variant frames, nominal discard and adjacent
+frame/caller controls, RC units, lint and format; update docs/audit and retain/
+publish. Next86 record binding kinds. Keep omission controls unchanged.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -198,7 +195,7 @@ still need their final squash rebases and six exact-head full gates.
 | 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | All nine storage/inline-path/runtime/construction/scoped/unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass; original source/probes unchanged, including exact missing finalizer-removal/storage exits4/7, tracing-off reuse and unrelated live Files; shared/no-free lifetimes preserved; final actual-squash/full gates required |
 | 82 ownership-file-construction-disposal | ecfd9a28c39e | 6e5063786651 | All nine constructor/storage/library-resource/scoped/unwind tests29.08CPU/63.78elapsed, lint2.70/5.69s and format0.50/0.96s pass; original source/probes unchanged, including hard-exit102 and exact premature growth/omitted disposal exits3/5; unrelated registry entries and rollback preserved; final actual-squash/full gates required |
 | 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Original variant control10.41CPU/22.82elapsed, nine frame/caller tests24.67/49.60s, all23 RC units3.77/7.98s, lint2.43/4.99s, format0.45/0.84s and binary inspection0.22/1.11s pass; both original feature/repair commits and source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 layout/disassembly recorded; final actual-squash/full gates required |
-| 84 ownership-resource-frame-binding-kinds | 57d27683b3f3 | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
+| 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
 | 85 ownership-match-scrutinee-types | 1236f09a1d85 | 073a20c8d7ef | Two tests 12.49/27.27s; lint 6.11/13.31s and format 0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | f5a017db54da | 1236f09a1d85 | Test10.49/22.84s; lint 6.03/12.91s and format 0.41/0.86s pass |
 | 87 ownership-nominal-source-context | 08beb7c2bc23 | f5a017db54da | Raw source/native test 13.09/26.43s; lint 6.14/13.07s and format 0.45/0.86s pass |
