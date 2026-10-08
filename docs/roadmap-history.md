@@ -11451,3 +11451,11 @@ Row84 refresh2f67969e9985f96584601447080c4bb84bf572e8 uses actual base6d3fcd7444
 Compiler/runtime and binding-path fixtures match original, with inherited CLI/GC
 harness repairs intact. Previous CURRENTd2936a008fd2 remains under its immutable
 revision before explicit-lease publication. Fresh focused checks follow.
+
+Row83 clippy6.31/13.11s and format0.44/0.83s pass after the resource variant
+test10.02/22.30s. Row85 refreshc0263af654c4735703276f3f45f4b784cd66c36f
+uses actual base2f67969e9985. Both nominal scrutinee and stack-child root repair
+commits survive unchanged; source/test differences from original are inherited
+CLI/tracing harness repairs only. Prior CURRENT97dca7626158 is retained under
+an immutable revision before lease publication. Fresh focused checks follow.
+PR102 Linux test passes; regular Intel macOS remains running, not acceptance.

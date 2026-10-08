@@ -41,8 +41,8 @@ PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
 Current head 51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
  da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
 focused-accepted1741ab5fa64e exactly. Production CI37975866229
-has bench, regular ARM macOS and both GC stress jobs passing; Linux test
-and regular Intel macOS remain running. roadmap_docs CI37975866346 passes.
+has Linux test, bench, regular ARM macOS and both GC stress jobs passing;
+regular Intel macOS remains running. roadmap_docs CI37975866346 passes.
 Require all six production jobs and
 roadmap_docs at this exact head before explicit squash with
 `Own task result wrappers and preserve typed deadline aliases` and empty body.
@@ -126,9 +126,9 @@ still need their final squash rebases and six exact-head full gates.
 | 80 ownership-file-inline-path | 8454a97667bb | 76374abb1077 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 47abf911f844 | d39b6145cb55 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
-| 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Refreshed source unchanged; fresh focused checks follow |
+| 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Refreshed source unchanged; fresh focused checks follow |
-| 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
+| 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Both nominal typing and stack-child repairs preserved; fresh focused checks follow |
 | 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
 | 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
 | 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
@@ -252,8 +252,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-frame-variants-worktree; the guarded tag-aware
-unboxed resource variant check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-resource-frame-binding-worktree; the guarded resource
+variant binding-path check is running. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
