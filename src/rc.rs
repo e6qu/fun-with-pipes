@@ -35,7 +35,8 @@ type Set = BTreeSet<Local>;
 /// (`prim_consumes`). Strings and bytes participate when a primitive returns
 /// an owned leaf; unknown runtime/FFI boundaries still promote them to sharing.
 /// Compiled dynamic applications own closures and typed captures; task
-/// handles own cached results. Unknown callbacks and other runtime values
+/// handles own cached results, and channels own queued elements. Unknown
+/// callbacks and other runtime values
 /// remain shared. Never count integers, floats, `Bool`, `()` and other enumerations. A type this pass
 /// does not know (`unknown`) is counted.
 pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
@@ -44,7 +45,10 @@ pub fn needs_rc(shapes: &Shapes, t: &MT) -> bool {
         MT::Con(n, _)
             if n == "?"
                 || is_container(n)
-                || matches!(n.as_str(), "std::String" | "std::Bytes" | "std::Task") =>
+                || matches!(
+                    n.as_str(),
+                    "std::String" | "std::Bytes" | "std::Task" | "std::Channel"
+                ) =>
         {
             true
         }

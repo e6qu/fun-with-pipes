@@ -1362,6 +1362,9 @@ impl<'p> Gen<'p> {
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::Task") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_task_drop(v); }}\n");
         }
@@ -5297,6 +5300,53 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::ChannelOperation => {
+                                let ty = if sym == "channel.make" {
+                                    func.ty.params(func.arity as usize).1
+                                } else {
+                                    &func.locals[usize::from(sym == "channel.recv-for")]
+                                };
+                                let MT::Con(name, elements) = ty else {
+                                    return Err("channel boundary lacks its channel type".into());
+                                };
+                                if name != "std::Channel" || elements.len() != 1 {
+                                    return Err("channel boundary lacks its element type".into());
+                                }
+                                let drop = self.value_drop(&elements[0]);
+                                let dup = if crate::rc::needs_rc(&self.prog.shapes, &elements[0]) {
+                                    "fwp_rc_dup"
+                                } else {
+                                    "NULL"
+                                };
+                                match sym.as_str() {
+                                    "channel.make" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_make(l0)",
+                                            &format!("fwp_p_channel_make_owned(l0, {drop}, {dup})"),
+                                        )
+                                    }
+                                    "channel.send" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_send(l0, l1)",
+                                            &format!("fwp_p_channel_send_owned(l0, l1, {dup})"),
+                                        )
+                                    }
+                                    "channel.recv" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_recv(l0)",
+                                            &format!("fwp_p_channel_recv_owned(l0, {dup})"),
+                                        )
+                                    }
+                                    "channel.recv-for" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_recv_for(l0, l1)",
+                                            &format!("fwp_p_channel_recv_for_owned(l0, l1, {dup})"),
+                                        )
+                                    }
+                                    "channel.close" => {}
+                                    _ => unreachable!("unmodeled channel operation: {sym}"),
+                                }
+                            }
                             ResultOwnership::OwnedTaskOption if sym == "task.await" => {
                                 let ty = func.ty.params(func.arity as usize).1;
                                 let MT::Con(_, args) = ty else {
