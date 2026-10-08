@@ -25,10 +25,13 @@ immutable value semantics, effects and evaluation/trap order stable.
   empty body/no trailers. Root fast-forwarded preserving active plan/handoff;
   backup `/private/tmp/fwp-main-docs-a4b6533`. Sole open PR #82: borrowed
   callbacks, exact `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`, CI `37703018710`.
-  ARM macOS/benchmarks passed; Linux/Intel macOS are live. Merge after all four pass.
+  Linux, ARM macOS and benchmarks passed; Intel macOS remains live. Merge after all four pass.
   Then rebase map from OLD `029fac4` onto the new squash; preserve OLD `41ef82d`.
-  Latest preparation is counted channels/queue elements on OLD `bb6f9c4`; next
-  acceptance work is cycles/library/unknown lifetimes and aggregate gaps.
+  Latest published preparation is counted channels/queue elements `ab44b7d` on
+  OLD `bb6f9c4`. C export result ownership is being prepared separately on OLD
+  `ab44b7d`, checkout `/private/tmp/fwp-library-result-worktree`, branch
+  `ownership-library-results`. Remaining acceptance work includes converted
+  library inputs, unload/finalizers, cycles and aggregate gaps.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
   exact head `7ce23dd`, all four gates passed in CI `37684140373`.
 - Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
@@ -2500,3 +2503,69 @@ CPU 0.34 s / elapsed 0.61 s; whitespace clean. Exact bounded commands included
 --test channel_queue_ownership --test task_ownership -- -D warnings`. No resource
 limits were raised/bypassed; no focused failure remains. Shared target contains
 this channel compiler; package clean is required before checkout changes.
+
+Channel ownership preparation published as
+`ab44b7de0812eb1f84d5430a303cd61ddd026219`, OLD base `bb6f9c4`.
+Verified one-line, 72-character subject `Own typed channel queues and transfer
+receive references without sharing` (supplied as one line), empty body/no trailers.
+Checkout clean; final formatting check CPU 0.35 s / elapsed 0.73 s. No second PR
+opened. Sole #82 exact `3fa67f3`, CI `37703018710`: ARM macOS and benchmarks
+passed; Linux and Intel macOS remain live. No local workload remains; shared
+target is this channel compiler. Continue the same CI run, fixing any failure.
+
+Next concrete action: audit actual phase-2 acceptance against docs/ownership.md,
+with source-reachable runtime cycles and native library lifetime/teardown probes.
+Distinguish an explicit tracing fallback from deterministic support; do not mark
+phase 2 or optional tracing-free execution complete from these narrow checks.
+Then repair remaining aggregate reconstruction/metadata paths using typed/source
+evidence. Preserve OLD `ab44b7d` for the next prepared child. Once #82's four
+gates pass, exact-head squash with subject `Add typed borrowed application for
+synchronous callbacks` (one line, 56 characters), empty body; rebase map from
+OLD `029fac4` onto the new squash and open the sole next PR.
+
+
+## Prepared native library export result ownership (2026-10-08)
+
+Branch `ownership-library-results`, checkout `/private/tmp/fwp-library-result-worktree`,
+OLD base `ab44b7de0812eb1f84d5430a303cd61ddd026219`. Exported functions evaluate
+once, protect owned results during C conversion, release copied record/Option
+boxes and caller CAF references, and promote only escaping String results or
+String record fields to the existing library lifetime. No new release interface.
+Raw pointer payloads and scalar bits remain uncounted. NUL conversion traps
+release the result through the internal recovered-trap cleanup probe.
+
+The baseline probe failed with exit 1 (unreleased result). The first repaired
+poison probe exposed a fixture mistake: record poisoning uses tag 0xdead, not
+a zero field count; the assertion was corrected. Final probe passes at O1/O2,
+both poison modes, with four negative controls: omitted release (1), omitted
+escaping String promotion (6), omitted conversion guard (4), duplicate nullable
+pointer evaluation (11). Unoptimized IR interpreter values agree. One thousand
+CAF export calls retain exactly one cache owner. Counters confirm immediate
+box reclamation; this is not a speed or whole-program allocation claim.
+
+Native libraries actually use the collector allocator and its RC metadata, with
+tracing unarmed for unknown host roots; they do not use the WebAssembly bump
+path. The probe requests GC stress/verification and asserts collection stays
+unarmed with zero collections. Executable CAF tests exercise the armed stress
+path separately. No library host-root tracing or complete GC-free support claim.
+
+Serial commands under `env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target
+python3 /private/tmp/fwp-local-guard.py`, after `cargo clean -p fwp`:
+- `cargo test --test library_result_ownership -- --nocapture`: baseline failure
+  CPU 6.87 s / elapsed 14.29 s; final pass CPU 7.28 s / elapsed 17.07 s.
+- `cargo test --test ffi --test caf_ownership -- --nocapture`: eight pass,
+  CPU 6.70 s / elapsed 15.11 s.
+- Additional `FWP_REUSE=0` environment with `cargo test --test ffi
+  shared_library_from_c -- --nocapture`: pass, CPU 0.60 s / elapsed 1.47 s.
+- `cargo fmt`: pass, CPU 0.35 s / elapsed 0.62 s.
+- `cargo clippy --lib --test library_result_ownership -- -D warnings`: final
+  pass, CPU 0.07 s / elapsed 0.25 s (initial CPU 2.34 s / elapsed 4.69 s).
+
+Full sequential architecture/benchmark CI is still required. Sole PR #82 exact
+`3fa67f3`, CI `37703018710`: Linux, ARM macOS and benchmarks passed; Intel
+macOS remains live. Merge only after all four pass, with recorded one-line
+subject/empty body and exact head. Then rebase map from OLD `029fac4`; preserve
+its OLD `41ef82d` for the filter child. Next acceptance action: typed library
+input conversion and its failure/alias lifetimes, then unload/finalizers and
+source-reachable cycles, with remaining aggregate gaps still open. Phases 2–6
+remain incomplete. Shared target now contains this library-result compiler.

@@ -54,8 +54,11 @@ as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed al
 in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
 types, passed all four exact-head gates in CI `37684140373` and was squash-merged
 as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-child ownership,
-is the sole open PR. Its exact-head CI `37696063781` gates merging; separate
-compiler ownership preparation continues meanwhile.
+passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
+[PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
+the sole open PR at exact `3fa67f3`. Linux, ARM macOS and benchmarks passed in
+CI `37703018710`; Intel macOS is still running. Continue focused roadmap work
+and repair any failure while waiting for the final merge gate.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -633,3 +636,15 @@ the queue owner into an owned Option after allocation; blocked/closed sends
 retain none. Alias, cancellation/close, function/task descendants, generation,
 sharing fallback and failure controls pass; full sequential CI remains required.
 Finish cycles/library/unknown lifetimes and aggregate gaps before phase 2 acceptance.
+
+Counted channel queues published as `ab44b7d`, separate from sole PR #82.
+Next: phase-2 acceptance audit with actual cycle/library and aggregate evidence.
+CI gates merging only; continue work and fix any failures.
+
+C export result ownership is prepared on OLD `ab44b7d`: wrappers evaluate once,
+release copied boxes and caller CAF references, and preserve escaping C strings.
+Focused counts, conversion failure cleanup and O1/O2 negative controls pass;
+eight adjacent CAF/FFI tests and the ownership-disabled library smoke pass.
+Native libraries retain allocator metadata with tracing unarmed; this is not
+the WebAssembly bump path. Converted inputs, unload/finalizers and runtime cycles
+remain separate acceptance tasks. Full sequential CI is required before merge.

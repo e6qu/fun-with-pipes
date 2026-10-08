@@ -48,6 +48,28 @@ host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
 the ownership gap. `--memory static` provisions bounded memory, not static
 lifetimes. None of these is a general collector-free execution guarantee.
 
+## Prepared C export result ownership
+
+Native library wrappers evaluate each exported call once, protect its owned
+result through C conversion, and release copied record/nullable-pointer boxes.
+CAF calls give up the caller reference while retaining the cache owner. Raw
+pointer payloads and scalar words never acquire counts from their bit patterns.
+
+C string results, including string fields of `repr(C)` records, escape into
+host storage. After successful conversion only those strings become shared;
+the enclosing counted record can still be released. This preserves the existing
+library lifetime of host pointers without introducing a new release interface.
+A rejected NUL-containing string releases its result through the conversion
+unwind scope; it does not promote unfinished results to host retention.
+
+Focused O1/O2 probes check exact counts, immediate release, stable cache counts,
+pointer-shaped scalars, retained host strings and recovered conversion traps.
+Library collection stays unarmed even with stress requested because host roots
+are unknown. These checks therefore demonstrate count reclamation, not host-root
+tracing. Returned strings, converted input ownership, heap unmapping on unload,
+resource finalization and cycles remain distinct acceptance work. Full sequential
+Linux/macOS CI is required before this prepared change becomes merged support.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
