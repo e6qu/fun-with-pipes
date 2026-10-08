@@ -1572,7 +1572,7 @@ impl<'p> Gen<'p> {
         }
         let result = format!("{}{}    }}\n}}\n", head, body);
         if !free_enabled() && self.resource_type(mt) {
-            result.replace("fwp_rc_free_obj(v);", "fwp_rc_drop(v);")
+            result.replace("fwp_rc_free_obj(v);", "fwp_rc_resource_free_obj(v);")
         } else {
             result
         }
