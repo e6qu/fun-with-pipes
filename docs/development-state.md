@@ -51,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row83 are published with focused checks. The next independent task
-is row84 per-path variant bindings.
+through row84 are published with focused checks. The next independent task
+is row85 whole-match ownership.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -129,8 +129,9 @@ still need their final squash rebases and six exact-head full gates.
 | 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
 | 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
 | 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
+| 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
 
-Rows 18–83 are published preparations with passing focused tests, lint and
+Rows 18–84 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -140,10 +141,12 @@ boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence
 Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
 host bump-C checks supply no actual WASI acceptance; physical bump storage
 remains allocated. Prepared layout/allocation controls establish no speed claim.
-Independent row84 is rebased; four variant/frame tests pass 32.57 / 65.62 s; focused lint passes 3.41 / 10.41 s; format 0.87 / 4.02 s.
-Its previous actual base is
-786e4bbb99f1732727504f415e300c80b146f0e7; new base is f3c9ee4,
-retaining inherited binary-read, constructor and required-WASI repairs.
+Row84 is published clean at d2936a008fd2717cb7444a5dca8df0065cb77827,
+on actual f3c9ee4. Four tests, lint 3.41 / 10.41 s and format 0.87 / 4.02 s
+pass. Mixed let/pattern arms initialize from their own current scrutinee and
+close once at original frame exit. Next row85 actual base is
+ae00e6929e8686d2d794d4cfa5600e31e169dec7; rebase both 3a0cbdb and
+8723724 onto d2936a0, retaining nominal File and whole-stack child ownership.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 

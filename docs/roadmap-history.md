@@ -9332,3 +9332,8 @@ fallback and original lifetimes.
 Fmt check passes 0.87 / 4.02 s; ten root docs copied before amend. Tested
 source unchanged. Handoff archives completed row77–83 paragraphs rather than
 retaining competing old next actions; actual bases and checks remain in its table.
+Final row84 d2936a008fd2717cb7444a5dca8df0065cb77827 is published clean
+with exact lease ae00e6929e8686d2d794d4cfa5600e31e169dec7. Whole commit
+message is one line with empty body. Row85 actual base remains ae00e69 and
+contains two commits (nominal context plus whole-stack binder repair).
+No extra PR opened; PR97 is still the sole current delivery.
