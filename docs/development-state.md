@@ -68,7 +68,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–86 are refreshed and published on their actual predecessors.
+Preparations39–87 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -84,17 +84,15 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task87 verifies raw source nominal-match resource disposal
-(`ownership-nominal-source-context`). Preparation86 publisheda0de231a4c0cb4a89157278a86e3cdb2d315e4dd
-on actual85ebe69e13a935, with all original source/probes and all11 docs preserved.
-Three audits and publication1.65CPU/17.99elapsed pass.
-Rebase87 FROM actual86oldf5a017db54da ONTO published86a0de231a4c0c.
-This preparation adds a source regression without changing compiler/runtime.
-Native5fab3216668d preserves the original source/probe and unchanged compiler/runtime.
-The source control passes13.04CPU/26.20elapsed: 64 discarded nested Files with
-descriptor bound32, raw interpreter versus optimized/unoptimized native at O1/O2
-and GC/reuse/free/poison variants. Lint2.43/4.94s and format0.43/0.83s pass; finish all11 docs/audits and retained publication.
-Next88 channel cycles; explicit cycle breaking is not automatic reclamation.
+Current independent task88 verifies explicit channel cycle draining
+(`ownership-channel-cycle-lifetimes`). Preparation87 published5a4ef15301c8bf7d34d562053ade81838e0c9b4c
+on actual86a0de231a4c0c, preserving original source/probes, unchanged compiler/runtime
+and all11 docs. Three audits and publication2.01CPU/19.32elapsed pass.
+Rebase88 FROM actual87old08beb7c2bc23 ONTO published875a4ef15301c8.
+Run unchanged cycle/queue controls, lint and format, all11 docs/audits and retained
+publication. Close must preserve queued values; explicit draining breaks the
+counted cycle. Automatic unreachable-cycle reclamation remains unproved.
+Next89 repaired HTTP2 body roots; preserve the accepted strict fixture repair.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -200,7 +198,7 @@ still need their final squash rebases and six exact-head full gates.
 | 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
 | 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | All13 original nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed, all23 RC units3.80/7.81s, lint2.45/5.02s and format0.51/0.83s pass; both original feature/stack-child repair commits and source/probes unchanged, including child-retain omission and strict File/box controls; final actual-squash/full gates required |
 | 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
-| 87 ownership-nominal-source-context | 5fab3216668d | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
+| 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
 | 88 ownership-channel-cycle-lifetimes | b2d374878677 | 08beb7c2bc23 | Two cycle/queue tests 13.30/26.87s; lint 5.94/13.04s and format 0.46/0.87s pass |
 | 89 ownership-http2-body-roots | 3b72f38e6814 | b2d374878677 | Four-way fixture8f6846a/38046812141 passes original strict omission and all controls; tested fixture applied without optional export; source published and propagated through112; final refresh/full gates required |
 | 90 fix-http2-body-bounds | 1b4be82fe9b6 | 3b72f38e6814 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
