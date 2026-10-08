@@ -11311,3 +11311,15 @@ preemption, stress, verification and poison variants, including reversed wake or
 Only CLI/tracing harness repairs differ from original source/tests. Old CURRENT
 7d8ab6719e55 remains under its immutable revision before lease publication.
 Fresh timer checks follow.
+
+Row66 guarded clean0.00/0.13s, peer-subject allocation/buffer test7.47/16.47s,
+clippy2.33/4.59s and format0.44/0.84s pass. Row69 refresh
+7047b100dbbe2ebcfa7e22aed865aa5e80594522 uses actual base933deb78f600.
+Compiler/runtime and nested boxing fixtures match the original; only inherited
+CLI/tracing harness repairs differ. Previous CURRENT821e6c1baaef is retained
+under roadmap/revision-069-821e6c1baaef before explicit-lease publication.
+Fresh nested-loop checks follow.
+
+Row67 guarded clean0.00/0.14s, ALPN owning-session root test6.99/14.97s,
+clippy5.72/11.65s and format0.44/0.84s pass. Shared target switched with
+guarded package clean0.00/0.13s to row68; focused timer-order check is running.

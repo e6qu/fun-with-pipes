@@ -108,10 +108,10 @@ still need their final squash rebases and six exact-head full gates.
 | 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
 | 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
 | 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
-| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Fresh checks follow; compiler/runtime unchanged |
-| 67 ownership-tls-alpn-roots | bbde0fa9c254 | ec16c6630686 | Fresh focused checks follow; compiler/runtime unchanged |
+| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
+| 67 ownership-tls-alpn-roots | bbde0fa9c254 | ec16c6630686 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 933deb78f600 | bbde0fa9c254 | Five prior pointer repairs preserved; timer oracle checks follow |
-| 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |
+| 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Refreshed source unchanged; fresh focused checks follow |
 | 70 ownership-file-construction | 0d09a61aaab7 | 821e6c1baaef | 11.09 / 22.39 s |
 | 71 ownership-file-write-visibility | 8a061cb9b8ab | 0d09a61aaab7 | 12.72 / 25.58 s |
 | 72 ownership-file-io-errors | d4611644084a | 8a061cb9b8ab | 18.47 / 37.02 s |
@@ -248,13 +248,12 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-argument-preparation-worktree; no workloads run. Free disk
-recovered after earlier refusals (latest observation113197360KiB available).
-Latest row34 guarded checks pass: clean0.00/0.14s; test9.91/20.00s;
-clippy2.69/5.35s; format0.34/0.61s. Row32/33 checks are recorded above and
-in history; full Linux fold evidence passes. No local full gate was run.
-Stop if limits are crossed; move checks to GitHub without bypassing the guard,
-including for package clean. Earlier refusal/recovery chronology is in history.
+belongs to /private/tmp/fwp-ci-probe-repairs-worktree; the guarded timer-order
+check is running. Latest disk observation114505676KiB available; target137684KiB.
+Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
+Every workload still samples current limits; observations do not authorize
+bypassing the guard. No local full gate was run. Earlier refusal/recovery
+chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
 and entire commit messages (latest0.31CPU/2.49elapsed). It caught a status update
