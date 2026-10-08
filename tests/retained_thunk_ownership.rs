@@ -77,6 +77,7 @@ int main(void){
   if(mode==0){if(result==FWP_NONE||OBJ(result)->f[0]!=5)return 2;fwp_rc_free_obj(fwp_rc_fresh(result));}
   else if(result!=FWP_NONE)return 3;
   if(t->thunk)return 4;
+  fwp_task_drop(PTR(t));
   if(alias){if(*fwp_rc_slot(capture)!=1||STR(capture)->len!=5)return 5;fwp_rc_free_obj(capture);}
   else if(!dead(capture))return 6;
  }
@@ -84,7 +85,7 @@ int main(void){
  V scalar=fwp_rc_fresh(fwp_str_new("scalar",6));V fn=fwp_rc_fresh(fwp_pap(WORD,1,&scalar));
  fwp_task *t=(fwp_task *)(uintptr_t)fSPAWN(fn);fwp_closure_drop(fn);V result=fwp_await(t);
  if(result==FWP_NONE||OBJ(result)->f[0]!=scalar||*fwp_rc_slot(scalar)!=1)return 7;
- fwp_rc_free_obj(fwp_rc_fresh(result));fwp_rc_free_obj(scalar);
+ fwp_rc_free_obj(fwp_rc_fresh(result));fwp_task_drop(PTR(t));fwp_rc_free_obj(scalar);
  // Unknown callback metadata retains the conservative shared fallback.
  fwp_fninfo table[sizeof(fwp_fn_table)/sizeof(fwp_fn_table[0])];
  memcpy(table,fwp_fn_table,sizeof(table));table[PLAIN].owned=0;fwp_fns=table;

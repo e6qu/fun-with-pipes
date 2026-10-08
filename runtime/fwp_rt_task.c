@@ -173,7 +173,8 @@ struct fwp_task {
     int64_t deadline; /* monotonic ns, 0 = none */
     int64_t wake_at;  /* timer while parked, 0 = none */
     V thunk, result;
-    int owns_thunk, share_result;
+    int owns_thunk, counted;
+    void (*result_drop)(V);
     jmp_buf base;
     /* saved runtime state */
     fwp_handler *handlers;
@@ -433,6 +434,22 @@ static void fwp_cancel_tree(fwp_task *t) {
     for (fwp_task *c = t->first_child; c; c = c->next_sibling) fwp_cancel_tree(c);
 }
 
+/* A scheduler reference survives until its stack and GC links are removed. */
+static void fwp_task_drop(V value) {
+    if (!fwp_rc_release_last(value)) return;
+    fwp_task *t = (fwp_task *)(uintptr_t)value;
+    if (!t->done || t->stack) abort();
+    V result = t->result;
+    t->result = 0;
+    t->has_result = 0;
+    if (t->result_drop && result) t->result_drop(result);
+    fwp_mem_free(t->st);
+    t->st = 0;
+    t->counted = 0;
+    /* Task storage is mutable kind 2, not a record/variant header. */
+    fwp_rc_free_arr(value);
+}
+
 /* ----- switching */
 
 /* stacks of finished tasks, kept for reuse */
@@ -456,7 +473,9 @@ static void fwp_free_zombie(void) {
         else fwp_gc_tasks = fwp_zombie->gc_next;
         if (fwp_zombie->gc_next) fwp_zombie->gc_next->gc_prev = fwp_zombie->gc_prev;
         fwp_zombie->gc_prev = fwp_zombie->gc_next = 0;
+        fwp_task *finished = fwp_zombie;
         fwp_zombie = 0;
+        if (finished->counted) fwp_task_drop(PTR(finished));
     }
 }
 
@@ -658,6 +677,7 @@ static void fwp_unlink_child(fwp_task *t) {
     else p->first_child = t->next_sibling;
     if (t->next_sibling) t->next_sibling->prev_sibling = t->prev_sibling;
     if (!p->first_child) fwp_wake_all(&p->children_done);
+    t->parent = t->next_sibling = t->prev_sibling = 0;
 }
 
 /* Wait for every child of the current task; its deadline (or
@@ -692,9 +712,10 @@ static void fwp_task_main(void) {
                 t->thunk = 0;
                 t->owns_thunk = 0;
                 V result = fwp_apply_owned(thunk, 1, &unit);
-                /* Results still belong to the shared task graph. Scalars
-                 * never pass through a generic pointer/count operation. */
-                t->result = t->share_result ? fwp_rc_shared(result) : result;
+                /* A counted handle owns the result; unknown shared boundaries
+                 * retain tracing. Scalars never pass through generic sharing. */
+                uint8_t *count = fwp_rc_slot(PTR(t));
+                t->result = t->result_drop && (!count || !*count) ? fwp_rc_shared(result) : result;
             } else {
                 t->result = fwp_apply1(t->thunk, FWP_UNIT);
             }
@@ -868,7 +889,7 @@ static V fwp_p_task_spawn(V thunk) { return PTR(fwp_spawn(thunk, 0)); }
 
 /* Borrowed at the compiler boundary, retained until the task takes it.
  * Protect only the extra reference if stack/scope preparation fails. */
-static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, int share_result) {
+static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, void (*drop)(V)) {
     if (!fwp_fns[CLO(thunk)->fn].owned) {
         fwp_rc_share(thunk);
         return fwp_spawn(thunk, deadline);
@@ -879,13 +900,17 @@ static fwp_task *fwp_spawn_retained(V thunk, int64_t deadline, int share_result)
     fwp_value_protect(&owner, &cleanup);
     fwp_task *t = fwp_spawn(thunk, deadline);
     t->owns_thunk = 1;
-    t->share_result = share_result;
+    t->result_drop = drop;
+    t->counted = 1;
+    fwp_rc_fresh(PTR(t));
+    fwp_rc_dup(PTR(t)); /* caller and scheduler */
+    if (fwp_cur->scope) fwp_rc_dup(PTR(t)); /* scope task array */
     fwp_value_finish(&owner, &cleanup);
     return t;
 }
 
-static V fwp_p_task_spawn_retained(V thunk, int share_result) {
-    return PTR(fwp_spawn_retained(thunk, 0, share_result));
+static V fwp_p_task_spawn_retained(V thunk, void (*drop)(V)) {
+    return PTR(fwp_spawn_retained(thunk, 0, drop));
 }
 
 static V fwp_p_task_await(V t) {
@@ -893,14 +918,38 @@ static V fwp_p_task_await(V t) {
     return fwp_await((fwp_task *)(uintptr_t)t);
 }
 
+static void fwp_task_option_outer_drop(V value) {
+    if (fwp_rc_release_last(value)) fwp_rc_free_obj(value);
+}
+static V fwp_await_owned(fwp_task *t, void (*dup)(V)) {
+    V result = fwp_rc_fresh(fwp_await(t));
+    if (!result) return result;
+    fwp_value_owner owner = {result, fwp_task_option_outer_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    if (dup) dup(OBJ(result)->f[0]);
+    return fwp_value_finish(&owner, &cleanup);
+}
+static V fwp_p_task_await_owned(V t, void (*dup)(V)) {
+    fwp_tasks_init();
+    return fwp_await_owned((fwp_task *)(uintptr_t)t, dup);
+}
+
 static V fwp_p_task_within(V d, V thunk) {
     int64_t at = fwp_after(d);
     return fwp_await(fwp_spawn(thunk, at));
 }
 
-static V fwp_p_task_within_retained(V d, V thunk, int share_result) {
+static V fwp_p_task_within_retained(V d, V thunk, void (*drop)(V), void (*dup)(V)) {
     int64_t at = fwp_after(d);
-    return fwp_await(fwp_spawn_retained(thunk, at, share_result));
+    fwp_task *t = fwp_spawn_retained(thunk, at, drop);
+    fwp_value_owner owner = {PTR(t), fwp_task_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_await_owned(t, dup);
+    fwp_value_finish(&owner, &cleanup);
+    fwp_task_drop(PTR(t));
+    return result;
 }
 
 static V fwp_p_task_cancel(V t) {
@@ -947,6 +996,7 @@ static void fwp_scope_release(void *arg) {
     fwp_scope_owner *owner = arg;
     owner->task->scope = owner->scope->prev;
     fwp_handlers = owner->handlers;
+    for (size_t i = 0; i < owner->scope->n; i++) fwp_task_drop(PTR(owner->scope->tasks[i]));
     fwp_mem_free(owner->scope->tasks);
     owner->scope->tasks = 0;
 }

@@ -20,6 +20,10 @@ pub enum ResultOwnership {
     FreshContainer,
     /// A synchronous callback returns a typed owned value.
     OwnedCallback,
+    /// Runtime task storage owns its cached typed result.
+    OwnedTask,
+    /// Owned Option storage and a typed task-result reference.
+    OwnedTaskOption,
     /// Typed array boundary, including scalar/optional/list results.
     ArrayOperation {
         consumed: Option<usize>,
@@ -129,7 +133,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
-        "task.spawn" => (&[B], R, Some(Callback::Retained(0)), &[0]),
+        "task.spawn" => (
+            &[B],
+            ResultOwnership::OwnedTask,
+            Some(Callback::Retained(0)),
+            &[0],
+        ),
         "task.scope" => (
             &[B],
             ResultOwnership::OwnedCallback,
@@ -138,11 +147,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         ),
         "task.within" => (
             &[B, B],
-            ResultOwnership::FreshOuter,
+            ResultOwnership::OwnedTaskOption,
             Some(Callback::Retained(1)),
             &[1],
         ),
-        "task.await" | "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
+        "task.await" => (&[B], ResultOwnership::OwnedTaskOption, None, &[0]),
+        "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
         "channel.recv-for" => (&[B, S], ResultOwnership::FreshOuter, None, &[1]),
         "task.deadline" => (
             &[B, B],
@@ -151,7 +161,8 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[1],
         ),
         "task.sleep" | "task.yield" | "task.cancelled" | "channel.make" => (&[B], R, None, &[]),
-        "task.cancel" | "channel.close" => (&[S], R, None, &[]),
+        "task.cancel" => (&[B], R, None, &[]),
+        "channel.close" => (&[S], R, None, &[]),
         "channel.send" => (&[S, S], R, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
@@ -451,6 +462,10 @@ mod tests {
         let spawn = primitive("task.spawn").unwrap();
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
+        assert_eq!(spawn.result, ResultOwnership::OwnedTask);
+        let await_contract = primitive("task.await").unwrap();
+        assert_eq!(await_contract.argument(0), Argument::Borrow);
+        assert_eq!(await_contract.result, ResultOwnership::OwnedTaskOption);
         assert!(!spawn.borrows_callback()); // asynchronous callbacks still escape
         let scope = primitive("task.scope").unwrap();
         assert!(scope.borrows_callback());
