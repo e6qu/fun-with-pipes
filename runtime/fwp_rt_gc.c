@@ -1306,8 +1306,9 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
  * Split overapplication at actual function boundaries: scalar argument bits
  * must never be interpreted as counted pointers. Returned function values
  * are already owned and are consumed by the next application. */
-static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_prefix) {
-    if (owned_prefix > n) fwp_trap("internal: invalid owned callback prefix");
+static V fwp_apply_borrowed_span(V f, uint32_t n, V *args, uint32_t owned_start, uint32_t owned_len) {
+    if (owned_start > n || owned_len > n - owned_start)
+        fwp_trap("internal: invalid owned callback span");
     fwp_rc_dup(f);
     for (;;) {
         fwp_clo *c = CLO(f);
@@ -1320,17 +1321,24 @@ static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_pref
         }
         uint32_t need = fi->arity - c->n;
         uint32_t chunk = n < need ? n : need;
-        uint32_t transferred = owned_prefix < chunk ? owned_prefix : chunk;
-        V *borrowed = transferred ? args + transferred : args;
-        fi->owned->arguments(borrowed, c->n + transferred, chunk - transferred);
+        uint32_t before = owned_start < chunk ? owned_start : chunk;
+        uint32_t transferred = owned_len < chunk - before ? owned_len : chunk - before;
+        uint32_t after = chunk - before - transferred;
+        if (before) fi->owned->arguments(args, c->n, before);
+        if (after) fi->owned->arguments(args + before + transferred, c->n + before + transferred, after);
         V result = fwp_apply_owned(f, chunk, args);
         FWP_KEEP_ALIVE(args);
         if (chunk == n) return result;
         f = result;
         args += chunk;
         n -= chunk;
-        owned_prefix -= transferred;
+        owned_start = owned_start > chunk ? owned_start - chunk : 0;
+        owned_len -= transferred;
     }
+}
+
+static V fwp_apply_borrowed_prefix(V f, uint32_t n, V *args, uint32_t owned_prefix) {
+    return fwp_apply_borrowed_span(f, n, args, 0, owned_prefix);
 }
 
 static V fwp_apply_borrowed(V f, uint32_t n, V *args) {

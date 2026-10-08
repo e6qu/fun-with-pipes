@@ -425,6 +425,7 @@ struct Gen<'p> {
     callbacks: Vec<FuncId>,
     owned_callbacks: Vec<FuncId>,
     owned_fold_callbacks: Vec<FuncId>,
+    owned_right_fold_callbacks: Vec<FuncId>,
 }
 
 /// `e` without the reference count changes of local `x`, if it does
@@ -1717,6 +1718,17 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
             .collect::<String>();
         return format!("{} {{\n    size_t n, m;\n    V *a = fwp_map_items(xs, &n);\n    V *b = fwp_map_items(ys, &m);\n    size_t len = n < m ? n : m;\n    for (size_t i = 0; i < len; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n    }}\n    V result = fwp_map_finish(a, len);\n    FWP_KEEP_ALIVE(b);\n    fwp_mem_free(b);\n{fences}    FWP_KEEP_ALIVE(xs);\n    FWP_KEEP_ALIVE(ys);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 2);
     }
+    if reuse && sym == "fold-right" {
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(["a[i - 1]".to_string(), "z".to_string()])
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = n; i > 0; i--) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        z = fwp_owned_entry{g}(args);\n    }}\n    FWP_KEEP_ALIVE(a);\n    fwp_mem_free(a);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return z;\n}}\n", hof_sig(i, sym, *k), k + 1);
+    }
     let body = match sym.as_str() {
         "map" => format!(
             "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++) a[i] = {};\n    return fwp_list_from(a, n);",
@@ -2823,7 +2835,12 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         let sym = match &self.g.prog.funcs[id].body {
-            Body::Prim(s) if matches!(s.as_str(), "map" | "filter" | "fold" | "zip-with") => {
+            Body::Prim(s)
+                if matches!(
+                    s.as_str(),
+                    "map" | "filter" | "fold" | "fold-right" | "zip-with"
+                ) =>
+            {
                 s.clone()
             }
             _ => return None,
@@ -2836,7 +2853,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         let (g, n) = self.callback_origin(args.first()?)?;
         if self.g.prog.funcs[g].arity as usize
-            != n + if matches!(sym.as_str(), "fold" | "zip-with") {
+            != n + if matches!(sym.as_str(), "fold" | "fold-right" | "zip-with") {
                 2
             } else {
                 1
@@ -2846,6 +2863,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
         self.g.used_closures[g] = true;
         if n == 0 {
+            if sym == "fold-right" {
+                if !self.g.owned_right_fold_callbacks.contains(&g) {
+                    self.g.owned_right_fold_callbacks.push(g);
+                }
+                let z = self.expr(&args[1]);
+                let xs = self.expr(&args[2]);
+                return Some(format!(
+                    "fwp_k_fold_right_owned(fwp_owned_right_fold_k{g}, {z}, {xs})"
+                ));
+            }
             if sym == "fold" {
                 if !self.g.owned_fold_callbacks.contains(&g) {
                     self.g.owned_fold_callbacks.push(g);
@@ -5024,6 +5051,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         callbacks: Vec::new(),
         owned_callbacks: Vec::new(),
         owned_fold_callbacks: Vec::new(),
+        owned_right_fold_callbacks: Vec::new(),
     };
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
@@ -5523,6 +5551,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for &id in &g.owned_fold_callbacks {
         let _ = writeln!(out, "static V fwp_owned_fold_k{id}(V z, V x) {{ V a[] = {{z, x}}; fwp_args{id}(a + 1, 1, 1); return fwp_owned_entry{id}(a); }}");
+    }
+    for &id in &g.owned_right_fold_callbacks {
+        let _ = writeln!(out, "static V fwp_owned_right_fold_k{id}(V x, V z) {{ V a[] = {{x, z}}; fwp_args{id}(a, 0, 1); return fwp_owned_entry{id}(a); }}");
     }
     // the functions the runtime calls back: their results are shared
     for &cb in &g.callbacks {

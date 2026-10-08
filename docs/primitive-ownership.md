@@ -284,3 +284,25 @@ no-tracing differential changes only result sharing: identical output and zero
 collections, counts free 2.2 MiB versus 3.6 MiB with owned results (Apple Silicon,
 Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmark gates remain required;
 other runtime callbacks and exceptional cleanup remain in phase 2.
+
+## Owned spans and right-fold transfer
+
+Borrowed application can transfer a contiguous span of supplied arguments,
+duplicating only typed slices before/after it. Span positions and lengths adjust
+at each actual function boundary during overapplication. Prefix transfer remains
+a wrapper; ordinary borrowing has an empty span. Zero-argument calls avoid null
+pointer arithmetic. `fold-right` borrows callback/list, consumes the accumulator,
+and transfers callback argument 1 while borrowing argument 0. Empty input returns
+the original owned accumulator. Direct/captured right-fold loops keep specialization.
+The input scratch buffer remains a root and is explicitly released on completion.
+
+`tests/right_fold_ownership.rs` covers input/capture/accumulator aliases, returned
+functions, empty input and dynamic/captured callbacks at O1/O2, stack on/off,
+GC stress/verification and both poison modes. Interpreter agreement verifies
+right-to-left callback behavior. The runtime probe transfers an owned second
+argument across a scalar-to-function overapplication boundary. A selected
+no-tracing differential restores only generic/specialized result sharing:
+identical output, zero collections, 1.3 MiB freed by counts versus 1.8 MiB with
+transfers (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision). Full CI/benchmarks
+remain required; retained callbacks, exceptions and remaining primitive boundaries
+still rely on conservative runtime ownership.
