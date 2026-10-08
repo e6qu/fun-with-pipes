@@ -9170,3 +9170,29 @@ lifetimes and returned/error aliases remain valid. Same-target lint runs.
 Same-target lint passes 2.58 / 5.09 s CPU / elapsed.
 Fmt check passes 0.43 / 0.83 s. Ten root docs copied before amend; tested
 feature source unchanged. Preparation still needs its own sequential full CI.
+Final row79 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040 is published clean
+with exact lease 658e5b73ae1c05fe086adfd99678db5c780bf7d4. Whole commit
+message is one line with empty body. Row80 actual base remains 658e5b7.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Inline File path layout refresh, 2026-10-09
+
+Row80 rebases from actual 658e5b73ae1c05fe086adfd99678db5c780bf7d4
+onto 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040. Ten root docs resolve
+conflicts, preserving concise inline-path design and all prior history. Layout
+code/tests match 2d903d6617d99cec52600c8af43e4d08b5de6716 with inherited
+main keep-alives, binary-read dispatch/implementation and corrected constructor
+omission control (_Exit(3) before stale finalizer). No repaired code reverted.
+Guarded cargo test --test file_inline_path --test file_construction_ownership
+--test file_read_kinds runs; single aligned leaf path allocation, checked size
+and raw interpreter display/I/O agreement remain required.
+Guarded clean before checkout switch passes 0.04 / 0.24 s.
+Four focused tests pass 12.66 / 25.48 s CPU / elapsed: File paths use one
+allocation versus two, 16-byte header versus 24 on this 64-bit host; path
+size/terminator, open/closed display, raw interpreter I/O and binary/text
+read distinction pass. O1/O2 GC off/on stress/verify and poison controls pass.
+Constructor injected failures close exactly once and clear finalized handles;
+corrected stale-finalizer omission control remains. Same-target lint runs.
+Same-target lint passes 2.51 / 5.00 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged; no general speed claim or merged support before full CI.

@@ -415,5 +415,10 @@ typed fields, avoiding a parent heap box while retaining children for the
 original frame lifetime. Other bindings retain the boxed parent.
 FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
 must unwind safely. This preparation supplies no general speed claim.
+Prepared File layout stores FILE*, a uint64 owner count and a NUL-terminated
+inline path in one aligned leaf allocation. The checked path length includes
+header and terminator. On 64-bit hosts the header is 16 bytes rather than
+24 bytes; constructor allocation controls and display/I/O agreement are
+required. This reduces layout/allocation overhead without a timing claim.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
