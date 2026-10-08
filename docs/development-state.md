@@ -171,7 +171,7 @@ still need their final squash rebases and six exact-head full gates.
 | 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | cb32c2cea9bb | bb1e6b94fcfd | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
 | 53 ownership-channel-queues | 69bc96667a52 | cb32c2cea9bb | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
-| 54 ownership-library-results | ff3bfedf26cd | 310031a5596b | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
+| 54 ownership-library-results | f53cccc88d45 | 69bc96667a52 | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
 | 55 ownership-library-inputs | b0a593982767 | ff3bfedf26cd | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
 | 56 ownership-library-unload | 400d11c0b317 | b0a593982767 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
 | 57 ownership-opencl-lifetime | fde35253a744 | 400d11c0b317 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
