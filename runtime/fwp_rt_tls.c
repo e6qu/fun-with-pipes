@@ -193,10 +193,12 @@ static char *fwp_tls_peer_subject(SSL *ssl) {
         X509_NAME_print_ex(bio, name, 0, XN_FLAG_RFC2253);
         char *p = 0;
         long n = BIO_get_mem_data(bio, &p);
-        if (n >= 0 && p) {
+        if (n >= 0 && p && (uintmax_t)n < SIZE_MAX) {
             out = (char *)malloc((size_t)n + 1);
-            memcpy(out, p, (size_t)n);
-            out[n] = 0;
+            if (out) {
+                memcpy(out, p, (size_t)n);
+                out[n] = 0;
+            }
         }
     }
     if (bio) BIO_free(bio);
@@ -539,11 +541,16 @@ static V fwp_p_tls_alpn(V c) {
 
 static V fwp_p_tls_secure(V c) { return SOCK(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
 
+static void fwp_tls_subject_free(void *p) { free(p); }
+
 static V fwp_p_tls_peer_subject(V c) {
     if (!SOCK(c)->tls || SOCK(c)->kind != 1) return FWP_NONE;
     char *s = fwp_tls_peer_subject((SSL *)SOCK(c)->tls);
     if (!s) return FWP_NONE;
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_subject_free, s);
     V v = fwp_cstr(s);
-    free(s);
+    fwp_cleanup_pop(&cleanup);
+    fwp_tls_subject_free(s);
     return fwp_some(v);
 }
