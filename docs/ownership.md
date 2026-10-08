@@ -276,7 +276,11 @@ policy justify it.
 The latest worker-local repair keeps compatible complete calls and typed aliases
 unboxed while partial/dynamic captures remain boxed. Exact child/alias/trap checks
 pass, and the unchanged full wide-record allocation acceptance now passes on
-Linux and both macOS architectures in separate evidence. Prepared TLS resource
+Linux and both macOS architectures in separate evidence. File constructor cleanup
+also has fault/omission checks for stream ownership through allocation and library
+finalizer registration. Source File values remain affine: no Dup or resource
+capture is added. Implicit resource discard and arbitrary resource lifetime
+coverage still require interpreter/native evidence. Prepared TLS resource
 teardown, connection cancellation and peer-subject temporary cleanup have actual
 OpenSSL/omission checks; library probes generally run with collection unarmed.
 They do not prove host-root tracing or deterministic discard of every resource.

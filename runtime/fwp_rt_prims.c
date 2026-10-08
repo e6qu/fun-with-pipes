@@ -2444,15 +2444,35 @@ static void fwp_file_final(void *p) {
 }
 #endif
 
+static V fwp_p_file_close(V h) {
+    fwp_file *f = (fwp_file *)(uintptr_t)h;
+    if (f->f) { fclose(f->f); f->f = 0; }
+    return FWP_UNIT;
+}
+
+typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
+static void fwp_close_scoped_file(void *arg) {
+    fwp_file_cleanup *file = arg;
+    if (file->handle) fwp_p_file_close(file->handle);
+    else fclose(file->stream); /* allocation failed before a handle existed */
+}
+
 static V fwp_file_value(FILE *f, const char *path) {
+    fwp_file_cleanup file = {f, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
     fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
     h->f = f;
+    h->path = path;
+    file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
 #endif
     char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
     strcpy(p, path);
     h->path = p;
+    FWP_KEEP_ALIVE(path);
+    fwp_cleanup_pop(&cleanup);
     return PTR(h);
 }
 
@@ -2460,12 +2480,6 @@ static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, create ? "w+b" : "rb");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
     return fwp_file_value(f, STR(path)->d);
-}
-
-static V fwp_p_file_close(V h) {
-    fwp_file *f = (fwp_file *)(uintptr_t)h;
-    if (f->f) { fclose(f->f); f->f = 0; }
-    return FWP_UNIT;
 }
 
 static V fwp_p_file_read_all(V h, const fwp_desc *err) {
@@ -2487,22 +2501,14 @@ static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
     return h;
 }
 
-typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
-static void fwp_close_scoped_file(void *arg) {
-    fwp_file_cleanup *file = arg;
-    if (file->handle) fwp_p_file_close(file->handle);
-    else fclose(file->stream); /* allocation failed before a handle existed */
-}
-
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, "r+b");
     if (!f) f = fopen(STR(path)->d, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
-    fwp_file_cleanup file = {f, 0};
+    V h = fwp_file_value(f, STR(path)->d);
+    fwp_file_cleanup file = {f, h};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
-    V h = fwp_file_value(f, STR(path)->d);
-    file.handle = h;
     fwp_handler hd;
     hd.prev = fwp_handlers;
     hd.state_depth = fwp_state_len;

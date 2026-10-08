@@ -85,7 +85,8 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
 
-| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | pending | pending | `e503e10a9780` |
+| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
+| 70 | file-construction | `ownership-file-construction` | pending | pending | `b00215dc10f5` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

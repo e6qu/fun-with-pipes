@@ -306,15 +306,24 @@ fn scoped_file_handlers_match_interpreter() {
 main = [
     "{}" | attempt (flip file.with file.read-all) | echo,
     "{}" | attempt (flip file.with file.read-all) | echo,
+    "{}" | file.create | file.write "created" | file.close,
+    "{}" | file.open | file.read-all | second file.close | .0 | echo,
 ] | ignore
 "#,
             data.display(),
-            missing.display()
+            missing.display(),
+            dir.0.join("direct.txt").display(),
+            dir.0.join("direct.txt").display()
         ),
     )
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
     assert!(reference
         .stdout
         .starts_with(b"Ok \"scoped file contents\"\nErr "));

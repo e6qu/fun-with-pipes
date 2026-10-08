@@ -171,9 +171,9 @@ unarmed and no host-root tracing claim follows. Warning check passes CPU 2.40 s 
 no body/trailers; full sequential CI remains required.
 
 Nested-loop preparation is in progress on `ownership-nested-loop-boxing`,
-checkout `/private/tmp/fwp-nested-loop-boxing-worktree`, now based on published
-CI repair `e503e10a97807a91f0ce1794f5b8b3e7cb955114`. Preserved dirty work
-through stash/rebase/pop; only src/cgen.rs, src/rc.rs and its new test are modified.
+checkout `/private/tmp/fwp-nested-loop-boxing-worktree`, published clean as `b00215dc10f561747f2adbfb04e404e81581f598`,
+parent OLD CI repair `e503e10a97807a91f0ce1794f5b8b3e7cb955114`. Preserved dirty
+work through stash/rebase/pop before completion.
 Typed prepared aliases now let rebuilt inner records stay flattened (st[5]
 instead of st[3]); Again stops boxing the inner tuple. A real source/C fixture
 then exposes a leaked original/partial owner when that inner value is boxed on
@@ -190,8 +190,9 @@ tests passes CPU 2.35 s / 4.77 s; format CPU 0.34 s / 0.62 s. The first adjacent
 run crashed because its old cancellation probe treated the now-flattened String
 fields as a boxed pair; the updated typed-field probe passes with unchanged
 release/alias/scalar assertions. An initial mistyped target ran no checks and
-was corrected. Prepare/publish this as queue 69, then audit resource discard
-and retained cycles while sequential full CI continues.
+was corrected. Queue 69 is published with a 65-character single-line subject and empty body;
+sequential full CI still required. Audit resource construction/discard and retained
+cycles next while full CI continues.
 Small emitted-code checks only; no full allocation workload ran locally.
 
 CI repair is prepared separately in `/private/tmp/fwp-ci-probe-repairs-worktree`,
@@ -212,10 +213,32 @@ small raw oracle prints the unchanged expected order. Ten focused checks pass
 under the persistent guard, CPU 27.31 s / elapsed 54.75 s; clippy lib/six tests
 passes CPU 2.38 s / 4.92 s; format CPU 0.43 s / 0.87 s.
 Linux early runner confirmation now PASS for all ten tests under BOTH GCC and
-Clang in CI `37730777345`; all six full evidence gates remain required.
+Clang in CI `37730777345`; Intel delayed-timer regression also PASS; all six full evidence gates remain required.
 
-Priority now: validate completed evidence Linux/Intel repairs while sole PR #85 runs,
-then finish this aggregate repair. General File/socket resource discard, retained
+File construction is prepared on `ownership-file-construction`, checkout
+`/private/tmp/fwp-file-construction-worktree`, parent OLD `b00215d` (not published
+at this snapshot). The original direct open/create boundary loses its fopen stream
+when handle/path construction traps: baseline probe exit 2 (CPU 6.78 s / 13.95 s).
+The constructor now owns the raw stream before allocating, transfers cleanup to
+the initialized handle, roots the borrowed path, then relinquishes the scope only
+on successful construction. file.with starts its callback scope after construction,
+preventing duplicate stream ownership on a construction trap. Handle/path/finalizer
+registration/callback fault probes verify exactly one close, EBADF, cleared failed
+handles and safe loaded-region teardown. Removing the constructor scope or managed
+handle transfer restores failures (exit 2/3). Armed fixture stress/verification and
+both poison modes pass O1/O2. Five constructor/unwind/library tests pass CPU 4.48 s /
+10.58 s; initial expanded source oracle incorrectly duplicated affine File via tap,
+was corrected to second file.close, then matches explicit-no-opt interpreter.
+This preserves the language's resource Dup/capture restrictions. Native allocator
+OOM still exits the process (102); injected recoverable trap checks establish
+cleanup behavior, not a new recoverable OOM interface. Production library tracing
+stays unarmed. Format passes CPU 0.37 s / 0.75 s; clippy lib/three tests passes CPU 2.37 s /
+4.77 s.
+
+Priority now: finish/publish this constructor repair as queue 70 while sole PR #85
+and full evidence CI run, then reproduce affine File discard with bounded file
+descriptor pressure and compare raw interpreter/native before choosing lifetime
+changes. General File/socket resource discard, retained
 callback teardown and cycle lifetime policy follow. Implicit effectful resource release
 must preserve observable lifetime/evaluation order; it is distinct from harmless
 memory reclamation and needs a language/interpreter contract before widening it.
@@ -227,7 +250,7 @@ interface or backend, or claim speed without equivalent workload evidence.
 
 Root main has ONLY our pending live docs/history/queue/guard changes; preserve
 those on fast-forward. Prepared published production checkouts are clean. Current
-shared compiler target belongs to `/private/tmp/fwp-nested-loop-boxing-worktree`; use
+shared compiler target belongs to `/private/tmp/fwp-file-construction-worktree`; use
 guarded `cargo clean -p fwp` before switching compiler checkouts. Never run local
 workloads concurrently.
 
