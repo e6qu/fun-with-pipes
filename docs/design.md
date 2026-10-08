@@ -433,5 +433,8 @@ Prepared whole-pattern variant bindings initialize fresh typed holders from
 the current scrutinee on each binding path. A local used by a let in another
 arm must not supply that payload. Partially failed patterns preserve original
 frame lifetime rather than releasing their File bindings early.
+Prepared record pattern holders likewise initialize typed fields from their
+current scrutinee before anchoring the original frame owner. A field mapping
+created by a let on another arm must not supply these borrowed fields.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

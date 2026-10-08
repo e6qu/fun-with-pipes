@@ -98,7 +98,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `06c93eff77af` | `17869223a502` | `750a5cffd46b` |
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `f3c9ee4ec354` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `d2936a008fd2` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `872372452a10` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `97dca7626158` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f85cc4e09db4` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `8abfd46b3476` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `291f8f75f196` | `dc2ad1febc5d` | `8abfd46b3476` |

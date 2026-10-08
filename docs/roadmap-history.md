@@ -9365,3 +9365,28 @@ helper passes 1.19 / 6.75 s CPU / elapsed. This restores focused evidence
 for the actual earlier HTTP failure; each production PR still needs all six gates.
 Fmt check passes 0.43 / 0.83 s; ten current root docs copied before amend.
 Tested code unchanged; both one-line preparation commits remain in ancestry.
+Final row85 97dca7626158d867392c30bc6d6d21438eec7639 is published clean
+with exact lease 872372452a1071db124f8e4cc8ae16027cc8f337. First replay
+46b163cc40652ee7f565c3423e039d043a16f518 remains. Both whole messages
+are one line with empty bodies. Row86 actual base remains OLD3a0cbdb, not
+8723724 or rewritten97dca76; inherit the stack repair without replaying it.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Per-path record frame binding refresh, 2026-10-09
+
+Row86 rebases from actual 3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778
+onto 97dca7626158d867392c30bc6d6d21438eec7639, inheriting the stack repair
+without replaying it. Ten root docs resolve conflicts. Record test matches
+f85cc4e09db49f1ac53f1f06da40b49f189b5b56; Cgen additionally includes the
+nine-line stack-child binder repair and corrected byte-read dispatch.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test --test resource_frame_fields
+--test resource_frame_variants --test stack_match_ownership runs.
+Three focused tests pass 16.25 / 34.51 s CPU / elapsed. Mixed let/whole
+record paths close exactly once; current-scrutinee field holders preserve
+original frame lifetime, one-vs-zero boxes and partial-retain cleanup. Variant
+active tags and whole-stack binder child aliases remain valid. Raw source
+interpreter agreement and O1/O2 GC off/on stress/verify plus poison controls
+pass. Same-target lint runs.
+Same-target lint passes 2.56 / 5.14 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
+code unchanged, including inherited stack-child repair and byte-read dispatch.

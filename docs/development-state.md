@@ -51,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row84 are published with focused checks. The next independent task
-is row85 whole-match ownership.
+through row85 are published with focused checks. The next independent task
+is row86 per-path record bindings.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -130,8 +130,9 @@ still need their final squash rebases and six exact-head full gates.
 | 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
 | 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
 | 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
+| 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
 
-Rows 18–84 are published preparations with passing focused tests, lint and
+Rows 18–85 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -141,15 +142,14 @@ boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence
 Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
 host bump-C checks supply no actual WASI acceptance; physical bump storage
 remains allocated. Prepared layout/allocation controls establish no speed claim.
-Row84 is published clean at d2936a008fd2717cb7444a5dca8df0065cb77827,
-on actual f3c9ee4. Four tests, lint 3.41 / 10.41 s and format 0.87 / 4.02 s
-pass. Mixed let/pattern arms initialize from their own current scrutinee and
-close once at original frame exit. Independent row85 is rebased; four stack/context/variant tests pass 15.67 / 33.72 s; lint 2.51 / 5.04 s
-passes; format 0.43 / 0.83 s. Rebuilt O2 HTTP golden passes all four modes
-(build 7.37 / 14.81 s, execution 1.19 / 6.75 s).
-Its previous actual base is
-ae00e6929e8686d2d794d4cfa5600e31e169dec7; both 3a0cbdb and 8723724
-are replayed onto d2936a0, retaining nominal File and whole-stack child ownership.
+Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
+on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
+Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
+HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
+Independent row86 is rebased; three record/variant/stack tests pass 16.25 / 34.51 s; focused lint passes 2.56 / 5.14 s; format 0.45 / 0.83 s.
+Its previous actual base remains 3a0cbdb33b796b8dd88afe86b4bb3068fdc7e778,
+not 8723724 or the rewritten head; new base is 97dca76 without replaying
+the whole-stack fix. Binary reads and required Linux WASI env remain.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -171,11 +171,9 @@ exact HTTP golden in four GC-off/on poison modes pass. The repaired full gates p
 its own exact-head gates. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
 retain failed logs, commands, controls and measurements.
 
-Production row 85 repair is published clean as
-872372452a1071db124f8e4cc8ae16027cc8f337, following immutable OLD3a0cbdb.
-Its five focused tests pass 16.71 s /36.11 s, lint 2.45 s /4.96 s, format
-0.45 s /0.86 s. Row 86 actual base remains 3a0cbdb; do not replay this fix
-when rebasing row 86 onto row 85's eventual squash. OLD anchors stay unchanged.
+Production row85 repair is refreshed above, preserving the whole-stack binder
+regression and nominal File ownership. Row86 actual base stays 3a0cbdb; the
+next rebase must inherit the stack repair without replaying it. OLD anchors stay unchanged.
 Rows 79–88 are prepared, not delivered. Channel close preserves queued values;
 explicit drain breaks its counted cycle; automatic cycle reclamation is unproved.
 
@@ -198,8 +196,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-match-scrutinee-worktree; match regressions, rebuilt HTTP golden, lint and format pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
+belongs to /private/tmp/fwp-resource-record-binding-worktree; three tests, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
