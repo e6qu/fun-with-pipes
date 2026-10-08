@@ -424,5 +424,10 @@ Prepared last-owner File disposal removes weak library finalizers before
 reclaiming unshared native storage. Shared, bump and disabled-free storage
 keeps its allocator lifetime. Scoped cleanup closes while its constructor
 owner is live, then drops that owner; aliases must never see reclaimed storage.
+Prepared original variant holders use tag-aware typed structs for eligible
+matched bindings. Retain incoming payloads completely before replacing a frame
+slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
+before dropping the wrapper. Generate cleanup IDs after helper generation,
+which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

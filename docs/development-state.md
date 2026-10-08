@@ -42,7 +42,8 @@ ownership-list-structure, /private/tmp/fwp-structure-worktree, exact
 Rebased from ACTUAL prior base 112f3c8; source/runtime/tests/workflows exactly
 match verified 6ce37fb. Four final tests pass 16.32 / 32.95 s, exact contract unit
 3.24 / 6.73 s, lint 2.29 / 4.59 s and format 0.34 / 0.60 s.
-CI 37917260081 has Intel GC stress running; bench also runs; four jobs remain queued at this exact head. Require all six full gates before
+CI 37917260081 bench passes; Linux, Intel regular and Intel GC stress run;
+two ARM macOS jobs remain queued at this exact head. Require all six full gates before
 explicit match-head squash:
 `Own typed zip unzip and chunks results and release scratch storage`, empty body.
 After merge, row20 ACTUAL current base remains 6ce37fb180e1d88903dd94dadaf47181085ab09e;
@@ -50,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row81 are published with focused checks. The next independent task
-is row82 File constructor rollback.
+through row82 are published with focused checks. The next independent task
+is row83 typed variant frame holders.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -126,8 +127,9 @@ still need their final squash rebases and six exact-head full gates.
 | 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |
 | 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
 | 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
+| 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
 
-Rows 18–81 are published preparations with passing focused tests, lint and
+Rows 18–82 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -156,11 +158,14 @@ failure cleanup, display and binary/text reads. Row81 is published clean at
 faac017dc60d99fc29169ce518ef346fd0f86b9a on actual e7d3882. Five tests,
 lint 2.63 / 5.23 s and format 0.44 / 0.83 s pass. Last-owner unshared File
 storage reclaims after finalizer removal; aliases, disabled-free policy and
-scoped close-before-drop remain correct. Independent row82 is rebased;
-three constructor/storage tests pass 10.55 / 25.59 s; focused lint passes 2.49 / 5.02 s; format 0.53 / 1.09 s.
+scoped close-before-drop remain correct. Row82 is published clean at
+06c93eff77af1f55771b7d466528599096342414 on actual faac017. Three tests,
+lint 2.49 / 5.02 s and format 0.53 / 1.09 s pass. Failed constructors reclaim
+headers and close streams; failed registry growth preserves prior finalizers,
+including hard OOM exit 102. Independent row83 is rebased; five variant/record/frame tests pass 26.37 / 53.88 s; focused lint passes 2.93 / 6.03 s; format 0.53 / 1.07 s.
 Its previous actual base is
-750a5cffd46b83c22fa403ed9453b9678bf77118; new base is faac017,
-retaining inherited binary-read and corrected constructor omission controls.
+17869223a5022ef060e24b06b0eacb73729f9589; new base is 06c93ef,
+retaining inherited binary-read and safe constructor test controls.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -209,8 +214,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-construction-disposal-worktree; three constructor/storage tests, lint and format pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.25 s).
+belongs to /private/tmp/fwp-resource-frame-variants-worktree; five variant/record/frame tests, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.08 / 0.57 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

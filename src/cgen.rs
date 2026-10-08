@@ -597,6 +597,40 @@ impl Gen<'_> {
         format!("fwp_owner_ctx{id} {ctx} = {{{}}}; fwp_cleanup {node}; fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});", initial.join(", "))
     }
 
+    /// Original frame holders may keep variant tags and payloads as structs.
+    fn protect_frame_values(
+        &mut self,
+        values: &[(String, MT)],
+        variants: &[(usize, MT)],
+        ctx: &str,
+        node: &str,
+    ) -> (String, usize) {
+        if variants.is_empty() {
+            let protection = self.protect_values(values, ctx, node);
+            let id = self.cleanup_defs.len().saturating_sub(1);
+            return (protection, id);
+        }
+        let mut members = Vec::new();
+        let mut initial = Vec::new();
+        let mut releases = Vec::new();
+        for (i, (value, ty)) in values.iter().enumerate() {
+            members.push(format!("V v{i};"));
+            initial.push(value.clone());
+            let drop = self.value_drop(ty);
+            releases.push(format!("{drop}(c->v{i});"));
+        }
+        for (i, (m, ty)) in variants.iter().enumerate() {
+            let k = self.vhelper(ty, *m);
+            members.push(format!("fwp_u{m} u{i};"));
+            initial.push("{0}".into());
+            releases.push(format!("fwp_vdrop{k}(&c->u{i});"));
+        }
+        // Helpers may generate their own cleanup definitions first.
+        let id = self.cleanup_defs.len();
+        self.cleanup_defs.push(format!("typedef struct {{ {} }} fwp_owner_ctx{id};\nstatic void fwp_owner_release{id}(void *arg) {{ fwp_owner_ctx{id} *c = arg; {} }}\n", members.join(" "), releases.join(" ")));
+        (format!("fwp_owner_ctx{id} {ctx} = {{{}}}; fwp_cleanup {node}; fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});", initial.join(", ")), id)
+    }
+
     /// Retain typed fields in order, owning only successfully completed extras.
     fn duplicate_values(&mut self, values: &[(String, MT)], ctx: &str, node: &str) -> String {
         let counted: Vec<_> = values
@@ -1896,6 +1930,7 @@ impl<'p> Gen<'p> {
 enum ResourceSlot {
     Value(String),
     Fields(Vec<Option<String>>),
+    Variant(String, usize),
 }
 
 /// Per-function code generation state.
@@ -2879,6 +2914,64 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    fn resource_variant_binding(&self, e: &Expr, local: Local, ty: &MT) -> Option<usize> {
+        if let Expr::Let(l, value, body) = e {
+            if *l == local {
+                return only_matched(body, local)
+                    .then(|| self.unboxed_variant(value, ty))
+                    .flatten();
+            }
+        }
+        let mut found = None;
+        // The same traversal used by field eligibility, without assuming a tag.
+        fn visit(fg: &FnGen<'_, '_>, e: &Expr, l: Local, ty: &MT, found: &mut Option<usize>) {
+            if found.is_some() {
+                return;
+            }
+            match e {
+                Expr::Let(x, value, body) if *x == l => {
+                    if only_matched(body, l) {
+                        *found = fg.unboxed_variant(value, ty);
+                    }
+                }
+                Expr::Let(_, value, body) => {
+                    visit(fg, value, l, ty, found);
+                    visit(fg, body, l, ty, found);
+                }
+                Expr::Dup(_, body)
+                | Expr::Drop(_, body)
+                | Expr::Field(body, _)
+                | Expr::ResourceRegion { body, .. } => visit(fg, body, l, ty, found),
+                Expr::Match(value, arms) => {
+                    visit(fg, value, l, ty, found);
+                    for (_, body) in arms {
+                        visit(fg, body, l, ty, found);
+                    }
+                }
+                Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                    for arg in args {
+                        visit(fg, arg, l, ty, found);
+                    }
+                }
+                Expr::Apply(value, args) => {
+                    visit(fg, value, l, ty, found);
+                    for arg in args {
+                        visit(fg, arg, l, ty, found);
+                    }
+                }
+                Expr::SetFields(value, fields) => {
+                    visit(fg, value, l, ty, found);
+                    for (_, value) in fields {
+                        visit(fg, value, l, ty, found);
+                    }
+                }
+                Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => {}
+            }
+        }
+        visit(self, e, local, ty, &mut found);
+        found
+    }
+
     /// Original frame references are independent of ordinary last-use owners.
     fn begin_resource_region(
         &mut self,
@@ -2890,6 +2983,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let saved = self.resource_slots.clone();
         let mut entries = Vec::new();
         let mut initial = Vec::new();
+        let mut variants = Vec::new();
         for &l in parameters {
             let ty = self.locals[l as usize].clone();
             let parts: Vec<(String, MT)> = if let Some(fs) = self.fields.get(&l) {
@@ -2936,12 +3030,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let node = self.fresh();
         for &l in bindings {
             let ty = self.locals[l as usize].clone();
-            let holder = if let Some(fields) =
-                record_fields(&self.g.prog.shapes, &ty).filter(|fields| {
-                    resource_frame_fields_enabled()
-                        && (1..=MAX_UNBOXED).contains(&fields.len())
-                        && self.resource_field_binding(body, l, fields.len())
-                }) {
+            let holder = if let Some(m) = resource_frame_fields_enabled()
+                .then(|| self.resource_variant_binding(body, l, &ty))
+                .flatten()
+            {
+                let index = variants.len();
+                variants.push((m, ty.clone()));
+                ResourceSlot::Variant(format!("{ctx}.u{index}"), m)
+            } else if let Some(fields) = record_fields(&self.g.prog.shapes, &ty).filter(|fields| {
+                resource_frame_fields_enabled()
+                    && (1..=MAX_UNBOXED).contains(&fields.len())
+                    && self.resource_field_binding(body, l, fields.len())
+            }) {
                 ResourceSlot::Fields(
                     fields
                         .iter()
@@ -2964,8 +3064,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             self.resource_slots.insert(l, holder);
         }
         let original = self.begin_call(key);
-        let id = self.g.cleanup_defs.len();
-        let protection = self.g.protect_values(&entries, &ctx, &node);
+        let (protection, id) = self
+            .g
+            .protect_frame_values(&entries, &variants, &ctx, &node);
         assert!(!protection.is_empty(), "empty original resource region");
         self.line(&protection);
         // Incoming owners stay protected while retaining frame references.
@@ -3003,6 +3104,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
             None
         };
         match slot {
+            ResourceSlot::Variant(slot, m) => {
+                let value = self.vlocals.get(&l).unwrap().0.clone();
+                let k = self.g.vhelper(&ty, m);
+                self.line(&format!("/* original resource variant */ fwp_vdup{k}(&{value}); fwp_vdrop{k}(&{slot}); {slot} = {value};"));
+            }
             ResourceSlot::Value(slot) => {
                 let dup = self.g.value_dup(&ty);
                 let drop = self.g.value_drop(&ty);
@@ -3031,6 +3137,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
 
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
         if self.resource_slots.contains_key(&l) {
+            if let Some(ResourceSlot::Variant(_, m)) = self.resource_slots.get(&l).cloned() {
+                let ty = self.locals[l as usize].clone();
+                let (tag, fields) = self.expr_variant(v, m, &ty);
+                let u = self.fresh();
+                self.line(&format!(
+                    "fwp_u{m} {u} = {{{tag}, {{{}}}}};",
+                    fields.join(", ")
+                ));
+                self.vlocals.insert(l, (u, m, ty));
+                self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
+                return body;
+            }
             if let Some(ResourceSlot::Fields(slots)) = self.resource_slots.get(&l) {
                 let n = slots.len();
                 if self.unboxed(v) == Some(n) && self.field_uses(body, l, n) {

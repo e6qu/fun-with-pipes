@@ -9249,3 +9249,27 @@ Last-owner finalizer/reuse controls pass. Focused lint runs. PR97 benchmark
 job now also runs; Intel GC runs and four jobs remain queued.
 Same-target lint passes 2.49 / 5.02 s and format 0.53 / 1.09 s CPU / elapsed.
 Ten root docs copied before amend; tested feature source unchanged.
+Final row82 06c93eff77af1f55771b7d466528599096342414 is published clean
+with exact lease 17869223a5022ef060e24b06b0eacb73729f9589. Whole commit
+message is one line with empty body. Row83 actual base remains 1786922.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Tag-aware variant frame holder refresh, 2026-10-09
+
+Row83 rebases from actual 17869223a5022ef060e24b06b0eacb73729f9589
+onto 06c93eff77af1f55771b7d466528599096342414. Ten root docs resolve
+conflicts, preserving concise tag-aware holder design. Cgen/variant test match
+786e4bbb99f1732727504f415e300c80b146f0e7 except inherited byte-read dispatch.
+Guarded clean passes 0.08 / 0.57 s. Guarded cargo test
+--test resource_frame_variants --test resource_frame_fields --test resource_frames
+runs. Eligible variants avoid wrapper boxes; incoming owners survive partial
+retention, tag-aware cleanup and boxed fallback conversion.
+Five focused tests pass 26.37 / 53.88 s CPU / elapsed. Raw interpreter
+agreement and direct-IR allocation controls prove one parent variant box
+versus zero for eligible holders. Nullary/scalar active tags, incoming partial
+retain cleanup, boxed fallback and mixed record/variant cleanup IDs pass
+O1/O2 GC off/on stress/verify and poison cases. Original frame lifetime
+regressions pass. Same-target lint runs.
+Same-target lint passes 2.93 / 6.03 s CPU / elapsed.
+Fmt check passes 0.53 / 1.07 s; ten root docs copied before amend. Tested
+source unchanged. Original variant holder support still requires full sequential CI.
