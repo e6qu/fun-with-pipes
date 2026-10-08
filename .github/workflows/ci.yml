@@ -84,6 +84,8 @@ jobs:
       - name: clippy (WebAssembly build)
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: test
+        env:
+          FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
         run: cargo test --all-targets --no-fail-fast
 
   bench:
