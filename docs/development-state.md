@@ -78,7 +78,7 @@ retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
 pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
 0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
 native probes:66–73 refresh passes8.39CPU/91.73elapsed, preserving both
-resource-frame commits. Continue74–112 in batches of at most eight through
+resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed; continue82–112 in batches of at most eight through
 /private/tmp/fwp-refresh-counted-worker-arguments.py, then refresh failed full
 evidence. Completed fwp-counted-worker-refresh journals must not be rerun. Full runs and
 PR #109 continue; failed evidence never establishes support. Raw/clean logs:
@@ -189,7 +189,7 @@ still need their final squash rebases and six exact-head full gates.
 | 78 ownership-wasm-count-disposal | c7ba897d8d9c | 231568d07731 | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | 8053dc693a13 | c7ba897d8d9c | Test10.09/21.47s; lint 6.10/13.03s and format 0.55/1.08s pass |
 | 80 ownership-file-inline-path | 0ea8a1c94115 | 8053dc693a13 | Two tests 10.54/21.29s; lint 6.87/13.94s and format 0.54/1.07s pass |
-| 81 ownership-file-storage-disposal | c4110b410f56 | 143444f5c43e | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
+| 81 ownership-file-storage-disposal | 2fffa57d369d | 0ea8a1c94115 | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | af8561c68820 | c4110b410f56 | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | ed1091ff988c | af8561c68820 | Direct frame-constructor repair: five original native tests 20.72CPU/41.72elapsed, lint 2.34/4.77s and format 0.45/0.86s pass; strong audit 0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 26f529e6ba91 | ed1091ff988c | Test10.45/23.67s; lint 6.18/12.88s and format 0.45/0.83s pass |
@@ -272,7 +272,7 @@ accepts a current production head. Superseded runs are archived in history.
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 has an ARM regular failure on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. Other jobs continue; bench, both macOS GC stress jobs and roadmap_docs pass; Linux and regular Intel macOS running; ARM regular failed; mandatory actual WASI on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
+| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 has ARM regular and Linux failures on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. Intel regular continues; bench, both macOS GC stress jobs and roadmap_docs pass; mandatory actual WASI executed on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
 | Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI 38015942823 passes on repaired source112 996d5ee4ef4f; all 21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit 0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI 37992657684 is historical |
 | Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI 38015884622 passes on repaired source100 a3d88c0b8f3d; all 21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit 0.43/3.47s passes. Prior3aca5cf/CI 37993159029 is historical |
 | Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI 38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.42/3.35s passes. Failed372375a/CI 38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
