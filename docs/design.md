@@ -453,3 +453,9 @@ finish; each await owns an alias of its cached typed result. Deadline helpers
 protect their private handles during waiting and release them on failure.
 Unknown boundaries retain tracing. Evidence and remaining acceptance work are in
 [ownership.md](ownership.md#prepared-counted-task-handles-and-results).
+
+Prepared channels own typed queued values and transfer them into receive results.
+Separate caller handles keep parked operations alive through cancellation; last
+handle destruction releases queued values and storage. Unknown/sink boundaries
+retain tracing. Evidence and remaining cycle/library acceptance are in
+[ownership.md](ownership.md#prepared-counted-channels-and-queue-elements).

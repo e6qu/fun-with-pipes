@@ -39,7 +39,7 @@ allocations before counting is needed.
 | Maps, sets | Counted storage with typed key/value ownership, copied aliases and synchronous callbacks | Old-object reclamation, runtime lifetime and numeric layout coverage |
 | Strings and bytes | Selected copy/alias primitive results counted; leaf destruction frees storage directly | Complete remaining result families, callback lifetimes and exceptional cleanup |
 | Escaping closures | Compiled dynamic calls own heap closures and typed captures; runtime callbacks still share | Retained callback ownership, remaining temporary contexts, retained callback and exceptional cleanup |
-| Tasks, channels, networking, callbacks | Prepared Task scheduler/scope/caller owners and typed cached results; channel/unknown boundaries still share | Channel queues, cycles, library/unload and full sequential CI |
+| Tasks, channels, networking, callbacks | Prepared Task owners/cache results and typed Channel queue owners; unknown boundaries still share | Cycles, library/unload and full sequential CI |
 | AD tapes/kernel buffers | Numeric arrays outside the collected value heap | Cleanup on failure/cancellation, capacity reuse and scoped lifetimes |
 
 Native executables still need a generational conservative collector for shared
@@ -1242,3 +1242,66 @@ task_handle_ownership --test retained_thunk_ownership --test
 within_thunk_ownership -- -D warnings`. No resource limits were raised/bypassed,
 no focused failure remains. Shared target contains this task-handle compiler.
 Full sequential CI is still required; phase 2 and phases 3–6 remain incomplete.
+
+## Prepared counted channels and queue elements
+
+`ownership-channel-queues`, `/private/tmp/fwp-channel-queue-worktree`, OLD base
+`bb6f9c49a0434afc9f7dd1fb9891a6fa8fb32a8a`. Channel is now a counted builtin
+with typed queue duplicate/drop metadata and a runtime destructor. Send, receive,
+timed receive and close borrow the handle. Enqueue retains one typed element
+reference only after capacity is available; closed/blocked sends retain none.
+Receive allocates its owned Option before removing the queue reference, then
+transfers that reference without duplication. Last handle release destroys queued
+elements and buffer storage. Parked compiled callers hold a handle owner, and
+wait links clear before cancellation cleanup can destroy the last reference.
+Scalar address bits receive no count/share/destruction operation. Unknown C
+channels, promoted handles and sink callbacks retain the tracing fallback.
+
+The pre-fix native probe failed with exit 1 (no counted channel handle). O1/O2
+probes in both poison modes with GC stress/verification cover growth across the
+initial capacity, caller/queue/receive aliases, closed sends, last handle queue
+destruction, blocked send/receive cancellation and close, including early
+external-handle drop while a worker waits. Queue function captures and task
+cache descendants release correctly; an old channel/buffer roots young queued
+elements through minor collection. Shared/C-channel and sink fallback behavior
+is checked without counting scalar words. Native source stdout/stderr/exit
+agree with an unoptimized interpreter. A function-valued fixture initially used
+a pipe/Async scope context incorrectly; corrected to `option.map (apply ())`,
+without changing syntax/type/effect semantics.
+
+Wide retain overflow acquires no queue owner and preserves the caller. A forced
+receive allocation trap leaves the element and queue owner intact, and retry
+succeeds. This is an injected preparation failure, not a recoverable allocator
+OOM claim. Controls removing queue retain/drop fail with 2/6; adding an extra
+receive retain fails with 4; removing before allocation fails with 26. A control
+initially targeted the old allocator expression after instrumentation; corrected
+and all controls now assert they changed the generated runtime. An adjacent
+task test likewise used the former receive helper name; its lookup is updated
+to the scalar owned helper, retaining its count invariant checks.
+
+Serial bounded checks after package clean:
+- Initial queue probe passes, CPU 7.98 s / elapsed 16.37 s.
+- Channel and task-handle probes pass in a group where the adjacent helper-name
+  lookup failed; the failure was repaired, not skipped.
+- Four final channel/task ownership tests pass, CPU 6.25 s / elapsed 12.67 s.
+- Added function/task/generation/fallback probes pass, CPU 4.32 s / elapsed 8.80 s.
+
+Full sequential CI remains required. Sole PR #82 exact `3fa67f3`, CI
+`37703018710`: ARM macOS and benchmarks passed, Linux/Intel macOS tests live.
+Merge only after all four pass with the recorded subject and empty body, then
+rebase map from OLD `029fac4` onto that squash. Next acceptance work: runtime
+cycles and library/unknown retained lifetime coverage, plus remaining aggregate
+reconstruction/metadata gaps before phase 2 closes. Phases 2–6 remain incomplete.
+Preserve OLD `bb6f9c4` for this branch's rebase and its published head for its child.
+
+Final four channel/unwind tests pass, including timed receive checks, CPU
+14.17 s / elapsed 28.63 s. Complete contract inventory (including all channel
+borrow/result assertions) passes, CPU 3.26 s / elapsed 6.80 s. Library and both
+affected test targets pass clippy, CPU 2.23 s / elapsed 4.63 s. Formatting passes,
+CPU 0.34 s / elapsed 0.61 s; whitespace clean. Exact bounded commands included
+`cargo test --test channel_queue_ownership --test task_ownership -- --nocapture`,
+`cargo test --test channel_queue_ownership --test unwind_cleanup -- --nocapture`,
+`cargo test --lib ownership::tests -- --nocapture`, and `cargo clippy --lib
+--test channel_queue_ownership --test task_ownership -- -D warnings`. No resource
+limits were raised/bypassed; no focused failure remains. Shared target contains
+this channel compiler; package clean is required before checkout changes.

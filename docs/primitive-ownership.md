@@ -20,6 +20,10 @@ Every failure path still consumes its specified reference.
 
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
+| channel.make | borrow capacity | owned channel with typed queue metadata | none |
+| channel.send | borrow channel/value | scalar; successful enqueue owns one typed value alias | none |
+| channel.recv/recv-for | borrow handle (and duration) | owned Option transferring a queue element owner | none |
+| channel.close | borrow handle | scalar; queued values remain available to drain | none |
 | task.await | borrow task handle | owned Option and typed cached-result alias | none |
 | task.cancel | borrow task handle | scalar | none |
 | task.scope | borrow callback | typed owned callback result | borrowed argument 0 |
@@ -709,3 +713,13 @@ deadline-handle preparation protect failure paths. task.cancel borrows the handl
 Unknown callbacks/sharing retain the tracing fallback; channel queues, cycles
 and library/unload acceptance remain open. See
 [ownership.md](ownership.md#prepared-counted-task-handles-and-results).
+
+## Prepared counted channels and queue elements
+
+Known channel creation owns typed queue metadata. Send retains an element only
+after capacity is available; receive allocates its Option before transferring
+the queue reference. Last handle release destroys queued values and buffer
+storage. Parked callers own their handle until wait links clear. Unknown C
+channels, shared handles and sinks retain the tracing fallback; scalar words
+receive no generic count/share operation. See
+[ownership.md](ownership.md#prepared-counted-channels-and-queue-elements).

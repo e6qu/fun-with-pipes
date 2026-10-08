@@ -114,7 +114,7 @@ main = [
             scalar = Some(name);
         }
     }
-    let recv_boundary = emitted.find("fwp_p_channel_recv(l0)").unwrap();
+    let recv_boundary = emitted.find("fwp_p_channel_recv_owned(l0, NULL)").unwrap();
     let recv = emitted[..recv_boundary]
         .rsplit("static V ")
         .next()

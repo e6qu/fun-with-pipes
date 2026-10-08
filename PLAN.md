@@ -623,3 +623,13 @@ the cached result after stack cleanup. Deadline private handles and partial
 Options unwind on failure. Focused aliases, cancellation, generation and
 failure controls pass; full sequential CI remains required. Next: channel
 queue/handle ownership, then remaining cycles/library lifetime acceptance.
+
+Counted task handles/results published as `bb6f9c4`, separate from sole PR #82.
+Next: typed Channel handles and queue element owners, with blocked/cancelled
+send/receive and closed/drained teardown evidence. Preserve the handoff anchors.
+
+Prepared channels count handles and own typed queue elements. Receive transfers
+the queue owner into an owned Option after allocation; blocked/closed sends
+retain none. Alias, cancellation/close, function/task descendants, generation,
+sharing fallback and failure controls pass; full sequential CI remains required.
+Finish cycles/library/unknown lifetimes and aggregate gaps before phase 2 acceptance.
