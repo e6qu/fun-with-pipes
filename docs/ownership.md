@@ -1540,3 +1540,22 @@ not a network-latency claim. Successful handoff, connection refusal, resolver/SS
 release and missing-guard controls pass O1/O2 with reuse poisoning. Native library
 collection remains unarmed; full sequential CI/source stress remains required.
 Peer-subject buffers, general affine discard, aggregate and cycle gaps remain open.
+
+
+## Prepared record locals between compatible workers
+
+A record returned in a C struct can stay as fields when every use reads a field
+or supplies a complete direct call to a worker with the same field ABI. Typed
+aliases introduced by reference counting follow the same restriction. Count
+operations retain/drop the fields by their concrete types; normal calls transfer
+those owners, and registered cleanup releases live fields on traps. Partial and
+dynamic calls keep boxed captures.
+
+A shortened copy of the original six-field recursive allocation regression agrees
+with the unoptimized interpreter under O1/O2, GC stress/verification and reuse
+poisoning. A typed IR probe checks returned aliases, unique/shared child counts,
+trap cleanup and partial capture lifetime; pointer-shaped scalar values do not
+acquire reference counts. Adjacent worker preparation/boxing and variant alias
+checks pass. The full allocation regression is unchanged and requires GitHub
+runner evidence; no speed or complete ownership-coverage claim follows from
+these focused checks.

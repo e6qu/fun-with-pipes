@@ -32,18 +32,24 @@ immutable value semantics, effects and evaluation/trap order stable.
   OLD map `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto this squash. Only
   handoff conflicts; use authoritative root docs and preserve OLD `1ea7f07`
   for fold. Full six-job exact-head gate remains required for the next PR.
-  Shared target is dirty connect-cleanup checkout; clean package before switching.
-  Latest published preparation: ALPN wire `f6598e440a59b1a7312ff5b62178644bec458ad8`,
-  OLD parent `4ab1f7d`. Pending TCP/TLS cancellation fix passes three focused
-  tests on `/private/tmp/fwp-connect-cleanup-worktree`, branch
-  `ownership-connect-cancellation`, OLD parent `f6598e4`; not committed yet.
-  Warning check now confirmed; publish the prepared cancellation change separately.
-  Separate evidence branch `ownership-evidence-tls-listeners`, exact `a11f9e1`,
-  CI `37719202504`: ARM regular and stress failed, other jobs still run.
-  Logs `/private/tmp/fwp-tls-current-arm-113122693830.log` and
-  `/private/tmp/fwp-tls-current-arm-gc-113122693964.log` obtained via completed
-  job API; gh run log waits for the whole run. Diagnose and repair these failures;
-  they gate acceptance of the preparation chain, never roadmap progress.
+  Shared target currently belongs to `/private/tmp/fwp-unboxed-worker-worktree`;
+  clean the package under the guard before switching compiler checkouts.
+  Connect cancellation is published as `0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392`
+  on `ownership-connect-cancellation`, OLD parent `f6598e4`.
+  Next preparation is ABI-aware record worker locals on
+  `ownership-unboxed-worker-locals`, parent immutable OLD `0cc6126`;
+  `src/cgen.rs` and `tests/unboxed_worker_locals.rs` are uncommitted.
+  Separate evidence `ownership-evidence-tls-listeners` now has local head
+  `8e5fb6a99c74aace434fbaec0faf442dfcaca2dc`, restoring already-merged
+  GC roots, cache access and tutorial fixes; remote is still `a11f9e1`.
+  CI `37719202504` is terminal cancelled after concrete failures were diagnosed;
+  it supplies no passing gate. Logs are `/private/tmp/fwp-tls-current-arm-113122693830.log`
+  and `/private/tmp/fwp-tls-current-arm-gc-113122693964.log`.
+  The restored focused macOS roots check passes. Fix the real wide-record
+  boxing regression, apply that compiler repair to evidence, then publish
+  a new exact head and run all six gates. Keep the full <1 MiB allocation
+  acceptance on CI. Sequential PR #84 remains independent and requires
+  all six passing exact-head jobs before its squash.
 - Previous baseline: PR #82, `181d3b3`, all four CI `37703018710` gates passed
   at exact `3fa67f3`, one-line `Add typed borrowed application for synchronous callbacks`.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
@@ -3437,3 +3443,30 @@ returns fwp_r6 but its recursive result is boxed into fwp_record(6) only to unpa
 it for another field-by-field worker. The bound local's use in a worker call fails
 the current generic only_fields predicate. Fix ABI-aware local eligibility with
 alias/exception ownership tests; do not raise existing allocation threshold.
+
+
+Prepared ABI-aware worker record locals (`ownership-unboxed-worker-locals`,
+immutable OLD parent `0cc612650ab9ee8cd2fb8cb6560e3cadcb9c0392`): a recursive
+six-field record was boxed solely for an immediate field-by-field worker call,
+causing the existing wide allocation test to report 366.2 MiB. Cgen now recognizes
+complete compatible worker calls and typed aliases through count operations;
+partial/dynamic uses keep their boxes. No inline budget or allocation threshold
+was raised. Two regressions verify shortened original wide source against the
+explicitly unoptimized interpreter, aliases, exact typed child counts, traps,
+partial captures and scalar words that resemble pointers, at O1/O2 under GC
+stress/verification and both reuse modes. Six checks across unboxed locals,
+variant aliases, worker boxing and preparation pass under the guard: CPU 16.30 s /
+elapsed 32.81 s. Formatting passes CPU 0.43 s / elapsed 0.61 s. The initial alias
+eligibility missed Dup-wrapped aliases and was repaired; an invalid partial Call
+fixture was corrected to Apply before native ownership evidence. Full original
+6-million-step allocation acceptance remains unchanged and runs only on CI.
+Next publish this separate compiler repair, apply it to evidence head `8e5fb6a`,
+and run all six full evidence jobs, including an early wide allocation check.
+PR #84 is still sole open PR; after all six exact-head jobs pass, squash it and
+rebase fold from immutable OLD filter `1ea7f07`. Phase 2 remains incomplete.
+
+Final warning check passes after four fixture clone/slice warnings were repaired:
+CPU 0.01 s / elapsed 0.14 s; final fmt check CPU 0.35 s / elapsed 0.74 s.
+All local checks used `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3
+CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py cargo ...` serially. No local limits were raised.

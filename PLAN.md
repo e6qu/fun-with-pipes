@@ -62,7 +62,9 @@ merged as `0f1ca94` after all six exact-head jobs passed in CI `37719069685` at
 `0c5bec4`. Required macOS stress jobs now run separately from the regular suite;
 their union preserves complete coverage. Filter is rebased from immutable OLD map `41ef82d`; sole PR #84
 (`a5185a9`) runs full six-job CI `37722779465`. Separate prepared TLS evidence
-`37719202504` has real ARM regular/stress failures; diagnose and repair them while
+`37719202504` exposed ARM regular/stress failures and was cancelled after
+diagnosis. Already-merged roots/cache/tutorial fixes are restored in evidence;
+repair the record-worker boxing regression and rerun all six exact-head jobs while
 sequential PR CI runs. Failing tests remain work, never a roadmap blocker.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
@@ -749,3 +751,11 @@ avoid collector scratch, size only valid names, check protocol lengths/malloc an
 release an already connected socket on buffer failure. Interpreter/native wire
 bytes and focused failure controls pass. Next TCP-connect/TLS-handshake cancellation
 and peer-subject temporary ownership. Full sequential CI remains required.
+
+
+Record worker locals are prepared: compatible complete calls and typed aliases
+keep fields unboxed; partial/dynamic captures stay boxed. Focused semantics,
+counts and exceptional cleanup pass. The full wide-record <1 MiB allocation gate
+remains unchanged and will run on CI after the evidence branch receives the fix.
+Continue peer-subject temporary ownership and aggregate/cycle audits while
+sequential PR gates run; prepared changes are not merged support.
