@@ -50,8 +50,8 @@ After its eventual merge, row19 ACTUAL current base remains112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from1358267 and restored afterward. Independent preparations through row57 are published with focused checks;
-row58 interpreter OpenCL lifetime is next while PR96 full CI runs.
+main fast-forward from1358267 and restored afterward. Independent preparations through row58 are published with focused checks;
+row59 TLS listener ownership is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -102,21 +102,21 @@ still need their final squash rebases and six exact-head full gates.
 | 55 ownership-library-inputs | f240ecd56f3b | 82f32b2cde03 | 9.42 /22.58 s |
 | 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 /31.36 s |
 | 57 ownership-opencl-lifetime | 5b6e65f365d6 | 878b25aad627 | 10.33 /32.03 s |
+| 58 ownership-interpreter-opencl | 00013d55d078 | 5b6e65f365d6 | 14.19 /34.79 s |
 
-Rows18–57 are published preparations with passing focused tests, lint and
+Rows18–58 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row57 native-OpenCL5b6e65f365d6befce32e96665f62dbbd4625dece is clean
-on actual base878b25a, published with exact lease against OLDd8b4d88.
-Both focused tests pass10.33 /32.03 s, lint2.44 /4.93 s, format0.35 /0.75 s.
-Row58 interpreter OpenCL lifetime rebases from ACTUAL old parentd8b4d88
-onto current row57 head5b6e65f. Both focused combined OpenCL/unload tests pass14.19 /34.79 s; final
-lint, format, docs and publication follow. Successful interpreter GPU cache
-stays process-lived; no real-device claim.
+Row58 interpreter-OpenCL00013d55d078ef3276255055517d7ca6ee660221 is clean
+on actual base5b6e65f, published with exact lease against OLDabc1285.
+Both focused tests pass14.19 /34.79 s, lint2.48 /4.84 s, format0.45 /0.62 s.
+Row59 TLS listener ownership rebases from ACTUAL old parentabc1285 onto
+current row58 head00013d5. Focused real-OpenSSL listener test passes8.83 /20.03 s; lint, format,
+docs and publication follow. Full source streams remain on CI.
 Preserve immutable OLD anchors; no additional PR.
 PR96 is the sole open delivery; row19 final rebase follows its eventual squash.
 
@@ -165,7 +165,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-interpreter-opencl-worktree; combined OpenCL/unload tests complete; lint is active.
+belongs to /private/tmp/fwp-tls-listener-worktree; TLS listener test complete; lint is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.15 s CPU /1.05 s elapsed).

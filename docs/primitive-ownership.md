@@ -200,6 +200,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Sequential CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
 | 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Sequential CI; fake API controls establish ownership, not real device execution |
 | 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Sequential CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
+| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Sequential CI; real OpenSSL failures, engine agreement and full TLS stress suites |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

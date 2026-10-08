@@ -8566,3 +8566,25 @@ no real-device/kernel claim is made.
 Interpreter OpenCL lint with both targets and -D warnings passes2.48 s CPU
 /4.84 s elapsed; fmt check0.45 /0.62 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final interpreter-OpenCL00013d55d078ef3276255055517d7ca6ee660221 is clean
+on actual base5b6e65f, published with exact lease against OLDabc1285.
+Whole subject verified one line, empty body; no second PR. Row59 actual base
+remains OLDabc1285 until its own rebase; immutable queue anchors unchanged.
+
+Row59 TLS listener ownership rebase from ACTUALabc128581b615530ba2f3bc43de0c8d708d340ea
+onto actual row58 head00013d55d078ef3276255055517d7ca6ee660221 resolves
+doc conflicts with nine authoritative files. Real OpenSSL listener/session
+probe started. Full TLS streams stay on GitHub under resource limits; its
+snapshot correction requires exact engine agreement before normalizing only
+OpenSSL bad-certificate alert vendor wording. No full source TLS gate is
+claimed by this focused local probe.
+Row59 guarded clean passes0.00 s CPU /0.14 s elapsed. Guarded cargo test
+--test tls_listener_ownership passes one test8.83 s CPU /20.03 s elapsed.
+Real OpenSSL ALPN handshakes survive listener stop and raw HTTP/2 session
+transfer; last accepted session releases server context and ALPN storage.
+Certificate/CA/app-data/owner allocation/address/bind failures release
+completed owners. O1/O2 poison and six omission controls pass. Library GC
+stays unarmed in this fixture; source TLS/stress suites remain on CI.
+TLS listener/source-target lint with -D warnings passes2.66 s CPU /5.35 s
+elapsed; fmt check0.46 /0.63 s. Linting tls does not run the full source
+suite. Nine current docs copied before final amend; tested source unchanged.

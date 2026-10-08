@@ -386,6 +386,9 @@ Prepared typed channels own queued elements and transfer their references
 into receive results after successful Option allocation. Close preserves
 queued values; unknown sink/runtime boundaries still share, and cycles
 require the explicit lifetime policy described in ownership.md.
+Prepared TLS listener ownership retains server context and ALPN state through
+accepted sessions, including raw HTTP/2 transfer. Listener stop releases its
+owner; the last session releases the context and protocol storage.
 The RC match preparation recovers missing nominal context from a whole-value
 pattern's typed local, using it for scrutinee conversion and temporary destruction.
 Known expression types remain authoritative. Whole-value pattern aliases of
