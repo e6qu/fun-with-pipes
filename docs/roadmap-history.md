@@ -5400,3 +5400,14 @@ ancestry pairs, all inspected complete commit messages; CPU0.08 s / elapsed
 0.61 s. Command: env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py python3
 /private/tmp/fwp-check-handoff.py. No test failure blocks roadmap work.
+
+PR #90 merged as cca99c07c4c35c37bcdcb19549e4027abfdcae24 after all six
+CI37765137522 gates passed at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731.
+Whole message: `Own optional list aliases and borrow synchronous find predicates`,
+one line, empty body. OLD34023f remains the inference preparation rebase anchor.
+
+Variant-frame preparation: related six focused checks25.41 s CPU /50.90 s elapsed;
+final extended dynamic-tag/partial-retain/allocation/source fixture3.49 s /9.34 s;
+clippy lib/four fixtures2.53 s /5.06 s; fmt0.45 s /0.83 s. Local guarded checks
+only. Scalar payload -1 must never be interpreted as inactive File ownership.
+Parent boxes exactly one disabled, zero enabled. Full platform gates pending.

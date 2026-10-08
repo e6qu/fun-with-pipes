@@ -2,7 +2,7 @@
 
 Updated 2026-10-08. These published branches are preparation, not merged support.
 Open one PR at a time in this order after the previous PR passes all six gates
-and squash-merges. Merged PR #89/list-copy has immutable OLD head `bb00baa4`; list-option is next (row 12).
+and squash-merges. Merged PR #90/list-option has immutable OLD head `34023f35`; inference is next (row 13).
 Completed rows remain immutable anchors; do not reopen rows through list-copy.
 
 For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
@@ -39,7 +39,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 10 | prefix | `ownership-list-prefix` | `42cf518f2ec5` | `376e77ae9469` | `adc7947a25f2` |
 | 11 | list-copy | `ownership-list-copies` | `bcdfb163c565` | `bb00baa4ab95` | `376e77ae9469` |
 | 12 | list-option | `ownership-list-options` | `8e6a891eadfa` | `34023f35a42f` | `bb00baa4ab95` |
-| 13 | inference | `inference-call-effects` | `89b7bde2c8f0` | `89b7bde2c8f0` | `34023f35a42f` |
+| 13 | inference | `inference-call-effects` | `7018086b8f98` | `89b7bde2c8f0` | `34023f35a42f` |
 | 14 | wide | `ownership-wide-counts` | `3a791dc7e9f3` | `3a791dc7e9f3` | `89b7bde2c8f0` |
 | 15 | order | `ownership-list-order` | `c83557825d8a` | `c83557825d8a` | `3a791dc7e9f3` |
 | 16 | sort-callback | `ownership-sort-callbacks` | `66bc713dea67` | `66bc713dea67` | `c83557825d8a` |
@@ -96,7 +96,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
-| 70 | file-construction | `ownership-file-construction` | `e9d575fdf990` | `e9d575fdf990` | `b00215dc10f5` |
+| 70 | file-construction | `ownership-file-construction` | `722224705f7c` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `22a520c26219` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `368dafc5567d` | `dcc5bbac318f` | `06419f4c5989` |
@@ -108,6 +108,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 79 | resource-frame-fields | `ownership-resource-frame-fields` | `658e5b73ae1c` | `658e5b73ae1c` | `681dd55136b0` |
 | 80 | file-inline-path | `ownership-file-inline-path` | `2d903d6617d9` | `2d903d6617d9` | `658e5b73ae1c` |
 | 81 | file-storage-disposal | `ownership-file-storage-disposal` | `750a5cffd46b` | `750a5cffd46b` | `2d903d6617d9` |
+| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `17869223a502` | `17869223a502` | `750a5cffd46b` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
