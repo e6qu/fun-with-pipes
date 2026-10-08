@@ -50,8 +50,8 @@ After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row71 are published with focused checks;
-row72 File IO errors and binary reads is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row72 are published with focused checks;
+row73 original resource frame fusion is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -116,23 +116,22 @@ still need their final squash rebases and six exact-head full gates.
 | 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |
 | 70 ownership-file-construction | 0d09a61aaab7 | 821e6c1baaef | 11.09 / 22.39 s |
 | 71 ownership-file-write-visibility | 8a061cb9b8ab | 0d09a61aaab7 | 12.72 / 25.58 s |
+| 72 ownership-file-io-errors | d4611644084a | 8a061cb9b8ab | 18.47 / 37.02 s |
 
-Rows 18–71 are published preparations with passing focused tests, lint and
+Rows 18–72 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row71 File write visibility is published clean at
-8a061cb9b8ab0836674ffca28923f7542a29196b on actual base 0d09a61.
-Six tests pass 12.72 / 25.58 s, lint 2.55 / 5.13 s, format 0.44 / 0.82 s.
-Immediate visibility agrees with raw interpreter; short-write/flush errors preserve
-the borrowed handle. Constructor/unwind and omitted-flush controls pass.
-Row72 rebased from ACTUAL old parent 5ac7103 onto current row71 head 8a061cb;
-six focused File IO errors, binary/text kinds, write and construction tests
-pass 18.47 / 37.02 s; lint passes 2.48 / 5.11 s.
-Previous current 22a520c binary-read repair remains preserved.
+Row72 File IO and binary reads is published clean at
+d4611644084ab89c2bcd981ed93d857f9017fe35 on actual base 8a061cb.
+Six tests pass 18.47 / 37.02 s, lint 2.48 / 5.11 s, format 0.45 / 0.84 s.
+Directory/invalid-UTF8 errors agree with raw interpreter; binary reads preserve
+arbitrary bytes. Borrowed handles remain open; temporary buffers/owned streams release.
+Next rebase row73 from ACTUAL old parent 06419f4 onto current row72 head d461164;
+previous current 368dafc includes the corrected original-frame fusion barrier.
 Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
 alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;

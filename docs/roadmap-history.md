@@ -8903,3 +8903,7 @@ Inspected interpreter File operations: explicitly closed handles return empty re
 and no-op writes, matching native behavior. Preserve this existing semantic contract.
 Same-target lint passes 2.48 / 5.11 s CPU / elapsed.
 Fmt check passes 0.45 / 0.84 s; ten docs copied before amend, tested code unchanged.
+Final row72 d4611644084ab89c2bcd981ed93d857f9017fe35 is published clean with
+exact lease 22a520c262196da7e403e7cca3cc26837adda82c. Whole subject verifies
+one line and empty body. OLD 06419f4/parent 5ac7103 remain immutable. Row73
+ACTUAL base remains OLD 06419f4; preserve its current corrected barrier 368dafc.
