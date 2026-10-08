@@ -306,10 +306,14 @@ fn scoped_file_handlers_match_interpreter() {
 main = [
     "{}" | attempt (flip file.with file.read-all) | echo,
     "{}" | attempt (flip file.with file.read-all) | echo,
+    "{}" | file.create | file.write "created" | file.close,
+    "{}" | file.open | file.read-all | second file.close | .0 | echo,
 ] | ignore
 "#,
             data.display(),
-            missing.display()
+            missing.display(),
+            dir.0.join("direct.txt").display(),
+            dir.0.join("direct.txt").display()
         ),
     )
     .unwrap();
