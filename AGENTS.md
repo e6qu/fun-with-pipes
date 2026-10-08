@@ -2,6 +2,9 @@
 
 Read [PLAN.md](PLAN.md), [docs/development-state.md](docs/development-state.md)
 and the relevant part of [docs/design.md](docs/design.md) before changing code.
+[docs/roadmap-queue.md](docs/roadmap-queue.md) preserves immutable preparation
+anchors; [docs/roadmap-history.md](docs/roadmap-history.md) preserves old evidence.
+Keep the live handoff current instead of appending competing old next actions.
 The state file is the handoff between sessions; update it after meaningful
 progress with actual checks, unresolved failures and the next concrete action.
 Do not treat an implemented change or a skipped test as verified support.
@@ -12,7 +15,8 @@ The user authorized completing the active roadmap automatically, one focused
 PR at a time, with full CI before each squash merge and the commit format
 below. Failing tests are tasks to fix; queued CI gates merging, not roadmap
 work. Diagnose failures and prepare the next task while CI runs. Keep later
-changes separate and open the next PR after the current one merges. This authorization covers roadmap branch publication, PR creation,
+changes separate and open the next PR after the current one merges. This
+authorization covers roadmap branch publication, PR creation,
 fixes and merges; keep later sessions within that scope and do not request
 the same permission again. Maintain the plan and handoff throughout. A queued,
 skipped or superseded CI run is not a passing gate for the current PR head.
@@ -40,14 +44,15 @@ Compare interpreter and native behavior for every semantic change.
 - The user's fun-refactor-specific guard remains
   `python3 /Users/zardoz/.codex/tools/fr-local-guard.py COMMAND...` for local
   fr invocations and checks. It targets a different repository; do not run
-  it against fwp or change its limits. Use an equivalent bounded check for
-  fwp, and record the command and outcome in the handoff.
+  it against fwp or change its limits. Use
+  `python3 scripts/local-guard.py COMMAND...` for equivalent bounded fwp checks, and record the command and outcome in the handoff.
 - Memory changes need GC stress/verification and reuse verification on CI.
   Performance claims need equivalent workloads and recorded hardware,
   compiler, flags, allocations and live memory as well as elapsed time.
 - Every commit message is exactly one line, at most 80 characters, with no
   body, trailers or AI attribution. Use ordinary Git author metadata.
-  When authorized to merge, wait for passing CI and squash-merge with an
+  When authorized to merge, require all six exact-head jobs (Linux, bench,
+  regular ARM/Intel macOS and GC stress ARM/Intel) and squash-merge with an
   explicitly supplied subject and empty body.
 
 Repository conventions and test locations are in [CONTRIBUTING.md](CONTRIBUTING.md).

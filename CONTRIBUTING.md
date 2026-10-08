@@ -4,6 +4,9 @@ Start with [PLAN.md](PLAN.md), [the session handoff](docs/development-state.md)
 and [the ownership contract](docs/ownership.md). Update the handoff with the
 actual validation and next action before ending a session. Keep unfinished
 work and historical benchmark evidence separate from verified deliveries.
+The [prepared queue](docs/roadmap-queue.md) preserves immutable rebase anchors;
+[historical notes](docs/roadmap-history.md) preserve prior evidence. Update the
+live handoff instead of appending competing historical next actions.
 
 Thank you for helping. This guide covers setting up, the rules the code
 follows, how to test a change, and how changes are merged. How the
@@ -38,8 +41,8 @@ fwp run examples/hello.fwp
 
 ## Before you open a pull request
 
-Run focused checks locally, serially and at low priority, with sampled
-resource monitoring. Stop at 1 GiB aggregate RSS, 2 GiB generated target
+Run focused checks locally through `python3 scripts/local-guard.py COMMAND...`,
+serially and at low priority, with sampled resource monitoring. Stop at 1 GiB aggregate RSS, 2 GiB generated target
 data, less than 64 GiB free disk or a 180-second workload deadline.
 Full builds, full test gates, large evidence regeneration and benchmarks
 belong on GitHub runners. A local refusal moves that work to CI; do not
@@ -59,7 +62,11 @@ A separate CI job runs the benchmarks
 reports times without failing on them, but it does fail when fwp, C and
 Rust print different results.
 
-The macOS jobs run the native test gate with OpenSSL on arm64 and x86-64.
+All six exact-head jobs are required before merging: Linux, bench, regular
+macOS arm64/x86-64 and separate GC stress jobs on both macOS architectures.
+Regular macOS runs exclude only `golden_programs_under_gc_stress`; each
+dedicated stress job runs exactly that test. Their union is the full native
+test gate with OpenSSL.
 Optional-tool skips are not platform coverage. Some older memory suites
 still require Linux `/proc` or `strace`; Darwin-specific regressions in
 `tests/macos.rs` assert that collection is armed and really runs, rather

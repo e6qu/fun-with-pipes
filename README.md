@@ -1,7 +1,7 @@
 # fwp ("foop")
 
-Current development focuses on native macOS, precise runtime ownership,
-efficient numeric layouts and autodiff while preserving simple pipe semantics.
+Native macOS support is merged. Current development completes runtime ownership,
+then numeric layouts and autodiff while preserving simple pipe semantics.
 See [PLAN.md](PLAN.md) for the ordered roadmap and
 [docs/development-state.md](docs/development-state.md) for the session handoff
 and actual validation status.

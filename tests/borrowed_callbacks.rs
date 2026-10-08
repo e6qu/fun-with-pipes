@@ -144,6 +144,10 @@ int main(void) {
     V leaf = fwp_rc_fresh(fwp_cstr("retained"));
     V scalar = fwp_rc_fresh(fwp_cstr("scalar bits"));
     V mixed = probe_closure(0, 0, NULL);
+    V empty_partial = fwp_apply_borrowed(mixed, 0, NULL);
+    if (CLO(empty_partial)->n || *fwp_rc_slot(empty_partial) != 1 ||
+        *fwp_rc_slot(mixed) != 1) return 20;
+    fwp_closure_drop(empty_partial);
     V pair[] = {leaf, scalar};
     V r = fwp_apply_borrowed(mixed, 2, pair);
     if (r != leaf || *fwp_rc_slot(leaf) != 2 || *fwp_rc_slot(scalar) != 1 || *fwp_rc_slot(mixed) != 1) return 1;
@@ -155,10 +159,27 @@ int main(void) {
     probe_drop_leaf(r);
     fwp_closure_drop(partial);
     if (*fwp_rc_slot(leaf) != 1) return 4;
+    V transferred = fwp_rc_fresh(fwp_cstr("transferred"));
+    V transfer_args[] = {transferred, scalar};
+    r = fwp_apply_borrowed_prefix(mixed, 2, transfer_args, 1);
+    if (r != transferred || *fwp_rc_slot(r) != 1 ||
+        *fwp_rc_slot(scalar) != 1 || *fwp_rc_slot(mixed) != 1) return 16;
+    probe_drop_leaf(r);
+    transferred = fwp_rc_fresh(fwp_cstr("partial transfer"));
+    V transferred_partial = fwp_apply_borrowed_prefix(mixed, 1, &transferred, 1);
+    if (*fwp_rc_slot(transferred) != 1) return 17;
+    r = fwp_apply_borrowed(transferred_partial, 1, &scalar);
+    if (r != transferred || *fwp_rc_slot(r) != 2 || *fwp_rc_slot(scalar) != 1) return 18;
+    probe_drop_leaf(r);
+    fwp_closure_drop(transferred_partial);
     V factory = probe_closure(2, 0, NULL);
     V over[] = {scalar, leaf};
     r = fwp_apply_borrowed(factory, 2, over);
     if (r != leaf || *fwp_rc_slot(leaf) != 2 || *fwp_rc_slot(scalar) != 1 || *fwp_rc_slot(factory) != 1) return 5;
+    probe_drop_leaf(r);
+    r = fwp_apply_borrowed_prefix(factory, 2, over, 1);
+    if (r != leaf || *fwp_rc_slot(leaf) != 2 || *fwp_rc_slot(scalar) != 1 ||
+        *fwp_rc_slot(factory) != 1) return 19;
     probe_drop_leaf(r);
     fwp_rc_dup(leaf);
     V capture = probe_closure(3, 1, &leaf);

@@ -424,6 +424,7 @@ struct Gen<'p> {
     /// Functions the runtime calls back directly (`Gen::callback`).
     callbacks: Vec<FuncId>,
     owned_callbacks: Vec<FuncId>,
+    owned_fold_callbacks: Vec<FuncId>,
 }
 
 /// `e` without the reference count changes of local `x`, if it does
@@ -1694,6 +1695,17 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
             .collect::<String>();
         return format!("{} {{\n    size_t n, kept = 0;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) == FWP_TRUE) {{\n            fwp_args{g}(&a[i], {k}, 1);\n            a[kept++] = a[i];\n        }}\n    }}\n    V result = fwp_map_finish(a, kept);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
+    if reuse && sym == "fold" {
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(["z".to_string(), "OBJ(xs)->f[0]".to_string()])
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        return format!("{} {{\n    V source = xs;\n    while (xs != 0) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        fwp_args{g}(args + {}, {}, 1);\n        z = fwp_owned_entry{g}(args);\n        xs = OBJ(xs)->f[1];\n    }}\n{fences}    FWP_KEEP_ALIVE(source);\n    return z;\n}}\n", hof_sig(i, sym, *k), k + 1, k + 1);
+    }
     let body = match sym.as_str() {
         "map" => format!(
             "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++) a[i] = {};\n    return fwp_list_from(a, n);",
@@ -2800,7 +2812,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         let sym = match &self.g.prog.funcs[id].body {
-            Body::Prim(s) if matches!(s.as_str(), "map" | "filter") => s.clone(),
+            Body::Prim(s) if matches!(s.as_str(), "map" | "filter" | "fold") => s.clone(),
             _ => return None,
         };
         if !matches!(
@@ -2810,11 +2822,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return None;
         }
         let (g, n) = self.callback_origin(args.first()?)?;
-        if self.g.prog.funcs[g].arity as usize != n + 1 {
+        if self.g.prog.funcs[g].arity as usize != n + if sym == "fold" { 2 } else { 1 } {
             return None;
         }
         self.g.used_closures[g] = true;
         if n == 0 {
+            if sym == "fold" {
+                if !self.g.owned_fold_callbacks.contains(&g) {
+                    self.g.owned_fold_callbacks.push(g);
+                }
+                let z = self.expr(&args[1]);
+                let xs = self.expr(&args[2]);
+                return Some(format!("fwp_k_fold_owned(fwp_owned_fold_k{g}, {z}, {xs})"));
+            }
             if !self.g.owned_callbacks.contains(&g) {
                 self.g.owned_callbacks.push(g);
             }
@@ -2840,7 +2860,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.g.hofs.len() - 1
             }
         };
-        caps.push(self.expr(&args[1]));
+        for arg in &args[1..] {
+            caps.push(self.expr(arg));
+        }
         Some(format!("fwp_hof{i}({})", caps.join(", ")))
     }
 
@@ -4232,7 +4254,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     // with counted references: arrays written in place, and
                     // new ones owned by compiled code
                     if let Some(crate::ownership::Contract {
-                        result: crate::ownership::ResultOwnership::OwnedContainer { runtime, .. },
+                        result:
+                            crate::ownership::ResultOwnership::OwnedContainer { runtime, .. }
+                            | crate::ownership::ResultOwnership::OwnedAccumulator { runtime, .. },
                         ..
                     }) = crate::ownership::primitive(&sym)
                     {
@@ -4974,6 +4998,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         reuse,
         callbacks: Vec::new(),
         owned_callbacks: Vec::new(),
+        owned_fold_callbacks: Vec::new(),
     };
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
@@ -5461,6 +5486,9 @@ static const fwp_exec_spec exec_spec{i} = {{
         for &id in &g.owned_callbacks {
             let _ = writeln!(out, "static V fwp_owned_k{id}(V x) {{ V a[] = {{x}}; fwp_args{id}(a, 0, 1); return fwp_owned_entry{id}(a); }}");
         }
+    }
+    for &id in &g.owned_fold_callbacks {
+        let _ = writeln!(out, "static V fwp_owned_fold_k{id}(V z, V x) {{ V a[] = {{z, x}}; fwp_args{id}(a + 1, 1, 1); return fwp_owned_entry{id}(a); }}");
     }
     // the functions the runtime calls back: their results are shared
     for &cb in &g.callbacks {
