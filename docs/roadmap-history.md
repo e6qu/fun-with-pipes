@@ -11184,3 +11184,12 @@ format0.35/0.73s pass. Row52 refreshfe8ed51eb078658eda0ae4f490fe87b47150b1e2
 has actual base245a0a24370e, matches original compiler/runtime and retains old
 CURRENT4b6a2cb08da5 under immutable revision before explicit-lease publication.
 Task-handle tests follow; published implementation is not acceptance.
+
+Row51 guarded clean0.00/0.14s, scoped callback9.76/20.17s, clippy2.45/4.85s
+and format0.34/0.62s pass. Row52 guarded clean0.00/0.14s, task handle/cached
+result11.24/23.29s, clippy2.34/4.73s and format0.44/0.74s pass. Cache/task
+runtime evidence7dfe64894b1dc1107859a5cde550850fdb672973 starts CI37973911726.
+Row53 refresha30c1829d0d0 uses actual basefe8ed51eb078. Row54 refresh
+f4d3784f4657f2bc1d6fe159f5c130dcf0e14d7c uses actual basea30c1829d0d0.
+Compiler/runtime match originals; old CURRENT53/54 are retained under immutable
+revision tags before lease publication. Fresh checks follow.

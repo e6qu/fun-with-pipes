@@ -75,7 +75,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 51 | task-scope | `ownership-task-scope` | `245a0a24370e` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `fe8ed51eb078` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `a30c1829d0d0` | `ab44b7de0812` | `bb6f9c49a043` |
-| 54 | library-result | `ownership-library-results` | `82f32b2cde03` | `5b34382167da` | `ab44b7de0812` |
+| 54 | library-result | `ownership-library-results` | `f4d3784f4657` | `5b34382167da` | `ab44b7de0812` |
 | 55 | library-input | `ownership-library-inputs` | `f240ecd56f3b` | `a6ebc1da9637` | `5b34382167da` |
 | 56 | library-unload | `ownership-library-unload` | `878b25aad627` | `5d0dc220fa1c` | `a6ebc1da9637` |
 | 57 | opencl | `ownership-opencl-lifetime` | `5b6e65f365d6` | `d8b4d88da98d` | `5d0dc220fa1c` |
