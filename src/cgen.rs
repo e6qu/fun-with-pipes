@@ -540,6 +540,18 @@ fn variant_returns_enabled() -> bool {
 }
 
 impl Gen<'_> {
+    fn value_dup(&self, ty: &MT) -> &'static str {
+        if matches!(ty, MT::Con(n, _) if n == "std::File") {
+            "fwp_file_dup"
+        } else {
+            "fwp_rc_dup"
+        }
+    }
+
+    fn resource_type(&self, ty: &MT) -> bool {
+        crate::resource::contains_file(&self.prog.shapes, ty)
+    }
+
     fn live_calls(&self, id: FuncId, e: &Expr) -> HashMap<*const Expr, crate::rc::CallLiveness> {
         if !self.reuse || !self.unwind {
             return HashMap::new();
@@ -597,8 +609,9 @@ impl Gen<'_> {
             String::new()
         };
         let mut out = protect.clone();
-        for (j, (value, _)) in counted.iter().enumerate() {
-            let _ = write!(out, " fwp_rc_dup({value});");
+        for (j, (value, ty)) in counted.iter().enumerate() {
+            let duplicate = self.value_dup(ty);
+            let _ = write!(out, " {duplicate}({value});");
             if !protect.is_empty() {
                 let _ = write!(out, " {ctx}.v{j} = {value};");
             }
@@ -1259,18 +1272,14 @@ impl<'p> Gen<'p> {
         }
         let duplicate = |ty: &MT| {
             if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                "fwp_rc_dup"
+                self.value_dup(ty)
             } else {
                 "NULL"
             }
         };
         let state = duplicate(&fields[0]);
         let result = duplicate(&fields[1]);
-        let drop = if free_enabled() {
-            format!("fwp_drop{}", self.drop_id(step))
-        } else {
-            "fwp_rc_drop".into()
-        };
+        let drop = self.value_drop(step);
         Ok(format!("{state}, {result}, {drop}"))
     }
 
@@ -1286,7 +1295,9 @@ impl<'p> Gen<'p> {
     fn value_drop(&mut self, ty: &MT) -> String {
         if !crate::rc::needs_rc(&self.prog.shapes, ty) {
             "NULL".into()
-        } else if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
+        } else if (free_enabled() || self.resource_type(ty))
+            && !matches!(ty, MT::Con(n, _) if n == "?")
+        {
             format!("fwp_drop{}", self.drop_id(ty))
         } else {
             "fwp_rc_drop".into()
@@ -1294,19 +1305,9 @@ impl<'p> Gen<'p> {
     }
 
     fn map_ops(&mut self, element: &MT) -> String {
-        let drop = if !crate::rc::needs_rc(&self.prog.shapes, element) {
-            "NULL".into()
-        } else if free_enabled() {
-            format!("fwp_drop{}", self.drop_id(element))
-        } else {
-            "fwp_rc_drop".into()
-        };
+        let drop = self.value_drop(element);
         let list = MT::Con("std::List".into(), vec![element.clone()]);
-        let list_drop = if free_enabled() {
-            format!("fwp_drop{}", self.drop_id(&list))
-        } else {
-            "fwp_rc_drop".into()
-        };
+        let list_drop = self.value_drop(&list);
         format!("{drop}, {list_drop}")
     }
 
@@ -1421,7 +1422,9 @@ impl<'p> Gen<'p> {
                 if !crate::rc::needs_rc(&self.prog.shapes, ft) {
                     continue;
                 }
-                let name = if free_enabled() && !matches!(ft, MT::Con(n, _) if n == "?") {
+                let name = if (free_enabled() || self.resource_type(ft))
+                    && !matches!(ft, MT::Con(n, _) if n == "?")
+                {
                     format!("fwp_drop{}", self.drop_id(ft))
                 } else {
                     "fwp_rc_drop".into()
@@ -1449,6 +1452,9 @@ impl<'p> Gen<'p> {
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        if matches!(mt, MT::Con(n, _) if n == "std::File") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
         }
@@ -1559,7 +1565,12 @@ impl<'p> Gen<'p> {
         if cases.is_empty() || !one {
             body.push_str("        return;\n");
         }
-        format!("{}{}    }}\n}}\n", head, body)
+        let result = format!("{}{}    }}\n}}\n", head, body);
+        if !free_enabled() && self.resource_type(mt) {
+            result.replace("fwp_rc_free_obj(v);", "fwp_rc_drop(v);")
+        } else {
+            result
+        }
     }
 
     fn desc_body(&mut self, mt: &MT, id: usize) -> String {
@@ -1898,6 +1909,7 @@ struct FnGen<'g, 'p> {
     /// Off-heap local owners count their children directly.
     stack_children: HashMap<Local, Vec<(String, MT)>>,
     known_callbacks: HashMap<Local, (FuncId, usize)>,
+    resource_slots: HashMap<Local, String>,
     /// The function being generated.
     me: FuncId,
     tail_calls: std::collections::HashSet<*const Expr>,
@@ -2388,7 +2400,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.stack_args_finish(outer);
                 (0..n).map(|k| format!("{}.f[{}]", t, k)).collect()
             }
-            Expr::Let(x, v, b) if is_local_through_counts(b, *x) && self.unboxed(v) == Some(n) => {
+            Expr::Let(x, v, b)
+                if !self.resource_slots.contains_key(x)
+                    && is_local_through_counts(b, *x)
+                    && self.unboxed(v) == Some(n) =>
+            {
                 let fs = self.expr_fields(v, n);
                 let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
                 self.fields.insert(*x, names);
@@ -2412,7 +2428,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
-            Expr::ResourceRegion { body, .. } => self.expr_fields(body, n),
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let values = self.expr_fields(body, n);
+                let result = values.into_iter().map(|v| self.bind(v)).collect();
+                self.end_resource_region(frame);
+                result
+            }
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -2585,6 +2611,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 parts(&t)
             }
             Expr::Let(l, v, b) => {
+                if self.resource_slots.contains_key(l) {
+                    let b = self.bind_local(*l, v, b);
+                    return self.expr_variant(b, m, ty);
+                }
                 // A returned alias transfers the existing field owners. Boxing
                 // it would retain an extra set whose original has been consumed.
                 if variant_uses(b, *l, true) {
@@ -2628,7 +2658,18 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
-            Expr::ResourceRegion { body, .. } => self.expr_variant(body, m, ty),
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let (tag, fields) = self.expr_variant(body, m, ty);
+                let tag = self.bind(tag);
+                let fields = fields.into_iter().map(|v| self.bind(v)).collect();
+                self.end_resource_region(frame);
+                (tag, fields)
+            }
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_variant(b, m, ty)
@@ -2800,7 +2841,115 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// fields and that `v` gives unboxed is kept as its fields. Returns the
     /// rest of `body` to generate (a copy that reuses its original takes
     /// the original's `Drop`).
+    /// Original frame references are independent of ordinary last-use owners.
+    fn begin_resource_region(
+        &mut self,
+        key: *const Expr,
+        parameters: &[Local],
+        bindings: &[Local],
+    ) -> (HashMap<Local, String>, String, String, usize) {
+        let saved = self.resource_slots.clone();
+        let mut entries = Vec::new();
+        let mut initial = Vec::new();
+        for &l in parameters {
+            let ty = self.locals[l as usize].clone();
+            let parts: Vec<(String, MT)> = if let Some(fs) = self.fields.get(&l) {
+                fs.iter()
+                    .cloned()
+                    .zip(
+                        record_fields(&self.g.prog.shapes, &ty)
+                            .unwrap()
+                            .iter()
+                            .map(|(_, t)| t.clone()),
+                    )
+                    .collect()
+            } else if let Some(lg) = self.in_loop.as_ref().filter(|lg| lg.record && l == 0) {
+                let mut parts = Vec::new();
+                for ((off, width), (_, t)) in lg
+                    .slots
+                    .iter()
+                    .zip(record_fields(&self.g.prog.shapes, &ty).unwrap())
+                {
+                    if width.is_some() {
+                        for (i, (_, ft)) in record_fields(&self.g.prog.shapes, t)
+                            .unwrap()
+                            .iter()
+                            .enumerate()
+                        {
+                            parts.push((format!("st[{}]", off + i), ft.clone()));
+                        }
+                    } else {
+                        parts.push((format!("st[{off}]"), t.clone()));
+                    }
+                }
+                parts
+            } else {
+                vec![(format!("l{l}"), ty)]
+            };
+            for (value, ty) in parts {
+                if crate::rc::needs_rc(&self.g.prog.shapes, &ty) {
+                    initial.push((entries.len(), value));
+                    entries.push(("0".into(), ty));
+                }
+            }
+        }
+        let ctx = self.fresh();
+        let node = self.fresh();
+        for &l in bindings {
+            let ty = self.locals[l as usize].clone();
+            let slot = entries.len();
+            entries.push(("0".into(), ty));
+            self.resource_slots.insert(l, format!("{ctx}.v{slot}"));
+        }
+        let original = self.begin_call(key);
+        let id = self.g.cleanup_defs.len();
+        let protection = self.g.protect_values(&entries, &ctx, &node);
+        assert!(!protection.is_empty(), "empty original resource region");
+        self.line(&protection);
+        // Incoming owners stay protected while retaining frame references.
+        for (slot, value) in initial {
+            let dup = self.g.value_dup(&entries[slot].1);
+            self.line(&format!("{dup}({value}); {ctx}.v{slot} = {value};"));
+        }
+        // Pop the input scope below the frame scope in LIFO order, then re-arm
+        // the initialized frame. Retaining is complete; no operation can trap.
+        self.line(&format!("fwp_cleanup_pop(&{node});"));
+        self.end_call(original);
+        self.line(&format!(
+            "fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});"
+        ));
+        (saved, ctx, node, id)
+    }
+
+    fn end_resource_region(&mut self, frame: (HashMap<Local, String>, String, String, usize)) {
+        let (saved, ctx, node, id) = frame;
+        self.line(&format!("/* original resource frame */ fwp_cleanup_pop(&{node}); fwp_owner_release{id}(&{ctx});"));
+        self.resource_slots = saved;
+    }
+
+    fn anchor_resource_binding(&mut self, l: Local, owned: bool) {
+        let Some(slot) = self.resource_slots.get(&l).cloned() else {
+            return;
+        };
+        let ty = self.locals[l as usize].clone();
+        let dup = self.g.value_dup(&ty);
+        let drop = self.g.value_drop(&ty);
+        let original = if owned {
+            self.begin_owners(&[(l, 1)])
+        } else {
+            None
+        };
+        self.line(&format!("{dup}(l{l}); {drop}({slot}); {slot} = l{l};"));
+        self.end_call(original);
+    }
+
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
+        if self.resource_slots.contains_key(&l) {
+            let value = self.expr(v);
+            self.line(&format!("l{l} = {value};"));
+            self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
+            return body;
+        }
         if let Some((g, n)) = self.callback_origin(v) {
             self.known_callbacks.insert(l, (g, n));
         } else {
@@ -3152,6 +3301,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// fields give up the references it held (the cell is dead) and the
     /// cell becomes a token; otherwise it is an ordinary drop.
     fn reuse_token(&mut self, x: Local, body: &Expr) -> Option<Token> {
+        if !reuse_enabled() {
+            return None;
+        }
         let virtual_state = self.in_loop.as_ref().is_some_and(|lg| lg.record) && x == 0;
         if self.fields.contains_key(&x)
             || self.vlocals.contains_key(&x)
@@ -3428,7 +3580,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return;
         }
         let op = if matches!(e, Expr::Dup(..)) {
-            "fwp_rc_dup"
+            self.g.value_dup(&self.locals[l as usize])
         } else {
             "fwp_rc_drop"
         };
@@ -3650,7 +3802,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The drop function of a counted type (`Gen::drop_id`), when objects
     /// are freed by their counts.
     fn typed_drop(&mut self, t: &MT) -> Option<String> {
-        if !self.g.reuse || !free_enabled() || matches!(t, MT::Con(n, _) if n == "?") {
+        if !self.g.reuse
+            || (!free_enabled() && !self.g.resource_type(t))
+            || matches!(t, MT::Con(n, _) if n == "?")
+        {
             return None;
         }
         if !crate::rc::needs_rc(&self.g.prog.shapes, t) {
@@ -4105,7 +4260,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.expr(b)
                 }
             },
-            Expr::ResourceRegion { body, .. } => self.expr(body),
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let value = self.expr(body);
+                let result = self.bind(value);
+                self.end_resource_region(frame);
+                result
+            }
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr(b)
@@ -4302,7 +4467,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 .as_ref()
                 .is_some_and(|ty| crate::rc::needs_rc(&self.g.prog.shapes, ty));
         if owned_value {
-            self.line(&format!("if ({found}) fwp_rc_dup({v});"));
+            let dup = self.g.value_dup(value_type.as_ref().unwrap());
+            self.line(&format!("if ({found}) {dup}({v});"));
         }
         let r = self.fresh();
         self.line(&format!("V {};", r));
@@ -4343,7 +4509,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
     fn pattern(&mut self, p: &Pat, v: &str, fail: &str) {
         match p {
             Pat::Wild => {}
-            Pat::Bind(l) => self.line(&format!("l{} = {};", l, v)),
+            Pat::Bind(l) => {
+                self.line(&format!("l{} = {};", l, v));
+                self.anchor_resource_binding(*l, false);
+            }
             Pat::Lit(lit) => {
                 let cond = match lit {
                     Value::Str(s) => {
@@ -4671,7 +4840,12 @@ impl<'p> Gen<'p> {
                 self.desc(&elem(&result, 0))
             ),
             "format" => format!("return fwp_p_format(l0, l1, {});", self.desc(&p(1))),
-            "fail" => format!("fwp_fail(l0, {}); return 0;", self.desc(&p(0))),
+            "fail" => {
+                let retain = if self.reuse && crate::rc::needs_rc(&self.prog.shapes, &p(0)) {
+                    format!("{}(l0); ", self.value_dup(&p(0)))
+                } else { String::new() };
+                format!("{retain}fwp_fail(l0, {}); return 0;", self.desc(&p(0)))
+            },
             "loop" if self.reuse => {
                 let step = MT::Con("std::Step".into(), vec![p(1), result.clone()]);
                 let ops = self.loop_owned_ops(&step)?;
@@ -4763,8 +4937,8 @@ impl<'p> Gen<'p> {
                 match sym {
                     "file.open" => format!("return fwp_p_file_open(l0, 0, {});", err),
                     "file.create" => format!("return fwp_p_file_open(l0, 1, {});", err),
-                    "file.read-all" => format!("return fwp_p_file_read_all(l0, {});", err),
-                    "file.write" => format!("return fwp_p_file_write(l0, l1, {});", err),
+                    "file.read-all" => format!("return fwp_p_file_read_all_owned(l0, {});", err),
+                    "file.write" => format!("return fwp_p_file_write_owned(l0, l1, {});", err),
                     "file.with" => format!("return fwp_p_file_with(l0, l1, {});", err),
                     "file.read" => format!("return fwp_p_file_read(l0, {});", err),
                     _ => format!("return fwp_p_file_write_new(l0, l1, {});", err),
@@ -5233,6 +5407,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
+            resource_slots: HashMap::new(),
             me: step,
             tail_calls: tail_calls(e),
         };
@@ -5303,8 +5478,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 .collect();
             let preparing = self.protect_values(&empty, "prepared", "preparation_cleanup");
             take.push_str(&preparing);
-            for (j, (slot, _)) in counted.iter().enumerate() {
-                let _ = write!(take, " fwp_rc_dup(st[{slot}]);");
+            for (j, (slot, ty)) in counted.iter().enumerate() {
+                let dup = self.value_dup(ty);
+                let _ = write!(take, " {dup}(st[{slot}]);");
                 if !preparing.is_empty() {
                     let _ = write!(take, " prepared.v{j} = st[{slot}];");
                 }
@@ -5431,7 +5607,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         let result = func.locals[i].params(1).1;
                         let drop = self.value_drop(result);
                         let dup = if crate::rc::needs_rc(&self.prog.shapes, result) {
-                            "fwp_rc_dup"
+                            self.value_dup(result)
                         } else {
                             "NULL"
                         };
@@ -5493,7 +5669,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 }
                                 let drop = self.value_drop(&elements[0]);
                                 let dup = if crate::rc::needs_rc(&self.prog.shapes, &elements[0]) {
-                                    "fwp_rc_dup"
+                                    self.value_dup(&elements[0])
                                 } else {
                                     "NULL"
                                 };
@@ -5535,13 +5711,28 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     return Err("task await result lacks its element type".into());
                                 };
                                 let dup = if crate::rc::needs_rc(&self.prog.shapes, element) {
-                                    "fwp_rc_dup"
+                                    self.value_dup(element)
                                 } else {
                                     "NULL"
                                 };
                                 s = s.replace(
                                     "fwp_p_task_await(l0)",
                                     &format!("fwp_p_task_await_owned(l0, {dup})"),
+                                );
+                            }
+                            ResultOwnership::OwnedAttempt => {
+                                let MT::Con(_, types) = func.ty.params(func.arity as usize).1
+                                else {
+                                    return Err("attempt has a non-Result type".into());
+                                };
+                                if types.len() != 2 {
+                                    return Err("attempt Result lacks payload types".into());
+                                }
+                                let good = self.value_drop(&types[0]);
+                                let bad = self.value_drop(&types[1]);
+                                s = s.replace(
+                                    "fwp_p_attempt(l0, l1)",
+                                    &format!("fwp_p_attempt_owned(l0, l1, {good}, {bad})"),
                                 );
                             }
                             ResultOwnership::OwnedCallback => {
@@ -5650,28 +5841,28 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 let key = &types[0];
                                 let duplicate = |ty: &MT| {
                                     if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                                        "fwp_rc_dup"
+                                        self.value_dup(ty)
                                     } else {
                                         "NULL"
                                     }
                                 };
                                 let dk = duplicate(key);
                                 let dv = duplicate(&value);
-                                let drop_key = if free_enabled()
+                                let drop_key = if (free_enabled() || self.resource_type(key))
                                     && crate::rc::needs_rc(&self.prog.shapes, key)
                                 {
                                     format!("fwp_drop{}", self.drop_id(key))
                                 } else {
                                     "NULL".into()
                                 };
-                                let drop_value = if free_enabled()
+                                let drop_value = if (free_enabled() || self.resource_type(&value))
                                     && crate::rc::needs_rc(&self.prog.shapes, &value)
                                 {
                                     format!("fwp_drop{}", self.drop_id(&value))
                                 } else {
                                     "NULL".into()
                                 };
-                                let drop_map = if free_enabled() {
+                                let drop_map = if free_enabled() || self.resource_type(&map) {
                                     format!("fwp_drop{}", self.drop_id(&map))
                                 } else {
                                     "fwp_rc_drop".into()
@@ -5730,7 +5921,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         }
                                     };
                                     args.push(if crate::rc::needs_rc(&self.prog.shapes, &ty) {
-                                        "fwp_rc_dup".into()
+                                        self.value_dup(&ty).into()
                                     } else {
                                         "NULL".into()
                                     });
@@ -5739,7 +5930,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 if matches!(sym.as_str(), "array.set" | "array.push") {
                                     let ty = element.as_ref().unwrap();
                                     args.push(
-                                        if free_enabled()
+                                        if (free_enabled() || self.resource_type(ty))
                                             && crate::rc::needs_rc(&self.prog.shapes, ty)
                                         {
                                             format!("fwp_drop{}", self.drop_id(ty))
@@ -5748,7 +5939,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         },
                                     );
                                     let array = &func.locals[func.arity as usize - 1];
-                                    args.push(if free_enabled() {
+                                    args.push(if free_enabled() || self.resource_type(array) {
                                         format!("fwp_drop{}", self.drop_id(array))
                                     } else {
                                         "fwp_rc_drop".into()
@@ -5795,7 +5986,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     (0..func.arity).map(|i| format!("l{i}")).collect();
                                 args.extend(fields.iter().map(|ty| {
                                     if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                                        "fwp_rc_dup".into()
+                                        self.value_dup(ty).into()
                                     } else {
                                         "NULL".into()
                                     }
@@ -5837,8 +6028,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     let _ = write!(body, " case {tag}:");
                                     for (i, ty) in fields.iter().enumerate() {
                                         if crate::rc::needs_rc(&self.prog.shapes, ty) {
-                                            let _ =
-                                                write!(body, " fwp_rc_dup(OBJ(result)->f[{i}]);");
+                                            let dup = self.value_dup(ty);
+                                            let _ = write!(body, " {dup}(OBJ(result)->f[{i}]);");
                                         }
                                     }
                                     body.push_str(" break;");
@@ -5870,7 +6061,8 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             }
                             ResultOwnership::AliasArgument { argument } => {
                                 if crate::rc::needs_rc(&self.prog.shapes, &func.locals[argument]) {
-                                    s = format!("fwp_rc_dup(l{argument}); {s}");
+                                    let dup = self.value_dup(&func.locals[argument]);
+                                    s = format!("{dup}(l{argument}); {s}");
                                 }
                             }
                             ResultOwnership::AliasLeaf { argument } => {
@@ -5968,6 +6160,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     stack_args: Vec::new(),
                     stack_children: HashMap::new(),
                     known_callbacks: HashMap::new(),
+                    resource_slots: HashMap::new(),
                     me: id,
                     tail_calls: tail_calls(&e),
                 };
@@ -6016,6 +6209,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
             known_callbacks: HashMap::new(),
+            resource_slots: HashMap::new(),
             me: id,
             tail_calls: tail_calls(e),
         };
@@ -6085,8 +6279,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 .collect();
             let preparing = self.protect_values(&empty_fields, "prepared", "preparation_cleanup");
             pre.push_str(&preparing);
-            for (j, (value, _)) in counted_fields.iter().enumerate() {
-                let _ = write!(pre, " fwp_rc_dup({value}); ");
+            for (j, (value, ty)) in counted_fields.iter().enumerate() {
+                let dup = self.value_dup(ty);
+                let _ = write!(pre, " {dup}({value}); ");
                 if !preparing.is_empty() {
                     let _ = write!(pre, "prepared.v{j} = {value}; ");
                 }
@@ -6683,7 +6878,12 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     if variant_returns_enabled() {
         variant_returns(prog, &mut abis);
     }
-    let reuse = reuse_enabled();
+    let resources = prog.funcs.iter().any(|f| {
+        f.locals
+            .iter()
+            .any(|t| crate::resource::contains_file(&prog.shapes, t))
+    });
+    let reuse = reuse_enabled() || resources;
     let counted;
     let prog = if reuse {
         counted = counted_program(prog);
@@ -6715,7 +6915,8 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         cli_defs: String::new(),
         cli_flags: HashMap::new(),
         ticks: uses_async(prog) || uses_services(prog),
-        unwind: uses_async(prog)
+        unwind: resources
+            || uses_async(prog)
             || uses_services(prog)
             || tests
             || matches!(mode, Mode::Library | Mode::Service | Mode::Exec(..))
@@ -7181,16 +7382,13 @@ static const fwp_exec_spec exec_spec{i} = {{
                 } else {
                     String::new()
                 };
+                let dup = g.value_dup(ty);
                 let _ = writeln!(
                     arguments,
-                    "    if (start <= {j} && {j} - start < n) {{ fwp_rc_dup(a[{j} - start]);{tracked} }}"
+                    "    if (start <= {j} && {j} - start < n) {{ {dup}(a[{j} - start]);{tracked} }}"
                 );
-                let drop = if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
-                    format!("fwp_drop{}", g.drop_id(ty))
-                } else {
-                    "fwp_rc_drop".into()
-                };
-                if free_enabled() {
+                let drop = g.value_drop(ty);
+                if free_enabled() || g.resource_type(ty) {
                     if g.unwind {
                         let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {drop}(CLO(v)->a[{j}]);");
                     } else {
@@ -7214,11 +7412,7 @@ static const fwp_exec_spec exec_spec{i} = {{
                 if !crate::rc::needs_rc(&prog.shapes, ty) {
                     continue;
                 }
-                let drop = if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
-                    format!("fwp_drop{}", g.drop_id(ty))
-                } else {
-                    "fwp_rc_drop".into()
-                };
+                let drop = g.value_drop(ty);
                 let _ = writeln!(
                     argument_drops,
                     "    if (start <= {j} && {j} - start < n) {drop}(a[{j} - start]);"
@@ -7307,6 +7501,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
     if !free_enabled() {
         out.push_str("#define FWP_RESOURCE_NO_FREE 1\n");
+    }
+    if !reuse_enabled() {
+        out.push_str("#define FWP_NO_REUSE 1\n");
     }
     let web = uses_web(prog);
     let tls = uses_services || web || uses_tls(prog);
