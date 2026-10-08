@@ -217,6 +217,10 @@ static volatile int fwp_shutdown = 0;
 static volatile sig_atomic_t fwp_shutdown = 0;
 #endif
 static int fwp_signals_installed = 0;
+#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
+static struct sigaction fwp_prior_sigint, fwp_prior_sigterm;
+static int fwp_saved_sigint, fwp_saved_sigterm;
+#endif
 
 static int64_t fwp_now_ns(void) {
     struct timespec t;
@@ -455,6 +459,7 @@ static void fwp_task_drop(V value) {
 /* stacks of finished tasks, kept for reuse */
 static char *fwp_stack_pool[64];
 static int fwp_stack_pool_n = 0;
+#define FWP_NATIVE_TASK_STACK ((size_t)256 << 20)
 
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
@@ -802,7 +807,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->stack_size = FWP_STATIC_TASK_STACK;
     t->stack = fwp_static_task_stack();
 #else
-    t->stack_size = (size_t)256 << 20;
+    t->stack_size = FWP_NATIVE_TASK_STACK;
     if (fwp_stack_pool_n > 0) {
         t->stack = fwp_stack_pool[--fwp_stack_pool_n];
     } else {
@@ -1676,8 +1681,18 @@ static void fwp_on_signal(int sig) {
 static V fwp_p_shutdown_requested(void) {
     if (!fwp_signals_installed) {
         fwp_signals_installed = 1;
+#ifdef FWP_LIBRARY
+        struct sigaction action;
+        memset(&action, 0, sizeof action);
+        action.sa_handler = fwp_on_signal;
+        action.sa_flags = SA_RESTART;
+        sigemptyset(&action.sa_mask);
+        fwp_saved_sigint = sigaction(SIGINT, &action, &fwp_prior_sigint) == 0;
+        fwp_saved_sigterm = sigaction(SIGTERM, &action, &fwp_prior_sigterm) == 0;
+#else
         signal(SIGINT, fwp_on_signal);
         signal(SIGTERM, fwp_on_signal);
+#endif
     }
     return fwp_shutdown ? FWP_TRUE : FWP_FALSE;
 }
@@ -1746,6 +1761,53 @@ static V fwp_p_metrics_snapshot(void) {
     }
     return fwp_list_from(items, fwp_nmetrics);
 }
+
+#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
+static void fwp_library_tasks_finish(void) {
+    if (fwp_cur && fwp_cur != fwp_root) abort();
+    if (fwp_root) {
+        fwp_root->unwinding = 1;
+        /* Detached runtime tasks are not root children, but still have stacks
+         * in this list. Cancel all of them before disposing any mapping. */
+        for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) fwp_cancel_tree(t);
+        while (fwp_gc_tasks) {
+            fwp_make_ready(fwp_root);
+            fwp_block();
+            fwp_free_zombie();
+        }
+    }
+    fwp_free_zombie();
+#ifndef FWP_STATIC_MEMORY
+    while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);
+#endif
+    if (fwp_epfd >= 0) close(fwp_epfd);
+    fwp_epfd = -1;
+#ifdef __linux__
+    fwp_fdws = 0;
+    fwp_nfdws = 0;
+#endif
+    fwp_io_waiting = 0;
+    fwp_cur = fwp_root = fwp_zombie = 0;
+    fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
+    fwp_cleanups = 0;
+    fwp_handlers = 0;
+    fwp_state = 0;
+    fwp_state_len = fwp_state_cap = 0;
+    struct sigaction current;
+    if (fwp_saved_sigint && sigaction(SIGINT, 0, &current) == 0 &&
+        !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
+        sigaction(SIGINT, &fwp_prior_sigint, 0);
+    if (fwp_saved_sigterm && sigaction(SIGTERM, 0, &current) == 0 &&
+        !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
+        sigaction(SIGTERM, &fwp_prior_sigterm, 0);
+    fwp_saved_sigint = fwp_saved_sigterm = fwp_signals_installed = 0;
+    fwp_shutdown = 0;
+    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
+    free(fwp_metrics);
+    fwp_metrics = 0;
+    fwp_nmetrics = fwp_metrics_cap = 0;
+}
+#endif
 
 /* ----- stack overflow */
 
