@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, ownership-evidence-wasm-resources]
+    branches: [main, ownership-evidence-resource-frames]
   pull_request:
 
 jobs:
@@ -86,7 +86,7 @@ jobs:
       - name: Required WASI and File ownership regressions
         env:
           FWP_REQUIRE_WASM_RESOURCE_COUNTS: 1
-        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_read_kinds --test file_construction_ownership -- --nocapture
+        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_read_kinds --test file_construction_ownership --test file_construction_disposal --test file_storage_disposal --test file_inline_path --test resource_frame_fields --test resource_frame_variants --test resource_match_context --test channel_cycle_ownership -- --nocapture
       - name: test
         run: cargo test --all-targets --no-fail-fast
 

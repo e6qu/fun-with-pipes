@@ -72,7 +72,7 @@ Failed/cancelled/superseded runs never supply acceptance evidence.
 
 ## Ownership preparations and active work
 
-Rows79–86 are published with focused evidence; full sequential CI remains required.
+Rows79–88 are published with focused evidence; full sequential CI remains required.
 
 | Row | Preparation | Current head | Focused evidence |
 |---|---|---|---|
@@ -84,34 +84,28 @@ Rows79–86 are published with focused evidence; full sequential CI remains requ
 | 84 | Variant binding kinds | ae00e6929e86 | Per-path payload initialization; implicit one-close audit |
 | 85 | Match scrutinee types | 3a0cbdb33b79 | Whole-pattern context; typed temporary; implicit close |
 | 86 | Record binding kinds | f85cc4e09db4 | Per-path field initialization; allocation and close audits |
+| 87 | Nominal source context | 8abfd46b3476 | Explicit raw oracles; 64 nested File discards under32 descriptors |
+| 88 | Channel cycles | dc2ad1febc5d | Close retains queue; typed drain breaks counted cycle |
 
 Immutable full heads/parents are in the queue. Rows74 and78 inherit corrected
 current bases368dafc andc889479 respectively; their OLD parents reflect this.
 Never substitute a rewritten/squash head for an immutable descendant anchor.
 
-Latest published preparation: ownership-nominal-source-context,
-/private/tmp/fwp-nominal-source-worktree, parent immutablef85cc4e09db49f1ac53f1f06da40b49f189b5b56.
-Two source context tests now use explicit FWP_NO_OPT=1 interpreter oracles;
-four existing field/match checks pass in the initial run. New resource_match_context
-passes6.22 s /12.64 s: 64 nested nominal File discards under32 descriptors,
-optimized/unoptimized native IR, O1/O2, reuse/free on/off, GC off/on/stress/
-verification and both poison modes. Initial source incorrectly duplicated File;
-changed to affine Held | flip Wrap 17. That failed draft is not verification.
-Clippy lib/three fixtures passes2.63 s /5.28 s; format0.44 s /0.83 s.
-Published as queue87 at8abfd46b34762b0cf69e417b65a85a1d783b61ac, clean.
-Whole message: `Verify nominal source ownership and streamline the roadmap handoff`,
-one line, empty body. No additional PR; full sequential CI remains required.
+Latest preparation: ownership-channel-cycle-lifetimes,
+/private/tmp/fwp-channel-cycle-worktree, exactdc2ad1febc5d64a588ff90a333753ab1cb688a72,
+parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac, published clean.
+Channel fixture passes1.37 s /3.13 s, related queue/task tests9.04 s /18.50 s,
+clippy2.37 s /4.87 s, fmt0.45 s /0.86 s. Poison assertions verify tombstones
+rather than cleared metadata. Detailed checks are archived in history.
+This verifies explicit draining, not automatic cycle reclamation.
 
-Active preparation: ownership-channel-cycle-lifetimes,
-/private/tmp/fwp-channel-cycle-worktree, parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac.
-New channel_cycle_ownership passes1.37 s CPU /3.13 s elapsed: 64 recursive
-self-queued channels, explicit close, outside-owner release, typed drain and
-final destruction; O1/O2, GC off/on with stress/verification, both poison modes.
-The initial assertion incorrectly expected cleared count metadata in poison
-mode; corrected it to verify object tombstones and emptied channel storage.
-Related channel_queue_ownership and task_handle_ownership pass9.04 s /18.50 s;
-clippy lib/new fixture passes2.37 s /4.87 s; format0.45 s /0.86 s.
-No runtime change or general cycle reclamation claim; full sequential CI remains required.
+Next combined evidence is prepared separately at
+/private/tmp/fwp-resource-evidence-worktree, ownership-evidence-resource-frames,
+adding rows79–88 to5fd2ed6. Constructor conflict preserves poison-only header
+inspection and _Exit(3) before stale finalizers. Focused constructor validation
+passes8.22 s CPU /17.58 s elapsed; integrated fmt0.46 s /0.84 s.
+Publish the isolated six-gate workflow and record its exact head/run. The previous
+resource evidence run remains intact. This evidence is never a production PR.
 
 Next independent work: ambiguous nominal contexts without whole-value binders,
 nested holders and shared/cycle graphs. Source match functions begin with typed
@@ -132,10 +126,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Shared target currently
-belongs to channel-cycle checkout. Guarded cargo clean -p fwp before switching
-checkouts; last switch0.00 s /0.13 s. No local workload is active.
-Last doc audit: nine link sets including heading fragments,81 immutable queue
-ancestry pairs and whole commit messages pass0.10 s /0.71 s under the guard.
+belongs to resource-evidence checkout. Guarded cargo clean -p fwp before switching
+checkouts; last switch0.00 s /0.14 s. No local workload is active.
+Last doc audit: nine link sets including heading fragments,82 immutable queue
+ancestry pairs and whole commit messages pass0.08 s /0.61 s under the guard.
 Publication anchors and current messages are included. Handoff448→133 lines and ownership460→177 lines;
 exact previous snapshots are archived in history.
 

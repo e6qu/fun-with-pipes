@@ -109,6 +109,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `3a0cbdb33b79` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f85cc4e09db4` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `8abfd46b3476` | `8abfd46b3476` | `f85cc4e09db4` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `dc2ad1febc5d` | `dc2ad1febc5d` | `8abfd46b3476` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

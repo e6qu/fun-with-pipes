@@ -6371,3 +6371,43 @@ drop releases the cycle. This verifies explicit draining, not automatic
 reclamation of unreachable cycles. Related queue/task handle tests pass9.04 s
 /18.50 s, clippy lib/new fixture2.37 s /4.87 s, format0.45 s /0.86 s.
 Full exact-head sequential CI remains required; no additional PR was opened.
+
+## Focused source and cycle checks through queue88
+
+Latest published preparation: ownership-nominal-source-context,
+/private/tmp/fwp-nominal-source-worktree, parent immutablef85cc4e09db49f1ac53f1f06da40b49f189b5b56.
+Two source context tests now use explicit FWP_NO_OPT=1 interpreter oracles;
+four existing field/match checks pass in the initial run. New resource_match_context
+passes6.22 s /12.64 s: 64 nested nominal File discards under32 descriptors,
+optimized/unoptimized native IR, O1/O2, reuse/free on/off, GC off/on/stress/
+verification and both poison modes. Initial source incorrectly duplicated File;
+changed to affine Held | flip Wrap 17. That failed draft is not verification.
+Clippy lib/three fixtures passes2.63 s /5.28 s; format0.44 s /0.83 s.
+Published as queue87 at8abfd46b34762b0cf69e417b65a85a1d783b61ac, clean.
+Whole message: `Verify nominal source ownership and streamline the roadmap handoff`,
+one line, empty body. No additional PR; full sequential CI remains required.
+
+Latest published preparation: ownership-channel-cycle-lifetimes,
+/private/tmp/fwp-channel-cycle-worktree, parent immutable8abfd46b34762b0cf69e417b65a85a1d783b61ac.
+New channel_cycle_ownership passes1.37 s CPU /3.13 s elapsed: 64 recursive
+self-queued channels, explicit close, outside-owner release, typed drain and
+final destruction; O1/O2, GC off/on with stress/verification, both poison modes.
+The initial assertion incorrectly expected cleared count metadata in poison
+mode; corrected it to verify object tombstones and emptied channel storage.
+Related channel_queue_ownership and task_handle_ownership pass9.04 s /18.50 s;
+clippy lib/new fixture passes2.37 s /4.87 s; format0.45 s /0.86 s.
+Published as queue88 atdc2ad1febc5d64a588ff90a333753ab1cb688a72, clean.
+Whole message: `Verify explicit channel cycle draining and document lifetime policy`.
+No runtime change or general cycle reclamation claim; full sequential CI remains required.
+
+
+## Resource frame evidence integration
+
+Separate ownership-evidence-resource-frames extends5fd2ed6 with rows79–88.
+The constructor conflict keeps poison-only inspection of retained failed headers
+and _Exit(3) before deliberately stale library finalizers. Its focused
+file_construction_ownership check passes8.22 s CPU /17.58 s elapsed after
+guarded clean0.00 s /0.14 s; integrated fmt0.46 s /0.84 s. Required Linux
+WASI stage includes the new File storage/constructor and resource frame/nominal/
+cycle regressions; all six full gates remain required. Previous live evidence
+is preserved on its original branch. Workflow changes never enter production.
