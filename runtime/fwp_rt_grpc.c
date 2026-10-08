@@ -2037,6 +2037,22 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
     return ctx;
 }
 
+typedef struct { int fd; SSL_CTX *tls; } g_listener_owner;
+static void g_listener_finish(void *p) {
+    g_listener_owner *owner = (g_listener_owner *)p;
+    if (owner->fd >= 0) {
+        int fd = owner->fd;
+        owner->fd = -1;
+        fwp_fd_closing(fd);
+        close(fd);
+    }
+    if (owner->tls) {
+        SSL_CTX *ctx = owner->tls;
+        owner->tls = 0;
+        fwp_tls_server_drop(ctx);
+    }
+}
+
 static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     const char *listen_at = 0, *cert = 0, *key = 0, *ca = 0;
     for (int i = 1; i < argc; i++) {
@@ -2058,6 +2074,9 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     int failed;
     SSL_CTX *tls = g_server_tls(cert, key, ca, &failed);
     if (failed) return 1;
+    g_listener_owner listener = {-1, tls};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, g_listener_finish, &listener);
     if (!listen_at) {
         listen_at = getenv(s->env);
         if (!listen_at || !*listen_at) listen_at = s->default_addr;
@@ -2071,13 +2090,17 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
                 "fwp serve: %s needs a certificate and key (--tls-cert and --tls-key, or FWP_TLS_CERT and "
                 "FWP_TLS_KEY)\n",
                 listen_at);
+        fwp_cleanup_pop(&cleanup);
+        g_listener_finish(&listener);
         return 1;
     }
     char bound[300];
     int fd = h2_listen(hostport, bound, sizeof bound);
+    listener.fd = fd;
     if (fd < 0) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
-        if (tls) fwp_tls_server_drop(tls);
+        fwp_cleanup_pop(&cleanup);
+        g_listener_finish(&listener);
         return 1;
     }
     g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);
@@ -2100,6 +2123,8 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     fflush(stderr);
     fwp_tasks_init();
     g_accept_loop(fd, srv);
+    fwp_cleanup_pop(&cleanup);
+    g_listener_finish(&listener);
     return 1;
 }
 
