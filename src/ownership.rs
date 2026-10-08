@@ -24,6 +24,8 @@ pub enum ResultOwnership {
     OwnedTask,
     /// Owned Option storage and a typed task-result reference.
     OwnedTaskOption,
+    /// Counted channel storage and typed queue ownership.
+    ChannelOperation,
     /// Typed array boundary, including scalar/optional/list results.
     ArrayOperation {
         consumed: Option<usize>,
@@ -125,7 +127,7 @@ impl Contract {
 /// spawned/deadline thunks retain a counted owner; other retained callbacks share.
 /// Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
-    use Argument::{Borrow as B, Consume as C, Share as S};
+    use Argument::{Borrow as B, Consume as C};
     use ResultOwnership::Shared as R;
     let (arguments, result, callback, aliases): (
         &'static [Argument],
@@ -152,18 +154,18 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[1],
         ),
         "task.await" => (&[B], ResultOwnership::OwnedTaskOption, None, &[0]),
-        "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
-        "channel.recv-for" => (&[B, S], ResultOwnership::FreshOuter, None, &[1]),
+        "channel.recv" => (&[B], ResultOwnership::ChannelOperation, None, &[0]),
+        "channel.recv-for" => (&[B, B], ResultOwnership::ChannelOperation, None, &[1]),
         "task.deadline" => (
             &[B, B],
             ResultOwnership::AliasArgument { argument: 1 },
             None,
             &[1],
         ),
-        "task.sleep" | "task.yield" | "task.cancelled" | "channel.make" => (&[B], R, None, &[]),
+        "task.sleep" | "task.yield" | "task.cancelled" => (&[B], R, None, &[]),
         "task.cancel" => (&[B], R, None, &[]),
-        "channel.close" => (&[S], R, None, &[]),
-        "channel.send" => (&[S, S], R, None, &[]),
+        "channel.make" | "channel.close" => (&[B], ResultOwnership::ChannelOperation, None, &[]),
+        "channel.send" => (&[B, B], ResultOwnership::ChannelOperation, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }
@@ -459,6 +461,17 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        for symbol in [
+            "channel.make",
+            "channel.send",
+            "channel.recv",
+            "channel.recv-for",
+            "channel.close",
+        ] {
+            let channel = primitive(symbol).unwrap();
+            assert_eq!(channel.result, ResultOwnership::ChannelOperation);
+            assert!(channel.arguments.iter().all(|arg| *arg == Argument::Borrow));
+        }
         let spawn = primitive("task.spawn").unwrap();
         assert_eq!(spawn.argument(0), Argument::Borrow);
         assert_eq!(spawn.callback, Some(Callback::Retained(0)));
