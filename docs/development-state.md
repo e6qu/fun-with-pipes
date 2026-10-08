@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 09:50 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 10:00 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -566,8 +566,8 @@ actual runner WASI evidence; native GC-off checks are not WASM support. Original
 aggregate-holder boxing and File header/path reclamation also remain required.
 
 
-Current local compiler target is `/private/tmp/fwp-file-runtime-boundaries-worktree`,
-clean at 30fe112; no local workload runs. Root now has six live doc edits (including
+Earlier boundary preparation used `/private/tmp/fwp-file-runtime-boundaries-worktree`,
+clean at 30fe112. Root now has six live doc edits (including
 prepared primitive File/effect contracts), all ours; preserve all six on the next
 main fast-forward. Next preparation base is actual 30fe112. WebAssembly's bump
 allocation remains intentional, but zero RC slots prevent last-owner resource
@@ -579,12 +579,15 @@ active phase 2 work. Prefix #88 subsequently passed all six gates and merged; li
 
 
 WebAssembly logical-count repair is in progress on `ownership-wasm-resource-counts`,
-checkout `/private/tmp/fwp-wasm-resource-counts-worktree`, parent actual 30fe112.
+checkout `/private/tmp/fwp-wasm-resource-counts-worktree`, parent actual 30fe112, published clean as
+`c889479eed7aba4967b2e5f87d7a368193b18be9` (queue 77); immutable OLD
+046f7e85a9eb remains unchanged after the WASI predicate correction.
 Independent logical aggregate/task counts now apply only to File-bearing
 programs, without changing value layout, bump storage or physical reuse.
 The stable exact-value counter map avoids reading arbitrary scalar/constant words
 as headers. 64-bit counts and compact-slot access cover 300 aliases and overflow;
-logical destruction removes entries. Metadata storage and lookup work increase;
+Logical destruction removes entries with normal freeing enabled; disabled-free
+metadata lifetime still needs repair below. Metadata storage and lookup work increase;
 no zero-cost, heap-reduction or complete tracing-free claim follows.
 
 A generated typed (File, File) destructor is exercised on the actual non-GC C
@@ -601,7 +604,7 @@ CPU 24.61 s / elapsed 49.75 s. The fourth test (actual WASI) skipped because the
 local toolchain is unavailable; an explicit nocapture rerun confirms the skip,
 CPU 0.00 s / 0.13 s. Clippy lib/three fixtures passed 2.27 s / 4.55 s; fmt
 passed 0.34 s / 0.63 s. No local workload remains running; shared target belongs
-to this checkout. Publish the preparation without another PR, then run full
+to this checkout. Preparation is published without another PR. Run full
 separate evidence with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1 so runner skips fail.
 
 Next: real WASI runner execution, shared graphs/callback teardown and bounded
@@ -609,3 +612,53 @@ metadata lifetime with freeing disabled; then remove aggregate frame boxes and
 finish File header/path storage lifetime. Keep phase 2 incomplete. One PR #89
 remains open; failures are repair tasks and all six current-head gates still gate
 its squash. After squash, rebase list-option from immutable OLD bb00baa4.
+
+
+Separate WASI evidence is published at `01cb806b578ec012da1065bf2887b03b5dbe96b3`,
+branch `ownership-evidence-wasm-resources`, checkout
+`/private/tmp/fwp-wasm-evidence-worktree`. CI `37759368719` is queued at that exact
+head; no result accepted yet. It restores only the already-merged root/cache/
+tutorial fixes as 1d42a67, uses the current six-job platform split, and runs the
+three focused fixtures early on Linux with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1.
+Neither its baseline/workflow commits nor passing evidence replace sequential
+PR gates or enter production ancestry. It has no PR.
+
+Next concrete preparation after 046f7e8: reproduce disabled-free metadata growth.
+Generated resource-parent destructors use fwp_rc_drop instead of physical free;
+that leaves the last count-map entry behind on WASM even after children close.
+Separate logical counter disposal from retained object storage for resource
+parents and task/channel storage, keep native exact zero-free accounting, and
+add the disabled-free omission control before publication. Unknown/shared graph
+and closure cycles remain subsequent audits; no general tracing-free claim.
+
+
+Required WASI evidence 37759368719 failed the real descriptor check; Linux bench
+passed, other gates were superseded/cancelled. Diagnostic run 37759763830 proved
+File refs had reached zero but fcntl(F_GETFD) still returned 1 with errno 0 under
+WASI, whereas EBADF was expected. The predicate now uses actual fstat validity
+and still requires EBADF after last-owner drop. Both unchanged omitted-count and
+positive assertions remain. Prepared queue 77 was rewritten with exact lease as
+c889479; its OLD 046f7e8 remains permanent. Native fstat checks pass at O1/O2.
+Repaired evidence CI 37760170473 is live at
+`1d6a5d6bedd203c4302599c4e3165412cacd6265`; no passing WASI or full gate claim yet.
+Logs: /private/tmp/fwp-wasm-evidence-37759368719-linux.log and
+/private/tmp/fwp-wasm-evidence-37759763830-linux.log. Both superseded runs were
+cancelled to conserve runner resources, never treated as successful gates.
+
+Disabled-free follow-up is prepared on ownership-wasm-count-disposal, checkout
+/private/tmp/fwp-wasm-disposal-worktree. Baseline concrete metadata-growth
+reproducer fails exit 5 (CPU 7.53 s / elapsed 15.45 s). Resource-parent and
+Task/Channel disposal helpers now remove logical counter metadata on the bump
+heap even with FWP_FREE=0; native storage retention stays count-only. Actual
+generated File-pair destructor and cached task/channel runtime destructors close
+last owners and leave no counter entries. Restoring aggregate count-only teardown
+fails exit 5; restoring runtime storage count-only teardown fails exit 9.
+
+Four executed host/native tests pass CPU 27.27 s / elapsed 54.95 s, including
+native exact zero-freed-bytes accounting. Actual WASI skips locally (unavailable
+toolchain), not support. Final task/channel matrix passes 1.58 s / 3.79 s, final
+fstat host matrix 2.29 s / 6.13 s; clippy lib/three fixtures 2.53 s / 5.15 s and
+final test refactor 0.06 s / 0.26 s; fmt 0.46 s / 0.87 s. Full runner WASI matrix
+now covers both freeing modes, aggregates and cached task/channel owners with
+omission controls. Publish this preparation after rebasing onto corrected actual
+queue 77 c889479, then add it to the separate full runner evidence. No extra PR.
