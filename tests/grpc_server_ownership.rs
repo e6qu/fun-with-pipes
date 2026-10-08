@@ -163,7 +163,19 @@ int main(int argc,char **argv){
         ),
     ] {
         assert!(generated.contains(needle), "missing control {needle}");
-        let broken = generated.replacen(needle, replacement, 1);
+        let start = generated
+            .find("static void g_listener_finish(void *p) {")
+            .unwrap();
+        let end = start + generated[start..].find("\n}\n").unwrap() + 3;
+        let mut broken = generated.clone();
+        if needle.contains("owner->fd") || needle.contains("fwp_tls_server_drop") {
+            let listener = &generated[start..end];
+            assert_eq!(listener.matches(needle).count(), 1);
+            broken.replace_range(start..end, &listener.replacen(needle, replacement, 1));
+        } else {
+            assert_eq!(generated.matches(needle).count(), 1);
+            broken = generated.replacen(needle, replacement, 1);
+        }
         fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O1").unwrap();
         let out = Command::new(&exe)
             .args([dir.join("cert.pem"), dir.join("key.pem")])
