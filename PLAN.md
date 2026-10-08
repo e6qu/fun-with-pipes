@@ -59,8 +59,8 @@ passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
 now merged as `181d3b3` after all four exact-head gates passed in CI
 `37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
 map callbacks, is the sole open PR at exact `2b0012a`; full CI `37711126548`
-is live: benchmarks passed, Linux and both macOS jobs running. Continue library
-teardown preparation and fix any CI failure.
+is live: Linux, Apple Silicon and benchmarks passed; Intel macOS is running.
+Continue OpenCL/external resource preparation and fix any CI failure.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -690,3 +690,10 @@ frees idle stacks/metrics/side metadata and deletes the library pthread key.
 Negative controls verify missing cleanup is detected. General external resource
 lifetimes, cycles and remaining aggregate paths remain open; no complete tracing-
 free execution claim. Full sequential cross-platform CI remains required.
+
+
+Native OpenCL owner cleanup is prepared next: release completed owners on failed
+initialization and drain/release queue, context and loader on native completion
+or library exit/unload. Archive exit ordering is checked on macOS. Hardware GPU
+validation and interpreter cache/failure lifetimes remain distinct; sequential
+cross-platform CI is still required before merging this preparation.

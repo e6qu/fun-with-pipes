@@ -26,18 +26,18 @@ immutable value semantics, effects and evaluation/trap order stable.
   handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. Sole open
   [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83): map callbacks, exact
   `2b0012a25da33ba777868e3755ed2127993f77e1`, full CI `37711126548` live:
-  benchmarks passed; Linux and both macOS jobs are running.
+  Linux, ARM macOS and benchmarks passed; Intel macOS is running.
   Rebase from OLD `029fac4` had only plan/handoff conflicts, reconciled with
   these authoritative docs. Three map/callback tests, complete contract
   inventory, clippy and formatting pass. Merge only after all four current-head
   gates pass, subject `Own synchronous map results without sharing callback inputs`,
   59 characters, one line, empty body and exact match. Then rebase filter from
   OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
-  `1ea7f07` for the fold child. Shared target is library unload; clean package before switching.
-  Latest published preparation: library inputs `a6ebc1da9637b4fef866697fa766208fd2d72af1`,
-  OLD base `5b34382`, checkout `/private/tmp/fwp-library-input-worktree`,
-  branch `ownership-library-inputs`. Current preparation: native library unload
-  mappings/caches/finalizers/task stacks/pthread cleanup key, then cycles/aggregate gaps.
+  `1ea7f07` for the fold child. Shared target is OpenCL ownership; clean package before switching.
+  Latest published preparation: library unload `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`,
+  OLD base `a6ebc1d`, checkout `/private/tmp/fwp-library-unload-worktree`,
+  branch `ownership-library-unload`. Current preparation: native OpenCL loader,
+  queue and context ownership, then external resources/cycles/aggregate gaps.
 - Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
   passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
@@ -2794,3 +2794,83 @@ also passes with `FWP_REUSE=0`, CPU 0.63 s / elapsed 1.82 s. All commands use
 Formatting/whitespace pass. No local workload remains. Next audit actual external
 resource cleanup and source-reachable runtime cycles; keep this preparation
 separate from sole PR #83 and require full exact-head CI at its sequential turn.
+
+
+Native library unload publication: `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`,
+branch `ownership-library-unload`, OLD parent `a6ebc1d`, clean checkout
+`/private/tmp/fwp-library-unload-worktree`. Verified one-line 64-character subject
+`Drain native library tasks and release runtime storage on unload`, empty body.
+No additional PR opened. All focused checks above pass; full sequential CI remains
+required. Sole PR #83 exact `2b0012a`, CI `37711126548` still live with benchmarks
+passed and Linux/ARM/Intel tests running. Next preparation audit found persistent
+OpenCL loader/context/queue ownership missing, including initialization failures;
+fix those lifetimes next, then external files/sockets/TLS and cycles/aggregate gaps.
+
+
+## Native OpenCL lifetime preparation (2026-10-08)
+
+Branch `ownership-opencl-lifetime`, checkout `/private/tmp/fwp-opencl-worktree`,
+OLD parent `5d0dc220fa1cfc3699cef88224c61d42cf8e66fc`. Not yet published.
+The actual-loader regression first failed at O1 with exit 2: generated-library
+unload left a live context. Baseline check CPU 6.54 s / elapsed 14.12 s. Runtime
+now records its dlopen owner and requires queue/context release entry points.
+A common finish path drains/releases the queue, releases the context, then closes
+the loader reference. Failed symbol lookup, platform/device selection and
+context/queue creation run this path immediately, preserving the cached failure
+diagnostic and preventing a second creation attempt. Library unload and normal
+native executable completion invoke finish after CAF release.
+
+The first corrected dynamic loader probe passes five modes (success, no platform,
+context failure, queue failure after context creation, missing required symbol)
+at O1/O2: CPU 6.91 s / elapsed 16.68 s. A fake OpenCL library records API ownership
+and actual loader destruction; this is not hardware GPU validation. Additional
+archive/executable exit checks, five negative controls and adjacent unload checks
+are running. Rust interpreter OpenCL uses a process-lifetime OnceLock cache; its
+partial-failure cleanup also needs audit, recorded separately from native unload.
+Shared target is this OpenCL compiler, following guarded package clean (128.9 MiB).
+Sole PR #83 CI stays live; failures remain repairs and do not block this work.
+
+
+OpenCL archive exit exposed a real ordering failure: the OpenCL image's
+termination ran before the archive's ordinary destructor (stdout `main`, `bad
+cleanup`). Combined unload/GPU check failed, CPU 2.47 s / elapsed 10.05 s;
+unload test itself still passed. Library initialization now also registers its
+idempotent finish through atexit, retaining the unload destructor as fallback.
+This must be proved safe across actual repeated dynamic unload and process exit;
+checks are running before any publication. Do not treat the initial dynamic-only
+pass as complete archive support. Executable completion explicitly finishes its
+OpenCL cache; native-library exit/unload shares its guarded finish path.
+
+
+OpenCL early-exit registration now passes the combined two-test check, CPU 10.01 s /
+elapsed 29.61 s: repeated dynamic unload, static archive exit and native executable
+completion all release API owners before loader teardown, at O1/O2. Five dynamic
+negative controls detect missing queue/context/loader release, drain and library
+finish. Final added controls also check Darwin archive exit registration and native
+executable finish. Full sequential CI remains required. Current sole PR #83 CI
+`37711126548`: Linux, Apple Silicon and benchmarks passed; Intel macOS remains live.
+
+
+OpenCL final dedicated check (including executable and Darwin archive-exit
+negative controls) passes, CPU 1.24 s / elapsed 9.03 s; formatting passes,
+CPU 0.35 s / elapsed 0.74 s. The archive registration negative control is
+Darwin-specific; all platforms still run positive static-archive and dynamic
+loader ownership assertions. The native code change preserves the cached error
+message and availability behavior. Unoptimized interpreter/native no-OpenCL
+semantic comparison is running before publication.
+
+
+Unoptimized no-OpenCL semantic comparison passes: `FWP_NO_OPT=1 cargo test
+--test numerics gpu_without_opencl -- --nocapture`, CPU 9.62 s / elapsed 19.26 s.
+Interpreter/native stdout, stderr and exit status agree for absent loader and
+no-platform implementations. No hardware GPU claim and no full local test gate.
+
+
+OpenCL publication validation: library/unload/GPU clippy passes with `-D warnings`,
+CPU 2.34 s / elapsed 4.70 s. Three adjacent C input/output checks still pass after
+exit registration: `cargo test --test library_input_ownership --test
+library_result_ownership -- --nocapture`, CPU 2.97 s / elapsed 8.92 s. Final format
+check passes, CPU 0.35 s / elapsed 0.72 s; whitespace clean. No local workload
+remains. Publish this native preparation separately, then implement interpreter
+OpenCL partial-load cleanup without changing process-lifetime availability/cache
+semantics. Current target is OpenCL; package clean before the next checkout.

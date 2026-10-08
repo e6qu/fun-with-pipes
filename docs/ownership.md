@@ -126,6 +126,28 @@ stays unarmed. Ordinary archives are covered; static-memory provisioning, genera
 File/socket/TLS/GPU resources, source-reachable cycles and complete tracing-free
 execution still need evidence. Full sequential Linux/macOS CI is required.
 
+## Prepared native OpenCL owners
+
+The runtime keeps one owner of its OpenCL loader handle, context and command
+queue. Missing entry points, unavailable platforms/devices and context/queue
+creation failure release completed owners immediately. The cached diagnostic
+and availability result remain stable. Successful completion drains the queue,
+releases it and its context, then closes the loader owner. Normal native program
+completion and native library exit/unload run this path.
+
+Native library initialization registers its guarded finish for process exit as
+well as keeping its unload destructor. This releases dynamically loaded resources
+before Darwin terminates the dependency image, including static archives; repeated
+finish calls are harmless. Actual loader probes cover API release counts/order,
+partial failure, shared unload, archive exit and executable completion at O1/O2.
+Negative controls detect omitted release/drain/finish and Darwin exit registration.
+A fake OpenCL implementation proves the resource protocol; it proves no hardware
+GPU speed or numerical correctness. Full sequential CI is still required.
+
+Interpreter OpenCL retains a process-lifetime cache; its partial-failure resource
+cleanup remains separate acceptance work. File/socket/TLS ownership, remaining
+aggregate paths and cycles still require evidence before tracing can be optional.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
