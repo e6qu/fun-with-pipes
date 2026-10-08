@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 08:31 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 09:39 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -36,16 +36,16 @@ Queued, skipped, cancelled, superseded or earlier-head runs are not passing gate
 
 ## Merged support
 
-Current main: `eae33c4c9e50c397936827e4495577fc6f6f063f`, squash #87.
-ALL SIX jobs passed in CI `37743989274` at exact
-`8be65d1ae2eccda2f3e8059e77c7f9b59e3f899b`. Verified one-line subject
-`Transfer right-fold accumulators with typed owned argument spans`, empty body.
-Root fast-forward preserved five current docs in `/private/tmp/fwp-main-docs-pre87`.
-Previous #86 squash `90affeb` passed ALL SIX CI `37733658893`.
+Current main: `49f91081113156c69e87e966dd7ef055ceeb1432`, squash #88.
+ALL SIX jobs passed in CI `37750832622` at exact
+`42cf518f2ec52dd86344f9393fbe20f4a492ac00`. Verified one-line subject
+`Own selected list prefixes and borrowed callback suffixes`, empty body.
+Root fast-forward preserved six current docs in `/private/tmp/fwp-main-docs-pre88`.
+Previous #87 squash `eae33c4` passed ALL SIX CI `37743989274`.
 
-#74–#87 deliver native macOS ARM/Intel, container ownership contracts, owned
+#74–#88 deliver native macOS ARM/Intel, container ownership contracts, owned
 text/byte leaves and fresh text trees, compiled closures and cleanup, concrete
-argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip and right-fold ownership.
+argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip, right-fold and list-prefix ownership.
 Full earlier hashes/runs, measurements and delivered language features remain in
 [history](roadmap-history.md). Phase 1 is complete; phase 2 is incomplete;
 phases 3–6 (numeric representation, numerics/autodiff, broader evidence and
@@ -69,22 +69,34 @@ Both oracles explicitly use FWP_NO_OPT=1. Equivalent owned/shared controls
 verify identical output, no collections and >0.3 MiB extra reclamation;
 no speed claim. OLD preparation anchor remains `adc7947a25f297d5de53d587a4bcdeb11d29fdb7`.
 
-Next: list-prefix, branch `ownership-list-prefix`, checkout
-`/private/tmp/fwp-prefix-worktree`, OLD head `376e77ae94690057ededafd3468e72075cd4bb1c`.
-Rebase from OLD right-fold adc7947a onto actual #87 squash eae33c4.
-Resolve plan/state conflicts with current live docs, correct no-opt references,
-Focused seven prefix/right-fold/zip/borrowed checks pass CPU 21.41 s / elapsed
-42.98 s; clippy lib/four tests 2.32 s / 4.76 s; real inventory one test
-3.30 s / 6.88 s; format 0.32 s / 0.61 s. Both prefix oracles now use
-FWP_NO_OPT=1. Publishing the sole next PR; require all six exact-head gates.
+Prefix #88 has merged after all six exact-head gates passed. Seven focused
+checks passed CPU 21.41 s / elapsed 42.98 s; clippy lib/four fixtures 2.32 s /
+4.76 s, real inventory one test 3.30 s / 6.88 s, format 0.32 s / 0.61 s.
+Both oracles use FWP_NO_OPT=1. OLD prefix remains 376e77ae9469.
+Next: list-copy, actual branch `ownership-list-copies`, checkout
+`/private/tmp/fwp-list-copy-worktree`, OLD head `bb00baa4ab9577ed785e5cb2f3280c9d6697dde6`.
+Rebased from immutable OLD prefix `376e77ae94690057ededafd3468e72075cd4bb1c`
+onto actual #88 squash 49f9108. Both interpreter oracles explicitly use
+FWP_NO_OPT=1. Seven list-copy/prefix/right-fold/borrowed-callback tests passed
+CPU 21.03 s / elapsed 42.42 s. Clippy lib/four fixtures passed 2.20 s / 4.44 s;
+real inventory one lib test passed 3.02 s / 6.43 s. Formatting initially failed
+on the corrected oracle expressions; formatted and rechecked successfully,
+CPU 0.36 s / 0.51 s. Commands use the documented fwp local guard.
+Publish the sole next PR after committing this handoff. Full six exact-head gates
+remain required. Next after its squash: list-option, rebasing from immutable
+OLD list-copy bb00baa4 onto the actual new squash. Keep failures as repair tasks.
 
 In parallel preparation, `/private/tmp/fwp-file-runtime-owners-worktree`, branch
-`ownership-file-runtime-owners`, is dirty atop resource-frame preparation
+`ownership-file-runtime-owners`, is published clean as `e21c92ea2f6c7bdfcf881d05e485f57683df0b85` atop resource-frame preparation
 `368dafc5567dab757e779017784ce347c908593c`. File header counts are independent
-of GC metadata; owned borrowed-I/O wrappers and String unwind cleanup are being
-implemented. No tests yet, no native frame integration, no implicit-disposal
-or heap-reclamation support claim. Next: negative-control runtime ownership
-probes, guarded focused checks and separate preparation publication.
+of GC metadata; owned borrowed-I/O wrappers and String unwind cleanup are implemented. Nine focused runtime/File construction/I/O/visibility/frame checks pass CPU
+23.50 s / elapsed 47.19 s. The runtime probe has three omission controls for
+returned-alias retention, extra-reference unwind and fresh-String unwind; O1/O2
+with GC stress/verification and both poison modes pass. Explicit close and
+library finalization do not double-close. Final runtime matrix additionally passes with FWP_GC=off, CPU 1.21 s /
+elapsed 3.65 s. Clippy lib/five fixtures passes 2.45 s / 5.08 s; fmt
+0.45 s / 0.84 s. No native frame integration or header/path storage
+reclamation claim. No extra PR was opened. The subsequent native frame preparation is recorded below.
 
 Fold local evidence: five fold/filter/borrowed checks CPU 15.84 s / 31.87 s;
 clippy lib/three tests CPU 2.20 s / 4.51 s; inventory CPU 3.08 s / 6.51 s;
@@ -250,14 +262,13 @@ cleanup behavior, not a new recoverable OOM interface. Production library tracin
 stays unarmed. Format passes CPU 0.37 s / 0.75 s; clippy lib/three tests passes CPU 2.37 s /
 4.77 s.
 
-Queue 70 is published (no extra PR). #86 passed ALL SIX and merged; right-fold is now
-the next sequential task. Full separate evidence now passes all six gates.
+Queue 70 is published (no extra PR). #87 passed ALL SIX and merged; prefix #88
+is the sole sequential PR. Full separate evidence passes all six gates.
 
-Priority now: connect native typed File ownership on `ownership-file-discard`, checkout
-`/private/tmp/fwp-file-discard-worktree`, current parent `368dafc`, with bounded file
-descriptor pressure and compare raw interpreter/native before changing lifetimes. Current affine File discard reproducer is `tests/file_discard_ownership.rs` in
-that checkout, untracked and intentionally failing until repaired; no commit or
-second PR. It lowers ONLY each interpreted/native child descriptor limit to 32
+Following the separate runtime-count foundation, connect native typed File ownership on `ownership-file-discard`, checkout
+`/private/tmp/fwp-file-discard-worktree`, current parent `e21c92e`, with bounded file
+descriptor pressure and compare raw interpreter/native before changing lifetimes. The initial affine File discard reproducer was `tests/file_discard_ownership.rs`
+in that checkout, originally untracked and failing; native preparation below repairs it. It lowers ONLY each interpreted/native child descriptor limit to 32
 through setrlimit/pre_exec (never the session/compiler/test process), then opens
 and ignores 64 Files in loop steps. Explicit-no-opt interpreter prints discarded;
 O1 native with FWP_GC=off traps with Too many open files (CPU 7.34 s / 14.87 s).
@@ -277,8 +288,7 @@ would incorrectly make it succeed. Any fix must preserve this trap behavior.
 Resource lifetime anchors must survive function inlining and loop lowering;
 optional count/reuse/free flags must not disable required resource disposal.
 The File-discard 32-descriptor native failure reproduced again after both I/O
-repairs (CPU 0.88 s / elapsed 2.03 s). This remains an active repair target,
-not a blocker. A separate four-descriptor helper test exposes an optimized
+repairs (CPU 0.88 s / elapsed 2.03 s). That failure was the native frame repair target; the follow-up below now passes. A separate four-descriptor helper test exposes an optimized
 interpreter bug: two inlined helpers incorrectly retain the first helper's File
 into the second call, whereas raw execution closes its frame (baseline CPU
 1.02 s / elapsed 2.24 s). Original frame metadata fixes this below.
@@ -323,8 +333,8 @@ resource unit checks now pass CPU 3.64 s / 7.52 s; repeated three frame checks
 CPU 12.80 s / 25.86 s; format CPU 0.46 s / 0.85 s. Published the focused correction as `368dafc5567dab757e779017784ce347c908593c`,
 verified single-line subject and empty body; final warning check passes CPU
 2.36 s / elapsed 4.65 s. dcc5bba remains immutable OLD. Dirty File-discard was preserved through stash/rebase/pop from dcc5bba onto
-that corrected current head. Its four-test untracked audit remains. No native
-File ARC implementation yet. Next concrete action: add typed File retain/drop and
+that corrected current head. Its four-test untracked audit remained. Before the
+native follow-up below, the concrete action was: add typed File retain/drop and
 primitive result contracts; retain original parameter/binding owners in stack
 region slots and release them on normal/error/trap/cancellation exits. Protect
 partial initialization and returned/error aliases. Cover direct handles and
@@ -420,3 +430,160 @@ The guard and compact documents landed with #85. Include current updates in
 the next sequential PR, reconcile
 future snapshots against them, and update current state rather than appending
 another competing priority queue. No roadmap work is blocked by test failures.
+
+
+File runtime-count preparation: `ownership-file-runtime-owners`, checkout
+`/private/tmp/fwp-file-runtime-owners-worktree`, parent `368dafc5567dab757e779017784ce347c908593c`
+(the corrected current resource-frame head, not OLD dcc5bba). Three omission
+controls fail independently: no returned-alias retain exits 6, no extra-owner
+unwind exits 7, no String unwind exits 10. Correct code passes O1/O2, GC stress/
+verification and disabled tracing, both reuse poison modes; no-free mode preserves
+stream semantics while leaving String storage to tracing. File header retains
+300 aliases even with its GC slot cleared; last owner closes once. Recoverable
+read/write/conversion/tuple failures preserve the borrowed original owner;
+checked UINT64_MAX overflow does not touch the stream or leak cleanup entries.
+Header/path storage remains allocator-managed; finalizers need the header until
+library finish. This is runtime foundation only: native typed File Dup/Drop,
+resource-result dispatch and region scopes are next. Published clean as queue 74 at `e21c92ea2f6c7bdfcf881d05e485f57683df0b85`,
+verified one-line subject `Count File aliases independently of tracing metadata`
+and empty body; no extra PR. Rebased the preserved four-case dirty File-discard
+audit from 368dafc onto that publication; only the audit is untracked. Keep the original 4-descriptor parameter failure
+while repairing the 64-open/discard native failure. Local checks used:
+`env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test file_runtime_ownership --test file_io_errors --test file_construction_ownership --test file_write_visibility --test resource_frames`;
+all nine passed, CPU 23.50 s / elapsed 47.19 s. Final runtime-only matrix,
+fmt and clippy lib/five fixtures commands used the same guard and passed above.
+
+
+Pre-native handoff verification: nine current/archive doc link sets, all 68 immutable
+queue ancestry pairs and whole-message checks for #87 squash, prefix publication
+and File runtime foundation pass (guarded python check, CPU 0.05 s / 0.48 s).
+At that earlier snapshot #88 gates were pending; all six have since passed and #88 merged.
+No local workload is running. Shared target was cleaned with the guard before
+switching to `/private/tmp/fwp-file-discard-worktree`, now at e21c92e with only
+its then-four-case untracked audit. The next compiler step at that point was: rc::free_in must count original
+ResourceRegion parameters as free uses (but not uninitialized local bindings),
+so early drops stay inside the original frame; Checker must record entry owners
+before region retention can allocate. Then connect typed File retain/drop and
+owned I/O result dispatch and emit protected, initialized native region slots.
+Validate parameter trap order and returned/error aliases alongside repairing the
+native discard failure; mandatory disposal must survive optional reuse/free flags.
+Prefix CI failures, if any, are repair tasks, never roadmap blockers.
+
+
+Native File frame preparation is now implemented on `ownership-file-discard`,
+checkout `/private/tmp/fwp-file-discard-worktree`, parent e21c92e (queue 74).
+The formerly failing 64-open/discard loop succeeds at O1/O2 with a child descriptor
+limit of 32 and GC off; all reuse/free combinations, real stress/verification and
+both poison modes pass. Omitting only the normal frame release restores the
+original EMFILE failure. Original parameter/record slots have separate frame
+references, zero initialization and registered cleanup through partial retention.
+Incoming parameter owners remain live before frame setup; dead drops occur inside
+regions. Native scalar/record/variant result paths release the region after result
+ownership transfers. Original bindings currently use boxed slots; optimizing these
+holders into typed fields remains necessary for allocation efficiency.
+
+File enters the mandatory ownership pass even under FWP_REUSE=0. Physical reuse
+stays disabled by runtime uniqueness guards and no reuse tokens. File-bearing
+aggregate drops still traverse resource children under FWP_FREE=0. Typed callback,
+worker, loop, task/channel and container boundaries select File header retains.
+Borrowed File I/O calls select the already-owned runtime wrappers. Explicit close
+is unchanged. The original four-descriptor parameter EMFILE behavior passes;
+inlined helpers now also close before the next helper in native mode, including
+reuse/free disabled. Returned File/record aliases pass. Handled Error[File] first
+exposed an early close (`internal: duplicate discarded file`); typed fail payload
+retention and an owned synchronous attempt wrapper repaired it. Both Result
+branches protect payload ownership through result allocation.
+
+Earlier sixteen focused File/runtime/frame/effect checks passed CPU 30.13 s /
+60.58 s. After trimming duplicate audit cases, eight final File/frame/effect
+checks (including the frame-release omission control) pass CPU 24.89 s / 49.84 s.
+Nineteen RC invariants pass 3.64 s / 7.54 s; actual primitive inventory one test
+passes 0.00 s / 0.13 s; clippy lib/four fixtures 2.35 s / 4.77 s; fmt 0.45 s /
+0.87 s. Final thirteen typed File/frame/effect/task/channel/map/set checks pass CPU
+34.92 s / elapsed 70.20 s. Final format passes 0.34 s / 0.63 s; final
+compiler/six-fixture warning check passes 2.26 s / 4.68 s. Published queue 75 as `923ad4a4fb07a5f6e2211c16c219308b5bddcf56`, clean
+with verified one-line subject `Release native File owners at original resource frame boundaries`
+and empty body; no second PR. All local checks used the same serial, low-priority fwp guard. The standalone discard audit now contains
+only its new descriptor-pressure/flags/omission check; its other three cases are
+maintained in tests/resource_frames.rs, with native helper coverage added.
+
+This is preparation, not merged File ARC acceptance. Header/path storage retains
+its allocator lifetime; File-bearing WebAssembly aggregates still need logical
+ownership despite stub native count slots. Unknown/shared runtime graphs,
+resource-bearing callback teardown, error/cancellation scopes and original
+aggregate-holder allocation need further audit. Do not claim optional tracing-free
+execution. Continue phase 2 repairs while sequential CI runs; the native preparation is published without an extra PR. Next sequential PR after
+prefix remains list-copy from immutable OLD prefix 376e77ae9469.
+
+
+Earlier native-frame preparation was published clean at 923ad4a.
+Next concrete audit: File-bearing runtime results/borrowed containers and
+WebAssembly aggregate ownership (the latter cannot rely on native RC slots),
+then remove unnecessary boxes from original aggregate frame holders and complete
+header/path storage lifetime. Preserve the exact native/interpreter cleanup/trap
+order; keep phase 2 incomplete. Prefix #88 subsequently passed all six exact-head gates and merged. Failures remain repair tasks.
+
+
+File runtime-boundary preparation is published clean as
+`30fe112db93c727e565fed0a4c25e4da713a10ad` on `ownership-file-runtime-boundaries`,
+checkout `/private/tmp/fwp-file-runtime-boundaries-worktree`, parent OLD/current
+`923ad4a4fb07a5f6e2211c16c219308b5bddcf56` (queue 75). Native actual-source
+checks cover an independently opened File returned through file.with, cached task
+File results and loop Step File results. The final loop callback selection depends
+on runtime read-all input and has distinct step branches, preventing constant
+callback folding; its final matrix passes CPU 11.56 s / elapsed 23.30 s. Raw interpreter references use
+FWP_NO_OPT=1. O1/O2, reuse/free disabled and enabled, tracing off and armed stress/
+verification, and both poison modes pass. Initial task fixture had an invalid
+no-hole None arm using const; corrected before recording semantic evidence.
+
+file.with now borrows its synchronous callback, receives an owned tuple, retains
+its returned typed value, drops the tuple and both File owners, and closes the
+scoped stream idempotently. The raw scoped stream remains registered through
+errors/traps/cancellation; no new surface resource duplication is permitted.
+Omitting only the result retain is detected at O1/O2 (exit 101, duplicate discarded
+File). Header/path storage still follows the existing allocator lifetime.
+
+The audit also found FWP_FREE=0 was bypassed by ordinary child drop functions
+inside a resource-bearing parent. Such children now have count-only drop bodies;
+resource children still close. Task/channel object storage also honors the no-free
+macro while releasing their owned resource results/queued values. Exact generated
+C accounting verifies fwp_gc.freed == 0.0 for all three sources with tracing off,
+at O1/O2, without rounded counters. Restoring ordinary child frees in the scoped
+probe fails that accounting check (exit 29). These are flag semantics checks,
+not a heap reduction or speed claim.
+
+Eleven focused File/frame/effect/task checks pass CPU 36.83 s / elapsed 73.76 s.
+Final boundary matrix with both omission controls and exact no-free accounting
+passes 17.60 s / 35.40 s. Format 0.44 s / 0.62 s and clippy lib/five fixtures
+2.33 s / 4.77 s pass. The actual inventory check passes one test, CPU 3.48 s / 7.34 s.
+Published without a second PR; verified one-line subject
+`Own scoped File results and honor disabled freeing`, empty body. Same fixed serial/low-priority fwp guard throughout.
+Next: WebAssembly resource-bearing aggregates and runtime owners cannot use their
+stub RC operations (fresh/dup/drop/release-last are currently no-ops). Require
+actual runner WASI evidence; native GC-off checks are not WASM support. Original
+aggregate-holder boxing and File header/path reclamation also remain required.
+
+
+Current local compiler target is `/private/tmp/fwp-file-runtime-boundaries-worktree`,
+clean at 30fe112; no local workload runs. Root now has six live doc edits (including
+prepared primitive File/effect contracts), all ours; preserve all six on the next
+main fast-forward. Next preparation base is actual 30fe112. WebAssembly's bump
+allocation remains intentional, but zero RC slots prevent last-owner resource
+cleanup in boxed aggregates and runtime cached values. Add a focused reproducer
+and logical ownership repair, then require actual runner WASI execution. Do not
+substitute native GC-off evidence for that platform check. Task/callback cycle
+policy, shared runtime graphs, aggregate frame boxes and header storage remain
+active phase 2 work. Prefix #88 subsequently passed all six gates and merged; list-copy follows from immutable OLD prefix 376e77ae9469.
+
+
+WebAssembly logical-count repair is in progress on `ownership-wasm-resource-counts`,
+checkout `/private/tmp/fwp-wasm-resource-counts-worktree`, parent actual 30fe112.
+Dirty edits add independent logical aggregate/task counts for resource programs
+without changing value layout, bump storage or physical reuse. No validation yet.
+A stable exact-value counter map avoids reading arbitrary value words as headers;
+64-bit counts and runtime compact-slot access cover wide aliases/overflow. Count
+entries are removed on logical destruction. The map adds metadata storage and
+lookup work, so no zero-cost or memory-reduction claim. Next: focused host execution
+of the actual GC-disabled C path, then actual WASI evidence on runners, sharing/
+callback/teardown audits and metadata-cost measurements. Keep this separate from
+list-copy's sequential PR and continue phase 2 until full acceptance.

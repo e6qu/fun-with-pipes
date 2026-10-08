@@ -24,6 +24,12 @@ pub enum ResultOwnership {
     },
     /// New owned list nodes containing already-owned callback results.
     FreshSpine,
+    /// New list nodes alias borrowed elements; an optional suffix aliases
+    /// the specified argument and requires one additional tail reference.
+    CopiedSpine {
+        runtime: &'static str,
+        tail: Option<usize>,
+    },
     /// One owned reference to a borrowed list suffix.
     AliasTail {
         argument: usize,
@@ -169,6 +175,43 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[B, B],
             ResultOwnership::AliasTail { argument: 1 },
             Some(Callback::Borrowed(0)),
+            &[1],
+        ),
+        "reverse" | "flatten" => (
+            &[B],
+            ResultOwnership::CopiedSpine {
+                runtime: if symbol == "reverse" {
+                    "reverse"
+                } else {
+                    "flatten"
+                },
+                tail: None,
+            },
+            None,
+            &[0],
+        ),
+        "take" => (
+            &[B, B],
+            ResultOwnership::CopiedSpine {
+                runtime: "take",
+                tail: None,
+            },
+            None,
+            &[1],
+        ),
+        "append" => (
+            &[B, B],
+            ResultOwnership::CopiedSpine {
+                runtime: "append",
+                tail: Some(0),
+            },
+            None,
+            &[0, 1],
+        ),
+        "drop" => (
+            &[B, B],
+            ResultOwnership::AliasTail { argument: 1 },
+            None,
             &[1],
         ),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
@@ -341,6 +384,24 @@ mod tests {
             assert!(contract.borrows_callback());
             assert_eq!(contract.callback, Some(Callback::Borrowed(0)));
             assert_eq!(contract.arguments, &[Argument::Borrow, Argument::Borrow]);
+        }
+        for symbol in ["reverse", "take", "append", "flatten", "drop"] {
+            assert!(lists
+                .lines()
+                .any(|line| line.starts_with(&format!("foreign \"fwp\" {symbol} :"))));
+            let c = primitive(symbol).unwrap();
+            assert!(c.arguments.iter().all(|a| *a == Argument::Borrow));
+            assert!(c.callback.is_none());
+            assert!(!c.aliases.is_empty());
+            if let ResultOwnership::CopiedSpine {
+                tail: Some(argument),
+                ..
+            }
+            | ResultOwnership::AliasTail { argument } = c.result
+            {
+                assert!(c.aliases.contains(&argument), "{symbol}");
+                assert_eq!(c.argument(argument), Argument::Borrow);
+            }
         }
         assert!(!primitive("array.map").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
