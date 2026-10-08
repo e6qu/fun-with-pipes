@@ -84,10 +84,9 @@ alias and inactive-payload assertions are unchanged. Refresh and rerun holder
 source88 after both repairs propagate; failed evidence is not support.
 
 Matched-result refresh44–67 is complete, including both CAF/converted-result
-controls;60–67 passes8.35CPU/92.10elapsed. Refresh68–72 passes;73 validation stopped on the exact expected-match patch
-layout after its source rebase (resource handling follows match completion).
-Keep the original compiler scopes and update the strict verifier context, then
-continue73–112 in bounded batches using
+controls;60–67 passes8.35CPU/92.10elapsed. Refresh68–75 is complete:5.27CPU/58.64elapsed stops safely at the strict73
+expected-patch layout check;3.26/38.44s completes after preserving the resource
+handler layout and both original resource commits. Continue76–112 using
 /private/tmp/fwp-refresh-matched-conversion.py and actual bases in the table.
 It verifies exact inherited code, original probes and commit counts, retains each
 prior head remotely, publishes with an exact lease and audits the handoff.
@@ -159,7 +158,7 @@ still need their final squash rebases and six exact-head full gates.
 | 72 ownership-file-io-errors | 54d816de6a93 | 55a6b0c6c7c5 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
 | 73 ownership-resource-frames | e3bfb67a9244 | 54d816de6a93 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | ddbee893478e | e3bfb67a9244 | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
-| 75 ownership-file-discard | f7b57915dd7a | 38d83189cedb | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
+| 75 ownership-file-discard | ef04da0f3049 | ddbee893478e | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | 4c6618c4eb91 | f7b57915dd7a | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 8d4ba07d6def | 4c6618c4eb91 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | e037bc5a06dc | 8d4ba07d6def | Actual WASI gates required; source unchanged except inherited harness repairs |
