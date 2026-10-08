@@ -122,7 +122,9 @@ impl<'p> Behaviors<'p> {
 
     fn expr(&mut self, e: &Expr) -> Traps {
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.expr(b)
+            }
             Expr::Local(_) | Expr::Const(_) => none(),
             // a constant binding is evaluated; a function is a value
             Expr::Func(id) if self.funcs[*id].arity == 0 => self.call(*id, &[]),
@@ -303,6 +305,15 @@ impl Fuser<'_> {
 
     fn expr(&mut self, e: Expr) -> Expr {
         let e = match e {
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body: Box::new(self.expr(*body)),
+            },
             Expr::Call(id, args) => {
                 Expr::Call(id, args.into_iter().map(|a| self.expr(a)).collect())
             }

@@ -154,7 +154,7 @@ still need their final squash rebases and six exact-head full gates.
 | 69 ownership-nested-loop-boxing | 04d75ff8a0e1 | 4f37224b0f6f | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
 | 70 ownership-file-construction | fa6e27813f3d | 04d75ff8a0e1 | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 55a6b0c6c7c5 | fa6e27813f3d | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
-| 72 ownership-file-io-errors | 2990083331a2 | 8c332516937b | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
+| 72 ownership-file-io-errors | 54d816de6a93 | 55a6b0c6c7c5 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
 | 73 ownership-resource-frames | 006aba78f1f5 | 2990083331a2 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 38d83189cedb | 006aba78f1f5 | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | f7b57915dd7a | 38d83189cedb | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
