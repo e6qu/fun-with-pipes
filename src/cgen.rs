@@ -534,6 +534,11 @@ fn stack_enabled() -> bool {
     std::env::var("FWP_STACK").map_or(true, |v| v != "0")
 }
 
+/// Original resource record holders may retain fields without a heap box.
+fn resource_frame_fields_enabled() -> bool {
+    std::env::var("FWP_FRAME_FIELDS").map_or(true, |v| v != "0")
+}
+
 /// Variants returned as structs (`FWP_VRET=0` when compiling turns it off).
 fn variant_returns_enabled() -> bool {
     std::env::var("FWP_VRET").map_or(true, |v| v != "0")
@@ -1887,6 +1892,12 @@ impl<'p> Gen<'p> {
     }
 }
 
+#[derive(Clone)]
+enum ResourceSlot {
+    Value(String),
+    Fields(Vec<Option<String>>),
+}
+
 /// Per-function code generation state.
 struct FnGen<'g, 'p> {
     g: &'g mut Gen<'p>,
@@ -1914,7 +1925,7 @@ struct FnGen<'g, 'p> {
     /// Off-heap local owners count their children directly.
     stack_children: HashMap<Local, Vec<(String, MT)>>,
     known_callbacks: HashMap<Local, (FuncId, usize)>,
-    resource_slots: HashMap<Local, String>,
+    resource_slots: HashMap<Local, ResourceSlot>,
     /// The function being generated.
     me: FuncId,
     tail_calls: std::collections::HashSet<*const Expr>,
@@ -2438,7 +2449,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 bindings,
                 body,
             } => {
-                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let frame =
+                    self.begin_resource_region(e as *const Expr, parameters, bindings, body);
                 let values = self.expr_fields(body, n);
                 let result = values.into_iter().map(|v| self.bind(v)).collect();
                 self.end_resource_region(frame);
@@ -2668,7 +2680,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 bindings,
                 body,
             } => {
-                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let frame =
+                    self.begin_resource_region(e as *const Expr, parameters, bindings, body);
                 let (tag, fields) = self.expr_variant(body, m, ty);
                 let tag = self.bind(tag);
                 let fields = fields.into_iter().map(|v| self.bind(v)).collect();
@@ -2842,17 +2855,41 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    /// `l = v` before `body`: a record that `body` reads only through its
-    /// fields and that `v` gives unboxed is kept as its fields. Returns the
-    /// rest of `body` to generate (a copy that reuses its original takes
-    /// the original's `Drop`).
+    /// Only replace a boxed frame holder when its local can stay unboxed.
+    /// Otherwise retain the parent once, rather than adding counts per field.
+    fn resource_field_binding(&self, e: &Expr, local: Local, n: usize) -> bool {
+        let eligible = |e: &Expr| self.resource_field_binding(e, local, n);
+        match e {
+            Expr::Let(l, value, body) if *l == local => {
+                self.unboxed(value) == Some(n) && self.field_uses(body, local, n)
+            }
+            Expr::Let(_, value, body) => eligible(value) || eligible(body),
+            Expr::Dup(_, body)
+            | Expr::Drop(_, body)
+            | Expr::Field(body, _)
+            | Expr::ResourceRegion { body, .. } => eligible(body),
+            Expr::Match(value, arms) => {
+                eligible(value) || arms.iter().any(|(_, body)| eligible(body))
+            }
+            Expr::Call(_, args) | Expr::Construct(_, args) | Expr::Record(args) => {
+                args.iter().any(eligible)
+            }
+            Expr::Apply(value, args) => eligible(value) || args.iter().any(eligible),
+            Expr::SetFields(value, fields) => {
+                eligible(value) || fields.iter().any(|(_, value)| eligible(value))
+            }
+            Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => false,
+        }
+    }
+
     /// Original frame references are independent of ordinary last-use owners.
     fn begin_resource_region(
         &mut self,
         key: *const Expr,
         parameters: &[Local],
         bindings: &[Local],
-    ) -> (HashMap<Local, String>, String, String, usize) {
+        body: &Expr,
+    ) -> (HashMap<Local, ResourceSlot>, String, String, usize) {
         let saved = self.resource_slots.clone();
         let mut entries = Vec::new();
         let mut initial = Vec::new();
@@ -2902,9 +2939,32 @@ impl<'g, 'p> FnGen<'g, 'p> {
         let node = self.fresh();
         for &l in bindings {
             let ty = self.locals[l as usize].clone();
-            let slot = entries.len();
-            entries.push(("0".into(), ty));
-            self.resource_slots.insert(l, format!("{ctx}.v{slot}"));
+            let holder = if let Some(fields) =
+                record_fields(&self.g.prog.shapes, &ty).filter(|fields| {
+                    resource_frame_fields_enabled()
+                        && (1..=MAX_UNBOXED).contains(&fields.len())
+                        && self.resource_field_binding(body, l, fields.len())
+                }) {
+                ResourceSlot::Fields(
+                    fields
+                        .iter()
+                        .map(|(_, field)| {
+                            if crate::rc::needs_rc(&self.g.prog.shapes, field) {
+                                let slot = entries.len();
+                                entries.push(("0".into(), field.clone()));
+                                Some(format!("{ctx}.v{slot}"))
+                            } else {
+                                None
+                            }
+                        })
+                        .collect(),
+                )
+            } else {
+                let slot = entries.len();
+                entries.push(("0".into(), ty));
+                ResourceSlot::Value(format!("{ctx}.v{slot}"))
+            };
+            self.resource_slots.insert(l, holder);
         }
         let original = self.begin_call(key);
         let id = self.g.cleanup_defs.len();
@@ -2926,7 +2986,10 @@ impl<'g, 'p> FnGen<'g, 'p> {
         (saved, ctx, node, id)
     }
 
-    fn end_resource_region(&mut self, frame: (HashMap<Local, String>, String, String, usize)) {
+    fn end_resource_region(
+        &mut self,
+        frame: (HashMap<Local, ResourceSlot>, String, String, usize),
+    ) {
         let (saved, ctx, node, id) = frame;
         self.line(&format!("/* original resource frame */ fwp_cleanup_pop(&{node}); fwp_owner_release{id}(&{ctx});"));
         self.resource_slots = saved;
@@ -2937,19 +3000,50 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return;
         };
         let ty = self.locals[l as usize].clone();
-        let dup = self.g.value_dup(&ty);
-        let drop = self.g.value_drop(&ty);
         let original = if owned {
             self.begin_owners(&[(l, 1)])
         } else {
             None
         };
-        self.line(&format!("{dup}(l{l}); {drop}({slot}); {slot} = l{l};"));
+        match slot {
+            ResourceSlot::Value(slot) => {
+                let dup = self.g.value_dup(&ty);
+                let drop = self.g.value_drop(&ty);
+                self.line(&format!("{dup}(l{l}); {drop}({slot}); {slot} = l{l};"));
+            }
+            ResourceSlot::Fields(slots) => {
+                let fields = record_fields(&self.g.prog.shapes, &ty).unwrap().to_vec();
+                let values = self.fields.get(&l).cloned().unwrap_or_else(|| {
+                    (0..fields.len())
+                        .map(|i| format!("OBJ(l{l})->f[{i}]"))
+                        .collect()
+                });
+                for ((slot, value), (_, ty)) in slots.into_iter().zip(values).zip(fields) {
+                    if let Some(slot) = slot {
+                        let dup = self.g.value_dup(&ty);
+                        let drop = self.g.value_drop(&ty);
+                        self.line(&format!(
+                            "/* original resource field */ {dup}({value}); {drop}({slot}); {slot} = {value};"
+                        ));
+                    }
+                }
+            }
+        }
         self.end_call(original);
     }
 
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
         if self.resource_slots.contains_key(&l) {
+            if let Some(ResourceSlot::Fields(slots)) = self.resource_slots.get(&l) {
+                let n = slots.len();
+                if self.unboxed(v) == Some(n) && self.field_uses(body, l, n) {
+                    let values = self.expr_fields(v, n);
+                    let names = values.into_iter().map(|value| self.bind(value)).collect();
+                    self.fields.insert(l, names);
+                    self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
+                    return body;
+                }
+            }
             let value = self.expr(v);
             self.line(&format!("l{l} = {value};"));
             self.anchor_resource_binding(l, !matches!(v, Expr::Field(..)));
@@ -4270,7 +4364,8 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 bindings,
                 body,
             } => {
-                let frame = self.begin_resource_region(e as *const Expr, parameters, bindings);
+                let frame =
+                    self.begin_resource_region(e as *const Expr, parameters, bindings, body);
                 let value = self.expr(body);
                 let result = self.bind(value);
                 self.end_resource_region(frame);
