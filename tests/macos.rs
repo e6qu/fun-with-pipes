@@ -76,6 +76,62 @@ fn native_tasks_and_autodiff_under_collection() {
 }
 
 #[test]
+fn optimized_lists_under_collection() {
+    let scratch = Scratch::new("optimized-lists");
+    // These failed in the full Darwin sweep: flat-map, a right-fold
+    // callback and filesystem lists. Keep this local reproducer short;
+    // the golden GC suite still executes the original long iterator.
+    for name in ["traits", "stdlib_fixes", "cli_fs"] {
+        let fixture = root().join(format!("tests/run/{name}.fwp"));
+        let source = std::fs::read_to_string(&fixture).unwrap();
+        let expected = std::fs::read_to_string(fixture.with_extension("out")).unwrap();
+        let (source, expected) = if name == "stdlib_fixes" {
+            (
+                source.replace("300000", "300").replace("299999", "299"),
+                expected.replace("[299999]", "[299]"),
+            )
+        } else {
+            (source, expected)
+        };
+        let src = scratch.0.join(format!("{name}.fwp"));
+        std::fs::write(&src, source).unwrap();
+        let interpreted = checked(
+            Command::new(fwp())
+                .args(["run", "--interp"])
+                .arg(&src)
+                .current_dir(&scratch.0)
+                .env("FWP_SEED", "42"),
+        );
+        assert_eq!(interpreted.stdout, expected.as_bytes(), "{name}");
+        for opt in ["-O1", "-O2"] {
+            let exe = scratch.0.join(format!("{name}{opt}"));
+            checked(
+                Command::new(fwp())
+                    .arg("build")
+                    .arg(&src)
+                    .args([opt, "-o"])
+                    .arg(&exe),
+            );
+            for poison in ["0", "1"] {
+                let output = checked(
+                    Command::new(&exe)
+                        .current_dir(&scratch.0)
+                        .env("FWP_SEED", "42")
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison),
+                );
+                assert_eq!(
+                    output.stdout,
+                    expected.as_bytes(),
+                    "{name}, {opt}, poison={poison}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn openssl_prefix_is_usable_in_both_backends() {
     // The macOS CI jobs always provide this prefix. A developer without
     // OpenSSL can still run the other platform regressions locally.

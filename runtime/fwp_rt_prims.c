@@ -229,6 +229,7 @@ static V fwp_p_fold_right(V f, V z, V xs) {
     size_t n;
     V *a = fwp_list_items(xs, &n);
     for (size_t i = n; i > 0; i--) z = fwp_apply2(f, a[i - 1], z);
+    FWP_KEEP_ALIVE(a);
     return z;
 }
 
@@ -605,6 +606,7 @@ FWP_K V fwp_k_fold_right(fwp_fn2 f, V z, V xs) {
     size_t n;
     V *a = fwp_list_items(xs, &n);
     for (size_t i = n; i > 0; i--) z = f(a[i - 1], z);
+    FWP_KEEP_ALIVE(a);
     return z;
 }
 
@@ -965,6 +967,7 @@ static V fwp_p_flat_map(V f, V xs) {
     for (size_t i = 0; i < n; i++) a[i] = fwp_apply1(f, a[i]);
     V r = 0;
     for (size_t i = n; i > 0; i--) r = fwp_p_append(r, a[i - 1]);
+    FWP_KEEP_ALIVE(a);
     return r;
 }
 
