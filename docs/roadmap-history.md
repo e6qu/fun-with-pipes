@@ -8759,3 +8759,28 @@ PR96 now passes bench and both regular/GC stress ARM macOS; Linux and both
 Intel macOS jobs remain running at exact 03d25ac.
 Same-target lint passes 3.78 / 7.59 s CPU / elapsed.
 Fmt check passes 0.48 / 0.98 s; nine docs copied before amend, tested code unchanged.
+Final row66 b728cf5f2adb4d0957b108545df187013cf8f912 is published clean with
+exact lease 6bda2c815a7107c059370d83f1f090b50996d152. Whole subject is one
+line with empty body. No additional PR; row67 actual base remains 6bda2c8.
+
+## Borrowed ALPN root preparation refresh, 2026-10-09
+
+Row67 rebases from actual old parent 6bda2c815a7107c059370d83f1f090b50996d152
+onto current row66 head b728cf5f2adb4d0957b108545df187013cf8f912.
+Nine authoritative docs plus current AGENTS/CONTRIBUTING/README/local guard
+resolve historical consolidation; guard limits stay unchanged. Guarded clean
+passes 0.05 / 0.38 s. Guarded cargo test --test tls_alpn_roots
+--test tls_peer_subject_ownership --test tls_listener_ownership is running.
+Feature TLS runtime/test match immutable e0f11626f60955d080669a4e38e2e81ac06fff9f.
+Historical row67 consolidation would remove the prepared CONTRIBUTING raw
+optimizer oracle guidance from row48. Restored that paragraph in the current
+root and row67; preserve this additional root doc during future main refresh.
+No source or limits changed by this documentation repair.
+All three focused tests pass 11.12 / 26.13 s CPU / elapsed. ALPN probe explicitly
+arms tracing and forces a major collection at the copy boundary, checking the
+collection counter advances and SSL remains alive through its borrowed bytes.
+Missing-owner-fence control fails as intended. Real BIO handshake metadata agrees
+with Rust Session; O1/O2 stress/verification and poison checks pass. Related
+library fixtures remain unarmed; this specific probe establishes actual tracing.
+Same-target lint passes 2.97 / 5.99 s CPU / elapsed.
+Fmt check passes 0.52 / 0.99 s. Ten current docs copied before amend; tested code unchanged.
