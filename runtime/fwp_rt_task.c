@@ -1067,6 +1067,7 @@ typedef struct {
      * `Channel[T]` parameter): 0 when the stream is closed */
     int (*sink)(void *ctx, V x);
     void *sink_ctx;
+    void (*value_drop)(V), (*value_dup)(V);
 } fwp_chan;
 
 static V fwp_p_channel_make(V capv) {
@@ -1076,6 +1077,30 @@ static V fwp_p_channel_make(V capv) {
     fwp_chan *c = (fwp_chan *)fwp_mem_alloc(sizeof(fwp_chan));
     c->cap = (size_t)cap;
     return PTR(c);
+}
+
+static V fwp_p_channel_make_owned(V cap, void (*drop)(V), void (*dup)(V)) {
+    V value = fwp_rc_fresh(fwp_p_channel_make(cap));
+    fwp_chan *c = (fwp_chan *)(uintptr_t)value;
+    c->value_drop = drop;
+    c->value_dup = dup;
+    return value;
+}
+
+static void fwp_channel_drop(V value) {
+    if (!fwp_rc_release_last(value)) return;
+    fwp_chan *c = (fwp_chan *)(uintptr_t)value;
+    if (c->sendq.head || c->recvq.head) abort();
+    if (c->value_drop) for (size_t i = 0; i < c->len; i++) {
+        size_t at = (c->head + i) % c->size;
+        V element = c->buf[at];
+        c->buf[at] = 0;
+        c->value_drop(element);
+    }
+    c->len = 0;
+    fwp_mem_free(c->buf);
+    c->buf = 0;
+    fwp_rc_free_arr(value);
 }
 
 static void fwp_chan_grow(fwp_chan *c) {
@@ -1109,6 +1134,33 @@ static V fwp_p_channel_send(V ch, V x) {
     }
 }
 
+static V fwp_p_channel_send_owned(V ch, V x, void (*dup)(V)) {
+    fwp_tasks_init();
+    fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
+    if (c->sink) {
+        if (c->closed) return FWP_FALSE;
+        if (dup) fwp_rc_share(x);
+        return c->sink(c->sink_ctx, x) ? FWP_TRUE : FWP_FALSE;
+    }
+    for (;;) {
+        if (c->closed) return FWP_FALSE;
+        if (c->len < c->cap) {
+            if (c->len == c->size) fwp_chan_grow(c);
+            uint8_t *count = fwp_rc_slot(ch);
+            if (count && *count) {
+                if (c->value_dup) c->value_dup(x);
+            } else if (dup) fwp_rc_share(x);
+            c->buf[(c->head + c->len) % c->size] = x;
+            c->len++;
+            fwp_wake_all(&c->recvq);
+            return FWP_TRUE;
+        }
+        fwp_check_cancel();
+        fwp_park(&c->sendq, 0);
+        fwp_check_cancel();
+    }
+}
+
 static V fwp_chan_recv(V ch, int64_t at) {
     fwp_tasks_init();
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
@@ -1131,6 +1183,35 @@ static V fwp_chan_recv(V ch, int64_t at) {
 
 static V fwp_p_channel_recv(V ch) { return fwp_chan_recv(ch, 0); }
 static V fwp_p_channel_recv_for(V d, V ch) { return fwp_chan_recv(ch, fwp_after(d)); }
+
+static V fwp_chan_recv_owned(V ch, int64_t at, void (*dup)(V)) {
+    fwp_tasks_init();
+    fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
+    for (;;) {
+        if (c->len) {
+            V x = c->buf[c->head];
+            uint8_t *count = fwp_rc_slot(ch);
+            if ((!count || !*count) && dup) fwp_rc_share(x);
+            /* Allocate before removing the queue owner; no fallible operation
+             * follows its transfer into this owned Option. */
+            V result = fwp_rc_fresh(fwp_some(x));
+            c->buf[c->head] = 0;
+            c->head = (c->head + 1) % c->size;
+            c->len--;
+            fwp_wake_all(&c->sendq);
+            return result;
+        }
+        if (c->closed || c->sink) return FWP_NONE;
+        fwp_check_cancel();
+        if (at && fwp_now_ns() >= at) return FWP_NONE;
+        fwp_park(&c->recvq, at);
+        fwp_check_cancel();
+    }
+}
+static V fwp_p_channel_recv_owned(V ch, void (*dup)(V)) { return fwp_chan_recv_owned(ch, 0, dup); }
+static V fwp_p_channel_recv_for_owned(V d, V ch, void (*dup)(V)) {
+    return fwp_chan_recv_owned(ch, fwp_after(d), dup);
+}
 
 static V fwp_p_channel_close(V ch) {
     fwp_chan *c = (fwp_chan *)(uintptr_t)ch;
