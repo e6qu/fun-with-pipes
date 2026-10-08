@@ -176,7 +176,7 @@ still need their final squash rebases and six exact-head full gates.
 | 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
 | 70 ownership-file-construction | 823b86c74a68 | 925724e0994d | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
-| 71 ownership-file-write-visibility | 55a6b0c6c7c5 | fa6e27813f3d | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
+| 71 ownership-file-write-visibility | de6667643951 | 823b86c74a68 | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
 | 72 ownership-file-io-errors | 54d816de6a93 | 55a6b0c6c7c5 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
 | 73 ownership-resource-frames | e3bfb67a9244 | 54d816de6a93 | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | ddbee893478e | e3bfb67a9244 | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
