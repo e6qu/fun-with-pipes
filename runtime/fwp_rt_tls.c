@@ -470,16 +470,21 @@ static void fwp_host_of(const char *addr, char *out, size_t n) {
 
 /* ------------------------------------------------------------ primitives */
 
+static void fwp_tls_connect_drop(void *p) { fwp_p_sock_close(*(V *)p); }
+
 /* CA file, insecure, server name ("" for the host), protocols, client
  * certificate and key ("" for none), address */
 static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V addr, const fwp_desc *err) {
     V c = fwp_p_tcp_connect(addr, err);
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_connect_drop, &c);
     char host[256];
     if (STR(name)->len) snprintf(host, sizeof host, "%s", STR(name)->d);
     else fwp_host_of(STR(addr)->d, host, sizeof host);
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
     if (!alpn) {
+        fwp_cleanup_pop(&cleanup);
         fwp_p_sock_close(c);
         return fwp_io_error("tls", fwp_tls_err, err);
     }
@@ -488,10 +493,14 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
     free(alpn);
     if (ssl) {
         SOCK(c)->tls = ssl;
-        if (fwp_tls_finish(ssl, SOCK(c)->fd, 0)) return c;
+        if (fwp_tls_finish(ssl, SOCK(c)->fd, 0)) {
+            fwp_cleanup_pop(&cleanup);
+            return c;
+        }
     }
     char msg[1024];
     snprintf(msg, sizeof msg, "%s: %s", STR(addr)->d, fwp_tls_err);
+    fwp_cleanup_pop(&cleanup);
     fwp_p_sock_close(c);
     return fwp_io_error("tls", msg, err);
 }

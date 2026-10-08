@@ -135,7 +135,10 @@ Compare pointer arithmetic and numeric widths with the interpreter, including
 boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
 The existing raw interpreter reproducibly panics on a large I16 element offset;
 native code uses signed overflow-prone arithmetic. A separate pointer-width
-wrapping repair is prepared, with boundary/native/sanitizer controls pending CI.
+wrapping repair passes boundary/native/sanitizer controls on Linux and both
+macOS architectures; final bundle acceptance is pending. Bundle54–63 also
+prepares borrowed raw-memory contracts and counted ptr.read-string copies,
+with copy independence and last-owner native release controls.
 It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
 
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
@@ -335,13 +338,13 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
-| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Sequential CI; aliases, traps and cancellation |
-| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Sequential CI; ambiguous nominal contexts and nested holders |
-| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Sequential CI; shared graph/cycle policy and actual device evidence |
-| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Sequential CI; all escaping/error/shared boundaries |
-| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Sequential CI; shared/stale handles and actual WASI behavior |
+| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Bundle CI; aliases, traps and cancellation |
+| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Bundle CI; ambiguous nominal contexts and nested holders |
+| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Bundle CI; shared graph/cycle policy and actual device evidence |
+| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
+| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
-| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Sequential CI; nested holders and partial-retain traps |
+| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 
 ## Original resource semantics
 
@@ -349,7 +352,7 @@ File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
 when ignored; early close would change later IO failures. Prepared internal ResourceRegion
 anchors record these lifetimes before optimization and preserve them through
-inlining and fusion; their implementation still requires sequential delivery.
+inlining and fusion; their implementation still requires accepted bundle delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 

@@ -421,7 +421,7 @@ Prepared nested loop reconstruction keeps compatible nested records as flat
 state slots through Again updates. Reading a whole record reconstructs it with
 typed children; progressive retains and completed fields remain protected until
 boxing succeeds. Field reads that can reconstruct records participate in caller
-liveness cleanup. Scalars remain uncounted; sequential full CI is required.
+liveness cleanup. Scalars remain uncounted; full CI per final bundle is required.
 
 Prepared CAF ownership retains a typed cache owner and returns a separate
 owner on each call. Initialization retry and reentrant replacement preserve
@@ -490,7 +490,7 @@ Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
 interpreter. Check size before completion, then reset/dead state, then timeout;
 an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
-remain subject to full sequential CI and the ownership acceptance criteria.
+remain subject to full final-bundle CI and the ownership acceptance criteria.
 
 Prepared network ownership uses the existing unwind cleanup stack. HTTP/2
 peer subject temporaries stay owned until String/Option copying finishes.
@@ -520,7 +520,7 @@ before writing/transcoding and released after success or unwind. Wire bytes,
 plain/gzip payloads, fixed-width representation, oneof prefixes, diagnostics,
 receive order and error/trap order remain unchanged.
 
-These are prepared contracts, subject to sequential full platform/GC CI.
+These are prepared contracts, subject to full platform/GC CI per bundle.
 [Primitive ownership](primitive-ownership.md#prepared-refinements) records individual
 acceptance controls; [the handoff](development-state.md) records delivery status.
 Prepared pending gRPC connections also own lookup results, descriptors and
@@ -552,7 +552,7 @@ Prepared packed TLS options use one checked allocation containing an aligned
 header followed by strings and the full length-framed key. Child string/key
 pointers are borrowed within that allocation; last-owner release frees its
 base once. Original allocation probes and actual ARM/Intel binary layouts pass
-on prepared source112; final sequential CI still gates merged support. Full connection addresses also use checked tail storage
+on prepared source112; final bundle CI still gates merged support. Full connection addresses also use checked tail storage
 within the existing managed connection allocation, preserving complete pool
 keys without separate address allocation. Connection wrappers retain tracing
 compatibility. Canonical decode already frees temporary C buffers on normal
