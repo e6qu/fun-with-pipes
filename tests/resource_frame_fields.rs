@@ -157,6 +157,66 @@ main = "{}" | file.open | pack | .file | file.close | const "closed" | echo
             }
         }
     }
+    // Original record binders can be lets and whole-pattern bindings on
+    // different paths. Neither path may read the other's C field temporaries.
+    for selector in [0, 1] {
+        let mut mixed = program.clone();
+        let Body::Expr(Expr::ResourceRegion { body, .. }) = &mut mixed.funcs[0].body else {
+            panic!()
+        };
+        let Expr::Let(_, value, rest) = &mut **body else {
+            panic!()
+        };
+        **rest = Expr::Record(vec![]); // Implicit resource disposal only.
+        let pattern_path = Expr::Match(value.clone(), vec![(Pat::Bind(0), (**rest).clone())]);
+        **body = Expr::Match(
+            Box::new(Expr::Const(fwp::value::Value::I64(selector))),
+            vec![
+                (Pat::Lit(fwp::value::Value::I64(0)), (**body).clone()),
+                (Pat::Wild, pattern_path),
+            ],
+        );
+        assert_eq!(fwp::interp::run_main(&mixed, vec![]).exit_code, 0);
+        let code = fwp::cgen::generate(&mixed).unwrap();
+        let hooks = r#"
+#include <stdio.h>
+#include <sys/stat.h>
+static FILE *record_open(const char *,const char *);
+static int record_close(FILE *);
+static int record_fd, record_closes;
+#define fopen record_open
+#define fclose record_close
+"#;
+        let audit = r#"
+#undef fopen
+#undef fclose
+static FILE *record_stream;
+static FILE *record_open(const char *p,const char *m){FILE *f=fopen(p,m);if(f){record_stream=f;record_fd=fileno(f);}return f;}
+static int record_close(FILE *f){if(f==record_stream)record_closes++;return fclose(f);}
+"#;
+        let code = code.replace("return fwp_exit_code;", "struct stat record_status;if(record_closes!=1||fstat(record_fd,&record_status)!=-1||errno!=EBADF)return 35;return fwp_exit_code;");
+        let code = format!("{hooks}\n{code}\n{audit}");
+        for opt in ["-O1", "-O2"] {
+            fwp::cgen::compile_c(&code, &exe, opt).unwrap();
+            for gc in ["off", "on"] {
+                for poison in ["0", "1"] {
+                    let out = Command::new(&exe)
+                        .env("FWP_GC", gc)
+                        .env("FWP_GC_STRESS", "1")
+                        .env("FWP_GC_VERIFY", "1")
+                        .env("FWP_REUSE_VERIFY", poison)
+                        .output()
+                        .unwrap();
+                    assert!(
+                        out.status.success(),
+                        "record selector={selector}, {opt}, gc={gc}, poison={poison}: {:?}: {}",
+                        out.status.code(),
+                        String::from_utf8_lossy(&out.stderr)
+                    );
+                }
+            }
+        }
+    }
     let mut fault_program = program.clone();
     let string = MT::con("std::String");
     fault_program.funcs[0].locals[0] = MT::Record(vec![
