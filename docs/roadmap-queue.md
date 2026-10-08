@@ -88,7 +88,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 50 | task-within | `ownership-task-within` | `aa181f8f2c3a` | `14a76de5b8bb` | `7208e4a2d93e` |
 | 51 | task-scope | `ownership-task-scope` | `28de1794f39f` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `4b6a2cb08da5` | `bb6f9c49a043` | `7da15d9c8ea3` |
-| 53 | channel-queue | `ownership-channel-queues` | `ab44b7de0812` | `ab44b7de0812` | `bb6f9c49a043` |
+| 53 | channel-queue | `ownership-channel-queues` | `ccbf2957f351` | `ab44b7de0812` | `bb6f9c49a043` |
 | 54 | library-result | `ownership-library-results` | `5b34382167da` | `5b34382167da` | `ab44b7de0812` |
 | 55 | library-input | `ownership-library-inputs` | `a6ebc1da9637` | `a6ebc1da9637` | `5b34382167da` |
 | 56 | library-unload | `ownership-library-unload` | `5d0dc220fa1c` | `5d0dc220fa1c` | `a6ebc1da9637` |

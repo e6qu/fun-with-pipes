@@ -6595,7 +6595,38 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             if r == crate::ffi::CType::Void {
                 let _ = writeln!(lib_defs, "    (void){};\n}}\n", call);
             } else {
-                let _ = writeln!(lib_defs, "    return {};\n}}\n", ffi_to_c(&r, &call));
+                // The C result copies scalars and records, but string pointers
+                // escape into host storage for the lifetime of the library.
+                // Evaluate once (OptPtr conversion reads its value twice),
+                // and protect the owned result if string conversion traps.
+                let result_ty = f.ty.params(f.arity as usize).1.clone();
+                let drop = if g.reuse {
+                    g.value_drop(&result_ty)
+                } else {
+                    "NULL".into()
+                };
+                let _ = writeln!(lib_defs,
+                    "    V result = {call};\n    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
+                    crate::ffi::c_name(&r), ffi_to_c(&r, "result"));
+                if g.reuse {
+                    match &r {
+                        crate::ffi::CType::Str => {
+                            lib_defs.push_str("    fwp_rc_share(result);\n");
+                        }
+                        crate::ffi::CType::Struct { fields, .. } => {
+                            for (_, index, ty) in fields {
+                                if *ty == crate::ffi::CType::Str {
+                                    let _ = writeln!(
+                                        lib_defs,
+                                        "    fwp_rc_share(OBJ(result)->f[{index}]);"
+                                    );
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n    owner.value = result; fwp_value_release(&owner);\n    return converted;\n}\n\n");
             }
         }
     }

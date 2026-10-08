@@ -8413,3 +8413,24 @@ Exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_
 passes one test (57 filtered)3.42 s CPU /7.08 s elapsed. Channel-queue lint
 with all three integration targets and -D warnings passes2.38 /4.72 s; fmt
 check0.43 /0.84 s. Nine current docs copied before final amend; tested source unchanged.
+Final channel-queuesccbf2957f3516a2d62e291c9b7a9c7b1344be568 is clean
+on actual base4b6a2cb, published with exact lease against OLDab44b7d.
+Whole subject verified one line, empty body; no second PR. Row54 actual base
+remains OLDab44b7d until its own rebase; immutable queue anchors unchanged.
+
+Row54 C export results rebase from ACTUALab44b7de0812eb1f84d5430a303cd61ddd026219
+onto actual row53 headccbf2957f3516a2d62e291c9b7a9c7b1344be568 resolves
+doc conflicts with nine authoritative files. Reference preserves its explicit
+host-string/raw-pointee lifetime contract. Direct typed-IR interpreter
+checks bypass optimizer passes. Guarded clean0.02 /0.13 s; focused export
+result test started; full FFI/library gates remain on CI.
+Guarded cargo test --test library_result_ownership passes one test
+8.09 s CPU /17.77 s elapsed. C export conversion evaluates results once,
+releases copied scalar/record/nullable-pointer wrappers and preserves host
+string storage. Direct typed-IR interpreter values, 1000 cached calls, failed
+string conversions and four omission/evaluation controls pass at O1/O2 with
+poison. Library GC remains unarmed with zero collections: setting stress
+variables here does not establish library tracing coverage.
+Export-result lint with its integration target and -D warnings passes
+2.28 s CPU /4.61 s elapsed; fmt check0.34 /0.60 s. Nine current docs copied
+before final amend; tested source unchanged.
