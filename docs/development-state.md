@@ -53,8 +53,8 @@ focused clippy2.34/4.66s, format0.34/0.61s and strong audit0.47/3.67s pass.
 All11 live docs are copied into the PR. Prior remote131ec8ebdd06 is retained at
 roadmap/revision-028-131ec8ebdd06 before exact-lease publication. Freeze this head
 except for actual fixes; record fresh production/documentation run IDs and wait
-for all seven exact-head gates before squash. Production CI38011227462 is queued;
-roadmap_docs38011227532 is running, both at1dcbe79. While CI runs, refresh66–112 and
+for all seven exact-head gates before squash. Production CI38011227462 is running;
+its benchmark job passes. Roadmap docs38011227532 passes, all at head1dcbe79. While CI runs, refresh66–112 and
 scoped evidence using their recorded actual bases. Next production delivery29
 opens only after107 merges and its squash message/tree are verified.
 Squash subject: `Protect runtime application owners through preparation and unwind`;
@@ -78,7 +78,15 @@ locally, all18 IR checks3.33/7.13s. Rows42–49 exact repair refresh passes
 8.26CPU/93.23elapsed;50–57 passes8.53/92.92s;58–65 passes8.39/92.32s.
 Every prior head is retained; immutable OLD anchors stay fixed. Current65 is
 98f5c04f6260e56d57c86e437486bb04d392aa7d on actual04811432dc3d.
-Next independent work refresh66–112 and corresponding scoped evidence.
+Rows66–73 now inherit the reviewed repairs. The guard initially stopped on the
+row69 observer and row73 ResourceRegion compiler conflicts; both were reviewed:
+keep the generic observer plus the original flattened-field assertion, and retain
+both inline Again normalization and resource traversal. Original probe assertions
+and both row73 commits survive. Serial bounded parts:3.28CPU/37.18elapsed stopped
+at69;4.55/51.41s stopped at73;1.24/16.12s completes. Documentation-only continuations
+pass0.00/0.13–0.14s; an initial resolver invoked from root safely refuses without
+changing files. Current73 is006aba78f1f5f16406a4c7cca5864781f959cdcf on2990083331a2.
+Next independent work refresh74–112 and corresponding scoped evidence.
 The table records actual bases; all earlier focused evidence predates these
 repairs unless stated otherwise. Each production delivery still needs its own
 final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
@@ -145,7 +153,7 @@ still need their final squash rebases and six exact-head full gates.
 | 70 ownership-file-construction | 3d10c5dd387d | 17d47b91a8f6 | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 8c332516937b | 3d10c5dd387d | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
 | 72 ownership-file-io-errors | 2990083331a2 | 8c332516937b | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
-| 73 ownership-resource-frames | 3dc1c36adbad | 82e51ba8ea16 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
+| 73 ownership-resource-frames | 006aba78f1f5 | 2990083331a2 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | 5179067d6635 | 4155bc9fce74 | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
@@ -252,7 +260,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
-| Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
+| Rows47–52 cache and task runtime | 329e8db140771d33fa7be2946ab3cf1d1d9978ec | Fresh runner pending; source52bc6b763b3bf3 byte-identical; all20 ownership IR controls and original stack/reuse gates; strong audit0.42/3.44s passes. Prior7dfe/CI37973911726 predates the repairs |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |

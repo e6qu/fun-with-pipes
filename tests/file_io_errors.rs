@@ -158,7 +158,7 @@ int main(int argc,char **argv){
         ).replace(
             "while ((n = fread(tmp, 1, sizeof tmp, f)) > 0) buf_put(&b, tmp, n);",
             "while ((n = fread(tmp, 1, sizeof tmp, f)) > 0) {buf_put(&b,tmp,n);watched_buffer=b.d;if(fault==1)fwp_trap(\"read buffer failure\");}"
-        ).replace("V text = buf_to_str(&b);", "if(fault==2)fwp_trap(\"read String failure\");V text = buf_to_str(&b);")
+        ).replace("V text = fwp_rc_fresh(buf_to_str(&b));", "if(fault==2)fwp_trap(\"read String failure\");V text = fwp_rc_fresh(buf_to_str(&b));")
         .replace("V result = buf_to_str(&b);", "if(fault==2)fwp_trap(\"read String failure\");V result = buf_to_str(&b);")
         .replace("V result = fwp_tuple2(text, h);", "if(fault==3)fwp_trap(\"read tuple failure\");V result = fwp_tuple2(text,h);");
         assert_ne!(instrumented, original);
