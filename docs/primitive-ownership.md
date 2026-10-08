@@ -221,6 +221,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 76 | Scoped File callbacks return separately owned result aliases; task/loop results preserve File owners while disabled ordinary freeing still retains child storage | Sequential CI; raw interpreter/scoped/task/loop outputs, lost-owner and storage-free controls |
 | 77 | Bump-heap resource aggregates use logical count metadata and drop typed File children; count metadata releases while physical value storage remains | Sequential CI; required actual WASI fstat, wide counts/overflow and scalar-bit safety; host C is separate evidence |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 78 | Disabled-free aggregates/tasks/channels dispose logical metadata and File children while physical bump storage remains | Sequential CI; O1/O2 omission controls and required actual WASI in both free modes |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

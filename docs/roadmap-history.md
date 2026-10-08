@@ -9118,3 +9118,31 @@ bump logical metadata. Focused lint and format follow; actual WASI stays on CI.
 Same-target lint passes 2.54 / 5.09 s CPU / elapsed.
 Fmt check passes 0.46 / 0.86 s; ten docs copied before amend, tested source unchanged.
 Linux required-WASI gate is prepared and awaits its own exact-head CI.
+Final row77 b4482c259c1edf2863c146f7795b97fc168ddd4a is published clean with
+exact lease c889479eed7aba4967b2e5f87d7a368193b18be9. Whole subject verifies
+one line and empty body. Row78 actual base remains c889479; inherit required
+Linux WASI env when rebasing onto b4482c2. PR97 Intel GC stress is running;
+five remaining jobs are queued, with no failed or passing acceptance yet.
+
+## Disabled-free WASM disposal refresh, 2026-10-09
+
+Row78 rebases from actual c889479eed7aba4967b2e5f87d7a368193b18be9
+onto b4482c259c1edf2863c146f7795b97fc168ddd4a. Ten root docs resolve
+conflicts. Runtime/task/count tests match current 681dd55136b030866c28afb227f222503c21113b;
+Cgen additionally inherits repaired file.read-bytes dispatch. Required Linux
+WASI test env remains, covering both free modes and cached-task/channel owners.
+Guarded clean passes 0.05 / 0.38 s. Focused cargo test --test wasm_resource_counts
+-- --skip wasi_aggregate_counts_release_file_children is running: two native
+host bump-C tests selected, actual WASI explicitly excluded for runner validation.
+Two native bump-C tests pass 9.47 / 19.69 s CPU / elapsed. O1/O2 fixed
+aggregate, cached task and channel cleanup passes; omitted disposal fails
+with expected exits 5 and 9. Metadata is reclaimed despite disabled object
+freeing; physical bump storage remains. Related native File boundary test runs.
+Related guarded cargo test --test file_runtime_boundaries passes one test
+12.17 / 24.55 s CPU / elapsed, retaining raw interpreter agreement, O1/O2,
+reuse/free on/off, GC off/on poison and missing-owner/accounting controls.
+Focused lint for both targets runs; actual WASI remains runner-only acceptance.
+Same-target focused lint passes 2.43 / 4.90 s CPU / elapsed.
+Fmt check passes 0.45 / 0.86 s. Ten current root docs copied before amend;
+tested source unchanged. Minimal required-WASI Linux env covers actual test
+in both free modes, but this preparation still awaits sequential full gates.
