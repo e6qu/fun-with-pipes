@@ -11172,3 +11172,9 @@ pass. Row50 refresh1b5fb056fa00d181ca7b03a436dee354169c68ab has actual
 baseec9a4133a2c1; checks follow. Both compiler/runtime match originals; old
 CURRENTs are retained under immutable revision tags before lease publication.
 Record/type-context evidenceCI37972496949 passes all focused checks.
+
+Row49 guarded clippy2.33/4.82s and format0.35/0.73s pass. Row50 guarded
+clean0.00/0.13s and deadline callback8.95/18.26s pass. Row51 refresh
+245a0a24370ef7bcbb77009861631ebbd7deb65e has actual base1b5fb056fa00;
+compiler/runtime match original; current28de1794f39f is retained under immutable
+revision tag before explicit-lease publication. Scoped cleanup checks follow.

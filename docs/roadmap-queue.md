@@ -72,7 +72,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 48 | inline-caf | `ownership-inline-caf` | `ece7166b7a79` | `6734248e7c0d` | `68cf7bf2f7ca` |
 | 49 | retained-thunk | `ownership-task-thunks` | `ec9a4133a2c1` | `7208e4a2d93e` | `6734248e7c0d` |
 | 50 | task-within | `ownership-task-within` | `1b5fb056fa00` | `14a76de5b8bb` | `7208e4a2d93e` |
-| 51 | task-scope | `ownership-task-scope` | `28de1794f39f` | `7da15d9c8ea3` | `14a76de5b8bb` |
+| 51 | task-scope | `ownership-task-scope` | `245a0a24370e` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `4b6a2cb08da5` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `ccbf2957f351` | `ab44b7de0812` | `bb6f9c49a043` |
 | 54 | library-result | `ownership-library-results` | `82f32b2cde03` | `5b34382167da` | `ab44b7de0812` |
