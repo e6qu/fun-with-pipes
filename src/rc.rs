@@ -362,6 +362,15 @@ impl Pass<'_> {
                     None => m,
                 }
             }
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => Expr::ResourceRegion {
+                parameters: parameters.clone(),
+                bindings: bindings.clone(),
+                body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
+            },
             Expr::Dup(..) | Expr::Drop(..) => unreachable!("reference counting runs once"),
         }
     }
@@ -564,6 +573,7 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
                 free_in(b, bound, out);
             }
         }
+        Expr::ResourceRegion { body, .. } => free_in(body, bound, out),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !bound.contains(l) {
                 out.insert(*l);
@@ -818,6 +828,7 @@ impl Checker<'_> {
                 *st = after.unwrap_or_default();
                 Ok(())
             }
+            Expr::ResourceRegion { body, .. } => self.expr(body, st, consume),
             Expr::Dup(l, b) => {
                 // A retain can allocate wide-count metadata. Protect existing
                 // references before it runs; the new reference does not exist yet.

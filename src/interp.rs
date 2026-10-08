@@ -200,6 +200,19 @@ impl<'p> Interp<'p> {
 
     pub fn eval(&mut self, e: &Expr, locals: &mut Vec<Value>) -> R<Value> {
         match e {
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => {
+                let result = self.eval(body, locals);
+                // Inlined frames use fresh binders. Return/error values already
+                // own their aliases; clearing these slots releases only this frame.
+                for l in parameters.iter().chain(bindings) {
+                    locals[*l as usize] = Value::unit();
+                }
+                result
+            }
             // Rust's reference counts free the interpreter's values
             Expr::Dup(_, b) | Expr::Drop(_, b) => self.eval(b, locals),
             Expr::Local(i) => Ok(locals[*i as usize].clone()),
