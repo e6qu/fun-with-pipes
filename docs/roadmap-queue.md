@@ -92,7 +92,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `933deb78f600` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7047b100dbbe` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `41a76ee080e5` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `8a061cb9b8ab` | `5ac710398a14` | `e9d575fdf990` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `6fdf20ca82a9` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |

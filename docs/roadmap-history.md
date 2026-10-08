@@ -11338,3 +11338,10 @@ focused Linux cache/task and external resource lifetimes, actual tracing churn,
 primitive consistency and strong handoff audit. Neither replaces sequential
 production gates. Row69 nested boxing and both loop unwind tests14.44/29.19s
 pass; lint/format follow.
+
+Row69 clippy5.60/11.68s and format0.35/0.63s pass after all three focused
+nested-boxing/loop-unwind tests14.44/29.19s. Row71 refresh
+6fdf20ca82a90a4846cbf115ffe47046fc9824e6 uses actual base41a76ee080e5;
+compiler/runtime/File write fixture match original, with inherited CLI/tracing
+harness repairs preserved. Prior CURRENT8a061cb9b8ab is retained under an
+immutable revision tag before explicit-lease publication. Focused checks follow.
