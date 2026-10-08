@@ -451,11 +451,7 @@ static void fwp_task_drop(V value) {
     t->st = 0;
     t->counted = 0;
     /* Task storage is mutable kind 2, not a record/variant header. */
-#ifdef FWP_RESOURCE_NO_FREE
-    fwp_rc_drop(value);
-#else
-    fwp_rc_free_arr(value);
-#endif
+    fwp_rc_resource_free_arr(value);
 }
 
 /* ----- switching */
@@ -1109,11 +1105,7 @@ static void fwp_channel_drop(V value) {
     c->len = 0;
     fwp_mem_free(c->buf);
     c->buf = 0;
-#ifdef FWP_RESOURCE_NO_FREE
-    fwp_rc_drop(value);
-#else
-    fwp_rc_free_arr(value);
-#endif
+    fwp_rc_resource_free_arr(value);
 }
 
 static void fwp_chan_grow(fwp_chan *c) {
