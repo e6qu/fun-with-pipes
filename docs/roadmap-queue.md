@@ -1,44 +1,22 @@
 # Prepared roadmap queue
 
-Updated 2026-10-08. These published branches are preparation, not merged support.
-Open one PR at a time in this order after the previous PR passes all six gates
-and squash-merges. Merged PR #91/inference retains immutable OLD head `89b7bde2`; wide counts
-are next (row14).
-Completed rows remain immutable anchors; do not reopen rows through inference.
+Updated 2026-10-09. Rows through18 are merged; queue19 is the next delivery.
+Current merge status, actual rewritten bases and checks live only in
+[the handoff](development-state.md). This table preserves preparation ancestry;
+a published preparation is not verified main support.
 
-For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
-Preserve OLD head/parent below permanently: children were prepared from original
-heads, not later rewrites or squash commits. Replace outdated plan/handoff copies
-with current root docs when resolving documentation conflicts. Re-run focused
-checks after rebasing; original evidence is in [the history](roadmap-history.md).
-Publish with an explicit lease against the remote current head, then create the
-sole next PR. Full exact-head CI is required anew for every PR.
+Open one PR at a time after the previous PR passes all six exact-head gates
+and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
+Use the current actual base from the handoff; immutable OLD parents describe
+original preparation and can differ after rewrites. Never replace OLD anchors.
+Resolve documentation conflicts with all ten current root docs, rerun focused
+checks and publish with an explicit lease against the actual remote current head.
+Every final PR needs new six-job exact-head CI. Prior evidence and superseded
+queue instructions are preserved in [history](roadmap-history.md).
 
-Current heads change on rebase; OLD anchors never change. Rows through13 are
-merged; row14/wide is the sole open PR92. Merge/run evidence is in
-[the handoff](development-state.md) and [history](roadmap-history.md).
-Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
-the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
-actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
-WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
-which is its immutable parent.
-Row14 wide is now final-rebased on actual main3c0685c after PR91 squash.
-Its next rebase uses actual current3c0685c, not OLD89b7bde.
-Its OLDhead3a791dc and row15 OLDparent stay immutable.
-Row15 is prepared on current widecb0d7e6; its later rebase must use that
-actual current base. OLDheadc835578 and row16 OLDparent stay immutable.
-Row16 is prepared on current list-order5fe5692; use that actual current base
-for its later squash rebase. OLDhead66bc713 and row17 OLDparent stay immutable.
-Row17 is prepared on current sort-callback5c19337; use that actual current
-base later. OLDhead0a90b05 and row18 OLDparent stay immutable.
-Row18 is prepared on current sequence15743b8; use that actual current base
-later. OLDhead787763d and row19 OLDparent stay immutable.
-Row19 is prepared on current loop112f3c8; use that actual current base later.
-OLDheadc05a5d9 and row20 OLDparent stay immutable.
-For a rewritten branch, use its actual current base
-when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
-in this repository; use resolved full hashes for publication/merge head checks.
-Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
+Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
+resolve full hashes before publication or merge. Checkout paths use
+`/private/tmp/fwp-NAME-worktree`; consult the handoff for exceptions.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -109,7 +87,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `8a061cb9b8ab` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
-| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `e21c92ea2f6c` | `e21c92ea2f6c` | `368dafc5567d` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `923ad4a4fb07` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `30fe112db93c` | `30fe112db93c` | `923ad4a4fb07` |
 | 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `c889479eed7a` | `046f7e85a9eb` | `30fe112db93c` |

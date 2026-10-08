@@ -8956,3 +8956,82 @@ original-frame and repaired IO regressions. Library probes need no tracing proof
 for logical close; sequential full gates still required.
 Same-target lint passes 2.57 / 5.18 s CPU / elapsed.
 Fmt check passes 0.44 / 0.83 s; ten docs copied before amend, tested code unchanged.
+Final row74 4b5da4aa946a54788aaf6fc0a2356122ed53155d is published clean with
+exact lease e21c92ea2f6c7bdfcf881d05e485f57683df0b85. Whole subject verifies
+one line and empty body. No extra PR; row75 ACTUAL base remains e21c92e.
+
+## Mandatory original-frame release preparation refresh, 2026-10-09
+
+Row75 rebases from ACTUAL old parent e21c92ea2f6c7bdfcf881d05e485f57683df0b85
+onto current row74 head 4b5da4aa946a54788aaf6fc0a2356122ed53155d.
+Ten current docs resolve conflicts; feature compiler/tests match immutable
+923ad4a except C generator preserves repaired row72 binary-read dispatch.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test
+--test file_discard_ownership --test resource_frames --test file_runtime_ownership
+is running. Mandatory resource drops stay distinct from optional storage freeing.
+
+## Loop delivery and queue streamlining, 2026-10-09
+
+PR96 merged at 2026-10-09T10:16:42Z after all six CI37909273494 jobs passed
+at exact 03d25acc581a69c1a16f0add88e4768777072683. Explicit match-head
+squash produced d174e73fecb96cb5aef85fa20eb8471a48dc0948; fetched actual
+main verifies entire one-line subject, no body/trailers:
+Transfer owned loop states and reclaim typed Step and ABI payloads.
+All ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96,
+main fast-forwarded from 60e5d62 and all ten restored with byte verification.
+Queue intro now delegates live delivery/bases solely to the handoff; superseded
+instructions below are archived without changing any immutable OLD anchors.
+
+### Archived queue instructions before PR96 delivery
+
+# Prepared roadmap queue
+
+Updated 2026-10-08. These published branches are preparation, not merged support.
+Open one PR at a time in this order after the previous PR passes all six gates
+and squash-merges. Merged PR #91/inference retains immutable OLD head `89b7bde2`; wide counts
+are next (row14).
+Completed rows remain immutable anchors; do not reopen rows through inference.
+
+For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
+Preserve OLD head/parent below permanently: children were prepared from original
+heads, not later rewrites or squash commits. Replace outdated plan/handoff copies
+with current root docs when resolving documentation conflicts. Re-run focused
+checks after rebasing; original evidence is in [the history](roadmap-history.md).
+Publish with an explicit lease against the remote current head, then create the
+sole next PR. Full exact-head CI is required anew for every PR.
+
+Current heads change on rebase; OLD anchors never change. Rows through13 are
+merged; row14/wide is the sole open PR92. Merge/run evidence is in
+[the handoff](development-state.md) and [history](roadmap-history.md).
+Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
+the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
+actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
+WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
+which is its immutable parent.
+Row14 wide is now final-rebased on actual main3c0685c after PR91 squash.
+Its next rebase uses actual current3c0685c, not OLD89b7bde.
+Its OLDhead3a791dc and row15 OLDparent stay immutable.
+Row15 is prepared on current widecb0d7e6; its later rebase must use that
+actual current base. OLDheadc835578 and row16 OLDparent stay immutable.
+Row16 is prepared on current list-order5fe5692; use that actual current base
+for its later squash rebase. OLDhead66bc713 and row17 OLDparent stay immutable.
+Row17 is prepared on current sort-callback5c19337; use that actual current
+base later. OLDhead0a90b05 and row18 OLDparent stay immutable.
+Row18 is prepared on current sequence15743b8; use that actual current base
+later. OLDhead787763d and row19 OLDparent stay immutable.
+Row19 is prepared on current loop112f3c8; use that actual current base later.
+OLDheadc05a5d9 and row20 OLDparent stay immutable.
+For a rewritten branch, use its actual current base
+when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
+in this repository; use resolved full hashes for publication/merge head checks.
+Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
+
+
+## Mandatory frame release focused checks, 2026-10-09
+
+All five selected tests pass 22.99 / 46.22 s CPU / elapsed. Sixty-four source
+opens/discards stay within 32 descriptors across O1/O2 × reuse/free on/off ×
+GC on/off × poison modes; omitting original frame drops fails with descriptor
+exhaustion. Original parameter lifetime, alias and runtime count regressions pass.
+Same-target lint passes 2.59 / 5.18 s and fmt check 0.44 / 0.84 s.
+Ordinary heap freeing remains optional; mandatory File resource release is preserved.

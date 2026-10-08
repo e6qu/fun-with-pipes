@@ -139,6 +139,8 @@ released explicitly. Scalar bits never select a reference destructor.
 | reverse; flatten; take | Borrow inputs | Copied fresh spine retaining selected elements |
 | sort; unique | Borrow list | Copied spine retaining typed selected elements; release scanned scratch; stable comparisons/first occurrence |
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
+| scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
+| loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
@@ -159,7 +161,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
 | 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
@@ -216,6 +217,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Sequential CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
 | 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Sequential CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
 | 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Sequential CI; wide counts/overflow, GC-off close, IO traps and omission controls |
+| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Sequential CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
