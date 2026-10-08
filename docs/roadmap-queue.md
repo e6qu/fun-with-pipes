@@ -92,7 +92,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0b51abc49371` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `2c2c562401ab` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `d7641a1ab055` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `ed6462d15872` | `b8f3752d236f` | `0cc612650ab9` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `e217ad8ce0d9` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `cfe905046796` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `f7a0bd2eba93` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `351b21daafbb` | `e503e10a9780` | `e0f11626f609` |
