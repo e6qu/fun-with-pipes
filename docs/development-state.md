@@ -88,13 +88,17 @@ that conflict, then docs continuation0.00/0.14s and exact-source resume
 4.27/49.20s pass. Current41 is172912b7b1c66e3d6e50a60090b8b7559ffc4ffa.
 Its three loop cleanup/preparation tests pass13.79CPU/27.69elapsed and all18
 IR tests pass3.33/7.13s. Fresh evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5
-runsCI38008988824 on actualsource172912b, with compiler/runtime/tests/scripts
+passesCI38008988824 on actualsource172912b, with compiler/runtime/tests/scripts
 and production workflows byte-identical. Retained failed0bb9762 under
 roadmap/evidence-conversion-0bb9762dd41b before exact leased publication.
 Strong audit0.42CPU/3.49elapsed passes. Loop/control42–49 refresh now
 finishes8.26CPU/93.23elapsed with exact code/observer/control inheritance,
 all old heads retained and all source/handoff audits passing. Current49
-is49b7aa5a0c074fa7e06364b06ddf891b46a3738d. Next refresh50–112. The loop observer must read actual
+is49b7aa5a0c074fa7e06364b06ddf891b46a3738d. Rows50–57 also refresh with
+exact repair/source controls8.53CPU/92.92elapsed; current57 isfde35253a744
+on actual400d11c0b317. Journals42–49 and50–57 are complete; do not rerun.
+Next refresh58–112. Combined41 passes; later scoped source requires refreshed
+runner evidence and every production PR still needs its fresh full gates. The loop observer must read actual
 counted-owner layout: flattened string owners are not boxed records. All
 scalar-bit, alias, finalizer and exact release assertions remain unchanged.
 Row33 both loop checks pass10.45CPU/20.96elapsed on the local repair.
@@ -167,7 +171,7 @@ still need their final squash rebases and six exact-head full gates.
 | 54 ownership-library-results | ff3bfedf26cd | 310031a5596b | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
 | 55 ownership-library-inputs | b0a593982767 | ff3bfedf26cd | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
 | 56 ownership-library-unload | 400d11c0b317 | b0a593982767 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | 47992a27c193 | ac74568b0113 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
+| 57 ownership-opencl-lifetime | fde35253a744 | 400d11c0b317 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
@@ -292,7 +296,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | Fresh CI38008988824 running on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
+| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |

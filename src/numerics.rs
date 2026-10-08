@@ -402,6 +402,17 @@ mod opencl {
     extern "C" {
         fn dlopen(path: *const c_char, flags: c_int) -> *mut c_void;
         fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
+        fn dlclose(handle: *mut c_void) -> c_int;
+    }
+
+    struct Library(Ptr);
+
+    impl Drop for Library {
+        fn drop(&mut self) {
+            unsafe {
+                dlclose(self.0);
+            }
+        }
     }
 
     #[allow(clippy::type_complexity)]
@@ -460,6 +471,7 @@ mod opencl {
         release_program: unsafe extern "C" fn(Ptr) -> i32,
         release_queue: unsafe extern "C" fn(Ptr) -> i32,
         release_context: unsafe extern "C" fn(Ptr) -> i32,
+        _library: Library,
     }
 
     /// The OpenCL library, the device chosen and its context and queue.
@@ -468,6 +480,24 @@ mod opencl {
         device: Ptr,
         context: Ptr,
         queue: Ptr,
+    }
+
+    // Construction owns each completed stage before the next fallible call.
+    // The successful cache intentionally lives for this interpreter process;
+    // failed construction drops these owners before caching its diagnostic.
+    impl Drop for Gpu {
+        fn drop(&mut self) {
+            unsafe {
+                if !self.queue.is_null() {
+                    (self.cl.finish)(self.queue);
+                    (self.cl.release_queue)(self.queue);
+                }
+                if !self.context.is_null() {
+                    (self.cl.release_context)(self.context);
+                }
+            }
+            // Cl releases the library after these entry points are finished.
+        }
     }
 
     unsafe impl Send for Gpu {}
@@ -508,6 +538,7 @@ mod opencl {
                     names.join(", ")
                 )
             })?;
+        let library = Library(handle);
         fn get<F: Copy>(h: Ptr, name: &str) -> Result<F, String> {
             assert_eq!(std::mem::size_of::<F>(), std::mem::size_of::<Ptr>());
             let c = CString::new(name).unwrap();
@@ -541,11 +572,18 @@ mod opencl {
             release_program: get(handle, "clReleaseProgram")?,
             release_queue: get(handle, "clReleaseCommandQueue")?,
             release_context: get(handle, "clReleaseContext")?,
+            _library: library,
         };
         let device = unsafe { pick_device(&cl) }?;
+        let mut gpu = Gpu {
+            cl,
+            device,
+            context: std::ptr::null_mut(),
+            queue: std::ptr::null_mut(),
+        };
         let mut err = 0i32;
-        let context = unsafe {
-            (cl.create_context)(
+        gpu.context = unsafe {
+            (gpu.cl.create_context)(
                 std::ptr::null(),
                 1,
                 &device,
@@ -554,25 +592,20 @@ mod opencl {
                 &mut err,
             )
         };
-        if context.is_null() || err != 0 {
+        if gpu.context.is_null() || err != 0 {
             return Err(format!(
                 "no OpenCL device: clCreateContext failed ({})",
                 err
             ));
         }
-        let queue = unsafe { (cl.create_queue)(context, device, 0, &mut err) };
-        if queue.is_null() || err != 0 {
+        gpu.queue = unsafe { (gpu.cl.create_queue)(gpu.context, device, 0, &mut err) };
+        if gpu.queue.is_null() || err != 0 {
             return Err(format!(
                 "no OpenCL device: clCreateCommandQueue failed ({})",
                 err
             ));
         }
-        Ok(Gpu {
-            cl,
-            device,
-            context,
-            queue,
-        })
+        Ok(gpu)
     }
 
     /// The first GPU with double precision, or else the first device of
@@ -755,7 +788,6 @@ mod opencl {
                 (cl.release_kernel)(kernel);
             }
             (cl.release_program)(prog);
-            let _ = (cl.release_queue, cl.release_context);
             res
         }
     }
