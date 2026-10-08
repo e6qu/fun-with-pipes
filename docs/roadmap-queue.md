@@ -3,7 +3,7 @@
 Updated 2026-10-08. These published branches are preparation, not merged support.
 Open one PR at a time in this order after the previous PR passes all six gates
 and squash-merges. Merged PR #90/list-option has immutable OLD head `34023f35`; inference is next (row 13).
-Completed rows remain immutable anchors; do not reopen rows through list-copy.
+Completed rows remain immutable anchors; do not reopen rows through list-option.
 
 For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
 Preserve OLD head/parent below permanently: children were prepared from original
@@ -13,14 +13,9 @@ checks after rebasing; original evidence is in [the history](roadmap-history.md)
 Publish with an explicit lease against the remote current head, then create the
 sole next PR. Full exact-head CI is required anew for every PR.
 
-Current head changes on rebase; OLD anchors never change. Fold's final published
-head `a090f1f5ac6c` passed all six CI `37728301773` gates and squash-merged as
-`d4e52617eac2`. Zip final `cf8ce6e61295` passed all six CI `37733658893` jobs and merged as
-`90affeb3954a`. Right-fold rebased from OLD zip onto that squash and is merged PR #87 at
-`8be65d1ae2ec`, squash `eae33c4c9e50`, ALL SIX CI `37743989274` gates passed.
-Prefix final `42cf518f2ec5` passed ALL SIX CI `37750832622` gates and merged
-as `49f910811131`. List-copy bcdfb163 passed ALL SIX CI 37758597151 and merged as dbdaee4448d4.
-List-option is next; preserve OLD list-copy bb00baa4 for its rebase.
+Current heads change on rebase; OLD anchors never change. Rows through12 are
+merged; row13/inference is the sole current PR. Merge/run evidence is in
+[the handoff](development-state.md) and [history](roadmap-history.md).
 Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
 the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
 actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
@@ -112,6 +107,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `786e4bbb99f1` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `ae00e6929e86` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `3a0cbdb33b79` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f85cc4e09db4` | `f85cc4e09db4` | `3a0cbdb33b79` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

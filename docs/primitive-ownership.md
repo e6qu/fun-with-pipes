@@ -17,6 +17,10 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
+The table below describes the merged container baseline. Typed element and
+runtime refinements remain prepared in [the queue](roadmap-queue.md); consult
+[the handoff](development-state.md) for current validation.
+
 | Primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
 | array/map/set.from-list | share list | fresh outer storage, shared elements | none |

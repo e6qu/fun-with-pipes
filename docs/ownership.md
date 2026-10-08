@@ -108,353 +108,70 @@ assert semantic results and stable allocation properties instead.
 Run full workloads on GitHub runners. Passing Linux tests alone does not
 validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
-## Remaining leaf and capture coverage
+## Merged ownership boundaries
 
-Selected direct leaves and copied Option/List trees now have ownership contracts.
-Other IO/network/runtime results still share. Primitive contract coverage alone
-is not proof that every result has deterministic reclamation. Complete retained
-container elements, callbacks/captures, handlers/traps, FFI retention and young/old
-collector interaction. Typed record/variant drops release their children;
-container drops currently release only outer storage.
+Main through PR #90 includes the following contracts. Detailed primitive modes
+are in [primitive-ownership.md](primitive-ownership.md), and original validation
+and measurements are in [history](roadmap-history.md).
 
-Generational marking restricts immediate freeing of old counted objects. Removing
-that restriction needs its own invariant and stress evidence. Define cycle
-policy and teardown before claiming general execution without tracing GC.
+- Selected String/Bytes copy and alias results are owned; leaf destruction frees
+  their storage without scanning payload bytes as child pointers. Fresh nested
+  text results retain owned spines and elements.
+- Compiled dynamic calls own heap closures and typed captures. Bounded capture
+  cleanup protects partial application and converted arguments through traps.
+  Unknown runtime/FFI callbacks keep the sharing fallback.
+- Concrete call temporaries and eligible stack aggregate/closure children keep
+  typed ownership. Count operations address children rather than stack wrappers.
+- Synchronous callbacks borrow typed inputs and return owned results. Map/filter
+  own fresh spines; fold/right-fold transfer accumulators; zip owns callback
+  results; prefix/copy operations preserve owned aliases. Optional list results
+  retain selected values, and synchronous find borrows predicate inputs.
 
-## Counted leaf primitive families
+These contracts do not establish complete runtime retention, exceptional
+lifetimes, shared graph ownership or general execution without tracing.
 
-`String` and `Bytes` locals now participate in IR ownership. Selected primitive
-results establish counts: copies start fresh, `string.to-bytes` duplicates its
-identity result, and padding/replacement duplicate the input when a no-op returns
-it unchanged. Their read-only arguments borrow without promoting the leaf to
-runtime sharing. Unknown runtime and FFI boundaries retain the shared fallback.
+## Prepared ownership work
 
-Leaf allocations use the existing out-of-line count metadata. Sharing stops at
-a leaf; its bytes are not scanned as pointers. A generated typed leaf drop frees
-the allocation directly rather than reading an ADT tag. Reuse verification
-poisons only within its capacity and clears its String/Bytes length, avoiding
-the record poisoner's interpretation of that length as a field count.
+[The immutable queue](roadmap-queue.md) records the ordered published work.
+Prepared code and focused checks are not merged support. Every preparation must
+rebase and pass six exact-head full CI gates. Current failures and commands are
+in [the handoff](development-state.md), rather than a second priority list here.
 
-The focused copy loop demonstrates reclamation of young owned leaves on normal
-paths. It does not establish full ARC: other runtime-created text results, retained
-container elements, callbacks, stack captures, handler unwind and cancellation
-still require ownership contracts and cleanup. Old marked objects remain under
-the collector's generational policy; WebAssembly still uses its bump allocator.
+| Area | Prepared contract | Acceptance still required |
+|---|---|---|
+| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Sequential CI; aliases, traps and cancellation |
+| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Sequential CI; ambiguous nominal contexts and nested holders |
+| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Sequential CI; shared graph/cycle policy and actual device evidence |
+| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Sequential CI; all escaping/error/shared boundaries |
+| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Sequential CI; shared/stale handles and actual WASI behavior |
+| WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
+| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Sequential CI; nested holders and partial-retain traps |
 
-## Fresh nested text results
+## Original resource semantics
 
-Generated type-directed helpers own copied String/Bytes result trees returned by
-selected primitives. They install one count on every new object, skip scalar
-fields and traverse list tails in a loop. The fresh-tree contract prohibits input
-aliases, internal sharing and cycles; it is narrower than general graph ownership.
-Numeric parse options remain shared while representation/destruction of boxed
-numeric cases is unfinished. Full inventory and regression details are in
-[primitive-ownership.md](primitive-ownership.md).
+File values stay affine: no duplication trait or resource capture is added.
+A File parameter remains alive until its original function frame exits, even
+when ignored; early close would change later IO failures. Internal ResourceRegion
+anchors are recorded before optimization and must survive inlining and fusion.
+Returned/error aliases retain their owners. Partially failed patterns retain
+already bound locals until frame exit, matching the interpreter.
 
-## Compiled closure ownership
+Prepared native File headers count logical owners independently of GC slots.
+The last owner closes the stream; explicit close and teardown are idempotent.
+Inline-path storage uses one aligned leaf allocation. Unshared last-owner
+storage release first removes library finalizers, and constructor failures retain
+raw-stream/header ownership through registration and path-copy failures. Shared
+headers retain the compatibility allocator lifetime. FWP_FREE=0 keeps ordinary
+child storage while resource ownership still closes streams.
 
-Function locals participate in IR Dup/Drop. Compiled dynamic application consumes
-its function reference and arguments. Partial application builds a fresh heap
-closure, duplicates existing captures by their monomorphic types and transfers
-new arguments. Full application duplicates the captured references for the
-callee, consumes supplied arguments and releases the function after the call.
-A retained function alias keeps its captures alive; overapplication continues
-with the returned owned function. Static function values remain off the heap.
+Eligible original record bindings retain fields without a forced parent box;
+variant bindings retain tag/payload structs through tag-aware helpers. Boxed
+bindings retain the parent once. FWP_FRAME_FIELDS=0 is the comparison control.
+Incoming owners remain protected through partial-retain failures. Whole-pattern
+bindings initialize their own path's payload/fields, avoiding C temporaries from
+another branch. Missing nominal scrutinee context can be recovered from a typed
+whole-value binder; other ambiguous patterns remain an audit item.
 
-Each live function used as a closure has sparse metadata for an owned entry and
-typed capture handling. The function table adds one metadata pointer per slot;
-this is a layout cost, not a measured speed improvement. Capture cleanup never
-counts inline scalar bits. Primitive owned entries release borrowed arguments
-after the call, preserve their addresses as collector roots, and respect consumed
-container arguments. Unknown FFI/runtime boundaries still promote values to
-sharing. Runtime callback entries explicitly share their typed inputs and results.
-
-The focused closure regression checks retained captures and function aliases,
-partial applications and input-returning functions against the interpreter at
--O1/-O2, with GC stress/verification and both reuse-poison modes. A 10,000-step
-heap-closure loop, with tracing off and zero collections, frees 1.2 MiB by counts
-versus 0.0 MiB with FWP_FREE=0 (Apple Silicon, Apple Clang 17, -O1,
-FWP_STACK=0; counters rounded to tenths). This demonstrates the selected path,
-not complete ownership. PR #78 passed its full architecture and benchmark
-gates; later ownership extensions require their own exact-head gates.
-
-Eligible stack aggregates now retain typed child ownership; runtime-retained
-callbacks, exceptional paths, generational old objects, count overflow and WASI
-reclamation remain gaps. Closure releases use a per-thread work list to avoid recursion through nested
-function captures. Other aggregate destruction and incomplete temporary types
-still need coverage before general no-tracing support. Cycles still require an
-explicit policy.
-
-## Bounded function capture cleanup
-
-An outer closure release drains a work list. Nested function capture releases
-queue their owned reference instead of recursively entering capture cleanup.
-The work list keeps 64 values in the current C frame; wider pending work spills
-into an explicitly freed allocation outside the collected heap. Neither the
-queue nor typed capture destruction invokes a collection safe point. Native
-contexts are per thread; WASI has no runtime threads and retains its no-op counts.
-This limits C call depth through function captures, not arbitrary aggregate shapes.
-
-The focused regression constructs 8,000-node linear and branching capture graphs,
-then releases them on a 256 KiB native worker stack. At -O0, restoring only the
-recursive release exhausts that stack; the work-list version completes, matches
-the interpreter and reports zero collections with tracing disabled. Both nodes
-and captures are released by counts; the branching graph exercises the spill
-path. PR #79 passed full native/WASI/platform and benchmark gates. This does
-not establish ownership of every callback or arbitrary aggregate shape.
-
-Investigation also exposed incomplete concrete typing of constructor temporaries:
-borrowed constructor arguments previously fell back to the unknown type and
-only decremented their outer count. Call parameter types now give these
-ownership temporaries concrete monomorphic types, so typed release reaches their
-children. Remaining constructor/result/field contexts still need coverage.
-
-## Concrete call argument temporaries
-
-IR constructors carry tags/fields without a standalone nominal type. When a call
-parameter supplies that type, the ownership pass retains it on new temporaries
-instead of using the unknown-type fallback. Existing inferred expression types
-take precedence. Both owned function calls and borrowing primitive/FFI calls
-provide their concrete parameter types; uncounted scalar temporaries stay scalar.
-The evaluation sequence and early/last-use ownership discipline are unchanged.
-
-A List-of-functions probe restores only the previous outer count decrement in
-emitted C. With tracing off and zero collections, typed temporary cleanup frees
-0.5 MiB versus 0.0 MiB, with identical interpreter output (Apple Silicon, Apple
-Clang 17, -O1, FWP_STACK=0, 10,000 iterations, 0.1 MiB counter precision).
-Retained function/list aliases and literal leaf/Option children match both
-backends at -O1/-O2 under GC stress/verification and both poison modes. Earlier
-container/leaf/text/closure/cleanup checks and five FFI regressions pass locally.
-PR #80 passed full CI. This covers call argument temporaries; it does not
-complete type propagation into every generated constructor or aggregate.
-
-## Owned children of stack aggregates
-
-A stack wrapper does not have a heap count slot. Cgen now tracks its concrete
-children in the frame instead. Dup/Drop of an eligible local or alias changes
-those child references directly. A consumed stack argument retains its children
-through the call and releases that owner's references after returning. Dynamic
-application does the same for stack closures. Record/variant unboxing transfers
-child ownership, and each normal or unboxed call has its own cleanup scope so
-nested argument evaluation cannot release another call's children prematurely.
-
-The stack object layout stays unchanged. Callees keep their existing behavior
-for an off-heap pointer and duplicate retained fields/captures; cleanup in the
-owning frame gives up the original references. Address fences retain children
-through allocating calls. Heap reuse tokens and the in-place-update shortcut
-are bypassed for tracked stack objects. Unknown child types retain the fallback;
-this does not implement cancellation/handler unwind or runtime callback retention.
-
-Two focused regressions compare interpreter/native aliases and record/variant
-return paths at -O1/-O2, GC stress/verification and both poison modes. Restoring
-only the previous retained child lifetimes, with tracing off and identical
-output, changes a 10,000-step variant loop from 0.5 to 0.0 MiB freed by counts,
-and a closure loop from 1.7 to 1.3 MiB (Apple Silicon, Apple Clang 17, -O1;
-counters rounded to tenths). Fifteen focused ownership tests and the existing
-stack closure allocation elimination regression passed locally. PR #81 then
-passed its full architecture, WASI, GC/reuse and benchmark gates.
-
-
-## Borrowed synchronous callbacks and map results
-
-The typed `fwp_apply_borrowed` boundary borrows callback arguments during a
-synchronous call and returns an owned result. Compiled callbacks retain returned
-aliases by their concrete types. Map owns its fresh list spine and callback
-results while borrowing input elements; direct and captured specializations keep
-the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#90 passed their exact-head full gates. Fold transfers its owned
-accumulator through borrowed synchronous calls while input elements remain
-borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
-Right-fold transfers its accumulator through a typed owned argument span;
-List-copy and optional list results passed full CI and merged. Other callbacks, runtime unwind and retained owners
-remain preparation.
-
-## Prepared work and acceptance limits
-
-[The immutable queue](roadmap-queue.md) records runtime/callback/container,
-aggregate, type, CAF, task/channel/library, OpenCL and resource cleanup work.
-These branches are not merged support. Each must rebase and pass full exact-head
-CI. No optional tracing-free mode is accepted until ownership coverage and cycle
-policy justify it.
-
-The latest worker-local repair keeps compatible complete calls and typed aliases
-unboxed while partial/dynamic captures remain boxed. Exact child/alias/trap checks
-pass, and the unchanged full wide-record allocation acceptance now passes on
-Linux and both macOS architectures in separate evidence. File constructor cleanup
-also has fault/omission checks for stream ownership through allocation and library
-finalizer registration. Source File values remain affine: no Dup or resource
-capture is added. Implicit resource discard and arbitrary resource lifetime
-coverage still require interpreter/native evidence. Prepared TLS resource
-teardown, connection cancellation and peer-subject temporary cleanup have actual
-OpenSSL/omission checks; library probes generally run with collection unarmed.
-They do not prove host-root tracing or deterministic discard of every resource.
-Rebuilt nested loop records now also have a preparation that preserves typed
-flattened state through Again and protects original, partial and pending owners
-when Stop boxes an inner result. Alias/scalar/cancellation and omission controls
-pass locally; sequential full CI remains required. No measured speed claim follows.
-An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
-and reproduced loss of the owning Conn during String allocation. Its owner fence
-and fence-omission control now pass under real GC/reuse verification; production library
-tracing remains unarmed. Current work/evidence, including any unresolved failures,
-is recorded in the handoff rather than appended as another priority queue here.
-
-Native file.write also has a prepared visibility repair: flush checked stdio
-buffers before returning to match Rust descriptor writes, including write errors
-while the affine handle remains borrowed. General discard remains separate:
-a File parameter stays alive until its original function frame exits, even after
-ignore, because early close changes observable later I/O failures. Internal
-resource scopes must survive optimization and preserve that original lifetime.
-
-File read error/UTF-8 agreement and temporary read-buffer cleanup now also have
-a preparation. The borrowed read-all handle stays open through failure; the
-path-based read owns and closes its stream. Short write-new and buffered close
-errors are checked with the original write errno preserved. This does not
-establish general implicit resource disposal or tracing-free coverage.
-
-## Original resource lifetimes
-
-General resource discard is an active phase 2 repair, not a CI blocker. The
-current File audit has two complementary acceptance cases: 64 open/discard loop
-steps succeed under a 32-descriptor child limit without collection, and reopening
-after ignoring a File parameter still fails under a four-descriptor child limit
-until its original function frame exits. The interpreter retains original
-parameters and local bindings for that frame. Eager last-use close would turn an
-observable failure into success. Explicit file.close retains its existing effect.
-Neither descriptor limit changes the compiler, test runner or user session.
-
-A prepared compiler repair records original File owners before optimization.
-Internal resource regions must survive inlining and loop lowering; an inlined
-callee's parameter anchors must use fresh local binders rather than aliases of
-caller binders. Preserve owners for initialized original resource locals, including
-conditional pattern bindings, without retaining unrelated optimizer-generated
-argument temporaries. A stack scope can hold zero-initialized owner slots and
-release the initialized slots on normal return, effect failure, recoverable trap
-or task cancellation. Protect partially retained slots during preparation. These
-are compiler representation details, with no nullable File type or new syntax.
-
-Region anchors complement typed retain/drop rather than replacing ownership of
-returned values. Result aliases, returned aggregates, Again/Stop state, borrowed
-runtime calls and error payloads need correct ownership transfer before dropping
-the region. Optimized interpreter execution must release the same original frame
-anchors at the same boundary. Required resource cleanup must work with
-FWP_REUSE=0, FWP_FREE=0 and collection disabled; check supported WebAssembly
-resource behavior separately because its bump allocator has no native RC slots.
-Library finalization remains idempotent and must not double-close a discarded
-handle. Preserve affine File restrictions and forbidden partial resource capture.
-
-Typed ResourceRegion metadata and interpreter frame release are now prepared,
-including a reproduced inlined-helper lifetime repair. A further native preparation now retains original frame references and releases
-them on normal and nonlocal exits. File retain/drop and borrowed I/O dispatch are
-connected, with owned error-handler payloads. This is not delivered ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
-errors, cancellation and optional flags before accepting general disposal. Keep
-tracing available until complete ownership and cycle acceptance is demonstrated.
-
-Fusion treats resource regions as observable even when their original source
-arrows are pure. A controlled pipeline verifies fusion is blocked specifically
-by its frame marker; removing the marker permits fusion. Required destructor
-effects cannot be interleaved solely because the body reports no trap/effect.
-
-
-A separate File runtime preparation introduces a 64-bit header owner count,
-independent of the collector's count slot. The last owner closes the stream;
-explicit close and library teardown remain idempotent. Header/path storage still
-uses the existing allocator lifetime. The internal header grows from 16 to 24
-bytes (8-byte alignment); this is no claim of fewer bytes or allocations.
-Owned read/write wrappers retain returned File aliases and protect the extra
-reference through I/O errors and conversion/allocation traps. A fresh read String
-has its own unwind owner until the tuple takes ownership; FWP_FREE=0 leaves its
-storage to the collector. A subsequent native compiler preparation now selects those wrappers.
-Native region disposal, resource aggregates and escaped/error/cancellation owners
-remain required before accepting implicit File cleanup or tracing-free coverage.
-
-
-Native region cleanup has focused descriptor-pressure/omission evidence: 64
-open/discard iterations succeed under a 32-descriptor child limit with tracing
-and reuse/free disabled; omitting frame release fails. The original parameter's
-four-descriptor EMFILE lifetime remains unchanged. Incoming frame references,
-partially initialized binding slots, record/variant results and handled File error
-aliases have focused coverage. Original aggregate binding slots currently box
-values; retaining flattened fields without extra wrappers is a follow-up. Header
-storage, shared runtime graphs and WebAssembly aggregate ownership remain open.
-
-
-A further runtime-boundary preparation owns file.with's callback tuple, retains
-its typed result before disposing that tuple and releases the original scoped
-File owner. Actual returned File, cached task File and loop Step File sources
-match the raw interpreter under disabled reuse/free/tracing and real GC stress.
-Result-retain omission is detected. FWP_FREE=0 keeps ordinary child and task/channel
-object storage from count-based freeing while still closing resource children;
-exact zero freed-byte accounting and an ordinary-child-free negative control
-verify this policy. The WebAssembly RC stubs still require an ownership repair.
-
-
-Prepared original record-frame holders can retain eligible typed fields instead
-of forcing a parent heap box. Other boxed bindings keep one parent retain.
-A typed IR allocation control verifies one parent box versus zero at O1/O2;
-source/interpreter comparisons and partial-retain cleanup checks also pass locally.
-FWP_FRAME_FIELDS=0 disables this compiler optimization for comparisons. Broader
-workload count/timing and full sequential platform gates remain required; this
-is not a general speed or zero-allocation claim. See the handoff for exact evidence.
-
-
-A subsequent prepared File layout copies its display path into the same leaf
-allocation as the FILE pointer and64-bit owner count. The fixed native header is
-16 bytes rather than24; constructor requests eight fewer bytes and makes one
-allocation rather than two. The path remains owned and NUL-terminated; a File
-has no GC-valued children in this layout. Alignment, internal closed-handle
-display, aliases, constructor unwind, library teardown and source/native I/O
-have focused checks. This does not reclaim the header at the last owner; safe
-finalizer removal and shared/stale handle policy remain required. Sequential
-full platform gates and actual WASI evidence are still pending.
-
-
-The next prepared File disposal closes the last typed owner and frees unshared
-native leaf storage after removing its library finalizer. Executables skip the
-finalizer scan; library removal compacts its registry without allocation and
-costs linear time in registered entries. Unknown/shared headers retain their
-allocator lifetime. Disabled freeing retains storage; verification poison leaves
-a closed zero-owner/empty-path header. Scoped callbacks close while their
-constructor owner remains live, then drop that owner on return and unwind.
-Focused tests verify same-address reuse without tracing, freed-byte accounting,
-retained finalizers and omission controls. Constructor exceptional storage,
-shared graphs/cycles, actual WASI and full sequential gates remain required.
-
-
-A further prepared constructor scope owns its initialized File header through
-registration/path-copy traps: close first, then dispose the temporary reference
-and eligible storage. Before initialization it owns the raw stream. Finalizer
-registry growth checks overflow and commits pointer/capacity only after realloc
-succeeds, preserving existing owners on failure. Recoverable allocation-fault
-probes and normal hard-OOM library teardown verify both cases. These are prepared
-native checks; sequential full gates and actual WASI remain required.
-
-Original variant frame holders have a separate preparation after constructor
-storage cleanup. Eligible only-matched bindings keep tag and typed payload in
-a zero-initialized cleanup-frame struct. Tag-aware retain/drop helpers preserve
-File and ordinary child ownership, with incoming owners protected through
-partial-retain failures. FWP_FRAME_FIELDS=0 preserves the boxed control.
-Focused tests prove one versus zero parent boxes and safe dynamic nullary/scalar
-tags, without changing original parameter lifetimes. Sequential full CI, nested
-holders and shared/cycle audits remain open; this is not merged ARC support.
-
-A mixed-binding preparation initializes a variant pattern binding’s borrowed
-tag/payload from the current path before retaining it in the original frame.
-Choosing a frame representation from a let in another arm must not make the
-pattern use that arm’s C temporary. Descriptor audit proves one close through
-implicit disposal without explicit close or tracing. Full CI remains pending.
-Bare nominal match scrutinees that lose their type remain a separate cleanup
-gap; recovering context from pattern-bound locals is the next concrete repair.
-
-Bare nominal match scrutinees now have a separate RC preparation: when the
-expression has no known type, a whole-value pattern binder supplies its
-monomorphic nominal type. That type guides field ownership conversion and the
-match temporary’s destructor. Descriptor tests prove payload disposal without
-a typed scrutinee let, explicit close or tracing. Ambiguous/no-whole-binder
-patterns remain an audit item; full sequential CI is still required.
-
-A separate record binding-kind preparation reads borrowed fields from the
-current whole-pattern scrutinee before frame retains, replacing any field map
-from a different let arm. Direct descriptor tests close once through implicit
-cleanup with tracing disabled, and existing allocation controls remain intact.
-Partially failed patterns keep bound resource locals through original frame
-exit, matching interpreter behavior. Full sequential CI remains pending.
+Focused descriptor, allocation and omission controls support these preparations.
+Full tracing-free acceptance still requires complete escape/runtime ownership,
+physical reclamation where supported and an explicit cycle lifetime policy.
