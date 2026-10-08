@@ -42,15 +42,16 @@ ownership-loop-state, /private/tmp/fwp-loop-worktree, exact
 Source/runtime/tests/workflows exactly match verified112f3c8; four raw
 interpreter oracles keep FWP_NO_OPT=1. Five final tests pass18.66 /37.70 s,
 exact contract unit3.15 /6.61 s, lint2.30 /4.69 s, format0.33 /0.60 s.
-CI37909273494 is queued at this exact head; all six gates are starting; require each to pass at this exact head before
+CI37909273494 runs Linux and ARM GC stress at this exact head; remaining
+four gates are queued; require each to pass at this exact head before
 explicit match-head squash with subject
 `Transfer owned loop states and reclaim typed Step and ABI payloads`, empty body.
 After its eventual merge, row19 ACTUAL current base remains112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from1358267 and restored afterward. Independent preparations through row55 are published with focused checks;
-row56 native library teardown is next while PR96 full CI runs.
+main fast-forward from1358267 and restored afterward. Independent preparations through row56 are published with focused checks;
+row57 native OpenCL lifetime is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -99,20 +100,22 @@ still need their final squash rebases and six exact-head full gates.
 | 53 ownership-channel-queues | ccbf2957f351 | 4b6a2cb08da5 | 18.97 /38.17 s + exact unit3.42 /7.08 s |
 | 54 ownership-library-results | 82f32b2cde03 | ccbf2957f351 | 8.09 /17.77 s |
 | 55 ownership-library-inputs | f240ecd56f3b | 82f32b2cde03 | 9.42 /22.58 s |
+| 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 /31.36 s |
 
-Rows18–55 are published preparations with passing focused tests, lint and
+Rows18–56 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row55 library-inputsf240ecd56f3b765074b5c2c06e2a4757560eb9fc is clean
-on actual base82f32b2, published with exact lease against OLDa6ebc1d.
-Three focused tests pass9.42 /22.58 s, lint2.54 /4.95 s, format0.45 /0.83 s.
-Row56 native library teardown rebases from ACTUAL old parenta6ebc1d
-onto current row55 headf240ecd. Four focused loader unload/input/result tests pass12.24 /31.36 s;
-final lint, format, docs and publication follow.
+Row56 library-unload878b25aad6278469a3ac3e57a0ce6a2c9ec00f95 is clean
+on actual basef240ecd, published with exact lease against OLD5d0dc22.
+Four focused tests pass12.24 /31.36 s, lint2.50 /5.05 s, format0.45 /0.83 s.
+Row57 native OpenCL lifetime rebases from ACTUAL old parent5d0dc22 onto
+current row56 head878b25a. Both focused OpenCL cleanup/library-unload tests pass10.33 /32.03 s;
+final lint, format, docs and publication follow. Fake API tests do not
+establish hardware GPU execution.
 Preserve immutable OLD anchors; no additional PR.
 PR96 is the sole open delivery; row19 final rebase follows its eventual squash.
 
@@ -161,7 +164,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-library-unload-worktree; unload/input/result tests complete; lint is active.
+belongs to /private/tmp/fwp-opencl-worktree; OpenCL cleanup/unload tests complete; lint is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 /0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.15 s CPU /1.05 s elapsed).

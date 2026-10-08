@@ -8521,3 +8521,25 @@ pass. Library tracing stays unarmed; full Linux/ARM/Intel gates still required.
 Library-unload lint with all three targets and -D warnings passes2.50 s
 CPU /5.05 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final library-unload878b25aad6278469a3ac3e57a0ce6a2c9ec00f95 is clean
+on actual basef240ecd, published with exact lease against OLD5d0dc22.
+Whole subject verified one line, empty body; no second PR. Row57 actual base
+remains OLD5d0dc22 until its own rebase; immutable queue anchors unchanged.
+
+Row57 native OpenCL lifetime rebase from ACTUAL5d0dc220fa1cfc3699cef88224c61d42cf8e66fc
+onto actual row56 head878b25aad6278469a3ac3e57a0ce6a2c9ec00f95 resolves
+only doc conflicts with nine authoritative files. A loader-visible fake OpenCL
+implementation checks API ownership and teardown, not actual GPU execution.
+OpenCL lifetime and related library-unload checks started. PR96 exact03d25ac
+runs Linux and ARM GC stress; other gates queued, none yet passing.
+Row57 guarded clean passes0.06 s CPU /0.26 s elapsed.
+Guarded cargo test --test opencl_lifetime --test library_unload passes
+both tests10.33 s CPU /32.03 s elapsed. Loader-visible fake OpenCL checks
+missing-symbol/device/context/queue failures and cached diagnostics, queue
+finish before release/context/library teardown, actual dynamic unload,
+static-archive exit and executable exit. O1/O2 omission controls and Darwin
+early-atexit ordering pass; actual library-unload regression also passes.
+This verifies API ownership, not hardware GPU/kernel execution.
+Native OpenCL lint with both targets and -D warnings passes2.44 s CPU
+/4.93 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
+final amend; tested source unchanged.
