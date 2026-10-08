@@ -183,7 +183,7 @@ still need their final squash rebases and six exact-head full gates.
 | 72 ownership-file-io-errors | 4aeff2223e3f | de6667643951 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
 | 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
-| 75 ownership-file-discard | ef04da0f3049 | ddbee893478e | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
+| 75 ownership-file-discard | 4b8202419941 | d3fa39b37c83 | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | f0034b6ab7c1 | ef04da0f3049 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 8a2d845523c5 | f0034b6ab7c1 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | 43773a07a269 | 8a2d845523c5 | Actual WASI gates required; source unchanged except inherited harness repairs |

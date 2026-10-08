@@ -156,6 +156,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "file.read-all" => (&[B], ResultOwnership::OwnedResource, None, &[0]),
         "file.write" => (&[B, B], ResultOwnership::OwnedResource, None, &[1]),
         "file.close" => (&[B], R, None, &[]),
+        "file.with" => (
+            &[B, B],
+            ResultOwnership::OwnedResource,
+            Some(Callback::Borrowed(1)),
+            &[1],
+        ),
         "task.scope" => (
             &[B],
             ResultOwnership::OwnedCallback,
