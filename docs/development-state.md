@@ -127,9 +127,9 @@ still need their final squash rebases and six exact-head full gates.
 | 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 47abf911f844 | d39b6145cb55 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
-| 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Refreshed source unchanged; fresh focused checks follow |
-| 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Both nominal typing and stack-child repairs preserved; fresh focused checks follow |
-| 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
+| 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
+| 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Both nominal/stack-child tests12.49/27.27s pass; lint/format follow |
+| 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Refreshed source unchanged; fresh focused checks follow |
 | 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
 | 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
 | 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
@@ -200,7 +200,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 queued; source1a5f5ba, actual base295b0da; not acceptance |
-| Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 queued; sourceda4acc3, actual base5179067; not acceptance |
+| Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
@@ -252,8 +252,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-frame-binding-worktree; the guarded resource
-variant binding-path check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-match-scrutinee-worktree; the guarded nominal
+and stack-child match ownership checks are running. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

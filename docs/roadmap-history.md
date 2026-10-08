@@ -11459,3 +11459,15 @@ commits survive unchanged; source/test differences from original are inherited
 CLI/tracing harness repairs only. Prior CURRENT97dca7626158 is retained under
 an immutable revision before lease publication. Fresh focused checks follow.
 PR102 Linux test passes; regular Intel macOS remains running, not acceptance.
+
+Row84 binding-path test10.45/23.67s, clippy6.18/12.88s and format0.45/0.83s
+pass. Row86 refreshd0e41c87e547f6f090e2da91799279572de505b2 uses actual
+basec0263af654c4. Compiler/runtime and record binding fixtures match original
+with inherited CLI/tracing repairs intact. Old CURRENT5915ac0607ac is retained
+under an immutable revision before lease publication. Focused checks follow.
+
+Linux File/frame evidenceCI37980022336 at4a448ea21e5ca197b8e7efed1796a8578d7e0761
+passes lint/format, all focused File/frame/ownership tests, resource metadata/fusion
+units, actual tracing churn and strong doc audit. It does not replace sequential
+production gates. Row85 both nominal variant and stack-child alias tests
+12.49/27.27s pass; lint/format follow. Actual WASI evidence is running.
