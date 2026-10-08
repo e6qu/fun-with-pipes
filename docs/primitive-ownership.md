@@ -328,3 +328,31 @@ File header references are independent of native GC slots. FWP_FREE=0 keeps
 ordinary children and task/channel object storage from count-based freeing while
 still disposing resource children. Header/path storage and WebAssembly aggregate
 logical ownership remain open; retain the fallback and phase 2 acceptance checks.
+
+
+## Optional list aliases and synchronous find
+
+Prepared for the next focused list-option PR; full exact-head gates are pending.
+
+`nth`, `find` and `index-of` borrow their arguments and own newly allocated
+Option nodes. FreshOuter identifies one new structural allocation whose fields
+may alias borrowed inputs: the generated wrapper duplicates pointer-bearing
+fields by monomorphic constructor type and leaves scalar words alone. This
+is distinct from FreshTree, which owns an independent allocation tree. None
+requires no allocation or count.
+
+`nth`/`find` acquire one reference to the selected input element. `index-of`
+returns an owned optional scalar and borrows its comparison key. Negative or
+past-end indices, empty inputs and missing values preserve existing behavior.
+Find predicates use synchronous borrowed application, stop at the first match
+and do not retain the callback. Direct/captured specializations keep typed
+argument copies, selected-element references and original source/capture roots.
+
+`tests/list_option_ownership.rs` checks retained aliases, selected functions,
+results after input cleanup, dynamic/captured predicates, missing/negative/
+past-end/empty cases, scalar elements and a predicate that traps if invoked
+after a match. Interpreter/native outputs agree at O1/O2, stack on/off,
+collection stress/verification and both reuse-poison settings. The no-tracing
+loop frees 10.4 MiB by counts versus 9.6 MiB after restoring only optional-result
+sharing in generic and specialized paths (Apple Silicon, Apple Clang 17, O1,
+0.1 MiB precision, zero collections). Full platform CI remains required.
