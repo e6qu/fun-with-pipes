@@ -11280,3 +11280,11 @@ cd3a9d666bb21d6a682e541ae985e9f10de2e096 starts CI37976525768. Row64 refresh
 446d60c378dccac6c44b75d10f4d52f4bfeb98c4 uses actual based0e29ddbf182;
 compiler/runtime match original. Old CURRENTae05b2bfc32c is retained under
 immutable revision tag before explicit-lease publication; fresh checks follow.
+
+Row62 guarded clean0.02/0.13s, TLS cache failure/retry7.17/16.27s,
+clippy2.43/4.95s and format0.40/0.73s pass. Channel/library evidence
+CI37974795204 passes all focused Linux ownership/tracing and document checks.
+Row65 refresh46f7f4b172266e2805d087e1fc3fb39640e4e2ae uses actual
+base446d60c378dc; compiler/runtime match original. Old CURRENT2ba7084abe25
+is retained under immutable revision tag before explicit-lease publication.
+Unboxed worker tests follow; no general speed claim is made.

@@ -41,7 +41,8 @@ PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
 Current head 51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
  da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
 focused-accepted1741ab5fa64e exactly. Production CI37975866229
-and roadmap_docs CI37975866346 are queued; neither is acceptance. Require six production jobs and
+is queued/running; roadmap_docs CI37975866346 passes. Six passing
+production jobs are still required. Require six production jobs and
 roadmap_docs at this exact head before explicit squash with
 `Own task result wrappers and preserve typed deadline aliases` and empty body.
 Row25 actual current base remains1741ab5; final-rebase it only after the actual
@@ -103,10 +104,10 @@ still need their final squash rebases and six exact-head full gates.
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
-| 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Fresh focused checks follow; compiler/runtime unchanged |
+| 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Fresh checks follow; compiler/runtime unchanged |
 | 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Fresh focused checks follow; compiler/runtime unchanged |
-| 65 ownership-unboxed-worker-locals | 2ba7084abe25 | ae05b2bfc32c | 20.34 / 58.06 s |
+| 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Fresh focused checks follow; compiler/runtime unchanged |
 | 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
 | 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
 | 68 ownership-ci-probe-repairs | 7d8ab6719e55 | 22b95b0ddb74 | 30.99 / 62.26 s |
@@ -198,7 +199,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 queued; productionc61df65, actual base044ceae |
-| Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 queued; productionac6de59, actual base625ac77 |
+| Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 queued; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows38–41 loop/retain/typed conversion | 3a9fcb512a37a745e65629b29b15e1d06ec0a992 | CI37971602336 passes Linux ownership/tracing and docs; production67e3771, actual basedd6c405 |
