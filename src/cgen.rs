@@ -1683,6 +1683,17 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
             .collect::<String>();
         return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n    }}\n    V result = fwp_map_finish(a, n);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
+    if reuse && sym == "filter" {
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once("a[i]".to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        return format!("{} {{\n    size_t n, kept = 0;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        if (fwp_owned_entry{g}(args) == FWP_TRUE) {{\n            fwp_args{g}(&a[i], {k}, 1);\n            a[kept++] = a[i];\n        }}\n    }}\n    V result = fwp_map_finish(a, kept);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
+    }
     let body = match sym.as_str() {
         "map" => format!(
             "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++) a[i] = {};\n    return fwp_list_from(a, n);",
@@ -2784,10 +2795,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
-    fn owned_map(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
-        if !self.g.reuse || !matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "map") {
+    fn owned_list_hof(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        if !self.g.reuse {
             return None;
         }
+        let sym = match &self.g.prog.funcs[id].body {
+            Body::Prim(s) if matches!(s.as_str(), "map" | "filter") => s.clone(),
+            _ => return None,
+        };
         if !matches!(
             args.first()?,
             Expr::Func(_) | Expr::Local(_) | Expr::Apply(_, _)
@@ -2804,7 +2819,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 self.g.owned_callbacks.push(g);
             }
             let xs = self.expr(&args[1]);
-            return Some(format!("fwp_k_map_owned(fwp_owned_k{g}, {xs})"));
+            return Some(if sym == "map" {
+                format!("fwp_k_map_owned(fwp_owned_k{g}, {xs})")
+            } else {
+                format!("fwp_k_filter_owned(fwp_owned_k{g}, fwp_args{g}, {xs})")
+            });
         }
         let mut caps = match &args[0] {
             Expr::Local(l) => (0..n)
@@ -2813,7 +2832,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Apply(_, caps) => self.args(caps),
             _ => return None,
         };
-        let key = ("map".to_string(), g, n);
+        let key = (sym, g, n);
         let i = match self.g.hofs.iter().position(|h| *h == key) {
             Some(i) => i,
             None => {
@@ -2902,7 +2921,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn call_expr_inner(&mut self, id: FuncId, args: &[Expr]) -> String {
-        if let Some(call) = self.owned_map(id, args) {
+        if let Some(call) = self.owned_list_hof(id, args) {
             let result = self.bind(call);
             // Specialization reads captures directly; preserve the original
             // borrowed closure/list addresses until allocating calls return.
@@ -4229,7 +4248,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         use crate::ownership::ResultOwnership;
                         match contract.result {
                             ResultOwnership::FreshSpine => {
-                                s = s.replace("fwp_p_map(", "fwp_p_map_owned(");
+                                s = s
+                                    .replace("fwp_p_map(", "fwp_p_map_owned(")
+                                    .replace("fwp_p_filter(", "fwp_p_filter_owned(");
                             }
                             ResultOwnership::FreshTree => {
                                 let result_type = func.ty.params(func.arity as usize).1.clone();

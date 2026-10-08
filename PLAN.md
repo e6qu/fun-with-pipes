@@ -57,12 +57,13 @@ as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-ch
 passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
 [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
 now merged as `181d3b3` after all four exact-head gates passed in CI
-`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
-map callbacks, is the sole open PR at exact `2b0012a`; full CI `37711126548`
-ended with Intel's 90-minute timeout after its GC stress suite passed but took
-57.5 minutes. Separate that suite into required macOS stress jobs while retaining
-full coverage; require all six exact-head jobs before merge. Continue ownership
-preparation and fix runner failures.
+`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83), map callbacks, is now
+merged as `0f1ca94` after all six exact-head jobs passed in CI `37719069685` at
+`0c5bec4`. Required macOS stress jobs now run separately from the regular suite;
+their union preserves complete coverage. Next rebase/check filter from immutable
+OLD map `41ef82d` and open its sole focused PR. Separate prepared TLS evidence
+`37719202504` has real ARM regular/stress failures; diagnose and repair them while
+sequential PR CI runs. Failing tests remain work, never a roadmap blocker.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -716,3 +717,35 @@ handshakes and partial-failure controls pass focused checks. The larger unoptimi
 source comparison exceeded the local memory limit and moves to runner evidence;
 full sequential CI remains required. TLS client caches, resource discard/unload,
 server cancellation and cycles remain open.
+
+
+The unoptimized source TLS stream comparison now passes on Linux and both macOS
+architectures under GC/reuse verification in evidence run `37718591863`. Its
+vendor alert snapshot accepts one exact naming alias while still requiring raw
+byte-for-byte engine agreement. Full current evidence `37719202504` uses separate
+macOS stress jobs and remains pending; it does not replace rebased PR gates.
+
+Library resource teardown is prepared separately after TLS listeners: actual unload
+closes owned File/socket/HTTP2 handles and releases TLS sessions, ALPN owners and
+client cache, with no implicit close_notify. Repeated loader cycles and omission
+controls pass focused checks. Full sequential CI is required; gRPC server
+cancellation, client cache partial failures and remaining lifetime/cycle gaps stay
+open. Continue repairs while PR #83's six gates run.
+
+gRPC server cancellation is prepared after library resources. A stack cleanup
+owner protects the bound listener and initial TLS protocol context, including
+preparation cancellation; accepted sessions keep their own context references.
+Actual scheduler cancellation and post-cancellation ALPN checks pass. Full
+sequential gates remain required. Next repair TLS cache/ALPN allocation failures.
+
+TLS client-cache allocation failures are prepared after service cancellation:
+failed growth/name creation releases partial owners and preserves previous entries;
+server ALPN allocation failure is explicit. Focused retry/omission checks pass.
+Next audit ALPN wire preparation and cancellable TLS connect lifetime. Full
+sequential gates remain required, with PR #83 ARM regular/stress and bench passing.
+
+ALPN wire preparation is prepared after cache failures: direct borrowed list walks
+avoid collector scratch, size only valid names, check protocol lengths/malloc and
+release an already connected socket on buffer failure. Interpreter/native wire
+bytes and focused failure controls pass. Next TCP-connect/TLS-handshake cancellation
+and peer-subject temporary ownership. Full sequential CI remains required.

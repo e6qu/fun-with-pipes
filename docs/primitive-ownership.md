@@ -219,3 +219,23 @@ owned map results (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision).
 This is reclamation evidence, not a timing claim. Full CI and benchmarks remain
 required. Other list/container callbacks, retained runtime callbacks, cycles,
 exceptional cleanup, exact overflow counts and WASI reclamation remain work.
+
+## Synchronous owned filter results
+
+`filter` has the same explicit synchronous borrowed callback policy as map,
+while its result spine contains selected aliases of input elements. A predicate
+consumes typed temporary argument copies and returns Bool. Selection therefore
+acquires an additional reference by the actual element parameter type before
+transferring it into a result node. Pointer-bearing functions/aggregates are
+counted; inline scalars are not guessed from their bits. Unknown function entries
+retain conservative sharing. Direct and captured predicate loops preserve
+specialization and address fences. Scratch storage is explicitly released.
+
+`tests/filter_ownership.rs` checks retained input/capture aliases, selected
+functions with shared captures, dynamic predicates, scalar elements, empty
+inputs and no matches at O1/O2, stack on/off, GC stress/verification and both
+poison settings. A selected no-tracing differential changes only the returned
+spine's shared-result boundary: identical output and zero collections,
+4.6 MiB freed by counts versus 5.0 MiB for owned filter results (Apple Silicon,
+Apple Clang 17, O1, counters rounded to 0.1 MiB). Full platform and benchmark gates
+remain required before merge; retained callbacks and exceptional cleanup remain.
