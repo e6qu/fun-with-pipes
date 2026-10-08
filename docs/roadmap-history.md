@@ -9414,3 +9414,31 @@ coverage of every resource graph. Focused lint runs.
 Focused lint passes 2.52 / 5.01 s CPU / elapsed.
 Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
 source unchanged and compiler/runtime/workflows match predecessor.
+Final row87 f08611023cec7df7bcb114832f1cf2e292ac73c3 is published clean
+with exact lease 8abfd46b34762b0cf69e417b65a85a1d783b61ac. Whole commit
+message is one line with empty body. Row88 actual base remains 8abfd46,
+with both cycle-evidence and tracing/documentation commits to preserve.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Explicit channel cycle evidence refresh, 2026-10-09
+
+Row88 rebases from actual 8abfd46b34762b0cf69e417b65a85a1d783b61ac
+onto f08611023cec7df7bcb114832f1cf2e292ac73c3. Ten root docs resolve
+conflicts. Cycle test matches 291f8f75f19688f139b2dcae7f31482cac810643;
+tracing controls and queue-preservation docs are already inherited, making
+291f8f7 documentation-only replay empty. Its content remains in all three
+reference/concurrency/ownership docs, including host library lifetime guidance
+that the historical commit removed. Only cycle test differs from predecessor.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test
+--test channel_cycle_ownership --test channel_queue_ownership runs.
+Close preserves queued values; explicit drain/discard breaks the self-cycle.
+Automatic unreachable cycle reclamation is not established by this test.
+Two cycle/queue tests pass 13.11 / 26.29 s CPU / elapsed. 64 self-cycle
+iterations preserve queue owners on close, drain through typed receive/discard
+and reclaim counted values; normal counts and poison tombstones agree.
+Raw interpreter comparison, O1/O2 GC-off/on stress/verify and poison pass.
+Typed queue transfer/failure cleanup regressions also pass. Focused lint runs.
+Same-target focused lint passes 2.64 / 5.36 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
+cycle/queue code unchanged. Reference, concurrency and ownership all retain
+tracing toggles and explicit-drain limits without altering channel.close semantics.

@@ -100,7 +100,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `d2936a008fd2` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `97dca7626158` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `5915ac0607ac` | `f85cc4e09db4` | `3a0cbdb33b79` |
-| 87 | nominal-source-context | `ownership-nominal-source-context` | `8abfd46b3476` | `8abfd46b3476` | `f85cc4e09db4` |
+| 87 | nominal-source-context | `ownership-nominal-source-context` | `f08611023cec` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `291f8f75f196` | `dc2ad1febc5d` | `8abfd46b3476` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update

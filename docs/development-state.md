@@ -51,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row86 are published with focused checks. The next independent task
-is row87 nested nominal source evidence.
+through row87 are published with focused checks. The next independent task
+is row88 explicit channel-cycle drain evidence.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -132,8 +132,9 @@ still need their final squash rebases and six exact-head full gates.
 | 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
 | 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
 | 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
+| 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
 
-Rows 18–86 are published preparations with passing focused tests, lint and
+Rows 18–87 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -147,13 +148,14 @@ Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
 on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
 Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
 HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
-Row86 is published clean at 5915ac0607acc7a06b35d6b04d3d3047e024fdd6,
-on actual 97dca76. Three tests, lint 2.56 / 5.14 s and format 0.45 / 0.83 s
-pass. Mixed-arm records initialize current fields, retaining original frame
-lifetimes and the stack-binder repair. Independent row87 is rebased; nested nominal source test passes 13.06 / 26.28 s; focused lint passes 2.52 / 5.01 s; format 0.44 / 0.83 s.
-Its previous actual base is
-f85cc4e09db49f1ac53f1f06da40b49f189b5b56; new base is 5915ac0,
-retaining current raw-oracle guidance and all previously repaired source/runtime.
+Row87 is published clean at f08611023cec7df7bcb114832f1cf2e292ac73c3,
+on actual 5915ac0. Nested source test, lint 2.52 / 5.01 s and format
+0.44 / 0.83 s pass. Raw interpreter and native disposal agree under 32-descriptor
+bound, optimized/unoptimized and reuse/free/GC modes. Independent row88
+is rebased; two cycle/queue tests pass 13.11 / 26.29 s; focused lint passes 2.64 / 5.36 s; format 0.45 / 0.83 s. Its previous actual base is
+8abfd46b34762b0cf69e417b65a85a1d783b61ac; new base is f086110. Cycle
+test is unchanged; tracing/queue docs from 291f8f7 are already inherited,
+so that documentation-only replay becomes empty. Explicit-drain policy remains.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -200,7 +202,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-nominal-source-worktree; source test, lint and format pass; no local workload is active.
+belongs to /private/tmp/fwp-channel-cycle-worktree; cycle/queue tests, lint and format pass; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
