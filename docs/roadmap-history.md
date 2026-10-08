@@ -9337,3 +9337,31 @@ with exact lease ae00e6929e8686d2d794d4cfa5600e31e169dec7. Whole commit
 message is one line with empty body. Row85 actual base remains ae00e69 and
 contains two commits (nominal context plus whole-stack binder repair).
 No extra PR opened; PR97 is still the sole current delivery.
+
+## Whole-match nominal and stack ownership refresh, 2026-10-09
+
+Row85 rebases both commits from actual ae00e6929e8686d2d794d4cfa5600e31e169dec7
+onto d2936a008fd2717cb7444a5dca8df0065cb77827. First replay
+46b163cc40652ee7f565c3423e039d043a16f518 preserves nominal match context;
+second replay cb7c2d7a97aff3431b40164ec83d117ab2deb748 preserves whole-stack
+child owners. Ten root docs resolve both conflict sets without old histories
+replacing current state. RC/code/tests match 872372452a1071db124f8e4cc8ae16027cc8f337
+except inherited binary-read dispatch. Guarded clean passes 0.07 / 0.37 s.
+Guarded cargo test --test stack_match_ownership --test match_context_ownership
+--test resource_frame_variants runs. All raw source oracles explicitly disable
+optimization; required binder-retain omission control stays in production.
+Four focused stack/context/variant tests pass 15.67 / 33.72 s CPU / elapsed.
+Raw interpreter agreement, O1/O2 GC off/on stress/verify and poison plus
+required whole-binder child-retain omission control pass. Nominal File
+disposal and variant lifetimes remain correct. Same-target lint passes
+2.51 / 5.04 s. Rebuild exact HTTP golden at O2 from this current checkout,
+then compare stdout/stderr in four GC-off/on × poison modes.
+Guarded current binary build http.fwp -O2 -o /private/tmp/fwp-resource-http-fixed
+from current tests/run passes 7.37 / 14.81 s CPU / elapsed. Guarded python3
+/private/tmp/fwp-verify-resource-http.py now checks the rebuilt fixture.
+Exact rebuilt HTTP golden passes stdout, empty stderr and exit zero in all
+four GC off/on × poison modes, stress/verify enabled, seed 42. Guarded
+helper passes 1.19 / 6.75 s CPU / elapsed. This restores focused evidence
+for the actual earlier HTTP failure; each production PR still needs all six gates.
+Fmt check passes 0.43 / 0.83 s; ten current root docs copied before amend.
+Tested code unchanged; both one-line preparation commits remain in ancestry.

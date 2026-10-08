@@ -144,9 +144,12 @@ remains allocated. Prepared layout/allocation controls establish no speed claim.
 Row84 is published clean at d2936a008fd2717cb7444a5dca8df0065cb77827,
 on actual f3c9ee4. Four tests, lint 3.41 / 10.41 s and format 0.87 / 4.02 s
 pass. Mixed let/pattern arms initialize from their own current scrutinee and
-close once at original frame exit. Next row85 actual base is
-ae00e6929e8686d2d794d4cfa5600e31e169dec7; rebase both 3a0cbdb and
-8723724 onto d2936a0, retaining nominal File and whole-stack child ownership.
+close once at original frame exit. Independent row85 is rebased; four stack/context/variant tests pass 15.67 / 33.72 s; lint 2.51 / 5.04 s
+passes; format 0.43 / 0.83 s. Rebuilt O2 HTTP golden passes all four modes
+(build 7.37 / 14.81 s, execution 1.19 / 6.75 s).
+Its previous actual base is
+ae00e6929e8686d2d794d4cfa5600e31e169dec7; both 3a0cbdb and 8723724
+are replayed onto d2936a0, retaining nominal File and whole-stack child ownership.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -195,8 +198,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-frame-binding-worktree; four variant/frame tests, lint and format pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.14 / 1.04 s).
+belongs to /private/tmp/fwp-match-scrutinee-worktree; match regressions, rebuilt HTTP golden, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
