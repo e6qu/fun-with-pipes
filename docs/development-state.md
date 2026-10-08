@@ -94,22 +94,18 @@ audits pass. Interpreter/native OpenCL failures and actual TLS stream outputs
 agree; the stream check executed without skip. Real resource disposal preserves
 unrelated host handles and sends no implicit TLS shutdown traffic. Old revisions
 and source/probes are preserved; fake OpenCL is not GPU hardware coverage.
-Preparations61–65 are published on their actual refreshed predecessors. Original
+Preparations61–67 are published on their actual refreshed predecessors. Original
 gRPC/TLS/resource and worker controls, lint, format and all audits pass. Both
 worker implementation/repair commits and all original source/probes survive.
-Actual O1/O2 ARM64 worker binaries/layout/disassembly are retained: six-I64
-value48 bytes/aligned8; return uses caller storage with192/208-byte frames.
-These are ABI observations, not speed or constant-stack claims; phase3 must
-measure spills/caller storage. Exact heads, bases and metrics are in the table.
-Peer subjects66 is published7250692d5758940de492742ff4e8e4ec3c15d670 on
-actual65e217ad8ce0d9. All three original subject/cache/listener controls,
-lint, format and all audits pass; original source/probes and old revision survive.
-Current independent task67 is borrowed ALPN roots (`ownership-tls-alpn-roots`),
-rebased FROM actualcfe905046796 ONTO published66 at native6103b2d0df11.
-All three original ALPN-root/subject/listener controls pass9.86CPU/23.27elapsed,
-including actual major collection and exact omitted-fence exit1. Lint2.49/4.99s
-and format0.44/0.82s pass. Finish all11 docs/audit before retained-revision
-publication, then prepare queue68 deterministic task timer regression.
+Actual O1/O2 ARM64 worker layout/disassembly is retained: value48 bytes/aligned8;
+return uses caller storage with192/208-byte frames. No speed/constant-stack claim.
+ALPN roots pass actual major tracing and exact omitted-fence exit1, with
+interpreter/native handshake agreement. Heads, bases and metrics are in the table.
+Current independent task68 is task timer ordering (`ownership-ci-probe-repairs`):
+rebase FROM actualf7a0bd2eba93 ONTO published67. Preserve shorter-timer overtaking,
+explicit channel ordering and scope joining; compare raw interpreter and O1/O2
+native outputs across preemption/reuse modes. Check the original timer target,
+lint, format and all11 docs/audit before retained-revision publication.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -195,7 +191,7 @@ still need their final squash rebases and six exact-head full gates.
 | 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | Three original connect/wire/cache controls10.02CPU/23.52elapsed, lint2.57/5.19s and format0.44/0.82s pass; original source/probes unchanged, including all four resolver/descriptor/handshake omissions; final actual-squash/full gates required |
 | 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
-| 67 ownership-tls-alpn-roots | 6103b2d0df11 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
+| 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
 | 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
 | 70 ownership-file-construction | 823b86c74a68 | 925724e0994d | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
