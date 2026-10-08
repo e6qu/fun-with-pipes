@@ -16940,3 +16940,5 @@ returns a signal instead of required exit1, without recorded signal/stderr;
 Intel fails Rust toolchain DNS before tests. Corrected fresh controls must
 record signal/status, use distinct binaries and explicit UBSan exit policy.
 These failures are repair work, not roadmap or merge authorization blockers.
+
+Compiler/task bundle44–53 published31d038c4ea78cbea81e1001f1662ef7bb771bbfa on actual0f32e7560398c048478c4186c63d90c32e7c1727; native77af0259095cfaf436978929558e514be2e36086. All20 original commits plus final all11-doc snapshot preserved; every prepared53 native/probe byte unchanged, accepted golden/CI diagnostics inherited exactly. All three44/106/69 audits pass; original preparation branches and immutable anchors untouched. Final-head full production matrix required.

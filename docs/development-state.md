@@ -49,43 +49,45 @@ incomplete; phases3–6 are pending. Golden mismatches now retain binaries and
 O1 C, report actual Unix signals and upload failures. The original Intel signal
 was not identified; diagnostic changes do not establish a runtime repair.
 
-Next production delivery bundles queues44–53: returned variant aliases,
+[PR122](https://github.com/e6qu/fun-with-pipes/pull/122) is the sole open production PR, bundling queues44–53: returned variant aliases,
 nominal match/field contexts, CAF caches/evaluation, retained task callbacks,
-deadlines/scopes/handles and typed channel queues. Rebase the contiguous
-prepared53 source b304e91f628c FROM actual prepared43
-6b809877a1ac493015e1902204cc5ea72b68a875 onto this actual PR121 squash.
-Preserve all20 original commits and compiler/runtime/ownership probes; inherit
-accepted golden diagnostics and artifact steps exactly. Worktree:
+deadlines/scopes/handles and typed channel queues. All20 original commits were
+rebased from prepared53 b304e91f628c, excluding prepared43 6b809877a1ac,
+onto the actual PR121 squash. Original compiler/runtime/ownership probes and
+accepted golden diagnostics are preserved. Worktree:
 /private/tmp/fwp-compiler-task-bundle-worktree; branch:
-ownership-compiler-task-bundle. Keep existing preparation branches/anchors intact.
-Run bounded focused checks and all original included regressions on CI, with
-full production gates once at the final bundle head. Copy all11 docs and audit
-before publication and the sole next PR. Include exact negative controls,
-alias/scalar, GC/reuse and raw interpreter agreement. Independent evidence
-stays outside production ancestry. Do not open a standalone queue44 PR.
+ownership-compiler-task-bundle. Existing preparation branches/anchors remain intact.
+CI38123585926 runs the six production jobs at the published head; benchmark
+passes, remaining jobs are running. Documentation38123585877 passes.
+Require all seven passing gates before squash. While they run, prepare the
+related library/OpenCL/TLS/resource bundle54–63, including the separately
+verified pointer arithmetic repair when its fresh focused CI passes.
+Independent evidence stays outside production ancestry. No standalone queue44 PR.
 
-Bundle native head77af0259095cfaf436978929558e514be2e36086 preserves20
+Published bundle head31d038c4ea78cbea81e1001f1662ef7bb771bbfa (native77af0259095c) preserves20
 original commits on actual0f32e7560398 and every prepared53 compiler/runtime/
 ownership probe byte. Golden diagnostics and CI artifact steps match main
 byte-for-byte. Preparation initially dropped empty docs-only commits and failed
 its count check; corrected rebase explicitly preserves them and passes1.25CPU/
 9.36elapsed. Bounded native alias/channel/task-handle targets pass four tests,
 zero ignored,18.91CPU/37.93elapsed. All21 RC units, focused lint and format
-pass together6.47CPU/12.90elapsed. Full bundled CI remains required. Journal:
+pass together6.47CPU/12.90elapsed. Publication1.76CPU/15.50elapsed and PR creation0.17CPU/3.93elapsed pass.
+Full bundled CI remains required. Journal:
 /private/tmp/fwp-compiler-task-bundle-preparation.json; focused logs/checks:
 /private/tmp/fwp-compiler-task-bundle-focused-checks.log and .json.
 
 ## Evidence and preservation requirements
 
-Queue48 unused-CAF-argument evidence32dbb066a08f448c4b68f64d7cd40ed4a4eb696e
-runs CI38109342751 on unchanged prepared36fb4e1de52e compiler/runtime/library
+Queue48 corrected unused-CAF-argument evidence31e142339330b0bd3952d41cd173f7bc1fb55a5b
+requires fresh focused CI38123665620, currently queued; previous38109342751 failed inspection on unchanged prepared36fb4e1de52e compiler/runtime/library
 and both original tests. The capture delegates original compiler arguments,
 retains four owner/control fixtures per architecture and selects the intact
 argument-drop fixture for compiled layout. Exact missing-release exit4 and
 original evaluation/trap order, GC/reuse and raw interpreter controls remain.
 The original two tests pass on both architectures, but the evidence inspector
 fails: it incorrectly counted the echoed-text drop as the CAF argument drop.
-Correction selects the CAF-bound local explicitly. Corrected evidence CI is
+Correction selects the CAF-bound local explicitly; publication0.68CPU/6.75elapsed
+passes with all eight retained C fixtures classified correctly. Corrected evidence CI is
 required; final48 is included in bundle44–53 and needs all production gates.
 Publication0.77CPU/6.56elapsed passes; a mistaken branch trigger was corrected
 in a separate commit0.07/2.45s before execution. Journal:
@@ -254,11 +256,12 @@ preparations need final squash rebases and all seven exact-head production gates
 ## Finish phase2, then continue the plan
 
 A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
-head a7e782cb1ccca48c15fe980f8db914a9b026a7a6 on actual main120, runs
+head 227f15356da8f9a5c7675eea9fda074a6be8857a on actual main120 requires fresh focused CI38123787995, currently queued; previous
 CI38109876885 passes Linux, but ARM fails the negative sanitizer exit-code
 assertion and Intel fails Rust toolchain DNS provisioning before tests. The
 original terminating signal was not recorded; corrected controls use explicit
 UBSan exit behavior, distinct binaries and retained status/C/binary diagnostics.
+Corrected publication0.66CPU/6.65elapsed and formatting0.45CPU/0.84elapsed pass.
 A fresh exact-head preparation run is required. Include it with the next related C-library/raw-memory ownership bundle after
 44–53, with a final actual-squash rebase and all production gates. Do not open
 a separate pointer-only production PR. ptr.at uses unsigned pointer-width
