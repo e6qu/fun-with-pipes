@@ -20,12 +20,21 @@
 use crate::ir::{Body, Expr, FuncId, Local, Pat, Program};
 
 /// For each function, whether each parameter escapes (`false`: it does
-/// not). Functions that are not expressions let every parameter escape.
+/// not). Non-expression functions let parameters escape except callback slots
+/// whose primitive contract proves synchronous invocation without retention.
 pub fn params(prog: &Program) -> Vec<Vec<bool>> {
     let mut noesc: Vec<Vec<bool>> = prog
         .funcs
         .iter()
-        .map(|f| vec![matches!(f.body, Body::Expr(_)); f.arity as usize])
+        .map(|f| {
+            (0..f.arity as usize)
+                .map(|j| {
+                    matches!(f.body, Body::Expr(_))
+                        || matches!(&f.body, Body::Prim(s) if crate::ownership::primitive(s)
+                    .is_some_and(|c| c.borrows_callback() && c.callback_argument() == Some(j)))
+                })
+                .collect()
+        })
         .collect();
     // the greatest fixed point: parameters escape only when shown to
     loop {

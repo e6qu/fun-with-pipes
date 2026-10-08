@@ -190,3 +190,32 @@ made. This foundation does not yet change map or retained runtime callbacks.
 scalar bits resembling an allocation, exact and partial calls, overapplication
 across a scalar-to-function boundary, captured/input aliases and a stack callback
 at O1/O2 with collection stress/verification and both reuse-poison settings.
+
+## Synchronous owned map results
+
+`map` borrows the callback and input list. Its explicit Borrowed callback
+contract proves synchronous invocation without retaining the function itself;
+other callbacks keep Shared contracts. Escape analysis uses that proof only
+for the function slot, never for every borrowed argument. The result has a
+FreshSpine contract: new counted list nodes containing already-owned callback
+results. Callback results may alias inputs/captures or be functions; neither
+child counts nor shared children are reset. FreshTree is inappropriate here.
+
+Generic map invokes the typed borrowed entry. Direct and captured HOF variants
+still call statically known functions, taking typed argument copies per iteration.
+Known partial callbacks hidden behind counted locals retain specialization.
+Original callback/list addresses and captured pointer values stay roots through
+allocating calls. Result buffers use separately releasable memory and transfer
+owned element references into new nodes before release. The interpreter and
+legacy uncounted execution retain their existing behavior.
+
+`tests/map_ownership.rs` covers retained inputs, newly allocated captures,
+identity/constant aliases, partial callbacks returning functions, dynamic
+callbacks and scalar/aggregate results at O1/O2, stack on/off, collection stress
+and verification, and both poison modes. A selected 10,000-step loop compares
+identical generated code with only the old shared-result boundary restored:
+zero collections, identical output, 2.7 MiB freed by counts versus 4.6 MiB for
+owned map results (Apple Silicon, Apple Clang 17, O1, 0.1 MiB precision).
+This is reclamation evidence, not a timing claim. Full CI and benchmarks remain
+required. Other list/container callbacks, retained runtime callbacks, cycles,
+exceptional cleanup, exact overflow counts and WASI reclamation remain work.

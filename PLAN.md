@@ -54,8 +54,15 @@ as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed al
 in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
 types, passed all four exact-head gates in CI `37684140373` and was squash-merged
 as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-child ownership,
-is the sole open PR. Its exact-head CI `37696063781` gates merging; separate
-compiler ownership preparation continues meanwhile.
+passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
+[PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
+now merged as `181d3b3` after all four exact-head gates passed in CI
+`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
+map callbacks, is the sole open PR at exact `2b0012a`; full CI `37711126548`
+ended with Intel's 90-minute timeout after its GC stress suite passed but took
+57.5 minutes. Separate that suite into required macOS stress jobs while retaining
+full coverage; require all six exact-head jobs before merge. Continue ownership
+preparation and fix runner failures.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -602,3 +609,110 @@ borrowed callbacks, rebased from OLD `b563360`; later preparations stay separate
 Deadline callback ownership published as `14a76de`, separate preparation.
 Borrowed callbacks rebased onto merged #81 and pass three focused checks.
 Publish/open this sole next PR; preserve OLD `029fac4` for the map child.
+
+Sole open PR #82 publishes borrowed callbacks at exact `3fa67f3`. Full current
+head CI is required before squash with the recorded 56-character subject and
+empty body. Continue task.scope ownership while CI runs; fix all failures.
+
+Prepared task.scope borrows its synchronous callback, transfers an owned result
+and protects result/scope storage across joining, cancellation and recovered
+traps. Seven focused task ownership checks plus adjacent unwind checks pass;
+full sequential CI remains required. Task-result/handle lifetimes and channel
+queue ownership are next. #82 remains sole open, with macOS jobs running.
+
+Scoped callback ownership published as `7da15d9`, separate from sole PR #82.
+Next: task handle/scheduler/scope owners, typed repeated awaits and result
+destruction, then channel queue ownership. The handoff records audit findings.
+
+Prepared task handles/results have independent scheduler, scope and caller
+owners. Repeated awaits own their returned aliases; the last handle releases
+the cached result after stack cleanup. Deadline private handles and partial
+Options unwind on failure. Focused aliases, cancellation, generation and
+failure controls pass; full sequential CI remains required. Next: channel
+queue/handle ownership, then remaining cycles/library lifetime acceptance.
+
+Counted task handles/results published as `bb6f9c4`, separate from sole PR #82.
+Next: typed Channel handles and queue element owners, with blocked/cancelled
+send/receive and closed/drained teardown evidence. Preserve the handoff anchors.
+
+Prepared channels count handles and own typed queue elements. Receive transfers
+the queue owner into an owned Option after allocation; blocked/closed sends
+retain none. Alias, cancellation/close, function/task descendants, generation,
+sharing fallback and failure controls pass; full sequential CI remains required.
+Finish cycles/library/unknown lifetimes and aggregate gaps before phase 2 acceptance.
+
+Counted channel queues published as `ab44b7d`, separate from sole PR #82.
+Next: phase-2 acceptance audit with actual cycle/library and aggregate evidence.
+CI gates merging only; continue work and fix any failures.
+
+C export result ownership is prepared on OLD `ab44b7d`: wrappers evaluate once,
+release copied boxes and caller CAF references, and preserve escaping C strings.
+Focused counts, conversion failure cleanup and O1/O2 negative controls pass;
+eight adjacent CAF/FFI tests and the ownership-disabled library smoke pass.
+Native libraries retain allocator metadata with tracing unarmed; this is not
+the WebAssembly bump path. Converted inputs, unload/finalizers and runtime cycles
+remain separate acceptance tasks. Full sequential CI is required before merge.
+
+C export results published as `5b34382`, separate from sole PR #82; focused
+validation and required commit format pass. Next: owned library input conversion
+and preparation failure cleanup, then unload/finalizers/cycles and aggregate gaps.
+
+Owned C library inputs are prepared on OLD `5b34382`: counted copies, typed
+partial argument/field cleanup, and shared consume/borrow modes. O1/O2
+input/result controls, six adjacent FFI/worker checks, void/optional inputs and
+ownership-disabled C smoke pass. Pointer-only Bytes export inputs now explicitly
+report their missing length; ordinary foreign Bytes parameters remain supported.
+Next: library unload mappings, caches, finalizers, task stacks and worker threads,
+then cycles and remaining aggregate gaps. Full sequential CI remains required.
+
+PR #82 passed all four exact-head gates in CI `37703018710` and squash-merged
+as `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`. Verified one-line, 56-character
+subject `Add typed borrowed application for synchronous callbacks`, empty body.
+Library inputs published separately as `a6ebc1d`, OLD base `5b34382`; focused
+checks and required commit format pass. Map callback child is being rebased
+from OLD `029fac4` onto the new squash, with only plan/handoff conflicts.
+
+Map callback rebase onto `181d3b3` applies without code conflicts. Three focused
+map/borrowed-callback checks and clippy pass; independent unoptimized interpreter
+values agree, and the selected no-tracing control frees 2.7 versus 4.6 MiB by
+counts. Final inventory/format checks precede publication and the sole next PR.
+
+Map callbacks published as `2b0012a` after guarded tests, inventory, clippy and
+formatting pass; sole PR #83 runs full exact-head CI `37711126548`. All four
+gates precede squash merge with the one-line, 59-character subject and empty
+body. Next independent preparation: native library unload lifecycle on OLD
+`a6ebc1d`; then cycles/aggregate gaps. The filter child rebases from OLD
+`41ef82d` after #83 merges; preserve OLD `1ea7f07` for its child.
+
+
+Native library unload is in focused preparation. Actual macOS loader cycles and
+ordinary static-archive exit pass at O1/O2 with reuse poisoning. Cleanup drains
+attached/detached tasks before finalizers and unmapping, restores host signals,
+frees idle stacks/metrics/side metadata and deletes the library pthread key.
+Negative controls verify missing cleanup is detected. General external resource
+lifetimes, cycles and remaining aggregate paths remain open; no complete tracing-
+free execution claim. Full sequential cross-platform CI remains required.
+
+
+Native OpenCL owner cleanup is prepared next: release completed owners on failed
+initialization and drain/release queue, context and loader on native completion
+or library exit/unload. Archive exit ordering is checked on macOS. Hardware GPU
+validation and interpreter cache/failure lifetimes remain distinct; sequential
+cross-platform CI is still required before merging this preparation.
+
+
+Interpreter OpenCL failed initialization now has staged loader/context/queue
+owners in preparation. Actual-loader controls detect omitted release, and
+unoptimized native/interpreter checks cover failed availability caching. The
+successful interpreter cache keeps its existing process lifetime. Next audit TLS
+listener context/ALPN cleanup and partial listen failure while accepted sessions
+keep their OpenSSL context references. Full sequential CI remains required.
+
+
+TLS listener owners are prepared: stop releases its context reference, accepted
+sessions retain protocol state through raw HTTP/2 transfer, and final session
+close releases the remaining context/wire/descriptor owners. Actual OpenSSL
+handshakes and partial-failure controls pass focused checks. The larger unoptimized
+source comparison exceeded the local memory limit and moves to runner evidence;
+full sequential CI remains required. TLS client caches, resource discard/unload,
+server cancellation and cycles remain open.

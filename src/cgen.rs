@@ -423,6 +423,7 @@ struct Gen<'p> {
     reuse: bool,
     /// Functions the runtime calls back directly (`Gen::callback`).
     callbacks: Vec<FuncId>,
+    owned_callbacks: Vec<FuncId>,
 }
 
 /// `e` without the reference count changes of local `x`, if it does
@@ -1609,6 +1610,7 @@ struct FnGen<'g, 'p> {
     stack_args: Vec<(String, MT)>,
     /// Off-heap local owners count their children directly.
     stack_children: HashMap<Local, Vec<(String, MT)>>,
+    known_callbacks: HashMap<Local, (FuncId, usize)>,
     /// The function being generated.
     me: FuncId,
 }
@@ -1670,6 +1672,17 @@ fn hof_def(i: usize, (sym, g, k): &(String, FuncId, usize), reuse: bool) -> Stri
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
     let call = |x: &str| shared(reuse, format!("f{}({}{})", g, caps, x));
+    if reuse && sym == "map" {
+        let args = (0..*k)
+            .map(|j| format!("c{j}"))
+            .chain(std::iter::once("a[i]".to_string()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let fences = (0..*k)
+            .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
+            .collect::<String>();
+        return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n    }}\n    V result = fwp_map_finish(a, n);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
+    }
     let body = match sym.as_str() {
         "map" => format!(
             "size_t n;\n    V *a = fwp_list_items(xs, &n);\n    for (size_t i = 0; i < n; i++) a[i] = {};\n    return fwp_list_from(a, n);",
@@ -2190,6 +2203,11 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// rest of `body` to generate (a copy that reuses its original takes
     /// the original's `Drop`).
     fn bind_local<'e>(&mut self, l: Local, v: &Expr, body: &'e Expr) -> &'e Expr {
+        if let Some((g, n)) = self.callback_origin(v) {
+            self.known_callbacks.insert(l, (g, n));
+        } else {
+            self.known_callbacks.remove(&l);
+        }
         // a variant built or returned as a struct on every path, only
         // matched: kept as one
         if let Some(m) = self.unboxed_variant(v, &self.locals[l as usize].clone()) {
@@ -2753,6 +2771,60 @@ impl<'g, 'p> FnGen<'g, 'p> {
         format!("(int64_t)fwp_utf8_count(STR({})->d, STR({})->len)", v, v)
     }
 
+    fn callback_origin(&self, e: &Expr) -> Option<(FuncId, usize)> {
+        match e {
+            Expr::Func(g) => Some((*g, 0)),
+            Expr::Apply(f, xs) if matches!(**f, Expr::Func(_)) => {
+                let Expr::Func(g) = **f else { unreachable!() };
+                Some((g, xs.len()))
+            }
+            Expr::Local(l) => self.known_callbacks.get(l).copied(),
+            Expr::Dup(_, b) | Expr::Drop(_, b) => self.callback_origin(b),
+            _ => None,
+        }
+    }
+
+    fn owned_map(&mut self, id: FuncId, args: &[Expr]) -> Option<String> {
+        if !self.g.reuse || !matches!(&self.g.prog.funcs[id].body, Body::Prim(s) if s == "map") {
+            return None;
+        }
+        if !matches!(
+            args.first()?,
+            Expr::Func(_) | Expr::Local(_) | Expr::Apply(_, _)
+        ) {
+            return None;
+        }
+        let (g, n) = self.callback_origin(args.first()?)?;
+        if self.g.prog.funcs[g].arity as usize != n + 1 {
+            return None;
+        }
+        self.g.used_closures[g] = true;
+        if n == 0 {
+            if !self.g.owned_callbacks.contains(&g) {
+                self.g.owned_callbacks.push(g);
+            }
+            let xs = self.expr(&args[1]);
+            return Some(format!("fwp_k_map_owned(fwp_owned_k{g}, {xs})"));
+        }
+        let mut caps = match &args[0] {
+            Expr::Local(l) => (0..n)
+                .map(|j| format!("CLO(l{l})->a[{j}]"))
+                .collect::<Vec<_>>(),
+            Expr::Apply(_, caps) => self.args(caps),
+            _ => return None,
+        };
+        let key = ("map".to_string(), g, n);
+        let i = match self.g.hofs.iter().position(|h| *h == key) {
+            Some(i) => i,
+            None => {
+                self.g.hofs.push(key);
+                self.g.hofs.len() - 1
+            }
+        };
+        caps.push(self.expr(&args[1]));
+        Some(format!("fwp_hof{i}({})", caps.join(", ")))
+    }
+
     /// A call of a higher-order primitive whose function argument is a
     /// known function, with nothing captured, of the arity the primitive
     /// applies it at: the runtime's `fwp_k_*` variant, which calls it
@@ -2830,6 +2902,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn call_expr_inner(&mut self, id: FuncId, args: &[Expr]) -> String {
+        if let Some(call) = self.owned_map(id, args) {
+            let result = self.bind(call);
+            // Specialization reads captures directly; preserve the original
+            // borrowed closure/list addresses until allocating calls return.
+            for arg in args {
+                if let Expr::Local(l) = arg {
+                    self.line(&format!("FWP_KEEP_ALIVE(l{l});"));
+                }
+            }
+            return result;
+        }
         if let Some(call) = self.known_hof(id, args) {
             return self.bind(call);
         }
@@ -4041,6 +4124,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             tokens: Vec::new(),
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
+            known_callbacks: HashMap::new(),
             me: step,
         };
         let r = fg.expr(e);
@@ -4144,6 +4228,9 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::FreshSpine => {
+                                s = s.replace("fwp_p_map(", "fwp_p_map_owned(");
+                            }
                             ResultOwnership::FreshTree => {
                                 let result_type = func.ty.params(func.arity as usize).1.clone();
                                 let owner = self.tree_owner_id(&result_type)?;
@@ -4247,6 +4334,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     tokens: Vec::new(),
                     stack_args: Vec::new(),
                     stack_children: HashMap::new(),
+                    known_callbacks: HashMap::new(),
                     me: id,
                 };
                 let r = fg.expr(&e);
@@ -4294,6 +4382,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             tokens: Vec::new(),
             stack_args: Vec::new(),
             stack_children: HashMap::new(),
+            known_callbacks: HashMap::new(),
             me: id,
         };
         let ret = match (abi.ret, abi.vret) {
@@ -4863,6 +4952,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         noesc: crate::escape::params(prog),
         reuse,
         callbacks: Vec::new(),
+        owned_callbacks: Vec::new(),
     };
     let mut roots = Vec::new();
     if let Mode::Exec(cmds, _) = &mode {
@@ -5337,6 +5427,19 @@ static const fwp_exec_spec exec_spec{i} = {{
     }
     for (step, _) in &g.loops {
         let _ = writeln!(out, "static V fwp_loop{}(V s);", step);
+    }
+    if g.reuse {
+        for (id, _) in prog
+            .funcs
+            .iter()
+            .enumerate()
+            .filter(|(id, f)| live[*id] && g.used_closures[*id] && f.arity > 0)
+        {
+            let _ = writeln!(out, "static V fwp_owned_entry{id}(V *a);\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n);");
+        }
+        for &id in &g.owned_callbacks {
+            let _ = writeln!(out, "static V fwp_owned_k{id}(V x) {{ V a[] = {{x}}; fwp_args{id}(a, 0, 1); return fwp_owned_entry{id}(a); }}");
+        }
     }
     // the functions the runtime calls back: their results are shared
     for &cb in &g.callbacks {

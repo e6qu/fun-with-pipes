@@ -17,6 +17,8 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// New owned list nodes containing already-owned callback results.
+    FreshSpine,
     FreshLeaf,
     /// A tree of new counted allocations: no input aliases or internal sharing.
     FreshTree,
@@ -37,17 +39,37 @@ pub enum ResultOwnership {
     },
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Callback {
+    Shared(usize),
+    /// Invoke synchronously without retaining the callback function itself.
+    /// Supplied values borrow by type; returned values carry ownership.
+    Borrowed(usize),
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Contract {
     pub arguments: &'static [Argument],
     pub result: ResultOwnership,
-    pub callback: Option<usize>,
+    pub callback: Option<Callback>,
     /// Arguments whose values/elements may be reachable from the result.
     /// Callback entries include values captured by the callback.
     pub aliases: &'static [usize],
 }
 
 impl Contract {
+    /// Only proven synchronous callbacks may borrow without runtime sharing.
+    /// Borrowing alone does not establish that an argument cannot escape.
+    pub fn borrows_callback(self) -> bool {
+        matches!(self.callback, Some(Callback::Borrowed(_)))
+    }
+
+    pub fn callback_argument(self) -> Option<usize> {
+        self.callback.map(|c| match c {
+            Callback::Shared(i) | Callback::Borrowed(i) => i,
+        })
+    }
+
     pub fn argument(self, index: usize) -> Argument {
         self.arguments
             .get(index)
@@ -65,7 +87,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
     let (arguments, result, callback, aliases): (
         &'static [Argument],
         ResultOwnership,
-        Option<usize>,
+        Option<Callback>,
         &'static [usize],
     ) = match symbol {
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
@@ -92,6 +114,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "split" | "string.split-once" | "string.find" | "bytes.find" | "bytes.get" => {
             (&[B, B], ResultOwnership::FreshTree, None, &[])
         }
+        "map" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "parse-int" | "parse-float" | "length" => (&[B], R, None, &[]),
         "string.to-bytes" => (&[B], ResultOwnership::AliasLeaf { argument: 0 }, None, &[0]),
         "pad-left" | "pad-right" | "replace" => (
@@ -131,9 +159,9 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             &[0, 1],
         ),
         "array.make" => (&[B, S], F, None, &[1]),
-        "array.generate" => (&[B, S], F, Some(1), &[1]),
-        "array.map" | "map.map-values" => (&[S, B], F, Some(0), &[0, 1]),
-        "array.fold" => (&[S, S, B], R, Some(0), &[0, 1, 2]),
+        "array.generate" => (&[B, S], F, Some(Callback::Shared(1)), &[1]),
+        "array.map" | "map.map-values" => (&[S, B], F, Some(Callback::Shared(0)), &[0, 1]),
+        "array.fold" => (&[S, S, B], R, Some(Callback::Shared(0)), &[0, 1, 2]),
         "array.slice" => (&[B, B, B], F, None, &[2]),
         "array.append" | "set.union" | "set.intersect" | "set.diff" => (&[B, B], F, None, &[0, 1]),
         "array.sort" => (&[B], F, None, &[0]),
@@ -167,7 +195,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
                 runtime: "map_update",
                 wrapped: false,
             },
-            Some(1),
+            Some(Callback::Shared(1)),
             &[0, 1, 2, 3],
         ),
         "set.insert" => (
@@ -214,8 +242,16 @@ mod tests {
                 }
                 let c = primitive(symbol).unwrap_or_else(|| panic!("missing contract: {symbol}"));
                 assert!(c.aliases.iter().all(|i| *i < c.arguments.len()), "{symbol}");
-                if let Some(i) = c.callback {
-                    assert_eq!(c.argument(i), Argument::Share, "{symbol}");
+                if let Some(i) = c.callback_argument() {
+                    assert_eq!(
+                        c.argument(i),
+                        if c.borrows_callback() {
+                            Argument::Borrow
+                        } else {
+                            Argument::Share
+                        },
+                        "{symbol}"
+                    );
                 }
                 let consumed: Vec<_> = c
                     .arguments
@@ -243,6 +279,15 @@ mod tests {
                 }
             }
         }
+        let lists = include_str!("../lib/list.fwp");
+        assert!(lists
+            .lines()
+            .any(|line| line.starts_with("foreign \"fwp\" map :")));
+        let map = primitive("map").unwrap();
+        assert!(map.borrows_callback());
+        assert_eq!(map.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(map.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert!(!primitive("array.map").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
     }
 }
