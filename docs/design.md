@@ -484,3 +484,8 @@ Prepared TLS client cache growth publishes completed entries and releases partia
 owners on allocation failure; prior entries remain usable. Service ALPN preparation
 handles strdup failure before context creation. [Allocation-failure evidence](ownership.md#prepared-tls-cache-partial-allocation-owners)
 records the focused probes; sequential CI and remaining TLS lifetime work are pending.
+
+Prepared ALPN packing uses direct borrowed list walks and one bounded buffer,
+with interpreter-compatible bytes and explicit allocation failure cleanup.
+[Wire preparation evidence](ownership.md#prepared-alpn-wire-preparation) records
+focused probes; full sequential gates and handshake cancellation remain pending.

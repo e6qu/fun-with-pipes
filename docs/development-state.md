@@ -3324,3 +3324,37 @@ Next inspect protocol wire scratch/malloc/length preparation and connect cancell
 native tls.connect currently opens TCP before preparing ALPN/SSL and keeps no
 cleanup frame across fallible/cancellable handshake. Keep one PR open, with all
 six exact-head jobs required before squash. Phase 2 and later phases stay open.
+
+
+TLS cache preparation is published as `4ab1f7ddd6f8f2a335f3640a229629b782e09b3b`,
+subject `Preserve TLS caches and release partial allocation owners`, one line,
+no trailers. ALPN wire preparation is separate on `ownership-tls-wire-preparation`,
+checkout `/private/tmp/fwp-tls-wire-worktree`, immutable OLD parent `4ab1f7d`.
+Failed malloc reproduced a crash (CPU 6.80 s / elapsed 14.06 s). The wire helper
+now walks borrowed list nodes directly, counting only nonempty names <=255 bytes,
+checks wire/API and allocation sizes, and fills one exact buffer. It creates no
+collector scratch array; a probe instruments the old list-items allocation to
+verify zero calls. Native bytes match the interpreter's actual alpn_wire helper.
+Allocation failure reports a TLS error; listen creates no context, and connect
+closes the already connected TCP descriptor before raising its error.
+
+Focused native O1/O2/reuse checks cover allocation failure, invalid/empty names,
+exact bytes/size, empty list, listener rejection and actual TCP client descriptor
+closure. Three controls detect unchecked malloc, counting invalid names and omitted
+client close. A reduced local wire ceiling exercises the length rejection before
+allocation, without allocating gigabytes. Its first synthetic ceiling caused
+unsigned subtraction to wrap for an entry larger than that ceiling; the production
+predicate now checks entry <= ceiling before subtracting (normal ALPN entry max256
+was already below UINT_MAX). The synthetic test now passes. No large workloads or
+limits bypassed. These are unarmed native-library probes, not host-root tracing.
+
+New primitive ALPN guards shadowed the cache fixture's old generic `if (!alpn)`
+needle. That existing negative control is now anchored to its service diagnostic,
+and fails as intended. The combined wire/cache/listener suite passes 3 tests,
+CPU 3.23 s / elapsed 10.60 s. Formatting CPU 0.34 s / elapsed 0.61 s; package clean
+CPU 0.04 s / elapsed 0.26 s. Shared target now wire checkout. Sequential full
+Linux/ARM/Intel stress/reuse gates remain required. Next actual cancellation probes
+for TCP connect (pending descriptor/resolver owners) and TLS handshake (connected
+socket/SSL owner), followed by peer-subject temporary buffers and remaining IO.
+PR #83 remains sole open; its ARM regular/stress and bench pass while Linux/Intel
+run. Keep preparing/fixing work; CI gates merge, not the roadmap.

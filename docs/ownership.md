@@ -1506,3 +1506,19 @@ ALPN failure at O1/O2 with reuse poisoning. Omission controls detect context/nam
 leaks, incomplete entries, lost cache and missing ALPN guard. Full sequential CI
 remains required. Protocol wire preparation, handshake cancellation, interpreter
 cache failure/shutdown, aggregate and cycle coverage remain open.
+
+
+## Prepared ALPN wire preparation
+
+Native ALPN preparation borrows list nodes in two passes without collector scratch,
+counts only valid names and allocates one exact wire buffer. It checks API length,
+allocation size and malloc failure. Successful bytes agree with the interpreter's
+ALPN helper. Failure reports a TLS error before listener context creation or closes
+the client's completed TCP descriptor before returning the error.
+
+Focused O1/O2/reuse probes verify bytes, allocation size, invalid/empty names,
+zero list-item scratch allocations, actual connected descriptor closure and omitted
+allocation/size/close guards. A reduced ceiling exercises rejection without a large
+allocation; this does not claim a real multi-gigabyte workload was run locally.
+Native library tracing stays unarmed and full sequential CI remains required.
+Pending TCP connect, handshake cancellation and peer-subject buffers remain open.

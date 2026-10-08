@@ -742,3 +742,9 @@ failed growth/name creation releases partial owners and preserves previous entri
 server ALPN allocation failure is explicit. Focused retry/omission checks pass.
 Next audit ALPN wire preparation and cancellable TLS connect lifetime. Full
 sequential gates remain required, with PR #83 ARM regular/stress and bench passing.
+
+ALPN wire preparation is prepared after cache failures: direct borrowed list walks
+avoid collector scratch, size only valid names, check protocol lengths/malloc and
+release an already connected socket on buffer failure. Interpreter/native wire
+bytes and focused failure controls pass. Next TCP-connect/TLS-handshake cancellation
+and peer-subject temporary ownership. Full sequential CI remains required.
