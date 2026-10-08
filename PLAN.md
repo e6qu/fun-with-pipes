@@ -57,7 +57,7 @@ next action. Prepared work still requires final rebases and full CI.
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
 and cycles. Repair reproduced FFI pointer-offset overflow and verify raw-memory
-boundaries. Prepared resource/unwind improvements require sequential full CI.
+boundaries. Prepared resource/unwind improvements require full CI per final bundle.
 Finish phase 2 before numeric representation, numerics/autodiff and optional
 tracing-free work. Windows, new deployment interfaces and a new backend remain
 deferred unless the user changes priorities.
