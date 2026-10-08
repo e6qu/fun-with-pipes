@@ -29,7 +29,7 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 ## Main and next delivery
 
 Main is d174e73fecb96cb5aef85fa20eb8471a48dc0948 (#96). All six
-CI37909273494 gates passed at 03d25acc581a69c1a16f0add88e4768777072683.
+CI 37909273494 gates passed at 03d25acc581a69c1a16f0add88e4768777072683.
 Explicit match-head squash verifies the whole one-line message:
 `Transfer owned loop states and reclaim typed Step and ABI payloads`.
 #74–#96 deliver native macOS and selected ownership through loop-state/Step/ABI
@@ -42,7 +42,7 @@ ownership-list-structure, /private/tmp/fwp-structure-worktree, exact
 Rebased from ACTUAL prior base 112f3c8; source/runtime/tests/workflows exactly
 match verified 6ce37fb. Four final tests pass 16.32 / 32.95 s, exact contract unit
 3.24 / 6.73 s, lint 2.29 / 4.59 s and format 0.34 / 0.60 s.
-CI37917260081 is queued at this exact head. Require all six full gates before
+CI 37917260081 is queued at this exact head. Require all six full gates before
 explicit match-head squash:
 `Own typed zip unzip and chunks results and release scratch storage`, empty body.
 After merge, row20 ACTUAL current base remains 6ce37fb180e1d88903dd94dadaf47181085ab09e;
@@ -50,8 +50,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row75 are published with focused checks. The next independent task
-is row76 scoped File result ownership.
+through row76 are published with focused checks. The next independent task
+is row77 WASM resource metadata.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -120,24 +120,27 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 3c87e1f63b51 | d4611644084a | 21.06 / 42.34 s + three units 3.93 / 8.00 s |
 | 74 ownership-file-runtime-owners | 4b5da4aa946a | 3c87e1f63b51 | 21.91 / 44.03 s |
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
+| 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
 
-Rows 18–75 are published preparations with passing focused tests, lint and
+Rows 18–76 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row75 mandatory original-frame release is published clean at
-db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0 on actual base 4b5da4a.
-Five tests pass 22.99 / 46.22 s, lint 2.59 / 5.18 s, format 0.44 / 0.84 s.
-Source opens/discards respect descriptor bounds without GC and with reuse/free
-disabled. Original parameter lifetimes and owned aliases remain preserved.
-Independent row76 rebased from ACTUAL old parent 923ad4a onto current row75 head db3bcf0.
-Three scoped File result, logical owner and byte-read tests pass 22.08 / 46.15 s;
-lint passes 2.48 / 5.05 s. Runtime conflict
-retains the new owning scoped callback alongside repaired binary/text read dispatch.
-Preserve all ten current docs before main refresh or rebase; OLD anchors stay immutable.
+Row76 scoped File results is published clean at
+b4860bf2c392e8dae09994d404b9a4a6f0636d73 on actual base db3bcf0.
+Three tests pass 22.08 / 46.15 s, lint 2.48 / 5.05 s, format 0.45 / 0.83 s.
+Scoped/task/loop File results agree with raw interpreter; missing-owner and
+FWP_FREE=0 storage accounting controls pass. Binary-read repairs remain intact.
+Independent row77 rebased from ACTUAL old parent 30fe112 onto current row76 head b4860bf.
+Native bump-C exact test passes 7.93 / 16.79 s (actual WASI test filtered);
+related native File owner test passes 1.26 / 3.62 s. Corrected WASI fstat predicate remains.
+Minimal Linux test-step env requires actual WASI availability for its final CI.
+Focused lint passes 2.54 / 5.09 s.
+Focused native bump-C checks are not actual WASI support; full required runner evidence remains CI.
+Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
 ## Repaired resource evidence
@@ -185,8 +188,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-runtime-boundaries-worktree; scoped result checks complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.36 s).
+belongs to /private/tmp/fwp-wasm-resource-counts-worktree; bump/native checks complete; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.02 / 0.25 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.07 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

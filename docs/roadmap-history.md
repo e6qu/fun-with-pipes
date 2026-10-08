@@ -9090,3 +9090,31 @@ pass. Tasks/channels honor FWP_RESOURCE_NO_FREE without losing resource disposal
 Related logical alias and arbitrary-byte regressions pass. Sequential full gates required.
 Same-target lint passes 2.48 / 5.05 s CPU / elapsed.
 Fmt check passes 0.45 / 0.83 s; ten current docs copied before amend, tested code unchanged.
+Final row76 b4860bf2c392e8dae09994d404b9a4a6f0636d73 is published clean with
+exact lease 30fe112db93c727e565fed0a4c25e4da713a10ad. Whole subject verifies
+one line and empty body. Row77 ACTUAL base remains 30fe112; preserve its current
+c889479 WASI fstat repair. No extra PR; PR97 full exact-head CI is still queued.
+
+## WASM logical count preparation refresh, 2026-10-09
+
+Row77 rebases from ACTUAL old parent 30fe112db93c727e565fed0a4c25e4da713a10ad
+onto current row76 head b4860bf2c392e8dae09994d404b9a4a6f0636d73.
+Ten current docs resolve conflicts; logical-count C runtime and test match current
+c889479eed7aba4967b2e5f87d7a368193b18be9, preserving the corrected fstat
+WASI descriptor predicate. Minimal production Linux test-step env sets
+FWP_REQUIRE_WASM_RESOURCE_COUNTS=1, so its actual WASI test cannot silently skip.
+No evidence workflow copied into production. Guarded clean passes 0.02 / 0.25 s.
+Guarded cargo test --test wasm_resource_counts
+bump_heap_aggregate_counts_release_file_children -- --exact is running.
+This selects native host bump-C evidence only; actual WASI remains on GitHub.
+Exact host bump-C test passes 7.93 / 16.79 s CPU / elapsed, one executed
+and actual WASI test explicitly filtered. It checks 128 aggregate disposal cycles,
+300 aliases, overflow, scalar/constant safety and required-count omission at O1/O2.
+Logical metadata disappears on destruction; physical bump allocations remain.
+Related native File alias test is running. This local check is not WASI acceptance.
+Related guarded cargo test --test file_runtime_ownership passes one test
+1.26 / 3.62 s CPU / elapsed. Current native semantics stay correct alongside
+bump logical metadata. Focused lint and format follow; actual WASI stays on CI.
+Same-target lint passes 2.54 / 5.09 s CPU / elapsed.
+Fmt check passes 0.46 / 0.86 s; ten docs copied before amend, tested source unchanged.
+Linux required-WASI gate is prepared and awaits its own exact-head CI.

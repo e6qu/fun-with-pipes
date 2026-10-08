@@ -7524,6 +7524,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     if !reuse_enabled() {
         out.push_str("#define FWP_NO_REUSE 1\n");
     }
+    if resources {
+        out.push_str("#define FWP_RESOURCE_OWNERS 1\n");
+    }
     let web = uses_web(prog);
     let tls = uses_services || web || uses_tls(prog);
     if tls {
