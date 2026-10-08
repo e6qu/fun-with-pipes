@@ -140,7 +140,7 @@ still need their final squash rebases and six exact-head full gates.
 | 65 ownership-unboxed-worker-locals | 98f5c04f6260 | 04811432dc3d | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
 | 66 ownership-tls-peer-subject | bde11299c626 | 98f5c04f6260 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
 | 67 ownership-tls-alpn-roots | ff4e98c6979e | bde11299c626 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
-| 68 ownership-ci-probe-repairs | 933deb78f600 | bbde0fa9c254 | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
+| 68 ownership-ci-probe-repairs | 3135b0d66ba3 | ff4e98c6979e | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
 | 70 ownership-file-construction | 41a76ee080e5 | 7047b100dbbe | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
 | 71 ownership-file-write-visibility | 6fdf20ca82a9 | 41a76ee080e5 | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |

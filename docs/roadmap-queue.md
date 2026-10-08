@@ -96,7 +96,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `98f5c04f6260` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `bde11299c626` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `ff4e98c6979e` | `e0f11626f609` | `6bda2c815a71` |
-| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `933deb78f600` | `e503e10a9780` | `e0f11626f609` |
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `3135b0d66ba3` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7047b100dbbe` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `41a76ee080e5` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `6fdf20ca82a9` | `5ac710398a14` | `e9d575fdf990` |
