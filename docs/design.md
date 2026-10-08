@@ -466,3 +466,11 @@ Separate caller handles keep parked operations alive through cancellation; last
 handle destruction releases queued values and storage. Unknown/sink boundaries
 retain tracing. Evidence and remaining cycle/library acceptance are in
 [ownership.md](ownership.md#prepared-counted-channels-and-queue-elements).
+
+
+Prepared native-library resource finalizers release owned File/socket/HTTP2
+handles before unmapping the heap. Session disposal during unload avoids network
+writes, then releases cached TLS contexts; explicit close retains close_notify.
+See [the ownership evidence](ownership.md#prepared-native-library-resource-teardown).
+This is prepared work pending sequential CI; general affine discard and remaining
+runtime/cycle coverage remain open.

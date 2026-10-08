@@ -2437,9 +2437,19 @@ static V fwp_io_error_path(const char *kind, const char *path, const fwp_desc *d
     return fwp_io_error(kind, buf, d);
 }
 
+#ifdef FWP_LIBRARY
+static void fwp_file_final(void *p) {
+    fwp_file *h = (fwp_file *)p;
+    if (h->f) { fclose(h->f); h->f = 0; }
+}
+#endif
+
 static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
     h->f = f;
+#ifdef FWP_LIBRARY
+    fwp_gc_finalizer(h, fwp_file_final);
+#endif
     char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
     strcpy(p, path);
     h->path = p;

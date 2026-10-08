@@ -1446,3 +1446,29 @@ CPU 0.34 s / elapsed 0.61 s; whitespace clean. Exact bounded commands included
 --test channel_queue_ownership --test task_ownership -- -D warnings`. No resource
 limits were raised/bypassed; no focused failure remains. Shared target contains
 this channel compiler; package clean is required before checkout changes.
+
+
+## Prepared native library resource teardown
+
+Native libraries finalize owned File and socket wrappers before their region is
+unmapped. Explicit close/stop clears these owners; HTTP/2 transfer clears the socket
+wrapper and transfers ownership to the connection. Existing connection finalizers
+close surviving descriptors and dispose sessions during library teardown. The host
+retains ownership of its descriptors. This reuses the existing finalizer table,
+without another heap allocation per SSL session or a new source annotation.
+
+Implicit disposal calls SSL_free and releases server protocol owners without
+SSL_shutdown. Explicit close still sends close_notify. Client-context cache owners,
+CA names and storage are released after finalizing sessions. Library tasks drain
+before finalizers; handles must not be used after unload, and all host calls must
+have completed. Executable collection behavior and the successful interpreter TLS
+cache lifetime remain separate work.
+
+An actual repeated loader fixture checks owned descriptor absence, preserved host
+peers, balanced client/server contexts, sessions, ALPN storage and client-cache
+storage. It covers completed ALPN handshakes, stopped/open listeners, explicit
+close and HTTP/2 transfer at O1/O2 with reuse poisoning. Six negative controls detect
+missing ownership, disposal/cache cleanup and implicit shutdown. Native library
+tracing remains unarmed; these checks do not prove general affine-drop, cycle or
+tracing-free support. Full sequential CI remains required. Successful gRPC server
+cancellation and client-cache allocation failures are the next resource tasks.
