@@ -9390,3 +9390,27 @@ pass. Same-target lint runs.
 Same-target lint passes 2.56 / 5.14 s CPU / elapsed.
 Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
 code unchanged, including inherited stack-child repair and byte-read dispatch.
+Final row86 5915ac0607acc7a06b35d6b04d3d3047e024fdd6 is published clean
+with exact lease f85cc4e09db49f1ac53f1f06da40b49f189b5b56. Whole commit
+message is one line with empty body. Row87 actual base remains f85cc4e.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Nested nominal source resource refresh, 2026-10-09
+
+Row87 rebases from actual f85cc4e09db49f1ac53f1f06da40b49f189b5b56
+onto 5915ac0607acc7a06b35d6b04d3d3047e024fdd6. Ten root docs resolve
+conflicts without old consolidation replacing current status/evidence. The
+only source/runtime/workflow delta is the intended tests/resource_match_context.rs;
+prior raw field/match oracle fixes are already inherited. No runtime change.
+Guarded clean passes 0.00 / 0.13 s. Guarded cargo test
+--test resource_match_context runs, comparing raw interpreter with optimized/
+unoptimized source, O1/O2, reuse/free toggles, GC off/on stress and poison
+under a 32-descriptor child-only bound for 64 nested nominal File discards.
+Nested nominal source regression passes 13.06 / 26.28 s CPU / elapsed,
+64 discards within 32 descriptors. Raw interpreter and optimized/unoptimized
+source builds agree across O1/O2, reuse/free toggles, GC off/on stress/verify
+and poison. This confirms tested nominal File lifetimes, not no-tracing
+coverage of every resource graph. Focused lint runs.
+Focused lint passes 2.52 / 5.01 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged and compiler/runtime/workflows match predecessor.

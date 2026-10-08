@@ -230,6 +230,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 84 | Whole-pattern variant holders initialize from the current scrutinee on each binding path | Sequential CI; mixed let/pattern arms, exact-once close and stale-local prevention |
 | 85 | Whole-match scrutinees preserve nominal context; whole stack binders retain and drop their typed children | Sequential CI; File disposal plus HTTP/stack alias regressions and retain omission controls |
 | 86 | Record pattern holders initialize borrowed typed fields from their own current scrutinee before frame retention | Sequential CI; mixed let/pattern arms, exact-once close and preserved stack binder repair |
+| 87 | Nested nominal source matches discard typed File payloads at original frame exit without exhausting descriptors | Sequential CI; raw interpreter, optimized/unoptimized source, reuse/free and GC modes |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
