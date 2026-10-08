@@ -56,7 +56,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `9a21fd6cc844` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
-| 28 | runtime-call | `ownership-runtime-call-cleanup` | `131ec8ebdd06` | `bee3f1659ae5` | `7392f2d67151` |
+| 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `25eda7b24ef5` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `9979e9fd1a27` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `47776e738c26` | `c2a364544d92` | `b8f4c2469215` |
@@ -93,7 +93,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 62 | tls-cache | `ownership-tls-cache-failures` | `004eccb1f092` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `f1915b15033e` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `04811432dc3d` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `46f7f4b17226` | `b8f3752d236f` | `0cc612650ab9` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `98f5c04f6260` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `ec16c6630686` | `6bda2c815a71` | `b8f3752d236f` |
 | 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `bbde0fa9c254` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `933deb78f600` | `e503e10a9780` | `e0f11626f609` |
