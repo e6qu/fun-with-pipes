@@ -11471,3 +11471,9 @@ passes lint/format, all focused File/frame/ownership tests, resource metadata/fu
 units, actual tracing churn and strong doc audit. It does not replace sequential
 production gates. Row85 both nominal variant and stack-child alias tests
 12.49/27.27s pass; lint/format follow. Actual WASI evidence is running.
+
+Row85 clippy6.11/13.31s and format0.44/0.83s pass after both nominal/stack-child
+tests12.49/27.27s. Row87 refreshb83d77ce5da8f3f1eb2d353bc8d8c76541043ae2
+uses actual based0e41c87e547; compiler/runtime and source context fixture match
+original with inherited CLI/tracing repairs intact. Old CURRENTf08611023cec
+is retained under an immutable revision before lease publication. Checks follow.
