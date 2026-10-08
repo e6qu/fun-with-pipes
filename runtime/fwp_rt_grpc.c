@@ -2021,8 +2021,10 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
         *failed = 1;
         return 0;
     }
-    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3, ca);
+    unsigned char *alpn = (unsigned char *)strdup("\x02h2");
+    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, alpn, 3, ca);
     if (!ctx) {
+        free(alpn);
         fprintf(stderr, "fwp serve: %s\n", fwp_tls_err);
         *failed = 1;
     }
@@ -2069,6 +2071,7 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     int fd = h2_listen(hostport, bound, sizeof bound);
     if (fd < 0) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
+        if (tls) fwp_tls_server_drop(tls);
         return 1;
     }
     g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);

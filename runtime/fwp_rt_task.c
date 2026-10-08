@@ -1241,6 +1241,7 @@ static char fwp_tls_err[512];
 static ssize_t fwp_tls_recv(void *ssl, char *buf, size_t n, int *ww);
 static ssize_t fwp_tls_send(void *ssl, const char *buf, size_t n, int *ww);
 static void fwp_tls_free(void *ssl);
+static void fwp_tls_server_drop(void *ctx);
 static void *fwp_tls_accepted(void *ctx, int fd);
 #endif
 
@@ -1451,6 +1452,9 @@ static V fwp_p_tcp_stop(V l) {
         fwp_fd_closing(fd);
         close(fd);
     }
+#ifdef FWP_TLS
+    if (SOCK(l)->tls) { fwp_tls_server_drop(SOCK(l)->tls); SOCK(l)->tls = 0; }
+#endif
     return FWP_UNIT;
 }
 
