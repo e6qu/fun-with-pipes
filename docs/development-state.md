@@ -105,10 +105,10 @@ still need their final squash rebases and six exact-head full gates.
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
-| 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Fresh checks follow; compiler/runtime unchanged |
+| 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
 | 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Fresh focused checks follow; compiler/runtime unchanged |
 | 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Fresh focused checks follow; compiler/runtime unchanged |
-| 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
+| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Fresh checks follow; compiler/runtime unchanged |
 | 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
 | 68 ownership-ci-probe-repairs | 7d8ab6719e55 | 22b95b0ddb74 | 30.99 / 62.26 s |
 | 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |

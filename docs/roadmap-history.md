@@ -11288,3 +11288,9 @@ Row65 refresh46f7f4b172266e2805d087e1fc3fb39640e4e2ae uses actual
 base446d60c378dc; compiler/runtime match original. Old CURRENT2ba7084abe25
 is retained under immutable revision tag before explicit-lease publication.
 Unboxed worker tests follow; no general speed claim is made.
+
+Row63 guarded clean0.02/0.13s, bounded ALPN preparation7.54/16.19s,
+clippy2.45/4.96s and format0.45/0.86s pass. Row66 refreshec16c66306869d0b7626150020c6ab51ca9e4a1f
+uses actual base46f7f4b17226; compiler/runtime match original. Old CURRENT
+b728cf5f2adb is retained under immutable revision tag before lease publication.
+Peer-subject allocation/buffer checks follow.
