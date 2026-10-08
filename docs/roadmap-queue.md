@@ -103,7 +103,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 73 | resource-frames | `ownership-resource-frames` | `3dba256655a3` | `dcc5bbac318f` | `06419f4c5989` |
 | 74 | file-runtime-owners | `ownership-file-runtime-owners` | `8d5cb3c4e3e4` | `e21c92ea2f6c` | `368dafc5567d` |
 | 75 | file-discard | `ownership-file-discard` | `423a7ddcc760` | `923ad4a4fb07` | `e21c92ea2f6c` |
-| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `e69eb74df932` | `30fe112db93c` | `923ad4a4fb07` |
+| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `603bb0b914db` | `30fe112db93c` | `923ad4a4fb07` |
 | 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `231568d07731` | `046f7e85a9eb` | `30fe112db93c` |
 | 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `c7ba897d8d9c` | `681dd55136b0` | `c889479eed7a` |
 | 79 | resource-frame-fields | `ownership-resource-frame-fields` | `8053dc693a13` | `658e5b73ae1c` | `681dd55136b0` |
