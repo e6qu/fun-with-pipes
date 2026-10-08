@@ -102,7 +102,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `2ba7084abe25` | `b8f3752d236f` | `0cc612650ab9` |
 | 66 | peer-subject | `ownership-tls-peer-subject` | `b728cf5f2adb` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `22b95b0ddb74` | `e0f11626f609` | `6bda2c815a71` |
 | 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
 | 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
 | 70 | file-construction | `ownership-file-construction` | `722224705f7c` | `e9d575fdf990` | `b00215dc10f5` |

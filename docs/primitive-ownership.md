@@ -209,6 +209,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Sequential CI; emitted box removal, interpreter agreement and field cleanup |
 | 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Sequential CI; real handshakes, retry, Rust metadata agreement and omission controls |
 | 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Sequential CI; forced major trace, actual collection, session lifetime and missing-fence control |
+| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Sequential CI; raw interpreter, preemption, stress and cleanup controls |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

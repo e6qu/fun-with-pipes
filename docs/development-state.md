@@ -42,16 +42,16 @@ ownership-loop-state, /private/tmp/fwp-loop-worktree, exact
 Source/runtime/tests/workflows exactly match verified 112f3c8; four raw
 interpreter oracles keep FWP_NO_OPT=1. Five final tests pass 18.66 / 37.70 s,
 exact contract unit 3.15 / 6.61 s, lint 2.30 / 4.69 s, format 0.33 / 0.60 s.
-CI 37909273494 passes bench and regular/GC stress ARM macOS at this exact head.
-Linux, regular Intel macOS and Intel GC stress run. Require each to pass before
+CI 37909273494 passes bench, regular ARM macOS and ARM/Intel GC stress
+at this exact head. Linux and regular Intel macOS run. Require each to pass before
 explicit match-head squash with subject
 `Transfer owned loop states and reclaim typed Step and ABI payloads`, empty body.
 After its eventual merge, row19 ACTUAL current base remains 112f3c8;
 rebase from that base onto its real squash, preserving OLDc05a5d9/parent787763d.
 
 All nine root docs were preserved in /private/tmp/fwp-main-docs-pre95 before
-main fast-forward from 1358267 and restored afterward. Independent preparations through row66 are published with focused checks;
-row67 borrowed TLS protocol roots is next while PR96 full CI runs.
+main fast-forward from 1358267 and restored afterward. Independent preparations through row67 are published with focused checks;
+row68 ownership probes and deterministic timer fixtures is next while PR96 full CI runs.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -111,25 +111,26 @@ still need their final squash rebases and six exact-head full gates.
 | 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
 | 65 ownership-unboxed-worker-locals | 2ba7084abe25 | ae05b2bfc32c | 20.34 / 58.06 s |
 | 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
+| 67 ownership-tls-alpn-roots | 22b95b0ddb74 | b728cf5f2adb | 11.12 / 26.13 s |
 
-Rows 18–66 are published preparations with passing focused tests, lint and
+Rows 18–67 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row66 TLS peer-subject cleanup is published clean at
-b728cf5f2adb4d0957b108545df187013cf8f912 on actual base 2ba7084.
-Three focused tests pass 10.79 / 25.73 s, lint 3.78 / 7.59 s, format 0.48 / 0.98 s.
-Real handshakes, Rust metadata agreement, copy traps and omission controls pass.
-Library tracing is unarmed; sequential full source and stress gates remain required.
-Row67 rebased from actual old parent 6bda2c8 onto current row66 head b728cf5;
-three focused ALPN roots, peer metadata and listener tests pass 11.12 / 26.13 s;
-lint passes 2.97 / 5.99 s.
-Its historical doc replay preserves current repository guidance and guard.
-CONTRIBUTING now also carries the prepared raw-oracle guidance; preserve this
-additional dirty doc alongside the nine authoritative docs before main refresh.
+Row67 borrowed TLS protocol roots is published clean at
+22b95b0ddb74c4a58cd7c236184e5e183b8fb019 on actual base b728cf5.
+Three focused tests pass 11.12 / 26.13 s, lint 2.97 / 5.99 s, format 0.52 / 0.99 s.
+Forced major trace explicitly arms collection and preserves SSL through String copy;
+missing-owner-fence control fails. Rust Session metadata agrees.
+Row68 rebased from actual old parent e0f1162 onto current row67 head 22b95b0.
+Five probe repairs remain; timer regression adapts to the already merged
+join/drain/sort golden fixtures. All ten tests across six focused targets pass 30.99 / 62.26 s after repairing
+literal braces in the new Rust source fixture. Lint passes 2.59 / 5.35 s.
+Preserve CONTRIBUTING raw-oracle guidance, now an additional dirty root doc,
+alongside the nine authoritative docs before main refresh or doc resolution.
 Preserve immutable OLD anchors. PR96 remains the sole open delivery;
 row19 final rebase follows its eventual squash.
 
@@ -178,7 +179,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-tls-alpn-root-worktree; ALPN root checks complete; no local workload is active.
+belongs to /private/tmp/fwp-ci-probe-repairs-worktree; probe/timer checks complete; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.17 s elapsed).

@@ -8784,3 +8784,30 @@ with Rust Session; O1/O2 stress/verification and poison checks pass. Related
 library fixtures remain unarmed; this specific probe establishes actual tracing.
 Same-target lint passes 2.97 / 5.99 s CPU / elapsed.
 Fmt check passes 0.52 / 0.99 s. Ten current docs copied before amend; tested code unchanged.
+Final row67 22b95b0ddb74c4a58cd7c236184e5e183b8fb019 is published clean with
+exact lease e0f11626f60955d080669a4e38e2e81ac06fff9f. Whole subject verifies
+one line and empty body. No additional PR; row68 actual base remains e0f1162.
+
+## Ownership probe and timer preparation refresh, 2026-10-09
+
+Row68 rebases from actual old parent e0f11626f60955d080669a4e38e2e81ac06fff9f
+onto current row67 head 22b95b0ddb74c4a58cd7c236184e5e183b8fb019.
+Ten current docs resolve conflicts. Raw interpreter flags already match; five
+GC chunk probes now supply their required index output. Golden task fixtures
+already synchronize via joining children, draining and sorting their results;
+retain those merged fixtures and adapt the timer regression to that behavior.
+The delayed case adds 100 ms before the shorter timer, verifies its injection,
+and checks raw interpreter/O1/O2 outputs across preemption and poison modes.
+PR96 passes four exact-head jobs, including both macOS stress; Linux and regular
+Intel macOS are running. No additional PR.
+Guarded clean passes 0.07 / 0.38 s. First six-target test command exits 101
+at compile time (7.32 / 14.64 s): adapted source has a literal {} inside Rust
+format!. Escaped those braces; retrying the same bounded command. This failure
+is repaired work, not a roadmap blocker.
+Corrected six-target test command passes all ten tests 30.99 / 62.26 s.
+Five repaired probe files exactly match immutable e503e10a; golden task fixtures
+and CONTRIBUTING exactly match current row67. New timer regression is adapted
+and passes both deliberate-overrun cases with raw interpreter/O1/O2 and
+preemption 1/37/1000 × poison 0/1 × GC stress/verification.
+Same-target lint passes 2.59 / 5.35 s CPU / elapsed.
+Fmt check passes 0.45 / 0.86 s. Ten docs copied before final amend; tested code unchanged.

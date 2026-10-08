@@ -107,7 +107,8 @@ static volatile V source_list, input_leaf, input_alias;
 static int recover_map_trap(void) { return 1; }
 static int dead_string(V v) { return fwp_reuse_verify ? STR(v)->len == 0 : *fwp_rc_slot(v) == 0; }
 static int dead_scratch(V v) {
-    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, NULL);
+    size_t ci;
+    gc_chunk *chunk = fwp_gc_chunk_of((uintptr_t)v, &ci);
     if (!chunk) return 1;
     if (chunk->type == GC_FREE) return 1;
     if (chunk->type != GC_SMALL) return 0;

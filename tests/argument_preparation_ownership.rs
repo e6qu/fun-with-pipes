@@ -101,7 +101,8 @@ static jmp_buf preparing;
 static int recover_preparation(void) { return 1; }
 static int dead_cell(V v) {
     if (fwp_reuse_verify) return OBJ(v)->tag==0xdead;
-    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,NULL);
+    size_t ci;
+    gc_chunk *chunk=fwp_gc_chunk_of((uintptr_t)v,&ci);
     if (!chunk || chunk->type==GC_FREE) return 1;
     if (chunk->type!=GC_SMALL) return 0;
     for (char *p=fwp_gc.lists[chunk->leaf][chunk->cls].free;p;p=(char *)~*(uintptr_t *)p)
