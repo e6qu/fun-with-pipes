@@ -262,9 +262,10 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#85 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#86 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
-borrowed. Zip is next; other callbacks, runtime unwind and retained owners remain
+borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
+Right-fold is next; other callbacks, runtime unwind and retained owners remain
 preparation.
 
 ## Prepared work and acceptance limits
@@ -302,3 +303,9 @@ while the affine handle remains borrowed. General discard remains separate:
 a File parameter stays alive until its original function frame exits, even after
 ignore, because early close changes observable later I/O failures. Internal
 resource scopes must survive optimization and preserve that original lifetime.
+
+File read error/UTF-8 agreement and temporary read-buffer cleanup now also have
+a preparation. The borrowed read-all handle stays open through failure; the
+path-based read owns and closes its stream. Short write-new and buffered close
+errors are checked with the original write errno preserved. This does not
+establish general implicit resource disposal or tracing-free coverage.

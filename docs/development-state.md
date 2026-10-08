@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 06:18 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 07:28 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -36,17 +36,17 @@ Queued, skipped, cancelled, superseded or earlier-head runs are not passing gate
 
 ## Merged support
 
-Current main: `d4e52617eac2823f8eb35e83c3bf9cd9b2730fcf`, squash #85, merged
-2026-10-08T05:34:03Z. ALL SIX jobs passed in CI `37728301773` at exact
-`a090f1f5ac6cae78f569c28b13d68c72b36e1ae2`. Verified one-line subject
-`Transfer owned accumulators through synchronous fold callbacks`, empty body.
-Root fast-forward preserved current docs; backup `/private/tmp/fwp-main-docs-pre85`.
-The compact plan, history, queue and persistent guard are now tracked on main.
-Previous #84 squash `01c6f58` passed ALL SIX CI `37722779465` at `a5185a9`.
+Current main: `90affeb3954a8d5da9f4f66a2cbcdc235f57a6f7`, squash #86, merged
+2026-10-08T07:24:02Z. ALL SIX jobs passed in CI `37733658893` at exact
+`cf8ce6e61295170fb455957fe83218c30e9cd8b4`. Verified one-line subject
+`Own zip callback results and preserve typed input aliases`, empty body.
+Root fast-forward preserved five current docs in `/private/tmp/fwp-main-docs-pre86`.
+The guard and compact docs are tracked. Previous #85 squash `d4e5261`
+passed ALL SIX CI `37728301773` at exact `a090f1f`.
 
-#74–#85 deliver native macOS ARM/Intel, container ownership contracts, owned
+#74–#86 deliver native macOS ARM/Intel, container ownership contracts, owned
 text/byte leaves and fresh text trees, compiled closures and cleanup, concrete
-argument temporaries, owned stack children, borrowed callbacks, map, filter and fold ownership.
+argument temporaries, owned stack children, borrowed callbacks, map, filter, fold and zip ownership.
 Full earlier hashes/runs, measurements and delivered language features remain in
 [history](roadmap-history.md). Phase 1 is complete; phase 2 is incomplete;
 phases 3–6 (numeric representation, numerics/autodiff, broader evidence and
@@ -55,25 +55,21 @@ interfaces/new backend remain deferred.
 
 ## Next sequential PR
 
-Sole [PR #86](https://github.com/e6qu/fun-with-pipes/pull/86) is zip ownership: `ownership-zip-callbacks`, checkout
-`/private/tmp/fwp-zip-worktree`, clean published exact head
-`cf8ce6e61295170fb455957fe83218c30e9cd8b4`. Rebase onto #85 squash `d4e5261` is complete;
-only handoff conflict, resolved with current root docs. Immutable OLD zip
-`bdb750f6d46b69153fb9f577a5fa4cbe12b7e523` remains the right-fold rebase anchor;
-OLD fold parent `a180c3fb5f429edc79facd340577c5115f1a78cf` remains unchanged.
-Both zip references now explicitly use FWP_NO_OPT=1. Seven zip/fold/filter/
-borrowed-callback checks pass CPU 20.63 s / elapsed 41.50 s. Clippy lib/four tests
-passes CPU 2.18 s / 4.42 s; primitive inventory passes CPU 3.07 s / 6.46 s;
-fmt CPU 0.35 s / 0.63 s. All 64 immutable queue parent/head pairs and all links
-in nine docs verify. Zip's equivalent shared/owned control verifies more than
-0.8 MiB additional reclamation and zero collections with equal outputs; no speed
-claim. Amended head is published with an exact lease against OLD zip; sole PR #86 is
-open with full CI `37733658893` at exact `cf8ce6e`. Require all six exact-head CI jobs before explicit squash.
-Subject `Own zip callback results and preserve typed input aliases`, empty body.
-Initial mistyped branch name rejected without modification, then corrected.
-Next after zip is right-fold OLD `adc7947a`: rebase from immutable OLD zip
-`bdb750f6`, not rewritten zip, onto actual zip squash. Keep later preparations
-separate, and fix tests while CI runs.
+Zip #86 has merged after all six exact-head gates passed. Seven zip/fold/filter/
+borrowed-callback checks pass CPU 20.63 s / elapsed 41.50 s; clippy lib/four tests
+CPU 2.18 s / 4.42 s, inventory CPU 3.07 s / 6.46 s, fmt CPU 0.35 s / 0.63 s.
+Both zip references explicitly use FWP_NO_OPT=1. Equivalent shared/owned control
+verifies more than 0.8 MiB additional reclamation, identical outputs and no
+collections; no speed claim. All 64 immutable queue pairs through construction
+and all links in nine docs verify; verify new publication pairs too.
+
+Next sole PR is right-fold, branch `ownership-right-fold`, checkout
+`/private/tmp/fwp-right-fold-worktree`, OLD head `adc7947a25f297d5de53d587a4bcdeb11d29fdb7`.
+Rebase from immutable OLD zip `bdb750f6d46b69153fb9f577a5fa4cbe12b7e523`
+onto actual #86 squash `90affeb3954a8d5da9f4f66a2cbcdc235f57a6f7`.
+Never use rewritten zip `cf8ce6e` as the OLD anchor. Resolve historical docs with
+current root docs, verify explicit no-opt oracles and focused checks, then publish
+with an exact lease and open the sole PR. Keep later preparations separate.
 
 Fold local evidence: five fold/filter/borrowed checks CPU 15.84 s / 31.87 s;
 clippy lib/three tests CPU 2.20 s / 4.51 s; inventory CPU 3.08 s / 6.51 s;
@@ -239,10 +235,10 @@ cleanup behavior, not a new recoverable OOM interface. Production library tracin
 stays unarmed. Format passes CPU 0.37 s / 0.75 s; clippy lib/three tests passes CPU 2.37 s /
 4.77 s.
 
-Queue 70 is published (no extra PR). #85 passed ALL SIX and merged; zip is now
+Queue 70 is published (no extra PR). #86 passed ALL SIX and merged; right-fold is now
 the next sequential task. Full separate evidence now passes all six gates.
 
-After finishing the file-write visibility preparation, repair affine File discard on `ownership-file-discard`, checkout
+After finishing the file I/O error preparation, repair affine File discard on `ownership-file-discard`, checkout
 `/private/tmp/fwp-file-discard-worktree`, parent OLD `e9d575f`, with bounded file
 descriptor pressure and compare raw interpreter/native before changing lifetimes. Current affine File discard reproducer is `tests/file_discard_ownership.rs` in
 that checkout, untracked and intentionally failing until repaired; no commit or
@@ -281,8 +277,28 @@ explicit close; removing only flush is detected (exit 3). Six visibility,
 construction and unwind checks pass CPU 12.42 s / elapsed 25.22 s. Clippy lib/three
 tests passes CPU 2.36 s / 4.80 s; fmt CPU 0.35 s / 0.62 s. The first sandboxed
 format invocation could not sample ps and stopped; the guarded monitored retry
-passed without changing limits. Publish this preparation without another PR,
-then rebase the dirty File-discard audit from e9d575f onto its published head.
+passed without changing limits. Published clean as `5ac710398a14f68453c2cb9f0bf1477ca08d8b81`, single-line
+subject and empty body verified, no extra PR. Dirty File-discard audit was
+preserved through stash/rebase/pop from e9d575f onto 5ac7103; its two tests remain
+untracked. The known discard failure still requires a lifetime-preserving repair.
+
+File I/O errors are prepared on `ownership-file-io-errors`, checkout
+`/private/tmp/fwp-file-io-errors-worktree`, parent OLD `5ac7103`. Actual directory
+read baseline returns success where raw interpreter reports a read error (CPU
+7.41 s / elapsed 15.10 s). Both file.read and file.read-all now check read errors
+and strict UTF-8, preserving existing path-bearing/pathless IoError messages.
+Temporary read buffers have stack cleanup through conversion/recoverable traps;
+file.read owns its stream while file.read-all borrows its handle. Keep the latter
+handle reachable through returned tuple allocation. file.write-new checks short
+writes and buffered close failures, closes once and preserves the original write
+errno even if close overwrites it. Fault probes and omission controls independently
+catch lost buffer cleanup, lost stream cleanup and ignored write errors. O1/O2
+with actual armed GC stress/verification and both reuse modes pass. Eight read,
+visibility, construction and unwind tests pass CPU 11.73 s / elapsed 24.14 s;
+clippy lib/four tests CPU 2.27 s / 4.55 s, format CPU 0.44 s / 0.89 s.
+Publish separately without another PR, then rebase dirty File-discard from
+5ac7103 onto that published head. Allocation fault probes prove recoverable-trap
+cleanup, not a new recoverable OOM interface. General File discard is still open.
 
 General File/socket resource discard, retained
 callback teardown and cycle lifetime policy follow. Implicit effectful resource release
@@ -296,7 +312,7 @@ interface or backend, or claim speed without equivalent workload evidence.
 
 Root main has ONLY our pending five live doc changes; preserve
 those on fast-forward. Prepared published production checkouts are clean. Current
-shared compiler target belongs to `/private/tmp/fwp-file-write-visibility-worktree`; use
+shared compiler target belongs to `/private/tmp/fwp-file-io-errors-worktree`; use
 guarded `cargo clean -p fwp` before switching compiler checkouts. Never run local
 workloads concurrently.
 
