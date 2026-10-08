@@ -55,7 +55,12 @@ main = [
     )
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&src)
+            .env("FWP_NO_OPT", "1"),
+    );
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
             let exe = dir.0.join(format!("aliases{opt}-{stack}"));
@@ -106,7 +111,12 @@ main = (10000, 0) | loop step | echo
     )
     .unwrap();
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    let reference = checked(Command::new(fwp).args(["run", "--interp"]).arg(&src));
+    let reference = checked(
+        Command::new(fwp)
+            .args(["run", "--interp"])
+            .arg(&src)
+            .env("FWP_NO_OPT", "1"),
+    );
     let emitted = dir.0.join("loop.c");
     checked(
         Command::new(fwp)

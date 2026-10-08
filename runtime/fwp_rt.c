@@ -117,6 +117,8 @@ static V fwp_data(uint32_t tag, uint32_t n, const V *f) {
     o->tag = tag;
     o->n = n;
     for (uint32_t i = 0; i < n; i++) o->f[i] = f[i];
+    /* Inlining may preload fields before allocation: retain their owner. */
+    FWP_KEEP_ALIVE(f);
     return PTR(o);
 }
 
@@ -132,6 +134,8 @@ static V fwp_str_new(const char *s, size_t len) {
     r->len = len;
     memcpy(r->d, s, len);
     r->d[len] = 0;
+    /* A source slice can be the only remaining root of its allocation. */
+    FWP_KEEP_ALIVE(s);
     return PTR(r);
 }
 
@@ -154,9 +158,11 @@ static size_t fwp_list_len(V xs) {
 
 /* list -> temporary array of items */
 static V *fwp_list_items(V xs, size_t *n) {
+    V owner = xs;
     *n = fwp_list_len(xs);
     V *a = (V *)fwp_alloc((*n + 1) * sizeof(V));
     for (size_t i = 0; i < *n; i++) { a[i] = OBJ(xs)->f[0]; xs = OBJ(xs)->f[1]; }
+    FWP_KEEP_ALIVE(owner);
     return a;
 }
 
