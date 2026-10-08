@@ -165,7 +165,7 @@ still need their final squash rebases and six exact-head full gates.
 | 79 ownership-resource-frame-fields | ec96643bfe26 | 43773a07a269 | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
 | 80 ownership-file-inline-path | 143444f5c43e | ec96643bfe26 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | c4110b410f56 | 143444f5c43e | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
-| 82 ownership-file-construction-disposal | 1dc8cfe230fc | 5a4d180478bb | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
+| 82 ownership-file-construction-disposal | af8561c68820 | c4110b410f56 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 06215746caae | 1dc8cfe230fc | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published, prior head retained; propagation/runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
