@@ -82,21 +82,18 @@ capture, spawn, deadline, scope and task-handle controls pass, with contract
 inventory, ownership units, lint, format and all audits. Old revisions are retained
 remotely; source/probes remain unchanged. Completed publication journals must
 not rerun. Exact heads, bases and metrics are in the table and history.
-Preparations53–54 are published on their actual refreshed predecessors. Channel
-and C library result controls pass, including all original failure/omission
-controls, lint, format and all audits. Old revisions and source/probes are preserved.
+Preparations53–56 are published on their actual refreshed predecessors. Original
+channel and library input/result/unload controls, lint, format and all audits pass;
+old revisions and source/probes are preserved. Actual shared-library unload and
+static-archive exit include suspended-task draining and six teardown omissions.
 Closing preserves queued values; automatic unreachable-cycle reclamation remains
-unproved. Host string pointers retain the existing shared lifetime while loaded.
-Copied library inputs55 is published96ee4fd963e3f3a0dd23970c41174dd337fcc1e3
-on actual5446afd27c986c. All three original input/result controls, lint, format
-and all audits pass; old revision and original source/probes are preserved.
-Current independent task56 is actual library unload (`ownership-library-unload`),
-rebased FROM actual067d547b3bfd ONTO published55 at native320504ca0454.
-All four original unload/input/result controls pass12.41CPU/31.49elapsed,
-including actual shared-loader unload, static-archive exit and six unchanged
-teardown omissions. Lint2.50/5.12s and format0.44/0.82s pass. Finish all11
-docs/audit before retained-revision publication, then prepare queue57 native
-OpenCL owners using the original loader-visible fake API; no GPU hardware claim.
+unproved. Host string pointers retain their shared lifetime while loaded.
+Current independent task57 is native OpenCL owners (`ownership-opencl-lifetime`):
+rebase FROM actual0d30f4e3da51 ONTO published566c367aa9a921. Preserve original
+loader-visible fake API initialization failure, context/queue release, loader
+unload and static-exit controls. Check OpenCL plus library-unload regressions,
+lint, format and all11 docs/audit before retained-revision publication.
+Fake API coverage does not establish GPU hardware support.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -171,7 +168,7 @@ still need their final squash rebases and six exact-head full gates.
 | 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 54 ownership-library-results | 46afd27c986c | b304e91f628c | Original C library result control7.96CPU/17.73elapsed, lint2.47/4.88s and format0.43/0.82s pass; original source/probes unchanged, including all four reclamation/string/guard/evaluation controls; final actual-squash/full gates required |
 | 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
-| 56 ownership-library-unload | 320504ca0454 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
+| 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
 | 57 ownership-opencl-lifetime | 9dc98a72cac1 | 0d30f4e3da51 | Fake API test 7.78/22.85s; lint 2.36/4.71s and format 0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint 2.32/4.69s and format 0.34/0.62s pass |
 | 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint 2.46/5.00s and format 0.35/0.75s pass |
