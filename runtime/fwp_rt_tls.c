@@ -231,11 +231,22 @@ static SSL_CTX *fwp_tls_client_ctx(const char *ca, int verify) {
     } else {
         SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
     }
-    fwp_tls_clients = (fwp_tls_client *)realloc(fwp_tls_clients, (fwp_tls_nclients + 1) * sizeof *fwp_tls_clients);
-    fwp_tls_clients[fwp_tls_nclients].ca = strdup(ca);
-    fwp_tls_clients[fwp_tls_nclients].verify = verify;
-    fwp_tls_clients[fwp_tls_nclients++].ctx = ctx;
+    /* Publish only a complete entry, preserving the old cache on failure. */
+    if (fwp_tls_nclients >= SIZE_MAX / sizeof *fwp_tls_clients) goto allocation_failed;
+    char *name = strdup(ca);
+    if (!name) goto allocation_failed;
+    fwp_tls_client *clients = (fwp_tls_client *)realloc(fwp_tls_clients, (fwp_tls_nclients + 1) * sizeof *fwp_tls_clients);
+    if (!clients) { free(name); goto allocation_failed; }
+    clients[fwp_tls_nclients].ca = name;
+    clients[fwp_tls_nclients].verify = verify;
+    clients[fwp_tls_nclients].ctx = ctx;
+    fwp_tls_clients = clients;
+    fwp_tls_nclients++;
     return ctx;
+allocation_failed:
+    SSL_CTX_free(ctx);
+    snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS client context cache");
+    return 0;
 }
 
 static int fwp_is_ip(const char *s) {
