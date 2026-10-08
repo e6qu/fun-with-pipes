@@ -169,7 +169,7 @@ still need their final squash rebases and six exact-head full gates.
 | 81 ownership-file-storage-disposal | c4110b410f56 | 143444f5c43e | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | af8561c68820 | c4110b410f56 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | ed1091ff988c | af8561c68820 | Direct frame-constructor repair: five original native tests20.72CPU/41.72elapsed, lint2.34/4.77s and format0.45/0.86s pass; strong audit0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
-| 84 ownership-resource-frame-binding-kinds | 9a4fb29ee416 | 8bf7da674bb5 | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
+| 84 ownership-resource-frame-binding-kinds | 26f529e6ba91 | ed1091ff988c | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | 67f022e93858 | 807afa9962aa | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
