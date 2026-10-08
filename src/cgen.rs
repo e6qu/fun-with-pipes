@@ -4732,6 +4732,14 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     let u = self.fresh();
                     self.line(&format!("fwp_u{m} {u} = fwp_vunbox{m}({v});"));
                     self.vlocals.insert(*l, (u, m, ty));
+                } else if let Some(ResourceSlot::Fields(slots)) = self.resource_slots.get(l) {
+                    // Pattern fields borrow this path's scrutinee, just as the
+                    // let path's fields borrow its own freshly bound locals.
+                    let n = slots.len();
+                    let fields = (0..n)
+                        .map(|i| self.bind(format!("OBJ({v})->f[{i}]")))
+                        .collect();
+                    self.fields.insert(*l, fields);
                 } else {
                     self.line(&format!("l{} = {};", l, v));
                 }

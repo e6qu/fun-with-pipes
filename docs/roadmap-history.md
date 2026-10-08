@@ -5417,3 +5417,8 @@ Nominal bare-constructor match cleanup baseline fails descriptor-close audit
 10.24 s /23.52 s; seven related contexts/frame tests13.51 s /27.20 s; nineteen
 RC unit checks3.67 s /7.59 s; clippy2.47 s /5.07 s; format0.44 s /0.83 s.
 All local checks used the bounded fwp guard. Full platform acceptance pending.
+
+Mixed record binding-kind baseline fails generated C9.25 s CPU /19.12 s elapsed.
+Repair passes record allocation/actual implicit-close fixture10.42 s /22.39 s,
+five related variant/frame/discard checks18.38 s /36.82 s, clippy2.55 s /5.17 s
+and format0.45 s /0.83 s, all under the local guard. Full CI remains pending.
