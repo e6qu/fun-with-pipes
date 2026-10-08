@@ -77,7 +77,7 @@ static int handshake(SSL *server){
  int ok=SSL_is_init_finished(server)&&SSL_is_init_finished(client)&&n==2&&!memcmp(protocol,"h2",2);
  SSL_free(client);return ok;
 }
-int main(int argc,char **argv){
+static int probe(int argc,char **argv){
  if(argc!=3)return 30;fwp_lib_init();fwp_tasks_init();
  for(int sessions=0;sessions<=3;sessions++){
   ctx_freed=wire_freed=owner_freed=0;
@@ -121,6 +121,7 @@ int main(int argc,char **argv){
  }
  return 0;
 }
+int main(int argc,char **argv){int status=probe(argc,argv);if(status)_Exit(status);return 0;}
 "#;
     let dir = std::env::temp_dir().join(format!("fwp-tls-listener-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
