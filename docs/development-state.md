@@ -82,14 +82,16 @@ capture, spawn, deadline, scope and task-handle controls pass, with contract
 inventory, ownership units, lint, format and all audits. Old revisions are retained
 remotely; source/probes remain unchanged. Completed publication journals must
 not rerun. Exact heads, bases and metrics are in the table and history.
-Current independent task53 is typed channel queues (`ownership-channel-queues`),
-rebased FROM actualcb32c2cea9bb ONTO published52df26a860c99f at native9d1ff972b09d.
-All five original channel/task-alias/task-handle controls pass19.72CPU/39.59elapsed,
-including all four original queue omission/extra-retain/allocation-failure controls.
-All21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s
-and format0.44/0.83s pass. Finish all11 docs/audit before retained-revision
-publication, then prepare queue54 C library results. Closing still preserves
-queued values; automatic unreachable-cycle reclamation remains unproved.
+Typed channels53 is publishedb304e91f628ccc60cb624c6a2b3199439203499e on
+actual52df26a860c99f. All five original controls, ownership units, contract
+inventory, lint, format and all audits pass. Closing preserves queued values;
+automatic unreachable-cycle reclamation remains unproved.
+Current independent task54 is C library results (`ownership-library-results`):
+rebase FROM actual69bc96667a52 ONTO published53. Preserve typed copied-result
+cleanup, host string lifetime, conversion-trap and single-evaluation controls.
+Check original library result controls, lint, format and all11 docs/audit before
+retained-revision publication. Existing host-owned strings retain a documented
+shared lifetime; this is not collector-free external ownership.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -161,7 +163,7 @@ still need their final squash rebases and six exact-head full gates.
 | 50 ownership-task-within | 5cfbbf10087a | 215e0edec0f1 | Three original deadline/retained-thunk controls5.34CPU/10.77elapsed, exact contract inventory3.62/7.53s, lint2.44/4.88s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 51 ownership-task-scope | f36bacf80bfc | 5cfbbf10087a | Four original scope/deadline/retained-thunk controls15.75CPU/31.78elapsed, exact contract inventory3.45/7.06s lint2.48/4.97s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 52 ownership-task-handles | df26a860c99f | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 53 ownership-channel-queues | 9d1ff972b09d | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 54 ownership-library-results | f53cccc88d45 | 69bc96667a52 | Test7.86/17.88s; lint 2.44/4.85s and format 0.34/0.61s pass |
 | 55 ownership-library-inputs | 067d547b3bfd | f53cccc88d45 | Two tests 8.27/18.38s; lint 2.34/4.68s and format 0.34/0.61s pass |
 | 56 ownership-library-unload | 0d30f4e3da51 | 067d547b3bfd | Test8.98/21.43s; lint 2.42/4.81s and format 0.45/0.74s pass |
