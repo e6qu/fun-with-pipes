@@ -27,11 +27,10 @@ immutable value semantics, effects and evaluation/trap order stable.
   callbacks, exact `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`, CI `37703018710`.
   Linux, ARM macOS and benchmarks passed; Intel macOS remains live. Merge after all four pass.
   Then rebase map from OLD `029fac4` onto the new squash; preserve OLD `41ef82d`.
-  Latest published preparation is counted channels/queue elements `ab44b7d` on
-  OLD `bb6f9c4`. C export result ownership is being prepared separately on OLD
-  `ab44b7d`, checkout `/private/tmp/fwp-library-result-worktree`, branch
-  `ownership-library-results`. Remaining acceptance work includes converted
-  library inputs, unload/finalizers, cycles and aggregate gaps.
+  Latest published preparation is C export results `5b34382`, OLD base `ab44b7d`.
+  Library input ownership is prepared on OLD `5b34382`, checkout
+  `/private/tmp/fwp-library-input-worktree`, branch `ownership-library-inputs`.
+  Remaining acceptance work includes unload/finalizers, cycles and aggregate gaps.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
   exact head `7ce23dd`, all four gates passed in CI `37684140373`.
 - Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
@@ -2569,3 +2568,89 @@ its OLD `41ef82d` for the filter child. Next acceptance action: typed library
 input conversion and its failure/alias lifetimes, then unload/finalizers and
 source-reachable cycles, with remaining aggregate gaps still open. Phases 2–6
 remain incomplete. Shared target now contains this library-result compiler.
+
+Native library result ownership published as
+`5b34382167da90d5677943d3ca617bf0e6a5924c`, OLD base `ab44b7d`. Verified
+one-line subject `Release copied C export results and preserve host string lifetimes`,
+66 characters, empty body/no trailers. Checkout clean; final `cargo fmt --
+--check` passes, CPU 0.35 s / elapsed 0.61 s; whitespace clean. No second PR
+opened and no local workload remains. Shared target is this library compiler.
+Root plan/handoff remain the only local main edits; preserve them on fast-forward.
+Preserve OLD `5b34382` for the next prepared child. Latest #82 gate check:
+Linux, ARM macOS and benchmarks passed; Intel macOS still running. Continue
+the same run, fix any failure, and merge only after all four current-head gates
+pass. Next concrete implementation: type-directed owned C-to-fwp library input
+conversion, protecting earlier prepared arguments/fields on failure and
+transferring them exactly once into the exported entry. Test scalar pointer
+bits, input aliases returned as C strings, multiple String/Option/record
+arguments, later conversion traps, and unchanged ordinary foreign-call
+borrowing. Then complete unload/finalizers/cycles evidence and aggregate gaps.
+
+
+## Prepared native library input ownership (2026-10-08)
+
+Branch `ownership-library-inputs`, checkout `/private/tmp/fwp-library-input-worktree`,
+OLD base `5b34382167da90d5677943d3ca617bf0e6a5924c`. C export wrappers create
+counted String copies, nullable-pointer options and record boxes. Earlier
+arguments and completed record fields remain in typed cleanup scopes during
+later conversion. Fields follow C declaration order while canonical indices
+retain the language layout. Scalar/pointer bits stay uncounted.
+
+The shared `rc::consumes_arg` contract transfers consumed inputs once into
+expression/constructor/primitive entry; borrowed inputs remain protected
+through the call and are released afterward. Export result ownership preserves
+C host string aliases. Both consuming and borrowing void exports are covered.
+Ordinary foreign converters/sharing remain unchanged. A Bytes export parameter
+now reports the missing pointer length; foreign functions still accept Bytes
+payload pointers. No new ABI or surface syntax was introduced.
+
+Baseline probe reproduced the retained input (exit 1). Fixture failures were
+repaired: the injected allocation hook needed a forward trap declaration,
+record alias ABI creates a separate result box, field workers legitimately
+drop duplicated fields and the original box, and division uses data-last
+operand order. The unoptimized interpreter now confirms the callee trap too.
+No implementation or test failure remains.
+
+Final O1/O2, both-poison input/result probes pass: direct borrowed primitive,
+consuming function, nested and direct nullable inputs, declaration/canonical
+field order, string/record aliases returned to C, retained host strings,
+scalar pointer words, null/invalid UTF-8 later input, prepared record allocation
+trap, consumed callee trap, and borrowed/consumed void results. Four negative
+controls fail as intended: absent borrowed argument release (1), uncleared
+consumed owner/double drop (2), missing earlier argument completion guard (11),
+missing record field completion guard (12). One diagnostic test confirms Bytes
+export rejection while ordinary foreign signature classification is retained.
+Previous result probe's repeated-evaluation control was adapted to named input
+locals and still detects extra evaluation. Actual allocator OOM is fatal; the
+record-allocation trap is explicitly injected, not evidence of recoverable OOM.
+
+Serial bounded commands after `cargo clean -p fwp`, using
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py`:
+- Baseline `cargo test --test library_input_ownership -- --nocapture`:
+  actual regression exit 1, CPU 0.25 s / elapsed 0.99 s after fixing the C hook.
+- Final `cargo test --test library_input_ownership --test library_result_ownership
+  -- --nocapture`: three pass, CPU 2.39 s / elapsed 8.08 s.
+- `cargo test --test ffi --test worker_preparation_ownership -- --nocapture`:
+  six pass, CPU 5.56 s / elapsed 11.36 s.
+- Additional `FWP_REUSE=0` with `cargo test --test ffi shared_library_from_c
+  -- --nocapture`: pass, CPU 0.55 s / elapsed 1.58 s.
+- `cargo fmt`: pass, CPU 0.36 s / elapsed 0.74 s.
+- Initial `cargo clippy --lib --test library_input_ownership
+  --test library_result_ownership -- -D warnings`: pass, CPU 2.33 s / elapsed
+  4.68 s; final check after optional/void cases passes, CPU 0.00 s / elapsed
+  0.14 s (cached compiler checking).
+
+Library tracing stays unarmed despite stress/verification requests; count
+reclamation is measured directly, not claimed as host-root GC verification.
+Full exact-head sequential CI remains required. Sole PR #82 exact `3fa67f3`,
+CI `37703018710`: Linux, ARM macOS and benchmarks passed; Intel macOS is live.
+Continue the same run and fix any failure. After all four pass, squash with
+recorded one-line subject and empty body, then rebase map from OLD `029fac4`
+onto that squash (preserve OLD `41ef82d` for filter). Next concrete task:
+native library unload teardown, starting with reserved heap/metadata mappings,
+CAF caches, finalizers, scheduler stacks and thread-pool lifetime. Do not unmap
+storage while background workers can still access generated code or values.
+Source-reachable cycles and remaining aggregate metadata/reconstruction gaps
+also remain before phase 2 closes; phases 2–6 are incomplete. Shared target now
+contains this input compiler. Preserve OLD `5b34382` for the branch rebase.

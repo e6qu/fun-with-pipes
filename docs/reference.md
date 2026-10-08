@@ -289,6 +289,9 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
   and remain valid while the library is loaded; the host must not free them.
   Scalar/struct results are copied into C values. A nullable pointer copies the
   raw pointer; the pointee follows its own allocation/lifetime contract.
+  Library input strings and `repr(C)` records are copied into language values.
+  `Bytes` can be passed to foreign functions, but cannot be a library export
+  parameter: a byte pointer alone does not specify its length.
 
 ## The `fwp` command
 

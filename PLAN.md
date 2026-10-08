@@ -648,3 +648,15 @@ eight adjacent CAF/FFI tests and the ownership-disabled library smoke pass.
 Native libraries retain allocator metadata with tracing unarmed; this is not
 the WebAssembly bump path. Converted inputs, unload/finalizers and runtime cycles
 remain separate acceptance tasks. Full sequential CI is required before merge.
+
+C export results published as `5b34382`, separate from sole PR #82; focused
+validation and required commit format pass. Next: owned library input conversion
+and preparation failure cleanup, then unload/finalizers/cycles and aggregate gaps.
+
+Owned C library inputs are prepared on OLD `5b34382`: counted copies, typed
+partial argument/field cleanup, and shared consume/borrow modes. O1/O2
+input/result controls, six adjacent FFI/worker checks, void/optional inputs and
+ownership-disabled C smoke pass. Pointer-only Bytes export inputs now explicitly
+report their missing length; ordinary foreign Bytes parameters remain supported.
+Next: library unload mappings, caches, finalizers, task stacks and worker threads,
+then cycles and remaining aggregate gaps. Full sequential CI remains required.

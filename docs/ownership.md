@@ -70,6 +70,39 @@ tracing. Returned strings, converted input ownership, heap unmapping on unload,
 resource finalization and cycles remain distinct acceptance work. Full sequential
 Linux/macOS CI is required before this prepared change becomes merged support.
 
+## Prepared C export input ownership
+
+Library wrappers prepare C parameters in signature order. Copied String inputs,
+nullable-pointer option boxes and `repr(C)` record boxes start counted. Raw
+pointers and scalar fields do not. A record prepares its fields in C declaration
+order, retaining only completed fields in a typed cleanup scope; canonical field
+indices still determine the language record layout.
+
+The wrapper owns every completed argument until entry. Arguments consumed by
+an expression function, constructor or consuming primitive transfer once into
+the callee. Borrowed arguments remain protected through the call and are released
+on return. These modes use the same `rc::consumes_arg` contract as internal calls.
+Aliased owned results survive that release, and the result wrapper preserves C
+strings that escape to the host. Ordinary foreign calls keep their shared fallback.
+
+Failed later string validation releases the preceding arguments and record field
+prefix. An injected record-allocation trap checks the whole prepared field scope;
+actual allocator exhaustion still exits fatally and is not a recoverable claim.
+Source functions keep their existing semantics and worker ABI; field workers can
+duplicate and release fields while also releasing the input box.
+
+The pointer-only C ABI cannot construct a Bytes header or establish its length.
+Library exports with Bytes parameters now report that missing length explicitly;
+ordinary foreign functions can still receive the byte payload pointer. A new
+length-bearing export ABI is outside this focused ownership change.
+
+Focused unoptimized interpreter/C checks and O1/O2 probes cover consumed/borrowed
+calls, field order, aliases, pointer-shaped scalars, partial conversions and
+callee traps with immediate count reclamation. Negative controls verify argument
+release, transfer clearing and argument/field completion guards. Tracing remains
+unarmed in native libraries. Unload, runtime resources/cycles and remaining shared
+boundaries stay separate acceptance tasks; full sequential CI is still required.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only
