@@ -36,7 +36,7 @@ with one line, an empty body and no trailers or attribution. Raw commit has
 one parent and tree `327f156b52dc515bcd7d0d251fee9d9fa705d09a`, identical to the tested
 head. All11 live docs were hashed in /private/tmp/fwp-main-docs-pre111 and
 restored byte-for-byte after main FF. Duplicate mainCI38053458085 cancelled
-only after that proof; main docs38053458119 must finish. Native macOS and
+only after that proof; main docs38053458119 passes on the actual squash. Native macOS and
 selected ownership are delivered through fold accumulator/borrowed-argument
 preparation and right-fold scratch unwind. Phase2 remains incomplete;
 phases3–6 remain pending and tracing remains the fallback.
@@ -50,7 +50,7 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
 Production CI38054115210 has ARM regular and Intel GC stress jobs running;
-four other production jobs and docs38054115151 remain queued. Require all seven
+four other production jobs remain queued; docs38054115151 passes. Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -88,16 +88,17 @@ old revisions and source/probes are preserved. Actual shared-library unload and
 static-archive exit include suspended-task draining and six teardown omissions.
 Closing preserves queued values; automatic unreachable-cycle reclamation remains
 unproved. Host string pointers retain their shared lifetime while loaded.
-Native OpenCL57 is published3dd39a69a43035a55a5136e8f7cd3b592a3e2d8b on
-actual566c367aa9a921. Both original fake-API/library-unload controls, lint,
-format and all audits pass; source/probes and old revision are preserved.
-Current independent task58 is interpreter OpenCL (`ownership-interpreter-opencl`),
-rebased FROM actual9dc98a72cac1 ONTO published57 at nativeffec94681778.
-Both original fake-OpenCL/library-unload controls pass14.15CPU/35.43elapsed,
-with exact interpreter/native failure agreement. Lint2.41/4.87s and
-format0.45/0.84s pass. Finish all11 docs/audit before retained-revision publication,
-then prepare queue59 TLS listener/session owners. The successful interpreter
-cache lives for the process; fake API coverage does not establish GPU hardware.
+Preparations57–58 are published on their actual refreshed predecessors. Original
+native/interpreter fake-OpenCL and library-unload controls, lint, format and all
+audits pass; exact interpreter/native failure outputs agree. Source/probes and
+old revisions are preserved. The interpreter cache intentionally lives for the
+process; fake API coverage does not establish GPU hardware support.
+Current independent task59 is TLS listeners (`ownership-tls-listeners`): rebase
+FROM actual013b07eac021 ONTO published584119be1cdaf9. Preserve real OpenSSL
+context/ALPN ownership through accepted and raw HTTP/2 sessions, failed listener
+construction and all six release/retain/guard omissions. Check the original
+listener probe and focused TLS streams engine agreement, lint, format and all11
+docs/audit before retained-revision publication.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -174,7 +175,7 @@ still need their final squash rebases and six exact-head full gates.
 | 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
 | 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
 | 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | Both original fake-OpenCL/library-unload controls10.35CPU/30.64elapsed, lint2.50/5.00s and format0.44/0.82s pass; original source/probes unchanged; fake API does not verify GPU hardware; final actual-squash/full gates required |
-| 58 ownership-interpreter-opencl | ffec94681778 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
+| 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
 | 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint 2.46/5.00s and format 0.35/0.75s pass |
 | 60 ownership-library-resources | aa8dfb3a703e | 64fc39f9738e | Test8.04/18.34s; lint 2.48/4.99s and format 0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 91f9a30742f9 | aa8dfb3a703e | Test9.94/19.99s; lint 2.46/4.95s and format 0.44/0.86s pass |
