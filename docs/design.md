@@ -420,5 +420,9 @@ inline path in one aligned leaf allocation. The checked path length includes
 header and terminator. On 64-bit hosts the header is 16 bytes rather than
 24 bytes; constructor allocation controls and display/I/O agreement are
 required. This reduces layout/allocation overhead without a timing claim.
+Prepared last-owner File disposal removes weak library finalizers before
+reclaiming unshared native storage. Shared, bump and disabled-free storage
+keeps its allocator lifetime. Scoped cleanup closes while its constructor
+owner is live, then drops that owner; aliases must never see reclaimed storage.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.

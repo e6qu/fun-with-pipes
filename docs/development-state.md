@@ -50,8 +50,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row79 are published with focused checks. The next independent task
-is row80 inline File paths.
+through row80 are published with focused checks. The next independent task
+is row81 File storage disposal.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -124,8 +124,9 @@ still need their final squash rebases and six exact-head full gates.
 | 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
 | 78 ownership-wasm-count-disposal | 9609b73ef5ed | b4482c259c1e | Two native bump tests 9.47 / 19.69 s + File 12.17 / 24.55 s; actual WASI awaits CI |
 | 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |
+| 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
 
-Rows 18–79 are published preparations with passing focused tests, lint and
+Rows 18–80 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -146,11 +147,15 @@ Row79 is published clean at 35c2aeb2923ecdb716ce9ff8f33ca8d58d25e040,
 on actual 9609b73. Four field/frame tests, lint 2.58 / 5.09 s and format
 0.43 / 0.83 s pass. Field-only holders eliminate one parent record box;
 original lifetimes, returned/error aliases and partial-retain unwind are preserved.
-No general speed claim. Independent row80 is rebased; four focused tests pass 12.66 / 25.48 s.
-Focused lint passes 2.51 / 5.00 s; format 0.44 / 0.83 s.
+No general speed claim. Row80 is published clean at
+e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 on actual 35c2aeb. Four tests,
+lint 2.51 / 5.00 s and format 0.44 / 0.83 s pass. Inline paths use one
+allocation and a 16-byte header on this 64-bit host, preserving constructor
+failure cleanup, display and binary/text reads. Independent row81 is rebased;
+five storage/alias tests pass 25.15 / 54.49 s; focused lint passes 2.63 / 5.23 s; format 0.44 / 0.83 s.
 Its previous actual base is
-658e5b73ae1c05fe086adfd99678db5c780bf7d4; new base is 35c2aeb,
-retaining inherited binary-read, constructor-control and required-WASI repairs.
+2d903d6617d99cec52600c8af43e4d08b5de6716; new base is e7d3882,
+retaining inherited roots, binary-read and constructor-control repairs.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -199,10 +204,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-inline-path-worktree; four layout/constructor/read tests, lint and format pass; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.04 / 0.24 s).
+belongs to /private/tmp/fwp-file-storage-disposal-worktree; five storage/alias tests, lint and format pass; no local workload is active.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.25 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.16 s CPU / 1.07 s elapsed).
+ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

@@ -9196,3 +9196,30 @@ corrected stale-finalizer omission control remains. Same-target lint runs.
 Same-target lint passes 2.51 / 5.00 s CPU / elapsed.
 Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
 source unchanged; no general speed claim or merged support before full CI.
+Final row80 e7d3882b67aef89c4bcb57ed14fe600bffb1fd63 is published clean
+with exact lease 2d903d6617d99cec52600c8af43e4d08b5de6716. Whole commit
+message is one line with empty body. Row81 actual base remains 2d903d6.
+No extra PR opened; PR97 is still the sole current delivery.
+
+## Last-owner File storage refresh, 2026-10-09
+
+Row81 rebases from actual 2d903d6617d99cec52600c8af43e4d08b5de6716
+onto e7d3882b67aef89c4bcb57ed14fe600bffb1fd63. Ten root docs resolve
+conflicts, retaining concise storage/finalizer design. Finalizer/count code and
+three modified test files match 750a5cffd46b83c22fa403ed9453b9678bf77118;
+primitives inherit main keep-alives and binary-read distinction. Required-WASI
+Linux env and corrected constructor omission control remain. Guarded cargo test
+--test file_storage_disposal --test file_inline_path --test file_runtime_ownership
+--test file_runtime_boundaries runs. Shared/disabled-free/bump storage stays;
+unshared native storage reclaims only after weak finalizer removal.
+Guarded clean before checkout switch passes 0.05 / 0.25 s.
+Five focused tests pass 25.15 / 54.49 s CPU / elapsed. O1/O2 finalizer
+removal and storage-disposal omission controls fail as expected; fixed code
+passes shared/unshared, disabled-free, GC off/on stress/verify and poison
+cases. Unshared storage reuse and freed-byte counters agree. Scoped/task/loop
+results remain valid against raw interpreter; inline layout/count alias checks
+pass. Focused lint runs. Merged-main CI37916609315 bench passes, other five
+jobs run; PR97 Intel GC runs and five jobs remain queued, no observed failure.
+Same-target lint passes 2.63 / 5.23 s CPU / elapsed.
+Fmt check passes 0.44 / 0.83 s; ten root docs copied before amend. Tested
+source unchanged. Each production preparation still needs sequential full gates.
