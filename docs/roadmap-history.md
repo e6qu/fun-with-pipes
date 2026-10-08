@@ -11218,3 +11218,8 @@ a5ebb52578e36663791a51754b4b9fa14474ed4a uses actual base4ae80b641da1;
 compiler/runtime match original, and native/interpreter fake API tests use
 FWP_NO_OPT=1. Old CURRENT00013d55d078 is retained under immutable revision
 before explicit-lease publication; fresh checks follow.
+
+Row56 guarded clippy2.42/4.81s and format0.45/0.74s also pass. Row59
+refresh99b769bff921ceea02fa821b88ff608a4b938f73 uses actual basea5ebb52578e3;
+compiler/runtime match original, and old CURRENT838cf5dee220 is retained
+under immutable revision before explicit-lease publication. TLS listener checks follow.
