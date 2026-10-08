@@ -1522,3 +1522,21 @@ allocation/size/close guards. A reduced ceiling exercises rejection without a la
 allocation; this does not claim a real multi-gigabyte workload was run locally.
 Native library tracing stays unarmed and full sequential CI remains required.
 Pending TCP connect, handshake cancellation and peer-subject buffers remain open.
+
+
+## Prepared connection cancellation owners
+
+TCP connect keeps a pending descriptor and resolver result in a stack cleanup
+owner through cancellable waits and wrapper preparation. Failed attempts close and
+unregister descriptors; success transfers ownership to the socket wrapper. TLS
+connect keeps that wrapper protected through protocol setup and handshake, then
+returns it with the cleanup frame removed. This adds no per-connection allocation
+or source annotation and preserves ordinary error/evaluation order.
+
+Actual scheduler cancellation probes cover pending connect, wrapper publication,
+ALPN preparation and TLS handshake wait. The pending-connect pause is injected at
+the EINPROGRESS boundary using a real local socket; this is lifetime evidence,
+not a network-latency claim. Successful handoff, connection refusal, resolver/SSL
+release and missing-guard controls pass O1/O2 with reuse poisoning. Native library
+collection remains unarmed; full sequential CI/source stress remains required.
+Peer-subject buffers, general affine discard, aggregate and cycle gaps remain open.

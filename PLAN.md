@@ -57,12 +57,13 @@ as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-ch
 passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
 [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
 now merged as `181d3b3` after all four exact-head gates passed in CI
-`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
-map callbacks, is the sole open PR at exact `0c5bec4`; new CI `37719069685`
-is queued after the gate repair. Prior CI `37711126548` ended with Intel's 90-minute timeout after its GC stress suite passed but took
-57.5 minutes. Separate that suite into required macOS stress jobs while retaining
-full coverage; require all six exact-head jobs before merge. Continue ownership
-preparation and fix runner failures.
+`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83), map callbacks, is now
+merged as `0f1ca94` after all six exact-head jobs passed in CI `37719069685` at
+`0c5bec4`. Required macOS stress jobs now run separately from the regular suite;
+their union preserves complete coverage. Filter is rebased from immutable OLD map `41ef82d`; sole PR #84
+(`a5185a9`) runs full six-job CI `37722779465`. Separate prepared TLS evidence
+`37719202504` has real ARM regular/stress failures; diagnose and repair them while
+sequential PR CI runs. Failing tests remain work, never a roadmap blocker.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout

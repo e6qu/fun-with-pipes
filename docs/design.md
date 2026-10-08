@@ -489,3 +489,8 @@ Prepared ALPN packing uses direct borrowed list walks and one bounded buffer,
 with interpreter-compatible bytes and explicit allocation failure cleanup.
 [Wire preparation evidence](ownership.md#prepared-alpn-wire-preparation) records
 focused probes; full sequential gates and handshake cancellation remain pending.
+
+Prepared TCP/TLS connection setup uses stack cleanup owners through resolver,
+pending-connect, wrapper and handshake preparation, transferring to the returned
+connection on success. [Cancellation evidence](ownership.md#prepared-connection-cancellation-owners)
+records focused scheduler probes; full sequential gates remain required.
