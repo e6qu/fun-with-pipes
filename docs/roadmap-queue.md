@@ -90,7 +90,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 59 | tls-listener | `ownership-tls-listeners` | `64fc39f9738e` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `aa8dfb3a703e` | `07092cb06e1d` | `3f6154b4bf67` |
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `91f9a30742f9` | `0d5d3098e782` | `07092cb06e1d` |
-| 62 | tls-cache | `ownership-tls-cache-failures` | `004eccb1f092` | `4ab1f7ddd6f8` | `0d5d3098e782` |
+| 62 | tls-cache | `ownership-tls-cache-failures` | `0ba865002ace` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `f1915b15033e` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `04811432dc3d` | `0cc612650ab9` | `f6598e440a59` |
 | 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `98f5c04f6260` | `b8f3752d236f` | `0cc612650ab9` |
