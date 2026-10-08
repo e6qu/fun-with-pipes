@@ -20,7 +20,9 @@ head `a090f1f5ac6c` passed all six CI `37728301773` gates and squash-merged as
 `8be65d1ae2ec`, squash `eae33c4c9e50`, ALL SIX CI `37743989274` gates passed.
 Prefix is sole PR #88 at `42cf518f2ec5`, CI `37750832622` queued.
 Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
-the fusion correction. The pending discard branch must inherit that correction.
+the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
+actual immutable parent, not the frame row's original dcc5bba. The pending discard
+branch now inherits row 74.
 For a rewritten branch, use its actual current base
 when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
 in this repository; use resolved full hashes for publication/merge head checks.
@@ -97,6 +99,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `06419f4c5989` | `06419f4c5989` | `5ac710398a14` |
 | 73 | resource-frames | `ownership-resource-frames` | `368dafc5567d` | `dcc5bbac318f` | `06419f4c5989` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `e21c92ea2f6c` | `e21c92ea2f6c` | `368dafc5567d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

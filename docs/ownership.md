@@ -343,10 +343,9 @@ Library finalization remains idempotent and must not double-close a discarded
 handle. Preserve affine File restrictions and forbidden partial resource capture.
 
 Typed ResourceRegion metadata and interpreter frame release are now prepared,
-including a reproduced inlined-helper lifetime repair. Native regions currently
-evaluate their bodies without implicit destruction; connecting typed File
-ownership is the next required implementation step. This is not delivered
-ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
+including a reproduced inlined-helper lifetime repair. A further native preparation now retains original frame references and releases
+them on normal and nonlocal exits. File retain/drop and borrowed I/O dispatch are
+connected, with owned error-handler payloads. This is not delivered ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
 errors, cancellation and optional flags before accepting general disposal. Keep
 tracing available until complete ownership and cycle acceptance is demonstrated.
 
@@ -364,6 +363,16 @@ bytes (8-byte alignment); this is no claim of fewer bytes or allocations.
 Owned read/write wrappers retain returned File aliases and protect the extra
 reference through I/O errors and conversion/allocation traps. A fresh read String
 has its own unwind owner until the tuple takes ownership; FWP_FREE=0 leaves its
-storage to the collector. The wrappers are not yet selected by compiler lowering.
+storage to the collector. A subsequent native compiler preparation now selects those wrappers.
 Native region disposal, resource aggregates and escaped/error/cancellation owners
 remain required before accepting implicit File cleanup or tracing-free coverage.
+
+
+Native region cleanup has focused descriptor-pressure/omission evidence: 64
+open/discard iterations succeed under a 32-descriptor child limit with tracing
+and reuse/free disabled; omitting frame release fails. The original parameter's
+four-descriptor EMFILE lifetime remains unchanged. Incoming frame references,
+partially initialized binding slots, record/variant results and handled File error
+aliases have focused coverage. Original aggregate binding slots currently box
+values; retaining flattened fields without extra wrappers is a follow-up. Header
+storage, shared runtime graphs and WebAssembly aggregate ownership remain open.

@@ -2389,6 +2389,32 @@ static V fwp_p_attempt(V f, V x) {
     return fwp_data(1, 1, &e);
 }
 
+/* Both branches carry one typed owned value. Protect it if result boxing traps. */
+static V fwp_p_attempt_owned(V f, V x, void (*drop_result)(V), void (*drop_error)(V)) {
+    fwp_handler h;
+    h.prev = fwp_handlers;
+    h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
+    fwp_handlers = &h;
+    V value; uint32_t tag;
+    if (setjmp(h.jb) == 0) {
+        value = fwp_apply_borrowed(f, 1, &x);
+        tag = 0;
+    } else {
+        fwp_state_len = h.state_depth;
+        value = h.value;
+        tag = 1;
+    }
+    fwp_handlers = h.prev;
+    fwp_value_owner owner = {value, tag ? drop_error : drop_result};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_rc_fresh(fwp_data(tag, 1, &value));
+    FWP_KEEP_ALIVE(f); FWP_KEEP_ALIVE(x);
+    fwp_value_finish(&owner, &cleanup);
+    return result;
+}
+
 static V fwp_p_get(void) { return fwp_state_len ? fwp_state[fwp_state_len - 1] : FWP_UNIT; }
 
 static V fwp_p_put(V s) {
