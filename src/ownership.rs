@@ -125,6 +125,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        "zip-with" => (
+            &[B, B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
         "fold" => (
             &[B, C, B],
             ResultOwnership::OwnedAccumulator {

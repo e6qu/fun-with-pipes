@@ -262,8 +262,10 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#84 passed their exact-head full gates. Fold is the next PR; other
-callbacks, runtime unwind and retained owners remain preparation.
+PRs #82–#85 passed their exact-head full gates. Fold transfers its owned
+accumulator through borrowed synchronous calls while input elements remain
+borrowed. Zip is next; other callbacks, runtime unwind and retained owners remain
+preparation.
 
 ## Prepared work and acceptance limits
 
@@ -276,10 +278,18 @@ policy justify it.
 The latest worker-local repair keeps compatible complete calls and typed aliases
 unboxed while partial/dynamic captures remain boxed. Exact child/alias/trap checks
 pass, and the unchanged full wide-record allocation acceptance now passes on
-Linux and both macOS architectures in separate evidence. Prepared TLS resource
+Linux and both macOS architectures in separate evidence. File constructor cleanup
+also has fault/omission checks for stream ownership through allocation and library
+finalizer registration. Source File values remain affine: no Dup or resource
+capture is added. Implicit resource discard and arbitrary resource lifetime
+coverage still require interpreter/native evidence. Prepared TLS resource
 teardown, connection cancellation and peer-subject temporary cleanup have actual
 OpenSSL/omission checks; library probes generally run with collection unarmed.
 They do not prove host-root tracing or deterministic discard of every resource.
+Rebuilt nested loop records now also have a preparation that preserves typed
+flattened state through Again and protects original, partial and pending owners
+when Stop boxes an inner result. Alias/scalar/cancellation and omission controls
+pass locally; sequential full CI remains required. No measured speed claim follows.
 An ALPN owner-liveness probe deliberately arms collection in a standalone fixture
 and reproduced loss of the owning Conn during String allocation. Its owner fence
 and fence-omission control now pass under real GC/reuse verification; production library
