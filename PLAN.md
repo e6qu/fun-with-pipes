@@ -44,8 +44,8 @@ Main includes #74–#101: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
 wide counts, array/map/set elements and reclamation of old counted storage.
 PR101 passed all six exact-head production gates and the documentation audit,
-then merged. Queue24 task result/deadline boundaries is the next delivery.
-Its final rebase and fresh production gates remain required. Exact heads,
+then merged. PR102 delivers queue24 task result/deadline boundaries.
+Its final rebase is published; fresh exact-head production gates are running. Exact heads,
 commands, failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

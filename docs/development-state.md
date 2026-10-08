@@ -41,8 +41,9 @@ PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
 Current head 51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
  da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
 focused-accepted1741ab5fa64e exactly. Production CI37975866229
-is queued/running; roadmap_docs CI37975866346 passes. Six passing
-production jobs are still required. Require six production jobs and
+has bench, regular ARM macOS and both GC stress jobs passing; Linux test
+and regular Intel macOS remain running. roadmap_docs CI37975866346 passes.
+Require all six production jobs and
 roadmap_docs at this exact head before explicit squash with
 `Own task result wrappers and preserve typed deadline aliases` and empty body.
 Row25 actual current base remains1741ab5; final-rebase it only after the actual
@@ -118,10 +119,10 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 3dc1c36adbad | 82e51ba8ea16 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | 5179067d6635 | 4155bc9fce74 | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
-| 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Refreshed source unchanged; fresh focused checks follow |
+| 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 295b0da5c1f0 | da4acc398637 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | 1a5f5ba98a32 | 295b0da5c1f0 | Actual WASI gates required; source unchanged except inherited harness repairs |
-| 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |
+| 79 ownership-resource-frame-fields | 76374abb1077 | 1a5f5ba98a32 | Refreshed source unchanged; focused field checks running |
 | 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
 | 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
 | 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
@@ -198,6 +199,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 queued; source1a5f5ba, actual base295b0da; not acceptance |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 queued; sourceda4acc3, actual base5179067; not acceptance |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
@@ -250,8 +252,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-file-runtime-boundaries-worktree; the guarded File
-runtime-boundary check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-resource-frame-fields-worktree; the guarded typed
+resource-frame field check is running. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

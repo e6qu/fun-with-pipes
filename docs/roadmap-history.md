@@ -11404,3 +11404,12 @@ Row78 refresh1a5f5ba98a322efeabae30286e985b76d0843356 uses actual base295b0da5c1
 Compiler/runtime/tests and WASI workflow match original except inherited CLI/GC
 harness repairs. Old CURRENT9609b73ef5ed is retained under its immutable
 revision before lease publication. Actual WASI proof awaits fresh runner gates.
+
+Row76 runtime File result test18.99/38.40s, clippy5.98/12.65s and
+format0.46/0.84s pass. Actual WASI evidence
+dc731c19e001bdee07c71d866d707d681682b394 is source-identical to1a5f5ba98a32;
+CI37980359907 is queued, not acceptance. Row79 refresh
+76374abb1077fd1255fbacc0f72ac190476689d2 uses actual base1a5f5ba98a32;
+compiler/runtime and resource-field fixtures match original with inherited
+CLI/tracing repairs intact. Previous CURRENT35c2aeb2923e is retained under
+its immutable revision before lease publication. Fresh focused checks run.
