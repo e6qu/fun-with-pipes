@@ -1452,6 +1452,11 @@ impl<'p> Gen<'p> {
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        // A resource parent still releases its children with freeing disabled;
+        // ordinary children keep the same count-only storage policy.
+        if !free_enabled() && !self.resource_type(mt) {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_rc_drop(v); }}\n");
+        }
         if matches!(mt, MT::Con(n, _) if n == "std::File") {
             return format!("static void fwp_drop{id}(V v) {{ fwp_file_drop(v); }}\n");
         }
@@ -5718,6 +5723,23 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 s = s.replace(
                                     "fwp_p_task_await(l0)",
                                     &format!("fwp_p_task_await_owned(l0, {dup})"),
+                                );
+                            }
+                            ResultOwnership::OwnedResource if sym == "file.with" => {
+                                let ty = func.ty.params(func.arity as usize).1.clone();
+                                let pair = MT::Record(vec![
+                                    ("0".into(), ty.clone()),
+                                    ("1".into(), MT::con("std::File")),
+                                ]);
+                                let drop = self.value_drop(&pair);
+                                let dup = if crate::rc::needs_rc(&self.prog.shapes, &ty) {
+                                    self.value_dup(&ty)
+                                } else {
+                                    "NULL"
+                                };
+                                let err = self.desc(&MT::con("std::IoError"));
+                                s = format!(
+                                    "return fwp_p_file_with_owned(l0, l1, {err}, {drop}, {dup});"
                                 );
                             }
                             ResultOwnership::OwnedAttempt => {
