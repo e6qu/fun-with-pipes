@@ -371,6 +371,12 @@ effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
 Inlined record projections similarly preserve the checked base type through
 scalar replacement so discarded nested children keep their typed destruction.
+Prepared nested loop reconstruction keeps compatible nested records as flat
+state slots through Again updates. Reading a whole record reconstructs it with
+typed children; progressive retains and completed fields remain protected until
+boxing succeeds. Field reads that can reconstruct records participate in caller
+liveness cleanup. Scalars remain uncounted; sequential full CI is required.
+
 Prepared CAF ownership retains a typed cache owner and returns a separate
 owner on each call. Initialization retry and reentrant replacement preserve
 callers; executable teardown releases caches after finishing tasks. CAF

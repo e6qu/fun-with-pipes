@@ -8811,3 +8811,24 @@ and passes both deliberate-overrun cases with raw interpreter/O1/O2 and
 preemption 1/37/1000 × poison 0/1 × GC stress/verification.
 Same-target lint passes 2.59 / 5.35 s CPU / elapsed.
 Fmt check passes 0.45 / 0.86 s. Ten docs copied before final amend; tested code unchanged.
+Final row68 7d8ab6719e55b5b8a5e93c0471cd374adcd0b38b is published clean with
+exact lease e503e10a97807a91f0ce1794f5b8b3e7cb955114. Whole subject verifies
+one line and empty body. No additional PR; row69 actual base remains e503e10.
+
+## Nested loop boxing preparation refresh, 2026-10-09
+
+Row69 rebases from actual old parent e503e10a97807a91f0ce1794f5b8b3e7cb955114
+onto current row68 head 7d8ab6719e55b5b8a5e93c0471cd374adcd0b38b.
+Ten authoritative docs resolve historical conflicts. Feature compiler/tests
+exactly match immutable b00215dc10f561747f2adbfb04e404e81581f598.
+Guarded clean passes 0.07 / 0.37 s. Guarded cargo test --test nested_loop_boxing
+--test loop_preparation_ownership --test loop_unwind_ownership is running.
+All four focused tests pass 18.32 / 36.87 s CPU / elapsed. Rebuilt nested records
+stay in five flat state slots without boxing on Again; whole Stop results keep
+original owners, progressive retains and completed children protected until box
+allocation succeeds. Caller liveness includes field reconstruction. Raw interpreter,
+O1/O2, GC stress/verification, reuse poison, 64 alias/fault cases and three removed
+cleanup scopes per optimization level pass. Related cancellation and preparation
+regressions pass. Emitted box removal is not an elapsed-speed claim.
+Same-target lint passes 2.56 / 5.18 s CPU / elapsed.
+Fmt check passes 0.45 / 0.83 s. Ten docs copied before amend; tested code unchanged.

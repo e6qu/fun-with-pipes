@@ -110,6 +110,12 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
     let nested = function_id(&emitted, "nested-step");
     let step_scope = loop_scope(&emitted, step);
     let nested_scope = loop_scope(&emitted, nested);
+    assert!(
+        emitted.contains(&format!(
+            "typedef struct {{ V v0; V v1; }} fwp_owner_ctx{nested_scope};"
+        )),
+        "nested state must own its flattened String fields directly"
+    );
     let probe=r#"
 static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
@@ -125,8 +131,8 @@ static void cancel_at_loop_tick(void) {
     } else if (fwp_cleanups->release==fwp_owner_releaseSCOPE) {
         text=((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0;
     } else if (fwp_cleanups->release==fwp_owner_releaseNSCOPE) {
-        V pair=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0;
-        text=OBJ(pair)->f[0];other=OBJ(pair)->f[1];
+        fwp_owner_ctxNSCOPE *fields=fwp_cleanups->arg;
+        text=fields->v0;other=fields->v1;
     } else return;
     if (++current_tick!=wanted_tick) return;
     observed_text=text;observed_other=other;fwp_cur->cancelled=1;fwp_budget=0;

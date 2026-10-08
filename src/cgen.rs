@@ -636,6 +636,75 @@ impl Gen<'_> {
             _ => None,
         }
     }
+
+    /// RC preparation names computed record arguments. Track those typed
+    /// producers when deciding which nested loop fields can remain unboxed.
+    fn local_record_width(
+        &self,
+        e: &Expr,
+        locals: &[MT],
+        known: &HashMap<Local, usize>,
+    ) -> Option<usize> {
+        match e {
+            Expr::Local(l) => known.get(l).copied(),
+            Expr::Dup(_, b) | Expr::Drop(_, b) => self.local_record_width(b, locals, known),
+            Expr::Let(l, v, b) => {
+                let mut known = known.clone();
+                if let Some(n) = self
+                    .local_record_width(v, locals, &known)
+                    .filter(|n| small_record(self.prog, &locals[*l as usize]) == Some(*n))
+                {
+                    known.insert(*l, n);
+                } else {
+                    known.remove(l);
+                }
+                self.local_record_width(b, locals, &known)
+            }
+            Expr::Match(_, arms) => {
+                let n = self.local_record_width(&arms.first()?.1, locals, known)?;
+                arms.iter()
+                    .all(|(_, b)| self.local_record_width(b, locals, known) == Some(n))
+                    .then_some(n)
+            }
+            _ => self.unboxed_value(e),
+        }
+    }
+
+    fn loop_field_unboxed(
+        &self,
+        e: &Expr,
+        field: usize,
+        n: usize,
+        locals: &[MT],
+        known: &HashMap<Local, usize>,
+    ) -> bool {
+        match e {
+            Expr::Let(l, v, b) => {
+                let mut known = known.clone();
+                if let Some(m) = self
+                    .local_record_width(v, locals, &known)
+                    .filter(|m| small_record(self.prog, &locals[*l as usize]) == Some(*m))
+                {
+                    known.insert(*l, m);
+                } else {
+                    known.remove(l);
+                }
+                self.loop_field_unboxed(b, field, n, locals, &known)
+            }
+            Expr::Dup(_, b) | Expr::Drop(_, b) => {
+                self.loop_field_unboxed(b, field, n, locals, known)
+            }
+            Expr::Match(_, arms) => arms
+                .iter()
+                .all(|(_, b)| self.loop_field_unboxed(b, field, n, locals, known)),
+            Expr::Construct(0, xs) => match xs.as_slice() {
+                [Expr::Record(fs)] => self.local_record_width(&fs[field], locals, known) == Some(n),
+                _ => false,
+            },
+            Expr::Construct(1, _) => true,
+            _ => false,
+        }
+    }
 }
 
 /// Most fields of a record passed or returned as a C struct (two words
@@ -2637,6 +2706,21 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         || reads(a)
                 })
             }
+            Expr::Construct(0, args)
+                if self
+                    .in_loop
+                    .as_ref()
+                    .is_some_and(|lg| lg.record && lg.tails.contains(&(e as *const Expr))) =>
+            {
+                let lg = self.in_loop.as_ref().unwrap();
+                match args.as_slice() {
+                    [Expr::Record(fs)] => fs.iter().enumerate().all(|(i, value)| {
+                        (matches!(value, Expr::Local(x) if *x == l) && lg.slots[i].1 == Some(n))
+                            || reads(value)
+                    }),
+                    _ => args.iter().all(reads),
+                }
+            }
             Expr::Construct(_, args) | Expr::Record(args) => args.iter().all(reads),
             Expr::Apply(f, args) => reads(f) && args.iter().all(reads),
             Expr::Field(r, _) => reads(r),
@@ -2691,7 +2775,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         if let Some(n) = self.unboxed(v) {
-            if !matches!(v, Expr::Record(_)) && self.field_uses(body, l, n) {
+            if (!matches!(v, Expr::Record(_)) || self.in_loop.is_some())
+                && self.field_uses(body, l, n)
+            {
                 let fs = self.expr_fields(v, n);
                 let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
                 self.fields.insert(l, names);
@@ -3890,25 +3976,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         Some(m) => {
                             let fs: Vec<String> =
                                 (off..off + m).map(|k| format!("st[{}]", k)).collect();
+                            let original = self.begin_call(e as *const Expr);
+                            let mut values = Vec::new();
                             if self.g.reuse {
                                 let state_fields =
                                     record_fields(&self.g.prog.shapes, &self.locals[0]).unwrap();
                                 let inner = &state_fields[*i as usize].1;
-                                let counted = record_fields(&self.g.prog.shapes, inner)
+                                values = record_fields(&self.g.prog.shapes, inner)
                                     .unwrap()
                                     .iter()
                                     .enumerate()
-                                    .filter(|(_, (_, ty))| {
-                                        crate::rc::needs_rc(&self.g.prog.shapes, ty)
-                                    })
-                                    .map(|(j, _)| off + j)
+                                    .map(|(j, (_, ty))| (fs[j].clone(), ty.clone()))
                                     .collect::<Vec<_>>();
-                                for slot in counted {
-                                    self.line(&format!("fwp_rc_dup(st[{slot}]);"));
-                                }
+                                let ctx = self.fresh();
+                                let node = self.fresh();
+                                let retain = self.g.duplicate_values(&values, &ctx, &node);
+                                self.line(&retain);
                             }
+                            let pending = self.begin_values(&values);
                             let r = format!("fwp_record({}, {})", m, Self::array(&fs));
-                            self.bind(self.g.fresh(r))
+                            let result = self.bind(self.g.fresh(r));
+                            self.end_call(pending);
+                            self.end_call(original);
+                            result
                         }
                     };
                 }
@@ -5039,15 +5129,7 @@ impl<'p> Gen<'p> {
             let w = field_tys
                 .get(j)
                 .and_then(|t| small_record(self.prog, t))
-                .filter(|m| {
-                    ts.iter().all(|t| match t {
-                        Expr::Construct(0, xs) => match &xs[0] {
-                            Expr::Record(fs) => self.unboxed_value(&fs[j]) == Some(*m),
-                            _ => false,
-                        },
-                        _ => true,
-                    })
-                });
+                .filter(|m| self.loop_field_unboxed(e, j, *m, &f.locals, &HashMap::new()));
             slots.push((n, w));
             n += w.unwrap_or(1);
         }
