@@ -11373,3 +11373,10 @@ uses actual base3dc1c36adbad. Compiler/runtime and File count fixtures match
 original; inherited CLI/tracing repairs remain. Prior CURRENT4b5da4aa946a
 is retained under its immutable revision before lease publication.
 Fresh owner-count checks follow.
+
+Row73 three resource frame integrations12.65/25.47s and all three resource
+metadata/fusion units3.81/7.73s pass. Row75 refresh
+5179067d6635010332886473133462d1d4a0f1bf uses actual base4155bc9fce74.
+Compiler/runtime and discard fixtures match original, with inherited CLI/tracing
+repairs intact. Previous CURRENTdb3bcf0da8d6 is retained under its immutable
+revision before explicit-lease publication. Fresh focused checks follow.
