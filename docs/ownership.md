@@ -103,6 +103,29 @@ release, transfer clearing and argument/field completion guards. Tracing remains
 unarmed in native libraries. Unload, runtime resources/cycles and remaining shared
 boundaries stay separate acceptance tasks; full sequential CI is still required.
 
+## Prepared native library teardown
+
+Native library unload cancels and drains attached and detached scheduler tasks
+before releasing generated-code storage. It releases active/idle stack mappings,
+runtime metrics and the owned polling descriptor, restores saved host signal
+actions if they still point at this runtime, and releases typed CAF owners.
+Registered finalizers run while their objects remain mapped. Collector side
+allocations and the complete raw heap/metadata reservations are then released.
+The host keeps ownership of its file descriptors and manually allocated pointers.
+
+A library-only pthread key holds the temporary per-thread closure-release work
+list; deleting it at unload avoids the native TLS descriptor that prevented
+Darwin's loader destructor from running. Native executables retain their TLS
+implementation. Numerical kernel threads are joined within each kernel call.
+Hosts must complete all calls before unloading; this adds no concurrent-call ABI.
+
+Actual repeated loader cycles and static-archive process exit pass focused O1/O2
+checks with reuse poisoning. Negative controls detect missing unmap, CAF/side
+cleanup, signal restoration and pthread-key deletion. Native library collection
+stays unarmed. Ordinary archives are covered; static-memory provisioning, general
+File/socket/TLS/GPU resources, source-reachable cycles and complete tracing-free
+execution still need evidence. Full sequential Linux/macOS CI is required.
+
 ## Next ownership change
 
 The shared inventory consolidates array/map/set contracts and borrows comparison-only

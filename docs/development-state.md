@@ -17,20 +17,29 @@ immutable value semantics, effects and evaluation/trap order stable.
 
 ## Merged baseline and current work
 
-- Current origin/main: `a4b6533fd2355a5f91ffda4fceed69a28bcec392`, squash of
-  [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), merged
-  2026-10-07T23:32:12Z. All four gates passed in CI `37696063781` at exact
-  `6eeb915771abcac085c6f6cf0520fd25cbbe79ee`. Verified one-line subject
-  `Retain and release typed children of nonescaping stack values`, 61 characters,
-  empty body/no trailers. Root fast-forwarded preserving active plan/handoff;
-  backup `/private/tmp/fwp-main-docs-a4b6533`. Sole open PR #82: borrowed
-  callbacks, exact `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`, CI `37703018710`.
-  Linux, ARM macOS and benchmarks passed; Intel macOS remains live. Merge after all four pass.
-  Then rebase map from OLD `029fac4` onto the new squash; preserve OLD `41ef82d`.
-  Latest published preparation is C export results `5b34382`, OLD base `ab44b7d`.
-  Library input ownership is prepared on OLD `5b34382`, checkout
-  `/private/tmp/fwp-library-input-worktree`, branch `ownership-library-inputs`.
-  Remaining acceptance work includes unload/finalizers, cycles and aggregate gaps.
+- Current origin/main: `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`, squash of
+  [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), merged
+  2026-10-08T00:58:09Z. All four gates passed in CI `37703018710` at exact
+  `3fa67f3a8548a3e5605d15723ad74c95b6fdda00`. Verified one-line subject
+  `Add typed borrowed application for synchronous callbacks`, 56 characters,
+  empty body/no trailers. Local main fast-forwarded preserving current plan/
+  handoff; backup `/private/tmp/fwp-main-docs-181d3b3`. Sole open
+  [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83): map callbacks, exact
+  `2b0012a25da33ba777868e3755ed2127993f77e1`, full CI `37711126548` live:
+  benchmarks passed; Linux and both macOS jobs are running.
+  Rebase from OLD `029fac4` had only plan/handoff conflicts, reconciled with
+  these authoritative docs. Three map/callback tests, complete contract
+  inventory, clippy and formatting pass. Merge only after all four current-head
+  gates pass, subject `Own synchronous map results without sharing callback inputs`,
+  59 characters, one line, empty body and exact match. Then rebase filter from
+  OLD `41ef82d87769596f99bde2081dc5ac00a514ffbc` onto its squash; preserve OLD
+  `1ea7f07` for the fold child. Shared target is library unload; clean package before switching.
+  Latest published preparation: library inputs `a6ebc1da9637b4fef866697fa766208fd2d72af1`,
+  OLD base `5b34382`, checkout `/private/tmp/fwp-library-input-worktree`,
+  branch `ownership-library-inputs`. Current preparation: native library unload
+  mappings/caches/finalizers/task stacks/pthread cleanup key, then cycles/aggregate gaps.
+- Previous stack baseline: PR #81, `a4b6533`, all four CI `37696063781` gates
+  passed at exact `6eeb915`. Verified one-line, 61-character subject and empty body.
 - Previous baseline: `50ab17aba07e798d39818ad4fa423edff6e4b895`, PR #80,
   exact head `7ce23dd`, all four gates passed in CI `37684140373`.
 - Earlier container baseline: `5998302`, squash merge of [PR #75](https://github.com/e6qu/fun-with-pipes/pull/75).
@@ -2654,3 +2663,134 @@ storage while background workers can still access generated code or values.
 Source-reachable cycles and remaining aggregate metadata/reconstruction gaps
 also remain before phase 2 closes; phases 2–6 are incomplete. Shared target now
 contains this input compiler. Preserve OLD `5b34382` for the branch rebase.
+
+Library inputs published as `a6ebc1da9637b4fef866697fa766208fd2d72af1`, OLD
+base `5b34382`. Verified one-line, 67-character subject `Own copied C library
+inputs and unwind partial argument preparation` (supplied as one line), empty
+body/no trailers. Checkout clean. Final formatting check CPU 0.36 s / elapsed
+0.74 s; whitespace clean. No second PR was opened. Shared target is this input
+compiler; package clean before switching to rebased map validation.
+
+PR #82 all four exact-head gates passed at `3fa67f3` in CI `37703018710`;
+squash-merged 2026-10-08T00:58:09Z as `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`.
+Verified subject `Add typed borrowed application for synchronous callbacks`,
+56 characters, one line, empty body/no trailers. Root fast-forwarded preserving
+its two local plan/handoff files, backup `/private/tmp/fwp-main-docs-181d3b3`.
+Map child rebase from OLD `029fac4` onto this squash has only plan/handoff
+conflicts; other changes apply. Resolve with current root docs, complete rebase,
+run guarded map/borrowed callback checks after package clean, then exact-lease
+push and open the sole next PR. Preserve OLD `41ef82d` for the filter child and
+OLD `a6ebc1d` for the next independently prepared library teardown child.
+
+Map callback rebase completed onto `181d3b3`; no code conflicts. After guarded
+package clean, `cargo test --test map_ownership --test borrowed_callbacks
+-- --nocapture` passes three tests, CPU 11.56 s / elapsed 23.36 s. Both map
+source references now explicitly use `FWP_NO_OPT=1` for an independent
+unoptimized interpreter oracle. O1/O2, stack on/off, GC stress/verification and
+both poison modes preserve aliases/captures. Selected no-tracing loop reports
+2.7 MiB freed by counts for the restored shared-result boundary versus 4.6 MiB
+for owned spines (same generated code otherwise, same output, O1, Apple Silicon/
+Apple Clang 17, 0.1 MiB report precision). This is not a speed claim or proof
+of complete tracing-free support. `cargo clippy --lib --test map_ownership
+--test borrowed_callbacks -- -D warnings` passes, CPU 2.31 s / elapsed 4.65 s.
+Shared target is now this rebased map compiler. Final contract inventory and
+formatting before publication; then exact-lease push against OLD `41ef82d`,
+open sole next PR and run all four current-head gates. Preserve OLD `41ef82d`
+for the filter child. Full builds/tests remain on runners; no limits bypassed.
+
+Rebased map's complete contract inventory passes, CPU 3.20 s / elapsed 6.77 s.
+One inventory test checks all declared collection/text boundaries. All focused
+checks pass; no unresolved failure. Ready for final format and publication.
+
+Map callbacks published after rebase as
+`2b0012a25da33ba777868e3755ed2127993f77e1` using exact lease against OLD
+`41ef82d87769596f99bde2081dc5ac00a514ffbc`. Verified one-line, 59-character
+subject `Own synchronous map results without sharing callback inputs`, empty
+body/no trailers; clean checkout. Final `cargo fmt -- --check` passes, CPU
+0.34 s / elapsed 0.63 s; whitespace clean. Sole new PR #83:
+https://github.com/e6qu/fun-with-pipes/pull/83 . Full exact-head runner CI
+`37711126548` is queued at that head. Follow the same run, fix failures and
+merge only after all four gates actually pass. Explicit squash subject above,
+empty body and exact match. Filter child then rebases from OLD `41ef82d` onto
+that squash; preserve OLD `1ea7f07` for fold.
+
+Next independent task while CI proceeds: native library unload lifecycle on a
+new prepared child of OLD `a6ebc1da9637b4fef866697fa766208fd2d72af1`. Read
+actual collector reservation/metadata, CAF, finalizer, scheduler stack and
+thread-pool code. Prove no worker can access unloaded code/storage before
+unmapping; preserve loaded-library host pointers. Native libraries have RC
+metadata but tracing is unarmed. Check actual `dlopen`/`dlclose` and static
+exit behavior on runners, with bounded focused local probes. Cycles and
+aggregate gaps remain before closing phase 2; phases 2–6 are incomplete. No
+local workload remains. Main's only local edits are active plan/handoff;
+preserve them during the next fast-forward.
+
+Latest verified #83 run `37711126548` is in progress at exact `2b0012a`: bench
+passed; Linux, ARM macOS and Intel macOS are running. It is not a passing
+merge gate yet. Continue teardown preparation while following this same run.
+
+
+## Native library unload preparation (2026-10-08)
+
+Branch `ownership-library-unload`, checkout `/private/tmp/fwp-library-unload-worktree`,
+OLD parent `a6ebc1da9637b4fef866697fa766208fd2d72af1`. Ready for publication after focused validation; exact head will be recorded below.
+Generated native libraries now have an idempotent unload/exit destructor. It
+cancels and drains all scheduler tasks, including detached tasks, releases idle
+stack mappings, restores saved host signal actions when the host has not replaced
+them, closes the runtime polling descriptor, frees metrics, releases CAF owners,
+runs registered finalizers with their objects still mapped, releases collector
+side allocations and the complete original heap/meta mappings, and deletes the
+closure cleanup pthread key. Host-owned file descriptors stay open.
+
+The audit found no persistent numerical thread pool: each started pthread is
+joined before its kernel call returns. Do not invent a pool teardown API.
+A native TLS closure work-list pointer kept the dylib resident on Darwin, so an
+initial destructor implementation did not execute on dlclose. A library-only,
+explicitly deleted pthread key preserves per-thread release work and allows the
+actual loader destructor to run. Executable TLS and WASM behavior stay unchanged.
+The full raw collector reservation, before alignment, is now tracked for unmap.
+
+`cargo test --test library_unload -- --nocapture` passes under the fwp local guard:
+CPU 8.68 s / elapsed 20.21 s, one test. Actual dlopen/dlclose executes three cycles
+per case, O1/O2 and reuse verification off/on. Native archives prove process-exit
+ordering (`main`, `finalized`, `finished`) with the same optimization/poison cases.
+The finalizer verifies both blocked task cancellations and cached-owner release
+before object storage disappears; it reenters finish to verify idempotence.
+Heap/meta and active/idle stack mappings are checked absent, five external heap
+allocations and the pthread key are checked released once, saved full SIGINT/TERM
+actions are checked restored, and a subsequent host signal override is preserved.
+Six negative controls fail with the expected status when heap unmap, stack unmap,
+CAF cleanup, wide-count cleanup, signal restoration or key deletion is removed.
+
+Repaired probe failures: initial fixture lacked size_t's header; Darwin TLS
+prevented unload; mincore on macOS was insufficient to prove mapping absence.
+The macOS probe now uses mach_vm_region to prove the complete range absent;
+Linux uses mincore/ENOMEM at both range ends. The earlier dynamic-only pass was
+CPU 0.35 s / elapsed 1.84 s; the final test adds archive exit and six controls.
+Formatting passes, CPU 0.34 s / elapsed 0.60 s. Eight adjacent CAF, bounded
+closure-release, C input/output ownership and task-handle checks pass under the
+guard: CPU 12.34 s / elapsed 31.04 s. Command: `cargo test --test
+library_input_ownership --test library_result_ownership --test closure_cleanup
+--test caf_ownership --test task_handle_ownership -- --nocapture`.
+
+Native-library tracing remains unarmed (asserted zero collections); this proves
+region teardown, not host-root tracing or complete GC-free ownership. Registered
+finalizers do not establish general File/socket/TLS/GPU cleanup. Raw escaping
+pointers retain their manual host lifetime; no new public ABI is introduced.
+Static-memory provisioning is not covered by the mapping assertions; ordinary
+static archives are. Hosts must finish calls before unload. Cycles and remaining
+aggregate/reconstruction paths still require acceptance evidence before phase 2
+closes. Full Linux/ARM/Intel/benchmark CI is required when this branch reaches the
+sole-PR position. Shared target is this unload compiler; clean package on switch.
+Next: finish adjacent validation and publish this preparation, then audit actual
+runtime external resource lifetimes and source-reachable cycles/aggregate gaps.
+
+
+Library unload final validation: clippy of library and unload/input/result tests
+passes with `-D warnings`, CPU 2.35 s / elapsed 4.69 s. Shared-library C smoke
+also passes with `FWP_REUSE=0`, CPU 0.63 s / elapsed 1.82 s. All commands use
+`env CARGO_TARGET_DIR=/Users/zardoz/projects/fun-with-pipes/target python3
+/private/tmp/fwp-local-guard.py ...`; no full local gates or skipped checks.
+Formatting/whitespace pass. No local workload remains. Next audit actual external
+resource cleanup and source-reachable runtime cycles; keep this preparation
+separate from sole PR #83 and require full exact-head CI at its sequential turn.

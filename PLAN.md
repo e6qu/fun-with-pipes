@@ -56,9 +56,11 @@ types, passed all four exact-head gates in CI `37684140373` and was squash-merge
 as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-child ownership,
 passed all four gates in CI `37696063781` and was squash-merged as `a4b6533`.
 [PR #82](https://github.com/e6qu/fun-with-pipes/pull/82), borrowed callbacks, is
-the sole open PR at exact `3fa67f3`. Linux, ARM macOS and benchmarks passed in
-CI `37703018710`; Intel macOS is still running. Continue focused roadmap work
-and repair any failure while waiting for the final merge gate.
+now merged as `181d3b3` after all four exact-head gates passed in CI
+`37703018710` at `3fa67f3`. [PR #83](https://github.com/e6qu/fun-with-pipes/pull/83),
+map callbacks, is the sole open PR at exact `2b0012a`; full CI `37711126548`
+is live: benchmarks passed, Linux and both macOS jobs running. Continue library
+teardown preparation and fix any CI failure.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -660,3 +662,31 @@ ownership-disabled C smoke pass. Pointer-only Bytes export inputs now explicitly
 report their missing length; ordinary foreign Bytes parameters remain supported.
 Next: library unload mappings, caches, finalizers, task stacks and worker threads,
 then cycles and remaining aggregate gaps. Full sequential CI remains required.
+
+PR #82 passed all four exact-head gates in CI `37703018710` and squash-merged
+as `181d3b356db94a3bcff78a79c2a2d84aad15b1c8`. Verified one-line, 56-character
+subject `Add typed borrowed application for synchronous callbacks`, empty body.
+Library inputs published separately as `a6ebc1d`, OLD base `5b34382`; focused
+checks and required commit format pass. Map callback child is being rebased
+from OLD `029fac4` onto the new squash, with only plan/handoff conflicts.
+
+Map callback rebase onto `181d3b3` applies without code conflicts. Three focused
+map/borrowed-callback checks and clippy pass; independent unoptimized interpreter
+values agree, and the selected no-tracing control frees 2.7 versus 4.6 MiB by
+counts. Final inventory/format checks precede publication and the sole next PR.
+
+Map callbacks published as `2b0012a` after guarded tests, inventory, clippy and
+formatting pass; sole PR #83 runs full exact-head CI `37711126548`. All four
+gates precede squash merge with the one-line, 59-character subject and empty
+body. Next independent preparation: native library unload lifecycle on OLD
+`a6ebc1d`; then cycles/aggregate gaps. The filter child rebases from OLD
+`41ef82d` after #83 merges; preserve OLD `1ea7f07` for its child.
+
+
+Native library unload is in focused preparation. Actual macOS loader cycles and
+ordinary static-archive exit pass at O1/O2 with reuse poisoning. Cleanup drains
+attached/detached tasks before finalizers and unmapping, restores host signals,
+frees idle stacks/metrics/side metadata and deletes the library pthread key.
+Negative controls verify missing cleanup is detected. General external resource
+lifetimes, cycles and remaining aggregate paths remain open; no complete tracing-
+free execution claim. Full sequential cross-platform CI remains required.
