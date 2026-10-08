@@ -14,7 +14,7 @@ and limitations in [development-state.md](development-state.md).
 ```
 lex → parse (offside layout) → macro expansion → name collection
     → inference (types, traits, effects, resources) → monomorphization
-    → typed IR → optimizer → { interpreter, C code generator }
+    → typed IR → resource frame anchors → optimizer → { interpreter, C code generator }
 ```
 
 | Concern | Decision |
@@ -43,6 +43,12 @@ map/filter own fresh spines and results without promoting input elements to shar
 Other callback/runtime and exceptional ownership extensions are prepared separately.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
+
+Original File frame anchors now have a preparation: ResourceRegion records typed
+parameter/local binders before optimization, protects them during inlining, and
+releases interpreted frame slots on return/error. Returned aliases keep their
+owners. Native region destruction is still the next ownership step; this does
+not establish implicit resource disposal or tracing-free execution.
 
 The C backend and the interpreter must agree byte for byte on stdout,
 stderr and the exit code. `tests/golden_run.rs` runs every program in
