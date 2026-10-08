@@ -49,7 +49,7 @@ Phase1 is done; phase2 is incomplete; phases3–6 remain pending.
 Sole open PR [#90](https://github.com/e6qu/fun-with-pipes/pull/90):
 ownership-list-options at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731,
 checkout /private/tmp/fwp-list-option-worktree. Full CI37765137522:
-benchmark passes; five gates pending at last authoritative poll.
+benchmark, Linux full test and ARM regular macOS pass; three gates pending at last poll.
 Seven focused tests pass CPU23.21 s / elapsed46.79 s; clippy lib/four fixtures
 2.41 s / 4.92 s; real inventory one test3.30 s / 6.89 s; fmt0.35 s / 0.74 s.
 Both oracles explicitly use FWP_NO_OPT=1. Prepared ownership of nth/find/index-of
@@ -76,7 +76,8 @@ Evidence workflows never enter production ancestry.
 Current separate WASM evidence checkout /private/tmp/fwp-wasm-evidence-worktree,
 branch ownership-evidence-wasm-resources, published
 74a6e3fe7c748b69f43c5930160d54e51f4871fa. Full CI37766917931 is live:
-Linux in progress, benchmark passes, four Mac gates queued at last poll.
+Linux and ARM regular/Intel GC are live; benchmark passes; Intel regular and
+ARM GC remain queued at last poll.
 Mandatory early Linux stage requires actual WASI resource-count tests including
 both free modes, FilePair, cached Task/Channel disposal and omission controls;
 File runtime boundaries/discard and file_read_kinds run there too.
@@ -142,7 +143,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to that other repository; do not use it for fwp.
-Current shared compiler target belongs to /private/tmp/fwp-file-inline-path-worktree.
+Current shared compiler target belongs to /private/tmp/fwp-file-storage-disposal-worktree.
 Guarded cargo clean -p fwp before switching checkout. All local checks above
 used this guard; no active workload remains at last handoff.
 
@@ -246,3 +247,50 @@ realloc failure transactionality as well. Shared/cycle boundaries remain open.
 Final disposal clippy lib/five fixtures passes CPU2.92 s /elapsed5.97 s;
 git diff --check passes. Publish the preparation after final format check.
 Final disposal format passes CPU1.00 s /elapsed2.63 s. No active workload remains.
+
+Queue81 is published clean750a5cffd46b83c22fa403ed9453b9678bf77118,
+parent immutable2d903d6617d99cec52600c8af43e4d08b5de6716. Whole message:
+`Reclaim unshared File storage after removing library finalizers`, one line,
+empty body. No second PR; full sequential platform/WASI validation pending.
+Keep OLD750a5cf immutable for the constructor exceptional-storage preparation.
+
+Latest exact-head #90 poll: benchmark and ARM regular Mac pass; Linux, Intel
+regular and both GC gates pending. Fresh evidence Linux, ARM regular and Intel
+GC are live; bench passes; Intel regular/ARM GC queued. Continue fixing and
+preparing while CI runs, without opening the next PR before #90 squash.
+
+Queue81 post-publication audit passes nine doc link sets,75 immutable queue
+ancestry pairs and complete inspected commit messages, guard CPU0.32 s /
+elapsed3.71 s. Seven live root doc edits remain ours; preserve all on main FF.
+
+
+Active queue82 constructor-disposal preparation:
+/private/tmp/fwp-file-construction-disposal-worktree, branch
+ownership-file-construction-disposal, parent immutable750a5cf. Constructor
+cleanup now owns an initialized header, closes it while live, then drops its
+storage on recoverable traps. Before initialization, it still closes the raw
+stream. Existing failure probes inspect dead headers only under poison retention.
+Finalizer growth uses temporary pointer/capacity with overflow checking, commits
+only after successful realloc, and preserves existing entries on failure.
+
+Initial construction/storage checks pass CPU9.47 s /21.64 s. New test injects
+actual registry realloc failure with zero or64 retained File owners; recoverable
+trap mode verifies closed failed descriptor, fresh-header freed bytes (or retained
+storage under disabled-free/poison), unchanged registry and surviving sentinels.
+Production hard-OOM behavior remains exit102; an atexit audit verifies all64
+registered descriptors close after allocation failure. O1/O2 and GC off/on with
+stress/verification/both poison modes pass, CPU0.92 s /3.56 s. Added negative
+control for prematurely published capacity (must fail rollback), alongside
+close-only-constructor storage-leak control. Final four-fixture check passes CPU15.98 s /33.29 s. Format0.45 s /0.84 s passes.
+Shared target belongs to the constructor-disposal checkout. No extra PR.
+
+Queue82 final clippy lib/four fixtures passes2.71 s /5.43 s; fmt0.46 s /0.96 s;
+diff whitespace check passes. Separate full evidence74a6e3f /CI37766917931
+Linux fails constructor raw-only omission control: it reports stale handle then
+normal exit runs its deliberately invalid finalizer, triggering glibc double-free
+instead of expected exit3. Log /private/tmp/fwp-evidence-linux-37766917931.log,
+job113276719315. Use _Exit(3) after detecting stale state, preserving all positive
+close/teardown assertions. Same correction applied to original queue70, current
+e9d575f (OLD remains immutable), separate evidence and queue82. Queue82 corrected
+control passes1.04 s /3.35 s. Verify/publish queue70 correction and evidence;
+then rerun all six full gates. Failure is a repair task, not a roadmap blocker.

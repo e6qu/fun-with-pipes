@@ -418,3 +418,12 @@ constructor owner remains live, then drop that owner on return and unwind.
 Focused tests verify same-address reuse without tracing, freed-byte accounting,
 retained finalizers and omission controls. Constructor exceptional storage,
 shared graphs/cycles, actual WASI and full sequential gates remain required.
+
+
+A further prepared constructor scope owns its initialized File header through
+registration/path-copy traps: close first, then dispose the temporary reference
+and eligible storage. Before initialization it owns the raw stream. Finalizer
+registry growth checks overflow and commits pointer/capacity only after realloc
+succeeds, preserving existing owners on failure. Recoverable allocation-fault
+probes and normal hard-OOM library teardown verify both cases. These are prepared
+native checks; sequential full gates and actual WASI remain required.
