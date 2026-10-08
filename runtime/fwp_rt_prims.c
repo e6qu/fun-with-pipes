@@ -2453,6 +2453,22 @@ static V fwp_p_file_close(V h) {
     return FWP_UNIT;
 }
 
+/* Resource ownership is independent of tracing/count metadata. Explicit close
+ * closes the stream; dropping the last value owner also closes it. Storage still
+ * follows the allocator's existing lifetime until compiler coverage is complete. */
+static void fwp_file_dup(V h) {
+    if (!h) return;
+    fwp_file *file = (fwp_file *)(uintptr_t)h;
+    if (!file->refs) fwp_trap("internal: duplicate discarded file");
+    if (file->refs == UINT64_MAX) fwp_trap("reference count overflow");
+    file->refs++;
+}
+static void fwp_file_drop(V h) {
+    if (!h) return;
+    fwp_file *file = (fwp_file *)(uintptr_t)h;
+    if (file->refs && --file->refs == 0) fwp_p_file_close(h);
+}
+
 typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
 static void fwp_close_scoped_file(void *arg) {
     fwp_file_cleanup *file = arg;
@@ -2467,6 +2483,7 @@ static V fwp_file_value(FILE *f, const char *path) {
     fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
     h->f = f;
     h->path = path;
+    h->refs = 1;
     file.handle = PTR(h);
 #ifdef FWP_LIBRARY
     fwp_gc_finalizer(h, fwp_file_final);
@@ -2491,6 +2508,14 @@ static void fwp_file_buffer_cleanup(void *arg) {
     b->d = 0;
 }
 
+static void fwp_file_text_drop(V value) {
+#ifdef FWP_RESOURCE_NO_FREE
+    fwp_rc_drop(value);
+#else
+    fwp_rc_free_obj(value);
+#endif
+}
+
 /* The temporary buffer belongs to the read, not to the borrowed File. */
 static V fwp_p_file_read_all(V h, const fwp_desc *err) {
     fwp_file *f = (fwp_file *)(uintptr_t)h;
@@ -2513,10 +2538,15 @@ static V fwp_p_file_read_all(V h, const fwp_desc *err) {
         fwp_file_buffer_cleanup(&b);
         return fwp_io_error("read", "stream did not contain valid UTF-8", err);
     }
-    V text = buf_to_str(&b);
+    V text = fwp_rc_fresh(buf_to_str(&b));
     b.d = 0;
+    fwp_value_owner text_owner = {text, fwp_file_text_drop};
+    fwp_cleanup text_cleanup;
+    fwp_value_protect(&text_owner, &text_cleanup);
     V result = fwp_tuple2(text, h);
+    fwp_rc_fresh(result);
     FWP_KEEP_ALIVE(h);
+    fwp_value_finish(&text_owner, &text_cleanup);
     fwp_cleanup_pop(&cleanup);
     return result;
 }
@@ -2528,6 +2558,26 @@ static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
     if (f->f && (fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len || fflush(f->f) != 0))
         return fwp_io_error("write", strerror(errno), err);
     return h;
+}
+
+/* Borrowed I/O inputs, owned File aliases in the returned value. Protect the
+ * completed extra reference while I/O/conversion can fail. */
+static V fwp_p_file_write_owned(V s, V h, const fwp_desc *err) {
+    fwp_file_dup(h);
+    fwp_value_owner owner = {h, fwp_file_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    fwp_p_file_write(s, h, err);
+    return fwp_value_finish(&owner, &cleanup);
+}
+static V fwp_p_file_read_all_owned(V h, const fwp_desc *err) {
+    fwp_file_dup(h);
+    fwp_value_owner owner = {h, fwp_file_drop};
+    fwp_cleanup cleanup;
+    fwp_value_protect(&owner, &cleanup);
+    V result = fwp_p_file_read_all(h, err);
+    fwp_value_finish(&owner, &cleanup);
+    return result;
 }
 
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {

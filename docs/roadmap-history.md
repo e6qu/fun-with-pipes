@@ -11352,3 +11352,17 @@ uses actual base6fdf20ca82a9. Compiler/runtime and File I/O/byte-read fixtures
 match original; inherited CLI/tracing repairs remain. Prior CURRENTd4611644084a
 is retained under its immutable revision before explicit-lease publication.
 Fresh File I/O checks follow.
+
+CI37978789380 atb9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a passes all
+focused Linux TLS roots/worker/timer, related ownership, actual tracing churn,
+primitive consistency and strong doc checks. Row71 two File write tests8.14/17.09s,
+clippy5.55/11.78s and format0.35/0.75s pass. Row73 refresh
+3dc1c36adbad9db1a90cdaf29fd4bfeefdf403ee uses actual base82e51ba8ea16;
+both original frame preservation and fusion barrier commits survive unchanged.
+Only inherited CLI/tracing harness repairs differ in source/tests. Prior CURRENT
+3c87e1f63b51 is retained under its immutable revision before lease publication.
+Fresh focused resource frame checks follow.
+
+Row72 all three File I/O and binary/text semantic tests14.85/30.79s pass.
+The raw interpreter oracle uses FWP_NO_OPT=1; native O1/O2 comparisons include
+GC on/off, stress/verification and reuse poison variants. Lint/format follow.
