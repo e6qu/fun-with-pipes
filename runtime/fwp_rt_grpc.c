@@ -2028,6 +2028,11 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
         return 0;
     }
     unsigned char *alpn = (unsigned char *)strdup("\x02h2");
+    if (!alpn) {
+        fprintf(stderr, "fwp serve: cannot allocate TLS protocol list\n");
+        *failed = 1;
+        return 0;
+    }
     SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, alpn, 3, ca);
     if (!ctx) {
         free(alpn);

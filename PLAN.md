@@ -736,3 +736,9 @@ owner protects the bound listener and initial TLS protocol context, including
 preparation cancellation; accepted sessions keep their own context references.
 Actual scheduler cancellation and post-cancellation ALPN checks pass. Full
 sequential gates remain required. Next repair TLS cache/ALPN allocation failures.
+
+TLS client-cache allocation failures are prepared after service cancellation:
+failed growth/name creation releases partial owners and preserves previous entries;
+server ALPN allocation failure is explicit. Focused retry/omission checks pass.
+Next audit ALPN wire preparation and cancellable TLS connect lifetime. Full
+sequential gates remain required, with PR #83 ARM regular/stress and bench passing.

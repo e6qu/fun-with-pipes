@@ -3290,3 +3290,37 @@ gRPC server checkout. Source/stress large gates remain on GitHub. Next concrete
 action is client TLS cache partial allocation ownership and server ALPN strdup
 failure; phases 2–6 remain open. Current six-job PR/evidence CI still runs, with
 benchmarks passing; do not count queued/in-progress jobs as a merge gate.
+
+
+gRPC server preparation is published as `0d5d3098e7827e36045984adcbf859901bde4b74`,
+subject `Release service listeners and TLS context owners on cancellation` (one
+line, no trailers). TLS cache preparation is separate on `ownership-tls-cache-failures`,
+checkout `/private/tmp/fwp-tls-cache-worktree`, immutable OLD parent `0d5d309`.
+The actual failed-realloc fixture reproduced a process crash (CPU 6.81 s / elapsed
+14.32 s). Client cache creation now checks capacity, prepares a CA name, grows
+through a temporary pointer, and publishes only a complete entry. Failure releases
+name/context, keeps prior entries intact and returns a stable TLS diagnostic.
+Successful caching remains unchanged. Service ALPN strdup failure is reported
+before creating a context instead of publishing a null protocol buffer.
+
+Focused O1/O2/reuse checks cover empty/populated caches, strdup/realloc failure,
+previous pointer/name/context identity, retry, cache reuse, idempotent teardown
+and server ALPN allocation failure. Five controls detect omitted context/name
+release, incomplete publication, lost cache and missing ALPN guard. Intentionally
+losing the cache caused finalization to crash after detecting it; fixture _Exit
+now applies only after nonzero failure observation. Positive tests still finalize.
+Final dedicated test passes CPU 0.72 s / elapsed 3.66 s; first corrected production
+check passed CPU 6.90 s / elapsed 14.86 s. Adjacent server/resource probes pass in
+the combined check, which initially failed only that negative-control reporting
+case (CPU 4.96 s / elapsed 13.26 s), so it is not a fully passing suite. Clippy
+lib/cache test passes CPU 2.36 s / elapsed 4.77 s; fmt CPU 0.45 s / elapsed 0.85 s.
+Guarded clean switching target passed CPU 0.00 s / elapsed 0.14 s. Shared target
+is TLS cache checkout. Full gates, source TLS stress and reuse suites remain CI work.
+
+PR #83 current CI `37719069685`: bench and both ARM regular/stress jobs pass;
+Linux and Intel regular/stress remain in progress. TLS evidence `37719202504`
+still runs, with Intel stress queued; do not count those statuses as passing.
+Next inspect protocol wire scratch/malloc/length preparation and connect cancellation:
+native tls.connect currently opens TCP before preparing ALPN/SSL and keeps no
+cleanup frame across fallible/cancellable handshake. Keep one PR open, with all
+six exact-head jobs required before squash. Phase 2 and later phases stay open.

@@ -479,3 +479,8 @@ Prepared service listener cleanup uses a stack frame across preparation and the
 cancellable accept loop. It releases the listener/context owner while accepted TLS
 sessions keep their own references; [cancellation evidence](ownership.md#prepared-service-listener-cancellation-cleanup)
 records actual scheduler and ALPN checks. Full sequential CI remains required.
+
+Prepared TLS client cache growth publishes completed entries and releases partial
+owners on allocation failure; prior entries remain usable. Service ALPN preparation
+handles strdup failure before context creation. [Allocation-failure evidence](ownership.md#prepared-tls-cache-partial-allocation-owners)
+records the focused probes; sequential CI and remaining TLS lifetime work are pending.

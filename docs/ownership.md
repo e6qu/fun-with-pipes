@@ -1489,3 +1489,20 @@ controls detect missing cleanup registration, descriptor close and context relea
 This is prepared support pending full sequential gates. Remaining TLS cache/name
 allocation failures and runtime lifetime/cycle gaps stay open; it adds no tracing
 or ownership claim beyond these paths.
+
+
+## Prepared TLS cache partial allocation owners
+
+Client-context cache publication now follows completed CA-name allocation and
+successful growth through a temporary pointer. Failure releases completed context
+and name owners, retains earlier cache entries and reports a TLS allocation error.
+Capacity arithmetic is checked. Service ALPN allocation failure is reported before
+creating a context. Successful TLS verification, caching and source syntax stay
+unchanged; this adds no global shutdown interface.
+
+Actual allocation failure controls cover strdup/realloc with empty and populated
+caches, identity of earlier entries, retry, idempotent cache teardown and service
+ALPN failure at O1/O2 with reuse poisoning. Omission controls detect context/name
+leaks, incomplete entries, lost cache and missing ALPN guard. Full sequential CI
+remains required. Protocol wire preparation, handshake cancellation, interpreter
+cache failure/shutdown, aggregate and cycle coverage remain open.
