@@ -436,3 +436,11 @@ partial-retain failures. FWP_FRAME_FIELDS=0 preserves the boxed control.
 Focused tests prove one versus zero parent boxes and safe dynamic nullary/scalar
 tags, without changing original parameter lifetimes. Sequential full CI, nested
 holders and shared/cycle audits remain open; this is not merged ARC support.
+
+A mixed-binding preparation initializes a variant pattern binding’s borrowed
+tag/payload from the current path before retaining it in the original frame.
+Choosing a frame representation from a let in another arm must not make the
+pattern use that arm’s C temporary. Descriptor audit proves one close through
+implicit disposal without explicit close or tracing. Full CI remains pending.
+Bare nominal match scrutinees that lose their type remain a separate cleanup
+gap; recovering context from pattern-bound locals is the next concrete repair.
