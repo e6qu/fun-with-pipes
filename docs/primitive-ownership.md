@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR100. Arrays, maps and sets own typed elements.
+The tables describe main through PR101. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -87,6 +87,13 @@ count overflow traps and side-entry allocation failure exits102. Interior
 references canonicalize to allocation starts. Explicit runtime sharing still
 promotes the complete reachable graph; traversal overflow preserves child
 counts while recursing. Large fanout no longer forces automatic sharing.
+
+Eligible counted storage reclaims at last release at any age. Returning a cell
+clears old marks; verification clears stale child words before linking the free
+slot. In-place record reuse/updates retain their young-cell restriction. Shared
+runtime graphs remain on tracing. PR101 passed all six production gates and the
+documentation audit; the tracing churn fixture explicitly disables both counted
+freeing and reuse so real collection remains tested.
 
 ## Selected String/Bytes boundaries
 
@@ -197,7 +204,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
 | 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
 | 25 | Runtime cleanup stack releases registered owners/scoped files before failure, trap or cancellation; task switching preserves cleanup scopes | Sequential CI; exactly-once/LIFO and handler boundaries; automatic owner registration remains later work |
 | 26 | Detached compiler reuse cells retain a cleanup lifetime; transfer clears holders, unused cells release lexically and on unwind | Sequential CI; old/young eligibility, flags and exceptional token paths |

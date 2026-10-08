@@ -11227,3 +11227,35 @@ under immutable revision before explicit-lease publication. TLS listener checks 
 Row57 guarded clean0.00/0.14s, native fake OpenCL API7.78/22.85s,
 clippy2.36/4.71s and format0.45/0.75s pass. These are ownership/failure
 contracts, not hardware throughput evidence. Full sequential gates remain required.
+
+Row58 guarded clean0.00/0.14s, native/raw interpreter fake OpenCL cleanup
+11.27/27.44s, clippy2.32/4.69s and format0.34/0.62s pass. Row60 refresh
+ac17bf61276c5f289b55d57e02439446c94700f9 has actual base99b769bff921.
+Row61 refresh044ceae9f0c53c5b633947ad27385e2350e8422a has actual
+baseac17bf61276c. Both match original compiler/runtime; original CURRENT60/61
+remain under immutable revision tags before explicit-lease publication. Checks follow.
+
+## PR101 old counted storage delivery
+
+All six production CI37969632273 jobs and roadmap_docs CI37969632440 pass
+at6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c. Explicit match-head squash
+merged PR101 at2026-10-09T18:45:45Z as da62127c92565d00c3116956e6a7f70ac735355e
+with the verified one-line subject
+`Reclaim old owned storage and preserve young reuse invariants`.
+Fresh ten-doc SHA256 snapshot/private/tmp/fwp-main-docs-pre101 was restored
+byte-for-byte after main fast-forward; raw commit message is exactly one line,
+under80 characters and without body/trailers/attribution. Compiler/runtime/tests/
+.github match the accepted PR head exactly. Next delivery is row24, FROM actual
+495411d ONTO actual squashda62127c, never from an immutable OLD parent.
+
+Duplicate post-merge main CI37975529386 was cancelled after all accepted PR101
+gates passed and source/runtime/tests/.github parity with actual squashda62127
+was verified. Cancellation is not acceptance. Row24 final source84c34acd0346
+rebases FROM actual495411d ONTO da62127. Compiler/runtime/tests match
+focused-accepted1741ab5; fresh production gates follow.
+
+PR102 publishes51cf1c6987888ddbe69fdeb79455208fb1eb077a after final source
+84c34acd0346 and current documentation publication. Row24 actual base is
+da62127c9256. Guarded portable audit0.31/2.49s passes all44 Markdown link
+sets,106 immutable pairs/tags, contiguous order and entire commit messages.
+No fresh local source gate is claimed; source matches focused-accepted1741ab5.

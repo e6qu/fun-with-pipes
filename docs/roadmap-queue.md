@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through22 are merged; queue23 is the next delivery.
+Updated 2026-10-09. Rows through23 are merged; queue24 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -45,7 +45,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
-| 24 | task-boundary | `ownership-task-boundaries` | `1741ab5fa64e` | `02beec353ec7` | `6774aa5bb426` |
+| 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
@@ -82,7 +82,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 58 | interpreter-opencl | `ownership-interpreter-opencl` | `a5ebb52578e3` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `99b769bff921` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `ac17bf61276c` | `07092cb06e1d` | `3f6154b4bf67` |
-| 61 | grpc-server | `ownership-grpc-server-cleanup` | `c299edbc33eb` | `0d5d3098e782` | `07092cb06e1d` |
+| 61 | grpc-server | `ownership-grpc-server-cleanup` | `044ceae9f0c5` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
 | 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |

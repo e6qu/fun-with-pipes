@@ -28,28 +28,24 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is eeef3b5d3f5386015c6dead55cc5da632f61d61d (#100). All six
-CI37961944703 production gates and roadmap_docs CI37961944952 pass at
-b5d658aa1a06391e106874bf2c3fc2b551f3a0ac. Explicit match-head squash at
-2026-10-09T17:45:46Z verifies the entire one-line message:
-`Own typed map and set elements across copies updates and callbacks`.
-#74–#100 deliver native macOS and selected ownership through typed repeat/range,
-zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native wide counts, arrays,
-maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
+Main is da62127c92565d00c3116956e6a7f70ac735355e (#101). All six
+CI37969632273 production gates and roadmap_docs CI37969632440 pass at
+6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c. Explicit match-head squash at
+2026-10-09T18:45:45Z verifies the entire one-line message:
+`Reclaim old owned storage and preserve young reuse invariants`.
+#74–#101 deliver native macOS and selected ownership through typed arrays,
+maps/sets and eligible old-storage reclamation. Phase1 is done; phase2 remains
+incomplete; phases3–6 are pending. Tracing remains the shared/runtime fallback.
 
-PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
-Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
-base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
-and CI37969632440 (roadmap_docs) are current production gates. roadmap_docs, bench, regular ARM macOS and both
-GC stress jobs and Linux pass; regular Intel macOS runs. All six are required. Compiler/runtime/tests match
-focused-accepted495411d33f60 exactly. The final publication records the merged
-map/set contracts and inherits the portable roadmap audit. Require all six
-production jobs and roadmap_docs at this exact head before squash with
-`Reclaim old owned storage and preserve young reuse invariants` and empty body.
-Superseded PR100 runs37958351622/37959781379/37960281416 are cancelled,
-not acceptance. Initial PR101 CI37968881919 is superseded and cancelled;
-its documentation check passed at the old head, not the current head. Row24 has actual current base495411d, so final-rebase FROM
-that base ONTO the actual PR101 squash after it merges. OLD anchors stay fixed.
+PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
+Current head51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
+ da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
+focused-accepted1741ab5fa64e exactly. Require six production jobs and
+roadmap_docs at this exact head before explicit squash with
+`Own task result wrappers and preserve typed deadline aliases` and empty body.
+Row25 actual current base remains1741ab5; final-rebase it only after the actual
+row24 squash exists. OLD anchors stay fixed. Superseded PR101 CI37968881919
+and duplicate post-merge main CI37975529386 are cancelled, not acceptance.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -68,7 +64,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | PR101 full CI follows; source matches focused-accepted495411d |
-| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
+| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Source matches focused-accepted1741ab5; final full CI follows |
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
@@ -102,10 +98,10 @@ still need their final squash rebases and six exact-head full gates.
 | 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
 | 56 ownership-library-unload | ac6de597fddc | 625ac7793f84 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
 | 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
-| 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API native/interpreter failure cleanup checks follow |
+| 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Focused checks follow; compiler/runtime unchanged |
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Focused checks follow; compiler/runtime unchanged |
-| 61 ownership-grpc-server-cleanup | c299edbc33eb | d56a24e48d7e | 12.59 / 28.85 s |
+| 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Fresh focused checks follow; compiler/runtime unchanged |
 | 62 ownership-tls-cache-failures | 0be508308064 | c299edbc33eb | 11.21 / 26.06 s |
 | 63 ownership-tls-wire-preparation | 66e80d399e65 | 0be508308064 | 11.65 / 26.15 s |
 | 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
@@ -159,15 +155,14 @@ still need their final squash rebases and six exact-head full gates.
 | 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–22 are merged. Row23 source is unchanged from focused Linux
-acceptance and is now in PR101 on actual main. Detailed commands, full hashes,
+heads; rows18–23 are merged. Row24 is the next focused delivery. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row24 actual base is still495411d, rather than
-the newer final PR101 head; final-rebase it only after the actual squash exists.
+inherited CLI/GC harness fixes. Row25 actual base is still1741ab5, rather than a future final row24 head;
+final-rebase it only after that actual squash exists.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
@@ -259,7 +254,7 @@ Stop if limits are crossed; move checks to GitHub without bypassing the guard,
 including for package clean. Earlier refusal/recovery chronology is in history.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.35CPU/2.66elapsed). It caught a status update
+and entire commit messages (latest0.31CPU/2.49elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
@@ -273,6 +268,6 @@ Preserve all ten current root docs before fast-forward/rebase conflict resolutio
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. The portable auditor is tracked on main.
-Latest ten-doc snapshot is /private/tmp/fwp-main-docs-pre100; refresh all ten
+Latest ten-doc snapshot is /private/tmp/fwp-main-docs-pre101; refresh all ten
 immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.
