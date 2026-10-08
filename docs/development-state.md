@@ -309,9 +309,20 @@ opt::tests filter ran zero tests and is not acceptance evidence. All compiler
 edits were copied/byte-verified into the separate frame checkout before restoring
 the discard checkout's tracked files; its untracked audit remained preserved.
 
-Publish frames separately without another PR, then rebase the dirty File-discard
-checkout from 06419f4 onto its published head and connect native typed File
-ownership. The region direction and required flags/escape/error/cancellation
+Published original `dcc5bbac318f567bf952bb72ab280d3ab75bca11` with verified
+one-line subject and empty body, no extra PR. Dirty File-discard was preserved
+through stash/rebase/pop from 06419f4 onto dcc5bba; its untracked four-test audit
+remains, with the native 32-descriptor case still the known failing target.
+
+Follow-up in the frame checkout: pure source arrows can still own File frames,
+so fusion must treat ResourceRegion as observable rather than derive only its
+body's trap set. A controlled map/length pipeline fuses when the region is removed
+and remains unfused with the region, preserving cleanup boundaries. Three
+resource unit checks now pass CPU 3.64 s / 7.52 s; repeated three frame checks
+CPU 12.80 s / 25.86 s; format CPU 0.46 s / 0.85 s. Publish this focused correction
+on the frame branch, preserving dcc5bba as immutable OLD. Then rebase dirty
+File-discard from dcc5bba onto the corrected current frame head before connecting
+native typed File ownership. The region direction and required flags/escape/error/cancellation
 acceptance are durable in ownership.md. Required disposal must work without GC
 and with FWP_REUSE=0/FWP_FREE=0; supported WASM needs a count representation
 independent of native GC slots. Preserve the four-descriptor parameter trap while

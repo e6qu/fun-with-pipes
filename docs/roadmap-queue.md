@@ -93,6 +93,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 70 | file-construction | `ownership-file-construction` | `e9d575fdf990` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `06419f4c5989` | `06419f4c5989` | `5ac710398a14` |
+| 73 | resource-frames | `ownership-resource-frames` | `dcc5bbac318f` | `dcc5bbac318f` | `06419f4c5989` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

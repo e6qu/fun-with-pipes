@@ -348,3 +348,8 @@ ownership is the next required implementation step. This is not delivered
 ARC coverage. Validate raw and optimized interpreter/native behavior, escapes,
 errors, cancellation and optional flags before accepting general disposal. Keep
 tracing available until complete ownership and cycle acceptance is demonstrated.
+
+Fusion treats resource regions as observable even when their original source
+arrows are pure. A controlled pipeline verifies fusion is blocked specifically
+by its frame marker; removing the marker permits fusion. Required destructor
+effects cannot be interleaved solely because the body reports no trap/effect.
