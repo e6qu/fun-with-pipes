@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-08 10:00 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
+Updated 2026-10-08 10:34 UTC. Read [PLAN](../PLAN.md), [ownership](ownership.md)
 and the relevant [design](design.md) before code changes. This file is current
 operational state. [Preparation queue](roadmap-queue.md) records immutable rebase
 anchors; [history](roadmap-history.md) preserves detailed earlier evidence.
@@ -36,16 +36,16 @@ Queued, skipped, cancelled, superseded or earlier-head runs are not passing gate
 
 ## Merged support
 
-Current main: `49f91081113156c69e87e966dd7ef055ceeb1432`, squash #88.
-ALL SIX jobs passed in CI `37750832622` at exact
-`42cf518f2ec52dd86344f9393fbe20f4a492ac00`. Verified one-line subject
-`Own selected list prefixes and borrowed callback suffixes`, empty body.
-Root fast-forward preserved six current docs in `/private/tmp/fwp-main-docs-pre88`.
-Previous #87 squash `eae33c4` passed ALL SIX CI `37743989274`.
+Current main: `dbdaee4448d4ccd62720f04d3f866d429db800aa`, squash #89,
+merged 2026-10-08 10:33:05 UTC. ALL SIX CI 37758597151 jobs passed at exact
+`bcdfb163c565b6275be4c36389e7c226882fb319`. Whole commit message verified:
+`Own typed list copies and retain borrowed suffix references`, one line, empty body.
+Root fast-forward preserved all six live docs in /private/tmp/fwp-main-docs-pre89.
+Previous #88 squash 49f9108 passed ALL SIX CI 37750832622.
 
-#74–#88 deliver native macOS ARM/Intel, container ownership contracts, owned
+#74–#89 deliver native macOS ARM/Intel, container ownership contracts, owned
 text/byte leaves and fresh text trees, compiled closures and cleanup, concrete
-argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip, right-fold and list-prefix ownership.
+argument temporaries, owned stack children, borrowed callbacks, map, filter, fold, zip, right-fold, list-prefix and list-copy ownership.
 Full earlier hashes/runs, measurements and delivered language features remain in
 [history](roadmap-history.md). Phase 1 is complete; phase 2 is incomplete;
 phases 3–6 (numeric representation, numerics/autodiff, broader evidence and
@@ -82,11 +82,13 @@ CPU 21.03 s / elapsed 42.42 s. Clippy lib/four fixtures passed 2.20 s / 4.44 s;
 real inventory one lib test passed 3.02 s / 6.43 s. Formatting initially failed
 on the corrected oracle expressions; formatted and rechecked successfully,
 CPU 0.36 s / 0.51 s. Commands use the documented fwp local guard.
-Sole PR #89 is open at `bcdfb163c565b6275be4c36389e7c226882fb319`;
-CI `37758597151` runs at that exact head: bench passed; Linux and Intel regular
-run, other platform gates were queued at the last check. Full six exact-head gates
-remain required. No queued gate counts as passing. Next after its squash: list-option, rebasing from immutable
-OLD list-copy bb00baa4 onto the actual new squash. Keep failures as repair tasks.
+List-copy #89 has merged after all six current-head gates passed. Its immutable
+OLD anchor remains bb00baa4ab9577ed785e5cb2f3280c9d6697dde6.
+Next: list-option, branch ownership-list-options, checkout
+/private/tmp/fwp-list-option-worktree, OLD head 34023f35a42f9f686b6919307d83e17fd4ed7263.
+Rebase from immutable OLD list-copy bb00baa4 onto actual #89 squash dbdaee4,
+replace stale docs with current root copies, correct raw interpreter oracles,
+then run focused checks and publish the sole next PR. No PR currently open.
 
 In parallel preparation, `/private/tmp/fwp-file-runtime-owners-worktree`, branch
 `ownership-file-runtime-owners`, is published clean as `e21c92ea2f6c7bdfcf881d05e485f57683df0b85` atop resource-frame preparation
@@ -662,3 +664,73 @@ final test refactor 0.06 s / 0.26 s; fmt 0.46 s / 0.87 s. Full runner WASI matri
 now covers both freeing modes, aggregates and cached task/channel owners with
 omission controls. Publish this preparation after rebasing onto corrected actual
 queue 77 c889479, then add it to the separate full runner evidence. No extra PR.
+
+
+Required early WASI/host/File stage passed on repaired evidence 37760170473 at
+1d6a5d6, including actual WASI O1/O2 omitted-count failure and positive last-owner
+closure. This is focused platform evidence, not six full gates. The run was
+superseded/cancelled after adding the disabled-free repair; no full-pass claim.
+
+Queue 78 is published clean as `681dd55136b030866c28afb227f222503c21113b`,
+parent actual corrected queue 77 `c889479eed7aba4967b2e5f87d7a368193b18be9`.
+Rebase completed cleanly; final guarded focused host matrix passes CPU 9.54 s /
+elapsed 19.95 s, real WASI explicitly skipped locally. Whole subject is one line,
+empty body. Combined runner evidence head is
+`e9f31a94e018d399fc4ae5ef583abee7780cfb0c`, CI `37760628633`, queued/live without
+accepted results yet. Both freeing modes and actual cached task/channel cleanup
+now run under mandatory WASI; fix any failures. Evidence formatting passes
+0.47 s / 0.87 s. No additional PR exists.
+
+Current operations: root main remains 49f9108 with only six live doc edits, all
+ours; preserve them before the next main fast-forward. Sole PR #89 remains
+bcdfb163 at CI 37758597151; all five remaining gates must pass before squash.
+Shared compiler target belongs to /private/tmp/fwp-wasm-disposal-worktree; no
+local workload is running. Keep every immutable queue anchor, especially OLD
+prefix 376e77ae, OLD list-copy bb00baa4 and OLD WASM counts 046f7e8.
+
+Next independent audit: unknown/shared runtime graphs and retained callback
+resource aliases, then remove original resource aggregate-holder boxes and
+reclaim File header/path storage without leaving stale library finalizers.
+Current File last-drop closes only the stream; native library finalizer entries
+still retain headers. Do not add immediate storage reclamation until unregister/
+finalization and partial-construction unwind are proven safe. After #89 squash,
+rebase list-option from OLD bb00baa4 onto the actual new main and publish the
+sole next PR. Phase 2 remains incomplete; preserve the subsequent phase order.
+
+
+Required combined WASI stage passes on evidence e9f31a9 / CI 37760628633:
+O1/O2, both freeing modes, File aggregates and cached Task/Channel owners,
+positive cleanup and original-count/aggregate-disposal/runtime-disposal omission
+controls. The separate full run remains live; only bench full gate passed at the
+last check. Sequential production gates remain mandatory for each preparation.
+
+Original record-frame optimization is implemented in ownership-resource-frame-fields,
+checkout /private/tmp/fwp-resource-frame-fields-worktree, parent actual 681dd55.
+Original frame contexts retain counted fields only when a binding is eligible
+for unboxing; ordinary boxed records keep one parent retain. The compiler-only
+FWP_FRAME_FIELDS=0 comparison restores boxed holders. No surface syntax changes.
+Raw typed IR and equivalent generated C show exactly one record box in the
+control versus zero with fields at O1/O2, GC on/off and both poison modes.
+The existing source control was already unboxed and could not prove the change;
+the fixture was corrected to exercise an actual original record binding. Invalid
+initial recursive source duplicated affine File input; the final valid source
+uses a sequential read-all pipeline and matches explicit FWP_NO_OPT=1 output.
+
+Six focused frame/holder/runtime/discard tests pass under the guard CPU 37.15 s /
+elapsed 74.45 s after narrowing eligibility. A new File/String partial-retain
+probe traps before the second field retain, verifies one stream close, EBADF,
+empty unwind chain and reclaimed String; omitting owner drops restores exit 2.
+The first poison observation incorrectly demanded a zero count; the runtime's
+poisoned String payload is the correct dead-state check. Final allocation/source/
+IR/unwind matrix passes CPU 3.01 s / elapsed 7.33 s. Clippy lib/four fixtures
+passes 2.49 s / 5.03 s; format 0.46 s / 0.87 s; inventory one actual test
+3.77 s / 7.96 s. No elapsed-time speed or complete unboxed-aggregate claim.
+Publish the focused preparation without another PR; full runner evidence follows.
+Original resource variants/nested holders and header/path reclamation remain.
+
+Current main is dbdaee4 with six live doc edits, all ours. No local workload
+runs; shared compiler target belongs to /private/tmp/fwp-resource-frame-fields-worktree.
+Next sequential publication is list-option, rebased from OLD bb00baa4; preserve
+that anchor. Unknown/shared resource graphs, retained callbacks/cycles, original
+variant/nested holders and safe File header/path finalizer removal remain phase 2
+audits. Failing tests are repair work, never roadmap blockers.
