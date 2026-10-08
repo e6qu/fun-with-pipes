@@ -10,7 +10,7 @@ fn checked(command: &mut Command) -> Output {
     );
     out
 }
-fn probe() -> (fwp::cgen::TempDir, String, String) {
+fn probe(free: &str) -> (fwp::cgen::TempDir, String, String) {
     let dir = fwp::cgen::TempDir::new("fwp-wasm-resource-counts").unwrap();
     let src = dir.join("probe.fwp");
     std::fs::write(
@@ -26,6 +26,7 @@ main = "unused" | flip file.with other | ignore
     checked(
         Command::new(env!("CARGO_BIN_EXE_fwp"))
             .arg("build")
+            .env("FWP_FREE", free)
             .arg(&src)
             .args(["--emit-c", "-o"])
             .arg(&emitted),
@@ -94,7 +95,7 @@ int main(int argc,char **argv) {
 }
 #[test]
 fn bump_heap_aggregate_counts_release_file_children() {
-    let (dir, generated, fixture) = probe();
+    let (dir, generated, fixture) = probe("1");
     let old = generated.replace(
         "#define FWP_RESOURCE_OWNERS 1",
         "#undef FWP_RESOURCE_OWNERS",
@@ -141,35 +142,104 @@ fn wasi_aggregate_counts_release_file_children() {
         eprintln!("skipping actual WASI evidence: toolchain unavailable");
         return;
     }
-    let (dir, generated, fixture) = probe();
-    let old = generated.replace(
-        "#define FWP_RESOURCE_OWNERS 1",
-        "#undef FWP_RESOURCE_OWNERS",
-    );
-    std::fs::write(dir.join("data"), "contents").unwrap();
-    let wasm = dir.join("probe.wasm");
-    let runner = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs");
-    for opt in ["-O1", "-O2"] {
-        for (code, expected) in [(&old, 4), (&generated, 0)] {
-            fwp::cgen::compile_for(
-                &format!("{code}\n{fixture}"),
-                &wasm,
-                opt,
-                fwp::cgen::Target::Wasi,
-            )
-            .unwrap();
-            let out = Command::new("node")
-                .arg("--no-warnings")
-                .arg(&runner)
-                .arg(&wasm)
-                .arg("data")
-                .current_dir(dir.path())
-                .output()
+    for free in ["1", "0"] {
+        let (dir, generated, fixture) = probe(free);
+        let fixture = if free == "0" {
+            runtime_owners(fixture)
+        } else {
+            fixture
+        };
+        let old = generated.replace(
+            "#define FWP_RESOURCE_OWNERS 1",
+            "#undef FWP_RESOURCE_OWNERS",
+        );
+        std::fs::write(dir.join("data"), "contents").unwrap();
+        let wasm = dir.join("probe.wasm");
+        let runner =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/wasm/wasi-run.mjs");
+        let omitted = generated.replace("fwp_rc_resource_free_obj(v);", "fwp_rc_drop(v);");
+        let omitted_runtime =
+            generated.replace("fwp_rc_resource_free_arr(value);", "fwp_rc_drop(value);");
+        let cases = if free == "0" {
+            vec![(&omitted, 5), (&omitted_runtime, 9), (&generated, 0)]
+        } else {
+            vec![(&old, 4), (&generated, 0)]
+        };
+        for opt in ["-O1", "-O2"] {
+            for &(code, expected) in &cases {
+                fwp::cgen::compile_for(
+                    &format!("{code}\n{fixture}"),
+                    &wasm,
+                    opt,
+                    fwp::cgen::Target::Wasi,
+                )
                 .unwrap();
+                let out = Command::new("node")
+                    .arg("--no-warnings")
+                    .arg(&runner)
+                    .arg(&wasm)
+                    .arg("data")
+                    .current_dir(dir.path())
+                    .output()
+                    .unwrap();
+                assert_eq!(
+                    out.status.code(),
+                    Some(expected),
+                    "{opt}, WASI, free {free}: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+        }
+    }
+}
+
+fn runtime_owners(fixture: String) -> String {
+    let owners = r#"
+ V h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);
+ fwp_file *file=(fwp_file *)(uintptr_t)h;int fd=fileno(file->f);
+ fwp_task *task=(fwp_task *)fwp_mem_alloc(sizeof *task);
+ task->done=1;task->counted=1;task->has_result=1;task->result=h;task->result_drop=fwp_file_drop;
+ V cached=fwp_rc_fresh(PTR(task));fwp_rc_dup(cached);fwp_task_drop(cached);
+ if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 9;
+ fwp_task_drop(cached);
+ if(file->refs||fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 9;
+ h=fwp_p_file_open(fwp_cstr(argv[1]),0,0);file=(fwp_file *)(uintptr_t)h;fd=fileno(file->f);
+ V channel=fwp_p_channel_make_owned(1,fwp_file_drop,fwp_file_dup);
+ fwp_chan *c=(fwp_chan *)(uintptr_t)channel;
+ fwp_chan_grow(c);c->buf[0]=h;c->len=1;
+ fwp_rc_dup(channel);fwp_channel_drop(channel);
+ if(file->refs!=1||fstat(fd,&descriptor_status)==-1)return 10;
+ fwp_channel_drop(channel);
+ if(file->refs||fstat(fd,&descriptor_status)!=-1||fwp_wasm_counts_live)return 10;
+"#;
+    fixture.replace(
+        " /* Pointer-shaped",
+        &format!("{owners}\n /* Pointer-shaped"),
+    )
+}
+
+#[test]
+fn disabled_free_disposes_resource_counts_without_freeing_bump_storage() {
+    let (dir, generated, fixture) = probe("0");
+    let fixture = runtime_owners(fixture);
+    assert!(generated.contains("#define FWP_RESOURCE_NO_FREE 1"));
+    let data = dir.join("data");
+    std::fs::write(&data, "contents").unwrap();
+    let exe = dir.join("probe");
+    let omitted = generated.replace("fwp_rc_resource_free_obj(v);", "fwp_rc_drop(v);");
+    assert_ne!(omitted, generated);
+    let omitted_runtime =
+        generated.replace("fwp_rc_resource_free_arr(value);", "fwp_rc_drop(value);");
+    assert_ne!(omitted_runtime, generated);
+    for opt in ["-O1", "-O2"] {
+        for (code, expected) in [(&omitted, 5), (&omitted_runtime, 9), (&generated, 0)] {
+            fwp::cgen::compile_c(&format!("#define __wasm__ 1\n{code}\n{fixture}"), &exe, opt)
+                .unwrap();
+            let out = Command::new(&exe).arg(&data).output().unwrap();
             assert_eq!(
                 out.status.code(),
                 Some(expected),
-                "{opt}, WASI: {}",
+                "{opt}: {}",
                 String::from_utf8_lossy(&out.stderr)
             );
         }
