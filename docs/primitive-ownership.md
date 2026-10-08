@@ -159,7 +159,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
 | 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
 | 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
@@ -197,6 +196,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Sequential CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
 | 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Sequential CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
 | 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Sequential CI; conversion failure, nullable pointers, cached calls and host lifetimes |
+| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Sequential CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
@@ -229,3 +229,8 @@ hardware settings are preserved in
 They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Dead projected fields, retained callbacks, exception/cancellation,
 unknown runtime boundaries and cycle policy remain part of phase2 acceptance.
+
+Main through PR #95 also borrows scan/iterate callbacks and inputs, owns
+initial stored aliases and adopts subsequent callback results; scratch
+storage is released after the state sequence is built. Exceptional lifetime
+extensions remain prepared work.

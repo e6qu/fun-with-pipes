@@ -8434,3 +8434,66 @@ variables here does not establish library tracing coverage.
 Export-result lint with its integration target and -D warnings passes
 2.28 s CPU /4.61 s elapsed; fmt check0.34 /0.60 s. Nine current docs copied
 before final amend; tested source unchanged.
+Final library-results82f32b2cde036be328c769e5dcdee701ea67713a is clean
+on actual baseccbf295, published with exact lease against OLD5b34382.
+Whole subject verified one line, empty body; no second PR. Row55 actual base
+remains OLD5b34382 until its own rebase; immutable queue anchors unchanged.
+
+## Scan and iterate delivery, 2026-10-09
+
+PR95 exact5d0a3f302e476dfada1b3ea71aa56dae4086d905 passes all six
+CI37901758334 gates: Linux, bench, regular ARM/Intel macOS and dedicated
+ARM/Intel GC stress. Explicit match-head squash merged2026-10-09T09:03:35Z
+as60e5d6216d0f01306b457f65c00807df7d932cb1. Whole message verified
+exactly one line: `Own scan and iterate states while borrowing synchronous callbacks`.
+All nine root docs saved in /private/tmp/fwp-main-docs-pre95 before main
+fast-forward from1358267, then restored; current preparations preserved.
+Next delivery row18 uses ACTUAL current base15743b8, not rewritten row17
+head5d0a3f3 or immutable OLD0a90b05.
+
+Final row18 loop delivery rebase from ACTUAL15743b853d6a190a53ea4a95532eb9845b4c685a
+onto actual PR95 squash60e5d6216d0f01306b457f65c00807df7d932cb1
+resolves doc conflicts with all nine authoritative root files. The old
+doc-only consolidation follow-up becomes empty, retaining its immutable
+anchor in queue/history. Source/runtime/tests/workflows exactly match
+verified112f3c8. Four raw source oracles retain FWP_NO_OPT=1. Guarded
+clean0.00 /0.13 s; final five loop ownership checks started.
+Final guarded cargo test --test loop_ownership passes all five tests
+18.66 s CPU /37.70 s elapsed. Generic/specialized/flattened/nested loops
+transfer owned current states and selected Step payloads, release typed
+Step/ABI wrappers, preserve caller aliases and scalar address-shaped bits.
+Raw agreement, loop goldens and O1/O2 stress/verification/poison pass, with
+focused fused-consumer and callback GC-off reclamation checks. Broader
+exceptional loop cleanup remains in later preparations.
+Final exact ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts
+passes one test (48 filtered)3.15 s CPU /6.61 s elapsed. Final loop lint
+passes2.30 /4.69 s; fmt check0.33 /0.60 s. Source/runtime/tests/workflows
+still match112f3c8 exactly. Nine current docs copied before final amend;
+no open PR before publishing the next sole delivery.
+Final loop head03d25acc581a69c1a16f0add88e4768777072683 is clean on actual
+main60e5d62, published with exact lease against112f3c8. Whole message
+verified one line, empty body; source/runtime/tests/workflows unchanged.
+Sole PR96 https://github.com/e6qu/fun-with-pipes/pull/96 created with focused
+validation and full gate requirements. Row19 ACTUAL current base remains
+112f3c8; immutable OLDc05a5d9/parent787763d anchors remain unchanged.
+
+Row55 C input rebase from ACTUAL5b34382167da90d5677943d3ca617bf0e6a5924c
+onto actual row54 head82f32b2cde036be328c769e5dcdee701ea67713a resolves
+doc conflicts with nine authoritative files after PR96 publication. Current
+reference marks input ownership and missing-length Bytes rejection as
+prepared; foreign-call convention stays unchanged. Direct typed-IR interpreter
+checks bypass optimization. Input/result checks started.
+PR96 CI37909273494 is queued at exact03d25acc581a69c1a16f0add88e4768777072683;
+a queued run is not a passing gate. Row55 guarded clean0.00 /0.13 s.
+Guarded cargo test --test library_input_ownership --test library_result_ownership
+passes all three tests9.42 s CPU /22.58 s elapsed. Copied C string/record
+inputs transfer or release exactly once; partial argument/field conversion,
+null/invalid UTF8, allocation failure and callee traps clean earlier owners.
+Scalar/raw-pointer values retain their external lifetime; exported aliases
+keep library string storage. Direct typed-IR values, O1/O2 poison and four
+omission controls pass alongside result conversion regressions. Bytes export
+parameters report missing ABI length while ordinary foreign signatures remain
+accepted. Library GC stays unarmed; these are ownership/cleanup checks.
+C input/result lint with both targets and -D warnings passes2.54 s CPU
+/4.95 s elapsed; fmt check0.45 /0.83 s. Nine current docs copied before
+final amend; tested source unchanged.

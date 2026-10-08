@@ -289,6 +289,10 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
   and remain valid while the library is loaded; the host must not free them.
   Scalar/struct results are copied into C values. A nullable pointer copies the
   raw pointer; the pointee follows its own allocation/lifetime contract.
+  Prepared C input ownership copies strings and `repr(C)` records into owned
+  language values. Prepared export validation rejects `Bytes` parameters,
+  because the byte pointer ABI carries no length; foreign calls keep their
+  existing convention. See [the handoff](development-state.md) for delivery status.
 
 ## The `fwp` command
 

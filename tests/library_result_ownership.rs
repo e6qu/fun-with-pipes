@@ -197,8 +197,8 @@ int main(void) {
         let missing_drop = observed.replace("owner.value = result; fwp_value_release(&owner);", "");
         let missing_share = observed.replace("    fwp_rc_share(result);\n", "");
         let extra_evaluation = observed.replace(
-            "    V result = f1((V)(uintptr_t)(a0));",
-            "    V result = f1((V)(uintptr_t)(a0)); (void)f1((V)(uintptr_t)(a0));",
+            "    V result = f1(input_arg0);",
+            "    V result = f1(input_arg0); (void)f1(input_arg0);",
         );
         let bad_start = observed.find("struct fwp_c_Text bad(int64_t a0)").unwrap();
         let mut missing_guard = observed.clone();
