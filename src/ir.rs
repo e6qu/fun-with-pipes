@@ -141,6 +141,13 @@ pub enum Expr {
     /// Copy of a record with some fields replaced.
     SetFields(Box<Expr>, Vec<(u32, Expr)>),
     Let(Local, Box<Expr>, Box<Expr>),
+    /// Original resource frame, recorded before optimization. Parameters and
+    /// initialized bindings remain owners until this body returns or fails.
+    ResourceRegion {
+        parameters: Vec<Local>,
+        bindings: Vec<Local>,
+        body: Box<Expr>,
+    },
     /// First matching arm wins; patterns bind locals.
     Match(Box<Expr>, Vec<(Pat, Expr)>),
     /// One more reference to the value of a local, then the expression
@@ -300,7 +307,7 @@ pub fn type_of<'a>(
 ) -> Option<MT> {
     let type_of = |e| type_of(func, shapes, locals, e);
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) => type_of(b),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => type_of(b),
         Expr::Local(l) => locals.get(*l as usize).cloned(),
         Expr::Func(id) => Some(func(*id).clone()),
         Expr::Call(id, a) => Some(func(*id).params(a.len()).1.clone()),
@@ -411,6 +418,26 @@ fn check_expr<'a>(
         _ => Ok(()),
     };
     match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => {
+            let mut seen = std::collections::HashSet::new();
+            for l in parameters.iter().chain(bindings) {
+                has(*l)?;
+                if !seen.insert(*l) {
+                    return Err(format!("duplicate resource owner local {}", l));
+                }
+                if !crate::resource::contains_file(shapes, &locals[*l as usize]) {
+                    return Err(format!(
+                        "resource owner local {} has nonresource type {}",
+                        l, locals[*l as usize]
+                    ));
+                }
+            }
+            check_expr(func, shapes, locals, body)
+        }
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             has(*l)?;
             check_expr(func, shapes, locals, b)
