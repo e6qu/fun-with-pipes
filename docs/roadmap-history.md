@@ -8543,3 +8543,26 @@ This verifies API ownership, not hardware GPU/kernel execution.
 Native OpenCL lint with both targets and -D warnings passes2.44 s CPU
 /4.93 s elapsed; fmt check0.35 /0.75 s. Nine current docs copied before
 final amend; tested source unchanged.
+Final native-OpenCL5b6e65f365d6befce32e96665f62dbbd4625dece is clean
+on actual base878b25a, published with exact lease against OLDd8b4d88.
+Whole subject verified one line, empty body; no second PR. Row58 actual base
+remains OLDd8b4d88 until its own rebase; immutable queue anchors unchanged.
+
+Row58 interpreter OpenCL rebase from ACTUALd8b4d88da98d91183577a71dd65d2d17a375e7d6
+onto actual row57 head5b6e65f365d6befce32e96665f62dbbd4625dece resolves
+only doc conflicts with nine authoritative files. Source interpreter and
+native availability probes both set FWP_NO_OPT=1. Rust staged library/GPU
+owners clean failed initialization before caching diagnostics; successful
+interpreter GPU cache intentionally remains process-lived. Combined fake
+API/native/interpreter lifetime and related library-unload checks started.
+Row58 guarded clean passes0.00 s CPU /0.13 s elapsed.
+Guarded cargo test --test opencl_lifetime --test library_unload passes
+both tests14.19 s CPU /34.79 s elapsed. Fake API failure modes compare
+raw native and interpreter stdout/stderr with cleanup before cached
+availability diagnostics; staged Rust owners release partial library/context/
+queue construction. O1/O2 native cleanup controls and actual loader/static
+unload regression pass. Successful interpreter GPU cache stays process-lived;
+no real-device/kernel claim is made.
+Interpreter OpenCL lint with both targets and -D warnings passes2.48 s CPU
+/4.84 s elapsed; fmt check0.45 /0.62 s. Nine current docs copied before
+final amend; tested source unchanged.
