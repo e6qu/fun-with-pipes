@@ -159,7 +159,7 @@ still need their final squash rebases and six exact-head full gates.
 | 76 ownership-file-runtime-boundaries | 4c6618c4eb91 | f7b57915dd7a | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
 | 77 ownership-wasm-resource-counts | 8d4ba07d6def | 4c6618c4eb91 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | e037bc5a06dc | 8d4ba07d6def | Actual WASI gates required; source unchanged except inherited harness repairs |
-| 79 ownership-resource-frame-fields | 76374abb1077 | 1a5f5ba98a32 | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
+| 79 ownership-resource-frame-fields | d6eabb576bd2 | e037bc5a06dc | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
 | 80 ownership-file-inline-path | 8454a97667bb | 76374abb1077 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 47abf911f844 | d39b6145cb55 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
