@@ -37,33 +37,28 @@ superseded or earlier-head runs are not passing gates.
 
 ## Delivered and current PR
 
-Main is dbdaee4448d4ccd62720f04d3f866d429db800aa, squash #89,
-merged 2026-10-08 10:33:05 UTC after ALL SIX CI37758597151 gates at
-bcdfb163c565b6275be4c36389e7c226882fb319. Whole message verified:
-`Own typed list copies and retain borrowed suffix references`, empty body.
-#74–#89 deliver native macOS ARM/Intel, primitive contracts, owned leaves/text,
-compiled closure ownership/cleanup, concrete temporaries, stack children,
-borrowed callbacks, map/filter/fold/zip/right-fold/prefix/list-copy ownership.
+Main is cca99c07c4c35c37bcdcb19549e4027abfdcae24, squash #90.
+All six CI37765137522 gates passed at exact
+8e6a891eadfaa500c5114ce6d598fe0c2bf66731 before merging. Whole message verified:
+`Own optional list aliases and borrow synchronous find predicates`, empty body.
+#74–#90 deliver native macOS and ownership through optional list results.
 Phase1 is done; phase2 is incomplete; phases3–6 remain pending.
 
-Sole open PR [#90](https://github.com/e6qu/fun-with-pipes/pull/90):
-ownership-list-options at 8e6a891eadfaa500c5114ce6d598fe0c2bf66731,
-checkout /private/tmp/fwp-list-option-worktree. Full CI37765137522:
-benchmark, Linux full test and ARM regular macOS pass; three gates pending at last poll.
-Seven focused tests pass CPU23.21 s / elapsed46.79 s; clippy lib/four fixtures
-2.41 s / 4.92 s; real inventory one test3.30 s / 6.89 s; fmt0.35 s / 0.74 s.
-Both oracles explicitly use FWP_NO_OPT=1. Prepared ownership of nth/find/index-of
-results needs its current-head full gate. No additional PR is open.
-
-After all six pass, squash #90 with subject
-`Own optional list aliases and borrow synchronous find predicates`, empty body.
-Preserve all SEVEN live root docs before fast-forwarding main:
-PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
-docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md.
-Then rebase inference-call-effects (/private/tmp/fwp-inference-worktree)
-from immutable OLD list-option34023f35a42f9f686b6919307d83e17fd4ed7263
-onto the actual new squash. Resolve prepared doc snapshots using current root
-copies while retaining each new contract. Test, publish and open its focused PR.
+Next delivery: inference-call-effects (/private/tmp/fwp-inference-worktree),
+rebased from immutable OLD list-option34023f35a42f9f686b6919307d83e17fd4ed7263
+onto actual squash cca99c0. Focused cargo test --test call_effects: four pass,
+CPU17.05 s /elapsed34.05 s. Native comparison rerun with explicit FWP_NO_OPT=1:
+one passes1.72 s /3.50 s. Clippy lib/fixture2.36 s /4.69 s, fmt0.34 s /0.59 s.
+All commands used env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
+/Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo ... .
+Sole open PR #91: https://github.com/e6qu/fun-with-pipes/pull/91
+exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 queued.
+All six exact-head gates are required before squash.
+Shared target switched from inference to variant checkout after guarded cargo
+clean -p fwp (0.00 s /0.13 s). No local workload is active.
+Seven live docs were preserved in /private/tmp/fwp-main-docs-pre90 before
+fast-forwarding main. Failing tests are mandatory repair work, never a roadmap
+blocker; CI gates merging while implementation and preparation continue.
 
 ## Full evidence and actual repairs
 
@@ -75,9 +70,9 @@ Evidence workflows never enter production ancestry.
 
 Current separate WASM evidence checkout /private/tmp/fwp-wasm-evidence-worktree,
 branch ownership-evidence-wasm-resources, published
-74a6e3fe7c748b69f43c5930160d54e51f4871fa. Full CI37766917931 is live:
-Linux and ARM regular/Intel GC are live; benchmark passes; Intel regular and
-ARM GC remain queued at last poll.
+5fd2ed65385a23f3226b2bef02eb10196f51aeb4. Fresh full CI37771769436 is running; its required WASI/File regressions pass. Full acceptance remains pending.
+Previous74a6e3f /CI37766917931 failed Linux constructor omission control;
+its concrete repair is verified/published and cancellation requested.
 Mandatory early Linux stage requires actual WASI resource-count tests including
 both free modes, FilePair, cached Task/Channel disposal and omission controls;
 File runtime boundaries/discard and file_read_kinds run there too.
@@ -143,7 +138,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to that other repository; do not use it for fwp.
-Current shared compiler target belongs to /private/tmp/fwp-file-storage-disposal-worktree.
+Current shared compiler target belongs to /private/tmp/fwp-wasm-evidence-worktree.
 Guarded cargo clean -p fwp before switching checkout. All local checks above
 used this guard; no active workload remains at last handoff.
 
@@ -294,3 +289,61 @@ close/teardown assertions. Same correction applied to original queue70, current
 e9d575f (OLD remains immutable), separate evidence and queue82. Queue82 corrected
 control passes1.04 s /3.35 s. Verify/publish queue70 correction and evidence;
 then rerun all six full gates. Failure is a repair task, not a roadmap blocker.
+
+Queue82 published clean17869223a5022ef060e24b06b0eacb73729f9589,
+parent immutable750a5cffd46b83c22fa403ed9453b9678bf77118. Whole message:
+`Release failed File constructors and preserve finalizer registry growth`,
+one line, empty body. No extra PR. Original queue70 control check runs as
+guard37700; shared target switching to
+/private/tmp/fwp-file-construction-worktree. Fix and rerun full evidence next.
+
+Original queue70 _Exit control repair passes independently:
+cargo test --test file_construction_ownership under guard, CPU8.36 s /17.47 s.
+Preserve immutable OLDe9d575f for queue71 when rewriting its current head.
+Original queue70 clippy lib/fixture2.64 s /5.32 s and fmt0.45 s /0.85 s pass.
+
+Original queue70 correction published722224705f7c65a11a2c393ddca47ad276f1a115,
+exact lease against OLDe9d575f preserved for queue71. Message one line:
+`Own file construction and stop controls before stale finalizers`, empty body.
+Evidence early required stage now also runs file_construction_ownership;
+combined control verification is guard45476. Publish then supersede failed
+CI37766917931 with six fresh exact-head gates. Shared target is WASM evidence.
+
+Combined constructor control repair passes CPU8.02 s /17.29 s; fmt0.46 s /0.94 s.
+Fresh evidence5fd2ed65385a23f3226b2bef02eb10196f51aeb4 is published clean;
+failed37766917931 cancellation requested after publication. No failed/
+superseded gate is acceptance evidence. Record the fresh run and require all six.
+
+Fresh repaired evidence CI37771769436 is queued at exact5fd2ed6. Final handoff
+audit passes nine doc link sets,76 immutable ancestry pairs and inspected whole
+commit messages (CPU0.07 s /0.60 s). No active local workload remains. Next:
+inspect six exact-head #90 gates for squash; continue original resource variant/
+nested-frame holders and shared/cycle boundary audits while CI runs. Keep all
+seven live root doc edits through fast-forward; File-preparation branch snapshots
+are historical and their full sequential/actual-WASI gates remain pending.
+
+
+Active original-variant frame optimization preparation:
+/private/tmp/fwp-resource-frame-variants-worktree, branch
+ownership-resource-frame-variants, parent immutable17869223a5022ef060e24b06b0eacb73729f9589.
+src/cgen.rs and new tests/resource_frame_variants.rs are dirty. The baseline
+proved one parent allocation with FWP_FRAME_FIELDS=0; enabled mode initially
+failed its zero-box requirement. Implemented tag/payload ResourceSlot::Variant,
+mixed typed/variant cleanup frames and protected incoming owners before retains.
+Capture cleanup IDs after helper generation. Boxed fallback transfers typed
+payload ownership before dropping the original boxed owner.
+Six related checks pass CPU25.41 s /50.90 s. Extended allocation/source and
+partial-retain trap fixture passes CPU3.04 s /7.22 s; fmt0.45 s /0.82 s.
+Actual source uses FWP_NO_OPT=1 interpreter oracle and native O1/O2, GC off/on
+stress/verification, both poison modes, with FWP_REUSE=0/FWP_FREE=0. IR fixture
+proves exact parent counts one versus zero. Injected second String retain failure
+closes the File once and releases String ownership; omitted incoming-owner drop
+leaks the descriptor as expected. No broad speed or tracing-free claim.
+Dynamic nullary/scalar tags now pass O1/O2, GC off/on/stress/verification and
+both poison modes (CPU3.49 s /9.34 s). Initial new fixture used nonexistent
+Pat::Const; corrected to Pat::Lit. Failed compile is not validation. Clippy
+lib/four fixtures passes2.53 s /5.06 s; final fmt0.45 s /0.83 s.
+Next: publish queue83; audit nested holders, aliases and shared/cycle graphs;
+full CI remains required. Shared target is this checkout; no local work is active.
+Separate repaired evidence37771769436 passes required WASI/File stage and is
+running full gates. Continue repairing any failures while delivering inference.

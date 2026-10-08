@@ -360,3 +360,11 @@ The interpreter remains the semantic oracle. Fixed native header size and
 constructor allocation count are compared with the previous equivalent layout;
 this is allocation evidence, not a general speed or tracing-free claim.
 Current validation and remaining finalizer/storage lifetimes are in the handoff.
+
+Original resource-frame variant preparation keeps eligible only-matched binders
+as fwp_u structs alongside typed V holders. Existing vdup/vdrop helpers dispatch
+by tag; zero payloads are safe before initialization. Retain the incoming owner
+until all field retains complete, then replace the frame slot. Generate cleanup
+definition IDs after helper generation because helpers can add nested cleanup
+definitions. Boxed fallback transfers payload ownership before dropping its box.
+FWP_FRAME_FIELDS=0 retains the comparison path. Full CI is pending.

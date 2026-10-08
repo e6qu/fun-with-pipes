@@ -262,11 +262,11 @@ synchronous call and returns an owned result. Compiled callbacks retain returned
 aliases by their concrete types. Map owns its fresh list spine and callback
 results while borrowing input elements; direct and captured specializations keep
 the same contract. Retained runtime callbacks still require separate ownership.
-PRs #82–#89 passed their exact-head full gates. Fold transfers its owned
+PRs #82–#90 passed their exact-head full gates. Fold transfers its owned
 accumulator through borrowed synchronous calls while input elements remain
 borrowed. Zip owns its result spine and callback results with borrowed typed input aliases.
 Right-fold transfers its accumulator through a typed owned argument span;
-List-copy has passed full CI and merged; list-option is next. Other callbacks, runtime unwind and retained owners
+List-copy and optional list results passed full CI and merged. Other callbacks, runtime unwind and retained owners
 remain preparation.
 
 ## Prepared work and acceptance limits
@@ -427,3 +427,12 @@ registry growth checks overflow and commits pointer/capacity only after realloc
 succeeds, preserving existing owners on failure. Recoverable allocation-fault
 probes and normal hard-OOM library teardown verify both cases. These are prepared
 native checks; sequential full gates and actual WASI remain required.
+
+Original variant frame holders have a separate preparation after constructor
+storage cleanup. Eligible only-matched bindings keep tag and typed payload in
+a zero-initialized cleanup-frame struct. Tag-aware retain/drop helpers preserve
+File and ordinary child ownership, with incoming owners protected through
+partial-retain failures. FWP_FRAME_FIELDS=0 preserves the boxed control.
+Focused tests prove one versus zero parent boxes and safe dynamic nullary/scalar
+tags, without changing original parameter lifetimes. Sequential full CI, nested
+holders and shared/cycle audits remain open; this is not merged ARC support.
