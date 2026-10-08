@@ -53,8 +53,9 @@ exact-head gates in run `37636161587`, attempt 2;
 as `079e7b5`. [PR #79](https://github.com/e6qu/fun-with-pipes/pull/79) passed all four gates
 in run `37666199241` and was squash-merged as `33d4fb1`. [PR #80](https://github.com/e6qu/fun-with-pipes/pull/80), concrete temporary
 types, passed all four exact-head gates in CI `37684140373` and was squash-merged
-as `50ab17a`. Stack-child ownership is the next sequential PR; separate compiler
-ownership preparation continues while full CI runs.
+as `50ab17a`. [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), stack-child ownership,
+is the sole open PR. Its exact-head CI `37696063781` gates merging; separate
+compiler ownership preparation continues meanwhile.
 
 Phase 2 has a published preparation chain covering typed closure/stack children,
 synchronous list/container callbacks, call-effect inference, exact high-fanout
@@ -86,6 +87,12 @@ transfers unboxed field owners instead of boxing and leaking an extra retain.
 Interpreter/native values, unique/shared child counts, source yield behavior and
 adjacent ownership checks pass. Full sequential CI is still required. Remaining
 whole-value boxing and untyped/reconstructed aggregate lifetimes stay open.
+
+Nominal match context is prepared: discarded effectful constructor fields keep
+typed cleanup during optimization, and unknown scrutinees retain their typed
+binding. Dedicated reclamation and selected case/record/variant semantic checks
+pass; full sequential CI is still required. Remaining field/reconstruction and
+runtime lifetime audits stay open.
 
 Allocation elimination comes first, then registers/stack, ownership transfer,
 regions with known lifetimes, and reference counting for sharing. Reference
@@ -532,3 +539,66 @@ Constructor allocation now passes focused exceptional cleanup/alias checks in a
 separate preparation. Worker result boxing also passes focused exceptional checks. Complete field
 duplication, initial loop flattening, typed constructor temporaries, CAF/inline lifetimes and
 retained tasks before phase 2 acceptance. Full sequential CI remains required.
+
+Prepared record projection preserves the checked base type when inlining erases
+it, allowing typed scalar replacement and discarded nested-child cleanup without
+an outer record allocation. Seven focused ownership checks, five selected
+semantic goldens and clippy pass; full sequential CI remains required. Bare
+untyped/reconstructed aggregate contexts and retained runtime lifetimes remain
+open. PR #81 is the sole open PR; later preparation stays separate.
+
+Record projection preparation published as `085dc71`, separate from sole PR #81.
+The current exact-head gate has passing benchmarks and running Linux/ARM/Intel
+macOS tests. Continue reconstruction/boxing and runtime lifetime work while CI
+runs; repair any failures before merging. The handoff records the immutable
+anchors and the next concrete action.
+
+Prepared counted CAF caches keep a typed cache owner, return owned references,
+name caller temporaries and protect caller values during evaluation. Executables
+release their result and caches after tasks finish. IR/source cleanup controls,
+17 RC checks, 10 focused ownership tests, four selected semantic goldens and C
+library interop pass. Library/unload and shared runtime lifetime coverage remains
+open, as do aggregate reconstruction and retained tasks. Full sequential CI is
+required; phase 2 is still in progress and #81 is the sole open PR.
+
+CAF ownership preparation published as `68cf7bf`, no additional PR. The handoff
+records its exact head, OLD `085dc71` base, checks and remaining lifetime gaps.
+Continue aggregate/runtime ownership while #81's current-head CI runs; fix any
+failure and squash only after all four required gates pass.
+
+Prepared CAF inlining preserves argument evaluation even when the callee ignores
+it. Source regressions use an unoptimized reference to detect common optimizer
+trap omissions; counted temporary and cache cleanup controls pass. Five focused
+checks, four selected semantic goldens and clippy/fmt pass; full CI is required.
+PR #81 is the sole open PR: Linux, ARM macOS and benchmarks passed; Intel macOS
+running. Continue ownership preparation and repair failures before merging.
+
+CAF inlining preparation published as `6734248`, separate from sole PR #81.
+Source trap order and counted temporary cleanup are verified against an
+unoptimized reference; full sequential CI is still required. The handoff lists
+immutable anchors and the next aggregate/runtime lifetime audit.
+
+Prepared task.spawn keeps a counted thunk owner through task entry/cancellation,
+releasing typed captures without sharing their graph. Fallible scope/stack
+preparation precedes child publication and protects the extra reference. Ten
+focused integration checks and the contract inventory pass; final dedicated
+checks also cover unknown metadata. Task handles/results, scope/within, channels
+and cycles remain open. Full sequential CI is required; #81 is still the sole
+open PR with Linux, ARM macOS and benchmarks passing and Intel macOS running.
+
+Retained task thunks published as `7208e4a`, separate from sole PR #81.
+Continue task.within callback ownership, then task.scope and remaining teardown.
+
+Prepared task.within retains typed callback ownership through its deadline task.
+Success/cancellation, capture aliases, unoptimized semantic comparison and
+legacy-sharing controls pass; parent spawn failure checks still pass. Counted
+task results/handles remain shared. Next: task.scope and scope result cleanup
+across joining/cancellation. Full sequential CI remains required before merge.
+
+Stack-child ownership passed all four gates in CI `37696063781` and PR #81
+merged as `a4b6533`, with the required subject/empty body verified. Next PR:
+borrowed callbacks, rebased from OLD `b563360`; later preparations stay separate.
+
+Deadline callback ownership published as `14a76de`, separate preparation.
+Borrowed callbacks rebased onto merged #81 and pass three focused checks.
+Publish/open this sole next PR; preserve OLD `029fac4` for the map child.
