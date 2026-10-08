@@ -27,11 +27,13 @@ fn opencl_load_failures_and_library_unload_release_external_owners() {
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 {STATE}
 static struct state fallback={{.at_exit=1}};static struct state *s=&fallback;static int mode;static int platform,device,context,queue;
+static void __attribute__((constructor)) start(void){{const char *m=getenv("FWP_TEST_OPENCL_MODE");if(m)mode=atoi(m);}}
 void fake_setup(struct state *state,int m){{s=state;mode=m;}}
-static void __attribute__((destructor)) unloaded(void){{if(s){{s->unload++;if(s->at_exit)puts(s->bad||s->context!=1||s->queue!=1||
- s->finish!=1||s->release_queue!=1||s->release_context!=1?"bad cleanup":"released");}}}}
+static void __attribute__((destructor)) unloaded(void){{if(s){{s->unload++;if(s->at_exit)puts(s->bad||s->context!=(mode==0||mode==3?1:0)||s->queue!=(mode==0?1:0)||
+ s->finish!=s->queue||s->release_queue!=s->queue||s->release_context!=s->context?"bad cleanup":"released");fflush(stdout);}}}}
 int32_t clGetPlatformIDs(uint32_t n,void **p,uint32_t *count){{
  if(count)*count=mode==1?0:1;if(n&&p)*p=&platform;return 0;
 }}
@@ -140,10 +142,30 @@ int main(int argc,char **argv){{
     let lib = dir.join(format!("libgpu.{}", fwp::cgen::shared_library_extension()));
     let fake = dir.join(format!("libfake.{}", fwp::cgen::shared_library_extension()));
     let exe = dir.join("host");
+    let source_file = dir.join("availability.fwp");
+    std::fs::write(
+        &source_file,
+        "main = [Gpu | device.available | echo, Gpu | device.available | echo] | ignore\n",
+    )
+    .unwrap();
+    let native_file = dir.join("availability");
     for opt in ["-O1", "-O2"] {
         fwp::cgen::compile_library(&generated, &header, &lib, opt, fwp::cgen::LibKind::Shared)
             .unwrap();
         fwp::cgen::compile_c(&host, &exe, opt).unwrap();
+        let build = Command::new(env!("CARGO_BIN_EXE_fwp"))
+            .arg("build")
+            .arg(&source_file)
+            .args([opt, "-o"])
+            .arg(&native_file)
+            .env("FWP_NO_OPT", "1")
+            .output()
+            .unwrap();
+        assert!(
+            build.status.success(),
+            "{}",
+            String::from_utf8_lossy(&build.stderr)
+        );
         for mode in 0..=4 {
             let source = if mode == 4 {
                 format!("#define MISSING_SYMBOL 1\n{stub}")
@@ -164,6 +186,35 @@ int main(int argc,char **argv){{
                 out.status.code(),
                 String::from_utf8_lossy(&out.stderr)
             );
+            if mode > 0 {
+                let native = Command::new(&native_file)
+                    .env("FWP_OPENCL_LIB", &fake)
+                    .env("FWP_TEST_OPENCL_MODE", mode.to_string())
+                    .output()
+                    .unwrap();
+                assert!(native.status.success());
+                assert_eq!(
+                    String::from_utf8_lossy(&native.stdout),
+                    "released\nFalse\nFalse\n",
+                    "native {opt}, mode {mode}"
+                );
+                let interpreted = Command::new(env!("CARGO_BIN_EXE_fwp"))
+                    .args(["run", "--interp"])
+                    .arg(&source_file)
+                    .env("FWP_NO_OPT", "1")
+                    .env("FWP_OPENCL_LIB", &fake)
+                    .env("FWP_TEST_OPENCL_MODE", mode.to_string())
+                    .output()
+                    .unwrap();
+                assert!(interpreted.status.success());
+                assert_eq!(
+                    interpreted.stdout,
+                    native.stdout,
+                    "interpreter {opt}, mode {mode}: {}",
+                    String::from_utf8_lossy(&interpreted.stdout)
+                );
+                assert_eq!(interpreted.stderr, native.stderr);
+            }
         }
         fwp::cgen::compile_library(&stub, "", &fake, opt, fwp::cgen::LibKind::Shared).unwrap();
         let archive = dir.join("libgpu.a");
