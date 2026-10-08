@@ -13611,3 +13611,10 @@ controls remain. Format apply0.45/0.63s, focused four-target lint2.35/4.78s,
 final format0.35/0.73s pass. Repair changes only the worker-use predicate, plus
 authoritative docs; current evidence is not full acceptance. Publish at65 and
 propagate the exact change through66–112 before refreshed full platform evidence.
+
+Earliest worker repair60b03078c3cd075a094994487d015328967a96a1 preserves the
+original65 implementation commit and adds one verified repair/docs commit.
+Final audit0.42CPU/3.36elapsed passes83 live rows. Original native probes,
+runtime and scripts are unchanged. Prior886f8b0 is retained remotely as
+roadmap/revision-065-886f8b0083c9 before exact-lease publication. Patch proof:
+/private/tmp/fwp-counted-worker-alias-repair.patch (src/cgen.rs only).

@@ -75,8 +75,9 @@ count operations after the earlier inline-argument repair. The narrow fix uses
 is_local_through_counts only for complete compatible worker arguments; partial
 and dynamic applications still box. All nine original worker/conversion/caller/
 retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
-pass. Publish earliest row65 repair, preserve original native probes, then
-propagate through66–112 and refresh the failed full evidence. Full runs and
+pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
+0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
+native probes, propagate through66–112 and refresh the failed full evidence. Full runs and
 PR #109 continue; failed evidence never establishes support. Raw/clean logs:
 /private/tmp/fwp-full-ownership-38016929326-arm-failure[.clean].log; emitted C:
 /private/tmp/fwp-worker-alias-886f8b-generated.c.
@@ -169,7 +170,7 @@ still need their final squash rebases and six exact-head full gates.
 | 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
-| 65 ownership-unboxed-worker-locals | 886f8b0083c9 | d364e70df274 | Count-wrapped local worker-use repair passes nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s and format0.35/0.73s; local pre-fix assertion fails6.65/13.68s; repair publication/propagation and fresh full evidence follow |
+| 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
 | 66 ownership-tls-peer-subject | d8b4e2407fb1 | 886f8b0083c9 | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
 | 67 ownership-tls-alpn-roots | 221d8fa6ffcc | d8b4e2407fb1 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 4f37224b0f6f | 221d8fa6ffcc | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
