@@ -218,6 +218,12 @@ static void g_stream_final(void *p) {
 
 static void g_conn_final(void *p) {
     g_conn *c = (g_conn *)p;
+#ifdef FWP_LIBRARY
+#ifdef FWP_TLS
+    if (c->ssl) { fwp_tls_dispose(c->ssl); c->ssl = 0; }
+#endif
+    if (c->fd >= 0) { close(c->fd); c->fd = -1; }
+#endif
     h2_hpack_free(&c->dec);
     h2b_free(&c->in);
     h2b_free(&c->out);
