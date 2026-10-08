@@ -52,7 +52,7 @@ one passes1.72 s /3.50 s. Clippy lib/fixture2.36 s /4.69 s, fmt0.34 s /0.59 s.
 All commands used env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3
 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo ... .
 Sole open PR #91: https://github.com/e6qu/fun-with-pipes/pull/91
-exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 queued.
+exact7018086b8f9851f576350ba24e8af5041c3bb594, CI37774239006 benchmark passes; other five gates queued.
 All six exact-head gates are required before squash.
 Shared target switched from inference to variant checkout after guarded cargo
 clean -p fwp (0.00 s /0.13 s). No local workload is active.
@@ -343,7 +343,43 @@ Dynamic nullary/scalar tags now pass O1/O2, GC off/on/stress/verification and
 both poison modes (CPU3.49 s /9.34 s). Initial new fixture used nonexistent
 Pat::Const; corrected to Pat::Lit. Failed compile is not validation. Clippy
 lib/four fixtures passes2.53 s /5.06 s; final fmt0.45 s /0.83 s.
-Next: publish queue83; audit nested holders, aliases and shared/cycle graphs;
+Queue83 published clean786e4bbb99f1732727504f415e300c80b146f0e7,
+parent immutable17869223a5022ef060e24b06b0eacb73729f9589. Message:
+`Keep original resource variant holders unboxed and tag-aware`, one line, empty body.
+No additional PR. Next: audit nested holders, aliases and shared/cycle graphs;
 full CI remains required. Shared target is this checkout; no local work is active.
 Separate repaired evidence37771769436 passes required WASI/File stage and is
 running full gates. Continue repairing any failures while delivering inference.
+
+Final handoff audit passes nine doc link sets,77 immutable queue ancestry pairs
+and complete commit messages (guard CPU0.07 s /elapsed0.60 s). Sole open PR91
+exact7018086, CI37774239006 benchmark passes; other five gates queued. Repaired evidence37771769436 benchmark and
+required WASI/File stage pass, full other gates pending. Root maincca99c0 has
+seven live doc edits; preserve all through the next fast-forward. Variant prep
+786e4bb is published clean; shared target belongs to variant checkout and no
+local workload is active. Continue nested-holder/shared/cycle audits while CI
+runs, fix every failure, squash91 only after all six current-head gates pass,
+then rebase the next ordered queue task using immutable OLD anchors.
+
+Active mixed-binding preparation: ownership-resource-frame-binding-kinds in
+/private/tmp/fwp-resource-frame-binding-worktree, parent immutable786e4bbb99f1732727504f415e300c80b146f0e7.
+Reproduced generated C referencing the first arm’s t6 from another arm when an
+original binder is a let on one path and whole-pattern binding on another.
+Initialize that pattern’s borrowed tag/payload from the current boxed value
+before anchoring its frame retain. Preserve unboxed eligible let paths.
+Final extended fixture passes3.69 s /9.61 s and closes its actual descriptor
+exactly once without explicit file.close, O1/O2, GC off/on/stress/verification,
+both poison modes. Five related checks across resource_frames,
+resource_frame_fields and file_discard_ownership pass17.74 s /35.69 s;
+clippy lib/four fixtures2.57 s /5.16 s; format0.45 s /0.84 s.
+Earlier compile reproducer9.59 s /20.69 s failed; preliminary unbox-only test
+without deterministic-close audit was insufficient. Stronger audit exposed
+a distinct missing-type case: bare nominal constructor match scrutinees get
+unknown RC temporary types, so payload destruction leaks without tracing.
+The final binding fixture has a typed boxed local scrutinee to isolate this fix.
+Next separate task: recover scrutinee type from whole-pattern bound locals,
+reproduce without that typed local, verify actual close and typed cleanup.
+Also audit equivalent mixed record bindings and nested/shared/cycle graphs.
+Do not mark failed or narrow checks as broad tracing-free support.
+Repaired evidence37771769436 benchmark and ARM GC pass, required WASI/File
+stage passes; Linux/regular Macs run, Intel GC queued. Full acceptance pending.

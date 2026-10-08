@@ -368,3 +368,9 @@ until all field retains complete, then replace the frame slot. Generate cleanup
 definition IDs after helper generation because helpers can add nested cleanup
 definitions. Boxed fallback transfers payload ownership before dropping its box.
 FWP_FRAME_FIELDS=0 retains the comparison path. Full CI is pending.
+
+When an original binder uses a variant holder, whole-value pattern binding
+initializes its own borrowed fwp_u payload with vunbox before anchoring it.
+Reference-count IR still owns the used pattern reference and boxed scrutinee.
+This avoids cross-arm references to an eligible let’s C temporary. Native
+descriptor cleanup is tested independently of explicit close and collection.
