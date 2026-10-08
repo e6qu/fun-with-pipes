@@ -82,7 +82,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 51 | task-scope | `ownership-task-scope` | `511721920cca` | `7da15d9c8ea3` | `14a76de5b8bb` |
 | 52 | task-handle | `ownership-task-handles` | `bc6b763b3bf3` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `310031a5596b` | `ab44b7de0812` | `bb6f9c49a043` |
-| 54 | library-result | `ownership-library-results` | `9d87a3774363` | `5b34382167da` | `ab44b7de0812` |
+| 54 | library-result | `ownership-library-results` | `ff3bfedf26cd` | `5b34382167da` | `ab44b7de0812` |
 | 55 | library-input | `ownership-library-inputs` | `825dfbfeb23f` | `a6ebc1da9637` | `5b34382167da` |
 | 56 | library-unload | `ownership-library-unload` | `ac74568b0113` | `5d0dc220fa1c` | `a6ebc1da9637` |
 | 57 | opencl | `ownership-opencl-lifetime` | `47992a27c193` | `d8b4d88da98d` | `5d0dc220fa1c` |
