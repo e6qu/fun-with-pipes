@@ -81,7 +81,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 57 | opencl | `ownership-opencl-lifetime` | `4ae80b641da1` | `d8b4d88da98d` | `5d0dc220fa1c` |
 | 58 | interpreter-opencl | `ownership-interpreter-opencl` | `a5ebb52578e3` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `99b769bff921` | `3f6154b4bf67` | `abc128581b61` |
-| 60 | library-resource | `ownership-library-resources` | `d56a24e48d7e` | `07092cb06e1d` | `3f6154b4bf67` |
+| 60 | library-resource | `ownership-library-resources` | `ac17bf61276c` | `07092cb06e1d` | `3f6154b4bf67` |
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `c299edbc33eb` | `0d5d3098e782` | `07092cb06e1d` |
 | 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
 | 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |

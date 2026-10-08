@@ -101,10 +101,10 @@ still need their final squash rebases and six exact-head full gates.
 | 54 ownership-library-results | f4d3784f4657 | a30c1829d0d0 | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
 | 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
 | 56 ownership-library-unload | ac6de597fddc | 625ac7793f84 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake OpenCL API ownership checks follow; no hardware numerics claim |
+| 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API native/interpreter failure cleanup checks follow |
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Focused checks follow; compiler/runtime unchanged |
-| 60 ownership-library-resources | d56a24e48d7e | 838cf5dee220 | 11.76 / 31.49 s |
+| 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Focused checks follow; compiler/runtime unchanged |
 | 61 ownership-grpc-server-cleanup | c299edbc33eb | d56a24e48d7e | 12.59 / 28.85 s |
 | 62 ownership-tls-cache-failures | 0be508308064 | c299edbc33eb | 11.21 / 26.06 s |
 | 63 ownership-tls-wire-preparation | 66e80d399e65 | 0be508308064 | 11.65 / 26.15 s |

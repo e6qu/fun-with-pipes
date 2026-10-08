@@ -11223,3 +11223,7 @@ Row56 guarded clippy2.42/4.81s and format0.45/0.74s also pass. Row59
 refresh99b769bff921ceea02fa821b88ff608a4b938f73 uses actual basea5ebb52578e3;
 compiler/runtime match original, and old CURRENT838cf5dee220 is retained
 under immutable revision before explicit-lease publication. TLS listener checks follow.
+
+Row57 guarded clean0.00/0.14s, native fake OpenCL API7.78/22.85s,
+clippy2.36/4.71s and format0.45/0.75s pass. These are ownership/failure
+contracts, not hardware throughput evidence. Full sequential gates remain required.
