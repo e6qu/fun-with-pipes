@@ -11577,3 +11577,9 @@ bc69035d8c0f10d03b5e38ba2a498686475c07c2 uses actual base6e5d43aee3e7.
 Compiler/runtime/rendering fixture match original with inherited CLI/GC repairs.
 OLDea79bdee1191 stays fixed; previous CURRENT is retained under revision-096
 before lease publication. Fresh rendering/trap recovery checks follow.
+
+Row94 clippy5.64/12.70s and format0.46/0.85s pass after receive/cancel
+test9.19/18.86s. Row97 refresh25838578a6bfa5bd030af964d9fbe0cfd8132a69
+uses actual basebc69035d8c0f; compiler/runtime/send fixture match original with
+inherited CLI/GC repairs. OLD671ada6ec85d stays fixed; previous CURRENT is
+retained under revision-097 before lease publication. Fresh checks follow.
