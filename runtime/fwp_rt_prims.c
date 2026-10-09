@@ -52,10 +52,10 @@ static V fwp_p_filter(V f, V xs) {
     return fwp_list_from(a, k);
 }
 
-/* A selected output element needs its own reference independently of the
- * temporary owned copy consumed by the predicate. Its monomorphic parameter
+/* An output alias needs its own reference independently of the
+ * temporary owned copy consumed by a callback. Its monomorphic parameter
  * metadata distinguishes pointers from scalar words. */
-static void fwp_filter_element_dup(V f, V element) {
+static void fwp_callback_argument_dup(V f, V element) {
     fwp_clo *c = CLO(f);
     const fwp_fninfo *fi = &fwp_fns[c->fn];
     if (fi->owned) fi->owned->arguments(&element, c->n, 1);
@@ -66,7 +66,7 @@ static V fwp_p_filter_owned(V f, V xs) {
     V *a = fwp_map_items(xs, &n);
     for (size_t i = 0; i < n; i++) {
         if (fwp_apply_borrowed(f, 1, &a[i]) == FWP_TRUE) {
-            fwp_filter_element_dup(f, a[i]);
+            fwp_callback_argument_dup(f, a[i]);
             a[k++] = a[i];
         }
     }
@@ -82,7 +82,7 @@ static V fwp_p_take_while_owned(V f, V xs) {
     size_t n, k = 0;
     V *a = fwp_map_items(xs, &n);
     while (k < n && fwp_apply_borrowed(f, 1, &a[k]) == FWP_TRUE) {
-        fwp_filter_element_dup(f, a[k]);
+        fwp_callback_argument_dup(f, a[k]);
         k++;
     }
     V result = fwp_map_finish(a, k);
@@ -626,6 +626,30 @@ static V fwp_p_scan(V f, V z, V xs) {
     return fwp_list_from(out, n + 1);
 }
 
+/* Each stored state keeps its output reference while the callback borrows
+ * it for the next step. Only the initial state comes from a borrowed input. */
+static V fwp_p_scan_owned(V f, V z, V xs) {
+    V initial = z;
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    if (n > SIZE_MAX / sizeof(V) - 2) fwp_trap("scan too large");
+    V *out = (V *)fwp_mem_alloc((n + 2) * sizeof(V));
+    fwp_callback_argument_dup(f, z);
+    out[0] = z;
+    for (size_t i = 0; i < n; i++) {
+        V args[] = {z, a[i]};
+        z = fwp_apply_borrowed(f, 2, args);
+        out[i + 1] = z;
+    }
+    FWP_KEEP_ALIVE(a);
+    fwp_mem_free(a);
+    V result = fwp_map_finish(out, n + 1);
+    FWP_KEEP_ALIVE(initial);
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 static V fwp_p_chunks(V n, V xs) {
     if ((int64_t)n <= 0) fwp_trap("chunks: size must be positive");
     size_t k = (size_t)(int64_t)n, len;
@@ -647,6 +671,24 @@ static V fwp_p_iterate(V n, V f, V x) {
         if (i + 1 < k) x = fwp_apply1(f, x);
     }
     return fwp_list_from(a, k);
+}
+
+static V fwp_p_iterate_owned(V n, V f, V x) {
+    size_t k = fwp_count_arg(n);
+    if (!k) return 0;
+    V initial = x;
+    if (k >= SIZE_MAX / sizeof(V)) fwp_trap("iterate too large");
+    V *a = (V *)fwp_mem_alloc((k + 1) * sizeof(V));
+    fwp_callback_argument_dup(f, x);
+    a[0] = x;
+    for (size_t i = 1; i < k; i++) {
+        x = fwp_apply_borrowed(f, 1, &x);
+        a[i] = x;
+    }
+    V result = fwp_map_finish(a, k);
+    FWP_KEEP_ALIVE(initial);
+    FWP_KEEP_ALIVE(f);
+    return result;
 }
 
 static V fwp_p_flat_map(V f, V xs) {
