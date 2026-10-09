@@ -148,8 +148,9 @@ still need their final squash rebases and six exact-head full gates.
 | 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
 | 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
 | 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
+| 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
 
-Rows 18–95 are published preparations with passing focused tests, lint and
+Rows 18–96 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -166,29 +167,21 @@ Rows92–93 publish explicit peer owners through child/detached-sender joins
 and owned final statuses through encoding/unwind. Their table entries and
 history retain full heads, commands, failures and omission controls. Network
 context storage and other buffers still use tracing; no complete ARC claim.
-Next independent preparation ownership-grpc-receive-cleanup at
-/private/tmp/fwp-grpc-receive-cleanup-worktree starts on a92c951. Unary
-receive protects dequeued request/status storage across the second wait;
-unexpected/missing results release, and reflection end text releases. Actual
-scheduler regression covers reset, cancelled wait, normal ownership transfer
-and three omitted-release controls. Both focused tests pass12.09 / 24.36 s,
-lint2.43 / 4.91 s and format0.45 / 0.83 s. Published clean at
-8bd9e78743abd7ed2c1f721ee100ed325074da2e on actuala92c951. Further preparation ownership-grpc-force-cleanup,
-/private/tmp/fwp-grpc-force-cleanup-worktree, starts on8bd9e78. Streaming
-force owns received payload/text through decode and copying, protects decoder
-failure reasons and temporary error text, and transfers first-error text or
-values without changing memo behavior. Both focused force/unary tests pass 11.15 / 23.28 s, lint 2.50 / 5.05 s and
-format 0.45 / 0.83 s. Published clean at
-6b82bc5b8b2ff729d2c3d4bcf831955ec855a002 on actual8bd9e78. Independent ownership-grpc-render-cleanup at
-/private/tmp/fwp-grpc-render-cleanup-worktree starts on6b82bc5. Streamed
-error rendering protects its fwp_buf with the existing buffer destructor
-before writing/trapping. Both tests pass 2.79 / 5.95 s; fixture macro collision
-corrected, lint 2.66 / 5.38 s and format 0.45 / 0.83 s pass. Record and publish.
-Protocol encoding scratch remains the following audit.
+Rows94–96 publish unary receive, streaming force and rendered-error scratch
+cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
+hashes and detailed checks are in history; the table keeps actual bases.
+Independent ownership-grpc-send-cleanup at
+/private/tmp/fwp-grpc-send-cleanup-worktree starts on ea79bde. Encoded
+message buffers have typed h2_buf cleanup through cancellable flow-control
+waits. Focused actual scheduler tests cover zero/partial windows, cancellation,
+wake/resume, closed streams and exact decoded plain/gzip payloads. Send/force
+checks pass 10.02 / 21.56 s, lint 2.74 / 5.52 s and format 0.45 / 0.82 s.
+Record and publish.
+Caller encoding buffers remain the following audit.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery at542fc08, new exact-head CI37929002304 queues
-regular macOS and both GC jobs run; Linux and bench queue.
+bench passes; Linux, regular macOS and both GC jobs run.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
 ACTUAL base remains7741d09 until rebased after the eventual PR98 squash.
 
@@ -235,7 +228,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-render-cleanup-worktree; final generation tests, lint and format pass.
+belongs to /private/tmp/fwp-grpc-send-cleanup-worktree; final generation tests, lint and format pass.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 88 immutable queue
 ancestry pairs and whole commit messages (0.18 s CPU / 1.29 s elapsed).

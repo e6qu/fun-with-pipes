@@ -9881,3 +9881,54 @@ Corrected rendered-error/force tests pass2.79 / 5.95 s CPU / elapsed. Real
 I64 rendering preserves exact final diagnostic; partial/final traps each free
 scratch once. Omitted cleanup fails1. Focused clippy passes2.66 / 5.38 s; format
 application0.54 / 1.06 s and check0.45 / 0.83 s pass under bounded guard.
+
+Row96 published clean at ea79bdee1191f1a1a8d5cd180245df895711461e on actual
+6b82bc5b8b2ff729d2c3d4bcf831955ec855a002; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Encoded-message buffer ownership preparation, 2026-10-09
+
+New ownership-grpc-send-cleanup starts on ea79bdee1191f1a1a8d5cd180245df895711461e.
+g_send_msg previously freed its encoded h2_buf only on normal return; flow
+control waiting can cancel and leak that malloc buffer. Register a typed
+h2_buf destructor before encoding and pop/release on normal completion.
+Actual scheduler fixture covers zero/partial windows, cancelled waits, wake/
+resume, closed connection/reset and successful plain/gzip sending. It joins
+DATA frames, decompresses the gzip body and checks all128 arbitrary bytes.
+Omitted cleanup must fail1; fixed O1/O2 × tracing off/on × poison must pass.
+Guarded clean before switching0.07 / 0.37 s; focused send/force tests run.
+Caller encoding scratch remains a separate audited follow-up.
+
+Focused send/force tests pass10.02 / 21.56 s CPU / elapsed. Actual flow-control
+suspension/cancellation, partial frames, wake/resume and closed streams preserve
+exact plain/gzip-decoded128 bytes at O1/O2 with tracing off/on and poison.
+Omitted cleanup fails1. Focused send/force lint runs. Current PR98 exact542fc08
+CI37929002304 bench passes; Linux and all four macOS jobs run.
+
+### Archived published receive/render preparation handoff
+
+Next independent preparation ownership-grpc-receive-cleanup at
+/private/tmp/fwp-grpc-receive-cleanup-worktree starts on a92c951. Unary
+receive protects dequeued request/status storage across the second wait;
+unexpected/missing results release, and reflection end text releases. Actual
+scheduler regression covers reset, cancelled wait, normal ownership transfer
+and three omitted-release controls. Both focused tests pass12.09 / 24.36 s,
+lint2.43 / 4.91 s and format0.45 / 0.83 s. Published clean at
+8bd9e78743abd7ed2c1f721ee100ed325074da2e on actuala92c951. Further preparation ownership-grpc-force-cleanup,
+/private/tmp/fwp-grpc-force-cleanup-worktree, starts on8bd9e78. Streaming
+force owns received payload/text through decode and copying, protects decoder
+failure reasons and temporary error text, and transfers first-error text or
+values without changing memo behavior. Both focused force/unary tests pass 11.15 / 23.28 s, lint 2.50 / 5.05 s and
+format 0.45 / 0.83 s. Published clean at
+6b82bc5b8b2ff729d2c3d4bcf831955ec855a002 on actual8bd9e78. Independent ownership-grpc-render-cleanup at
+/private/tmp/fwp-grpc-render-cleanup-worktree starts on6b82bc5. Streamed
+error rendering protects its fwp_buf with the existing buffer destructor
+before writing/trapping. Both tests pass 2.79 / 5.95 s; fixture macro collision
+corrected, lint 2.66 / 5.38 s and format 0.45 / 0.83 s pass. Published clean at
+ea79bdee1191f1a1a8d5cd180245df895711461e on actual6b82bc5.
+
+Focused send/force clippy passes2.74 / 5.52 s CPU / elapsed; format application
+0.55 / 0.83 s and check0.45 / 0.82 s pass under the bounded guard. Sender's
+wire buffer transfers no ownership to the wait; its lexical destructor
+releases after normal completion or cancellation. No new allocation or speed
+claim. Published preparation details move from live handoff to this history.

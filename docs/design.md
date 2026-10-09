@@ -482,3 +482,8 @@ Prepared streamed non-status errors register their rendering buffer with the
 existing buffer destructor before formatting. Both a partial rendering trap
 and the final diagnostic trap release scratch. Diagnostic contents remain
 unchanged; this does not complete protocol encoding scratch ownership.
+
+Prepared encoded gRPC messages register typed h2_buf cleanup before encoding
+and keep it active through flow-control waits. Normal return or cancellation
+releases the malloc frame buffer. Plain and gzip bodies preserve exact payloads;
+caller encoding buffers remain a separate exceptional ownership audit.
