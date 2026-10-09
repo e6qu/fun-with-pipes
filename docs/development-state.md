@@ -28,98 +28,61 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01` (#105).
-All six production jobs CI37997170222 and roadmap_docs CI37997170102 pass
-at accepted head `9a21fd6cc844c0960cedd283fd09ab354ee32338`. Explicit
-match-head squash at 2026-10-09T22:55:27Z has the entire one-line message:
-`Protect compiler reuse tokens through transfer and unwind` (57 characters).
-Its complete tree `7213b49ea3b8b983c5f8dbc6f2ad9c75504106c9` matches the
-accepted PR head. Raw message has no body/trailers/attribution. Initial manual
-verification wrongly required a terminal newline; GitHub stores this subject
-without one. Correct byte-for-byte subject verification passes.
-Duplicate post-merge main CI38001796693 is cancelled only after all accepted
-gates and tree parity. Main roadmap_docs38001796557 also passes.
-All 11 current docs were backed up and hashed in /private/tmp/fwp-main-docs-pre105
-and restored byte-for-byte after main FF. Refresh the backup before the next FF.
+Main is `ff29c268eed8669d812d40d1050e0c4bd188d52c` (#106).
+Accepted head `5683df1c8a96bad30e3c679987e87694387c3b62` passes all six
+production jobs in CI38006543549 and roadmap_docs38006543521. Explicit
+match-head squash at2026-10-10T00:44:53Z has the entire58-character message
+`Protect live compiler owners across calls and cancellation`, with empty body
+and no trailers/attribution. Complete tree943eb09f97dbf03a03fa69c59aeb6ff39f17dfc5
+matches the accepted head. Raw-message and tree proofs are saved locally.
+Duplicate main CI38010369877 is cancelled only after this parity/gate proof;
+main roadmap_docs38010369880 passes too. All11 docs are backed up and hashed
+in /private/tmp/fwp-main-docs-pre106 and restored byte-for-byte after main FF.
+Refresh that snapshot before the next main update.
 
-#74–#105 deliver native macOS and selected typed ownership, old-storage
-reclamation, task result/deadline boundaries, registered runtime unwind cleanup,
-the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
-Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
-the fallback. Prior acceptance details and failed/superseded runs are in history.
-[PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
-production PR, repaired exact head `5683df1c8a96bad30e3c679987e87694387c3b62` on actual
-main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006543549 and
-roadmap_docs38006543521, benchmarks and ARM GC stress pass; regular ARM/Intel
-macOS, Intel GC stress and Linux are running. Require all seven passing exact-head
-checks, then squash with subject
-`Protect live compiler owners across calls and cancellation` and empty body.
-The complete repair is published; freeze it unless a real failure needs repair.
-All final focused checks pass43.85 CPU / 87.62 elapsed seconds: 16 native
-ownership/allocation tests (73.07 elapsed), all13 ownership-IR tests (6.81),
-exact record reuse (2.60), focused lint (4.46) and format (0.57). Native
-pending-argument coverage tests counted and scalar results at O1/O2 with GC
-stress/verification and reuse poisoning, against raw interpreter behavior.
-Strong audit passes0.42CPU/3.51elapsed. Superseded7a550b7 misses a final-scalar
-pending owner; its CI38006009928 is cancelled only after fresh gates launch.
-Retained roadmap/revision-027-7a550b724047 preserves it. Neither prior head is
-eligible to merge. Next propagate the complete repair through preparations.
-Rows28–35 inherit the exact complete repair. Row35 test-insertion conflict
-preserves its constructor test and both new argument controls; strict source
-parity and handoff audits pass. Complete journal28–35 is finished: initial
-guard7.37CPU/80.51elapsed stopped at the conflict, reviewed docs continuation
-0.00/0.14s and guarded resume1.24/16.34s pass. Rows36–41 now inherit the exact repair, preserving typed conversion in40
-without its old blanket-temporary policy. Guard4.41CPU/47.46elapsed stops at
-that reviewed source conflict; docs continuation0.00/0.14s and exact-source
-resume2.30/25.90s pass. Fresh combined evidence0bb9762dd41b5ca3e7987d593a0650b4619e34d6 on actual
-source41a59952364e225f41d54412741a25909bf414828a failsCI38007031461. It adds
-unchanged stack/reuse allocation gates and runs the complete ownership-IR
-module; compiler/runtime/tests/scripts/production workflows match41 exactly.
-Retained oldedabbc2 under roadmap/evidence-conversion-edabbc24e57d before
-leased publication. Audit0.43CPU/3.50elapsed passes. Runner failures: loop
-state flattening is lost when Again holds an inline Let/Record spine; two
-new IR controls select arbitrary HashMap entries after constructor recording
-is added. Preserve their exact owner assertions while selecting pending calls.
-Normalization and observer repair527f84d405b77ad33b27f9a4cf7981259e1c11e9
-is published at33 on actual32c434692ccb6f; olde838 is retained remotely. Rows34–41 now inherit the loop repair and exact call-selection correction
-at35. Reviewed38 conflict preserves its initial-field protection and the
-representation-aware observer. Guarded refresh stops4.23CPU/46.91elapsed at
-that conflict, then docs continuation0.00/0.14s and exact-source resume
-4.27/49.20s pass. Current41 is172912b7b1c66e3d6e50a60090b8b7559ffc4ffa.
-Its three loop cleanup/preparation tests pass13.79CPU/27.69elapsed and all18
-IR tests pass3.33/7.13s. Fresh evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5
-runsCI38008988824 on actualsource172912b, with compiler/runtime/tests/scripts
-and production workflows byte-identical. Retained failed0bb9762 under
-roadmap/evidence-conversion-0bb9762dd41b before exact leased publication.
-Strong audit0.42CPU/3.49elapsed passes. Loop/control42–49 refresh now
-finishes8.26CPU/93.23elapsed with exact code/observer/control inheritance,
-all old heads retained and all source/handoff audits passing. Current49
-is49b7aa5a0c074fa7e06364b06ddf891b46a3738d. Next refresh50–112. The loop observer must read actual
-counted-owner layout: flattened string owners are not boxed records. All
-scalar-bit, alias, finalizer and exact release assertions remain unchanged.
-Row33 both loop checks pass10.45CPU/20.96elapsed on the local repair.
-Completed42–49 refresh preserves CAF evaluation/pending owners and adds a
-negative/positive CAF scalar IR control: all20 units pass3.40CPU/7.15elapsed,
-format0.34/0.62s. Row47 is404970bff753 on actual3ee4f29b8493. Resumed serial
-publication/audit passes3.22CPU/37.65elapsed. No old gate accepts the unresolved
-combined41 evidence; all later prepared work requires fresh final full gates. Each production PR still needs full gates.
+#74–#106 deliver native macOS and selected typed ownership through compiler
+reuse-token and live caller/pending-argument cleanup. Phase1 is done; phase2
+remains incomplete; phases3–6 are pending. Tracing remains the fallback.
+PR107 is open: https://github.com/e6qu/fun-with-pipes/pull/107. Its exact head is
+1dcbe79ac0777b83cad6f49b8ab4b28ad140c854 on actual squash baseff29c268eed8669d812d40d1050e0c4bd188d52c.
+Row28 protects runtime application/pending-argument cleanup and incorporates the
+original row34 capture-preparation repair. Both implementation commits survive
+the rebase; source/tests/scripts/workflows match prior131ec8ebdd06 byte-for-byte.
+All14 focused integration tests33.34CPU/67.02elapsed,13 IR controls3.29/6.83s,
+focused clippy2.34/4.66s, format0.34/0.61s and strong audit0.47/3.67s pass.
+All11 live docs are copied into the PR. Prior remote131ec8ebdd06 is retained at
+roadmap/revision-028-131ec8ebdd06 before exact-lease publication. Freeze this head
+except for actual fixes; record fresh production/documentation run IDs and wait
+for all seven exact-head gates before squash. Production CI38011227462 is queued;
+roadmap_docs38011227532 is running, both at1dcbe79. While CI runs, refresh66–112 and
+scoped evidence using their recorded actual bases. Next production delivery29
+opens only after107 merges and its squash message/tree are verified.
+Squash subject: `Protect runtime application owners through preparation and unwind`;
+empty body, at most80 characters. Do not reopen or rewrite accepted106.
 
-Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
-Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
-is superseded and cancelled after fresh gates launch. Retained remote revision
-roadmap/revision-027-9c1b5a861b15 preserves it. Failure details are archived.
+Current106 repair preserves stack/reuse allocation limits while protecting
+computed, duplicated and scalar-final argument lifetimes. All final17 focused
+integration/allocation checks and13 ownership-IR checks, lint/format and audit
+pass before the seven full gates. Failed9c1b5a8/7a550b7 heads and runs are
+retained and archived; neither was accepted. Original pipe/effect/trap semantics
+and allocation assertions are unchanged.
 
-The complete repair leaves final consumed values inline only without earlier
-counted pending arguments. Scalar computations finish before pending owners
-transfer, preserving failure cleanup. Earlier computed and duplicated values
-retain typed owners during later evaluation. Stack/worker/loop shapes remain
-visible. No allocation thresholds or existing assertions were weakened.
-
-Row28 is now131ec8ebdd0691571eab15924dd598b921fbc6c1 on actualPR1065683df1.
-Carry the exact repair into later preparations;
-previous source-parity and focused evidence predate this change. After PR106
-passes all seven exact-head gates and merges, rebase row28 onto its actual
-squash, validate it and open the next PR. Keep only one production PR open.
+Later preparation repairs are separate:33 adds bound/inline Again record
+normalization and an emitted-layout cancellation observer;35 corrects new IR
+controls to select their pending calls;47 preserves evaluated CAFs during later
+scalar evaluation. Existing alias/release/scalar-bit assertions remain intact.
+Combined evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 passesCI38008988824
+on current41 at172912b7b1c66e3d6e50a60090b8b7559ffc4ffa, including all18 IR
+checks and original stack/reuse gates. All three loop checks pass13.79CPU/27.69elapsed
+locally, all18 IR checks3.33/7.13s. Rows42–49 exact repair refresh passes
+8.26CPU/93.23elapsed;50–57 passes8.53/92.92s;58–65 passes8.39/92.32s.
+Every prior head is retained; immutable OLD anchors stay fixed. Current65 is
+98f5c04f6260e56d57c86e437486bb04d392aa7d on actual04811432dc3d.
+Next independent work refresh66–112 and corresponding scoped evidence.
+The table records actual bases; all earlier focused evidence predates these
+repairs unless stated otherwise. Each production delivery still needs its own
+final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
+full acceptance, preserving its immutable anchor and coverage.
 
 The merged million-step native tail regression passes O1/O2 with GCoff/on
 against a200-step FWP_NO_OPT=1 oracle. Full-size raw100000 local execution
@@ -137,8 +100,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 27 ownership-call-liveness | 5683df1c8a96 | 2ef5510154cd | PR106 complete repair: 13 IR checks plus16 integration/allocation checks, exact reuse, lint/format pass43.85CPU/87.62elapsed serially; fresh full CI required |
-| 28 ownership-runtime-call-cleanup | 131ec8ebdd06 | 5683df1c8a96 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
+| 28 ownership-runtime-call-cleanup | 1dcbe79ac077 | ff29c268eed8 | Final squash-base source parity; fourteen focused integration tests33.34CPU/67.02elapsed pass; thirteen IR controls3.29/6.83s, focused lint2.34/4.66s and format0.34/0.61s pass; strong audit0.47/3.67s passes; PR107 exact-head full CI pending |
 | 29 ownership-map-unwind | 25eda7b24ef5 | 131ec8ebdd06 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
 | 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
@@ -162,28 +124,28 @@ still need their final squash rebases and six exact-head full gates.
 | 49 ownership-task-thunks | 49b7aa5a0c07 | be475bda31dc | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 68a2e5f1358e | 49b7aa5a0c07 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 511721920cca | 68a2e5f1358e | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
-| 52 ownership-task-handles | 8eab3e41f8ba | 935554ad52c1 | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
-| 53 ownership-channel-queues | 40252d18e97e | 8eab3e41f8ba | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
-| 54 ownership-library-results | 9d87a3774363 | 40252d18e97e | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
-| 55 ownership-library-inputs | 825dfbfeb23f | 9d87a3774363 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
-| 56 ownership-library-unload | ac74568b0113 | 825dfbfeb23f | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | 47992a27c193 | ac74568b0113 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
-| 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
-| 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
-| 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
-| 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
-| 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
-| 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
-| 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
-| 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
-| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
-| 67 ownership-tls-alpn-roots | bbde0fa9c254 | ec16c6630686 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
-| 68 ownership-ci-probe-repairs | 933deb78f600 | bbde0fa9c254 | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
-| 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
-| 70 ownership-file-construction | 41a76ee080e5 | 7047b100dbbe | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
-| 71 ownership-file-write-visibility | 6fdf20ca82a9 | 41a76ee080e5 | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
-| 72 ownership-file-io-errors | 82e51ba8ea16 | 6fdf20ca82a9 | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
-| 73 ownership-resource-frames | 3dc1c36adbad | 82e51ba8ea16 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
+| 52 ownership-task-handles | bc6b763b3bf3 | 511721920cca | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
+| 53 ownership-channel-queues | 310031a5596b | bc6b763b3bf3 | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
+| 54 ownership-library-results | ff3bfedf26cd | 310031a5596b | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
+| 55 ownership-library-inputs | b0a593982767 | ff3bfedf26cd | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
+| 56 ownership-library-unload | 400d11c0b317 | b0a593982767 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
+| 57 ownership-opencl-lifetime | fde35253a744 | 400d11c0b317 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
+| 58 ownership-interpreter-opencl | e9bddcdc78b7 | fde35253a744 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
+| 59 ownership-tls-listeners | 2184aa897572 | e9bddcdc78b7 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
+| 60 ownership-library-resources | b2b3e2d73da8 | 2184aa897572 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
+| 61 ownership-grpc-server-cleanup | 15ed94b82b00 | b2b3e2d73da8 | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
+| 62 ownership-tls-cache-failures | 004eccb1f092 | 15ed94b82b00 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
+| 63 ownership-tls-wire-preparation | f1915b15033e | 004eccb1f092 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
+| 64 ownership-connect-cancellation | 04811432dc3d | f1915b15033e | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
+| 65 ownership-unboxed-worker-locals | 98f5c04f6260 | 04811432dc3d | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
+| 66 ownership-tls-peer-subject | bde11299c626 | 98f5c04f6260 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
+| 67 ownership-tls-alpn-roots | ff4e98c6979e | bde11299c626 | Test6.99/14.97s; lint5.72/11.65s and format0.44/0.84s pass |
+| 68 ownership-ci-probe-repairs | 3135b0d66ba3 | ff4e98c6979e | Timer test10.28/21.81s; lint5.61/11.71s and format0.46/0.87s pass |
+| 69 ownership-nested-loop-boxing | 17d47b91a8f6 | 3135b0d66ba3 | Three tests14.44/29.19s; lint5.60/11.68s and format0.35/0.63s pass |
+| 70 ownership-file-construction | 3d10c5dd387d | 17d47b91a8f6 | Test7.49/16.08s; lint5.42/11.61s and format0.36/0.76s pass |
+| 71 ownership-file-write-visibility | 8c332516937b | 3d10c5dd387d | Two tests8.14/17.09s; lint5.55/11.78s and format0.35/0.75s pass |
+| 72 ownership-file-io-errors | 2990083331a2 | 8c332516937b | Three tests14.85/30.79s; lint5.53/11.82s and format0.35/0.62s pass |
+| 73 ownership-resource-frames | 006aba78f1f5 | 2990083331a2 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 4155bc9fce74 | 3dc1c36adbad | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | 5179067d6635 | 4155bc9fce74 | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
@@ -292,7 +254,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | Fresh CI38008988824 running on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
+| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
@@ -324,77 +286,28 @@ reclamation against the finite phase2 exit criteria in ownership.md. Channel
 close preserves queued values; explicit drain alone proves its counted cycle
 can be broken. Preserve raw interpreter comparisons and original pipe semantics.
 
-## Current guard repair
+## Accepted guard and fixture controls
 
-Row105 lint stopped when rustc removed temporary rmetaJAcTae during target du.
-This is incomplete verification, not a resource-limit waiver. No workload remains.
-Separate branch fix-local-guard-sampling in /private/tmp/fwp-guard-sampling-worktree
-has final sourced4c832188d3563e85410adeb8763bf6a74f4833b on actual
-main3bb34267997479794aeac9fff3447da94c16ca4d, with scripts/workflow identical
-to focused-accepted063f4ca. Pause the guarded workload during target sampling; keep
-RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
-All three deterministic integration checks pass under the original root guard:
-Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.20CPU/1.36elapsed. They verify suspension/resumption, sampler errors and the
-unchanged target-size limit. Negative control against the original guard fails
-all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
-The initial test fixture escaping failure was corrected before this acceptance.
-The roadmap_docs workflow runs these checks on Linux too. PR103 is merged;
-PR104 is merged after all six exact-head gates and roadmap_docs pass.
-Post-merge root guard integration repeat passes0.18CPU/1.36elapsed.
-Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
-passes all three integration checks (0.688s) and the documentation audit.
+The guard sampling repair is merged in PR104, with all exact-head platform gates.
+It suspends workloads during target-size sampling and preserves every resource
+limit. Three deterministic integration checks cover suspension/resumption,
+sampler errors and the original target-size limit. The stronger handoff audit
+merged in PR105 verifies recorded live heads and actual source-base ancestry.
+Commands and current limits are below; old diagnostics are archived in history.
 
-## Active evidence repairs
+Preserve accepted HTTP2 omission controls: GCC x86-64 isolates allocation and
+clears only stale callee-saved registers in the test hook; other compilers keep
+the original probe. Positive collection, strict omission failures, payloads and
+finalizer checks remain mandatory. Accepted evidence8e79458951a8b148e3a3c6a1df488e7f09470fba
+passesCI37990203134; ARM focused checks also pass. Rejected broad-clobber,
+forced-inline and Clang fallback approaches are archived, never production fixes.
 
-HTTP2 CI37983077375 and serving CI37984431678 fail only the inherited
-body-owner omission control on GCC. GCC assembly in diagnostic37988293141
-shows omitted call/stream roots retained in callee-saved registers. Construction
-isolation alone fails. Register-clobber evidenceeec7ef8 passes Linux37989065155,
-but its ARM macOS omission control fails (7.71CPU/15.94elapsed); forcing both
-hooks inline also fails locally0.76CPU/2.33elapsed. These are rejected fixture
-approaches and stay out of production.
-
-Independent Clang fallback5ca597d also fails on Linux37989581687 and is
-rejected. Normal HTTP2 evidence8e79458951a8b148e3a3c6a1df488e7f09470fba,
-CI37990203134, passes normal Linux lint/format, body roots/limits/peer cleanup,
-related resources, actual tracing churn and docs. It scopes the stale-register
-control to GCC x86-64 and keeps the original probe on other compilers. ARM
-focused checks pass15.46CPU/31.62elapsed after guarded clean. All positive
-and strict omission assertions remain; no diagnostics or extra compiler
-dependency remains. Fixture repair is published in row8959c59a882d67d1f8ea191a1cf576c395e3a22522,
-unchanged actual basee15c6fc. Revision089-f45a7dbbd33d retains the prior head.
-Serial guarded propagation through90–112 completed3.50CPU/98.11elapsed.
-All current heads and actual bases are in the table; prior heads are retained
-under immutable revision tags. Compiler/runtime/workflows are unchanged.
-
-Client CI37985348012 fails its typed handler check. Static handler alone fails
-37987135273. Diagnostic37987861321 shows correct code14 and transport-failure
-text, but descriptor identity mismatch. Static fixture descriptorsf1318ed pass
-Linux37988968135. Normal evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0,
-CI37989574765, passes normal format/lint, exact trap/typed error/omission checks,
-related ownership/context/startup tests, actual tracing churn and docs. ARM
-focused checks pass8.63CPU/17.84elapsed under the original root guard.
-Validated static fixture objects are published in row102488801a9f2f74734b60e9516edd8ca92a32edf1d,
-with unchanged actual basec6b5ad8. Revision102-222e199ca735 retains the prior head.
-Current row102 is5f4c3b2423ac after propagation; the table is authoritative.
-All90–112 inherit the accepted fixtures, preserving original OLD anchors.
-
-Rows109–112 are published with actual refreshed predecessor bases in the table.
-Combined storage evidencefb9e59fef93ead188c8b8f82ce7147290a9b5e6e,
-CI37988444009, passes scoped TLS/captures/full pool identities/environment
-teardown/packed options/full-address checks, interpreter identity, lint/format,
-actual tracing churn and the documentation audit. Compiler/runtime/tests match
-row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
-before tests; superseded37987994602 is cancelled. Neither is acceptance.
-Validated HTTP2/client fixture repairs are propagated through rows90–112,
-preserving every immutable OLD anchor. Refreshed evidencee5bbfd8 passes
-CI37992657684 against current215d7ba, including both accepted root controls.
-Fresh serving evidence3aca5cf passes CI37993159029; source matches current
-row100e6ae6c8 and only its inherited HTTP2 fixture differs from old accepted
-production source. Reuse evidence25fc868 passes CI37992999275 against
-current0a7203f. Old evidence heads are retained remotely under roadmap/evidence-*
-tags before leased publication. Each eventual production
-PR requires its own final rebase and six exact-head gates plus roadmap_docs.
+Preserve client controls using static handler/TypeInfo fixture objects. Exact
+descriptor identity, code14 and transport-failure text remain checked. Accepted
+evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 passesCI37989574765 with ARM
+focused checks. Runtime behavior and original assertions are unchanged. Both
+fixture corrections propagate through90–112; subsequent argument/loop repairs
+require refreshed evidence and final exact-head full gates.
 
 ## Local limits and durable docs
 
@@ -407,41 +320,23 @@ limits and move work to CI; never raise or bypass them. Use:
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
 ```
 
-The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-variant-conversion-worktree after bounded package clean
-0.07CPU/0.37elapsed. Three focused loop tests pass13.79CPU/27.69elapsed;
-all18 IR checks pass3.33CPU/7.13elapsed. Shared native binary reflects current
-prepared41, not the frozen PR106 head.
-PR106 focused source checks below predate this target switch. PR106 repair modifies only src/rc.rs:
-earlier counted arguments remain owned across later evaluation. The final
-consumed argument stays inline only without pending counted arguments, keeping
-stack/worker/loop shapes visible. Both computed and duplicated pending owners
-remain protected; the new duplicate-owner IR regression verifies this case.
-Final bounded command is python3 /private/tmp/fwp-verify-final-call-repair.py
-through the absolute-root guard, with OpenSSL environment. It serially runs:
-cargo test --test compiler_call_liveness --test reuse_token_ownership
---test unwind_cleanup --test stack; cargo test --lib rc::tests;
-cargo test --test reuse unique_records_are_updated_in_place -- --exact;
-focused clippy for those five integration targets; cargo fmt -- --check.
-All pass43.85CPU/87.62elapsed. Existing >10MiB baseline and <1MiB optimized
-allocation assertions remain unchanged. No local full gate was run.
-Complete patch: /private/tmp/fwp-call-liveness-complete-argument-repair.patch.
-Earlier partial patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
-Complete argument helper: /private/tmp/fwp-refresh-complete-call-repair.py.
-Loop/control propagation: /private/tmp/fwp-refresh-loop-controls.py, with
-full/case-only normalization patches and exact inherited loop observer.
-Use separate complete-call journals; partial28–35 journal is superseded, not
-a completed full refresh. Root table records every published actual base.
-Failure log: /private/tmp/fwp-pr106-arm-job.clean.log. Old ARM failures: reuse
-45.8MiB copied/30.5MiB reused; shapes61/30.5MiB, twice137.3/91.6MiB,
-wide366.2MiB, digits115.9/91.6MiB. Outputs are correct; allocation gates remain
-unchanged. The original gh --log-failed refused unfinished full-run logs;
-direct completed job API download succeeds, with ANSI bytes saved/stripped.
-Rows50–57 serial refresh completes8.27CPU/92.49elapsed with strict native
-source/old-probe parity and exact merged guard/audit/workflow/tail inheritance.
-Journal /private/tmp/fwp-refresh-rows-50-57-journal.json is complete; do not rerun.
-Future preparations must inherit the verified argument-lowering repair on their
-final/next refresh; unchanged-source claims above predate this new correction.
+The fun-refactor guard applies to the other repository. The shared target is
+now belongs to /private/tmp/fwp-runtime-call-worktree after the final
+squash-base rebase and bounded rebuild. Four focused integration targets pass
+14 tests33.34CPU/67.02elapsed; all13 IR controls3.29/6.83s, focused lint2.34/4.66s
+and format0.34/0.61s pass. Commands: cargo test --test runtime_call_ownership
+--test argument_preparation_ownership --test compiler_call_liveness --test unwind_cleanup;
+cargo test --lib rc::tests; cargo clippy for those four targets -- -D warnings;
+cargo fmt --all -- --check, all through the absolute-root guard with OpenSSL.
+Prior compiler/loop target switches, failures and measurements are archived in
+[history](roadmap-history.md). Never assume a shared native binary belongs to a
+checkout until its bounded package clean and rebuild finish.
+
+The complete argument repair and later loop/control refresh preserve original
+allocation and alias assertions. Temporary helpers and their journals live in
+/private/tmp; the table, actual bases and retained remote tags are the durable
+recovery record. Completed journals must not be rerun blindly. Full-size raw
+tail evidence stays on GitHub because it exceeds local RSS limits.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
