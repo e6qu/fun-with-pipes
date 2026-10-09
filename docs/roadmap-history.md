@@ -11951,3 +11951,78 @@ tests and workflows are byte-identical across the timing-only correction.
 Superseded full CI37991334046 is cancelled; old roadmap_docs37991334167 passed
 but is not the new head's gate. Require all six fresh exact-head jobs plus
 roadmap_docs before explicit squash, single-line subject and empty body.
+
+## Row26 preparation after PR103
+
+Rebase previous published bb77c078354f14c3f8e205f17bde2edb199b945c from actual
+6421c025b3d53ed59a177aac1b0f9fff662e1736 onto main103
+3bb34267997479794aeac9fff3447da94c16ca4d produces published
+0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests are unchanged;
+only the ten authoritative documentation conflicts were resolved. Old publication
+is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
+reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
+format0.32/0.59s. This preparation is not a production gate or merge; final
+rebase starts from actual3bb3426 after the guard repair merges.
+
+Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
+
+Sequential preparation refresh row28: b5f44e80462c7a246c0c09c8f8fd3838fd118866 → e06c447336ae97eff77b118ebaac194f6968623d, actual base71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0. Retained roadmap/revision-028-b5f44e80462c before explicit leased publication. Compiler/runtime/workflow code unchanged; tests are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
+
+## Archived merged preparation evidence
+
+The live handoff removes these historical rows after their deliveries merged.
+They remain evidence for their stated source, not current acceptance gates.
+
+| Scope | Exact evidence head | Run / status |
+|---|---|---|
+| Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
+| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
+| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
+
+Refreshed evidence sources: reuse25fc86811242133c05c247b7ec766b55327b21d2 on0a7203f, storagee5bbfd84736f35f79d631b48373fb8b328251b5f on215d7ba and serving3aca5cf20d779fa1e9abbfd89e0588032940fb91 one6ae6c8. All compiler/runtime/tests match their prepared sources exactly. Old evidence3d6102a/fb9e59f/5fd8e12 retained remotely before leased replacement; copied all ten authoritative docs for conflicts and refreshed shared auditor. Guarded evidence audits pass2.88s/2.87s/2.98s elapsed; queued runs37992999275/37992657684/37993159029 are not acceptance.
+
+## Archived numerics timing samples
+
+These earlier samples lack a recorded processor model, compiler/flags and
+allocation/live-memory data. They are historical observations, not the baseline
+for roadmap performance acceptance. New comparisons use the measurement
+contract in [ownership.md](ownership.md).
+
+**Performance** (`cargo test --release --test numerics -- --ignored
+--nocapture`, a function of n inputs with 4n operations, on a shared
+4-core machine):
+
+| | native | interpreter |
+|---|---|---|
+| `grad`, n = 100 | 0.012 s | 0.48 s |
+| `gradient` (forward), n = 100 | 0.016 s | 0.50 s |
+| `grad`, n = 1000 | 0.012 s | 0.32 s |
+| `gradient` (forward), n = 1000 | 0.75 s | not measured |
+
+
+Refreshed normal Linux evidence runs37992999275 (reuse tokens),37992657684 (storage plus repaired root controls) and37993159029 (serving plus repaired HTTP2 omission control) all pass at25fc868/e5bbfd8/3aca5cf respectively. They include their normal lint/format, selected ownership tests, actual tracing churn and shared roadmap audit. Each source matches its recorded production preparation. These focused runs do not replace sequential exact-head platform gates.
+
+## Earlier runtime argument-preparation protection
+
+The existing row34 compiler/runtime/test correction9f56744 applies cleanly to
+row28. It protects completed capture duplicates and partial closure storage,
+and defers supplied-prefix transfer until callback entry after capture
+preparation. Published7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3 on actual
+71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 includes the unchanged corrected
+row34 test. Eleven focused runtime/call/preparation tests pass29.13CPU/
+58.52elapsed, lint2.48/4.99s and format0.35/0.63s. Retained previous
+e06c447336ae97eff77b118ebaac194f6968623d remotely before leased publication.
+Later overlapping row34 implementation is reconciled on final rebase; its
+immutable anchor and coverage remain. No complete exception-ownership claim.
+
+Row29 refreshed84ef5480f4938e78c11c10823bf498a8a1a4e6f9 → 78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 on actual7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3. Exact early row34 patch accounts for compiler/runtime changes; inherited audit matches the new base and the original map regression is byte-identical. Eight focused map/preparation/runtime tests pass22.28CPU/44.73elapsed; lint2.41/5.01s and format0.35/0.75s. Retained revision-029-84ef5480f493 remotely before leased publication; full sequential gates remain required.
+
+Row26 strengthens the shared handoff audit after stale next-action bases were
+found in the live documentation. It verifies live branch/head agreement with
+the queue and actual-base ancestry, without modifying immutable anchors.
+Positive audit passes44 link sets/106 immutable pairs/87 live pairs0.47CPU/
+3.69elapsed. Isolated stale-head and stale-base controls both fail as expected,
+then corrected data passes; combined1.19CPU/9.17elapsed. Compiler/runtime/tests
+remain identical to0a7203f. Runtime evidence37994225608 also passes at2234160
+with exact source parity to7cfbe03, including early partial-capture protection.
