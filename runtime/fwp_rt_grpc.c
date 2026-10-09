@@ -1172,6 +1172,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
     g_incoming *src = cell->src;
     g_got g;
     g_recv(src->c, src->s, src->deadline, &g);
+    fwp_cleanup received_cleanup;
+    fwp_cleanup_push(&received_cleanup, g_got_release, &g);
     V r = FWP_NONE;
     if (src->results) {
         /* a failure is an `Err` element, then the end */
@@ -1180,6 +1182,9 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             char *why = 0;
             int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
             free(g.m);
+            g.m = 0;
+            fwp_cleanup decode_cleanup;
+            fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
             if (k == G_DEC_OK) {
                 g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
                 next->src = src;
@@ -1187,15 +1192,21 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             } else {
                 char *t = k == G_DEC_BAD ? g_strdupf("bad response from %s: %s", src->what, why)
                                          : strdup("unexpected error in a response");
+                fwp_cleanup text_cleanup;
+                fwp_cleanup_push(&text_cleanup, fwp_tls_subject_free, t);
                 r = g_err_element(src, GRPC_INTERNAL, t);
+                fwp_cleanup_pop(&text_cleanup);
                 free(t);
             }
+            fwp_cleanup_pop(&decode_cleanup);
+            fwp_tls_subject_free(why);
         } else if (g.kind == G_END && g.code == 0) {
             r = FWP_NONE;
         } else {
             r = g_err_element(src, g.kind == G_END ? g.code : GRPC_UNAVAILABLE, g.text);
         }
-        free(g.text);
+        fwp_cleanup_pop(&received_cleanup);
+        g_got_release(&g);
         cell->forced = 1;
         cell->memo = r;
         return r;
@@ -1205,12 +1216,23 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         char *why = 0;
         int k = g_decode(&src->dec, g.m->d, g.m->n, &x, &why);
         free(g.m);
+        g.m = 0;
+        fwp_cleanup decode_cleanup;
+        fwp_cleanup_push(&decode_cleanup, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) {
             if (src->server) g_fail_call(GRPC_INVALID_ARGUMENT, why);
             g_trapf("bad response from %s: %s", src->what, why);
         }
         if (k == G_DEC_ERROR) {
-            if (first) { *err_value = x; *err_desc = src->dec.error; return 0; }
+            if (first) {
+                *err_value = x;
+                *err_desc = src->dec.error;
+                fwp_cleanup_pop(&decode_cleanup);
+                fwp_tls_subject_free(why);
+                fwp_cleanup_pop(&received_cleanup);
+                g_got_release(&g);
+                return 0;
+            }
             fwp_buf b = {0};
             fwp_write(&b, x, src->dec.error, 1);
             g_trapf("service call %s failed: error: %.*s", src->what, (int)b.len, b.d ? b.d : "");
@@ -1218,6 +1240,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
         g_cell *next = (g_cell *)fwp_mem_alloc(sizeof *next);
         next->src = src;
         r = fwp_some(fwp_tuple2(x, PTR(next)));
+        fwp_cleanup_pop(&decode_cleanup);
+        fwp_tls_subject_free(why);
     } else if (g.kind == G_END && g.code == 0) {
         r = FWP_NONE;
     } else {
@@ -1227,12 +1251,20 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
             fwp_check_cancel();
         }
         int code = g.kind == G_END ? g.code : -1;
-        if (first) { f->code = code; f->text = g.text; return 0; }
+        if (first) {
+            f->code = code;
+            f->text = g.text;
+            g.text = 0;
+            fwp_cleanup_pop(&received_cleanup);
+            g_got_release(&g);
+            return 0;
+        }
         if (code == GRPC_INTERNAL && strncmp(g.text, "trap: ", 6) == 0) fwp_trap(g.text + 6);
         if (code >= 0) g_trapf("service call %s failed: gRPC status %d: %s", src->what, code, g.text);
         g_trapf("service call %s failed: %s", src->what, g.text);
     }
-    free(g.text);
+    fwp_cleanup_pop(&received_cleanup);
+    g_got_release(&g);
     cell->forced = 1;
     cell->memo = r;
     return r;
