@@ -11933,3 +11933,10 @@ Before main fast-forward, all ten root docs were saved and SHA256-verified in
 fast-forward fromc7b3e3f to3bb3426. Main docs now mark queue25 runtime cleanup
 merged, guard sampling repair next and queue26 afterward. Ownership remains
 incomplete and tracing is still the compatibility fallback.
+
+Guard repair final sourced4c832188d3563e85410adeb8763bf6a74f4833b is rebased
+from actualc7b3e3f onto main1033bb3426. Only ten authoritative docs conflicted;
+scripts and roadmap workflow match focused-accepted063f4ca exactly. Updated
+root audit passes44-doc/106-pair/tag/whole-message checks0.31CPU/2.52elapsed.
+Final integration repeat under the original root guard passes all three checks;
+new publication follows with a separate exact-head full production gate.

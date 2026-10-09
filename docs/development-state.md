@@ -40,9 +40,10 @@ CI37990763675 is cancelled only after this parity check, not acceptance.
 #74–#103 deliver native macOS and selected ownership through typed collections,
 old-storage reclamation, task result/deadline boundaries and registered runtime
 unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
-Tracing remains the fallback. There is currently no open PR. Final-rebase the
-published guard sampling repair from actual mainc7b3e3f onto this actual squash,
-copy the ten authoritative docs, audit and publish its focused PR next. Require
+Tracing remains the fallback. There is currently no open PR. Guard repair sourced4c832188d3563e85410adeb8763bf6a74f4833b
+is finally rebased on this actual squash; its scripts/workflow match focused
+accepted063f4ca exactly. Copy the ten authoritative docs, audit and publish its
+focused PR next. Require
 all six exact-head production jobs and roadmap_docs before explicit squash with
 `Pause guarded compiler workloads while sampling target size` and empty body.
 Then deliver row26. Its actual prepared base remains6421c025; rebase from that
@@ -247,11 +248,12 @@ can be broken. Preserve raw interpreter comparisons and original pipe semantics.
 Row105 lint stopped when rustc removed temporary rmetaJAcTae during target du.
 This is incomplete verification, not a resource-limit waiver. No workload remains.
 Separate branch fix-local-guard-sampling in /private/tmp/fwp-guard-sampling-worktree
-is published at063f4ca9729253c0cdc79945181701adc8b1953a, based on
-mainc7b3e3f. Pause the guarded workload during target sampling; keep
+has final sourced4c832188d3563e85410adeb8763bf6a74f4833b on actual
+main3bb34267997479794aeac9fff3447da94c16ca4d, with scripts/workflow identical
+to focused-accepted063f4ca. Pause the guarded workload during target sampling; keep
 RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
 All three deterministic integration checks pass under the original root guard:
-CPU0.17/elapsed1.24s. They verify suspension/resumption, sampler errors and the
+Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.17CPU/1.24elapsed. They verify suspension/resumption, sampler errors and the
 unchanged target-size limit. Negative control against the original guard fails
 all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
 The initial test fixture escaping failure was corrected before this acceptance.
@@ -326,7 +328,7 @@ bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.33CPU/2.62elapsed). It caught a status update
+and entire commit messages (latest0.31CPU/2.52elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
