@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through19 are merged; queue20 is the next delivery.
+Updated 2026-10-09. Rows through20 are merged; queue21 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -33,8 +33,8 @@ resolve full hashes before publication or merge. Checkout paths use
 | 17 | state-sequence | `ownership-state-sequences` | `5d0a3f302e47` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
-| 20 | generation | `ownership-list-generation` | `542fc080e881` | `fad9b1ad08f6` | `c05a5d9c7d86` |
-| 21 | array-element | `ownership-array-elements` | `79bc00f13649` | `636414fabf18` | `fad9b1ad08f6` |
+| 20 | generation | `ownership-list-generation` | `de969ee71615` | `fad9b1ad08f6` | `c05a5d9c7d86` |
+| 21 | array-element | `ownership-array-elements` | `c8d4b57092e5` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `f4716a027a1b` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `cde58f461f78` | `02beec353ec7` | `6774aa5bb426` |
@@ -116,6 +116,10 @@ resolve full hashes before publication or merge. Checkout paths use
 | 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `b44f53c9a60f` | `b44f53c9a60f` | `4114b709fb4b` |
 | 101 | grpc-client-requests | `ownership-grpc-client-requests` | `2339ff08e421` | `2339ff08e421` | `b44f53c9a60f` |
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `33661b298f96` | `33661b298f96` | `2339ff08e421` |
+| 103 | grpc-client-receive | `ownership-grpc-client-receive` | `c48864ce7231` | `c48864ce7231` | `33661b298f96` |
+| 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `b244d5f7c423` | `b244d5f7c423` | `c48864ce7231` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
+| 106 | grpc-context-restore | `ownership-grpc-context-restore` | `7a89dd017ae4` | `7a89dd017ae4` | `cb20833c018f` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

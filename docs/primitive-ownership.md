@@ -153,6 +153,11 @@ FreshTree requires every reachable allocation to be new and independently owned.
 None needs no allocation. These contracts preserve aliasing and immutable values;
 they do not establish complete exception or retained-callback ownership.
 
+Merged repeat borrows value/count and retains each typed alias in fresh
+counted list nodes. Range borrows bounds and owns fresh counted nodes. Scalar
+words are never counted as pointers; boxed128-bit payloads retain the shared
+compatibility lifetime. Full six-job acceptance is recorded in the handoff.
+
 ## Prepared refinements
 
 These contracts are published preparations, not main support. Exact heads and
@@ -162,7 +167,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
 | 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
@@ -246,6 +250,11 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Sequential CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
 | 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Sequential CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
 | 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Sequential CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
+| 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Sequential CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
+| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Sequential CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
+| 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
+| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
+| 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
