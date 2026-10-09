@@ -232,7 +232,8 @@ lifetimes, shared graph ownership or general execution without tracing.
 
 [The immutable queue](roadmap-queue.md) records the ordered published work.
 Prepared code and focused checks are not merged support. Every preparation must
-rebase and pass six exact-head full CI gates. Current failures and commands are
+rebase and pass six exact-head production jobs plus the documentation audit.
+Current failures and commands are
 in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
