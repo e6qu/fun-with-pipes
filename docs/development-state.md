@@ -72,7 +72,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–102 are refreshed and published on their actual predecessors.
+Preparations39–103 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -88,19 +88,17 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Preparation102 client failure text ownership is published4e6dbbddf88854b0410efae4c22d536b281e3a5b
-on actual101a584b59ec896. Both original feature/longjmp repair commits and all
-source/probes are preserved. Four tests13.37CPU/28.29elapsed, lint2.34/4.93s,
-format0.45/0.86s and all three audits pass; retained publication1.68/17.83s passes.
-Exact omission exit1, raw trap/typed error text and once-only release remain
-unchanged. Final sequential production gates remain.
-Current independent task103: synchronous client receive message ownership.
-Native rebase4b8373ba57db FROM actual102old7931f680a003 ONTO
-published1024e6dbbddf888 completed once with all source/probes unchanged;
-Four original client-receive/failure-text/client-request/force tests
-14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass.
-Complete all11 docs/audits before retained publication. Preserve retry/error/cancellation
-paths and all three exact omitted cleanup exit1 controls. Next104 pending connection cleanup.
+Preparation103 client receive ownership is published09b5e3e70117b0908873c51fc6de34f28d2ebb82
+on actual1024e6dbbddf888. Four original client-receive/failure-text/request/force
+tests14.38CPU/28.87elapsed, lint2.42/4.95s, format0.45/0.87s and all three audits
+pass. Retained publication1.73CPU/17.99elapsed passes. All source/probes remain
+byte-identical, including three omission exit1 controls and retry, decode,
+channel cancellation and trap text. Final sequential production gates remain.
+Current independent task104: pending connection cleanup. Rebase FROM actual
+103old38e1e7ab8048 ONTO published10309b5e3e70117; run connection/client-receive/
+client-request/TLS listener controls, lint/format and all11 docs/audits before
+retained publication. Preserve actual descriptor/lookup/SSL cancellation controls
+and original omitted descriptor exit1 / SSL exit3. Next105 background startup ownership.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -222,7 +220,7 @@ still need their final squash rebases and six exact-head full gates.
 | 100 ownership-grpc-response-encoding | 3b13964722ba | 58bf72dbf3df | All four original response/canonical/request/send tests12.11CPU/25.13elapsed, lint2.43/4.95s and format0.43/0.83s pass; source/probes unchanged including both exact omitted cleanup exit1 controls, unary/stream/error bytes and trap/cancellation release counts across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 101 ownership-grpc-client-requests | a584b59ec896 | 3b13964722ba | All four original client-request/response/request/send tests12.36CPU/25.32elapsed, lint2.45/4.94s and format0.45/0.85s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, exact client encode/missing response text and suspended cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | All four original failure-text/client-request/force/receive tests13.37CPU/28.29elapsed, lint2.34/4.93s and format0.45/0.86s pass; both original feature/longjmp repair commits and all source/probes unchanged including exact omitted cleanup exit1, raw trap/GrpcError text and once-only release across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 103 ownership-grpc-client-receive | 4b8373ba57db | 4e6dbbddf888 | All four original client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass; source/probes unchanged including all three exact omitted cleanup exit1 controls, retry/error/decode/channel cancellation and exact trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | All four original client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass; source/probes unchanged including all three exact omitted cleanup exit1 controls, retry/error/decode/channel cancellation and exact trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 104 ownership-grpc-connect-cleanup | 54cffe881e1f | 38e1e7ab8048 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 105 ownership-grpc-connect-startup | c07c37877b47 | 54cffe881e1f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 106 ownership-grpc-context-restore | 43757843a1b3 | c07c37877b47 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
