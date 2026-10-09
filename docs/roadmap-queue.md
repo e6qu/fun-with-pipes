@@ -62,7 +62,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 33 | loop-unwind | `ownership-loop-unwind` | `ac24ea45cbe0` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `49705971b287` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `54249400ef16` | `608ae7bb2d24` | `49739182ecb6` |
-| 36 | worker-boxing | `ownership-worker-boxing` | `bcd3b392050b` | `dc4f9461571b` | `608ae7bb2d24` |
+| 36 | worker-boxing | `ownership-worker-boxing` | `759bc59437a7` | `dc4f9461571b` | `608ae7bb2d24` |
 | 37 | worker-preparation | `ownership-worker-preparation` | `8c4e9ffd71a5` | `c97dd03f8d89` | `dc4f9461571b` |
 | 38 | loop-preparation | `ownership-loop-preparation` | `4289528c436b` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `d98205af88df` | `1bb11bece9ae` | `b879eca20812` |
@@ -115,7 +115,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `a0de231a4c0c` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `5a4ef15301c8` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `3db25573057b` | `dc2ad1febc5d` | `8abfd46b3476` |
-| 89 | http2-body-roots | `ownership-http2-body-roots` | `13f101bfd57f` | `d29dda936dff` | `e91dcb307c61` |
+| 89 | http2-body-roots | `ownership-http2-body-roots` | `5bc4f862bd5a` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `1b4be82fe9b6` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `9900cc0d5229` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `e89105300eb3` | `09751c8c65ac` | `3c268c34d15b` |
