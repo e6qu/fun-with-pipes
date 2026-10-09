@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through23 are merged; queue24 is the next delivery.
+Updated 2026-10-09. Rows through24 are merged; queue25 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -46,7 +46,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
-| 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
+| 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `b5f44e80462c` | `bee3f1659ae5` | `7392f2d67151` |
@@ -109,7 +109,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `c0263af654c4` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `d0e41c87e547` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `b83d77ce5da8` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e91dcb307c61` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e15c6fc1f0c3` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `d29dda936dff` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `6f310b5483a8` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `3c268c34d15b` | `3c268c34d15b` | `6f310b5483a8` |

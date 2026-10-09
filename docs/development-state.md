@@ -28,27 +28,26 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is da62127c92565d00c3116956e6a7f70ac735355e (#101). All six
-CI37969632273 production gates and roadmap_docs CI37969632440 pass at
-6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c. Explicit match-head squash at
-2026-10-09T18:45:45Z verifies the entire one-line message:
-`Reclaim old owned storage and preserve young reuse invariants`.
-#74–#101 deliver native macOS and selected ownership through typed arrays,
-maps/sets and eligible old-storage reclamation. Phase1 is done; phase2 remains
-incomplete; phases3–6 are pending. Tracing remains the shared/runtime fallback.
+Main is c7b3e3f7433b47686c82426173b97f368b792c56 (#102). All six
+CI37975866229 production gates and roadmap_docs CI37975866346 pass at
+51cf1c6987888ddbe69fdeb79455208fb1eb077a. Explicit match-head squash at
+2026-10-09T19:41:46Z verifies the entire one-line message:
+`Own task result wrappers and preserve typed deadline aliases`.
+#74–#102 deliver native macOS and selected ownership through typed collections,
+old-storage reclamation and task result/deadline boundaries. Phase1 is done;
+phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback.
 
-PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
-Current head 51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
- da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
-focused-accepted1741ab5fa64e exactly. Production CI37975866229
-has Linux test, bench, regular ARM macOS and both GC stress jobs passing;
-regular Intel macOS remains running. roadmap_docs CI37975866346 passes.
-Require all six production jobs and
-roadmap_docs at this exact head before explicit squash with
-`Own task result wrappers and preserve typed deadline aliases` and empty body.
-Row25 actual current base remains1741ab5; final-rebase it only after the actual
-row24 squash exists. OLD anchors stay fixed. Superseded PR101 CI37968881919
-and duplicate post-merge main CI37975529386 are cancelled, not acceptance.
+PR103 https://github.com/e6qu/fun-with-pipes/pull/103 is the only open PR.
+Current head1537961db5da753e123162aa8441cb4488d9a66b has actual main base
+c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
+focused-accepted6421c025b3d5 exactly. Production CI37982307280 and roadmap_docs CI37982307209 are queued.
+Queued runs are not acceptance. Require all six
+production jobs and roadmap_docs at this exact head before explicit squash
+with `Release registered owners before nonlocal unwind` and empty body.
+Row26 actual prepared base remains6421c025; final-rebase it only after the actual
+row25 squash exists. OLD anchors stay fixed. Duplicate post-merge main
+CI37981976609 is cancelled after accepted-source/workflow parity, not acceptance.
+Superseded PR101 CI37968881919 and duplicate main CI37975529386 remain cancelled.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -66,9 +65,9 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | PR101 full CI follows; source matches focused-accepted495411d |
-| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Source matches focused-accepted1741ab5; final full CI follows |
-| 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
+| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
+| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
+| 25 ownership-unwind-runtime | 1537961db5da | c7b3e3f7433b | PR103 source matches focused-accepted6421c025; fresh full gates follow |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
@@ -129,9 +128,9 @@ still need their final squash rebases and six exact-head full gates.
 | 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
-| 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Refreshed source unchanged; fresh focused checks follow |
+| 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Refreshed source unchanged; fresh raw source checks follow |
-| 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
+| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Refreshed source unchanged; explicit draining checks follow |
 | 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
 | 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
 | 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
@@ -158,14 +157,14 @@ still need their final squash rebases and six exact-head full gates.
 | 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–23 are merged. Row24 is the next focused delivery. Detailed commands, full hashes,
+heads; rows18–24 are merged. Row25 is the next focused delivery. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row25 actual base is still1741ab5, rather than a future final row24 head;
-final-rebase it only after that actual squash exists.
+inherited CLI/GC harness fixes. Row25 is now rebased from prepared1741ab5 onto actual row24 squashc7b3e3f.
+Row26 actual prepared base remains6421c025; use that base when its turn arrives.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
@@ -199,7 +198,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 queued; source1a5f5ba, actual base295b0da; not acceptance |
+| Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
@@ -252,15 +251,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-record-binding-worktree; the guarded record
-pattern binding-path check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-nominal-source-worktree; the guarded raw source
+nominal-context check is running. Row86 focused checks completed within limits. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.37CPU/2.81elapsed). It caught a status update
+and entire commit messages (latest0.32CPU/2.51elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.

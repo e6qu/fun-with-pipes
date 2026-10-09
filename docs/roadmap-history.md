@@ -11477,3 +11477,34 @@ tests12.49/27.27s. Row87 refreshb83d77ce5da8f3f1eb2d353bc8d8c76541043ae2
 uses actual based0e41c87e547; compiler/runtime and source context fixture match
 original with inherited CLI/tracing repairs intact. Old CURRENTf08611023cec
 is retained under an immutable revision before lease publication. Checks follow.
+
+Actual WASI evidenceCI37980359907 atdc731c19e001bdee07c71d866d707d681682b394
+passes required real WASI File/Task/Channel counts, free variants, WebAssembly
+compiler lint, related native File/frame/ownership tests, actual tracing churn
+and strong doc audit. It does not replace sequential production gates. Row86
+record binding test10.49/22.84s passes. Row88 refresh
+e15c6fc1f0c34e458d029861976734befaf9976a uses actual baseb83d77ce5da8;
+source and explicit-cycle fixtures match original with inherited CLI/GC repairs.
+Old CURRENTe91dcb307c61 is retained before lease publication. Explicit draining
+is tested; automatic unreachable-cycle reclamation remains unproved.
+
+PR102 all six CI37975866229 jobs and roadmap_docs CI37975866346 pass at
+51cf1c6987888ddbe69fdeb79455208fb1eb077a. Explicit subject/empty-body
+squash merged2026-10-09T19:41:46Z asc7b3e3f7433b47686c82426173b97f368b792c56.
+Raw stored message is exactly one line, 58 characters, without trailers.
+Compiler/runtime/tests/workflows match accepted head byte-for-byte. Fresh
+pre102 ten-doc snapshot restored byte-for-byte after main fast-forward.
+Duplicate main CI37981976609 cancelled only after parity; not acceptance.
+Row86 clippy6.03/12.91s and format0.41/0.86s pass. Next row25 final rebase
+uses actual base1741ab5fa64e and actual merged squashc7b3e3f7433b.
+
+Row25 final source1e9a5495d44f7e9b4fca2709b5e7059a452548f2 has actual
+main basec7b3e3f7433b. Compiler/runtime/tests match focused-accepted6421c025
+byte-for-byte. Publication docs carry merged task contracts and current roadmap
+preparations through row88; original anchors remain fixed. Fresh audit passes.
+
+Guarded audit0.32/2.51s passes all44 doc sets and106 immutable pairs/tags
+after row25 actual-main rebase. Final publication1537961db5da753e123162aa8441cb4488d9a66b
+preserves focused-accepted6421c025 source/runtime/tests byte-for-byte. Retained
+revision-025-6421c025b3d5 precedes explicit-lease publication. PR103 is the
+only open production PR; fresh exact-head seven-job acceptance remains required.
