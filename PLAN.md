@@ -40,11 +40,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#98: native macOS and selected ownership through typed
-repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native
-wide counts. PR98 merged after all six exact-head gates passed, including its
-CLI and tracing-fixture repairs. Next delivery is queue21 array ownership;
-final rebase and focused checks pass; publication precedes six fresh gates. Exact heads, commands,
+Main includes #74–#99: native macOS and selected ownership through typed
+repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
+wide counts and array elements. PR99 passed all six exact-head gates and
+merged. Queue22 map/set ownership is the next focused delivery; separate
+GitHub format, lint, ownership tests and handoff audit pass. Its final rebase
+and six fresh production gates remain required. Exact heads, commands,
 failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

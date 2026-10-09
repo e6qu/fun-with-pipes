@@ -17,46 +17,67 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The table below describes the merged container baseline. Typed element and
-runtime refinements remain prepared in [the queue](roadmap-queue.md); consult
-[the handoff](development-state.md) for current validation.
+The tables describe main through PR99. Arrays own typed elements; maps and
+sets retain the shared-element baseline until PR100 passes and merges.
+Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
-| Primitives | Arguments in data-last order | Result / aliasing | Callback |
+| Array primitives | Arguments in data-last order | Result / aliasing | Callback |
 |---|---|---|---|
-| array/map/set.from-list | share list | fresh outer storage, shared elements | none |
-| array.to-list; map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
-| array.length; map.size; set.size | borrow container | scalar | none |
-| array.get | borrow index, borrow array | shared Option containing an aliased element | none |
-| array.set | borrow index, share value, consume array | owned optional container; failure consumes array too | none |
-| array.push | share value, consume array | owned container, old/inserted elements shared | none |
-| array.make | borrow count, share value | fresh container holding repeated shared value | none |
-| array.generate | borrow count, share callback | fresh container, shared callback results | argument 1 |
-| array.map; map.map-values | share callback, borrow container | fresh container, shared callback results; map keys alias input | argument 0 |
-| array.fold | share callback, share accumulator, borrow array | accumulator or shared callback result | argument 0 |
-| array.slice | borrow start, length and array | copied outer storage, aliased elements; no backing view | none |
-| array.append; set.union/intersect/diff | borrow both containers | fresh outer storage, aliased elements | none |
-| array.sort | borrow array | copied outer storage, aliased elements | none |
+| array.from-list; array.to-list | borrow input | counted output retaining typed elements | none |
+| array.length | borrow array | scalar | none |
+| array.get | borrow index and array | owned Option retaining selected typed element | none |
+| array.set | borrow index/value, consume array | owned optional container; retains inserted value and copied aliases | none |
+| array.push | borrow value, consume array | owned container retaining inserted and copied elements | none |
+| array.make | borrow count/value | counted container retaining each repeated typed alias | none |
+| array.generate | borrow count/callback | counted container adopting owned callback results | argument1 borrowed |
+| array.map | borrow callback/array | counted container adopting owned callback results | argument0 borrows typed elements |
+| array.fold | borrow callback/array, consume accumulator | transfers owned accumulator/result | argument0 borrows elements |
+| array.slice; array.sort | borrow arguments | copied storage retaining typed aliases; no backing view | none |
+| array.append | borrow both arrays | copied storage retaining typed aliases | none |
+
+Array destruction releases typed children before outer storage. Scalar fields
+are skipped; boxed128-bit payloads retain their compatibility lifetime. Immutable
+updates preserve live aliases. General callback unwind remains prepared work.
+
+| Map/set primitives | Arguments in data-last order | Result / aliasing | Callback |
+|---|---|---|---|
+| map/set.from-list | share list | fresh outer storage, shared elements | none |
+| map.keys/values/to-list; set.to-list | borrow container | shared list containing aliased elements | none |
+| map.size; set.size | borrow container | scalar | none |
+| map.map-values | share callback, borrow map | fresh container, shared callback results and aliased keys | argument0 |
+| set.union/intersect/diff | borrow both sets | fresh outer storage, aliased elements | none |
 | map.empty; set.empty | none | static shared empty value | none |
-| map.insert | share key, share value, consume map | owned container, aliased stored elements | none |
-| map.get | borrow key, borrow map | shared Option containing aliased value | none |
-| map.contains; set.contains | borrow key and container | scalar | none |
+| map.insert | share key/value, consume map | owned container, aliased stored elements | none |
+| map.get | borrow key/map | shared Option containing aliased value | none |
+| map.contains; set.contains | borrow key/container | scalar | none |
 | map.remove; set.remove | borrow key, consume container | owned container; missing key can return original | none |
-| map.update | share key, callback and default, consume map | owned container with shared callback result | argument 1 |
+| map.update | share key/callback/default, consume map | owned container with shared callback result | argument1 |
 | set.insert | share key, consume set | owned container with shared key | none |
 
-Comparison-only keys never escape into `fwp_map_find` or structural `fwp_cmp`:
+Comparison-only keys never escape into fwp_map_find or structural fwp_cmp;
 these functions read values, allocate nothing and invoke no user callbacks.
-Their primitive wrappers therefore omit `fwp_rc_share(key)`. Insert/update still
-share keys because a key can be stored. Container callbacks in this table
-still share inputs/results, including returned inputs and captured aliases.
+Their wrappers omit fwp_rc_share(key). The current map/set baseline still
+shares inserted keys/elements and callback inputs/results. Fresh outer storage
+does not imply independently owned elements; its destructor frees the buffer
+without recursively releasing shared elements. PR100 refines these contracts
+with typed owners; its pending gates are recorded in the handoff.
 
-Fresh outer storage does not imply independently owned elements. Current
-container destruction frees the outer buffer; it does not recursively release
-its runtime-shared elements. Aliasing metadata records which arguments or their
-elements can be reachable from the result, including callback captures. Typed
-container elements, retained runtime results, exceptional cleanup and cycles
-remain work in [ownership.md](ownership.md). Selected leaves and compiled
-closure ownership are merged as described below.
+## Conservative reconstruction and external boundaries
+
+Unknown primitive, foreign and remote boundaries keep the explicit shared
+fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
+known descriptor does not establish ownership of every reconstructed node.
+
+| Boundary | Current requirement and remaining ownership evidence |
+|---|---|
+| JSON/CSV/protocol parsing | Shared reconstructed aggregates; typed child transfer and partial-failure cleanup need separate contracts |
+| Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
+| Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
+| Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
+
+Keep these boundaries on tracing compatibility until their contracts and cleanup
+are proved. Phase2 records coverage and remaining fallback requirements; phase6
+must establish eligibility and cycle policy before claiming collection-free use.
 
 ## Complete runtime sharing
 
@@ -158,6 +179,11 @@ counted list nodes. Range borrows bounds and owns fresh counted nodes. Scalar
 words are never counted as pointers; boxed128-bit payloads retain the shared
 compatibility lifetime. Full six-job acceptance is recorded in the handoff.
 
+Merged arrays own typed elements. Get and copies retain aliases; map/generate
+adopt callback results; fold consumes its accumulator; set/push consume the
+container while preserving immutable aliases. Scalar bits are never treated as
+pointers. PR99 passed all six platform and GC gates.
+
 ## Prepared refinements
 
 These contracts are published preparations, not main support. Exact heads and
@@ -167,7 +193,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
 | 23 | Last counted owners free storage at any age; reuse clears old marks and stays young-only for immutable updates | Sequential CI; stale-root verification, shared boundaries and reclaimed storage controls |
 | 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
@@ -255,6 +280,11 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
 | 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
 | 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
+| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
+| 109 | TLS pool identity preserves full fields with checked length framing | Sequential CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
+| 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub CI37948869170 passes; sequential CI remains required; cache immutability, blocked task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
+| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Focused GitHub CI37950759037 passes; sequential CI remains required; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
+| 112 | Connections preserve full addresses after aligned headers in one checked allocation | Focused GitHub CI37958243461 passes; sequential CI remains required; actual long-address loopback/pool reuse, truncation rejection, copied inputs and requested bytes against legacy short-address layout; tracing compatibility remains |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

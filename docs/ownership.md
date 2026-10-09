@@ -92,6 +92,28 @@ this does not establish automatic cycle reclamation. Tracing-free eligibility
 therefore needs proved scoped/drained lifetimes or another explicit cycle policy;
 unproved shared cycles retain the tracing fallback.
 
+## Phase 2 exit gates
+
+Finish the prepared ownership deliveries and the following finite coverage
+review before phase 3. The primitive inventory, IR checker and generated
+wrappers must agree on each contract. Record conservative shared boundaries
+explicitly, including their retention and teardown; they remain tracing
+requirements until phase 6 proves eligibility for execution without collection.
+
+| Review | Required evidence |
+|---|---|
+| Primitive families | Argument/result/alias/callback contracts, coverage checks and scalar address-shaped-bit controls |
+| Retained values and contexts | Original owners survive escapes; normal, error, trap and cancellation cleanup; callback evaluation order preserved |
+| Resources and metadata roots | Borrowed descriptors/subjects stay live; deterministic discard, weak-finalizer removal and library teardown; affine File rules preserved |
+| Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
+| Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
+
+Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
+and reuse verification, with allocation/live-memory evidence for reclamation.
+Shared fallback is documented coverage, not deterministic reclamation or a
+collector-free guarantee. Phase 6 must reject unsupported claims about escapes,
+cycles and external lifetimes rather than inferring support from successful exit.
+
 ## Representation and numerics
 
 Prefer elimination, registers and scalar replacement, then stack allocation,
@@ -117,6 +139,24 @@ blocked matrix multiplication, reusable tape/scratch buffers and exceptional
 cleanup before adding accelerator backends. OpenCL discovery is not evidence
 that kernels executed on a real device.
 
+### Phase 3 delivery sequence
+
+Keep source array/value types, pipe syntax and wire behavior unchanged. Make
+representation choices after monomorphization, using the concrete element and
+field types; generic/foreign boundaries keep explicit conversion contracts.
+
+| Delivery | Implementation and acceptance |
+|---|---|
+| Natural-width scalar arrays | Checked sizes/strides, suitable payload alignment and typed load/store; preserve aliases, bounds, arithmetic/trap order and pointer-free scanning |
+| Scalar/aggregate ABI | Prefer natural C scalar fields and direct workers where measured; verify arm64/x86-64 integer and floating-point register use, spills, boxing and FFI conversion |
+| Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
+| Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
+
+Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
+until their representation/conversion contracts pass. Keep default reduction
+order and floating-point contraction unchanged. Phase 4 owns numerical loop,
+matrix and autodiff buffer/tape improvements after this representation gate.
+
 ## Evidence required
 
 Use equivalent workloads against C and Rust, with allocation-inclusive and
@@ -130,10 +170,13 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #96 includes the following contracts. Detailed primitive modes
+Main through PR #99 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
+- Arrays own typed elements across lookup, copies, generation, mapping and
+  immutable updates; folds transfer accumulators. Typed destruction releases
+  children without treating scalar bits as pointers. General unwind remains prepared.
 - Native counts stay exact above 254 with rare side entries. Ordered copied
   lists retain typed aliases; sort-by owns once-per-input keys and its stable
   copied result, releasing scratch after construction.

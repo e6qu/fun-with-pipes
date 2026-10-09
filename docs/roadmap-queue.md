@@ -1,12 +1,17 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through20 are merged; queue21 is the next delivery.
+Updated 2026-10-09. Rows through21 are merged; queue22 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
 
 Open one PR at a time after the previous PR passes all six exact-head gates
 and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
+Immutable OLD heads are retained remotely by lightweight tags
+`roadmap/preparation-007` through `roadmap/preparation-112`. Their ancestor
+parents remain reachable through those tags. On a clean clone, fetch tags
+before ancestry verification. Never move these tags or rewrite OLD anchors.
+
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
 Resolve documentation conflicts with all ten current root docs, rerun focused
@@ -34,12 +39,12 @@ resolve full hashes before publication or merge. Checkout paths use
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `de969ee71615` | `fad9b1ad08f6` | `c05a5d9c7d86` |
-| 21 | array-element | `ownership-array-elements` | `c8d4b57092e5` | `636414fabf18` | `fad9b1ad08f6` |
-| 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
-| 23 | old-reclamation | `ownership-old-reclamation` | `f4716a027a1b` | `6774aa5bb426` | `a8a7d119712b` |
-| 24 | task-boundary | `ownership-task-boundaries` | `cde58f461f78` | `02beec353ec7` | `6774aa5bb426` |
-| 25 | unwind-runtime | `ownership-unwind-runtime` | `123d8b5928aa` | `3e314222ff7c` | `02beec353ec7` |
-| 26 | unwind-liveness | `ownership-reuse-tokens` | `216e673ff2dd` | `33cf86466e2f` | `3e314222ff7c` |
+| 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
+| 22 | map-set | `ownership-map-set-elements` | `98632b08aaad` | `a8a7d119712b` | `636414fabf18` |
+| 23 | old-reclamation | `ownership-old-reclamation` | `495411d33f60` | `6774aa5bb426` | `a8a7d119712b` |
+| 24 | task-boundary | `ownership-task-boundaries` | `1741ab5fa64e` | `02beec353ec7` | `6774aa5bb426` |
+| 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
+| 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `786f1700236e` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `e3c49d965cd0` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `8093bf382210` | `62add7e4a85f` | `bee3f1659ae5` |
@@ -120,6 +125,12 @@ resolve full hashes before publication or merge. Checkout paths use
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `b244d5f7c423` | `b244d5f7c423` | `c48864ce7231` |
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `7a89dd017ae4` | `7a89dd017ae4` | `cb20833c018f` |
+| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `ea18e54f0eee` | `ea18e54f0eee` | `7a89dd017ae4` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
+| 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `d178d86dca2b` | `d178d86dca2b` | `36ad63424530` |
+| 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `6f4bfba80ef3` | `6f4bfba80ef3` | `d178d86dca2b` |
+| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `2bd17608388d` | `2bb665596390` | `6f4bfba80ef3` |
+| 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `762117573367` | `edbc5e8d0e62` | `2bd17608388d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
