@@ -149,8 +149,9 @@ still need their final squash rebases and six exact-head full gates.
 | 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
 | 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
 | 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
+| 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
 
-Rows 18–96 are published preparations with passing focused tests, lint and
+Rows 18–97 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -176,12 +177,20 @@ message buffers have typed h2_buf cleanup through cancellable flow-control
 waits. Focused actual scheduler tests cover zero/partial windows, cancellation,
 wake/resume, closed streams and exact decoded plain/gzip payloads. Send/force
 checks pass 10.02 / 21.56 s, lint 2.74 / 5.52 s and format 0.45 / 0.82 s.
-Record and publish.
-Caller encoding buffers remain the following audit.
+Published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8
+on actual ea79bde.
+Independent queue98 ownership-grpc-request-encoding starts on671ada6,
+/private/tmp/fwp-grpc-request-encoding-worktree. Detached sender owns request
+scratch before encoding and keeps its cleanup through sending. Focused
+actual sender tests cover encoding trap, cancelled send and normal request
+bytes/end marker; both tests pass 2.03 / 4.93 s, lint 2.51 / 4.92 s and
+format 0.47 / 0.96 s. Fixture shadowing issue corrected; record and publish.
+Canonical encoding
+scratch inside the encoder remains the next audit.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery at542fc08, new exact-head CI37929002304 queues
-bench passes; Linux, regular macOS and both GC jobs run.
+bench, ARM regular macOS and ARM GC pass; Linux and both Intel jobs run.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
 ACTUAL base remains7741d09 until rebased after the eventual PR98 squash.
 
@@ -228,7 +237,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-send-cleanup-worktree; final generation tests, lint and format pass.
+belongs to /private/tmp/fwp-grpc-request-encoding-worktree; final generation tests, lint and format pass.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 88 immutable queue
 ancestry pairs and whole commit messages (0.18 s CPU / 1.29 s elapsed).

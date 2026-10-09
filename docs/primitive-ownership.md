@@ -241,6 +241,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 95 | Streaming force owns received payload/status through decoding/copying; decoder failure and temporary error text unwind; first-error return transfers ownership | Sequential CI; first-error/memo behavior, decoder/copy traps, scalar/results, tracing off/on and three omission controls |
 | 96 | Streamed non-status error owns its rendering scratch before formatting/trapping | Sequential CI; partial-render/final trap, exact diagnostics, tracing off/on and omitted cleanup |
 | 97 | Encoded gRPC message h2_buf owns its malloc storage through cancellable flow-control waits | Sequential CI; zero/partial window cancellation, wake/resume, closed streams, exact plain/gzip frames and omitted cleanup |
+| 98 | Detached sender owns request encoding scratch through encoding and cancellable send | Sequential CI; encode trap recovery, normal request bytes/end marker, simultaneous request/wire cancellation and omitted cleanup |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

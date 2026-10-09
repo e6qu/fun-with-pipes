@@ -487,3 +487,8 @@ Prepared encoded gRPC messages register typed h2_buf cleanup before encoding
 and keep it active through flow-control waits. Normal return or cancellation
 releases the malloc frame buffer. Plain and gzip bodies preserve exact payloads;
 caller encoding buffers remain a separate exceptional ownership audit.
+
+Prepared detached gRPC senders own request encoding scratch before encoding
+and keep cleanup active through the cancellable send. Normal completion or
+encoding/cancellation unwind releases the caller's buffer separately from
+the encoded wire buffer. Internal canonical encoding scratch is a later audit.

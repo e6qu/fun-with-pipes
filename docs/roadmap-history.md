@@ -9932,3 +9932,33 @@ Focused send/force clippy passes2.74 / 5.52 s CPU / elapsed; format application
 wire buffer transfers no ownership to the wait; its lexical destructor
 releases after normal completion or cancellation. No new allocation or speed
 claim. Published preparation details move from live handoff to this history.
+
+Row97 published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8 on actual
+ea79bdee1191f1a1a8d5cd180245df895711461e; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Detached sender request scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-request-encoding starts on671ada6ec85d6e46174bcdacbc0a95725131ede8.
+Detached g_send_all encodes a malloc request h2_buf then calls cancellable
+sending; previously only normal return freed the caller's scratch. Register
+typed request cleanup before encoding and transfer no ownership across send.
+Actual sender fixture stubs iterator/request encoding only, checks normal
+request bytes/end marker, encoding trap recovery and cancellation while both
+request and wire buffers are live. Omitted request cleanup must fail1; fixed
+O1/O2 × tracing off/on × poison must pass. Guarded clean before switching
+0.05 / 0.36 s; request/send tests run. Canonical encoder scratch remains later.
+Current PR98 exact542fc08 CI37929002304 bench, ARM regular/GC pass; Linux
+and both Intel jobs run. Queue98 preparation is not a competing delivery PR.
+
+Initial request check fails exit1017.32 / 14.94 s: fixture's global
+request_buffer watch is shadowed by the new local cleanup record in macro
+expansion. Renamed observer pointer watched_request, preserving control
+needles/runtime. No production workaround or weaker assertions. Rerun.
+
+Corrected request/send tests pass2.03 / 4.93 s CPU / elapsed. Normal request
+bytes/end marker, encoding-trap recovery and cancellation with two live buffers
+pass at O1/O2 with tracing off/on and poison. Omitted caller cleanup fails1.
+Focused lint passes2.51 / 4.92 s; format application0.44 / 0.83 s and check
+0.47 / 0.96 s pass. No new allocations or performance claim; internal canonical
+encoding scratch remains the next specific runtime ownership audit.
