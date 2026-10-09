@@ -358,6 +358,14 @@ error. See [protocol.md](protocol.md).
 
 ## Prepared ownership implementation
 
+Compiler call ownership lowering must preserve allocation optimizations as well
+as exceptional lifetimes. Earlier counted arguments, including duplicated
+locals, stay registered while later arguments evaluate. A final consumed value
+can stay inline when no earlier counted argument needs protection, preserving
+direct stack, worker and flattened-loop representations. Existing allocation
+limits and raw-interpreter comparisons remain acceptance gates.
+
+
 Prepared record-worker calls keep returned locals as fields when every use is a
 field read or a complete call with the matching record ABI. Typed aliases and
 trap cleanup preserve field owners; partial and dynamic calls retain boxed

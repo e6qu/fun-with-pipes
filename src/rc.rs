@@ -387,10 +387,10 @@ impl Pass<'_> {
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut xs = Vec::new();
         let mut drop_after: Vec<Local> = Vec::new();
-        // Every computed counted argument becomes an owned temporary before
-        // the operation, including consumed arguments. Earlier results remain
-        // visible owners if evaluation of a later argument unwinds. Bind earlier
-        // computed scalar arguments too, preserving evaluation order.
+        // Computed counted arguments stay owned while later arguments run.
+        // With no pending counted arguments, the final consumed argument can
+        // transfer directly, preserving stack, worker and loop representations.
+        // Bind earlier scalar computations too, preserving evaluation order.
         let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
@@ -399,7 +399,15 @@ impl Pass<'_> {
             .iter()
             .zip(modes)
             .enumerate()
-            .filter(|(i, (p, _))| !inline(p) && !uncounted[*i])
+            .filter(|(i, (p, mode))| {
+                !inline(p)
+                    && !uncounted[*i]
+                    && (matches!(mode, Mode::Borrow)
+                        || *i + 1 < parts.len()
+                        || parts[..*i].iter().enumerate().any(|(j, earlier)| {
+                            !uncounted[j] && !matches!(earlier, Expr::Const(_) | Expr::Func(_))
+                        }))
+            })
             .map(|(i, _)| i)
             .next_back();
         for (i, (p, mode)) in parts.iter().zip(modes).enumerate() {
@@ -443,7 +451,10 @@ impl Pass<'_> {
                 }
                 (Mode::Consume, p) => {
                     let v = self.conv(p, &mine, &theirs);
-                    if inline(&v) || (uncounted[i] && last_bound.is_none_or(|j| i > j)) {
+                    if inline(&v)
+                        || ((uncounted[i] || i + 1 == parts.len())
+                            && last_bound.is_none_or(|j| i > j))
+                    {
                         xs.push(v);
                     } else {
                         let t = types[i].clone();
@@ -1006,6 +1017,29 @@ mod tests {
         assert_eq!(second.at_entry.len(), 2); // input plus the first produced value
         assert_eq!(second.at_entry[0], (0, 1));
         assert_eq!(second.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn earlier_duplicate_remains_owned_during_the_final_call() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "produce".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(list())),
+            body: Body::Prim("probe.produce".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Local(0),
+            Expr::Call(1, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let call = calls.values().next().unwrap();
+        assert_eq!(call.at_entry.len(), 2);
+        assert_eq!(call.at_entry[0], (0, 1));
+        assert!(call.at_entry[1].0 > 0);
+        assert_eq!(call.at_entry[1].1, 1);
     }
 
     #[test]

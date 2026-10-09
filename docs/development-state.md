@@ -47,17 +47,30 @@ reclamation, task result/deadline boundaries, registered runtime unwind cleanup,
 the bounded guard repair and compiler reuse-token transfer/unwind cleanup.
 Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing remains
 the fallback. Prior acceptance details and failed/superseded runs are in history.
-No production PR is open. Row27 final rebase from actual9a21fd6 onto actual
-squash2ef5510 gives local3e82eca990cec698471b87252a75581bd17e7718. Compiler/
-runtime/tests/scripts/production workflows are byte-identical to published2a2458b.
-Final twelve focused tests pass30.59CPU/61.49elapsed. Eleven ownership-IR module
-tests pass3.27CPU/6.84elapsed. Lint2.39/4.79s and format0.34/0.60s and strong44/106/86 audit0.43/3.49s pass. Copy
-all 11 current docs, publish and open the only next production PR.
-The published preparation is2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1; compiler/
-runtime/original probe match71c2405. Twelve focused tests30.40CPU/61.02elapsed,
-lint2.35/4.73s, format0.35/0.62s and strong audit0.45/3.59s pass before final
-rebase. Retained roadmap/revision-027-71c2405dd0e0 remotely. The final PR needs
-all six fresh exact-head production jobs plus roadmap_docs before squash.
+[PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
+production PR, exact head `9c1b5a861b156a48d9e4e55b96c336fc6e852e18` on actual
+main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Full CI38002299110 fails regular ARM macOS allocation regressions; other jobs
+continue, and benchmarks/both GC stress/docs pass only at this old head. This
+head is not eligible to merge. Repair the cause and require all seven fresh
+exact-head checks; update root
+status without rewriting the PR just to embed run IDs. Require all seven
+exact-head passing checks, then squash with the subject
+`Protect live compiler owners across calls and cancellation` and empty body.
+
+The current repair keeps a final consumed computation inline when no earlier
+counted argument requires protection. Earlier computed and duplicated values
+retain typed pending owners during later evaluation. Stack/worker/loop shapes
+remain visible, preserving the existing allocation limits. No thresholds or
+fixtures were weakened. Final focused checks pass: all 12 ownership-IR tests
+(3.17 CPU / 6.64 elapsed seconds), 12 call/token/unwind integration checks plus
+four stack allocation tests (34.14 / 68.60 seconds), and exact record reuse
+(1.32 / 2.83 seconds). Full platform acceptance remains required.
+
+Next, publish the repair and refresh row28 FROM its recorded actual base onto
+the repaired PR106 head. Carry the exact repair into later preparations;
+previous source-parity and focused evidence predate this change. After PR106
+passes all seven exact-head gates and merges, rebase row28 onto its actual
+squash, validate it and open the next PR. Keep only one production PR open.
 
 The merged million-step native tail regression passes O1/O2 with GCoff/on
 against a200-step FWP_NO_OPT=1 oracle. Full-size raw100000 local execution
@@ -75,37 +88,37 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 27 ownership-call-liveness | 2a2458b93d6c | 9a21fd6cc844 | Twelve tests30.40/61.02s; lint2.35/4.73s, format0.35/0.62s and strong audit pass; final rebase after105 |
-| 28 ownership-runtime-call-cleanup | 3e7ab59e89c3 | 2a2458b93d6c | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
-| 29 ownership-map-unwind | 4c7d5ba45082 | 3e7ab59e89c3 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
-| 30 ownership-selection-unwind | c17d4a693b32 | 4c7d5ba45082 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
-| 31 ownership-zip-unwind | 5d411a886b73 | c17d4a693b32 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
-| 32 ownership-fold-unwind | a8e662267bbc | 5d411a886b73 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 33 ownership-loop-unwind | c37df3b0520c | a8e662267bbc | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
-| 34 ownership-argument-preparation | 819fd83c48e2 | c37df3b0520c | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
-| 35 ownership-constructor-unwind | 26375deb676e | 819fd83c48e2 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
-| 36 ownership-worker-boxing | 928c619289bd | 26375deb676e | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
-| 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
-| 38 ownership-loop-preparation | 032a764c1d33 | 3bd34dafb62f | Test9.88/19.92s; lint2.40/4.81s and format0.34/0.71s pass |
-| 39 ownership-variant-preparation | 5a72ba8763e4 | 032a764c1d33 | Native10.28/20.75s; unit3.40/7.06s; lint/format pass |
-| 40 ownership-constructor-types | dd6c405c77eb | 5a72ba8763e4 | Native10.03/20.20s; two units; lint2.42/4.95s and format0.43/0.59s pass |
-| 41 ownership-variant-conversion | 67e37717ecf2 | dd6c405c77eb | Native10.20/20.63s; unit3.37/7.04s; lint2.29/4.47s and format0.33/0.59s pass |
-| 42 ownership-record-update | 4ea62b69a2c4 | 67e37717ecf2 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
-| 43 ownership-record-conversion | ffbbcf9d5119 | 4ea62b69a2c4 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
-| 44 ownership-variant-alias | b31400d03ac7 | ffbbcf9d5119 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
-| 45 ownership-match-context | 0b00524a0a03 | b31400d03ac7 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
-| 46 ownership-field-context | f2262f94ada4 | 0b00524a0a03 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
-| 47 ownership-caf-cache | fcfa8fb2d296 | f2262f94ada4 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
-| 48 ownership-inline-caf | ece7166b7a79 | fcfa8fb2d296 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
-| 49 ownership-task-thunks | ec9a4133a2c1 | ece7166b7a79 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
-| 50 ownership-task-within | 1b5fb056fa00 | ec9a4133a2c1 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
-| 51 ownership-task-scope | 245a0a24370e | 1b5fb056fa00 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
-| 52 ownership-task-handles | fe8ed51eb078 | 245a0a24370e | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
-| 53 ownership-channel-queues | a30c1829d0d0 | fe8ed51eb078 | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
-| 54 ownership-library-results | f4d3784f4657 | a30c1829d0d0 | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
-| 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
-| 56 ownership-library-unload | ac6de597fddc | 625ac7793f84 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
+| 27 ownership-call-liveness | 9c1b5a861b15 | 2ef5510154cd | PR106 repair: 12 IR tests3.17/6.64s; 16 focused integration/allocation tests34.14/68.60s; record reuse1.32/2.83s; fresh full CI required |
+| 28 ownership-runtime-call-cleanup | fbb3bc84847b | 9c1b5a861b15 | Source unchanged; ten tests27.43/55.06s, lint2.37/4.77s, format0.34/0.63s and strong audit pass; final sequential gates follow |
+| 29 ownership-map-unwind | 4147e018d2e0 | fbb3bc84847b | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
+| 30 ownership-selection-unwind | c0afce27ff2e | 4147e018d2e0 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
+| 31 ownership-zip-unwind | eadec76e75e7 | c0afce27ff2e | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
+| 32 ownership-fold-unwind | 1523161a7314 | eadec76e75e7 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
+| 33 ownership-loop-unwind | ce5a51c330f3 | 1523161a7314 | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
+| 34 ownership-argument-preparation | dcf18f01c2fb | ce5a51c330f3 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
+| 35 ownership-constructor-unwind | 432a3332c4f7 | dcf18f01c2fb | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
+| 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
+| 37 ownership-worker-preparation | 7de346c56ec4 | 0584ab3ac77b | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
+| 38 ownership-loop-preparation | 61c5f8e91cc5 | 7de346c56ec4 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
+| 39 ownership-variant-preparation | a5ac41b405dd | 61c5f8e91cc5 | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
+| 40 ownership-constructor-types | 5376d4a1f4ed | a5ac41b405dd | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
+| 41 ownership-variant-conversion | 9033d9f1072e | 5376d4a1f4ed | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
+| 42 ownership-record-update | 00b9d0901485 | 9033d9f1072e | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
+| 43 ownership-record-conversion | 3df2c9d86059 | 00b9d0901485 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
+| 44 ownership-variant-alias | 8ebfe6f5d701 | 3df2c9d86059 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
+| 45 ownership-match-context | e73b5b8e7ac7 | 8ebfe6f5d701 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
+| 46 ownership-field-context | ae8933d991cb | e73b5b8e7ac7 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
+| 47 ownership-caf-cache | 4f75498ad664 | ae8933d991cb | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
+| 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
+| 49 ownership-task-thunks | 4ab664827244 | 3b142abc5f93 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
+| 50 ownership-task-within | 91b625c60cb9 | 4ab664827244 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
+| 51 ownership-task-scope | 935554ad52c1 | 91b625c60cb9 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
+| 52 ownership-task-handles | 8eab3e41f8ba | 935554ad52c1 | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
+| 53 ownership-channel-queues | 40252d18e97e | 8eab3e41f8ba | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
+| 54 ownership-library-results | 9d87a3774363 | 40252d18e97e | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
+| 55 ownership-library-inputs | 825dfbfeb23f | 9d87a3774363 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
+| 56 ownership-library-unload | ac74568b0113 | 825dfbfeb23f | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
+| 57 ownership-opencl-lifetime | 47992a27c193 | ac74568b0113 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
 | 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
@@ -226,7 +239,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows38–41 loop/retain/typed conversion | 3a9fcb512a37a745e65629b29b15e1d06ec0a992 | CI37971602336 passes Linux ownership/tracing and docs; production67e3771, actual basedd6c405 |
+| Rows26–41 callback/constructor/typed conversion | edabbc24e57d71eb5e8253f25f1c1697322da56a | CI38004068610 passes combined ownership/tracing/lint/docs and five exact IR units; source/tests/scripts/production workflows match current41 at9033d9f; earlier3a9fcb5 CI37971602336 passed on67e3771 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
 | Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
@@ -343,8 +356,29 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 
 The fun-refactor guard is for the other repository. Shared target now belongs
 to /private/tmp/fwp-call-liveness-worktree after absolute-root guarded package
-clean0.07CPU/0.38elapsed. Twelve final call/token/unwind tests pass30.59CPU/
-61.49elapsed. Eleven focused ownership-IR module tests pass3.27CPU/6.84elapsed.
+clean (0.07 CPU / 0.38 elapsed seconds). PR106 repair modifies only src/rc.rs:
+earlier counted arguments remain owned across later evaluation. The final
+consumed argument stays inline only without pending counted arguments, keeping
+stack/worker/loop shapes visible. Both computed and duplicated pending owners
+remain protected; the new duplicate-owner IR regression verifies this case.
+Final focused validation: 12 ownership-IR tests pass3.17CPU/6.64elapsed;
+12 call/token/unwind checks plus four unchanged stack allocation tests pass
+34.14CPU/68.60elapsed; exact record reuse passes1.32CPU/2.83elapsed.
+The baseline >10MiB and optimized <1MiB allocation assertions are unchanged.
+Focused lint passes2.26CPU/4.71elapsed; final format passes0.36/0.75s
+after rustfmt. The strong audit precedes publication; full checks run on GitHub.
+Patch: /private/tmp/fwp-call-liveness-final-argument-repair.patch.
+Failure log: /private/tmp/fwp-pr106-arm-job.clean.log. Old ARM failures: reuse
+45.8MiB copied/30.5MiB reused; shapes61/30.5MiB, twice137.3/91.6MiB,
+wide366.2MiB, digits115.9/91.6MiB. Outputs are correct; allocation gates remain
+unchanged. The original gh --log-failed refused unfinished full-run logs;
+direct completed job API download succeeds, with ANSI bytes saved/stripped.
+Rows50–57 serial refresh completes8.27CPU/92.49elapsed with strict native
+source/old-probe parity and exact merged guard/audit/workflow/tail inheritance.
+Journal /private/tmp/fwp-refresh-rows-50-57-journal.json is complete; do not rerun.
+Future preparations must inherit the verified argument-lowering repair on their
+final/next refresh; unchanged-source claims above predate this new correction.
+
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
 samples current limits; historical observations never authorize bypassing the
