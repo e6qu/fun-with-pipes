@@ -1,0 +1,26 @@
+name: Focused gRPC environment cache preparation
+
+on:
+  push:
+    branches: [ownership-evidence-grpc-environment]
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        run: cargo clippy --test grpc_environment_cache --test grpc_tls_pool_identity --test grpc_capture_resources --test grpc_context_resources --test library_unload -- -D warnings
+      - name: Focused lifetime and library teardown checks
+        run: cargo test --test grpc_environment_cache --test grpc_tls_pool_identity --test grpc_capture_resources --test grpc_context_resources --test library_unload --no-fail-fast
+      - name: Matching interpreter pool identity
+        run: cargo test --lib grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool -- --exact
