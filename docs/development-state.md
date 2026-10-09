@@ -72,7 +72,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–109 are refreshed and published on their actual predecessors.
+Preparations39–110 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -88,20 +88,18 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Preparation 109 TLS pool identity is published at c9d841ee5a9db99b816914f0a02fdd44ffcee40c
-on actual 108 ef437370ca74. Four native controls pass (13.37 CPU / 30.03 elapsed s).
-The exact interpreter pool-key unit executes one passing test (5.33 / 11.12 s);
-lint (2.35 / 4.76 s), format (0.45 / 0.85 s), all three audits and retained
-publication (1.81 / 18.68 s) pass. Original source/probes remain byte-identical,
-including the old-key collision exit 1, complete option distinctions and pool reuse.
-Final sequential production gates remain.
-Current independent task 110: environment TLS cache teardown. Rebase FROM actual
-109 old 6b206eae08ec ONTO published 109 c9d841ee5a9d completed once at751fa69e018c;
-source/probes unchanged. Four original environment-cache/identity/capture/
-context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s
-pass. Complete all11 docs/audits before retained publication. Preserve read-once options, blocked-task and finalizer order,
-repeat teardown and omitted cache cleanup exit 1. Next: 111 packed options,
-including actual binary/layout inspection; preserve both original commits.
+Preparation 110 environment cache teardown is published at bf297ac299ea816937cbb5cf64ef12981db3651c
+on actual 109 c9d841ee5a9d. Four original controls pass (13.41 CPU / 29.53 elapsed s),
+as do lint (2.56 / 5.22 s), format (0.44 / 0.82 s), all three audits and retained
+publication (1.92 / 19.36 s). Original source/probes remain byte-identical,
+including omitted cleanup exit 1, read-once inputs, blocked-task/finalizer order
+and repeated teardown. Final sequential production gates remain.
+Current independent task 111: packed TLS options. Rebase FROM actual 110 old
+0caead68a6c3 ONTO published 110 bf297ac299ea, preserving BOTH original commits.
+Run packed-options/environment-cache/identity/capture controls with unchanged
+compiler delegation to retain the original packed probe's actual C/binaries;
+inspect headers, disassembly and actual layout, then lint/format and all 11 docs/
+audits before retained publication. Next: 112 full connection addresses.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -230,7 +228,7 @@ still need their final squash rebases and six exact-head full gates.
 | 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | All four original context-resource/restoration/startup/task-handle tests19.18CPU/40.38elapsed, lint2.48/5.17s and format0.44/0.84s pass; source/probes unchanged including all omitted TLS/task/scope owner exit1 controls, escaped tasks, spawn rollback and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | All four original capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass; source/probes unchanged including all three omitted owner exit1 controls, atomic overflow rollback, inherited captures and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | All four original native identity/capture/context-resource/connection tests13.37CPU/30.03elapsed, exact interpreter pool-key unit5.33/11.12s (one executed), lint2.35/4.76s and format0.45/0.85s pass; source/probes unchanged including old collision exit1, all fields/long/separator options, copied keys and pool reuse across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 110 ownership-grpc-environment-cache | 751fa69e018c | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 111 ownership-grpc-packed-options | b2350957e6ff | 0caead68a6c3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 112 ownership-grpc-connection-addresses | 0da68ea8cdb1 | b2350957e6ff | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 
