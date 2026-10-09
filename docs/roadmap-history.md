@@ -11613,3 +11613,235 @@ c6b5ad8c827cf734f0883c9daa676c0c0541a050 uses actual base7fe3282b1413.
 Compiler/runtime/client request fixture match original with inherited CLI/GC repairs.
 OLD2339ff08e421 stays fixed; previous CURRENT is retained before lease publication.
 Fresh client encoding/cancel checks follow.
+
+Row99 canonical partial/transcoder failure scratch test7.35/15.76s passes;
+lint/format follow. Queued runs remain pending verification.
+
+After server recovery, verified PR103 unchanged and queued, main atc7b3e3f,
+no compiler workload remaining and failure-text refresh222e199 completed locally
+but unpublished. Row99 clippy5.99/12.96s previously passed; remaining formatting
+0.45/0.87s now passes. Row102 refresh222e199ca7354ce59616b894d3e691d1428564e8
+uses actual basec6b5ad8c827c; source/runtime/tests match original except inherited
+CLI/GC repairs. OLD33661b298f96 stays fixed; previous CURRENT retained under
+revision-102 before explicit-lease publication. Fresh focused checks follow.
+
+Row100 served response trap/cancel test9.09/18.46s passes. Row103 refresh
+8ccdd092478cab8e0d30400f6703e4624ec1055f uses actual base222e199ca735.
+Compiler/runtime/client receive fixture match original with inherited CLI/GC repairs.
+OLDc48864ce7231 stays fixed; previous CURRENT is retained under revision-103
+before lease publication. Fresh retry/error/cancel checks follow.
+
+Row100 clippy5.76/13.10s and format0.46/0.87s pass after response
+test9.09/18.46s. Row104 refresh8bf114c615fe8a36b5e3daa55b232c0c50445dd6
+uses actual base8ccdd092478c; compiler/runtime/connect fixture match original
+with inherited CLI/GC repairs. OLDb244d5f7c423 stays fixed; previous CURRENT
+is retained before lease publication. Fresh cancellation checks follow.
+
+Row101 client encode/cancel test8.38/16.90s passes; lint/format follow.
+
+Row101 clippy5.92/13.01s and format0.46/0.86s pass after client request
+test8.38/16.90s. Row105 refresh4d4cbacd0a7850fd046bba139683e67e610d5b2c
+uses actual base8bf114c615fe; compiler/runtime/startup fixture match original
+with inherited CLI/GC repairs. OLDcb20833c018f stays fixed; previous CURRENT
+is retained before lease publication. Fresh startup rollback checks follow.
+
+Row102 copied failure text/trap/typed error test7.45/15.82s passes.
+Row106 refresh911fcf78c5c9a30c4eba3e2cfa63844005f3dee9 uses actual base4d4cbacd0a78.
+Compiler/runtime/context fixture match original with inherited CLI/GC repairs.
+OLD7a89dd017ae4 stays fixed; previous CURRENT is retained before lease publication.
+Fresh context/trap/cancellation checks follow; cleanup must not restore handlers.
+
+Row102 clippy5.96/13.43s and format0.46/0.87s pass after copied failure text
+test7.45/15.82s. Row103 client receive retry/error/cancel test10.13/20.40s
+passes. Focused Linux client evidenceed7ce4b60160d4e5f94a98760f2f05b005959201
+is source-identical to911fcf78c5c9; CI37985348012 is queued, not acceptance.
+
+Row103 clippy6.00/13.19s and format0.45/0.85s pass after receive
+test10.13/20.40s. Row107 refresh090422d2f3302b3ae2b3d6430a194783d1c25c16
+uses actual base911fcf78c5c9; compiler/runtime/scoped option fixture match original
+with inherited CLI/GC repairs. OLDea18e54f0eee stays fixed; previous CURRENT
+is retained before lease publication. Fresh scoped-owner checks follow.
+
+Row104 pending connect/handshake cancellation cleanup test7.73/16.98s passes;
+lint/format follow. No local full gate was run.
+
+Row104 clippy6.15/13.36s and format0.44/0.86s pass after connect
+test7.73/16.98s. Row108 refresh52668c476b2acc348ed611fc8d75e2b69504302f
+uses actual base090422d2f330; compiler/runtime/capture fixture match original
+with inherited CLI/GC repairs. OLD36ad63424530 stays fixed; previous CURRENT
+is retained before lease publication. Fresh capture/alias/rollback checks follow.
+
+Row105 background startup failed-task reservation cleanup11.73/23.95s passes;
+lint/format follow. PR103 exact-head roadmap_docs CI37982307209 passes, with
+all six production jobs still pending. No old/superseded acceptance is reused.
+
+Row105 lint stopped during guard disk sampling: du reported target/debug/deps/
+rmetaJAcTae disappeared while rustc changed temporary metadata. This is not lint
+acceptance. No workload remains; free disk113625788KiB and target143120KiB are
+within unchanged limits. Prepare a separate guard sampling fix that pauses the
+workload while measuring target size; retain all limits and fail on sampler errors.
+Row109 rebase95c74a9b4b45a7db16c1646617bb065af904e5aa is complete locally
+on actual base52668c476b2a, not published yet.
+
+## Local guard sampling repair preparation (2026-10-09)
+
+Row105 lint stopped because rustc removed temporary rmetaJAcTae while du
+traversed the shared target. Its startup test passed11.73CPU/23.95elapsed;
+lint remains incomplete and no formatting acceptance is claimed. The guard
+stopped correctly, with113625788KiB free disk and143120KiB target, so this
+was a sampling race rather than permission to increase resource limits.
+
+Separate fix-local-guard-sampling starts from mainc7b3e3f. It suspends the
+tracked workload for disk sampling, then retains the existing CPU-throttle
+resume decision. Sampling errors still kill the workload. All RSS, target,
+free-disk, CPU and deadline limits are unchanged. Three isolated Python
+integration checks prove pause/resume, fail-on-error and target-size rejection
+without allocating2GiB. The initial fixture escaped-newline failure was fixed
+by using a raw string. Final checks under the original shared-target guard:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-guard-sampling-worktree/scripts/test-local-guard.py`
+passes0.17CPU/1.24elapsed. FWP_GUARD_TEST_SOURCE pointing to the original root
+guard is the negative control: all three fail with workload-not-suspended,
+0.20CPU/0.87elapsed, as expected. No compiler/full gate ran locally.
+The roadmap_docs workflow adds the integration checks on Linux. Keep PR103
+frozen; deliver this repair as its own next PR after103, before queue26.
+
+## Linux evidence fixture failures and focused repairs (2026-10-09)
+
+Resource-holder/cycle evidence3f0c430477bf261a54cbffb3c39a17826e7677f5,
+CI37982696642, passes. HTTP2 roots evidence9f564880378644a82f11bbf343956d1f6f019d48
+CI37983077375 and serving evidence5fd8e12bd82a8f4ac43b26390a53691be04595fd
+CI37984431678 fail only the inherited HTTP2 body omission control: deliberately
+removing the owner fence exits0 on GCC rather than expected1. Positive copy,
+actual collection, payload and finalizer checks pass; all other selected
+HTTP2 and serving tests pass. A focused evidence-only repaira80d4b8f9fbdf1953d8e74cd06c79c86d8f0f344
+separates construction from the active copying frame and clears dead stack
+scratch to remove accidental conservative owner roots. Fresh CI37987025996
+is queued. Do not weaken the omission assertion or claim acceptance yet.
+
+Client evidenceed7ce4b60160d4e5f94a98760f2f05b005959201, CI37985348012,
+fails only grpc_client_failure_text at its typed-handler assertion, exit3
+on GCC-O1/GC-off. The fixture's automatic handler is changed by fwp_fail
+after setjmp and read after longjmp, making it indeterminate under C rules.
+Focused evidence-only repairf2a2417 moves that handler into static storage and
+clears it for each case. All trap, typed-error and omission/free assertions
+remain. Fresh Linux evidence follows; no runtime change or production merge
+is claimed. Publish validated fixes in their original focused deliveries and
+propagate through later prepared branches without changing immutable anchors.
+
+Guard repair production preparation063f4ca9729253c0cdc79945181701adc8b1953a
+is published without a second PR, on mainc7b3e3f. Separate evidence
+9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407, is queued.
+The updated44-document/106-pair immutable tag and message audit passes
+0.31CPU/2.54elapsed before these new evidence status updates.
+
+Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6 completes
+CI37986986407 successfully: all three integration checks0.688s and the
+44-document/106-immutable-pair/tag/message audit pass. Runner free disk86GiB;
+limits are unchanged and no allocation-limit bypass was needed. Client repair
+f2a241784d98b54f1541ed9f586d90e50db08a30 is queued in CI37987135273.
+The failed overall client run37985348012 still provides passing format/lint,
+startup and dynamic-context checks at its exact evidence head; do not call the
+overall run passing. Fresh normal evidence for the repaired fixture follows.
+
+Row109 preparation95c74a9b4b45a7db16c1646617bb065af904e5aa is published on
+actual refreshed row10852668c476b2acc348ed611fc8d75e2b69504302f. Before the
+explicit leased rewrite, oldd178d86dca2bd8c9c0ed7f9f3fa417374c55af29 was retained
+under immutable roadmap/revision-109-d178d86dca2b. Source comparison differs
+only in inherited CLI/GC fixture repairs; full binary TLS option identity and
+omission/collision assertions are unchanged. Original OLD anchors remain fixed.
+Fresh local/root documentation audit passes0.38CPU/2.91elapsed.
+
+Row110 preparation09ec98b12c5db0064e85de435cdbe2694e8fe69e is published
+on actual95c74a9b4b45a7db16c1646617bb065af904e5aa. Retained old6f4bfba80ef3
+under roadmap/revision-110-6f4bfba80ef3 before exact leased rewrite. Only ten
+authoritative docs conflicted; runtime/compiler/cache tests remain unchanged
+apart from inherited CLI/GC repairs. Prior Linux evidence remains historical
+until fresh sequential full acceptance. Immutable OLD anchors remain fixed.
+
+Row111 preparation4fd2d18953859eee788d8d383280acd1946162bc is published
+on actual09ec98b12c5db0064e85de435cdbe2694e8fe69e. Both the one-allocation
+implementation and prior formatting repair survive. Retained old2bd17608388d
+under roadmap/revision-111-2bd17608388d before exact leased rewrite. Only
+documentation conflicted; compiler/runtime/tests differ only in inherited
+CLI/GC repairs. Original OLD2bb665596390 remains fixed.
+
+Row112 preparation93783d4ffda4744130d696c2e997c4a50c445b27 is published
+on actual4fd2d18953859eee788d8d383280acd1946162bc. Both full-address storage
+and its formatting repair survive; compiler/runtime/tests differ only in
+inherited CLI/GC repairs. Retained previous762117573367 under immutable
+roadmap/revision-112-762117573367 before exact leased rewrite. ORIGINAL
+OLDedbc5e8d0e62247c360db49c6019de7462701e48 remains fixed and tag-identical.
+Fresh combined scoped TLS/capture/pool/cache/packed/full-address checks follow.
+
+The first HTTP2 construction-frame attempta80d4b8, CI37987025996, still fails
+the same omitted-owner exit assertion on GCC; no acceptance. Evidence-only
+diagnostic830ce5a8f46cf7e0cf1856ad84c4f1025120c75b, CI37987901892, saves
+the omitted-owner executable and prints body/primitive machine code on failure.
+The first client static-handler attemptf2a2417, CI37987135273, still fails
+typed-check exit3. Evidence-only diagnosticf0ba2d28dc63f8cdcaea374d4907d7e3bcd4b515,
+CI37987861321, reports the precise handler/code/text mismatch. Neither
+first hypothesis is sufficient; diagnostics stay out of production ancestry.
+
+Combined storage evidence0050b346cfbd66c8439254bc788cc59ec05936d0 is queued
+in CI37988054909. Source/runtime/tests match refreshed row11293783d4 exactly.
+Selected targets cover scoped TLS owners, captures, full TLS identities,
+environment-cache teardown, packed options, full addresses, context restore,
+startup rollback, old reclamation and ownership; real tracing churn follows.
+The exact interpreter pool-identity unit is included. Initial workflow5dd3bfe
+used a nonexistent tls::tests::grpc_addr filter; corrected before acceptance.
+The integration address test already checks Rust grpc_addr. Superseded
+CI37987994602 is cancelled, not a passing gate.
+
+HTTP2 diagnostic CI37987901892 could not emit assembly because rg is absent
+on that runner. Evidence221cb1bfb22823d8c2ea576bb35c9418b7e2aed7 corrects
+the diagnostic to available grep/sed and handles GCC-renamed symbols;
+CI37988293141 is queued. This is not a production dependency change.
+Storage CI37988054909 stopped before tests because its old prepared ancestry
+lacks scripts/check-roadmap.py, which was added separately on main. Fresh
+evidencefb9e59f copies that already accepted auditor into isolated evidence;
+compiler/runtime/tests remain identical to row11293783d4. No skipped test or
+failed setup is acceptance. The primitive inventory's stale merged-PR marker
+was updated from93 to102, and duplicate95-only validation wording removed.
+
+Corrected GCC diagnostic221cb1b, CI37988293141, confirms call in r14 and
+stream-waiter interior pointer in r15 remain at collection without the owner
+fence. A conservative collector may retain dead physical register contents.
+Register-clobber evidenceeec7ef8, CI37989065155, passes Linux, but fails the
+ARM omission check locally7.71CPU/15.94elapsed. Unpublished forced primitive
+inlining also fails0.76CPU/2.33elapsed. These rejected test-only approaches
+never enter production. Bounded ARM assembly inspection0.00CPU/0.13elapsed
+shows call spilled on the stack and additional stale-register effects.
+Portable normal evidence5ca597db43d4ed4465e6f5f86c0cc4cb6cd455db restores the
+original fixture and positive host compiler checks. When GCC conservatively
+retains the omitted owner, an independent Clang test must pass all positive
+checks and strictly reject omission. ARM Mac focused checks pass0.65CPU/2.21elapsed;
+CI37989581687 is queued. No forced inlining, register clobbers or diagnostics
+remain. The focused runner explicitly installs Clang for that independent control.
+
+Client diagnosticf0ba2d2, CI37987861321, reports kind3, descriptor identity
+false, actual/expected code14, and matching transport-failure text. Handler
+static storage alone was insufficient. Static descriptor objectsf1318ed9952ac65929e53bf5dd36ce9aff60fcfc
+pass Linux CI37988968135; exact code/text/descriptor and omitted cleanup
+assertions remain. Normal evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0
+removes temporary diagnostics; CI37989574765 and focused ARM check follow.
+Storage evidencefb9e59fef93ead188c8b8f82ce7147290a9b5e6e passes
+CI37988444009: focused scoped/capture/pool/cache/packed/full-address lifetimes,
+actual allocation/byte controls, interpreter identity, tracing, lint/format and
+docs. Tests/runtime/compiler match row11293783d4; no full delivery claim.
+
+Normal client evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 passes
+CI37989574765, including format/lint, exact descriptor/code/text checks,
+normal/omitted releases, other selected ownership/context/startup checks,
+actual tracing churn and docs. Focused ARM check passes8.63CPU/17.84elapsed
+under the original root guard, after clean0.02CPU/0.44elapsed. Only static
+handler/descriptor fixture objects are propagated to the original row102
+preparation; no runtime/compiler behavior or assertions change.
+
+Independent Clang fallback5ca597d, CI37989581687, also fails on Linux because
+Clang retains the omitted owner there. Reject that approach and its dependency
+change. Current normal evidence8e79458 uses the GCC x86-64 stale-root fixture
+validated previously on Linux while preserving the original probe elsewhere.
+All positive GC/payload/finalizer checks and strict omitted-owner assertion
+remain. Forced primitive inlining and architecture-wide clobbers were rejected.
+Formatting check initially reported Rust layout; rustfmt fixed the single file
+0.09CPU/0.67elapsed. Fresh normal Linux and final ARM evidence follow.
