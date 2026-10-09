@@ -11547,3 +11547,13 @@ Row91 peer copy/Option failure cleanup test7.33/15.65s passes. Row93 refresh
 Compiler/runtime/status fixture match original with inherited CLI/tracing repairs.
 OLDa92c951fa6d9 stays fixed; previous CURRENT is retained under revision-093
 before lease publication. Fresh status encoding/unwind checks follow.
+
+Row91 clippy5.73/12.81s and format0.46/0.86s pass after copy/Option failure
+cleanup7.33/15.65s. Guarded package clean0.00/0.14s precedes row92 completion
+lifetime checks. No local full gate was run.
+
+Row92 completion/child/detached-sender lifetime test10.52/21.18s passes.
+Row94 refresh4907857412c2c9954bc2f3c195fc3fdff6a6286d uses actual base8d35ee99bd23.
+Compiler/runtime/receive fixture match original with inherited CLI/tracing repairs.
+OLD8bd9e78743ab stays fixed; previous CURRENT is retained under revision-094
+before lease publication. Fresh receive temporary failure checks follow.
