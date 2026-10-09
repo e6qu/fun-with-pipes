@@ -191,6 +191,9 @@ struct fwp_task {
     fwp_cleanup *trap_cleanup;
     jmp_buf *trap_jb;           /* traps recovered here (a served call) */
     void *gctx;                 /* gRPC context, inherited by children */
+#ifdef FWP_GCTX_OWNERS
+    void *gctx_owner;           /* retained original context, even if gctx changes */
+#endif
     /* links */
     fwp_task *next_ready;
     fwp_task *tprev, *tnext;    /* timer list */
@@ -241,6 +244,15 @@ static int64_t fwp_after(V d) {
 }
 
 /* a task is collected once it finished and nothing refers to it */
+#ifdef FWP_GCTX_OWNERS
+static void *(*fwp_gctx_acquire)(void *) = 0;
+static void (*fwp_gctx_release)(void *) = 0;
+static void fwp_gctx_pending_release(void *arg) {
+    void **held = (void **)arg;
+    if (*held) { fwp_gctx_release(*held); *held = 0; }
+}
+#endif
+
 static fwp_task *fwp_task_new(void) { return (fwp_task *)fwp_mem_alloc(sizeof(fwp_task)); }
 
 static fwp_task *fwp_gc_tasks = 0;
@@ -750,6 +762,13 @@ static void fwp_task_main(void) {
         t->owns_thunk = 0;
         fwp_closure_drop(thunk);
     }
+#ifdef FWP_GCTX_OWNERS
+    if (t->gctx_owner) {
+        void *held = t->gctx_owner;
+        t->gctx_owner = 0;
+        fwp_gctx_release(held);
+    }
+#endif
     t->done = 1;
     t->cleanups = 0; /* no cleanup link may outlive its task stack */
     fwp_wake_all(&t->waiters);
@@ -787,6 +806,11 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->carg = carg;
     t->deadline = deadline;
     t->gctx = fwp_cur->gctx;
+#ifdef FWP_GCTX_OWNERS
+    void *context_hold = fwp_gctx_acquire ? fwp_gctx_acquire(t->gctx) : 0;
+    fwp_cleanup context_cleanup;
+    if (context_hold) fwp_cleanup_push(&context_cleanup, fwp_gctx_pending_release, &context_hold);
+#endif
     /* Reserve scope storage before allocating the stack. Publish no child
      * or runnable task until all fallible preparation has completed. */
     fwp_scope *s = detached ? 0 : fwp_cur->scope;
@@ -851,6 +875,12 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->ctx.uc_stack.ss_size = t->stack_size;
     t->ctx.uc_link = 0;
     makecontext(&t->ctx, fwp_task_main, 0);
+#endif
+#ifdef FWP_GCTX_OWNERS
+    if (context_hold) {
+        t->gctx_owner = context_hold;
+        fwp_cleanup_pop(&context_cleanup);
+    }
 #endif
     if (!detached) {
         t->parent = fwp_cur;
