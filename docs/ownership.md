@@ -61,6 +61,8 @@ spines/results. sort/unique borrow their input, retain typed selected aliases
 and release scratch after constructing their owned copied result. sort-by
 borrows its callback/input, evaluates keys once in input order, owns typed
 keys/copied results and releases scratch; stable ties remain unchanged.
+repeat retains typed borrowed aliases in owned fresh nodes; range owns its
+fresh nodes. Scalars remain uncounted; boxed128-bit payloads still share.
 Finish remaining primitive/runtime families, including argument/result ownership,
 retention, aliases and exceptional cleanup. The exact prepared queue and current
 verification are in [the handoff](development-state.md). Keep the IR pass and

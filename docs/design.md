@@ -486,4 +486,11 @@ drops its owner. The last task releases the descriptor. Its static failure
 marker is excluded from malloc finalization. Dynamic context callbacks use
 the same cleanup stack to restore the saved task context on raw traps and
 cancellation, retaining existing normal/typed-error restoration and handler
-boundaries. Scoped TLS/capture lifetimes and canonical decode remain audits.
+boundaries. Scoped TLS options have checked dynamic-scope and inheriting-task
+owners; the last user releases copied strings and option storage without
+tracing. Task preparation protects acquired context owners, and completion
+releases the original retained context after child joins even if current
+gctx changed. These hooks and one private pointer compile only for service/
+web programs. Read-once environment options keep their cache lifetime; context
+wrappers retain tracing compatibility. Capture lifetimes, complete TLS pool
+identity and canonical decode remain audits.

@@ -28,40 +28,32 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is 2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 (#97). All six
-CI 37917260081 gates passed at 65fedd8d85430216539031553f88705ea72db5b4.
-Explicit match-head squash at 2026-10-09T11:43:18Z verifies the entire one-line
-message: `Own typed zip unzip and chunks results and release scratch storage`.
-#74–#97 deliver native macOS and selected ownership through typed nested
+Main is 559f4acc3d279755c42be0e0fbc7de92348b9813 (#98). All six
+CI37936505408 gates pass atde969ee7161531406fecf1812e11ddb4ad03078c.
+Explicit match-head squash at2026-10-09T14:25:51Z verifies the entire one-line
+message: `Own repeated aliases and generated numeric list nodes`.
+#74–#98 deliver native macOS and selected ownership through typed repeat/range,
 zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
-Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
+Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
 
-Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
-ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
-de969ee7161531406fecf1812e11ddb4ad03078c on actual main2c1003c.
-Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/generation tests/workflows exactly against7741d09.
-Second commit542fc08 repairs only the CLI helper and adds its regression;
-third commitde969ee repairs the tracing-only GC churn fixture. All ten current root docs resolve historical
-conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
-and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
-`Own repeated aliases and generated numeric list nodes`, empty body.
-Completed previous-main CI37916609315 at d174e73 fails Linux only:
-cli::multi_command_program panics writing stdin with BrokenPipe. All other
-five jobs pass; full logs /private/tmp/fwp-main96-failure.log. Legal add-all
-case ignores supplied stdin and exits0. The helper must tolerate only closed
-stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout passes focused multi-command23.59 / 47.48 s and
-deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
-0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
-new exact-head gates atde969ee; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
-After merge, row21 ACTUAL refreshed base isde969ee7161531406fecf1812e11ddb4ad03078c;
-rebase onto the real squash, preserving immutable OLD anchors. Later branches
-prepared before CLI and collector-fixture fixes must inherit both on final
-rebase; source comparisons against older preparations should allow these
-explicitly inherited repairs.
-Ten current docs were backed up and byte-verified in
-/private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row105 are published with focused checks;
-row21 is refreshed against the repaired delivery. Prior checks remain in history.
+Open delivery PR99: https://github.com/e6qu/fun-with-pipes/pull/99
+ownership-array-elements, /private/tmp/fwp-array-element-worktree, exact head
+ dc85b679407a7adda1438989051ca7eaf70072e5 on actual main559f4acc.
+Final source/runtime/tests/workflows match prior c8d4b57 exactly, including
+inherited CLI/GC repairs. Array tests pass 14.57 / 29.32 s CPU / elapsed;
+focused lint passes 2.44 / 4.83 s; formatting passes 0.33 / 0.60 s.
+Published with explicit lease; require six new exact-head gates.
+After passing CI, squash with `Own typed array elements across copies updates and callbacks`
+and empty body, then continue row22. Row22 ACTUAL base remains443524e until
+its own refresh; never replace immutable OLD anchors.
+
+Later preparations must inherit both CLI early-stdin-close and tracing-fixture
+repairs on final rebases. The repaired Linux gate actually verifies the
+collector churn output, allocation/collection thresholds and RSS bound.
+Ten authoritative docs backed up to/private/tmp/fwp-main-docs-pre98 were
+restored byte-for-byte after main fast-forward2c1003c→559f4ac. Preparations
+through106 are published; row107 tests/lint/format pass before publication.
+Prior delivery checks and failures remain in history.
 
 ## Next sequential preparations
 
@@ -73,8 +65,8 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
-| 20 ownership-list-generation | de969ee71615, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
-| 21 ownership-array-elements | c8d4b57092e5 | de969ee71615 | 14.39 / 29.34 s |
+| 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
+| 21 ownership-array-elements | dc85b679407a, PR99 | 559f4acc3d27 | 14.57 / 29.32 s final |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
@@ -159,6 +151,7 @@ still need their final squash rebases and six exact-head full gates.
 | 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
 | 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
 | 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
+| 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -180,7 +173,7 @@ context storage and other buffers still use tracing; no complete ARC claim.
 Rows94–96 publish unary receive, streaming force and rendered-error scratch
 cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
 hashes and detailed checks are in history; the table keeps actual bases.
-Preparations through row105 are published with focused checks recorded in
+Preparations through row106 are published with focused checks recorded in
 [history](roadmap-history.md). Row21 is published atc8d4b57092e54fe292ccc04dc0b813652fdc2617.
 Rebase to PR98 headde969ee completed from ACTUAL542fc08, inheriting the
 collector fixture repair. Three array tests pass14.39 / 29.34 s; focused
@@ -213,25 +206,23 @@ restores dynamic gctx on raw trap/cancellation as well as normal/typed return.
 Handler restoration remains in existing catch boundaries; cleanup changes only
 the saved context pointer. Both focused context/failure-text tests pass8.46 / 18.21 s;
 nested normal/typed/raw/cancel restoration and omission control pass.
-Focused lint2.48 / 4.94 s and final format0.45 / 0.82 s pass; publish next.
-Remaining audit: scoped TLS/capture context lifetimes and canonical decode. Prepared
+Focused lint2.48 / 4.94 s and final format0.45 / 0.82 s pass. Published clean
+at7a89dd017ae49f1a7deae49745e15ee807f46b2d, no competing PR.
+Independent row107 ownership-grpc-context-resources starts on7a89dd0,
+/private/tmp/fwp-grpc-context-resources-worktree. Scoped TLS options gain
+checked users held by dynamic callbacks and original inheriting task contexts.
+Task preparation reserves/rolls back context owners; completion drops them
+after child joins. Context hooks/one private pointer are emitted only for
+services/web programs. Environment options preserve read-once cache lifetime.
+All three context/resources/task-handle tests pass7.45 / 16.78 s, including
+escaped/detached/cancelled/failed-prepare and overflow owner checks.
+Focused lint2.68 / 5.39 s and format0.45 / 0.83 s pass; publication follows.
+Remaining audit: capture context lifetimes, complete TLS pool identity and canonical decode. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
-PR98 is the sole delivery atde969ee, full CI37936505408: bench passes;
-Both ARM macOS jobs pass; Linux and both Intel jobs run.
-Previous exact-head CI37929002304:
-Completed CI37929002304: bench and all four ARM/Intel macOS jobs pass;
-Linux fails gc::long_loop_runs_in_bounded_memory at tests/gc.rs194: zero
-collections, while output/allocation assertions preceding it pass; RSS has not run.
-Full log /private/tmp/fwp-pr98-linux-failure.log. Collector repair explicitly disables
-FWP_FREE/FWP_REUSE for this tracing-only workload, preserving all assertions.
-Focused GC lint passes2.32 / 4.59 s and format0.34 / 0.60 s; local execution
-is skipped by /proc availability and is not verified support. Repair published
-atde969ee7161531406fecf1812e11ddb4ad03078c; require six fresh gates.
-Old five passes do not cover this repair.
-Linux execution must pass on fresh exact-head CI; local macOS skips this test.
-Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
-ACTUAL refreshed base isde969ee; final rebase follows the eventual PR98 squash.
+PR98 acceptance and its repaired collector fixture are recorded above; superseded
+failures and logs remain in history. The next delivery is row21 on actual main
+559f4ac; row22 retains actual base443524e until its own final refresh.
 
 ## Repaired resource evidence
 
@@ -276,8 +267,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-context-restore-worktree; context tests run.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.38 s).
+belongs to /private/tmp/fwp-array-element-worktree; final array tests run.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
 Last guarded doc audit passes eleven link/heading sets, 99 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.44 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
@@ -286,6 +277,6 @@ Preserve all ten current root docs before fast-forward/rebase conflict resolutio
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre97; refresh all ten
+/private/tmp/fwp-main-docs-pre98; refresh all ten
 immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

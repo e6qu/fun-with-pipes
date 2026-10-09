@@ -10296,3 +10296,108 @@ with exact exit1; fixed O1/O2 cases pass GC off/on, stress/verification/poison.
 Context/failure-text lint passes2.48 / 4.94 s. Initial format check flagged
 unformatted new Rust fixture (0.45 / 0.84 s, exit1); guarded format apply
 0.47 / 0.94 s and final check0.45 / 0.82 s pass. No resource limit exceeded.
+
+Row106 preparation published clean at7a89dd017ae49f1a7deae49745e15ee807f46b2d
+on actualcb20833c018f8af3cd6bfb13bdb7696c503b7c6a. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## Scoped TLS context resource ownership preparation, 2026-10-09
+
+Independent ownership-grpc-context-resources starts on7a89dd017ae49f1a7deae49745e15ee807f46b2d,
+/private/tmp/fwp-grpc-context-resources-worktree. Scoped g_tls users are checked
+counts; dynamic callbacks and inheriting tasks own references. Preparation
+protects and rolls back acquired context ownership; post-join task completion
+releases the original retained context, even if current gctx was replaced.
+Last owner frees five malloc strings and option storage without tracing.
+Read-once environment options keep their sentinel cache lifetime. One private
+Task pointer/hooks compile only for service/web programs; plain tasks omit
+them. Context/value wrappers still use existing tracing compatibility.
+Actual callback/task fixture covers return, typed/raw trap, cancel, structured/
+detached escape, preparation trap, overflow rollback, manual context replacement,
+cache lifetime and omitted scope/pending/completion cleanup.
+Guarded clean0.07 / 0.37 s; focused context/resources/task-handle tests run.
+
+CI37936505408 atde969ee now passes Linux, benchmarks, both ARM macOS and
+Intel GC. Regular Intel macOS still runs; require it before match-head squash.
+Linux has actually executed and verified the tracing fixture RSS bound.
+Initial TLS resource fixture fails only its final cache manual-release counter
+(8.27 CPU / 17.15 elapsed s, exit101): #undef free left those six manual
+frees outside the observer. Use observed_free for fixture-only cleanup; prior
+owner/escape/cancellation/overflow checks passed before this last assertion.
+
+All three resource/context/task-handle focused tests pass7.45 CPU /
+16.78 elapsed s. Each scoped TLS object releases its five copied strings and
+struct exactly once after callback/task users finish, including GC-off paths.
+Three omission controls detect missing scope, failed-prepare and completion
+release; checked overflow preserves the previous count. Plain task compilation
+omits context-owner marker and succeeds. No general tracing-free claim.
+
+## PR98 merged after both harness repairs, 2026-10-09
+
+All six exact-head CI37936505408 jobs pass atde969ee7161531406fecf1812e11ddb4ad03078c.
+Explicit match-head squash at2026-10-09T14:25:51Z yields actual main
+559f4acc3d279755c42be0e0fbc7de92348b9813. Entire subject verifies exactly
+`Own repeated aliases and generated numeric list nodes`; one line, empty body
+and no trailers/attribution. Ten root docs preserved in/private/tmp/fwp-main-docs-pre98
+and restored byte-for-byte after main2c1003c→559f4ac. CLI and GC fixture
+failures are repaired and fully gated, including actual Linux RSS acceptance.
+
+### Archived PR98 pre-merge handoff
+
+The following records old checks/status, not live next actions.
+
+Main is 2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 (#97). All six
+CI 37917260081 gates passed at 65fedd8d85430216539031553f88705ea72db5b4.
+Explicit match-head squash at 2026-10-09T11:43:18Z verifies the entire one-line
+message: `Own typed zip unzip and chunks results and release scratch storage`.
+#74–#97 deliver native macOS and selected ownership through typed nested
+zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
+Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
+
+Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
+ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
+de969ee7161531406fecf1812e11ddb4ad03078c on actual main2c1003c.
+Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/generation tests/workflows exactly against7741d09.
+Second commit542fc08 repairs only the CLI helper and adds its regression;
+third commitde969ee repairs the tracing-only GC churn fixture. All ten current root docs resolve historical
+conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
+and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
+`Own repeated aliases and generated numeric list nodes`, empty body.
+Completed previous-main CI37916609315 at d174e73 fails Linux only:
+cli::multi_command_program panics writing stdin with BrokenPipe. All other
+five jobs pass; full logs /private/tmp/fwp-main96-failure.log. Legal add-all
+case ignores supplied stdin and exits0. The helper must tolerate only closed
+stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout passes focused multi-command23.59 / 47.48 s and
+deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
+0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
+new exact-head gates atde969ee; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
+After merge, row21 ACTUAL refreshed base isde969ee7161531406fecf1812e11ddb4ad03078c;
+rebase onto the real squash, preserving immutable OLD anchors. Later branches
+prepared before CLI and collector-fixture fixes must inherit both on final
+rebase; source comparisons against older preparations should allow these
+explicitly inherited repairs.
+Ten current docs were backed up and byte-verified in
+/private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
+restored byte-for-byte afterward. Independent preparations through row106 are published with focused checks;
+row21 is refreshed against the repaired delivery. Prior checks remain in history.
+
+
+## Final array delivery rebase after PR98 squash, 2026-10-09
+
+ownership-array-elements rebases from ACTUALde969ee onto actual
+559f4acc3d279755c42be0e0fbc7de92348b9813; no conflicts. Source/runtime/
+tests/workflows match publishedc8d4b57 exactly, preserving both CLI/GC harness
+repairs. Ten root docs preserved before rebase in/private/tmp/fwp-docs-before-array99.
+Focused final array tests run; no competing delivery PR while preparing PR99.
+
+Final array guarded clean before switching passes0.07 / 0.37 s; source
+parity againstc8d4b57 includes all compiler/runtime/test/workflow files.
+
+## Final array delivery preparation after PR98
+
+Row21 rebased from actual de969ee onto main559f4acc, with source/runtime/tests/
+workflows unchanged from published c8d4b570. Guarded package clean passes
+0.07 / 0.37 s CPU / elapsed. Final `cargo test --test array_element_ownership`
+passes all three tests 14.57 / 29.32 s; focused clippy with `-D warnings` passes
+2.44 / 4.83 s; `cargo fmt --check` passes 0.33 / 0.60 s.
+Full exact-head acceptance remains pending publication and CI.
