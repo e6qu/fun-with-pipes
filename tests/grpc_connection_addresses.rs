@@ -105,11 +105,7 @@ int main(void){
 "#;
     let copied = "memcpy(c->authority, authority, n + 1);";
     assert_eq!(generated.matches(copied).count(), 1);
-    let broken = generated.replacen(
-        copied,
-        "snprintf(c->authority, 256, \"%s\", authority);",
-        1,
-    );
+    let broken = generated.replacen(copied, "snprintf(c->authority, 256, \"%s\", authority);", 1);
     let dir = fwp::cgen::TempDir::new("grpc-connection-addresses").unwrap();
     let exe = dir.join("probe");
     for opt in ["-O1", "-O2"] {
@@ -120,7 +116,11 @@ int main(void){
         )
         .unwrap();
         let out = Command::new(&exe).env("FWP_GC", "off").output().unwrap();
-        assert_eq!(out.status.code(), Some(1), "old address truncation: {out:?}");
+        assert_eq!(
+            out.status.code(),
+            Some(1),
+            "old address truncation: {out:?}"
+        );
         fwp::cgen::compile_c(
             &format!("{hooks}\n{generated}\n{legacy}\n{fixture}"),
             &exe,
