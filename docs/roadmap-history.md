@@ -12061,3 +12061,14 @@ The root guard now pauses workloads during target sampling; limits remain
 unchanged. Separate source-parity map evidence37995710137 passes at
 3389a9730a8ec5f030b54cbafacbda95ce94529d with early preparation protection
 and the stronger87-live-pair auditor.
+
+Final row26 rebase from actual3bb3426 onto main1047520b8d gives local
+70f7b11162c9f046ecb99160b167a4b3d32dafdc. Compiler/runtime/tests/auditor are
+byte-identical tocc297e6 before the new tail regression. That regression checks
+a million native recursive steps atO1/O2 with GCoff/on against a200-step raw
+oracle, including actual token cleanup emission. All seven reuse-token/unwind
+tests pass19.40CPU/39.06elapsed; lint2.30/4.73s, format0.35/0.63s and strong
+audit44/106/87 pairs0.44/3.58s pass. Earlier native100000 probe passes0.00/
+0.38s; raw100000 guard stops at1GiB aggregate RSS, with no raised/bypassed limit.
+The smaller raw200 oracle passes0.37/0.74s; full-size raw evidence moves to CI.
+Post-merge guard tests pass0.18/1.36s.

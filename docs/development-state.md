@@ -50,15 +50,20 @@ Row26 is published at `cc297e6b31c9ea7564c1f196eddb5c06059525ec` on actual
 base `3bb34267997479794aeac9fff3447da94c16ca4d`. Compiler/runtime/tests match
 previous0a7203f exactly; it also strengthens live handoff head/base validation.
 Six focused ownership/unwind tests pass18.68CPU/37.65elapsed; clippy2.54/5.04s
-and format0.32/0.59s pass. Linux evidence37992999275 passes. Final-rebase from
-actual3bb3426 onto main1047520b8d, copy all 11 current docs, rerun focused checks
-and strong audit, then publish and open the next PR. All OLD anchors stay fixed.
+and format0.32/0.59s pass. Linux evidence37992999275 passes. Final rebase from actual3bb3426 onto main1047520b8d produces local
+70f7b11162c9f046ecb99160b167a4b3d32dafdc, with all 11 current docs preserved
+and compiler/runtime/tests/auditor byte-identical to publishedcc297e6 before
+the new tail regression. Seven focused reuse-token/unwind tests pass19.40CPU/39.06elapsed,
+including a million-step native tail case atO1/O2, GCoff/on, with a200-step raw
+oracle. Final lint2.30/4.73s, format0.35/0.63s and strong audit0.44/3.58s pass.
+Commit and publish
+with retained priorcc297e6 before opening the next PR. All OLD anchors stay fixed.
 A native100000-step tail probe passes atO1 with stack allocation and variant
 returns disabled:0.00CPU/0.38elapsed. The raw100000-step interpreter probe
 is stopped by the1GiB aggregate RSS guard; do not repeat it locally or raise
 limits. A200-step raw oracle passes0.37/0.74s with the same final result.
-Move the full-size raw probe to Linux evidence and add focused native long-tail
-coverage before final publication. Initial source syntax errors were corrected.
+Move the full-size raw probe to Linux evidence; focused native long-tail
+coverage is now being checked before final publication. Initial source syntax errors were corrected.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -199,7 +204,7 @@ retaining its anchor and regression coverage. No new full gate or complete excep
 
 ## Fixture repair status
 
-Row29 production84ef5480f4938e78c11c10823bf498a8a1a4e6f9 passes normal
+Earlier row29 production84ef5480f4938e78c11c10823bf498a8a1a4e6f9 passes normal
 Linux evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135, CI37966274872:
 format/lint, map/call/reuse/cleanup/task ownership, actual tracing and all-doc/tag
 checks. No diagnostics remain. GDB identified a fixture call to
@@ -240,7 +245,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
-| Row29 map callback unwind | 5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 | CI37966274872 passes normal repaired checks; production84ef548, actual baseb5f44e8 |
+| Row29 map callback unwind and preparation | 3389a9730a8ec5f030b54cbafacbda95ce94529d | CI37995710137 passes normal repaired checks and strong87-pair audit; source matches published78ed19f |
 | Row28 runtime application and preparation | 223416054406a975db1524b5c6866e248df91745 | CI37994225608 passes; source matches published7cfbe03, includes early capture repair |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
@@ -350,14 +355,12 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-map-unwind-worktree after guarded clean0.06/0.38s.
-Row29 map/preparation/runtime-call tests pass:8 tests22.28CPU/44.73elapsed.
-Lint2.41/5.01s and format0.35/0.75s pass; no local workload is running.
-Published head78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 is based on
-published row287cfbe03. Only the exact early row34 preparation patch and the
-inherited main auditor differ from original84ef548; the map probe is unchanged.
-Old84ef548 is retained remotely at roadmap/revision-029-84ef5480f493;
-current table refs are updated after successful checks and leased publication.
+belongs to /private/tmp/fwp-unwind-liveness-worktree. Seven final reuse-token/
+unwind tests pass19.40CPU/39.06elapsed; lint2.30/4.73s, format0.35/0.63s
+and strong audit0.44/3.58s also pass. No local workload is running. The local rebase70f7b111 is on
+actual main1047520b8d; published row26 remainscc297e6 on3bb3426 until final
+checks/publication. The full-size raw tail probe hit the1GiB RSS limit and was
+stopped; keep it on CI. The smaller raw oracle and native100000-step probe pass.
 Row27 eleven focused tests pass30.85CPU/62.02elapsed, lint2.52/5.06s and
 format0.35/0.63s. Row28 eleven focused tests pass29.13/58.52s, lint2.48/4.99s
 and format0.35/0.63s. Row26 six tests pass18.68/37.65s, lint2.54/5.04s and

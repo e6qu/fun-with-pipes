@@ -229,3 +229,53 @@ fn bump_allocator_still_compiles_token_cleanup() {
     fwp::cgen::compile_c(&format!("#define FWP_GC 0\n{emitted}"), &exe, "-O1").unwrap();
     assert_eq!(checked(&mut Command::new(&exe)).stdout, reference.stdout);
 }
+
+#[test]
+fn tail_token_cleanup_preserves_long_native_recursion() {
+    let dir = Scratch::new("tail");
+    let src = dir.0.join("tail.fwp");
+    let cfile = dir.0.join("tail.c");
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let source = r#"Box = | Empty | Box I64
+down : Box -> Box ! {Error[String]}
+rec down = match
+    Empty -> Empty
+    Box _ -> if (lt 0) (const "negative" | fail) (if (eq 0) Box (sub 1 | Box | down))
+main = Box 1000000 | attempt down | echo
+"#;
+    // The same recurrence ends at Box 0 for any nonnegative input. Keep the
+    // raw local oracle small; the large native case detects retained C frames.
+    std::fs::write(&src, source.replace("Box 1000000 |", "Box 200 |")).unwrap();
+    let reference = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&src),
+    );
+    assert_eq!(reference.stdout, b"Ok (Box 0)\n");
+    std::fs::write(&src, source).unwrap();
+    checked(
+        Command::new(fwp)
+            .env("FWP_STACK", "0")
+            .env("FWP_VRET", "0")
+            .arg("build")
+            .arg(&src)
+            .args(["--emit-c", "-o"])
+            .arg(&cfile),
+    );
+    let emitted = std::fs::read_to_string(cfile).unwrap();
+    assert!(emitted.contains("fwp_rc_cleanup_cell(&t"));
+    for opt in ["-O1", "-O2"] {
+        let exe = dir.0.join(opt);
+        fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
+        for gc in ["off", "on"] {
+            let out = checked(
+                Command::new(&exe)
+                    .env("FWP_GC", gc)
+                    .env("FWP_GC_STRESS", "0")
+                    .env("FWP_REUSE_VERIFY", "0"),
+            );
+            assert_eq!(out.stdout, reference.stdout, "{opt}, GC={gc}");
+        }
+    }
+}
