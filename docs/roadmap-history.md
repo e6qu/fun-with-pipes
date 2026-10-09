@@ -10272,3 +10272,27 @@ production source was unchanged by the fixture correction.
 
 Focused startup/pending-connect lint passes2.47 / 5.05 s; format apply
 0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.
+
+Row105 preparation published clean atcb20833c018f8af3cd6bfb13bdb7696c503b7c6a
+on actualb244d5f7c423edffc9159b1dd1a7fdac1934727a. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## Dynamic gRPC context restoration preparation, 2026-10-09
+
+Independent ownership-grpc-context-restore starts oncb20833c018f8af3cd6bfb13bdb7696c503b7c6a,
+/private/tmp/fwp-grpc-context-restore-worktree. g_with_ctx scopes saved task
+context on existing cleanup stack, restoring raw traps/cancellation as well
+as normal/typed returns. Cleanup changes only gctx: fwp_fail reads the active
+handler again after unwinding, so handler restoration must remain in catch
+boundaries. Actual cleanup/scheduler fixture injects user callback outcomes;
+nested typed/raw failures and parked cancellation prove pointer restoration.
+Guarded clean0.07 / 0.38 s; focused context/failure-text checks run.
+
+Both context/failure-text tests pass8.46 CPU / 18.21 elapsed s. Actual
+cleanup stack and scheduler restore saved gctx under normal, typed, raw trap,
+nested typed/raw and cancelled callback paths. Omitted unwind restore fails
+with exact exit1; fixed O1/O2 cases pass GC off/on, stress/verification/poison.
+
+Context/failure-text lint passes2.48 / 4.94 s. Initial format check flagged
+unformatted new Rust fixture (0.45 / 0.84 s, exit1); guarded format apply
+0.47 / 0.94 s and final check0.45 / 0.82 s pass. No resource limit exceeded.

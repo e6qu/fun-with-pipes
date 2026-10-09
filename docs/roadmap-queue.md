@@ -118,6 +118,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `33661b298f96` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `c48864ce7231` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `b244d5f7c423` | `b244d5f7c423` | `c48864ce7231` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

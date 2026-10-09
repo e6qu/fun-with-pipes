@@ -249,6 +249,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Sequential CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
 | 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Sequential CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
 | 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
+| 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

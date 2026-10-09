@@ -483,5 +483,7 @@ connection-wrapper creation. Background startup has a temporary connection
 owner and a protected reference reserved for each task; abort marks the
 unpublished connection dead without allocating, cancels published tasks and
 drops its owner. The last task releases the descriptor. Its static failure
-marker is excluded from malloc finalization. Canonical decode and broader
-callback/context teardown remain audits.
+marker is excluded from malloc finalization. Dynamic context callbacks use
+the same cleanup stack to restore the saved task context on raw traps and
+cancellation, retaining existing normal/typed-error restoration and handler
+boundaries. Scoped TLS/capture lifetimes and canonical decode remain audits.
