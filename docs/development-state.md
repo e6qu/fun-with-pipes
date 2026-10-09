@@ -52,7 +52,8 @@ repairs on final rebases. The repaired Linux gate actually verifies the
 collector churn output, allocation/collection thresholds and RSS bound.
 Ten authoritative docs backed up to/private/tmp/fwp-main-docs-pre98 were
 restored byte-for-byte after main fast-forward2c1003c→559f4ac. Preparations
-through110 are published, with row110 validation still pending; PR99 CI37945913789 is queued at exact dc85b679.
+through111 are published, with rows110–111 validation still pending; PR99 CI37945913789 at exact dc85b679 has bench passing; Linux and
+all four macOS jobs run.
 Duplicate main CI37944119691 cancellation confirmed to free runner capacity
 for PR99: source/runtime/tests/workflows match all-six-accepted PR98 exactly.
 Current PR99 gates remain required; cancelled duplicate is not acceptance.
@@ -166,6 +167,7 @@ still need their final squash rebases and six exact-head full gates.
 | 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Local guard refused; remote evidence pending |
+| 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Local guard refused; remote evidence pending |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
 heads; rows18–20 are merged. The current row22 refresh has unchanged runtime/
@@ -196,8 +198,20 @@ starts on6f4bfba and packs header/strings/key into one checked allocation.
 New fixture checks actual allocator calls, bytes, header alignment, copied
 inputs, last-owner release and allocation failure. Existing ownership fixtures
 adapt selected free counts to packed storage. Local checks remain refused;
-publication/remote evidence follows, with no verified allocation claim yet.
-Remaining audits are canonical decode and broader phase2 coverage in PLAN.
+published2bd17608388d270fb60437c8b32c84c66c02ae13 on actual6f4bfba.
+Separate evidence823af3475560ed7709f958478580e364d89bdddf,
+CI37950759037 queued, includes the shortened fixture lookup formatting repair.
+Superseded c02364d CI37949993129 is cancelled; no allocation claim yet.
+Independent row112 ownership-grpc-connection-addresses starts on2bd1760,
+/private/tmp/fwp-grpc-connection-addresses-worktree. Checked connection-tail
+address storage preserves full pool keys in the existing allocation. New
+loopback fixture checks4096 trailing slashes, actual pool reuse, copied short
+input, one connection allocation and short requested bytes below old layout;
+interpreter parsing agrees. Local checks remain refused; remote evidence
+follows. No verified memory or speed claim. Canonical C decode scratch review
+finds existing normal success/error frees; decoded aggregates retain shared
+compatibility and require a separate typed-boundary audit. Broader phase2
+coverage remains in PLAN.
 
 ## Repaired resource evidence
 
@@ -248,7 +262,7 @@ refused before execution; no workload is running. At refusal, disk free was
 move checks to GitHub. Do not bypass the guard, including for package clean.
 Last guarded doc audit passes eleven link/heading sets, 102 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.45 s elapsed).
-The queue now has104 immutable pairs; fresh audit is pending remote evidence
+The queue now has105 immutable pairs; fresh audit is pending remote evidence
 after the disk refusal. /private/tmp/fwp-check-handoff.py keeps the current
 audit input; evidence runner scripts/check-handoff-evidence.py verifies its
 published snapshot. Never call an older doc audit current verification.

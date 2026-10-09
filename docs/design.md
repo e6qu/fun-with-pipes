@@ -506,4 +506,8 @@ Prepared packed TLS options use one checked allocation containing an aligned
 header followed by strings and the full length-framed key. Child string/key
 pointers are borrowed within that allocation; last-owner release frees its
 base once. Focused remote checks are pending, so allocation reduction is not
-yet verified support. Canonical decode remains an audit.
+yet verified support. Full connection addresses also use checked tail storage
+within the existing managed connection allocation, preserving complete pool
+keys without separate address allocation. Connection wrappers retain tracing
+compatibility. Canonical decode already frees temporary C buffers on normal
+success/error exits; typed ownership of reconstructed aggregates remains an audit.

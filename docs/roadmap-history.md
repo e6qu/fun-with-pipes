@@ -10622,3 +10622,23 @@ calloc, realloc and strdup during construction, checks exact allocation bytes,
 header alignment, copied input and release after last owner, plus failed
 allocation. Local workloads remain refused by the disk guard; remote checks
 are pending, with no verified allocation reduction or speed claim yet.
+
+## Complete connection address storage preparation
+
+Row112 ownership-grpc-connection-addresses starts on actual2bd17608388d270fb60437c8b32c84c66c02ae13,
+/private/tmp/fwp-grpc-connection-addresses-worktree. Connection headers replace
+256-byte inline address fields with a pointer into checked variable tail
+storage in the same managed allocation. Full addresses survive pool comparison
+and diagnostics; short addresses request fewer bytes without a second
+allocation. Connection wrappers remain tracing-compatible; no complete
+ARC or verified performance/memory claim. New fixture uses a real loopback
+connection with4096 trailing URI slashes (native/interpreter transport parsing
+strips them), checks exact stored key and pooled reuse after TLS option release,
+old truncation rejection, copied short input and requested allocation bytes
+against an equivalent legacy layout. Local checks remain refused; remote
+focused evidence follows. Canonical decode scratch review confirms existing
+normal success/error frees, while decoded aggregates retain shared fallback
+and need a separate typed-boundary audit. PR99 bench passes; its five other
+exact-head jobs run. Packed evidence refreshed823af3475560ed7709f958478580e364d89bdddf
+on preparation2bd1760 at queued CI37950759037 after static formatting repair.
+Superseded c02364d/37949993129 is cancelled and not acceptance.
