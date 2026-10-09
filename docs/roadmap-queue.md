@@ -109,6 +109,8 @@ resolve full hashes before publication or merge. Checkout paths use
 
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `09751c8c65ac` | `09751c8c65ac` | `3c268c34d15b` |
 
+| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `a92c951fa6d9` | `a92c951fa6d9` | `09751c8c65ac` |
+
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
 its workflow commits and equivalent baseline repairs never enter this chain.

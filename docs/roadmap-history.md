@@ -9328,7 +9328,7 @@ including hard OOM exit 102. Row83 is published clean at
 f3c9ee4ec35416d1050b98d389186434e8408b2d on actual 06c93ef. Five tests,
 lint 2.93 / 6.03 s and format 0.53 / 1.07 s pass. Eligible variant holders
 avoid wrapper boxes while preserving active tags, partial retention, boxed
-fallback and original lifetimes. 
+fallback and original lifetimes.
 Fmt check passes 0.87 / 4.02 s; ten root docs copied before amend. Tested
 source unchanged. Handoff archives completed row77–83 paragraphs rather than
 retaining competing old next actions; actual bases and checks remain in its table.
@@ -9730,3 +9730,54 @@ Focused cargo clippy --test grpc_status_cleanup --test grpc_peer_completion
 -- -D warnings passes2.37 / 4.83 s; cargo fmt --all application0.45 / 0.83 s
 and -- --check0.46 / 0.84 s pass under documented bounded guard. Final tested
 production delta transfers and frees owned strings without altering wire text.
+
+Row93 published clean at a92c951fa6d927356a375edfe42c29589c505b99 on actual
+09751c8c65acd0c6d01d074171f52a297f667cf7; immutable first head/parent anchor recorded.
+Entire one-line message verifies; no additional PR.
+
+## Dequeued unary request ownership preparation, 2026-10-09
+
+New ownership-grpc-receive-cleanup starts on a92c951fa6d927356a375edfe42c29589c505b99.
+A unary request is removed from the stream before waiting for the next message;
+its malloc payload previously leaked on cancellation/reset or an extra message.
+Scoped received-result cleanup now owns both message and copied status storage.
+Normal unary return transfers only its request; error return transfers only
+its text. Missing/extra/error results and partial waits release other storage.
+Reflection also frees the copied end status. No evaluation or status changes.
+Actual scheduler fixture covers normal binary payload transfer, missing/extra
+messages, bad/reset streams, cancellation during the second wait and reflection
+end. Omitted unwind/message/reflection controls must exit1, with fixed O1/O2 ×
+tracing off/on × poison. Guarded clean before switching passes0.00 / 0.13 s;
+cargo test --test grpc_receive_cleanup --test grpc_status_cleanup runs.
+
+### Archived detailed peer/status preparation handoff
+
+Published row92 ownership-grpc-peer-completion starts on3c268c3,
+/private/tmp/fwp-grpc-peer-completion-worktree. A nonthrowing/nonallocating
+task completion callback disposes peer metadata after child joins. Initial
+two child/cancellation tests pass12.62 / 25.40 s, but further audit identifies
+detached senders invoking language callbacks after parent completion. Added
+explicit retained serving-peer users for those senders, protected during spawn
+and released after their own children finish. Expanded detached-sender tests pass6.46 / 13.14 s with explicit leak/early
+controls. Added sender-spawn cancellation and user-count overflow checks;
+final focused tests pass14.18 / 28.39 s; task-handle regression4.65 / 10.14 s,
+focused lint2.72 / 5.47 s and format0.46 / 0.87 s pass. Published clean at09751c8c65acd0c6d01d074171f52a297f667cf7;
+immutable OLD equals first head, parent3c268c34d15b5ffd36b3747d1f6cee8343b34e08.
+gRPC status audit now verifies that g_recv text is copied malloc storage;
+normal handler messages are owned, cancellation sv.msg is a borrowed slot.
+Independent ownership-grpc-status-cleanup starts on09751c8,
+/private/tmp/fwp-grpc-status-cleanup-worktree. It transfers cancellation's
+stored status, protects final encoding messages and frees normal results.
+Replacing a stored status copies before releasing an aliased old string;
+last retained context owner frees any remaining status. Focused final-status
+and peer regressions pass13.25 / 26.68 s. Added encoded-message byte checks
+and hard allocation-failure102 assertions. Final two tests pass6.25 / 12.74 s;
+encoded-space fixture expectation corrected to match both engines. Focused
+lint2.37 / 4.83 s and format0.46 / 0.84 s pass. Published clean at
+a92c951fa6d927356a375edfe42c29589c505b99 on actual09751c8.
+Unary receive and status tests pass12.09 / 24.36 s CPU / elapsed. Focused
+cargo clippy --test grpc_receive_cleanup --test grpc_status_cleanup
+-- -D warnings passes2.43 / 4.91 s. Format application and check both
+pass0.45 / 0.83 s. Actual binary transfer, exactly-once malloc release and
+cancelled second wait are verified at O1/O2 with tracing off/on and poison.
+Three omitted ownership controls fail exactly1. No local full gate.

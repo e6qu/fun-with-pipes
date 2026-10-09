@@ -138,7 +138,9 @@ still need their final squash rebases and six exact-head full gates.
 
 | 92 ownership-grpc-peer-completion | 09751c8c65ac | 3c268c34d15b | Peer/server14.18 / 28.39 s + task4.65 / 10.14 s |
 
-Rows 18–92 are published preparations with passing focused tests, lint and
+| 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
+
+Rows 18–93 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -151,28 +153,18 @@ remains allocated. Prepared layout/allocation controls establish no speed claim.
 Rows85–91 source/control details and full hashes are archived in history;
 the table above keeps actual bases and focused checks. Row91 uses unwind
 ownership for the temporary HTTP/2 subject copy; no additional PR.
-Published row92 ownership-grpc-peer-completion starts on3c268c3,
-/private/tmp/fwp-grpc-peer-completion-worktree. A nonthrowing/nonallocating
-task completion callback disposes peer metadata after child joins. Initial
-two child/cancellation tests pass12.62 / 25.40 s, but further audit identifies
-detached senders invoking language callbacks after parent completion. Added
-explicit retained serving-peer users for those senders, protected during spawn
-and released after their own children finish. Expanded detached-sender tests pass6.46 / 13.14 s with explicit leak/early
-controls. Added sender-spawn cancellation and user-count overflow checks;
-final focused tests pass14.18 / 28.39 s; task-handle regression4.65 / 10.14 s,
-focused lint2.72 / 5.47 s and format0.46 / 0.87 s pass. Published clean at09751c8c65acd0c6d01d074171f52a297f667cf7;
-immutable OLD equals first head, parent3c268c34d15b5ffd36b3747d1f6cee8343b34e08.
-gRPC status audit now verifies that g_recv text is copied malloc storage;
-normal handler messages are owned, cancellation sv.msg is a borrowed slot.
-Independent ownership-grpc-status-cleanup starts on09751c8,
-/private/tmp/fwp-grpc-status-cleanup-worktree. It transfers cancellation's
-stored status, protects final encoding messages and frees normal results.
-Replacing a stored status copies before releasing an aliased old string;
-last retained context owner frees any remaining status. Focused final-status
-and peer regressions pass13.25 / 26.68 s. Added encoded-message byte checks
-and hard allocation-failure102 assertions. Final two tests pass6.25 / 12.74 s;
-encoded-space fixture expectation corrected to match both engines. Focused
-lint2.37 / 4.83 s and format0.46 / 0.84 s pass. Record and publish. Receive-side discarded results remain the following audit.
+Rows92–93 publish explicit peer owners through child/detached-sender joins
+and owned final statuses through encoding/unwind. Their table entries and
+history retain full heads, commands, failures and omission controls. Network
+context storage and other buffers still use tracing; no complete ARC claim.
+Next independent preparation ownership-grpc-receive-cleanup at
+/private/tmp/fwp-grpc-receive-cleanup-worktree starts on a92c951. Unary
+receive protects dequeued request/status storage across the second wait;
+unexpected/missing results release, and reflection end text releases. Actual
+scheduler regression covers reset, cancelled wait, normal ownership transfer
+and three omitted-release controls. Both focused tests pass12.09 / 24.36 s,
+lint2.43 / 4.91 s and format0.45 / 0.83 s. Record and publish; further audit
+is streaming client receive/status and protocol scratch buffers.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery, CI37925910460 exact6b1cd9b bench passes, Linux/regular macOS run and both GC gates queue; row21
@@ -221,8 +213,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-status-cleanup-worktree; final generation tests, lint and format pass.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.04 / 0.26 s).
+belongs to /private/tmp/fwp-grpc-receive-cleanup-worktree; final generation tests, lint and format pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 85 immutable queue
 ancestry pairs and whole commit messages (0.20 s CPU / 1.30 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

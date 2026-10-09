@@ -465,3 +465,9 @@ then releases it. Replacing a stored status copies before dropping the old
 owner, including an aliased input; the last retained serving-context user
 also releases any status left in its slot. Received status text is copied
 malloc storage, not a borrowed stream field. Wire encoding remains unchanged.
+
+Prepared unary gRPC receive owns dequeued malloc request and copied status
+storage across the subsequent wait. Cleanup releases them on cancellation or
+an unexpected extra result; normal return transfers only the requested
+message or error text. Reflection discards its copied end status. Message
+contents, receive order and error codes remain unchanged.
