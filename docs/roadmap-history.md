@@ -11178,3 +11178,9 @@ clean0.00/0.13s and deadline callback8.95/18.26s pass. Row51 refresh
 245a0a24370ef7bcbb77009861631ebbd7deb65e has actual base1b5fb056fa00;
 compiler/runtime match original; current28de1794f39f is retained under immutable
 revision tag before explicit-lease publication. Scoped cleanup checks follow.
+
+Row50 guarded primitive inventory unit3.33/6.98s, clippy2.43/4.79s and
+format0.35/0.73s pass. Row52 refreshfe8ed51eb078658eda0ae4f490fe87b47150b1e2
+has actual base245a0a24370e, matches original compiler/runtime and retains old
+CURRENT4b6a2cb08da5 under immutable revision before explicit-lease publication.
+Task-handle tests follow; published implementation is not acceptance.
