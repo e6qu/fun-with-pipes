@@ -95,8 +95,9 @@ including both CAF/converted-result controls. Refresh60–67 passes8.35CPU/92.10
 68–75 passes after the strict resource-layout adjustment (5.27/58.64s stopped,
 3.26/38.44s completed);76–83 passes8.42/92.36s. Both original resource commits
 and the additional frame-holder repair survive. Refresh84–91 passes8.63CPU/92.12elapsed, preserving both row85 commits and
-original HTTP fixture controls. Continue92–112 in bounded
-batches using /private/tmp/fwp-refresh-matched-conversion.py and actual bases.
+original HTTP fixture controls. Refresh92–99 passes8.63CPU/92.83elapsed;
+100–107 passes8.50/91.57s. Continue108–112 in a bounded batch using
+/private/tmp/fwp-refresh-matched-conversion.py and actual bases.
 It verifies exact inherited code, original probes and commit counts, retains each
 prior head remotely, publishes with an exact lease and audits the handoff.
 It additionally carries the exact row83 frame-holder patch into84 and later.
@@ -199,7 +200,7 @@ still need their final squash rebases and six exact-head full gates.
 | 105 ownership-grpc-connect-startup | c7db1b368da0 | f0384f82c63e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 106 ownership-grpc-context-restore | 06b87f3c83af | c7db1b368da0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 107 ownership-grpc-context-resources | d4b360f6cc71 | 06b87f3c83af | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 108 ownership-grpc-capture-resources | 8f66e28763b4 | c34c313ccfb0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 108 ownership-grpc-capture-resources | 1362d3a239bc | d4b360f6cc71 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 109 fix-grpc-tls-pool-identity | cf14552bdba5 | 8f66e28763b4 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 110 ownership-grpc-environment-cache | 393456e6e5ca | cf14552bdba5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
