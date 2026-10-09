@@ -2405,10 +2405,19 @@ static V fwp_p_grpc_metadata(void) {
     return fwp_list_from(items, n);
 }
 
+typedef struct { fwp_task *task; void *saved; } g_context_owner;
+static void g_context_restore(void *arg) {
+    g_context_owner *owner = (g_context_owner *)arg;
+    owner->task->gctx = owner->saved;
+}
+
 /* run `f` with a context, restoring the task's afterwards */
 static V g_with_ctx(g_ctx *ctx, V f) {
     fwp_task *t = fwp_cur;
     void *saved = t->gctx;
+    g_context_owner owner = {t, saved};
+    fwp_cleanup context_cleanup;
+    fwp_cleanup_push(&context_cleanup, g_context_restore, &owner);
     t->gctx = ctx;
     fwp_handler h;
     h.prev = fwp_handlers;
@@ -2418,12 +2427,14 @@ static V g_with_ctx(g_ctx *ctx, V f) {
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, FWP_UNIT);
         fwp_handlers = h.prev;
-        t->gctx = saved;
+        fwp_cleanup_pop(&context_cleanup);
+        g_context_restore(&owner);
         return r;
     }
     fwp_handlers = h.prev;
     fwp_state_len = h.state_depth;
-    t->gctx = saved;
+    fwp_cleanup_pop(&context_cleanup);
+    g_context_restore(&owner);
     fwp_fail(h.value, h.desc);
     return 0;
 }
