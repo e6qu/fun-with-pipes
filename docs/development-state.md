@@ -182,7 +182,7 @@ still need their final squash rebases and six exact-head full gates.
 | 91 ownership-http2-peer-cleanup | 9900cc0d5229 | 1b4be82fe9b6 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 92 ownership-grpc-peer-completion | e89105300eb3 | 9900cc0d5229 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 93 ownership-grpc-status-cleanup | f1a357fb78da | e89105300eb3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
-| 94 ownership-grpc-receive-cleanup | e783dfc73c6a | aa2a5aa9a912 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 94 ownership-grpc-receive-cleanup | df82d27c917b | f1a357fb78da | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 95 ownership-grpc-force-cleanup | a4481338b05a | e783dfc73c6a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 96 ownership-grpc-render-cleanup | 2471ba8194d9 | a4481338b05a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 97 ownership-grpc-send-cleanup | 0aac7d0311f4 | 2471ba8194d9 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
