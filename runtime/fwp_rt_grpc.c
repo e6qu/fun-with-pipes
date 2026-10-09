@@ -114,8 +114,16 @@ typedef struct g_serving {
     int code;                  /* a status for a cancelled call, or -1 */
     char *msg;
     char *peer;                /* the subject of the client's certificate, or 0 */
+    size_t peer_users;          /* serving task plus detached language senders */
     g_stream *s;               /* the call's stream */
 } g_serving;
+
+static void g_serving_peer_release(g_serving *sv) {
+    if (sv && --sv->peer_users == 0) {
+        fwp_tls_subject_free(sv->peer);
+        sv->peer = 0;
+    }
+}
 
 /* how a client's calls connect over TLS (`grpc.with-tls`, or the
  * FWP_SERVICE_<M>_CA, ... variables): malloc'ed strings ("" for none);
@@ -1270,7 +1278,14 @@ typedef struct {
     g_stream *s;
     V cur, enc;
     const fwp_remote *r;
+    g_serving *serving;
 } g_sender;
+
+static void g_sender_peer_finish(void *arg) {
+    g_sender *x = (g_sender *)arg;
+    g_serving_peer_release(x->serving);
+    x->serving = 0;
+}
 
 static void g_send_all(void *arg, int cancelled) {
     g_sender *x = (g_sender *)arg;
@@ -1327,7 +1342,16 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remo
     x->cur = iter;
     x->enc = enc;
     x->r = r;
-    fwp_spawn_task(0, g_send_all, x, 0, 1);
+    x->serving = g_ctx_of()->serving;
+    if (x->serving) {
+        if (x->serving->peer_users == SIZE_MAX) fwp_trap("too many serving context owners");
+        x->serving->peer_users++;
+    }
+    fwp_cleanup peer_cleanup;
+    fwp_cleanup_push(&peer_cleanup, g_sender_peer_finish, x);
+    fwp_task *t = fwp_spawn_task(0, g_send_all, x, 0, 1);
+    t->cfinish = g_sender_peer_finish;
+    fwp_cleanup_pop(&peer_cleanup);
 }
 
 /* ------------------------------------------------------------- client stubs */
@@ -1485,6 +1509,13 @@ typedef struct {
     g_ctx ctx;
 } g_job;
 
+/* The serving context is inherited by children; dispose only after their join. */
+static void g_job_peer_finish(void *arg) {
+    g_job *j = (g_job *)arg;
+    g_serving_peer_release(&j->sv);
+}
+
+
 static const g_route *g_route_of(const g_server *srv, const char *path) {
     for (size_t i = 0; i < srv->n; i++)
         if (strcmp(srv->routes[i].path, path) == 0) return &srv->routes[i];
@@ -1542,6 +1573,9 @@ static void g_start_call(g_conn *c, g_stream *s) {
     j->sv.headers = &s->headers;
     j->sv.code = -1;
     j->sv.peer = c->ssl ? fwp_tls_peer_subject(c->ssl) : 0;
+    j->sv.peer_users = 1;
+    fwp_cleanup peer_cleanup;
+    fwp_cleanup_push(&peer_cleanup, g_job_peer_finish, j);
     j->sv.s = s;
     /* responses are compressed like the requests */
     const char *enc = h2_get(&s->headers, "grpc-encoding");
@@ -1550,6 +1584,8 @@ static void g_start_call(g_conn *c, g_stream *s) {
     s->task = fwp_spawn_task(0, g_handle, j, g_parse_timeout(h2_get(&s->headers, "grpc-timeout")), 0);
     j->sv.task = s->task;
     s->task->gctx = &j->ctx;
+    s->task->cfinish = g_job_peer_finish;
+    fwp_cleanup_pop(&peer_cleanup);
 }
 
 /* end a served call with its status (code < 0: OK) */
