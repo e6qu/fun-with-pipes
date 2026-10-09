@@ -22,8 +22,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Clang for independent conservative-root omission control
-        run: sudo apt-get update && sudo apt-get install -y clang
       - name: Format
         if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
