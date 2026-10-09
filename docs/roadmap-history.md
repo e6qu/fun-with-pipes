@@ -11613,3 +11613,14 @@ c6b5ad8c827cf734f0883c9daa676c0c0541a050 uses actual base7fe3282b1413.
 Compiler/runtime/client request fixture match original with inherited CLI/GC repairs.
 OLD2339ff08e421 stays fixed; previous CURRENT is retained before lease publication.
 Fresh client encoding/cancel checks follow.
+
+Row99 canonical partial/transcoder failure scratch test7.35/15.76s passes;
+lint/format follow. Queued runs remain pending verification.
+
+After server recovery, verified PR103 unchanged and queued, main atc7b3e3f,
+no compiler workload remaining and failure-text refresh222e199 completed locally
+but unpublished. Row99 clippy5.99/12.96s previously passed; remaining formatting
+0.45/0.87s now passes. Row102 refresh222e199ca7354ce59616b894d3e691d1428564e8
+uses actual basec6b5ad8c827c; source/runtime/tests match original except inherited
+CLI/GC repairs. OLD33661b298f96 stays fixed; previous CURRENT retained under
+revision-102 before explicit-lease publication. Fresh focused checks follow.

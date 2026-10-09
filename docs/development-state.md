@@ -141,10 +141,10 @@ still need their final squash rebases and six exact-head full gates.
 | 96 ownership-grpc-render-cleanup | bc69035d8c0f | 6e5d43aee3e7 | Rendering test8.01/16.29s; lint6.17/13.04s and format0.46/0.84s pass |
 | 97 ownership-grpc-send-cleanup | 25838578a6bf | bc69035d8c0f | Send test7.91/16.42s; lint5.87/13.11s and format0.46/0.87s pass |
 | 98 ownership-grpc-request-encoding | b7d41363523d | 25838578a6bf | Request test7.94/16.22s; lint5.93/13.02s and format0.47/0.88s pass |
-| 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Refreshed source unchanged; serialization failure checks follow |
+| 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Canonical test7.35/15.76s; lint5.99/12.96s and format0.45/0.87s pass |
 | 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Refreshed source unchanged; response encoding/cancel checks follow |
 | 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Refreshed source unchanged; client encoding/cancel checks follow |
-| 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
+| 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Refreshed source unchanged; typed-error/trap checks follow |
 | 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
 | 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
 | 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
@@ -254,8 +254,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-canonical-encoding-worktree; guarded canonical
-serialization failure cleanup checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
+belongs to /private/tmp/fwp-grpc-canonical-encoding-worktree; no local workload
+is running. Recovery verified no interrupted compiler process remains. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
