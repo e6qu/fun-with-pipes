@@ -1234,6 +1234,8 @@ static V g_force(g_cell *cell, int first, g_failure *f, V *err_value, const fwp_
                 return 0;
             }
             fwp_buf b = {0};
+            fwp_cleanup error_buffer;
+            fwp_cleanup_push(&error_buffer, fwp_file_buffer_cleanup, &b);
             fwp_write(&b, x, src->dec.error, 1);
             g_trapf("service call %s failed: error: %.*s", src->what, (int)b.len, b.d ? b.d : "");
         }

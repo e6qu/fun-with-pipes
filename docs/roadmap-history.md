@@ -11557,3 +11557,13 @@ Row94 refresh4907857412c2c9954bc2f3c195fc3fdff6a6286d uses actual base8d35ee99bd
 Compiler/runtime/receive fixture match original with inherited CLI/tracing repairs.
 OLD8bd9e78743ab stays fixed; previous CURRENT is retained under revision-094
 before lease publication. Fresh receive temporary failure checks follow.
+
+Row92 clippy5.77/12.88s and format0.45/0.87s pass after completion
+test10.52/21.18s. Guarded package clean0.00/0.14s precedes row93 status text
+encoding/send/unwind checks. No local full gate was run.
+
+Row93 status send/cancellation cleanup test9.60/19.41s passes. Row95 refresh
+6e5d43aee3e7edd4d3c8a2accf6f8c9463a627df uses actual base4907857412c2.
+Compiler/runtime/decode fixture match original with inherited CLI/GC repairs.
+OLD6b82bc5b8b2f stays fixed; previous CURRENT is retained under revision-095
+before lease publication. Fresh streaming/decode temporary checks follow.

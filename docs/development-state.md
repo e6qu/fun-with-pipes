@@ -134,10 +134,10 @@ still need their final squash rebases and six exact-head full gates.
 | 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Test7.37/15.71s; lint6.23/13.16s and format0.46/0.86s pass |
 | 90 fix-http2-body-bounds | 9c2787630b7f | f45a7dbbd33d | Body fixture7.47/15.54s; lint5.85/12.63s and format0.46/0.86s pass |
 | 91 ownership-http2-peer-cleanup | 8a06d5df63ee | 9c2787630b7f | Failure cleanup test7.33/15.65s; lint5.73/12.81s and format0.46/0.86s pass |
-| 92 ownership-grpc-peer-completion | ac6e5cc39ac5 | 8a06d5df63ee | Completion/child/sender test10.52/21.18s passes; lint/format follow |
-| 93 ownership-grpc-status-cleanup | 8d35ee99bd23 | ac6e5cc39ac5 | Refreshed source unchanged; status encoding/unwind checks follow |
+| 92 ownership-grpc-peer-completion | ac6e5cc39ac5 | 8a06d5df63ee | Completion test10.52/21.18s; lint5.77/12.88s and format0.45/0.87s pass |
+| 93 ownership-grpc-status-cleanup | 8d35ee99bd23 | ac6e5cc39ac5 | Status send/cancellation test9.60/19.41s passes; lint/format follow |
 | 94 ownership-grpc-receive-cleanup | 4907857412c2 | 8d35ee99bd23 | Refreshed source unchanged; receive temporary failure checks follow |
-| 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
+| 95 ownership-grpc-force-cleanup | 6e5d43aee3e7 | 4907857412c2 | Refreshed source unchanged; streaming/decode failure checks follow |
 | 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
 | 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
 | 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
@@ -253,8 +253,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-peer-completion-worktree; guarded peer metadata
-post-child/detached-sender lifetime checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
+belongs to /private/tmp/fwp-grpc-status-cleanup-worktree; guarded owned status
+encoding/send/unwind cleanup checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
