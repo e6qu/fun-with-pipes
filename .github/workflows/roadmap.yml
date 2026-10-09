@@ -1,0 +1,23 @@
+name: Roadmap documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  roadmap_docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Retain review heads for preparation references
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Documentation, immutable tags and commit messages
+        run: python3 scripts/check-roadmap.py
