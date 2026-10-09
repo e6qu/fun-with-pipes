@@ -11109,3 +11109,17 @@ Guarded clean0.00/0.13s, flattened-loop preparation9.88/19.92s, clippy2.40/4.81s
 and format0.34/0.71s pass. Compiler/runtime match original; original current
 7ae78137d444 is retained under immutable revision tag before lease publication.
 Row39 refresh5a72ba8763e4 uses actual032a764c; checks are still running.
+
+Row39 5a72ba8763e4bd1edb06ac22c814f15c23ea49a0 has actual base032a764c1d33.
+Guarded clean0.00/0.13s, retain overflow10.28/20.75s, exact unfinished-reference
+liveness3.40/7.06s, clippy2.39/4.70s and format0.34/0.60s pass. Runtime/compiler
+match original; original currentf0049c4aabe0 is retained under immutable revision
+before lease publication. Row40 dd6c405c77eb has actual base5a72ba8763e4;
+constructor type test10.03/20.20s and exact nested shape3.44/7.32s plus
+argument/update types0.00/0.13s pass. Remaining checks follow.
+
+Row40 guarded clippy2.42/4.95s and format0.43/0.59s also pass. Row41
+67e37717ecf24fd5ce595e50084af805a9037ffc uses actual basedd6c405c77eb;
+guarded native variant conversion10.20/20.63s passes. Runtime/compiler remain
+unchanged from the original preparations; both prior published heads were retained
+under immutable revision tags before explicit-lease publication.
