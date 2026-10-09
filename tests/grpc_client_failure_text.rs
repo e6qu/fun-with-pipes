@@ -40,6 +40,8 @@ static void observed_free(void *p){if(p&&p==watched_text){text_frees++;watched_t
 static void no_release(void *p){(void)p;}
 static int recover(void){return 1;}
 static jmp_buf failed;
+/* The error path writes the handler after setjmp; keep it nonautomatic. */
+static fwp_handler handler;
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
  const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String"};
@@ -49,7 +51,7 @@ int main(void){
   text_frees=0;const char *message=kind==1?"trap: decoder trap":kind==2||kind==4?"denied":"transport failure";
   int code=kind==1?GRPC_INTERNAL:kind==2||kind==4?7:-1;
   watched_text=strdup(message);if(!watched_text)return 9;
-  remote.m.status_errors=kind>=3;fwp_handler handler={0};handler.cleanup=fwp_cleanups;handler.state_depth=fwp_state_len;
+  remote.m.status_errors=kind>=3;memset(&handler,0,sizeof handler);handler.cleanup=fwp_cleanups;handler.state_depth=fwp_state_len;
   if(kind>=3)fwp_handlers=&handler;
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(!setjmp(failed)){
