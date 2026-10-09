@@ -143,11 +143,11 @@ still need their final squash rebases and six exact-head full gates.
 | 98 ownership-grpc-request-encoding | b7d41363523d | 25838578a6bf | Request test7.94/16.22s; lint5.93/13.02s and format0.47/0.88s pass |
 | 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Canonical test7.35/15.76s; lint5.99/12.96s and format0.45/0.87s pass |
 | 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Response test9.09/18.46s; lint5.76/13.10s and format0.46/0.87s pass |
-| 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Refreshed source unchanged; client encoding/cancel checks follow |
+| 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Client test8.38/16.90s; lint5.92/13.01s and format0.46/0.86s pass |
 | 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Refreshed source unchanged; typed-error/trap checks follow |
 | 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Refreshed source unchanged; retry/error/cancel checks follow |
 | 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Refreshed source unchanged; pending resource cancellation checks follow |
-| 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
+| 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Refreshed source unchanged; driver startup rollback checks follow |
 | 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
 | 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
 | 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
@@ -254,8 +254,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-client-requests-worktree; guarded client request
-encoding/cancellation checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
+belongs to /private/tmp/fwp-grpc-client-failure-text-worktree; guarded copied
+client failure text/trap/typed error checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

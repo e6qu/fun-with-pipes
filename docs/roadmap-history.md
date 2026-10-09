@@ -11636,3 +11636,11 @@ test9.09/18.46s. Row104 refresh8bf114c615fe8a36b5e3daa55b232c0c50445dd6
 uses actual base8ccdd092478c; compiler/runtime/connect fixture match original
 with inherited CLI/GC repairs. OLDb244d5f7c423 stays fixed; previous CURRENT
 is retained before lease publication. Fresh cancellation checks follow.
+
+Row101 client encode/cancel test8.38/16.90s passes; lint/format follow.
+
+Row101 clippy5.92/13.01s and format0.46/0.86s pass after client request
+test8.38/16.90s. Row105 refresh4d4cbacd0a7850fd046bba139683e67e610d5b2c
+uses actual base8bf114c615fe; compiler/runtime/startup fixture match original
+with inherited CLI/GC repairs. OLDcb20833c018f stays fixed; previous CURRENT
+is retained before lease publication. Fresh startup rollback checks follow.

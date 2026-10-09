@@ -126,7 +126,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `222e199ca735` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `8ccdd092478c` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `8bf114c615fe` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `4d4cbacd0a78` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `7a89dd017ae4` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `ea18e54f0eee` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
