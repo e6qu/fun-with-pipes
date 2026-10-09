@@ -13,6 +13,10 @@ jobs:
       RUST_TEST_THREADS: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Handoff links, immutable anchors and commit subjects
+        run: python3 scripts/check-handoff-evidence.py
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
