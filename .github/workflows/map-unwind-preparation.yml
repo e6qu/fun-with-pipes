@@ -11,6 +11,8 @@ jobs:
     env:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
+      FWP_KEEP_FAILED_FIXTURES: 1
+      CC: cc -g
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,3 +36,11 @@ jobs:
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Diagnose preserved map fixture on failure
+        if: ${{ failure() }}
+        run: |
+          command -v gdb || (sudo apt-get update && sudo apt-get install -y gdb)
+          for exe in /tmp/fwp-map-unwind-*-callbacks/callbacks; do
+            test -f "$exe" || continue
+            gdb --batch -ex 'set env FWP_GC_STRESS 1' -ex 'set env FWP_GC_VERIFY 1' -ex 'set env FWP_REUSE_VERIFY 0' -ex run -ex bt -ex 'info locals' "$exe"
+          done

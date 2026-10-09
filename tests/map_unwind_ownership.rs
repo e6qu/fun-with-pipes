@@ -22,7 +22,9 @@ impl Scratch {
 }
 impl Drop for Scratch {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
+        if std::env::var_os("FWP_KEEP_FAILED_FIXTURES").is_none() || !std::thread::panicking() {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
     }
 }
 
@@ -154,7 +156,9 @@ int main(void) {
             (&builder, &builder_probe),
             (&cancelled, &cancelled_probe),
         ] {
-            fwp::cgen::compile_c(&format!("{code}\n{probe}"), &exe, opt).unwrap();
+            let source = format!("{code}\n{probe}");
+            std::fs::write(dir.0.join("probe.c"), &source).unwrap();
+            fwp::cgen::compile_c(&source, &exe, opt).unwrap();
             for poison in ["0", "1"] {
                 let out = checked(
                     Command::new(&exe)
