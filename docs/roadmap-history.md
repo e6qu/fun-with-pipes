@@ -12015,3 +12015,33 @@ row34 test. Eleven focused runtime/call/preparation tests pass29.13CPU/
 e06c447336ae97eff77b118ebaac194f6968623d remotely before leased publication.
 Later overlapping row34 implementation is reconciled on final rebase; its
 immutable anchor and coverage remain. No complete exception-ownership claim.
+
+Row29 refreshed84ef5480f4938e78c11c10823bf498a8a1a4e6f9 → 78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 on actual7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3. Exact early row34 patch accounts for compiler/runtime changes; inherited audit matches the new base and the original map regression is byte-identical. Eight focused map/preparation/runtime tests pass22.28CPU/44.73elapsed; lint2.41/5.01s and format0.35/0.75s. Retained revision-029-84ef5480f493 remotely before leased publication; full sequential gates remain required.
+
+Row26 strengthens the shared handoff audit after stale next-action bases were
+found in the live documentation. It verifies live branch/head agreement with
+the queue and actual-base ancestry, without modifying immutable anchors.
+Positive audit passes44 link sets/106 immutable pairs/87 live pairs0.47CPU/
+3.69elapsed. Isolated stale-head and stale-base controls both fail as expected,
+then corrected data passes; combined1.19CPU/9.17elapsed. Compiler/runtime/tests
+remain identical to0a7203f. Runtime evidence37994225608 also passes at2234160
+with exact source parity to7cfbe03, including early partial-capture protection.
+
+Published row26 audit/docs refreshcc297e6b31c9ea7564c1f196eddb5c06059525ec
+on actual main1033bb34267997479794aeac9fff3447da94c16ca4d. Native source
+remains byte-identical to0a7203f; final positive audit0.48CPU/3.69elapsed passes
+all87 live pairs. Retained roadmap/revision-026-0a7203f5c559 remotely before
+leased publication. Row27 actual base remains old0a7203f until its own final
+rebase; immutable anchors and prior bases are not silently rewritten.
+
+Sequential preparation refresh row30: ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 → 244dd2a578af002cc7316b6227f423be6bd63d8f, actual base78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8. Retained roadmap/revision-030-ca33d3141a96 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row31: a282f630c7902b1239e87e8d300a271d5960d252 → 687ae106193bb472e4db399907131a65fa571ff2, actual base244dd2a578af002cc7316b6227f423be6bd63d8f. Retained roadmap/revision-031-a282f630c790 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row32: 459287698745aa390254180024b8ddb22ccfb7b5 → 270525b5bb9ac18249bda39fc92a0c4782c8612d, actual base687ae106193bb472e4db399907131a65fa571ff2. Retained roadmap/revision-032-459287698745 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row33: b16195bcebf3886edff6b4b8df7fb37131ac1333 → c65514a8e6d4761884f23027240dd3a058935a6e, actual base270525b5bb9ac18249bda39fc92a0c4782c8612d. Retained roadmap/revision-033-b16195bcebf3 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row34: 9f56744c4eb741d0489f79f75f6cd164fffd7687 → 804e6a0cf9f31d75de0fe4b0831037fcd05b4987, actual basec65514a8e6d4761884f23027240dd3a058935a6e. Retained roadmap/revision-034-9f56744c4eb7 before explicit leased publication. Compiler/runtime/tests are byte-identical to the original row34 source and the refreshed row33 predecessor; only documentation differs from that predecessor. The main roadmap audit is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Early preparation propagation through30–34 passes under the original guard0.82CPU/21.38elapsed. Every old head is retained remotely, every OLD preparation tag remains fixed, and source expectations were constructed by applying only the exact accepted row34 patch to each old preparation before byte comparison. Row34 is now documentation-only relative to refreshed33, so its duplicate implementation PR can be skipped once28 passes full acceptance; coverage remains in every later full suite.

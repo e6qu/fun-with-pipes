@@ -18,7 +18,8 @@ This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all ten current root docs, rerun focused
+Resolve documentation conflicts with all ten current root docs plus additional
+modified tracked documents, including current docs/numerics.md. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
 Every final PR needs new six-job exact-head CI. Prior evidence and superseded
 queue instructions are preserved in [history](roadmap-history.md).
@@ -26,6 +27,11 @@ queue instructions are preserved in [history](roadmap-history.md).
 Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
 resolve full hashes before publication or merge. Checkout paths use
 `/private/tmp/fwp-NAME-worktree`; consult the handoff for exceptions.
+
+Row34's argument/capture preparation repair and regression probe are now moved
+into row28 to protect callback entry earlier. Current34 is documentation-only
+relative to refreshed33. After28 passes its full acceptance, skip the duplicate
+implementation PR at34; keep its immutable anchor and later regression coverage.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -48,15 +54,15 @@ resolve full hashes before publication or merge. Checkout paths use
 | 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
-| 26 | unwind-liveness | `ownership-reuse-tokens` | `0a7203f5c559` | `33cf86466e2f` | `3e314222ff7c` |
+| 26 | unwind-liveness | `ownership-reuse-tokens` | `cc297e6b31c9` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `71c2405dd0e0` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `7cfbe030d3de` | `bee3f1659ae5` | `7392f2d67151` |
-| 29 | map-unwind | `ownership-map-unwind` | `84ef5480f493` | `62add7e4a85f` | `bee3f1659ae5` |
-| 30 | selection-unwind | `ownership-selection-unwind` | `ca33d3141a96` | `b8f4c2469215` | `62add7e4a85f` |
-| 31 | zip-unwind | `ownership-zip-unwind` | `a282f630c790` | `c2a364544d92` | `b8f4c2469215` |
-| 32 | fold-unwind | `ownership-fold-unwind` | `459287698745` | `968dac7ed9cf` | `c2a364544d92` |
-| 33 | loop-unwind | `ownership-loop-unwind` | `b16195bcebf3` | `988f2a3be97f` | `968dac7ed9cf` |
-| 34 | argument-preparation | `ownership-argument-preparation` | `9f56744c4eb7` | `49739182ecb6` | `988f2a3be97f` |
+| 29 | map-unwind | `ownership-map-unwind` | `78ed19ff401a` | `62add7e4a85f` | `bee3f1659ae5` |
+| 30 | selection-unwind | `ownership-selection-unwind` | `244dd2a578af` | `b8f4c2469215` | `62add7e4a85f` |
+| 31 | zip-unwind | `ownership-zip-unwind` | `687ae106193b` | `c2a364544d92` | `b8f4c2469215` |
+| 32 | fold-unwind | `ownership-fold-unwind` | `270525b5bb9a` | `968dac7ed9cf` | `c2a364544d92` |
+| 33 | loop-unwind | `ownership-loop-unwind` | `c65514a8e6d4` | `988f2a3be97f` | `968dac7ed9cf` |
+| 34 | argument-preparation | `ownership-argument-preparation` | `804e6a0cf9f3` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `82f58d851b73` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `6032ecffcb7d` | `dc4f9461571b` | `608ae7bb2d24` |
 | 37 | worker-preparation | `ownership-worker-preparation` | `3bd34dafb62f` | `c97dd03f8d89` | `dc4f9461571b` |
