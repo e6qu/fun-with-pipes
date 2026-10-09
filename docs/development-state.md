@@ -192,7 +192,7 @@ still need their final squash rebases and six exact-head full gates.
 | 98 ownership-grpc-request-encoding | 1f6f668eff38 | 351073f7254d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 99 ownership-grpc-canonical-encoding | 96f523dfad9e | 1f6f668eff38 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 100 ownership-grpc-response-encoding | a3d88c0b8f3d | 96f523dfad9e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 101 ownership-grpc-client-requests | 2ac08dea923a | 3bec687cea7d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 101 ownership-grpc-client-requests | e0db0123a16c | a3d88c0b8f3d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 102 ownership-grpc-client-failure-text | 04e8557ca5e8 | 2ac08dea923a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 103 ownership-grpc-client-receive | 6f1f030dfcce | 04e8557ca5e8 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 104 ownership-grpc-connect-cleanup | ac9558374a4d | 6f1f030dfcce | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
