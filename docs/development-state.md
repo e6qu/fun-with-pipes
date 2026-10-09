@@ -38,9 +38,10 @@ maps/sets and eligible old-storage reclamation. Phase1 is done; phase2 remains
 incomplete; phases3–6 are pending. Tracing remains the shared/runtime fallback.
 
 PR102 https://github.com/e6qu/fun-with-pipes/pull/102 is the only open PR.
-Current head51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
+Current head 51cf1c6987888ddbe69fdeb79455208fb1eb077a has actual main base
  da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
-focused-accepted1741ab5fa64e exactly. Require six production jobs and
+focused-accepted1741ab5fa64e exactly. Production CI37975866229
+and roadmap_docs CI37975866346 are queued; neither is acceptance. Require six production jobs and
 roadmap_docs at this exact head before explicit squash with
 `Own task result wrappers and preserve typed deadline aliases` and empty body.
 Row25 actual current base remains1741ab5; final-rebase it only after the actual
@@ -99,11 +100,11 @@ still need their final squash rebases and six exact-head full gates.
 | 56 ownership-library-unload | ac6de597fddc | 625ac7793f84 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
 | 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
-| 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Focused checks follow; compiler/runtime unchanged |
-| 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Focused checks follow; compiler/runtime unchanged |
+| 59 ownership-tls-listeners | 99b769bff921 | a5ebb52578e3 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
+| 60 ownership-library-resources | ac17bf61276c | 99b769bff921 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 044ceae9f0c5 | ac17bf61276c | Fresh focused checks follow; compiler/runtime unchanged |
-| 62 ownership-tls-cache-failures | 0be508308064 | c299edbc33eb | 11.21 / 26.06 s |
-| 63 ownership-tls-wire-preparation | 66e80d399e65 | 0be508308064 | 11.65 / 26.15 s |
+| 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Fresh focused checks follow; compiler/runtime unchanged |
+| 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Fresh checks follow; compiler/runtime unchanged |
 | 64 ownership-connect-cancellation | ae05b2bfc32c | 66e80d399e65 | 12.36 / 27.82 s |
 | 65 ownership-unboxed-worker-locals | 2ba7084abe25 | ae05b2bfc32c | 20.34 / 58.06 s |
 | 66 ownership-tls-peer-subject | b728cf5f2adb | 2ba7084abe25 | 10.79 / 25.73 s |
