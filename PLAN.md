@@ -11,7 +11,7 @@ prior deliveries and measurements, without supplying new priorities.
 Complete this roadmap automatically, one focused PR at a time. Fix failing tests;
 CI gates merging, not implementation or next-task preparation. Full builds,
 tests, benchmarks and large regeneration run on GitHub. Require all six passing
-jobs for the current exact PR head before squash. Supply a single-line subject
+jobs and the roadmap documentation audit for the current exact PR head before squash. Supply a single-line subject
 of at most 80 characters and an empty body, with no trailers or attribution.
 Update the handoff and queue after meaningful progress. This authorization
 persists across sessions and compactions; no repeat approval is required.
@@ -40,13 +40,13 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#99: native macOS and selected ownership through typed
+Main includes #74–#100: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
-wide counts and array elements. PR99 passed all six exact-head gates and
-merged. Queue22 map/set ownership is the next focused delivery; separate
-GitHub format, lint, ownership tests and handoff audit pass. Its final rebase
-and six fresh production gates remain required. Exact heads, commands,
-failures and acceptance remain in [the handoff](docs/development-state.md).
+wide counts, array elements and map/set elements. PR100 passed all six
+exact-head production gates and the roadmap documentation audit, then merged.
+Queue23 old-storage reclamation is the next focused delivery. Its final rebase
+and fresh production gates remain required. Exact heads, commands, failures and
+acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
