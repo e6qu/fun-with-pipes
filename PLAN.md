@@ -40,13 +40,13 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#92: native macOS, primitive contracts, owned leaves/text,
+Main includes #74–#93: native macOS, primitive contracts, owned leaves/text,
 compiled closures and cleanup, concrete temporaries, stack children, borrowed
-synchronous list callbacks/results, separate call effects and exact native wide
-counts. [PR #92](https://github.com/e6qu/fun-with-pipes/pull/92) merged after
-all six exact-head gates passed. The next focused PR owns sorted/unique list
-elements and releases scratch. Exact heads, gates and next actions are in
-[the handoff](docs/development-state.md).
+synchronous list callbacks/results, ordered copies, separate call effects and
+exact native wide counts. [PR #93](https://github.com/e6qu/fun-with-pipes/pull/93)
+merged after all six exact-head gates passed. The next focused PR borrows
+sort-by callbacks and reclaims typed keys/results. Exact heads, gates and next
+actions are in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux
