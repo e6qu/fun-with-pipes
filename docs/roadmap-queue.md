@@ -129,7 +129,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `4d4cbacd0a78` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `911fcf78c5c9` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `090422d2f330` | `ea18e54f0eee` | `7a89dd017ae4` |
-| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `52668c476b2a` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `d178d86dca2b` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `6f4bfba80ef3` | `6f4bfba80ef3` | `d178d86dca2b` |
 | 111 | grpc-packed-options | `ownership-grpc-packed-options` | `2bd17608388d` | `2bb665596390` | `6f4bfba80ef3` |

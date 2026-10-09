@@ -11661,3 +11661,12 @@ test10.13/20.40s. Row107 refresh090422d2f3302b3ae2b3d6430a194783d1c25c16
 uses actual base911fcf78c5c9; compiler/runtime/scoped option fixture match original
 with inherited CLI/GC repairs. OLDea18e54f0eee stays fixed; previous CURRENT
 is retained before lease publication. Fresh scoped-owner checks follow.
+
+Row104 pending connect/handshake cancellation cleanup test7.73/16.98s passes;
+lint/format follow. No local full gate was run.
+
+Row104 clippy6.15/13.36s and format0.44/0.86s pass after connect
+test7.73/16.98s. Row108 refresh52668c476b2acc348ed611fc8d75e2b69504302f
+uses actual base090422d2f330; compiler/runtime/capture fixture match original
+with inherited CLI/GC repairs. OLD36ad63424530 stays fixed; previous CURRENT
+is retained before lease publication. Fresh capture/alias/rollback checks follow.

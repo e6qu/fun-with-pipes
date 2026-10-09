@@ -40,7 +40,7 @@ phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback
 PR103 https://github.com/e6qu/fun-with-pipes/pull/103 is the only open PR.
 Current head1537961db5da753e123162aa8441cb4488d9a66b has actual main base
 c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
-focused-accepted6421c025b3d5 exactly. Production CI37982307280 and roadmap_docs CI37982307209 are queued.
+focused-accepted6421c025b3d5 exactly. Production CI37982307280 is queued/running; roadmap_docs CI37982307209 passes.
 Queued runs are not acceptance. Require all six
 production jobs and roadmap_docs at this exact head before explicit squash
 with `Release registered owners before nonlocal unwind` and empty body.
@@ -146,11 +146,11 @@ still need their final squash rebases and six exact-head full gates.
 | 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Client test8.38/16.90s; lint5.92/13.01s and format0.46/0.86s pass |
 | 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Failure text test7.45/15.82s; lint5.96/13.43s and format0.46/0.87s pass |
 | 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Receive test10.13/20.40s; lint6.00/13.19s and format0.45/0.85s pass |
-| 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Refreshed source unchanged; pending resource cancellation checks follow |
+| 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Connect test7.73/16.98s; lint6.15/13.36s and format0.44/0.86s pass |
 | 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Refreshed source unchanged; driver startup rollback checks follow |
 | 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | Refreshed source unchanged; context/trap/cancellation checks follow |
 | 107 ownership-grpc-context-resources | 090422d2f330 | 911fcf78c5c9 | Refreshed source unchanged; scoped options/retained task checks follow |
-| 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
+| 108 ownership-grpc-capture-resources | 52668c476b2a | 090422d2f330 | Refreshed source unchanged; capture/alias/rollback checks follow |
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
 | 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
@@ -255,8 +255,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-connect-cleanup-worktree; guarded pending
-connection resource cancellation checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
+belongs to /private/tmp/fwp-grpc-connect-startup-worktree; guarded driver startup
+partial spawn/connection owner rollback checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
