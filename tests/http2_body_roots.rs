@@ -47,13 +47,20 @@ static void inspect_owner(void){
  fwp_gc.major_next=1;fwp_gc_collect();
  if(fwp_gc.ncollect<=before)_Exit(3);if(released)_Exit(1);
 }
-static __attribute__((noinline)) V body(void){
+/* Keep construction-only owner pointers out of the active copying frame. */
+static __attribute__((noinline)) V make_call(void){
  g_conn *conn=g_conn_new(-1,"local",0);
  g_stream *stream=g_stream_new(conn,1);
  static const unsigned char bytes[]={0,255,192,128,10};
  h2b_put(&stream->data,bytes,sizeof bytes);stream->remote_end=1;
  watched_body=stream->data.d;
- V call=g_call_value(conn,stream,1,0);copy_active=1;
+ return g_call_value(conn,stream,1,0);
+}
+static __attribute__((noinline)) void clear_dead_stack(void){
+ volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;
+}
+static __attribute__((noinline)) V body(void){
+ V call=make_call();clear_dead_stack();copy_active=1;
  struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
  return fwp_p_http2_body(64,PTR(&duration),call);
 }
