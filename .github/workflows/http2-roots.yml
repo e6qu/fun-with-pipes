@@ -40,3 +40,9 @@ jobs:
       - name: Resource metadata and fusion order
         if: ${{ !cancelled() }}
         run: cargo test --lib resource::tests -- --nocapture
+      - name: Omitted-owner machine code diagnostic
+        if: ${{ failure() }}
+        run: |
+          nm /tmp/fwp-http2-owner-omitted | rg 'body|make_call|inspect_owner|fwp_str_new'
+          objdump -d --disassemble=body /tmp/fwp-http2-owner-omitted
+          objdump -d --disassemble=fwp_p_http2_body /tmp/fwp-http2-owner-omitted

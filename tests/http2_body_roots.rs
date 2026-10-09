@@ -95,6 +95,7 @@ int main(void){int status=probe();if(status)_Exit(status);return 0;}
         }
     }
     fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O2").unwrap();
+    std::fs::copy(&exe, "/tmp/fwp-http2-owner-omitted").unwrap();
     let out = Command::new(&exe).output().unwrap();
     assert_eq!(out.status.code(), Some(1), "omitted owner: {out:?}");
 }
