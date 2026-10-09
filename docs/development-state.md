@@ -41,7 +41,7 @@ PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
 Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
 base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
 and CI37969632440 (roadmap_docs) are current production gates. roadmap_docs, bench, regular ARM macOS and both
-GC stress jobs pass; Linux and regular Intel macOS run. All six are required. Compiler/runtime/tests match
+GC stress jobs and Linux pass; regular Intel macOS runs. All six are required. Compiler/runtime/tests match
 focused-accepted495411d33f60 exactly. The final publication records the merged
 map/set contracts and inherits the portable roadmap audit. Require all six
 production jobs and roadmap_docs at this exact head before squash with
@@ -97,12 +97,12 @@ still need their final squash rebases and six exact-head full gates.
 | 50 ownership-task-within | 1b5fb056fa00 | ec9a4133a2c1 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 245a0a24370e | 1b5fb056fa00 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | fe8ed51eb078 | 245a0a24370e | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
-| 53 ownership-channel-queues | a30c1829d0d0 | fe8ed51eb078 | Focused checks follow; compiler/runtime unchanged |
-| 54 ownership-library-results | f4d3784f4657 | a30c1829d0d0 | Focused checks follow; compiler/runtime unchanged |
-| 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Focused checks follow; compiler/runtime unchanged |
-| 56 ownership-library-unload | 878b25aad627 | f240ecd56f3b | 12.24 / 31.36 s |
-| 57 ownership-opencl-lifetime | 5b6e65f365d6 | 878b25aad627 | 10.33 / 32.03 s |
-| 58 ownership-interpreter-opencl | 00013d55d078 | 5b6e65f365d6 | 14.19 / 34.79 s |
+| 53 ownership-channel-queues | a30c1829d0d0 | fe8ed51eb078 | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
+| 54 ownership-library-results | f4d3784f4657 | a30c1829d0d0 | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
+| 55 ownership-library-inputs | 625ac7793f84 | f4d3784f4657 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
+| 56 ownership-library-unload | ac6de597fddc | 625ac7793f84 | Focused checks follow; compiler/runtime unchanged |
+| 57 ownership-opencl-lifetime | 4ae80b641da1 | ac6de597fddc | Fake OpenCL API ownership checks follow; no hardware numerics claim |
+| 58 ownership-interpreter-opencl | a5ebb52578e3 | 4ae80b641da1 | Fake API native/interpreter failure cleanup checks follow |
 | 59 ownership-tls-listeners | 838cf5dee220 | 00013d55d078 | 8.83 / 20.03 s |
 | 60 ownership-library-resources | d56a24e48d7e | 838cf5dee220 | 11.76 / 31.49 s |
 | 61 ownership-grpc-server-cleanup | c299edbc33eb | d56a24e48d7e | 12.59 / 28.85 s |
