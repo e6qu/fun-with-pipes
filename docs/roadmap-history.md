@@ -9781,3 +9781,77 @@ cargo clippy --test grpc_receive_cleanup --test grpc_status_cleanup
 pass0.45 / 0.83 s. Actual binary transfer, exactly-once malloc release and
 cancelled second wait are verified at O1/O2 with tracing off/on and poison.
 Three omitted ownership controls fail exactly1. No local full gate.
+
+Row94 published clean at 8bd9e78743abd7ed2c1f721ee100ed325074da2e on actual
+a92c951fa6d927356a375edfe42c29589c505b99; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Previous-main Linux CLI harness failure repair, 2026-10-09
+
+Completed previous-main push CI37916609315 at d174e73 fails Linux only; five
+other jobs pass. Full failure logs /private/tmp/fwp-main96-failure.log. Only
+cli::multi_command_program fails, tests/cli.rs:76 unwrap gets BrokenPipe while
+writing stdin. Existing add-all case intentionally supplies5 newline but
+expects0 from an empty argument list, so early stdin close is legal. Updated
+helper tolerates only ErrorKind::BrokenPipe and always captures/asserts exact
+child stdout/stderr/status. Other stdin errors still fail. This repair goes
+into the sole PR98 before merging; all six new exact-head gates are required.
+Focused CLI regression runs serial under the bounded local guard. Existing
+PR97 exact six gates remain passed; no failed run is presented as acceptance.
+
+Guarded handoff audit passes11 document link/heading sets,88 immutable ancestry
+pairs and whole commit messages0.18 / 1.29 s. Guarded clean before CLI checkout
+switch passes0.00 / 0.14 s. New CLI repair's focused test runs; no resource
+limit raised or bypassed. Superseded runs will not supply new-head acceptance.
+
+Focused cargo test --test cli multi_command_program -- --exact passes
+23.59 / 47.48 s CPU / elapsed with all existing interpreter/native cases.
+Added deterministic early stdin close regression: child closes its read end
+before a buffer larger than pipe capacity is written, then emits stdout and
+stderr and exits7. The harness must preserve all three observed results.
+This removes reliance on scheduling to cover the original BrokenPipe race.
+
+Deterministic early-close test passes0.18 / 0.73 s CPU / elapsed. Initial
+focused CLI lint passes2.26 / 4.59 s; final lint including deterministic
+regression passes0.09 / 0.26 s. Format application/check both0.36 / 0.73 s.
+No runtime/compiler change beyond previously tested generation work. New
+PR98 head must replace old6b1cd9b for all six merge gates.
+
+CLI failure repair published as second PR98 commit542fc080e8818c26fb3da2ebbc295cd9fb864ee5 atop6b1cd9b,
+actual base2c1003c. Entire message is one line, with empty body/trailers.
+PR description rewritten around generation ownership plus the CLI race repair.
+Cancellation of superseded37925910460 at6b1cd9b requested after publication; no old or
+cancelled run supplies current acceptance. New head needs all six exact gates.
+
+New PR98 exact-head CI37929002304 at542fc08 queues all six jobs. Later
+preparations must inherit the CLI repair from the eventual squash; preserve
+feature deltas and immutable OLD anchors, not the old full-file CLI snapshot.
+
+Superseded PR98 CI37925910460 is confirmed completed/cancelled after new head
+publication. Generation source/runtime/tests/workflows still match7741d09,
+except explicitly inherited CLI repair. Fresh six-job gate37929002304 remains
+the only current acceptance run. No main run was cancelled.
+
+## Streaming cell force ownership preparation, 2026-10-09
+
+New ownership-grpc-force-cleanup starts on8bd9e78743abd7ed2c1f721ee100ed325074da2e.
+Streaming force owns received malloc message/status across decoder/response
+copying and traps. Decoder failure reasons and temporary error text have
+scoped cleanup. Normal cached result and first-error return retain existing
+behavior, transferring only returned error text/value. Fixture uses actual
+receive/cell/memo paths while stubbing decoder results and allocation-copy
+traps; it checks end, status failures, successful scalar/results, decoder
+failure/trap, copy failure, first-error transfer and repeated cached force.
+Omitted receive/reason/temporary-text controls must fail1. Fixed O1/O2 ×
+tracing off/on × poison must pass. Guarded clean before switching0.00 / 0.13 s;
+focused force/unary receive tests run. Rendered error and protocol output
+scratch buffers still need separate exceptional lifetime review.
+
+Focused cargo test --test grpc_force_cleanup --test grpc_receive_cleanup
+passes both11.15 / 23.28 s CPU / elapsed. Focused clippy for these two targets
+passes2.50 / 5.05 s; format application0.45 / 0.84 s and check0.45 / 0.83 s
+pass. O1/O2, tracing off/on, poison, first-error transfer and unchanged memo
+behavior pass; three omission controls fail exactly1. Fixture decoder stubs
+check lifetime boundaries; full protocol/interpreter acceptance remains CI.
+Contiguous live tables repaired by removing accidental blank lines between
+preparation rows; historical checks remain archived.

@@ -471,3 +471,9 @@ storage across the subsequent wait. Cleanup releases them on cancellation or
 an unexpected extra result; normal return transfers only the requested
 message or error text. Reflection discards its copied end status. Message
 contents, receive order and error codes remain unchanged.
+
+Prepared streaming gRPC cell force owns received malloc payload/status through
+decoding and response copying. Scoped cleanup releases decoder failure reasons
+and temporary error text during traps. First-error returns transfer only the
+returned text/value; successful force retains its existing cached result.
+Rendered-error and protocol-output scratch lifetimes remain a separate audit.
