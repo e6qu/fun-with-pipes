@@ -499,5 +499,7 @@ child appends. Both resource counters validate before acquisition changes
 either, and constructors protect resources if acquisition traps. TLS pool
 keys use checked length framing and complete bytes rather than delimiter
 serialization through a fixed diagnostic buffer; connections copy keys so
-scoped options can be released independently. Environment-cache teardown,
-canonical decode and packed TLS storage remain audits.
+scoped options can be released independently. Read-once environment TLS
+caches release on library teardown after tasks drain and GC finalizers finish,
+before SSL cache disposal. Cache and hook state reset for reinitialization.
+Canonical decode and packed TLS storage remain audits.

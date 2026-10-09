@@ -10452,3 +10452,36 @@ Row109 final focused lint2.62 / 5.42 s and format0.52 / 1.07 s pass.
 Duplicate post-merge main CI37944119691 cancellation requested after verifying
 source/runtime/tests/workflows equal PR98 all-six-accepted de969ee. PR99
 current six gates remain required; no cancelled-run acceptance.
+
+## Map/set pre-delivery refresh and local resource refusal
+
+Row22 rebased from actual443524ef6b6d5183f010899902a94a9d53c5dc55 onto active
+array PR99 dc85b679407a7adda1438989051ca7eaf70072e5. Ten authoritative docs
+were preserved at/private/tmp/fwp-docs-before-map22-refresh and used to resolve
+only historical doc conflicts. Runtime/compiler/tests/workflows match prior
+1689c03 apart from inherited CLI/GC repairs. Guarded `cargo clean -p fwp`
+refuses before execution: less than64 GiB free disk. Read-only observation
+64840628 KiB free (61.84 GiB), target142264 KiB (138.93 MiB). No fresh local
+check or changed limit; focused map validation moves to separate GitHub evidence.
+Duplicate main CI37944119691 is confirmed cancelled; not current PR acceptance.
+
+Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
+dc85b679407a7adda1438989051ca7eaf70072e5 with explicit lease1689c03.
+Separate focused evidence352affa359742e997978214b19918941781d3afb adds only
+its push workflow. Production ancestry never inherits this workflow.
+
+## Environment TLS cache teardown preparation
+
+Row110 ownership-grpc-environment-cache starts on actual d178d86dca2bd8c9c0ed7f9f3fa417374c55af29,
+/private/tmp/fwp-grpc-environment-cache-worktree. Local workload checks remain
+refused due to below64 GiB free disk; no local test/format/lint claim. Cache
+values keep read-once semantics until unload; generated service/web libraries
+release malloc cache entries, names and TLS options after task draining and
+GC finalizers and before OpenSSL cache disposal. Cache/pool/hooks reset for
+reinitialization. New native fixture checks ten selected malloc releases,
+blocked child/finalizer ordering, unchanged cache despite environment changes,
+two init/finish cycles, idempotence and omitted-cleanup rejection. Focused
+validation moves to a separate GitHub evidence branch; full sequential gates
+remain required. Map evidence refreshed51639d38897d35538914da051347046c590d20f9
+at queued CI37948108555 adds handoff validation; superseded352affa run
+37947989500 cancellation requested and never acceptance.

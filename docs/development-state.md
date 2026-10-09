@@ -44,18 +44,25 @@ inherited CLI/GC repairs. Array tests pass 14.57 / 29.32 s CPU / elapsed;
 focused lint passes 2.44 / 4.83 s; formatting passes 0.33 / 0.60 s.
 Published with explicit lease; require six new exact-head gates.
 After passing CI, squash with `Own typed array elements across copies updates and callbacks`
-and empty body, then continue row22. Row22 ACTUAL base remains443524e until
-its own refresh; never replace immutable OLD anchors.
+and empty body, then continue row22. Row22 pre-delivery refresh onto PR99 dc85b679 is complete; it must rebase
+from that actual base onto the eventual array squash. OLD anchors stay immutable.
 
 Later preparations must inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. The repaired Linux gate actually verifies the
 collector churn output, allocation/collection thresholds and RSS bound.
 Ten authoritative docs backed up to/private/tmp/fwp-main-docs-pre98 were
 restored byte-for-byte after main fast-forward2c1003c→559f4ac. Preparations
-through108 are published; PR99 CI37945913789 is queued at exact dc85b679.
-Duplicate main CI37944119691 cancellation requested to free runner capacity
+through109 are published; PR99 CI37945913789 is queued at exact dc85b679.
+Duplicate main CI37944119691 cancellation confirmed to free runner capacity
 for PR99: source/runtime/tests/workflows match all-six-accepted PR98 exactly.
 Current PR99 gates remain required; cancelled duplicate is not acceptance.
+Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
+dc85b679. Focused GitHub evidence ownership-evidence-map-set, checkout
+/private/tmp/fwp-map-set-evidence-worktree, head51639d38897d35538914da051347046c590d20f9,
+CI37948108555 queued at that exact head,
+runs document links/anchors/subjects and format/lint/map_set_ownership/ownership
+without another PR. Superseded352affa CI37947989500 cancellation requested. Workflow
+changes never enter production ancestry; evidence is not six-gate acceptance.
 Prior delivery checks and failures remain in history.
 
 ## Next sequential preparations
@@ -70,7 +77,7 @@ still need their final squash rebases and six exact-head full gates.
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
 | 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
 | 21 ownership-array-elements | dc85b679407a, PR99 | 559f4acc3d27 | 14.57 / 29.32 s final |
-| 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
+| 22 ownership-map-set-elements | c9ef3d88211f | dc85b679407a | Prior 14.98 / 30.15 s; fresh local guard refused |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
@@ -157,6 +164,7 @@ still need their final squash rebases and six exact-head full gates.
 | 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
 | 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
 | 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
+| 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -242,13 +250,27 @@ identity passes1.15 / 3.31 s, including old-encoding rejection, actual loopback
 connection construction/pool reuse after options free, full-field differences
 and4096-byte names. Matching interpreter exact unit passes5.51 / 11.41 s.
 Initial focused lint2.56 / 5.17 s passes; final lint2.62 / 5.42 s and
-format0.52 / 1.07 s pass; publication follows.
-Remaining audit: environment-cache teardown, canonical decode and packed TLS storage. Prepared
+format0.52 / 1.07 s pass; published at
+d178d86dca2bd8c9c0ed7f9f3fa417374c55af29 with actual base36ad634.
+Independent row110 ownership-grpc-environment-cache starts on d178d86,
+/private/tmp/fwp-grpc-environment-cache-worktree. Read-once service TLS cache
+now has library teardown after task draining/GC finalization and before SSL
+cache disposal; hooks/pool/cache pointers reset for reinitialization. New fixture
+checks cache immutability, blocked child and finalizer ordering, ten malloc
+releases, two init/finish cycles, idempotence and omission rejection. Local
+checks remain refused by the disk guard; publish for isolated GitHub evidence.
+No verified support yet.
+Remaining audit: canonical decode and packed TLS storage. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 acceptance and its repaired collector fixture are recorded above; superseded
-failures and logs remain in history. The next delivery is row21 on actual main
-559f4ac; row22 retains actual base443524e until its own final refresh.
+failures and logs remain in history. The next delivery is PR99 arrays on actual main559f4ac. Row22 maps refreshed
+from443524e onto PR99 dc85b679; only historical doc conflicts were resolved
+using all ten authoritative docs. Source/runtime/tests/workflows equal prior
+1689c03 apart from inherited CLI/GC test repairs. Guarded clean refuses before
+execution because free disk is below64 GiB; no fresh local support claimed.
+Observed61.84 GiB free, target138.93 MiB. Stop local workloads; move focused
+map checks to a separate GitHub evidence branch, never production ancestry.
 
 ## Repaired resource evidence
 
