@@ -843,7 +843,7 @@ immutable value semantics, effects and evaluation/trap order stable.
   [run 37612412156](https://github.com/e6qu/fun-with-pipes/actions/runs/37612412156):
   Linux, ARM/Intel macOS and benchmarks. Intel completed 2026-10-07T12:38:44Z.
   Verified squash subject: `Unify container ownership contracts and borrow comparison keys`,
-  one line, 61 characters, no body or trailers. Concurrent native executable
+  one line, 60 characters, no body or trailers. Concurrent native executable
   cache access is read-only; ARM's tutorial/pipeline regression is fixed.
 - Earlier native macOS baseline [PR #74](https://github.com/e6qu/fun-with-pipes/pull/74)
   merged as `af15d26`, passing all four jobs in run `37591744197`.
@@ -1029,7 +1029,7 @@ conflicts required reconciliation. Four focused checks and fmt/whitespace pass.
 Sole open [PR #81](https://github.com/e6qu/fun-with-pipes/pull/81), exact head
 `6eeb915771abcac085c6f6cf0520fd25cbbe79ee`, full CI `37696063781`, in progress; ARM macOS and benchmark gates passed, Linux/Intel macOS running.
 All four gates must pass before squash with subject `Retain and release typed
-children of nonescaping stack values` (one line, 61 characters), empty body and
+children of nonescaping stack values` (one line, 60 characters), empty body and
 exact head match. Then rebase borrowed callbacks from OLD `b563360`; preserve
 that original anchor rather than using the rewritten stack or squash head.
 
@@ -1063,7 +1063,7 @@ checkouts. No local workload remains.
 Previous published preparation: `ownership-field-context`, checkout
 `/private/tmp/fwp-field-context-worktree`, OLD base `3f61f51`, exact head
 `085dc716d5994681b998f13cd619b139794539fc`; clean checkout, no additional PR.
-Commit subject verified: one line, 61 characters, empty body/no trailers.
+Commit subject verified: one line, 60 characters, empty body/no trailers.
 Checked record types survive projection inlining; two regressions and five
 adjacent checks, five selected semantic goldens, clippy and fmt/whitespace pass.
 Detailed evidence is below; full sequential CI remains required. Next audit
@@ -1339,7 +1339,7 @@ Library clippy is warning-free (CPU 2.78 s / elapsed 5.57 s); fmt and whitespace
 pass. No local workload remains. Those checks used the worker-preparation compiler. Current shared target contains
 the loop-preparation compiler; guarded `cargo clean -p fwp` is required before
 another checkout's package build. Verified subject `Protect boxed arguments and partial fields before worker entry`
-is one line, 61 characters, empty body/no trailers. Next protect initial
+is one line, 60 characters, empty body/no trailers. Next protect initial
 loop state flattening and partial field extraction before worker entry, followed
 by vlocal variant duplication/boxing, typed constructor temporaries, CAF/inline
 lifetimes and retained tasks. Full sequential CI remains required.
@@ -2788,10 +2788,10 @@ remain incomplete; no general ARC, tracing-free or speed claim is made.
 PR #81 is the sole open PR, exact `6eeb915`, full CI `37696063781`; benchmark
 passed and all three architecture test jobs are running. Prepare this branch
 separately. Future squash subject `Preserve checked record types across inlined field projections`
-is one line, 61 characters, empty body/no trailers. Publication follows checks.
+is one line, 60 characters, empty body/no trailers. Publication follows checks.
 
 Projection context published as `085dc716d5994681b998f13cd619b139794539fc`;
-checkout clean and subject verified as one line, 61 characters, no body/trailers.
+checkout clean and subject verified as one line, 60 characters, no body/trailers.
 Latest CI snapshot for sole PR #81: benchmark passed; Linux, ARM macOS and Intel
 macOS test jobs in progress at exact `6eeb915`. Failing tests remain repair tasks;
 no failure is reported by this snapshot. Preserve OLD `b563360` for the immediate
@@ -2933,7 +2933,7 @@ repair failures and continue separate preparation. Prepared squash subject
 rebase after #81 merges. No second PR opens while that current gate is pending.
 
 CAF inlining published as `6734248e7c0d4d53d57e5acccb9af02641713e9d`;
-checkout clean, subject verified as one line, 61 characters, no body/trailers.
+checkout clean, subject verified as one line, 60 characters, no body/trailers.
 Final formatting check passes (CPU 0.44 s / elapsed 0.86 s), whitespace clean.
 PR #81 full run `37696063781` has passing Linux, ARM macOS and benchmark gates;
 Intel macOS tests are live at exact `6eeb915`. Continue separate ownership
@@ -10675,7 +10675,7 @@ requirements until proved, with no surface language change or speed claim.
 PR99 exact dc85b679407a7adda1438989051ca7eaf70072e5 passed all six
 CI37945913789 gates. Explicit subject and empty-body squash at16:12:45Z
 produced c4d820e0d032a010c4fa933d879bdaeee9cefc37. Whole commit message
-is one line, 61 characters, without trailers. All ten authoritative docs were
+is one line, 60 characters, without trailers. All ten authoritative docs were
 SHA256-verified before and after main fast-forward from559f4acc.
 
 Map evidence c79544b74d30e6d285f64e0f500891434a2e91f7,
@@ -10702,3 +10702,70 @@ freeing. It now explicitly sets FWP_FREE=0 and FWP_REUSE=0, while the normal
 build exercises default counted reclamation. Output21768000, allocation>800MiB,
 collection>10 and RSS<64MiB requirements remain on the separate tracing build.
 Fresh GitHub checks are required; local guard remains below its disk threshold.
+
+## Archived preparation and combined evidence notes, 2026-10-09
+
+Latest independent work is row110 environment-cache teardown, published
+6f4bfba80ef364d719ff58a984926922b2e826c2 on actuald178d86, checkout
+/private/tmp/fwp-grpc-environment-cache-worktree. Local checks were refused.
+Separate ownership-evidence-grpc-environment at46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944,
+CI37948869170 passes format/lint/cache/pool/capture/context/unload and matching
+interpreter identity. Linux focused evidence verifies ten selected malloc frees,
+blocked child/finalizer ordering, read-once values, reinitialization/idempotence
+and omission rejection with GC/reuse verification. Full sequential platform
+acceptance is still required.
+Its workflow never enters production ancestry. Independent row111
+ownership-grpc-packed-options, /private/tmp/fwp-grpc-packed-options-worktree,
+starts on6f4bfba and packs header/strings/key into one checked allocation.
+New fixture checks actual allocator calls, bytes, header alignment, copied
+inputs, last-owner release and allocation failure. Existing ownership fixtures
+adapt selected free counts to packed storage. Local checks remain refused;
+published2bd17608388d270fb60437c8b32c84c66c02ae13 on actual6f4bfba.
+Separate evidence823af3475560ed7709f958478580e364d89bdddf,
+CI37950759037 passes format/lint/packed/cache/pool/capture/context/unload and
+matching interpreter identity, including one allocation, exact requested bytes,
+alignment, copied inputs, allocation-failure and last-owner checks. It includes
+the shortened fixture lookup formatting repair.
+Superseded c02364d CI37949993129 is cancelled; no allocation claim yet.
+Independent row112 ownership-grpc-connection-addresses starts on2bd1760,
+/private/tmp/fwp-grpc-connection-addresses-worktree. Checked connection-tail
+address storage preserves full pool keys in the existing allocation. New
+loopback fixture checks4096 trailing slashes, actual pool reuse, copied short
+input, one connection allocation and short requested bytes below old layout;
+interpreter parsing agrees by source review; execution remains pending.
+Publishededbc5e8d0e62247c360db49c6019de7462701e48 on actual2bd1760.
+Local checks remain refused; remote evidence follows. No verified memory or speed claim. Canonical C decode scratch review
+finds existing normal success/error frees; decoded aggregates retain shared
+compatibility and require a separate typed-boundary audit. Broader phase2
+coverage remains in PLAN.
+
+## Repaired resource evidence
+
+Current separate evidence: ownership-evidence-resource-frames,
+/private/tmp/fwp-resource-evidence-worktree, exact
+bf05481ac5c6e60c4e05872a241a2ff436cb457f, CI 37798736754: all six gates pass at this exact head. It includes
+rows 79–88 plus the required stack_match_ownership regression. No evidence PR.
+Evidence workflows and baseline repairs never enter production ancestry.
+
+Previous ee4bd2238e078238cf1a0867e1c891cbf3170279 /CI 37780278972 passes
+bench and fails all five other gates (HTTP, REST/TLS/web and native std).
+A whole pattern binder retained only the outer pointer of a stack aggregate,
+while its newly typed scrutinee dropped child owners. Propagating those typed
+children into the binder repairs Dup/Drop and preserves nominal File disposal.
+Omission control, raw interpreter agreement, O1/O2, related resource tests and
+exact HTTP golden in four GC-off/on poison modes pass. The repaired full gates pass; each sequential production PR still needs
+its own exact-head gates. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
+retain failed logs, commands, controls and measurements.
+
+Production row85 repair is refreshed above, preserving the whole-stack binder
+regression and nominal File ownership. Row86 now inherits the stack repair on actual97dca76; its next final
+rebase must preserve that repair without replaying it. OLD anchors stay unchanged.
+Rows 79–88 are prepared, not delivered. Channel close preserves queued values;
+explicit drain breaks its counted cycle; automatic cycle reclamation is unproved.
+
+Earlier combined evidence passed all six: TLS/listener 9bcae30119028b1870efb8fecfcf9746f5808acb,
+CI 37730777345; WASM/resource 5fd2ed65385a23f3226b2bef02eb10196f51aeb4,
+CI 37771769436 (required actual WASI/File stage, both free modes).
+Each production PR still needs its own exact-head gates. Baseline root/cache/
+tutorial/boxing, WASI fstat, binary reads and listener/constructor control
+repairs are preserved in history; failed runs supply no acceptance.
