@@ -758,6 +758,15 @@ typedef struct {
     int retry;      /* G_LOST: the request certainly was not processed */
 } g_got;
 
+static void g_got_release(void *arg) {
+    g_got *g = (g_got *)arg;
+    free(g->m);
+    free(g->text);
+    g->m = 0;
+    g->text = 0;
+}
+
+
 static void g_status_of(g_conn *c, g_stream *s, g_got *g) {
     g->kind = G_END;
     const char *st = h2_get(&s->headers, ":status");
@@ -1631,18 +1640,38 @@ static void g_finish(g_conn *c, g_stream *s, int code, const char *msg) {
 static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
     g_got g;
     g_recv(j->c, j->s, 0, &g);
+    fwp_cleanup first_cleanup;
+    fwp_cleanup_push(&first_cleanup, g_got_release, &g);
     if (g.kind != G_MSG) {
         if (g.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
         *code = GRPC_INVALID_ARGUMENT;
         *msg = g.kind == G_LOST ? g.text : strdup("missing request message");
+        if (g.kind == G_LOST) g.text = 0;
+        fwp_cleanup_pop(&first_cleanup);
+        g_got_release(&g);
         return 0;
     }
     g_got e;
     g_recv(j->c, j->s, 0, &e);
-    if (e.kind == G_END) { free(e.text); return g.m; }
+    fwp_cleanup second_cleanup;
+    fwp_cleanup_push(&second_cleanup, g_got_release, &e);
+    if (e.kind == G_END) {
+        g_msg *result = g.m;
+        g.m = 0;
+        fwp_cleanup_pop(&second_cleanup);
+        g_got_release(&e);
+        fwp_cleanup_pop(&first_cleanup);
+        g_got_release(&g);
+        return result;
+    }
     if (e.kind == G_LOST && !j->s->bad) { fwp_cancel_tree(fwp_cur); fwp_check_cancel(); }
     *code = GRPC_INVALID_ARGUMENT;
     *msg = e.kind == G_LOST ? e.text : strdup("expected one request message");
+    if (e.kind == G_LOST) e.text = 0;
+    fwp_cleanup_pop(&second_cleanup);
+    g_got_release(&e);
+    fwp_cleanup_pop(&first_cleanup);
+    g_got_release(&g);
     return 0;
 }
 
@@ -1951,7 +1980,7 @@ static int g_reflect(g_job *j, char **msg) {
     for (;;) {
         g_got g;
         g_recv(j->c, j->s, 0, &g);
-        if (g.kind == G_END) return -1;
+        if (g.kind == G_END) { free(g.text); return -1; }
         if (g.kind == G_LOST) {
             *msg = g.text;
             return GRPC_INVALID_ARGUMENT;
