@@ -42,8 +42,7 @@ GitHub-accepted c9ef3d88211f exactly, including inherited CLI/GC repairs.
 Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
 PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
 Current PR headb5d658aa1a06391e106874bf2c3fc2b551f3a0ac includes the
-immutable-anchor repair and durable all-doc audit. CI37961944703 has six
-production gates pending/running; exact-head roadmap_docs CI37961944952 passes.
+immutable-anchor repair and durable all-doc audit. CI37961944703 passes all four macOS jobs and bench; Linux remains running; exact-head roadmap_docs CI37961944952 passes.
 Superseded37958351622/37959781379/37960281416 are cancelled, not acceptance.
 Compiler/runtime/tests still match focused-accepted c9ef3d88211f; the read-only
 roadmap workflow adds all-doc links, immutable-tag and message checks.
@@ -75,8 +74,8 @@ still need their final squash rebases and six exact-head full gates.
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
-| 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Required fixture pointer fixed; fresh Linux evidence follows |
-| 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
+| 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
+| 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Tests20.69/41.60s; lint/format pass; fresh GitHub evidence follows |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 / 48.48 s |
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 / 57.61 s |
 | 34 ownership-argument-preparation | ada6a3a62df1 | dc9bfd5e626b | 24.82 / 49.89 s |
@@ -185,7 +184,8 @@ checks. No diagnostics remain. GDB identified a fixture call to
 fwp_gc_chunk_of(ci=NULL), which requires an output pointer; using local ci
 preserves all assertions and changes no runtime/compiler code.
 Row30 ca33d3141a96 inherits that fix on actual84ef548 and fixes its identical
-observer. Normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295 reruns.
+observer. Normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295,
+CI37966690637, passes.
 Row68 already repairs these calls in zip/fold/argument fixtures; bring each
 minimal fix into its earlier delivery rather than waiting for row68. Preserve
 all alias/reclamation assertions. Detailed failed/diagnostic logs stay in history.
@@ -201,6 +201,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
 | Row29 map callback unwind | 5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 | CI37966274872 passes normal repaired checks; production84ef548, actual baseb5f44e8 |
 | Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 passes focused checks and all-doc/tag audit; productionb5f44e8, actual basec4eb75e |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
@@ -240,16 +241,13 @@ limits and move work to CI; never raise or bypass them. Use:
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
 ```
 
-The fun-refactor guard is for the other repository. Previous shared target
-belonged to /private/tmp/fwp-grpc-tls-pool-identity-worktree. The map clean
-previously refused at61.84GiB free disk and138.93MiB target. Disk subsequently
-recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
-package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
-format0.34/0.61s. Shared target now belongs to
-/private/tmp/fwp-unwind-liveness-worktree; no workload is running.
-Row27 package clean subsequently refused again below64GiB; no local test/lint
-ran and shared target remains the reuse-token worktree. Move checks to GitHub.
-Stop at limits; do not bypass the guard, including for package clean.
+The fun-refactor guard is for the other repository. Shared target currently
+belongs to /private/tmp/fwp-zip-unwind-worktree; no workloads run. Free disk
+recovered after earlier refusals (latest observation113197360KiB available).
+Latest bounded checks at row31 pass: package clean0.00/0.14s, six callback
+fixtures20.69/41.60s, lint2.24/4.63s and format0.35/0.74s.
+Stop if limits are crossed; move checks to GitHub without bypassing the guard,
+including for package clean. Earlier refusal/recovery chronology is in history.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
 and entire commit messages (0.30CPU/2.37elapsed). It caught a status update

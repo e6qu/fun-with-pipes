@@ -11006,3 +11006,25 @@ modifications remain in its final source. Assertions were preserved.
 Row30 normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295 refreshes
 from actual398503f onto repairedca33d31; old398 remains under an immutable
 revision tag for older evidence snapshot inputs. Fresh Linux checks follow.
+
+Row31 zip unwind refreshed from actual69b1ad1 ontoca33d31 and brings forward
+row68's identical mandatory chunk-index fixture fix. Published
+a282f630c7902b1239e87e8d300a271d5960d252 keeps runtime/compiler behavior,
+alias/cleanup assertions and inherited CLI/GC/map/selection repairs. Prior
+published6a09138 is retained under immutable roadmap/revision-031-6a0913896eb7
+before explicit-lease rewrite. Guarded package clean0.00/0.14s passes; focused
+map/selection/zip checks run. All four macOS jobs and bench pass at PR100b5d658a;
+Linux remains the last production gate.
+
+Row30 normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295,
+CI37966690637 passes complete focused Linux checks, including corrected map/
+selection callbacks, all related compiler/runtime ownership controls, actual
+tracing and all44-doc/immutable-tag audit. Diagnostic source is absent.
+Row31 currenta282f63 guarded six map/selection/zip fixtures20.69/41.60s pass;
+aliases, order, partial spines, both buffer failures, cancellation and scalar
+address-bit controls remain intact. Lint/format and remote focused checks follow.
+
+Row31 a282f63 focused clippy zip/map/selection2.24/4.63s and fmt0.35/0.74s
+pass after its six tests20.69/41.60s. Shared target now belongs to
+/private/tmp/fwp-zip-unwind-worktree. No local workloads run. Fresh Linux
+acceptance follows; original fixture assertions and source semantics stay intact.
