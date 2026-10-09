@@ -37,14 +37,14 @@ b5d658aa1a06391e106874bf2c3fc2b551f3a0ac. Explicit match-head squash at
 zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native wide counts, arrays,
 maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
 
-No PR is currently open. Next delivery is row23, ownership-old-reclamation.
-Current preparation495411d33f6095c60ea54e56b7488d5770001a9a has actual base
-f71c002d5339c827f8b506ff1c75c1cb4b24371d. Final-rebase FROM that base ONTO
-actual main eeef3b5d, preserve all ten root docs, publish with an explicit lease,
-then open the next focused PR. Require all six production jobs and roadmap_docs
-at its exact head before an explicit subject/empty-body squash. OLD anchors
-stay immutable. Superseded PR100 runs37958351622/37959781379/37960281416
-are cancelled, not acceptance.
+No PR is currently open. Row23 final source preparation is
+cf69657357f0198e7cf6d7e167ad3d71829ef5f4 on actual main
+ eeef3b5d3f5386015c6dead55cc5da632f61d61d. Compiler/runtime/tests are
+byte-identical to focused-accepted495411d33f60. Publish the final source plus
+this handoff, then open the next focused PR. Require all six production jobs
+and roadmap_docs at its exact head before explicit subject/empty-body squash.
+OLD anchors stay immutable. Superseded PR100 runs37958351622/37959781379/
+37960281416 are cancelled, not acceptance.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -62,7 +62,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Tests9.89/20.19s; lint/format and GitHub CI37958839569 pass |
+| 23 ownership-old-reclamation | cf69657357f0 | eeef3b5d3f53 | Source unchanged from focused-accepted495411d; final full CI follows |
 | 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
