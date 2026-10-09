@@ -1,0 +1,29 @@
+name: Focused old storage reclamation preparation
+
+on:
+  push:
+    branches: [ownership-evidence-old-reclamation]
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test old_reclamation --test gc -- -D warnings
+      - name: Reclamation, stale roots and retained task boundaries
+        if: ${{ !cancelled() }}
+        run: cargo test --test old_reclamation --no-fail-fast
+      - name: Actual tracing churn and bounded live memory
+        if: ${{ !cancelled() }}
+        run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture

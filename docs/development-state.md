@@ -41,7 +41,7 @@ dc85b679 onto main c4d820e. Source/runtime/tests/workflows match the focused
 GitHub-accepted c9ef3d88211f exactly, including inherited CLI/GC repairs.
 Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
 PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
-CI37958351622 has six fresh exact-head gates queued. OLD anchors stay immutable. Row23 still uses actual base1689c03.
+CI37958351622 has six fresh exact-head gates queued. OLD anchors stay immutable. Row23 pre-delivery refresh495411d now uses actual basef71c002.
 
 Later preparations must inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. The repaired Linux gate actually verifies the
@@ -87,7 +87,7 @@ still need their final squash rebases and six exact-head full gates.
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
 | 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
 | 22 ownership-map-set-elements | f71c002d5339 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
+| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Prior 9.50 / 19.72 s; fresh GitHub evidence pending |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
 | 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
@@ -187,8 +187,8 @@ production PR still requires six exact-head full gates; prepared is not merged.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution. Row22
-has final-rebased from dc85b679 onto actual PR99 squash c4d820e; row23 still rebases
-from actual1689c03 after row22 merges. Preserve inherited CLI/GC harness fixes.
+has final-rebased from dc85b679 onto actual PR99 squash c4d820e; row23 now rebases
+from actualf71c002 after row22 merges. Preserve inherited CLI/GC harness fixes.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel

@@ -10691,3 +10691,14 @@ All ten current root documents replace prepared snapshots before publication.
 Row112 repair762117573367 applies exactly the two runner rustfmt differences;
 evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d triggers fresh checks.
 No local checks ran under the refused disk guard.
+
+## 2026-10-09 row23 pre-delivery refresh
+
+Rebased row23 from actual1689c03 onto PR100 f71c002. Only root documentation
+conflicts required resolution; runtime/compiler/ownership tests match published
+f4716a0. Source comparison contains the inherited CLI and tracing fixture repairs.
+Review found the prepared shared churn build disabled reuse but not counted
+freeing. It now explicitly sets FWP_FREE=0 and FWP_REUSE=0, while the normal
+build exercises default counted reclamation. Output21768000, allocation>800MiB,
+collection>10 and RSS<64MiB requirements remain on the separate tracing build.
+Fresh GitHub checks are required; local guard remains below its disk threshold.
