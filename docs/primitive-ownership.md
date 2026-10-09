@@ -183,6 +183,11 @@ adopt callback results; fold consumes its accumulator; set/push consume the
 container while preserving immutable aliases. Scalar bits are never treated as
 pointers. PR99 passed all six platform and GC gates.
 
+Merged maps/sets own typed keys/elements. Construction and copies retain aliases;
+lookup returns an owned Option; updates consume the container and release
+displaced owners. Synchronous callbacks borrow values and adopt results. PR100
+passed all six production gates and the documentation audit.
+
 ## Prepared refinements
 
 These contracts are published preparations, not main support. Exact heads and

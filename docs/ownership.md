@@ -24,14 +24,18 @@ Functions and constructors consume owned arguments; primitive, foreign and
 remote calls normally borrow. Selected container primitives consume their
 container argument. [The shared primitive contract inventory](primitive-ownership.md)
 drives argument modes, runtime sharing and owning wrapper selection for arrays,
-maps and sets. Comparison-only keys borrow; inserted keys remain shared.
+maps and sets. Comparison-only keys borrow; inserted typed keys/elements retain
+owned references, and immutable copies retain aliases. Unknown boundaries
+continue to share reachable values.
 
 Native reference counts remain exact beyond the inline byte range using rare
 size_t side entries keyed by canonical allocation metadata, without retaining
 new value roots. Overflow traps; release/sharing/reuse/collection clear entries.
 This does not change shared runtime or cycle fallback lifetimes.
 
-Generated drop functions free counted objects at their last reference.
+Generated drop functions release typed children at their last reference;
+young counted storage is freed immediately. Reclamation of old counted storage
+is the next delivery and remains gated by PR101.
 Unique records, variants and containers can reuse storage. Escape analysis,
 scalar replacement, specialized calls and pipeline fusion eliminate many
 allocations before counting is needed.
