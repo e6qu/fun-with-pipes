@@ -44,6 +44,10 @@ Other callback/runtime and exceptional ownership extensions are prepared separat
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
+Compiler reuse tokens clear dead fields before retaining empty young cells,
+transfer into compatible constructors and release unused cells. Registered token
+cleanup handles failure, trap and cancellation, and unlinks before tail calls.
+
 The runtime cleanup stack releases registered owners and scoped files before
 nonlocal failure, trap or cancellation invalidates their frames. Catching
 handlers bound cleanup, and task switches preserve separate chains. Compiler
