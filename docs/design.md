@@ -445,3 +445,8 @@ interpreter. Check size before completion, then reset/dead state, then timeout;
 an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
+
+Prepared HTTP/2 peer metadata protects its malloc subject temporary with the
+existing unwind cleanup stack until String/Option copying completes. Focused
+copy-trap and omitted-cleanup controls check exactly-once release; HTTP/2
+handle ownership still uses the tracing compatibility policy.

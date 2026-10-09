@@ -103,6 +103,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `f08611023cec` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e91dcb307c61` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `d29dda936dff` | `d29dda936dff` | `e91dcb307c61` |
+| 90 | http2-body-bounds | `fix-http2-body-bounds` | `6f310b5483a8` | `6f310b5483a8` | `d29dda936dff` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

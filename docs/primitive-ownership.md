@@ -141,6 +141,7 @@ released explicitly. Scalar bits never select a reference destructor.
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
 | scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
 | loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |
+| zip; unzip; chunks | Borrow inputs | Counted nested spines retain typed aliases; release scratch; invalid chunk size traps before list evaluation |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
@@ -161,7 +162,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
 | 22 | Maps/sets own typed keys/elements; copies/get retain aliases, synchronous callbacks borrow inputs/adopt results; updates consume container | Sequential CI; key identity, ordering, aliasing, scalar safety and reclamation |
@@ -234,6 +234,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 88 | Channel close preserves queued values; explicit receive/discard drains and breaks a counted self-cycle | Sequential CI; queue counts and normal/poison disposal; automatic cycle reclamation remains unproved |
 | 89 | HTTP/2 body copying keeps the borrowed call/stream owner live while allocating from its external malloc buffer | Sequential CI; actual major collection, arbitrary bytes, finalizer lifetime and omitted-fence control |
 | 90 | Negative HTTP/2 body limits clamp to zero; size, completion, reset/dead and timeout retain interpreter ordering | Sequential CI; thirteen raw interpreter/native cases, removed-clamp and borrowed-root controls |
+| 91 | HTTP/2 peer subject malloc temporary remains unwind-owned through String/Option copying | Sequential CI; exactly-once release, copy traps, absent peer and no-TLS paths, omitted-cleanup controls |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

@@ -9526,3 +9526,67 @@ PR97 ARM GC stress also passes: four gates pass, Linux and Intel regular run.
 Fmt check passes 0.45 / 0.83 s; ten root docs copied before first preparation
 commit. Production semantic delta is one negative-limit clamp, with paired
 raw interpreter/native tests and preserved borrowed-owner regression.
+New row90 6f310b5483a8c49e2819c595a25a9a15b71190b6 is published clean on
+actual d29dda936dff119f226cdc720aa42da549a1427a. Initial immutable OLD
+anchor equals this first preparation commit; later CURRENT may change only.
+Whole commit message verifies one line, empty body and no attribution.
+Next independent work continues borrowed-runtime roots and nominal context
+audits at this actual prepared head. No extra PR opened; PR97 remains sole delivery.
+
+## HTTP/2 peer metadata unwind audit, 2026-10-09
+
+New isolated ownership-http2-peer-cleanup branch starts on actual
+6f310b5483a8c49e2819c595a25a9a15b71190b6. HTTP/2 request copies a malloc
+peer subject into String/Option; a trap skipped its normal-path free. Protect
+the temporary with existing fwp_tls_subject_free unwind cleanup until both
+allocations succeed, then release once. Native fixture injects both failures,
+checks success/absent-TLS/absent-subject behavior and omitted-cleanup failure.
+Guarded cargo test --test http2_peer_cleanup --test tls_peer_subject_ownership
+runs; related real OpenSSL certificate/BIO/Rust subject evidence remains.
+Further audit candidate: gRPC served-job peer/status-message lifetimes, ensuring
+retained task contexts are not released before task completion.
+Initial metadata/TLS check fails exit101 (7.24 / 15.22 s), fixed O1
+fixture exits1 on temporary-free counter. Added stage/counter diagnostics
+without changing runtime or assertions; focused checks rerun to identify cause.
+Guarded clean before switching passes 0.07 / 0.37 s.
+Diagnostic retest fails exit101 (0.37 / 1.29 s): stage0 reported four frees
+because the fixture retained a dangling address that malloc subsequently reused
+for unrelated allocations. Observer now clears the tracked pointer when that
+allocation is freed, preserving exactly-one release/leak assertions for its
+actual lifetime. Runtime unchanged. Metadata and real TLS checks rerun.
+Corrected metadata/TLS tests pass 1.32 / 5.17 s CPU / elapsed. HTTP/2
+string-copy and Option traps release the subject exactly once, leave no
+cleanup links, and preserve success/absent subject/TLS behavior. Omitted
+cleanup controls fail at O1/O2. Fixed GC stress/verify and poison pass.
+Related real OpenSSL certificate/BIO/Rust subject evidence remains valid.
+Focused lint runs. PR97 Linux now passes; only regular Intel macOS remains.
+
+## Structure delivery and HTTP/2 peer cleanup preparation, 2026-10-09
+
+PR97 exact65fedd8d85430216539031553f88705ea72db5b4 passes all six
+CI37917260081 jobs. Explicit match-head squash at 2026-10-09T11:43:18Z yields
+2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 with entire one-line message
+`Own typed zip unzip and chunks results and release scratch storage`.
+Ten authoritative root docs backed up to /private/tmp/fwp-main-docs-pre97,
+byte-verified, restored after main fast-forward and byte-verified again.
+
+New ownership-http2-peer-cleanup preparation starts on
+6f310b5483a8c49e2819c595a25a9a15b71190b6. Runtime HTTP/2 request metadata
+registers the existing TLS subject destructor before copying a malloc subject
+into String/Option; normal completion removes cleanup and frees exactly once.
+Focused fixture uses actual SSL/managed call structures and stubs only subject
+acquisition, inducing both copying traps, absent peer and no-TLS paths.
+O1/O2, actual stress/verification and poison modes pass; omitted-cleanup controls
+exit1 on leaked temporaries. Related TLS regression covers real X509/BIO subject
+ownership and raw interpreter agreement.
+Initial fixture fails exit101 (7.24 / 15.22 s); diagnostic rerun fails
+0.37 / 1.29 s, stage0 counted four frees instead of one. Its retained freed
+address was reused by later allocations. Forgetting the observed pointer at its
+first free fixes the test lifetime without changing runtime or release assertions.
+Guarded cargo test --test http2_peer_cleanup --test tls_peer_subject_ownership
+passes both tests 1.32 / 5.17 s CPU / elapsed. Guarded clean passes0.07 / 0.37 s;
+format application0.43 / 0.83 s, focused cargo clippy --test http2_peer_cleanup
+--test tls_peer_subject_ownership -- -D warnings2.58 / 5.15 s and cargo fmt
+--all -- --check0.44 / 0.83 s. All use the documented env/local guard.
+Further gRPC peer/status audit must respect child task context inherited until
+join after the handler returns; no early free or complete no-tracing claim.
