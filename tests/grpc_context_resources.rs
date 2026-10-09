@@ -70,7 +70,7 @@ static void no_release(void *p){(void)p;}
 static void remember_tls(void *p){g_tls *t=p;watched_tls=t;owned[0]=t;owned[1]=t->ca;owned[2]=t->name;owned[3]=t->cert;owned[4]=t->keyfile;owned[5]=t->key;}
 static void observed_free(void *p){if(p)for(int i=0;i<6;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
 static void check_options(void){const g_tls *t=g_ctx_of()->tls;if(t!=watched_tls||strcmp(t->ca,"ca")||strcmp(t->name,"name")||strcmp(t->cert,"cert")||strcmp(t->keyfile,"key")||!t->insecure||frees)_Exit(10);}
-static void overflow_restore(void *p){g_tls *t=p;if(t->users!=SIZE_MAX-1)_Exit(11);t->users=1;}
+static void overflow_restore(void *p){g_tls *t=p;if(t->users!=SIZE_MAX-1)_Exit(11);t->users=2;}
 static void child(void *arg,int stop){
  if(stop){cancelled++;return;}
  check_options();if(!scope_returned)_Exit(12);
