@@ -1371,8 +1371,11 @@ static void g_send_all(void *arg, int cancelled) {
         int ok;
         if (x->r) {
             h2_buf req = {0};
+            fwp_cleanup request_buffer;
+            fwp_cleanup_push(&request_buffer, g_h2_buffer_release, &req);
             g_encode_request(x->r, &v, &req);
             ok = g_send_msg(x->c, x->s, req.d, req.len, 0);
+            fwp_cleanup_pop(&request_buffer);
             h2b_free(&req);
         } else {
             V b = fwp_apply1(x->enc, v);
