@@ -129,9 +129,9 @@ still need their final squash rebases and six exact-head full gates.
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
-| 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Refreshed source unchanged; fresh raw source checks follow |
+| 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s passes; lint/format follow |
 | 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Refreshed source unchanged; explicit draining checks follow |
-| 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
+| 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Refreshed source unchanged; fresh borrowed root checks follow |
 | 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
 | 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
 | 92 ownership-grpc-peer-completion | 09751c8c65ac | 3c268c34d15b | Peer/server14.18 / 28.39 s + task4.65 / 10.14 s |

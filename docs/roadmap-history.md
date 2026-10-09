@@ -11508,3 +11508,10 @@ after row25 actual-main rebase. Final publication1537961db5da753e123162aa8441cb4
 preserves focused-accepted6421c025 source/runtime/tests byte-for-byte. Retained
 revision-025-6421c025b3d5 precedes explicit-lease publication. PR103 is the
 only open production PR; fresh exact-head seven-job acceptance remains required.
+
+Row87 raw source nominal lifetime test13.09/26.43s passes. Row89 refresh
+f45a7dbbd33d628bee7982c392c83f920a803725 uses actual basee15c6fc1f0c3;
+compiler/runtime and borrowed HTTP2 body fixtures match original with inherited
+CLI/tracing harness repairs intact. Original OLDd29dda936dff remains fixed;
+previous CURRENT is also retained under revision-089 before lease publication.
+Fresh focused borrowed-root checks follow.
