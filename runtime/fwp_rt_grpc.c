@@ -1844,20 +1844,31 @@ static int g_run_method(g_job *j, char **msg) {
     if (code >= 0) return code;
     if (in_response) {
         fwp_buf canon = {0};
+        fwp_cleanup error_canonical;
+        fwp_cleanup_push(&error_canonical, fwp_file_buffer_cleanup, &canon);
         buf_putc(&canon, 1);
         fwp_encode(&canon, err, m->error);
         h2_buf b = {0};
+        fwp_cleanup response_buffer;
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         if (!pb_encode(m->schema, m->resp_node, (const unsigned char *)canon.d, canon.len, &b))
             g_trapf("cannot encode a message: %s", h2_err);
+        fwp_cleanup_pop(&response_buffer);
+        fwp_cleanup_pop(&error_canonical);
         free(canon.d);
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
+        fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
         return -1;
     }
     if (m->output == 0) {
         h2_buf b = {0};
+        fwp_cleanup response_buffer;
+        fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
         g_encode(&enc, v, m->error != 0, &b);
         g_send_msg(j->c, j->s, b.d, b.len, 0);
+        fwp_cleanup_pop(&response_buffer);
         h2b_free(&b);
     } else if (m->output == 1 || m->output == 3) {
         /* forcing the iterator may trap */
@@ -1894,8 +1905,11 @@ static int g_run_method(g_job *j, char **msg) {
                 x = OBJ(x)->f[0];
             }
             h2_buf b = {0};
+            fwp_cleanup response_buffer;
+            fwp_cleanup_push(&response_buffer, g_h2_buffer_release, &b);
             g_encode(&enc, x, m->error != 0, &b);
             int ok = g_send_msg(j->c, j->s, b.d, b.len, 0);
+            fwp_cleanup_pop(&response_buffer);
             h2b_free(&b);
             if (!ok) { fwp_check_cancel(); break; }
         }

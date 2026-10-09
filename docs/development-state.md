@@ -52,15 +52,14 @@ stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout
 deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
 0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
 new exact-head gates; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
-After merge, row21 ACTUAL current base stays7741d09dd8cf214396e7938e07fbbd1f7263d9f7;
+After merge, row21 ACTUAL refreshed base is542fc080e8818c26fb3da2ebbc295cd9fb864ee5;
 rebase onto the real squash, preserving immutable OLD anchors. Later branches
 prepared before the CLI fix must inherit it on final rebase; source comparisons
 against older preparations should allow this explicitly inherited repair.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row90 are
-published; row91 peer cleanup is published with focused tests, lint and format
-passing. Prior checks remain in history.
+restored byte-for-byte afterward. Independent preparations through row99 are published with focused checks;
+row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
 
@@ -73,7 +72,7 @@ still need their final squash rebases and six exact-head full gates.
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
 | 20 ownership-list-generation | 542fc080e881, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
-| 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 / 28.81 s |
+| 21 ownership-array-elements | 79bc00f13649 | 542fc080e881 | 14.02 / 28.13 s |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
@@ -151,8 +150,9 @@ still need their final squash rebases and six exact-head full gates.
 | 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
 | 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
 | 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
+| 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
 
-Rows 18–98 are published preparations with passing focused tests, lint and
+Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -193,16 +193,26 @@ protect canonical fwp_buf scratch before serialization and transcoding.
 Focused tests use real I64 serialization and injected partial/transcoder
 failures, checking exact canonical bytes/diagnostics and omitted cleanup.
 Canonical/request tests pass 8.38 / 17.93 s, lint 2.46 / 4.87 s and format
-0.47 / 0.74 s. Record and publish.
+0.47 / 0.74 s. Published clean at
+4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual663ef59.
 Next delivery preparation refreshes row21 arrays on the actual current PR98
-head542fc08, inheriting its CLI repair. Remaining audit: canonical decode
-and caller-side response encoding scratch, then client status/message paths.
+head542fc08, inheriting its CLI repair. Rebase completed from actual7741d09;
+source/runtime/array tests/workflows match443524e exactly; only inherited
+CLI test repair differs. Three array tests pass14.02 / 28.13 s; focused lint
+passes2.30 / 4.61 s and format0.34 / 0.62 s. Published clean at
+79bc00f136491ee8beb6d51674d3ed4faf7d5303, without a competing PR. Independent row100 ownership-grpc-response-encoding starts on actual4114b70,
+/private/tmp/fwp-grpc-response-encoding-worktree. Served unary/stream/error
+response buffers get cleanup across encoding traps and cancellable sends;
+error canonical scratch is protected before serialization. Both response/request
+tests pass2.95 / 6.01 s; lint2.39 / 4.91 s and format0.47 / 0.75 s pass.
+Publish the preparation without a competing PR.
+Remaining audit: canonical decode and client status/message paths.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
-PR98 is the sole delivery at542fc08, new exact-head CI37929002304 queues
-bench, ARM regular macOS and ARM GC pass; Linux and both Intel jobs run.
+PR98 is the sole delivery at542fc08, new exact-head CI37929002304:
+bench, ARM/Intel regular macOS and ARM GC pass; Linux and Intel GC run.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
-ACTUAL base remains7741d09 until rebased after the eventual PR98 squash.
+ACTUAL refreshed base is542fc08; final rebase follows the eventual PR98 squash.
 
 ## Repaired resource evidence
 
@@ -247,10 +257,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-canonical-encoding-worktree; final generation tests, lint and format pass.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
-Last guarded doc audit passes eleven link/heading sets, 88 immutable queue
-ancestry pairs and whole commit messages (0.18 s CPU / 1.29 s elapsed).
+belongs to /private/tmp/fwp-grpc-response-encoding-worktree; array checks pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
+Last guarded doc audit passes eleven link/heading sets, 93 immutable queue
+ancestry pairs and whole commit messages (0.16 s CPU / 1.22 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

@@ -9991,3 +9991,55 @@ PR98 head542fc08, inheriting the already-published CLI harness repair.
 Focused canonical/request lint passes2.46 / 4.87 s CPU / elapsed; formatting
 application0.45 / 0.86 s and check0.47 / 0.74 s pass under local guard.
 All focused checks pass; full protocol/platform acceptance remains sequential CI.
+
+Queue99 published clean at 4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual
+663ef599a4385b394964fc92017c03cb57c1ddd8; immutable first head/parent recorded. Entire
+one-line commit message verifies; PR98 remains the sole delivery.
+
+## Array preparation refresh after CLI failure repair, 2026-10-09
+
+ownership-array-elements, /private/tmp/fwp-array-element-worktree, rebases
+from actual7741d09dd8cf214396e7938e07fbbd1f7263d9f7 onto current PR98
+head542fc080e8818c26fb3da2ebbc295cd9fb864ee5. All doc conflicts resolve
+with ten authoritative root docs. Source/runtime/array tests/workflows against
+443524ef6b6d5183f010899902a94a9d53c5dc55 are identical; only inherited
+CLI test repair differs. Guarded clean before switching passes0.05 / 0.38 s;
+focused cargo test --test array_element_ownership runs. No competing PR.
+
+Refreshed array preparation passes all three tests14.02 / 28.13 s CPU /
+elapsed: collection/alias/callback behavior, tracing-off reclamation and scalar
+address-shaped bit safety. Its new ACTUAL base is542fc08, not old7741d09;
+final squash rebase must use that refreshed base. Focused array lint runs.
+
+Focused array lint passes2.30 / 4.61 s and format0.34 / 0.62 s; no resource
+limits exceeded. Publish the refreshed preparation without a competing PR.
+
+Refreshed preparation published clean at79bc00f136491ee8beb6d51674d3ed4faf7d5303
+on actual542fc080e8818c26fb3da2ebbc295cd9fb864ee5, explicit lease against
+443524e. Entire message is one line. Row22 actual base remains443524e until
+its own refresh. Immutable anchors remain untouched; PR98 is sole delivery.
+
+## Served response encoding ownership preparation, 2026-10-09
+
+Independent ownership-grpc-response-encoding starts on actual4114b709fb4b6f2397bc78f3d55f2c7c2c25357a,
+/private/tmp/fwp-grpc-response-encoding-worktree. g_run_method scopes encoded
+unary, streaming and error response buffers through cancellation/encoding traps.
+Error canonical scratch is protected before serialization. Real scheduler
+fixture checks parked flow-control cancellation, normal bytes, encoding traps,
+partial error serialization and omitted response/canonical cleanup controls.
+Request/user/transcoder boundaries are injected; complete protocol acceptance
+remains on sequential six-job CI. Guarded clean0.07 / 0.37 s; focused tests run.
+
+Initial response fixture C compilation failed because g_job.what is a fixed
+array, not assignable pointer (7.62 CPU / 16.32 elapsed s, exit101); corrected
+fixture with strcpy. The related request regression passed in that workload.
+
+A second fixture run lacked its task-level trap recovery boundary: omitted
+canonical cleanup reached the intentionally injected response trap and SIGABRT
+(1.56 CPU / 3.87 elapsed s, exit101). Added explicit task trap recovery,
+restoring saved handler/cleanup state. Both response/request tests then pass
+2.95 CPU / 6.01 elapsed s. Normal unary/stream/error bytes, cancellation,
+response/canonical partial traps and both cleanup omission controls pass.
+
+Focused response/request lint passes2.39 / 4.91 s; guarded format apply
+0.46 / 0.85 s and check0.47 / 0.75 s pass. No resource limit exceeded.

@@ -497,3 +497,9 @@ Prepared message/request encoders register canonical serialization buffers
 with their existing destructor before writing and transcoding. Success frees
 normally; partial serialization or transcoder failure frees on unwind. Fixed-
 width canonical bytes, oneof prefix and diagnostic contents stay unchanged.
+
+Prepared served response encoding owns unary, streaming and error-response
+wire buffers across encoding and cancellable flow-control waits. Error
+canonical scratch is protected before serialization and freed after transcoding.
+Normal wire bytes and error/trap order stay unchanged; sequential full CI
+is still required.
