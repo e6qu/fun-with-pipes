@@ -193,7 +193,7 @@ still need their final squash rebases and six exact-head full gates.
 | 99 ownership-grpc-canonical-encoding | 96f523dfad9e | 1f6f668eff38 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 100 ownership-grpc-response-encoding | a3d88c0b8f3d | 96f523dfad9e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 101 ownership-grpc-client-requests | e0db0123a16c | a3d88c0b8f3d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 102 ownership-grpc-client-failure-text | 04e8557ca5e8 | 2ac08dea923a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 102 ownership-grpc-client-failure-text | 4c58f019e707 | e0db0123a16c | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 103 ownership-grpc-client-receive | 6f1f030dfcce | 04e8557ca5e8 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 104 ownership-grpc-connect-cleanup | ac9558374a4d | 6f1f030dfcce | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 105 ownership-grpc-connect-startup | 2711a516ee34 | ac9558374a4d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
@@ -205,16 +205,15 @@ still need their final squash rebases and six exact-head full gates.
 | 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
-Prepared focused evidence and source-parity proofs remain in history.
-The guard repair is current, then row26. Detailed commands, full hashes,
-fixture failures and omission controls remain in history. Every production PR
-requires six exact-head full gates and the documentation audit.
+Prepared focused evidence, detailed commands and earlier source-parity proofs
+remain in history. The Main and next delivery section supplies the sole live
+next action. Every production PR requires six exact-head full gates and the
+documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
-predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row26 is based on main1033bb3426; rows27–28
-are refreshed onto their current preceding preparations. The table records
-actual bases; historical evidence bases below do not override them.
+predecessor heads. Preserve all 11 root docs for conflict resolution and
+inherited CLI/GC harness fixes. The table records actual bases; historical
+evidence bases never override them.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
@@ -228,7 +227,7 @@ stay owned until capture duplication succeeds, and partial duplicated captures
 have registered cleanup. The unchanged negative control catches its omission.
 The live preparation/evidence tables above give current heads and checks;
 previous revisions and propagation results are in history.
-After row28 passes full acceptance, skip the duplicate implementation PR at
+Row28 passed full acceptance in PR107. Skip the duplicate implementation PR at
 row34 while preserving its immutable anchor and regression coverage. Current
 row34 differs from row33 only in docs. No general exceptional-ownership claim.
 
@@ -257,38 +256,19 @@ accepts a current production head. Superseded runs are archived in history.
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
 | Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; historical source215d7ba |
-| Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
-| Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
-| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
-| TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
-| WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
 | Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
-| Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI38015529998 running on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all21 IR controls and stack/reuse gates. Strong audit0.42/3.35s passes. Failed372375a/CI38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
 | Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 passes on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
 | Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 passes on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
-| Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
-| Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
-| Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | CI38013532481 passes on repaired source52 cb32c2cea9bb; all21 IR controls and unchanged native conversion/stack/reuse gates; strong audit0.43/3.46s passes. Prior329e8db/CI38011548324 failed matched conversion and is retained |
-| Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
-| Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
-| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
-| Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
-| Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
-| Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
-| Row29 map callback unwind and preparation | 79dcc10eb1806d481600d2c7ccd9141b60d7376b | CI38000551924 passes focused ownership/tracing/lint/docs; source/tests/scripts/production workflows match published4c7d5ba; prior3389a973 CI37995710137 passed on78ed19f |
-| Row28 runtime application and preparation | 44f4297f270fd57ab34a20734e4635c65c6d40b2 | CI38000484752 passes ownership/tracing/lint/docs; source/tests/scripts/production workflows match published3e7ab59; prior2234160 CI37994225608 passed on7cfbe03 |
-| Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
-| Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
-| Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
+
+Earlier scope heads and full run IDs are preserved in
+[the evidence archive](roadmap-history.md#earlier-scoped-evidence-handoff).
 
 Evidence workflows never enter production ancestry. Every sequential PR still
-requires all six gates at its own current head. Preserve row85's repaired typed
-whole-stack binder and nominal File disposal; row86's actual base97dca76 already
-contains that repair. Failed and superseded logs remain in history.
+requires all six gates at its own current head. Preserve both row85 commits: its repaired typed
+whole-stack binder and nominal File disposal. Failed and superseded logs remain in history.
 
 Row111 verifies one TLS-option allocation, exact requested bytes, alignment,
 copied inputs, last-owner release and allocation-failure cleanup. It makes no
