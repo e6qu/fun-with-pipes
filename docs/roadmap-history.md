@@ -9442,3 +9442,44 @@ Same-target focused lint passes 2.64 / 5.36 s CPU / elapsed.
 Fmt check passes 0.45 / 0.83 s; ten root docs copied before amend. Tested
 cycle/queue code unchanged. Reference, concurrency and ownership all retain
 tracing toggles and explicit-drain limits without altering channel.close semantics.
+Final row88 e91dcb307c615b3330e50348a710a14b0c6be178 is published clean
+with exact lease 291f8f75f19688f139b2dcae7f31482cac810643. Whole commit
+message is one line with empty body. Historical documentation-only second
+commit is empty because current docs already retain its corrected content.
+Rows18–88 preparations remain sequential, not delivered. Next independent
+work audits remaining phase2 ownership boundaries at this actual prepared head.
+No extra PR opened; PR97 remains the sole current delivery.
+
+## Borrowed HTTP/2 body owner audit, 2026-10-09
+
+New isolated ownership-http2-body-roots branch starts at actual
+e91dcb307c615b3330e50348a710a14b0c6be178. HTTP/2 body copies bytes from
+g_stream malloc data; that pointer is outside the GC heap, and no owner is
+used after the allocating copy. Add FWP_KEEP_ALIVE(call) after copy, preserving
+its reachable stream and connection until the bytes belong to a language value.
+New forced major trace verifies actual collection and finalizer survival at
+the copy boundary; fixed O1/O2/poison and omitted-fence O2 control required.
+Guarded cargo test --test http2_body_roots runs. Full existing web interpreter/
+native gates remain runner-only; this is not yet verified support.
+Separate audit finding: native negative body max is not clamped like the Rust
+interpreter. Investigate as the next focused semantic boundary task.
+Initial root fixture test fails 101 (7.32 / 14.97 s), native signal11 before
+owner inspection: fixture passed scalar zero where Duration needs an object
+with its nanosecond field. Corrected fixture uses stack Duration {0 ns};
+no runtime workaround or weakened collection assertion. Focused test reruns.
+Corrected focused HTTP/2 body root test passes 0.57 / 2.23 s CPU / elapsed.
+Actual major trace advances collection count at copy boundary; fixed O1/O2
+with poison off/on keeps stream alive, preserves five arbitrary bytes and
+finalizes once at library teardown. O2 omitted-fence control exits1 before
+using freed buffer, proving the borrowed-root gap. Related guarded cargo test
+--test tls_alpn_roots now checks the same external-storage owner contract.
+Related TLS ALPN forced-major root regression passes 0.55 / 2.12 s CPU /
+elapsed. Actual collection, real OpenSSL/Rust ALPN agreement and omitted-fence
+control remain valid. Both focused regressions pass; focused lint runs.
+PR97 ARM regular macOS now also passes (bench and Intel GC already pass);
+Linux, Intel regular and ARM GC stress are running at exact65fedd8.
+Focused lint passes 2.69 / 5.43 s CPU / elapsed; formatting application
+passes 0.45 / 0.84 s. Tests and controls preserve external owner lifetime,
+not a new counted HTTP/2 handle contract or a performance claim.
+Fmt check passes 0.48 / 0.97 s; ten root docs copied before first preparation
+commit. Production delta is one two-line owner fence plus its focused regression.

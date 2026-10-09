@@ -42,8 +42,8 @@ ownership-list-structure, /private/tmp/fwp-structure-worktree, exact
 Rebased from ACTUAL prior base 112f3c8; source/runtime/tests/workflows exactly
 match verified 6ce37fb. Four final tests pass 16.32 / 32.95 s, exact contract unit
 3.24 / 6.73 s, lint 2.29 / 4.59 s and format 0.34 / 0.60 s.
-CI 37917260081 bench passes; Linux, Intel regular and Intel GC stress run;
-ARM regular macOS also runs; ARM GC stress remains queued at this exact head. Require all six full gates before
+CI 37917260081 bench, ARM regular macOS and Intel GC stress pass; Linux,
+Intel regular macOS and ARM GC stress run at this exact head. Require all six full gates before
 explicit match-head squash:
 `Own typed zip unzip and chunks results and release scratch storage`, empty body.
 After merge, row20 ACTUAL current base remains 6ce37fb180e1d88903dd94dadaf47181085ab09e;
@@ -51,8 +51,8 @@ rebase from that base onto the real squash, preserving OLD fad9b1a/parent c05a5d
 
 Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
 main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row87 are published with focused checks. The next independent task
-is row88 explicit channel-cycle drain evidence.
+through row88 are published with focused checks. The next independent task
+is the remaining phase2 ownership audit at row88; fix any uncovered boundaries.
 Prior main/heads/messages, failed evidence and focused checks remain in history.
 
 ## Next sequential preparations
@@ -133,8 +133,9 @@ still need their final squash rebases and six exact-head full gates.
 | 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
 | 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
 | 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
+| 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
 
-Rows 18–87 are published preparations with passing focused tests, lint and
+Rows 18–88 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -148,14 +149,21 @@ Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
 on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
 Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
 HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
-Row87 is published clean at f08611023cec7df7bcb114832f1cf2e292ac73c3,
-on actual 5915ac0. Nested source test, lint 2.52 / 5.01 s and format
-0.44 / 0.83 s pass. Raw interpreter and native disposal agree under 32-descriptor
-bound, optimized/unoptimized and reuse/free/GC modes. Independent row88
-is rebased; two cycle/queue tests pass 13.11 / 26.29 s; focused lint passes 2.64 / 5.36 s; format 0.45 / 0.83 s. Its previous actual base is
-8abfd46b34762b0cf69e417b65a85a1d783b61ac; new base is f086110. Cycle
-test is unchanged; tracing/queue docs from 291f8f7 are already inherited,
-so that documentation-only replay becomes empty. Explicit-drain policy remains.
+Row88 is published clean at e91dcb307c615b3330e50348a710a14b0c6be178,
+on actual f086110. Two cycle/queue tests, lint 2.64 / 5.36 s and format
+0.45 / 0.83 s pass. Close preserves queued values; explicit drain breaks
+the counted self-cycle. Tracing docs from 291f8f7 are already inherited.
+Independent phase2 audit found borrowed HTTP/2 body bytes outside the GC heap.
+New branch ownership-http2-body-roots at /private/tmp/fwp-http2-body-roots-worktree
+on actual e91dcb3 adds a call-owner fence and forced-major-collection regression.
+Corrected focused test passes 0.57 / 2.23 s: actual major trace, O1/O2/poison
+and O2 omitted-fence exit1. Initial fixture used invalid scalar Duration;
+replaced with {0 ns} object and preserved strong assertions. Related TLS root
+regression passes 0.55 / 2.12 s; full web engine comparison remains on
+sequential CI. Focused lint passes 2.69 / 5.43 s; format 0.48 / 0.97 s.
+Audit also found native negative http2.body max differs from interpreter clamp
+to zero; investigate separately after the root fix, preserving error order.
+Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR97 is the sole open delivery; row20 final rebase follows its eventual squash.
 
@@ -202,10 +210,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-channel-cycle-worktree; cycle/queue tests, lint and format pass; no local workload is active.
+belongs to /private/tmp/fwp-http2-body-roots-worktree; body/SSL root regressions, lint and format pass; no local workload is active.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
 Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.16 s CPU / 1.16 s elapsed).
+ancestry pairs and whole commit messages (0.18 s CPU / 1.29 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

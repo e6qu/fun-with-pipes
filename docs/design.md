@@ -436,5 +436,9 @@ frame lifetime rather than releasing their File bindings early.
 Prepared record pattern holders likewise initialize typed fields from their
 current scrutinee before anchoring the original frame owner. A field mapping
 created by a let on another arm must not supply these borrowed fields.
+Prepared HTTP/2 body copying keeps its borrowed call owner live through
+allocation. The stream buffer uses malloc, so its bytes alone cannot root
+the GC-managed stream. Forced major collection and finalizer omission controls
+verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
