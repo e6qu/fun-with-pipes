@@ -139,6 +139,8 @@ released explicitly. Scalar bits never select a reference destructor.
 | reverse; flatten; take | Borrow inputs | Copied fresh spine retaining selected elements |
 | sort; unique | Borrow list | Copied spine retaining typed selected elements; release scanned scratch; stable comparisons/first occurrence |
 | sort-by | Borrow callback/list | Evaluate each key once in input order; own typed keys and copied result, release scratch; stable ties |
+| scan; iterate | Borrow callbacks/inputs | Retain initial stored state and adopt subsequent owned callback states |
+| loop | Borrow callback, consume state | Transfer callback input; retain selected typed Step payload before releasing wrapper; reclaim typed worker/ABI wrappers |
 | append | Borrow both lists | Copied spine plus retained tail from argument0 |
 | drop | Borrow count/list | Retained tail of argument1 |
 | nth; find | Borrow arguments | Fresh Option retaining selected element; find borrows predicate and stops at first match |
@@ -159,7 +161,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
 | 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
 | 21 | Arrays own typed elements; get/copies retain aliases, map/generate adopt callback results, fold consumes accumulator; set/push consume container | Sequential CI; callback order, copied and unique updates, aliases and scalar safety |
@@ -196,6 +197,27 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Sequential CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
 | 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Sequential CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
 | 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Sequential CI; conversion failure, nullable pointers, cached calls and host lifetimes |
+| 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Sequential CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
+| 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Sequential CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |
+| 57 | Native OpenCL initialization/teardown owns the loader handle, context and queue with ordered release on failure and exit | Sequential CI; fake API controls establish ownership, not real device execution |
+| 58 | Staged interpreter OpenCL owners release partial initialization before caching a failure; successful cache remains process-lived | Sequential CI; raw native/interpreter failure diagnostics and fake API lifetime controls |
+| 59 | TLS server context and ALPN owners survive listener stop and raw accepted-session transfer; last session releases them | Sequential CI; real OpenSSL failures, engine agreement and full TLS stress suites |
+| 60 | Library unload finalizes owned File/socket/HTTP2 descriptors and TLS sessions/caches without implicit shutdown traffic | Sequential CI; actual reload, explicit-close idempotence, host peers and cleanup omission controls |
+| 61 | gRPC service listener owners protect descriptors/TLS contexts through preparation and cancellation while accepted sessions retain protocol state | Sequential CI; source gRPC/TLS behavior and precise listener cleanup controls |
+| 62 | TLS client-cache publication preserves old entries and releases partial context/name owners on allocation failure; retry succeeds | Sequential CI; source TLS behavior, allocation controls and cached identity |
+| 63 | ALPN packing borrows list elements without collector scratch, checks wire length and allocation, and closes a newly connected socket on failure | Sequential CI; source TLS behavior, bounds and allocation/descriptor omission controls |
+| 64 | TCP preparation owns resolver results and pending descriptors through cancellation; TLS connection wrappers own sockets and SSL handshakes until transfer | Sequential CI; cancellation at each preparation boundary, refusal and cleanup omission controls |
+| 65 | Compatible complete worker calls transfer record fields directly; typed aliases and trap cleanup preserve ownership, with boxed partial/dynamic captures | Sequential CI; emitted box removal, interpreter agreement and field cleanup |
+| 66 | TLS peer subjects release acquired certificates, BIOs and native copy buffers on preparation failure or language String copy trap | Sequential CI; real handshakes, retry, Rust metadata agreement and omission controls |
+| 67 | TLS protocol String allocation keeps its owning connection live while reading SSL-owned bytes | Sequential CI; forced major trace, actual collection, session lifetime and missing-fence control |
+| 68 | Ownership probes pass valid GC metadata outputs; timer regressions exercise the merged join/drain/sort fixture under deliberate wake-order overtaking | Sequential CI; raw interpreter, preemption, stress and cleanup controls |
+| 69 | Rebuilt nested loop records remain flat; original owners, progressive retains and completed fields survive failed whole-result reconstruction | Sequential CI; alias matrices, scalar bits, retain/allocation traps and omission controls |
+| 70 | File construction owns raw streams before handle allocation and managed handles before path/finalizer preparation; failures close once and clear stale streams | Sequential CI; direct/scoped create/open, allocation/callback failures and finalization controls |
+| 71 | Native File writes flush stdio before returning so later descriptor reads see interpreter-equivalent bytes and flush errors preserve the borrowed handle | Sequential CI; immediate visibility, short-write/flush errors and omitted-flush controls |
+| 72 | File reads protect temporary buffers and owned streams, report read/write errors, and validate UTF-8 only for text; arbitrary byte reads remain binary | Sequential CI; raw interpreter errors, binary/text kinds, injected cleanup controls |
+| 73 | Original resource frames are anchored before optimization and remain observable through inlining; fusion cannot interleave their cleanup | Sequential CI; parameter/local/result/error lifetimes and pure-pipeline fusion control |
+| 74 | File logical alias counts live in the header independently of GC metadata; borrowed IO returns separately owned aliases and protects them during failures | Sequential CI; wide counts/overflow, GC-off close, IO traps and omission controls |
+| 75 | Mandatory resource ownership releases File aliases at original frame boundaries even when ordinary reuse/freeing is disabled | Sequential CI; descriptor-bound discard, preserved parameter lifetimes, aliases and omitted-frame-drop controls |
 | 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 

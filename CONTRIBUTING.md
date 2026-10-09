@@ -82,7 +82,11 @@ than accepting a stress variable with collection disabled.
   engines, the interpreter (`src/interp.rs`) and the C backend
   (`src/cgen.rs`, `runtime/*.c`), and the two agree byte for byte on
   stdout, stderr and the exit code. A change to one engine comes with the
-  same change to the other.
+  same change to the other. Optimizer changes also need an unoptimized
+  reference: `FWP_NO_OPT=1 fwp run --interp program.fwp`, or interpretation
+  of the original typed IR before the pass. Ordinary `--interp` also uses
+  the optimizer, so agreement between optimized engines alone can miss
+  a shared evaluation-order bug. Check observable traps as well as values.
 - **Generics are explicit.** In `lib/` and in examples, every generic
   definition has a signature, because the compiler rejects a definition
   without one that would be generic. Generics compile to specialized

@@ -1,44 +1,22 @@
 # Prepared roadmap queue
 
-Updated 2026-10-08. These published branches are preparation, not merged support.
-Open one PR at a time in this order after the previous PR passes all six gates
-and squash-merges. Merged PR #91/inference retains immutable OLD head `89b7bde2`; wide counts
-are next (row14).
-Completed rows remain immutable anchors; do not reopen rows through inference.
+Updated 2026-10-09. Rows through18 are merged; queue19 is the next delivery.
+Current merge status, actual rewritten bases and checks live only in
+[the handoff](development-state.md). This table preserves preparation ancestry;
+a published preparation is not verified main support.
 
-For a branch, rebase with `git rebase --onto NEW_MAIN OLD_PARENT BRANCH`.
-Preserve OLD head/parent below permanently: children were prepared from original
-heads, not later rewrites or squash commits. Replace outdated plan/handoff copies
-with current root docs when resolving documentation conflicts. Re-run focused
-checks after rebasing; original evidence is in [the history](roadmap-history.md).
-Publish with an explicit lease against the remote current head, then create the
-sole next PR. Full exact-head CI is required anew for every PR.
+Open one PR at a time after the previous PR passes all six exact-head gates
+and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
+Use the current actual base from the handoff; immutable OLD parents describe
+original preparation and can differ after rewrites. Never replace OLD anchors.
+Resolve documentation conflicts with all ten current root docs, rerun focused
+checks and publish with an explicit lease against the actual remote current head.
+Every final PR needs new six-job exact-head CI. Prior evidence and superseded
+queue instructions are preserved in [history](roadmap-history.md).
 
-Current heads change on rebase; OLD anchors never change. Rows through13 are
-merged; row14/wide is the sole open PR92. Merge/run evidence is in
-[the handoff](development-state.md) and [history](roadmap-history.md).
-Resource frames retain OLD `dcc5bbac318f`; current `368dafc5567d` also includes
-the fusion correction. File runtime owners (row 74) inherit corrected current 368dafc; that is their
-actual immutable parent, not the frame row's original dcc5bba. The discard branch inherits row 74. Queue 77 retains OLD 046f7e8 after its
-WASI descriptor predicate rewrite to c889479; queue 78 inherits actual c889479,
-which is its immutable parent.
-Row14 wide is now final-rebased on actual main3c0685c after PR91 squash.
-Its next rebase uses actual current3c0685c, not OLD89b7bde.
-Its OLDhead3a791dc and row15 OLDparent stay immutable.
-Row15 is prepared on current widecb0d7e6; its later rebase must use that
-actual current base. OLDheadc835578 and row16 OLDparent stay immutable.
-Row16 is prepared on current list-order5fe5692; use that actual current base
-for its later squash rebase. OLDhead66bc713 and row17 OLDparent stay immutable.
-Row17 is prepared on current sort-callback5c19337; use that actual current
-base later. OLDhead0a90b05 and row18 OLDparent stay immutable.
-Row18 is prepared on current sequence15743b8; use that actual current base
-later. OLDhead787763d and row19 OLDparent stay immutable.
-Row19 is prepared on current loop112f3c8; use that actual current base later.
-OLDheadc05a5d9 and row20 OLDparent stay immutable.
-For a rewritten branch, use its actual current base
-when rebasing again. Ancestry checks use OLD parent → OLD head, not current head. Prefixes uniquely resolve
-in this repository; use resolved full hashes for publication/merge head checks.
-Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
+Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
+resolve full hashes before publication or merge. Checkout paths use
+`/private/tmp/fwp-NAME-worktree`; consult the handoff for exceptions.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -53,7 +31,7 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 15 | order | `ownership-list-order` | `d2e0e296888d` | `c83557825d8a` | `3a791dc7e9f3` |
 | 16 | sort-callback | `ownership-sort-callbacks` | `9f4e3bbc211c` | `66bc713dea67` | `c83557825d8a` |
 | 17 | state-sequence | `ownership-state-sequences` | `5d0a3f302e47` | `0a90b0520cc1` | `66bc713dea67` |
-| 18 | loop | `ownership-loop-state` | `112f3c8de87b` | `787763d2e4b6` | `0a90b0520cc1` |
+| 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `6ce37fb180e1` | `c05a5d9c7d86` | `787763d2e4b6` |
 | 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
@@ -90,27 +68,27 @@ Checkout paths are `/private/tmp/fwp-NAME-worktree` with NAME below.
 | 52 | task-handle | `ownership-task-handles` | `4b6a2cb08da5` | `bb6f9c49a043` | `7da15d9c8ea3` |
 | 53 | channel-queue | `ownership-channel-queues` | `ccbf2957f351` | `ab44b7de0812` | `bb6f9c49a043` |
 | 54 | library-result | `ownership-library-results` | `82f32b2cde03` | `5b34382167da` | `ab44b7de0812` |
-| 55 | library-input | `ownership-library-inputs` | `a6ebc1da9637` | `a6ebc1da9637` | `5b34382167da` |
-| 56 | library-unload | `ownership-library-unload` | `5d0dc220fa1c` | `5d0dc220fa1c` | `a6ebc1da9637` |
-| 57 | opencl | `ownership-opencl-lifetime` | `d8b4d88da98d` | `d8b4d88da98d` | `5d0dc220fa1c` |
-| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `abc128581b61` | `abc128581b61` | `d8b4d88da98d` |
-| 59 | tls-listener | `ownership-tls-listeners` | `3f6154b4bf67` | `3f6154b4bf67` | `abc128581b61` |
-| 60 | library-resource | `ownership-library-resources` | `07092cb06e1d` | `07092cb06e1d` | `3f6154b4bf67` |
-| 61 | grpc-server | `ownership-grpc-server-cleanup` | `6364bedd9a5c` | `0d5d3098e782` | `07092cb06e1d` |
-| 62 | tls-cache | `ownership-tls-cache-failures` | `4ab1f7ddd6f8` | `4ab1f7ddd6f8` | `0d5d3098e782` |
-| 63 | tls-wire | `ownership-tls-wire-preparation` | `f6598e440a59` | `f6598e440a59` | `4ab1f7ddd6f8` |
-| 64 | connect-cleanup | `ownership-connect-cancellation` | `0cc612650ab9` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `b8f3752d236f` | `b8f3752d236f` | `0cc612650ab9` |
-| 66 | peer-subject | `ownership-tls-peer-subject` | `6bda2c815a71` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `e0f11626f609` | `e0f11626f609` | `6bda2c815a71` |
-| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `e503e10a9780` | `e503e10a9780` | `e0f11626f609` |
-| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `b00215dc10f5` | `b00215dc10f5` | `e503e10a9780` |
-| 70 | file-construction | `ownership-file-construction` | `722224705f7c` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `5ac710398a14` | `5ac710398a14` | `e9d575fdf990` |
-| 72 | file-io-errors | `ownership-file-io-errors` | `22a520c26219` | `06419f4c5989` | `5ac710398a14` |
-| 73 | resource-frames | `ownership-resource-frames` | `368dafc5567d` | `dcc5bbac318f` | `06419f4c5989` |
-| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `e21c92ea2f6c` | `e21c92ea2f6c` | `368dafc5567d` |
-| 75 | file-discard | `ownership-file-discard` | `923ad4a4fb07` | `923ad4a4fb07` | `e21c92ea2f6c` |
+| 55 | library-input | `ownership-library-inputs` | `f240ecd56f3b` | `a6ebc1da9637` | `5b34382167da` |
+| 56 | library-unload | `ownership-library-unload` | `878b25aad627` | `5d0dc220fa1c` | `a6ebc1da9637` |
+| 57 | opencl | `ownership-opencl-lifetime` | `5b6e65f365d6` | `d8b4d88da98d` | `5d0dc220fa1c` |
+| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `00013d55d078` | `abc128581b61` | `d8b4d88da98d` |
+| 59 | tls-listener | `ownership-tls-listeners` | `838cf5dee220` | `3f6154b4bf67` | `abc128581b61` |
+| 60 | library-resource | `ownership-library-resources` | `d56a24e48d7e` | `07092cb06e1d` | `3f6154b4bf67` |
+| 61 | grpc-server | `ownership-grpc-server-cleanup` | `c299edbc33eb` | `0d5d3098e782` | `07092cb06e1d` |
+| 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
+| 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
+| 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `2ba7084abe25` | `b8f3752d236f` | `0cc612650ab9` |
+| 66 | peer-subject | `ownership-tls-peer-subject` | `b728cf5f2adb` | `6bda2c815a71` | `b8f3752d236f` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `22b95b0ddb74` | `e0f11626f609` | `6bda2c815a71` |
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `7d8ab6719e55` | `e503e10a9780` | `e0f11626f609` |
+| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `821e6c1baaef` | `b00215dc10f5` | `e503e10a9780` |
+| 70 | file-construction | `ownership-file-construction` | `0d09a61aaab7` | `e9d575fdf990` | `b00215dc10f5` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `8a061cb9b8ab` | `5ac710398a14` | `e9d575fdf990` |
+| 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
+| 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
+| 75 | file-discard | `ownership-file-discard` | `db3bcf0da8d6` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `30fe112db93c` | `30fe112db93c` | `923ad4a4fb07` |
 | 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `c889479eed7a` | `046f7e85a9eb` | `30fe112db93c` |
 | 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `681dd55136b0` | `681dd55136b0` | `c889479eed7a` |
