@@ -127,7 +127,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `0aac7d0311f4` | `671ada6ec85d` | `ea79bdee1191` |
 | 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `ae4ef94a5afb` | `663ef599a438` | `671ada6ec85d` |
 | 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `eb5ae0a4a4c2` | `4114b709fb4b` | `663ef599a438` |
-| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `a3d88c0b8f3d` | `b44f53c9a60f` | `4114b709fb4b` |
+| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `3883d1abaccc` | `b44f53c9a60f` | `4114b709fb4b` |
 | 101 | grpc-client-requests | `ownership-grpc-client-requests` | `e0db0123a16c` | `2339ff08e421` | `b44f53c9a60f` |
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `4c58f019e707` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `32c500ef4444` | `c48864ce7231` | `33661b298f96` |

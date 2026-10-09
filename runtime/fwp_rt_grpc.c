@@ -1451,8 +1451,11 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (!s) g_stub_fail(r, addr, -1, err);
         if (r->m.input == 0) {
             h2_buf req = {0};
+            fwp_cleanup client_request;
+            fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
             g_encode_request(r, args, &req);
             g_send_msg(c, s, req.d, req.len, 1);
+            fwp_cleanup_pop(&client_request);
             h2b_free(&req);
         } else if (r->m.output != 0) {
             /* requests are sent as responses arrive */
@@ -1461,8 +1464,11 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
             V cur = args[0], x;
             while (g_iter_next(&cur, &x)) {
                 h2_buf req = {0};
+                fwp_cleanup client_request;
+                fwp_cleanup_push(&client_request, g_h2_buffer_release, &req);
                 g_encode_request(r, &x, &req);
                 int ok = g_send_msg(c, s, req.d, req.len, 0);
+                fwp_cleanup_pop(&client_request);
                 h2b_free(&req);
                 if (!ok) break;
             }
