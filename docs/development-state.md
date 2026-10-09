@@ -150,8 +150,9 @@ still need their final squash rebases and six exact-head full gates.
 | 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
 | 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
 | 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
+| 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
 
-Rows 18–97 are published preparations with passing focused tests, lint and
+Rows 18–98 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -184,9 +185,18 @@ Independent queue98 ownership-grpc-request-encoding starts on671ada6,
 scratch before encoding and keeps its cleanup through sending. Focused
 actual sender tests cover encoding trap, cancelled send and normal request
 bytes/end marker; both tests pass 2.03 / 4.93 s, lint 2.51 / 4.92 s and
-format 0.47 / 0.96 s. Fixture shadowing issue corrected; record and publish.
-Canonical encoding
-scratch inside the encoder remains the next audit.
+format 0.47 / 0.96 s. Fixture shadowing corrected; published clean at
+663ef599a4385b394964fc92017c03cb57c1ddd8 on actual671ada6.
+Independent ownership-grpc-canonical-encoding starts on663ef59,
+/private/tmp/fwp-grpc-canonical-encoding-worktree. Message/request encoders
+protect canonical fwp_buf scratch before serialization and transcoding.
+Focused tests use real I64 serialization and injected partial/transcoder
+failures, checking exact canonical bytes/diagnostics and omitted cleanup.
+Canonical/request tests pass 8.38 / 17.93 s, lint 2.46 / 4.87 s and format
+0.47 / 0.74 s. Record and publish.
+Next delivery preparation refreshes row21 arrays on the actual current PR98
+head542fc08, inheriting its CLI repair. Remaining audit: canonical decode
+and caller-side response encoding scratch, then client status/message paths.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery at542fc08, new exact-head CI37929002304 queues
@@ -237,7 +247,7 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-request-encoding-worktree; final generation tests, lint and format pass.
+belongs to /private/tmp/fwp-grpc-canonical-encoding-worktree; final generation tests, lint and format pass.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 88 immutable queue
 ancestry pairs and whole commit messages (0.18 s CPU / 1.29 s elapsed).

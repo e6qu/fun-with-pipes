@@ -492,3 +492,8 @@ Prepared detached gRPC senders own request encoding scratch before encoding
 and keep cleanup active through the cancellable send. Normal completion or
 encoding/cancellation unwind releases the caller's buffer separately from
 the encoded wire buffer. Internal canonical encoding scratch is a later audit.
+
+Prepared message/request encoders register canonical serialization buffers
+with their existing destructor before writing and transcoding. Success frees
+normally; partial serialization or transcoder failure frees on unwind. Fixed-
+width canonical bytes, oneof prefix and diagnostic contents stay unchanged.

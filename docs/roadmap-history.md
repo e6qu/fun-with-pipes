@@ -9962,3 +9962,32 @@ pass at O1/O2 with tracing off/on and poison. Omitted caller cleanup fails1.
 Focused lint passes2.51 / 4.92 s; format application0.44 / 0.83 s and check
 0.47 / 0.96 s pass. No new allocations or performance claim; internal canonical
 encoding scratch remains the next specific runtime ownership audit.
+
+Queue98 published clean at 663ef599a4385b394964fc92017c03cb57c1ddd8 on actual
+671ada6ec85d6e46174bcdacbc0a95725131ede8; immutable first head/parent recorded. Entire
+one-line message verifies. PR98 is still the sole open delivery, unrelated to
+this preparation row number.
+
+## Canonical encoder scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-canonical-encoding starts on663ef599a4385b394964fc92017c03cb57c1ddd8.
+Message/request encoders now register canonical fwp_buf cleanup before fixed-
+width serialization and protobuf transcoding. Normal completion pops/releases;
+partial serialization or transcoder failure releases on unwind. Real I64
+serialization fixture checks exact little-endian bytes and oneof prefix, with
+injected transcoder/partial-write failures and exact unchanged diagnostics.
+Omitted cleanup must fail1; fixed O1/O2 × tracing off/on × poison must pass.
+Actual protobuf acceptance remains full CI; fixture isolates lifetime boundaries.
+Guarded clean before switching0.05 / 0.37 s; canonical/request tests run.
+Remaining audit: canonical decoding, caller response encoding and client result
+status/message exceptional lifetimes. No additional PR or new surface syntax.
+
+Focused canonical/request tests pass8.38 / 17.93 s CPU / elapsed. Actual I64
+bytes/oneof prefix, injected partial/transcoder failure, exact diagnostics and
+omitted-cleanup control pass at O1/O2 with tracing off/on and poison. Focused
+lint runs. Next foreground preparation refreshes row21 arrays onto current
+PR98 head542fc08, inheriting the already-published CLI harness repair.
+
+Focused canonical/request lint passes2.46 / 4.87 s CPU / elapsed; formatting
+application0.45 / 0.86 s and check0.47 / 0.74 s pass under local guard.
+All focused checks pass; full protocol/platform acceptance remains sequential CI.
