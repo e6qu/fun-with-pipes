@@ -123,6 +123,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `ea18e54f0eee` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `d178d86dca2b` | `d178d86dca2b` | `36ad63424530` |
+| 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `6f4bfba80ef3` | `6f4bfba80ef3` | `d178d86dca2b` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

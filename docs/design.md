@@ -502,4 +502,8 @@ serialization through a fixed diagnostic buffer; connections copy keys so
 scoped options can be released independently. Read-once environment TLS
 caches release on library teardown after tasks drain and GC finalizers finish,
 before SSL cache disposal. Cache and hook state reset for reinitialization.
-Canonical decode and packed TLS storage remain audits.
+Prepared packed TLS options use one checked allocation containing an aligned
+header followed by strings and the full length-framed key. Child string/key
+pointers are borrowed within that allocation; last-owner release frees its
+base once. Focused remote checks are pending, so allocation reduction is not
+yet verified support. Canonical decode remains an audit.

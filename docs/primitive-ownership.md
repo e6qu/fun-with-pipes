@@ -258,6 +258,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
 | 109 | TLS pool identity preserves full fields with checked length framing | Sequential CI; delimiter collisions, every field, names beyond 1 KiB, actual key copy/pool reuse after scoped release, interpreter oracle and old-encoding rejection |
 | 110 | Library teardown releases read-once environment TLS caches after tasks/finalizers | Focused GitHub checks pending after disk refusal; cache immutability, blocked task/finalizer order, ten malloc frees, reinit/idempotence and omission control; sequential CI remains required |
+| 111 | Immutable TLS options pack header, strings and full key into one checked allocation | Remote focused checks pending after disk refusal; actual allocation/byte counts, header alignment, copied inputs, failure cleanup and existing scope/task/cache/pool controls |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
