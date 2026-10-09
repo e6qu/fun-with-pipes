@@ -43,8 +43,11 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 Main includes #74–#97: native macOS and selected ownership through typed
 zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
 [PR #97](https://github.com/e6qu/fun-with-pipes/pull/97) merged after all six
-exact-head jobs passed. Next delivery is queue20, typed repeat/range ownership;
-its final rebase and focused checks precede the next sole PR. Exact heads,
+exact-head jobs passed. Sole [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98) delivers queue20,
+typed repeat/range ownership. Final focused checks pass; six exact-head CI
+jobs gate its merge. The completed previous-main Linux run exposed an early
+stdin-close panic in the CLI harness; focused repair checks pass and the
+updated PR head must receive six fresh gates. Exact heads,
 checks and gates are in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real

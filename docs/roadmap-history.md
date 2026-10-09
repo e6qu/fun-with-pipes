@@ -9328,7 +9328,7 @@ including hard OOM exit 102. Row83 is published clean at
 f3c9ee4ec35416d1050b98d389186434e8408b2d on actual 06c93ef. Five tests,
 lint 2.93 / 6.03 s and format 0.53 / 1.07 s pass. Eligible variant holders
 avoid wrapper boxes while preserving active tags, partial retention, boxed
-fallback and original lifetimes. 
+fallback and original lifetimes.
 Fmt check passes 0.87 / 4.02 s; ten root docs copied before amend. Tested
 source unchanged. Handoff archives completed row77–83 paragraphs rather than
 retaining competing old next actions; actual bases and checks remain in its table.
@@ -9608,3 +9608,211 @@ Final guarded generation tests pass all three13.79 / 27.85 s CPU / elapsed.
 Focused cargo clippy --test list_generation_ownership -- -D warnings passes
 2.38 / 4.68 s. Range owns fresh nodes; repeat retains each typed alias.
 Boxed128-bit payloads remain shared; generic unwind coverage stays later work.
+
+Final formatting passes0.34 / 0.60 s. PR98 publishes exact6b1cd9bf1ea4b1a28838d160acca1efb6cab47dc
+on actual2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 with lease against7741d09.
+Entire message is one line; source/runtime/tests/workflows remain unchanged
+against preparation7741d09. Sole delivery PR98 now awaits six exact-head jobs.
+
+### Archived published preparation handoff through row91
+
+Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
+on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
+Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
+HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
+Row88 is published clean at e91dcb307c615b3330e50348a710a14b0c6be178,
+on actual f086110. Two cycle/queue tests, lint 2.64 / 5.36 s and format
+0.45 / 0.83 s pass. Close preserves queued values; explicit drain breaks
+the counted self-cycle. Tracing docs from 291f8f7 are already inherited.
+New row89 is published clean at d29dda936dff119f226cdc720aa42da549a1427a,
+on actual e91dcb3, checkout /private/tmp/fwp-http2-body-roots-worktree.
+Body and related TLS root tests, lint 2.69 / 5.43 s and format 0.48 / 0.97 s
+pass. Actual major collection preserves stream through copying; omitted-fence
+O2 control exits1. Fixture Duration error is corrected and archived.
+Row90 is published clean at 6f310b5483a8c49e2819c595a25a9a15b71190b6,
+on actual d29dda9, checkout /private/tmp/fwp-http2-body-bounds-worktree.
+Thirteen raw interpreter/native body-bound cases agree; removed-clamp controls
+reproduce the old mismatch. Borrowed-root test, lint 5.93 / 12.87 s and format
+0.45 / 0.83 s pass. Test-only compilation/control issues are repaired and archived.
+Independent audit found HTTP/2 peer metadata buffer leak on string/Option
+copy trap. New ownership-http2-peer-cleanup branch at
+/private/tmp/fwp-http2-peer-cleanup-worktree on 6f310b5 protects the malloc
+subject with existing unwind cleanup. Both metadata/TLS ownership tests pass
+1.32 / 5.17 s; O1/O2 copy/Option traps and omitted-cleanup controls pass.
+Fixture recycled-address counter is corrected. Focused lint passes 2.58 / 5.15 s;
+format check passes 0.44 / 0.83 s. Published clean at
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08; immutable OLD equals first
+preparation head, parent6f310b5483a8c49e2819c595a25a9a15b71190b6.
+Further audit: gRPC served-job peer strings and status messages need lifetime
+review; do not free retained task context until task completion is proved.
+
+## Served gRPC peer ownership audit, 2026-10-09
+
+New ownership-grpc-peer-completion preparation starts on
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08. g_start_call allocates the subject
+but previously has no release path. Generic C-task completion callback runs
+after structured child joins; peer owner is protected during spawning.
+Initial guarded cargo test --test grpc_peer_completion --test grpc_server_ownership
+passes both12.62 / 25.40 s CPU / elapsed. Follow-up audit finds detached
+g_send_all invokes language encoders/iterators and may outlive the serving task.
+Initial passing tests therefore do not establish safe final disposal. Added
+explicit serving-peer users retained by detached senders until their own child
+joins; spawn traps release the partial retained owner. Expanded actual-scheduler
+test keeps the sender alive after parent completion and checks omitted sender
+completion, omitted parent completion and early-release controls. Focused rerun.
+No status-message ownership change: results mix borrowed stream strings and
+new malloc strings, requiring a separate audit. Guarded clean before switching
+from generation checkout passes0.00 / 0.14 s. PR98 CI37925910460 exact6b1cd9b
+is queued; no failing gate or additional PR.
+
+Expanded test fails exit1018.05 / 16.19 s: early-release control deliberately
+exits1 in the child lifetime check, whereas test expected the parent check's
+exit6. Both are explicit premature-release assertions; accepted controls now
+allow only1/6 for that variant, never a signal or unrelated failure. Fixed
+runtime was not yet exercised in this run; focused checks rerun.
+
+Corrected expanded scheduler tests and server regression pass6.46 / 13.14 s
+CPU / elapsed. Actual detached sender keeps the serving peer after parent
+completion; its own post-join completion releases the last owner. Fixed
+O1/O2 × tracing off/on × poison passes; omitted parent and sender completion
+exit7/9, early release exits1/6 before use. Added sender-spawn cancellation
+unwind and checked SIZE_MAX owner overflow; final focused rerun runs.
+
+Final expanded peer/server tests pass14.18 / 28.39 s CPU / elapsed, including
+spawning cancellation and exact owner-count overflow. Task-handle regression
+passes4.65 / 10.14 s. Focused cargo clippy --test grpc_peer_completion
+--test grpc_server_ownership --test task_handle_ownership -- -D warnings
+passes2.72 / 5.47 s. Formatting application0.51 / 0.99 s and check0.46 / 0.87 s
+pass. All are bounded env/local-guard commands; no local full gate.
+Status audit corrects the earlier tentative borrowed-text assumption: g_recv
+always strdup-copies stream/connection status text. Normal handler messages
+are owned; only cancellation's sv.msg aliases its stored owner. Next focused
+fix transfers that slot, protects final encoding and reclaims it, with tests.
+
+Row92 published clean at 09751c8c65acd0c6d01d074171f52a297f667cf7 on actual
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08; first head/parent become immutable preparation
+anchors. Entire one-line commit message verifies and no additional PR opens.
+
+## Served gRPC final status ownership preparation, 2026-10-09
+
+New ownership-grpc-status-cleanup starts on09751c8c65acd0c6d01d074171f52a297f667cf7.
+Normal served status results are malloc-owned; cancellation's sv.msg is a
+stored owner. Handler transfers that slot, protects the final message through
+encoding and releases it normally or on unwind. Last retained context owner
+also frees any stored status left by later detached senders. g_fail_call copies
+before releasing a replaced/aliased old message, traps with the new owned
+copy and preserves hard out-of-memory exit102. Focused fixture checks unknown
+method, explicit status, deadline/reset/cancellation, cancellation during final
+encoding, alias replacement and retained-owner disposal. Omitted normal/unwind
+controls must fail exactly2; fixed O1/O2 × tracing off/on × poison must pass.
+Guarded cargo clean before switching passes0.04 / 0.26 s; focused status and
+peer regression tests run. No additional PR or semantic/performance claim.
+
+Initial status and peer regressions pass13.25 / 26.68 s CPU / elapsed.
+Added exact expected percent-encoded message bytes in produced frames and
+allocation-failure assertion: old stored message remains alive while a failed
+replacement reports only `fwp: out of memory`, exit102. Final focused rerun.
+PR98 exact6b1cd9b CI37925910460 bench passes; Linux and regular macOS run,
+both GC gates queue. No failing gates or competing PR.
+
+Expanded byte assertion fails exit1014.24 / 8.64 s: deliberate unwind-omission
+control reaches encoded-text check first, which incorrectly expected spaces
+to become %20. Both runtime h2_pct_encode and interpreter h2::pct_encode keep
+printable spaces unchanged. Corrected only expected bytes to match existing
+engine semantics; omission still must fail exactly2 for leaked storage. Rerun.
+
+Corrected final status/peer tests pass6.25 / 12.74 s CPU / elapsed. Expected
+wire text matches runtime/interpreter encoding; failed replacement preserves
+old owner and exits102 with exact out-of-memory stderr. Normal/unwind omission
+controls still exit2. Focused status/peer lint runs.
+
+Focused cargo clippy --test grpc_status_cleanup --test grpc_peer_completion
+-- -D warnings passes2.37 / 4.83 s; cargo fmt --all application0.45 / 0.83 s
+and -- --check0.46 / 0.84 s pass under documented bounded guard. Final tested
+production delta transfers and frees owned strings without altering wire text.
+
+Row93 published clean at a92c951fa6d927356a375edfe42c29589c505b99 on actual
+09751c8c65acd0c6d01d074171f52a297f667cf7; immutable first head/parent anchor recorded.
+Entire one-line message verifies; no additional PR.
+
+## Dequeued unary request ownership preparation, 2026-10-09
+
+New ownership-grpc-receive-cleanup starts on a92c951fa6d927356a375edfe42c29589c505b99.
+A unary request is removed from the stream before waiting for the next message;
+its malloc payload previously leaked on cancellation/reset or an extra message.
+Scoped received-result cleanup now owns both message and copied status storage.
+Normal unary return transfers only its request; error return transfers only
+its text. Missing/extra/error results and partial waits release other storage.
+Reflection also frees the copied end status. No evaluation or status changes.
+Actual scheduler fixture covers normal binary payload transfer, missing/extra
+messages, bad/reset streams, cancellation during the second wait and reflection
+end. Omitted unwind/message/reflection controls must exit1, with fixed O1/O2 ×
+tracing off/on × poison. Guarded clean before switching passes0.00 / 0.13 s;
+cargo test --test grpc_receive_cleanup --test grpc_status_cleanup runs.
+
+### Archived detailed peer/status preparation handoff
+
+Published row92 ownership-grpc-peer-completion starts on3c268c3,
+/private/tmp/fwp-grpc-peer-completion-worktree. A nonthrowing/nonallocating
+task completion callback disposes peer metadata after child joins. Initial
+two child/cancellation tests pass12.62 / 25.40 s, but further audit identifies
+detached senders invoking language callbacks after parent completion. Added
+explicit retained serving-peer users for those senders, protected during spawn
+and released after their own children finish. Expanded detached-sender tests pass6.46 / 13.14 s with explicit leak/early
+controls. Added sender-spawn cancellation and user-count overflow checks;
+final focused tests pass14.18 / 28.39 s; task-handle regression4.65 / 10.14 s,
+focused lint2.72 / 5.47 s and format0.46 / 0.87 s pass. Published clean at09751c8c65acd0c6d01d074171f52a297f667cf7;
+immutable OLD equals first head, parent3c268c34d15b5ffd36b3747d1f6cee8343b34e08.
+gRPC status audit now verifies that g_recv text is copied malloc storage;
+normal handler messages are owned, cancellation sv.msg is a borrowed slot.
+Independent ownership-grpc-status-cleanup starts on09751c8,
+/private/tmp/fwp-grpc-status-cleanup-worktree. It transfers cancellation's
+stored status, protects final encoding messages and frees normal results.
+Replacing a stored status copies before releasing an aliased old string;
+last retained context owner frees any remaining status. Focused final-status
+and peer regressions pass13.25 / 26.68 s. Added encoded-message byte checks
+and hard allocation-failure102 assertions. Final two tests pass6.25 / 12.74 s;
+encoded-space fixture expectation corrected to match both engines. Focused
+lint2.37 / 4.83 s and format0.46 / 0.84 s pass. Published clean at
+a92c951fa6d927356a375edfe42c29589c505b99 on actual09751c8.
+Unary receive and status tests pass12.09 / 24.36 s CPU / elapsed. Focused
+cargo clippy --test grpc_receive_cleanup --test grpc_status_cleanup
+-- -D warnings passes2.43 / 4.91 s. Format application and check both
+pass0.45 / 0.83 s. Actual binary transfer, exactly-once malloc release and
+cancelled second wait are verified at O1/O2 with tracing off/on and poison.
+Three omitted ownership controls fail exactly1. No local full gate.
+
+Row94 published clean at 8bd9e78743abd7ed2c1f721ee100ed325074da2e on actual
+a92c951fa6d927356a375edfe42c29589c505b99; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Previous-main Linux CLI harness failure repair, 2026-10-09
+
+Completed previous-main push CI37916609315 at d174e73 fails Linux only; five
+other jobs pass. Full failure logs /private/tmp/fwp-main96-failure.log. Only
+cli::multi_command_program fails, tests/cli.rs:76 unwrap gets BrokenPipe while
+writing stdin. Existing add-all case intentionally supplies5 newline but
+expects0 from an empty argument list, so early stdin close is legal. Updated
+helper tolerates only ErrorKind::BrokenPipe and always captures/asserts exact
+child stdout/stderr/status. Other stdin errors still fail. This repair goes
+into the sole PR98 before merging; all six new exact-head gates are required.
+Focused CLI regression runs serial under the bounded local guard. Existing
+PR97 exact six gates remain passed; no failed run is presented as acceptance.
+
+Guarded handoff audit passes11 document link/heading sets,88 immutable ancestry
+pairs and whole commit messages0.18 / 1.29 s. Guarded clean before CLI checkout
+switch passes0.00 / 0.14 s. New CLI repair's focused test runs; no resource
+limit raised or bypassed. Superseded runs will not supply new-head acceptance.
+
+Focused cargo test --test cli multi_command_program -- --exact passes
+23.59 / 47.48 s CPU / elapsed with all existing interpreter/native cases.
+Added deterministic early stdin close regression: child closes its read end
+before a buffer larger than pipe capacity is written, then emits stdout and
+stderr and exits7. The harness must preserve all three observed results.
+This removes reliance on scheduling to cover the original BrokenPipe race.
+
+Deterministic early-close test passes0.18 / 0.73 s CPU / elapsed. Initial
+focused CLI lint passes2.26 / 4.59 s; final lint including deterministic
+regression passes0.09 / 0.26 s. Format application/check both0.36 / 0.73 s.
+No runtime/compiler change beyond previously tested generation work. New
+PR98 head must replace old6b1cd9b for all six merge gates.

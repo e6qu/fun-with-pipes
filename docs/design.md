@@ -450,3 +450,24 @@ Prepared HTTP/2 peer metadata protects its malloc subject temporary with the
 existing unwind cleanup stack until String/Option copying completes. Focused
 copy-trap and omitted-cleanup controls check exactly-once release; HTTP/2
 handle ownership still uses the tracing compatibility policy.
+
+Prepared served gRPC peer metadata has an explicit logical owner for its
+serving task and each detached sender capable of invoking language code.
+A nonallocating, nonthrowing internal C-task completion callback runs after
+structured child joins. It releases that task's peer owner; the last owner
+frees the malloc subject. Spawning protects partially acquired owners, and
+count overflow traps before acquisition. The GC-managed context and other
+network buffers still retain their existing tracing lifetimes.
+
+Prepared served gRPC final statuses transfer a stored cancellation message
+into the handler's owned result. Cleanup protects it through final encoding,
+then releases it. Replacing a stored status copies before dropping the old
+owner, including an aliased input; the last retained serving-context user
+also releases any status left in its slot. Received status text is copied
+malloc storage, not a borrowed stream field. Wire encoding remains unchanged.
+
+Prepared unary gRPC receive owns dequeued malloc request and copied status
+storage across the subsequent wait. Cleanup releases them on cancellation or
+an unexpected extra result; normal return transfers only the requested
+message or error text. Reflection discards its copied end status. Message
+contents, receive order and error codes remain unchanged.

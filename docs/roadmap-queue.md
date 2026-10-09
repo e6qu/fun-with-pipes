@@ -33,7 +33,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 17 | state-sequence | `ownership-state-sequences` | `5d0a3f302e47` | `0a90b0520cc1` | `66bc713dea67` |
 | 18 | loop | `ownership-loop-state` | `03d25acc581a` | `787763d2e4b6` | `0a90b0520cc1` |
 | 19 | structure | `ownership-list-structure` | `65fedd8d8543` | `c05a5d9c7d86` | `787763d2e4b6` |
-| 20 | generation | `ownership-list-generation` | `7741d09dd8cf` | `fad9b1ad08f6` | `c05a5d9c7d86` |
+| 20 | generation | `ownership-list-generation` | `6b1cd9bf1ea4` | `fad9b1ad08f6` | `c05a5d9c7d86` |
 | 21 | array-element | `ownership-array-elements` | `443524ef6b6d` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `1689c03ff621` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `f4716a027a1b` | `6774aa5bb426` | `a8a7d119712b` |
@@ -106,6 +106,12 @@ resolve full hashes before publication or merge. Checkout paths use
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `6f310b5483a8` | `6f310b5483a8` | `d29dda936dff` |
 
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `3c268c34d15b` | `3c268c34d15b` | `6f310b5483a8` |
+
+| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `09751c8c65ac` | `09751c8c65ac` | `3c268c34d15b` |
+
+| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `a92c951fa6d9` | `a92c951fa6d9` | `09751c8c65ac` |
+
+| 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `8bd9e78743ab` | `8bd9e78743ab` | `a92c951fa6d9` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
