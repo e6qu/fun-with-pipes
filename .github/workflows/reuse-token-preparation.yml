@@ -34,3 +34,19 @@ jobs:
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Full-size raw interpreter tail oracle on the runner
+        if: ${{ !cancelled() }}
+        run: |
+          uname -m
+          rustc --version
+          cc --version
+          cat > /tmp/fwp-tail-token-full.fwp <<'FWP'
+          Box = | Empty | Box I64
+          down : Box -> Box ! {Error[String]}
+          rec down = match
+              Empty -> Empty
+              Box _ -> if (lt 0) (const "negative" | fail) (if (eq 0) Box (sub 1 | Box | down))
+          main = Box 100000 | attempt down | echo
+          FWP
+          /usr/bin/time -v env FWP_NO_OPT=1 target/debug/fwp run --interp /tmp/fwp-tail-token-full.fwp > /tmp/fwp-tail-token-full.out
+          test "$(cat /tmp/fwp-tail-token-full.out)" = 'Ok (Box 0)'
