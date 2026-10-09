@@ -87,9 +87,7 @@ int main(void){
  fwp_lib_finish();return 0;
 }
 "#;
-    let start = generated
-        .find("    t->key = next;")
-        .unwrap();
+    let start = generated.find("    t->key = next;").unwrap();
     let end = start + generated[start..].find("    return t;").unwrap();
     let broken=format!("{}    t->key=next;snprintf(t->key,key_len<1024?key_len:1024,\"%s|%d|%s|%s|%s\",ca,insecure,name,cert,key);t->key_len=strlen(t->key)+1;\n{}",&generated[..start],&generated[end..]);
     let dir = fwp::cgen::TempDir::new("grpc-pool-identity").unwrap();
