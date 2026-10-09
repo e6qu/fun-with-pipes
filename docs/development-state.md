@@ -201,7 +201,7 @@ still need their final squash rebases and six exact-head full gates.
 | 90 fix-http2-body-bounds | c80d278dd53d | 177a08a204d7 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 91 ownership-http2-peer-cleanup | 16edf14e0b94 | c80d278dd53d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 92 ownership-grpc-peer-completion | 52433827539e | 16edf14e0b94 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 93 ownership-grpc-status-cleanup | e7408fee761a | 5b15ee436b69 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 93 ownership-grpc-status-cleanup | aa2a5aa9a912 | 52433827539e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 94 ownership-grpc-receive-cleanup | 7c94141a1a9a | e7408fee761a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 95 ownership-grpc-force-cleanup | 279f9f73e3f3 | 7c94141a1a9a | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 96 ownership-grpc-render-cleanup | 8302c3468190 | 279f9f73e3f3 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
