@@ -136,6 +136,8 @@ typedef struct {
     size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
 
+typedef struct { h2_hdrs headers; size_t users; } g_capture;
+
 /* a task's gRPC context: metadata and deadline of the calls it makes, and
  * the call it serves */
 typedef struct {
@@ -145,6 +147,7 @@ typedef struct {
     g_serving *serving;
     const g_tls *tls;
     h2_hdrs *capture;          /* response metadata collected, or 0 */
+    g_capture *capture_owner; /* retained by dynamic scopes and inheriting tasks */
     int gzip;                  /* the calls made compress their requests */
 } g_ctx;
 
@@ -152,23 +155,38 @@ static g_ctx g_empty_ctx;
 static g_conn *g_pool = 0;
 static const fwp_desc *g_grpc_error_desc = 0;
 
-static void *g_context_acquire(void *arg) {
-    g_ctx *ctx = (g_ctx *)arg;
-    g_tls *tls = ctx ? (g_tls *)ctx->tls : 0;
-    if (!tls || tls->users == SIZE_MAX) return 0;
-    if (tls->users == SIZE_MAX - 1) fwp_trap("too many TLS option owners");
-    tls->users++;
-    return ctx;
-}
-
-static void g_context_release(void *arg) {
-    g_ctx *ctx = (g_ctx *)arg;
-    g_tls *tls = (g_tls *)ctx->tls;
+static void g_tls_release(void *arg) {
+    g_tls *tls = (g_tls *)arg;
     if (!tls->users || tls->users == SIZE_MAX) abort();
     if (--tls->users == 0) {
         free(tls->ca); free(tls->name); free(tls->cert);
         free(tls->keyfile); free(tls->key); free(tls);
     }
+}
+
+static void g_capture_release(void *arg) {
+    g_capture *cap = (g_capture *)arg;
+    if (!cap->users) abort();
+    if (--cap->users == 0) { h2_hdrs_free(&cap->headers); free(cap); }
+}
+
+static void *g_context_acquire(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    g_tls *tls = ctx ? (g_tls *)ctx->tls : 0;
+    g_capture *cap = ctx ? ctx->capture_owner : 0;
+    int own_tls = tls && tls->users != SIZE_MAX;
+    /* Validate both counters before changing either, so acquisition is atomic. */
+    if (own_tls && tls->users == SIZE_MAX - 1) fwp_trap("too many TLS option owners");
+    if (cap && cap->users == SIZE_MAX) fwp_trap("too many metadata capture owners");
+    if (own_tls) tls->users++;
+    if (cap) cap->users++;
+    return own_tls || cap ? ctx : 0;
+}
+
+static void g_context_release(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    if (ctx->tls && ctx->tls->users != SIZE_MAX) g_tls_release((void *)ctx->tls);
+    if (ctx->capture_owner) g_capture_release(ctx->capture_owner);
 }
 
 static g_ctx *g_ctx_of(void) {
@@ -2523,17 +2541,23 @@ static V fwp_p_grpc_with_response_metadata(V f) {
     g_ctx *cur = g_ctx_of();
     g_ctx *ctx = (g_ctx *)fwp_alloc(sizeof *ctx);
     *ctx = *cur;
-    h2_hdrs *cap = (h2_hdrs *)calloc(1, sizeof *cap);
+    g_capture *owner = (g_capture *)calloc(1, sizeof *owner);
+    owner->users = 1;
+    fwp_cleanup capture_cleanup;
+    fwp_cleanup_push(&capture_cleanup, g_capture_release, owner);
+    h2_hdrs *cap = &owner->headers;
     ctx->capture = cap;
+    ctx->capture_owner = owner;
     V r = g_with_ctx(ctx, f);
     if (cur->capture)
         for (size_t i = 0; i < cap->n; i++)
             h2_hdrs_add(cur->capture, cap->v[i].name, strlen(cap->v[i].name), cap->v[i].value,
                         strlen(cap->v[i].value));
     V md = g_pairs_value(cap);
-    h2_hdrs_free(cap);
-    free(cap);
-    return fwp_tuple2(r, md);
+    V result = fwp_tuple2(r, md);
+    fwp_cleanup_pop(&capture_cleanup);
+    g_capture_release(owner);
+    return result;
 }
 
 static V fwp_p_grpc_peer_subject(void) {
@@ -2554,8 +2578,13 @@ static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, 
     V *fs = OBJ(o)->f;
     ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
                          g_opt_text(fs[ikey]));
-    ((g_tls *)ctx->tls)->users = 0;
-    return g_with_ctx(ctx, f);
+    ((g_tls *)ctx->tls)->users = 1;
+    fwp_cleanup tls_cleanup;
+    fwp_cleanup_push(&tls_cleanup, g_tls_release, (void *)ctx->tls);
+    V result = g_with_ctx(ctx, f);
+    fwp_cleanup_pop(&tls_cleanup);
+    g_tls_release((void *)ctx->tls);
+    return result;
 }
 
 static V fwp_p_grpc_with_deadline(V d, V f) {
