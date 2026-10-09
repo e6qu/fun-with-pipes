@@ -138,7 +138,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `cd31bd02464f` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `6b206eae08ec` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `0caead68a6c3` | `6f4bfba80ef3` | `d178d86dca2b` |
-| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `73e37788e5c6` | `2bb665596390` | `6f4bfba80ef3` |
+| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `b2350957e6ff` | `2bb665596390` | `6f4bfba80ef3` |
 | 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `12a2f3a988b2` | `edbc5e8d0e62` | `2bd17608388d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update

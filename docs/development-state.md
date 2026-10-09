@@ -199,7 +199,7 @@ still need their final squash rebases and six exact-head full gates.
 | 108 ownership-grpc-capture-resources | cd31bd02464f | f63fbe1de7c0 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 109 fix-grpc-tls-pool-identity | 6b206eae08ec | cd31bd02464f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 110 ownership-grpc-environment-cache | 0caead68a6c3 | 6b206eae08ec | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
-| 111 ownership-grpc-packed-options | 73e37788e5c6 | 93d088fb187d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 111 ownership-grpc-packed-options | b2350957e6ff | 0caead68a6c3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 112 ownership-grpc-connection-addresses | 12a2f3a988b2 | 73e37788e5c6 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
