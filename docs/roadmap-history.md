@@ -11247,3 +11247,9 @@ byte-for-byte after main fast-forward; raw commit message is exactly one line,
 under80 characters and without body/trailers/attribution. Compiler/runtime/tests/
 .github match the accepted PR head exactly. Next delivery is row24, FROM actual
 495411d ONTO actual squashda62127c, never from an immutable OLD parent.
+
+Duplicate post-merge main CI37975529386 was cancelled after all accepted PR101
+gates passed and source/runtime/tests/.github parity with actual squashda62127
+was verified. Cancellation is not acceptance. Row24 final source84c34acd0346
+rebases FROM actual495411d ONTO da62127. Compiler/runtime/tests match
+focused-accepted1741ab5; fresh production gates follow.

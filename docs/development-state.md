@@ -37,16 +37,16 @@ CI37969632273 production gates and roadmap_docs CI37969632440 pass at
 maps/sets and eligible old-storage reclamation. Phase1 is done; phase2 remains
 incomplete; phases3–6 are pending. Tracing remains the shared/runtime fallback.
 
-No PR is open. Row24 task-boundary delivery is final-rebasing FROM actual
-495411d33f6095c60ea54e56b7488d5770001a9a ONTO main da62127c. Current
-preparation1741ab5fa64e220cecb4ae248d9670494458e178 passed focused Linux
-CI37959126658. Preserve all ten root docs, verify compiler/runtime/tests match,
-retain the old published current under an immutable revision tag, publish with
-an explicit lease, then open the next PR. Require six production jobs and
-roadmap_docs at its exact head before explicit subject/empty-body squash.
-Row25 actual current base is1741ab5; final-rebase it only after the actual
+No PR is open. Row24 final source preparation is
+84c34acd0346724f2b419ce157fa9fef26bbf5a8 on actual main
+ da62127c92565d00c3116956e6a7f70ac735355e. Compiler/runtime/tests match
+focused-accepted1741ab5fa64e exactly; no fresh local gate is claimed. Publish
+this source and current handoff, then open the next focused PR. Require six
+production jobs and roadmap_docs at its exact head before explicit squash with
+`Own task result wrappers and preserve typed deadline aliases` and empty body.
+Row25 actual current base remains1741ab5; final-rebase it only after the actual
 row24 squash exists. OLD anchors stay fixed. Superseded PR101 CI37968881919
-is cancelled, not acceptance. Previous publication details remain in history.
+and duplicate post-merge main CI37975529386 are cancelled, not acceptance.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -65,7 +65,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | PR101 full CI follows; source matches focused-accepted495411d |
-| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
+| 24 ownership-task-boundaries | 84c34acd0346 | da62127c9256 | Source matches focused-accepted1741ab5; final full CI follows |
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
