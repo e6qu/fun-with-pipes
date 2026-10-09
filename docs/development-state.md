@@ -88,7 +88,8 @@ pass0.00/0.13–0.14s; an initial resolver invoked from root safely refuses with
 changing files. Current73 is006aba78f1f5f16406a4c7cca5864781f959cdcf on2990083331a2.
 Rows74–81 refresh passes8.66CPU/93.03elapsed with exact reviewed source
 inheritance; original probes and actual-WASI requirements remain unchanged.
-Next independent work refresh82–112 and corresponding scoped evidence.
+Rows82–89 refresh passes8.50CPU/93.22elapsed; both row85 commits and HTTP GC
+fixture controls remain intact. Next independent work refresh90–112 and scoped evidence.
 The table records actual bases; all earlier focused evidence predates these
 repairs unless stated otherwise. Each production delivery still needs its own
 final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
@@ -171,7 +172,7 @@ still need their final squash rebases and six exact-head full gates.
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | 67f022e93858 | 807afa9962aa | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
 | 88 ownership-channel-cycle-lifetimes | f194c55d4351 | 67f022e93858 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
-| 89 ownership-http2-body-roots | 59c59a882d67 | e15c6fc1f0c3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
+| 89 ownership-http2-body-roots | c2c14e491c30 | f194c55d4351 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | fb5765a9ec36 | 59c59a882d67 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 91 ownership-http2-peer-cleanup | 05f1a8841609 | fb5765a9ec36 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 92 ownership-grpc-peer-completion | 84b6d877fa9b | 05f1a8841609 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
@@ -256,7 +257,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
 | Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
-| Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
+| Rows79–88 typed holders and explicit cycles | 372375a15557b0c295cb5365b5536b4f3fe7f8ab | CI38011999875 queued on repaired source88 f194c55d4351; original holder/cycle/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.43/3.49s passes. Prior3f0c430/CI37982696642 predates the repairs; explicit draining does not prove automatic cycle reclamation |
 | Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 running on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
 | Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 running on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
