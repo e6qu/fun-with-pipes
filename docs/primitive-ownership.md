@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR102. Arrays, maps and sets own typed elements.
+The tables describe main through PR103. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -60,6 +60,16 @@ before buffers and outer storage. Copies retain aliases; replacement/removal
 releases displaced owners. Scalar payloads are skipped and boxed128-bit values
 retain their compatibility lifetime. Ordering, key identity and immutable
 aliases are preserved. General callback unwind remains prepared work.
+
+## Registered unwind cleanup
+
+The merged runtime cleanup stack releases registered owners and scoped files in
+LIFO order before failure, trap or cancellation invalidates their frames. It
+stops at the catching handler boundary; task switches preserve separate chains.
+Normal transfer unlinks registrations without releasing a transferred value.
+PR103 passed all six exact-head production jobs and the documentation audit.
+Automatic registration for remaining compiler/runtime ownership paths is
+prepared work; this is not complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
@@ -213,7 +223,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 25 | Runtime cleanup stack releases registered owners/scoped files before failure, trap or cancellation; task switching preserves cleanup scopes | Sequential CI; exactly-once/LIFO and handler boundaries; automatic owner registration remains later work |
 | 26 | Detached compiler reuse cells retain a cleanup lifetime; transfer clears holders, unused cells release lexically and on unwind | Sequential CI; old/young eligibility, flags and exceptional token paths |
 | 27 | Compiler call liveness protects actual owned references before later argument failures and at callee entry; boxed/worker and variant cleanup remain typed | Sequential CI; exactly-once release, aliases and cancellation before entry tick |
 | 28 | Runtime application owns its function and pending typed arguments until transfer/return; unwind releases them, and callers protect stack captures | Sequential CI; overapplication, scalar safety, primitive traps and cancelled entry |
@@ -320,7 +329,7 @@ not automatic cycle reclamation or general tracing-free support.
 
 ## Validation and limits
 
-Merged contracts through #102 passed their exact-head full platform gates.
+Merged contracts through #103 passed their exact-head full platform gates.
 Prepared ownership extensions remain subject to their own sequential full
 acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,

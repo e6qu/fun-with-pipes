@@ -22,10 +22,10 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --test gc -- -D warnings
+        run: cargo clippy --test http2_body_roots --test grpc_client_failure_text --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --test gc -- -D warnings
       - name: Scoped owners, capture rollback, full pool identities and packed storage
         if: ${{ !cancelled() }}
-        run: cargo test --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --no-fail-fast
+        run: cargo test --test http2_body_roots --test grpc_client_failure_text --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --no-fail-fast
       - name: Interpreter TLS pool identity
         if: ${{ !cancelled() }}
         run: cargo test --lib grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool -- --exact --nocapture

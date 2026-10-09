@@ -11907,3 +11907,59 @@ Fixture propagation row109: 95c74a9b4b45a7db16c1646617bb065af904e5aa → cf14552
 Fixture propagation row110: 09ec98b12c5db0064e85de435cdbe2694e8fe69e → 393456e6e5ca161b76ce18ead2ca6145f86a6be1, actual basecf14552bdba50683ad04221bfe483474b1d274bd. Retained roadmap/revision-110-09ec98b12c5d before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
 
 Fixture propagation row111: 4fd2d18953859eee788d8d383280acd1946162bc → a4f347499f19e352351bdded9fa5dd1ef7878716, actual base393456e6e5ca161b76ce18ead2ca6145f86a6be1. Retained roadmap/revision-111-4fd2d1895385 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row112: 93783d4ffda4744130d696c2e997c4a50c445b27 → 215d7badbd49fc5ce47a6857fa180dc16fd37f18, actual basea4f347499f19e352351bdded9fa5dd1ef7878716. Retained roadmap/revision-112-93783d4ffda4 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+## PR103 accepted and next guard delivery (2026-10-10 local time)
+
+All six production jobs in CI37982307280 and roadmap_docs CI37982307209 pass
+at exact1537961db5da753e123162aa8441cb4488d9a66b. Authorized explicit match-head
+squash at2026-10-09T21:00:38Z produces main3bb34267997479794aeac9fff3447da94c16ca4d.
+Entire Git message is the one line `Release registered owners before nonlocal unwind`,
+48 characters, empty body, no trailers or attribution. Full tree77e1008656d4330285a658cc111e596a9fda720f
+exactly matches the accepted PR head. Duplicate main CI37990763675 was cancelled
+only after accepted gates and tree parity; it is not acceptance.
+
+Serial guarded fixture propagation90–112 passes3.50CPU/98.11elapsed. Each
+actual old base and previous head is retained in the entries above; source
+compiler/runtime/workflows remain byte-identical and both fixture files match
+accepted normal evidence exactly. All previous heads were retained remotely
+before explicit leased rewrites. ORIGINAL OLD anchors/tags never moved.
+The durable last-stage journal is /private/tmp/fwp-fixture-propagation-journal.json;
+root tables/history preserve all actual refs. No full local gate was run.
+
+Before main fast-forward, all ten root docs were saved and SHA256-verified in
+/private/tmp/fwp-main-docs-pre103. Restore verified all ten byte-exact after
+fast-forward fromc7b3e3f to3bb3426. Main docs now mark queue25 runtime cleanup
+merged, guard sampling repair next and queue26 afterward. Ownership remains
+incomplete and tracing is still the compatibility fallback.
+
+Guard repair final sourced4c832188d3563e85410adeb8763bf6a74f4833b is rebased
+from actualc7b3e3f onto main1033bb3426. Only ten authoritative docs conflicted;
+scripts and roadmap workflow match focused-accepted063f4ca exactly. Updated
+root audit passes44-doc/106-pair/tag/whole-message checks0.31CPU/2.52elapsed.
+Final integration repeat under the original root guard passes all three checks
+0.20CPU/1.36elapsed;
+new publication follows with a separate exact-head full production gate.
+
+PR104 https://github.com/e6qu/fun-with-pipes/pull/104 opens for the guard repair
+after103 merges. Current head925daae1a95e3d68f4d622b72d8f642aa5a4346b has
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. The initial doc
+snapshot3f72a0d incorrectly copied the initial local timing into the final
+repeat; corrected to actual0.20CPU/1.36elapsed before acceptance. Code, scripts,
+tests and workflows are byte-identical across the timing-only correction.
+Superseded full CI37991334046 is cancelled; old roadmap_docs37991334167 passed
+but is not the new head's gate. Require all six fresh exact-head jobs plus
+roadmap_docs before explicit squash, single-line subject and empty body.
+
+## Row26 preparation after PR103
+
+Rebase previous published bb77c078354f14c3f8e205f17bde2edb199b945c from actual
+6421c025b3d53ed59a177aac1b0f9fff662e1736 onto main103
+3bb34267997479794aeac9fff3447da94c16ca4d produces published
+0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests are unchanged;
+only the ten authoritative documentation conflicts were resolved. Old publication
+is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
+reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
+format0.32/0.59s. This preparation is not a production gate or merge; final
+rebase starts from actual3bb3426 after the guard repair merges.
