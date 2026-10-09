@@ -1,0 +1,42 @@
+name: Focused HTTP2 body roots bounds and peer cleanup
+
+on:
+  push:
+    branches: [ownership-evidence-http2-roots]
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain review heads for merged preparation references
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Handoff links, immutable anchors and commit subjects
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        if: ${{ !cancelled() }}
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test http2_body_roots --test http2_peer_cleanup --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test library_resources --test stack_match_ownership --test resource_match_context --test old_reclamation --test ownership --test gc -- -D warnings
+      - name: Borrowed body roots, raw body limits and failed peer metadata copies
+        if: ${{ !cancelled() }}
+        run: cargo test --test http2_body_roots --test http2_peer_cleanup --test tls_alpn_roots --test tls_peer_subject_ownership --test tls_listener_ownership --test library_resources --test stack_match_ownership --test resource_match_context --test old_reclamation --test ownership --no-fail-fast
+      - name: Actual tracing churn and bounded live memory
+        if: ${{ !cancelled() }}
+        run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Primitive boundary consistency
+        if: ${{ !cancelled() }}
+        run: cargo test --lib ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts -- --exact
+      - name: Resource metadata and fusion order
+        if: ${{ !cancelled() }}
+        run: cargo test --lib resource::tests -- --nocapture
