@@ -979,6 +979,160 @@ mod tests {
     use super::*;
 
     #[test]
+    fn body_bounds_and_error_order_agree_with_native() {
+        use crate::ir::{Body, Func};
+        use std::process::Command;
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let _peer = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let (socket, _) = listener.accept().unwrap();
+        let conn = Rc::new(RefCell::new(Conn::new(socket, "local".into(), None)));
+        let stream = Rc::new(RefCell::new(Stream::default()));
+        let call = wrap(Native::Grpc(Obj::Call(Rc::new(Call {
+            conn: conn.clone(),
+            stream: stream.clone(),
+        }))));
+        let bytes = [0, 255, 192, 128, 10];
+        // Size is checked before completion, then reset/dead, then timeout.
+        let cases = [
+            (i64::MIN, 0, true, false, false),
+            (-1, 0, true, false, false),
+            (-1, 1, true, false, false),
+            (0, 0, true, false, false),
+            (0, 1, true, false, false),
+            (5, 5, true, false, false),
+            (4, 5, true, false, false),
+            (i64::MAX, 5, true, false, false),
+            (-1, 0, false, true, false),
+            (-1, 0, false, false, true),
+            (-1, 0, false, false, false),
+            (-1, 1, false, true, false),
+            (-1, 0, true, true, true),
+        ];
+        let empty = Program::default();
+        let mut interpreter = Interp::new(&empty, Box::new(Vec::<u8>::new()));
+        let mut expected = String::new();
+        for (max, len, end, reset, dead) in cases {
+            {
+                let mut s = stream.borrow_mut();
+                s.data = bytes[..len].to_vec();
+                s.remote_end = end;
+                s.reset = reset.then(|| "reset".into());
+            }
+            conn.borrow_mut().dead = dead.then(|| "dead".into());
+            let result = body(
+                &mut interpreter,
+                &[
+                    Value::I64(max),
+                    Value::data(0, vec![Value::I64(0)]),
+                    call.clone(),
+                ],
+            )
+            .unwrap_or_else(|_| panic!("interpreter body failed"));
+            match &result {
+                Value::Data(0, fields) => {
+                    expected.push_str("ok:");
+                    for byte in bytes_of(&fields[0]).iter() {
+                        use std::fmt::Write;
+                        write!(&mut expected, "{byte:02x}").unwrap();
+                    }
+                    expected.push('\n');
+                }
+                Value::Data(1, fields) => {
+                    use std::fmt::Write;
+                    writeln!(&mut expected, "err:{}", int(&fields[0])).unwrap();
+                }
+                _ => panic!("unexpected body result"),
+            }
+        }
+        assert_eq!(expected, "ok:\nok:\nerr:413\nok:\nerr:413\nok:00ffc0800a\nerr:413\nok:00ffc0800a\nerr:0\nerr:0\nerr:408\nerr:413\nok:\n");
+
+        let unit = MT::unit();
+        let program = Program {
+            funcs: vec![
+                Func {
+                    name: "available".into(),
+                    arity: 1,
+                    locals: vec![unit.clone()],
+                    ty: MT::Fun(Box::new(unit.clone()), Box::new(MT::con("std::Bool"))),
+                    body: Body::Prim("tls.available".into()),
+                },
+                Func {
+                    name: "web".into(),
+                    arity: 0,
+                    locals: vec![],
+                    ty: unit,
+                    body: Body::Prim("http2.connect".into()),
+                },
+            ],
+            exports: vec![("available".into(), 0)],
+            ..Program::default()
+        };
+        let (generated, _) = crate::cgen::generate_library(&program, "body_bounds").unwrap();
+        let rows = cases
+            .iter()
+            .map(|&(max, len, end, reset, dead)| {
+                let max = if max == i64::MIN {
+                    "INT64_MIN".into()
+                } else {
+                    max.to_string()
+                };
+                format!(
+                    "{{{max},{len},{},{},{}}}",
+                    u8::from(end),
+                    u8::from(reset),
+                    u8::from(dead)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        let fixture = r#"
+struct body_case {int64_t max;size_t len;int end,reset,dead;};
+static const struct body_case cases[]={CASES};
+int main(void){
+ fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
+ g_conn *c=g_conn_new(-1,"local",0);g_stream *s=g_stream_new(c,1);
+ V call=g_call_value(c,s,1,0);
+ struct {uint32_t tag,n;V f[1];} duration={0,1,{0}};
+ const unsigned char bytes[]={0,255,192,128,10};
+ for(size_t i=0;i<sizeof cases/sizeof *cases;i++){
+  const struct body_case *p=&cases[i];s->data.len=0;h2b_put(&s->data,bytes,p->len);
+  s->remote_end=p->end;free(s->reset);s->reset=p->reset?strdup("reset"):0;
+  free(c->dead);c->dead=p->dead?strdup("dead"):0;
+  V r=fwp_p_http2_body((V)p->max,PTR(&duration),call);
+  if(OBJ(r)->tag==0){V b=OBJ(r)->f[0];printf("ok:");for(size_t j=0;j<STR(b)->len;j++)printf("%02x",(unsigned char)STR(b)->d[j]);puts("");}
+  else printf("err:%lld\n",(long long)(int64_t)OBJ(r)->f[0]);
+ }
+ FWP_KEEP_ALIVE(call);fwp_lib_finish();return 0;
+}
+"#.replace("CASES", &rows);
+        let dir = crate::cgen::TempDir::new("http2-body-bounds").unwrap();
+        let exe = dir.join("probe");
+        let needle =
+            "    g_call *k = WCALL(call);\n    int64_t mx = (int64_t)max;\n    if (mx < 0) mx = 0;";
+        assert_eq!(generated.matches(needle).count(), 1);
+        let old = generated.replacen(needle, "    g_call *k = WCALL(call);\n    int64_t mx = (int64_t)max;\n    /* omit negative max clamp */", 1);
+        for opt in ["-O1", "-O2"] {
+            crate::cgen::compile_c(&format!("{old}\n{fixture}"), &exe, opt).unwrap();
+            let out = Command::new(&exe).output().unwrap();
+            assert!(out.status.success(), "old body: {out:?}");
+            assert_ne!(out.stdout, expected.as_bytes(), "old bound must differ");
+            crate::cgen::compile_c(&format!("{generated}\n{fixture}"), &exe, opt).unwrap();
+            for poison in ["0", "1"] {
+                let out = Command::new(&exe)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", poison)
+                    .output()
+                    .unwrap();
+                assert!(out.status.success(), "{opt}/{poison}: {out:?}");
+                assert_eq!(out.stdout, expected.as_bytes());
+                assert!(out.stderr.is_empty(), "{out:?}");
+            }
+        }
+    }
+
+    #[test]
     fn websocket_messages_deflate_and_inflate() {
         for m in [&b""[..], b"a", &b"abc".repeat(5000)] {
             let z = ws_deflate(m);

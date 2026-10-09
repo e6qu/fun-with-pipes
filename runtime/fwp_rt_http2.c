@@ -271,6 +271,7 @@ static V w_err_code(int64_t code) {
 static V fwp_p_http2_body(V max, V timeout, V call) {
     g_call *k = WCALL(call);
     int64_t mx = (int64_t)max;
+    if (mx < 0) mx = 0;
     int64_t until = fwp_after(timeout);
     g_stream *s = k->s;
     for (;;) {

@@ -133,7 +133,7 @@ still need their final squash rebases and six exact-head full gates.
 | 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
 | 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
-| 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Test7.37/15.71s; lint6.23/13.16s and format0.46/0.86s pass |
+| 89 ownership-http2-body-roots | 59c59a882d67 | e15c6fc1f0c3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | 9c2787630b7f | f45a7dbbd33d | Body fixture7.47/15.54s; lint5.85/12.63s and format0.46/0.86s pass |
 | 91 ownership-http2-peer-cleanup | 8a06d5df63ee | 9c2787630b7f | Failure cleanup test7.33/15.65s; lint5.73/12.81s and format0.46/0.86s pass |
 | 92 ownership-grpc-peer-completion | ac6e5cc39ac5 | 8a06d5df63ee | Completion test10.52/21.18s; lint5.77/12.88s and format0.45/0.87s pass |
@@ -280,8 +280,10 @@ related resources, actual tracing churn and docs. It scopes the stale-register
 control to GCC x86-64 and keeps the original probe on other compilers. ARM
 focused checks pass15.46CPU/31.62elapsed after guarded clean. All positive
 and strict omission assertions remain; no diagnostics or extra compiler
-dependency remains. Publish this fixture repair in row89, then propagate
-through later preparations alongside the validated client fixture in row102.
+dependency remains. Fixture repair is published in row8959c59a882d67d1f8ea191a1cf576c395e3a22522,
+unchanged actual basee15c6fc. Revision089-f45a7dbbd33d retains the prior head.
+Propagate through90–112 from their actual recorded bases, including the
+validated row102 static fixture repair.
 
 Client CI37985348012 fails its typed handler check. Static handler alone fails
 37987135273. Diagnostic37987861321 shows correct code14 and transport-failure
@@ -292,8 +294,8 @@ related ownership/context/startup tests, actual tracing churn and docs. ARM
 focused checks pass8.63CPU/17.84elapsed under the original root guard.
 Validated static fixture objects are published in row102488801a9f2f74734b60e9516edd8ca92a32edf1d,
 with unchanged actual basec6b5ad8. Revision102-222e199ca735 retains the prior head.
-Rebase103 from its actual old base222e199 onto488801a, then later rows; combine
-with the pending HTTP2 fixture propagation once its normal Linux run passes.
+Propagate90–112 together from their recorded actual bases: new row89 owns the
+HTTP2 fixture repair; row102488801a owns the static fixture repair.
 
 Rows109–112 are published with actual refreshed predecessor bases in the table.
 Combined storage evidencefb9e59fef93ead188c8b8f82ce7147290a9b5e6e,
