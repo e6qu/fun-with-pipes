@@ -11253,3 +11253,454 @@ gates passed and source/runtime/tests/.github parity with actual squashda62127
 was verified. Cancellation is not acceptance. Row24 final source84c34acd0346
 rebases FROM actual495411d ONTO da62127. Compiler/runtime/tests match
 focused-accepted1741ab5; fresh production gates follow.
+
+PR102 publishes51cf1c6987888ddbe69fdeb79455208fb1eb077a after final source
+84c34acd0346 and current documentation publication. Row24 actual base is
+da62127c9256. Guarded portable audit0.31/2.49s passes all44 Markdown link
+sets,106 immutable pairs/tags, contiguous order and entire commit messages.
+No fresh local source gate is claimed; source matches focused-accepted1741ab5.
+
+Row59 guarded clean0.00/0.14s, TLS listener/session teardown8.61/19.51s,
+clippy2.46/5.00s and format0.35/0.75s pass. Row62 refresh
+c61df653dfb261585a419c2e5cd05869134de99f uses actual base044ceae9f0c5;
+compiler/runtime match original. Original CURRENT0be508308064 is retained
+under immutable revision before lease publication; fresh checks follow.
+PR102 head51cf1c698788 starts productionCI37975866229 and roadmap_docs37975866346.
+Queued gates are not acceptance.
+
+Row60 guarded clean0.00/0.13s, library File/session/HTTP2 resource disposal
+8.04/18.34s, clippy2.48/4.99s and format0.41/0.86s pass. Row63 refresh
+d0e29ddbf1825d05d6866622420d68117c4e9e26 has actual basec61df653dfb2;
+compiler/runtime match original. Old CURRENT66e80d399e65 is retained under
+immutable revision tag before lease publication; fresh checks follow.
+
+Row61 guarded clean0.02/0.14s, gRPC listener cancellation9.94/19.99s,
+clippy2.46/4.95s and format0.44/0.86s pass. External lifetimes evidence
+cd3a9d666bb21d6a682e541ae985e9f10de2e096 starts CI37976525768. Row64 refresh
+446d60c378dccac6c44b75d10f4d52f4bfeb98c4 uses actual based0e29ddbf182;
+compiler/runtime match original. Old CURRENTae05b2bfc32c is retained under
+immutable revision tag before explicit-lease publication; fresh checks follow.
+
+Row62 guarded clean0.02/0.13s, TLS cache failure/retry7.17/16.27s,
+clippy2.43/4.95s and format0.40/0.73s pass. Channel/library evidence
+CI37974795204 passes all focused Linux ownership/tracing and document checks.
+Row65 refresh46f7f4b172266e2805d087e1fc3fb39640e4e2ae uses actual
+base446d60c378dc; compiler/runtime match original. Old CURRENT2ba7084abe25
+is retained under immutable revision tag before explicit-lease publication.
+Unboxed worker tests follow; no general speed claim is made.
+
+Row63 guarded clean0.02/0.13s, bounded ALPN preparation7.54/16.19s,
+clippy2.45/4.96s and format0.45/0.86s pass. Row66 refreshec16c66306869d0b7626150020c6ab51ca9e4a1f
+uses actual base46f7f4b17226; compiler/runtime match original. Old CURRENT
+b728cf5f2adb is retained under immutable revision tag before lease publication.
+Peer-subject allocation/buffer checks follow.
+
+Row64 guarded clean0.00/0.14s, connection/handshake cancellation7.77/17.05s,
+clippy2.31/4.60s and format0.44/0.60s pass. Row67 refresh
+bbde0fa9c2544399bdff36a5f308d17a7c2fa8af uses actual baseec16c6630686;
+compiler/runtime match original. Old CURRENT22b95b0ddb74 is retained under
+immutable revision tag before explicit-lease publication; protocol-root checks follow.
+
+Row65 guarded clean0.00/0.14s, both unboxed worker/field transfer tests
+8.07/16.86s, clippy2.36/4.73s and format0.35/0.62s pass. These are controlled
+ownership/allocation checks, not a general elapsed-speed claim. Row68 refresh
+933deb78f600c935ff01a1101a2b55c72c152620 uses actual basebbde0fa9c254.
+The five mandatory scratch output-pointer fixes are already inherited identically;
+the retained timer oracle compares raw interpreter and native output under
+preemption, stress, verification and poison variants, including reversed wake order.
+Only CLI/tracing harness repairs differ from original source/tests. Old CURRENT
+7d8ab6719e55 remains under its immutable revision before lease publication.
+Fresh timer checks follow.
+
+Row66 guarded clean0.00/0.13s, peer-subject allocation/buffer test7.47/16.47s,
+clippy2.33/4.59s and format0.44/0.84s pass. Row69 refresh
+7047b100dbbe2ebcfa7e22aed865aa5e80594522 uses actual base933deb78f600.
+Compiler/runtime and nested boxing fixtures match the original; only inherited
+CLI/tracing harness repairs differ. Previous CURRENT821e6c1baaef is retained
+under roadmap/revision-069-821e6c1baaef before explicit-lease publication.
+Fresh nested-loop checks follow.
+
+Row67 guarded clean0.00/0.14s, ALPN owning-session root test6.99/14.97s,
+clippy5.72/11.65s and format0.44/0.84s pass. Shared target switched with
+guarded package clean0.00/0.13s to row68; focused timer-order check is running.
+
+Row68 timer-order test10.28/21.81s, clippy5.61/11.71s and format0.46/0.87s
+pass. Linux evidenceb9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a preserves
+source933deb78f600 byte-for-byte; CI37978789380 is queued, not acceptance.
+Row70 refresh41a76ee080e51b150df86ccef357c90b8ef21418 uses actual base
+7047b100dbbe. Compiler/runtime/File fixture match original; only inherited
+CLI/tracing harness repairs differ. Prior CURRENT0d09a61aaab7 is retained
+under its immutable revision tag before lease publication. Focused checks follow.
+
+CI37973911726 at7dfe64894b1dc1107859a5cde550850fdb672973 and
+CI37976525768 atcd3a9d666bb21d6a682e541ae985e9f10de2e096 pass the
+focused Linux cache/task and external resource lifetimes, actual tracing churn,
+primitive consistency and strong handoff audit. Neither replaces sequential
+production gates. Row69 nested boxing and both loop unwind tests14.44/29.19s
+pass; lint/format follow.
+
+Row69 clippy5.60/11.68s and format0.35/0.63s pass after all three focused
+nested-boxing/loop-unwind tests14.44/29.19s. Row71 refresh
+6fdf20ca82a90a4846cbf115ffe47046fc9824e6 uses actual base41a76ee080e5;
+compiler/runtime/File write fixture match original, with inherited CLI/tracing
+harness repairs preserved. Prior CURRENT8a061cb9b8ab is retained under an
+immutable revision tag before explicit-lease publication. Focused checks follow.
+
+Row70 guarded construction failure/cleanup test7.49/16.08s, clippy5.42/11.61s
+and format0.36/0.76s pass. Row72 refresh82e51ba8ea16294e1356e10e56993a1f7250e482
+uses actual base6fdf20ca82a9. Compiler/runtime and File I/O/byte-read fixtures
+match original; inherited CLI/tracing repairs remain. Prior CURRENTd4611644084a
+is retained under its immutable revision before explicit-lease publication.
+Fresh File I/O checks follow.
+
+CI37978789380 atb9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a passes all
+focused Linux TLS roots/worker/timer, related ownership, actual tracing churn,
+primitive consistency and strong doc checks. Row71 two File write tests8.14/17.09s,
+clippy5.55/11.78s and format0.35/0.75s pass. Row73 refresh
+3dc1c36adbad9db1a90cdaf29fd4bfeefdf403ee uses actual base82e51ba8ea16;
+both original frame preservation and fusion barrier commits survive unchanged.
+Only inherited CLI/tracing harness repairs differ in source/tests. Prior CURRENT
+3c87e1f63b51 is retained under its immutable revision before lease publication.
+Fresh focused resource frame checks follow.
+
+Row72 all three File I/O and binary/text semantic tests14.85/30.79s pass.
+The raw interpreter oracle uses FWP_NO_OPT=1; native O1/O2 comparisons include
+GC on/off, stress/verification and reuse poison variants. Lint/format follow.
+
+Row72 clippy5.53/11.82s and format0.35/0.62s pass after the three focused
+semantic tests. Row74 refresh4155bc9fce74b0971b6ebd98cb6aea586fc18e49
+uses actual base3dc1c36adbad. Compiler/runtime and File count fixtures match
+original; inherited CLI/tracing repairs remain. Prior CURRENT4b5da4aa946a
+is retained under its immutable revision before lease publication.
+Fresh owner-count checks follow.
+
+Row73 three resource frame integrations12.65/25.47s and all three resource
+metadata/fusion units3.81/7.73s pass. Row75 refresh
+5179067d6635010332886473133462d1d4a0f1bf uses actual base4155bc9fce74.
+Compiler/runtime and discard fixtures match original, with inherited CLI/tracing
+repairs intact. Previous CURRENTdb3bcf0da8d6 is retained under its immutable
+revision before explicit-lease publication. Fresh focused checks follow.
+
+Row73 clippy6.13/12.55s and format0.44/0.84s pass after integration and
+metadata/fusion units. Row74 independent File aliases/borrowed-I/O unwind
+test8.17/18.29s passes. Row76 refreshda4acc3986370cb2e2efca1e294cd7674f19ad52
+uses actual base5179067d6635; compiler/runtime and File boundary fixtures match
+original with inherited CLI/tracing repairs preserved. Prior CURRENTb4860bf2c392
+is retained under an immutable revision before lease publication. Checks follow.
+
+Row74 clippy5.82/12.43s and format0.43/0.83s pass. Row75 discard test
+13.04/26.17s and clippy5.83/12.17s pass. Linux evidence
+4a448ea21e5ca197b8e7efed1796a8578d7e0761 is source-identical toda4acc398637;
+CI37980022336 is queued, not acceptance. Row77 refresh
+295b0da5c1f02b448a62d425da69f359d3e70932 uses actual baseda4acc398637.
+Compiler/runtime/tests and actual WASI workflow match original, except inherited
+CLI/tracing harness repairs. Previous CURRENTb4482c259c1e is retained under
+its immutable revision before lease publication. Actual WASI proof needs CI.
+
+Row75 format0.44/0.83s passes. Guarded roadmap audit0.37/2.81s passes
+all44 tracked Markdown link/heading sets,106 immutable pairs and tag identities,
+contiguous queue and whole commit messages after preparations through row77.
+Row78 refresh1a5f5ba98a322efeabae30286e985b76d0843356 uses actual base295b0da5c1f0.
+Compiler/runtime/tests and WASI workflow match original except inherited CLI/GC
+harness repairs. Old CURRENT9609b73ef5ed is retained under its immutable
+revision before lease publication. Actual WASI proof awaits fresh runner gates.
+
+Row76 runtime File result test18.99/38.40s, clippy5.98/12.65s and
+format0.46/0.84s pass. Actual WASI evidence
+dc731c19e001bdee07c71d866d707d681682b394 is source-identical to1a5f5ba98a32;
+CI37980359907 is queued, not acceptance. Row79 refresh
+76374abb1077fd1255fbacc0f72ac190476689d2 uses actual base1a5f5ba98a32;
+compiler/runtime and resource-field fixtures match original with inherited
+CLI/tracing repairs intact. Previous CURRENT35c2aeb2923e is retained under
+its immutable revision before lease publication. Fresh focused checks run.
+
+Row79 resource frame field test10.09/21.47s, clippy6.10/13.03s and
+format0.55/1.08s pass. Row80 refresh8454a97667bb668b9c75221b55e5d57356b45745
+uses actual base76374abb1077; compiler/runtime and aligned path fixture match
+original with inherited CLI/tracing repairs intact. Previous CURRENTe7d3882b67ae
+is retained under its immutable revision before lease publication. Checks run.
+
+Row80 both aligned path/allocation and raw interpreter source tests10.54/21.29s,
+clippy6.87/13.94s and format0.54/1.07s pass. Row81 refresh
+d39b6145cb559e17ac3c1005959f2cabd6c22980 uses actual base8454a97667bb.
+Compiler/runtime and disposal fixture match original, with inherited CLI/tracing
+repairs preserved. Old CURRENTfaac017dc60d remains under its immutable revision
+before lease publication. Fresh focused storage disposal check runs.
+
+Row81 storage disposal/finalizer removal test8.53/19.18s passes. Row82 refresh
+47abf911f844825e2ab05f328b57e237c7471298 uses actual based39b6145cb55;
+compiler/runtime and failed-construction/registry fixture match original, with
+inherited CLI/tracing harness repairs. Previous CURRENT06c93eff77af is retained
+under an immutable revision before lease publication. Fresh focused checks follow.
+
+Row81 clippy6.72/13.84s and format0.45/0.84s pass after storage disposal
+test8.53/19.18s. Shared package clean0.00/0.14s precedes the bounded row82
+failed-constructor disposal check. No local full gate was run.
+
+Row82 failed constructor storage and finalizer-registry test8.16/18.70s passes.
+Row83 refresh6d3fcd7444ad1c3fb78efbef9e500873fc5dd10b uses actual base47abf911f844.
+Compiler/runtime and unboxed resource variant fixtures match original with
+inherited CLI/tracing harness repairs preserved. Previous CURRENTf3c9ee4ec354
+is retained under its immutable revision before lease publication. Checks follow.
+
+Row82 clippy6.09/12.99s and format0.44/0.83s pass after failed-constructor
+storage disposal8.16/18.70s. Shared package clean0.00/0.14s precedes the
+guarded row83 resource variant check. No local full gate was run.
+
+Row84 refresh2f67969e9985f96584601447080c4bb84bf572e8 uses actual base6d3fcd7444ad.
+Compiler/runtime and binding-path fixtures match original, with inherited CLI/GC
+harness repairs intact. Previous CURRENTd2936a008fd2 remains under its immutable
+revision before explicit-lease publication. Fresh focused checks follow.
+
+Row83 clippy6.31/13.11s and format0.44/0.83s pass after the resource variant
+test10.02/22.30s. Row85 refreshc0263af654c4735703276f3f45f4b784cd66c36f
+uses actual base2f67969e9985. Both nominal scrutinee and stack-child root repair
+commits survive unchanged; source/test differences from original are inherited
+CLI/tracing harness repairs only. Prior CURRENT97dca7626158 is retained under
+an immutable revision before lease publication. Fresh focused checks follow.
+PR102 Linux test passes; regular Intel macOS remains running, not acceptance.
+
+Row84 binding-path test10.45/23.67s, clippy6.18/12.88s and format0.45/0.83s
+pass. Row86 refreshd0e41c87e547f6f090e2da91799279572de505b2 uses actual
+basec0263af654c4. Compiler/runtime and record binding fixtures match original
+with inherited CLI/tracing repairs intact. Old CURRENT5915ac0607ac is retained
+under an immutable revision before lease publication. Focused checks follow.
+
+Linux File/frame evidenceCI37980022336 at4a448ea21e5ca197b8e7efed1796a8578d7e0761
+passes lint/format, all focused File/frame/ownership tests, resource metadata/fusion
+units, actual tracing churn and strong doc audit. It does not replace sequential
+production gates. Row85 both nominal variant and stack-child alias tests
+12.49/27.27s pass; lint/format follow. Actual WASI evidence is running.
+
+Row85 clippy6.11/13.31s and format0.44/0.83s pass after both nominal/stack-child
+tests12.49/27.27s. Row87 refreshb83d77ce5da8f3f1eb2d353bc8d8c76541043ae2
+uses actual based0e41c87e547; compiler/runtime and source context fixture match
+original with inherited CLI/tracing repairs intact. Old CURRENTf08611023cec
+is retained under an immutable revision before lease publication. Checks follow.
+
+Actual WASI evidenceCI37980359907 atdc731c19e001bdee07c71d866d707d681682b394
+passes required real WASI File/Task/Channel counts, free variants, WebAssembly
+compiler lint, related native File/frame/ownership tests, actual tracing churn
+and strong doc audit. It does not replace sequential production gates. Row86
+record binding test10.49/22.84s passes. Row88 refresh
+e15c6fc1f0c34e458d029861976734befaf9976a uses actual baseb83d77ce5da8;
+source and explicit-cycle fixtures match original with inherited CLI/GC repairs.
+Old CURRENTe91dcb307c61 is retained before lease publication. Explicit draining
+is tested; automatic unreachable-cycle reclamation remains unproved.
+
+PR102 all six CI37975866229 jobs and roadmap_docs CI37975866346 pass at
+51cf1c6987888ddbe69fdeb79455208fb1eb077a. Explicit subject/empty-body
+squash merged2026-10-09T19:41:46Z asc7b3e3f7433b47686c82426173b97f368b792c56.
+Raw stored message is exactly one line, 58 characters, without trailers.
+Compiler/runtime/tests/workflows match accepted head byte-for-byte. Fresh
+pre102 ten-doc snapshot restored byte-for-byte after main fast-forward.
+Duplicate main CI37981976609 cancelled only after parity; not acceptance.
+Row86 clippy6.03/12.91s and format0.41/0.86s pass. Next row25 final rebase
+uses actual base1741ab5fa64e and actual merged squashc7b3e3f7433b.
+
+Row25 final source1e9a5495d44f7e9b4fca2709b5e7059a452548f2 has actual
+main basec7b3e3f7433b. Compiler/runtime/tests match focused-accepted6421c025
+byte-for-byte. Publication docs carry merged task contracts and current roadmap
+preparations through row88; original anchors remain fixed. Fresh audit passes.
+
+Guarded audit0.32/2.51s passes all44 doc sets and106 immutable pairs/tags
+after row25 actual-main rebase. Final publication1537961db5da753e123162aa8441cb4488d9a66b
+preserves focused-accepted6421c025 source/runtime/tests byte-for-byte. Retained
+revision-025-6421c025b3d5 precedes explicit-lease publication. PR103 is the
+only open production PR; fresh exact-head seven-job acceptance remains required.
+
+Row87 raw source nominal lifetime test13.09/26.43s passes. Row89 refresh
+f45a7dbbd33d628bee7982c392c83f920a803725 uses actual basee15c6fc1f0c3;
+compiler/runtime and borrowed HTTP2 body fixtures match original with inherited
+CLI/tracing harness repairs intact. Original OLDd29dda936dff remains fixed;
+previous CURRENT is also retained under revision-089 before lease publication.
+Fresh focused borrowed-root checks follow.
+
+Row87 clippy6.14/13.07s and format0.45/0.86s pass after raw source test
+13.09/26.43s. Row88 cycle/queue tests13.30/26.87s pass. Focused Linux
+evidence3f0c430477bf261a54cbffb3c39a17826e7677f5 is source-identical toe15c6fc1f0c3;
+CI37982696642 is queued, not acceptance. Row90 refresh
+9c2787630b7f99a055a18148f4a98ef8c20d1acc uses actual basef45a7dbbd33d.
+Compiler/runtime/body fixtures match original with inherited CLI/GC repairs.
+OLD6f310b5483a8 stays fixed; previous CURRENT is retained under revision-090
+before lease publication. Fresh limits/error-order checks follow.
+
+Row88 clippy5.94/13.04s and format0.46/0.87s pass after both cycle/queue
+tests13.30/26.87s. Row89 major-collection borrowed body root test7.37/15.71s
+passes. Row91 refresh8a06d5df63ee1054a8742abf8674d4033fc313b6 uses actual
+base9c2787630b7f. Compiler/runtime and peer cleanup fixture match original with
+inherited CLI/GC repairs. OLD3c268c34d15b remains fixed; previous CURRENT is
+retained under revision-091 before lease publication. Fresh peer checks follow.
+
+Row89 clippy6.23/13.16s and format0.46/0.86s pass. Row90 extended body
+fixture7.47/15.54s passes. Row92 refreshac6e5cc39ac5e84df6564a54c97a58844fbf5b4e
+uses actual base8a06d5df63ee; compiler/runtime/completion fixtures match original
+with inherited CLI/GC repairs. OLD09751c8c65ac stays fixed; previous CURRENT
+is retained under revision-092 before lease publication. Checks follow.
+
+Row90 clippy5.85/12.63s and format0.46/0.86s pass after body fixture7.47/15.54s.
+Focused HTTP2 evidence9f564880378644a82f11bbf343956d1f6f019d48 is source-identical
+to8a06d5df63ee; CI37983077375 is queued, not acceptance.
+
+Row91 peer copy/Option failure cleanup test7.33/15.65s passes. Row93 refresh
+8d35ee99bd236e62a6a01159ead576bbdbe1b23e uses actual baseac6e5cc39ac5.
+Compiler/runtime/status fixture match original with inherited CLI/tracing repairs.
+OLDa92c951fa6d9 stays fixed; previous CURRENT is retained under revision-093
+before lease publication. Fresh status encoding/unwind checks follow.
+
+Row91 clippy5.73/12.81s and format0.46/0.86s pass after copy/Option failure
+cleanup7.33/15.65s. Guarded package clean0.00/0.14s precedes row92 completion
+lifetime checks. No local full gate was run.
+
+Row92 completion/child/detached-sender lifetime test10.52/21.18s passes.
+Row94 refresh4907857412c2c9954bc2f3c195fc3fdff6a6286d uses actual base8d35ee99bd23.
+Compiler/runtime/receive fixture match original with inherited CLI/tracing repairs.
+OLD8bd9e78743ab stays fixed; previous CURRENT is retained under revision-094
+before lease publication. Fresh receive temporary failure checks follow.
+
+Row92 clippy5.77/12.88s and format0.45/0.87s pass after completion
+test10.52/21.18s. Guarded package clean0.00/0.14s precedes row93 status text
+encoding/send/unwind checks. No local full gate was run.
+
+Row93 status send/cancellation cleanup test9.60/19.41s passes. Row95 refresh
+6e5d43aee3e7edd4d3c8a2accf6f8c9463a627df uses actual base4907857412c2.
+Compiler/runtime/decode fixture match original with inherited CLI/GC repairs.
+OLD6b82bc5b8b2f stays fixed; previous CURRENT is retained under revision-095
+before lease publication. Fresh streaming/decode temporary checks follow.
+
+Row93 clippy6.04/12.91s and format0.45/0.85s pass after status cleanup
+test9.60/19.41s. Guarded package clean0.00/0.14s precedes row94 receive buffer
+and status cleanup checks. No local full gate was run.
+
+Row94 receive failure/cancelled wait test9.19/18.86s passes. Row96 refresh
+bc69035d8c0f10d03b5e38ba2a498686475c07c2 uses actual base6e5d43aee3e7.
+Compiler/runtime/rendering fixture match original with inherited CLI/GC repairs.
+OLDea79bdee1191 stays fixed; previous CURRENT is retained under revision-096
+before lease publication. Fresh rendering/trap recovery checks follow.
+
+Row94 clippy5.64/12.70s and format0.46/0.85s pass after receive/cancel
+test9.19/18.86s. Row97 refresh25838578a6bfa5bd030af964d9fbe0cfd8132a69
+uses actual basebc69035d8c0f; compiler/runtime/send fixture match original with
+inherited CLI/GC repairs. OLD671ada6ec85d stays fixed; previous CURRENT is
+retained under revision-097 before lease publication. Fresh checks follow.
+
+Row95 clippy6.04/12.88s and format0.44/0.85s pass after decode cleanup
+test8.90/18.31s. Row98 refreshb7d41363523d08c941a903d2861284ef6a5aa691
+uses actual base25838578a6bf; compiler/runtime/encoding fixture match original
+with inherited CLI/GC repairs. OLD663ef599a438 stays fixed; previous CURRENT is
+retained under revision-098 before lease publication. Fresh checks follow.
+
+Row96 rendering partial/completed scratch cleanup test8.01/16.29s passes;
+lint/format follow. No production acceptance is inferred from queued runs.
+
+Row96 clippy6.17/13.04s and format0.46/0.84s pass after rendering
+test8.01/16.29s. Row99 refresh4872607fc02fb87af0f68770ccea47354320edb7
+uses actual baseb7d41363523d; compiler/runtime/canonical fixture match original
+with inherited CLI/GC repairs. OLD4114b709fb4b stays fixed; previous CURRENT is
+retained under revision-099 before lease publication. Fresh checks follow.
+
+Row97 send/cancel test7.91/16.42s, clippy5.87/13.11s and format0.46/0.87s
+pass. Row100 refresh7fe3282b14133707e35e7dd9f3f2bdd47c59c5e6 uses actual
+base4872607fc02f; compiler/runtime/response fixture match original with inherited
+CLI/GC repairs. OLDb44f53c9a60f stays fixed; previous CURRENT is retained under
+revision-100 before lease publication. Fresh response encoding checks follow.
+
+Row98 request encoding trap/cancel test7.94/16.22s, clippy5.93/13.02s and
+format0.47/0.88s pass. Linux serving evidence
+5fd8e12bd82a8f4ac43b26390a53691be04595fd is source-identical to7fe3282b1413;
+CI37984431678 is queued, not acceptance. Row101 refresh
+c6b5ad8c827cf734f0883c9daa676c0c0541a050 uses actual base7fe3282b1413.
+Compiler/runtime/client request fixture match original with inherited CLI/GC repairs.
+OLD2339ff08e421 stays fixed; previous CURRENT is retained before lease publication.
+Fresh client encoding/cancel checks follow.
+
+Row99 canonical partial/transcoder failure scratch test7.35/15.76s passes;
+lint/format follow. Queued runs remain pending verification.
+
+After server recovery, verified PR103 unchanged and queued, main atc7b3e3f,
+no compiler workload remaining and failure-text refresh222e199 completed locally
+but unpublished. Row99 clippy5.99/12.96s previously passed; remaining formatting
+0.45/0.87s now passes. Row102 refresh222e199ca7354ce59616b894d3e691d1428564e8
+uses actual basec6b5ad8c827c; source/runtime/tests match original except inherited
+CLI/GC repairs. OLD33661b298f96 stays fixed; previous CURRENT retained under
+revision-102 before explicit-lease publication. Fresh focused checks follow.
+
+Row100 served response trap/cancel test9.09/18.46s passes. Row103 refresh
+8ccdd092478cab8e0d30400f6703e4624ec1055f uses actual base222e199ca735.
+Compiler/runtime/client receive fixture match original with inherited CLI/GC repairs.
+OLDc48864ce7231 stays fixed; previous CURRENT is retained under revision-103
+before lease publication. Fresh retry/error/cancel checks follow.
+
+Row100 clippy5.76/13.10s and format0.46/0.87s pass after response
+test9.09/18.46s. Row104 refresh8bf114c615fe8a36b5e3daa55b232c0c50445dd6
+uses actual base8ccdd092478c; compiler/runtime/connect fixture match original
+with inherited CLI/GC repairs. OLDb244d5f7c423 stays fixed; previous CURRENT
+is retained before lease publication. Fresh cancellation checks follow.
+
+Row101 client encode/cancel test8.38/16.90s passes; lint/format follow.
+
+Row101 clippy5.92/13.01s and format0.46/0.86s pass after client request
+test8.38/16.90s. Row105 refresh4d4cbacd0a7850fd046bba139683e67e610d5b2c
+uses actual base8bf114c615fe; compiler/runtime/startup fixture match original
+with inherited CLI/GC repairs. OLDcb20833c018f stays fixed; previous CURRENT
+is retained before lease publication. Fresh startup rollback checks follow.
+
+Row102 copied failure text/trap/typed error test7.45/15.82s passes.
+Row106 refresh911fcf78c5c9a30c4eba3e2cfa63844005f3dee9 uses actual base4d4cbacd0a78.
+Compiler/runtime/context fixture match original with inherited CLI/GC repairs.
+OLD7a89dd017ae4 stays fixed; previous CURRENT is retained before lease publication.
+Fresh context/trap/cancellation checks follow; cleanup must not restore handlers.
+
+Row102 clippy5.96/13.43s and format0.46/0.87s pass after copied failure text
+test7.45/15.82s. Row103 client receive retry/error/cancel test10.13/20.40s
+passes. Focused Linux client evidenceed7ce4b60160d4e5f94a98760f2f05b005959201
+is source-identical to911fcf78c5c9; CI37985348012 is queued, not acceptance.
+
+Row103 clippy6.00/13.19s and format0.45/0.85s pass after receive
+test10.13/20.40s. Row107 refresh090422d2f3302b3ae2b3d6430a194783d1c25c16
+uses actual base911fcf78c5c9; compiler/runtime/scoped option fixture match original
+with inherited CLI/GC repairs. OLDea18e54f0eee stays fixed; previous CURRENT
+is retained before lease publication. Fresh scoped-owner checks follow.
+
+Row104 pending connect/handshake cancellation cleanup test7.73/16.98s passes;
+lint/format follow. No local full gate was run.
+
+Row104 clippy6.15/13.36s and format0.44/0.86s pass after connect
+test7.73/16.98s. Row108 refresh52668c476b2acc348ed611fc8d75e2b69504302f
+uses actual base090422d2f330; compiler/runtime/capture fixture match original
+with inherited CLI/GC repairs. OLD36ad63424530 stays fixed; previous CURRENT
+is retained before lease publication. Fresh capture/alias/rollback checks follow.
+
+Row105 background startup failed-task reservation cleanup11.73/23.95s passes;
+lint/format follow. PR103 exact-head roadmap_docs CI37982307209 passes, with
+all six production jobs still pending. No old/superseded acceptance is reused.
+
+Row105 lint stopped during guard disk sampling: du reported target/debug/deps/
+rmetaJAcTae disappeared while rustc changed temporary metadata. This is not lint
+acceptance. No workload remains; free disk113625788KiB and target143120KiB are
+within unchanged limits. Prepare a separate guard sampling fix that pauses the
+workload while measuring target size; retain all limits and fail on sampler errors.
+Row109 rebase95c74a9b4b45a7db16c1646617bb065af904e5aa is complete locally
+on actual base52668c476b2a, not published yet.
+
+## Local guard sampling repair preparation (2026-10-09)
+
+Row105 lint stopped because rustc removed temporary rmetaJAcTae while du
+traversed the shared target. Its startup test passed11.73CPU/23.95elapsed;
+lint remains incomplete and no formatting acceptance is claimed. The guard
+stopped correctly, with113625788KiB free disk and143120KiB target, so this
+was a sampling race rather than permission to increase resource limits.
+
+Separate fix-local-guard-sampling starts from mainc7b3e3f. It suspends the
+tracked workload for disk sampling, then retains the existing CPU-throttle
+resume decision. Sampling errors still kill the workload. All RSS, target,
+free-disk, CPU and deadline limits are unchanged. Three isolated Python
+integration checks prove pause/resume, fail-on-error and target-size rejection
+without allocating2GiB. The initial fixture escaped-newline failure was fixed
+by using a raw string. Final checks under the original shared-target guard:
+`python3 scripts/local-guard.py python3 /private/tmp/fwp-guard-sampling-worktree/scripts/test-local-guard.py`
+passes0.17CPU/1.24elapsed. FWP_GUARD_TEST_SOURCE pointing to the original root
+guard is the negative control: all three fail with workload-not-suspended,
+0.20CPU/0.87elapsed, as expected. No compiler/full gate ran locally.
+The roadmap_docs workflow adds the integration checks on Linux. Keep PR103
+frozen; deliver this repair as its own next PR after103, before queue26.
