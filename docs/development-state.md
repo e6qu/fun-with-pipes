@@ -78,7 +78,7 @@ retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
 pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
 0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
 native probes:66–73 refresh passes8.39CPU/91.73elapsed, preserving both
-resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed; continue82–112 in batches of at most eight through
+resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed and82–89 passes8.69/92.92s; continue90–112 in batches of at most eight through
 /private/tmp/fwp-refresh-counted-worker-arguments.py, then refresh failed full
 evidence. Completed fwp-counted-worker-refresh journals must not be rerun. Full runs and
 PR #109 continue; failed evidence never establishes support. Raw/clean logs:
@@ -138,7 +138,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 bench/regular ARM/ARM GC/docs pass; remaining exact-head gates running |
+| 30 ownership-selection-unwind | 8371fc50c9bf | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s, format0.34/0.62s and final audit0.43/3.40s pass; PR #109 Linux/bench/regular ARM/both GC/docs pass; Intel regular running |
 | 31 ownership-zip-unwind | ff84318a416d | 8371fc50c9bf | Six zip/selection checks20.99CPU/42.22elapsed, lint2.27/4.62s, format0.35/0.63s and audit0.44/3.48s pass; exact original source/probe parity; prior47776e7 retained before publication; final actual-squash rebase and all gates required |
 | 32 ownership-fold-unwind | 9aed23988b19 | ff84318a416d | Nine fold/runtime-call checks24.14CPU/48.48elapsed, lint2.33/4.77s, format0.35/0.62s and audit0.44/3.58s pass; exact original source/probe parity; priorc434692 retained before publication; final actual-squash rebase and all gates required |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
@@ -197,7 +197,7 @@ still need their final squash rebases and six exact-head full gates.
 | 86 ownership-resource-record-binding-kinds | f5a017db54da | 1236f09a1d85 | Test10.49/22.84s; lint 6.03/12.91s and format 0.41/0.86s pass |
 | 87 ownership-nominal-source-context | 08beb7c2bc23 | f5a017db54da | Raw source/native test 13.09/26.43s; lint 6.14/13.07s and format 0.45/0.86s pass |
 | 88 ownership-channel-cycle-lifetimes | b2d374878677 | 08beb7c2bc23 | Two cycle/queue tests 13.30/26.87s; lint 5.94/13.04s and format 0.46/0.87s pass |
-| 89 ownership-http2-body-roots | 9d8a6fb2a7df | acce7492f8d3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
+| 89 ownership-http2-body-roots | 177a08a204d7 | b2d374878677 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | 71d875caed41 | 9d8a6fb2a7df | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 91 ownership-http2-peer-cleanup | 36ea28337198 | 71d875caed41 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 92 ownership-grpc-peer-completion | 5b15ee436b69 | 36ea28337198 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
@@ -272,7 +272,7 @@ accepts a current production head. Superseded runs are archived in history.
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 has ARM regular and Linux failures on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. Intel regular continues; bench, both macOS GC stress jobs and roadmap_docs pass; mandatory actual WASI executed on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
+| Complete prepared ownership queue through 112 | 3a97905ca9801d4751f02798bc7240ddba2d8ccd | Full evidence38016929326 fails Linux and both regular macOS jobs on source112 996d5ee4ef4f: unchanged aliases worker-argument boxing assertion in unboxed_worker_locals. All jobs complete; bench, both macOS GC stress jobs and roadmap_docs pass; actual WASI count/File disposal checks pass on Linux. Source/native probes/scripts/production workflows are byte-identical; strong audit 0.42/3.36s passes. Runner-only evidence branch, no additional PR; never substitutes for each sequential PR head |
 | Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI 38015942823 passes on repaired source112 996d5ee4ef4f; all 21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit 0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI 37992657684 is historical |
 | Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI 38015884622 passes on repaired source100 a3d88c0b8f3d; all 21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit 0.43/3.47s passes. Prior3aca5cf/CI 37993159029 is historical |
 | Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI 38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.42/3.35s passes. Failed372375a/CI 38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
