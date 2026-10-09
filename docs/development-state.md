@@ -253,7 +253,7 @@ main3bb34267997479794aeac9fff3447da94c16ca4d, with scripts/workflow identical
 to focused-accepted063f4ca. Pause the guarded workload during target sampling; keep
 RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
 All three deterministic integration checks pass under the original root guard:
-Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.17CPU/1.24elapsed. They verify suspension/resumption, sampler errors and the
+Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.20CPU/1.36elapsed. They verify suspension/resumption, sampler errors and the
 unchanged target-size limit. Negative control against the original guard fails
 all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
 The initial test fixture escaping failure was corrected before this acceptance.

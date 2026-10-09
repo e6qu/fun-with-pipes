@@ -11938,5 +11938,6 @@ Guard repair final sourced4c832188d3563e85410adeb8763bf6a74f4833b is rebased
 from actualc7b3e3f onto main1033bb3426. Only ten authoritative docs conflicted;
 scripts and roadmap workflow match focused-accepted063f4ca exactly. Updated
 root audit passes44-doc/106-pair/tag/whole-message checks0.31CPU/2.52elapsed.
-Final integration repeat under the original root guard passes all three checks;
+Final integration repeat under the original root guard passes all three checks
+0.20CPU/1.36elapsed;
 new publication follows with a separate exact-head full production gate.
