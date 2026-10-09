@@ -226,6 +226,9 @@ static void g_stream_final(void *p) {
     free(s->bad);
 }
 
+/* Nonallocating failure marker: no stream observes an unpublished connection. */
+static char g_connect_start_failed[] = "connection startup failed";
+
 static void g_conn_final(void *p) {
     g_conn *c = (g_conn *)p;
 #ifdef FWP_LIBRARY
@@ -238,7 +241,7 @@ static void g_conn_final(void *p) {
     h2b_free(&c->in);
     h2b_free(&c->out);
     h2b_free(&c->cont_buf);
-    free(c->dead);
+    if (c->dead != g_connect_start_failed) free(c->dead);
     free(c->tlskey);
 }
 
@@ -912,6 +915,17 @@ static int g_same_tls(const char *a, const g_tls *t) {
     return a && strcmp(a, t->key) == 0;
 }
 
+typedef struct { g_conn *c; fwp_task *reader, *writer; } g_connect_start_owner;
+static void g_connect_ref_release(void *arg) { g_conn_release((g_conn *)arg); }
+static void g_connect_start_abort(void *arg) {
+    g_connect_start_owner *owner = (g_connect_start_owner *)arg;
+    owner->c->dead = g_connect_start_failed;
+    shutdown(owner->c->fd, SHUT_RDWR);
+    if (owner->reader) fwp_cancel_tree(owner->reader);
+    if (owner->writer) fwp_cancel_tree(owner->writer);
+    g_conn_release(owner->c);
+}
+
 static void g_connect_ssl_release(void *arg) {
     SSL **ssl = (SSL **)arg;
     if (*ssl) { SSL_free(*ssl); *ssl = 0; }
@@ -991,11 +1005,23 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     owner.fd = -1;
     fwp_cleanup_pop(&connect_cleanup);
     c->tlskey = opts ? strdup(opts->key) : 0;
-    c->refs = 2;
-    fwp_spawn_task(0, g_reader, c, 0, 1);
-    fwp_spawn_task(0, g_writer, c, 0, 1);
+    c->refs = 1; /* temporary startup owner */
+    g_connect_start_owner startup = {c, 0, 0};
+    fwp_cleanup startup_cleanup;
+    fwp_cleanup_push(&startup_cleanup, g_connect_start_abort, &startup);
+    fwp_cleanup reserved_ref;
+    c->refs++;
+    fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
+    startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);
+    fwp_cleanup_pop(&reserved_ref); /* reader takes its reserved reference */
+    c->refs++;
+    fwp_cleanup_push(&reserved_ref, g_connect_ref_release, c);
+    startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);
+    fwp_cleanup_pop(&reserved_ref);
     c->next_pool = g_pool;
     g_pool = c;
+    fwp_cleanup_pop(&startup_cleanup);
+    g_conn_release(c); /* only the reader and writer remain */
     return c;
 }
 
