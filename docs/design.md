@@ -471,3 +471,46 @@ storage across the subsequent wait. Cleanup releases them on cancellation or
 an unexpected extra result; normal return transfers only the requested
 message or error text. Reflection discards its copied end status. Message
 contents, receive order and error codes remain unchanged.
+
+Prepared streaming gRPC cell force owns received malloc payload/status through
+decoding and response copying. Scoped cleanup releases decoder failure reasons
+and temporary error text during traps. First-error returns transfer only the
+returned text/value; successful force retains its existing cached result.
+Rendered-error and protocol-output scratch lifetimes remain a separate audit.
+
+Prepared streamed non-status errors register their rendering buffer with the
+existing buffer destructor before formatting. Both a partial rendering trap
+and the final diagnostic trap release scratch. Diagnostic contents remain
+unchanged; this does not complete protocol encoding scratch ownership.
+
+Prepared encoded gRPC messages register typed h2_buf cleanup before encoding
+and keep it active through flow-control waits. Normal return or cancellation
+releases the malloc frame buffer. Plain and gzip bodies preserve exact payloads;
+caller encoding buffers remain a separate exceptional ownership audit.
+
+Prepared detached gRPC senders own request encoding scratch before encoding
+and keep cleanup active through the cancellable send. Normal completion or
+encoding/cancellation unwind releases the caller's buffer separately from
+the encoded wire buffer. Internal canonical encoding scratch is a later audit.
+
+Prepared message/request encoders register canonical serialization buffers
+with their existing destructor before writing and transcoding. Success frees
+normally; partial serialization or transcoder failure frees on unwind. Fixed-
+width canonical bytes, oneof prefix and diagnostic contents stay unchanged.
+
+Prepared served response encoding owns unary, streaming and error-response
+wire buffers across encoding and cancellable flow-control waits. Error
+canonical scratch is protected before serialization and freed after transcoding.
+Normal wire bytes and error/trap order stay unchanged; sequential full CI
+is still required.
+
+Prepared synchronous client requests also scope their encoded unary/iterator
+buffers before encoding and until sending returns or cancellation unwinds.
+Request bytes and end markers remain unchanged. Connection/user-code ownership
+and complete client response/status cleanup remain separate audits.
+
+Prepared client failure raising takes ownership of copied transport, status
+and first-iterator failure text. Raw trap messages and typed GrpcError values
+copy their contents before cleanup releases the original text. All current
+callers transfer owned copies; future receive scopes must clear transferred
+text to avoid releasing it twice.

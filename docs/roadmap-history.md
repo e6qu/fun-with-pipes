@@ -9816,3 +9816,292 @@ focused CLI lint passes2.26 / 4.59 s; final lint including deterministic
 regression passes0.09 / 0.26 s. Format application/check both0.36 / 0.73 s.
 No runtime/compiler change beyond previously tested generation work. New
 PR98 head must replace old6b1cd9b for all six merge gates.
+
+CLI failure repair published as second PR98 commit542fc080e8818c26fb3da2ebbc295cd9fb864ee5 atop6b1cd9b,
+actual base2c1003c. Entire message is one line, with empty body/trailers.
+PR description rewritten around generation ownership plus the CLI race repair.
+Cancellation of superseded37925910460 at6b1cd9b requested after publication; no old or
+cancelled run supplies current acceptance. New head needs all six exact gates.
+
+New PR98 exact-head CI37929002304 at542fc08 queues all six jobs. Later
+preparations must inherit the CLI repair from the eventual squash; preserve
+feature deltas and immutable OLD anchors, not the old full-file CLI snapshot.
+
+Superseded PR98 CI37925910460 is confirmed completed/cancelled after new head
+publication. Generation source/runtime/tests/workflows still match7741d09,
+except explicitly inherited CLI repair. Fresh six-job gate37929002304 remains
+the only current acceptance run. No main run was cancelled.
+
+## Streaming cell force ownership preparation, 2026-10-09
+
+New ownership-grpc-force-cleanup starts on8bd9e78743abd7ed2c1f721ee100ed325074da2e.
+Streaming force owns received malloc message/status across decoder/response
+copying and traps. Decoder failure reasons and temporary error text have
+scoped cleanup. Normal cached result and first-error return retain existing
+behavior, transferring only returned error text/value. Fixture uses actual
+receive/cell/memo paths while stubbing decoder results and allocation-copy
+traps; it checks end, status failures, successful scalar/results, decoder
+failure/trap, copy failure, first-error transfer and repeated cached force.
+Omitted receive/reason/temporary-text controls must fail1. Fixed O1/O2 ×
+tracing off/on × poison must pass. Guarded clean before switching0.00 / 0.13 s;
+focused force/unary receive tests run. Rendered error and protocol output
+scratch buffers still need separate exceptional lifetime review.
+
+Focused cargo test --test grpc_force_cleanup --test grpc_receive_cleanup
+passes both11.15 / 23.28 s CPU / elapsed. Focused clippy for these two targets
+passes2.50 / 5.05 s; format application0.45 / 0.84 s and check0.45 / 0.83 s
+pass. O1/O2, tracing off/on, poison, first-error transfer and unchanged memo
+behavior pass; three omission controls fail exactly1. Fixture decoder stubs
+check lifetime boundaries; full protocol/interpreter acceptance remains CI.
+Contiguous live tables repaired by removing accidental blank lines between
+preparation rows; historical checks remain archived.
+
+Row95 published clean at 6b82bc5b8b2ff729d2c3d4bcf831955ec855a002 on actual
+8bd9e78743abd7ed2c1f721ee100ed325074da2e; immutable first head/parent recorded, whole
+one-line commit message verifies. No additional PR.
+
+## Streamed-error rendering scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-render-cleanup starts on6b82bc5b8b2ff729d2c3d4bcf831955ec855a002.
+Streamed non-status errors render into a malloc fwp_buf then always trap; that
+scratch previously leaked. Register the existing generic buffer destructor
+before rendering, so both partial-render trap and final diagnostic trap free
+it. Focused fixture uses real I64 formatting, stubbing only decoder outcome,
+checks exact diagnostic text and exactly-once buffer release. Omitted cleanup
+must exit1; fixed O1/O2 × tracing off/on × poison must pass. Guarded clean before
+switching0.00 / 0.13 s; focused rendering/force tests run. PR98 current542fc08
+CI37929002304 regular macOS/both GC jobs run; Linux/bench queue.
+
+Initial focused rendering check fails exit1018.94 / 19.13 s: fixture macro
+parameter `d` also replaces the buffer's `.d` field with descriptor expression,
+so C compilation fails. Force regression passes. Renamed fixture macro
+parameters to avoid field substitution; runtime cleanup unchanged. Rerun.
+
+Corrected rendered-error/force tests pass2.79 / 5.95 s CPU / elapsed. Real
+I64 rendering preserves exact final diagnostic; partial/final traps each free
+scratch once. Omitted cleanup fails1. Focused clippy passes2.66 / 5.38 s; format
+application0.54 / 1.06 s and check0.45 / 0.83 s pass under bounded guard.
+
+Row96 published clean at ea79bdee1191f1a1a8d5cd180245df895711461e on actual
+6b82bc5b8b2ff729d2c3d4bcf831955ec855a002; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Encoded-message buffer ownership preparation, 2026-10-09
+
+New ownership-grpc-send-cleanup starts on ea79bdee1191f1a1a8d5cd180245df895711461e.
+g_send_msg previously freed its encoded h2_buf only on normal return; flow
+control waiting can cancel and leak that malloc buffer. Register a typed
+h2_buf destructor before encoding and pop/release on normal completion.
+Actual scheduler fixture covers zero/partial windows, cancelled waits, wake/
+resume, closed connection/reset and successful plain/gzip sending. It joins
+DATA frames, decompresses the gzip body and checks all128 arbitrary bytes.
+Omitted cleanup must fail1; fixed O1/O2 × tracing off/on × poison must pass.
+Guarded clean before switching0.07 / 0.37 s; focused send/force tests run.
+Caller encoding scratch remains a separate audited follow-up.
+
+Focused send/force tests pass10.02 / 21.56 s CPU / elapsed. Actual flow-control
+suspension/cancellation, partial frames, wake/resume and closed streams preserve
+exact plain/gzip-decoded128 bytes at O1/O2 with tracing off/on and poison.
+Omitted cleanup fails1. Focused send/force lint runs. Current PR98 exact542fc08
+CI37929002304 bench passes; Linux and all four macOS jobs run.
+
+### Archived published receive/render preparation handoff
+
+Next independent preparation ownership-grpc-receive-cleanup at
+/private/tmp/fwp-grpc-receive-cleanup-worktree starts on a92c951. Unary
+receive protects dequeued request/status storage across the second wait;
+unexpected/missing results release, and reflection end text releases. Actual
+scheduler regression covers reset, cancelled wait, normal ownership transfer
+and three omitted-release controls. Both focused tests pass12.09 / 24.36 s,
+lint2.43 / 4.91 s and format0.45 / 0.83 s. Published clean at
+8bd9e78743abd7ed2c1f721ee100ed325074da2e on actuala92c951. Further preparation ownership-grpc-force-cleanup,
+/private/tmp/fwp-grpc-force-cleanup-worktree, starts on8bd9e78. Streaming
+force owns received payload/text through decode and copying, protects decoder
+failure reasons and temporary error text, and transfers first-error text or
+values without changing memo behavior. Both focused force/unary tests pass 11.15 / 23.28 s, lint 2.50 / 5.05 s and
+format 0.45 / 0.83 s. Published clean at
+6b82bc5b8b2ff729d2c3d4bcf831955ec855a002 on actual8bd9e78. Independent ownership-grpc-render-cleanup at
+/private/tmp/fwp-grpc-render-cleanup-worktree starts on6b82bc5. Streamed
+error rendering protects its fwp_buf with the existing buffer destructor
+before writing/trapping. Both tests pass 2.79 / 5.95 s; fixture macro collision
+corrected, lint 2.66 / 5.38 s and format 0.45 / 0.83 s pass. Published clean at
+ea79bdee1191f1a1a8d5cd180245df895711461e on actual6b82bc5.
+
+Focused send/force clippy passes2.74 / 5.52 s CPU / elapsed; format application
+0.55 / 0.83 s and check0.45 / 0.82 s pass under the bounded guard. Sender's
+wire buffer transfers no ownership to the wait; its lexical destructor
+releases after normal completion or cancellation. No new allocation or speed
+claim. Published preparation details move from live handoff to this history.
+
+Row97 published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8 on actual
+ea79bdee1191f1a1a8d5cd180245df895711461e; immutable first head/parent recorded. Entire
+one-line commit message verifies; no additional PR.
+
+## Detached sender request scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-request-encoding starts on671ada6ec85d6e46174bcdacbc0a95725131ede8.
+Detached g_send_all encodes a malloc request h2_buf then calls cancellable
+sending; previously only normal return freed the caller's scratch. Register
+typed request cleanup before encoding and transfer no ownership across send.
+Actual sender fixture stubs iterator/request encoding only, checks normal
+request bytes/end marker, encoding trap recovery and cancellation while both
+request and wire buffers are live. Omitted request cleanup must fail1; fixed
+O1/O2 × tracing off/on × poison must pass. Guarded clean before switching
+0.05 / 0.36 s; request/send tests run. Canonical encoder scratch remains later.
+Current PR98 exact542fc08 CI37929002304 bench, ARM regular/GC pass; Linux
+and both Intel jobs run. Queue98 preparation is not a competing delivery PR.
+
+Initial request check fails exit1017.32 / 14.94 s: fixture's global
+request_buffer watch is shadowed by the new local cleanup record in macro
+expansion. Renamed observer pointer watched_request, preserving control
+needles/runtime. No production workaround or weaker assertions. Rerun.
+
+Corrected request/send tests pass2.03 / 4.93 s CPU / elapsed. Normal request
+bytes/end marker, encoding-trap recovery and cancellation with two live buffers
+pass at O1/O2 with tracing off/on and poison. Omitted caller cleanup fails1.
+Focused lint passes2.51 / 4.92 s; format application0.44 / 0.83 s and check
+0.47 / 0.96 s pass. No new allocations or performance claim; internal canonical
+encoding scratch remains the next specific runtime ownership audit.
+
+Queue98 published clean at 663ef599a4385b394964fc92017c03cb57c1ddd8 on actual
+671ada6ec85d6e46174bcdacbc0a95725131ede8; immutable first head/parent recorded. Entire
+one-line message verifies. PR98 is still the sole open delivery, unrelated to
+this preparation row number.
+
+## Canonical encoder scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-canonical-encoding starts on663ef599a4385b394964fc92017c03cb57c1ddd8.
+Message/request encoders now register canonical fwp_buf cleanup before fixed-
+width serialization and protobuf transcoding. Normal completion pops/releases;
+partial serialization or transcoder failure releases on unwind. Real I64
+serialization fixture checks exact little-endian bytes and oneof prefix, with
+injected transcoder/partial-write failures and exact unchanged diagnostics.
+Omitted cleanup must fail1; fixed O1/O2 × tracing off/on × poison must pass.
+Actual protobuf acceptance remains full CI; fixture isolates lifetime boundaries.
+Guarded clean before switching0.05 / 0.37 s; canonical/request tests run.
+Remaining audit: canonical decoding, caller response encoding and client result
+status/message exceptional lifetimes. No additional PR or new surface syntax.
+
+Focused canonical/request tests pass8.38 / 17.93 s CPU / elapsed. Actual I64
+bytes/oneof prefix, injected partial/transcoder failure, exact diagnostics and
+omitted-cleanup control pass at O1/O2 with tracing off/on and poison. Focused
+lint runs. Next foreground preparation refreshes row21 arrays onto current
+PR98 head542fc08, inheriting the already-published CLI harness repair.
+
+Focused canonical/request lint passes2.46 / 4.87 s CPU / elapsed; formatting
+application0.45 / 0.86 s and check0.47 / 0.74 s pass under local guard.
+All focused checks pass; full protocol/platform acceptance remains sequential CI.
+
+Queue99 published clean at 4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual
+663ef599a4385b394964fc92017c03cb57c1ddd8; immutable first head/parent recorded. Entire
+one-line commit message verifies; PR98 remains the sole delivery.
+
+## Array preparation refresh after CLI failure repair, 2026-10-09
+
+ownership-array-elements, /private/tmp/fwp-array-element-worktree, rebases
+from actual7741d09dd8cf214396e7938e07fbbd1f7263d9f7 onto current PR98
+head542fc080e8818c26fb3da2ebbc295cd9fb864ee5. All doc conflicts resolve
+with ten authoritative root docs. Source/runtime/array tests/workflows against
+443524ef6b6d5183f010899902a94a9d53c5dc55 are identical; only inherited
+CLI test repair differs. Guarded clean before switching passes0.05 / 0.38 s;
+focused cargo test --test array_element_ownership runs. No competing PR.
+
+Refreshed array preparation passes all three tests14.02 / 28.13 s CPU /
+elapsed: collection/alias/callback behavior, tracing-off reclamation and scalar
+address-shaped bit safety. Its new ACTUAL base is542fc08, not old7741d09;
+final squash rebase must use that refreshed base. Focused array lint runs.
+
+Focused array lint passes2.30 / 4.61 s and format0.34 / 0.62 s; no resource
+limits exceeded. Publish the refreshed preparation without a competing PR.
+
+Refreshed preparation published clean at79bc00f136491ee8beb6d51674d3ed4faf7d5303
+on actual542fc080e8818c26fb3da2ebbc295cd9fb864ee5, explicit lease against
+443524e. Entire message is one line. Row22 actual base remains443524e until
+its own refresh. Immutable anchors remain untouched; PR98 is sole delivery.
+
+## Served response encoding ownership preparation, 2026-10-09
+
+Independent ownership-grpc-response-encoding starts on actual4114b709fb4b6f2397bc78f3d55f2c7c2c25357a,
+/private/tmp/fwp-grpc-response-encoding-worktree. g_run_method scopes encoded
+unary, streaming and error response buffers through cancellation/encoding traps.
+Error canonical scratch is protected before serialization. Real scheduler
+fixture checks parked flow-control cancellation, normal bytes, encoding traps,
+partial error serialization and omitted response/canonical cleanup controls.
+Request/user/transcoder boundaries are injected; complete protocol acceptance
+remains on sequential six-job CI. Guarded clean0.07 / 0.37 s; focused tests run.
+
+Initial response fixture C compilation failed because g_job.what is a fixed
+array, not assignable pointer (7.62 CPU / 16.32 elapsed s, exit101); corrected
+fixture with strcpy. The related request regression passed in that workload.
+
+A second fixture run lacked its task-level trap recovery boundary: omitted
+canonical cleanup reached the intentionally injected response trap and SIGABRT
+(1.56 CPU / 3.87 elapsed s, exit101). Added explicit task trap recovery,
+restoring saved handler/cleanup state. Both response/request tests then pass
+2.95 CPU / 6.01 elapsed s. Normal unary/stream/error bytes, cancellation,
+response/canonical partial traps and both cleanup omission controls pass.
+
+Focused response/request lint passes2.39 / 4.91 s; guarded format apply
+0.46 / 0.85 s and check0.47 / 0.75 s pass. No resource limit exceeded.
+
+Row100 preparation published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6
+on actual4114b709fb4b6f2397bc78f3d55f2c7c2c25357a. Immutable first anchors
+recorded; entire commit message one line. PR98 remains the sole delivery.
+
+## Synchronous client request ownership preparation, 2026-10-09
+
+Independent ownership-grpc-client-requests starts on actualb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6,
+/private/tmp/fwp-grpc-client-requests-worktree. Unary and synchronous iterator
+requests register h2_buf cleanup before encoding and across cancellable sending.
+Real scheduler fixture injects connection/encoder/empty-response boundaries;
+checks normal request bytes/end marker and exact missing-response diagnostic,
+encoding traps, parked cancellation and omitted cleanup controls. Complete
+protocol semantics require sequential full CI. Guarded clean0.00 / 0.14 s;
+focused checks run. PR98 now passes all five macOS/bench jobs; Linux still runs.
+
+Both client/request focused tests pass9.19 CPU / 18.71 elapsed s. Actual
+parked cancellation releases both encoded request and wire buffers; normal
+bytes/end marker, exact missing-response/encode-trap diagnostics and omitted
+cleanup controls pass O1/O2 with GC off/on, stress/verification and poison.
+
+Client/request focused lint passes2.38 / 4.86 s; guarded format apply
+0.45 / 0.87 s and check0.48 / 0.75 s pass. No resource limit exceeded.
+
+Row101 preparation published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93
+on actualb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6. Immutable first anchors
+recorded; entire commit message one line. PR98 remains the sole delivery.
+
+## Client failure text ownership preparation, 2026-10-09
+
+Independent ownership-grpc-client-failure-text starts on2339ff08e4211bf5e831b4624bb37102b2f83d93,
+/private/tmp/fwp-grpc-client-failure-text-worktree. g_stub_fail takes owned
+char* and scopes copied transport/status/iterator failure text before raw
+trap or typed GrpcError raising. Eight callers supply owned copied text;
+future received-buffer scopes must clear transferred text to avoid double free.
+fwp_trap copies text before unwinding, and typed failure copies it into String.
+Focused fixture checks exact trap contents and typed error code/text plus omitted
+cleanup O1/O2/GC/poison. Guarded clean0.07 / 0.37 s; focused tests run.
+
+## PR98 Linux collector workload repair, 2026-10-09
+
+Completed six-job CI37929002304 at542fc08 passes all five macOS/bench jobs
+but Linux fails gc::long_loop_runs_in_bounded_memory, tests/gc.rs194: zero
+collections. Output21768000 and >800 MiB allocation assertions preceding it
+pass; RSS assertion follows and has not run. Full logs
+/private/tmp/fwp-pr98-linux-failure.log. Ownership reclamation/reuse now
+keeps this churn loop below the collection threshold. Tracing-specific build
+will explicitly set FWP_FREE=0 and FWP_REUSE=0; preserve all allocation,
+collection (>10), RSS (<64 MiB) and GC-off output assertions. Local macOS
+skips Linux /proc RSS test, so only runner execution establishes acceptance.
+
+Client failure text/request tests pass9.02 / 18.93 s; lint2.54 / 5.16 s;
+format apply0.44 / 0.83 s and check0.45 / 0.83 s. No limit exceeded.
+
+Row102 preparation published clean at33661b298f96afcae268bfa278d62e452cebd3c8
+on actual2339ff08e4211bf5e831b4624bb37102b2f83d93. Immutable first anchors
+recorded; entire message one line. PR98 remains sole delivery.
+
+PR98 tracing fixture repair passes focused cargo clippy --test gc -- -D
+warnings2.32 / 4.59 s and format0.34 / 0.60 s. Guarded clean before switching
+0.00 / 0.13 s. Linux-specific runtime test is not locally verified; require
+fresh exact-head Linux and all five other gates before squash.

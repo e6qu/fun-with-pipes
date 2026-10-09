@@ -47,7 +47,9 @@ exact-head jobs passed. Sole [PR #98](https://github.com/e6qu/fun-with-pipes/pul
 typed repeat/range ownership. Final focused checks pass; six exact-head CI
 jobs gate its merge. The completed previous-main Linux run exposed an early
 stdin-close panic in the CLI harness; focused repair checks pass and the
-updated PR head must receive six fresh gates. Exact heads,
+updated PR head must receive six fresh gates. Its Linux collector fixture
+also requires tracing-specific compilation: immediate reclamation/reuse can
+otherwise produce zero collections. Preserve its original assertions. Exact heads,
 checks and gates are in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
