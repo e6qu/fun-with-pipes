@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR101. Arrays, maps and sets own typed elements.
+The tables describe main through PR102. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -140,6 +140,15 @@ once the list is constructed. Those arrays use `fwp_mem_alloc`/`fwp_mem_free`:
 native arrays remain scanned while alive, and WASI uses a separately releasable
 allocation rather than freeing an interior pointer from its bump heap.
 
+## Task result and deadline boundaries
+
+Merged PR102 owns fresh typed result wrappers from task.await, task.within and
+Channel receives. Wrappers retain pointer-bearing payload owners; scalar words
+do not select reference destructors. task.deadline borrows its typed argument
+and retains the returned alias instead of forcing it into runtime sharing.
+Retained task thunks and scheduler/queue lifetimes remain later preparations;
+these contracts do not establish complete ARC or tracing-free execution.
+
 ## Compiled closures and synchronous callbacks
 
 Compiled dynamic calls own heap closures and typed captures. Monomorphic
@@ -204,7 +213,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 24 | task.deadline borrows/retains typed alias; task.await/within and channel receives own fresh wrappers; retained boundaries still share | Sequential CI; typed scalar/pointer safety and aliases; deeper task/queue lifetimes remain later work |
 | 25 | Runtime cleanup stack releases registered owners/scoped files before failure, trap or cancellation; task switching preserves cleanup scopes | Sequential CI; exactly-once/LIFO and handler boundaries; automatic owner registration remains later work |
 | 26 | Detached compiler reuse cells retain a cleanup lifetime; transfer clears holders, unused cells release lexically and on unwind | Sequential CI; old/young eligibility, flags and exceptional token paths |
 | 27 | Compiler call liveness protects actual owned references before later argument failures and at callee entry; boxed/worker and variant cleanup remain typed | Sequential CI; exactly-once release, aliases and cancellation before entry tick |

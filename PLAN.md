@@ -40,12 +40,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#101: native macOS and selected ownership through typed
+Main includes #74–#102: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
 wide counts, array/map/set elements and reclamation of old counted storage.
-PR101 passed all six exact-head production gates and the documentation audit,
-then merged. PR102 delivers queue24 task result/deadline boundaries.
-Its final rebase is published; fresh exact-head production gates are running. Exact heads,
+Task result/deadline boundaries merged in PR102 after all six exact-head
+production jobs and the documentation audit passed. Queue25 registered runtime
+unwind cleanup is the next delivery. Its final rebase and fresh gates follow. Exact heads,
 commands, failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
