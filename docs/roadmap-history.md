@@ -9688,3 +9688,45 @@ Status audit corrects the earlier tentative borrowed-text assumption: g_recv
 always strdup-copies stream/connection status text. Normal handler messages
 are owned; only cancellation's sv.msg aliases its stored owner. Next focused
 fix transfers that slot, protects final encoding and reclaims it, with tests.
+
+Row92 published clean at 09751c8c65acd0c6d01d074171f52a297f667cf7 on actual
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08; first head/parent become immutable preparation
+anchors. Entire one-line commit message verifies and no additional PR opens.
+
+## Served gRPC final status ownership preparation, 2026-10-09
+
+New ownership-grpc-status-cleanup starts on09751c8c65acd0c6d01d074171f52a297f667cf7.
+Normal served status results are malloc-owned; cancellation's sv.msg is a
+stored owner. Handler transfers that slot, protects the final message through
+encoding and releases it normally or on unwind. Last retained context owner
+also frees any stored status left by later detached senders. g_fail_call copies
+before releasing a replaced/aliased old message, traps with the new owned
+copy and preserves hard out-of-memory exit102. Focused fixture checks unknown
+method, explicit status, deadline/reset/cancellation, cancellation during final
+encoding, alias replacement and retained-owner disposal. Omitted normal/unwind
+controls must fail exactly2; fixed O1/O2 × tracing off/on × poison must pass.
+Guarded cargo clean before switching passes0.04 / 0.26 s; focused status and
+peer regression tests run. No additional PR or semantic/performance claim.
+
+Initial status and peer regressions pass13.25 / 26.68 s CPU / elapsed.
+Added exact expected percent-encoded message bytes in produced frames and
+allocation-failure assertion: old stored message remains alive while a failed
+replacement reports only `fwp: out of memory`, exit102. Final focused rerun.
+PR98 exact6b1cd9b CI37925910460 bench passes; Linux and regular macOS run,
+both GC gates queue. No failing gates or competing PR.
+
+Expanded byte assertion fails exit1014.24 / 8.64 s: deliberate unwind-omission
+control reaches encoded-text check first, which incorrectly expected spaces
+to become %20. Both runtime h2_pct_encode and interpreter h2::pct_encode keep
+printable spaces unchanged. Corrected only expected bytes to match existing
+engine semantics; omission still must fail exactly2 for leaked storage. Rerun.
+
+Corrected final status/peer tests pass6.25 / 12.74 s CPU / elapsed. Expected
+wire text matches runtime/interpreter encoding; failed replacement preserves
+old owner and exits102 with exact out-of-memory stderr. Normal/unwind omission
+controls still exit2. Focused status/peer lint runs.
+
+Focused cargo clippy --test grpc_status_cleanup --test grpc_peer_completion
+-- -D warnings passes2.37 / 4.83 s; cargo fmt --all application0.45 / 0.83 s
+and -- --check0.46 / 0.84 s pass under documented bounded guard. Final tested
+production delta transfers and frees owned strings without altering wire text.

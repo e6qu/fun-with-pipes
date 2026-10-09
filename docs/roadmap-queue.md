@@ -107,6 +107,8 @@ resolve full hashes before publication or merge. Checkout paths use
 
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `3c268c34d15b` | `3c268c34d15b` | `6f310b5483a8` |
 
+| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `09751c8c65ac` | `09751c8c65ac` | `3c268c34d15b` |
+
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
 its workflow commits and equivalent baseline repairs never enter this chain.

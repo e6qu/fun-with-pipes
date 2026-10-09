@@ -458,3 +458,10 @@ structured child joins. It releases that task's peer owner; the last owner
 frees the malloc subject. Spawning protects partially acquired owners, and
 count overflow traps before acquisition. The GC-managed context and other
 network buffers still retain their existing tracing lifetimes.
+
+Prepared served gRPC final statuses transfer a stored cancellation message
+into the handler's owned result. Cleanup protects it through final encoding,
+then releases it. Replacing a stored status copies before dropping the old
+owner, including an aliased input; the last retained serving-context user
+also releases any status left in its slot. Received status text is copied
+malloc storage, not a borrowed stream field. Wire encoding remains unchanged.
