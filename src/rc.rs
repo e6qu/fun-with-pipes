@@ -390,7 +390,8 @@ impl Pass<'_> {
         // Computed counted arguments stay owned while later arguments run.
         // With no pending counted arguments, the final consumed argument can
         // transfer directly, preserving stack, worker and loop representations.
-        // Bind earlier scalar computations too, preserving evaluation order.
+        // Scalar computations also finish before pending owners transfer, so
+        // their traps cannot strand earlier counted arguments.
         let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
@@ -401,9 +402,7 @@ impl Pass<'_> {
             .enumerate()
             .filter(|(i, (p, mode))| {
                 !inline(p)
-                    && !uncounted[*i]
-                    && (matches!(mode, Mode::Borrow)
-                        || *i + 1 < parts.len()
+                    && ((!uncounted[*i] && (matches!(mode, Mode::Borrow) || *i + 1 < parts.len()))
                         || parts[..*i].iter().enumerate().any(|(j, earlier)| {
                             !uncounted[j] && !matches!(earlier, Expr::Const(_) | Expr::Func(_))
                         }))
@@ -1028,6 +1027,29 @@ mod tests {
             locals: vec![list()],
             ty: MT::Fun(Box::new(list()), Box::new(list())),
             body: Body::Prim("probe.produce".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Local(0),
+            Expr::Call(1, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let call = calls.values().next().unwrap();
+        assert_eq!(call.at_entry.len(), 2);
+        assert_eq!(call.at_entry[0], (0, 1));
+        assert!(call.at_entry[1].0 > 0);
+        assert_eq!(call.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn earlier_owner_remains_owned_during_a_final_scalar_call() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "length".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("len".into()),
         });
         p.funcs[0].body = Body::Expr(Expr::Record(vec![
             Expr::Local(0),

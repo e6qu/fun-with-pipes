@@ -139,21 +139,36 @@ int main(void) {
 
 #[test]
 fn earlier_argument_is_released_when_later_argument_fails() {
-    let dir = Scratch::new("arguments");
+    for scalar in [false, true] {
+        check_later_argument_failure(scalar);
+    }
+}
+
+fn check_later_argument_failure(scalar: bool) {
+    let dir = Scratch::new(if scalar {
+        "scalar-arguments"
+    } else {
+        "arguments"
+    });
     let src = dir.0.join("arguments.fwp");
     let cfile = dir.0.join("arguments.c");
     let exe = dir.0.join("arguments");
     let fwp = env!("CARGO_BIN_EXE_fwp");
-    std::fs::write(
-        &src,
-        r#"guard : I64 -> String ! {Error[String]}
+    let source = r#"guard : I64 -> String ! {Error[String]}
 guard = if (eq 0) (const "expected" | fail) show
 pair : (I64 -> String ! {Error[String]}) -> I64 -> (String, String) ! {Error[String]}
 pair = curry (both (fork apply .1 .0) (fork apply (const 0) .0))
 main = 2 | attempt (pair guard) | echo
-"#,
-    )
-    .unwrap();
+"#;
+    let source = if scalar {
+        source.replace("(String, String)", "(String, I64)").replace(
+            "(fork apply (const 0) .0)",
+            "(fork apply (const 0) .0 | string.length)",
+        )
+    } else {
+        source.to_owned()
+    };
+    std::fs::write(&src, source).unwrap();
     let reference = checked(
         Command::new(fwp)
             .env("FWP_NO_OPT", "1")

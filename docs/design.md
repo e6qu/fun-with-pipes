@@ -362,7 +362,9 @@ Compiler call ownership lowering must preserve allocation optimizations as well
 as exceptional lifetimes. Earlier counted arguments, including duplicated
 locals, stay registered while later arguments evaluate. A final consumed value
 can stay inline when no earlier counted argument needs protection, preserving
-direct stack, worker and flattened-loop representations. Existing allocation
+direct stack, worker and flattened-loop representations. Later scalar
+computations also finish before pending counted owners transfer, preserving
+cleanup when scalar evaluation fails. Existing allocation
 limits and raw-interpreter comparisons remain acceptance gates.
 
 
