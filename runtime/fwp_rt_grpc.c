@@ -88,7 +88,7 @@ struct g_conn {
     int fd, refs;
     SSL *ssl;                  /* the TLS session of a TLS connection */
     const g_server *server;    /* 0 for a client connection */
-    char authority[256];       /* a client's: the address it was given */
+    char *authority;           /* full address, stored after this header */
     h2_hpack dec;
     h2_peer peer;
     int64_t conn_window;
@@ -304,11 +304,14 @@ static void g_set_reset(g_stream *s, const char *why) {
 }
 
 static g_conn *g_conn_new(int fd, const char *authority, const g_server *server) {
-    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c);
+    size_t n = strlen(authority);
+    if (n > SIZE_MAX - sizeof(g_conn) - 1) fwp_trap("connection address too large");
+    g_conn *c = (g_conn *)fwp_mem_alloc(sizeof *c + n + 1);
+    c->authority = (char *)(c + 1);
+    memcpy(c->authority, authority, n + 1);
     fwp_gc_finalizer(c, g_conn_final);
     c->fd = fd;
     c->server = server;
-    snprintf(c->authority, sizeof c->authority, "%s", authority);
     h2_hpack_init(&c->dec);
     c->peer.max_frame = 16384;
     c->peer.init_window = 65535;
