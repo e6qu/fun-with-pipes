@@ -188,7 +188,7 @@ still need their final squash rebases and six exact-head full gates.
 | 97 ownership-grpc-send-cleanup | bf2371572323 | 8aa292c5a24a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 98 ownership-grpc-request-encoding | b82589474d2a | bf2371572323 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 99 ownership-grpc-canonical-encoding | 3c67663986c7 | b82589474d2a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
-| 100 ownership-grpc-response-encoding | 3883d1abaccc | eb5ae0a4a4c2 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 100 ownership-grpc-response-encoding | 61a0def48b7d | 3c67663986c7 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 101 ownership-grpc-client-requests | 9bdd82863c39 | 3883d1abaccc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 102 ownership-grpc-client-failure-text | 7e011508db02 | 9bdd82863c39 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 103 ownership-grpc-client-receive | b7961a14d5dd | 7e011508db02 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
