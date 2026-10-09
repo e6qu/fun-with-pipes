@@ -10884,3 +10884,46 @@ actual786f1700236ec23b9880436d8c512b941a44e1ec and retrying succeeded.
 Guarded package clean refused again below64GiB before execution. No fresh
 local tests/lint ran; shared target still belongs to the reuse-token worktree.
 Focused verification moves to GitHub without raising or bypassing limits.
+
+## Archived delivery evidence chronology, 2026-10-09
+
+Later preparations must inherit both CLI early-stdin-close and tracing-fixture
+repairs on final rebases. The repaired Linux gate actually verifies the
+collector churn output, allocation/collection thresholds and RSS bound.
+Ten authoritative docs backed up to /private/tmp/fwp-main-docs-pre99 were
+restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
+through112 are published. Row112 CI37952655033 failed formatting before
+lint/tests. Both fixture formatting corrections are published at762117573367;
+evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
+passes focused format/lint/lifetime/teardown/interpreter checks.
+Duplicate main CI37957464783 cancellation confirmed after matching
+all-six-accepted PR99 source/runtime/tests/workflows.
+Duplicate main CI37944119691 was cancelled after matching all-six-accepted
+PR98 source/runtime/tests/workflows; cancellation is not acceptance.
+Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
+dc85b679. Focused GitHub evidence ownership-evidence-map-set, checkout
+/private/tmp/fwp-map-set-evidence-worktree, exact960a242d54d4a689730e7591854716ca4c5615a2,
+CI37953564015 fails before tests: OLD parent c889479eed7a is missing on
+a clean runner. Log /private/tmp/fwp-map-audit-failure.log. All106 OLD heads
+are now published atomically as lightweight roadmap/preparation-007…112
+tags, retaining their parents without source-branch changes. Refreshed map
+evidence c79544b74d30e6d285f64e0f500891434a2e91f7 follows the tag repair,
+CI37955579519 passes: handoff audit, format, lint and focused ownership tests.
+The independent checks also run if an audit fails, while preserving job failure.
+It audits current/immutable queue-head messages,
+links/anchors and focused map tests/lint/format without another PR. Its audit
+uses durable queue references and fetches retained review heads; retired c8/79bc
+preparation heads are not remote ancestors and are no longer audit inputs.
+Superseded352affa/51639d3/96e3804 evidence runs are cancelled, not acceptance.
+Workflow changes never enter production ancestry; focused evidence is not
+six-gate acceptance.
+Prior delivery checks and failures remain in history.
+
+Row28 runtime application refreshed from actual786f170 ontoc4eb75e;
+publishedb5f44e80462c7a246c0c09c8f8fd3838fd118866 has unchanged runtime,
+compiler and ownership tests, with inherited CLI/tracing-fixture repairs.
+All ten root docs resolved prepared snapshots. Local resource refusal persists;
+fresh checks move to GitHub. Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119444,
+CI37962382433, is queued with the stronger all44-doc/tag-identity auditor.
+Last observed disk63120268KiB available (~60.20GiB), target140856KiB (~137.55MiB).
+No local workloads remain active.
