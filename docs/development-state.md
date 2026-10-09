@@ -144,11 +144,11 @@ still need their final squash rebases and six exact-head full gates.
 | 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Canonical test7.35/15.76s; lint5.99/12.96s and format0.45/0.87s pass |
 | 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Response test9.09/18.46s; lint5.76/13.10s and format0.46/0.87s pass |
 | 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Client test8.38/16.90s; lint5.92/13.01s and format0.46/0.86s pass |
-| 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Refreshed source unchanged; typed-error/trap checks follow |
+| 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Failure text/trap/typed error test7.45/15.82s passes; lint/format follow |
 | 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Refreshed source unchanged; retry/error/cancel checks follow |
 | 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Refreshed source unchanged; pending resource cancellation checks follow |
 | 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Refreshed source unchanged; driver startup rollback checks follow |
-| 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
+| 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | Refreshed source unchanged; context/trap/cancellation checks follow |
 | 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
 | 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
