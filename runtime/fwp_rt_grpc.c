@@ -1038,6 +1038,7 @@ static int g_decode(const g_codec *k, const unsigned char *msg, size_t n, V *out
         fwp_handler h;
         h.prev = fwp_handlers;
         h.state_depth = fwp_state_len;
+        h.cleanup = fwp_cleanups;
         fwp_handlers = &h;
         if (setjmp(h.jb) == 0) {
             V r = fwp_apply1(k->fn, fwp_str_new((const char *)msg, n));
@@ -1270,8 +1271,11 @@ static void g_send_all(void *arg, int cancelled) {
     if (cancelled) return;
     jmp_buf tj;
     jmp_buf *saved = fwp_cur->trap_jb;
+    fwp_cleanup *saved_cleanup = fwp_cur->trap_cleanup;
+    fwp_cleanup *cleanup_base = fwp_cleanups;
     if (setjmp(tj) != 0) {
         fwp_cur->trap_jb = saved;
+        fwp_cur->trap_cleanup = saved_cleanup;
         char *why = g_strdupf("trap: %s", fwp_trap_msg);
         g_set_reset(x->s, why);
         free(why);
@@ -1280,6 +1284,7 @@ static void g_send_all(void *arg, int cancelled) {
         return;
     }
     fwp_cur->trap_jb = &tj;
+    fwp_cur->trap_cleanup = cleanup_base;
     V v;
     for (;;) {
         if (!x->s->listed || x->s->remote_end) break;
@@ -1306,6 +1311,7 @@ static void g_send_all(void *arg, int cancelled) {
         fwp_check_cancel();
     }
     fwp_cur->trap_jb = saved;
+    fwp_cur->trap_cleanup = saved_cleanup;
 }
 
 static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remote *r) {
@@ -1482,6 +1488,7 @@ static const g_route *g_route_of(const g_server *srv, const char *path) {
 static int g_trap_recover(void) {
     if (fwp_cur && fwp_cur->trap_jb) {
         fwp_trap_jb = fwp_cur->trap_jb;
+        fwp_trap_cleanup = fwp_cur->trap_cleanup;
         return 1;
     }
     return 0;
@@ -1597,28 +1604,35 @@ static g_msg *g_recv_one(g_job *j, int *code, char **msg) {
 static int g_apply_user(V f, uint32_t n, V *args, V *out, V *err, const fwp_desc **edesc) {
     fwp_task *t = fwp_cur;
     jmp_buf *saved = t->trap_jb;
+    fwp_cleanup *saved_cleanup = t->trap_cleanup;
+    fwp_cleanup *cleanup_base = fwp_cleanups;
     jmp_buf tj;
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
     if (setjmp(tj) != 0) {
         t->trap_jb = saved;
+        t->trap_cleanup = saved_cleanup;
         fwp_handlers = h.prev;
         fwp_state_len = h.state_depth;
         return 2;
     }
     t->trap_jb = &tj;
+    t->trap_cleanup = cleanup_base;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
         V r = n ? fwp_apply(f, n, args) : fwp_apply1(f, FWP_UNIT);
         fwp_handlers = h.prev;
         t->trap_jb = saved;
+        t->trap_cleanup = saved_cleanup;
         *out = r;
         return 0;
     }
     fwp_handlers = h.prev;
     fwp_state_len = h.state_depth;
     t->trap_jb = saved;
+    t->trap_cleanup = saved_cleanup;
     *err = h.value;
     *edesc = h.desc;
     return 1;
@@ -1724,10 +1738,13 @@ static int g_run_method(g_job *j, char **msg) {
     } else if (m->output == 1 || m->output == 3) {
         /* forcing the iterator may trap */
         jmp_buf *saved = fwp_cur->trap_jb;
+        fwp_cleanup *saved_cleanup = fwp_cur->trap_cleanup;
+        fwp_cleanup *cleanup_base = fwp_cleanups;
         jmp_buf tj;
         volatile V cur = v;
         if (setjmp(tj) != 0) {
             fwp_cur->trap_jb = saved;
+            fwp_cur->trap_cleanup = saved_cleanup;
             fflush(fwp_prog_out);
             fprintf(stderr, "fwp: trap: %s (in %s)\n", fwp_trap_msg, j->what);
             *msg = g_strdupf("trap: %s", fwp_trap_msg);
@@ -1736,8 +1753,10 @@ static int g_run_method(g_job *j, char **msg) {
         for (;;) {
             V x = 0, next = cur;
             fwp_cur->trap_jb = &tj;
+            fwp_cur->trap_cleanup = cleanup_base;
             int more = g_iter_next(&next, &x);
             fwp_cur->trap_jb = saved;
+            fwp_cur->trap_cleanup = saved_cleanup;
             if (!more) break;
             cur = next;
             if (m->output == 3) {
@@ -2124,6 +2143,7 @@ static V g_with_ctx(g_ctx *ctx, V f) {
     fwp_handler h;
     h.prev = fwp_handlers;
     h.state_depth = fwp_state_len;
+    h.cleanup = fwp_cleanups;
     fwp_handlers = &h;
     if (setjmp(h.jb) == 0) {
         V r = fwp_apply1(f, FWP_UNIT);

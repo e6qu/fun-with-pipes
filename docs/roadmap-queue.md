@@ -1,6 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-09. Rows through23 are merged; queue24 is the next delivery.
+Updated 2026-10-09. Rows through24 are merged; queue25 is the next delivery.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -45,8 +45,8 @@ resolve full hashes before publication or merge. Checkout paths use
 | 21 | array-element | `ownership-array-elements` | `dc85b679407a` | `636414fabf18` | `fad9b1ad08f6` |
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
-| 24 | task-boundary | `ownership-task-boundaries` | `84c34acd0346` | `02beec353ec7` | `6774aa5bb426` |
-| 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
+| 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
+| 25 | unwind-runtime | `ownership-unwind-runtime` | `1e9a5495d44f` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `b5f44e80462c` | `bee3f1659ae5` | `7392f2d67151` |
@@ -83,33 +83,33 @@ resolve full hashes before publication or merge. Checkout paths use
 | 59 | tls-listener | `ownership-tls-listeners` | `99b769bff921` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `ac17bf61276c` | `07092cb06e1d` | `3f6154b4bf67` |
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `044ceae9f0c5` | `0d5d3098e782` | `07092cb06e1d` |
-| 62 | tls-cache | `ownership-tls-cache-failures` | `0be508308064` | `4ab1f7ddd6f8` | `0d5d3098e782` |
-| 63 | tls-wire | `ownership-tls-wire-preparation` | `66e80d399e65` | `f6598e440a59` | `4ab1f7ddd6f8` |
-| 64 | connect-cleanup | `ownership-connect-cancellation` | `ae05b2bfc32c` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `2ba7084abe25` | `b8f3752d236f` | `0cc612650ab9` |
-| 66 | peer-subject | `ownership-tls-peer-subject` | `b728cf5f2adb` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `22b95b0ddb74` | `e0f11626f609` | `6bda2c815a71` |
-| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `7d8ab6719e55` | `e503e10a9780` | `e0f11626f609` |
-| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `821e6c1baaef` | `b00215dc10f5` | `e503e10a9780` |
-| 70 | file-construction | `ownership-file-construction` | `0d09a61aaab7` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `8a061cb9b8ab` | `5ac710398a14` | `e9d575fdf990` |
-| 72 | file-io-errors | `ownership-file-io-errors` | `d4611644084a` | `06419f4c5989` | `5ac710398a14` |
-| 73 | resource-frames | `ownership-resource-frames` | `3c87e1f63b51` | `dcc5bbac318f` | `06419f4c5989` |
-| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4b5da4aa946a` | `e21c92ea2f6c` | `368dafc5567d` |
-| 75 | file-discard | `ownership-file-discard` | `db3bcf0da8d6` | `923ad4a4fb07` | `e21c92ea2f6c` |
-| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `b4860bf2c392` | `30fe112db93c` | `923ad4a4fb07` |
-| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `b4482c259c1e` | `046f7e85a9eb` | `30fe112db93c` |
-| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `9609b73ef5ed` | `681dd55136b0` | `c889479eed7a` |
-| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `35c2aeb2923e` | `658e5b73ae1c` | `681dd55136b0` |
-| 80 | file-inline-path | `ownership-file-inline-path` | `e7d3882b67ae` | `2d903d6617d9` | `658e5b73ae1c` |
-| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `faac017dc60d` | `750a5cffd46b` | `2d903d6617d9` |
-| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `06c93eff77af` | `17869223a502` | `750a5cffd46b` |
-| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `f3c9ee4ec354` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `d2936a008fd2` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `97dca7626158` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `5915ac0607ac` | `f85cc4e09db4` | `3a0cbdb33b79` |
-| 87 | nominal-source-context | `ownership-nominal-source-context` | `f08611023cec` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e91dcb307c61` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 62 | tls-cache | `ownership-tls-cache-failures` | `c61df653dfb2` | `4ab1f7ddd6f8` | `0d5d3098e782` |
+| 63 | tls-wire | `ownership-tls-wire-preparation` | `d0e29ddbf182` | `f6598e440a59` | `4ab1f7ddd6f8` |
+| 64 | connect-cleanup | `ownership-connect-cancellation` | `446d60c378dc` | `0cc612650ab9` | `f6598e440a59` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `46f7f4b17226` | `b8f3752d236f` | `0cc612650ab9` |
+| 66 | peer-subject | `ownership-tls-peer-subject` | `ec16c6630686` | `6bda2c815a71` | `b8f3752d236f` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `bbde0fa9c254` | `e0f11626f609` | `6bda2c815a71` |
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `933deb78f600` | `e503e10a9780` | `e0f11626f609` |
+| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7047b100dbbe` | `b00215dc10f5` | `e503e10a9780` |
+| 70 | file-construction | `ownership-file-construction` | `41a76ee080e5` | `e9d575fdf990` | `b00215dc10f5` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `6fdf20ca82a9` | `5ac710398a14` | `e9d575fdf990` |
+| 72 | file-io-errors | `ownership-file-io-errors` | `82e51ba8ea16` | `06419f4c5989` | `5ac710398a14` |
+| 73 | resource-frames | `ownership-resource-frames` | `3dc1c36adbad` | `dcc5bbac318f` | `06419f4c5989` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4155bc9fce74` | `e21c92ea2f6c` | `368dafc5567d` |
+| 75 | file-discard | `ownership-file-discard` | `5179067d6635` | `923ad4a4fb07` | `e21c92ea2f6c` |
+| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `da4acc398637` | `30fe112db93c` | `923ad4a4fb07` |
+| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `295b0da5c1f0` | `046f7e85a9eb` | `30fe112db93c` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `1a5f5ba98a32` | `681dd55136b0` | `c889479eed7a` |
+| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `76374abb1077` | `658e5b73ae1c` | `681dd55136b0` |
+| 80 | file-inline-path | `ownership-file-inline-path` | `8454a97667bb` | `2d903d6617d9` | `658e5b73ae1c` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `d39b6145cb55` | `750a5cffd46b` | `2d903d6617d9` |
+| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `47abf911f844` | `17869223a502` | `750a5cffd46b` |
+| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `6d3fcd7444ad` | `786e4bbb99f1` | `17869223a502` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `2f67969e9985` | `ae00e6929e86` | `786e4bbb99f1` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `c0263af654c4` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `d0e41c87e547` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 87 | nominal-source-context | `ownership-nominal-source-context` | `b83d77ce5da8` | `8abfd46b3476` | `f85cc4e09db4` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e15c6fc1f0c3` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `d29dda936dff` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `6f310b5483a8` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `3c268c34d15b` | `3c268c34d15b` | `6f310b5483a8` |
