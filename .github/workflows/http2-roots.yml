@@ -43,6 +43,5 @@ jobs:
       - name: Omitted-owner machine code diagnostic
         if: ${{ failure() }}
         run: |
-          nm /tmp/fwp-http2-owner-omitted | rg 'body|make_call|inspect_owner|fwp_str_new'
-          objdump -d --disassemble=body /tmp/fwp-http2-owner-omitted
-          objdump -d --disassemble=fwp_p_http2_body /tmp/fwp-http2-owner-omitted
+          nm /tmp/fwp-http2-owner-omitted | grep -E 'body|make_call|inspect_owner|fwp_str_new'
+          objdump -d /tmp/fwp-http2-owner-omitted | sed -n -e '/<body[^>]*>:/,/^$/p' -e '/<fwp_p_http2_body[^>]*>:/,/^$/p' -e '/<inspect_owner[^>]*>:/,/^$/p'
