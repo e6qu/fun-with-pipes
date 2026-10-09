@@ -1415,7 +1415,10 @@ static void g_spawn_sender(g_conn *c, g_stream *s, V iter, V enc, const fwp_remo
 
 /* ------------------------------------------------------------- client stubs */
 
-static void g_stub_fail(const fwp_remote *r, const char *addr, int code, const char *text) {
+/* Takes ownership of copied transport/status text before raising it. */
+static void g_stub_fail(const fwp_remote *r, const char *addr, int code, char *text) {
+    fwp_cleanup failure_text;
+    fwp_cleanup_push(&failure_text, fwp_tls_subject_free, text);
     if ((code == GRPC_INTERNAL || code < 0) && strncmp(text, "trap: ", 6) == 0) fwp_trap(text + 6);
     if (r->m.status_errors) g_grpc_error(code < 0 ? GRPC_UNAVAILABLE : code, text, r->m.grpc_error);
     if (code >= 0) g_trapf("service call %s (%s) failed: gRPC status %d: %s", r->what, addr, code, text);
