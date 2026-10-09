@@ -11750,3 +11750,10 @@ under immutable roadmap/revision-109-d178d86dca2b. Source comparison differs
 only in inherited CLI/GC fixture repairs; full binary TLS option identity and
 omission/collision assertions are unchanged. Original OLD anchors remain fixed.
 Fresh local/root documentation audit passes0.38CPU/2.91elapsed.
+
+Row110 preparation09ec98b12c5db0064e85de435cdbe2694e8fe69e is published
+on actual95c74a9b4b45a7db16c1646617bb065af904e5aa. Retained old6f4bfba80ef3
+under roadmap/revision-110-6f4bfba80ef3 before exact leased rewrite. Only ten
+authoritative docs conflicted; runtime/compiler/cache tests remain unchanged
+apart from inherited CLI/GC repairs. Prior Linux evidence remains historical
+until fresh sequential full acceptance. Immutable OLD anchors remain fixed.

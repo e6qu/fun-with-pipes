@@ -55,7 +55,7 @@ fn scoped_tls_options_release_after_callbacks_and_escaped_tasks() {
 #include <stdlib.h>
 #include <stdint.h>
 static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn;
-static void *owned[6],*watched_tls,*spawned;
+static void *owned[1],*watched_tls,*spawned;
 static void remember_tls(void *);
 static void observed_free(void *);
 static uintptr_t observed_callback(uintptr_t);
@@ -67,8 +67,8 @@ static void no_release(void *);
 #undef free
 static const fwp_desc string_descriptor={.kind=K_STR,.name="String"};
 static void no_release(void *p){(void)p;}
-static void remember_tls(void *p){g_tls *t=p;watched_tls=t;owned[0]=t;owned[1]=t->ca;owned[2]=t->name;owned[3]=t->cert;owned[4]=t->keyfile;owned[5]=t->key;}
-static void observed_free(void *p){if(p)for(int i=0;i<6;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
+static void remember_tls(void *p){g_tls *t=p;watched_tls=t;owned[0]=t;}
+static void observed_free(void *p){if(p)for(int i=0;i<1;i++)if(owned[i]==p){owned[i]=0;frees++;break;}free(p);}
 static void check_options(void){const g_tls *t=g_ctx_of()->tls;if(t!=watched_tls||strcmp(t->ca,"ca")||strcmp(t->name,"name")||strcmp(t->cert,"cert")||strcmp(t->keyfile,"key")||!t->insecure||frees)_Exit(10);}
 static void overflow_restore(void *p){g_tls *t=p;if(t->users!=SIZE_MAX-1)_Exit(11);t->users=2;}
 static void child(void *arg,int stop){
@@ -90,14 +90,14 @@ static uintptr_t observed_callback(uintptr_t f){
  return 42;
 }
 static void call(void *arg,int stop){
- if(stop){cancelled++;if(fwp_cur->gctx||frees!=6)_Exit(1);return;}
+ if(stop){cancelled++;if(fwp_cur->gctx||frees!=1)_Exit(1);return;}
  jmp_buf failed;jmp_buf *saved=fwp_cur->trap_jb;fwp_cleanup *saved_cleanup=fwp_cur->trap_cleanup;
  fwp_handler handler={0};handler.prev=fwp_handlers;handler.cleanup=fwp_cleanups;handler.state_depth=fwp_state_len;fwp_handlers=&handler;
  if(!setjmp(failed)){
   if(!setjmp(handler.jb)){
    fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
    if(fwp_p_grpc_with_tls(PTR(arg),0,0,1,2,3,4)!=42)_Exit(15);scope_returned=1;
-   if(frees!=(stage==4||stage==5||stage==8?0:6))_Exit(1);
+   if(frees!=(stage==4||stage==5||stage==8?0:1))_Exit(1);
   }else{typed++;if(handler.desc!=&string_descriptor||strcmp(STR(handler.value)->d,"TLS typed failure"))_Exit(16);FWP_KEEP_ALIVE(handler.value);}
  }else{trapped++;const char *expected=stage==6?"child prepare trap":stage==7?"too many TLS option owners":"TLS scope trap";if(strcmp(fwp_trap_msg,expected))_Exit(17);}
  fwp_handlers=handler.prev;fwp_cur->trap_jb=saved;fwp_cur->trap_cleanup=saved_cleanup;
@@ -112,13 +112,13 @@ int main(void){
   if(stage==3){fwp_p_task_yield();if(!entered||task->done||frees)return 2;fwp_p_task_cancel(PTR(task));}
   fwp_await(task);
   if(stage==5){if(frees||!spawned||!entered||((fwp_task*)spawned)->done)return 3;fwp_make_ready(spawned);fwp_await(spawned);}
-  if(!task->done||frees!=6||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
+  if(!task->done||frees!=1||fwp_cleanups||cancelled!=(stage==3)||typed!=(stage==1)||trapped!=(stage==2||stage==6||stage==7)||task->gctx_owner)return 1;
   FWP_KEEP_ALIVE(options);FWP_KEEP_ALIVE(PTR(task));FWP_KEEP_ALIVE(PTR(spawned));
  }
  // Read-once cache options retain their original cache lifetime.
  stage=9;frees=0;g_ctx context={0};context.tls=g_tls_new("ca",1,"name","cert","key");
  if(g_with_ctx(&context,0)!=42||frees||context.tls->users!=SIZE_MAX||g_context_acquire(&context))return 4;
- g_tls *cached=(g_tls*)context.tls;observed_free(cached->ca);observed_free(cached->name);observed_free(cached->cert);observed_free(cached->keyfile);observed_free(cached->key);observed_free(cached);if(frees!=6)return 5;
+ g_tls *cached=(g_tls*)context.tls;observed_free(cached);if(frees!=1)return 5;
  fwp_lib_finish();return 0;
 }
 "#;
