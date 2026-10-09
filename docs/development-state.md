@@ -214,7 +214,7 @@ still need their final squash rebases and six exact-head full gates.
 | 108 ownership-grpc-capture-resources | edac8c6a96dc | e36c9af3743f | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 109 fix-grpc-tls-pool-identity | 1c471fb6b348 | edac8c6a96dc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 110 ownership-grpc-environment-cache | 93d088fb187d | 1c471fb6b348 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 111 ownership-grpc-packed-options | a7d089cc5153 | 66d7d93e57f5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 111 ownership-grpc-packed-options | 73e37788e5c6 | 93d088fb187d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 112 ownership-grpc-connection-addresses | 996d5ee4ef4f | a7d089cc5153 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
