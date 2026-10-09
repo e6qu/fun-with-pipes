@@ -40,13 +40,13 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#100: native macOS and selected ownership through typed
+Main includes #74–#101: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
-wide counts, array elements and map/set elements. PR100 passed all six
-exact-head production gates and the roadmap documentation audit, then merged.
-Queue23 old-storage reclamation is the next focused delivery. Its final rebase
-and fresh production gates remain required. Exact heads, commands, failures and
-acceptance remain in [the handoff](docs/development-state.md).
+wide counts, array/map/set elements and reclamation of old counted storage.
+PR101 passed all six exact-head production gates and the documentation audit,
+then merged. Queue24 task result/deadline boundaries is the next delivery.
+Its final rebase and fresh production gates remain required. Exact heads,
+commands, failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux

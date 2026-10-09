@@ -33,9 +33,10 @@ size_t side entries keyed by canonical allocation metadata, without retaining
 new value roots. Overflow traps; release/sharing/reuse/collection clear entries.
 This does not change shared runtime or cycle fallback lifetimes.
 
-Generated drop functions release typed children at their last reference;
-young counted storage is freed immediately. Reclamation of old counted storage
-is the next delivery and remains gated by PR101.
+Generated drop functions release typed children and reclaim eligible counted
+storage at its last reference, at any age. Runtime-shared graphs remain on
+tracing. Returning storage clears old marks; record reuse/update restrictions
+retain the young-cell invariant.
 Unique records, variants and containers can reuse storage. Escape analysis,
 scalar replacement, specialized calls and pipeline fusion eliminate many
 allocations before counting is needed.
@@ -174,7 +175,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #100 includes the following contracts. Detailed primitive modes
+Main through PR #101 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -184,6 +185,9 @@ and measurements are in [history](roadmap-history.md).
 - Maps and sets own typed keys/elements across construction, copies, lookup
   and immutable updates. Synchronous callbacks borrow inputs and adopt results;
   typed destruction releases children and storage. General unwind remains prepared.
+- Eligible old counted storage is reclaimed at last release. Verification
+  clears freed child words so stale conservative roots cannot retain reused cells;
+  newly allocated cells become young. Shared graphs still require tracing.
 - Native counts stay exact above 254 with rare side entries. Ordered copied
   lists retain typed aliases; sort-by owns once-per-input keys and its stable
   copied result, releasing scratch after construction.
