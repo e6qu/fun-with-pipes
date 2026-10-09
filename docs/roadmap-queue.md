@@ -99,7 +99,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 75 | file-discard | `ownership-file-discard` | `5179067d6635` | `923ad4a4fb07` | `e21c92ea2f6c` |
 | 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `da4acc398637` | `30fe112db93c` | `923ad4a4fb07` |
 | 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `295b0da5c1f0` | `046f7e85a9eb` | `30fe112db93c` |
-| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `9609b73ef5ed` | `681dd55136b0` | `c889479eed7a` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `1a5f5ba98a32` | `681dd55136b0` | `c889479eed7a` |
 | 79 | resource-frame-fields | `ownership-resource-frame-fields` | `35c2aeb2923e` | `658e5b73ae1c` | `681dd55136b0` |
 | 80 | file-inline-path | `ownership-file-inline-path` | `e7d3882b67ae` | `2d903d6617d9` | `658e5b73ae1c` |
 | 81 | file-storage-disposal | `ownership-file-storage-disposal` | `faac017dc60d` | `750a5cffd46b` | `2d903d6617d9` |

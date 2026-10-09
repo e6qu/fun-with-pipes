@@ -11396,3 +11396,11 @@ CI37980022336 is queued, not acceptance. Row77 refresh
 Compiler/runtime/tests and actual WASI workflow match original, except inherited
 CLI/tracing harness repairs. Previous CURRENTb4482c259c1e is retained under
 its immutable revision before lease publication. Actual WASI proof needs CI.
+
+Row75 format0.44/0.83s passes. Guarded roadmap audit0.37/2.81s passes
+all44 tracked Markdown link/heading sets,106 immutable pairs and tag identities,
+contiguous queue and whole commit messages after preparations through row77.
+Row78 refresh1a5f5ba98a322efeabae30286e985b76d0843356 uses actual base295b0da5c1f0.
+Compiler/runtime/tests and WASI workflow match original except inherited CLI/GC
+harness repairs. Old CURRENT9609b73ef5ed is retained under its immutable
+revision before lease publication. Actual WASI proof awaits fresh runner gates.
