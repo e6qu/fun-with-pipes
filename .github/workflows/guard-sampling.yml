@@ -1,0 +1,16 @@
+name: Focused local guard sampling checks
+on:
+  push:
+    branches: [ownership-evidence-guard-sampling]
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - run: python3 scripts/check-roadmap.py
+      - run: df -h .
+      - run: python3 scripts/test-local-guard.py
