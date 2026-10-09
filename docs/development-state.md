@@ -89,7 +89,8 @@ changing files. Current73 is006aba78f1f5f16406a4c7cca5864781f959cdcf on299008333
 Rows74–81 refresh passes8.66CPU/93.03elapsed with exact reviewed source
 inheritance; original probes and actual-WASI requirements remain unchanged.
 Rows82–89 refresh passes8.50CPU/93.22elapsed; both row85 commits and HTTP GC
-fixture controls remain intact. Next independent work refresh90–112 and scoped evidence.
+fixture controls remain intact. Rows90–97 refresh passes8.57CPU/93.54elapsed with strict compiler/runtime/probe
+parity apart from the reviewed inherited fixes. Next refresh98–112 and scoped evidence.
 The table records actual bases; all earlier focused evidence predates these
 repairs unless stated otherwise. Each production delivery still needs its own
 final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
@@ -180,7 +181,7 @@ still need their final squash rebases and six exact-head full gates.
 | 94 ownership-grpc-receive-cleanup | d1f35d6121a4 | fec93c5ec707 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 95 ownership-grpc-force-cleanup | 1e5a5b4f4fb3 | d1f35d6121a4 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 96 ownership-grpc-render-cleanup | d94a2784952d | 1e5a5b4f4fb3 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 97 ownership-grpc-send-cleanup | 9330eab6253e | 05d8c33dc305 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 97 ownership-grpc-send-cleanup | 080be7e655e3 | d94a2784952d | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 98 ownership-grpc-request-encoding | 6e2236f73519 | 9330eab6253e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 99 ownership-grpc-canonical-encoding | b0d7d1b7d2a9 | 6e2236f73519 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 100 ownership-grpc-response-encoding | e6ae6c83dc46 | b0d7d1b7d2a9 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
@@ -259,7 +260,7 @@ accepts a current production head. Superseded runs are archived in history.
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | 372375a15557b0c295cb5365b5536b4f3fe7f8ab | CI38011999875 queued on repaired source88 f194c55d4351; original holder/cycle/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.43/3.49s passes. Prior3f0c430/CI37982696642 predates the repairs; explicit draining does not prove automatic cycle reclamation |
 | Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 running on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
-| Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 running on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
+| Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 passes on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
 | Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
