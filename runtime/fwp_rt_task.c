@@ -186,6 +186,8 @@ struct fwp_task {
      * then again with 1 if the task was cancelled while running it */
     void (*cfn)(void *arg, int cancelled);
     void *carg;
+    /* Nonallocating, nonthrowing disposal after all inherited-context children finish. */
+    void (*cfinish)(void *arg);
     fwp_cleanup *trap_cleanup;
     jmp_buf *trap_jb;           /* traps recovered here (a served call) */
     void *gctx;                 /* gRPC context, inherited by children */
@@ -737,6 +739,11 @@ static void fwp_task_main(void) {
     t->unwinding = 1;
     fwp_handlers = 0;
     fwp_join_children();
+    if (t->cfinish) {
+        void (*finish)(void *) = t->cfinish;
+        t->cfinish = 0;
+        finish(t->carg);
+    }
     if (t->owns_thunk) {
         V thunk = t->thunk;
         t->thunk = 0;
