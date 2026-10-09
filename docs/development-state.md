@@ -40,8 +40,8 @@ maps and sets. Phase1 is done; phase2 remains incomplete; phases3–6 are pendin
 PR101 https://github.com/e6qu/fun-with-pipes/pull/101 is the only open PR.
 Its current head is 6fddf4f0b0734dd0e3a78ea7f8211f805d82dd9c, with actual
 base eeef3b5d3f5386015c6dead55cc5da632f61d61d. CI37969632273 (six production jobs)
-and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs passes and the six production
-jobs remain queued/running, not acceptance. Compiler/runtime/tests match
+and CI37969632440 (roadmap_docs) are current production gates; roadmap_docs and bench pass. The five other
+production jobs are running; all six are required for acceptance. Compiler/runtime/tests match
 focused-accepted495411d33f60 exactly. The final publication records the merged
 map/set contracts and inherits the portable roadmap audit. Require all six
 production jobs and roadmap_docs at this exact head before squash with
@@ -80,8 +80,8 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | b16195bcebf3 | 459287698745 | Two tests11.07/22.31s; lint2.42/4.93s pass; fresh Linux follows |
 | 34 ownership-argument-preparation | 9f56744c4eb7 | b16195bcebf3 | Test9.91/20.00s; lint2.69/5.35s and format0.34/0.61s pass |
 | 35 ownership-constructor-unwind | 82f58d851b73 | 9f56744c4eb7 | Native10.06/20.35s; exact unit3.38/7.11s; lint2.44/4.84s and format0.46/0.74s pass |
-| 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Runtime/compiler unchanged; focused check running |
-| 37 ownership-worker-preparation | 3b6bf091127c | df5862861e71 | 23.82 / 47.71 s |
+| 36 ownership-worker-boxing | 6032ecffcb7d | 82f58d851b73 | Test10.21/20.62s; lint2.42/4.87s and format0.35/0.62s pass |
+| 37 ownership-worker-preparation | 3bd34dafb62f | 6032ecffcb7d | Test9.50/19.16s; lint2.65/5.23s and format0.34/0.60s pass |
 | 38 ownership-loop-preparation | 7ae78137d444 | 3b6bf091127c | 26.30 / 52.71 s |
 | 39 ownership-variant-preparation | f0049c4aabe0 | 7ae78137d444 | 19.77 / 39.78 s + exact unit 3.28 / 6.82 s |
 | 40 ownership-constructor-types | c90fe5a9d170 | f0049c4aabe0 | 16.17 / 32.40 s + two exact units |
