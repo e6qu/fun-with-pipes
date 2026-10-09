@@ -149,7 +149,7 @@ still need their final squash rebases and six exact-head full gates.
 | 102 ownership-grpc-client-failure-text | 5f4c3b2423ac | b1c6a68771c7 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 103 ownership-grpc-client-receive | e25cebbd8ac3 | 5f4c3b2423ac | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 104 ownership-grpc-connect-cleanup | 9f6e7092f00c | e25cebbd8ac3 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Startup test11.73/23.95s passes; local lint stopped on du race; CI37985348012 format/lint/startup pass, overall fails another fixture |
+| 105 ownership-grpc-connect-startup | a8ed839d69f5 | 9f6e7092f00c | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | CI37985348012 context/trap/cancellation test passes; overall client run fails another fixture |
 | 107 ownership-grpc-context-resources | 090422d2f330 | 911fcf78c5c9 | Refreshed source unchanged; scoped options/retained task checks follow |
 | 108 ownership-grpc-capture-resources | 52668c476b2a | 090422d2f330 | Refreshed source unchanged; capture/alias/rollback checks follow |
