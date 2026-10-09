@@ -10066,3 +10066,33 @@ cleanup controls pass O1/O2 with GC off/on, stress/verification and poison.
 
 Client/request focused lint passes2.38 / 4.86 s; guarded format apply
 0.45 / 0.87 s and check0.48 / 0.75 s pass. No resource limit exceeded.
+
+Row101 preparation published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93
+on actualb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6. Immutable first anchors
+recorded; entire commit message one line. PR98 remains the sole delivery.
+
+## Client failure text ownership preparation, 2026-10-09
+
+Independent ownership-grpc-client-failure-text starts on2339ff08e4211bf5e831b4624bb37102b2f83d93,
+/private/tmp/fwp-grpc-client-failure-text-worktree. g_stub_fail takes owned
+char* and scopes copied transport/status/iterator failure text before raw
+trap or typed GrpcError raising. Eight callers supply owned copied text;
+future received-buffer scopes must clear transferred text to avoid double free.
+fwp_trap copies text before unwinding, and typed failure copies it into String.
+Focused fixture checks exact trap contents and typed error code/text plus omitted
+cleanup O1/O2/GC/poison. Guarded clean0.07 / 0.37 s; focused tests run.
+
+## PR98 Linux collector workload repair, 2026-10-09
+
+Completed six-job CI37929002304 at542fc08 passes all five macOS/bench jobs
+but Linux fails gc::long_loop_runs_in_bounded_memory, tests/gc.rs194: zero
+collections. Output21768000 and >800 MiB allocation assertions preceding it
+pass; RSS assertion follows and has not run. Full logs
+/private/tmp/fwp-pr98-linux-failure.log. Ownership reclamation/reuse now
+keeps this churn loop below the collection threshold. Tracing-specific build
+will explicitly set FWP_FREE=0 and FWP_REUSE=0; preserve all allocation,
+collection (>10), RSS (<64 MiB) and GC-off output assertions. Local macOS
+skips Linux /proc RSS test, so only runner execution establishes acceptance.
+
+Client failure text/request tests pass9.02 / 18.93 s; lint2.54 / 5.16 s;
+format apply0.44 / 0.83 s and check0.45 / 0.83 s. No limit exceeded.

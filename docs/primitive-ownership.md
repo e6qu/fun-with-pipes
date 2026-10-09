@@ -245,6 +245,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 99 | Message/request encoders own canonical serialization scratch until transcoding completes or unwinds | Sequential CI; actual fixed-width/oneof bytes, partial serialization/transcoder traps, diagnostics and omitted cleanup |
 | 100 | Served unary/stream/error responses own encoded buffers through cancellation; error canonical scratch owns partial serialization | Sequential CI; real parked scheduler cancellation, normal bytes, partial traps and omitted cleanup controls |
 | 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Sequential CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
+| 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Sequential CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

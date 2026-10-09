@@ -58,7 +58,7 @@ prepared before the CLI fix must inherit it on final rebase; source comparisons
 against older preparations should allow this explicitly inherited repair.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row99 are published with focused checks;
+restored byte-for-byte afterward. Independent preparations through row101 are published with focused checks;
 row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
@@ -152,6 +152,7 @@ still need their final squash rebases and six exact-head full gates.
 | 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
 | 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
 | 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
+| 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -211,12 +212,23 @@ Independent row101 ownership-grpc-client-requests starts on actualb44f53c,
 /private/tmp/fwp-grpc-client-requests-worktree. Both synchronous client request
 buffers now scope encoding and cancellable sends. Both client/request tests
 pass9.19 / 18.71 s; lint2.38 / 4.86 s and format0.48 / 0.75 s pass.
-Publication follows without a competing PR.
-Remaining audit: canonical decode and client status/message paths.
+Published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93, no competing PR.
+Independent row102 ownership-grpc-client-failure-text starts on2339ff0,
+/private/tmp/fwp-grpc-client-failure-text-worktree. Client failure helper now
+accepts ownership of copied transport/status/iterator failure text, with
+cleanup across raw traps and typed GrpcError raising. All eight callers supply
+owned copies; both focused tests pass9.02 / 18.93 s, lint2.54 / 5.16 s and
+format0.45 / 0.83 s. Publish separately; prioritize PR98 collector repair.
+Remaining audit: canonical decode and client receive/status cleanup.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery at542fc08, new exact-head CI37929002304:
-bench and all four ARM/Intel macOS jobs pass; Linux runs.
+Completed CI37929002304: bench and all four ARM/Intel macOS jobs pass;
+Linux fails gc::long_loop_runs_in_bounded_memory at tests/gc.rs194: zero
+collections, while output/allocation/RSS assertions preceding it pass.
+Full log /private/tmp/fwp-pr98-linux-failure.log. Explicitly disable
+FWP_FREE/FWP_REUSE for this tracing-only workload, preserving all assertions.
+Linux execution must pass on fresh exact-head CI; local macOS skips this test.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
 ACTUAL refreshed base is542fc08; final rebase follows the eventual PR98 squash.
 
@@ -263,10 +275,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-client-requests-worktree; response/array checks pass.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
-Last guarded doc audit passes eleven link/heading sets, 93 immutable queue
-ancestry pairs and whole commit messages (0.16 s CPU / 1.22 s elapsed).
+belongs to /private/tmp/fwp-grpc-client-failure-text-worktree; earlier checks pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
+Last guarded doc audit passes eleven link/heading sets, 95 immutable queue
+ancestry pairs and whole commit messages (0.18 s CPU / 1.30 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

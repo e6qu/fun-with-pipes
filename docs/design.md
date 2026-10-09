@@ -508,3 +508,9 @@ Prepared synchronous client requests also scope their encoded unary/iterator
 buffers before encoding and until sending returns or cancellation unwinds.
 Request bytes and end markers remain unchanged. Connection/user-code ownership
 and complete client response/status cleanup remain separate audits.
+
+Prepared client failure raising takes ownership of copied transport, status
+and first-iterator failure text. Raw trap messages and typed GrpcError values
+copy their contents before cleanup releases the original text. All current
+callers transfer owned copies; future receive scopes must clear transferred
+text to avoid releasing it twice.
