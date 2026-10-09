@@ -156,12 +156,12 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 006aba78f1f5 | 2990083331a2 | Three integrations12.65/25.47s; three units3.81/7.73s; lint6.13/12.55s and format0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | 38d83189cedb | 006aba78f1f5 | Test8.17/18.29s; lint5.82/12.43s and format0.43/0.83s pass |
 | 75 ownership-file-discard | f7b57915dd7a | 38d83189cedb | Test13.04/26.17s; lint5.83/12.17s and format0.44/0.83s pass |
-| 76 ownership-file-runtime-boundaries | da4acc398637 | 5179067d6635 | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
-| 77 ownership-wasm-resource-counts | 295b0da5c1f0 | da4acc398637 | Actual WASI gates remain required; native bump checks are not WASI proof |
-| 78 ownership-wasm-count-disposal | 1a5f5ba98a32 | 295b0da5c1f0 | Actual WASI gates required; source unchanged except inherited harness repairs |
-| 79 ownership-resource-frame-fields | 76374abb1077 | 1a5f5ba98a32 | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
-| 80 ownership-file-inline-path | 8454a97667bb | 76374abb1077 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
-| 81 ownership-file-storage-disposal | d39b6145cb55 | 8454a97667bb | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
+| 76 ownership-file-runtime-boundaries | 4c6618c4eb91 | f7b57915dd7a | Test18.99/38.40s; lint5.98/12.65s and format0.46/0.84s pass |
+| 77 ownership-wasm-resource-counts | 8d4ba07d6def | 4c6618c4eb91 | Actual WASI gates remain required; native bump checks are not WASI proof |
+| 78 ownership-wasm-count-disposal | e037bc5a06dc | 8d4ba07d6def | Actual WASI gates required; source unchanged except inherited harness repairs |
+| 79 ownership-resource-frame-fields | d6eabb576bd2 | e037bc5a06dc | Test10.09/21.47s; lint6.10/13.03s and format0.55/1.08s pass |
+| 80 ownership-file-inline-path | 19ed00f179a3 | d6eabb576bd2 | Two tests10.54/21.29s; lint6.87/13.94s and format0.54/1.07s pass |
+| 81 ownership-file-storage-disposal | 5a4d180478bb | 19ed00f179a3 | Test8.53/19.18s; lint6.72/13.84s and format0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | 47abf911f844 | d39b6145cb55 | Test8.16/18.70s; lint6.09/12.99s and format0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
