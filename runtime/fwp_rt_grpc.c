@@ -1114,10 +1114,13 @@ static void g_encode(const g_codec *k, V v, int tag, h2_buf *out) {
         return;
     }
     fwp_buf canon = {0};
+    fwp_cleanup canonical_cleanup;
+    fwp_cleanup_push(&canonical_cleanup, fwp_file_buffer_cleanup, &canon);
     if (tag) buf_putc(&canon, 0);
     fwp_encode(&canon, v, k->ty);
     if (!pb_encode(k->schema, k->node, (const unsigned char *)canon.d, canon.len, out))
         g_trapf("cannot encode a message: %s", h2_err);
+    fwp_cleanup_pop(&canonical_cleanup);
     free(canon.d);
 }
 
@@ -1421,9 +1424,12 @@ static void g_stub_fail(const fwp_remote *r, const char *addr, int code, const c
 
 static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out) {
     fwp_buf canon = {0};
+    fwp_cleanup canonical_cleanup;
+    fwp_cleanup_push(&canonical_cleanup, fwp_file_buffer_cleanup, &canon);
     for (int i = 0; i < r->m.nreq; i++) fwp_encode(&canon, vals[i], r->m.req[i]);
     if (!pb_encode(r->m.schema, r->m.req_node, (const unsigned char *)canon.d, canon.len, out))
         g_trapf("cannot encode the arguments of %s: %s", r->what, h2_err);
+    fwp_cleanup_pop(&canonical_cleanup);
     free(canon.d);
 }
 

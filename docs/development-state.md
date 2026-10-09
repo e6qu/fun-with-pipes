@@ -50,8 +50,7 @@ all14 RC units3.25/6.88s, lint2.44/4.99s, format0.34/0.61s and all three audits
 pass. Publication1.75CPU/18.26elapsed and PR creation0.20/3.94s pass. Oldbcd3b392050b
 is retained remotely before exact-lease publication. Resolved empty-docs commit
 bookkeeping is archived in history; native rebase was not rerun.
-CI38066365077 passes ARM GC stress; the other three macOS jobs run while
-Linux and bench are queued.
+CI38066365077 passes ARM GC stress; all remaining five production jobs run.
 Docs38066365141 passes at the frozen head. Require all seven
 exact-head gates, then match-head squash with subject
 `Protect worker result fields until record and variant boxing succeeds` and empty body.
@@ -72,7 +71,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–97 are refreshed and published on their actual predecessors.
+Preparations39–98 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -88,17 +87,16 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task98 owns detached request-encoding scratch through
-encoding traps and cancellable sending (`ownership-grpc-request-encoding`).
-Preparation97 published0203804096d8869a8005d3e29d0ec7d8297429a4 on actual96b4087dc07beb,
-with original source/probes preserved. Four send/decode/receive/status controls
-pass; three audits and publication1.79CPU/17.84elapsed pass.
-Rebase98 FROM actual97oldbf2371572323 ONTO published970203804096d8;
-Nativeff35c073546d preserves original source/probes. All four request/send/force/
-peer-completion tests14.14CPU/29.05elapsed pass, preserving exact omitted cleanup
-exit1, request/wire buffer release counts, encode trap/reset text, cancelled
-suspended sends and O1/O2 GC/poison modes. Lint2.48CPU/4.95elapsed and format0.51/0.95s
-pass; finish all11 docs/audits before retained publication. Next99 canonical encoding cleanup.
+Current independent task99 releases canonical serialization scratch on traps
+and transcoder failure (`ownership-grpc-canonical-encoding`). Preparation98
+published9c2c91fa8e21e1051198312a952c024f7a099bf4 on actual970203804096d8,
+with original source/probes preserved. Four request/send/decode/peer controls pass;
+three audits and publication1.82CPU/18.61elapsed pass.
+Rebase99 FROM actual98oldb82589474d2a ONTO published989c2c91fa8e21;
+run unchanged canonical/request/send/force controls, lint/format and all11 docs/
+audits before retained publication. Preserve exact omitted cleanup exit1, canonical
+I64 bytes and tagged result offsets, exact serialization/transcoder trap text,
+O1/O2 and GC/poison modes. Next100 response encoding cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -214,7 +212,7 @@ still need their final squash rebases and six exact-head full gates.
 | 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | All four original force/receive/status/completion tests16.95CPU/34.13elapsed, lint2.40/4.89s and format0.44/0.85s pass; source/probes unchanged including three omitted-release exit1 controls, decoder/copy traps, typed error/text transfers and O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | All four original send/force/receive/status tests15.07CPU/30.73elapsed, lint2.47/5.14s and format0.46/0.84s pass; source/probes unchanged including exact omitted cleanup exit1, plain/gzip frame bytes, partial/zero-window cancellation and resumed flow control across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 98 ownership-grpc-request-encoding | ff35c073546d | 0203804096d8 | All four original request/send/force/peer tests14.14CPU/29.05elapsed, lint2.48/4.95s and format0.51/0.95s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, encode trap/reset text and suspended-send cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | All four original request/send/force/peer tests14.14CPU/29.05elapsed, lint2.48/4.95s and format0.51/0.95s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, encode trap/reset text and suspended-send cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 99 ownership-grpc-canonical-encoding | 3c67663986c7 | b82589474d2a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 100 ownership-grpc-response-encoding | 61a0def48b7d | 3c67663986c7 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 101 ownership-grpc-client-requests | c05384110969 | 61a0def48b7d | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
