@@ -11883,3 +11883,87 @@ Fixture propagation row97: 25838578a6bfa5bd030af964d9fbe0cfd8132a69 → 9330eab6
 Fixture propagation row98: b7d41363523d08c941a903d2861284ef6a5aa691 → 6e2236f73519f287673e97385316fa855d4d7d83, actual base9330eab6253e7029191457f9f8d3eda2bed6c7b6. Retained roadmap/revision-098-b7d41363523d before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
 
 Fixture propagation row99: 4872607fc02fb87af0f68770ccea47354320edb7 → b0d7d1b7d2a9aa402e84be9f96fd399f85157f0a, actual base6e2236f73519f287673e97385316fa855d4d7d83. Retained roadmap/revision-099-4872607fc02f before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row100: 7fe3282b14133707e35e7dd9f3f2bdd47c59c5e6 → e6ae6c83dc465c5eccb9c94fa2cb983b732db4c4, actual baseb0d7d1b7d2a9aa402e84be9f96fd399f85157f0a. Retained roadmap/revision-100-7fe3282b1413 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row101: c6b5ad8c827cf734f0883c9daa676c0c0541a050 → b1c6a68771c728f2baddc2f9222fe62f21fa2ede, actual basee6ae6c83dc465c5eccb9c94fa2cb983b732db4c4. Retained roadmap/revision-101-c6b5ad8c827c before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row102: 488801a9f2f74734b60e9516edd8ca92a32edf1d → 5f4c3b2423accb0a02640d8c7556944e2905e8d6, actual baseb1c6a68771c728f2baddc2f9222fe62f21fa2ede. Retained roadmap/revision-102-488801a9f2f7 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row103: 8ccdd092478cab8e0d30400f6703e4624ec1055f → e25cebbd8ac341a37cfb2b0aebda78ba220e4c41, actual base5f4c3b2423accb0a02640d8c7556944e2905e8d6. Retained roadmap/revision-103-8ccdd092478c before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row104: 8bf114c615fe8a36b5e3daa55b232c0c50445dd6 → 9f6e7092f00c8d21d8fed1d7ba51146c42248d0b, actual basee25cebbd8ac341a37cfb2b0aebda78ba220e4c41. Retained roadmap/revision-104-8bf114c615fe before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row105: 4d4cbacd0a7850fd046bba139683e67e610d5b2c → a8ed839d69f54ebe99c3e999a15b03e1368de3d3, actual base9f6e7092f00c8d21d8fed1d7ba51146c42248d0b. Retained roadmap/revision-105-4d4cbacd0a78 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row106: 911fcf78c5c9a30c4eba3e2cfa63844005f3dee9 → 29104d9449075725d09fc3e517d15567f5c3b47f, actual basea8ed839d69f54ebe99c3e999a15b03e1368de3d3. Retained roadmap/revision-106-911fcf78c5c9 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row107: 090422d2f3302b3ae2b3d6430a194783d1c25c16 → c34c313ccfb05c1d9f6d6d9f9220b5a0570c297a, actual base29104d9449075725d09fc3e517d15567f5c3b47f. Retained roadmap/revision-107-090422d2f330 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row108: 52668c476b2acc348ed611fc8d75e2b69504302f → 8f66e28763b4d0f55fdd195272e907b474278122, actual basec34c313ccfb05c1d9f6d6d9f9220b5a0570c297a. Retained roadmap/revision-108-52668c476b2a before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row109: 95c74a9b4b45a7db16c1646617bb065af904e5aa → cf14552bdba50683ad04221bfe483474b1d274bd, actual base8f66e28763b4d0f55fdd195272e907b474278122. Retained roadmap/revision-109-95c74a9b4b45 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row110: 09ec98b12c5db0064e85de435cdbe2694e8fe69e → 393456e6e5ca161b76ce18ead2ca6145f86a6be1, actual basecf14552bdba50683ad04221bfe483474b1d274bd. Retained roadmap/revision-110-09ec98b12c5d before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row111: 4fd2d18953859eee788d8d383280acd1946162bc → a4f347499f19e352351bdded9fa5dd1ef7878716, actual base393456e6e5ca161b76ce18ead2ca6145f86a6be1. Retained roadmap/revision-111-4fd2d1895385 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row112: 93783d4ffda4744130d696c2e997c4a50c445b27 → 215d7badbd49fc5ce47a6857fa180dc16fd37f18, actual basea4f347499f19e352351bdded9fa5dd1ef7878716. Retained roadmap/revision-112-93783d4ffda4 before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+## PR103 accepted and next guard delivery (2026-10-10 local time)
+
+All six production jobs in CI37982307280 and roadmap_docs CI37982307209 pass
+at exact1537961db5da753e123162aa8441cb4488d9a66b. Authorized explicit match-head
+squash at2026-10-09T21:00:38Z produces main3bb34267997479794aeac9fff3447da94c16ca4d.
+Entire Git message is the one line `Release registered owners before nonlocal unwind`,
+48 characters, empty body, no trailers or attribution. Full tree77e1008656d4330285a658cc111e596a9fda720f
+exactly matches the accepted PR head. Duplicate main CI37990763675 was cancelled
+only after accepted gates and tree parity; it is not acceptance.
+
+Serial guarded fixture propagation90–112 passes3.50CPU/98.11elapsed. Each
+actual old base and previous head is retained in the entries above; source
+compiler/runtime/workflows remain byte-identical and both fixture files match
+accepted normal evidence exactly. All previous heads were retained remotely
+before explicit leased rewrites. ORIGINAL OLD anchors/tags never moved.
+The durable last-stage journal is /private/tmp/fwp-fixture-propagation-journal.json;
+root tables/history preserve all actual refs. No full local gate was run.
+
+Before main fast-forward, all ten root docs were saved and SHA256-verified in
+/private/tmp/fwp-main-docs-pre103. Restore verified all ten byte-exact after
+fast-forward fromc7b3e3f to3bb3426. Main docs now mark queue25 runtime cleanup
+merged, guard sampling repair next and queue26 afterward. Ownership remains
+incomplete and tracing is still the compatibility fallback.
+
+Guard repair final sourced4c832188d3563e85410adeb8763bf6a74f4833b is rebased
+from actualc7b3e3f onto main1033bb3426. Only ten authoritative docs conflicted;
+scripts and roadmap workflow match focused-accepted063f4ca exactly. Updated
+root audit passes44-doc/106-pair/tag/whole-message checks0.31CPU/2.52elapsed.
+Final integration repeat under the original root guard passes all three checks
+0.20CPU/1.36elapsed;
+new publication follows with a separate exact-head full production gate.
+
+PR104 https://github.com/e6qu/fun-with-pipes/pull/104 opens for the guard repair
+after103 merges. Current head925daae1a95e3d68f4d622b72d8f642aa5a4346b has
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. The initial doc
+snapshot3f72a0d incorrectly copied the initial local timing into the final
+repeat; corrected to actual0.20CPU/1.36elapsed before acceptance. Code, scripts,
+tests and workflows are byte-identical across the timing-only correction.
+Superseded full CI37991334046 is cancelled; old roadmap_docs37991334167 passed
+but is not the new head's gate. Require all six fresh exact-head jobs plus
+roadmap_docs before explicit squash, single-line subject and empty body.
+
+## Row26 preparation after PR103
+
+Rebase previous published bb77c078354f14c3f8e205f17bde2edb199b945c from actual
+6421c025b3d53ed59a177aac1b0f9fff662e1736 onto main103
+3bb34267997479794aeac9fff3447da94c16ca4d produces published
+0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests are unchanged;
+only the ten authoritative documentation conflicts were resolved. Old publication
+is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
+reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
+format0.32/0.59s. This preparation is not a production gate or merge; final
+rebase starts from actual3bb3426 after the guard repair merges.
+
+Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
+
+Sequential preparation refresh row28: b5f44e80462c7a246c0c09c8f8fd3838fd118866 → e06c447336ae97eff77b118ebaac194f6968623d, actual base71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0. Retained roadmap/revision-028-b5f44e80462c before explicit leased publication. Compiler/runtime/workflow code unchanged; tests are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.

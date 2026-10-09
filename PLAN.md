@@ -40,14 +40,14 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#102: native macOS and selected ownership through typed
+Main includes #74–#103: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
 wide counts, array/map/set elements and reclamation of old counted storage.
-Task result/deadline boundaries merged in PR102 after all six exact-head
-production jobs and the documentation audit passed. Queue25 registered runtime
-unwind cleanup is open as PR103. After its exact-head gates and squash, deliver
-the local guard sampling repair, then queue26 reuse tokens. Exact heads,
-commands, failures and acceptance remain in [the handoff](docs/development-state.md).
+Task result/deadline boundaries and registered runtime unwind cleanup merged
+in PR102–103 after all six exact-head production jobs and roadmap_docs passed.
+Deliver the local guard sampling repair next, then queue26 reuse tokens.
+Exact heads, commands, failures and acceptance remain in
+[the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
 wide-record boxing repair. Its unchanged full allocation test passes on Linux

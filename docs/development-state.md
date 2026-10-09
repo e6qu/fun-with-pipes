@@ -1,6 +1,6 @@
 # Session handoff
 
-Updated 2026-10-09. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
+Updated 2026-10-10. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 [design](design.md) before changing code. This is the live handoff;
 [queue](roadmap-queue.md) preserves immutable anchors and
 [history](roadmap-history.md) preserves detailed checks and superseded status.
@@ -28,28 +28,35 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is c7b3e3f7433b47686c82426173b97f368b792c56 (#102). All six
-CI37975866229 production gates and roadmap_docs CI37975866346 pass at
-51cf1c6987888ddbe69fdeb79455208fb1eb077a. Explicit match-head squash at
-2026-10-09T19:41:46Z verifies the entire one-line message:
-`Own task result wrappers and preserve typed deadline aliases`.
-#74–#102 deliver native macOS and selected ownership through typed collections,
-old-storage reclamation and task result/deadline boundaries. Phase1 is done;
-phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback.
+Main is3bb34267997479794aeac9fff3447da94c16ca4d (#103). All six
+production jobs in CI37982307280 and roadmap_docs CI37982307209 pass at
+1537961db5da753e123162aa8441cb4488d9a66b. Explicit match-head squash at
+2026-10-09T21:00:38Z has the entire one-line message:
+`Release registered owners before nonlocal unwind`.
+Its complete tree77e1008656d4330285a658cc111e596a9fda720f matches the accepted
+PR head. Raw Git message verification passes. Duplicate post-merge main
+CI37990763675 is cancelled only after this parity check, not acceptance.
 
-PR103 https://github.com/e6qu/fun-with-pipes/pull/103 is the only open PR.
-Current head1537961db5da753e123162aa8441cb4488d9a66b has actual main base
-c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
-focused-accepted6421c025b3d5 exactly. Production CI37982307280: bench and both dedicated macOS GC jobs pass;
-Both regular macOS jobs also pass; Linux is the sole remaining gate.
-Roadmap_docs CI37982307209 passes.
-Queued runs are not acceptance. Require all six
-production jobs and roadmap_docs at this exact head before explicit squash
-with `Release registered owners before nonlocal unwind` and empty body.
-Row26 actual prepared base remains6421c025; final-rebase it only after the actual
-row25 squash exists. OLD anchors stay fixed. Duplicate post-merge main
-CI37981976609 is cancelled after accepted-source/workflow parity, not acceptance.
-Superseded PR101 CI37968881919 and duplicate main CI37975529386 remain cancelled.
+#74–#103 deliver native macOS and selected ownership through typed collections,
+old-storage reclamation, task result/deadline boundaries and registered runtime
+unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
+Tracing remains the fallback. PR104 https://github.com/e6qu/fun-with-pipes/pull/104
+is the only open PR, current head925daae1a95e3d68f4d622b72d8f642aa5a4346b,
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. Production
+CI37991460642 is queued/running; roadmap_docs CI37991460672 passes. Guard scripts/workflow
+match focused-accepted063f4ca exactly; final local integration repeat passes
+0.20CPU/1.36elapsed and Linux evidence37986986407 passes. Require all six
+exact-head production jobs and roadmap_docs before explicit squash with
+`Pause guarded compiler workloads while sampling target size` and empty body.
+A timing-only doc correction supersedes3f72a0d; old CI37991334046 is cancelled
+and old docs37991334167 passed but neither is this head's acceptance.
+Row26 is published at0a7203f5c55949d3aefb6eec02d5ec69063f0e2c on actual
+main1033bb34267997479794aeac9fff3447da94c16ca4d. Compiler/runtime/tests match
+previousbb77c078 exactly. Six focused ownership/unwind tests pass18.68CPU/
+37.65elapsed; clippy passes2.54/5.04s and format0.32/0.59s. The old head is
+retained remotely at roadmap/revision-026-bb77c078354f. Keep the next PR separate
+until104 merges, then final-rebase from actual3bb3426 onto the guard squash.
+OLD anchors stay fixed.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
 repairs on final rebases. Row112's formatting failure is repaired and focused
@@ -66,13 +73,9 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
-| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
-| 25 ownership-unwind-runtime | 1537961db5da | c7b3e3f7433b | PR103 source matches focused-accepted6421c025; fresh full gates follow |
-| 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
-| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
-| 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
+| 26 ownership-reuse-tokens | 0a7203f5c559 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
+| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Source unchanged; inherited main documentation gate; fresh sequential gates follow |
+| 28 ownership-runtime-call-cleanup | e06c447336ae | 71c2405dd0e0 | Rebased onto refreshed preceding delivery; source unchanged; fresh sequential gates follow |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
 | 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
 | 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
@@ -144,22 +147,22 @@ still need their final squash rebases and six exact-head full gates.
 | 97 ownership-grpc-send-cleanup | 9330eab6253e | 05d8c33dc305 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 98 ownership-grpc-request-encoding | 6e2236f73519 | 9330eab6253e | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 99 ownership-grpc-canonical-encoding | b0d7d1b7d2a9 | 6e2236f73519 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Response test9.09/18.46s; lint5.76/13.10s and format0.46/0.87s pass |
-| 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Client test8.38/16.90s; lint5.92/13.01s and format0.46/0.86s pass |
-| 102 ownership-grpc-client-failure-text | 488801a9f2f7 | c6b5ad8c827c | Static fixture identities verified on normal Linux CI37989574765 and ARM8.63/17.84s; later propagation follows |
-| 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Receive test10.13/20.40s; lint6.00/13.19s and format0.45/0.85s pass |
-| 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Connect test7.73/16.98s; lint6.15/13.36s and format0.44/0.86s pass |
-| 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Startup test11.73/23.95s passes; local lint stopped on du race; CI37985348012 format/lint/startup pass, overall fails another fixture |
-| 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | CI37985348012 context/trap/cancellation test passes; overall client run fails another fixture |
-| 107 ownership-grpc-context-resources | 090422d2f330 | 911fcf78c5c9 | Refreshed source unchanged; scoped options/retained task checks follow |
-| 108 ownership-grpc-capture-resources | 52668c476b2a | 090422d2f330 | Refreshed source unchanged; capture/alias/rollback checks follow |
-| 109 fix-grpc-tls-pool-identity | 95c74a9b4b45 | 52668c476b2a | Refreshed source unchanged; old focused evidence remains historical; new checks follow |
-| 110 ownership-grpc-environment-cache | 09ec98b12c5d | 95c74a9b4b45 | Refreshed source unchanged; prior Linux evidence historical; new checks follow |
-| 111 ownership-grpc-packed-options | 4fd2d1895385 | 09ec98b12c5d | Both packed-storage and format commits preserved; fresh Linux checks follow |
-| 112 ownership-grpc-connection-addresses | 93783d4ffda4 | 4fd2d1895385 | Full-address and format commits preserved; fresh Linux checks follow |
+| 100 ownership-grpc-response-encoding | e6ae6c83dc46 | b0d7d1b7d2a9 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 101 ownership-grpc-client-requests | b1c6a68771c7 | e6ae6c83dc46 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 102 ownership-grpc-client-failure-text | 5f4c3b2423ac | b1c6a68771c7 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 103 ownership-grpc-client-receive | e25cebbd8ac3 | 5f4c3b2423ac | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 104 ownership-grpc-connect-cleanup | 9f6e7092f00c | e25cebbd8ac3 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 105 ownership-grpc-connect-startup | a8ed839d69f5 | 9f6e7092f00c | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 106 ownership-grpc-context-restore | 29104d944907 | a8ed839d69f5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 107 ownership-grpc-context-resources | c34c313ccfb0 | 29104d944907 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 108 ownership-grpc-capture-resources | 8f66e28763b4 | c34c313ccfb0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 109 fix-grpc-tls-pool-identity | cf14552bdba5 | 8f66e28763b4 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 110 ownership-grpc-environment-cache | 393456e6e5ca | cf14552bdba5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
-Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–24 are merged. Row25 is the next focused delivery. Detailed commands, full hashes,
+Prepared focused evidence and source-parity proofs remain in history.
+The guard repair is current, then row26. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
@@ -250,16 +253,17 @@ can be broken. Preserve raw interpreter comparisons and original pipe semantics.
 Row105 lint stopped when rustc removed temporary rmetaJAcTae during target du.
 This is incomplete verification, not a resource-limit waiver. No workload remains.
 Separate branch fix-local-guard-sampling in /private/tmp/fwp-guard-sampling-worktree
-is published at063f4ca9729253c0cdc79945181701adc8b1953a, based on
-mainc7b3e3f. Pause the guarded workload during target sampling; keep
+has final sourced4c832188d3563e85410adeb8763bf6a74f4833b on actual
+main3bb34267997479794aeac9fff3447da94c16ca4d, with scripts/workflow identical
+to focused-accepted063f4ca. Pause the guarded workload during target sampling; keep
 RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
 All three deterministic integration checks pass under the original root guard:
-CPU0.17/elapsed1.24s. They verify suspension/resumption, sampler errors and the
+Initial CPU0.17/elapsed1.24s; final-rebase repeat passes0.20CPU/1.36elapsed. They verify suspension/resumption, sampler errors and the
 unchanged target-size limit. Negative control against the original guard fails
 all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
 The initial test fixture escaping failure was corrected before this acceptance.
-The roadmap_docs workflow will run these checks on Linux too. Keep PR103 focused;
-finish this guard repair as the next focused PR after PR103 merges, then row26.
+The roadmap_docs workflow runs these checks on Linux too. PR103 is merged;
+final-rebase and publish this guard repair as the next focused PR, then row26.
 Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
 passes all three integration checks (0.688s) and the documentation audit.
 
@@ -282,8 +286,9 @@ focused checks pass15.46CPU/31.62elapsed after guarded clean. All positive
 and strict omission assertions remain; no diagnostics or extra compiler
 dependency remains. Fixture repair is published in row8959c59a882d67d1f8ea191a1cf576c395e3a22522,
 unchanged actual basee15c6fc. Revision089-f45a7dbbd33d retains the prior head.
-Propagate through90–112 from their actual recorded bases, including the
-validated row102 static fixture repair.
+Serial guarded propagation through90–112 completed3.50CPU/98.11elapsed.
+All current heads and actual bases are in the table; prior heads are retained
+under immutable revision tags. Compiler/runtime/workflows are unchanged.
 
 Client CI37985348012 fails its typed handler check. Static handler alone fails
 37987135273. Diagnostic37987861321 shows correct code14 and transport-failure
@@ -294,8 +299,8 @@ related ownership/context/startup tests, actual tracing churn and docs. ARM
 focused checks pass8.63CPU/17.84elapsed under the original root guard.
 Validated static fixture objects are published in row102488801a9f2f74734b60e9516edd8ca92a32edf1d,
 with unchanged actual basec6b5ad8. Revision102-222e199ca735 retains the prior head.
-Propagate90–112 together from their recorded actual bases: new row89 owns the
-HTTP2 fixture repair; row102488801a owns the static fixture repair.
+Current row102 is5f4c3b2423ac after propagation; the table is authoritative.
+All90–112 inherit the accepted fixtures, preserving original OLD anchors.
 
 Rows109–112 are published with actual refreshed predecessor bases in the table.
 Combined storage evidencefb9e59fef93ead188c8b8f82ce7147290a9b5e6e,
@@ -304,8 +309,8 @@ teardown/packed options/full-address checks, interpreter identity, lint/format,
 actual tracing churn and the documentation audit. Compiler/runtime/tests match
 row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
 before tests; superseded37987994602 is cancelled. Neither is acceptance.
-Validated HTTP2/client fixture repairs still need propagation through later
-preparations, preserving every immutable OLD anchor. Each eventual production
+Validated HTTP2/client fixture repairs are propagated through rows90–112,
+preserving every immutable OLD anchor. Fresh combined evidence follows. Each eventual production
 PR requires its own final rebase and six exact-head gates plus roadmap_docs.
 
 ## Local limits and durable docs
@@ -320,15 +325,18 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-http2-roots-evidence-worktree; final focused
-HTTP2 checks passed and no local workload is running. See the repairs above. Row86 focused checks completed within limits. Latest disk observation113625788KiB available; target143120KiB.
-Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
+belongs to /private/tmp/fwp-unwind-liveness-worktree. Row26's six focused tests,
+clippy and formatting pass; no local workload is running. Commands were guarded
+cargo test --test reuse_token_ownership --test unwind_cleanup, cargo clippy
+--test reuse_token_ownership --test unwind_cleanup -- -D warnings and cargo fmt
+--check. Every check stayed within limits. Latest recorded disk observation is
+113625788KiB available and target143120KiB; these are historical samples.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.33CPU/2.62elapsed). It caught a status update
+and entire commit messages (latest0.31CPU/2.52elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
