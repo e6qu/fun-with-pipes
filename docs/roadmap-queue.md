@@ -122,7 +122,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `b7d41363523d` | `663ef599a438` | `671ada6ec85d` |
 | 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `4872607fc02f` | `4114b709fb4b` | `663ef599a438` |
 | 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `7fe3282b1413` | `b44f53c9a60f` | `4114b709fb4b` |
-| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `2339ff08e421` | `2339ff08e421` | `b44f53c9a60f` |
+| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `c6b5ad8c827c` | `2339ff08e421` | `b44f53c9a60f` |
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `33661b298f96` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `c48864ce7231` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `b244d5f7c423` | `b244d5f7c423` | `c48864ce7231` |

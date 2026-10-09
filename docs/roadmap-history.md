@@ -11604,3 +11604,12 @@ pass. Row100 refresh7fe3282b14133707e35e7dd9f3f2bdd47c59c5e6 uses actual
 base4872607fc02f; compiler/runtime/response fixture match original with inherited
 CLI/GC repairs. OLDb44f53c9a60f stays fixed; previous CURRENT is retained under
 revision-100 before lease publication. Fresh response encoding checks follow.
+
+Row98 request encoding trap/cancel test7.94/16.22s, clippy5.93/13.02s and
+format0.47/0.88s pass. Linux serving evidence
+5fd8e12bd82a8f4ac43b26390a53691be04595fd is source-identical to7fe3282b1413;
+CI37984431678 is queued, not acceptance. Row101 refresh
+c6b5ad8c827cf734f0883c9daa676c0c0541a050 uses actual base7fe3282b1413.
+Compiler/runtime/client request fixture match original with inherited CLI/GC repairs.
+OLD2339ff08e421 stays fixed; previous CURRENT is retained before lease publication.
+Fresh client encoding/cancel checks follow.

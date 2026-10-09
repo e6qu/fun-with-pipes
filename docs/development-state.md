@@ -140,10 +140,10 @@ still need their final squash rebases and six exact-head full gates.
 | 95 ownership-grpc-force-cleanup | 6e5d43aee3e7 | 4907857412c2 | Decode test8.90/18.31s; lint6.04/12.88s and format0.44/0.85s pass |
 | 96 ownership-grpc-render-cleanup | bc69035d8c0f | 6e5d43aee3e7 | Rendering test8.01/16.29s; lint6.17/13.04s and format0.46/0.84s pass |
 | 97 ownership-grpc-send-cleanup | 25838578a6bf | bc69035d8c0f | Send test7.91/16.42s; lint5.87/13.11s and format0.46/0.87s pass |
-| 98 ownership-grpc-request-encoding | b7d41363523d | 25838578a6bf | Refreshed source unchanged; encoding/trap/cancellation checks follow |
+| 98 ownership-grpc-request-encoding | b7d41363523d | 25838578a6bf | Request test7.94/16.22s; lint5.93/13.02s and format0.47/0.88s pass |
 | 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Refreshed source unchanged; serialization failure checks follow |
 | 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Refreshed source unchanged; response encoding/cancel checks follow |
-| 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
+| 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Refreshed source unchanged; client encoding/cancel checks follow |
 | 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
 | 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
 | 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
@@ -198,6 +198,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 queued; source7fe3282, actual base4872607; not acceptance |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 queued; source8a06d5d, actual base9c27876; not acceptance |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 queued; sourcee15c6fc, actual baseb83d77c; not acceptance |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
@@ -253,8 +254,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-request-encoding-worktree; guarded request
-encoding scratch/trap/cancellation checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
+belongs to /private/tmp/fwp-grpc-canonical-encoding-worktree; guarded canonical
+serialization failure cleanup checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
