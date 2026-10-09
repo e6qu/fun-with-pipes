@@ -23,8 +23,11 @@ jobs:
         with:
           components: rustfmt, clippy
       - name: Format
+        if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
       - name: Focused lint
+        if: ${{ !cancelled() }}
         run: cargo clippy --test map_set_ownership --test ownership -- -D warnings
       - name: Focused ownership and raw interpreter/native comparison
+        if: ${{ !cancelled() }}
         run: cargo test --test map_set_ownership --test ownership --no-fail-fast
