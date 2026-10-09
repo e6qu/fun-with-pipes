@@ -479,5 +479,9 @@ These are prepared contracts, subject to sequential full platform/GC CI.
 acceptance controls; [the handoff](development-state.md) records delivery status.
 Prepared pending gRPC connections also own lookup results, descriptors and
 SSL state across connection/handshake suspension, transferring them after
-connection-wrapper creation. Canonical decode, partial background startup
-and broader callback teardown remain audits.
+connection-wrapper creation. Background startup has a temporary connection
+owner and a protected reference reserved for each task; abort marks the
+unpublished connection dead without allocating, cancels published tasks and
+drops its owner. The last task releases the descriptor. Its static failure
+marker is excluded from malloc finalization. Canonical decode and broader
+callback/context teardown remain audits.

@@ -60,7 +60,7 @@ rebase; source comparisons against older preparations should allow these
 explicitly inherited repairs.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row103 are published with focused checks;
+restored byte-for-byte afterward. Independent preparations through row104 are published with focused checks;
 row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
@@ -157,6 +157,7 @@ still need their final squash rebases and six exact-head full gates.
 | 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
 | 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
 | 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
+| 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -178,7 +179,7 @@ context storage and other buffers still use tracing; no complete ARC claim.
 Rows94–96 publish unary receive, streaming force and rendered-error scratch
 cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
 hashes and detailed checks are in history; the table keeps actual bases.
-Preparations through row103 are published with focused checks recorded in
+Preparations through row104 are published with focused checks recorded in
 [history](roadmap-history.md). Row21 is published atc8d4b57092e54fe292ccc04dc0b813652fdc2617.
 Rebase to PR98 headde969ee completed from ACTUAL542fc08, inheriting the
 collector fixture repair. Three array tests pass14.39 / 29.34 s; focused
@@ -195,12 +196,20 @@ Independent row104 ownership-grpc-connect-cleanup starts on c48864c,
 now protects gRPC socket/address resources, with an SSL scope through
 handshake and until transfer to the connection. Real loopback cancellation,
 refusal and handoff checks pass9.33 / 20.92 s; background startup is injected
-in the fixture. Lint2.54 / 5.15 s and format0.45 / 0.83 s pass; publish next.
-Remaining audit: canonical decode and partial background connection startup. Prepared
+in the fixture. Lint2.54 / 5.15 s and format0.45 / 0.83 s pass. Published at
+b244d5f7c423edffc9159b1dd1a7fdac1934727a, no competing PR.
+Independent row105 ownership-grpc-connect-startup starts on b244d5f,
+/private/tmp/fwp-grpc-connect-startup-worktree. Temporary startup owner and
+per-task reservations protect both background spawn boundaries. Abort marks
+unpublished context dead without allocating, cancels any reader/writer and
+releases owners; its static marker is excluded from malloc finalization.
+Both actual-task/failure and pending-connect tests pass6.11 / 12.61 s;
+focused lint2.47 / 5.05 s and format0.45 / 0.83 s pass; publish next.
+Remaining audit: canonical decode and broader callback/context teardown. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery atde969ee, full CI37936505408: bench passes;
-Linux and all four ARM/Intel macOS jobs run.
+ARM GC also passes; Linux, both Intel jobs and regular ARM macOS run.
 Previous exact-head CI37929002304:
 Completed CI37929002304: bench and all four ARM/Intel macOS jobs pass;
 Linux fails gc::long_loop_runs_in_bounded_memory at tests/gc.rs194: zero
@@ -258,8 +267,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-connect-cleanup-worktree; connect tests run.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
+belongs to /private/tmp/fwp-grpc-connect-startup-worktree; startup tests run.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.36 s).
 Last guarded doc audit passes eleven link/heading sets, 97 immutable queue
 ancestry pairs and whole commit messages (0.21 s CPU / 1.45 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.

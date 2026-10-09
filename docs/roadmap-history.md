@@ -10237,3 +10237,38 @@ O1/O2 cases pass GC off/on, stress/verification and poison.
 
 Focused gRPC/primitive connect lint passes2.54 / 5.15 s; format apply
 0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.
+
+Row104 preparation published clean atb244d5f7c423edffc9159b1dd1a7fdac1934727a
+on actualc48864ce72313d5aff87aca59f768023e17dbd26. Immutable anchors recorded;
+entire message one line. PR98 remains sole delivery.
+
+## gRPC background startup ownership preparation, 2026-10-09
+
+Independent ownership-grpc-connect-startup starts onb244d5f7c423edffc9159b1dd1a7fdac1934727a,
+/private/tmp/fwp-grpc-connect-startup-worktree. Startup has a temporary
+connection owner; each spawn has a scoped reserved reference. Abort uses a
+static unpublished-connection dead marker, shuts down and cancels published
+tasks without allocating, then drops its owner. Last background task closes
+the descriptor; no child runs against an already reclaimed socket. Finalizer
+excludes the static marker from free. Actual reader/writer fixture injects
+first/second spawn traps, checks publication/refs/descriptor and finalization,
+and normal two-task transfer. Existing pending-connect fixture now injects
+background publication at the explicit assignment boundaries.
+Guarded clean0.07 / 0.36 s; focused tests run.
+
+Initial startup-related pending-connect regression failed C compilation
+(7.17 CPU / 14.74 elapsed s, exit101): its old fixture replaced only the
+spawn call, leaving an integer assignment to the new task pointer. Updated
+asserted fixture needles to replace each complete startup assignment and
+set injected task handles to NULL. Production source was unchanged by this
+fixture repair; startup test had not yet run.
+
+A second startup fixture run passed pending-connect checks but failed its
+fixed-case ref expectation (3.53 CPU / 7.33 elapsed s, exit101). FIFO scheduling
+can finish the cancelled reader before the waiting caller resumes. Assert its
+reference count against actual task completion, then require the final zero
+refs/closed descriptor after await. Both tests pass6.11 / 12.61 s; normal
+production source was unchanged by the fixture correction.
+
+Focused startup/pending-connect lint passes2.47 / 5.05 s; format apply
+0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.
