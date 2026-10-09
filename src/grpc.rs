@@ -2746,3 +2746,45 @@ pub fn prim(it: &mut Interp, id: FuncId, sym: &str, a: &mut [Value]) -> R<Value>
 // connections above.
 #[path = "h2web.rs"]
 pub(crate) mod web;
+
+#[cfg(test)]
+mod pool_identity_tests {
+    use super::*;
+
+    #[test]
+    fn complete_tls_options_remain_distinct_in_interpreter_pool() {
+        let base = ClientTls {
+            ca: "a".into(),
+            insecure: false,
+            name: "b|c".into(),
+            cert: "d".into(),
+            key: "e".into(),
+        };
+        let key = |t: ClientTls| ClientTls::pool_key(&Some(Rc::new(t)), "localhost:1234");
+        let mut shifted = base.clone();
+        shifted.name = "b".into();
+        shifted.cert = "c|d".into();
+        assert_ne!(key(base.clone()), key(shifted));
+        for field in 0..5 {
+            let mut changed = base.clone();
+            match field {
+                0 => changed.ca = "different".into(),
+                1 => changed.name = "different".into(),
+                2 => changed.cert = "different".into(),
+                3 => changed.key = "different".into(),
+                _ => changed.insecure = true,
+            }
+            assert_ne!(key(base.clone()), key(changed));
+        }
+        let mut long = base.clone();
+        long.name = "x".repeat(4096);
+        let mut changed = long.clone();
+        changed.name.replace_range(4095..4096, "y");
+        assert_ne!(key(long.clone()), key(changed));
+        assert_eq!(key(long.clone()), key(long));
+        assert_ne!(
+            ClientTls::pool_key(&None, "localhost:1234"),
+            key(ClientTls::default())
+        );
+    }
+}
