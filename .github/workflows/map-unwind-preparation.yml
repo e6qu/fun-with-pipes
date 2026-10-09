@@ -27,10 +27,10 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --test gc -- -D warnings
+        run: cargo clippy --test argument_preparation_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --test gc -- -D warnings
       - name: Partial map results, scratch buffers and exceptional cleanup
         if: ${{ !cancelled() }}
-        run: cargo test --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --no-fail-fast
+        run: cargo test --test argument_preparation_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --no-fail-fast
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
