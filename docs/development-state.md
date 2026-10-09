@@ -140,7 +140,7 @@ still need their final squash rebases and six exact-head full gates.
 | 93 ownership-grpc-status-cleanup | a36f5538df30 | 84b6d877fa9b | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 94 ownership-grpc-receive-cleanup | 01de4770d750 | a36f5538df30 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 95 ownership-grpc-force-cleanup | 6a4ceee25582 | 01de4770d750 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 96 ownership-grpc-render-cleanup | bc69035d8c0f | 6e5d43aee3e7 | Rendering test8.01/16.29s; lint6.17/13.04s and format0.46/0.84s pass |
+| 96 ownership-grpc-render-cleanup | 05d8c33dc305 | 6a4ceee25582 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 97 ownership-grpc-send-cleanup | 25838578a6bf | bc69035d8c0f | Send test7.91/16.42s; lint5.87/13.11s and format0.46/0.87s pass |
 | 98 ownership-grpc-request-encoding | b7d41363523d | 25838578a6bf | Request test7.94/16.22s; lint5.93/13.02s and format0.47/0.88s pass |
 | 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Canonical test7.35/15.76s; lint5.99/12.96s and format0.45/0.87s pass |
