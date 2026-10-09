@@ -11965,3 +11965,40 @@ format0.32/0.59s. This preparation is not a production gate or merge; final
 rebase starts from actual3bb3426 after the guard repair merges.
 
 Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
+
+Sequential preparation refresh row28: b5f44e80462c7a246c0c09c8f8fd3838fd118866 → e06c447336ae97eff77b118ebaac194f6968623d, actual base71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0. Retained roadmap/revision-028-b5f44e80462c before explicit leased publication. Compiler/runtime/workflow code unchanged; tests are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
+
+## Archived merged preparation evidence
+
+The live handoff removes these historical rows after their deliveries merged.
+They remain evidence for their stated source, not current acceptance gates.
+
+| Scope | Exact evidence head | Run / status |
+|---|---|---|
+| Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
+| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
+| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
+
+Refreshed evidence sources: reuse25fc86811242133c05c247b7ec766b55327b21d2 on0a7203f, storagee5bbfd84736f35f79d631b48373fb8b328251b5f on215d7ba and serving3aca5cf20d779fa1e9abbfd89e0588032940fb91 one6ae6c8. All compiler/runtime/tests match their prepared sources exactly. Old evidence3d6102a/fb9e59f/5fd8e12 retained remotely before leased replacement; copied all ten authoritative docs for conflicts and refreshed shared auditor. Guarded evidence audits pass2.88s/2.87s/2.98s elapsed; queued runs37992999275/37992657684/37993159029 are not acceptance.
+
+## Archived numerics timing samples
+
+These earlier samples lack a recorded processor model, compiler/flags and
+allocation/live-memory data. They are historical observations, not the baseline
+for roadmap performance acceptance. New comparisons use the measurement
+contract in [ownership.md](ownership.md).
+
+**Performance** (`cargo test --release --test numerics -- --ignored
+--nocapture`, a function of n inputs with 4n operations, on a shared
+4-core machine):
+
+| | native | interpreter |
+|---|---|---|
+| `grad`, n = 100 | 0.012 s | 0.48 s |
+| `gradient` (forward), n = 100 | 0.016 s | 0.50 s |
+| `grad`, n = 1000 | 0.012 s | 0.32 s |
+| `gradient` (forward), n = 1000 | 0.75 s | not measured |
+
+
+Refreshed normal Linux evidence runs37992999275 (reuse tokens),37992657684 (storage plus repaired root controls) and37993159029 (serving plus repaired HTTP2 omission control) all pass at25fc868/e5bbfd8/3aca5cf respectively. They include their normal lint/format, selected ownership tests, actual tracing churn and shared roadmap audit. Each source matches its recorded production preparation. These focused runs do not replace sequential exact-head platform gates.

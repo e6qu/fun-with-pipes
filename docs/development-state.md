@@ -74,8 +74,8 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 26 ownership-reuse-tokens | 0a7203f5c559 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
-| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Source unchanged; inherited main documentation gate; fresh sequential gates follow |
-| 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
+| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
+| 28 ownership-runtime-call-cleanup | e06c447336ae | 71c2405dd0e0 | Rebased onto refreshed preceding delivery; source unchanged; fresh sequential gates follow |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
 | 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
 | 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
@@ -168,13 +168,28 @@ requires six exact-head full gates and the documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row25 is now rebased from prepared1741ab5 onto actual row24 squashc7b3e3f.
-Row26 actual prepared base remains6421c025; use that base when its turn arrives.
+inherited CLI/GC harness fixes. Row26 is based on main1033bb3426; rows27–28
+are refreshed onto their current preceding preparations. The table records
+actual bases; historical evidence bases below do not override them.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
 close preserves queued values; explicit drain breaks its counted cycle, while
 automatic unreachable-cycle reclamation remains unproved.
+
+## Earlier argument-preparation repair
+
+Review of row28 found that a capture duplicate can trap before the callback
+entry takes its argument prefix. The later row34 correction already protects
+this boundary and partial capture duplication. Its compiler/runtime/test patch
+9f56744 applies cleanly to row28 and is now copied locally into that preparation.
+This moves the existing correction earlier, without changing pipe semantics.
+Eleven focused runtime/call/preparation tests pass29.13CPU/58.52elapsed,
+including the unchanged negative control. Lint2.48/4.99s and format0.35/0.63s
+also pass; e06c447 remains the
+published row28 head until they pass. Preserve row34's immutable OLD anchor;
+its overlapping implementation will be reconciled on final rebase and its
+coverage retained. No new full gate or complete exceptional-ownership claim.
 
 ## Fixture repair status
 
@@ -196,16 +211,15 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
-| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
+| Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; source matches current row112215d7ba |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 fails client failure-text fixture at typed handler check; other checks pass |
-| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 fails only the inherited HTTP2 omission control; repair in progress |
-| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 fails the HTTP2 omission control on GCC; other checks pass |
+| Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
+| Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; source matches current row100e6ae6c8, inherited HTTP2 control repaired |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
@@ -223,9 +237,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row29 map callback unwind | 5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 | CI37966274872 passes normal repaired checks; production84ef548, actual baseb5f44e8 |
 | Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 passes focused checks and all-doc/tag audit; productionb5f44e8, actual basec4eb75e |
 | Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
-| Row26 compiler reuse tokens | 3d6102af3bffcec06a541c8e8238837ff19aad9f | CI37961205676 passes focused Linux checks; productionbb77c07, actual base6421c02 |
-| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
-| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
+| Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
 
 Evidence workflows never enter production ancestry. Every sequential PR still
@@ -263,7 +275,7 @@ unchanged target-size limit. Negative control against the original guard fails
 all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
 The initial test fixture escaping failure was corrected before this acceptance.
 The roadmap_docs workflow runs these checks on Linux too. PR103 is merged;
-final-rebase and publish this guard repair as the next focused PR, then row26.
+PR104 is published and awaiting its remaining exact-head gates, then row26.
 Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
 passes all three integration checks (0.688s) and the documentation audit.
 
@@ -310,7 +322,13 @@ actual tracing churn and the documentation audit. Compiler/runtime/tests match
 row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
 before tests; superseded37987994602 is cancelled. Neither is acceptance.
 Validated HTTP2/client fixture repairs are propagated through rows90–112,
-preserving every immutable OLD anchor. Fresh combined evidence follows. Each eventual production
+preserving every immutable OLD anchor. Refreshed evidencee5bbfd8 passes
+CI37992657684 against current215d7ba, including both accepted root controls.
+Fresh serving evidence3aca5cf passes CI37993159029; source matches current
+row100e6ae6c8 and only its inherited HTTP2 fixture differs from old accepted
+production source. Reuse evidence25fc868 passes CI37992999275 against
+current0a7203f. Old evidence heads are retained remotely under roadmap/evidence-*
+tags before leased publication. Each eventual production
 PR requires its own final rebase and six exact-head gates plus roadmap_docs.
 
 ## Local limits and durable docs
@@ -325,8 +343,14 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-unwind-liveness-worktree. Row26's six focused tests,
-clippy and formatting pass; no local workload is running. Commands were guarded
+belongs to /private/tmp/fwp-call-liveness-worktree after guarded cargo clean
+(0.04CPU/0.26elapsed). Row27 focused call-liveness/reuse-token/unwind tests are
+complete:11 tests pass30.85CPU/62.02elapsed, clippy2.52/5.06s and format
+0.35/0.63s. Target now belongs to /private/tmp/fwp-runtime-call-worktree after
+guarded clean. Row28 runtime/capture-preparation/call-liveness checks are
+complete:11 tests pass29.13CPU/58.52elapsed; lint2.48/4.99s and
+format0.35/0.63s pass. No local workload is running.
+Row26's six focused tests, clippy and formatting pass. Commands were guarded
 cargo test --test reuse_token_ownership --test unwind_cleanup, cargo clippy
 --test reuse_token_ownership --test unwind_cleanup -- -D warnings and cargo fmt
 --check. Every check stayed within limits. Latest recorded disk observation is
@@ -336,7 +360,7 @@ bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.31CPU/2.52elapsed). It caught a status update
+and entire commit messages (latest0.38CPU/2.92elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.
@@ -346,7 +370,10 @@ full history, immutable tags and retained PR heads on a fresh clone. Its workflo
 checks the actual PR head rather than GitHub's synthetic merge message. Later
 updates need fresh audit when links, refs or subjects change.
 
-Preserve all ten current root docs before fast-forward/rebase conflict resolution:
+Preserve all ten authoritative root docs plus any additional modified tracked
+documents before fast-forward/rebase conflict resolution. docs/numerics.md is
+currently also modified: it points to phase2 completion before numeric work and
+moves incomplete historical timing samples to history. The authoritative ten:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. The portable auditor is tracked on main.
