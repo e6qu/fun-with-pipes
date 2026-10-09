@@ -10794,3 +10794,16 @@ CI37959126658, remains pending; full platform gates are still required.
 PR100 receives a separate documentation commit carrying current publication,
 merge and evidence status. Its prior source commitf71c002 stays reachable in
 branch ancestry. Superseded37958351622 must not gate the updated PR head.
+
+Row112 at7621175 guarded package clean0.00/0.13s, new long-address fixture
+7.98/16.49s, lint2.44/4.82s and fmt0.45/0.85s pass. Actual loopback/pool
+reuse, copied inputs, requested bytes and old-truncation rejection run atO1/O2
+with GC off/on stress/verify and reuse poisoning. The Rust address assertion
+agrees. Shared target now belongs to the address worktree. No elapsed-speed
+claim; Linux/full sequential gates remain pending.
+
+The primitive inventory's stale pre-array baseline is replaced with the actual
+PR99 typed array contracts. Maps/sets are explicitly the pre-PR100 shared
+baseline until merge. Reconstruction/external boundaries record conservative
+fallback and their required partial construction, cache alias and teardown
+proofs. This preserves phase2 coverage without claiming complete ARC or no GC.

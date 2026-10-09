@@ -41,10 +41,12 @@ dc85b679 onto main c4d820e. Source/runtime/tests/workflows match the focused
 GitHub-accepted c9ef3d88211f exactly, including inherited CLI/GC repairs.
 Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
 PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
-CI37958351622 is superseded by the publication-status documentation commit;
-require six fresh gates at the updated PR head. The queue records published
-sourcef71c002, retained in the updated branch ancestry; retrieve the actual
-current PR head before gating or squash. OLD anchors stay immutable.
+Recorded review head0384b052c34713d0c2cb2443c97bfad810d1ea53 precedes
+the typed-array inventory correction. CI37959781379 is superseded; require
+six fresh gates at the updated PR head. Superseded37958351622 is cancelled,
+not acceptance. Source matches
+focused-accepted c9ef3d88211f exactly; retrieve the actual current PR head
+before gating or squash. OLD anchors stay immutable.
 Row23 pre-delivery refresh495411d uses actual basef71c002.
 
 Later preparations must inherit both CLI early-stdin-close and tracing-fixture
@@ -87,7 +89,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 22 ownership-map-set-elements | f71c002d5339 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
+| 22 ownership-map-set-elements | 0384b052c347 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Refreshed tests 9.89 / 20.19 s; lint/format pass; GitHub tracing pending |
 | 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Refreshed tests13.56/27.29s; lint/format pass; remote evidence pending |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
@@ -177,7 +179,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
 | 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
-| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Formatting repaired; fresh remote evidence pending |
+| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s, lint/format pass; GitHub pending |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
 heads; rows18–21 are merged. The current row22 refresh has unchanged runtime/
@@ -219,8 +221,9 @@ Row111 verifies one TLS-option allocation, exact requested bytes, alignment,
 copied inputs, last-owner release and allocation-failure cleanup. It makes no
 elapsed-speed or whole-program tracing-free claim. Row110 verifies read-once
 cache teardown after blocked tasks and finalizers; row111 changes selected
-cache releases from ten malloc allocations to five. Row112's long-address
-loopback/pool and requested-byte claims remain unverified pending fresh CI.
+cache releases from ten malloc allocations to five. Row112 locally verifies long-address loopback/pool reuse, copied inputs and
+requested bytes below the legacy short-address layout atO1/O2 with GC/reuse
+variants. Remote Linux and full sequential platform gates remain pending.
 
 Canonical C decode scratch already frees on normal success/error paths;
 reconstructed decoded aggregates remain shared. Audit typed reconstruction,
@@ -246,10 +249,10 @@ previously refused at61.84GiB free disk and138.93MiB target. Disk subsequently
 recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
 package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
 format0.34/0.61s. Shared target now belongs to
-/private/tmp/fwp-task-boundary-worktree; no workload is running.
+/private/tmp/fwp-grpc-connection-addresses-worktree; no workload is running.
 Stop at limits; do not bypass the guard, including for package clean.
 Latest guarded doc audit passes eleven link/heading sets, all106 immutable
-queue ancestry pairs and whole commit messages (0.23 s CPU / 1.68 s elapsed).
+queue ancestry pairs and whole commit messages (0.21 s CPU / 1.57 s elapsed).
 Command: `env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 scripts/local-guard.py python3 /private/tmp/fwp-check-handoff.py`.
 The helper derives current/OLD queue heads; evidence runner
 scripts/check-handoff-evidence.py verifies its published snapshot. Later doc
