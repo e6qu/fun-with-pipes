@@ -514,3 +514,9 @@ and first-iterator failure text. Raw trap messages and typed GrpcError values
 copy their contents before cleanup releases the original text. All current
 callers transfer owned copies; future receive scopes must clear transferred
 text to avoid releasing it twice.
+
+Prepared client receives scope dequeued messages and status copies across
+decoding, subsequent waits and channel callbacks. Retry frees copied reset
+text before reopening, and decoder diagnostics are released on raising.
+Failure-helper transfer clears the original status owner before unwinding.
+Complete protocol and platform acceptance still requires sequential CI.

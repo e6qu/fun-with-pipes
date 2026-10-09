@@ -38,9 +38,10 @@ Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
 
 Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
 ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
-542fc080e8818c26fb3da2ebbc295cd9fb864ee5 on actual main2c1003c.
+de969ee7161531406fecf1812e11ddb4ad03078c on actual main2c1003c.
 Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/generation tests/workflows exactly against7741d09.
-Second commit542fc08 repairs only the CLI helper and adds its regression. All ten current root docs resolve historical
+Second commit542fc08 repairs only the CLI helper and adds its regression;
+third commitde969ee repairs the tracing-only GC churn fixture. All ten current root docs resolve historical
 conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
 and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
 `Own repeated aliases and generated numeric list nodes`, empty body.
@@ -51,14 +52,15 @@ case ignores supplied stdin and exits0. The helper must tolerate only closed
 stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout passes focused multi-command23.59 / 47.48 s and
 deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
 0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
-new exact-head gates; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
-After merge, row21 ACTUAL refreshed base is542fc080e8818c26fb3da2ebbc295cd9fb864ee5;
+new exact-head gates atde969ee; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
+After merge, row21 ACTUAL refreshed base isde969ee7161531406fecf1812e11ddb4ad03078c;
 rebase onto the real squash, preserving immutable OLD anchors. Later branches
-prepared before the CLI fix must inherit it on final rebase; source comparisons
-against older preparations should allow this explicitly inherited repair.
+prepared before CLI and collector-fixture fixes must inherit both on final
+rebase; source comparisons against older preparations should allow these
+explicitly inherited repairs.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row101 are published with focused checks;
+restored byte-for-byte afterward. Independent preparations through row102 are published with focused checks;
 row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
@@ -71,8 +73,8 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
-| 20 ownership-list-generation | 542fc080e881, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
-| 21 ownership-array-elements | 79bc00f13649 | 542fc080e881 | 14.02 / 28.13 s |
+| 20 ownership-list-generation | de969ee71615, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
+| 21 ownership-array-elements | c8d4b57092e5 | de969ee71615 | 14.39 / 29.34 s |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
@@ -153,6 +155,7 @@ still need their final squash rebases and six exact-head full gates.
 | 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
 | 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
 | 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
+| 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -174,63 +177,35 @@ context storage and other buffers still use tracing; no complete ARC claim.
 Rows94–96 publish unary receive, streaming force and rendered-error scratch
 cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
 hashes and detailed checks are in history; the table keeps actual bases.
-Independent ownership-grpc-send-cleanup at
-/private/tmp/fwp-grpc-send-cleanup-worktree starts on ea79bde. Encoded
-message buffers have typed h2_buf cleanup through cancellable flow-control
-waits. Focused actual scheduler tests cover zero/partial windows, cancellation,
-wake/resume, closed streams and exact decoded plain/gzip payloads. Send/force
-checks pass 10.02 / 21.56 s, lint 2.74 / 5.52 s and format 0.45 / 0.82 s.
-Published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8
-on actual ea79bde.
-Independent queue98 ownership-grpc-request-encoding starts on671ada6,
-/private/tmp/fwp-grpc-request-encoding-worktree. Detached sender owns request
-scratch before encoding and keeps its cleanup through sending. Focused
-actual sender tests cover encoding trap, cancelled send and normal request
-bytes/end marker; both tests pass 2.03 / 4.93 s, lint 2.51 / 4.92 s and
-format 0.47 / 0.96 s. Fixture shadowing corrected; published clean at
-663ef599a4385b394964fc92017c03cb57c1ddd8 on actual671ada6.
-Independent ownership-grpc-canonical-encoding starts on663ef59,
-/private/tmp/fwp-grpc-canonical-encoding-worktree. Message/request encoders
-protect canonical fwp_buf scratch before serialization and transcoding.
-Focused tests use real I64 serialization and injected partial/transcoder
-failures, checking exact canonical bytes/diagnostics and omitted cleanup.
-Canonical/request tests pass 8.38 / 17.93 s, lint 2.46 / 4.87 s and format
-0.47 / 0.74 s. Published clean at
-4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual663ef59.
-Next delivery preparation refreshes row21 arrays on the actual current PR98
-head542fc08, inheriting its CLI repair. Rebase completed from actual7741d09;
-source/runtime/array tests/workflows match443524e exactly; only inherited
-CLI test repair differs. Three array tests pass14.02 / 28.13 s; focused lint
-passes2.30 / 4.61 s and format0.34 / 0.62 s. Published clean at
-79bc00f136491ee8beb6d51674d3ed4faf7d5303, without a competing PR. Independent row100 ownership-grpc-response-encoding starts on actual4114b70,
-/private/tmp/fwp-grpc-response-encoding-worktree. Served unary/stream/error
-response buffers get cleanup across encoding traps and cancellable sends;
-error canonical scratch is protected before serialization. Both response/request
-tests pass2.95 / 6.01 s; lint2.39 / 4.91 s and format0.47 / 0.75 s pass.
-Published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6, no competing PR.
-Independent row101 ownership-grpc-client-requests starts on actualb44f53c,
-/private/tmp/fwp-grpc-client-requests-worktree. Both synchronous client request
-buffers now scope encoding and cancellable sends. Both client/request tests
-pass9.19 / 18.71 s; lint2.38 / 4.86 s and format0.48 / 0.75 s pass.
-Published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93, no competing PR.
-Independent row102 ownership-grpc-client-failure-text starts on2339ff0,
-/private/tmp/fwp-grpc-client-failure-text-worktree. Client failure helper now
-accepts ownership of copied transport/status/iterator failure text, with
-cleanup across raw traps and typed GrpcError raising. All eight callers supply
-owned copies; both focused tests pass9.02 / 18.93 s, lint2.54 / 5.16 s and
-format0.45 / 0.83 s. Publish separately; prioritize PR98 collector repair.
-Remaining audit: canonical decode and client receive/status cleanup.
-Do not promote phase2 or no-tracing support before sequential full acceptance.
+Preparations through row102 are published with focused checks recorded in
+[history](roadmap-history.md). Row21 is published atc8d4b57092e54fe292ccc04dc0b813652fdc2617.
+Rebase to PR98 headde969ee completed from ACTUAL542fc08, inheriting the
+collector fixture repair. Three array tests pass14.39 / 29.34 s; focused
+lint2.48 / 4.88 s and format0.34 / 0.60 s pass; published without a PR. Preserve inherited CLI/GC harness fixes in source comparisons.
+Independent row103 ownership-grpc-client-receive starts on33661b2,
+/private/tmp/fwp-grpc-client-receive-worktree. Client first/next receives scope
+dequeued messages, status text and decoder why strings across retry, errors
+and cancellation. Failure-text transfer clears the old owner before raising.
+All three focused receive/failure/request tests pass13.79 / 27.82 s;
+lint2.54 / 5.14 s and format0.45 / 0.82 s pass; publish next.
+Remaining audit: canonical decode and runtime callback/connection teardown. Prepared
+work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
-PR98 is the sole delivery at542fc08, new exact-head CI37929002304:
+PR98 is the sole delivery atde969ee, full CI37936505408: bench passes;
+Linux and all four ARM/Intel macOS jobs run.
+Previous exact-head CI37929002304:
 Completed CI37929002304: bench and all four ARM/Intel macOS jobs pass;
 Linux fails gc::long_loop_runs_in_bounded_memory at tests/gc.rs194: zero
-collections, while output/allocation/RSS assertions preceding it pass.
-Full log /private/tmp/fwp-pr98-linux-failure.log. Explicitly disable
+collections, while output/allocation assertions preceding it pass; RSS has not run.
+Full log /private/tmp/fwp-pr98-linux-failure.log. Collector repair explicitly disables
 FWP_FREE/FWP_REUSE for this tracing-only workload, preserving all assertions.
+Focused GC lint passes2.32 / 4.59 s and format0.34 / 0.60 s; local execution
+is skipped by /proc availability and is not verified support. Repair published
+atde969ee7161531406fecf1812e11ddb4ad03078c; require six fresh gates.
+Old five passes do not cover this repair.
 Linux execution must pass on fresh exact-head CI; local macOS skips this test.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
-ACTUAL refreshed base is542fc08; final rebase follows the eventual PR98 squash.
+ACTUAL refreshed base isde969ee; final rebase follows the eventual PR98 squash.
 
 ## Repaired resource evidence
 
@@ -275,10 +250,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-client-failure-text-worktree; earlier checks pass.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
-Last guarded doc audit passes eleven link/heading sets, 95 immutable queue
-ancestry pairs and whole commit messages (0.18 s CPU / 1.30 s elapsed).
+belongs to /private/tmp/fwp-grpc-client-receive-worktree; receive tests run.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
+Last guarded doc audit passes eleven link/heading sets, 96 immutable queue
+ancestry pairs and whole commit messages (0.24 s CPU / 1.53 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:
