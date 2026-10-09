@@ -1,0 +1,24 @@
+name: Focused map/set preparation
+
+on:
+  push:
+    branches: [ownership-evidence-map-set]
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        run: cargo clippy --test map_set_ownership --test ownership -- -D warnings
+      - name: Focused ownership and raw interpreter/native comparison
+        run: cargo test --test map_set_ownership --test ownership --no-fail-fast
