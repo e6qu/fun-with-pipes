@@ -56,7 +56,7 @@ restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
 through112 are published. Row112 CI37952655033 failed formatting before
 lint/tests. Both fixture formatting corrections are published at762117573367;
 evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
-follows the repair and is running.
+passes focused format/lint/lifetime/teardown/interpreter checks.
 Duplicate main CI37957464783 cancellation confirmed after matching
 all-six-accepted PR99 source/runtime/tests/workflows.
 Duplicate main CI37944119691 was cancelled after matching all-six-accepted
@@ -89,9 +89,9 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 22 ownership-map-set-elements | 98632b08aaad | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Refreshed tests 9.89 / 20.19 s; lint/format pass; GitHub tracing pending |
+| 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Tests9.89/20.19s; lint/format and GitHub CI37958839569 pass |
 | 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Refreshed tests13.56/27.29s; lint/format pass; remote evidence pending |
-| 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
+| 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format pass; fresh GitHub evidence follows |
 | 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
 | 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 / 31.57 s |
@@ -178,7 +178,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
 | 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
-| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s, lint/format pass; GitHub pending |
+| 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
 heads; rows18–21 are merged. The current row22 refresh has unchanged runtime/
@@ -202,10 +202,10 @@ automatic unreachable-cycle reclamation remains unproved.
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
 | Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
-| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 queued; production495411d, actual basef71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
-| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 running after formatting repair7621175 |
+| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
 | Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 queued; production1741ab5, actual base495411d |
@@ -222,7 +222,7 @@ elapsed-speed or whole-program tracing-free claim. Row110 verifies read-once
 cache teardown after blocked tasks and finalizers; row111 changes selected
 cache releases from ten malloc allocations to five. Row112 locally verifies long-address loopback/pool reuse, copied inputs and
 requested bytes below the legacy short-address layout atO1/O2 with GC/reuse
-variants. Remote Linux and full sequential platform gates remain pending.
+variants. Focused Linux CI37958243461 also passes; full sequential platform gates remain required.
 
 Canonical C decode scratch already frees on normal success/error paths;
 reconstructed decoded aggregates remain shared. Audit typed reconstruction,
@@ -248,7 +248,7 @@ previously refused at61.84GiB free disk and138.93MiB target. Disk subsequently
 recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
 package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
 format0.34/0.61s. Shared target now belongs to
-/private/tmp/fwp-grpc-connection-addresses-worktree; no workload is running.
+/private/tmp/fwp-unwind-runtime-worktree; no workload is running.
 Stop at limits; do not bypass the guard, including for package clean.
 Latest guarded doc audit passes eleven link/heading sets, all106 immutable
 queue ancestry pairs and whole commit messages (0.21 s CPU / 1.57 s elapsed).

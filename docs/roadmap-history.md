@@ -10807,3 +10807,24 @@ PR99 typed array contracts. Maps/sets are explicitly the pre-PR100 shared
 baseline until merge. Reconstruction/external boundaries record conservative
 fallback and their required partial construction, cache alias and teardown
 proofs. This preserves phase2 coverage without claiming complete ARC or no GC.
+
+Row25 runtime cleanup refreshed from actualcde58f4 onto1741ab5;
+production6421c025b3d53ed59a177aac1b0f9fff662e1736 preserves the original
+runtime/compiler and unwind tests. Only inherited CLI and tracing-fixture
+repairs differ outside current root documents. Explicit lease publication
+succeeded; focused bounded local checks follow. Its final rebase must use
+actual1741ab5 after row24 merges.
+
+Row23 evidence7783afaef9a7431a40cf34b530c2c43386a06d0b,
+CI37958839569 passes all focused Linux steps: current handoff/106 immutable
+pairs, format, lint, reclaimed old storage/stale roots/retained task boundaries,
+and actual tracing churn. Both normal reclamation and forced-tracing builds
+preserve output and live-memory assertions. Full sequential gates remain required.
+Row112 evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d,
+CI37958243461 passes format/lint and all long-address/packed/cache/pool/context/
+capture/startup/library teardown controls plus the matching interpreter unit.
+Earlier formatting failure37952655033 supplied no behavior acceptance.
+
+Row25 at6421c02 guarded unwind tests9.45/19.08s, lint2.53/5.16s and
+fmt0.38/0.70s pass after package clean0.04/0.25s. Shared target is now
+/private/tmp/fwp-unwind-runtime-worktree. Full and Linux-focused gates follow.
