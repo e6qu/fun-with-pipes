@@ -75,7 +75,7 @@ still need their final squash rebases and six exact-head full gates.
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Invalid fixture output pointer repaired; fresh Linux evidence follows |
-| 30 ownership-selection-unwind | 398503f0938a | 9b5eb5804655 | CI37963696111 fails map and predicate stress fixtures |
+| 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Required fixture pointer fixed; fresh Linux evidence follows |
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 / 48.48 s |
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 / 57.61 s |
@@ -184,8 +184,8 @@ GCC exposes the invalid write, while Clang optimized it away. Production runtime
 code is unchanged. Row29 repair84ef5480f4938e78c11c10823bf498a8a1a4e6f9
 passes a local ci, matching the already prepared row68 fixture repair.
 Refresh normal evidence from actual9b5eb58 onto84ef548, remove all diagnostic
-changes and rerun complete focused Linux checks. Fix row30's identical call and
-rebase it from actual9b5eb58 onto84ef548. Preserve all ownership/alias/scratch
+changes and rerun complete focused Linux checks. Row30 ca33d3141a96 already fixes the identical call and
+rebases from actual9b5eb58 onto84ef548. Preserve all ownership/alias/scratch
 assertions. Row68 already repairs the same calls in zip/fold/argument fixtures;
 bring each minimal fix into its earlier delivery rather than waiting for row68.
 Logs: /private/tmp/fwp-map-unwind-gdb.log and
