@@ -70,7 +70,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–91 are refreshed and published on their actual predecessors.
+Preparations39–92 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -86,16 +86,16 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task92 keeps served gRPC peer metadata alive through
-children and detached senders, releasing after completion (`ownership-grpc-peer-completion`).
-Preparation91 published5029a447bcec5301caeca736701c581d329d9cb8 on actual90fabe0ac7b24a,
-with original source/probes preserved. Three audits and publication1.79CPU/18.60elapsed
-pass. Rebase92 FROM actual91old9900cc0d5229 ONTO published915029a447bcec;
-Nativef3554c30b32e preserves original source/probes. All four completion/server/
-task-handle/HTTP2 peer tests17.42CPU/36.92elapsed pass, preserving child joins,
-detached sender completion, cancellation and original omitted-finalizer controls.
-Lint2.37CPU/4.94elapsed and format0.44/0.85s pass; finish all11 docs/audits
-before retained publication. Next93 gRPC status cleanup. Selected deterministic cleanup is not tracing-free support.
+Current independent task93 releases served gRPC status-message storage after
+encoding and on unwind (`ownership-grpc-status-cleanup`). Preparation92
+published26545f1b279bf560504ebaae456518ba3566c944 on actual915029a447bcec,
+with original source/probes preserved. All four completion/server/task/peer controls
+pass; three audits and publication1.82CPU/18.06elapsed pass.
+Rebase93 FROM actual92olde89105300eb3 ONTO published9226545f1b279b;
+run unchanged status/completion/server/task controls, lint/format and all11 docs/
+audits before retained publication. Preserve both omitted-release controls with
+exact exit2, failed status-copy hard exit102 and exact stderr, GC on/off and both
+poison modes. Next94 task HTTP2 context owners.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -205,7 +205,7 @@ still need their final squash rebases and six exact-head full gates.
 | 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
 | 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Corrected exact grpc::web bounds/error-order comparison executes one test and passes0.45CPU/1.94elapsed; strict HTTP2 root test7.17/15.39s, lint2.41/4.77s and format0.45/0.87s pass; original source/probes unchanged including exact omitted-fence exit1; earlier zero-test filter explicitly unverified/resolved; final actual-squash/full gates required |
 | 91 ownership-http2-peer-cleanup | 5029a447bcec | fabe0ac7b24a | All three original peer/TLS/body-root tests8.42CPU/19.26elapsed, lint2.33/4.70s and format0.45/0.85s pass without skips; original source/probes unchanged including actual OpenSSL subject handshakes, strict omitted cleanup exit1 and TLS fault controls; final actual-squash/full gates required |
-| 92 ownership-grpc-peer-completion | f3554c30b32e | 5029a447bcec | All four original completion/server/task-handle/peer tests17.42CPU/36.92elapsed, lint2.37/4.94s and format0.44/0.85s pass; original source/probes unchanged, preserving joined children, detached senders, cancellation and omitted-finalizer controls; selected cleanup verified without claiming tracing-free support; final actual-squash/full gates required |
+| 92 ownership-grpc-peer-completion | 26545f1b279b | 5029a447bcec | All four original completion/server/task-handle/peer tests17.42CPU/36.92elapsed, lint2.37/4.94s and format0.44/0.85s pass; original source/probes unchanged, preserving joined children, detached senders, cancellation and omitted-finalizer controls; selected cleanup verified without claiming tracing-free support; final actual-squash/full gates required |
 | 93 ownership-grpc-status-cleanup | f1a357fb78da | e89105300eb3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 94 ownership-grpc-receive-cleanup | df82d27c917b | f1a357fb78da | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 95 ownership-grpc-force-cleanup | ab5723156bca | df82d27c917b | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
