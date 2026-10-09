@@ -54,7 +54,8 @@ publication (1.91 / 19.47 s) pass. Old 8c4e9ffd71a5 is retained remotely.
 production PR. Creation passes (0.17 CPU / 3.87 elapsed s). CI 38072953927 and
 docs 38072954043 belong to frozen `0ddeedbb09a29235556808a499a665178cf13d83`.
 Bench passes; the other five production jobs run. Docs status remains pending;
-only passing current-head gates accept the head. Require all seven fresh exact-head gates
+Docs 38072954043 passes at the frozen head. Only passing current-head gates
+accept the head. Require all seven fresh exact-head gates
 before match-head squash with subject
 `Protect boxed arguments and partial fields before worker entry` and empty body.
 Next production delivery after acceptance: queue 38 loop argument preparation.
@@ -73,7 +74,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–110 are refreshed and published on their actual predecessors.
+Preparations39–111 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -89,22 +90,21 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Preparation 110 environment cache teardown is published at bf297ac299ea816937cbb5cf64ef12981db3651c
-on actual 109 c9d841ee5a9d. Four original controls pass (13.41 CPU / 29.53 elapsed s),
-as do lint (2.56 / 5.22 s), format (0.44 / 0.82 s), all three audits and retained
-publication (1.92 / 19.36 s). Original source/probes remain byte-identical,
-including omitted cleanup exit 1, read-once inputs, blocked-task/finalizer order
-and repeated teardown. Final sequential production gates remain.
-Current independent task 111: packed TLS options. Rebase FROM actual 110 old
-0caead68a6c3 ONTO published 110 bf297ac299ea, preserving BOTH original commits.
-Native rebasea4b3803a6275 preserves both original commits and all source/probes.
-All four original packed-options/environment-cache/identity/capture tests
-12.58CPU/26.76elapsed pass with unchanged compiler delegation. Both actual packed
-probe C/binaries are retained. Actual ARM64 header/disassembly/layout inspection
-passes (0.20 CPU / 0.82 elapsed s): TLS header64 bytes/alignment8, offsets
-insecure40/key_len48/users56; tested single allocations101/8311 bytes.
-Lint2.59/5.25s and format0.44/0.83s pass; complete all11 docs/audits before
-retained publication. Next: 112 full connection addresses.
+Preparation 111 packed TLS options is published at 5a01572cb2c69ae272239e957b360f8ae1d6dc66
+on actual 110 bf297ac299ea. Both original feature/format commits and all source/probes
+survive. Four original tests (12.58 CPU / 26.76 elapsed s), actual ARM64 binary/layout
+inspection (0.20 / 0.82 s), lint (2.59 / 5.25 s), format (0.44 / 0.83 s), three audits
+and retained publication (1.80 / 18.42 s) pass. Header 64 bytes/alignment 8 and
+single allocation sizes 101/8311 bytes are measured; duplicated key bytes remain.
+Final sequential production gates remain.
+Current independent task 112: full connection addresses. Rebase FROM actual 111
+old b2350957e6ff ONTO published 111 5a01572cb2c6; preserve both original feature/
+format commits. Run address/packed-options/identity/connection controls, retaining
+actual address probe C/binaries with unchanged compiler delegation. Inspect actual
+new/legacy layouts, then lint/format and all11 docs/audits before retained publication.
+Keep exact truncation control exit1, copied addresses, long-address loopback/pool reuse,
+short-address byte savings and interpreter address parsing. After 112, review the
+finite phase2 exit inventory while continuing sequential production delivery.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -234,7 +234,7 @@ still need their final squash rebases and six exact-head full gates.
 | 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | All four original capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass; source/probes unchanged including all three omitted owner exit1 controls, atomic overflow rollback, inherited captures and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | All four original native identity/capture/context-resource/connection tests13.37CPU/30.03elapsed, exact interpreter pool-key unit5.33/11.12s (one executed), lint2.35/4.76s and format0.45/0.85s pass; source/probes unchanged including old collision exit1, all fields/long/separator options, copied keys and pool reuse across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 111 ownership-grpc-packed-options | a4b3803a6275 | bf297ac299ea | All four original packed/cache/identity/capture tests12.58CPU/26.76elapsed, actual ARM64 binary/layout inspection0.20/0.82s, lint2.59/5.25s and format0.44/0.83s pass; both original feature/format commits and source/probes unchanged including one allocation101/8311 bytes, alignment8/header64, copy/last-owner/failure controls and cache releases10-to-5; final actual-squash/full gates required |
+| 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | All four original packed/cache/identity/capture tests12.58CPU/26.76elapsed, actual ARM64 binary/layout inspection0.20/0.82s, lint2.59/5.25s and format0.44/0.83s pass; both original feature/format commits and source/probes unchanged including one allocation101/8311 bytes, alignment8/header64, copy/last-owner/failure controls and cache releases10-to-5; final actual-squash/full gates required |
 | 112 ownership-grpc-connection-addresses | 0da68ea8cdb1 | b2350957e6ff | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
