@@ -11630,3 +11630,9 @@ Row100 served response trap/cancel test9.09/18.46s passes. Row103 refresh
 Compiler/runtime/client receive fixture match original with inherited CLI/GC repairs.
 OLDc48864ce7231 stays fixed; previous CURRENT is retained under revision-103
 before lease publication. Fresh retry/error/cancel checks follow.
+
+Row100 clippy5.76/13.10s and format0.46/0.87s pass after response
+test9.09/18.46s. Row104 refresh8bf114c615fe8a36b5e3daa55b232c0c50445dd6
+uses actual base8ccdd092478c; compiler/runtime/connect fixture match original
+with inherited CLI/GC repairs. OLDb244d5f7c423 stays fixed; previous CURRENT
+is retained before lease publication. Fresh cancellation checks follow.
