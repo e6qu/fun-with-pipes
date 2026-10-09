@@ -499,5 +499,15 @@ child appends. Both resource counters validate before acquisition changes
 either, and constructors protect resources if acquisition traps. TLS pool
 keys use checked length framing and complete bytes rather than delimiter
 serialization through a fixed diagnostic buffer; connections copy keys so
-scoped options can be released independently. Environment-cache teardown,
-canonical decode and packed TLS storage remain audits.
+scoped options can be released independently. Read-once environment TLS
+caches release on library teardown after tasks drain and GC finalizers finish,
+before SSL cache disposal. Cache and hook state reset for reinitialization.
+Prepared packed TLS options use one checked allocation containing an aligned
+header followed by strings and the full length-framed key. Child string/key
+pointers are borrowed within that allocation; last-owner release frees its
+base once. Focused remote checks are pending, so allocation reduction is not
+yet verified support. Full connection addresses also use checked tail storage
+within the existing managed connection allocation, preserving complete pool
+keys without separate address allocation. Connection wrappers retain tracing
+compatibility. Canonical decode already frees temporary C buffers on normal
+success/error exits; typed ownership of reconstructed aggregates remains an audit.
