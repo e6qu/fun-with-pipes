@@ -35,8 +35,8 @@ fn grpc_connect_and_handshake_release_pending_resources_on_cancellation() {
     for (before,after) in [
         ("            fwp_wait_fd(fd, 1, 0);","            if(mode==1){phase=1;fwp_park(0,0);fwp_check_cancel();} fwp_wait_fd(fd,1,0);"),
         ("    g_conn *c = g_conn_new(fd, given, 0);","    if(mode==3){phase=1;fwp_park(0,0);fwp_check_cancel();} g_conn *c = g_conn_new(fd,given,0);"),
-        ("fwp_spawn_task(0, g_reader, c, 0, 1);","backgrounds++;"),
-        ("fwp_spawn_task(0, g_writer, c, 0, 1);","backgrounds++;"),
+        ("startup.reader = fwp_spawn_task(0, g_reader, c, 0, 1);","backgrounds++; startup.reader=0;"),
+        ("startup.writer = fwp_spawn_task(0, g_writer, c, 0, 1);","backgrounds++; startup.writer=0;"),
     ]{assert_eq!(method.matches(before).count(),1);method=method.replacen(before,after,1);}
     let generated = format!("{}{}{}", &generated[..start], method, &generated[end..]);
     let hooks = r#"
