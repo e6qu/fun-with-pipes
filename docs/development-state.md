@@ -50,8 +50,8 @@ all14 RC units3.25/6.88s, lint2.44/4.99s, format0.34/0.61s and all three audits
 pass. Publication1.75CPU/18.26elapsed and PR creation0.20/3.94s pass. Oldbcd3b392050b
 is retained remotely before exact-lease publication. Resolved empty-docs commit
 bookkeeping is archived in history; native rebase was not rerun.
-CI38066365077 has all four macOS jobs running; Linux, bench and
-docs38066365141 are queued at the frozen head. Require all seven
+CI38066365077 has all four macOS jobs running; Linux and bench are queued.
+Docs38066365141 passes at the frozen head. Require all seven
 exact-head gates, then match-head squash with subject
 `Protect worker result fields until record and variant boxing succeeds` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -71,7 +71,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–95 are refreshed and published on their actual predecessors.
+Preparations39–96 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -87,16 +87,16 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task96 releases streamed-error rendering scratch before
-trap recovery (`ownership-grpc-render-cleanup`). Preparation95 published
-91ab624526369c7ff70054f404028af1f4a5116c on actual94ec0fd11c6b26, preserving all
-original source/probes. Four decoder/receive/status/completion controls pass;
-three audits and publication1.68CPU/18.06elapsed pass.
-Rebase96 FROM actual95oldab5723156bca ONTO published9591ab62452636;
-Nativef85463a63925 preserves original source/probes. All four rendering/force/
-receive/status tests15.08CPU/31.06elapsed pass, preserving exact omitted cleanup
-exit1, render and final service-error trap text, O1/O2 and GC/poison modes.
-Finish lint/format and all11 docs/audits before retained publication. Next97 send cleanup.
+Current independent task97 releases encoded gRPC message buffers across
+flow-control cancellation (`ownership-grpc-send-cleanup`). Preparation96 published
+b4087dc07beb8c341a1cf1764a2f5ec36ab4207c on actual9591ab62452636, preserving all
+original source/probes. Four rendering/decode/receive/status controls pass;
+three audits and publication1.69CPU/18.11elapsed pass.
+Rebase97 FROM actual96old8aa292c5a24a ONTO published96b4087dc07beb;
+run unchanged send/force/receive/status controls, lint/format and all11 docs/
+audits before retained publication. Preserve exact omitted cleanup exit1, plain/
+gzip frame bytes, cancellation during zero/partial windows, resumed flow control
+and O1/O2 GC/poison modes. Next98 request encoding cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -210,7 +210,7 @@ still need their final squash rebases and six exact-head full gates.
 | 93 ownership-grpc-status-cleanup | 9ad102d5a16f | 26545f1b279b | All four original status/completion/server/task tests20.89CPU/42.76elapsed, lint2.43/4.94s and format0.45/0.85s pass; original source/probes unchanged including both omitted-release exit2 controls, status-copy hard exit102/exact stderr and GC on/off/poison modes; final actual-squash/full gates required |
 | 94 ownership-grpc-receive-cleanup | ec0fd11c6b26 | 9ad102d5a16f | All four original receive/status/completion/body-root tests15.65CPU/32.13elapsed, lint2.43/4.90s and format0.44/0.84s pass; source/probes unchanged including all three omitted-release exit1 controls, exact message bytes/status text and cancelled-wait cleanup across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | All four original force/receive/status/completion tests16.95CPU/34.13elapsed, lint2.40/4.89s and format0.44/0.85s pass; source/probes unchanged including three omitted-release exit1 controls, decoder/copy traps, typed error/text transfers and O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 96 ownership-grpc-render-cleanup | f85463a63925 | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 97 ownership-grpc-send-cleanup | bf2371572323 | 8aa292c5a24a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 98 ownership-grpc-request-encoding | b82589474d2a | bf2371572323 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 99 ownership-grpc-canonical-encoding | 3c67663986c7 | b82589474d2a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
