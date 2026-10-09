@@ -218,6 +218,27 @@ static V fwp_copy_finish(V *a, size_t n, V tail) {
     fwp_mem_free(a);
     return result;
 }
+/* Sorting aliases values; scratch words are tracing roots, not owners. */
+static V fwp_p_sort_copied(V xs, const fwp_desc *elem) {
+    size_t n;
+    V *a = fwp_map_items(xs, &n);
+    if (n > 1) {
+        V *tk = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        V *tv = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        V *vals = (V *)fwp_mem_alloc((n + 1) * sizeof(V));
+        memcpy(vals, a, n * sizeof(V));
+        fwp_msort(a, vals, n, elem, tk, tv);
+        FWP_KEEP_ALIVE(tk);
+        FWP_KEEP_ALIVE(tv);
+        FWP_KEEP_ALIVE(vals);
+        fwp_mem_free(vals);
+        fwp_mem_free(tv);
+        fwp_mem_free(tk);
+    }
+    V result = fwp_copy_finish(a, n, 0);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
 static V fwp_p_reverse_copied(V xs) {
     V source = xs, result = 0;
     while (xs) {
@@ -551,6 +572,19 @@ static V fwp_p_unique(V xs, const fwp_desc *d) {
         if (!seen) a[k++] = a[i];
     }
     return fwp_list_from(a, k);
+}
+
+static V fwp_p_unique_copied(V xs, const fwp_desc *d) {
+    size_t n, k = 0;
+    V *a = fwp_map_items(xs, &n);
+    for (size_t i = 0; i < n; i++) {
+        int seen = 0;
+        for (size_t j = 0; j < k && !seen; j++) seen = fwp_cmp(a[j], a[i], d) == 0;
+        if (!seen) a[k++] = a[i];
+    }
+    V result = fwp_copy_finish(a, k, 0);
+    FWP_KEEP_ALIVE(xs);
+    return result;
 }
 
 static V fwp_p_scan(V f, V z, V xs) {
