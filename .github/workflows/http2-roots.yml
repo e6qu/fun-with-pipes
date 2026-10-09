@@ -22,6 +22,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      - name: Clang for independent conservative-root omission control
+        run: sudo apt-get update && sudo apt-get install -y clang
       - name: Format
         if: ${{ !cancelled() }}
         run: cargo fmt --all -- --check
@@ -40,8 +42,3 @@ jobs:
       - name: Resource metadata and fusion order
         if: ${{ !cancelled() }}
         run: cargo test --lib resource::tests -- --nocapture
-      - name: Omitted-owner machine code diagnostic
-        if: ${{ failure() }}
-        run: |
-          nm /tmp/fwp-http2-owner-omitted | grep -E 'body|make_call|inspect_owner|fwp_str_new'
-          objdump -d /tmp/fwp-http2-owner-omitted | sed -n -e '/<body[^>]*>:/,/^$/p' -e '/<fwp_p_http2_body[^>]*>:/,/^$/p' -e '/<inspect_owner[^>]*>:/,/^$/p'
