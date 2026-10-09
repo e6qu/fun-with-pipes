@@ -12108,3 +12108,5 @@ are byte-identical to7cfbe03; inherited long-tail test, audit and guard. Ten
 focused runtime/preparation/reuse tests pass27.43CPU/55.06elapsed, lint2.37/
 4.77s, format0.34/0.63s and strong audit0.46/3.69s. Prior7cfbe03 retained
 remotely before leased publication. Final sequential gates still required.
+
+Row29 refreshed78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 to4c7d5ba450822f36eda7de8c5b762bf0471620f6 on actual3e7ab59e89c32f056a19bec6b327709e242d8393. Compiler/runtime/original probes are byte-identical; inherited long-tail regression, bounded guard repair and strong handoff audit match the new base. Seven focused map/preparation/reuse tests pass24.26CPU/48.82elapsed, clippy -D warnings2.51/5.05s, format0.44/0.61s and strong44/106/87 audit0.55/4.11s. Retained roadmap/revision-029-78ed19ff401a before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
