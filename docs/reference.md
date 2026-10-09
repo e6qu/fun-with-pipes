@@ -285,6 +285,10 @@ A C name other than the fwp one comes after `=`: `c-div 7 2` calls
 - `fwp build --staticlib` or `--cdylib` turns the exported functions into
   a C library with a header. Any language with a C FFI can call it; see
   `tests/c-interop/main.rs` for Rust.
+  Returned strings and string fields of returned structs borrow library storage
+  and remain valid while the library is loaded; the host must not free them.
+  Scalar/struct results are copied into C values. A nullable pointer copies the
+  raw pointer; the pointee follows its own allocation/lifetime contract.
 
 ## The `fwp` command
 

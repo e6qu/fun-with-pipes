@@ -348,6 +348,37 @@ static V fwp_p_loop(V f, V s) {
     }
 }
 
+/* A Step owns its selected payload. Take a typed extra reference before
+ * releasing the Step, so shared/aliased boxes are safe as well as unique ones. */
+static V fwp_loop_payload(V step, int stop, void (*dup_state)(V),
+                          void (*dup_result)(V), void (*drop_step)(V)) {
+    V value = OBJ(step)->f[0];
+    void (*duplicate)(V) = stop ? dup_result : dup_state;
+    if (duplicate) duplicate(value);
+    if (drop_step) drop_step(step);
+    return value;
+}
+static V fwp_p_loop_own(V f, V s, void (*dup_state)(V),
+                         void (*dup_result)(V), void (*drop_step)(V)) {
+    for (;;) {
+        FWP_TICK();
+        V step = fwp_apply_borrowed_prefix(f, 1, &s, 1);
+        int stop = fwp_tag(step) != 0;
+        s = fwp_loop_payload(step, stop, dup_state, dup_result, drop_step);
+        if (stop) { FWP_KEEP_ALIVE(f); return s; }
+    }
+}
+static V fwp_k_loop_owned(V (*entry)(V *), V s, void (*dup_state)(V),
+                           void (*dup_result)(V), void (*drop_step)(V)) {
+    for (;;) {
+        FWP_TICK();
+        V step = entry(&s);
+        int stop = fwp_tag(step) != 0;
+        s = fwp_loop_payload(step, stop, dup_state, dup_result, drop_step);
+        if (stop) return s;
+    }
+}
+
 /* The higher-order primitives above for a known function with nothing
  * captured (src/cgen.rs, `known_hof`): the C compiler inlines them at the
  * call, so the function is called directly instead of through

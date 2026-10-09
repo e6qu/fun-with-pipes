@@ -159,7 +159,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 17 | scan/iterate retain initial state and adopt later owned callback states; callbacks borrow earlier stored outputs | Sequential CI; empty/nonpositive cases and failure cleanup |
 | 18 | loop consumes state, transfers callback input, retains selected Step payload before destroying Step; workers dispose typed boxed input | Sequential CI; flattened state, traps, scalar root fences and exceptional cleanup |
 | 19 | zip/unzip/chunks borrow inputs, build counted nested structure, duplicate typed borrowed elements and release scratch | Sequential CI; retained aliases, scalar safety and chunk validation order |
 | 20 | repeat borrows value/count and retains each typed alias; range borrows bounds and owns fresh nodes | Sequential CI; scalar safety, overflow edges and alias reclamation; boxed128-bit payloads remain shared |
@@ -178,7 +177,26 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 33 | Loop protects counted current state at first/later cancellation safe points and owns Step through payload preparation | Sequential CI; flattened/nested state, aliases, scalar safety and payload-retain failures |
 | 34 | Typed argument/capture preparation owns each completed duplicate; closure construction retains its empty cell until captures succeed, then transfers pending arguments | Sequential CI; partial duplicate failures, aliases and pending owned arguments |
 | 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
-| 36–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
+| 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
+| 37 | Boxed-to-worker wrappers protect original arguments before preparation and each completed typed field duplicate until worker entry | Sequential CI; partial retention failure, boxed/scalar arguments, aliases and worker entry transfer |
+| 38 | Eligible loop state stays flattened through RC preparation; initial boxed input and each completed typed field duplicate stay owned until transfer | Sequential CI; partial field failures, cancellation slots, aliases and trap/evaluation order |
+| 39 | Multi-field typed retains protect each completed extra reference; caller liveness excludes unfinished retains through count overflow | Sequential CI; partial variant/stack retains, wide-count overflow and live aliases |
+| 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |
+| 41 | Boxed-to-struct variants retain original typed owners through payload preparation; consumed-value checkpoints protect only remaining caller references | Sequential CI; retain overflow, aliases, scalar safety and exact IR ownership checkpoint |
+| 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
+| 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |
+| 44 | Returned variant aliases transfer existing typed field owners directly, avoiding an extra box or retain set | Sequential CI; emitted ownership counts, aliases across yields and source/native agreement |
+| 45 | Match elimination preserves nominal types for effectful discarded constructor fields and their child destruction | Sequential CI; nested fields, aliasing, effects and evaluation order |
+| 46 | Inlined record projections retain checked base types while removing outer storage and dropping discarded children | Sequential CI; aliases, discarded nested fields and evaluation order |
+| 47 | Typed CAF cache owners survive caller drops; calls return separate owners and executable teardown releases caches after tasks | Sequential CI; initialization failures, reentry, overflow, aliases and teardown |
+| 48 | Inlining evaluates CAF arguments before the callee, including unused arguments, and releases their temporary owners | Sequential CI; first-trap order, raw interpreter agreement and missing-release control |
+| 49 | task.spawn borrows the caller thunk and retains a typed task owner until entry or cancellation; failed preparation rolls back before publication | Sequential CI; stack/scope failures, captures, aliases and scalar results; task graph still shares |
+| 50 | task.within borrows the caller thunk and retains typed captures through deadline completion or cancellation | Sequential CI; external aliases and rollback; task results still share |
+| 51 | task.scope borrows its callback, returns an owned result and protects result/scope storage through joining, traps and cancellation | Sequential CI; handler restoration, aliases and cleanup omission controls |
+| 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Sequential CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
+| 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Sequential CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
+| 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Sequential CI; conversion failure, nullable pointers, cached calls and host lifetimes |
+| 45–72 | Tasks, callbacks, aggregate/CAF contexts, native libraries, devices, networking, files and unwind | Sequential CI; escapes, cancellation and actual host behavior |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
@@ -210,3 +228,8 @@ hardware settings are preserved in
 They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Dead projected fields, retained callbacks, exception/cancellation,
 unknown runtime boundaries and cycle policy remain part of phase2 acceptance.
+
+Main through PR #95 also borrows scan/iterate callbacks and inputs, owns
+initial stored aliases and adopts subsequent callback results; scratch
+storage is released after the state sequence is built. Exceptional lifetime
+extensions remain prepared work.

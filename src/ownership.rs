@@ -137,6 +137,15 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(0)),
             &[0, 1],
         ),
+        "loop" => (
+            &[B, C],
+            ResultOwnership::OwnedAccumulator {
+                argument: 1,
+                runtime: "loop",
+            },
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "scan" => (
             &[B, B, B],
             ResultOwnership::FreshSpine,
@@ -462,6 +471,22 @@ mod tests {
                 assert_eq!(c.argument(argument), Argument::Borrow);
             }
         }
+        assert!(include_str!("../lib/prelude.fwp")
+            .lines()
+            .any(|line| line.starts_with("foreign \"fwp\" loop :")));
+        let loop_contract = primitive("loop").unwrap();
+        assert_eq!(
+            loop_contract.arguments,
+            &[Argument::Borrow, Argument::Consume]
+        );
+        assert_eq!(loop_contract.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(
+            loop_contract.result,
+            ResultOwnership::OwnedAccumulator {
+                argument: 1,
+                runtime: "loop",
+            }
+        );
         assert!(!primitive("array.map").unwrap().borrows_callback());
         assert!(primitive("unknown").is_none());
     }
