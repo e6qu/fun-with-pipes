@@ -12,7 +12,6 @@ jobs:
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
       FWP_KEEP_FAILED_FIXTURES: 1
-      CC: cc -g
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,6 +20,14 @@ jobs:
         run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Handoff links, immutable anchors and commit subjects
         run: python3 scripts/check-roadmap.py
+      - name: Native debug compiler wrapper
+        run: |
+          cat > "$RUNNER_TEMP/fwp-debug-cc" <<'SH'
+          #!/bin/sh
+          exec cc -g "$@"
+          SH
+          chmod +x "$RUNNER_TEMP/fwp-debug-cc"
+          echo "CC=$RUNNER_TEMP/fwp-debug-cc" >> "$GITHUB_ENV"
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
