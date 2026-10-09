@@ -10927,3 +10927,11 @@ fresh checks move to GitHub. Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119
 CI37962382433, is queued with the stronger all44-doc/tag-identity auditor.
 Last observed disk63120268KiB available (~60.20GiB), target140856KiB (~137.55MiB).
 No local workloads remain active.
+
+Row29 callback-map unwind refreshed from actuale3c49d9 ontob5f44e8;
+published9b5eb58046551342baccc38299a587dc96560589 preserves compiler/runtime
+and ownership fixtures, inheriting only CLI and tracing-fixture repairs outside
+authoritative docs. Its final rebase uses actualb5f44e8 after row28 merges.
+Fresh checks move to GitHub under the continuing local disk refusal. Row28
+evidenceae907d63e277f8c62a07b20aee0dfecb3167a9c6, CI37962723252,
+is running with all44-doc immutable-tag checks.
