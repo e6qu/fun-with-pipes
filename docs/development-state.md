@@ -28,34 +28,38 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `ff29c268eed8669d812d40d1050e0c4bd188d52c` (PR106). Accepted head
-`5683df1c8a96bad30e3c679987e87694387c3b62` passes all six production jobs in
-CI38006543549 and roadmap_docs38006543521. The squash message is exactly one
-line, 58 characters, with an empty body; its complete tree matches the tested
-head. Exact acceptance, message/tree proofs and prior failures are in [history](roadmap-history.md).
-Native macOS is delivered; selected ownership is delivered through compiler
-reuse-token and live caller/pending-argument cleanup. Phase2 remains incomplete;
-phases3–6 remain pending. Tracing is still the compatibility fallback.
+Main is `c9b9f835ebf2e3a868bfa4bdf256f0f16800786c` (PR107). Accepted head
+`1dcbe79ac0777b83cad6f49b8ab4b28ad140c854` passes all six production jobs in
+CI38011227462 and roadmap_docs38011227532. Match-head squash at2026-10-10T01:46:24Z
+has the exact65-character message `Protect runtime application owners through preparation and unwind`,
+with one line, an empty body and no trailers/attribution. Complete tree
+`2efc86ee42fb4cef265ca976bf1dcf43e618bfa0` matches the tested head. Raw-message,
+tree and final-gate proofs are saved locally; full acceptance is in history.
+All11 docs were hashed/backed up in /private/tmp/fwp-main-docs-pre107 and restored
+byte-for-byte after main FF. Refresh that now-stale backup before the next FF.
+Duplicate main CI38014464073 is cancelled only after parity/gate proof; main
+roadmap_docs38014464086 passes. Native macOS and selected ownership are delivered
+through runtime application/capture preparation and compiler caller/reuse cleanup.
+Phase2 remains incomplete; phases3–6 remain pending; tracing stays the fallback.
 
-[PR107](https://github.com/e6qu/fun-with-pipes/pull/107) delivers queue28 runtime
-application and capture-preparation cleanup. Its frozen head is
-`1dcbe79ac0777b83cad6f49b8ab4b28ad140c854` on actual squash base `ff29c268eed8`.
-All14 focused integration tests,13 IR controls, focused lint, format and strong
-handoff audit pass; commands and timings are in history. CI38011227462 has
-passing bench, ARM macOS and both dedicated macOS GC jobs. Regular Intel macOS also passes; Linux is still running. Roadmap_docs38011227532 passes at the same head.
-Require all seven exact-head gates; fix any failure. Use the explicit squash
-subject `Protect runtime application owners through preparation and unwind`,
-with an empty body and --match-head-commit. A prepared local gate-check/merge
-helper is /private/tmp/fwp-merge-pr107.py; it refuses incomplete or stale gates.
-Verify the raw squash message and whole-tree parity, refresh and hash all11 docs
-before updating local main, and restore those docs byte-for-byte before updating
-the handoff. The old /private/tmp/fwp-main-docs-pre106 backup is now stale.
+[PR108](https://github.com/e6qu/fun-with-pipes/pull/108) delivers queue29 map
+unwind. Its frozen exact head is `3c69084cec04ad0a5db3c2f8813a683140d3f40c`
+on actual squash base `c9b9f835ebf2e3a868bfa4bdf256f0f16800786c`. Both implementation/
+probe commits survive the rebase; source/tests/scripts/production workflows
+match prior25eda7b byte-for-byte. Nine focused map/runtime tests22.95CPU/46.05elapsed,
+focused clippy2.32/4.65s, format0.34/0.62s and strong audit0.42/3.45s pass.
+All11 live docs are copied into the PR; prior25eda7b is retained under
+roadmap/revision-029-25eda7b24ef5 before exact-lease publication. Freeze this head
+except for real fixes. Production CI38015157922 is running; roadmap_docs38015157960
+passes. Require all seven exact-head gates before merging.
+Squash subject: `Release map callback owners and partial results during unwind`;
+empty body and explicit --match-head-commit. After the accepted squash's message/
+tree proof and protected main update, deliver queue30 selection unwind next.
+Keep one production PR open at a time; continue independent preparation while CI runs.
 
-Open queue29 map unwind only after107 merges. Use its recorded actual base,
-rebase onto the actual squash, run focused checks, copy all11 current docs and
-require fresh full gates. Skip duplicate queue34 only after28 full acceptance;
-its original implementation and regression probe were moved into28. Preserve
-all immutable anchors and later coverage.
+Queue34 is now a verified duplicate of the preparation code/probe delivered
+in107. Skip its implementation PR when reached after33; preserve its immutable
+anchor, current source ancestry and all later regression coverage.
 
 ## Staged repairs and next independent work
 
@@ -88,7 +92,8 @@ Both repairs now propagate through83. Matched-result refresh44–59 is complete,
 including both CAF/converted-result controls. Refresh60–67 passes8.35CPU/92.10elapsed;
 68–75 passes after the strict resource-layout adjustment (5.27/58.64s stopped,
 3.26/38.44s completed);76–83 passes8.42/92.36s. Both original resource commits
-and the additional frame-holder repair survive. Continue84–112 in bounded
+and the additional frame-holder repair survive. Refresh84–91 passes8.63CPU/92.12elapsed, preserving both row85 commits and
+original HTTP fixture controls. Continue92–112 in bounded
 batches using /private/tmp/fwp-refresh-matched-conversion.py and actual bases.
 It verifies exact inherited code, original probes and commit counts, retains each
 prior head remotely, publishes with an exact lease and audits the handoff.
@@ -113,8 +118,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 28 ownership-runtime-call-cleanup | 1dcbe79ac077 | ff29c268eed8 | Final squash-base source parity; fourteen focused integration tests33.34CPU/67.02elapsed pass; thirteen IR controls3.29/6.83s, focused lint2.34/4.66s and format0.34/0.61s pass; strong audit0.47/3.67s passes; PR107 exact-head full CI pending |
-| 29 ownership-map-unwind | 25eda7b24ef5 | 131ec8ebdd06 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
+| 29 ownership-map-unwind | 3c69084cec04 | c9b9f835ebf2 | Nine focused tests22.95CPU/46.05elapsed, lint2.32/4.65s, format0.34/0.62s and audit0.42/3.45s pass; PR108 full exact-head CI pending |
 | 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
@@ -176,7 +180,7 @@ still need their final squash rebases and six exact-head full gates.
 | 88 ownership-channel-cycle-lifetimes | acce7492f8d3 | 69f606200622 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
 | 89 ownership-http2-body-roots | 9d8a6fb2a7df | acce7492f8d3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | 71d875caed41 | 9d8a6fb2a7df | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 91 ownership-http2-peer-cleanup | dee3f126a131 | 7f2d4f4ffd46 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 91 ownership-http2-peer-cleanup | 36ea28337198 | 71d875caed41 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 92 ownership-grpc-peer-completion | 307010912bf9 | dee3f126a131 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 93 ownership-grpc-status-cleanup | fec93c5ec707 | 307010912bf9 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 94 ownership-grpc-receive-cleanup | d1f35d6121a4 | fec93c5ec707 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
@@ -334,14 +338,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Current shared target
-belongs to /private/tmp/fwp-resource-frame-variants-worktree, after bounded
-package clean of source43(0.07CPU/0.38elapsed) and rebuild for the verified
-frame-holder repair. Commands and earlier target switches are in history.
-Before switching Rust checkouts, run bounded cargo clean -p fwp in this checkout
-and rebuild the requested target. Never infer binary/source identity from a
-shared target directory. Temporary helper paths can disappear; the table,
-actual bases and retained tags are the durable recovery record. No local full
-gate or full-size raw tail run is authorized by historical resource observations.
+belongs to /private/tmp/fwp-map-unwind-worktree after bounded package clean of
+row83(0.06CPU/0.37elapsed) and the final-squash rebase/rebuild. Focused command:
+cargo test --test map_unwind_ownership --test map_ownership --test runtime_call_ownership,
+through the absolute-root guard with OpenSSL; all nine tests pass22.95/46.05s.
+Before switching Rust checkouts, bounded cargo clean -p fwp in this checkout
+then rebuild the requested target. Earlier switches/checks are in history;
+never infer source identity from a shared target directory. Full gates run on
+GitHub. Temporary helpers may disappear; actual bases and retained tags are
+the durable recovery record.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload

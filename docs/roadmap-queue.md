@@ -56,7 +56,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `9a21fd6cc844` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
-| 29 | map-unwind | `ownership-map-unwind` | `25eda7b24ef5` | `62add7e4a85f` | `bee3f1659ae5` |
+| 29 | map-unwind | `ownership-map-unwind` | `3c69084cec04` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `9979e9fd1a27` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `47776e738c26` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `c434692ccb6f` | `968dac7ed9cf` | `c2a364544d92` |
@@ -118,7 +118,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `acce7492f8d3` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `9d8a6fb2a7df` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `71d875caed41` | `6f310b5483a8` | `d29dda936dff` |
-| 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `dee3f126a131` | `3c268c34d15b` | `6f310b5483a8` |
+| 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `36ea28337198` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `307010912bf9` | `09751c8c65ac` | `3c268c34d15b` |
 | 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `fec93c5ec707` | `a92c951fa6d9` | `09751c8c65ac` |
 | 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `d1f35d6121a4` | `8bd9e78743ab` | `a92c951fa6d9` |
