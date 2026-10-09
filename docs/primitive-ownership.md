@@ -255,6 +255,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 105 | Background gRPC startup owns temporary and per-task reserved references until publication | Sequential CI; first/second spawn traps, actual reader/writer termination, descriptor/ref/finalizer checks and omitted reservation/startup/marker controls |
 | 106 | Dynamic gRPC context restores its saved task pointer on every callback exit | Sequential CI; nested normal/typed/raw failures, actual parked cancellation and omitted unwind restore |
 | 107 | Scoped TLS options have checked dynamic-scope and original inheriting-task owners | Sequential CI; structured/detached escapes, cancellation/preparation/overflow, original-context replacement, six malloc releases and three omission controls; plain tasks omit hooks |
+| 108 | Response metadata captures have constructor, scope and inheriting-task owners | Sequential CI; snapshots resist later child appends, nested forwarding, typed/raw/cancel exits, failed preparation and counter acquisition; three omission controls |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes

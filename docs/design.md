@@ -492,5 +492,9 @@ tracing. Task preparation protects acquired context owners, and completion
 releases the original retained context after child joins even if current
 gctx changed. These hooks and one private pointer compile only for service/
 web programs. Read-once environment options keep their cache lifetime; context
-wrappers retain tracing compatibility. Capture lifetimes, complete TLS pool
-identity and canonical decode remain audits.
+wrappers retain tracing compatibility. Response metadata captures also retain
+constructor, scope and inheriting-task owners; the last owner frees headers
+and their storage. Returned metadata is a snapshot, independent of later
+child appends. Both resource counters validate before acquisition changes
+either, and constructors protect resources if acquisition traps. Complete
+TLS pool identity, environment-cache teardown and canonical decode remain audits.

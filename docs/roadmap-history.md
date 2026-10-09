@@ -10401,3 +10401,27 @@ workflows unchanged from published c8d4b570. Guarded package clean passes
 passes all three tests 14.57 / 29.32 s; focused clippy with `-D warnings` passes
 2.44 / 4.83 s; `cargo fmt --check` passes 0.33 / 0.60 s.
 Full exact-head acceptance remains pending publication and CI.
+
+Row107 published at ea18e54f0eeeee5ec470d44e770d31d3f42456af on actual
+7a89dd017ae49f1a7deae49745e15ee807f46b2d. Tests7.45 / 16.78 s,
+lint2.68 / 5.39 s and format0.45 / 0.83 s pass. No competing PR.
+PR99 exact dc85b679407a7adda1438989051ca7eaf70072e5 starts CI37945913789.
+
+## Response metadata capture ownership preparation, 2026-10-09
+
+Row108 ownership-grpc-capture-resources starts on actual ea18e54f0eeeee5ec470d44e770d31d3f42456af,
+/private/tmp/fwp-grpc-capture-resources-worktree. Old normal callback return
+freed capture headers while inherited child contexts could still refer to them;
+typed/raw/cancel exits also lacked constructor cleanup. Constructor, scope and
+original task owners now release on last use, including failed task preparation.
+Returned metadata remains an immutable snapshot; nested forwarding preserves order.
+TLS/capture overflow validates both before incrementing either; new TLS copies
+have constructor cleanup when inherited capture acquisition traps. Existing TLS
+fixture restores two owners (constructor/scope), preserving its omission checks.
+Interpreter src/grpc.rs uses Rc capture and cloned metadata snapshots; generated
+fixture verifies corresponding native lifetimes. Full interpreter/native gRPC
+suite stays in sequential CI; no local full-gate claim. Guarded clean passes
+0.05 / 0.38 s; three capture/resources/restore tests pass11.62 / 25.50 s;
+added combined-counter/constructor rollback test passes2.08 / 5.20 s. Initial
+lint passes2.47 / 4.96 s, final lint0.07 / 0.26 s; format applications
+0.40 / 0.74 s and0.47 / 0.62 s pass. Final format0.46 / 0.86 s passes; publication follows.

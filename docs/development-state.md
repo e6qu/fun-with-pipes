@@ -52,7 +52,7 @@ repairs on final rebases. The repaired Linux gate actually verifies the
 collector churn output, allocation/collection thresholds and RSS bound.
 Ten authoritative docs backed up to/private/tmp/fwp-main-docs-pre98 were
 restored byte-for-byte after main fast-forward2c1003c→559f4ac. Preparations
-through106 are published; row107 tests/lint/format pass before publication.
+through107 are published; PR99 CI37945913789 is queued at exact dc85b679.
 Prior delivery checks and failures remain in history.
 
 ## Next sequential preparations
@@ -152,6 +152,7 @@ still need their final squash rebases and six exact-head full gates.
 | 104 ownership-grpc-connect-cleanup | b244d5f7c423 | c48864ce7231 | 9.33 / 20.92 s |
 | 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
 | 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
+| 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -216,8 +217,17 @@ after child joins. Context hooks/one private pointer are emitted only for
 services/web programs. Environment options preserve read-once cache lifetime.
 All three context/resources/task-handle tests pass7.45 / 16.78 s, including
 escaped/detached/cancelled/failed-prepare and overflow owner checks.
-Focused lint2.68 / 5.39 s and format0.45 / 0.83 s pass; publication follows.
-Remaining audit: capture context lifetimes, complete TLS pool identity and canonical decode. Prepared
+Focused lint2.68 / 5.39 s and format0.45 / 0.83 s pass; published at
+ea18e54f0eeeee5ec470d44e770d31d3f42456af with actual base7a89dd0.
+Independent row108 ownership-grpc-capture-resources starts on ea18e54,
+/private/tmp/fwp-grpc-capture-resources-worktree. Response captures now reserve
+constructor/scope/task owners; metadata snapshots survive later child appends.
+Both TLS/capture counters validate before either increments; new TLS options
+retain a constructor cleanup while inherited capture acquisition can trap.
+All three capture/resources/restore tests pass11.62 / 25.50 s CPU / elapsed;
+added combined-counter/TLS-constructor rollback regression passes2.08 / 5.20 s.
+Final lint passes0.07 / 0.26 s. Final formatting passes0.46 / 0.86 s; publication follows.
+Remaining audit: complete TLS pool identity, cache teardown and canonical decode. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 acceptance and its repaired collector fixture are recorded above; superseded
