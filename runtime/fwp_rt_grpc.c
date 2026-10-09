@@ -133,6 +133,7 @@ static void g_serving_peer_release(g_serving *sv) {
 typedef struct {
     char *ca, *name, *cert, *keyfile, *key;
     int insecure;
+    size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
 
 /* a task's gRPC context: metadata and deadline of the calls it makes, and
@@ -151,8 +152,31 @@ static g_ctx g_empty_ctx;
 static g_conn *g_pool = 0;
 static const fwp_desc *g_grpc_error_desc = 0;
 
+static void *g_context_acquire(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    g_tls *tls = ctx ? (g_tls *)ctx->tls : 0;
+    if (!tls || tls->users == SIZE_MAX) return 0;
+    if (tls->users == SIZE_MAX - 1) fwp_trap("too many TLS option owners");
+    tls->users++;
+    return ctx;
+}
+
+static void g_context_release(void *arg) {
+    g_ctx *ctx = (g_ctx *)arg;
+    g_tls *tls = (g_tls *)ctx->tls;
+    if (!tls->users || tls->users == SIZE_MAX) abort();
+    if (--tls->users == 0) {
+        free(tls->ca); free(tls->name); free(tls->cert);
+        free(tls->keyfile); free(tls->key); free(tls);
+    }
+}
+
 static g_ctx *g_ctx_of(void) {
     fwp_tasks_init();
+    if (!fwp_gctx_acquire) {
+        fwp_gctx_acquire = g_context_acquire;
+        fwp_gctx_release = g_context_release;
+    }
     return fwp_cur->gctx ? (g_ctx *)fwp_cur->gctx : &g_empty_ctx;
 }
 
@@ -876,6 +900,7 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 
 static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
     g_tls *t = (g_tls *)calloc(1, sizeof *t);
+    t->users = SIZE_MAX;
     t->ca = strdup(ca);
     t->insecure = insecure;
     t->name = strdup(name);
@@ -2405,9 +2430,10 @@ static V fwp_p_grpc_metadata(void) {
     return fwp_list_from(items, n);
 }
 
-typedef struct { fwp_task *task; void *saved; } g_context_owner;
+typedef struct { fwp_task *task; void *saved, *held; } g_context_owner;
 static void g_context_restore(void *arg) {
     g_context_owner *owner = (g_context_owner *)arg;
+    if (owner->held) { g_context_release(owner->held); owner->held = 0; }
     owner->task->gctx = owner->saved;
 }
 
@@ -2415,7 +2441,7 @@ static void g_context_restore(void *arg) {
 static V g_with_ctx(g_ctx *ctx, V f) {
     fwp_task *t = fwp_cur;
     void *saved = t->gctx;
-    g_context_owner owner = {t, saved};
+    g_context_owner owner = {t, saved, g_context_acquire(ctx)};
     fwp_cleanup context_cleanup;
     fwp_cleanup_push(&context_cleanup, g_context_restore, &owner);
     t->gctx = ctx;
@@ -2528,6 +2554,7 @@ static V fwp_p_grpc_with_tls(V o, V f, int ica, int iins, int iname, int icert, 
     V *fs = OBJ(o)->f;
     ctx->tls = g_tls_new(g_opt_text(fs[ica]), fs[iins] == FWP_TRUE, g_opt_text(fs[iname]), g_opt_text(fs[icert]),
                          g_opt_text(fs[ikey]));
+    ((g_tls *)ctx->tls)->users = 0;
     return g_with_ctx(ctx, f);
 }
 
