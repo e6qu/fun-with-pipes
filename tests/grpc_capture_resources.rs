@@ -62,7 +62,7 @@ fn metadata_capture_releases_after_callbacks_and_escaped_tasks() {
 static int stage,frees,entered,cancelled,trapped,typed,scope_returned,fail_spawn,nested;
 static void *watched,*spawned;
 static uintptr_t snapshot;
-static void *tls_objects[6];static int tls_frees;
+static void *tls_objects[1];static int tls_frees;
 static void remember_tls(void *);
 static void remember_capture(void *);
 static void observed_free(void *);
@@ -76,8 +76,8 @@ static void no_release(void *);
 static const fwp_desc string_descriptor={.kind=K_STR,.name="String"};
 static void no_release(void *p){(void)p;}
 static void remember_capture(void *p){if(!nested)watched=p;}
-static void remember_tls(void *p){g_tls *t=p;tls_objects[0]=t;tls_objects[1]=t->ca;tls_objects[2]=t->name;tls_objects[3]=t->cert;tls_objects[4]=t->keyfile;tls_objects[5]=t->key;}
-static void observed_free(void *p){if(p&&p==watched){watched=0;frees++;}if(p)for(int i=0;i<6;i++)if(tls_objects[i]==p){tls_objects[i]=0;tls_frees++;break;}free(p);}
+static void remember_tls(void *p){g_tls *t=p;tls_objects[0]=t;}
+static void observed_free(void *p){if(p&&p==watched){watched=0;frees++;}if(p)for(int i=0;i<1;i++)if(tls_objects[i]==p){tls_objects[i]=0;tls_frees++;break;}free(p);}
 static void check_capture(void){g_ctx *ctx=g_ctx_of();if(!ctx->capture_owner||ctx->capture!=&ctx->capture_owner->headers||(!nested&&ctx->capture_owner!=watched)||frees)_Exit(10);}
 static void overflow_restore(void *p){g_capture *cap=p;if(cap->users!=SIZE_MAX)_Exit(11);cap->users=2;}
 static void child(void *arg,int stop){
@@ -138,12 +138,12 @@ int main(void){
  jmp_buf failed;fwp_cur->trap_jb=&failed;fwp_cur->trap_cleanup=fwp_cleanups;
  if(!setjmp(failed)){g_context_acquire(&context);return 4;}
  if(tls->users!=1||cap.users!=SIZE_MAX||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 5;
- g_tls_release(tls);if(tls_frees!=6)return 6;
+ g_tls_release(tls);if(tls_frees!=1)return 6;
  // Constructor ownership protects freshly copied TLS options when capture acquisition traps.
  tls_frees=0;V fields[5]={FWP_NONE,FWP_FALSE,FWP_NONE,FWP_NONE,FWP_NONE};V options=fwp_record(5,fields);
  context.tls=0;fwp_cur->gctx=&context;
  if(!setjmp(failed)){fwp_p_grpc_with_tls(options,0,0,1,2,3,4);return 7;}
- if(tls_frees!=6||cap.users!=SIZE_MAX||fwp_cleanups||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 8;
+ if(tls_frees!=1||cap.users!=SIZE_MAX||fwp_cleanups||strcmp(fwp_trap_msg,"too many metadata capture owners"))return 8;
  fwp_cur->gctx=0;fwp_cur->trap_jb=0;FWP_KEEP_ALIVE(options);
  fwp_lib_finish();return 0;
 }

@@ -161,8 +161,7 @@ static void g_tls_release(void *arg) {
     g_tls *tls = (g_tls *)arg;
     if (!tls->users || tls->users == SIZE_MAX) abort();
     if (--tls->users == 0) {
-        free(tls->ca); free(tls->name); free(tls->cert);
-        free(tls->keyfile); free(tls->key); free(tls);
+        free(tls);
     }
 }
 
@@ -920,20 +919,32 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 
 static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
     const char *fields[4] = {ca, name, cert, key};
-    size_t sizes[4], key_len = 1 + 4 * sizeof(size_t);
+    size_t sizes[4], key_len = 1 + 4 * sizeof(size_t), total = sizeof(g_tls);
     for (size_t i = 0; i < 4; i++) {
         sizes[i] = strlen(fields[i]);
         if (sizes[i] > SIZE_MAX - key_len) fwp_trap("TLS option key too large");
         key_len += sizes[i];
+        if (sizes[i] >= SIZE_MAX - total) fwp_trap("TLS option storage too large");
+        total += sizes[i] + 1;
     }
-    g_tls *t = (g_tls *)calloc(1, sizeof *t);
+    if (key_len > SIZE_MAX - total) fwp_trap("TLS option storage too large");
+    total += key_len;
+    g_tls *t = (g_tls *)malloc(total);
+    if (!t) fwp_trap("cannot allocate TLS options");
+    memset(t, 0, sizeof *t);
+    char *strings[4], *next = (char *)(t + 1);
+    for (size_t i = 0; i < 4; i++) {
+        strings[i] = next;
+        memcpy(next, fields[i], sizes[i] + 1);
+        next += sizes[i] + 1;
+    }
     t->users = SIZE_MAX;
-    t->ca = strdup(ca);
+    t->ca = strings[0];
     t->insecure = insecure;
-    t->name = strdup(name);
-    t->cert = strdup(cert);
-    t->keyfile = strdup(key);
-    t->key = (char *)malloc(key_len);
+    t->name = strings[1];
+    t->cert = strings[2];
+    t->keyfile = strings[3];
+    t->key = next;
     t->key_len = key_len;
     t->key[0] = !!insecure;
     char *p = t->key + 1;
