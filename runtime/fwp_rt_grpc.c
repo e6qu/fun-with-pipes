@@ -101,7 +101,8 @@ struct g_conn {
     int preface, goaway;
     char *dead;
     fwp_wl writer_wl, space_wl;
-    char *tlskey;              /* a client's TLS options (g_tls key), or 0 */
+    char *tlskey;              /* length-framed client TLS options, or 0 */
+    size_t tlskey_len;
     g_conn *next_pool;
     void *web;                 /* an HTTP server connection's g_web
                                 * (fwp_rt_http2.c), or 0 */
@@ -133,6 +134,7 @@ static void g_serving_peer_release(g_serving *sv) {
 typedef struct {
     char *ca, *name, *cert, *keyfile, *key;
     int insecure;
+    size_t key_len;
     size_t users;              /* SIZE_MAX for read-once environment caches */
 } g_tls;
 
@@ -917,6 +919,13 @@ static void g_recv(g_conn *c, g_stream *s, int64_t deadline, g_got *g) {
 /* ------------------------------------------------------------------ client */
 
 static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const char *cert, const char *key) {
+    const char *fields[4] = {ca, name, cert, key};
+    size_t sizes[4], key_len = 1 + 4 * sizeof(size_t);
+    for (size_t i = 0; i < 4; i++) {
+        sizes[i] = strlen(fields[i]);
+        if (sizes[i] > SIZE_MAX - key_len) fwp_trap("TLS option key too large");
+        key_len += sizes[i];
+    }
     g_tls *t = (g_tls *)calloc(1, sizeof *t);
     t->users = SIZE_MAX;
     t->ca = strdup(ca);
@@ -924,7 +933,14 @@ static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const ch
     t->name = strdup(name);
     t->cert = strdup(cert);
     t->keyfile = strdup(key);
-    t->key = g_strdupf("%s|%d|%s|%s|%s", ca, insecure, name, cert, key);
+    t->key = (char *)malloc(key_len);
+    t->key_len = key_len;
+    t->key[0] = !!insecure;
+    char *p = t->key + 1;
+    for (size_t i = 0; i < 4; i++) {
+        memcpy(p, &sizes[i], sizeof sizes[i]); p += sizeof sizes[i];
+        memcpy(p, fields[i], sizes[i]); p += sizes[i];
+    }
     return t;
 }
 
@@ -953,9 +969,9 @@ static const g_tls *g_env_tls(const char *var) {
     return k->tls;
 }
 
-static int g_same_tls(const char *a, const g_tls *t) {
-    if (!t) return a == 0;
-    return a && strcmp(a, t->key) == 0;
+static int g_same_tls(const g_conn *c, const g_tls *t) {
+    if (!t) return c->tlskey == 0;
+    return c->tlskey && c->tlskey_len == t->key_len && memcmp(c->tlskey, t->key, t->key_len) == 0;
 }
 
 typedef struct { g_conn *c; fwp_task *reader, *writer; } g_connect_start_owner;
@@ -1047,7 +1063,11 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     fwp_cleanup_pop(&ssl_cleanup);
     owner.fd = -1;
     fwp_cleanup_pop(&connect_cleanup);
-    c->tlskey = opts ? strdup(opts->key) : 0;
+    if (opts) {
+        c->tlskey_len = opts->key_len;
+        c->tlskey = (char *)malloc(opts->key_len);
+        memcpy(c->tlskey, opts->key, opts->key_len);
+    }
     c->refs = 1; /* temporary startup owner */
     g_connect_start_owner startup = {c, 0, 0};
     fwp_cleanup startup_cleanup;
@@ -1090,7 +1110,7 @@ static g_stream *g_open_tls(const char *addr, const char *path, const char *fp, 
     const g_tls *opts = g_ctx_of()->tls ? g_ctx_of()->tls : dflt;
     g_conn *c = 0;
     for (g_conn *p = g_pool; p; p = p->next_pool)
-        if (strcmp(p->authority, addr) == 0 && g_same_tls(p->tlskey, opts) && !p->dead && !p->goaway &&
+        if (strcmp(p->authority, addr) == 0 && g_same_tls(p, opts) && !p->dead && !p->goaway &&
             p->next_stream < 0x7fff0000u) {
             c = p;
             break;

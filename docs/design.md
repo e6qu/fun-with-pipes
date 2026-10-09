@@ -496,5 +496,8 @@ wrappers retain tracing compatibility. Response metadata captures also retain
 constructor, scope and inheriting-task owners; the last owner frees headers
 and their storage. Returned metadata is a snapshot, independent of later
 child appends. Both resource counters validate before acquisition changes
-either, and constructors protect resources if acquisition traps. Complete
-TLS pool identity, environment-cache teardown and canonical decode remain audits.
+either, and constructors protect resources if acquisition traps. TLS pool
+keys use checked length framing and complete bytes rather than delimiter
+serialization through a fixed diagnostic buffer; connections copy keys so
+scoped options can be released independently. Environment-cache teardown,
+canonical decode and packed TLS storage remain audits.

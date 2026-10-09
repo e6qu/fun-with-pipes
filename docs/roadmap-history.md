@@ -10425,3 +10425,30 @@ suite stays in sequential CI; no local full-gate claim. Guarded clean passes
 added combined-counter/constructor rollback test passes2.08 / 5.20 s. Initial
 lint passes2.47 / 4.96 s, final lint0.07 / 0.26 s; format applications
 0.40 / 0.74 s and0.47 / 0.62 s pass. Final format0.46 / 0.86 s passes; publication follows.
+
+Row108 published at36ad634245301b069a141faec54ba7aec7a58d28 on actual
+ea18e54f0eeeee5ec470d44e770d31d3f42456af. No competing PR.
+
+## Complete TLS pool identity preparation, 2026-10-09
+
+Row109 fix-grpc-tls-pool-identity starts on actual36ad634245301b069a141faec54ba7aec7a58d28,
+/private/tmp/fwp-grpc-tls-pool-identity-worktree. Old g_strdupf serialized
+options with ambiguous separators through1024 bytes, allowing different
+TLS settings to select one pooled connection. Checked length-framed binary
+keys include all four strings and the verification flag without truncation.
+Connections copy complete bytes/length independently of scoped options;
+field semantics match interpreter pool identity. No performance claim or
+allocation reduction yet; packed storage is a separate audit. Guarded
+clean0.00 / 0.13 s and format0.46 / 0.87 s pass. Initial four-test run
+16.24 / 33.57 s passes capture/context/startup, but new identity fixture
+fails before C execution due to a startup injection needle missing spaces.
+Corrected identity passes1.15 / 3.31 s with old-encoding rejection, delimiter
+collision and every-field checks,4096-byte names, actual loopback construction
+and pool reuse after source options release. Matching exact interpreter unit
+passes5.51 / 11.41 s. Initial lint2.56 / 5.17 s and later format application
+0.52 / 0.84 s pass; final lint/format precede publication.
+
+Row109 final focused lint2.62 / 5.42 s and format0.52 / 1.07 s pass.
+Duplicate post-merge main CI37944119691 cancellation requested after verifying
+source/runtime/tests/workflows equal PR98 all-six-accepted de969ee. PR99
+current six gates remain required; no cancelled-run acceptance.

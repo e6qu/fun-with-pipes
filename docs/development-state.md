@@ -52,7 +52,10 @@ repairs on final rebases. The repaired Linux gate actually verifies the
 collector churn output, allocation/collection thresholds and RSS bound.
 Ten authoritative docs backed up to/private/tmp/fwp-main-docs-pre98 were
 restored byte-for-byte after main fast-forward2c1003c→559f4ac. Preparations
-through107 are published; PR99 CI37945913789 is queued at exact dc85b679.
+through108 are published; PR99 CI37945913789 is queued at exact dc85b679.
+Duplicate main CI37944119691 cancellation requested to free runner capacity
+for PR99: source/runtime/tests/workflows match all-six-accepted PR98 exactly.
+Current PR99 gates remain required; cancelled duplicate is not acceptance.
 Prior delivery checks and failures remain in history.
 
 ## Next sequential preparations
@@ -153,6 +156,7 @@ still need their final squash rebases and six exact-head full gates.
 | 105 ownership-grpc-connect-startup | cb20833c018f | b244d5f7c423 | 6.11 / 12.61 s |
 | 106 ownership-grpc-context-restore | 7a89dd017ae4 | cb20833c018f | 8.46 / 18.21 s |
 | 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
+| 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -226,8 +230,20 @@ Both TLS/capture counters validate before either increments; new TLS options
 retain a constructor cleanup while inherited capture acquisition can trap.
 All three capture/resources/restore tests pass11.62 / 25.50 s CPU / elapsed;
 added combined-counter/TLS-constructor rollback regression passes2.08 / 5.20 s.
-Final lint passes0.07 / 0.26 s. Final formatting passes0.46 / 0.86 s; publication follows.
-Remaining audit: complete TLS pool identity, cache teardown and canonical decode. Prepared
+Final lint passes0.07 / 0.26 s. Final formatting passes0.46 / 0.86 s; published at
+36ad634245301b069a141faec54ba7aec7a58d28 with actual baseea18e54.
+Independent row109 fix-grpc-tls-pool-identity starts on36ad634,
+/private/tmp/fwp-grpc-tls-pool-identity-worktree. Length-framed binary keys
+replace ambiguous fixed-buffer delimiter serialization; pool copies retain
+exact byte lengths independent of scoped options. Capture/context/startup tests
+pass in the initial16.24 / 33.57 s run; identity fixture fails before C execution
+because its startup injection needle omits source spaces. Corrected native
+identity passes1.15 / 3.31 s, including old-encoding rejection, actual loopback
+connection construction/pool reuse after options free, full-field differences
+and4096-byte names. Matching interpreter exact unit passes5.51 / 11.41 s.
+Initial focused lint2.56 / 5.17 s passes; final lint2.62 / 5.42 s and
+format0.52 / 1.07 s pass; publication follows.
+Remaining audit: environment-cache teardown, canonical decode and packed TLS storage. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 acceptance and its repaired collector fixture are recorded above; superseded
@@ -279,8 +295,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 The fun-refactor guard is for the other repository. Shared target currently
 belongs to /private/tmp/fwp-array-element-worktree; final array tests run.
 Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
-Last guarded doc audit passes eleven link/heading sets, 99 immutable queue
-ancestry pairs and whole commit messages (0.20 s CPU / 1.44 s elapsed).
+Last guarded doc audit passes eleven link/heading sets, 102 immutable queue
+ancestry pairs and whole commit messages (0.20 s CPU / 1.45 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

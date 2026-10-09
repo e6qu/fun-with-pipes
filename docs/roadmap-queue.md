@@ -121,6 +121,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `cb20833c018f` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `7a89dd017ae4` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `ea18e54f0eee` | `ea18e54f0eee` | `7a89dd017ae4` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `36ad63424530` | `36ad63424530` | `ea18e54f0eee` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:
