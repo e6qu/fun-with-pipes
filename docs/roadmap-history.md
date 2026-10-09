@@ -9590,3 +9590,101 @@ format application0.43 / 0.83 s, focused cargo clippy --test http2_peer_cleanup
 --all -- --check0.44 / 0.83 s. All use the documented env/local guard.
 Further gRPC peer/status audit must respect child task context inherited until
 join after the handler returns; no early free or complete no-tracing claim.
+
+Row91 is published clean at 3c268c34d15b5ffd36b3747d1f6cee8343b34e08 on actual
+6f310b5483a8c49e2819c595a25a9a15b71190b6. Immutable OLD/parent pair records this first
+preparation; later CURRENT may change. Entire one-line message verifies:
+`Release HTTP2 peer subject temporaries when metadata copying fails`.
+No additional PR; next delivery remains row20 after the PR97 squash.
+
+Row20 final rebase from actual6ce37fb180e1d88903dd94dadaf47181085ab09e
+onto squash2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 succeeds. All doc
+conflicts resolve with ten current root docs; source/runtime/tests/workflows
+against7741d09dd8cf214396e7938e07fbbd1f7263d9f7 are byte-identical.
+Guarded cargo clean -p fwp passes0.05 / 0.25 s before checkout switch.
+Final cargo test --test list_generation_ownership runs under bounded guard.
+
+Final guarded generation tests pass all three13.79 / 27.85 s CPU / elapsed.
+Focused cargo clippy --test list_generation_ownership -- -D warnings passes
+2.38 / 4.68 s. Range owns fresh nodes; repeat retains each typed alias.
+Boxed128-bit payloads remain shared; generic unwind coverage stays later work.
+
+Final formatting passes0.34 / 0.60 s. PR98 publishes exact6b1cd9bf1ea4b1a28838d160acca1efb6cab47dc
+on actual2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 with lease against7741d09.
+Entire message is one line; source/runtime/tests/workflows remain unchanged
+against preparation7741d09. Sole delivery PR98 now awaits six exact-head jobs.
+
+### Archived published preparation handoff through row91
+
+Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
+on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
+Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
+HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
+Row88 is published clean at e91dcb307c615b3330e50348a710a14b0c6be178,
+on actual f086110. Two cycle/queue tests, lint 2.64 / 5.36 s and format
+0.45 / 0.83 s pass. Close preserves queued values; explicit drain breaks
+the counted self-cycle. Tracing docs from 291f8f7 are already inherited.
+New row89 is published clean at d29dda936dff119f226cdc720aa42da549a1427a,
+on actual e91dcb3, checkout /private/tmp/fwp-http2-body-roots-worktree.
+Body and related TLS root tests, lint 2.69 / 5.43 s and format 0.48 / 0.97 s
+pass. Actual major collection preserves stream through copying; omitted-fence
+O2 control exits1. Fixture Duration error is corrected and archived.
+Row90 is published clean at 6f310b5483a8c49e2819c595a25a9a15b71190b6,
+on actual d29dda9, checkout /private/tmp/fwp-http2-body-bounds-worktree.
+Thirteen raw interpreter/native body-bound cases agree; removed-clamp controls
+reproduce the old mismatch. Borrowed-root test, lint 5.93 / 12.87 s and format
+0.45 / 0.83 s pass. Test-only compilation/control issues are repaired and archived.
+Independent audit found HTTP/2 peer metadata buffer leak on string/Option
+copy trap. New ownership-http2-peer-cleanup branch at
+/private/tmp/fwp-http2-peer-cleanup-worktree on 6f310b5 protects the malloc
+subject with existing unwind cleanup. Both metadata/TLS ownership tests pass
+1.32 / 5.17 s; O1/O2 copy/Option traps and omitted-cleanup controls pass.
+Fixture recycled-address counter is corrected. Focused lint passes 2.58 / 5.15 s;
+format check passes 0.44 / 0.83 s. Published clean at
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08; immutable OLD equals first
+preparation head, parent6f310b5483a8c49e2819c595a25a9a15b71190b6.
+Further audit: gRPC served-job peer strings and status messages need lifetime
+review; do not free retained task context until task completion is proved.
+
+## Served gRPC peer ownership audit, 2026-10-09
+
+New ownership-grpc-peer-completion preparation starts on
+3c268c34d15b5ffd36b3747d1f6cee8343b34e08. g_start_call allocates the subject
+but previously has no release path. Generic C-task completion callback runs
+after structured child joins; peer owner is protected during spawning.
+Initial guarded cargo test --test grpc_peer_completion --test grpc_server_ownership
+passes both12.62 / 25.40 s CPU / elapsed. Follow-up audit finds detached
+g_send_all invokes language encoders/iterators and may outlive the serving task.
+Initial passing tests therefore do not establish safe final disposal. Added
+explicit serving-peer users retained by detached senders until their own child
+joins; spawn traps release the partial retained owner. Expanded actual-scheduler
+test keeps the sender alive after parent completion and checks omitted sender
+completion, omitted parent completion and early-release controls. Focused rerun.
+No status-message ownership change: results mix borrowed stream strings and
+new malloc strings, requiring a separate audit. Guarded clean before switching
+from generation checkout passes0.00 / 0.14 s. PR98 CI37925910460 exact6b1cd9b
+is queued; no failing gate or additional PR.
+
+Expanded test fails exit1018.05 / 16.19 s: early-release control deliberately
+exits1 in the child lifetime check, whereas test expected the parent check's
+exit6. Both are explicit premature-release assertions; accepted controls now
+allow only1/6 for that variant, never a signal or unrelated failure. Fixed
+runtime was not yet exercised in this run; focused checks rerun.
+
+Corrected expanded scheduler tests and server regression pass6.46 / 13.14 s
+CPU / elapsed. Actual detached sender keeps the serving peer after parent
+completion; its own post-join completion releases the last owner. Fixed
+O1/O2 × tracing off/on × poison passes; omitted parent and sender completion
+exit7/9, early release exits1/6 before use. Added sender-spawn cancellation
+unwind and checked SIZE_MAX owner overflow; final focused rerun runs.
+
+Final expanded peer/server tests pass14.18 / 28.39 s CPU / elapsed, including
+spawning cancellation and exact owner-count overflow. Task-handle regression
+passes4.65 / 10.14 s. Focused cargo clippy --test grpc_peer_completion
+--test grpc_server_ownership --test task_handle_ownership -- -D warnings
+passes2.72 / 5.47 s. Formatting application0.51 / 0.99 s and check0.46 / 0.87 s
+pass. All are bounded env/local-guard commands; no local full gate.
+Status audit corrects the earlier tentative borrowed-text assumption: g_recv
+always strdup-copies stream/connection status text. Normal handler messages
+are owned; only cancellation's sv.msg aliases its stored owner. Next focused
+fix transfers that slot, protects final encoding and reclaims it, with tests.

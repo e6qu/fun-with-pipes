@@ -36,16 +36,21 @@ message: `Own typed zip unzip and chunks results and release scratch storage`.
 zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
 Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
 
-No open delivery PR. Next is row20 ownership-list-generation,
-/private/tmp/fwp-generation-worktree, current7741d09dd8cf214396e7938e07fbbd1f7263d9f7.
-Rebase from ACTUAL base 6ce37fb180e1d88903dd94dadaf47181085ab09e onto
-actual squash2c1003c, preserving OLD fad9b1a/parent c05a5d9. Recheck typed
-repeat/range ownership and open the next sole PR; require six exact-head gates.
+Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
+ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
+6b1cd9bf1ea4b1a28838d160acca1efb6cab47dc on actual main2c1003c.
+Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/tests/
+workflows exactly against7741d09. All ten current root docs resolve historical
+conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
+and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
+`Own repeated aliases and generated numeric list nodes`, empty body.
+After merge, row21 ACTUAL current base stays7741d09dd8cf214396e7938e07fbbd1f7263d9f7;
+rebase onto the real squash, preserving immutable OLD anchors.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
 restored byte-for-byte afterward. Independent preparations through row90 are
-published; row91 peer cleanup passes focused tests, lint and formatting and is
-being recorded for publication. Prior checks remain in history.
+published; row91 peer cleanup is published with focused tests, lint and format
+passing. Prior checks remain in history.
 
 ## Next sequential preparations
 
@@ -57,7 +62,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
 | 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
-| 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 / 27.47 s |
+| 20 ownership-list-generation | 6b1cd9bf1ea4, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
 | 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 / 28.81 s |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
@@ -129,7 +134,9 @@ still need their final squash rebases and six exact-head full gates.
 | 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
 | 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
 
-Rows 18–90 are published preparations with passing focused tests, lint and
+| 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
+
+Rows 18–91 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
@@ -139,36 +146,27 @@ boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence
 Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
 host bump-C checks supply no actual WASI acceptance; physical bump storage
 remains allocated. Prepared layout/allocation controls establish no speed claim.
-Row85 is published clean at 97dca7626158d867392c30bc6d6d21438eec7639,
-on actual d2936a0, with nominal-context replay 46b163cc40652ee7f565c3423e039d043a16f518.
-Four tests, lint 2.51 / 5.04 s and format 0.43 / 0.83 s pass. Rebuilt O2
-HTTP golden passes exact stdout/stderr/exit in four GC-off/on × poison modes.
-Row88 is published clean at e91dcb307c615b3330e50348a710a14b0c6be178,
-on actual f086110. Two cycle/queue tests, lint 2.64 / 5.36 s and format
-0.45 / 0.83 s pass. Close preserves queued values; explicit drain breaks
-the counted self-cycle. Tracing docs from 291f8f7 are already inherited.
-New row89 is published clean at d29dda936dff119f226cdc720aa42da549a1427a,
-on actual e91dcb3, checkout /private/tmp/fwp-http2-body-roots-worktree.
-Body and related TLS root tests, lint 2.69 / 5.43 s and format 0.48 / 0.97 s
-pass. Actual major collection preserves stream through copying; omitted-fence
-O2 control exits1. Fixture Duration error is corrected and archived.
-Row90 is published clean at 6f310b5483a8c49e2819c595a25a9a15b71190b6,
-on actual d29dda9, checkout /private/tmp/fwp-http2-body-bounds-worktree.
-Thirteen raw interpreter/native body-bound cases agree; removed-clamp controls
-reproduce the old mismatch. Borrowed-root test, lint 5.93 / 12.87 s and format
-0.45 / 0.83 s pass. Test-only compilation/control issues are repaired and archived.
-Independent audit found HTTP/2 peer metadata buffer leak on string/Option
-copy trap. New ownership-http2-peer-cleanup branch at
-/private/tmp/fwp-http2-peer-cleanup-worktree on 6f310b5 protects the malloc
-subject with existing unwind cleanup. Both metadata/TLS ownership tests pass
-1.32 / 5.17 s; O1/O2 copy/Option traps and omitted-cleanup controls pass.
-Fixture recycled-address counter is corrected. Focused lint passes 2.58 / 5.15 s;
-format check passes 0.44 / 0.83 s. Record and publish the preparation.
-Further audit: gRPC served-job peer strings and status messages need lifetime
-review; do not free retained task context until task completion is proved.
+Rows85–91 source/control details and full hashes are archived in history;
+the table above keeps actual bases and focused checks. Row91 uses unwind
+ownership for the temporary HTTP/2 subject copy; no additional PR.
+Independent ownership-grpc-peer-completion preparation starts on3c268c3,
+/private/tmp/fwp-grpc-peer-completion-worktree. A nonthrowing/nonallocating
+task completion callback disposes peer metadata after child joins. Initial
+two child/cancellation tests pass12.62 / 25.40 s, but further audit identifies
+detached senders invoking language callbacks after parent completion. Added
+explicit retained serving-peer users for those senders, protected during spawn
+and released after their own children finish. Expanded detached-sender tests pass6.46 / 13.14 s with explicit leak/early
+controls. Added sender-spawn cancellation and user-count overflow checks;
+final focused tests pass14.18 / 28.39 s; task-handle regression4.65 / 10.14 s,
+focused lint2.72 / 5.47 s and format0.46 / 0.87 s pass. Record and publish.
+gRPC status audit now verifies that g_recv text is copied malloc storage;
+normal handler messages are owned, cancellation sv.msg is a borrowed slot.
+Next independent fix transfers that slot and protects/reclaims final encoding
+messages, then audits receive-side discarded results.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
-PR97 is merged; row20 final rebase onto actual2c1003c is the next delivery.
+PR98 is the sole delivery, CI37925910460 exact6b1cd9b bench/Intel regular run and four gates queue; row21
+follows its eventual squash.
 
 ## Repaired resource evidence
 
@@ -213,10 +211,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-http2-peer-cleanup-worktree; peer metadata/TLS tests, lint and format pass; no active workload.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
-Last guarded doc audit passes eleven link/heading sets, 84 immutable queue
-ancestry pairs and whole commit messages (0.19 s CPU / 1.29 s elapsed).
+belongs to /private/tmp/fwp-grpc-peer-completion-worktree; final generation tests, lint and format pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
+Last guarded doc audit passes eleven link/heading sets, 85 immutable queue
+ancestry pairs and whole commit messages (0.20 s CPU / 1.30 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:
