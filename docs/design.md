@@ -477,3 +477,8 @@ decoding and response copying. Scoped cleanup releases decoder failure reasons
 and temporary error text during traps. First-error returns transfer only the
 returned text/value; successful force retains its existing cached result.
 Rendered-error and protocol-output scratch lifetimes remain a separate audit.
+
+Prepared streamed non-status errors register their rendering buffer with the
+existing buffer destructor before formatting. Both a partial rendering trap
+and the final diagnostic trap release scratch. Diagnostic contents remain
+unchanged; this does not complete protocol encoding scratch ownership.

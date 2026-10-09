@@ -9855,3 +9855,29 @@ behavior pass; three omission controls fail exactly1. Fixture decoder stubs
 check lifetime boundaries; full protocol/interpreter acceptance remains CI.
 Contiguous live tables repaired by removing accidental blank lines between
 preparation rows; historical checks remain archived.
+
+Row95 published clean at 6b82bc5b8b2ff729d2c3d4bcf831955ec855a002 on actual
+8bd9e78743abd7ed2c1f721ee100ed325074da2e; immutable first head/parent recorded, whole
+one-line commit message verifies. No additional PR.
+
+## Streamed-error rendering scratch ownership preparation, 2026-10-09
+
+New ownership-grpc-render-cleanup starts on6b82bc5b8b2ff729d2c3d4bcf831955ec855a002.
+Streamed non-status errors render into a malloc fwp_buf then always trap; that
+scratch previously leaked. Register the existing generic buffer destructor
+before rendering, so both partial-render trap and final diagnostic trap free
+it. Focused fixture uses real I64 formatting, stubbing only decoder outcome,
+checks exact diagnostic text and exactly-once buffer release. Omitted cleanup
+must exit1; fixed O1/O2 × tracing off/on × poison must pass. Guarded clean before
+switching0.00 / 0.13 s; focused rendering/force tests run. PR98 current542fc08
+CI37929002304 regular macOS/both GC jobs run; Linux/bench queue.
+
+Initial focused rendering check fails exit1018.94 / 19.13 s: fixture macro
+parameter `d` also replaces the buffer's `.d` field with descriptor expression,
+so C compilation fails. Force regression passes. Renamed fixture macro
+parameters to avoid field substitution; runtime cleanup unchanged. Rerun.
+
+Corrected rendered-error/force tests pass2.79 / 5.95 s CPU / elapsed. Real
+I64 rendering preserves exact final diagnostic; partial/final traps each free
+scratch once. Omitted cleanup fails1. Focused clippy passes2.66 / 5.38 s; format
+application0.54 / 1.06 s and check0.45 / 0.83 s pass under bounded guard.
