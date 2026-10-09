@@ -11537,3 +11537,13 @@ fixture7.47/15.54s passes. Row92 refreshac6e5cc39ac5e84df6564a54c97a58844fbf5b4e
 uses actual base8a06d5df63ee; compiler/runtime/completion fixtures match original
 with inherited CLI/GC repairs. OLD09751c8c65ac stays fixed; previous CURRENT
 is retained under revision-092 before lease publication. Checks follow.
+
+Row90 clippy5.85/12.63s and format0.46/0.86s pass after body fixture7.47/15.54s.
+Focused HTTP2 evidence9f564880378644a82f11bbf343956d1f6f019d48 is source-identical
+to8a06d5df63ee; CI37983077375 is queued, not acceptance.
+
+Row91 peer copy/Option failure cleanup test7.33/15.65s passes. Row93 refresh
+8d35ee99bd236e62a6a01159ead576bbdbe1b23e uses actual baseac6e5cc39ac5.
+Compiler/runtime/status fixture match original with inherited CLI/tracing repairs.
+OLDa92c951fa6d9 stays fixed; previous CURRENT is retained under revision-093
+before lease publication. Fresh status encoding/unwind checks follow.

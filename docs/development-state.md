@@ -132,10 +132,10 @@ still need their final squash rebases and six exact-head full gates.
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
 | 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
 | 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Test7.37/15.71s; lint6.23/13.16s and format0.46/0.86s pass |
-| 90 fix-http2-body-bounds | 9c2787630b7f | f45a7dbbd33d | Extended body fixture7.47/15.54s passes; lint/format follow |
-| 91 ownership-http2-peer-cleanup | 8a06d5df63ee | 9c2787630b7f | Refreshed source unchanged; fresh peer cleanup checks follow |
+| 90 fix-http2-body-bounds | 9c2787630b7f | f45a7dbbd33d | Body fixture7.47/15.54s; lint5.85/12.63s and format0.46/0.86s pass |
+| 91 ownership-http2-peer-cleanup | 8a06d5df63ee | 9c2787630b7f | Copy/Option failure cleanup test7.33/15.65s passes; lint/format follow |
 | 92 ownership-grpc-peer-completion | ac6e5cc39ac5 | 8a06d5df63ee | Refreshed source unchanged; completion/sender lifetime checks follow |
-| 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
+| 93 ownership-grpc-status-cleanup | 8d35ee99bd23 | ac6e5cc39ac5 | Refreshed source unchanged; status encoding/unwind checks follow |
 | 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
 | 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
 | 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
@@ -198,6 +198,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 queued; source8a06d5d, actual base9c27876; not acceptance |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 queued; sourcee15c6fc, actual baseb83d77c; not acceptance |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
@@ -252,8 +253,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-http2-body-bounds-worktree; extended body fixture
-passed and guarded lint is running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
+belongs to /private/tmp/fwp-http2-peer-cleanup-worktree; guarded peer metadata
+copy/failure cleanup checks are running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
