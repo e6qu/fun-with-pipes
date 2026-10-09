@@ -1,4 +1,4 @@
-name: Focused loop retain and conversion preparation
+name: Focused ownership and allocation after call repair
 
 on:
   push:
@@ -27,25 +27,13 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test variant_conversion_ownership --test constructor_type_ownership --test retain_unwind_ownership --test loop_preparation_ownership --test worker_preparation_ownership --test worker_boxing_ownership --test constructor_unwind_ownership --test argument_preparation_ownership --test loop_unwind_ownership --test fold_unwind_ownership --test zip_unwind_ownership --test selection_unwind_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --test gc -- -D warnings
+        run: cargo clippy --test variant_conversion_ownership --test constructor_type_ownership --test retain_unwind_ownership --test loop_preparation_ownership --test worker_preparation_ownership --test worker_boxing_ownership --test constructor_unwind_ownership --test argument_preparation_ownership --test loop_unwind_ownership --test fold_unwind_ownership --test zip_unwind_ownership --test selection_unwind_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --test gc --test stack --test reuse -- -D warnings
       - name: Loop fields, partial retains and typed conversions
         if: ${{ !cancelled() }}
-        run: cargo test --test variant_conversion_ownership --test constructor_type_ownership --test retain_unwind_ownership --test loop_preparation_ownership --test worker_preparation_ownership --test worker_boxing_ownership --test constructor_unwind_ownership --test argument_preparation_ownership --test loop_unwind_ownership --test fold_unwind_ownership --test zip_unwind_ownership --test selection_unwind_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --no-fail-fast
+        run: cargo test --test variant_conversion_ownership --test constructor_type_ownership --test retain_unwind_ownership --test loop_preparation_ownership --test worker_preparation_ownership --test worker_boxing_ownership --test constructor_unwind_ownership --test argument_preparation_ownership --test loop_unwind_ownership --test fold_unwind_ownership --test zip_unwind_ownership --test selection_unwind_ownership --test map_unwind_ownership --test runtime_call_ownership --test compiler_call_liveness --test reuse_token_ownership --test unwind_cleanup --test task_ownership --test old_reclamation --test ownership --test stack --test reuse --no-fail-fast
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
-      - name: Constructor liveness transfer
+      - name: Ownership IR including pending counted and scalar arguments
         if: ${{ !cancelled() }}
-        run: cargo test --lib rc::tests::constructors_transfer_fields_and_keep_other_caller_owners -- --exact
-      - name: retain_liveness_excludes_the_unfinished_extra_reference
-        if: ${{ !cancelled() }}
-        run: cargo test --lib rc::tests::retain_liveness_excludes_the_unfinished_extra_reference -- --exact
-      - name: nested_constructor_temporaries_inherit_the_function_result_shape
-        if: ${{ !cancelled() }}
-        run: cargo test --lib rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape -- --exact
-      - name: dynamic_arguments_and_updates_keep_nested_constructor_types
-        if: ${{ !cancelled() }}
-        run: cargo test --lib rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types -- --exact
-      - name: consumed_value_conversion_keeps_only_remaining_caller_owners
-        if: ${{ !cancelled() }}
-        run: cargo test --lib rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners -- --exact
+        run: cargo test --lib rc::tests
