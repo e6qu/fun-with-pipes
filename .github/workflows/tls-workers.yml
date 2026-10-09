@@ -1,0 +1,39 @@
+name: Focused TLS roots worker locals and timer semantics
+
+on:
+  push:
+    branches: [ownership-evidence-tls-workers]
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain review heads for merged preparation references
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Handoff links, immutable anchors and commit subjects
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        if: ${{ !cancelled() }}
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test tls_wire_ownership --test connect_cleanup --test unboxed_worker_locals --test tls_peer_subject_ownership --test tls_alpn_roots --test task_timer_order --test tls_cache_ownership --test tls_listener_ownership --test library_resources --test task_handle_ownership --test retained_thunk_ownership --test old_reclamation --test ownership --test gc -- -D warnings
+      - name: TLS roots, worker transfers, reversed timers and resource teardown
+        if: ${{ !cancelled() }}
+        run: cargo test --test tls_wire_ownership --test connect_cleanup --test unboxed_worker_locals --test tls_peer_subject_ownership --test tls_alpn_roots --test task_timer_order --test tls_cache_ownership --test tls_listener_ownership --test library_resources --test task_handle_ownership --test retained_thunk_ownership --test old_reclamation --test ownership --no-fail-fast
+      - name: Actual tracing churn and bounded live memory
+        if: ${{ !cancelled() }}
+        run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Primitive boundary consistency
+        if: ${{ !cancelled() }}
+        run: cargo test --lib ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts -- --exact

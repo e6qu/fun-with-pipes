@@ -107,11 +107,11 @@ still need their final squash rebases and six exact-head full gates.
 | 62 ownership-tls-cache-failures | c61df653dfb2 | 044ceae9f0c5 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | d0e29ddbf182 | c61df653dfb2 | Test7.54/16.19s; lint2.45/4.96s and format0.45/0.86s pass |
 | 64 ownership-connect-cancellation | 446d60c378dc | d0e29ddbf182 | Test7.77/17.05s; lint2.31/4.60s and format0.44/0.60s pass |
-| 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Fresh focused checks follow; compiler/runtime unchanged |
-| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Fresh checks follow; compiler/runtime unchanged |
+| 65 ownership-unboxed-worker-locals | 46f7f4b17226 | 446d60c378dc | Two tests8.07/16.86s; lint2.36/4.73s and format0.35/0.62s pass |
+| 66 ownership-tls-peer-subject | ec16c6630686 | 46f7f4b17226 | Test7.47/16.47s; lint2.33/4.59s and format0.44/0.84s pass |
 | 67 ownership-tls-alpn-roots | bbde0fa9c254 | ec16c6630686 | Fresh focused checks follow; compiler/runtime unchanged |
-| 68 ownership-ci-probe-repairs | 7d8ab6719e55 | 22b95b0ddb74 | 30.99 / 62.26 s |
-| 69 ownership-nested-loop-boxing | 821e6c1baaef | 7d8ab6719e55 | 18.32 / 36.87 s |
+| 68 ownership-ci-probe-repairs | 933deb78f600 | bbde0fa9c254 | Five prior pointer repairs preserved; timer oracle checks follow |
+| 69 ownership-nested-loop-boxing | 7047b100dbbe | 933deb78f600 | Refreshed source unchanged; fresh focused checks follow |
 | 70 ownership-file-construction | 0d09a61aaab7 | 821e6c1baaef | 11.09 / 22.39 s |
 | 71 ownership-file-write-visibility | 8a061cb9b8ab | 0d09a61aaab7 | 12.72 / 25.58 s |
 | 72 ownership-file-io-errors | d4611644084a | 8a061cb9b8ab | 18.47 / 37.02 s |
