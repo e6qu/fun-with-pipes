@@ -277,6 +277,8 @@ static V fwp_p_http2_body(V max, V timeout, V call) {
         if ((int64_t)s->data.len > mx) return w_err_code(413);
         if (s->remote_end) {
             V b = fwp_str_new((const char *)s->data.d, s->data.len);
+            /* Body bytes belong to the stream's malloc buffer, not the GC heap. */
+            FWP_KEEP_ALIVE(call);
             return fwp_data(0, 1, &b);
         }
         if (s->reset || k->c->dead) return w_err_code(0);
