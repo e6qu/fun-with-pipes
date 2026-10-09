@@ -116,8 +116,8 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `b7e0cc99cf22` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `807afa9962aa` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `67f022e93858` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e15c6fc1f0c3` | `dc2ad1febc5d` | `8abfd46b3476` |
-| 89 | http2-body-roots | `ownership-http2-body-roots` | `59c59a882d67` | `d29dda936dff` | `e91dcb307c61` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `f194c55d4351` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 89 | http2-body-roots | `ownership-http2-body-roots` | `c2c14e491c30` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `fb5765a9ec36` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `05f1a8841609` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `84b6d877fa9b` | `09751c8c65ac` | `3c268c34d15b` |
