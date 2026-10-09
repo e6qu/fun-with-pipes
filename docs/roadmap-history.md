@@ -10207,3 +10207,33 @@ O1/O2. Fixed fixtures pass GC off/on, stress/verification and poison.
 
 Client receive/failure/request lint passes2.54 / 5.14 s; format apply
 0.45 / 0.83 s and check0.45 / 0.82 s. No resource limit exceeded.
+
+Row103 preparation published clean atc48864ce72313d5aff87aca59f768023e17dbd26
+on actual33661b298f96afcae268bfa278d62e452cebd3c8. Immutable anchors recorded;
+entire commit message one line. PR98 remains the sole delivery.
+
+Streamlined live handoff after publishing rows100–103, retaining actual bases
+and checks in its table and archiving chronology. Consolidated prepared
+network ownership design to remove superseded audit-next statements; current
+remaining decode/connection/callback audits stay explicit.
+
+## Pending gRPC connection cleanup preparation, 2026-10-09
+
+Independent ownership-grpc-connect-cleanup starts on c48864ce72313d5aff87aca59f768023e17dbd26,
+/private/tmp/fwp-grpc-connect-cleanup-worktree. Reuse fwp_connect_owner for
+pending address/socket cleanup; SSL scope releases a partially completed
+handshake. Transfer both owners after g_conn_new succeeds. Real loopback
+fixture covers pending connect, TLS handshake, cancellation before wrapper
+creation, refusal and descriptor handoff, with omitted fd/SSL cleanup controls.
+Background reader/writer publication is injected; partial startup remains
+a separate audit and full protocol acceptance remains on sequential CI.
+Guarded clean0.00 / 0.14 s; focused connect/primitive tests run.
+
+Both gRPC/primitive connect tests pass9.33 CPU / 20.92 elapsed s. Real
+loopback pending connect, TLS handshake and post-connect cancellation close
+fd/free resolver/SSL once. Refusal and successful descriptor transfer preserve
+normal lifetimes; omission controls catch missing fd/SSL cleanup. Fixed
+O1/O2 cases pass GC off/on, stress/verification and poison.
+
+Focused gRPC/primitive connect lint passes2.54 / 5.15 s; format apply
+0.44 / 0.83 s and check0.45 / 0.83 s pass. No resource limit exceeded.

@@ -60,7 +60,7 @@ rebase; source comparisons against older preparations should allow these
 explicitly inherited repairs.
 Ten current docs were backed up and byte-verified in
 /private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
-restored byte-for-byte afterward. Independent preparations through row102 are published with focused checks;
+restored byte-for-byte afterward. Independent preparations through row103 are published with focused checks;
 row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
@@ -156,6 +156,7 @@ still need their final squash rebases and six exact-head full gates.
 | 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
 | 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
 | 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
+| 103 ownership-grpc-client-receive | c48864ce7231 | 33661b298f96 | 13.79 / 27.82 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -177,7 +178,7 @@ context storage and other buffers still use tracing; no complete ARC claim.
 Rows94–96 publish unary receive, streaming force and rendered-error scratch
 cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
 hashes and detailed checks are in history; the table keeps actual bases.
-Preparations through row102 are published with focused checks recorded in
+Preparations through row103 are published with focused checks recorded in
 [history](roadmap-history.md). Row21 is published atc8d4b57092e54fe292ccc04dc0b813652fdc2617.
 Rebase to PR98 headde969ee completed from ACTUAL542fc08, inheriting the
 collector fixture repair. Three array tests pass14.39 / 29.34 s; focused
@@ -187,8 +188,15 @@ Independent row103 ownership-grpc-client-receive starts on33661b2,
 dequeued messages, status text and decoder why strings across retry, errors
 and cancellation. Failure-text transfer clears the old owner before raising.
 All three focused receive/failure/request tests pass13.79 / 27.82 s;
-lint2.54 / 5.14 s and format0.45 / 0.82 s pass; publish next.
-Remaining audit: canonical decode and runtime callback/connection teardown. Prepared
+lint2.54 / 5.14 s and format0.45 / 0.82 s pass. Published clean at
+c48864ce72313d5aff87aca59f768023e17dbd26, no competing PR.
+Independent row104 ownership-grpc-connect-cleanup starts on c48864c,
+/private/tmp/fwp-grpc-connect-cleanup-worktree. Existing connect-owner cleanup
+now protects gRPC socket/address resources, with an SSL scope through
+handshake and until transfer to the connection. Real loopback cancellation,
+refusal and handoff checks pass9.33 / 20.92 s; background startup is injected
+in the fixture. Lint2.54 / 5.15 s and format0.45 / 0.83 s pass; publish next.
+Remaining audit: canonical decode and partial background connection startup. Prepared
 work is not sequential full acceptance; phase2 remains incomplete.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery atde969ee, full CI37936505408: bench passes;
@@ -250,10 +258,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-client-receive-worktree; receive tests run.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
-Last guarded doc audit passes eleven link/heading sets, 96 immutable queue
-ancestry pairs and whole commit messages (0.24 s CPU / 1.53 s elapsed).
+belongs to /private/tmp/fwp-grpc-connect-cleanup-worktree; connect tests run.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
+Last guarded doc audit passes eleven link/heading sets, 97 immutable queue
+ancestry pairs and whole commit messages (0.21 s CPU / 1.45 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:

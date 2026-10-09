@@ -446,77 +446,38 @@ an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
 
-Prepared HTTP/2 peer metadata protects its malloc subject temporary with the
-existing unwind cleanup stack until String/Option copying completes. Focused
-copy-trap and omitted-cleanup controls check exactly-once release; HTTP/2
-handle ownership still uses the tracing compatibility policy.
+Prepared network ownership uses the existing unwind cleanup stack. HTTP/2
+peer subject temporaries stay owned until String/Option copying finishes.
+HTTP/2 handles and GC-managed connection/context storage retain tracing
+compatibility; these preparations do not establish complete ARC support.
 
-Prepared served gRPC peer metadata has an explicit logical owner for its
-serving task and each detached sender capable of invoking language code.
-A nonallocating, nonthrowing internal C-task completion callback runs after
-structured child joins. It releases that task's peer owner; the last owner
-frees the malloc subject. Spawning protects partially acquired owners, and
-count overflow traps before acquisition. The GC-managed context and other
-network buffers still retain their existing tracing lifetimes.
+Served gRPC peer metadata has a logical owner for its serving task and each
+detached sender that can invoke language code. A nonallocating, nonthrowing
+completion callback releases its owner after structured child joins; the last
+owner frees peer metadata and any stored status. Acquisition checks overflow
+and unwinds failed spawning. Stored status replacement copies before dropping
+the prior owner, including aliased input. Final encoding owns transferred text.
 
-Prepared served gRPC final statuses transfer a stored cancellation message
-into the handler's owned result. Cleanup protects it through final encoding,
-then releases it. Replacing a stored status copies before dropping the old
-owner, including an aliased input; the last retained serving-context user
-also releases any status left in its slot. Received status text is copied
-malloc storage, not a borrowed stream field. Wire encoding remains unchanged.
+Server and client receive paths own dequeued malloc messages and copied status
+text through decoding, subsequent waits and callbacks. Extra/malformed responses,
+cancellation and decoder failures release scratch. Normal returns transfer only
+the requested message, value or error text; cell forcing preserves its memo.
+Retry releases copied reset text before reopening. Client failure raising copies
+raw trap or typed GrpcError contents before releasing its transferred text;
+the receive owner clears that text slot to prevent a second release. Reflection
+releases copied end status, and streamed error rendering owns partial buffers.
 
-Prepared unary gRPC receive owns dequeued malloc request and copied status
-storage across the subsequent wait. Cleanup releases them on cancellation or
-an unexpected extra result; normal return transfers only the requested
-message or error text. Reflection discards its copied end status. Message
-contents, receive order and error codes remain unchanged.
+Encoded frame buffers, detached and synchronous client request buffers, and
+served unary/stream/error response buffers keep cleanup active across encoding
+and cancellable flow-control waits. Canonical serialization scratch is owned
+before writing/transcoding and released after success or unwind. Wire bytes,
+plain/gzip payloads, fixed-width representation, oneof prefixes, diagnostics,
+receive order and error/trap order remain unchanged.
 
-Prepared streaming gRPC cell force owns received malloc payload/status through
-decoding and response copying. Scoped cleanup releases decoder failure reasons
-and temporary error text during traps. First-error returns transfer only the
-returned text/value; successful force retains its existing cached result.
-Rendered-error and protocol-output scratch lifetimes remain a separate audit.
-
-Prepared streamed non-status errors register their rendering buffer with the
-existing buffer destructor before formatting. Both a partial rendering trap
-and the final diagnostic trap release scratch. Diagnostic contents remain
-unchanged; this does not complete protocol encoding scratch ownership.
-
-Prepared encoded gRPC messages register typed h2_buf cleanup before encoding
-and keep it active through flow-control waits. Normal return or cancellation
-releases the malloc frame buffer. Plain and gzip bodies preserve exact payloads;
-caller encoding buffers remain a separate exceptional ownership audit.
-
-Prepared detached gRPC senders own request encoding scratch before encoding
-and keep cleanup active through the cancellable send. Normal completion or
-encoding/cancellation unwind releases the caller's buffer separately from
-the encoded wire buffer. Internal canonical encoding scratch is a later audit.
-
-Prepared message/request encoders register canonical serialization buffers
-with their existing destructor before writing and transcoding. Success frees
-normally; partial serialization or transcoder failure frees on unwind. Fixed-
-width canonical bytes, oneof prefix and diagnostic contents stay unchanged.
-
-Prepared served response encoding owns unary, streaming and error-response
-wire buffers across encoding and cancellable flow-control waits. Error
-canonical scratch is protected before serialization and freed after transcoding.
-Normal wire bytes and error/trap order stay unchanged; sequential full CI
-is still required.
-
-Prepared synchronous client requests also scope their encoded unary/iterator
-buffers before encoding and until sending returns or cancellation unwinds.
-Request bytes and end markers remain unchanged. Connection/user-code ownership
-and complete client response/status cleanup remain separate audits.
-
-Prepared client failure raising takes ownership of copied transport, status
-and first-iterator failure text. Raw trap messages and typed GrpcError values
-copy their contents before cleanup releases the original text. All current
-callers transfer owned copies; future receive scopes must clear transferred
-text to avoid releasing it twice.
-
-Prepared client receives scope dequeued messages and status copies across
-decoding, subsequent waits and channel callbacks. Retry frees copied reset
-text before reopening, and decoder diagnostics are released on raising.
-Failure-helper transfer clears the original status owner before unwinding.
-Complete protocol and platform acceptance still requires sequential CI.
+These are prepared contracts, subject to sequential full platform/GC CI.
+[Primitive ownership](primitive-ownership.md#prepared-refinements) records individual
+acceptance controls; [the handoff](development-state.md) records delivery status.
+Prepared pending gRPC connections also own lookup results, descriptors and
+SSL state across connection/handshake suspension, transferring them after
+connection-wrapper creation. Canonical decode, partial background startup
+and broader callback teardown remain audits.

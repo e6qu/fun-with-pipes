@@ -247,6 +247,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 101 | Synchronous unary/iterator client requests own encoded buffers through encoding and cancellable sends | Sequential CI; real parked cancellation, request bytes/end marker, diagnostics and omitted cleanup controls |
 | 102 | Client failure helper takes copied transport/status/iterator text and releases it after raising | Sequential CI; exact raw trap and typed GrpcError code/text, copying before release and omitted cleanup |
 | 103 | Client receives own dequeued messages, status copies and decoder text across retry, callbacks and cancellation | Sequential CI; actual receive/scheduler success/retry/error/callback/cancel and first/next/decoder omission controls |
+| 104 | Pending gRPC connects own address lookup, descriptor and SSL through handshake and wrapper transfer | Sequential CI; actual loopback connect/handshake cancellation, refusal/handoff and omitted fd/SSL cleanup; partial background startup remains separate |
 | 73–88 | Original resource frames, File owners/storage/rollback, WASM logical counts, typed record/variant holders and cycle draining | Sequential CI; original lifetimes, ambiguous contexts and shared cycle policy |
 
 Prepared File IO borrows handles, owns returned File aliases/tuples and closes
