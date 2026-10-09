@@ -44,8 +44,8 @@ static jmp_buf failed;
 static fwp_handler handler;
 int main(void){
  fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));
- const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String"};
- const fwp_desc *fields[]={&integer,&string};const fwp_desc error={.kind=K_RECORD,.name="GrpcError",.n=2,.fields=fields};
+ static const fwp_desc integer={.kind=K_I64,.name="I64"},string={.kind=K_STR,.name="String"};
+ static const fwp_desc *const fields[]={&integer,&string};static const fwp_desc error={.kind=K_RECORD,.name="GrpcError",.n=2,.fields=fields};
  fwp_remote remote={0};remote.what="probe";remote.m.grpc_error=&error;
  for(int kind=0;kind<5;kind++){
   text_frees=0;const char *message=kind==1?"trap: decoder trap":kind==2||kind==4?"denied":"transport failure";
