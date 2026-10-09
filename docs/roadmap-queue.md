@@ -117,7 +117,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `08beb7c2bc23` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `b2d374878677` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `177a08a204d7` | `d29dda936dff` | `e91dcb307c61` |
-| 90 | http2-body-bounds | `fix-http2-body-bounds` | `71d875caed41` | `6f310b5483a8` | `d29dda936dff` |
+| 90 | http2-body-bounds | `fix-http2-body-bounds` | `c80d278dd53d` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `36ea28337198` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `5b15ee436b69` | `09751c8c65ac` | `3c268c34d15b` |
 | 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `e7408fee761a` | `a92c951fa6d9` | `09751c8c65ac` |
