@@ -122,6 +122,8 @@ static void g_serving_peer_release(g_serving *sv) {
     if (sv && --sv->peer_users == 0) {
         fwp_tls_subject_free(sv->peer);
         sv->peer = 0;
+        free(sv->msg);
+        sv->msg = 0;
     }
 }
 
@@ -1130,11 +1132,14 @@ typedef struct {
 static void g_fail_call(int code, const char *msg) {
     g_serving *sv = g_ctx_of()->serving;
     if (!sv) fwp_trap(msg);
+    char *copy = strdup(msg);
+    if (!copy) { fprintf(stderr, "fwp: out of memory\n"); exit(102); }
+    free(sv->msg);
     sv->code = code;
-    sv->msg = strdup(msg);
+    sv->msg = copy;
     fwp_cancel_tree(sv->task);
     fwp_check_cancel();
-    fwp_trap(msg);
+    fwp_trap(sv->msg);
 }
 
 /* the failure of a client call: a status, or -1 for a transport failure */
@@ -1983,6 +1988,7 @@ static void g_handle(void *arg, int cancelled) {
     } else if (j->sv.code >= 0) {
         code = j->sv.code;
         msg = j->sv.msg;
+        j->sv.msg = 0;
     } else if (j->s->reset || j->c->dead) {
         fflush(fwp_prog_out);
         if (logged) fprintf(stderr, "fwp: call cancelled by the client (in %s)\n", j->what);
@@ -1996,7 +2002,11 @@ static void g_handle(void *arg, int cancelled) {
         msg = strdup("cancelled");
     }
     fflush(fwp_prog_out);
+    fwp_cleanup message_cleanup;
+    fwp_cleanup_push(&message_cleanup, fwp_tls_subject_free, msg);
     g_finish(j->c, j->s, code, msg);
+    fwp_cleanup_pop(&message_cleanup);
+    fwp_tls_subject_free(msg);
 }
 
 /* accept connections and serve them, until the task is cancelled */

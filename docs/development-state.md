@@ -136,7 +136,7 @@ still need their final squash rebases and six exact-head full gates.
 | 89 ownership-http2-body-roots | 59c59a882d67 | e15c6fc1f0c3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | fb5765a9ec36 | 59c59a882d67 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 91 ownership-http2-peer-cleanup | 05f1a8841609 | fb5765a9ec36 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 92 ownership-grpc-peer-completion | ac6e5cc39ac5 | 8a06d5df63ee | Completion test10.52/21.18s; lint5.77/12.88s and format0.45/0.87s pass |
+| 92 ownership-grpc-peer-completion | 84b6d877fa9b | 05f1a8841609 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 93 ownership-grpc-status-cleanup | 8d35ee99bd23 | ac6e5cc39ac5 | Status test9.60/19.41s; lint6.04/12.91s and format0.45/0.85s pass |
 | 94 ownership-grpc-receive-cleanup | 4907857412c2 | 8d35ee99bd23 | Receive test9.19/18.86s; lint5.64/12.70s and format0.46/0.85s pass |
 | 95 ownership-grpc-force-cleanup | 6e5d43aee3e7 | 4907857412c2 | Decode test8.90/18.31s; lint6.04/12.88s and format0.44/0.85s pass |
