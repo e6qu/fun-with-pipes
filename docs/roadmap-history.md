@@ -11589,3 +11589,12 @@ test8.90/18.31s. Row98 refreshb7d41363523d08c941a903d2861284ef6a5aa691
 uses actual base25838578a6bf; compiler/runtime/encoding fixture match original
 with inherited CLI/GC repairs. OLD663ef599a438 stays fixed; previous CURRENT is
 retained under revision-098 before lease publication. Fresh checks follow.
+
+Row96 rendering partial/completed scratch cleanup test8.01/16.29s passes;
+lint/format follow. No production acceptance is inferred from queued runs.
+
+Row96 clippy6.17/13.04s and format0.46/0.84s pass after rendering
+test8.01/16.29s. Row99 refresh4872607fc02fb87af0f68770ccea47354320edb7
+uses actual baseb7d41363523d; compiler/runtime/canonical fixture match original
+with inherited CLI/GC repairs. OLD4114b709fb4b stays fixed; previous CURRENT is
+retained under revision-099 before lease publication. Fresh checks follow.
