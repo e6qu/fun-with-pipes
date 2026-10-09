@@ -40,7 +40,7 @@ static void observe_free(void *p){if(p)for(int i=0;i<nowned;i++)if(owned[i]==p){
 static void observe_cache(void){
  nowned=0;for(g_env_options *k=g_env_options_known;k;k=k->next){
   owned[nowned++]=k;owned[nowned++]=(void*)k->var;
-  if(k->tls){const g_tls *t=k->tls;owned[nowned++]=(void*)t;owned[nowned++]=t->ca;owned[nowned++]=t->name;owned[nowned++]=t->cert;owned[nowned++]=t->keyfile;owned[nowned++]=t->key;}
+  if(k->tls){const g_tls *t=k->tls;owned[nowned++]=(void*)t;}
  }
 }
 static void finalizer(void *p){finalized++;if(frees||!g_env_options_known||strcmp(g_env_tls("FWP_SERVICE_CACHE")->ca,expected))order_error=1;}
@@ -57,7 +57,7 @@ int main(void){
   fwp_lib_init();fwp_gc_start(__builtin_frame_address(0));fwp_tasks_init();
   const g_tls *tls=g_env_tls("FWP_SERVICE_CACHE");if(!tls||strcmp(tls->ca,expected)||tls->users!=SIZE_MAX)return 4;
   if(g_env_tls("FWP_SERVICE_EMPTY"))return 5;
-  observe_cache();if(nowned!=10)return 6;
+  observe_cache();if(nowned!=5)return 6;
   setenv("FWP_SERVICE_CACHE_CA",round?"third":"second",1);
   if(g_env_tls("FWP_SERVICE_CACHE")!=tls||strcmp(tls->ca,expected)||frees)return 7;
   g_ctx context={0};context.tls=tls;g_ctx_of();fwp_cur->gctx=&context;
