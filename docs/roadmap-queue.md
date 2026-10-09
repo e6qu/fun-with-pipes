@@ -58,7 +58,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `3c69084cec04` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `8371fc50c9bf` | `b8f4c2469215` | `62add7e4a85f` |
-| 31 | zip-unwind | `ownership-zip-unwind` | `ff84318a416d` | `c2a364544d92` | `b8f4c2469215` |
+| 31 | zip-unwind | `ownership-zip-unwind` | `05d354f57167` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `9aed23988b19` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `527f84d405b77` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `734d3383addf` | `49739182ecb6` | `988f2a3be97f` |
@@ -132,7 +132,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `7e011508db02` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `b7961a14d5dd` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `392a5721e544` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `c7db1b368da0` | `cb20833c018f` | `b244d5f7c423` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `96174aaaf6be` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `06b87f3c83af` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `d4b360f6cc71` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `1362d3a239bc` | `36ad63424530` | `ea18e54f0eee` |
