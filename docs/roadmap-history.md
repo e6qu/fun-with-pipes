@@ -11598,3 +11598,9 @@ test8.01/16.29s. Row99 refresh4872607fc02fb87af0f68770ccea47354320edb7
 uses actual baseb7d41363523d; compiler/runtime/canonical fixture match original
 with inherited CLI/GC repairs. OLD4114b709fb4b stays fixed; previous CURRENT is
 retained under revision-099 before lease publication. Fresh checks follow.
+
+Row97 send/cancel test7.91/16.42s, clippy5.87/13.11s and format0.46/0.87s
+pass. Row100 refresh7fe3282b14133707e35e7dd9f3f2bdd47c59c5e6 uses actual
+base4872607fc02f; compiler/runtime/response fixture match original with inherited
+CLI/GC repairs. OLDb44f53c9a60f stays fixed; previous CURRENT is retained under
+revision-100 before lease publication. Fresh response encoding checks follow.
