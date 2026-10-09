@@ -144,12 +144,12 @@ still need their final squash rebases and six exact-head full gates.
 | 99 ownership-grpc-canonical-encoding | 4872607fc02f | b7d41363523d | Canonical test7.35/15.76s; lint5.99/12.96s and format0.45/0.87s pass |
 | 100 ownership-grpc-response-encoding | 7fe3282b1413 | 4872607fc02f | Response test9.09/18.46s; lint5.76/13.10s and format0.46/0.87s pass |
 | 101 ownership-grpc-client-requests | c6b5ad8c827c | 7fe3282b1413 | Client test8.38/16.90s; lint5.92/13.01s and format0.46/0.86s pass |
-| 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Failure text/trap/typed error test7.45/15.82s passes; lint/format follow |
-| 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Refreshed source unchanged; retry/error/cancel checks follow |
+| 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Failure text test7.45/15.82s; lint5.96/13.43s and format0.46/0.87s pass |
+| 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Receive test10.13/20.40s; lint6.00/13.19s and format0.45/0.85s pass |
 | 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Refreshed source unchanged; pending resource cancellation checks follow |
 | 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Refreshed source unchanged; driver startup rollback checks follow |
 | 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | Refreshed source unchanged; context/trap/cancellation checks follow |
-| 107 ownership-grpc-context-resources | ea18e54f0eee | 7a89dd017ae4 | 7.45 / 16.78 s |
+| 107 ownership-grpc-context-resources | 090422d2f330 | 911fcf78c5c9 | Refreshed source unchanged; scoped options/retained task checks follow |
 | 108 ownership-grpc-capture-resources | 36ad63424530 | ea18e54f0eee | 11.62 / 25.50 s + added rollback 2.08 / 5.20 s |
 | 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
@@ -198,6 +198,7 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 queued; source911fcf7, actual base4d4cbac; not acceptance |
 | Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 queued; source7fe3282, actual base4872607; not acceptance |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 queued; source8a06d5d, actual base9c27876; not acceptance |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 queued; sourcee15c6fc, actual baseb83d77c; not acceptance |
@@ -254,8 +255,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-client-failure-text-worktree; guarded copied
-client failure text/trap/typed error checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
+belongs to /private/tmp/fwp-grpc-connect-cleanup-worktree; guarded pending
+connection resource cancellation checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

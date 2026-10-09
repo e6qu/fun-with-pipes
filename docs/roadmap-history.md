@@ -11650,3 +11650,14 @@ Row106 refresh911fcf78c5c9a30c4eba3e2cfa63844005f3dee9 uses actual base4d4cbacd0
 Compiler/runtime/context fixture match original with inherited CLI/GC repairs.
 OLD7a89dd017ae4 stays fixed; previous CURRENT is retained before lease publication.
 Fresh context/trap/cancellation checks follow; cleanup must not restore handlers.
+
+Row102 clippy5.96/13.43s and format0.46/0.87s pass after copied failure text
+test7.45/15.82s. Row103 client receive retry/error/cancel test10.13/20.40s
+passes. Focused Linux client evidenceed7ce4b60160d4e5f94a98760f2f05b005959201
+is source-identical to911fcf78c5c9; CI37985348012 is queued, not acceptance.
+
+Row103 clippy6.00/13.19s and format0.45/0.85s pass after receive
+test10.13/20.40s. Row107 refresh090422d2f3302b3ae2b3d6430a194783d1c25c16
+uses actual base911fcf78c5c9; compiler/runtime/scoped option fixture match original
+with inherited CLI/GC repairs. OLDea18e54f0eee stays fixed; previous CURRENT
+is retained before lease publication. Fresh scoped-owner checks follow.
