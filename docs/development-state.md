@@ -130,10 +130,10 @@ still need their final squash rebases and six exact-head full gates.
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
-| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Cycle/queue tests13.30/26.87s pass; lint/format follow |
-| 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Refreshed source unchanged; fresh borrowed root checks follow |
+| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
+| 89 ownership-http2-body-roots | f45a7dbbd33d | e15c6fc1f0c3 | Major collection root test7.37/15.71s passes; lint/format follow |
 | 90 fix-http2-body-bounds | 9c2787630b7f | f45a7dbbd33d | Refreshed source unchanged; fresh limits/error-order checks follow |
-| 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
+| 91 ownership-http2-peer-cleanup | 8a06d5df63ee | 9c2787630b7f | Refreshed source unchanged; fresh peer cleanup checks follow |
 | 92 ownership-grpc-peer-completion | 09751c8c65ac | 3c268c34d15b | Peer/server14.18 / 28.39 s + task4.65 / 10.14 s |
 | 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
 | 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
@@ -252,8 +252,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-channel-cycle-worktree; guarded cycle/queue tests
-passed and lint is running. Row86 focused checks completed within limits. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-http2-body-roots-worktree; borrowed-root test
+passed and guarded lint is running. Row86 focused checks completed within limits. Latest disk observation114096836KiB available; target148940KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery

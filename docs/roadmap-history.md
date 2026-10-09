@@ -11524,3 +11524,10 @@ CI37982696642 is queued, not acceptance. Row90 refresh
 Compiler/runtime/body fixtures match original with inherited CLI/GC repairs.
 OLD6f310b5483a8 stays fixed; previous CURRENT is retained under revision-090
 before lease publication. Fresh limits/error-order checks follow.
+
+Row88 clippy5.94/13.04s and format0.46/0.87s pass after both cycle/queue
+tests13.30/26.87s. Row89 major-collection borrowed body root test7.37/15.71s
+passes. Row91 refresh8a06d5df63ee1054a8742abf8674d4033fc313b6 uses actual
+base9c2787630b7f. Compiler/runtime and peer cleanup fixture match original with
+inherited CLI/GC repairs. OLD3c268c34d15b remains fixed; previous CURRENT is
+retained under revision-091 before lease publication. Fresh peer checks follow.
