@@ -320,9 +320,9 @@ not automatic cycle reclamation or general tracing-free support.
 
 ## Validation and limits
 
-Merged contracts through #93 passed their full platform gates. Rebased focused
-checks for prepared rows16–22 pass with explicit FWP_NO_OPT=1 raw interpreter
-oracles; all sequential full gates remain required. Tests cover retained aliases,
+Merged contracts through #102 passed their exact-head full platform gates.
+Prepared ownership extensions remain subject to their own sequential full
+acceptance. Focused interpreter oracles explicitly use FWP_NO_OPT=1. Tests cover retained aliases,
 scalar words resembling pointers, callback/capture ownership, conservative flags,
 GC stress/verification and reuse poisoning. The interpreter/native comparison
 includes observable callback and trap order.
@@ -334,7 +334,7 @@ They are scoped reclamation evidence, not blanket speed, register-placement or
 no-GC claims. Dead projected fields, retained callbacks, exception/cancellation,
 unknown runtime boundaries and cycle policy remain part of phase2 acceptance.
 
-Main through PR #95 also borrows scan/iterate callbacks and inputs, owns
-initial stored aliases and adopts subsequent callback results; scratch
-storage is released after the state sequence is built. Exceptional lifetime
-extensions remain prepared work.
+Merged scan/iterate boundaries borrow callbacks and inputs, own initial stored
+aliases and adopt subsequent callback results. Scratch storage is released
+after the state sequence is built. Exceptional lifetime extensions remain
+prepared work.

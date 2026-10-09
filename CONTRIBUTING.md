@@ -33,11 +33,9 @@ You need:
   qemu (`gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user`). Tests
   that need a missing tool skip themselves.
 
-```
-cargo build --release
-export PATH=$PWD/target/release:$PATH
-fwp run examples/hello.fwp
-```
+Build release binaries on GitHub runners with `cargo build --release`.
+With the resulting `fwp` binary available, run `fwp run examples/hello.fwp`.
+Use the bounded guard below for focused local checks.
 
 ## Before you open a pull request
 
