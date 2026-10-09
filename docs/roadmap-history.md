@@ -11531,3 +11531,9 @@ passes. Row91 refresh8a06d5df63ee1054a8742abf8674d4033fc313b6 uses actual
 base9c2787630b7f. Compiler/runtime and peer cleanup fixture match original with
 inherited CLI/GC repairs. OLD3c268c34d15b remains fixed; previous CURRENT is
 retained under revision-091 before lease publication. Fresh peer checks follow.
+
+Row89 clippy6.23/13.16s and format0.46/0.86s pass. Row90 extended body
+fixture7.47/15.54s passes. Row92 refreshac6e5cc39ac5e84df6564a54c97a58844fbf5b4e
+uses actual base8a06d5df63ee; compiler/runtime/completion fixtures match original
+with inherited CLI/GC repairs. OLD09751c8c65ac stays fixed; previous CURRENT
+is retained under revision-092 before lease publication. Checks follow.
