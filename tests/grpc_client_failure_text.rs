@@ -56,7 +56,9 @@ int main(void){
   fwp_trap_recover=recover;fwp_trap_jb=&failed;fwp_trap_cleanup=0;
   if(!setjmp(failed)){
    if(!setjmp(handler.jb)){g_stub_fail(&remote,"local",code,watched_text);return 2;}
-   if(kind<3||handler.desc!=&error||(int64_t)OBJ(handler.value)->f[0]!=(code<0?GRPC_UNAVAILABLE:code)||strcmp(STR(OBJ(handler.value)->f[1])->d,message))return 3;
+   if(kind<3||handler.desc!=&error||(int64_t)OBJ(handler.value)->f[0]!=(code<0?GRPC_UNAVAILABLE:code)||strcmp(STR(OBJ(handler.value)->f[1])->d,message)){
+    fprintf(stderr,"typed check: kind=%d desc=%d code=%lld expected=%d text=%s expected=%s\n",kind,handler.desc==&error,(long long)(int64_t)OBJ(handler.value)->f[0],code<0?GRPC_UNAVAILABLE:code,STR(OBJ(handler.value)->f[1])->d,message);return 3;
+   }
    FWP_KEEP_ALIVE(handler.value);
   }else{
    if(kind>=3)return 4;
