@@ -170,7 +170,7 @@ still need their final squash rebases and six exact-head full gates.
 | 85 ownership-match-scrutinee-types | b7e0cc99cf22 | 9a4fb29ee416 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
 | 86 ownership-resource-record-binding-kinds | 807afa9962aa | b7e0cc99cf22 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | 67f022e93858 | 807afa9962aa | Raw source/native test13.09/26.43s; lint6.14/13.07s and format0.45/0.86s pass |
-| 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
+| 88 ownership-channel-cycle-lifetimes | f194c55d4351 | 67f022e93858 | Two cycle/queue tests13.30/26.87s; lint5.94/13.04s and format0.46/0.87s pass |
 | 89 ownership-http2-body-roots | 59c59a882d67 | e15c6fc1f0c3 | GCC stale-root fixture passes normal Linux37990203134 and ARM15.46/31.62s; later propagation follows |
 | 90 fix-http2-body-bounds | fb5765a9ec36 | 59c59a882d67 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 91 ownership-http2-peer-cleanup | 05f1a8841609 | fb5765a9ec36 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
