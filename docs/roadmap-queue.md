@@ -50,7 +50,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `0a7203f5c559` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `71c2405dd0e0` | `7392f2d67151` | `33cf86466e2f` |
-| 28 | runtime-call | `ownership-runtime-call-cleanup` | `e06c447336ae` | `bee3f1659ae5` | `7392f2d67151` |
+| 28 | runtime-call | `ownership-runtime-call-cleanup` | `7cfbe030d3de` | `bee3f1659ae5` | `7392f2d67151` |
 | 29 | map-unwind | `ownership-map-unwind` | `84ef5480f493` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `ca33d3141a96` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `a282f630c790` | `c2a364544d92` | `b8f4c2469215` |

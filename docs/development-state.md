@@ -75,7 +75,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 26 ownership-reuse-tokens | 0a7203f5c559 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
 | 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Eleven tests30.85/62.02s; lint2.52/5.06s and format0.35/0.63s pass; fresh full gates follow |
-| 28 ownership-runtime-call-cleanup | e06c447336ae | 71c2405dd0e0 | Rebased onto refreshed preceding delivery; source unchanged; fresh sequential gates follow |
+| 28 ownership-runtime-call-cleanup | 7cfbe030d3de | 71c2405dd0e0 | Includes early row34 preparation repair; eleven tests29.13/58.52s, lint2.48/4.99s and format0.35/0.63s pass; fresh Linux evidence follows |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
 | 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
 | 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
@@ -186,8 +186,9 @@ this boundary and partial capture duplication. Its compiler/runtime/test patch
 This moves the existing correction earlier, without changing pipe semantics.
 Eleven focused runtime/call/preparation tests pass29.13CPU/58.52elapsed,
 including the unchanged negative control. Lint2.48/4.99s and format0.35/0.63s
-also pass; e06c447 remains the
-published row28 head until they pass. Preserve row34's immutable OLD anchor;
+also pass. Row28 is published at7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3
+on actual71c2405. Prior e06c447 is retained remotely at
+roadmap/revision-028-e06c447336ae. Fresh Linux evidence follows. Preserve row34's immutable OLD anchor;
 its overlapping implementation will be reconciled on final rebase and its
 coverage retained. No new full gate or complete exceptional-ownership claim.
 
