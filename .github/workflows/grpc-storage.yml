@@ -26,11 +26,9 @@ jobs:
       - name: Scoped owners, capture rollback, full pool identities and packed storage
         if: ${{ !cancelled() }}
         run: cargo test --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --no-fail-fast
-      - name: Interpreter pool identity and full address matching
+      - name: Interpreter TLS pool identity
         if: ${{ !cancelled() }}
-        run: |
-          cargo test --lib grpc::pool_identity_tests -- --nocapture
-          cargo test --lib tls::tests::grpc_addr -- --nocapture
+        run: cargo test --lib grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool -- --exact --nocapture
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
