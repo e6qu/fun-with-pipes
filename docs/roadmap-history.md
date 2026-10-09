@@ -11865,3 +11865,5 @@ guard preserved all limits. Both HTTP2 and normal client fixture fixes can now
 propagate through actual-base prepared branches without changing OLD anchors.
 
 Fixture propagation row90: 9c2787630b7f99a055a18148f4a98ef8c20d1acc → fb5765a9ec362eb8d27277ecacbea6b32ddfa70d, actual base59c59a882d67d1f8ea191a1cf576c395e3a22522. Retained roadmap/revision-090-9c2787630b7f before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Fixture propagation row91: 8a06d5df63ee1054a8742abf8674d4033fc313b6 → 05f1a8841609f45e047fa9722b0a26ebaa888f63, actual basefb5765a9ec362eb8d27277ecacbea6b32ddfa70d. Retained roadmap/revision-091-8a06d5df63ee before explicit leased publication. Compiler/runtime/workflow code unchanged; only accepted HTTP2/client fixture repairs differ. Immutable OLD tags remain fixed; sequential full gates still required.
