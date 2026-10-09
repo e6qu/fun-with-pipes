@@ -9483,3 +9483,46 @@ passes 0.45 / 0.84 s. Tests and controls preserve external owner lifetime,
 not a new counted HTTP/2 handle contract or a performance claim.
 Fmt check passes 0.48 / 0.97 s; ten root docs copied before first preparation
 commit. Production delta is one two-line owner fence plus its focused regression.
+New row89 d29dda936dff119f226cdc720aa42da549a1427a is published clean on
+actual e91dcb307c615b3330e50348a710a14b0c6be178. Initial immutable OLD
+anchor equals this first preparation commit; later CURRENT may change only.
+Whole commit message verifies one line, empty body and no attribution.
+Next independent task repairs native/interpreter negative HTTP/2 body bound
+mismatch, then continues remaining phase2 ownership audit. No extra PR opened.
+
+## HTTP/2 body negative-bound engine agreement, 2026-10-09
+
+New isolated fix-http2-body-bounds branch starts on
+d29dda936dff119f226cdc720aa42da549a1427a. Native max now clamps negative
+values to zero, matching src/h2web.rs interpreter behavior. New focused unit
+test directly calls the raw interpreter primitive and compares native C outputs
+for thirteen limit/completion/reset/dead/timeout cases, preserving size-before-
+completion-before-reset-before-timeout order. Includes arbitrary byte payload
+and removed-clamp control at O1/O2, plus GC stress/verify and poison.
+Guarded cargo test --lib body_bounds_and_error_order_agree_with_native runs.
+Initial new unit compilation fails E0509, exit101 (2.49 / 4.92 s): Value
+implements Drop, so its payload cannot be moved by match. Test now borrows
+result fields; no production change or weaker assertion. Focused test reruns.
+Guarded clean before switching checkout passes 0.04 / 0.25 s.
+Second focused test fails exit101 (5.40 / 11.21 s): thirteen raw interpreter
+cases pass, but omission needle also matches an existing clamp elsewhere in
+the generated runtime. Scoped needle to the HTTP/2 WCALL/max prefix; assertion
+still requires exactly one match and the control removes only this fix. Rerun.
+Corrected engine-agreement unit passes 6.00 / 12.64 s CPU / elapsed,
+one selected test (63 filtered). Thirteen direct raw interpreter results match
+native O1/O2 outputs, GC stress/verify and poison. Removed-clamp control
+returns the former differing output at both optimization levels. Size checking
+still precedes completion, then reset/dead, then timeout; extreme signed
+bounds and binary bytes remain correct. Related HTTP/2 forced-major root test runs.
+Related forced-major HTTP/2 body root regression passes 7.61 / 15.92 s
+CPU / elapsed. Corrected max semantics retain borrowed call owner through
+copying at O1/O2/poison; omitted-owner control still fails before freed bytes
+are used. Formatting applied; library/test lint runs under bounded guard.
+Library/test lint cargo clippy --lib --tests -- -D warnings passes
+5.93 / 12.87 s CPU / elapsed within guard limits. This checked more lint
+targets than necessary; future local lint should select relevant targets.
+No full test gate ran locally. Formatting application passes 0.44 / 0.83 s.
+PR97 ARM GC stress also passes: four gates pass, Linux and Intel regular run.
+Fmt check passes 0.45 / 0.83 s; ten root docs copied before first preparation
+commit. Production semantic delta is one negative-limit clamp, with paired
+raw interpreter/native tests and preserved borrowed-owner regression.

@@ -440,5 +440,8 @@ Prepared HTTP/2 body copying keeps its borrowed call owner live through
 allocation. The stream buffer uses malloc, so its bytes alone cannot root
 the GC-managed stream. Forced major collection and finalizer omission controls
 verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
+Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
+interpreter. Check size before completion, then reset/dead state, then timeout;
+an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
