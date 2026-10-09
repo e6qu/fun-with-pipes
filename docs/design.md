@@ -410,5 +410,107 @@ pattern's typed local, using it for scrutinee conversion and temporary destructi
 Known expression types remain authoritative. Whole-value pattern aliases of
 stack aggregates retain/drop their typed children, preserving them when the
 scrutinee releases its ownership. No new surface syntax is introduced.
+Prepared original resource-frame holders keep eligible field-only records in
+typed fields, avoiding a parent heap box while retaining children for the
+original frame lifetime. Other bindings retain the boxed parent.
+FWP_FRAME_FIELDS=0 provides an allocation comparison; partial field retention
+must unwind safely. This preparation supplies no general speed claim.
+Prepared File layout stores FILE*, a uint64 owner count and a NUL-terminated
+inline path in one aligned leaf allocation. The checked path length includes
+header and terminator. On 64-bit hosts the header is 16 bytes rather than
+24 bytes; constructor allocation controls and display/I/O agreement are
+required. This reduces layout/allocation overhead without a timing claim.
+Prepared last-owner File disposal removes weak library finalizers before
+reclaiming unshared native storage. Shared, bump and disabled-free storage
+keeps its allocator lifetime. Scoped cleanup closes while its constructor
+owner is live, then drops that owner; aliases must never see reclaimed storage.
+Prepared original variant holders use tag-aware typed structs for eligible
+matched bindings. Retain incoming payloads completely before replacing a frame
+slot; cleanup dispatches only the active tag. Boxed fallback retains payloads
+before dropping the wrapper. Generate cleanup IDs after helper generation,
+which may add nested cleanup definitions. FWP_FRAME_FIELDS=0 compares boxing.
+Prepared whole-pattern variant bindings initialize fresh typed holders from
+the current scrutinee on each binding path. A local used by a let in another
+arm must not supply that payload. Partially failed patterns preserve original
+frame lifetime rather than releasing their File bindings early.
+Prepared record pattern holders likewise initialize typed fields from their
+current scrutinee before anchoring the original frame owner. A field mapping
+created by a let on another arm must not supply these borrowed fields.
+Prepared HTTP/2 body copying keeps its borrowed call owner live through
+allocation. The stream buffer uses malloc, so its bytes alone cannot root
+the GC-managed stream. Forced major collection and finalizer omission controls
+verify this boundary; HTTP/2 handles still retain the tracing compatibility policy.
+Prepared HTTP/2 body bounds clamp negative limits to zero, matching the
+interpreter. Check size before completion, then reset/dead state, then timeout;
+an empty completed body succeeds at a zero limit even if the stream reset.
 File storage/finalizer, WASM logical counts, nested holders and graph/cycle work
 remain subject to full sequential CI and the ownership acceptance criteria.
+
+Prepared HTTP/2 peer metadata protects its malloc subject temporary with the
+existing unwind cleanup stack until String/Option copying completes. Focused
+copy-trap and omitted-cleanup controls check exactly-once release; HTTP/2
+handle ownership still uses the tracing compatibility policy.
+
+Prepared served gRPC peer metadata has an explicit logical owner for its
+serving task and each detached sender capable of invoking language code.
+A nonallocating, nonthrowing internal C-task completion callback runs after
+structured child joins. It releases that task's peer owner; the last owner
+frees the malloc subject. Spawning protects partially acquired owners, and
+count overflow traps before acquisition. The GC-managed context and other
+network buffers still retain their existing tracing lifetimes.
+
+Prepared served gRPC final statuses transfer a stored cancellation message
+into the handler's owned result. Cleanup protects it through final encoding,
+then releases it. Replacing a stored status copies before dropping the old
+owner, including an aliased input; the last retained serving-context user
+also releases any status left in its slot. Received status text is copied
+malloc storage, not a borrowed stream field. Wire encoding remains unchanged.
+
+Prepared unary gRPC receive owns dequeued malloc request and copied status
+storage across the subsequent wait. Cleanup releases them on cancellation or
+an unexpected extra result; normal return transfers only the requested
+message or error text. Reflection discards its copied end status. Message
+contents, receive order and error codes remain unchanged.
+
+Prepared streaming gRPC cell force owns received malloc payload/status through
+decoding and response copying. Scoped cleanup releases decoder failure reasons
+and temporary error text during traps. First-error returns transfer only the
+returned text/value; successful force retains its existing cached result.
+Rendered-error and protocol-output scratch lifetimes remain a separate audit.
+
+Prepared streamed non-status errors register their rendering buffer with the
+existing buffer destructor before formatting. Both a partial rendering trap
+and the final diagnostic trap release scratch. Diagnostic contents remain
+unchanged; this does not complete protocol encoding scratch ownership.
+
+Prepared encoded gRPC messages register typed h2_buf cleanup before encoding
+and keep it active through flow-control waits. Normal return or cancellation
+releases the malloc frame buffer. Plain and gzip bodies preserve exact payloads;
+caller encoding buffers remain a separate exceptional ownership audit.
+
+Prepared detached gRPC senders own request encoding scratch before encoding
+and keep cleanup active through the cancellable send. Normal completion or
+encoding/cancellation unwind releases the caller's buffer separately from
+the encoded wire buffer. Internal canonical encoding scratch is a later audit.
+
+Prepared message/request encoders register canonical serialization buffers
+with their existing destructor before writing and transcoding. Success frees
+normally; partial serialization or transcoder failure frees on unwind. Fixed-
+width canonical bytes, oneof prefix and diagnostic contents stay unchanged.
+
+Prepared served response encoding owns unary, streaming and error-response
+wire buffers across encoding and cancellable flow-control waits. Error
+canonical scratch is protected before serialization and freed after transcoding.
+Normal wire bytes and error/trap order stay unchanged; sequential full CI
+is still required.
+
+Prepared synchronous client requests also scope their encoded unary/iterator
+buffers before encoding and until sending returns or cancellation unwinds.
+Request bytes and end markers remain unchanged. Connection/user-code ownership
+and complete client response/status cleanup remain separate audits.
+
+Prepared client failure raising takes ownership of copied transport, status
+and first-iterator failure text. Raw trap messages and typed GrpcError values
+copy their contents before cleanup releases the original text. All current
+callers transfer owned copies; future receive scopes must clear transferred
+text to avoid releasing it twice.

@@ -68,12 +68,14 @@ fn run_env(
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    child
-        .stdin
-        .take()
-        .unwrap()
-        .write_all(stdin.as_bytes())
-        .unwrap();
+    // Commands may exit without consuming stdin; their result still needs checking.
+    if let Err(error) = child.stdin.take().unwrap().write_all(stdin.as_bytes()) {
+        assert_eq!(
+            error.kind(),
+            std::io::ErrorKind::BrokenPipe,
+            "stdin: {error}"
+        );
+    }
     let out = child.wait_with_output().unwrap();
     format!(
         "{}{}code={}",
@@ -81,6 +83,21 @@ fn run_env(
         String::from_utf8_lossy(&out.stderr),
         out.status.code().unwrap_or(-1)
     )
+}
+
+#[test]
+fn early_stdin_close_preserves_command_result() {
+    let input = "unused\n".repeat(128 * 1024);
+    let got = run(
+        Command::new("sh"),
+        &[
+            "-c",
+            "exec 0<&-; printf 'result\\n'; printf 'diagnostic\\n' >&2; exit 7",
+        ],
+        &input,
+        &root(),
+    );
+    assert_eq!(got, "result\ndiagnostic\ncode=7");
 }
 
 /// How to run a program: `fwp exec` (with its arguments before the

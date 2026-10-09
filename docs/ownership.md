@@ -143,6 +143,9 @@ and measurements are in [history](roadmap-history.md).
   Unknown runtime/FFI callbacks keep the sharing fallback.
 - Concrete call temporaries and eligible stack aggregate/closure children keep
   typed ownership. Count operations address children rather than stack wrappers.
+- Zip/unzip/chunks borrow inputs and build typed counted nested spines retaining
+  selected aliases. Scratch releases after construction; chunk validation
+  preserves trap order. General unwind protection remains prepared work.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
   reclaim typed boxed inputs and ABI wrappers; general unwind work remains prepared.

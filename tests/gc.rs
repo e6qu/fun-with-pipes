@@ -47,9 +47,14 @@ impl Drop for TempDir {
 }
 
 fn build(args: &[&str], cwd: &Path) {
+    build_with_env(args, cwd, &[]);
+}
+
+fn build_with_env(args: &[&str], cwd: &Path, env: &[(&str, &str)]) {
     let out = Command::new(fwp())
         .arg("build")
         .args(args)
+        .envs(env.iter().copied())
         .current_dir(cwd)
         .output()
         .unwrap();
@@ -174,13 +179,16 @@ fn long_loop_runs_in_bounded_memory() {
     }
     let dir = TempDir::new("loop");
     let exe = dir.0.join("churn");
-    build(
+    // Exercise tracing deliberately: ownership reclamation and constructor
+    // reuse can otherwise keep this allocating workload at zero collections.
+    build_with_env(
         &[
             root().join("tests/gc/churn.fwp").to_str().unwrap(),
             "-o",
             exe.to_str().unwrap(),
         ],
         &dir.0,
+        &[("FWP_FREE", "0"), ("FWP_REUSE", "0")],
     );
     let out = Command::new(&exe)
         .env("FWP_GC_STATS", "1")

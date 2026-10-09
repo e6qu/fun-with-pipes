@@ -28,29 +28,38 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is d174e73fecb96cb5aef85fa20eb8471a48dc0948 (#96). All six
-CI37909273494 gates passed at 03d25acc581a69c1a16f0add88e4768777072683.
-Explicit match-head squash verifies the whole one-line message:
-`Transfer owned loop states and reclaim typed Step and ABI payloads`.
-#74–#96 deliver native macOS and selected ownership through loop-state/Step/ABI
-wrappers, separate call effects and exact native wide counts. Phase 1 is done;
-phase 2 remains incomplete; phases 3–6 are pending.
+Main is 2c1003cad114a544aa3f5ba7386b9a46dcb0dc47 (#97). All six
+CI 37917260081 gates passed at 65fedd8d85430216539031553f88705ea72db5b4.
+Explicit match-head squash at 2026-10-09T11:43:18Z verifies the entire one-line
+message: `Own typed zip unzip and chunks results and release scratch storage`.
+#74–#97 deliver native macOS and selected ownership through typed nested
+zip/unzip/chunks, loop-state/Step/ABI wrappers and exact native wide counts.
+Phase 1 is done; phase 2 remains incomplete; phases 3–6 are pending.
 
-No PR is open. Next delivery is queue19 ownership-list-structure,
-/private/tmp/fwp-structure-worktree, final-rebased on actual main d174e73 (resolve the branch head before publication).
-Rebased from ACTUAL prior base 112f3c8de87beddab2374f51e19d6dc94846919d;
-source/runtime/tests/workflows exactly match verified previous 6ce37fb.
-Four final structural ownership tests pass 16.32 / 32.95 s. Exact contract unit
-passes 3.24 / 6.73 s; lint passes 2.29 / 4.59 s and format 0.34 / 0.60 s.
-Final docs and exact-lease publication follow; six full gates run only on GitHub.
-Preserve all ten root docs, verify tested feature source, rerun focused checks,
-exact-lease publication against 6ce37fb, then open the sole next PR.
-
-Ten current docs were byte-verified in /private/tmp/fwp-main-docs-pre96 before
-main fast-forward from 60e5d62 and restored afterward. Independent preparations
-through row75 are published with focused checks. The next independent task
-is row76 borrowed File roots.
-Prior main/heads/messages, failed evidence and focused checks remain in history.
+Sole open [PR #98](https://github.com/e6qu/fun-with-pipes/pull/98),
+ownership-list-generation, /private/tmp/fwp-generation-worktree, exact
+542fc080e8818c26fb3da2ebbc295cd9fb864ee5 on actual main2c1003c.
+Final rebase from ACTUAL prior base6ce37fb preserves source/runtime/generation tests/workflows exactly against7741d09.
+Second commit542fc08 repairs only the CLI helper and adds its regression. All ten current root docs resolve historical
+conflicts. Three final tests pass13.79 / 27.85 s, focused lint2.38 / 4.68 s
+and format0.34 / 0.60 s. Require all six exact-head jobs before squash with
+`Own repeated aliases and generated numeric list nodes`, empty body.
+Completed previous-main CI37916609315 at d174e73 fails Linux only:
+cli::multi_command_program panics writing stdin with BrokenPipe. All other
+five jobs pass; full logs /private/tmp/fwp-main96-failure.log. Legal add-all
+case ignores supplied stdin and exits0. The helper must tolerate only closed
+stdin and still assert exact child stdout/stderr/status. Repair in PR98 checkout passes focused multi-command23.59 / 47.48 s and
+deterministic early-close0.18 / 0.73 s, final lint0.09 / 0.26 s and format
+0.36 / 0.73 s. Repair published at542fc080e8818c26fb3da2ebbc295cd9fb864ee5. Require all six
+new exact-head gates; superseded37925910460 is confirmed cancelled to free runners. Old head6b1cd9b supplies no acceptance for the repair.
+After merge, row21 ACTUAL refreshed base is542fc080e8818c26fb3da2ebbc295cd9fb864ee5;
+rebase onto the real squash, preserving immutable OLD anchors. Later branches
+prepared before the CLI fix must inherit it on final rebase; source comparisons
+against older preparations should allow this explicitly inherited repair.
+Ten current docs were backed up and byte-verified in
+/private/tmp/fwp-main-docs-pre97 before main fast-forward from d174e73 and
+restored byte-for-byte afterward. Independent preparations through row102 are published with focused checks;
+row21 is refreshed against the repaired delivery. Prior checks remain in history.
 
 ## Next sequential preparations
 
@@ -61,9 +70,9 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 18 ownership-loop-state | 03d25acc581a, merged #96 | 60e5d6216d0f | 18.66 / 37.70 s final + exact unit 3.15 / 6.61 s |
-| 19 ownership-list-structure | 6ce37fb180e1 | 112f3c8de87b | 16.10 / 32.47 s |
-| 20 ownership-list-generation | 7741d09dd8cf | 6ce37fb180e1 | 13.69 / 27.47 s |
-| 21 ownership-array-elements | 443524ef6b6d | 7741d09dd8cf | 14.23 / 28.81 s |
+| 19 ownership-list-structure | 65fedd8d8543, merged #97 | d174e73fecb9 | 16.32 / 32.95 s final + exact unit 3.24 / 6.73 s |
+| 20 ownership-list-generation | 542fc080e881, PR98 | 2c1003cad114 | 13.79 / 27.85 s final |
+| 21 ownership-array-elements | 79bc00f13649 | 542fc080e881 | 14.02 / 28.13 s |
 | 22 ownership-map-set-elements | 1689c03ff621 | 443524ef6b6d | 14.98 / 30.15 s |
 | 23 ownership-old-reclamation | f4716a027a1b | 1689c03ff621 | 9.50 / 19.72 s |
 | 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
@@ -118,22 +127,115 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 3c87e1f63b51 | d4611644084a | 21.06 / 42.34 s + three units 3.93 / 8.00 s |
 | 74 ownership-file-runtime-owners | 4b5da4aa946a | 3c87e1f63b51 | 21.91 / 44.03 s |
 | 75 ownership-file-discard | db3bcf0da8d6 | 4b5da4aa946a | 22.99 / 46.22 s |
+| 76 ownership-file-runtime-boundaries | b4860bf2c392 | db3bcf0da8d6 | 22.08 / 46.15 s |
+| 77 ownership-wasm-resource-counts | b4482c259c1e | b4860bf2c392 | Native bump 7.93 / 16.79 s + File 1.26 / 3.62 s; actual WASI awaits CI |
+| 78 ownership-wasm-count-disposal | 9609b73ef5ed | b4482c259c1e | Two native bump tests 9.47 / 19.69 s + File 12.17 / 24.55 s; actual WASI awaits CI |
+| 79 ownership-resource-frame-fields | 35c2aeb2923e | 9609b73ef5ed | Four tests 18.06 / 36.28 s |
+| 80 ownership-file-inline-path | e7d3882b67ae | 35c2aeb2923e | Four tests 12.66 / 25.48 s |
+| 81 ownership-file-storage-disposal | faac017dc60d | e7d3882b67ae | Five tests 25.15 / 54.49 s |
+| 82 ownership-file-construction-disposal | 06c93eff77af | faac017dc60d | Three tests 10.55 / 25.59 s |
+| 83 ownership-resource-frame-variants | f3c9ee4ec354 | 06c93eff77af | Five tests 26.37 / 53.88 s |
+| 84 ownership-resource-frame-binding-kinds | d2936a008fd2 | f3c9ee4ec354 | Four tests 32.57 / 65.62 s |
+| 85 ownership-match-scrutinee-types | 97dca7626158 | d2936a008fd2 | Four tests 15.67 / 33.72 s + rebuilt HTTP golden 1.19 / 6.75 s |
+| 86 ownership-resource-record-binding-kinds | 5915ac0607ac | 97dca7626158 | Three tests 16.25 / 34.51 s |
+| 87 ownership-nominal-source-context | f08611023cec | 5915ac0607ac | One source test 13.06 / 26.28 s |
+| 88 ownership-channel-cycle-lifetimes | e91dcb307c61 | f08611023cec | Two cycle/queue tests 13.11 / 26.29 s |
+| 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
+| 90 fix-http2-body-bounds | 6f310b5483a8 | d29dda936dff | Engine comparison 6.00 / 12.64 s + body root 7.61 / 15.92 s |
+| 91 ownership-http2-peer-cleanup | 3c268c34d15b | 6f310b5483a8 | Two peer/TLS tests 1.32 / 5.17 s |
+| 92 ownership-grpc-peer-completion | 09751c8c65ac | 3c268c34d15b | Peer/server14.18 / 28.39 s + task4.65 / 10.14 s |
+| 93 ownership-grpc-status-cleanup | a92c951fa6d9 | 09751c8c65ac | Status/peer6.25 / 12.74 s final |
+| 94 ownership-grpc-receive-cleanup | 8bd9e78743ab | a92c951fa6d9 | Receive/status12.09 / 24.36 s |
+| 95 ownership-grpc-force-cleanup | 6b82bc5b8b2f | 8bd9e78743ab | Force/receive11.15 / 23.28 s |
+| 96 ownership-grpc-render-cleanup | ea79bdee1191 | 6b82bc5b8b2f | Render/force2.79 / 5.95 s |
+| 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
+| 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
+| 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
+| 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
+| 101 ownership-grpc-client-requests | 2339ff08e421 | b44f53c9a60f | 9.19 / 18.71 s |
+| 102 ownership-grpc-client-failure-text | 33661b298f96 | 2339ff08e421 | 9.02 / 18.93 s |
 
-Rows 18–75 are published preparations with passing focused tests, lint and
+Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
 Their final rebases use the actual bases above, never rewritten predecessor
 heads or immutable OLD parents. Source/runtime changes were checked before
 publication; each still needs its own six exact-head full gates. Row20 leaves
 boxed128-bit payloads shared. Row26's native bump C fixture is not WASI evidence.
 
-Row75 mandatory original-frame release is published clean at
-db3bcf0da8d6dbb5c5b4c4f4781c544fa622cbc0 on actual base 4b5da4a.
-Five tests pass 22.99 / 46.22 s, lint 2.59 / 5.18 s, format 0.44 / 0.84 s.
-Source opens/discards respect descriptor bounds without GC and with reuse/free
-disabled. Original parameter lifetimes and owned aliases remain preserved.
-Independent row76 rebases from ACTUAL old parent 923ad4a onto current row75 head db3bcf0.
-Preserve all ten current docs before main refresh or rebase; OLD anchors stay immutable.
-Delivery row19 now final-rebases from ACTUAL112f3c8 onto main d174e73 before sole next PR.
+Rows77–78 require actual WASI on Linux CI, in both free modes. Their native
+host bump-C checks supply no actual WASI acceptance; physical bump storage
+remains allocated. Prepared layout/allocation controls establish no speed claim.
+Rows85–91 source/control details and full hashes are archived in history;
+the table above keeps actual bases and focused checks. Row91 uses unwind
+ownership for the temporary HTTP/2 subject copy; no additional PR.
+Rows92–93 publish explicit peer owners through child/detached-sender joins
+and owned final statuses through encoding/unwind. Their table entries and
+history retain full heads, commands, failures and omission controls. Network
+context storage and other buffers still use tracing; no complete ARC claim.
+Rows94–96 publish unary receive, streaming force and rendered-error scratch
+cleanup with unchanged bytes, diagnostics and memo behavior. Full preparation
+hashes and detailed checks are in history; the table keeps actual bases.
+Independent ownership-grpc-send-cleanup at
+/private/tmp/fwp-grpc-send-cleanup-worktree starts on ea79bde. Encoded
+message buffers have typed h2_buf cleanup through cancellable flow-control
+waits. Focused actual scheduler tests cover zero/partial windows, cancellation,
+wake/resume, closed streams and exact decoded plain/gzip payloads. Send/force
+checks pass 10.02 / 21.56 s, lint 2.74 / 5.52 s and format 0.45 / 0.82 s.
+Published clean at 671ada6ec85d6e46174bcdacbc0a95725131ede8
+on actual ea79bde.
+Independent queue98 ownership-grpc-request-encoding starts on671ada6,
+/private/tmp/fwp-grpc-request-encoding-worktree. Detached sender owns request
+scratch before encoding and keeps its cleanup through sending. Focused
+actual sender tests cover encoding trap, cancelled send and normal request
+bytes/end marker; both tests pass 2.03 / 4.93 s, lint 2.51 / 4.92 s and
+format 0.47 / 0.96 s. Fixture shadowing corrected; published clean at
+663ef599a4385b394964fc92017c03cb57c1ddd8 on actual671ada6.
+Independent ownership-grpc-canonical-encoding starts on663ef59,
+/private/tmp/fwp-grpc-canonical-encoding-worktree. Message/request encoders
+protect canonical fwp_buf scratch before serialization and transcoding.
+Focused tests use real I64 serialization and injected partial/transcoder
+failures, checking exact canonical bytes/diagnostics and omitted cleanup.
+Canonical/request tests pass 8.38 / 17.93 s, lint 2.46 / 4.87 s and format
+0.47 / 0.74 s. Published clean at
+4114b709fb4b6f2397bc78f3d55f2c7c2c25357a on actual663ef59.
+Next delivery preparation refreshes row21 arrays on the actual current PR98
+head542fc08, inheriting its CLI repair. Rebase completed from actual7741d09;
+source/runtime/array tests/workflows match443524e exactly; only inherited
+CLI test repair differs. Three array tests pass14.02 / 28.13 s; focused lint
+passes2.30 / 4.61 s and format0.34 / 0.62 s. Published clean at
+79bc00f136491ee8beb6d51674d3ed4faf7d5303, without a competing PR. Independent row100 ownership-grpc-response-encoding starts on actual4114b70,
+/private/tmp/fwp-grpc-response-encoding-worktree. Served unary/stream/error
+response buffers get cleanup across encoding traps and cancellable sends;
+error canonical scratch is protected before serialization. Both response/request
+tests pass2.95 / 6.01 s; lint2.39 / 4.91 s and format0.47 / 0.75 s pass.
+Published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6, no competing PR.
+Independent row101 ownership-grpc-client-requests starts on actualb44f53c,
+/private/tmp/fwp-grpc-client-requests-worktree. Both synchronous client request
+buffers now scope encoding and cancellable sends. Both client/request tests
+pass9.19 / 18.71 s; lint2.38 / 4.86 s and format0.48 / 0.75 s pass.
+Published clean at2339ff08e4211bf5e831b4624bb37102b2f83d93, no competing PR.
+Independent row102 ownership-grpc-client-failure-text starts on2339ff0,
+/private/tmp/fwp-grpc-client-failure-text-worktree. Client failure helper now
+accepts ownership of copied transport/status/iterator failure text, with
+cleanup across raw traps and typed GrpcError raising. All eight callers supply
+owned copies; both focused tests pass9.02 / 18.93 s, lint2.54 / 5.16 s and
+format0.45 / 0.83 s. Published clean at33661b298f96afcae268bfa278d62e452cebd3c8.
+Prioritize PR98 collector repair.
+Remaining audit: canonical decode and client receive/status cleanup.
+Do not promote phase2 or no-tracing support before sequential full acceptance.
+Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
+PR98 is the sole delivery at542fc08, new exact-head CI37929002304:
+Completed CI37929002304: bench and all four ARM/Intel macOS jobs pass;
+Linux fails gc::long_loop_runs_in_bounded_memory at tests/gc.rs194: zero
+collections, while output/allocation/RSS assertions preceding it pass.
+Full log /private/tmp/fwp-pr98-linux-failure.log. Collector repair explicitly disables
+FWP_FREE/FWP_REUSE for this tracing-only workload, preserving all assertions.
+Focused GC lint passes2.32 / 4.59 s and format0.34 / 0.60 s; local execution
+is skipped by /proc availability and is not verified support. Publish new head
+and require six fresh gates; old five passes do not cover this repair.
+Linux execution must pass on fresh exact-head CI; local macOS skips this test.
+Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
+ACTUAL refreshed base is542fc08; final rebase follows the eventual PR98 squash.
 
 ## Repaired resource evidence
 
@@ -153,11 +255,9 @@ exact HTTP golden in four GC-off/on poison modes pass. The repaired full gates p
 its own exact-head gates. [Repair details](roadmap-history.md#resource-evidence-http-ownership-repair-2026-10-08)
 retain failed logs, commands, controls and measurements.
 
-Production row 85 repair is published clean as
-872372452a1071db124f8e4cc8ae16027cc8f337, following immutable OLD3a0cbdb.
-Its five focused tests pass 16.71 s /36.11 s, lint 2.45 s /4.96 s, format
-0.45 s /0.86 s. Row 86 actual base remains 3a0cbdb; do not replay this fix
-when rebasing row 86 onto row 85's eventual squash. OLD anchors stay unchanged.
+Production row85 repair is refreshed above, preserving the whole-stack binder
+regression and nominal File ownership. Row86 now inherits the stack repair on actual97dca76; its next final
+rebase must preserve that repair without replaying it. OLD anchors stay unchanged.
 Rows 79–88 are prepared, not delivered. Channel close preserves queued values;
 explicit drain breaks its counted cycle; automatic cycle reclamation is unproved.
 
@@ -180,16 +280,16 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-structure-worktree; row19 tests/lint complete; no local workload is active.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.05 / 0.37 s).
-Last guarded doc audit passes eleven link/heading sets, 82 immutable queue
-ancestry pairs and whole commit messages (0.14 s CPU / 1.04 s elapsed).
+belongs to /private/tmp/fwp-generation-worktree; collector repair lint/format pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.13 s).
+Last guarded doc audit passes eleven link/heading sets, 95 immutable queue
+ancestry pairs and whole commit messages (0.18 s CPU / 1.30 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
 
 Preserve all ten current root docs before fast-forward/rebase conflict resolution:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md and docs/concurrency.md. Latest snapshot is
-/private/tmp/fwp-main-docs-pre96; refresh all ten
+/private/tmp/fwp-main-docs-pre97; refresh all ten
 immediately before updating main. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

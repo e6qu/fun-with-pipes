@@ -612,6 +612,18 @@ static V fwp_p_repeat(V n, V x) {
     return r;
 }
 
+static V fwp_p_repeat_owned(V n, V x, void (*dup_element)(V)) {
+    size_t k = fwp_count_arg(n);
+    V result = 0;
+    for (size_t i = 0; i < k; i++) {
+        if (dup_element) dup_element(x);
+        V fields[] = {x, result};
+        result = fwp_rc_fresh(fwp_data(1, 2, fields));
+    }
+    FWP_KEEP_ALIVE(x);
+    return result;
+}
+
 static V fwp_p_nth(V n, V xs) {
     if ((int64_t)n < 0) return FWP_NONE;
     for (int64_t i = 0; xs != 0; i++, xs = OBJ(xs)->f[1])

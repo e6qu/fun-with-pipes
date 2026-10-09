@@ -4531,6 +4531,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 s = s
                                     .replace("fwp_p_map(", "fwp_p_map_owned(")
+                                    .replace("fwp_p_range(", "fwp_p_range_owned(")
                                     .replace("fwp_p_scan(", "fwp_p_scan_owned(")
                                     .replace("fwp_p_iterate(", "fwp_p_iterate_owned(")
                                     .replace("fwp_p_filter(", "fwp_p_filter_owned(")
@@ -4605,6 +4606,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         fs.iter().map(|(_, ty)| ty.clone()).collect()
                                     }
                                     "chunks" => vec![element(&func.locals[1])?],
+                                    "repeat" => vec![func.locals[1].clone()],
                                     _ => return Err(format!("unknown structural copy `{sym}`")),
                                 };
                                 let mut args: Vec<String> =
