@@ -44,6 +44,11 @@ Other callback/runtime and exceptional ownership extensions are prepared separat
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
+The runtime cleanup stack releases registered owners and scoped files before
+nonlocal failure, trap or cancellation invalidates their frames. Catching
+handlers bound cleanup, and task switches preserve separate chains. Compiler
+registration of all owned references remains prepared work.
+
 Prepared runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
 pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit

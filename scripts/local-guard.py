@@ -69,6 +69,10 @@ try:
         if sum(rows[p][2] for p in active)>limit: raise RuntimeError('aggregate RSS exceeded 1 GiB')
         if now-started>180: raise RuntimeError('180 second wall-time limit')
         if now-last_disk>2:
+            # Keep compiler renames/removals from racing the target traversal.
+            if not paused:
+                stop(signal.SIGSTOP)
+                paused=True
             size=int(subprocess.check_output(['du','-sk',str(root/'target')],text=True).split()[0])
             if size>2*1024**2: raise RuntimeError('target exceeded 2 GiB')
             if shutil.disk_usage(root).free<64*1024**3: raise RuntimeError('free disk below 64 GiB')
