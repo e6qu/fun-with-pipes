@@ -175,7 +175,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #101 includes the following contracts. Detailed primitive modes
+Main through PR #102 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -185,6 +185,9 @@ and measurements are in [history](roadmap-history.md).
 - Maps and sets own typed keys/elements across construction, copies, lookup
   and immutable updates. Synchronous callbacks borrow inputs and adopt results;
   typed destruction releases children and storage. General unwind remains prepared.
+- Task result/deadline boundaries own fresh typed result wrappers and retain
+  aliases without treating scalar words as pointers. Retained task thunks,
+  scheduler handles and queue lifetimes remain later preparations.
 - Eligible old counted storage is reclaimed at last release. Verification
   clears freed child words so stale conservative roots cannot retain reused cells;
   newly allocated cells become young. Shared graphs still require tracing.

@@ -46,7 +46,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 22 | map-set | `ownership-map-set-elements` | `b5d658aa1a06` | `a8a7d119712b` | `636414fabf18` |
 | 23 | old-reclamation | `ownership-old-reclamation` | `6fddf4f0b073` | `6774aa5bb426` | `a8a7d119712b` |
 | 24 | task-boundary | `ownership-task-boundaries` | `51cf1c698788` | `02beec353ec7` | `6774aa5bb426` |
-| 25 | unwind-runtime | `ownership-unwind-runtime` | `6421c025b3d5` | `3e314222ff7c` | `02beec353ec7` |
+| 25 | unwind-runtime | `ownership-unwind-runtime` | `1e9a5495d44f` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `bb77c078354f` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `c4eb75e82882` | `7392f2d67151` | `33cf86466e2f` |
 | 28 | runtime-call | `ownership-runtime-call-cleanup` | `b5f44e80462c` | `bee3f1659ae5` | `7392f2d67151` |

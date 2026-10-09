@@ -11497,3 +11497,8 @@ pre102 ten-doc snapshot restored byte-for-byte after main fast-forward.
 Duplicate main CI37981976609 cancelled only after parity; not acceptance.
 Row86 clippy6.03/12.91s and format0.41/0.86s pass. Next row25 final rebase
 uses actual base1741ab5fa64e and actual merged squashc7b3e3f7433b.
+
+Row25 final source1e9a5495d44f7e9b4fca2709b5e7059a452548f2 has actual
+main basec7b3e3f7433b. Compiler/runtime/tests match focused-accepted6421c025
+byte-for-byte. Publication docs carry merged task contracts and current roadmap
+preparations through row88; original anchors remain fixed. Fresh audit passes.

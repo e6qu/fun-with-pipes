@@ -38,11 +38,11 @@ old-storage reclamation and task result/deadline boundaries. Phase1 is done;
 phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback.
 
 No production PR is open. Row25 registered runtime-unwind cleanup is next.
-Its final rebase from actual prepared base1741ab5fa64e onto actual row24 squash
-c7b3e3f7433b is in progress; only historical docs conflict. Preserve source
-parity with focused-accepted6421c025b3d5, then publish and create the next PR.
-All six production jobs and roadmap_docs at its final exact head must pass
-before explicit squash with `Release registered owners before nonlocal unwind`
+Final source1e9a5495d44f7e9b4fca2709b5e7059a452548f2 has actual main base
+c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
+focused-accepted6421c025b3d5 exactly. Finish publication docs, publish and create
+its PR. All six production jobs and roadmap_docs at the final exact head must
+pass before explicit squash with `Release registered owners before nonlocal unwind`
 and empty body. OLD anchors stay fixed. Duplicate post-merge main CI37981976609
 is cancelled after accepted-source/workflow parity; it is not acceptance.
 Superseded PR101 CI37968881919 and duplicate main CI37975529386 remain cancelled.
@@ -63,9 +63,9 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | PR101 full CI follows; source matches focused-accepted495411d |
-| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Source matches focused-accepted1741ab5; final full CI follows |
-| 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
+| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
+| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
+| 25 ownership-unwind-runtime | 1e9a5495d44f | c7b3e3f7433b | Final source matches focused-accepted6421c025; new production gates follow |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
 | 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
@@ -126,7 +126,7 @@ still need their final squash rebases and six exact-head full gates.
 | 83 ownership-resource-frame-variants | 6d3fcd7444ad | 47abf911f844 | Test10.02/22.30s; lint6.31/13.11s and format0.44/0.83s pass |
 | 84 ownership-resource-frame-binding-kinds | 2f67969e9985 | 6d3fcd7444ad | Test10.45/23.67s; lint6.18/12.88s and format0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | c0263af654c4 | 2f67969e9985 | Two tests12.49/27.27s; lint6.11/13.31s and format0.44/0.83s pass |
-| 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s passes; lint/format follow |
+| 86 ownership-resource-record-binding-kinds | d0e41c87e547 | c0263af654c4 | Test10.49/22.84s; lint6.03/12.91s and format0.41/0.86s pass |
 | 87 ownership-nominal-source-context | b83d77ce5da8 | d0e41c87e547 | Refreshed source unchanged; fresh raw source checks follow |
 | 88 ownership-channel-cycle-lifetimes | e15c6fc1f0c3 | b83d77ce5da8 | Refreshed source unchanged; explicit draining checks follow |
 | 89 ownership-http2-body-roots | d29dda936dff | e91dcb307c61 | Body root 0.57 / 2.23 s + TLS root 0.55 / 2.12 s |
@@ -155,14 +155,14 @@ still need their final squash rebases and six exact-head full gates.
 | 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–23 are merged. Row24 is the next focused delivery. Detailed commands, full hashes,
+heads; rows18–24 are merged. Row25 is the next focused delivery. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
 Use actual bases above for final rebases, never OLD anchors or rewritten
 predecessor heads. Preserve all ten root docs for conflict resolution and
-inherited CLI/GC harness fixes. Row25 actual base is still1741ab5, rather than a future final row24 head;
-final-rebase it only after that actual squash exists.
+inherited CLI/GC harness fixes. Row25 is now rebased from prepared1741ab5 onto actual row24 squashc7b3e3f.
+Row26 actual prepared base remains6421c025; use that base when its turn arrives.
 Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
@@ -249,8 +249,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-resource-record-binding-worktree; the guarded record
-pattern binding-path check is running. Latest disk observation114675020KiB available; target153824KiB.
+belongs to /private/tmp/fwp-resource-record-binding-worktree; no local workload
+is running. Row86 focused checks completed within limits. Latest disk observation114675020KiB available; target153824KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
