@@ -169,14 +169,14 @@ still need their final squash rebases and six exact-head full gates.
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | bb1e6b94fcfd | f35dd8c34ea4 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
-| 52 ownership-task-handles | bc6b763b3bf3 | 511721920cca | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
-| 53 ownership-channel-queues | 310031a5596b | bc6b763b3bf3 | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
-| 54 ownership-library-results | ff3bfedf26cd | 310031a5596b | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
-| 55 ownership-library-inputs | b0a593982767 | ff3bfedf26cd | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
-| 56 ownership-library-unload | 400d11c0b317 | b0a593982767 | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
-| 57 ownership-opencl-lifetime | fde35253a744 | 400d11c0b317 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
-| 58 ownership-interpreter-opencl | e9bddcdc78b7 | fde35253a744 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
-| 59 ownership-tls-listeners | 2184aa897572 | e9bddcdc78b7 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
+| 52 ownership-task-handles | cb32c2cea9bb | bb1e6b94fcfd | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
+| 53 ownership-channel-queues | 69bc96667a52 | cb32c2cea9bb | Test11.45/23.08s; inventory3.40/7.25s; lint2.43/4.79s and format0.45/0.87s pass |
+| 54 ownership-library-results | f53cccc88d45 | 69bc96667a52 | Test7.86/17.88s; lint2.44/4.85s and format0.34/0.61s pass |
+| 55 ownership-library-inputs | 067d547b3bfd | f53cccc88d45 | Two tests8.27/18.38s; lint2.34/4.68s and format0.34/0.61s pass |
+| 56 ownership-library-unload | 0d30f4e3da51 | 067d547b3bfd | Test8.98/21.43s; lint2.42/4.81s and format0.45/0.74s pass |
+| 57 ownership-opencl-lifetime | 9dc98a72cac1 | 0d30f4e3da51 | Fake API test7.78/22.85s; lint2.36/4.71s and format0.45/0.75s pass |
+| 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint2.32/4.69s and format0.34/0.62s pass |
+| 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint2.46/5.00s and format0.35/0.75s pass |
 | 60 ownership-library-resources | b2b3e2d73da8 | 2184aa897572 | Test8.04/18.34s; lint2.48/4.99s and format0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 15ed94b82b00 | b2b3e2d73da8 | Test9.94/19.99s; lint2.46/4.95s and format0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | 004eccb1f092 | 15ed94b82b00 | Test7.17/16.27s; lint2.43/4.95s and format0.40/0.73s pass |
