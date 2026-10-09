@@ -11624,3 +11624,9 @@ but unpublished. Row99 clippy5.99/12.96s previously passed; remaining formatting
 uses actual basec6b5ad8c827c; source/runtime/tests match original except inherited
 CLI/GC repairs. OLD33661b298f96 stays fixed; previous CURRENT retained under
 revision-102 before explicit-lease publication. Fresh focused checks follow.
+
+Row100 served response trap/cancel test9.09/18.46s passes. Row103 refresh
+8ccdd092478cab8e0d30400f6703e4624ec1055f uses actual base222e199ca735.
+Compiler/runtime/client receive fixture match original with inherited CLI/GC repairs.
+OLDc48864ce7231 stays fixed; previous CURRENT is retained under revision-103
+before lease publication. Fresh retry/error/cancel checks follow.
