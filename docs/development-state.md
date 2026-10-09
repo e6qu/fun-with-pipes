@@ -42,16 +42,20 @@ old-storage reclamation, task result/deadline boundaries and registered runtime
 unwind cleanup. Phase1 is done; phase2 remains incomplete; phases3–6 are pending.
 Tracing remains the fallback. PR104 https://github.com/e6qu/fun-with-pipes/pull/104
 is the only open PR, current head925daae1a95e3d68f4d622b72d8f642aa5a4346b,
-actual main base3bb34267997479794aeac9fff3447da94c16ca4d. Guard scripts/workflow
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. Production
+CI37991460642 is queued/running; roadmap_docs CI37991460672 passes. Guard scripts/workflow
 match focused-accepted063f4ca exactly; final local integration repeat passes
 0.20CPU/1.36elapsed and Linux evidence37986986407 passes. Require all six
 exact-head production jobs and roadmap_docs before explicit squash with
 `Pause guarded compiler workloads while sampling target size` and empty body.
 A timing-only doc correction supersedes3f72a0d; old CI37991334046 is cancelled
 and old docs37991334167 passed but neither is this head's acceptance.
-Prepare row26 on actual main103 while these fresh gates run; keep its next PR
-separate until104 merges. Row26 actual prepared base remains6421c025 until its
-preparation rebase below; final-rebase onto the actual guard squash afterward.
+Row26 is published at0a7203f5c55949d3aefb6eec02d5ec69063f0e2c on actual
+main1033bb34267997479794aeac9fff3447da94c16ca4d. Compiler/runtime/tests match
+previousbb77c078 exactly. Six focused ownership/unwind tests pass18.68CPU/
+37.65elapsed; clippy passes2.54/5.04s and format0.32/0.59s. The old head is
+retained remotely at roadmap/revision-026-bb77c078354f. Keep the next PR separate
+until104 merges, then final-rebase from actual3bb3426 onto the guard squash.
 OLD anchors stay fixed.
 
 Later preparations inherit both CLI early-stdin-close and tracing-fixture
@@ -69,13 +73,9 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 22 ownership-map-set-elements | b5d658aa1a06 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
-| 23 ownership-old-reclamation | 6fddf4f0b073 | eeef3b5d3f53 | Merged PR101 after all six jobs and roadmap audit passed |
-| 24 ownership-task-boundaries | 51cf1c698788 | da62127c9256 | Merged PR102 after all six jobs and roadmap audit passed |
-| 25 ownership-unwind-runtime | 1537961db5da | c7b3e3f7433b | Merged PR103 after all six jobs and roadmap_docs passed |
-| 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
-| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
-| 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
+| 26 ownership-reuse-tokens | 0a7203f5c559 | 3bb342679974 | Six tests18.68/37.65s; lint2.54/5.04s and format0.32/0.59s pass; fresh production gates follow |
+| 27 ownership-call-liveness | 71c2405dd0e0 | 0a7203f5c559 | Source unchanged; inherited main documentation gate; fresh sequential gates follow |
+| 28 ownership-runtime-call-cleanup | e06c447336ae | 71c2405dd0e0 | Rebased onto refreshed preceding delivery; source unchanged; fresh sequential gates follow |
 | 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Normal GitHub CI37966274872 passes after fixture pointer repair |
 | 30 ownership-selection-unwind | ca33d3141a96 | 84ef5480f493 | Normal GitHub CI37966690637 passes after fixture repair |
 | 31 ownership-zip-unwind | a282f630c790 | ca33d3141a96 | Six callbacks20.69/41.60s; lint/format and Linux CI37967629573 pass |
@@ -161,8 +161,8 @@ still need their final squash rebases and six exact-head full gates.
 | 111 ownership-grpc-packed-options | a4f347499f19 | 393456e6e5ca | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
-Rows21–109 have prior focused test/lint/format evidence at their recorded
-heads; rows18–25 are merged. The guard repair is next, then row26. Detailed commands, full hashes,
+Prepared focused evidence and source-parity proofs remain in history.
+The guard repair is current, then row26. Detailed commands, full hashes,
 fixture failures and omission controls remain in history. Every production PR
 requires six exact-head full gates and the documentation audit.
 
@@ -309,8 +309,8 @@ teardown/packed options/full-address checks, interpreter identity, lint/format,
 actual tracing churn and the documentation audit. Compiler/runtime/tests match
 row11293783d4 exactly. Earlier37988054909 lacked the main auditor and failed
 before tests; superseded37987994602 is cancelled. Neither is acceptance.
-Validated HTTP2/client fixture repairs still need propagation through later
-preparations, preserving every immutable OLD anchor. Each eventual production
+Validated HTTP2/client fixture repairs are propagated through rows90–112,
+preserving every immutable OLD anchor. Fresh combined evidence follows. Each eventual production
 PR requires its own final rebase and six exact-head gates plus roadmap_docs.
 
 ## Local limits and durable docs
@@ -325,9 +325,12 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-http2-roots-evidence-worktree; final focused
-HTTP2 checks passed and no local workload is running. See the repairs above. Row86 focused checks completed within limits. Latest disk observation113625788KiB available; target143120KiB.
-Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
+belongs to /private/tmp/fwp-unwind-liveness-worktree. Row26's six focused tests,
+clippy and formatting pass; no local workload is running. Commands were guarded
+cargo test --test reuse_token_ownership --test unwind_cleanup, cargo clippy
+--test reuse_token_ownership --test unwind_cleanup -- -D warnings and cargo fmt
+--check. Every check stayed within limits. Latest recorded disk observation is
+113625788KiB available and target143120KiB; these are historical samples.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.

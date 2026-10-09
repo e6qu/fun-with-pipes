@@ -11951,3 +11951,19 @@ tests and workflows are byte-identical across the timing-only correction.
 Superseded full CI37991334046 is cancelled; old roadmap_docs37991334167 passed
 but is not the new head's gate. Require all six fresh exact-head jobs plus
 roadmap_docs before explicit squash, single-line subject and empty body.
+
+## Row26 preparation after PR103
+
+Rebase previous published bb77c078354f14c3f8e205f17bde2edb199b945c from actual
+6421c025b3d53ed59a177aac1b0f9fff662e1736 onto main103
+3bb34267997479794aeac9fff3447da94c16ca4d produces published
+0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests are unchanged;
+only the ten authoritative documentation conflicts were resolved. Old publication
+is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
+reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
+format0.32/0.59s. This preparation is not a production gate or merge; final
+rebase starts from actual3bb3426 after the guard repair merges.
+
+Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
+
+Sequential preparation refresh row28: b5f44e80462c7a246c0c09c8f8fd3838fd118866 → e06c447336ae97eff77b118ebaac194f6968623d, actual base71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0. Retained roadmap/revision-028-b5f44e80462c before explicit leased publication. Compiler/runtime/workflow code unchanged; tests are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
