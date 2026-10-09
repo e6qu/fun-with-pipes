@@ -14078,3 +14078,9 @@ Source89 now has the exact accepted8f6846a fixture, excluding only its optional
 Rust C export; source compiler/runtime/other probes untouched. Four-way proof
 verified all exact job names/statuses/head before applying. Format0.53CPU/1.06s
 passes. Source publication and guarded descendant propagation follow.
+
+Accepted HTTP2 fixture source89 published3b72f38e6814d98506265d1dabd8a3446d0f5ba0 on actualb2d374878677;
+original feature and fixture repair commits preserved. Prior177a08a204d7 retained
+remotely before normal fast-forward publication. Compiler/runtime/other probes
+and workflows unchanged; all11 authoritative docs copied. Format0.53CPU/1.06s
+and final strong audit0.52CPU/4.03s pass. Propagate exact fixture through90–112.
