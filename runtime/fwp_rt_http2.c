@@ -255,8 +255,11 @@ static V fwp_p_http2_request(V call) {
     char *peer = k->c->ssl ? fwp_tls_peer_subject(k->c->ssl) : 0;
     V pv = FWP_NONE;
     if (peer) {
+        fwp_cleanup peer_cleanup;
+        fwp_cleanup_push(&peer_cleanup, fwp_tls_subject_free, peer);
         pv = fwp_some(fwp_cstr(peer));
-        free(peer);
+        fwp_cleanup_pop(&peer_cleanup);
+        fwp_tls_subject_free(peer);
     }
     const char *m = h2_get(h, ":method"), *p = h2_get(h, ":path");
     V f[5] = {fwp_cstr(m ? m : ""), fwp_cstr(p ? p : ""), hs, fwp_cstr(k->c->authority), pv};

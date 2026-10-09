@@ -11515,3 +11515,12 @@ compiler/runtime and borrowed HTTP2 body fixtures match original with inherited
 CLI/tracing harness repairs intact. Original OLDd29dda936dff remains fixed;
 previous CURRENT is also retained under revision-089 before lease publication.
 Fresh focused borrowed-root checks follow.
+
+Row87 clippy6.14/13.07s and format0.45/0.86s pass after raw source test
+13.09/26.43s. Row88 cycle/queue tests13.30/26.87s pass. Focused Linux
+evidence3f0c430477bf261a54cbffb3c39a17826e7677f5 is source-identical toe15c6fc1f0c3;
+CI37982696642 is queued, not acceptance. Row90 refresh
+9c2787630b7f99a055a18148f4a98ef8c20d1acc uses actual basef45a7dbbd33d.
+Compiler/runtime/body fixtures match original with inherited CLI/GC repairs.
+OLD6f310b5483a8 stays fixed; previous CURRENT is retained under revision-090
+before lease publication. Fresh limits/error-order checks follow.
