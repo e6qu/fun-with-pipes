@@ -17,7 +17,7 @@ This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all11 authoritative docs listed in the
+Resolve documentation conflicts with all 11 authoritative docs listed in the
 handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
 Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
@@ -29,8 +29,8 @@ resolve full hashes before publication or merge. Checkout paths use
 
 Row34's argument/capture preparation repair and regression probe are now moved
 into row28 to protect callback entry earlier. Current34 is documentation-only
-relative to refreshed33. After28 passes its full acceptance, skip the duplicate
-implementation PR at34; keep its immutable anchor and later regression coverage.
+relative to refreshed33. Row28 passed full acceptance in PR107; skip the duplicate
+implementation PR at34 and keep its immutable anchor and later regression coverage.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|
@@ -132,7 +132,7 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `4c58f019e707` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `32c500ef4444` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `f0384f82c63e` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `2711a516ee34` | `cb20833c018f` | `b244d5f7c423` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `c7db1b368da0` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `29104d944907` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `c34c313ccfb0` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `8f66e28763b4` | `36ad63424530` | `ea18e54f0eee` |
