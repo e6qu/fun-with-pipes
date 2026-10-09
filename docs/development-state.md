@@ -195,7 +195,7 @@ still need their final squash rebases and six exact-head full gates.
 | 104 ownership-grpc-connect-cleanup | 54cffe881e1f | 38e1e7ab8048 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 105 ownership-grpc-connect-startup | c07c37877b47 | 54cffe881e1f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 106 ownership-grpc-context-restore | 43757843a1b3 | c07c37877b47 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
-| 107 ownership-grpc-context-resources | e36c9af3743f | 8c53b11ae1d0 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 107 ownership-grpc-context-resources | f63fbe1de7c0 | 43757843a1b3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 108 ownership-grpc-capture-resources | edac8c6a96dc | e36c9af3743f | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 109 fix-grpc-tls-pool-identity | 1c471fb6b348 | edac8c6a96dc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 110 ownership-grpc-environment-cache | 93d088fb187d | 1c471fb6b348 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
