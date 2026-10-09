@@ -29,7 +29,7 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
     let generated = generated
         .replace(
             "static V fwp_str_new(const char *s, size_t len) {",
-            "static V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();",
+            "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();",
         )
         .replace(
             "static void g_stream_final(void *p) {",
@@ -41,6 +41,7 @@ static int copy_active,released;
 static void inspect_owner(void);
 /* Remove stale conservative register roots at the copy boundary. A real live
  * owner is spilled across this clobber because its post-copy fence still uses it.
+ * Force this test hook inline so a separate callee cannot save stale roots.
  * Keep frame/stack and platform-reserved registers intact. */
 #if defined(__x86_64__)
 #define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
