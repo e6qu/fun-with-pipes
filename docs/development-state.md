@@ -67,8 +67,11 @@ Rows28–35 inherit the exact complete repair. Row35 test-insertion conflict
 preserves its constructor test and both new argument controls; strict source
 parity and handoff audits pass. Complete journal28–35 is finished: initial
 guard7.37CPU/80.51elapsed stopped at the conflict, reviewed docs continuation
-0.00/0.14s and guarded resume1.24/16.34s pass. Next refresh36–41, then run
-fresh combined scoped Linux evidence. Each production PR still needs full gates.
+0.00/0.14s and guarded resume1.24/16.34s pass. Rows36–41 now inherit the exact repair, preserving typed conversion in40
+without its old blanket-temporary policy. Guard4.41CPU/47.46elapsed stops at
+that reviewed source conflict; docs continuation0.00/0.14s and exact-source
+resume2.30/25.90s pass. Next refresh combined scoped Linux evidence on41,
+then remaining preparations42–112. Each production PR still needs full gates.
 
 Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
 Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
@@ -117,7 +120,7 @@ still need their final squash rebases and six exact-head full gates.
 | 38 ownership-loop-preparation | cff61cd0898d | c830f4d3175e | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | 7d617f68cac0 | cff61cd0898d | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | 1654263ed38e | 7d617f68cac0 | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
-| 41 ownership-variant-conversion | 9033d9f1072e | 5376d4a1f4ed | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
+| 41 ownership-variant-conversion | a59952364e22 | 1654263ed38e | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 00b9d0901485 | 9033d9f1072e | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
 | 43 ownership-record-conversion | 3df2c9d86059 | 00b9d0901485 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
 | 44 ownership-variant-alias | 8ebfe6f5d701 | 3df2c9d86059 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
