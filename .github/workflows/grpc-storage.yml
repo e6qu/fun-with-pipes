@@ -1,0 +1,39 @@
+name: Focused scoped TLS ownership and packed connection storage
+on:
+  push:
+    branches: [ownership-evidence-grpc-storage]
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        if: ${{ !cancelled() }}
+        run: cargo clippy --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --test gc -- -D warnings
+      - name: Scoped owners, capture rollback, full pool identities and packed storage
+        if: ${{ !cancelled() }}
+        run: cargo test --test grpc_context_resources --test grpc_capture_resources --test grpc_tls_pool_identity --test grpc_environment_cache --test grpc_packed_options --test grpc_connection_addresses --test grpc_context_restore --test grpc_connect_startup --test old_reclamation --test ownership --no-fail-fast
+      - name: Interpreter pool identity and full address matching
+        if: ${{ !cancelled() }}
+        run: |
+          cargo test --lib grpc::pool_identity_tests -- --nocapture
+          cargo test --lib tls::tests::grpc_addr -- --nocapture
+      - name: Actual tracing churn and bounded live memory
+        if: ${{ !cancelled() }}
+        run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Primitive ownership contract consistency
+        if: ${{ !cancelled() }}
+        run: cargo test --lib ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts -- --exact
