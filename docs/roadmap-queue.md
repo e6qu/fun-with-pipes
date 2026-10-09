@@ -134,7 +134,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `f0384f82c63e` | `b244d5f7c423` | `c48864ce7231` |
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `c7db1b368da0` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `06b87f3c83af` | `7a89dd017ae4` | `cb20833c018f` |
-| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `c34c313ccfb0` | `ea18e54f0eee` | `7a89dd017ae4` |
+| 107 | grpc-context-resources | `ownership-grpc-context-resources` | `d4b360f6cc71` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `8f66e28763b4` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `cf14552bdba5` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `393456e6e5ca` | `6f4bfba80ef3` | `d178d86dca2b` |
