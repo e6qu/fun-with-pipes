@@ -10769,3 +10769,10 @@ CI 37771769436 (required actual WASI/File stage, both free modes).
 Each production PR still needs its own exact-head gates. Baseline root/cache/
 tutorial/boxing, WASI fstat, binary reads and listener/constructor control
 repairs are preserved in history; failed runs supply no acceptance.
+
+Row24 task boundaries refreshed from actualf4716a0 onto corrected495411d;
+production1741ab5fa64e220cecb4ae248d9670494458e178 has unchanged runtime,
+compiler and ownership tests compared with cde58f4. Only inherited CLI and
+tracing-fixture repairs differ outside the authoritative documents.
+Row23 evidence7783afaef9a7431a40cf34b530c2c43386a06d0b, CI37958839569,
+adds the current handoff audit; superseded37958631863 is cancelled, not passing.

@@ -88,7 +88,7 @@ still need their final squash rebases and six exact-head full gates.
 | 20 ownership-list-generation | de969ee71615, merged #98 | 2c1003cad114 | 13.79 / 27.85 s final |
 | 22 ownership-map-set-elements | f71c002d5339 | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Prior 9.50 / 19.72 s; fresh GitHub evidence pending |
-| 24 ownership-task-boundaries | cde58f461f78 | f4716a027a1b | 9.51 / 19.21 s |
+| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Prior 9.51 / 19.21 s; fresh GitHub evidence pending |
 | 25 ownership-unwind-runtime | 123d8b5928aa | cde58f461f78 | 8.80 / 17.94 s |
 | 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
@@ -200,7 +200,7 @@ automatic unreachable-cycle reclamation remains unproved.
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
 | Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
-| Row23 reclamation and tracing | c77c2b6c2e0e4844535f83c0709ce07a69a363cf | CI37958631863 queued; production495411d, actual basef71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 queued; production495411d, actual basef71c002 |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 queued after formatting repair7621175 |
