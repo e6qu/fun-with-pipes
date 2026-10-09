@@ -912,6 +912,11 @@ static int g_same_tls(const char *a, const g_tls *t) {
     return a && strcmp(a, t->key) == 0;
 }
 
+static void g_connect_ssl_release(void *arg) {
+    SSL **ssl = (SSL **)arg;
+    if (*ssl) { SSL_free(*ssl); *ssl = 0; }
+}
+
 static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
     char host[256], port[32], addr[300];
     int tls;
@@ -930,9 +935,13 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
         *err = g_strdupf("cannot connect to %s: failed to lookup address information: %s", addr, gai_strerror(rc));
         return 0;
     }
+    fwp_connect_owner owner = {-1, res};
+    fwp_cleanup connect_cleanup;
+    fwp_cleanup_push(&connect_cleanup, fwp_connect_finish, &owner);
     int fd = -1, e = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        owner.fd = fd;
         if (fd < 0) { e = errno; continue; }
         fwp_nonblock(fd);
         if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
@@ -943,17 +952,23 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
             getsockopt(fd, SOL_SOCKET, SO_ERROR, &e, &el);
             if (e == 0) break;
         }
+        owner.fd = -1;
+        fwp_fd_closing(fd);
         close(fd);
         fd = -1;
     }
     freeaddrinfo(res);
+    owner.addresses = 0;
     if (fd < 0) {
         *err = g_strdupf("cannot connect to %s: %s", addr, strerror(e));
+        fwp_cleanup_pop(&connect_cleanup);
         return 0;
     }
     int one = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
     SSL *ssl = 0;
+    fwp_cleanup ssl_cleanup;
+    fwp_cleanup_push(&ssl_cleanup, g_connect_ssl_release, &ssl);
     if (tls) {
         /* verified with the system's CA certificates (SSL_CERT_FILE,
          * SSL_CERT_DIR) unless the options say otherwise, offering h2 */
@@ -962,13 +977,19 @@ static g_conn *g_connect(const char *given, const g_tls *opts, char **err) {
                    : fwp_tls_client_new(fd, "", 1, host, (const unsigned char *)"\x02h2", 3, "", "");
         if (!ssl || !fwp_tls_finish(ssl, fd, 0)) {
             *err = g_strdupf("cannot connect to %s: %s", addr, fwp_tls_err);
-            if (ssl) SSL_free(ssl);
-            close(fd);
+            fwp_cleanup_pop(&ssl_cleanup);
+            g_connect_ssl_release(&ssl);
+            fwp_cleanup_pop(&connect_cleanup);
+            fwp_connect_finish(&owner);
             return 0;
         }
     }
     g_conn *c = g_conn_new(fd, given, 0);
     c->ssl = ssl;
+    ssl = 0;
+    fwp_cleanup_pop(&ssl_cleanup);
+    owner.fd = -1;
+    fwp_cleanup_pop(&connect_cleanup);
     c->tlskey = opts ? strdup(opts->key) : 0;
     c->refs = 2;
     fwp_spawn_task(0, g_reader, c, 0, 1);
