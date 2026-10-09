@@ -24,14 +24,18 @@ Functions and constructors consume owned arguments; primitive, foreign and
 remote calls normally borrow. Selected container primitives consume their
 container argument. [The shared primitive contract inventory](primitive-ownership.md)
 drives argument modes, runtime sharing and owning wrapper selection for arrays,
-maps and sets. Comparison-only keys borrow; inserted keys remain shared.
+maps and sets. Comparison-only keys borrow; inserted typed keys/elements retain
+owned references, and immutable copies retain aliases. Unknown boundaries
+continue to share reachable values.
 
 Native reference counts remain exact beyond the inline byte range using rare
 size_t side entries keyed by canonical allocation metadata, without retaining
 new value roots. Overflow traps; release/sharing/reuse/collection clear entries.
 This does not change shared runtime or cycle fallback lifetimes.
 
-Generated drop functions free counted objects at their last reference.
+Generated drop functions release typed children at their last reference;
+young counted storage is freed immediately. Reclamation of old counted storage
+is the next delivery and remains gated by PR101.
 Unique records, variants and containers can reuse storage. Escape analysis,
 scalar replacement, specialized calls and pipeline fusion eliminate many
 allocations before counting is needed.
@@ -170,13 +174,16 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #99 includes the following contracts. Detailed primitive modes
+Main through PR #100 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
+- Maps and sets own typed keys/elements across construction, copies, lookup
+  and immutable updates. Synchronous callbacks borrow inputs and adopt results;
+  typed destruction releases children and storage. General unwind remains prepared.
 - Native counts stay exact above 254 with rare side entries. Ordered copied
   lists retain typed aliases; sort-by owns once-per-input keys and its stable
   copied result, releasing scratch after construction.

@@ -10863,3 +10863,211 @@ roadmap_docs workflow provide durable fresh-session verification. PR100 gets
 this docs repair; compiler/runtime/tests are unchanged. Prior CI37960281416
 is superseded and cannot gate the updated PR head. All six production jobs and
 the added docs gate must pass before squash.
+
+New exact-head roadmap_docs CI37961944952 passes at PR100b5d658aa1a06,
+including clean-runner full44-doc audit and immutable tags. Six production
+jobs CI37961944703 remain required. Compiler/runtime/tests are unchanged from
+focused-accepted c9ef3d8; only docs, portable auditor and read-only workflow changed.
+Row25 evidence971d7a120eac20bd85f379159e9ca5d77fdc23ab,
+CI37960652006 passes focused Linux cleanup/task/ownership/reclamation/tracing.
+Row26 evidence3d6102af3bffcec06a541c8e8238837ff19aad9f,
+CI37961205676 passes focused Linux reuse-token/cleanup/task/ownership/reclamation/
+tracing. Those preparation snapshots used the earlier ancestry-only auditor;
+the exact tag-identity repair is independently verified at PR100 headb5d658a.
+No old or cancelled production run supplies acceptance.
+
+Row27 call liveness refreshed from actual216e673 ontobb77c07. Published
+c4eb75e82882e9fcc02b832946ea94119cfc7c83 preserves runtime/compiler/tests;
+only inherited CLI and tracing-fixture repairs differ outside root docs.
+An incorrect full lease hash was rejected without changing remote; resolving
+actual786f1700236ec23b9880436d8c512b941a44e1ec and retrying succeeded.
+Guarded package clean refused again below64GiB before execution. No fresh
+local tests/lint ran; shared target still belongs to the reuse-token worktree.
+Focused verification moves to GitHub without raising or bypassing limits.
+
+## Archived delivery evidence chronology, 2026-10-09
+
+Later preparations must inherit both CLI early-stdin-close and tracing-fixture
+repairs on final rebases. The repaired Linux gate actually verifies the
+collector churn output, allocation/collection thresholds and RSS bound.
+Ten authoritative docs backed up to /private/tmp/fwp-main-docs-pre99 were
+restored byte-for-byte after main fast-forward559f4ac→c4d820e. Preparations
+through112 are published. Row112 CI37952655033 failed formatting before
+lint/tests. Both fixture formatting corrections are published at762117573367;
+evidence4dbd0dcedfc297f8f0859aca22142a55cc0dd79d, CI37958243461,
+passes focused format/lint/lifetime/teardown/interpreter checks.
+Duplicate main CI37957464783 cancellation confirmed after matching
+all-six-accepted PR99 source/runtime/tests/workflows.
+Duplicate main CI37944119691 was cancelled after matching all-six-accepted
+PR98 source/runtime/tests/workflows; cancellation is not acceptance.
+Refreshed maps published c9ef3d88211f6ce982c629dd27b0664ec9bdf68a on actual
+dc85b679. Focused GitHub evidence ownership-evidence-map-set, checkout
+/private/tmp/fwp-map-set-evidence-worktree, exact960a242d54d4a689730e7591854716ca4c5615a2,
+CI37953564015 fails before tests: OLD parent c889479eed7a is missing on
+a clean runner. Log /private/tmp/fwp-map-audit-failure.log. All106 OLD heads
+are now published atomically as lightweight roadmap/preparation-007…112
+tags, retaining their parents without source-branch changes. Refreshed map
+evidence c79544b74d30e6d285f64e0f500891434a2e91f7 follows the tag repair,
+CI37955579519 passes: handoff audit, format, lint and focused ownership tests.
+The independent checks also run if an audit fails, while preserving job failure.
+It audits current/immutable queue-head messages,
+links/anchors and focused map tests/lint/format without another PR. Its audit
+uses durable queue references and fetches retained review heads; retired c8/79bc
+preparation heads are not remote ancestors and are no longer audit inputs.
+Superseded352affa/51639d3/96e3804 evidence runs are cancelled, not acceptance.
+Workflow changes never enter production ancestry; focused evidence is not
+six-gate acceptance.
+Prior delivery checks and failures remain in history.
+
+Row28 runtime application refreshed from actual786f170 ontoc4eb75e;
+publishedb5f44e80462c7a246c0c09c8f8fd3838fd118866 has unchanged runtime,
+compiler and ownership tests, with inherited CLI/tracing-fixture repairs.
+All ten root docs resolved prepared snapshots. Local resource refusal persists;
+fresh checks move to GitHub. Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119444,
+CI37962382433, is queued with the stronger all44-doc/tag-identity auditor.
+Last observed disk63120268KiB available (~60.20GiB), target140856KiB (~137.55MiB).
+No local workloads remain active.
+
+Row29 callback-map unwind refreshed from actuale3c49d9 ontob5f44e8;
+published9b5eb58046551342baccc38299a587dc96560589 preserves compiler/runtime
+and ownership fixtures, inheriting only CLI and tracing-fixture repairs outside
+authoritative docs. Its final rebase uses actualb5f44e8 after row28 merges.
+Fresh checks move to GitHub under the continuing local disk refusal. Row28
+evidenceae907d63e277f8c62a07b20aee0dfecb3167a9c6, CI37962723252,
+is running with all44-doc immutable-tag checks.
+
+Row30 selection callback unwind refreshed from actual8093bf3 onto9b5eb58;
+published398503f0938a3efe723db4da9698313ec6b63ea6 preserves source and
+ownership fixtures; automated source-diff allowlist confirms only inherited
+CLI/tracing repairs. Authoritative root docs resolve all prepared conflicts.
+Fresh checks move to GitHub under the continuing disk refusal.
+Row28 evidenceae907d63e277f8c62a07b20aee0dfecb3167a9c6,
+CI37962723252 passes focused runtime calls, overapplication, compiler cleanup,
+ownership, tracing and strengthened all44-doc/tag audit. Row29 evidence
+c39c547b9a4259563ec7e454ed9463f6701ca054, CI37963280367, is running.
+
+Row27 evidence550cd9bd7f3431bf6e25a7db35917c8ab2119444,
+CI37962382433 passes focused call liveness, related ownership and all44-doc/tag
+identity checks. Row29 evidencec39c547b9a4259563ec7e454ed9463f6701ca054,
+CI37963280367 fails callbacks_and_partial_spines_release_results_and_scratch:
+FWP_GC_STRESS1/VERIFY1/REUSE_VERIFY0 native process has no ordinary exit code.
+Scalar control and all related integration suites pass, along with format,
+lint, strong docs audit and actual tracing churn. Log saved to
+/private/tmp/fwp-map-unwind-focused-failure.log; job113931199831.
+Diagnostic-only evidence8c29f3b7fa6e75d724fb5302d7237c906091e777 adds
+failed-fixture retention, probe.c persistence, CC debug symbols and GDB trace.
+No production implementation changed before determining the cause.
+
+Row29 current9b5eb58 guarded package clean0.00/0.14s and two macOS stress
+fixtures11.99/24.15s pass after disk recovered (113197360KiB available).
+Shared target is now /private/tmp/fwp-map-unwind-worktree; no workloads run.
+Diagnostic37964179747 at8c29f3b failed native compiler invocation: CC is a
+program path, so "cc -g" did not run. No native crash trace was produced.
+Corrected diagnostic91e0c76b77b97f5d821cbed41cef8f5d7e330a3f creates an
+executable wrapper forwarding -g; CI37965116750 queued. This remains evidence-only.
+Row30 evidencee82a135f6e5cacdd71b89a0139825cb875603a1c,
+CI37963696111 fails both inherited map and its own predicate fixture under
+Linux stress; scalar controls and related suites pass. The two failing fixtures
+share dead_string/dead_scratch observers. Saved log
+/private/tmp/fwp-selection-unwind-focused-failure.log. Root cause still requires
+native backtrace; no speculative production change or support claim.
+
+## 2026-10-09 map and selection scratch observer repair
+
+Corrected diagnostic CI37965116750 at91e0c76 produces GDB SIGSEGV at
+fwp_gc_chunk_of(ci=NULL), reached from dead_scratch, with off131072. The
+helper unconditionally writes its required output pointer. GCC emits that write;
+Clang's optimization hid the invalid fixture call. Log
+/private/tmp/fwp-map-unwind-gdb.log. This is a fixture fault, not evidence of
+failed runtime ownership. Row29 production84ef5480f4938e78c11c10823bf498a8a1a4e6f9
+passes a local ci and preserves every release/alias assertion. The initially
+publisheda44c936 symbol name was aligned with prepared row68's existing repair
+and replaced with an explicit lease before handoff publication.
+Row68 already contains these exact minimal repairs in map/selection/zip/fold/
+argument preparation fixtures. Bring them forward into each own sequential
+preparation; do not replay or overwrite subsequent ownership/harness changes.
+Normal evidence rebases from actual9b5eb58 onto84ef548 and removes failed
+fixture retention, custom compiler wrapper and GDB steps before acceptance.
+
+Row30 ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 inherits the fixed map
+observer on actual84ef548 and fixes its own identical required-output-pointer
+call. Runtime/compiler code and all assertions are unchanged. Previous published
+398503f0938a remains under immutable roadmap/revision-030-398503f0938a before
+its evidence branch refresh: earlier map evidence snapshots still reference it.
+Original preparation tags and OLD anchors remain unchanged. Row29 normal
+evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135 matches production84ef548
+source exactly after removing diagnostics; fresh complete focused Linux run follows.
+
+Row29 normal evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135,
+CI37966274872 passes complete focused Linux checks at production84ef548:
+format/lint, map/call/reuse/cleanup/task/ownership controls, actual tracing and
+all-doc/tag audit. No failed-fixture retention, CC wrapper, saved probe or GDB
+modifications remain in its final source. Assertions were preserved.
+Row30 normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295 refreshes
+from actual398503f onto repairedca33d31; old398 remains under an immutable
+revision tag for older evidence snapshot inputs. Fresh Linux checks follow.
+
+Row31 zip unwind refreshed from actual69b1ad1 ontoca33d31 and brings forward
+row68's identical mandatory chunk-index fixture fix. Published
+a282f630c7902b1239e87e8d300a271d5960d252 keeps runtime/compiler behavior,
+alias/cleanup assertions and inherited CLI/GC/map/selection repairs. Prior
+published6a09138 is retained under immutable roadmap/revision-031-6a0913896eb7
+before explicit-lease rewrite. Guarded package clean0.00/0.14s passes; focused
+map/selection/zip checks run. All four macOS jobs and bench pass at PR100b5d658a;
+Linux remains the last production gate.
+
+Row30 normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295,
+CI37966690637 passes complete focused Linux checks, including corrected map/
+selection callbacks, all related compiler/runtime ownership controls, actual
+tracing and all44-doc/immutable-tag audit. Diagnostic source is absent.
+Row31 currenta282f63 guarded six map/selection/zip fixtures20.69/41.60s pass;
+aliases, order, partial spines, both buffer failures, cancellation and scalar
+address-bit controls remain intact. Lint/format and remote focused checks follow.
+
+Row31 a282f63 focused clippy zip/map/selection2.24/4.63s and fmt0.35/0.74s
+pass after its six tests20.69/41.60s. Shared target now belongs to
+/private/tmp/fwp-zip-unwind-worktree. No local workloads run. Fresh Linux
+acceptance follows; original fixture assertions and source semantics stay intact.
+
+## PR100 map/set ownership delivery
+
+All six CI37961944703 production jobs and roadmap_docs CI37961944952 pass
+at b5d658aa1a06391e106874bf2c3fc2b551f3a0ac. Explicit match-head squash
+merged PR100 at 2026-10-09T17:45:46Z as
+ eeef3b5d3f5386015c6dead55cc5da632f61d61d with the verified one-line subject
+`Own typed map and set elements across copies updates and callbacks`.
+The fresh pre-merge ten-doc snapshot and SHA256 manifest are preserved in
+/private/tmp/fwp-main-docs-pre100. Main fast-forward restored all ten docs
+byte-for-byte and installed the identical tracked portable roadmap auditor.
+
+## Fold preparation refresh after PR100
+
+Row32 was rebased from actual6a0913896eb7 onto row31 a282f630c790;
+459287698745aa390254180024b8ddb22ccfb7b5 includes the mandatory scratch
+observer output pointer, matching the known later fixture repair. Compiler and
+runtime are unchanged; CLI/tracing and earlier scratch-observer fixes are inherited.
+Guarded package clean0.04/0.25s; two fold tests13.13/26.45s; focused
+clippy2.75/5.42s; format0.44/0.82s all pass. Each used the fwp local guard;
+full builds/tests remain on GitHub. Original anchors are untouched; old current
+1e8d1e34bc78 is retained under roadmap/revision-032-1e8d1e34bc78 before lease publication.
+
+Duplicate post-merge main CI37968556540 was cancelled only after all accepted
+PR100 gates passed and src/runtime/tests/.github were byte-identical between
+accepted b5d658aa1a06 and actual squash eeef3b5d3f53. Cancellation is not acceptance.
+PR101 final head6bd265486e20 starts CI37968881919 and roadmap_docs37968881895.
+Fold evidenceef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 starts CI37969003113;
+queued/running evidence is not acceptance.
+
+## Loop and argument cleanup refreshes
+
+Row33 b16195bcebf3886edff6b4b8df7fb37131ac1333 has actual base459287698745.
+Guarded package clean0.05/0.38s, two loop tests11.07/22.31s, clippy2.42/4.93s
+and format0.34/0.62s pass. Row34 9f56744c4eb741d0489f79f75f6cd164fffd7687
+has actual baseb16195b and fixes the same mandatory scratch observer output
+pointer. Guarded clean0.00/0.14s and argument test9.91/20.00s pass. Runtime
+and compiler match the originals; CLI/tracing and prior fixture repairs are
+inherited. Both old current heads were retained under immutable revision tags
+before explicit-lease publication. A guarded doc audit attempted during the
+loop check refused the serialization lock; it was not bypassed or accepted.
+
+Row34 guarded clippy2.69/5.35s and format0.34/0.61s also pass.
