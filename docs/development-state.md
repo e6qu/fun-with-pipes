@@ -72,7 +72,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–99 are refreshed and published on their actual predecessors.
+Preparations39–100 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -88,19 +88,16 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Preparation99 canonical encoding cleanup is published58bf72dbf3dfb4c8cb00ca141572afb60658a14c
-on actual989c2c91fa8e21, preserving original source/probes. Four tests4.14CPU/10.05elapsed,
-lint2.53/5.21s, format0.40/0.74s and all three audits pass;
-retained publication1.80CPU/18.77elapsed passes. Prior test footer was lost across
-compaction; tests alone were repeated, not the successful native rebase.
-Exact omission exit1, canonical bytes/tag offsets and trap text remain unchanged;
-arbitrary mid-write trap coverage is not claimed.
-Current independent task100: served response encoding cleanup. Rebase FROM actual
-99old3c67663986c7 ONTO published9958bf72dbf3df, preserving source/probes;
-Native rebase88ed53929eec preserves all source/probes. Four original
-response/canonical/request/send controls12.11CPU/25.13elapsed pass. Finish
-Lint2.43/4.95s and format0.43/0.83s pass. Complete all11 docs/audits
-and retained publication. Next101 synchronous client request encoding cleanup.
+Preparation100 served response encoding cleanup is published3b13964722baf713d2768da475f8911344db6798
+on actual9958bf72dbf3df. Four original response/canonical/request/send tests
+12.11CPU/25.13elapsed, lint2.43/4.95s, format0.43/0.83s and all three audits pass.
+Retained publication1.82CPU/18.55elapsed passes; original source/probes remain
+byte-identical, including both omitted cleanup exit1 controls, exact response
+bytes and cancellation/trap release counts. Final production gates remain.
+Current independent task101: synchronous client request encoding cleanup.
+Rebase FROM actual100old61a0def48b7d ONTO published1003b13964722ba;
+run client-request/response/request/send controls, lint/format and all11 docs/
+audits before retained publication. Next102 client failure text ownership.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -219,7 +216,7 @@ still need their final squash rebases and six exact-head full gates.
 | 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | All four original send/force/receive/status tests15.07CPU/30.73elapsed, lint2.47/5.14s and format0.46/0.84s pass; source/probes unchanged including exact omitted cleanup exit1, plain/gzip frame bytes, partial/zero-window cancellation and resumed flow control across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | All four original request/send/force/peer tests14.14CPU/29.05elapsed, lint2.48/4.95s and format0.51/0.95s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, encode trap/reset text and suspended-send cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 99 ownership-grpc-canonical-encoding | 58bf72dbf3df | 9c2c91fa8e21 | All four original canonical/request/send/force tests4.14CPU/10.05elapsed lint2.53/5.21s and format0.40/0.74s pass; source/probes unchanged including exact omitted cleanup exit1, canonical bytes/tag offsets and trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 100 ownership-grpc-response-encoding | 88ed53929eec | 58bf72dbf3df | All four original response/canonical/request/send tests12.11CPU/25.13elapsed, lint2.43/4.95s and format0.43/0.83s pass; source/probes unchanged including both exact omitted cleanup exit1 controls, unary/stream/error bytes and trap/cancellation release counts across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 100 ownership-grpc-response-encoding | 3b13964722ba | 58bf72dbf3df | All four original response/canonical/request/send tests12.11CPU/25.13elapsed, lint2.43/4.95s and format0.43/0.83s pass; source/probes unchanged including both exact omitted cleanup exit1 controls, unary/stream/error bytes and trap/cancellation release counts across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 101 ownership-grpc-client-requests | c05384110969 | 61a0def48b7d | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 102 ownership-grpc-client-failure-text | 7931f680a003 | c05384110969 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 103 ownership-grpc-client-receive | 38e1e7ab8048 | 7931f680a003 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
