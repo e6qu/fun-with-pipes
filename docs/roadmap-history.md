@@ -11941,3 +11941,134 @@ root audit passes44-doc/106-pair/tag/whole-message checks0.31CPU/2.52elapsed.
 Final integration repeat under the original root guard passes all three checks
 0.20CPU/1.36elapsed;
 new publication follows with a separate exact-head full production gate.
+
+PR104 https://github.com/e6qu/fun-with-pipes/pull/104 opens for the guard repair
+after103 merges. Current head925daae1a95e3d68f4d622b72d8f642aa5a4346b has
+actual main base3bb34267997479794aeac9fff3447da94c16ca4d. The initial doc
+snapshot3f72a0d incorrectly copied the initial local timing into the final
+repeat; corrected to actual0.20CPU/1.36elapsed before acceptance. Code, scripts,
+tests and workflows are byte-identical across the timing-only correction.
+Superseded full CI37991334046 is cancelled; old roadmap_docs37991334167 passed
+but is not the new head's gate. Require all six fresh exact-head jobs plus
+roadmap_docs before explicit squash, single-line subject and empty body.
+
+## Row26 preparation after PR103
+
+Rebase previous published bb77c078354f14c3f8e205f17bde2edb199b945c from actual
+6421c025b3d53ed59a177aac1b0f9fff662e1736 onto main103
+3bb34267997479794aeac9fff3447da94c16ca4d produces published
+0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests are unchanged;
+only the ten authoritative documentation conflicts were resolved. Old publication
+is retained remotely at roadmap/revision-026-bb77c078354f. Guarded six focused
+reuse-token/unwind tests pass18.68CPU/37.65elapsed, lint2.54/5.04s and
+format0.32/0.59s. This preparation is not a production gate or merge; final
+rebase starts from actual3bb3426 after the guard repair merges.
+
+Row27 preparation refreshed c4eb75e82882e9fcc02b832946ea94119cfc7c83 → 71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 on actual base0a7203f5c55949d3aefb6eec02d5ec69063f0e2c. Compiler/runtime/tests and production CI workflow are byte-identical; inherited roadmap workflow and auditor match the new base. Retained roadmap/revision-027-c4eb75e82882 before leased publication. The first strict parity assertion stopped on this inherited workflow, then explicit base parity verified it; no production source changed.
+
+Sequential preparation refresh row28: b5f44e80462c7a246c0c09c8f8fd3838fd118866 → e06c447336ae97eff77b118ebaac194f6968623d, actual base71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0. Retained roadmap/revision-028-b5f44e80462c before explicit leased publication. Compiler/runtime/workflow code unchanged; tests are byte-identical. Immutable OLD tags remain fixed; sequential full gates still required.
+
+## Archived merged preparation evidence
+
+The live handoff removes these historical rows after their deliveries merged.
+They remain evidence for their stated source, not current acceptance gates.
+
+| Scope | Exact evidence head | Run / status |
+|---|---|---|
+| Row22 maps and handoff | c79544b74d30e6d285f64e0f500891434a2e91f7 | CI37955579519 passes; production source unchanged atf71c002 |
+| Row23 reclamation and tracing | 7783afaef9a7431a40cf34b530c2c43386a06d0b | CI37958839569 passes audit, lint, ownership and actual tracing; production495411d, actual basef71c002 |
+| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
+| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
+
+Refreshed evidence sources: reuse25fc86811242133c05c247b7ec766b55327b21d2 on0a7203f, storagee5bbfd84736f35f79d631b48373fb8b328251b5f on215d7ba and serving3aca5cf20d779fa1e9abbfd89e0588032940fb91 one6ae6c8. All compiler/runtime/tests match their prepared sources exactly. Old evidence3d6102a/fb9e59f/5fd8e12 retained remotely before leased replacement; copied all ten authoritative docs for conflicts and refreshed shared auditor. Guarded evidence audits pass2.88s/2.87s/2.98s elapsed; queued runs37992999275/37992657684/37993159029 are not acceptance.
+
+## Archived numerics timing samples
+
+These earlier samples lack a recorded processor model, compiler/flags and
+allocation/live-memory data. They are historical observations, not the baseline
+for roadmap performance acceptance. New comparisons use the measurement
+contract in [ownership.md](ownership.md).
+
+**Performance** (`cargo test --release --test numerics -- --ignored
+--nocapture`, a function of n inputs with 4n operations, on a shared
+4-core machine):
+
+| | native | interpreter |
+|---|---|---|
+| `grad`, n = 100 | 0.012 s | 0.48 s |
+| `gradient` (forward), n = 100 | 0.016 s | 0.50 s |
+| `grad`, n = 1000 | 0.012 s | 0.32 s |
+| `gradient` (forward), n = 1000 | 0.75 s | not measured |
+
+
+Refreshed normal Linux evidence runs37992999275 (reuse tokens),37992657684 (storage plus repaired root controls) and37993159029 (serving plus repaired HTTP2 omission control) all pass at25fc868/e5bbfd8/3aca5cf respectively. They include their normal lint/format, selected ownership tests, actual tracing churn and shared roadmap audit. Each source matches its recorded production preparation. These focused runs do not replace sequential exact-head platform gates.
+
+## Earlier runtime argument-preparation protection
+
+The existing row34 compiler/runtime/test correction9f56744 applies cleanly to
+row28. It protects completed capture duplicates and partial closure storage,
+and defers supplied-prefix transfer until callback entry after capture
+preparation. Published7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3 on actual
+71c2405dd0e09d2dff3bdedd8c56759e5fc9d1f0 includes the unchanged corrected
+row34 test. Eleven focused runtime/call/preparation tests pass29.13CPU/
+58.52elapsed, lint2.48/4.99s and format0.35/0.63s. Retained previous
+e06c447336ae97eff77b118ebaac194f6968623d remotely before leased publication.
+Later overlapping row34 implementation is reconciled on final rebase; its
+immutable anchor and coverage remain. No complete exception-ownership claim.
+
+Row29 refreshed84ef5480f4938e78c11c10823bf498a8a1a4e6f9 → 78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 on actual7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3. Exact early row34 patch accounts for compiler/runtime changes; inherited audit matches the new base and the original map regression is byte-identical. Eight focused map/preparation/runtime tests pass22.28CPU/44.73elapsed; lint2.41/5.01s and format0.35/0.75s. Retained revision-029-84ef5480f493 remotely before leased publication; full sequential gates remain required.
+
+Row26 strengthens the shared handoff audit after stale next-action bases were
+found in the live documentation. It verifies live branch/head agreement with
+the queue and actual-base ancestry, without modifying immutable anchors.
+Positive audit passes44 link sets/106 immutable pairs/87 live pairs0.47CPU/
+3.69elapsed. Isolated stale-head and stale-base controls both fail as expected,
+then corrected data passes; combined1.19CPU/9.17elapsed. Compiler/runtime/tests
+remain identical to0a7203f. Runtime evidence37994225608 also passes at2234160
+with exact source parity to7cfbe03, including early partial-capture protection.
+
+Published row26 audit/docs refreshcc297e6b31c9ea7564c1f196eddb5c06059525ec
+on actual main1033bb34267997479794aeac9fff3447da94c16ca4d. Native source
+remains byte-identical to0a7203f; final positive audit0.48CPU/3.69elapsed passes
+all87 live pairs. Retained roadmap/revision-026-0a7203f5c559 remotely before
+leased publication. Row27 actual base remains old0a7203f until its own final
+rebase; immutable anchors and prior bases are not silently rewritten.
+
+Sequential preparation refresh row30: ca33d3141a96bbc756bcf5df8f55e4ae2b312e19 → 244dd2a578af002cc7316b6227f423be6bd63d8f, actual base78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8. Retained roadmap/revision-030-ca33d3141a96 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row31: a282f630c7902b1239e87e8d300a271d5960d252 → 687ae106193bb472e4db399907131a65fa571ff2, actual base244dd2a578af002cc7316b6227f423be6bd63d8f. Retained roadmap/revision-031-a282f630c790 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row32: 459287698745aa390254180024b8ddb22ccfb7b5 → 270525b5bb9ac18249bda39fc92a0c4782c8612d, actual base687ae106193bb472e4db399907131a65fa571ff2. Retained roadmap/revision-032-459287698745 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row33: b16195bcebf3886edff6b4b8df7fb37131ac1333 → c65514a8e6d4761884f23027240dd3a058935a6e, actual base270525b5bb9ac18249bda39fc92a0c4782c8612d. Retained roadmap/revision-033-b16195bcebf3 before explicit leased publication. Production CI unchanged; compiler/runtime differences are exactly the early row34 protection. Original probes are byte-identical; the preparation probe is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Sequential preparation refresh row34: 9f56744c4eb741d0489f79f75f6cd164fffd7687 → 804e6a0cf9f31d75de0fe4b0831037fcd05b4987, actual basec65514a8e6d4761884f23027240dd3a058935a6e. Retained roadmap/revision-034-9f56744c4eb7 before explicit leased publication. Compiler/runtime/tests are byte-identical to the original row34 source and the refreshed row33 predecessor; only documentation differs from that predecessor. The main roadmap audit is inherited unchanged. Immutable OLD tags remain fixed; sequential full gates still required.
+
+Early preparation propagation through30–34 passes under the original guard0.82CPU/21.38elapsed. Every old head is retained remotely, every OLD preparation tag remains fixed, and source expectations were constructed by applying only the exact accepted row34 patch to each old preparation before byte comparison. Row34 is now documentation-only relative to refreshed33, so its duplicate implementation PR can be skipped once28 passes full acceptance; coverage remains in every later full suite.
+
+## PR104 merged guard sampling repair
+
+All six exact-head CI37991460642 jobs and roadmap_docs37991460672 pass at
+925daae1a95e3d68f4d622b72d8f642aa5a4346b. Explicit squash with subject
+`Pause guarded compiler workloads while sampling target size` and empty body
+merges at2026-10-09T21:53:51Z into7520b8d5a1b07b07ad1a381c23be75a879470e0a.
+Raw entire message is one line59characters with no trailers/attribution;
+complete accepted/squash tree39c93dd86e37638896f5df08c6392ebe1e50bcd1 matches.
+Only after those proofs, duplicate main full run37996159178 is cancelled.
+All 11 authoritative/modified docs are backed up with SHA256 in
+/private/tmp/fwp-main-docs-pre104 and restored byte-for-byte after main FF.
+The root guard now pauses workloads during target sampling; limits remain
+unchanged. Separate source-parity map evidence37995710137 passes at
+3389a9730a8ec5f030b54cbafacbda95ce94529d with early preparation protection
+and the stronger87-live-pair auditor.
+
+Final row26 rebase from actual3bb3426 onto main1047520b8d gives local
+70f7b11162c9f046ecb99160b167a4b3d32dafdc. Compiler/runtime/tests/auditor are
+byte-identical tocc297e6 before the new tail regression. That regression checks
+a million native recursive steps atO1/O2 with GCoff/on against a200-step raw
+oracle, including actual token cleanup emission. All seven reuse-token/unwind
+tests pass19.40CPU/39.06elapsed; lint2.30/4.73s, format0.35/0.63s and strong
+audit44/106/87 pairs0.44/3.58s pass. Earlier native100000 probe passes0.00/
+0.38s; raw100000 guard stops at1GiB aggregate RSS, with no raised/bypassed limit.
+The smaller raw200 oracle passes0.37/0.74s; full-size raw evidence moves to CI.
+Post-merge guard tests pass0.18/1.36s.

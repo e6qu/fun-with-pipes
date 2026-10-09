@@ -50,7 +50,9 @@ Audit the handoff and tracked Markdown links with
 `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`. A clean clone
 needs full history and the immutable `roadmap/preparation-*` tags; fetch them
 without force before checking. The audit verifies tag identity, ancestry, queue
-order and whole commit messages. CI checks the actual PR head and fetches review
+order and whole commit messages. The next ownership delivery also verifies live
+handoff heads against the queue and ancestry of their actual rebase bases.
+CI checks the actual PR head and fetches review
 heads so merged preparation references remain available.
 
 CI runs these, and all of them must pass:

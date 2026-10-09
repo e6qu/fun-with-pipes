@@ -6,9 +6,10 @@ run. The library itself is listed in [stdlib.md](stdlib.md) (sections
 and [tutorial 20](tutorials/20-autodiff-and-devices/README.md) introduce
 it.
 
-Next work is prioritized in [../PLAN.md](../PLAN.md): typed contiguous
-numeric storage and views, tape cleanup on failure/cancellation and capacity
-reuse, fused gradient kernels, and cache-aware matrix multiplication.
+After runtime ownership reaches its exit gates, [../PLAN.md](../PLAN.md)
+prioritizes typed contiguous numeric storage and views, tape cleanup on
+failure/cancellation and capacity reuse, fused gradient kernels, and blocked
+matrix multiplication.
 [ownership.md](ownership.md) records the representation and floating-point
 contract; [development-state.md](development-state.md) records current evidence.
 
@@ -88,16 +89,11 @@ forward mode).
 Reverse mode needs the tape's memory, 24 bytes per operation; there is no
 checkpointing.
 
-**Performance** (`cargo test --release --test numerics -- --ignored
---nocapture`, a function of n inputs with 4n operations, on a shared
-4-core machine):
-
-| | native | interpreter |
-|---|---|---|
-| `grad`, n = 100 | 0.012 s | 0.48 s |
-| `gradient` (forward), n = 100 | 0.016 s | 0.50 s |
-| `grad`, n = 1000 | 0.012 s | 0.32 s |
-| `gradient` (forward), n = 1000 | 0.75 s | not measured |
+Historical timing samples are preserved in
+[the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
+Future comparisons must record equivalent workloads, hardware, compiler,
+flags, allocations and live memory alongside elapsed time, as required by
+[the ownership contract](ownership.md).
 
 ## Tensor expressions and kernels
 
