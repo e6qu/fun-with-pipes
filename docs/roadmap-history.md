@@ -11040,3 +11040,34 @@ The fresh pre-merge ten-doc snapshot and SHA256 manifest are preserved in
 /private/tmp/fwp-main-docs-pre100. Main fast-forward restored all ten docs
 byte-for-byte and installed the identical tracked portable roadmap auditor.
 
+## Fold preparation refresh after PR100
+
+Row32 was rebased from actual6a0913896eb7 onto row31 a282f630c790;
+459287698745aa390254180024b8ddb22ccfb7b5 includes the mandatory scratch
+observer output pointer, matching the known later fixture repair. Compiler and
+runtime are unchanged; CLI/tracing and earlier scratch-observer fixes are inherited.
+Guarded package clean0.04/0.25s; two fold tests13.13/26.45s; focused
+clippy2.75/5.42s; format0.44/0.82s all pass. Each used the fwp local guard;
+full builds/tests remain on GitHub. Original anchors are untouched; old current
+1e8d1e34bc78 is retained under roadmap/revision-032-1e8d1e34bc78 before lease publication.
+
+Duplicate post-merge main CI37968556540 was cancelled only after all accepted
+PR100 gates passed and src/runtime/tests/.github were byte-identical between
+accepted b5d658aa1a06 and actual squash eeef3b5d3f53. Cancellation is not acceptance.
+PR101 final head6bd265486e20 starts CI37968881919 and roadmap_docs37968881895.
+Fold evidenceef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 starts CI37969003113;
+queued/running evidence is not acceptance.
+
+## Loop and argument cleanup refreshes
+
+Row33 b16195bcebf3886edff6b4b8df7fb37131ac1333 has actual base459287698745.
+Guarded package clean0.05/0.38s, two loop tests11.07/22.31s, clippy2.42/4.93s
+and format0.34/0.62s pass. Row34 9f56744c4eb741d0489f79f75f6cd164fffd7687
+has actual baseb16195b and fixes the same mandatory scratch observer output
+pointer. Guarded clean0.00/0.14s and argument test9.91/20.00s pass. Runtime
+and compiler match the originals; CLI/tracing and prior fixture repairs are
+inherited. Both old current heads were retained under immutable revision tags
+before explicit-lease publication. A guarded doc audit attempted during the
+loop check refused the serialization lock; it was not bypassed or accepted.
+
+Row34 guarded clippy2.69/5.35s and format0.34/0.61s also pass.
