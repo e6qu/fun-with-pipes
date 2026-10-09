@@ -18,7 +18,7 @@ jobs:
       - name: Retain review heads for merged preparation references
         run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
       - name: Handoff links, immutable anchors and commit subjects
-        run: python3 scripts/check-handoff-evidence.py
+        run: python3 scripts/check-roadmap.py
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
