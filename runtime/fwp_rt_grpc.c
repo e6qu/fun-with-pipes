@@ -1425,6 +1425,13 @@ static void g_stub_fail(const fwp_remote *r, const char *addr, int code, char *t
     g_trapf("service call %s (%s) failed: %s", r->what, addr, text);
 }
 
+/* Transfer copied receive text out of the scoped buffer owner. */
+static void g_stub_got_fail(const fwp_remote *r, const char *addr, int code, g_got *g) {
+    char *text = g->text;
+    g->text = 0;
+    g_stub_fail(r, addr, code, text);
+}
+
 static void g_encode_request(const fwp_remote *r, V *vals, h2_buf *out) {
     fwp_buf canon = {0};
     fwp_cleanup canonical_cleanup;
@@ -1447,6 +1454,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
     g_stream *s = 0;
     g_got first;
     memset(&first, 0, sizeof first);
+    fwp_cleanup first_received;
+    fwp_cleanup_push(&first_received, g_got_release, &first);
     for (int attempt = 0;; attempt++) {
         int reused = 0;
         char *err = 0;
@@ -1479,39 +1488,58 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         }
         if (r->m.output != 0) break;
         g_recv(c, s, deadline, &first);
-        if (first.kind == G_LOST && first.retry && reused && attempt == 0 && r->m.input == 0) continue;
+        if (first.kind == G_LOST && first.retry && reused && attempt == 0 && r->m.input == 0) {
+            g_got_release(&first);
+            continue;
+        }
         break;
     }
     if (r->m.output == 0) {
-        if (first.kind == G_LOST) g_stub_fail(r, addr, -1, first.text);
-        if (first.kind == G_END && first.code != 0) g_stub_fail(r, addr, first.code, first.text);
+        if (first.kind == G_LOST) g_stub_got_fail(r, addr, -1, &first);
+        if (first.kind == G_END && first.code != 0) g_stub_got_fail(r, addr, first.code, &first);
         if (first.kind == G_END) g_trapf("bad response from %s (%s): missing response message", r->what, addr);
         V v;
         char *why = 0;
         int k = g_decode(&dec, first.m->d, first.m->n, &v, &why);
         free(first.m);
+        first.m = 0;
+        fwp_cleanup decode_text;
+        fwp_cleanup_push(&decode_text, fwp_tls_subject_free, why);
         if (k == G_DEC_BAD) g_trapf("bad response from %s (%s): %s", r->what, addr, why);
-        g_got g;
+        fwp_cleanup_pop(&decode_text);
+        free(why);
+        g_got g = {0};
+        fwp_cleanup received;
+        fwp_cleanup_push(&received, g_got_release, &g);
         g_recv(c, s, deadline, &g);
         if (g.kind == G_MSG) {
             g_reset(c, s, 8);
             g_trapf("bad response from %s (%s): more than one response message", r->what, addr);
         }
-        if (g.kind == G_LOST) g_stub_fail(r, addr, -1, g.text);
-        if (g.code != 0) g_stub_fail(r, addr, g.code, g.text);
+        if (g.kind == G_LOST) g_stub_got_fail(r, addr, -1, &g);
+        if (g.code != 0) g_stub_got_fail(r, addr, g.code, &g);
         if (k == G_DEC_ERROR) fwp_fail(v, r->m.error);
+        fwp_cleanup_pop(&received);
+        g_got_release(&g);
+        fwp_cleanup_pop(&first_received);
+        g_got_release(&first);
         return v;
     }
     if (r->m.output == 2) {
         V ch = args[r->m.input == 1 ? 1 : r->m.nreq];
         for (;;) {
-            g_got g;
+            g_got g = {0};
+            fwp_cleanup received;
+            fwp_cleanup_push(&received, g_got_release, &g);
             g_recv(c, s, deadline, &g);
             if (g.kind == G_MSG) {
                 V v;
                 char *why = 0;
                 int k = g_decode(&dec, g.m->d, g.m->n, &v, &why);
                 free(g.m);
+                g.m = 0;
+                fwp_cleanup decode_text;
+                fwp_cleanup_push(&decode_text, fwp_tls_subject_free, why);
                 if (k == G_DEC_BAD) {
                     g_reset(c, s, 8);
                     g_trapf("bad response from %s (%s): %s", r->what, addr, why);
@@ -1520,11 +1548,19 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
                     g_reset(c, s, 8);
                     fwp_fail(v, r->m.error);
                 }
+                fwp_cleanup_pop(&decode_text);
+                free(why);
                 fwp_p_channel_send(ch, v);
+                fwp_cleanup_pop(&received);
+                g_got_release(&g);
                 continue;
             }
-            if (g.kind == G_LOST) g_stub_fail(r, addr, -1, g.text);
-            if (g.code != 0) g_stub_fail(r, addr, g.code, g.text);
+            if (g.kind == G_LOST) g_stub_got_fail(r, addr, -1, &g);
+            if (g.code != 0) g_stub_got_fail(r, addr, g.code, &g);
+            fwp_cleanup_pop(&received);
+            g_got_release(&g);
+            fwp_cleanup_pop(&first_received);
+            g_got_release(&first);
             return FWP_UNIT;
         }
     }
@@ -1547,6 +1583,8 @@ static V fwp_remote_call(const fwp_remote *r, V *args) {
         if (ed) fwp_fail(ev, ed);
         g_stub_fail(r, addr, f.code, f.text);
     }
+    fwp_cleanup_pop(&first_received);
+    g_got_release(&first);
     return fwp_apply1(fwp_pap((uint32_t)r->m.iter_fn, 0, 0), PTR(cell));
 }
 
