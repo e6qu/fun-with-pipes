@@ -40,7 +40,8 @@ phase2 remains incomplete; phases3–6 are pending. Tracing remains the fallback
 PR103 https://github.com/e6qu/fun-with-pipes/pull/103 is the only open PR.
 Current head1537961db5da753e123162aa8441cb4488d9a66b has actual main base
 c7b3e3f7433b47686c82426173b97f368b792c56. Compiler/runtime/tests match
-focused-accepted6421c025b3d5 exactly. Production CI37982307280 is queued/running; roadmap_docs CI37982307209 passes.
+focused-accepted6421c025b3d5 exactly. Production CI37982307280: bench passes; five other jobs run.
+Roadmap_docs CI37982307209 passes.
 Queued runs are not acceptance. Require all six
 production jobs and roadmap_docs at this exact head before explicit squash
 with `Release registered owners before nonlocal unwind` and empty body.
@@ -147,11 +148,11 @@ still need their final squash rebases and six exact-head full gates.
 | 102 ownership-grpc-client-failure-text | 222e199ca735 | c6b5ad8c827c | Failure text test7.45/15.82s; lint5.96/13.43s and format0.46/0.87s pass |
 | 103 ownership-grpc-client-receive | 8ccdd092478c | 222e199ca735 | Receive test10.13/20.40s; lint6.00/13.19s and format0.45/0.85s pass |
 | 104 ownership-grpc-connect-cleanup | 8bf114c615fe | 8ccdd092478c | Connect test7.73/16.98s; lint6.15/13.36s and format0.44/0.86s pass |
-| 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Refreshed source unchanged; driver startup rollback checks follow |
-| 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | Refreshed source unchanged; context/trap/cancellation checks follow |
+| 105 ownership-grpc-connect-startup | 4d4cbacd0a78 | 8bf114c615fe | Startup test11.73/23.95s passes; local lint stopped on du race; CI37985348012 format/lint/startup pass, overall fails another fixture |
+| 106 ownership-grpc-context-restore | 911fcf78c5c9 | 4d4cbacd0a78 | CI37985348012 context/trap/cancellation test passes; overall client run fails another fixture |
 | 107 ownership-grpc-context-resources | 090422d2f330 | 911fcf78c5c9 | Refreshed source unchanged; scoped options/retained task checks follow |
 | 108 ownership-grpc-capture-resources | 52668c476b2a | 090422d2f330 | Refreshed source unchanged; capture/alias/rollback checks follow |
-| 109 fix-grpc-tls-pool-identity | d178d86dca2b | 36ad63424530 | 1.15 / 3.31 s identity + interpreter unit 5.51 / 11.41 s |
+| 109 fix-grpc-tls-pool-identity | 95c74a9b4b45 | 52668c476b2a | Refreshed source unchanged; old focused evidence remains historical; new checks follow |
 | 110 ownership-grpc-environment-cache | 6f4bfba80ef3 | d178d86dca2b | Focused GitHub CI37948869170 passes |
 | 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
 | 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
@@ -198,10 +199,10 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 queued; source911fcf7, actual base4d4cbac; not acceptance |
-| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 queued; source7fe3282, actual base4872607; not acceptance |
-| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 queued; source8a06d5d, actual base9c27876; not acceptance |
-| Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 queued; sourcee15c6fc, actual baseb83d77c; not acceptance |
+| Rows101–106 gRPC client/connect/context | ed7ce4b60160d4e5f94a98760f2f05b005959201 | CI37985348012 fails client failure-text fixture at typed handler check; other checks pass |
+| Rows92–100 gRPC serving and encoding | 5fd8e12bd82a8f4ac43b26390a53691be04595fd | CI37984431678 fails only the inherited HTTP2 omission control; repair in progress |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 9f564880378644a82f11bbf343956d1f6f019d48 | CI37983077375 fails the HTTP2 omission control on GCC; other checks pass |
+| Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
 | Rows69–76 File and original resource frames | 4a448ea21e5ca197b8e7efed1796a8578d7e0761 | CI37980022336 passes focused Linux File/frame/ownership/tracing and docs; sourceda4acc3, actual base5179067 |
 | Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
@@ -243,6 +244,34 @@ reclamation against the finite phase2 exit criteria in ownership.md. Channel
 close preserves queued values; explicit drain alone proves its counted cycle
 can be broken. Preserve raw interpreter comparisons and original pipe semantics.
 
+## Current guard repair
+
+Row105 lint stopped when rustc removed temporary rmetaJAcTae during target du.
+This is incomplete verification, not a resource-limit waiver. No workload remains.
+Separate branch fix-local-guard-sampling in /private/tmp/fwp-guard-sampling-worktree
+is published at063f4ca9729253c0cdc79945181701adc8b1953a, based on
+mainc7b3e3f. Pause the guarded workload during target sampling; keep
+RSS, disk, target, CPU and deadline limits unchanged and fail on sampling errors.
+All three deterministic integration checks pass under the original root guard:
+CPU0.17/elapsed1.24s. They verify suspension/resumption, sampler errors and the
+unchanged target-size limit. Negative control against the original guard fails
+all three with workload-not-suspended (CPU0.20/elapsed0.87s), as expected.
+The initial test fixture escaping failure was corrected before this acceptance.
+The roadmap_docs workflow will run these checks on Linux too. Keep PR103 focused;
+finish this guard repair as the next focused PR after PR103 merges, then row26.
+Linux guard evidence9eece7440f19a71586ac1a5630816a5054c0dca6, CI37986986407,
+passes the three integration checks (0.688s) and the documentation audit.
+HTTP2 omission-control repaira80d4b8f9fbdf1953d8e74cd06c79c86d8f0f344
+is isolated evidence only, CI37987025996 queued. Separate gRPC client failure
+fixture repair moves the longjmp-mutated handler out of automatic storage;
+original run37985348012 fails its typed handler check while other tests pass.
+Repairf2a241784d98b54f1541ed9f586d90e50db08a30 is queued in CI37987135273.
+Do not propagate these fixture repairs until fresh normal evidence passes.
+Row10995c74a9b4b45a7db16c1646617bb065af904e5aa is published on actual52668c476b2a.
+Revision109-d178d86dca2b retains the previous head. Refresh row110 from its
+actual old based178d86d onto95c74a9, then111 and112. Pending HTTP2/client fixture
+repairs must propagate through these preparations after normal Linux acceptance.
+
 ## Local limits and durable docs
 
 Full builds/tests, benchmarks and large regeneration run on GitHub. Focused
@@ -255,15 +284,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-connect-startup-worktree; guarded driver startup
-partial spawn/connection owner rollback checks are running. Row86 focused checks completed within limits. Latest disk observation113885004KiB available; target155536KiB.
+belongs to /private/tmp/fwp-grpc-connect-startup-worktree; no local workload
+is running after the guard stopped lint. See the repair above. Row86 focused checks completed within limits. Latest disk observation113625788KiB available; target143120KiB.
 Row67 checks pass: test6.99/14.97s, clippy5.72/11.65s and format0.44/0.84s.
 Every workload still samples current limits; observations do not authorize
 bypassing the guard. No local full gate was run. Earlier refusal/recovery
 chronology is in history; stop at limits and move checks to GitHub.
 Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
 link/heading sets,106 immutable queue pairs and tag identities, contiguous order
-and entire commit messages (latest0.32CPU/2.51elapsed). It caught a status update
+and entire commit messages (latest0.38CPU/2.91elapsed). It caught a status update
 that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
 CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
 could only check ancestry and did not detect this substitution.

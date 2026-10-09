@@ -944,11 +944,17 @@ static g_tls *g_tls_new(const char *ca, int insecure, const char *name, const ch
     return t;
 }
 
+typedef struct g_env_options {
+    const char *var;
+    const g_tls *tls;
+    struct g_env_options *next;
+} g_env_options;
+static g_env_options *g_env_options_known = 0;
+
 /* the TLS options of a service's variables (FWP_SERVICE_<M>_CA,
  * _INSECURE, _SERVER_NAME, _CERT, _KEY), or 0; read once per service */
 static const g_tls *g_env_tls(const char *var) {
-    static struct g_env_tls { const char *var; const g_tls *tls; struct g_env_tls *next; } *known = 0;
-    for (struct g_env_tls *k = known; k; k = k->next)
+    for (g_env_options *k = g_env_options_known; k; k = k->next)
         if (strcmp(k->var, var) == 0) return k->tls;
     const char *v[5];
     static const char *const sfx[5] = {"CA", "INSECURE", "SERVER_NAME", "CERT", "KEY"};
@@ -959,15 +965,36 @@ static const g_tls *g_env_tls(const char *var) {
         if (v[i] && !*v[i]) v[i] = 0;
     }
     int insecure = v[1] && strcmp(v[1], "0") != 0 && strcmp(v[1], "false") != 0;
-    struct g_env_tls *k = (struct g_env_tls *)calloc(1, sizeof *k);
+    g_env_options *k = (g_env_options *)calloc(1, sizeof *k);
     k->var = strdup(var);
     k->tls = v[0] || insecure || v[2] || v[3] || v[4]
                  ? g_tls_new(v[0] ? v[0] : "", insecure, v[2] ? v[2] : "", v[3] ? v[3] : "", v[4] ? v[4] : "")
                  : 0;
-    k->next = known;
-    known = k;
+    k->next = g_env_options_known;
+    g_env_options_known = k;
     return k->tls;
 }
+
+#ifdef FWP_LIBRARY
+/* Called only after task draining and GC finalization, before SSL cache disposal. */
+static void g_environment_finish(void) {
+    while (g_env_options_known) {
+        g_env_options *k = g_env_options_known;
+        g_env_options_known = k->next;
+        if (k->tls) {
+            g_tls *tls = (g_tls *)k->tls;
+            if (tls->users != SIZE_MAX) abort();
+            tls->users = 1;
+            g_tls_release(tls);
+        }
+        free((void *)k->var);
+        free(k);
+    }
+    g_pool = 0;
+    fwp_gctx_acquire = 0;
+    fwp_gctx_release = 0;
+}
+#endif
 
 static int g_same_tls(const g_conn *c, const g_tls *t) {
     if (!t) return c->tlskey == 0;

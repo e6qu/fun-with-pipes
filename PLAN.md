@@ -45,7 +45,8 @@ repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
 wide counts, array/map/set elements and reclamation of old counted storage.
 Task result/deadline boundaries merged in PR102 after all six exact-head
 production jobs and the documentation audit passed. Queue25 registered runtime
-unwind cleanup is the next delivery. Its final rebase and fresh gates follow. Exact heads,
+unwind cleanup is open as PR103. After its exact-head gates and squash, deliver
+the local guard sampling repair, then queue26 reuse tokens. Exact heads,
 commands, failures and acceptance remain in [the handoff](docs/development-state.md).
 
 Separate evidence has restored baseline root/cache/tutorial fixes and the real
