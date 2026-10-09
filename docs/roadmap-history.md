@@ -11644,3 +11644,9 @@ test8.38/16.90s. Row105 refresh4d4cbacd0a7850fd046bba139683e67e610d5b2c
 uses actual base8bf114c615fe; compiler/runtime/startup fixture match original
 with inherited CLI/GC repairs. OLDcb20833c018f stays fixed; previous CURRENT
 is retained before lease publication. Fresh startup rollback checks follow.
+
+Row102 copied failure text/trap/typed error test7.45/15.82s passes.
+Row106 refresh911fcf78c5c9a30c4eba3e2cfa63844005f3dee9 uses actual base4d4cbacd0a78.
+Compiler/runtime/context fixture match original with inherited CLI/GC repairs.
+OLD7a89dd017ae4 stays fixed; previous CURRENT is retained before lease publication.
+Fresh context/trap/cancellation checks follow; cleanup must not restore handlers.
