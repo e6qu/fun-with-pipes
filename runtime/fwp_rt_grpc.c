@@ -715,6 +715,8 @@ static int g_send_data(g_conn *c, g_stream *s, const unsigned char *d, size_t n,
     }
 }
 
+static void g_h2_buffer_release(void *arg) { h2b_free((h2_buf *)arg); }
+
 /* send one message; a server sends its response headers first */
 static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n, int end) {
     if (c->server && !s->sent_headers && !c->dead && !s->reset) {
@@ -730,6 +732,8 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2b_free(&blk);
     }
     h2_buf b = {0};
+    fwp_cleanup message_buffer;
+    fwp_cleanup_push(&message_buffer, g_h2_buffer_release, &b);
     if (s->gzip && n >= 64) {
         /* compressed (messages shorter than 64 bytes are sent as they are) */
         h2_buf z = {0};
@@ -742,6 +746,7 @@ static int g_send_msg(g_conn *c, g_stream *s, const unsigned char *msg, size_t n
         h2_grpc_frame(&b, msg, n);
     }
     int r = g_send_data(c, s, b.d, b.len, end);
+    fwp_cleanup_pop(&message_buffer);
     h2b_free(&b);
     return r;
 }
