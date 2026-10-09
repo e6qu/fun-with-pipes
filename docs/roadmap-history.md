@@ -14084,3 +14084,5 @@ original feature and fixture repair commits preserved. Prior177a08a204d7 retaine
 remotely before normal fast-forward publication. Compiler/runtime/other probes
 and workflows unchanged; all11 authoritative docs copied. Format0.53CPU/1.06s
 and final strong audit0.52CPU/4.03s pass. Propagate exact fixture through90–112.
+
+HTTP2 fixture propagation row90: c80d278dd53dba7bbb03af482ec978ebc9ce45db to1b4be82fe9b63a74d4cd5f93eedad05fc18066c0 on actual3b72f38e6814d98506265d1dabd8a3446d0f5ba0, FROMactual177a08a204d71a9f4278f0a16f81bc0a4968617b. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-090-c80d278dd53d, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
