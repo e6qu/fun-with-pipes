@@ -72,10 +72,10 @@ still need their final squash rebases and six exact-head full gates.
 | 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
 | 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format and GitHub CI37960652006 pass |
 | 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format and GitHub CI37961205676 pass |
-| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | Source unchanged; fresh local guard refused; GitHub checks follow |
+| 27 ownership-call-liveness | c4eb75e82882 | bb77c078354f | GitHub CI37962382433 passes; fresh local guard refused |
 | 28 ownership-runtime-call-cleanup | b5f44e80462c | c4eb75e82882 | Source unchanged; local limits defer fresh checks to GitHub |
-| 29 ownership-map-unwind | 9b5eb5804655 | b5f44e80462c | Source unchanged; fresh checks move to GitHub after disk refusal |
-| 30 ownership-selection-unwind | 69b1ad1e33e5 | 8093bf382210 | 22.29 / 44.76 s |
+| 29 ownership-map-unwind | 84ef5480f493 | b5f44e80462c | Invalid fixture output pointer repaired; fresh Linux evidence follows |
+| 30 ownership-selection-unwind | 398503f0938a | 9b5eb5804655 | CI37963696111 fails map and predicate stress fixtures |
 | 31 ownership-zip-unwind | 6a0913896eb7 | 69b1ad1e33e5 | 17.02 / 34.21 s |
 | 32 ownership-fold-unwind | 1e8d1e34bc78 | 6a0913896eb7 | 24.13 / 48.48 s |
 | 33 ownership-loop-unwind | dc9bfd5e626b | 1e8d1e34bc78 | 28.65 / 57.61 s |
@@ -176,6 +176,22 @@ context wrappers retain tracing compatibility; no complete ARC claim. Channel
 close preserves queued values; explicit drain breaks its counted cycle, while
 automatic unreachable-cycle reclamation remains unproved.
 
+## Active failure repair
+
+GDB CI37965116750 at91e0c76 identifies SIGSEGV in fwp_gc_chunk_of(ci=NULL),
+called by dead_scratch in the map fixture. The helper requires an output pointer;
+GCC exposes the invalid write, while Clang optimized it away. Production runtime
+code is unchanged. Row29 repair84ef5480f4938e78c11c10823bf498a8a1a4e6f9
+passes a local ci, matching the already prepared row68 fixture repair.
+Refresh normal evidence from actual9b5eb58 onto84ef548, remove all diagnostic
+changes and rerun complete focused Linux checks. Fix row30's identical call and
+rebase it from actual9b5eb58 onto84ef548. Preserve all ownership/alias/scratch
+assertions. Row68 already repairs the same calls in zip/fold/argument fixtures;
+bring each minimal fix into its earlier delivery rather than waiting for row68.
+Logs: /private/tmp/fwp-map-unwind-gdb.log and
+/private/tmp/fwp-selection-unwind-focused-failure.log. MacOS row29 before the
+fix passes11.99CPU/24.15elapsed; it supplied no Linux acceptance.
+
 ## Separate evidence and remaining audits
 
 | Scope | Exact evidence head | Run / status |
@@ -187,8 +203,9 @@ automatic unreachable-cycle reclamation remains unproved.
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 running; productionb5f44e8, actual basec4eb75e |
-| Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 queued; productionc4eb75e, actual basebb77c07 |
+| Row29 map callback unwind | c39c547b9a4259563ec7e454ed9463f6701ca054 | CI37963280367 fails native map callback fixture; production9b5eb58, actual baseb5f44e8 |
+| Row28 runtime application | ae907d63e277f8c62a07b20aee0dfecb3167a9c6 | CI37962723252 passes focused checks and all-doc/tag audit; productionb5f44e8, actual basec4eb75e |
+| Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
 | Row26 compiler reuse tokens | 3d6102af3bffcec06a541c8e8238837ff19aad9f | CI37961205676 passes focused Linux checks; productionbb77c07, actual base6421c02 |
 | Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 passes focused Linux checks; production6421c02, actual base1741ab5 |
 | Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
