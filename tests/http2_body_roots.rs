@@ -26,10 +26,20 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "body_roots").unwrap();
+    // GCC on x86-64 leaves dead call/stream pointers in callee-saved
+    // registers. Isolate construction and clear those stale roots in the
+    // copying frame; a live post-copy owner fence forces a surviving spill.
+    let (compiler, _) = fwp::cgen::c_compiler().unwrap();
+    let clear_stale_roots = cfg!(target_arch = "x86_64") && fwp::cgen::is_gcc(&compiler);
+    let boundary = if clear_stale_roots {
+        "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();"
+    } else {
+        "static V fwp_str_new(const char *s, size_t len) { inspect_owner();"
+    };
     let generated = generated
         .replace(
             "static V fwp_str_new(const char *s, size_t len) {",
-            "static V fwp_str_new(const char *s, size_t len) { inspect_owner();",
+            boundary,
         )
         .replace(
             "static void g_stream_final(void *p) {",
@@ -39,6 +49,9 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
 static unsigned char *watched_body;
 static int copy_active,released;
 static void inspect_owner(void);
+#if defined(__x86_64__)
+#define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
+#endif
 "#;
     let fixture = r#"
 static void inspect_owner(void){
@@ -70,6 +83,27 @@ static int probe(void){
 }
 int main(void){int status=probe();if(status)_Exit(status);return 0;}
 "#;
+    let fixture = if clear_stale_roots {
+        fixture
+            .replace(
+                "static __attribute__((noinline)) V body(void){",
+                "static __attribute__((noinline)) V make_call(void){",
+            )
+            .replace(
+                " V call=g_call_value(conn,stream,1,0);copy_active=1;",
+                r#"
+ return g_call_value(conn,stream,1,0);
+}
+static __attribute__((noinline)) void clear_dead_stack(void){
+ volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;
+}
+static __attribute__((noinline)) V body(void){
+ V call=make_call();clear_dead_stack();copy_active=1;
+"#,
+            )
+    } else {
+        fixture.to_owned()
+    };
     let dir = fwp::cgen::TempDir::new("http2-body-roots").unwrap();
     let exe = dir.join("probe");
     let needle = "    /* Body bytes belong to the stream's malloc buffer, not the GC heap. */\n            FWP_KEEP_ALIVE(call);";
