@@ -43,7 +43,7 @@ Published with an explicit lease as f71c002d5339c827f8b506ff1c75c1cb4b24371d.
 PR100 https://github.com/e6qu/fun-with-pipes/pull/100 is open;
 Current PR head98632b08aaad9d2564cc81c863437ff056e4574c includes the
 publication-status and typed-array inventory corrections. CI37960281416 has
-six exact-head gates queued. Superseded37958351622/37959781379 are cancelled,
+all six exact-head gates running. Superseded37958351622/37959781379 are cancelled,
 not acceptance. Source still matches focused-accepted c9ef3d88211f exactly.
 Retrieve the actual PR head before gating or squash. OLD anchors stay immutable.
 Row23 pre-delivery refresh495411d uses actual basef71c002.
@@ -90,9 +90,9 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 22 ownership-map-set-elements | 98632b08aaad | c4d820e0d032 | GitHub CI37955579519 passes unchanged source; fresh local guard refused |
 | 23 ownership-old-reclamation | 495411d33f60 | f71c002d5339 | Tests9.89/20.19s; lint/format and GitHub CI37958839569 pass |
-| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Refreshed tests13.56/27.29s; lint/format pass; remote evidence pending |
-| 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format pass; fresh GitHub evidence follows |
-| 26 ownership-reuse-tokens | 216e673ff2dd | 123d8b5928aa | 15.26 / 30.66 s |
+| 24 ownership-task-boundaries | 1741ab5fa64e | 495411d33f60 | Tests13.56/27.29s; lint/format and GitHub CI37959126658 pass |
+| 25 ownership-unwind-runtime | 6421c025b3d5 | 1741ab5fa64e | Tests9.45/19.08s; lint/format pass; GitHub CI37960652006 pending |
+| 26 ownership-reuse-tokens | bb77c078354f | 6421c025b3d5 | Tests18.92/38.09s; lint/format pass; GitHub evidence follows |
 | 27 ownership-call-liveness | 786f1700236e | 216e673ff2dd | 19.89 / 39.90 s |
 | 28 ownership-runtime-call-cleanup | e3c49d965cd0 | 786f1700236e | 15.73 / 31.57 s |
 | 29 ownership-map-unwind | 8093bf382210 | e3c49d965cd0 | 16.12 / 32.46 s |
@@ -208,7 +208,8 @@ automatic unreachable-cycle reclamation remains unproved.
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
-| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 queued; production1741ab5, actual base495411d |
+| Row25 runtime cleanup | 971d7a120eac20bd85f379159e9ca5d77fdc23ab | CI37960652006 queued; production6421c02, actual base1741ab5 |
+| Row24 task boundaries | 5e4fd6fe2549da35374b11838af9845c066375be | CI37959126658 passes focused checks and audit; production1741ab5, actual base495411d |
 | Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
 
 Evidence workflows never enter production ancestry. Every sequential PR still
@@ -248,7 +249,7 @@ previously refused at61.84GiB free disk and138.93MiB target. Disk subsequently
 recovered above64GiB (df71884308KiB available); unchanged guard allowed row23
 package clean0.00/0.14s, focused tests9.89/20.19s, lint2.36/4.80s and
 format0.34/0.61s. Shared target now belongs to
-/private/tmp/fwp-unwind-runtime-worktree; no workload is running.
+/private/tmp/fwp-unwind-liveness-worktree; no workload is running.
 Stop at limits; do not bypass the guard, including for package clean.
 Latest guarded doc audit passes eleven link/heading sets, all106 immutable
 queue ancestry pairs and whole commit messages (0.21 s CPU / 1.57 s elapsed).

@@ -10828,3 +10828,22 @@ Earlier formatting failure37952655033 supplied no behavior acceptance.
 Row25 at6421c02 guarded unwind tests9.45/19.08s, lint2.53/5.16s and
 fmt0.38/0.70s pass after package clean0.04/0.25s. Shared target is now
 /private/tmp/fwp-unwind-runtime-worktree. Full and Linux-focused gates follow.
+
+Row26 compiler reuse tokens refreshed from actual123d8b5 onto6421c02;
+publishedbb77c078354f14c3f8e205f17bde2edb199b945c preserves original
+runtime/compiler/tests with only inherited CLI and tracing-fixture repairs.
+Explicit lease succeeded; focused guarded checks run before more publication.
+Row25 separate evidence971d7a120eac20bd85f379159e9ca5d77fdc23ab,
+CI37960652006 queued; no competing production PR.
+
+Row24 evidence5e4fd6fe2549da35374b11838af9845c066375be,
+CI37959126658 passes focused format/lint, task ownership, reclamation, alias/
+scalar controls, actual tracing churn and current handoff audit. Production
+PR100 all six gates now run at98632b08aaad9d2564cc81c863437ff056e4574c.
+This does not authorize merging before every exact-head job succeeds.
+
+Row26 atbb77c07 guarded package clean0.05/0.25s, six reuse-token/cleanup
+tests18.92/38.09s, lint2.44/4.88s and fmt0.33/0.61s pass. Controls cover
+transfer, unused release, unwind, ownership switches and native bump codegen;
+they supply no actual-WASI disposal acceptance. Shared target is now
+/private/tmp/fwp-unwind-liveness-worktree. Fresh focused Linux checks follow.
