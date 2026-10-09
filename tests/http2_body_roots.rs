@@ -29,7 +29,7 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
     let generated = generated
         .replace(
             "static V fwp_str_new(const char *s, size_t len) {",
-            "static V fwp_str_new(const char *s, size_t len) { inspect_owner();",
+            "static V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();",
         )
         .replace(
             "static void g_stream_final(void *p) {",
@@ -39,6 +39,16 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
 static unsigned char *watched_body;
 static int copy_active,released;
 static void inspect_owner(void);
+/* Remove stale conservative register roots at the copy boundary. A real live
+ * owner is spilled across this clobber because its post-copy fence still uses it.
+ * Keep frame/stack and platform-reserved registers intact. */
+#if defined(__x86_64__)
+#define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
+#elif defined(__aarch64__)
+#define clear_dead_registers() __asm__ volatile("mov x19,xzr; mov x20,xzr; mov x21,xzr; mov x22,xzr; mov x23,xzr; mov x24,xzr; mov x25,xzr; mov x26,xzr; mov x27,xzr; mov x28,xzr" : : : "x19","x20","x21","x22","x23","x24","x25","x26","x27","x28","memory")
+#else
+#define clear_dead_registers() ((void)0)
+#endif
 "#;
     let fixture = r#"
 static void inspect_owner(void){
