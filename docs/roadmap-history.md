@@ -10875,3 +10875,12 @@ CI37961205676 passes focused Linux reuse-token/cleanup/task/ownership/reclamatio
 tracing. Those preparation snapshots used the earlier ancestry-only auditor;
 the exact tag-identity repair is independently verified at PR100 headb5d658a.
 No old or cancelled production run supplies acceptance.
+
+Row27 call liveness refreshed from actual216e673 ontobb77c07. Published
+c4eb75e82882e9fcc02b832946ea94119cfc7c83 preserves runtime/compiler/tests;
+only inherited CLI and tracing-fixture repairs differ outside root docs.
+An incorrect full lease hash was rejected without changing remote; resolving
+actual786f1700236ec23b9880436d8c512b941a44e1ec and retrying succeeded.
+Guarded package clean refused again below64GiB before execution. No fresh
+local tests/lint ran; shared target still belongs to the reuse-token worktree.
+Focused verification moves to GitHub without raising or bypassing limits.
