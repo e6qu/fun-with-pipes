@@ -11583,3 +11583,9 @@ test9.19/18.86s. Row97 refresh25838578a6bfa5bd030af964d9fbe0cfd8132a69
 uses actual basebc69035d8c0f; compiler/runtime/send fixture match original with
 inherited CLI/GC repairs. OLD671ada6ec85d stays fixed; previous CURRENT is
 retained under revision-097 before lease publication. Fresh checks follow.
+
+Row95 clippy6.04/12.88s and format0.44/0.85s pass after decode cleanup
+test8.90/18.31s. Row98 refreshb7d41363523d08c941a903d2861284ef6a5aa691
+uses actual base25838578a6bf; compiler/runtime/encoding fixture match original
+with inherited CLI/GC repairs. OLD663ef599a438 stays fixed; previous CURRENT is
+retained under revision-098 before lease publication. Fresh checks follow.
