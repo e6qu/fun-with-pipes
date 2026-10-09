@@ -11757,3 +11757,10 @@ under roadmap/revision-110-6f4bfba80ef3 before exact leased rewrite. Only ten
 authoritative docs conflicted; runtime/compiler/cache tests remain unchanged
 apart from inherited CLI/GC repairs. Prior Linux evidence remains historical
 until fresh sequential full acceptance. Immutable OLD anchors remain fixed.
+
+Row111 preparation4fd2d18953859eee788d8d383280acd1946162bc is published
+on actual09ec98b12c5db0064e85de435cdbe2694e8fe69e. Both the one-allocation
+implementation and prior formatting repair survive. Retained old2bd17608388d
+under roadmap/revision-111-2bd17608388d before exact leased rewrite. Only
+documentation conflicted; compiler/runtime/tests differ only in inherited
+CLI/GC repairs. Original OLD2bb665596390 remains fixed.

@@ -154,7 +154,7 @@ still need their final squash rebases and six exact-head full gates.
 | 108 ownership-grpc-capture-resources | 52668c476b2a | 090422d2f330 | Refreshed source unchanged; capture/alias/rollback checks follow |
 | 109 fix-grpc-tls-pool-identity | 95c74a9b4b45 | 52668c476b2a | Refreshed source unchanged; old focused evidence remains historical; new checks follow |
 | 110 ownership-grpc-environment-cache | 09ec98b12c5d | 95c74a9b4b45 | Refreshed source unchanged; prior Linux evidence historical; new checks follow |
-| 111 ownership-grpc-packed-options | 2bd17608388d | 6f4bfba80ef3 | Focused GitHub CI37950759037 passes |
+| 111 ownership-grpc-packed-options | 4fd2d1895385 | 09ec98b12c5d | Both packed-storage and format commits preserved; fresh Linux checks follow |
 | 112 ownership-grpc-connection-addresses | 762117573367 | 2bd17608388d | Tests7.98/16.49s; lint/format and GitHub CI37958243461 pass |
 
 Rows21–109 have prior focused test/lint/format evidence at their recorded
@@ -268,8 +268,8 @@ original run37985348012 fails its typed handler check while other tests pass.
 Repairf2a241784d98b54f1541ed9f586d90e50db08a30 is queued in CI37987135273.
 Do not propagate these fixture repairs until fresh normal evidence passes.
 Row10995c74a9b4b45a7db16c1646617bb065af904e5aa is published on actual52668c476b2a.
-Revision109-d178d86dca2b retains the previous head. Row11009ec98b12c5d is published on95c74a9. Refresh111 from its actual
-old base6f4bfba onto09ec98b, then112. Pending HTTP2/client fixture
+Revision109-d178d86dca2b retains the previous head. Row11009ec98b12c5d is published on95c74a9; row1114fd2d1895385 on09ec98b.
+Refresh112 from its actual old base2bd1760 onto4fd2d189. Pending HTTP2/client fixture
 repairs must propagate through these preparations after normal Linux acceptance.
 
 ## Local limits and durable docs
