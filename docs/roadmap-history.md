@@ -10043,3 +10043,26 @@ response/canonical partial traps and both cleanup omission controls pass.
 
 Focused response/request lint passes2.39 / 4.91 s; guarded format apply
 0.46 / 0.85 s and check0.47 / 0.75 s pass. No resource limit exceeded.
+
+Row100 preparation published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6
+on actual4114b709fb4b6f2397bc78f3d55f2c7c2c25357a. Immutable first anchors
+recorded; entire commit message one line. PR98 remains the sole delivery.
+
+## Synchronous client request ownership preparation, 2026-10-09
+
+Independent ownership-grpc-client-requests starts on actualb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6,
+/private/tmp/fwp-grpc-client-requests-worktree. Unary and synchronous iterator
+requests register h2_buf cleanup before encoding and across cancellable sending.
+Real scheduler fixture injects connection/encoder/empty-response boundaries;
+checks normal request bytes/end marker and exact missing-response diagnostic,
+encoding traps, parked cancellation and omitted cleanup controls. Complete
+protocol semantics require sequential full CI. Guarded clean0.00 / 0.14 s;
+focused checks run. PR98 now passes all five macOS/bench jobs; Linux still runs.
+
+Both client/request focused tests pass9.19 CPU / 18.71 elapsed s. Actual
+parked cancellation releases both encoded request and wire buffers; normal
+bytes/end marker, exact missing-response/encode-trap diagnostics and omitted
+cleanup controls pass O1/O2 with GC off/on, stress/verification and poison.
+
+Client/request focused lint passes2.38 / 4.86 s; guarded format apply
+0.45 / 0.87 s and check0.48 / 0.75 s pass. No resource limit exceeded.

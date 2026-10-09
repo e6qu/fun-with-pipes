@@ -113,6 +113,7 @@ resolve full hashes before publication or merge. Checkout paths use
 | 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `671ada6ec85d` | `671ada6ec85d` | `ea79bdee1191` |
 | 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `663ef599a438` | `663ef599a438` | `671ada6ec85d` |
 | 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `4114b709fb4b` | `4114b709fb4b` | `663ef599a438` |
+| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `b44f53c9a60f` | `b44f53c9a60f` | `4114b709fb4b` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

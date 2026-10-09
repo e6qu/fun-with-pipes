@@ -503,3 +503,8 @@ wire buffers across encoding and cancellable flow-control waits. Error
 canonical scratch is protected before serialization and freed after transcoding.
 Normal wire bytes and error/trap order stay unchanged; sequential full CI
 is still required.
+
+Prepared synchronous client requests also scope their encoded unary/iterator
+buffers before encoding and until sending returns or cancellation unwinds.
+Request bytes and end markers remain unchanged. Connection/user-code ownership
+and complete client response/status cleanup remain separate audits.

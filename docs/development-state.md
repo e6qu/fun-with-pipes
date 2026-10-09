@@ -151,6 +151,7 @@ still need their final squash rebases and six exact-head full gates.
 | 97 ownership-grpc-send-cleanup | 671ada6ec85d | ea79bdee1191 | Send/force10.02 / 21.56 s |
 | 98 ownership-grpc-request-encoding | 663ef599a438 | 671ada6ec85d | Request/send2.03 / 4.93 s |
 | 99 ownership-grpc-canonical-encoding | 4114b709fb4b | 663ef599a438 | Canonical/request8.38 / 17.93 s |
+| 100 ownership-grpc-response-encoding | b44f53c9a60f | 4114b709fb4b | 2.95 / 6.01 s |
 
 Rows 18–99 are published preparations with passing focused tests, lint and
 format checks; detailed commands, full hashes and measurements are in history.
@@ -205,12 +206,17 @@ passes2.30 / 4.61 s and format0.34 / 0.62 s. Published clean at
 response buffers get cleanup across encoding traps and cancellable sends;
 error canonical scratch is protected before serialization. Both response/request
 tests pass2.95 / 6.01 s; lint2.39 / 4.91 s and format0.47 / 0.75 s pass.
-Publish the preparation without a competing PR.
+Published clean atb44f53c9a60fd5b0c0ebeb9bf5befb8d6fc5dab6, no competing PR.
+Independent row101 ownership-grpc-client-requests starts on actualb44f53c,
+/private/tmp/fwp-grpc-client-requests-worktree. Both synchronous client request
+buffers now scope encoding and cancellable sends. Both client/request tests
+pass9.19 / 18.71 s; lint2.38 / 4.86 s and format0.48 / 0.75 s pass.
+Publication follows without a competing PR.
 Remaining audit: canonical decode and client status/message paths.
 Do not promote phase2 or no-tracing support before sequential full acceptance.
 Preserve all ten current docs before main refresh/rebase; OLD anchors stay immutable.
 PR98 is the sole delivery at542fc08, new exact-head CI37929002304:
-bench, ARM/Intel regular macOS and ARM GC pass; Linux and Intel GC run.
+bench and all four ARM/Intel macOS jobs pass; Linux runs.
 Superseded CI37925910460 at6b1cd9b supplies no new-head acceptance. Row21
 ACTUAL refreshed base is542fc08; final rebase follows the eventual PR98 squash.
 
@@ -257,8 +263,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target currently
-belongs to /private/tmp/fwp-grpc-response-encoding-worktree; array checks pass.
-Run guarded cargo clean -p fwp before switching checkouts (last 0.07 / 0.37 s).
+belongs to /private/tmp/fwp-grpc-client-requests-worktree; response/array checks pass.
+Run guarded cargo clean -p fwp before switching checkouts (last 0.00 / 0.14 s).
 Last guarded doc audit passes eleven link/heading sets, 93 immutable queue
 ancestry pairs and whole commit messages (0.16 s CPU / 1.22 s elapsed).
 Rerun /private/tmp/fwp-check-handoff.py after meaningful doc changes.
