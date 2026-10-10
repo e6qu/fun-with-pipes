@@ -14813,3 +14813,43 @@ before match-head squash with subject
 `Protect boxed arguments and partial fields before worker entry` and empty body.
 
 PR115 is accepted at25dd472a889baf61422c254eaa6b370147c81244 after all seven exact-head gates. Raw subject62characters, one parent771191d622cc13c055c08f1ba23fc50d02950ac7 and complete tree dc474e5a0f457bedead913f6e963990be85267a6 match the passing0ddeedbb09a29235556808a499a665178cf13d83 head. All11 live docs protected/restored byte-for-byte; duplicate main CI38076511839 cancelled only after proof. Actual main docs38076511888 pending. Merge0.26CPU/8.43elapsed, fetch0.04/1.08s, protect0.00/0.13s, cancel0.05/1.32s pass. Only live queue37 handoff row removed; immutable anchors and frozen accepted head remain. Next production queue38 on actual25dd472.
+
+### Passing loop preparation machine-code evidence
+
+CI38076425571 passes both ARM/Intel jobs at exact evidence head
+d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8 on unchanged4289528 source.
+Original flattened_loop_preparation_releases_original_and_partial_fields executes
+once per platform, zero failed/ignored tests; original exact exit5 negative and
+alias/scalar-bit controls remain unchanged. Guarded proof/artifact download passes
+0.19CPU/6.72elapsed. Proof, logs and both full artifact trees are retained at
+/private/tmp/fwp-loop-layout-passing-proof.json,
+/private/tmp/fwp-loop-layout-d9d1a02.log and
+/private/tmp/fwp-loop-layout-d9d1a02-artifacts. Completed recorder must not rerun.
+Source differs only by three evidence files. Positive/control C hashes are the
+same4779c5bfda10c9633d80dfa5277c3255a81972137fb85ce4e273bd1db4c39496
+and a43c921a9c9bcced028c9365376873ad56e734a399677f6601a7bdddbb9da7c0
+as the actual local binaries. Both Mach-O architectures, symbols/disassembly,
+original arguments and compiled layout drivers are retained.
+
+| Instrumented loop fixture | ARM | Intel |
+|---|---|---|
+| Hardware | Apple M1 (Virtual) | Core i7-8700B at3.20GHz |
+| OS/compiler | macOS15.7.9(24G830), Apple Clang17 | Same versions |
+| V size/alignment, flattened state |8/8,32 bytes |8/8,32 bytes |
+| Input owner, partial owner, cleanup record |8,16,24 bytes |8,16,24 bytes |
+| Positive frame O1/O2 |496/496 bytes |456/456 bytes |
+| Broken omission frame O1/O2 |464/448 bytes |408/408 bytes |
+| Positive static instructions O1/O2 |623/567 |787/698 |
+| Broken omission static instructions O1/O2 |608/553 |776/685 |
+
+Frames include saved registers; Intel return address is excluded. Static
+structure sizes do not sum directly to optimized frame usage. Fault-injected
+fixtures and broken omission controls do not establish production stack/ABI,
+cache behavior, allocation-free execution or speed improvements. Original flags
+remain O1/O2, gnu11, ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread.
+Fresh final queue38 native75e537988464d8f304bfdc409eb8334c46da99bd on actual
+PR115 squash25dd472 preserves both original commits and every source/probe byte.
+Rebase0.10CPU/0.95elapsed, package clean0.00/0.13s, four original focused
+regressions17.43/35.01s, all14 RC units3.37/6.83s, lint2.45/4.98s and
+format0.43/0.59s pass. Final publication and seven full exact-head gates remain.
+Actual main docs38076511888 passes at25dd472; queue37 acceptance is complete.

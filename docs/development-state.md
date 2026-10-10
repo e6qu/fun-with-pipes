@@ -38,7 +38,7 @@ empty body and no trailers or attribution. Raw commit has one parent
 `dc474e5a0f457bedead913f6e963990be85267a6`, identical to the tested head.
 All11 live docs were hashed in /private/tmp/fwp-main-docs-pre115 and restored
 byte-for-byte after fast-forward. Duplicate main CI38076511839 was cancelled
-only after complete-tree proof; actual main docs38076511888 remains pending.
+only after complete-tree proof; actual main docs38076511888 passes at the squash head.
 Merge passes0.26CPU/8.43elapsed; fetch0.04/1.08s, protection0.00/0.13s and
 cancellation0.05/1.32s pass. Queues35–37 are accepted in PRs113–115.
 Worker argument preparation now protects original boxed arguments and each
@@ -49,17 +49,25 @@ remain reachable. Phase2 remains incomplete; phases3–6 pending. No production
 PR is open yet; next delivery is queue38 loop argument preparation.
 
 Queue38 loop argument preparation is next on the actual PR115 squash.
-Its unchanged original test now passes with captured O1/O2 ARM64 binaries
-(10.07 CPU /20.34 elapsed s); real inspection passes (0.05 /0.25 s).
-Instrumented cleanup has a 496-byte frame; this is not a production speed claim.
-Final actual-squash rebase and fresh checks still remain.
-Independent loop binary evidence is queued in CI38076425571 at
+Final native snapshot75e537988464d8f304bfdc409eb8334c46da99bd is on actual
+main25dd472a889baf61422c254eaa6b370147c81244, FROMactual old37 8c4e9ffd71a5.
+Both original feature/docs commits remain, including explicit empty docs commit
+preservation after conflict resolution; every source/probe byte matches4289528.
+Rebase passes0.10CPU/0.95elapsed; bounded package clean0.00/0.13s removes78.8MiB.
+All four original loop/preparation/worker regressions pass17.43CPU/35.01elapsed;
+all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass.
+Original alias/scalar-bit controls, exact omitted partial scope exit5 and raw
+interpreter/native agreement remain intact. Publication and full gates remain.
+Independent loop binary evidence passes both jobs in CI38076425571 at
 `d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8` on unchanged source38
 4289528c436b. Only capture/inspection/workflow files differ. Both architectures
-will execute the original test and capture actual O1/O2 positive/control binaries.
+execute the original test without skips and capture four actual O1/O2 positive/control binaries.
 Tooling validation passes1.66CPU/3.46elapsed; publication0.13/3.18s.
 Compiled local sizes: V8/align8, state32, owner8/16, cleanup24 bytes.
-Runner results remain pending; this does not accept the final production head.
+Passing-proof/artifact download passes0.19CPU/6.72elapsed. Instrumented
+positive loop frames are496 bytes ARM and456 Intel (saved registers included;
+Intel return address excluded); these are not production stack/speed guarantees.
+This evidence does not accept the final production head.
 
 Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
 delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
@@ -154,7 +162,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
+| 38 ownership-loop-preparation | 75e537988464 | 25dd472a889b | Final actual-squash source preserves both original feature/docs commits; four loop/preparation/worker regressions17.43CPU/35.01elapsed, all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass; original source/probes unchanged including omitted partial scope exit5, scalar bits, aliases and raw interpreter/native agreement; independent ARM/Intel binary evidence passes; exact-head full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
 | 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 41 ownership-variant-conversion | cca935846750 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
@@ -316,10 +324,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-loop-preparation-worktree (queue38, 4289528c436b):
-the unchanged original test with actual binary capture passes10.07CPU/20.34elapsed,
-and binary inspection passes0.05/0.25s. Previous bounded package clean in source112
-removed127.2MiB (0.05CPU/0.37elapsed); historical disk sample76GiB free.
+last checked in /private/tmp/fwp-loop-preparation-worktree (queue38, final75e537988464):
+all four focused regressions17.43CPU/35.01elapsed and all14 RC units3.37/6.83s
+pass, with lint2.45/4.98s and format0.43/0.59s. Previous bounded package clean
+removed78.8MiB (0.00CPU/0.13elapsed); historical disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
