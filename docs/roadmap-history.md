@@ -13991,3 +13991,32 @@ Formatting0.45CPU/0.86elapsed passes. No source89 publication or propagation yet
 Fresh effects local compilation probe: five independently emitted/compiled binaries
 per optimization agree with the original snapshot on ARM, guard6.46CPU/13.09elapsed.
 Fresh runner trials are still required; this is not an Intel reproduction or fix.
+
+Diagnostic publication75f311323722142480177599d7dcc51e68a33e6d launches
+CI38045910841 for 100 fresh C/compile/run trials per option on three platforms,
+preserving exact source/assembly for any failing trial. Audit0.53CPU/3.92elapsed
+passes before publication. Original runtime/compiler/probes/production CI unchanged.
+HTTP2 frame experiment346d2cc695345faf1bfe1771ee0c4c40724aa83b launches
+four-way CI38045956375; audit0.53CPU/3.92elapsed passes before publication.
+Neither queued run establishes acceptance. Prior worker/zip package clean
+0.00CPU/0.13elapsed keeps shared target bounded. Worker36 lint first used a
+nonexistent worker_boxing test name and failed0.07CPU/0.37elapsed; corrected
+target is worker_boxing_ownership, with no assertions or source changes.
+
+Worker36 corrected four-target lint2.46CPU/5.05elapsed and format0.41/0.60s pass.
+Original eight-test result and all code/probes remain unchanged. Documentation
+publication follows; prepared checks do not replace final exact-head full gates.
+
+Worker36 publishedbcd3b392050b30163256ad72610046a15e691dfe on actualbbd74db2977a after audit0.52CPU/3.90elapsed.
+Prior e171da5957fd retained remotely; exact lease used. Both original feature and
+documentation commit preserved; all native/probe/workflow bytes unchanged.
+
+HTTP2 reserve-frame candidate346d2cc695345faf1bfe1771ee0c4c40724aa83b,
+CI38045956375: Intel/ARM/GCC pass, Linux Clang still fails the unchanged strict
+omission with exit0 instead of1; all positive and other resource controls pass.
+Reserve-frame hypothesis did not repair it. Add optional exact negative C export
+and actual O2 assembly artifacts; assertions/runtime/compiler unchanged.
+Intel original golden context diagnosticc938d08175975904ef3889731319a3561c7635e7,
+CI38046238343 is running after audit0.50CPU/3.80elapsed. Source/probes unchanged;
+compiler wrapper retains only the exact effects input and output, and invokes
+/usr/bin/clang with unchanged arguments. Full original snapshots remain strict.

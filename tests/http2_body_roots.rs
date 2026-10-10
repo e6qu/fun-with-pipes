@@ -143,6 +143,9 @@ static __attribute__((noinline)) V body(void){
             assert!(out.status.success(), "{opt}/{poison}: {out:?}");
         }
     }
+    if let Ok(path) = std::env::var("FWP_HTTP2_C_DIAGNOSTIC") {
+        std::fs::write(path, format!("{hooks}\n{broken}\n{fixture}")).unwrap();
+    }
     fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O2").unwrap();
     let out = Command::new(&exe).output().unwrap();
     assert_eq!(out.status.code(), Some(1), "omitted owner: {out:?}");

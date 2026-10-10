@@ -48,8 +48,20 @@ jobs:
       - name: Focused lint
         run: cargo clippy --test http2_body_roots --test tls_alpn_roots --test library_resources -- -D warnings
       - name: Strict omission and original resource controls
+        env:
+          FWP_HTTP2_C_DIAGNOSTIC: ${{ runner.temp }}/http2-owner.c
         run: cargo test --test http2_body_roots --test tls_alpn_roots --test library_resources --no-fail-fast
       - name: Actual collection
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
       - name: Ownership checkpoints
         run: cargo test --lib rc::tests -- --nocapture
+      - name: Exact strict omission assembly
+        if: always()
+        run: $CC -O2 -std=gnu11 -ffp-contract=off -w -S "$RUNNER_TEMP/http2-owner.c" -o "$RUNNER_TEMP/http2-owner.s"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: http2-owner-${{ matrix.runner }}-${{ matrix.cc }}
+          path: |
+            ${{ runner.temp }}/http2-owner.c
+            ${{ runner.temp }}/http2-owner.s
