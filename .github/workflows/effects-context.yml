@@ -1,0 +1,54 @@
+name: Intel effects golden context diagnostics
+
+on:
+  push:
+    branches: [ownership-evidence-effects-context]
+
+jobs:
+  golden_context:
+    runs-on: macos-15-intel
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain merged preparation review heads
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Docs and immutable anchors
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+      - name: macOS OpenSSL
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Original full execution snapshots with exact compiler capture
+        env:
+          FWP_EFFECTS_CAPTURE: ${{ runner.temp }}/effects-context
+        run: |
+          mkdir -p "$FWP_EFFECTS_CAPTURE"
+          CC="$PWD/scripts/capture-effects-cc.py" cargo test --test golden_run run_snapshots -- --exact --nocapture 2>&1 | tee "$FWP_EFFECTS_CAPTURE/golden.log"
+      - name: Exact binary and assembly inspection
+        if: always()
+        run: |
+          file "$RUNNER_TEMP/effects-context/effects-original"
+          /usr/bin/clang -S -O1 -std=gnu11 -ffp-contract=off -w "$RUNNER_TEMP/effects-context/effects.c" -o "$RUNNER_TEMP/effects-context/effects.s"
+      - name: Collect operating system crash diagnostics
+        if: always()
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import os, shutil
+          target = Path(os.environ['RUNNER_TEMP']) / 'effects-context' / 'crashes'
+          target.mkdir(parents=True, exist_ok=True)
+          for source in (Path.home() / 'Library/Logs/DiagnosticReports').glob('fwp-golden-*'):
+              if source.is_file():
+                  shutil.copyfile(source, target / source.name)
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: effects-intel-golden-context
+          path: ${{ runner.temp }}/effects-context/
