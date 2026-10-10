@@ -101,11 +101,13 @@ Actual O1/O2 ARM64 worker layout/disassembly is retained: value48 bytes/aligned8
 return uses caller storage with192/208-byte frames. No speed/constant-stack claim.
 ALPN roots pass actual major tracing and exact omitted-fence exit1, with
 interpreter/native handshake agreement. Heads, bases and metrics are in the table.
-Current independent task68 is task timer ordering (`ownership-ci-probe-repairs`):
-rebase FROM actualf7a0bd2eba93 ONTO published67. Preserve shorter-timer overtaking,
-explicit channel ordering and scope joining; compare raw interpreter and O1/O2
-native outputs across preemption/reuse modes. Check the original timer target,
-lint, format and all11 docs/audit before retained-revision publication.
+Current independent task68 is task timer ordering (`ownership-ci-probe-repairs`),
+rebased FROM actualf7a0bd2eba93 ONTO published67 at nativef2377b72b5d8.
+Original timer regression passes10.62CPU/22.32elapsed across O1/O2, three
+preemption slices, both reuse modes and delayed shorter-timer overtaking;
+raw interpreter output agrees. Lint2.66/5.30s and format0.44/0.83s pass.
+Finish all11 docs/audit before retained-revision publication, then prepare
+queue69 nested loop reconstruction and exceptional field-owner cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -192,7 +194,7 @@ still need their final squash rebases and six exact-head full gates.
 | 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
 | 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
-| 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
+| 68 ownership-ci-probe-repairs | f2377b72b5d8 | 6d80e63524c2 | Original timer regression10.62CPU/22.32elapsed, lint2.66/5.30s and format0.44/0.83s pass; original source/probes unchanged; raw interpreter agrees across O1/O2, three preemption slices, both reuse modes and delayed overtaking; final actual-squash/full gates required |
 | 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
 | 70 ownership-file-construction | 823b86c74a68 | 925724e0994d | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
 | 71 ownership-file-write-visibility | de6667643951 | 823b86c74a68 | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
@@ -367,8 +369,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-tls-alpn-root-worktree (row67, native6103b2d),
-with all three original controls9.86CPU/23.27elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-ci-probe-repairs-worktree (row68, nativef2377b7),
+with the original timer control10.62CPU/22.32elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
