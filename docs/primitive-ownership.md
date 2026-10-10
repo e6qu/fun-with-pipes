@@ -226,8 +226,9 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-These contracts are published preparations, not main support. Exact heads and
-immutable parent anchors are in [the queue](roadmap-queue.md); current commands
+Rows marked delivered or skipped already have main acceptance; the remaining
+contracts are published preparations. Exact heads and immutable parent anchors
+are in [the queue](roadmap-queue.md); current commands
 and failures are in [the handoff](development-state.md). Each sequential PR needs
 its own final rebase, focused checks and six passing exact-head full gates.
 
