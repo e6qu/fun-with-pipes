@@ -85,7 +85,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 55 | library-input | `ownership-library-inputs` | `96ee4fd963e3` | `a6ebc1da9637` | `5b34382167da` |
 | 56 | library-unload | `ownership-library-unload` | `6c367aa9a921` | `5d0dc220fa1c` | `a6ebc1da9637` |
 | 57 | opencl | `ownership-opencl-lifetime` | `3dd39a69a430` | `d8b4d88da98d` | `5d0dc220fa1c` |
-| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `013b07eac021` | `abc128581b61` | `d8b4d88da98d` |
+| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `ffec94681778` | `abc128581b61` | `d8b4d88da98d` |
 | 59 | tls-listener | `ownership-tls-listeners` | `64fc39f9738e` | `3f6154b4bf67` | `abc128581b61` |
 | 60 | library-resource | `ownership-library-resources` | `aa8dfb3a703e` | `07092cb06e1d` | `3f6154b4bf67` |
 | 61 | grpc-server | `ownership-grpc-server-cleanup` | `91f9a30742f9` | `0d5d3098e782` | `07092cb06e1d` |
