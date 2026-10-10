@@ -28,31 +28,27 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `486520c141d3c26888491d1f5434a7295d8e3cd7` (PR #112). Accepted exact head
-`ac24ea45cbe03a4cb7aaa2ac1fba999fccd58b42` passes all six production jobs in
-CI38054115210 and roadmap_docs38054115151. Match-head squash at2026-10-10T14:28:32Z
-has exact 64-character subject `Protect loop state and Step payload owners across nonlocal exits`,
+Main is `dd3b218b31e369383c019cc4ac3c9abc2d5042e1` (PR #113). Accepted exact head
+`54249400ef16fe655593b4136ea8ca3c379f1255` passes all six production jobs in
+CI38060160102 and roadmap_docs38060160207. Match-head squash at2026-10-10T15:58:13Z
+has exact 61-character subject `Protect consumed constructor fields before allocating storage`,
 one line with empty body and no trailers or attribution. Raw commit has one
-parent837096b9a5dc and tree `d999a7ec3459ab9ac02d61aef42456b0b5a551b1`, identical to the tested head.
-All11 live docs were hashed in /private/tmp/fwp-main-docs-pre112 and restored
-byte-for-byte after main FF. Duplicate mainCI38059746844 cancelled only after
-that proof; main docs38059746845 passes. Native macOS and selected ownership
-are delivered through loop state/Step unwind and flattened Again record preservation.
-Phase2 remains incomplete; phases3–6 remain pending and tracing remains fallback.
+parent486520c141d3 and tree `ddc1acfe9330b6c8d8aab21b90d53db69b1dd2c8`, identical to the tested head.
+All11 live docs were hashed in /private/tmp/fwp-main-docs-pre113 and restored
+byte-for-byte after main FF. Duplicate mainCI38065747650 cancelled only after
+that proof; actual main docs38065747672 queued. Native macOS and selected ownership
+are delivered through consumed constructor fields and remaining caller references,
+registered before constructor allocation. Phase2 remains incomplete; phases3–6
+remain pending and tracing remains fallback.
 
-[PR #113](https://github.com/e6qu/fun-with-pipes/pull/113) delivers queue35
-constructor cleanup. Frozen head54249400ef16fe655593b4136ea8ca3c379f1255 is
-on actual squash486520c141d3c26888491d1f5434a7295d8e3cd7. Original feature/docs
-commits and source/probes are preserved; fresh docs were appended, so referenced
-snapshot833fa844901a stays reachable. Eight focused tests27.31CPU/54.70elapsed,
-all14 RC units3.37/6.99s, lint2.32/4.67s, format0.34/0.60s and all three audits
-pass. Oldbbd74db2977a is retained remotely before exact-lease publication.
-CI38060160102 passes Linux, bench, ARM regular and both macOS GC stress jobs;
-Intel regular tests run.
-Docs38060160207 passes. Require all seven exact-head gates, then match-head squash with subject
-`Protect consumed constructor fields before allocating storage` and empty body.
-Verify whole raw message/tree and preserve all11 live docs before advancing main.
-Next production delivery after acceptance is queue36 worker result boxing.
+Next production delivery is queue36 worker result boxing (`ownership-worker-boxing`).
+Current prepared sourcebcd3b392050b30163256ad72610046a15e691dfe has actual old
+base35bbd74db2977a1a34f83e67dd92038dce93941786, with original feature and appended
+documentation commits. Rebase FROM that actual base ONTO accepted squashdd3b218b31e369383c019cc4ac3c9abc2d5042e1,
+preserving both commits and exact source/probes. Validate original worker boxing,
+constructor/caller/loop controls, RC units, lint and format, then all11 docs/audits
+and retained publication. Open only the next focused PR and require all seven
+exact-head full gates before squash. Fix failures and continue later preparation.
 
 Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
 delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
@@ -90,9 +86,10 @@ on actual875a4ef15301c8, preserving original source/probes and all11 docs.
 Three audits and publication1.78CPU/18.21elapsed pass.
 Rebase89 FROM actual88oldb2d374878677 ONTO published883db25573057b,
 preserving all three original root/GCC/x86-Clang fixture repair commits and exact
-source/probes. Run original actual-major collection/payload/finalizer control and
-exact omitted-fence exit1; lint, format and all11 docs/audits before retained
-publication. Existing four-way fixture evidence remains source-specific;
+source/probes. Native13f101bfd57f preserves all three commits and byte-identical source/probes.
+Original actual-major collection/payload/finalizer test7.08CPU/15.04elapsed passes,
+including exact omitted-fence exit1. Lint2.50CPU/4.96elapsed and format0.45/0.86s pass;
+finish all11 docs/audits before retained publication. Existing four-way fixture evidence remains source-specific;
 final sequential full gates still required. Next90 HTTP2 body bounds.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -147,7 +144,6 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 35 ownership-constructor-unwind | 54249400ef16 | 486520c141d3 | Final actual-squash rebase preserves both original feature/docs commits and source/probes; eight constructor/caller/loop tests27.31CPU/54.70elapsed, all14 RC units3.37/6.99s, lint2.32/4.67s and format0.34/0.60s pass; original omitted cleanup exit5 preserved; exact-head full gates required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
@@ -201,7 +197,7 @@ still need their final squash rebases and six exact-head full gates.
 | 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
 | 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
 | 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Both original cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s pass; source/probes and compiler/runtime unchanged; close preserves queued values and explicit drain releases counted cycles across O1/O2 GC/poison modes, without claiming automatic cycle reclamation; final actual-squash/full gates required |
-| 89 ownership-http2-body-roots | 3b72f38e6814 | b2d374878677 | Four-way fixture8f6846a/38046812141 passes original strict omission and all controls; tested fixture applied without optional export; source published and propagated through112; final refresh/full gates required |
+| 89 ownership-http2-body-roots | 13f101bfd57f | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
 | 90 fix-http2-body-bounds | 1b4be82fe9b6 | 3b72f38e6814 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 91 ownership-http2-peer-cleanup | 9900cc0d5229 | 1b4be82fe9b6 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 92 ownership-grpc-peer-completion | e89105300eb3 | 9900cc0d5229 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -357,9 +353,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-channel-cycle-worktree (row88, nativeb787b3c8),
-with both cycle/queue tests12.82CPU/25.69elapsed passing. The previous checkout's
-bounded package clean removed84.1MiB (0.07CPU/0.37elapsed).
+last checked in /private/tmp/fwp-http2-body-roots-worktree (row89, native13f101bf),
+with original HTTP2 major collection/root test7.08CPU/15.04elapsed passing.
+The previous checkout's bounded package clean removed85.5MiB (0.07CPU/0.37elapsed).
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared

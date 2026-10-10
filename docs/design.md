@@ -370,7 +370,8 @@ error. See [protocol.md](protocol.md).
 ## Prepared ownership implementation
 
 Compiler call ownership lowering must preserve allocation optimizations as well
-as exceptional lifetimes. Earlier counted arguments, including duplicated
+as exceptional lifetimes. PR113 protects consumed constructor fields and remaining
+caller references before allocation. Earlier counted arguments, including duplicated
 locals, stay registered while later arguments evaluate. A final consumed value
 can stay inline when no earlier counted argument needs protection, preserving
 direct stack, worker and flattened-loop representations. Later scalar
