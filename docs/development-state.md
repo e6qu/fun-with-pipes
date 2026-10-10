@@ -67,7 +67,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–80 are refreshed and published on their actual predecessors.
+Preparations39–81 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -83,14 +83,15 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Last-owner File storage81 at native4505f1463a53 on actual80010e622f064e preserves
-original source/probes. All nine storage/inline-path/runtime/construction/scoped/
-unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass.
-Exact missing finalizer-removal/storage-disposal exits4/7 remain intact. Repeated
-unshared storage reuse with tracing off, unrelated retained Files, real finalization,
-shared/no-free fallback and poisoning pass. Copy all11 docs/audit before retained
-publication; next82 failed File constructor storage cleanup and finalizer registry
-growth. Final actual-squash/full gates remain required.
+Failed File constructor/registry-growth82 at native838ebdbe43f0 on actual81
+6e5063786651 preserves original source/probes. All nine constructor/storage/
+library-resource/scoped/unwind tests29.08CPU/63.78elapsed, lint2.70/5.69s and
+format0.50/0.96s pass. Original hard-exit102, premature registry update exit3
+and omitted constructor storage disposal exit5 remain exact at O1/O2. Registry
+growth commits only after allocation succeeds; unrelated registrations and
+close/storage rollback survive. Copy all11 docs/audit before retained publication;
+next83 tag-aware unboxed variant frame holders, preserving both original and
+direct-constructor repair commits. Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -191,7 +192,7 @@ still need their final squash rebases and six exact-head full gates.
 | 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Both original binary-capture tests10.16CPU/20.43elapsed, eight File constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/1.09s pass; original source/probes unchanged; actual ARM64 headers/layouts/disassembly and one-vs-two allocation counters preserved; final actual-squash/full gates required |
 | 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | All nine storage/inline-path/runtime/construction/scoped/unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass; original source/probes unchanged, including exact missing finalizer-removal/storage exits4/7, tracing-off reuse and unrelated live Files; shared/no-free lifetimes preserved; final actual-squash/full gates required |
-| 82 ownership-file-construction-disposal | c6cbacac0db9 | 2fffa57d369d | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
+| 82 ownership-file-construction-disposal | 838ebdbe43f0 | 6e5063786651 | All nine constructor/storage/library-resource/scoped/unwind tests29.08CPU/63.78elapsed, lint2.70/5.69s and format0.50/0.96s pass; original source/probes unchanged, including hard-exit102 and exact premature growth/omitted disposal exits3/5; unrelated registry entries and rollback preserved; final actual-squash/full gates required |
 | 83 ownership-resource-frame-variants | 53440f785f65 | c6cbacac0db9 | Direct frame-constructor repair: five original native tests 20.72CPU/41.72elapsed, lint 2.34/4.77s and format 0.45/0.86s pass; strong audit 0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 073a20c8d7ef | 53440f785f65 | Test10.45/23.67s; lint 6.18/12.88s and format 0.45/0.83s pass |
 | 85 ownership-match-scrutinee-types | 1236f09a1d85 | 073a20c8d7ef | Two tests 12.49/27.27s; lint 6.11/13.31s and format 0.44/0.83s pass |
@@ -354,8 +355,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-storage-disposal-worktree (row81, native4505f146),
-with all nine storage and adjacent ownership tests30.46CPU/63.43elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-file-construction-disposal-worktree (row82, native838ebdbe),
+with all nine constructor/storage/library/scoped/unwind tests29.08CPU/63.78elapsed
+passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
