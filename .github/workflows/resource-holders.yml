@@ -27,10 +27,10 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test resource_frame_fields --test file_inline_path --test file_storage_disposal --test file_construction_disposal --test resource_frame_variants --test stack_match_ownership --test resource_match_context --test channel_cycle_ownership --test channel_queue_ownership --test resource_frames --test file_runtime_boundaries --test old_reclamation --test ownership --test gc -- -D warnings
+        run: cargo clippy --test resource_frame_fields --test file_inline_path --test file_storage_disposal --test file_construction_disposal --test resource_frame_variants --test stack_match_ownership --test resource_match_context --test channel_cycle_ownership --test channel_queue_ownership --test resource_frames --test file_runtime_boundaries --test old_reclamation --test ownership --test gc --test stack --test reuse -- -D warnings
       - name: Typed holders, nominal contexts, File storage and explicit cycle draining
         if: ${{ !cancelled() }}
-        run: cargo test --test resource_frame_fields --test file_inline_path --test file_storage_disposal --test file_construction_disposal --test resource_frame_variants --test stack_match_ownership --test resource_match_context --test channel_cycle_ownership --test channel_queue_ownership --test resource_frames --test file_runtime_boundaries --test old_reclamation --test ownership --no-fail-fast
+        run: cargo test --test resource_frame_fields --test file_inline_path --test file_storage_disposal --test file_construction_disposal --test resource_frame_variants --test stack_match_ownership --test resource_match_context --test channel_cycle_ownership --test channel_queue_ownership --test resource_frames --test file_runtime_boundaries --test old_reclamation --test ownership --test stack --test reuse --no-fail-fast
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
@@ -40,3 +40,6 @@ jobs:
       - name: Resource metadata and fusion order
         if: ${{ !cancelled() }}
         run: cargo test --lib resource::tests -- --nocapture
+      - name: All ownership IR controls including pending CAF and scalar owners
+        if: ${{ !cancelled() }}
+        run: cargo test --lib rc::tests
