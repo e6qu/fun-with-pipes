@@ -99,13 +99,16 @@ gRPC cancellation, TLS cache retry, bounded ALPN and TCP/TLS cleanup controls,
 lint, format and all audits pass. ALPN h2/http1.1 uses a measured13-byte buffer
 without GC scratch; original failure/length controls remain. Old revisions and
 source/probes are preserved; exact heads, bases and measurements are in the table.
-Current independent task65 is unboxed workers (`ownership-unboxed-worker-locals`):
-rebase FROM actuald364e70df274 ONTO published64d7641a1ab055, preserving both
-original implementation and counted-local transfer repair. Check original
-unboxed-worker, boxing/preparation, variant/record conversion, compiler-call
-liveness and retain-overflow targets, RC units, lint, format and all11 docs/audit
-before retained-revision publication. Complete compatible workers stay direct;
-partial/dynamic applications retain their boxed captures.
+Current independent task65 is unboxed workers (`ownership-unboxed-worker-locals`),
+rebased FROM actuald364e70df274 ONTO published64d7641a1ab055 at nativeed6462d15872.
+Both original implementation and counted-local repair commits are preserved.
+All12 original worker/conversion/compiler-call/retain controls pass40.51CPU/
+81.23elapsed; all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass.
+Exact O1/O2 binaries, C, flags, disassembly and generated layout are retained:
+the six-I64 value is48 bytes/aligned8; ARM returns through caller storage,
+with192/208-byte worker frames. No speed/constant-stack/all-register claim.
+Finish all11 docs/audit before retained-revision publication, then prepare queue66
+TLS peer-subject scratch cleanup. Partial/dynamic worker applications still box.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -189,7 +192,7 @@ still need their final squash rebases and six exact-head full gates.
 | 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | Three original TLS-cache/resource/gRPC controls11.72CPU/27.33elapsed, lint2.44/4.93s and format0.45/0.86s pass; original source/probes unchanged, including all five partial-owner/cache-publication controls; final actual-squash/full gates required |
 | 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | Three original wire/cache/listener controls10.61CPU/25.68elapsed, lint2.53/5.13s and format0.45/0.85s pass; original source/probes unchanged; measured 13-byte ALPN buffer without GC scratch and all original failure/length controls preserved; final actual-squash/full gates required |
 | 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | Three original connect/wire/cache controls10.02CPU/23.52elapsed, lint2.57/5.19s and format0.44/0.82s pass; original source/probes unchanged, including all four resolver/descriptor/handshake omissions; final actual-squash/full gates required |
-| 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
+| 65 ownership-unboxed-worker-locals | ed6462d15872 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 66 ownership-tls-peer-subject | cfe905046796 | 60b03078c3cd | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
 | 67 ownership-tls-alpn-roots | f7a0bd2eba93 | cfe905046796 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
@@ -367,8 +370,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-connect-cleanup-worktree (row64, nativef7523c2),
-with all three original controls10.02CPU/23.52elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-unboxed-worker-worktree (row65, nativeed6462d),
+with all12 original controls40.51CPU/81.23elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

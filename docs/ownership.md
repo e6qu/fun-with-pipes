@@ -141,6 +141,18 @@ and recorded in [history](roadmap-history.md). The O2 alias transfers share one
 32-byte stack slot; this shape-specific evidence is not a general ABI or timing
 claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
 
+The six-I64 recursive worker in preparation65 has a 48-byte value, aligned to8,
+versus56 bytes for the boxed header and fields, excluding collector metadata.
+Actual ARM64 O1/O2 binaries return it through caller storage using x8; the
+recursive worker uses192/208-byte frames respectively, including trap temporaries
+and stack protection. O2 passes six fields in x1–x6 to the next worker and uses
+vector loads/stores for the result. Its own body has no record-allocation call;
+the boxed interface wrapper remains. These measurements on Apple M4 Pro,
+macOS15.6.1 and Apple clang17 retain the original flags and strict semantic
+controls. They establish an ABI baseline, not a timing improvement, constant
+stack use or whole-program allocation freedom. Phase3 must measure caller
+storage and spill costs alongside box elimination; details are in history.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
