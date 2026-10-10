@@ -71,43 +71,28 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–48 are refreshed and published with their original source/probes
-and multi-commit repairs preserved. Exact heads, bases and checks are in the table;
-completed publication journals must not rerun. Returned-variant44 includes actual
-ARM64 binary/layout/disassembly evidence on Apple M4 Pro; it establishes the
-current 8-byte numeric slot baseline, not a speedup or natural-width support.
+Preparations39–68 are refreshed and published on their actual predecessors.
+Original source/probes, multi-commit repairs and immutable anchors are preserved;
+focused controls, lint, format and all audits pass. Exact heads, bases and metrics
+are in the table; detailed checks and retained revisions are in history. Completed
+publication journals must not rerun. Final squash rebases/full gates still remain.
 
-Preparations49–52 are published on their actual refreshed predecessors. Original
-capture, spawn, deadline, scope and task-handle controls pass, with contract
-inventory, ownership units, lint, format and all audits. Old revisions are retained
-remotely; source/probes remain unchanged. Completed publication journals must
-not rerun. Exact heads, bases and metrics are in the table and history.
-Preparations53–56 are published on their actual refreshed predecessors. Original
-channel and library input/result/unload controls, lint, format and all audits pass;
-old revisions and source/probes are preserved. Actual shared-library unload and
-static-archive exit include suspended-task draining and six teardown omissions.
-Closing preserves queued values; automatic unreachable-cycle reclamation remains
-unproved. Host string pointers retain their shared lifetime while loaded.
-Preparations57–60 are published on their actual refreshed predecessors. Original
-OpenCL, TLS listener and library resource/unload controls, lint, format and all
-audits pass. Interpreter/native OpenCL failures and actual TLS stream outputs
-agree; the stream check executed without skip. Real resource disposal preserves
-unrelated host handles and sends no implicit TLS shutdown traffic. Old revisions
-and source/probes are preserved; fake OpenCL is not GPU hardware coverage.
-Preparations61–67 are published on their actual refreshed predecessors. Original
-gRPC/TLS/resource and worker controls, lint, format and all audits pass. Both
-worker implementation/repair commits and all original source/probes survive.
-Actual O1/O2 ARM64 worker layout/disassembly is retained: value48 bytes/aligned8;
-return uses caller storage with192/208-byte frames. No speed/constant-stack claim.
-ALPN roots pass actual major tracing and exact omitted-fence exit1, with
-interpreter/native handshake agreement. Heads, bases and metrics are in the table.
-Current independent task68 is task timer ordering (`ownership-ci-probe-repairs`),
-rebased FROM actualf7a0bd2eba93 ONTO published67 at nativef2377b72b5d8.
-Original timer regression passes10.62CPU/22.32elapsed across O1/O2, three
-preemption slices, both reuse modes and delayed shorter-timer overtaking;
-raw interpreter output agrees. Lint2.66/5.30s and format0.44/0.83s pass.
-Finish all11 docs/audit before retained-revision publication, then prepare
-queue69 nested loop reconstruction and exceptional field-owner cleanup.
+Actual ARM64 binary/layout evidence for44 and65 establishes the current8-byte
+slot baseline. The six-I64 worker value is48 bytes/aligned8 and returns through
+caller storage with192/208-byte frames; no speed or constant-stack claim.
+ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
+executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
+fake APIs, not hardware evidence. Closing channels preserves queued values;
+automatic unreachable-cycle reclamation remains unproved.
+
+Nested-loop preparation69 at native2990e10695e8 on actual68c0cdb26eb99b passes
+all10 focused nested-loop/loop-unwind/worker/caller tests22.68CPU/46.10elapsed,
+all21 RC units3.54/7.24s, lint2.45/4.83s and format0.45/0.86s. All three
+omitted reconstruction cleanup scopes retain their exact exit2 oracle under
+O1/O2 GC stress/verification and reuse poisoning. Raw interpreter/native output
+agrees. Preserve original source/probes; copy all11 docs and audit before
+retained-revision publication, then prepare70 File construction on published69.
+The final actual-squash rebase and full sequential gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -195,7 +180,7 @@ still need their final squash rebases and six exact-head full gates.
 | 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
 | 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
 | 68 ownership-ci-probe-repairs | c0cdb26eb99b | 6d80e63524c2 | Original timer regression10.62CPU/22.32elapsed, lint2.66/5.30s and format0.44/0.83s pass; original source/probes unchanged; raw interpreter agrees across O1/O2, three preemption slices, both reuse modes and delayed overtaking; final actual-squash/full gates required |
-| 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
+| 69 ownership-nested-loop-boxing | 2990e10695e8 | c0cdb26eb99b | All10 original nested-loop/loop-unwind/worker/caller tests22.68CPU/46.10elapsed, all21 RC units3.54/7.24s, lint2.45/4.83s and format0.45/0.86s pass; original source/probes unchanged, including all three exact omitted-scope exit2 controls; final actual-squash/full gates required |
 | 70 ownership-file-construction | 823b86c74a68 | 925724e0994d | Test7.49/16.08s; lint 5.42/11.61s and format 0.36/0.76s pass |
 | 71 ownership-file-write-visibility | de6667643951 | 823b86c74a68 | Two tests 8.14/17.09s; lint 5.55/11.78s and format 0.35/0.75s pass |
 | 72 ownership-file-io-errors | 4aeff2223e3f | de6667643951 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
@@ -369,8 +354,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-ci-probe-repairs-worktree (row68, nativef2377b7),
-with the original timer control10.62CPU/22.32elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-nested-loop-boxing-worktree (row69, native2990e106),
+with all10 focused controls22.68CPU/46.10elapsed and all21 RC units passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
