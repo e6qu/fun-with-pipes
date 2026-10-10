@@ -45,9 +45,14 @@ Next production delivery is queue36 worker result boxing (`ownership-worker-boxi
 Current prepared sourcebcd3b392050b30163256ad72610046a15e691dfe has actual old
 base35bbd74db2977a1a34f83e67dd92038dce93941786, with original feature and appended
 documentation commits. Rebase FROM that actual base ONTO accepted squashdd3b218b31e369383c019cc4ac3c9abc2d5042e1,
-preserving both commits and exact source/probes. Validate original worker boxing,
-constructor/caller/loop controls, RC units, lint and format, then all11 docs/audits
-and retained publication. Open only the next focused PR and require all seven
+Both original feature/docs commits and exact source/probes are preserved at
+snapshot6e2902d2c7e3. The rebase's count check caught the original docs-only commit
+becoming empty after conflict resolution; retained it with --allow-empty -C
+bcd3b392050b without rerunning native rebase (recovery0.04CPU/0.78elapsed passes).
+All nine original worker/constructor/caller/loop tests30.22CPU/60.66elapsed pass,
+including exact worker omitted-scope exit4 and constructor exit5. All14 RC units
+3.25CPU/6.88elapsed, lint2.44/4.99s and format0.34/0.61s pass; finish all11
+docs/audits before retained publication. Open only the next focused PR and require all seven
 exact-head full gates before squash. Fix failures and continue later preparation.
 
 Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
@@ -140,7 +145,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
+| 36 ownership-worker-boxing | 6e2902d2c7e3 | dd3b218b31e3 | Final actual-squash source preserves both original feature/docs commits; nine worker/constructor/caller/loop tests30.22CPU/60.66elapsed, all14 RC units3.25/6.88s, lint2.44/4.99s and format0.34/0.61s pass; original source/probes unchanged, including exact worker omission exit4 and constructor exit5; exact-head full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
@@ -349,9 +354,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-http2-body-roots-worktree (row89, native13f101bf),
-with original HTTP2 major collection/root test7.08CPU/15.04elapsed passing.
-The previous checkout's bounded package clean removed85.5MiB (0.07CPU/0.37elapsed).
+last checked in /private/tmp/fwp-worker-boxing-worktree (queue36, native6e2902d2),
+with all nine worker/constructor/caller/loop tests30.22CPU/60.66elapsed passing.
+The previous checkout's bounded package clean removed94.1MiB (0.00CPU/0.14elapsed).
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
