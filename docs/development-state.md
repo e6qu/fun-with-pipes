@@ -151,7 +151,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 31 ownership-zip-unwind | 05d354f57167 | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; publishing next focused PR; all seven exact-head gates required |
 | 32 ownership-fold-unwind | f3585147985d | 05d354f57167 | Refreshed on frozen zip head; all original source/probes unchanged; nine tests24.44CPU/49.14elapsed, lint2.29/4.69s and format0.35/0.63s pass; actual-squash rebase and full gates required |
-| 33 ownership-loop-unwind | 37ab094371fc | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
+| 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
 | 34 ownership-argument-preparation | 734d3383addf | 527f84d405b7 | Source/tests/scripts/workflows identical to33; docs only; audit 0.44/3.50s passes; skip duplicate PR after 28 full acceptance |
 | 35 ownership-constructor-unwind | be0032a15ee3 | 734d3383addf | Six tests 22.36/45.17s; exact unit3.39/7.02s; lint 2.28/4.73s, format 0.35/0.74s and strong audit pass |
 | 36 ownership-worker-boxing | e171da5957fd | be0032a15ee3 | Three tests 15.44/31.12s; lint 2.40/4.94s, format 0.35/0.62s and strong audit pass; final sequential gates follow |
