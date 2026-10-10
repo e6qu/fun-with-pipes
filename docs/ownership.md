@@ -193,6 +193,16 @@ binaries, disassembly and a layout executable use unchanged compiler arguments.
 Instrumented constructor frames are 208/144 bytes; observer code affects these
 frames, so they are not production ABI or timing claims. Details are in history.
 
+Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
+520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
+offset 24; complete copied address bytes follow the header at offset 272.
+Original counters verify one request of 272+n+1 bytes for an n-byte address;
+"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
+loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
+positive/control binaries, disassembly and compiled layouts are recorded in
+history. Requested sizes exclude allocator/collector metadata; no timing,
+cache-speed or general collector-free claim follows.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend

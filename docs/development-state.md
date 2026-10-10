@@ -53,7 +53,7 @@ publication (1.91 / 19.47 s) pass. Old 8c4e9ffd71a5 is retained remotely.
 [PR #115](https://github.com/e6qu/fun-with-pipes/pull/115) is the sole open
 production PR. Creation passes (0.17 CPU / 3.87 elapsed s). CI 38072953927 and
 docs 38072954043 belong to frozen `0ddeedbb09a29235556808a499a665178cf13d83`.
-Bench passes; the other five production jobs run. Docs status remains pending;
+Bench passes; the other five production jobs run.
 Docs 38072954043 passes at the frozen head. Only passing current-head gates
 accept the head. Require all seven fresh exact-head gates
 before match-head squash with subject
@@ -98,10 +98,13 @@ and retained publication (1.80 / 18.42 s) pass. Header 64 bytes/alignment 8 and
 single allocation sizes 101/8311 bytes are measured; duplicated key bytes remain.
 Final sequential production gates remain.
 Current independent task 112: full connection addresses. Rebase FROM actual 111
-old b2350957e6ff ONTO published 111 5a01572cb2c6; preserve both original feature/
-format commits. Run address/packed-options/identity/connection controls, retaining
-actual address probe C/binaries with unchanged compiler delegation. Inspect actual
-new/legacy layouts, then lint/format and all11 docs/audits before retained publication.
+old b2350957e6ff ONTO published 111 5a01572cb2c6 completed once at8fe6765c9490,
+preserving both original feature/format commits and all source/probes.
+Four original address/packed-options/identity/connection tests11.32CPU/25.93elapsed
+pass with unchanged compiler delegation; four actual binaries retained. Actual
+new/legacy layout inspection0.22/0.99s passes (272/520-byte headers, alignment8,
+address field24, tested short request278). Lint2.64/5.34s and format0.44/0.85s
+pass; complete all11 docs/audits before retained publication.
 Keep exact truncation control exit1, copied addresses, long-address loopback/pool reuse,
 short-address byte savings and interpreter address parsing. After 112, review the
 finite phase2 exit inventory while continuing sequential production delivery.
@@ -235,7 +238,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | All four original native identity/capture/context-resource/connection tests13.37CPU/30.03elapsed, exact interpreter pool-key unit5.33/11.12s (one executed), lint2.35/4.76s and format0.45/0.85s pass; source/probes unchanged including old collision exit1, all fields/long/separator options, copied keys and pool reuse across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | All four original packed/cache/identity/capture tests12.58CPU/26.76elapsed, actual ARM64 binary/layout inspection0.20/0.82s, lint2.59/5.25s and format0.44/0.83s pass; both original feature/format commits and source/probes unchanged including one allocation101/8311 bytes, alignment8/header64, copy/last-owner/failure controls and cache releases10-to-5; final actual-squash/full gates required |
-| 112 ownership-grpc-connection-addresses | 0da68ea8cdb1 | b2350957e6ff | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 112 ownership-grpc-connection-addresses | 8fe6765c9490 | 5a01572cb2c6 | All four original address/packed/identity/connection tests11.32CPU/25.93elapsed, actual ARM64 binary/layout inspection0.22/0.99s, lint2.64/5.34s and format0.44/0.85s pass; both original feature/format commits and source/probes unchanged including truncation exit1, long loopback/pool reuse, copied addresses and actual272/520-byte headers aligned8 with short request278; final actual-squash/full gates required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
 remain in history. The Main and next delivery section supplies the sole live
@@ -368,11 +371,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-packed-options-worktree (row111, nativea4b3803a):
-original four tests12.58CPU/26.76elapsed, actual binary inspection0.20/0.82s and
-fresh worktree lint2.59/5.25s pass. Shared-package cleanup ran from root and
-removed90.1MiB (0.04CPU/0.25elapsed); source identity was rechecked in the actual
-row111 worktree before fresh lint. last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-connection-addresses-worktree (row112, native8fe6765c):
+all four address/packed-options/identity/connection tests11.32CPU/25.93elapsed,
+actual binary inspection0.22/0.99s and lint2.64/5.34s pass. Previous bounded
+package clean removed4.9MiB (0.00CPU/0.14elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
