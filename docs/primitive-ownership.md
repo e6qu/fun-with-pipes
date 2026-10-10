@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #109. Arrays, maps and sets own typed elements.
+The tables describe main through PR #110. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -233,12 +233,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 26 | Detached compiler reuse cells retain a cleanup lifetime; transfer clears holders, unused cells release lexically and on unwind | Sequential CI; old/young eligibility, flags and exceptional token paths |
-| 27 | Compiler call liveness protects actual owned references before later argument failures and at callee entry; boxed/worker and variant cleanup remain typed | Sequential CI; exactly-once release, aliases and cancellation before entry tick |
-| 28 | Runtime application owns its function and pending typed arguments until transfer/return; includes early row34 protection of partial argument/capture preparation and closure construction | Sequential CI; partial duplicates, overapplication, scalar safety, primitive traps and cancelled entry |
-| 29 | Map protects completed typed results and the partial spine until transfer, releasing them and scratch on unwind | Sequential CI; dynamic/direct/captured callbacks, scalar safety and allocation-failure ownership |
-| 30 | Filter/take-while protect typed selected aliases and partial result spines until transfer; unwind releases scratch and owned selections | Sequential CI; predicate order, retained aliases, scalar safety and partial construction |
-| 31 | zip-with protects completed typed results and partial spines; both borrowed scratch buffers release on unwind, including second-buffer failure | Sequential CI; aliases, scalar safety, callback traps, allocation failure and cancellation |
 | 32 | Fold retains its current accumulator until transfer, releases right-fold scratch on unwind and protects each borrowed argument duplicate during preparation | Sequential CI; aliases, partial duplicate failure, scalar safety and overapplication |
 | 33 | Loop protects counted current state at first/later cancellation safe points and owns Step through payload preparation | Sequential CI; flattened/nested state, aliases, scalar safety and payload-retain failures |
 | 34 | Original preparation anchor for argument/capture protection; implementation and its full regression probe are moved earlier into row28 | Reconcile overlap on final rebase; retain partial-failure, alias and pending-argument coverage |
