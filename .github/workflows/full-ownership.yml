@@ -1,0 +1,113 @@
+name: Full prepared ownership evidence
+
+on:
+  push:
+    branches: [ownership-evidence-full-ownership]
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: OpenSSL 3
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: test (GC stress golden suite runs in macos_gc)
+        run: cargo test --all-targets --no-fail-fast -- --skip golden_programs_under_gc_stress
+
+  # The stress golden suite took 57 minutes on Intel, leaving the serial
+  # integration test binaries unable to finish within the 90-minute gate.
+  # Both jobs are required per architecture; together they run the full suite.
+  macos_gc:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL 3
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - name: Full GC stress and verification golden suite
+        run: cargo test --test gc golden_programs_under_gc_stress -- --exact --nocapture
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          # fwp itself as WebAssembly (tests/browser.rs, the playground)
+          targets: wasm32-wasip1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: WebAssembly toolchain, OpenSSL headers (TLS)
+        run: sudo apt-get update && sudo apt-get install -y clang lld wasi-libc libclang-rt-18-dev-wasm32 libssl-dev openssl
+      - name: aarch64 cross compiler and qemu (tests/cross.rs)
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user musl-tools
+      - name: binaryen's wasm-opt (`--wasm-async=asyncify`; tests skip without it)
+        run: npm install -g binaryen
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: clippy (WebAssembly build)
+        run: cargo clippy --target wasm32-wasip1 -- -D warnings
+      - name: test
+        env:
+          FWP_REQUIRE_WASM_RESOURCE_COUNTS: "1"
+        run: cargo test --all-targets --no-fail-fast
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL headers (TLS)
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: benchmarks against C and Rust (docs/benchmarks.md)
+        run: cargo test --release --test bench -- --ignored --nocapture
+
+  roadmap_docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Retain review heads for preparation references
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Documentation, immutable tags and commit messages
+        run: python3 scripts/check-roadmap.py
+      - name: Local guard sampling integration checks
+        run: python3 scripts/test-local-guard.py

@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR103. Arrays, maps and sets own typed elements.
+The tables describe main through PR107. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -67,11 +67,21 @@ The merged runtime cleanup stack releases registered owners and scoped files in
 LIFO order before failure, trap or cancellation invalidates their frames. It
 stops at the catching handler boundary; task switches preserve separate chains.
 Normal transfer unlinks registrations without releasing a transferred value.
-PR103 passed all six exact-head production jobs and the documentation audit.
-Automatic registration for remaining compiler/runtime ownership paths is
-prepared work; this is not complete exceptional ownership or tracing-free support.
+Compiler caller/reuse-token and runtime application/capture-preparation cleanup
+are merged through PR107 after all exact-head gates. Registration for wider
+callback, constructor and runtime ownership remains prepared work; this is not
+complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
+
+A bounded inventory audit of prepared source112 (`996d5ee4ef4f`) finds explicit
+contract entries for 134 of 373 `foreign "fwp"` declaration symbols. The
+remaining 239 lack entries in this inventory; this does not mean 239 runtime
+sharing boundaries. Some combinators lower away, scalar words need no counts,
+and runtime-specific wrappers have additional lifetime handling. Review the
+actual lowered calls and runtime paths before assigning a contract or claiming
+tracing-free coverage. Main acceptance remains separate from this prepared-source
+inventory; counts and module details are in [history](roadmap-history.md#prepared-primitive-metadata-inventory).
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a

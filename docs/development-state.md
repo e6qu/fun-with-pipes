@@ -50,8 +50,9 @@ match prior25eda7b byte-for-byte. Nine focused map/runtime tests22.95CPU/46.05el
 focused clippy2.32/4.65s, format0.34/0.62s and strong audit0.42/3.45s pass.
 All11 live docs are copied into the PR; prior25eda7b is retained under
 roadmap/revision-029-25eda7b24ef5 before exact-lease publication. Freeze this head
-except for real fixes. Production CI38015157922 is running; roadmap_docs38015157960
-passes. Require all seven exact-head gates before merging.
+except for real fixes. Production CI38015157922 passes bench, regular ARM macOS and both macOS GC
+stress jobs; Linux and regular Intel macOS are running. Roadmap_docs38015157960 passes.
+Require all seven exact-head gates before merging.
 Squash subject: `Release map callback owners and partial results during unwind`;
 empty body and explicit --match-head-commit. After the accepted squash's message/
 tree proof and protected main update, deliver queue30 selection unwind next.
@@ -88,23 +89,18 @@ frame tests, lint, format and audit pass. Zero/one parent-box, File lifetime,
 alias and inactive-payload assertions are unchanged. Refreshed holder evidence `f7d7585b89ad` is byte-identical in source, native
 probes, scripts and production workflows to repaired source88 `acce7492f8d3`.
 All21 ownership IR controls and original stack/reuse gates remain required.
-CI38015529998 is running; failed CI38011999875 remains archived, not support.
+CI38015529998 passes; failed CI38011999875 remains archived, not support.
 
-Both repairs now propagate through83. Matched-result refresh44–59 is complete,
-including both CAF/converted-result controls. Refresh60–67 passes8.35CPU/92.10elapsed;
-68–75 passes after the strict resource-layout adjustment (5.27/58.64s stopped,
-3.26/38.44s completed);76–83 passes8.42/92.36s. Both original resource commits
-and the additional frame-holder repair survive. Refresh84–91 passes8.63CPU/92.12elapsed, preserving both row85 commits and
-original HTTP fixture controls. Refresh92–99 passes8.63CPU/92.83elapsed;
-100–107 passes8.50/91.57s. Continue108–112 in a bounded batch using
-/private/tmp/fwp-refresh-matched-conversion.py and actual bases.
-It verifies exact inherited code, original probes and commit counts, retains each
-prior head remotely, publishes with an exact lease and audits the handoff.
-It additionally carries the exact row83 frame-holder patch into84 and later.
-Completed journals must not be rerun. Prepare fresh serving/storage evidence
-after propagation; prior passes predate these repairs. All full gates remain
-required for each sequential production PR. Temporary helpers may disappear;
-the table, actual bases and retained remote tags are the durable recovery record.
+Both repairs now propagate through row112. Each bounded batch verifies exact
+inherited code, original probes and commit counts, retains prior heads remotely,
+publishes with an exact lease and audits the handoff. Both resource-frame
+commits, the frame-holder repair and both nominal/whole-stack match commits
+survive. Detailed commands, timings and conflict resolutions are in history.
+Completed refresh journals must not be rerun. Fresh serving/storage evidence
+passes on repaired source100/112; prior passes do not accept these new heads.
+Every production PR still requires its own seven exact-head gates. Temporary
+helpers may disappear; the table, actual bases and retained remote tags preserve
+the recovery record.
 
 The million-step native tail regression is merged and tested at O1/O2 with
 GCoff/on against a200-step raw oracle. Full-size raw100000 exceeds local RSS;
@@ -204,7 +200,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | 5a6b79b7a008 | 1362d3a239bc | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 110 ownership-grpc-environment-cache | 66d7d93e57f5 | 5a6b79b7a008 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 | 111 ownership-grpc-packed-options | a7d089cc5153 | 66d7d93e57f5 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
-| 112 ownership-grpc-connection-addresses | 215d7badbd49 | a4f347499f19 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 112 ownership-grpc-connection-addresses | 996d5ee4ef4f | a7d089cc5153 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
 remain in history. The Main and next delivery section supplies the sole live
@@ -256,11 +252,11 @@ accepts a current production head. Superseded runs are archived in history.
 
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; historical source215d7ba |
-| Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
-| Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI38015529998 running on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all21 IR controls and stack/reuse gates. Strong audit0.42/3.35s passes. Failed372375a/CI38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
-| Rows77–78 actual WASI counts/disposal | 24e7e57103f8c74bd3057ac856c7ba8e54378951 | CI38011802620 passes on repaired source78 e037bc5a06dc; required actual WASI, original resource/tracing probes, all20 IR controls and stack/reuse gates. Strong audit0.44/3.47s passes. Prior dc731c1/CI37980359907 predates the repairs |
-| Rows69–76 File and original resource frames | c5665d02622883499cdf8a1a9419dc835b1daed2 | CI38011728123 passes on repaired source76 4c6618c4eb91; original File/frame/loop probes, all20 IR controls, stack/reuse and tracing gates. Strong audit0.43/3.46s passes. Prior4a448ea/CI37980022336 predates the repairs |
+| Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI38015942823 passes on repaired source112 996d5ee4ef4f; all21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI37992657684 is historical |
+| Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI38015884622 passes on repaired source100 a3d88c0b8f3d; all21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit0.43/3.47s passes. Prior3aca5cf/CI37993159029 is historical |
+| Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all21 IR controls and stack/reuse gates. Strong audit0.42/3.35s passes. Failed372375a/CI38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
+| Rows77–78 actual WASI counts/disposal | 2378565fcf68780e0235dc120c3533f68c8868f0 | CI38016089987 passes on current source78 43773a07a269; mandatory actual WASI, original resource/tracing probes, all21 IR controls and stack/reuse gates. Strong audit0.46/3.56s passes. Prior24e7e57/CI38011802620 predates matched-result repair |
+| Rows69–76 File and original resource frames | cee001573c1ec0dd25f05097a71a57b662a03239 | CI38016049553 passes on current source76 f0034b6ab7c1; original File/frame/loop probes, all21 IR controls, stack/reuse and tracing gates. Strong audit0.50/3.71s passes. Prior c5665d0/CI38011728123 predates matched-result repair |
 | Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | CI38013532481 passes on repaired source52 cb32c2cea9bb; all21 IR controls and unchanged native conversion/stack/reuse gates; strong audit0.43/3.46s passes. Prior329e8db/CI38011548324 failed matched conversion and is retained |
 | Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI38008988824 passes on current41 at172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
 
@@ -278,6 +274,13 @@ cache teardown after blocked tasks and finalizers; row111 changes selected
 cache releases from ten malloc allocations to five. Row112 locally verifies long-address loopback/pool reuse, copied inputs and
 requested bytes below the legacy short-address layout atO1/O2 with GC/reuse
 variants. Focused Linux CI37958243461 also passes; full sequential platform gates remain required.
+
+A bounded source112 metadata inventory finds134 explicit entries among373
+library primitive symbols (0.22CPU/0.86elapsed). Absent metadata is not an
+effective runtime-sharing count: combinator lowering, scalars and runtime
+wrappers need separate review. Findings and module lists are in history; the
+primitive ownership page records this limit. Use that inventory for the finite
+phase2 exit review after sequential ownership deliveries.
 
 Canonical C decode scratch already frees on normal success/error paths;
 reconstructed decoded aggregates remain shared. Audit typed reconstruction,

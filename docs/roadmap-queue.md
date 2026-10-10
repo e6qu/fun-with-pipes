@@ -139,7 +139,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `5a6b79b7a008` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `66d7d93e57f5` | `6f4bfba80ef3` | `d178d86dca2b` |
 | 111 | grpc-packed-options | `ownership-grpc-packed-options` | `a7d089cc5153` | `2bb665596390` | `6f4bfba80ef3` |
-| 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `215d7badbd49` | `edbc5e8d0e62` | `2bd17608388d` |
+| 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `996d5ee4ef4f` | `edbc5e8d0e62` | `2bd17608388d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update
 `5c5875d30b8e`; do not open an extra PR for it. The evidence branch is separate:

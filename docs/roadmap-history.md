@@ -13270,3 +13270,166 @@ PR106-chain preparation refresh row109: cf14552bdba50683ad04221bfe483474b1d274bd
 PR106-chain preparation refresh row110: 393456e6e5ca161b76ce18ead2ca6145f86a6be1 to66d7d93e57f5fa6d2be79411aedc81e7033ebead on actual5a6b79b7a0084e96bc22d6f593b9f9412acc6a71, rebased FROMactualcf14552bdba50683ad04221bfe483474b1d274bd. Retained roadmap/revision-110-393456e6e5ca before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
 
 PR106-chain preparation refresh row111: a4f347499f19e352351bdded9fa5dd1ef7878716 toa7d089cc5153c4945769c3ff44ce7494b92c2bbb on actual66d7d93e57f5fa6d2be79411aedc81e7033ebead, rebased FROMactual393456e6e5ca161b76ce18ead2ca6145f86a6be1. Retained roadmap/revision-111-a4f347499f19 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row112: 215d7badbd49fc5ce47a6857fa180dc16fd37f18 to996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3 on actuala7d089cc5153c4945769c3ff44ce7494b92c2bbb, rebased FROMactuala4f347499f19e352351bdded9fa5dd1ef7878716. Retained roadmap/revision-112-215d7badbd49 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Completed repair propagation and fresh gRPC evidence
+
+Final bounded refresh108–112 passes5.41CPU/61.58elapsed. Both compiler repairs
+now reach112; original probes, both row85 commits and immutable anchors remain.
+Current source100 isa3d88c0b8f3d726d178619f73cee44855dc1e071; source112 is
+996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3. Actual bases are in the live table.
+
+Serving evidence rebases from actual e6ae6c83dc46 ontoa3d88c0b8f3d. Reviewed
+add/add conflict preserves the merged stronger auditor; all11 root docs resolve
+remaining conflicts. Guarded rebase0.03/0.26s stops; docs continue0.00/0.14s passes.
+New head1ec30f21bc457fe97f9d74616f97baca9f7fa10f preserves its one evidence
+commit. Source/native probes/scripts/production workflows matcha3d88 byte-for-byte.
+Original gRPC/HTTP2 controls remain, with all21 RC controls and stack/reuse gates
+added. Audit0.43/3.47s passes. Retain3aca5cf remotely as
+evidence-serving-3aca5cf20d77 before exact-lease publication. CI38015884622 runs.
+
+Storage evidence rebases from actual215d7badbd49 onto996d5ee4ef4f. The old
+pure auditor addition is already absorbed by the stronger base; review verifies
+no staged difference before skipping only that commit. Three remaining evidence
+commits survive, with all11 root docs copied. Guarded rebase, skip and docs
+continue each use0.00CPU/0.14elapsed. New exact head
+a6505b8f17c19c6736966181d1017389a4a6e109 has byte-identical source/native probes/
+scripts/production workflows to996d5ee. Original HTTP2/client/root controls and
+exact interpreter TLS pool identity test remain; all21 RC controls and stack/
+reuse gates are added. Audit0.42/3.38s passes. Retain e5bbfd8 remotely as
+evidence-storage-e5bbfd84736f before exact-lease publication. CI38015942823 queues.
+Queued evidence does not prove new support or replace sequential full gates.
+
+Refreshed holder evidence f7d7585b89ad/CI38015529998 passes all original scope
+checks, including the zero-parent-box assertion that failed before repair,
+all21 IR controls, real tracing and stack/reuse. This source-specific Linux
+pass does not accept a production PR or prove automatic cycle reclamation.
+
+## File and actual-WASI evidence after matched-result repair
+
+File evidence rebase FROM actual4c6618c4eb91 ONTO current source76
+f0034b6ab7c132a20f1aec22dbfdefd5f6c2c3ec preserves both evidence commits;
+all11 root docs resolve only documentation conflicts. Guarded rebase0.03CPU/
+0.25elapsed stops at docs, continue0.04/0.26s and audit0.50/3.71s pass.
+New exact headcee001573c1ec0dd25f05097a71a57b662a03239 matches source/native
+probes/scripts/production workflows byte-for-byte. All21 RC controls and original
+File/frame/loop/tracing/stack/reuse probes remain. Previous c5665d0 is retained
+as roadmap/evidence-file-c5665d026228 before exact-lease publication.
+Fresh CI38016049553 runs; old CI38011728123 passes only the earlier source.
+
+WASI evidence rebase FROM actual e037bc5a06dc ONTO current source78
+43773a07a26967f9cc5c02ec7cf16961fef3654f preserves both evidence commits;
+all11 root docs resolve documentation conflicts. Guarded rebase0.05CPU/
+0.14elapsed stops, continue0.00/0.14s and audit0.46/3.56s pass.
+New exact head2378565fcf68780e0235dc120c3533f68c8868f0 matches source/native
+probes/scripts/production workflows byte-for-byte. FWP_REQUIRE_WASM_RESOURCE_COUNTS=1
+remains mandatory alongside original native/tracing/stack/reuse and all21 RC
+controls. Previous24e7e57 is retained as roadmap/evidence-wasi-24e7e57103f8
+before exact-lease publication. Fresh CI38016089987 queues; old CI38011802620
+passes only the earlier source. Queued/skipped evidence is not passing support.
+
+Fresh source-specific serving CI38015884622 and storage CI38015942823 pass
+on exact heads1ec30f21bc45 and a6505b8f17c1, respectively. Original scopes, all21
+RC controls, stack/reuse, tracing and documentation gates pass; these Linux
+scopes never replace each production PR's full exact-head platform gates.
+
+Refreshed actual-WASI CI38016089987 passes on exact2378565fcf68, including
+required WASI resource-count/disposal execution and all inherited original
+tracing, ownership, stack/reuse and documentation controls. This is scoped
+Linux/WASI evidence, not full sequential production acceptance.
+
+## Prepared primitive metadata inventory
+
+A standalone bounded Rust audit imports the unmodified ownership inventory
+from source112996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3 and enumerates
+`foreign "fwp"` symbols in its library modules. Command through the absolute
+root guard: python3 /private/tmp/fwp-run-primitive-coverage-audit.py;
+0.22CPU/0.86elapsed passes. The audit changes no compiler/runtime/probes and
+does not use the shared Cargo target. It reports metadata presence only:
+combinator lowering, scalar-only calls and runtime-specific lifetime wrappers
+require separate review. Absence of metadata is not proof of tracing use or
+an ownership defect. These are prepared-source findings, not main acceptance.
+
+```text
+Prepared source996d5ee4ef4f: explicit primitive contract metadata vs declarations without metadata
+lib/autodiff.fwp: 0 explicit / 3 declarations
+  no explicit metadata: ad.tape, ad.push, ad.backward
+lib/cli.fwp: 0 explicit / 5 declarations
+  no explicit metadata: cli.parse, cli.help, term.is-tty, term.width, term.read-secret
+lib/collections.fwp: 42 explicit / 42 declarations
+lib/csv.fwp: 0 explicit / 2 declarations
+  no explicit metadata: csv.parse-with, csv.decode
+lib/ffi.fwp: 0 explicit / 9 declarations
+  no explicit metadata: mem.alloc, mem.free, mem.string, ptr.cast, ptr.at, ptr.read, ptr.write, ptr.read-string, ptr.address
+lib/fs.fwp: 0 explicit / 12 declarations
+  no explicit metadata: file.exists, file.is-dir, file.info, file.remove, file.rename, file.append, file.read-bytes, file.write-bytes, dir.list, dir.create, dir.create-all, dir.remove
+lib/grpc.fwp: 0 explicit / 10 declarations
+  no explicit metadata: grpc.metadata, grpc.set-header, grpc.set-trailer, grpc.with-gzip, grpc.with-response-metadata, grpc.peer-subject, grpc.with-tls, grpc.with-metadata, grpc.with-deadline, grpc._force
+lib/http.fwp: 0 explicit / 20 declarations
+  no explicit metadata: http.parse-request-head, http.parse-response-head, http.field-ok, http.content-length, http.to-hex, http.parse-hex, gzip.compress, gzip.decompress-max, deflate.compress, deflate.decompress-max, gzip._chunk, gzip._crc32, gzip._end, http._h2-serve, http._h2-request, http._h2-body, http._h2-respond, http._h2-data, http._h2-send, http._h2-pooled
+lib/io.fwp: 3 explicit / 11 declarations
+  no explicit metadata: read-line, read-all, read-lines, env.get, env.vars, env.cwd, time.monotonic, time.unix
+lib/json.fwp: 0 explicit / 4 declarations
+  no explicit metadata: json.parse, json.encode, json.write, json.read
+lib/list.fwp: 26 explicit / 26 declarations
+lib/log.fwp: 0 explicit / 4 declarations
+  no explicit metadata: metrics.add, metrics.set, metrics.observe, metrics.snapshot
+lib/net.fwp: 0 explicit / 20 declarations
+  no explicit metadata: tcp.listen, tcp.local-addr, tcp.accept, tcp.accept-for, tcp.stop, tcp.connect, tcp.read, tcp.read-for, tcp.write, tcp.write-for, tcp.close, tcp.peer-addr, udp.bind, udp.local-addr, udp.send-to, udp.recv-from, udp.close, dns.resolve, signal.shutdown-requested, signal.request-shutdown
+lib/numeric.fwp: 0 explicit / 7 declarations
+  no explicit metadata: linalg.lu-solve, linalg.det, linalg.inverse, linalg.cholesky, linalg.qr, linalg.cg, list.transpose
+lib/prelude.fwp: 18 explicit / 101 declarations
+  no explicit metadata: syntax.show, id, const, flip, compose, apply, fork, both, dup, on, uncurry, curry, swap, first, second, if, then2, curry3, uncurry3, tap, prim.add, prim.sub, prim.mul, prim.div, prim.rem, prim.neg, prim.zero, prim.one, prim.from-int, prim.from-float, prim.trap, wrapping.add, wrapping.sub, wrapping.mul, saturating.add, saturating.sub, saturating.mul, overflowing.add, overflowing.sub, overflowing.mul, checked.add, checked.sub, checked.mul, checked.div, bit.and, bit.or, bit.xor, bit.not, bit.shl, bit.shr, int.convert, int.to-float, float.to-int, float.convert, prim.sqrt, prim.exp, prim.ln, prim.sin, prim.cos, prim.tan, pow, floor, ceil, round, abs, min, max, hash, not, and, or, list.flat-map, list.ap, get, put, modify, run-state, random.u64, random.f64, file.read, file.write-new, args, exit
+lib/process.fwp: 0 explicit / 2 declarations
+  no explicit metadata: process.run-input, process.call
+lib/simd.fwp: 0 explicit / 9 declarations
+  no explicit metadata: simd.splat, simd.from-array, simd.add, simd.sub, simd.mul, simd.div, simd.min, simd.max, simd.sum
+lib/string.fwp: 31 explicit / 31 declarations
+lib/task.fwp: 14 explicit / 14 declarations
+lib/tensor.fwp: 0 explicit / 4 declarations
+  no explicit metadata: device.run, device.sum, device.gpu-available, device.gpu-run
+lib/ternary.fwp: 0 explicit / 8 declarations
+  no explicit metadata: trit.from-sign, trit.to-int, tint.to-int, tint.of-int, tint.trits, tint.from-trits, trits.pack, trits.unpack
+lib/tls.fwp: 0 explicit / 17 declarations
+  no explicit metadata: tls._connect, tls._listen, tls.handshake, tls.alpn, tls.secure, tls.peer-subject, tls.available, tls.accept, tls.accept-for, tls.local-addr, tls.stop, tls.read, tls.read-for, tls.write, tls.write-for, tls.close, tls.peer-addr
+lib/url.fwp: 0 explicit / 4 declarations
+  no explicit metadata: url.split, url.encode, url.decode, form.decode
+lib/websocket.fwp: 0 explicit / 8 declarations
+  no explicit metadata: ws._accept, ws._key, ws._frame, ws._parse, ws._close-payload, ws._close-parse, ws._deflate, ws._inflate
+TOTAL 134 explicit / 373 declarations; 239 without metadata (lowering/runtime behavior not audited; scalar words stay uncounted)
+```
+
+## Archived delivery narrative from the plan
+
+The plan's historical delivery narrative was moved here on2026-10-10 so the
+live plan keeps only the current priorities and acceptance criteria.
+
+Main includes #74–#107: native macOS and selected ownership through typed
+repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
+wide counts, array/map/set elements and reclamation of old counted storage.
+Task result/deadline boundaries and registered runtime unwind cleanup merged
+in PR102–103 after all six exact-head production jobs and roadmap_docs passed.
+PR104 adds the bounded guard sampling repair; PR105 adds compiler reuse-token
+transfer/unwind cleanup and stronger handoff checks, after all exact-head gates.
+PR106 adds live caller/pending-argument cleanup with the original allocation
+gates preserved, after all exact-head checks pass. PR107 adds runtime application
+and partial capture-preparation cleanup after all seven exact-head gates pass.
+Deliver queue29 map unwind next, followed by remaining ownership work.
+Exact heads, commands, failures and acceptance remain in
+[the handoff](development-state.md).
+
+Separate evidence has restored baseline root/cache/tutorial fixes and the real
+wide-record boxing repair. Its unchanged full allocation test passes on Linux
+and both macOS architectures; all six TLS/listener evidence jobs passed.
+Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
+both are repaired and all six WASM/resource gates pass. The next separate
+resource-frame evidence run exposed an HTTP GC signal failure; the whole
+stack-match binder ownership repair passes focused checks and all six full
+evidence gates. Every sequential PR still needs
+its own exact-head gates. Keep repairing failures.
+
+
+Plan-archive link audit initially fails0.00CPU/0.14elapsed because a moved
+relative handoff link still includes the old docs/ prefix. Correcting that
+archive-relative link restores the full audit:0.43CPU/3.44elapsed passes.

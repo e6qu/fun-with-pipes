@@ -40,29 +40,15 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#107: native macOS and selected ownership through typed
-repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
-wide counts, array/map/set elements and reclamation of old counted storage.
-Task result/deadline boundaries and registered runtime unwind cleanup merged
-in PR102–103 after all six exact-head production jobs and roadmap_docs passed.
-PR104 adds the bounded guard sampling repair; PR105 adds compiler reuse-token
-transfer/unwind cleanup and stronger handoff checks, after all exact-head gates.
-PR106 adds live caller/pending-argument cleanup with the original allocation
-gates preserved, after all exact-head checks pass. PR107 adds runtime application
-and partial capture-preparation cleanup after all seven exact-head gates pass.
-Deliver queue29 map unwind next, followed by remaining ownership work.
-Exact heads, commands, failures and acceptance remain in
-[the handoff](docs/development-state.md).
-
-Separate evidence has restored baseline root/cache/tutorial fixes and the real
-wide-record boxing repair. Its unchanged full allocation test passes on Linux
-and both macOS architectures; all six TLS/listener evidence jobs passed.
-Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
-both are repaired and all six WASM/resource gates pass. The next separate
-resource-frame evidence run exposed an HTTP GC signal failure; the whole
-stack-match binder ownership repair passes focused checks and all six full
-evidence gates. Every sequential PR still needs
-its own exact-head gates. Keep repairing failures.
+Main includes #74–#107: native macOS, selected typed container/text/callback
+ownership, exact wide reference counts and immediate last-owner reclamation.
+Registered unwind cleanup now protects compiler caller/reuse-token references
+and runtime application/capture preparation. Original allocation gates remain
+intact; merged changes passed all exact-head production and documentation gates.
+Deliver queue29 map unwind in PR108, then queue30 selection unwind and the
+remaining ownership work. Exact heads, failures, checks and the sole next action
+are in [the handoff](docs/development-state.md); historical platform evidence
+and repaired test controls are in [history](docs/roadmap-history.md).
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
