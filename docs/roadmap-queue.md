@@ -63,7 +63,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 34 | argument-preparation | `ownership-argument-preparation` | `49705971b287` | `49739182ecb6` | `988f2a3be97f` |
 | 35 | constructor-unwind | `ownership-constructor-unwind` | `54249400ef16` | `608ae7bb2d24` | `49739182ecb6` |
 | 36 | worker-boxing | `ownership-worker-boxing` | `759bc59437a7` | `dc4f9461571b` | `608ae7bb2d24` |
-| 37 | worker-preparation | `ownership-worker-preparation` | `8c4e9ffd71a5` | `c97dd03f8d89` | `dc4f9461571b` |
+| 37 | worker-preparation | `ownership-worker-preparation` | `0ddeedbb09a2` | `c97dd03f8d89` | `dc4f9461571b` |
 | 38 | loop-preparation | `ownership-loop-preparation` | `4289528c436b` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `d98205af88df` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `5ebcb2d6b0e2` | `b0219671dca3` | `1bb11bece9ae` |
@@ -137,7 +137,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `ef437370ca74` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `c9d841ee5a9d` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `bf297ac299ea` | `6f4bfba80ef3` | `d178d86dca2b` |
-| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `b2350957e6ff` | `2bb665596390` | `6f4bfba80ef3` |
+| 111 | grpc-packed-options | `ownership-grpc-packed-options` | `a4b3803a6275` | `2bb665596390` | `6f4bfba80ef3` |
 | 112 | grpc-connection-addresses | `ownership-grpc-connection-addresses` | `0da68ea8cdb1` | `edbc5e8d0e62` | `2bd17608388d` |
 
 The record-reconstruction branch `b21203da65d3` was incorporated into record-update

@@ -182,6 +182,17 @@ cleanup remain checked. These are representation measurements, not executed
 instruction counts or timings; File/path allocations remain. Exact source,
 flags, binaries, disassembly and compiled layout are recorded in history.
 
+Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
+insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
+one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
+4096-byte name plus other fields, with copied inputs and last-owner release.
+The payload contains both terminated strings and a length-framed identity key;
+packing removes separate allocation requests, rather than the duplicated key
+bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
+binaries, disassembly and a layout executable use unchanged compiler arguments.
+Instrumented constructor frames are 208/144 bytes; observer code affects these
+frames, so they are not production ABI or timing claims. Details are in history.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -225,7 +236,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #113 includes the following contracts. Detailed primitive modes
+Main through PR #114 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -233,14 +244,16 @@ and measurements are in [history](roadmap-history.md).
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
   Compiler call liveness and consumed constructor-field protection are merged;
-  remaining worker/callback paths stay prepared.
+  worker argument preparation and wider callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
   Compiler live caller/pending-argument and incoming-parameter cleanup is
   merged in PR106; runtime application and partial capture preparation in PR107.
   Constructor fields and remaining caller references are registered before allocation
-  in PR113; wider worker/callback registration remains prepared.
+  in PR113. Worker result fields and remaining caller references stay registered
+  until record/variant boxing succeeds in PR114; worker argument preparation
+  and wider callback registration remain prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
