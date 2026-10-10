@@ -27,10 +27,10 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test file_construction_ownership --test file_write_visibility --test file_io_errors --test file_read_kinds --test resource_frames --test file_runtime_ownership --test file_discard_ownership --test file_runtime_boundaries --test nested_loop_boxing --test loop_unwind_ownership --test old_reclamation --test ownership --test gc -- -D warnings
+        run: cargo clippy --test file_construction_ownership --test file_write_visibility --test file_io_errors --test file_read_kinds --test resource_frames --test file_runtime_ownership --test file_discard_ownership --test file_runtime_boundaries --test nested_loop_boxing --test loop_unwind_ownership --test old_reclamation --test ownership --test gc --test stack --test reuse -- -D warnings
       - name: File I/O, original frames, logical owners and exceptional cleanup
         if: ${{ !cancelled() }}
-        run: cargo test --test file_construction_ownership --test file_write_visibility --test file_io_errors --test file_read_kinds --test resource_frames --test file_runtime_ownership --test file_discard_ownership --test file_runtime_boundaries --test nested_loop_boxing --test loop_unwind_ownership --test old_reclamation --test ownership --no-fail-fast
+        run: cargo test --test file_construction_ownership --test file_write_visibility --test file_io_errors --test file_read_kinds --test resource_frames --test file_runtime_ownership --test file_discard_ownership --test file_runtime_boundaries --test nested_loop_boxing --test loop_unwind_ownership --test old_reclamation --test ownership --test stack --test reuse --no-fail-fast
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
@@ -40,3 +40,6 @@ jobs:
       - name: Resource metadata and fusion order
         if: ${{ !cancelled() }}
         run: cargo test --lib resource::tests -- --nocapture
+      - name: All ownership IR controls including pending CAF and scalar owners
+        if: ${{ !cancelled() }}
+        run: cargo test --lib rc::tests
