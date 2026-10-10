@@ -96,9 +96,10 @@ publication (1.81 / 18.68 s) pass. Original source/probes remain byte-identical,
 including the old-key collision exit 1, complete option distinctions and pool reuse.
 Final sequential production gates remain.
 Current independent task 110: environment TLS cache teardown. Rebase FROM actual
-109 old 6b206eae08ec ONTO published 109 c9d841ee5a9d. Run environment-cache/identity/
-capture/context-resource controls, lint/format and all 11 docs/audits before
-retained publication. Preserve read-once options, blocked-task and finalizer order,
+109 old 6b206eae08ec ONTO published 109 c9d841ee5a9d completed once at751fa69e018c;
+source/probes unchanged. Four original environment-cache/identity/capture/
+context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s
+pass. Complete all11 docs/audits before retained publication. Preserve read-once options, blocked-task and finalizer order,
 repeat teardown and omitted cache cleanup exit 1. Next: 111 packed options,
 including actual binary/layout inspection; preserve both original commits.
 
@@ -229,7 +230,7 @@ still need their final squash rebases and six exact-head full gates.
 | 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | All four original context-resource/restoration/startup/task-handle tests19.18CPU/40.38elapsed, lint2.48/5.17s and format0.44/0.84s pass; source/probes unchanged including all omitted TLS/task/scope owner exit1 controls, escaped tasks, spawn rollback and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | All four original capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass; source/probes unchanged including all three omitted owner exit1 controls, atomic overflow rollback, inherited captures and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | All four original native identity/capture/context-resource/connection tests13.37CPU/30.03elapsed, exact interpreter pool-key unit5.33/11.12s (one executed), lint2.35/4.76s and format0.45/0.85s pass; source/probes unchanged including old collision exit1, all fields/long/separator options, copied keys and pool reuse across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 110 ownership-grpc-environment-cache | 0caead68a6c3 | 6b206eae08ec | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 110 ownership-grpc-environment-cache | 751fa69e018c | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 111 ownership-grpc-packed-options | b2350957e6ff | 0caead68a6c3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 112 ownership-grpc-connection-addresses | 0da68ea8cdb1 | b2350957e6ff | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 
@@ -364,9 +365,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-tls-pool-identity-worktree (row109, native0a22d981),
-with all four identity/capture/context-resource/connection tests13.37CPU/30.03elapsed passing.
-Previous package clean removed117.5MiB (0.00CPU/0.13elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-environment-cache-worktree (row110, native751fa69e),
+with all four environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed passing.
+Previous package clean removed138.9MiB (0.05CPU/0.36elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
