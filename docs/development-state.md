@@ -87,12 +87,12 @@ and C library result controls pass, including all original failure/omission
 controls, lint, format and all audits. Old revisions and source/probes are preserved.
 Closing preserves queued values; automatic unreachable-cycle reclamation remains
 unproved. Host string pointers retain the existing shared lifetime while loaded.
-Current independent task55 is copied C library inputs (`ownership-library-inputs`):
-rebase FROM actualf53cccc88d45 ONTO published5446afd27c986c. Preserve typed
-input transfer/release, partial-conversion rollback and result regressions,
-including the explicit diagnostic for Bytes inputs whose C ABI lacks length.
-Check both original input/result test targets, lint, format and all11 docs/audit
-before retained-revision publication.
+Current independent task55 is copied C library inputs (`ownership-library-inputs`),
+rebased FROM actualf53cccc88d45 ONTO published5446afd27c986c at natived628fd229703.
+All three original input/result controls pass9.78CPU/22.08elapsed, including input
+rollback/transfer omissions and the missing Bytes-length diagnostic. Lint2.46/
+4.98s and format0.44/0.82s pass. Finish all11 docs/audit before retained-revision
+publication, then prepare queue56 actual library unload and task draining.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -166,7 +166,7 @@ still need their final squash rebases and six exact-head full gates.
 | 52 ownership-task-handles | df26a860c99f | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 54 ownership-library-results | 46afd27c986c | b304e91f628c | Original C library result control7.96CPU/17.73elapsed, lint2.47/4.88s and format0.43/0.82s pass; original source/probes unchanged, including all four reclamation/string/guard/evaluation controls; final actual-squash/full gates required |
-| 55 ownership-library-inputs | 067d547b3bfd | f53cccc88d45 | Two tests 8.27/18.38s; lint 2.34/4.68s and format 0.34/0.61s pass |
+| 55 ownership-library-inputs | d628fd229703 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
 | 56 ownership-library-unload | 0d30f4e3da51 | 067d547b3bfd | Test8.98/21.43s; lint 2.42/4.81s and format 0.45/0.74s pass |
 | 57 ownership-opencl-lifetime | 9dc98a72cac1 | 0d30f4e3da51 | Fake API test 7.78/22.85s; lint 2.36/4.71s and format 0.45/0.75s pass |
 | 58 ownership-interpreter-opencl | 013b07eac021 | 9dc98a72cac1 | Fake API interpreter/native11.27/27.44s; lint 2.32/4.69s and format 0.34/0.62s pass |
@@ -354,8 +354,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-library-result-worktree (row54, native3d795c7),
-with the original control7.96CPU/17.73elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-library-input-worktree (row55, natived628fd2),
+with all three original controls9.78CPU/22.08elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
