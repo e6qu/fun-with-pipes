@@ -101,11 +101,12 @@ Actual O1/O2 ARM64 worker binaries/layout/disassembly are retained: six-I64
 value48 bytes/aligned8; return uses caller storage with192/208-byte frames.
 These are ABI observations, not speed or constant-stack claims; phase3 must
 measure spills/caller storage. Exact heads, bases and metrics are in the table.
-Current independent task66 is peer subject cleanup (`ownership-tls-peer-subject`):
-rebase FROM actual60b03078c3cd ONTO published65e217ad8ce0d9. Preserve certificate,
-BIO and subject-copy buffer owners through failure and traps; check the original
-subject and TLS cache/listener controls, lint, format and all11 docs/audit before
-retained-revision publication.
+Current independent task66 is peer subject cleanup (`ownership-tls-peer-subject`),
+rebased FROM actual60b03078c3cd ONTO published65e217ad8ce0d9 at nativeb7a758541149.
+All three original subject/cache/listener controls pass10.61CPU/26.65elapsed,
+including certificate/BIO/buffer/allocation omissions. Lint2.45/5.01s and
+format0.43/0.82s pass. Finish all11 docs/audit before retained-revision publication,
+then prepare queue67 borrowed ALPN byte owners across actual major collection.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -190,7 +191,7 @@ still need their final squash rebases and six exact-head full gates.
 | 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | Three original wire/cache/listener controls10.61CPU/25.68elapsed, lint2.53/5.13s and format0.45/0.85s pass; original source/probes unchanged; measured 13-byte ALPN buffer without GC scratch and all original failure/length controls preserved; final actual-squash/full gates required |
 | 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | Three original connect/wire/cache controls10.02CPU/23.52elapsed, lint2.57/5.19s and format0.44/0.82s pass; original source/probes unchanged, including all four resolver/descriptor/handshake omissions; final actual-squash/full gates required |
 | 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
-| 66 ownership-tls-peer-subject | cfe905046796 | 60b03078c3cd | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
+| 66 ownership-tls-peer-subject | b7a758541149 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
 | 67 ownership-tls-alpn-roots | f7a0bd2eba93 | cfe905046796 | Test6.99/14.97s; lint 5.72/11.65s and format 0.44/0.84s pass |
 | 68 ownership-ci-probe-repairs | 351b21daafbb | f7a0bd2eba93 | Timer test 10.28/21.81s; lint 5.61/11.71s and format 0.46/0.87s pass |
 | 69 ownership-nested-loop-boxing | 925724e0994d | 351b21daafbb | Three tests 14.44/29.19s; lint 5.60/11.68s and format 0.35/0.63s pass |
@@ -367,8 +368,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-unboxed-worker-worktree (row65, nativeed6462d),
-with all12 original controls40.51CPU/81.23elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-peer-subject-worktree (row66, nativeb7a7585),
+with all three original controls10.61CPU/26.65elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
