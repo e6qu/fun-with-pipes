@@ -1130,6 +1130,15 @@ impl<'p> Gen<'p> {
         Ok(format!("{state}, {result}, {drop}"))
     }
 
+    fn loop_owned_ops(&mut self, step: &MT) -> Result<String, String> {
+        let ops = self.loop_ops(step)?;
+        let MT::Con(_, fields) = step else {
+            unreachable!()
+        };
+        let drop = self.value_drop(&fields[0]);
+        Ok(format!("{ops}, {drop}"))
+    }
+
     fn value_drop(&mut self, ty: &MT) -> String {
         if !crate::rc::needs_rc(&self.prog.shapes, ty) {
             "NULL".into()
@@ -1791,6 +1800,7 @@ fn hof_def(
     // with counted references, what the runtime keeps is shared
     let call = |x: &str| shared(reuse, format!("f{}({}{})", g, caps, x));
     if reuse && sym == "loop" {
+        let drop = fold_drop.expect("typed loop state");
         let ops = loop_ops.expect("owned loop operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
@@ -1800,7 +1810,7 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!(" FWP_KEEP_ALIVE(c{j});"))
             .collect::<String>();
-        return format!("{} {{\n    for (;;) {{\n        FWP_TICK();\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        V step = fwp_owned_entry{g}(args);\n        int stop = fwp_tag(step) != 0;\n        s = fwp_loop_payload(step, stop, {ops});\n        if (stop) {{{fences} return s; }}\n    }}\n}}\n", hof_sig(i, sym, *k));
+        return format!("{} {{\n    fwp_value_owner owner = {{s, {drop}}}; fwp_cleanup cleanup; fwp_value_protect(&owner, &cleanup);\n    for (;;) {{\n        FWP_TICK();\n        s = owner.value;\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        owner.value = 0;\n        V step = fwp_owned_entry{g}(args);\n        int stop = fwp_tag(step) != 0;\n        s = fwp_loop_payload(step, stop, {ops});\n        if (stop) {{{fences} fwp_value_finish(&owner, &cleanup); return s; }}\n        owner.value = s;\n    }}\n}}\n", hof_sig(i, sym, *k));
     }
     if reuse && sym == "map" {
         let ops = map_ops.expect("typed map result operations");
@@ -1995,6 +2005,46 @@ fn state_by_fields(e: &Expr) -> bool {
     }
 }
 
+// RC names an owned state argument after preparing its fields. Move only
+// that immediately consumed record's terminal Again through its preparation
+// spine, preserving the evaluation and release order of every field.
+fn again_record(e: &Expr) -> Option<Expr> {
+    Some(match e {
+        Expr::Record(_) => Expr::Construct(0, vec![e.clone()]),
+        Expr::Let(l, v, b) => Expr::Let(*l, v.clone(), Box::new(again_record(b)?)),
+        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(again_record(b)?)),
+        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(again_record(b)?)),
+        _ => return None,
+    })
+}
+
+fn loop_state_expr(e: &Expr) -> Expr {
+    match e {
+        Expr::Construct(0, xs) if xs.len() == 1 => {
+            again_record(&xs[0]).unwrap_or_else(|| e.clone())
+        }
+        Expr::Let(l, v, b) => {
+            if let Expr::Construct(0, xs) = &**b {
+                if xs.len() == 1 && matches!(xs[0], Expr::Local(k) if k == *l) {
+                    if let Some(prepared) = again_record(v) {
+                        return prepared;
+                    }
+                }
+            }
+            Expr::Let(*l, v.clone(), Box::new(loop_state_expr(b)))
+        }
+        Expr::Dup(l, b) => Expr::Dup(*l, Box::new(loop_state_expr(b))),
+        Expr::Drop(l, b) => Expr::Drop(*l, Box::new(loop_state_expr(b))),
+        Expr::Match(s, arms) => Expr::Match(
+            s.clone(),
+            arms.iter()
+                .map(|(p, b)| (p.clone(), loop_state_expr(b)))
+                .collect(),
+        ),
+        _ => e.clone(),
+    }
+}
+
 /// How a `loop` with this step function can run in C: `None` if it
 /// cannot (it is not a known one-argument function whose every result is
 /// a literal `Again x` or `Stop x`); `Some(Some(n))` when the state is a
@@ -2006,8 +2056,9 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
     if f.arity != 1 {
         return None;
     }
+    let e = loop_state_expr(e);
     let mut ts = Vec::new();
-    tails(e, &mut ts);
+    tails(&e, &mut ts);
     let mut fields = None;
     let mut all_records = true;
     for t in &ts {
@@ -2022,7 +2073,7 @@ fn loop_shape(f: &Func) -> Option<Option<usize>> {
             _ => return None,
         }
     }
-    if all_records && fields.is_some() && state_by_fields(e) {
+    if all_records && fields.is_some() && state_by_fields(&e) {
         Some(fields)
     } else {
         Some(None)
@@ -3308,7 +3359,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 return Some(format!("fwp_loop{g}({s})"));
             }
             let step = self.g.prog.funcs[g].ty.params(1).1.clone();
-            let ops = self.g.loop_ops(&step).expect("typed loop Step");
+            let ops = self.g.loop_owned_ops(&step).expect("typed loop Step");
             return Some(format!("fwp_k_loop_owned(fwp_owned_entry{g}, {s}, {ops})"));
         }
         if n == 0 {
@@ -4200,7 +4251,7 @@ impl<'p> Gen<'p> {
             "fail" => format!("fwp_fail(l0, {}); return 0;", self.desc(&p(0))),
             "loop" if self.reuse => {
                 let step = MT::Con("std::Step".into(), vec![p(1), result.clone()]);
-                let ops = self.loop_ops(&step)?;
+                let ops = self.loop_owned_ops(&step)?;
                 format!("return fwp_p_loop(l0, l1, {ops});")
             }
             "sort" => format!("return fwp_p_sort(l0, {});", self.desc(&elem(&p(0), 0))),
@@ -4700,9 +4751,11 @@ impl<'p> Gen<'p> {
     /// of the generic loop: one per iteration, and the step's own.
     fn loop_def(&mut self, step: FuncId, record: Option<usize>) -> String {
         let f = self.prog.funcs[step].clone();
-        let Body::Expr(e) = &f.body else {
+        let Body::Expr(original) = &f.body else {
             unreachable!()
         };
+        let normalized = loop_state_expr(original);
+        let e = &normalized;
         let mut ts = Vec::new();
         tails(e, &mut ts);
         // a field of a record state that is itself a small record, and
@@ -4847,6 +4900,32 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 )
             })
             .collect::<String>();
+        // The outer tick runs before fs takes the state; save only owned
+        // typed slots, never scalar address bits or already-consumed old slots.
+        let (mut protect, mut save, mut transfer, mut finish) =
+            (String::new(), String::new(), String::new(), String::new());
+        if self.reuse && self.unwind && self.ticks {
+            let owned: Vec<_> = slot_types
+                .iter()
+                .filter(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+                .cloned()
+                .collect();
+            if !owned.is_empty() {
+                let id = self.cleanup_defs.len();
+                let mut members = Vec::new();
+                let mut releases = Vec::new();
+                for (j, (slot, ty)) in owned.iter().enumerate() {
+                    members.push(format!("V v{j};"));
+                    let drop = self.value_drop(ty);
+                    releases.push(format!("{drop}(c->v{j});"));
+                    let _ = write!(save, "state_owner.v{j} = st[{slot}]; ");
+                    let _ = write!(transfer, "state_owner.v{j} = 0; ");
+                }
+                self.cleanup_defs.push(format!("typedef struct {{ {} }} fwp_owner_ctx{id};\nstatic void fwp_owner_release{id}(void *arg) {{ fwp_owner_ctx{id} *c = arg; {} }}\n", members.join(" "), releases.join(" ")));
+                protect = format!("fwp_owner_ctx{id} state_owner = {{0}}; fwp_cleanup state_cleanup; fwp_cleanup_push(&state_cleanup, fwp_owner_release{id}, &state_owner);");
+                finish = "fwp_cleanup_pop(&state_cleanup);".into();
+            }
+        }
         // a safe point per iteration, where a task could be preempted
         let tick = if self.ticks { "FWP_TICK();" } else { "" };
         let _ = write!(
@@ -4854,10 +4933,12 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
             "static V fwp_loop{id}(V s) {{
     V st[{n}] = {{0}}, nx[{n}] = {{0}}, out = 0;
     {load}{take}
+    {protect}
     for (;;) {{
-        {tick}
+        {save}{tick}
+        {transfer}
         int done = fs{id}(st, nx, &out);
-{root_fences}        if (done) return out;
+{root_fences}        if (done) {{ {finish} return out; }}
         for (int i = 0; i < {n}; i++) st[i] = nx[i];
     }}
 }}
@@ -6046,12 +6127,21 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
             } else {
                 None
             };
-        let fold_drop = if g.reuse && matches!(hof.0.as_str(), "fold" | "fold-right") {
+        let fold_drop = if g.reuse && matches!(hof.0.as_str(), "fold" | "fold-right" | "loop") {
             let ty = prog.funcs[hof.1]
                 .ty
                 .params(prog.funcs[hof.1].arity as usize)
                 .1
                 .clone();
+            let ty = if hof.0 == "loop" {
+                prog.funcs[hof.1]
+                    .ty
+                    .params(prog.funcs[hof.1].arity as usize)
+                    .0[hof.2]
+                    .clone()
+            } else {
+                ty
+            };
             Some(g.value_drop(&ty))
         } else {
             None
