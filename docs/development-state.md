@@ -36,7 +36,7 @@ one line with empty body and no trailers or attribution. Raw commit has one
 parent837096b9a5dc and tree `d999a7ec3459ab9ac02d61aef42456b0b5a551b1`, identical to the tested head.
 All11 live docs were hashed in /private/tmp/fwp-main-docs-pre112 and restored
 byte-for-byte after main FF. Duplicate mainCI38059746844 cancelled only after
-that proof; main docs38059746845 is queued. Native macOS and selected ownership
+that proof; main docs38059746845 passes. Native macOS and selected ownership
 are delivered through loop state/Step unwind and flattened Again record preservation.
 Phase2 remains incomplete; phases3–6 remain pending and tracing remains fallback.
 
@@ -81,12 +81,14 @@ executes without skip and agrees exactly with the interpreter. OpenCL57–58 use
 fake APIs, not hardware evidence. Closing channels preserves queued values;
 automatic unreachable-cycle reclamation remains unproved.
 
-Current independent task73 is original resource frames (`ownership-resource-frames`).
-Rebase FROM actual72old4aeff2223e3f ONTO published72eee4807a3954. Preserve both
-original implementation and fusion repair commits; original cleanup timing is
-observable even for pure stages. Validate frame/source/native tests, resource
-and RC units, lint, format and all11 docs/audits before retained publication.
-Next74 is File runtime owner counting.
+Original resource-frame73 at nativeb02b48c59348 on actual72eee4807a3954
+preserves both implementation/fusion repair commits and original source/probes.
+All11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units
+3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass.
+Raw interpreter/native frame results, aliases and error behavior agree; pure
+stage cleanup remains protected from fusion interleaving. Copy all11 docs and
+audit before retained publication; next74 File runtime owner counting.
+Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -178,7 +180,7 @@ still need their final squash rebases and six exact-head full gates.
 | 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | All four original construction/unwind tests10.29CPU/21.66elapsed, lint2.43/4.82s and format0.44/0.85s pass; original source/probes unchanged, including exact omitted-scope exit2 and stale-finalizer exit3; raw interpreter/native File behavior agrees; final actual-squash/full gates required |
 | 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | All six original write/construction/unwind tests12.54CPU/25.17elapsed, lint2.44/4.91s and format0.45/0.85s pass; original source/probes unchanged, including exact omitted-flush exit3; raw interpreter/native immediate write bytes agree; final actual-squash/full gates required |
 | 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
-| 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
+| 73 ownership-resource-frames | b02b48c59348 | eee4807a3954 | Both original implementation/fusion repair commits preserved; all11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
 | 75 ownership-file-discard | 4b8202419941 | d3fa39b37c83 | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
 | 76 ownership-file-runtime-boundaries | b5aee4eb6e95 | 4b8202419941 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
@@ -348,8 +350,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-constructor-unwind-worktree (row35, snapshot833fa844),
-with all eight focused tests27.31CPU/54.70elapsed and all14 RC units passing. Before switching Rust
+last checked in /private/tmp/fwp-resource-frames-worktree (row73, nativeb02b48c5),
+with all11 focused tests30.28CPU/60.68elapsed, three resource and all21 RC units
+passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
