@@ -1339,6 +1339,43 @@ static void fwp_closure_drop(V f) {
     if (work.items != work.local) free(work.items);
 }
 
+#ifndef FWP_UNWIND
+#define FWP_UNWIND 0
+#endif
+#if FWP_UNWIND
+/* Only completed duplicates are owned; the original argument slice borrows. */
+typedef struct {
+    V *args;
+    void (*drop)(V *, uint32_t, uint32_t);
+    uint32_t start, n;
+} fwp_args_owner;
+static void fwp_args_release(void *arg) {
+    fwp_args_owner *owner = arg;
+    uint32_t n = owner->n;
+    owner->n = 0;
+    if (n) owner->drop(owner->args, owner->start, n);
+}
+
+/* The current function stays owned until its entry returns. Supplied arguments
+ * transfer only at entry; overapplication's tail waits in this runtime frame. */
+typedef struct {
+    V function;
+    V *args;
+    const fwp_owned_fninfo *types;
+    uint32_t start, offset, n;
+} fwp_apply_owner;
+static void fwp_apply_release(void *arg) {
+    fwp_apply_owner *owner = arg;
+    V function = owner->function;
+    owner->function = 0;
+    uint32_t count = owner->n - owner->start;
+    if (count && owner->types->drop_arguments)
+        owner->types->drop_arguments(owner->args + owner->start, owner->offset + owner->start, count);
+    owner->start = owner->n;
+    if (function) fwp_closure_drop(function);
+}
+#endif
+
 static V fwp_apply_owned(V f, uint32_t n, V *args) {
     for (;;) {
         fwp_clo *c = CLO(f);
@@ -1349,14 +1386,35 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
             return fwp_apply(f, n, args);
         }
         uint32_t ar = fi->arity, have = c->n;
+#if FWP_UNWIND
+        fwp_apply_owner owner = {f, args, fi->owned, 0, have, n};
+        fwp_cleanup cleanup;
+        uint8_t *slot = fwp_rc_slot(f);
+        int registered = (slot && *slot) ||
+            (fi->owned->drop_arguments && (have || have + n < ar || n > ar - have));
+        if (registered) fwp_cleanup_push(&cleanup, fwp_apply_release, &owner);
+#endif
         if (have + n < ar) {
             fwp_clo *r = (fwp_clo *)fwp_alloc_init(sizeof(fwp_clo) + (have + n) * sizeof(V));
             r->fn = c->fn;
             r->n = have + n;
+#if FWP_UNWIND
+            /* Child aliases are not yet owned. A failed capture duplicate
+             * releases the empty outer cell, not its copied borrowed fields. */
+            V building = fwp_rc_fresh(PTR(r));
+            fwp_cleanup building_cleanup;
+            fwp_cleanup_push(&building_cleanup, fwp_rc_cleanup_cell, &building);
+#endif
             for (uint32_t i = 0; i < have; i++) r->a[i] = c->a[i];
             for (uint32_t i = 0; i < n; i++) r->a[have + i] = args[i];
             fi->owned->captures(f, 1);
             V result = fwp_rc_fresh(PTR(r));
+#if FWP_UNWIND
+            owner.start = n; /* the fresh closure now owns supplied arguments */
+            building = 0;
+            fwp_cleanup_pop(&building_cleanup);
+            if (registered) fwp_cleanup_pop(&cleanup);
+#endif
             FWP_KEEP_ALIVE(f);
             FWP_KEEP_ALIVE(args);
             fwp_closure_drop(f);
@@ -1365,14 +1423,23 @@ static V fwp_apply_owned(V f, uint32_t n, V *args) {
         uint32_t need = ar - have;
         V result;
         if (!have && ar) {
+#if FWP_UNWIND
+            owner.start = need; /* the entry takes exactly this prefix */
+#endif
             result = fi->owned->entry(args);
         } else {
             V all[ar ? ar : 1];
             for (uint32_t i = 0; i < have; i++) all[i] = c->a[i];
             for (uint32_t i = 0; i < need; i++) all[have + i] = args[i];
             fi->owned->captures(f, 1);
+#if FWP_UNWIND
+            owner.start = need; /* captures prepared; entry now takes the prefix */
+#endif
             result = fi->owned->entry(all);
         }
+#if FWP_UNWIND
+        if (registered) fwp_cleanup_pop(&cleanup);
+#endif
         FWP_KEEP_ALIVE(f);
         FWP_KEEP_ALIVE(args);
         fwp_closure_drop(f);

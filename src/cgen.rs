@@ -3601,10 +3601,17 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     "fwp_apply"
                 };
                 self.tail_tokens(self.tail_calls.contains(&(e as *const Expr)));
+                // A consumed off-heap closure leaves its original capture
+                // references with this frame until application returns.
+                let pending = self.stack_args.len();
+                if let Some(children) = &children {
+                    self.stack_args.extend(children.iter().cloned());
+                }
                 let result = self.bind_call(
                     e as *const Expr,
                     format!("{}({}, {}, {})", apply, fv, xs.len(), Self::array(&xs)),
                 );
+                self.stack_args.truncate(pending);
                 if let Some(children) = children {
                     self.stack_children_count(children, false);
                 }
@@ -6254,15 +6261,27 @@ static const fwp_exec_spec exec_spec{i} = {{
             let f = &prog.funcs[id];
             let mut caps = String::new();
             let mut cleanup = String::new();
+            let mut argument_drops = String::new();
             let mut arguments = String::from("    (void)a; (void)start; (void)n;\n");
             let params = f.ty.params(f.arity as usize).0;
+            let prepare_scope = g.unwind
+                && params
+                    .iter()
+                    .filter(|ty| crate::rc::needs_rc(&prog.shapes, ty))
+                    .count()
+                    > 1;
             for (j, ty) in params.iter().enumerate() {
                 if !crate::rc::needs_rc(&prog.shapes, ty) {
                     continue;
                 }
+                let tracked = if prepare_scope {
+                    format!(" owner.n = {j} - start + 1;")
+                } else {
+                    String::new()
+                };
                 let _ = writeln!(
                     arguments,
-                    "    if (start <= {j} && {j} - start < n) fwp_rc_dup(a[{j} - start]);"
+                    "    if (start <= {j} && {j} - start < n) {{ fwp_rc_dup(a[{j} - start]);{tracked} }}"
                 );
                 let drop = if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
                     format!("fwp_drop{}", g.drop_id(ty))
@@ -6270,7 +6289,11 @@ static const fwp_exec_spec exec_spec{i} = {{
                     "fwp_rc_drop".into()
                 };
                 if free_enabled() {
-                    let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) fwp_rc_dup(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
+                    if g.unwind {
+                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {drop}(CLO(v)->a[{j}]);");
+                    } else {
+                        let _ = writeln!(caps, "    if (CLO(v)->n > {j}) {{ if (duplicate) fwp_rc_dup(CLO(v)->a[{j}]); else {drop}(CLO(v)->a[{j}]); }}");
+                    }
                 } else {
                     let _ = writeln!(
                         caps,
@@ -6285,6 +6308,52 @@ static const fwp_exec_spec exec_spec{i} = {{
                     }
                 }
             }
+            for (j, ty) in f.ty.params(usize::MAX).0.iter().enumerate() {
+                if !crate::rc::needs_rc(&prog.shapes, ty) {
+                    continue;
+                }
+                let drop = if free_enabled() && !matches!(ty, MT::Con(n, _) if n == "?") {
+                    format!("fwp_drop{}", g.drop_id(ty))
+                } else {
+                    "fwp_rc_drop".into()
+                };
+                let _ = writeln!(
+                    argument_drops,
+                    "    if (start <= {j} && {j} - start < n) {drop}(a[{j} - start]);"
+                );
+            }
+            let pending_drop = if argument_drops.is_empty() {
+                "0".into()
+            } else {
+                let _ = writeln!(owned_defs, "static void fwp_arg_drop{id}(V *a, uint32_t start, uint32_t n) {{\n{argument_drops}}}");
+                format!("fwp_arg_drop{id}")
+            };
+            if prepare_scope {
+                // Each successful duplicate is owned until the whole requested
+                // span transfers. A later failure must preserve original aliases.
+                arguments.insert_str(0, &format!("    fwp_args_owner owner = {{a, {pending_drop}, start, 0}}; fwp_cleanup preparation;\n    fwp_cleanup_push(&preparation, fwp_args_release, &owner);\n"));
+                arguments.push_str("    fwp_cleanup_pop(&preparation);\n");
+            }
+            if g.unwind {
+                caps.insert_str(
+                    0,
+                    &format!(
+                        "    if (duplicate) {{ fwp_args{id}(CLO(v)->a, 0, CLO(v)->n); return; }}\n"
+                    ),
+                );
+            }
+            let (entry_pre, entry_post) = if g.unwind && !cleanup.is_empty() {
+                let _ = writeln!(
+                    owned_defs,
+                    "static void fwp_entry_release{id}(void *arg) {{ V *a = arg;\n{cleanup}}}"
+                );
+                (
+                    format!("    fwp_cleanup c; fwp_cleanup_push(&c, fwp_entry_release{id}, a);\n"),
+                    "    fwp_cleanup_pop(&c);\n".to_string(),
+                )
+            } else {
+                (String::new(), String::new())
+            };
             let release = if free_enabled() {
                 "fwp_rc_free_obj(v);"
             } else {
@@ -6292,11 +6361,12 @@ static const fwp_exec_spec exec_spec{i} = {{
             };
             caps.insert_str(0, "    (void)v; (void)duplicate;\n");
             let args: Vec<String> = (0..f.arity).map(|j| format!("a[{j}]")).collect();
-            let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n    V result = f{id}({});\n{cleanup}    return result;\n}}\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n) {{\n{arguments}}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}, fwp_args{id}}};", args.join(", "));
+            let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n{entry_pre}    V result = f{id}({});\n{entry_post}{cleanup}    return result;\n}}\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n) {{\n{arguments}}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}, fwp_args{id}, {pending_drop}}};", args.join(", "));
         }
     }
     let mut out = String::new();
     out.push_str("/* Generated by fwp. */\n");
+    let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
     let web = uses_web(prog);
     let tls = uses_services || web || uses_tls(prog);
     if tls {
