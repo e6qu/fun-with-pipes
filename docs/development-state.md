@@ -50,8 +50,8 @@ all14 RC units3.25/6.88s, lint2.44/4.99s, format0.34/0.61s and all three audits
 pass. Publication1.75CPU/18.26elapsed and PR creation0.20/3.94s pass. Oldbcd3b392050b
 is retained remotely before exact-lease publication. Resolved empty-docs commit
 bookkeeping is archived in history; native rebase was not rerun.
-CI38066365077 has both regular macOS jobs and ARM GC stress running; Linux,
-bench, Intel GC stress and docs38066365141 are queued at the frozen head. Require all seven
+CI38066365077 has all four macOS jobs running; Linux, bench and
+docs38066365141 are queued at the frozen head. Require all seven
 exact-head gates, then match-head squash with subject
 `Protect worker result fields until record and variant boxing succeeds` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -93,9 +93,10 @@ trap recovery (`ownership-grpc-render-cleanup`). Preparation95 published
 original source/probes. Four decoder/receive/status/completion controls pass;
 three audits and publication1.68CPU/18.06elapsed pass.
 Rebase96 FROM actual95oldab5723156bca ONTO published9591ab62452636;
-run unchanged rendering/force/receive/status controls, lint/format and all11 docs/
-audits before retained publication. Preserve exact omitted cleanup exit1, render
-and final service-error trap text, O1/O2 and GC/poison modes. Next97 send cleanup.
+Nativef85463a63925 preserves original source/probes. All four rendering/force/
+receive/status tests15.08CPU/31.06elapsed pass, preserving exact omitted cleanup
+exit1, render and final service-error trap text, O1/O2 and GC/poison modes.
+Finish lint/format and all11 docs/audits before retained publication. Next97 send cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -209,7 +210,7 @@ still need their final squash rebases and six exact-head full gates.
 | 93 ownership-grpc-status-cleanup | 9ad102d5a16f | 26545f1b279b | All four original status/completion/server/task tests20.89CPU/42.76elapsed, lint2.43/4.94s and format0.45/0.85s pass; original source/probes unchanged including both omitted-release exit2 controls, status-copy hard exit102/exact stderr and GC on/off/poison modes; final actual-squash/full gates required |
 | 94 ownership-grpc-receive-cleanup | ec0fd11c6b26 | 9ad102d5a16f | All four original receive/status/completion/body-root tests15.65CPU/32.13elapsed, lint2.43/4.90s and format0.44/0.84s pass; source/probes unchanged including all three omitted-release exit1 controls, exact message bytes/status text and cancelled-wait cleanup across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | All four original force/receive/status/completion tests16.95CPU/34.13elapsed, lint2.40/4.89s and format0.44/0.85s pass; source/probes unchanged including three omitted-release exit1 controls, decoder/copy traps, typed error/text transfers and O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 96 ownership-grpc-render-cleanup | 8aa292c5a24a | ab5723156bca | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 96 ownership-grpc-render-cleanup | f85463a63925 | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 97 ownership-grpc-send-cleanup | bf2371572323 | 8aa292c5a24a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 98 ownership-grpc-request-encoding | b82589474d2a | bf2371572323 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 99 ownership-grpc-canonical-encoding | 3c67663986c7 | b82589474d2a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -358,9 +359,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-force-cleanup-worktree (row95, nativea4e0f369),
-with all four force/receive/status/completion tests16.95CPU/34.13elapsed passing.
-Previous package clean removed127.1MiB (0.07CPU/0.36elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-render-cleanup-worktree (row96, nativef85463a6),
+with all four rendering/force/receive/status tests15.08CPU/31.06elapsed passing.
+Previous package clean removed127.2MiB (0.07CPU/0.38elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
