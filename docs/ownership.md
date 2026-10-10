@@ -133,6 +133,14 @@ aligned payloads where useful, and views with explicit backing lifetimes.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
 
+Focused ARM64 layout evidence for returned-variant preparation44 confirms an
+8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
+variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
+positive/control binaries, compiler inputs, flags and disassembly are retained
+and recorded in [history](roadmap-history.md). The O2 alias transfers share one
+32-byte stack slot; this shape-specific evidence is not a general ABI or timing
+claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
