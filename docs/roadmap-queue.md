@@ -134,7 +134,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `4802e1dfb8a5` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `2308b7c1db43` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `a2b3b132f094` | `ea18e54f0eee` | `7a89dd017ae4` |
-| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `cd31bd02464f` | `36ad63424530` | `ea18e54f0eee` |
+| 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `ca32999e7f53` | `36ad63424530` | `ea18e54f0eee` |
 | 109 | grpc-tls-pool-identity | `fix-grpc-tls-pool-identity` | `6b206eae08ec` | `d178d86dca2b` | `36ad63424530` |
 | 110 | grpc-environment-cache | `ownership-grpc-environment-cache` | `0caead68a6c3` | `6f4bfba80ef3` | `d178d86dca2b` |
 | 111 | grpc-packed-options | `ownership-grpc-packed-options` | `b2350957e6ff` | `2bb665596390` | `6f4bfba80ef3` |

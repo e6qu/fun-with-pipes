@@ -50,8 +50,8 @@ all14 RC units3.25/6.88s, lint2.44/4.99s, format0.34/0.61s and all three audits
 pass. Publication1.75CPU/18.26elapsed and PR creation0.20/3.94s pass. Oldbcd3b392050b
 is retained remotely before exact-lease publication. Resolved empty-docs commit
 bookkeeping is archived in history; native rebase was not rerun.
-CI38066365077 passes both ARM/Intel GC stress, bench and regular ARM macOS;
-Linux and regular Intel macOS jobs run.
+CI38066365077 passes Linux, both ARM/Intel GC stress, bench and regular ARM
+macOS; regular Intel macOS is the sole remaining production gate.
 Docs38066365141 passes at the frozen head. Require all seven
 exact-head gates, then match-head squash with subject
 `Protect worker result fields until record and variant boxing succeeds` and empty body.
@@ -95,9 +95,10 @@ pass. Retained publication1.74CPU/17.82elapsed passes. Source/probes remain
 byte-identical, including owner omission exit1 controls, escaped task/spawn
 rollback and task-only generation. Final sequential production gates remain.
 Current independent task108: response metadata capture ownership. Rebase FROM
-actual107oldf63fbe1de7c0 ONTO published107a2b3b132f094; run capture/context-resource/
-restoration/task-handle controls, lint/format and all11 docs/audits before retained
-publication. Preserve inherited captures and atomic acquisition overflow rollback.
+actual107oldf63fbe1de7c0 ONTO published107a2b3b132f094 completed once atca32999e7f53;
+source/probes unchanged. Four original capture/context-resource/restoration/
+task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass.
+Complete all11 docs/audits before retained publication. Preserve inherited captures and atomic acquisition overflow rollback.
 Next109 complete TLS pool identity, with matching interpreter/native key checks.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -225,7 +226,7 @@ still need their final squash rebases and six exact-head full gates.
 | 105 ownership-grpc-connect-startup | 4802e1dfb8a5 | 518e5cfaca02 | All four original startup/connection/peer-completion/task-handle tests20.62CPU/42.55elapsed, lint2.40/4.93s and format0.45/0.85s pass; source/probes unchanged including both omitted reference/startup exit1 controls, static marker exit8 and failed task-spawn teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 106 ownership-grpc-context-restore | 2308b7c1db43 | 4802e1dfb8a5 | All four original context/startup/peer/task-handle tests20.84CPU/41.74elapsed, lint2.53/5.15s and format0.45/0.87s pass; source/probes unchanged including exact omitted restoration exit1 and nested return/typed-error/trap/cancellation restoration across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | All four original context-resource/restoration/startup/task-handle tests19.18CPU/40.38elapsed, lint2.48/5.17s and format0.44/0.84s pass; source/probes unchanged including all omitted TLS/task/scope owner exit1 controls, escaped tasks, spawn rollback and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 108 ownership-grpc-capture-resources | cd31bd02464f | f63fbe1de7c0 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 108 ownership-grpc-capture-resources | ca32999e7f53 | a2b3b132f094 | All four original capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass; source/probes unchanged including all three omitted owner exit1 controls, atomic overflow rollback, inherited captures and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 109 fix-grpc-tls-pool-identity | 6b206eae08ec | cd31bd02464f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 110 ownership-grpc-environment-cache | 0caead68a6c3 | 6b206eae08ec | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 111 ownership-grpc-packed-options | b2350957e6ff | 0caead68a6c3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -362,9 +363,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-context-resources-worktree (row107, natived4b6dbef),
-with all four context-resource/restoration/startup/task-handle tests19.18CPU/40.38elapsed passing.
-Previous package clean removed117.4MiB (0.07CPU/0.36elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-capture-resources-worktree (row108, nativeca32999e),
+with all four capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed passing.
+Previous package clean removed117.4MiB (0.00CPU/0.13elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
