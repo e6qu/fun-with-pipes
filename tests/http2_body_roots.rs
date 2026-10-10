@@ -30,6 +30,17 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
     // registers. Isolate construction and clear those stale roots in the
     // copying frame; a live post-copy owner fence forces a surviving spill.
     let clear_stale_roots = cfg!(target_arch = "x86_64");
+    let generated = if clear_stale_roots {
+        let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
+        assert_eq!(generated.matches(primitive).count(), 1);
+        generated.replacen(
+            primitive,
+            "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
+            1,
+        )
+    } else {
+        generated
+    };
     let boundary = if clear_stale_roots {
         "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();"
     } else {

@@ -13781,3 +13781,22 @@ elapsed, focused clippy2.34/4.74s and formatting0.46/0.89s pass, after prior
 zip package clean0.07/0.37s. Dedicated runner matrix tests Linux GCC/Clang and
 macOS ARM/Intel Clang plus original resource, GC and ownership controls.
 Candidate is not accepted until all four pass. No second production PR opens.
+
+Fold independent rebase from actual ff84318a416d onto frozen zip05d354f57167
+yields b98eb6f1351b549731b3bf7fca74354a1310df1f, preserving every original source/probe/workflow byte and
+one implementation commit. Only authoritative docs conflicts were resolved;
+guard0.09CPU/0.90elapsed. Prior HTTP fixture package clean0.07/0.38s.
+Nine original fold/runtime-call controls24.44/49.14s, lint2.29/4.69s and
+format0.35/0.63s pass. Final squash rebase/full gates still required.
+HTTP fixture candidate0d54979de1ef/38021302113 Linux Clang strict omission
+still false-passes with0 (expected1); original positive controls pass.
+ARM and GCC pass. Failed candidate must not propagate.
+
+First HTTP2 candidate0d54979de1ef/38021302113 completes with ARM/GCC success
+and both x86 Clang failures of the exact omitted-owner assertion. Candidate
+is rejected. Next candidate forces only the x86 body primitive into the
+copying frame, in addition to the existing hook/register/stack isolation.
+ARM remains unchanged; all original assertions remain. Previous broad primitive
+inlining broke ARM and is explicitly not repeated. Full four-way evidence
+must pass before propagation. Fold docs commitf3585147985d is published
+on05d354f57167; original implementation plus live docs are retained.
