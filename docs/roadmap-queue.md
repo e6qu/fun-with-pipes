@@ -131,7 +131,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `4e6dbbddf888` | `33661b298f96` | `2339ff08e421` |
 | 103 | grpc-client-receive | `ownership-grpc-client-receive` | `09b5e3e70117` | `c48864ce7231` | `33661b298f96` |
 | 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `518e5cfaca02` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `c07c37877b47` | `cb20833c018f` | `b244d5f7c423` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `ba5872d92007` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `43757843a1b3` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `f63fbe1de7c0` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `cd31bd02464f` | `36ad63424530` | `ea18e54f0eee` |

@@ -95,9 +95,10 @@ pass without skip. Retained publication1.70CPU/18.13elapsed passes. Original
 source/probes remain byte-identical, including omitted descriptor exit1 and SSL
 exit3, actual lookup/socket/handshake cancellation and transfer. Full gates remain.
 Current independent task105: background connection startup ownership. Rebase
-FROM actual104old54cffe881e1f ONTO published104518e5cfaca02; run startup/
-connection/peer-completion/task-handle controls, lint/format and all11 docs/
-audits before retained publication. Preserve failed spawn references, unpublished
+FROM actual104old54cffe881e1f ONTO published104518e5cfaca02 completed once atba5872d92007;
+source/probes unchanged. Four original startup/connection/peer-completion/
+task-handle controls20.62CPU/42.55elapsed, lint2.40/4.93s and format0.45/0.85s
+pass. Complete all11 docs/audits before retained publication. Preserve failed spawn references, unpublished
 connection cleanup and static failure-marker control. Next106 dynamic context restore.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -222,7 +223,7 @@ still need their final squash rebases and six exact-head full gates.
 | 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | All four original failure-text/client-request/force/receive tests13.37CPU/28.29elapsed, lint2.34/4.93s and format0.45/0.86s pass; both original feature/longjmp repair commits and all source/probes unchanged including exact omitted cleanup exit1, raw trap/GrpcError text and once-only release across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | All four original client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass; source/probes unchanged including all three exact omitted cleanup exit1 controls, retry/error/decode/channel cancellation and exact trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 104 ownership-grpc-connect-cleanup | 518e5cfaca02 | 09b5e3e70117 | All four original connection/client-receive/client-request/TLS listener tests15.12CPU/33.91elapsed, lint2.46/4.93s and format0.44/0.84s pass without skip; source/probes unchanged including omitted descriptor exit1 and SSL exit3, actual lookup/socket/handshake cancellation and ownership transfer across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 105 ownership-grpc-connect-startup | c07c37877b47 | 54cffe881e1f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 105 ownership-grpc-connect-startup | ba5872d92007 | 518e5cfaca02 | All four original startup/connection/peer-completion/task-handle tests20.62CPU/42.55elapsed, lint2.40/4.93s and format0.45/0.85s pass; source/probes unchanged including both omitted reference/startup exit1 controls, static marker exit8 and failed task-spawn teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 106 ownership-grpc-context-restore | 43757843a1b3 | c07c37877b47 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 107 ownership-grpc-context-resources | f63fbe1de7c0 | 43757843a1b3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 108 ownership-grpc-capture-resources | cd31bd02464f | f63fbe1de7c0 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -362,9 +363,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-connect-cleanup-worktree (row104, native0e83c40a),
-with all four connection/client-receive/client-request/TLS listener tests15.12CPU/33.91elapsed passing.
-Previous package clean removed127.2MiB (0.00CPU/0.13elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-connect-startup-worktree (row105, nativeba5872d9),
+with all four startup/connection/peer-completion/task-handle tests20.62CPU/42.55elapsed passing.
+Previous package clean removed127.2MiB (0.00CPU/0.14elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
