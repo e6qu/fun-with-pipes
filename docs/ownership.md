@@ -230,7 +230,7 @@ and measurements are in [history](roadmap-history.md).
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
-  own fresh spines; fold/right-fold transfer accumulators; zip owns callback
+  own fresh spines; fold/right-fold transfer accumulators; zip-with owns callback
   results; registered map, selection and zip cleanup releases owned results,
   partial spines and scratch on failure, trap or cancellation. Both zip scratch
   buffers release, including a failure while preparing the second buffer.

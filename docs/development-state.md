@@ -82,10 +82,14 @@ Returned-variant alias44 is publishedb094ffbe7e460c9d31a276826c0c5520f9b76c27
 on current43, with original tests, negative retain control, lint/format/audits
 and exact ARM64 binaries/layout/disassembly passing. Hardware, compiler and
 flags are recorded; natural-width numeric slots remain phase3.
-Current independent task is nominal match-context45: local native
-b4fd61808400ca6bce284d900967381c7d4b67e0 on current44b094ffbe7e46.
-Original source/probes unchanged; focused tests are running. Finish lint/format,
-all11 docs/audit and retained-revision publication, then prepare46.
+Nominal match-context45 is published2b7dc81c7d1fa22c06fc7dfcae66cc733682ba09
+on current44, with original tests/lint/format/audits passing. Contribution rules
+now consistently require an explicit squash subject and empty body, and remote
+retention of pre-amend revisions referenced by frozen documentation.
+Current independent task is checked field-context46: local native
+14772eb77e293f5ecdd7856eda2bf3ea90a2d3a0 on current45. Original code/probes
+unchanged; focused tests are running. Finish lint/format, all11 docs/audit and
+retained-revision publication, then prepare47.
 Do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
@@ -147,7 +151,7 @@ still need their final squash rebases and six exact-head full gates.
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 46 ownership-field-context | 3a87da04a671 | 44e720054249 | Two tests 9.08/18.73s; lint 2.42/4.93s and format 0.43/0.83s pass |
+| 46 ownership-field-context | 14772eb77e29 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 47 ownership-caf-cache | 7e507e993e58 | 3a87da04a671 | Three tests 11.54/24.96s; lint 2.38/4.80s and format 0.44/0.83s pass |
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests 12.68/26.01s; lint 2.47/4.90s and format 0.35/0.73s pass |
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests 10.19/20.78s; lint 2.33/4.82s and format 0.35/0.73s pass |
@@ -344,8 +348,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-typed-expression-worktree (row45, nativeb4fd618),
-with both original controls9.14CPU/18.85elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-field-context-worktree (row46, native14772eb),
+with both original controls9.56CPU/19.54elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
