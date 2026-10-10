@@ -1,7 +1,6 @@
 # Prepared roadmap queue
 
-Updated 2026-10-10. Rows through25 are merged. Queue26 is next after merged
-local guard sampling repair #104.
+Updated 2026-10-10. This file preserves preparation ancestry.
 Current merge status, actual rewritten bases and checks live only in
 [the handoff](development-state.md). This table preserves preparation ancestry;
 a published preparation is not verified main support.
@@ -18,10 +17,10 @@ This keeps earlier evidence snapshots verifiable after later branch rewrites.
 
 Use the current actual base from the handoff; immutable OLD parents describe
 original preparation and can differ after rewrites. Never replace OLD anchors.
-Resolve documentation conflicts with all ten current root docs plus additional
-modified tracked documents, including current docs/numerics.md. Rerun focused
+Resolve documentation conflicts with all11 authoritative docs listed in the
+handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
-Every final PR needs new six-job exact-head CI. Prior evidence and superseded
+Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
 queue instructions are preserved in [history](roadmap-history.md).
 
 Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
@@ -56,8 +55,8 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 25 | unwind-runtime | `ownership-unwind-runtime` | `1537961db5da` | `3e314222ff7c` | `02beec353ec7` |
 | 26 | unwind-liveness | `ownership-reuse-tokens` | `9a21fd6cc844` | `33cf86466e2f` | `3e314222ff7c` |
 | 27 | call-liveness | `ownership-call-liveness` | `5683df1c8a96` | `7392f2d67151` | `33cf86466e2f` |
-| 28 | runtime-call | `ownership-runtime-call-cleanup` | `8fa4a7b61f52` | `bee3f1659ae5` | `7392f2d67151` |
-| 29 | map-unwind | `ownership-map-unwind` | `25eda7b24ef5` | `62add7e4a85f` | `bee3f1659ae5` |
+| 28 | runtime-call | `ownership-runtime-call-cleanup` | `1dcbe79ac077` | `bee3f1659ae5` | `7392f2d67151` |
+| 29 | map-unwind | `ownership-map-unwind` | `691c60540829` | `62add7e4a85f` | `bee3f1659ae5` |
 | 30 | selection-unwind | `ownership-selection-unwind` | `9979e9fd1a27` | `b8f4c2469215` | `62add7e4a85f` |
 | 31 | zip-unwind | `ownership-zip-unwind` | `47776e738c26` | `c2a364544d92` | `b8f4c2469215` |
 | 32 | fold-unwind | `ownership-fold-unwind` | `c434692ccb6f` | `968dac7ed9cf` | `c2a364544d92` |
@@ -71,69 +70,69 @@ implementation PR at34; keep its immutable anchor and later regression coverage.
 | 40 | constructor-types | `ownership-constructor-types` | `cccbe406449f` | `b0219671dca3` | `1bb11bece9ae` |
 | 41 | variant-conversion | `ownership-variant-conversion` | `172912b7b1c6` | `34873f41a4c4` | `b0219671dca3` |
 | 42 | record-update | `ownership-record-update` | `2b61f8cad333` | `5c5875d30b8e` | `34873f41a4c4` |
-| 43 | record-conversion | `ownership-record-conversion` | `b42bfee265ac` | `614dd3b19c13` | `5c5875d30b8e` |
-| 44 | variant-alias | `ownership-variant-alias` | `7d004381178f` | `de8562194d54` | `614dd3b19c13` |
-| 45 | typed-expression | `ownership-match-context` | `09ec9a65afdc` | `3f61f51521d9` | `de8562194d54` |
-| 46 | field-context | `ownership-field-context` | `d71a2aea284c` | `085dc716d599` | `3f61f51521d9` |
-| 47 | caf-ownership | `ownership-caf-cache` | `5f9a8bb2403b` | `68cf7bf2f7ca` | `085dc716d599` |
-| 48 | inline-caf | `ownership-inline-caf` | `be475bda31dc` | `6734248e7c0d` | `68cf7bf2f7ca` |
-| 49 | retained-thunk | `ownership-task-thunks` | `49b7aa5a0c07` | `7208e4a2d93e` | `6734248e7c0d` |
-| 50 | task-within | `ownership-task-within` | `68a2e5f1358e` | `14a76de5b8bb` | `7208e4a2d93e` |
-| 51 | task-scope | `ownership-task-scope` | `511721920cca` | `7da15d9c8ea3` | `14a76de5b8bb` |
-| 52 | task-handle | `ownership-task-handles` | `bc6b763b3bf3` | `bb6f9c49a043` | `7da15d9c8ea3` |
-| 53 | channel-queue | `ownership-channel-queues` | `310031a5596b` | `ab44b7de0812` | `bb6f9c49a043` |
-| 54 | library-result | `ownership-library-results` | `ff3bfedf26cd` | `5b34382167da` | `ab44b7de0812` |
-| 55 | library-input | `ownership-library-inputs` | `b0a593982767` | `a6ebc1da9637` | `5b34382167da` |
-| 56 | library-unload | `ownership-library-unload` | `400d11c0b317` | `5d0dc220fa1c` | `a6ebc1da9637` |
-| 57 | opencl | `ownership-opencl-lifetime` | `fde35253a744` | `d8b4d88da98d` | `5d0dc220fa1c` |
-| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `e9bddcdc78b7` | `abc128581b61` | `d8b4d88da98d` |
-| 59 | tls-listener | `ownership-tls-listeners` | `2184aa897572` | `3f6154b4bf67` | `abc128581b61` |
-| 60 | library-resource | `ownership-library-resources` | `b2b3e2d73da8` | `07092cb06e1d` | `3f6154b4bf67` |
-| 61 | grpc-server | `ownership-grpc-server-cleanup` | `15ed94b82b00` | `0d5d3098e782` | `07092cb06e1d` |
-| 62 | tls-cache | `ownership-tls-cache-failures` | `004eccb1f092` | `4ab1f7ddd6f8` | `0d5d3098e782` |
-| 63 | tls-wire | `ownership-tls-wire-preparation` | `f1915b15033e` | `f6598e440a59` | `4ab1f7ddd6f8` |
-| 64 | connect-cleanup | `ownership-connect-cancellation` | `04811432dc3d` | `0cc612650ab9` | `f6598e440a59` |
-| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `98f5c04f6260` | `b8f3752d236f` | `0cc612650ab9` |
-| 66 | peer-subject | `ownership-tls-peer-subject` | `ec16c6630686` | `6bda2c815a71` | `b8f3752d236f` |
-| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `bbde0fa9c254` | `e0f11626f609` | `6bda2c815a71` |
-| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `933deb78f600` | `e503e10a9780` | `e0f11626f609` |
-| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `7047b100dbbe` | `b00215dc10f5` | `e503e10a9780` |
-| 70 | file-construction | `ownership-file-construction` | `41a76ee080e5` | `e9d575fdf990` | `b00215dc10f5` |
-| 71 | file-write-visibility | `ownership-file-write-visibility` | `6fdf20ca82a9` | `5ac710398a14` | `e9d575fdf990` |
-| 72 | file-io-errors | `ownership-file-io-errors` | `82e51ba8ea16` | `06419f4c5989` | `5ac710398a14` |
-| 73 | resource-frames | `ownership-resource-frames` | `3dc1c36adbad` | `dcc5bbac318f` | `06419f4c5989` |
-| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `4155bc9fce74` | `e21c92ea2f6c` | `368dafc5567d` |
-| 75 | file-discard | `ownership-file-discard` | `5179067d6635` | `923ad4a4fb07` | `e21c92ea2f6c` |
-| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `da4acc398637` | `30fe112db93c` | `923ad4a4fb07` |
-| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `295b0da5c1f0` | `046f7e85a9eb` | `30fe112db93c` |
-| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `1a5f5ba98a32` | `681dd55136b0` | `c889479eed7a` |
-| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `76374abb1077` | `658e5b73ae1c` | `681dd55136b0` |
-| 80 | file-inline-path | `ownership-file-inline-path` | `8454a97667bb` | `2d903d6617d9` | `658e5b73ae1c` |
-| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `d39b6145cb55` | `750a5cffd46b` | `2d903d6617d9` |
-| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `47abf911f844` | `17869223a502` | `750a5cffd46b` |
-| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `6d3fcd7444ad` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `2f67969e9985` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `c0263af654c4` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `d0e41c87e547` | `f85cc4e09db4` | `3a0cbdb33b79` |
-| 87 | nominal-source-context | `ownership-nominal-source-context` | `b83d77ce5da8` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `e15c6fc1f0c3` | `dc2ad1febc5d` | `8abfd46b3476` |
-| 89 | http2-body-roots | `ownership-http2-body-roots` | `59c59a882d67` | `d29dda936dff` | `e91dcb307c61` |
-| 90 | http2-body-bounds | `fix-http2-body-bounds` | `fb5765a9ec36` | `6f310b5483a8` | `d29dda936dff` |
-| 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `05f1a8841609` | `3c268c34d15b` | `6f310b5483a8` |
-| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `84b6d877fa9b` | `09751c8c65ac` | `3c268c34d15b` |
-| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `a36f5538df30` | `a92c951fa6d9` | `09751c8c65ac` |
-| 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `01de4770d750` | `8bd9e78743ab` | `a92c951fa6d9` |
-| 95 | grpc-force-cleanup | `ownership-grpc-force-cleanup` | `6a4ceee25582` | `6b82bc5b8b2f` | `8bd9e78743ab` |
-| 96 | grpc-render-cleanup | `ownership-grpc-render-cleanup` | `05d8c33dc305` | `ea79bdee1191` | `6b82bc5b8b2f` |
-| 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `9330eab6253e` | `671ada6ec85d` | `ea79bdee1191` |
-| 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `6e2236f73519` | `663ef599a438` | `671ada6ec85d` |
-| 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `b0d7d1b7d2a9` | `4114b709fb4b` | `663ef599a438` |
-| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `e6ae6c83dc46` | `b44f53c9a60f` | `4114b709fb4b` |
-| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `b1c6a68771c7` | `2339ff08e421` | `b44f53c9a60f` |
-| 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `5f4c3b2423ac` | `33661b298f96` | `2339ff08e421` |
-| 103 | grpc-client-receive | `ownership-grpc-client-receive` | `e25cebbd8ac3` | `c48864ce7231` | `33661b298f96` |
-| 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `9f6e7092f00c` | `b244d5f7c423` | `c48864ce7231` |
-| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `a8ed839d69f5` | `cb20833c018f` | `b244d5f7c423` |
+| 43 | record-conversion | `ownership-record-conversion` | `8c7450568632` | `614dd3b19c13` | `5c5875d30b8e` |
+| 44 | variant-alias | `ownership-variant-alias` | `5e436e6ee6f5` | `de8562194d54` | `614dd3b19c13` |
+| 45 | typed-expression | `ownership-match-context` | `44e720054249` | `3f61f51521d9` | `de8562194d54` |
+| 46 | field-context | `ownership-field-context` | `3a87da04a671` | `085dc716d599` | `3f61f51521d9` |
+| 47 | caf-ownership | `ownership-caf-cache` | `7e507e993e58` | `68cf7bf2f7ca` | `085dc716d599` |
+| 48 | inline-caf | `ownership-inline-caf` | `3dd5219cb896` | `6734248e7c0d` | `68cf7bf2f7ca` |
+| 49 | retained-thunk | `ownership-task-thunks` | `2c14070a6347` | `7208e4a2d93e` | `6734248e7c0d` |
+| 50 | task-within | `ownership-task-within` | `f35dd8c34ea4` | `14a76de5b8bb` | `7208e4a2d93e` |
+| 51 | task-scope | `ownership-task-scope` | `bb1e6b94fcfd` | `7da15d9c8ea3` | `14a76de5b8bb` |
+| 52 | task-handle | `ownership-task-handles` | `cb32c2cea9bb` | `bb6f9c49a043` | `7da15d9c8ea3` |
+| 53 | channel-queue | `ownership-channel-queues` | `69bc96667a52` | `ab44b7de0812` | `bb6f9c49a043` |
+| 54 | library-result | `ownership-library-results` | `f53cccc88d45` | `5b34382167da` | `ab44b7de0812` |
+| 55 | library-input | `ownership-library-inputs` | `067d547b3bfd` | `a6ebc1da9637` | `5b34382167da` |
+| 56 | library-unload | `ownership-library-unload` | `0d30f4e3da51` | `5d0dc220fa1c` | `a6ebc1da9637` |
+| 57 | opencl | `ownership-opencl-lifetime` | `9dc98a72cac1` | `d8b4d88da98d` | `5d0dc220fa1c` |
+| 58 | interpreter-opencl | `ownership-interpreter-opencl` | `013b07eac021` | `abc128581b61` | `d8b4d88da98d` |
+| 59 | tls-listener | `ownership-tls-listeners` | `64fc39f9738e` | `3f6154b4bf67` | `abc128581b61` |
+| 60 | library-resource | `ownership-library-resources` | `aa8dfb3a703e` | `07092cb06e1d` | `3f6154b4bf67` |
+| 61 | grpc-server | `ownership-grpc-server-cleanup` | `91f9a30742f9` | `0d5d3098e782` | `07092cb06e1d` |
+| 62 | tls-cache | `ownership-tls-cache-failures` | `0ba865002ace` | `4ab1f7ddd6f8` | `0d5d3098e782` |
+| 63 | tls-wire | `ownership-tls-wire-preparation` | `52bc4e64547b` | `f6598e440a59` | `4ab1f7ddd6f8` |
+| 64 | connect-cleanup | `ownership-connect-cancellation` | `d364e70df274` | `0cc612650ab9` | `f6598e440a59` |
+| 65 | unboxed-worker | `ownership-unboxed-worker-locals` | `886f8b0083c9` | `b8f3752d236f` | `0cc612650ab9` |
+| 66 | peer-subject | `ownership-tls-peer-subject` | `d8b4e2407fb1` | `6bda2c815a71` | `b8f3752d236f` |
+| 67 | tls-alpn-root | `ownership-tls-alpn-roots` | `221d8fa6ffcc` | `e0f11626f609` | `6bda2c815a71` |
+| 68 | ci-probe-repairs | `ownership-ci-probe-repairs` | `4f37224b0f6f` | `e503e10a9780` | `e0f11626f609` |
+| 69 | nested-loop-boxing | `ownership-nested-loop-boxing` | `04d75ff8a0e1` | `b00215dc10f5` | `e503e10a9780` |
+| 70 | file-construction | `ownership-file-construction` | `fa6e27813f3d` | `e9d575fdf990` | `b00215dc10f5` |
+| 71 | file-write-visibility | `ownership-file-write-visibility` | `55a6b0c6c7c5` | `5ac710398a14` | `e9d575fdf990` |
+| 72 | file-io-errors | `ownership-file-io-errors` | `54d816de6a93` | `06419f4c5989` | `5ac710398a14` |
+| 73 | resource-frames | `ownership-resource-frames` | `e3bfb67a9244` | `dcc5bbac318f` | `06419f4c5989` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `ddbee893478e` | `e21c92ea2f6c` | `368dafc5567d` |
+| 75 | file-discard | `ownership-file-discard` | `ef04da0f3049` | `923ad4a4fb07` | `e21c92ea2f6c` |
+| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `f0034b6ab7c1` | `30fe112db93c` | `923ad4a4fb07` |
+| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `8a2d845523c5` | `046f7e85a9eb` | `30fe112db93c` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `43773a07a269` | `681dd55136b0` | `c889479eed7a` |
+| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `ec96643bfe26` | `658e5b73ae1c` | `681dd55136b0` |
+| 80 | file-inline-path | `ownership-file-inline-path` | `143444f5c43e` | `2d903d6617d9` | `658e5b73ae1c` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `c4110b410f56` | `750a5cffd46b` | `2d903d6617d9` |
+| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `af8561c68820` | `17869223a502` | `750a5cffd46b` |
+| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `ed1091ff988c` | `786e4bbb99f1` | `17869223a502` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `26f529e6ba91` | `ae00e6929e86` | `786e4bbb99f1` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `719905a41225` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `8ebd4cbcc3ba` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 87 | nominal-source-context | `ownership-nominal-source-context` | `69f606200622` | `8abfd46b3476` | `f85cc4e09db4` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `acce7492f8d3` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 89 | http2-body-roots | `ownership-http2-body-roots` | `9d8a6fb2a7df` | `d29dda936dff` | `e91dcb307c61` |
+| 90 | http2-body-bounds | `fix-http2-body-bounds` | `71d875caed41` | `6f310b5483a8` | `d29dda936dff` |
+| 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `36ea28337198` | `3c268c34d15b` | `6f310b5483a8` |
+| 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `307010912bf9` | `09751c8c65ac` | `3c268c34d15b` |
+| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `fec93c5ec707` | `a92c951fa6d9` | `09751c8c65ac` |
+| 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `d1f35d6121a4` | `8bd9e78743ab` | `a92c951fa6d9` |
+| 95 | grpc-force-cleanup | `ownership-grpc-force-cleanup` | `1e5a5b4f4fb3` | `6b82bc5b8b2f` | `8bd9e78743ab` |
+| 96 | grpc-render-cleanup | `ownership-grpc-render-cleanup` | `d94a2784952d` | `ea79bdee1191` | `6b82bc5b8b2f` |
+| 97 | grpc-send-cleanup | `ownership-grpc-send-cleanup` | `080be7e655e3` | `671ada6ec85d` | `ea79bdee1191` |
+| 98 | grpc-request-encoding | `ownership-grpc-request-encoding` | `6bddc3977352` | `663ef599a438` | `671ada6ec85d` |
+| 99 | grpc-canonical-encoding | `ownership-grpc-canonical-encoding` | `af556a1cf605` | `4114b709fb4b` | `663ef599a438` |
+| 100 | grpc-response-encoding | `ownership-grpc-response-encoding` | `3bec687cea7d` | `b44f53c9a60f` | `4114b709fb4b` |
+| 101 | grpc-client-requests | `ownership-grpc-client-requests` | `2ac08dea923a` | `2339ff08e421` | `b44f53c9a60f` |
+| 102 | grpc-client-failure-text | `ownership-grpc-client-failure-text` | `04e8557ca5e8` | `33661b298f96` | `2339ff08e421` |
+| 103 | grpc-client-receive | `ownership-grpc-client-receive` | `6f1f030dfcce` | `c48864ce7231` | `33661b298f96` |
+| 104 | grpc-connect-cleanup | `ownership-grpc-connect-cleanup` | `ac9558374a4d` | `b244d5f7c423` | `c48864ce7231` |
+| 105 | grpc-connect-startup | `ownership-grpc-connect-startup` | `2711a516ee34` | `cb20833c018f` | `b244d5f7c423` |
 | 106 | grpc-context-restore | `ownership-grpc-context-restore` | `29104d944907` | `7a89dd017ae4` | `cb20833c018f` |
 | 107 | grpc-context-resources | `ownership-grpc-context-resources` | `c34c313ccfb0` | `ea18e54f0eee` | `7a89dd017ae4` |
 | 108 | grpc-capture-resources | `ownership-grpc-capture-resources` | `8f66e28763b4` | `36ad63424530` | `ea18e54f0eee` |

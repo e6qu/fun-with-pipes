@@ -1130,6 +1130,23 @@ impl<'p> Gen<'p> {
         Ok(format!("{state}, {result}, {drop}"))
     }
 
+    fn map_ops(&mut self, element: &MT) -> String {
+        let drop = if !crate::rc::needs_rc(&self.prog.shapes, element) {
+            "NULL".into()
+        } else if free_enabled() {
+            format!("fwp_drop{}", self.drop_id(element))
+        } else {
+            "fwp_rc_drop".into()
+        };
+        let list = MT::Con("std::List".into(), vec![element.clone()]);
+        let list_drop = if free_enabled() {
+            format!("fwp_drop{}", self.drop_id(&list))
+        } else {
+            "fwp_rc_drop".into()
+        };
+        format!("{drop}, {list_drop}")
+    }
+
     fn tree_owner_id(&mut self, mt: &MT) -> Result<usize, String> {
         if let Some(id) = self.tree_owners.get(mt) {
             return Ok(*id);
@@ -1757,6 +1774,7 @@ fn hof_def(
     (sym, g, k): &(String, FuncId, usize),
     reuse: bool,
     loop_ops: Option<&str>,
+    map_ops: Option<&str>,
 ) -> String {
     let caps: String = (0..*k).map(|j| format!("c{}, ", j)).collect();
     // with counted references, what the runtime keeps is shared
@@ -1774,6 +1792,7 @@ fn hof_def(
         return format!("{} {{\n    for (;;) {{\n        FWP_TICK();\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {k});\n        V step = fwp_owned_entry{g}(args);\n        int stop = fwp_tag(step) != 0;\n        s = fwp_loop_payload(step, stop, {ops});\n        if (stop) {{{fences} return s; }}\n    }}\n}}\n", hof_sig(i, sym, *k));
     }
     if reuse && sym == "map" {
+        let ops = map_ops.expect("typed map result operations");
         let args = (0..*k)
             .map(|j| format!("c{j}"))
             .chain(std::iter::once("a[i]".to_string()))
@@ -1782,7 +1801,7 @@ fn hof_def(
         let fences = (0..*k)
             .map(|j| format!("    FWP_KEEP_ALIVE(c{j});\n"))
             .collect::<String>();
-        return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n    }}\n    V result = fwp_map_finish(a, n);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
+        return format!("{} {{\n    size_t n;\n    V *a = fwp_map_items(xs, &n);\n    fwp_map_owner owner = {{a, 0, 0, {ops}}}; fwp_cleanup cleanup;\n    fwp_map_protect(&owner, &cleanup);\n    for (size_t i = 0; i < n; i++) {{\n        V args[] = {{{args}}};\n        fwp_args{g}(args, 0, {});\n        a[i] = fwp_owned_entry{g}(args);\n        owner.count++;\n    }}\n    V result = fwp_map_finish_protected(&owner, &cleanup);\n{fences}    FWP_KEEP_ALIVE(xs);\n    return result;\n}}\n", hof_sig(i, sym, *k), k + 1);
     }
     if reuse && sym == "filter" {
         let args = (0..*k)
@@ -3305,7 +3324,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
             let xs = self.expr(&args[1]);
             return Some(if sym == "map" {
-                format!("fwp_k_map_owned(fwp_owned_k{g}, {xs})")
+                let result = self.g.prog.funcs[g].ty.params(1).1.clone();
+                let ops = self.g.map_ops(&result);
+                format!("fwp_k_map_owned(fwp_owned_k{g}, {xs}, {ops})")
             } else if sym == "drop-while" {
                 format!("fwp_k_drop_while_owned(fwp_owned_k{g}, {xs})")
             } else {
@@ -4881,8 +4902,21 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                         use crate::ownership::ResultOwnership;
                         match contract.result {
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
+                                if sym == "map" {
+                                    let result = func.ty.params(func.arity as usize).1;
+                                    let MT::Con(name, elements) = &result else {
+                                        return Err("map has a non-list result".into());
+                                    };
+                                    if name != "std::List" || elements.len() != 1 {
+                                        return Err("map has a non-list result".into());
+                                    }
+                                    let ops = self.map_ops(&elements[0]);
+                                    s = s.replace(
+                                        "fwp_p_map(l0, l1)",
+                                        &format!("fwp_p_map_owned(l0, l1, {ops})"),
+                                    );
+                                }
                                 s = s
-                                    .replace("fwp_p_map(", "fwp_p_map_owned(")
                                     .replace("fwp_p_range(", "fwp_p_range_owned(")
                                     .replace("fwp_p_scan(", "fwp_p_scan_owned(")
                                     .replace("fwp_p_iterate(", "fwp_p_iterate_owned(")
@@ -5952,7 +5986,23 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
         } else {
             None
         };
-        bodies.push_str(&hof_def(i, &hof, g.reuse, loop_ops.as_deref()));
+        let map_ops = if g.reuse && hof.0 == "map" {
+            let element = prog.funcs[hof.1]
+                .ty
+                .params(prog.funcs[hof.1].arity as usize)
+                .1
+                .clone();
+            Some(g.map_ops(&element))
+        } else {
+            None
+        };
+        bodies.push_str(&hof_def(
+            i,
+            &hof,
+            g.reuse,
+            loop_ops.as_deref(),
+            map_ops.as_deref(),
+        ));
         bodies.push('\n');
     }
     // the specialized loops, which may use others
