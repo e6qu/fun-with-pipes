@@ -45,10 +45,11 @@ Phase 2 remains incomplete; phases 3–6 remain pending; tracing is the fallback
 
 No production PR is open. Deliver queue 30 selection unwind next, on actual
 squash base `12d03395b4e4818a4e27d2342ff677ca5fc145e1`. Its final rebase FROM
-recorded actual25eda7b onto main is paused at docs-only conflicts. Copy all 11
-root docs, preserve the implementation and original probes, verify source parity,
-and rerun focused selection/filter/prefix checks, lint, format and audit through
-the guard. Retain prior9979e9f remotely before exact-lease publication. Copy the
+recorded actual25eda7b completes at source `8819695137c02f0300102a8457687a616d075548`.
+All 11 docs resolve the docs-only conflicts (0.03CPU/0.14elapsed); source, native
+probes, scripts and production workflows match prior9979e9f byte-for-byte.
+All six selection/filter/prefix tests pass21.01CPU/42.15elapsed; focused
+clippy2.34/4.74s and format0.34/0.62s pass. Strong documentation audit0.43/3.47s passes. Retain prior9979e9f remotely before exact-lease publication. Copy the
 live docs into the final PR, open it only after #108's accepted squash and
 require all seven exact-head gates. Proposed subject:
 `Release selected list aliases and scratch storage on nonlocal exits`;
@@ -113,7 +114,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests 24.42/48.98s; lint 2.24/4.54s, format 0.36/0.76s and strong audit pass; final sequential gates follow |
+| 30 ownership-selection-unwind | 8819695137c0 | 12d03395b4e4 | Six final focused tests21.01CPU/42.15elapsed, lint2.34/4.74s and format0.34/0.62s pass; exact source/probe parity; strong audit0.43/3.47s passes; full exact-head gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests 24.32/48.75s; lint 2.35/4.66s, format 0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests 22.49/45.05s; lint 2.37/4.77s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 33 ownership-loop-unwind | 527f84d405b77 | c434692ccb6f | Inline/bound Again repair: two loop tests 10.45CPU/20.96elapsed, lint 2.32/4.58s, format 0.36/0.76s, audit 0.44/3.37s pass; full sequential gates remain required |
@@ -324,10 +325,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Current shared target
-belongs to /private/tmp/fwp-map-unwind-worktree after bounded package clean of
-row 83(0.06CPU/0.37elapsed) and the final-squash rebase/rebuild. Focused command:
-cargo test --test map_unwind_ownership --test map_ownership --test runtime_call_ownership,
-through the absolute-root guard with OpenSSL; all nine tests pass22.95/46.05s.
+belongs to /private/tmp/fwp-selection-unwind-worktree after bounded package
+clean of the map checkout (0.06CPU/0.37elapsed). Focused command:
+cargo test --test selection_unwind_ownership --test filter_ownership --test prefix_ownership,
+through the absolute-root guard with OpenSSL; all six tests pass21.01/42.15s.
 Before switching Rust checkouts, bounded cargo clean -p fwp in this checkout
 then rebuild the requested target. Earlier switches/checks are in history;
 never infer source identity from a shared target directory. Full gates run on
@@ -352,7 +353,7 @@ python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 
 Fetch full history, immutable tags and retained PR heads on a fresh clone.
 The roadmap_docs workflow checks the actual PR head. Audit again after changes
-to links, refs or commit subjects. Merged rows26–28 are archived and removed from
+to links, refs or commit subjects. Merged rows26–29 are archived and removed from
 the live preparation table; their queue anchors and accepted heads stay fixed.
 
 Preserve all 11 authoritative docs before fast-forward/rebase conflict resolution:
@@ -361,7 +362,7 @@ docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
 docs/reference.md, docs/concurrency.md and docs/numerics.md. The numerics page
 keeps phase 2 exit gates ahead of representation work and links historical
 incomplete timings to the archive. Preserve any other modified tracked files too.
-Latest 11-doc snapshot is /private/tmp/fwp-main-docs-pre107 with sha256.json;
+Latest 11-doc snapshot is /private/tmp/fwp-main-docs-pre108 with sha256.json;
 all were restored byte-for-byte after updating main. Refresh before the next
 main update. Keep live status concise; archive chronology and superseded handoffs in
 history. Windows, new deployment interfaces and a new backend remain deferred.

@@ -13467,6 +13467,7 @@ finite phase2 review and numeric representation still precede phase4 tape work.
 
 ## Accepted map callback unwind delivery
 
+```json
 {
   "sha": "12d03395b4e4818a4e27d2342ff677ca5fc145e1",
   "mergedAt": "2026-10-10T02:46:18Z",
@@ -13479,6 +13480,7 @@ finite phase2 review and numeric representation still precede phase4 tape work.
     "c9b9f835ebf2e3a868bfa4bdf256f0f16800786c"
   ]
 }
+```
 
 All six exact-head production jobs in CI38015157922 and roadmap_docs38015157960
 pass before match-head squash. Guarded gate/merge0.36CPU/8.50elapsed and
@@ -13526,3 +13528,21 @@ Queue 34 is now a verified duplicate of the preparation code/probe delivered
 in107. Skip its implementation PR when reached after 33; preserve its immutable
 anchor, current source ancestry and all later regression coverage.
 
+
+## Final selection-unwind preparation after map acceptance
+
+Rebase FROM actual25eda7b24ef5e072ac3acd47e52a2bd30da3c913 ONTO accepted
+map squash12d03395b4e4818a4e27d2342ff677ca5fc145e1. Docs-only conflict
+stops guarded rebase0.05CPU/0.24elapsed; all11 protected root docs resolve it
+and continue0.03/0.14s. Source8819695137c02f0300102a8457687a616d075548
+preserves the original implementation commit. Compiler/runtime/native probes/
+scripts/production workflows match prior9979e9f byte-for-byte. Guarded clean
+of prior map package0.06/0.37s, six focused native/raw interpreter selection/
+filter/prefix checks21.01/42.15s, focused three-target clippy2.34/4.74s and
+format0.34/0.62s pass. GC stress/verification, reuse poison, scalar bits and
+original alias/release assertions remain. Six is the actual fresh test count;
+no broader support follows until all seven final exact-head jobs pass.
+
+Final selection docs audit passes0.43CPU/3.47elapsed:44 tracked Markdown
+link sets,106 immutable queue pairs/tags and83 live heads/bases, with whole
+commit messages checked. All11 live docs are copied into the final PR snapshot.
