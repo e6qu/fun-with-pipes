@@ -13821,3 +13821,11 @@ full hash failed without remote changes; publication with the recorded exact
 old hash succeeds. Diagnostic evidence2b980af240b5 must be refreshed with the
 corrected docs before its runner can collect assembly. All original assertions
 remain intact.
+
+Queued duplicate34 refreshed from actual527f84d405b77 onto0ec280e18416,
+yielding96e8bf1235e418519ad160c601af29b4f33415a6. Guard0.06CPU/0.92elapsed;
+one original documentation commit remains. Every native/compiler/probe/script/
+workflow byte matches prior734d3383addf and refreshed33; no implementation
+changes relative to33. Skip its implementation PR after33 passes full gates.
+No tests rerun for this documentation-only duplicate; preserve immutable
+anchors and all later coverage.
