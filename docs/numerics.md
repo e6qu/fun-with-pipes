@@ -89,6 +89,21 @@ forward mode).
 Reverse mode needs the tape's memory, 24 bytes per operation; there is no
 checkpointing.
 
+The later numeric phase must verify exceptional tape lifetimes before reusing
+capacity. Code review of prepared source112 (`996d5ee4ef4f`) finds that native
+`ad.backward` detaches four tape buffers before validating output tape IDs; its
+mixed-tape trap frees adjoints but does not release those buffers. The interpreter
+uses a local owned `Tape`, whose buffers drop on that error. Add a native
+allocation/release regression and preserve the same trap and raw interpreter
+behavior when fixing this path. Grad callback failure and cancellation before
+`ad.backward` also need explicit scoped lifetime evidence.
+
+Both token implementations wrap the slot generation after 32767 uses. The
+ordinary stale-token check therefore needs a regression across that wrap and a
+policy that prevents an old token from identifying a new tape. These are
+prepared-source review findings, not verified cleanup or stale-token guarantees
+for all lifetimes. Keep the current numeric phase order from [the plan](../PLAN.md).
+
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
 Future comparisons must record equivalent workloads, hardware, compiler,
