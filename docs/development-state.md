@@ -95,9 +95,11 @@ pass. Retained publication1.73CPU/17.99elapsed passes. All source/probes remain
 byte-identical, including three omission exit1 controls and retry, decode,
 channel cancellation and trap text. Final sequential production gates remain.
 Current independent task104: pending connection cleanup. Rebase FROM actual
-103old38e1e7ab8048 ONTO published10309b5e3e70117; run connection/client-receive/
-client-request/TLS listener controls, lint/format and all11 docs/audits before
-retained publication. Preserve actual descriptor/lookup/SSL cancellation controls
+103old38e1e7ab8048 ONTO published10309b5e3e70117 completed once at0e83c40a0038;
+original source/probes unchanged. Four original connection/client-receive/
+client-request/TLS listener controls15.12CPU/33.91elapsed pass without skip.
+Lint2.46/4.93s and format0.44/0.84s pass; complete all11 docs/audits
+before retained publication. Preserve actual descriptor/lookup/SSL cancellation controls
 and original omitted descriptor exit1 / SSL exit3. Next105 background startup ownership.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -221,7 +223,7 @@ still need their final squash rebases and six exact-head full gates.
 | 101 ownership-grpc-client-requests | a584b59ec896 | 3b13964722ba | All four original client-request/response/request/send tests12.36CPU/25.32elapsed, lint2.45/4.94s and format0.45/0.85s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, exact client encode/missing response text and suspended cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | All four original failure-text/client-request/force/receive tests13.37CPU/28.29elapsed, lint2.34/4.93s and format0.45/0.86s pass; both original feature/longjmp repair commits and all source/probes unchanged including exact omitted cleanup exit1, raw trap/GrpcError text and once-only release across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | All four original client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass; source/probes unchanged including all three exact omitted cleanup exit1 controls, retry/error/decode/channel cancellation and exact trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 104 ownership-grpc-connect-cleanup | 54cffe881e1f | 38e1e7ab8048 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 104 ownership-grpc-connect-cleanup | 0e83c40a0038 | 09b5e3e70117 | All four original connection/client-receive/client-request/TLS listener tests15.12CPU/33.91elapsed, lint2.46/4.93s and format0.44/0.84s pass without skip; source/probes unchanged including omitted descriptor exit1 and SSL exit3, actual lookup/socket/handshake cancellation and ownership transfer across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 105 ownership-grpc-connect-startup | c07c37877b47 | 54cffe881e1f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 106 ownership-grpc-context-restore | 43757843a1b3 | c07c37877b47 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 107 ownership-grpc-context-resources | f63fbe1de7c0 | 43757843a1b3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -362,8 +364,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-client-receive-worktree (row103, native4b8373ba),
-with all four client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed passing.
+last checked in /private/tmp/fwp-grpc-connect-cleanup-worktree (row104, native0e83c40a),
+with all four connection/client-receive/client-request/TLS listener tests15.12CPU/33.91elapsed passing.
 Previous package clean removed127.2MiB (0.00CPU/0.13elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
