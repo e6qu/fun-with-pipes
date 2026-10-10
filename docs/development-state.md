@@ -59,9 +59,16 @@ ARM sanitizer output agrees except for its captured ASan no-return stack warning
 that diagnostic job fails the byte comparison, not a reported memory error.
 Original Intel full-suite crash remains unresolved. Test independently generated
 C/binaries next; preserve any failing source, binary and optimized assembly.
-Fresh diagnostic75f311323722 / CI38045910841 is running; no passing claim.
-Original full golden context diagnosticc938d0817597 / CI38046238343 is running
-on Intel with exact compiler input/binary capture and macOS crash reports.
+Fresh diagnostic75f311323722 / CI38045910841 passes 100 independently
+emitted/compiled binaries per optimization on all three platforms. Intel/Linux
+sanitizers pass; ARM diagnostic still fails solely on its recorded ASan warning.
+Original full golden context diagnosticc938d0817597 / CI38046238343 passes
+on Intel (346.60s), with exact compiler C/binary capture. C SHA256 matches the
+earlier Intel probe; binary header confirms Mach-O64/x86-64. No crash report.
+Original signal remains unreproduced; no runtime/compiler fix claimed. Failed
+exact-head Intel production job in CI38021138247 is now rerunning after this
+investigation. All other original exact-head jobs/docs pass; merge still requires
+the retested Intel job to pass. Preserve the original failure and diagnostic evidence.
 Freeze this head except for real repairs. Require all seven gates before squash
 with subject `Release zip callback results and both scratch buffers on nonlocal exits`
 and explicit empty body. Verify raw message/tree, protect all 11 live docs and
@@ -85,27 +92,17 @@ immutable anchors and multi-commit preparations survive. Completed refresh
 journals must not be rerun. Detailed failures, checks and batch metrics are in
 [history](roadmap-history.md).
 
-Repair the strict HTTP/2 fixture at source89 (`177a08a204d7`) before refreshing
-full evidence on current112. Candidate5fbac7/38023254715 passes Intel, ARM and GCC, but Linux Clang
-still false-passes the omitted-owner control. Assembly shows an obsolete owner spill
-for the unreachable waiting loop. The current candidate selects only the
-fixture's already-completed copy path on x86; ARM, actual copy/fence/collection,
-payload, finalizer and all exact positive/negative assertions remain intact.
-Four-way evidence must pass on Linux GCC/Clang and macOS ARM/Intel Clang before
-publishing source89 and propagating90–112. No candidate is accepted yet. A new x86-only experiment reserves the actual
-frame pointer to exclude RBP as an uncleared heap register. Published candidate
-346d2cc69534 / four-way CI38045956375 passes Intel/ARM/GCC but still
-fails the Linux Clang strict omission. Reserve-frame inference did not repair
-it. Capture the actual Linux generated C and O2 assembly before the next change.
-Diagnostic6f5ce79118ed / CI38046362290 exports the exact negative source and
-assembly. Linux strict omission still fails; ARM ownership controls pass but
-its assembly step lacks the OpenSSL header path (now corrected). Actual Linux
-assembly shows clear_dead_stack before clock_gettime with owner in RBX; the
-new x86 candidate also clears stale stack words at the copy boundary after
-clearing registers. Four-way tests remain required; no acceptance yet.
-Evidence branch: ownership-evidence-http2-intel. Assembly diagnostic578830243e16/
-38022478422 and rejected candidates are archived in history. Run full source112
-production-equivalent evidence only after both repairs are present.
+Strict HTTP/2 fixture candidate8f6846a481ae passes all four jobs in CI38046812141
+(Linux GCC/Clang and macOS ARM/Intel Clang), with exact omission exit1 and all
+original positive/payload/finalizer/collection/ownership controls. Linux assembly
+confirms stale stack clearing at the copy boundary after clock_gettime and dead
+register clearing. Apply this tested fixture at source89 (currently177a08a204d7),
+remove optional diagnostic export, preserve native/probe bytes and publish its
+focused checks/docs. Propagate90–112 with retained revisions and exact leases,
+then refresh full production-equivalent evidence on current112. Phase2 remains
+incomplete; four-way fixture acceptance is not complete prepared-queue support.
+Evidence branch: ownership-evidence-http2-intel. Rejected candidates and assembly
+artifacts are archived in history.
 
 Queue32 fold and33 loop are independently refreshed and focused checks pass;
 34 is a verified docs-only duplicate. Keep these preparations separate from
@@ -129,7 +126,7 @@ still need their final squash rebases and six exact-head full gates.
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
-| 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests 16.61/33.35s; lint 2.26/4.59s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
+| 38 ownership-loop-preparation | 5588b2ed261e | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; docs publication follows; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests 16.18/32.57s; exact retain unit3.33/7.00s, lint 2.40/4.91s, format 0.35/0.75s and strong audit pass |
 | 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests 16.23/32.69s plus fifteen IR tests 3.32/6.89s; lint 2.36/4.59s, format 0.35/0.75s and strong audit pass |
 | 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests 16.62/33.51s; exact conversion IR unit3.23/6.74s, lint 2.32/4.72s, format 0.35/0.62s and strong audit pass |

@@ -14046,3 +14046,27 @@ in dead stack storage. New x86 hook additionally calls clear_dead_stack after
 clearing registers immediately before inspect_owner. This is a testable root
 hypothesis; original positives/negative exit1 remain mandatory. Format0.50/0.94s
 passes; four-way execution still required.
+
+Loop38 independently rebased FROMactualba9f0f293ac8bd372a3a9ffe225af07d27a7186e onto8c4e9ffd71a5555298721921a1fbf3a2314411cf, yielding
+5588b2ed261e63562faa81995978f7beb33426b0; original source/probes/workflows byte-identical. Guard0.06CPU/0.98s;
+prior target clean0.07/0.37s. Four original controls17.27CPU/34.61elapsed,
+lint2.61/5.29s and format0.42/0.83s pass. Final full sequential gates remain.
+
+HTTP2 accepted fixture8f6846a481ae99a22748318ad8ae9ec36f6debe0,
+CI38046812141: all four exact-head jobs pass strict omission exit1, O1/O2 with
+GC/reuse modes, payload/finalizer and library/TLS/actual-collection/IR controls.
+Four-way proof saved /private/tmp/fwp-http2-8f6846a-four-way-proof.json. Passing
+Linux O2 assembly saved /private/tmp/fwp-http2-8f6846a-linux: boundary clear
+stack at3107 follows clock_gettime3060 and precedes GC3117. Apply fixture-only
+repair to source89, excluding optional C export; no runtime/compiler changes.
+
+Effects diagnostic75f311323722/38045910841 passes 100 fresh C/compile/run trials
+per option on all three platforms. Intel/Linux ASan+UBSan pass; ARM strict
+instrumented stderr comparison fails solely on its recorded no-return warning.
+Original full golden contextc938d0817597/38046238343 passes346.60s on Intel.
+Captured C SHA25616158f03945926e297d95eb6eae05e9f372a274871b4b7a849ad91ca9b7a25fb
+matches earlier Intel diagnostic; headercffaedfe070000010300000002000000 confirms
+Mach-O64/x86-64. Original compiler arguments preserved, no crash report.
+After meaningful investigation and unchanged strict full snapshots, rerun the
+failed exact-head Intel production job in CI38021138247; initial crash remains
+unreproduced, no runtime/compiler fix claimed. Retest must pass before merge.
