@@ -49,7 +49,7 @@ actual squash base `be5f96be51eb48df2e9e08007d42b62cfefac22f`. All nine original
 native controls25.20CPU/50.65elapsed, lint2.47/5.09s, format0.43/0.82s and the
 strong docs audit pass; every original source/probe/workflow byte is preserved.
 Previous f3585147985dacacadf5380286ec4583508fb116 is retained remotely before
-exact-lease publication. Production CI38050046236 is running (bench/ARM GC pass); docs38050046274
+exact-lease publication. Production CI38050046236 is running (bench/both GC pass); docs38050046274
 passes. Require all seven exact-head gates before match-head squash with subject
 `Protect fold accumulators and borrowed arguments during preparation` and empty
 body. Fix any failures. Verify raw message/tree, protect all11 live docs and
@@ -78,10 +78,14 @@ exact bases/checks are in the table and history.
 Record conversion43 is published6b809877a1ac493015e1902204cc5ea72b68a875
 on current42cd2c8fa4251a, preserving both boxed-record and matched-result repair
 commits. Seven native controls, all20 ownership units, lint/format and audits pass.
-Current independent task is returned-variant alias44: local native968370152a7e
-on current43. Both original tests and the deliberate-extra-retain control pass,
-including exact captured ARM64 binaries at O1/O2 and measured layout/disassembly.
-Lint/format pass; finish docs/audit and retained-revision publication, then45.
+Returned-variant alias44 is publishedb094ffbe7e460c9d31a276826c0c5520f9b76c27
+on current43, with original tests, negative retain control, lint/format/audits
+and exact ARM64 binaries/layout/disassembly passing. Hardware, compiler and
+flags are recorded; natural-width numeric slots remain phase3.
+Current independent task is nominal match-context45: local native
+b4fd61808400ca6bce284d900967381c7d4b67e0 on current44b094ffbe7e46.
+Original source/probes unchanged; focused tests are running. Finish lint/format,
+all11 docs/audit and retained-revision publication, then prepare46.
 Do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
@@ -142,7 +146,7 @@ still need their final squash rebases and six exact-head full gates.
 | 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
-| 45 ownership-match-context | 44e720054249 | 5e436e6ee6f5 | Two tests 8.71/18.12s; lint 2.55/5.06s and format 0.44/0.84s pass |
+| 45 ownership-match-context | b4fd61808400 | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 3a87da04a671 | 44e720054249 | Two tests 9.08/18.73s; lint 2.42/4.93s and format 0.43/0.83s pass |
 | 47 ownership-caf-cache | 7e507e993e58 | 3a87da04a671 | Three tests 11.54/24.96s; lint 2.38/4.80s and format 0.44/0.83s pass |
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests 12.68/26.01s; lint 2.47/4.90s and format 0.35/0.73s pass |
@@ -340,14 +344,12 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-variant-alias-worktree (row44, native9683701),
-with both original controls9.66CPU/19.51elapsed passing. Focused exact binary
-capture0.44CPU/1.64elapsed and native layout/disassembly0.18CPU/0.85elapsed pass;
-artifacts and hardware/compiler/flags are recorded in history. Before
-switching Rust checkouts, use the root absolute guard with bounded cargo clean
--p fwp there, then rebuild the requested target. Never infer source identity
-from a shared target directory. Full gates run on GitHub. Temporary helpers
-may disappear; actual bases and retained remote tags are the recovery record.
+last checked in /private/tmp/fwp-typed-expression-worktree (row45, nativeb4fd618),
+with both original controls9.14CPU/18.85elapsed passing. Before switching Rust
+checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
+then rebuild the requested target. Never infer source identity from a shared
+target directory. Full gates run on GitHub. Temporary helpers may disappear;
+actual bases and retained remote tags are the durable recovery record.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
