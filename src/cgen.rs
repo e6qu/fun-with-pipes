@@ -2916,11 +2916,21 @@ impl<'g, 'p> FnGen<'g, 'p> {
         }
     }
 
+    // Original frame holders can own a direct constructor's tag and fields.
+    // The general variant heuristic prefers other representations for these.
+    fn resource_variant_value(&self, e: &Expr, ty: &MT) -> Option<usize> {
+        if variant_returns_enabled() && matches!(e, Expr::Construct(_, xs) if !xs.is_empty()) {
+            small_variant(self.g.prog, ty)
+        } else {
+            self.unboxed_variant(e, ty)
+        }
+    }
+
     fn resource_variant_binding(&self, e: &Expr, local: Local, ty: &MT) -> Option<usize> {
         if let Expr::Let(l, value, body) = e {
             if *l == local {
                 return only_matched(body, local)
-                    .then(|| self.unboxed_variant(value, ty))
+                    .then(|| self.resource_variant_value(value, ty))
                     .flatten();
             }
         }
@@ -2933,7 +2943,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             match e {
                 Expr::Let(x, value, body) if *x == l => {
                     if only_matched(body, l) {
-                        *found = fg.unboxed_variant(value, ty);
+                        *found = fg.resource_variant_value(value, ty);
                     }
                 }
                 Expr::Let(_, value, body) => {
