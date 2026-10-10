@@ -89,8 +89,9 @@ Current independent task88 verifies explicit channel cycle draining
 on actual86a0de231a4c0c, preserving original source/probes, unchanged compiler/runtime
 and all11 docs. Three audits and publication2.01CPU/19.32elapsed pass.
 Rebase88 FROM actual87old08beb7c2bc23 ONTO published875a4ef15301c8.
-Run unchanged cycle/queue controls, lint and format, all11 docs/audits and retained
-publication. Close must preserve queued values; explicit draining breaks the
+Nativeb787b3c84bfa preserves all original source/probes and unchanged compiler/runtime.
+Both cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s
+pass; finish all11 docs/audits before retained publication. Close preserves queued values; explicit draining breaks the
 counted cycle. Automatic unreachable-cycle reclamation remains unproved.
 Next89 repaired HTTP2 body roots; preserve the accepted strict fixture repair.
 
@@ -199,7 +200,7 @@ still need their final squash rebases and six exact-head full gates.
 | 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | All13 original nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed, all23 RC units3.80/7.81s, lint2.45/5.02s and format0.51/0.83s pass; both original feature/stack-child repair commits and source/probes unchanged, including child-retain omission and strict File/box controls; final actual-squash/full gates required |
 | 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
 | 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
-| 88 ownership-channel-cycle-lifetimes | b2d374878677 | 08beb7c2bc23 | Two cycle/queue tests 13.30/26.87s; lint 5.94/13.04s and format 0.46/0.87s pass |
+| 88 ownership-channel-cycle-lifetimes | b787b3c84bfa | 5a4ef15301c8 | Both original cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s pass; source/probes and compiler/runtime unchanged; close preserves queued values and explicit drain releases counted cycles across O1/O2 GC/poison modes, without claiming automatic cycle reclamation; final actual-squash/full gates required |
 | 89 ownership-http2-body-roots | 3b72f38e6814 | b2d374878677 | Four-way fixture8f6846a/38046812141 passes original strict omission and all controls; tested fixture applied without optional export; source published and propagated through112; final refresh/full gates required |
 | 90 fix-http2-body-bounds | 1b4be82fe9b6 | 3b72f38e6814 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 91 ownership-http2-peer-cleanup | 9900cc0d5229 | 1b4be82fe9b6 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -356,9 +357,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-nominal-source-worktree (row87, native5fab3216),
-with original source nominal-match test13.04CPU/26.20elapsed passing. The previous
-checkout's bounded package clean removed125.4MiB (0.00CPU/0.13elapsed).
+last checked in /private/tmp/fwp-channel-cycle-worktree (row88, nativeb787b3c8),
+with both cycle/queue tests12.82CPU/25.69elapsed passing. The previous checkout's
+bounded package clean removed84.1MiB (0.07CPU/0.37elapsed).
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared

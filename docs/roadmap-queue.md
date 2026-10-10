@@ -114,7 +114,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `ebe69e13a935` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `a0de231a4c0c` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `5a4ef15301c8` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `b2d374878677` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `b787b3c84bfa` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `3b72f38e6814` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `1b4be82fe9b6` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `9900cc0d5229` | `3c268c34d15b` | `6f310b5483a8` |
