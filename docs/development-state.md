@@ -131,7 +131,7 @@ still need their final squash rebases and six exact-head full gates.
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
 | 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests 16.62/33.51s; exact conversion IR unit3.23/6.74s, lint 2.32/4.72s, format 0.35/0.62s and strong audit pass |
+| 41 ownership-variant-conversion | a0bf1d1f7093 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 42 ownership-record-update | 2b61f8cad333 | 172912b7b1c6 | Two updates15.01/30.20s; unit3.22/6.67s; lint 2.28/4.57s and format 0.34/0.60s pass |
 | 43 ownership-record-conversion | 8c7450568632 | 2b61f8cad333 | Matched-result checkpoint repair: all 20 IR controls 3.25/6.97s, seven native tests 26.91/53.88s, lint 2.38/4.81s, format 0.35/0.63s pass; strong audit 0.43/3.47s passes; source8c74505 published with prior head retained; runner/full gates follow |
 | 44 ownership-variant-alias | 5e436e6ee6f5 | 8c7450568632 | Two tests 8.67/17.52s; lint 2.32/4.66s and format 0.35/0.73s pass |
@@ -333,8 +333,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-loop-unwind-worktree (row33, nativecb2115d),
-with both original loop controls passing11.07CPU/22.21elapsed. Before
+last checked in /private/tmp/fwp-variant-conversion-worktree (row41, nativea0bf1d1),
+with three original controls17.38CPU/34.92elapsed and the exact conversion
+liveness unit3.48CPU/7.20elapsed passing. Before
 switching Rust checkouts, use the root absolute guard with bounded cargo clean
 -p fwp there, then rebuild the requested target. Never infer source identity
 from a shared target directory. Full gates run on GitHub. Temporary helpers

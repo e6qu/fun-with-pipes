@@ -68,7 +68,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 38 | loop-preparation | `ownership-loop-preparation` | `4289528c436b` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `d98205af88df` | `1bb11bece9ae` | `b879eca20812` |
 | 40 | constructor-types | `ownership-constructor-types` | `5ebcb2d6b0e2` | `b0219671dca3` | `1bb11bece9ae` |
-| 41 | variant-conversion | `ownership-variant-conversion` | `172912b7b1c6` | `34873f41a4c4` | `b0219671dca3` |
+| 41 | variant-conversion | `ownership-variant-conversion` | `a0bf1d1f7093` | `34873f41a4c4` | `b0219671dca3` |
 | 42 | record-update | `ownership-record-update` | `2b61f8cad333` | `5c5875d30b8e` | `34873f41a4c4` |
 | 43 | record-conversion | `ownership-record-conversion` | `8c7450568632` | `614dd3b19c13` | `5c5875d30b8e` |
 | 44 | variant-alias | `ownership-variant-alias` | `5e436e6ee6f5` | `de8562194d54` | `614dd3b19c13` |
