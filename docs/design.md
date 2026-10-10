@@ -390,6 +390,10 @@ effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
 Inlined record projections similarly preserve the checked base type through
 scalar replacement so discarded nested children keep their typed destruction.
+Prepared loop normalization lifts both bound and inline Again record-field
+preparation through the same evaluation/drop spine for shape analysis and code
+emission. Cancellation observers read the actual counted-owner layout, including
+direct flattened String slots, while checking unchanged aliases and scalar bits.
 Prepared nested loop reconstruction keeps compatible nested records as flat
 state slots through Again updates. Reading a whole record reconstructs it with
 typed children; progressive retains and completed fields remain protected until

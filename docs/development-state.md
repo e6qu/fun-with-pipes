@@ -50,7 +50,8 @@ the fallback. Prior acceptance details and failed/superseded runs are in history
 [PR106](https://github.com/e6qu/fun-with-pipes/pull/106) is the only open
 production PR, repaired exact head `5683df1c8a96bad30e3c679987e87694387c3b62` on actual
 main `2ef5510154cd52f9f4e94a4a5a2778a20e43ec01`. Fresh full CI38006543549 and
-roadmap_docs38006543521 are running. Require all seven passing exact-head
+roadmap_docs38006543521, benchmarks and ARM GC stress pass; regular ARM/Intel
+macOS, Intel GC stress and Linux are running. Require all seven passing exact-head
 checks, then squash with subject
 `Protect live compiler owners across calls and cancellation` and empty body.
 The complete repair is published; freeze it unless a real failure needs repair.
@@ -63,8 +64,33 @@ Strong audit passes0.42CPU/3.51elapsed. Superseded7a550b7 misses a final-scalar
 pending owner; its CI38006009928 is cancelled only after fresh gates launch.
 Retained roadmap/revision-027-7a550b724047 preserves it. Neither prior head is
 eligible to merge. Next propagate the complete repair through preparations.
-Row35 is restored to its recorded published head after aborting its old rebase;
-the adjacent constructor/regression test conflict must preserve both changes.
+Rows28–35 inherit the exact complete repair. Row35 test-insertion conflict
+preserves its constructor test and both new argument controls; strict source
+parity and handoff audits pass. Complete journal28–35 is finished: initial
+guard7.37CPU/80.51elapsed stopped at the conflict, reviewed docs continuation
+0.00/0.14s and guarded resume1.24/16.34s pass. Rows36–41 now inherit the exact repair, preserving typed conversion in40
+without its old blanket-temporary policy. Guard4.41CPU/47.46elapsed stops at
+that reviewed source conflict; docs continuation0.00/0.14s and exact-source
+resume2.30/25.90s pass. Fresh combined evidence0bb9762dd41b5ca3e7987d593a0650b4619e34d6 on actual
+source41a59952364e225f41d54412741a25909bf414828a failsCI38007031461. It adds
+unchanged stack/reuse allocation gates and runs the complete ownership-IR
+module; compiler/runtime/tests/scripts/production workflows match41 exactly.
+Retained oldedabbc2 under roadmap/evidence-conversion-edabbc24e57d before
+leased publication. Audit0.43CPU/3.50elapsed passes. Runner failures: loop
+state flattening is lost when Again holds an inline Let/Record spine; two
+new IR controls select arbitrary HashMap entries after constructor recording
+is added. Preserve their exact owner assertions while selecting pending calls.
+Next finish normalization and the cancellation observer at33, propagate
+through34–49 with explicit call selection at35, then refresh combined41
+evidence before continuing50–112. The loop observer must read actual
+counted-owner layout: flattened string owners are not boxed records. All
+scalar-bit, alias, finalizer and exact release assertions remain unchanged.
+Row33 both loop checks pass10.45CPU/20.96elapsed on the local repair.
+Completed42–49 refresh preserves CAF evaluation/pending owners and adds a
+negative/positive CAF scalar IR control: all20 units pass3.40CPU/7.15elapsed,
+format0.34/0.62s. Row47 is404970bff753 on actual3ee4f29b8493. Resumed serial
+publication/audit passes3.22CPU/37.65elapsed. No old gate accepts the unresolved
+combined41 evidence; all later prepared work requires fresh final full gates. Each production PR still needs full gates.
 
 Old head9c1b5a8 fails regular ARM macOS allocation checks in CI38002299110.
 Its benchmark/GC/docs passes do not accept the repair. The old incomplete run
@@ -77,8 +103,8 @@ transfer, preserving failure cleanup. Earlier computed and duplicated values
 retain typed owners during later evaluation. Stack/worker/loop shapes remain
 visible. No allocation thresholds or existing assertions were weakened.
 
-Next, refresh row28 FROM its recorded actual base onto
-the repaired PR106 head. Carry the exact repair into later preparations;
+Row28 is now131ec8ebdd0691571eab15924dd598b921fbc6c1 on actualPR1065683df1.
+Carry the exact repair into later preparations;
 previous source-parity and focused evidence predate this change. After PR106
 passes all seven exact-head gates and merges, rebase row28 onto its actual
 squash, validate it and open the next PR. Keep only one production PR open.
@@ -105,23 +131,23 @@ still need their final squash rebases and six exact-head full gates.
 | 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 33 ownership-loop-unwind | 09892c4d61ad | 952b906059c6 | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
-| 34 ownership-argument-preparation | 926eb241633d | 09892c4d61ad | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
-| 35 ownership-constructor-unwind | 432a3332c4f7 | dcf18f01c2fb | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
-| 36 ownership-worker-boxing | 0584ab3ac77b | 432a3332c4f7 | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
-| 37 ownership-worker-preparation | 7de346c56ec4 | 0584ab3ac77b | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
-| 38 ownership-loop-preparation | 61c5f8e91cc5 | 7de346c56ec4 | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
-| 39 ownership-variant-preparation | a5ac41b405dd | 61c5f8e91cc5 | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
-| 40 ownership-constructor-types | 5376d4a1f4ed | a5ac41b405dd | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
-| 41 ownership-variant-conversion | 9033d9f1072e | 5376d4a1f4ed | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
-| 42 ownership-record-update | 00b9d0901485 | 9033d9f1072e | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
-| 43 ownership-record-conversion | 3df2c9d86059 | 00b9d0901485 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
-| 44 ownership-variant-alias | 8ebfe6f5d701 | 3df2c9d86059 | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
-| 45 ownership-match-context | e73b5b8e7ac7 | 8ebfe6f5d701 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
-| 46 ownership-field-context | ae8933d991cb | e73b5b8e7ac7 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
-| 47 ownership-caf-cache | 4f75498ad664 | ae8933d991cb | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
-| 48 ownership-inline-caf | 3b142abc5f93 | 4f75498ad664 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
-| 49 ownership-task-thunks | 4ab664827244 | 3b142abc5f93 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
+| 33 ownership-loop-unwind | e83800d9ac44 | c434692ccb6f | Five tests18.85/37.91s; lint2.24/4.52s, format0.35/0.63s and strong audit pass; final sequential gates follow |
+| 34 ownership-argument-preparation | d3e1f6d4ed04 | e83800d9ac44 | Source/tests/scripts/workflows identical to33; docs only; audit0.44/3.50s passes; skip duplicate PR after28 full acceptance |
+| 35 ownership-constructor-unwind | 1a01dd91bcfd | d3e1f6d4ed04 | Six tests22.36/45.17s; exact unit3.39/7.02s; lint2.28/4.73s, format0.35/0.74s and strong audit pass |
+| 36 ownership-worker-boxing | bbdcc69fe735 | 1a01dd91bcfd | Three tests15.44/31.12s; lint2.40/4.94s, format0.35/0.62s and strong audit pass; final sequential gates follow |
+| 37 ownership-worker-preparation | c830f4d3175e | bbdcc69fe735 | Three tests15.91/31.88s; lint2.33/4.78s, format0.35/0.63s and strong audit pass; final sequential gates follow |
+| 38 ownership-loop-preparation | cff61cd0898d | c830f4d3175e | Four tests16.61/33.35s; lint2.26/4.59s, format0.34/0.62s and strong audit pass; final sequential gates follow |
+| 39 ownership-variant-preparation | 7d617f68cac0 | cff61cd0898d | Three tests16.18/32.57s; exact retain unit3.33/7.00s, lint2.40/4.91s, format0.35/0.75s and strong audit pass |
+| 40 ownership-constructor-types | 1654263ed38e | 7d617f68cac0 | Three tests16.23/32.69s plus fifteen IR tests3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong audit pass |
+| 41 ownership-variant-conversion | a59952364e22 | 1654263ed38e | Three tests16.62/33.51s; exact conversion IR unit3.23/6.74s, lint2.32/4.72s, format0.35/0.62s and strong audit pass |
+| 42 ownership-record-update | 5522a2ceb038 | a59952364e22 | Two updates15.01/30.20s; unit3.22/6.67s; lint2.28/4.57s and format0.34/0.60s pass |
+| 43 ownership-record-conversion | 1ea65661b77d | 5522a2ceb038 | Native10.68/21.43s; lint2.26/4.47s and format0.34/0.72s pass |
+| 44 ownership-variant-alias | 36e970682a29 | 1ea65661b77d | Two tests8.67/17.52s; lint2.32/4.66s and format0.35/0.73s pass |
+| 45 ownership-match-context | f82fa2325d62 | 36e970682a29 | Two tests8.71/18.12s; lint2.55/5.06s and format0.44/0.84s pass |
+| 46 ownership-field-context | 3ee4f29b8493 | f82fa2325d62 | Two tests9.08/18.73s; lint2.42/4.93s and format0.43/0.83s pass |
+| 47 ownership-caf-cache | 404970bff753 | 3ee4f29b8493 | Three tests11.54/24.96s; lint2.38/4.80s and format0.44/0.83s pass |
+| 48 ownership-inline-caf | ee6016f60507 | 404970bff753 | Two tests12.68/26.01s; lint2.47/4.90s and format0.35/0.73s pass |
+| 49 ownership-task-thunks | 3f0e25fb2cc7 | ee6016f60507 | Two tests10.19/20.78s; lint2.33/4.82s and format0.35/0.73s pass |
 | 50 ownership-task-within | 91b625c60cb9 | 4ab664827244 | Test8.95/18.26s; inventory unit3.33/6.98s; lint2.43/4.79s and format0.35/0.73s pass |
 | 51 ownership-task-scope | 935554ad52c1 | 91b625c60cb9 | Test9.76/20.17s; lint2.45/4.85s and format0.34/0.62s pass |
 | 52 ownership-task-handles | 8eab3e41f8ba | 935554ad52c1 | Test11.24/23.29s; lint2.34/4.73s and format0.44/0.74s pass |
@@ -231,16 +257,20 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 
 ## Separate evidence and remaining audits
 
+Earlier passed evidence predates the complete PR106 call repair unless stated
+otherwise. Refresh scoped evidence on the repaired source; no historical pass
+accepts a current production head. Superseded runs are archived in history.
+
 | Scope | Exact evidence head | Run / status |
 |---|---|---|
-| Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; source matches current row112215d7ba |
+| Rows107–112 storage and repaired root controls | e5bbfd84736f35f79d631b48373fb8b328251b5f | CI37992657684 passes; historical source215d7ba |
 | Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
 | Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
 | Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
 | TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
 | WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
 | Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
-| Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; source matches current row100e6ae6c8, inherited HTTP2 control repaired |
+| Rows92–100 gRPC serving and encoding | 3aca5cf20d779fa1e9abbfd89e0588032940fb91 | CI37993159029 passes; historical sourcee6ae6c8, inherited HTTP2 control repaired |
 | Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
 | Rows79–88 typed holders and explicit cycles | 3f0c430477bf261a54cbffb3c39a17826e7677f5 | CI37982696642 passes focused Linux ownership, cycles, tracing, lint and docs |
 | Rows77–78 actual WASI counts/disposal | dc731c19e001bdee07c71d866d707d681682b394 | CI37980359907 passes required actual WASI and related Linux/tracing/docs; source1a5f5ba, actual base295b0da |
@@ -250,9 +280,9 @@ all alias/reclamation assertions. Detailed failed/diagnostic logs stay in histor
 | Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
 | Rows47–52 cache and task runtime | 7dfe64894b1dc1107859a5cde550850fdb672973 | CI37973911726 passes focused Linux ownership/tracing and docs; productionfe8ed51, actual base245a0a2 |
 | Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
-| Rows26–41 callback/constructor/typed conversion | edabbc24e57d71eb5e8253f25f1c1697322da56a | CI38004068610 passes combined ownership/tracing/lint/docs and five exact IR units; source/tests/scripts/production workflows match current41 at9033d9f; earlier3a9fcb5 CI37971602336 passed on67e3771 |
+| Rows26–41 callback/constructor/typed conversion | 0bb9762dd41b5ca3e7987d593a0650b4619e34d6 | CI38007031461 fails loop flattening and nondeterministic new IR selection; repair in progress; complete call repair, unchanged stack/reuse allocation gates, full ownership-IR module, tracing/lint/docs; source matches current41a599523 |
 | Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
-| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows exactly match current33c37df3b; prior1ac6dc9 CI37969742246 passed on9f56744 |
+| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
 | Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
 | Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
 | Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
@@ -366,8 +396,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard is for the other repository. Shared target now belongs
-to /private/tmp/fwp-call-liveness-worktree after absolute-root guarded package
-clean (0.07 CPU / 0.38 elapsed seconds). PR106 repair modifies only src/rc.rs:
+to /private/tmp/fwp-loop-unwind-worktree after bounded package clean
+0.00CPU/0.14elapsed. Its focused native loop checks pass10.45CPU/20.96elapsed;
+shared native binary reflects this prepared source, not the frozen PR106 head.
+PR106 focused source checks below predate this target switch. PR106 repair modifies only src/rc.rs:
 earlier counted arguments remain owned across later evaluation. The final
 consumed argument stays inline only without pending counted arguments, keeping
 stack/worker/loop shapes visible. Both computed and duplicated pending owners
