@@ -11,8 +11,9 @@ prior deliveries and measurements, without supplying new priorities.
 Complete this roadmap automatically, one focused PR at a time. Fix failing tests;
 CI gates merging, not implementation or next-task preparation. Full builds,
 tests, benchmarks and large regeneration run on GitHub. Require all six passing
-jobs and the roadmap documentation audit for the current exact PR head before squash. Supply a single-line subject
-of at most 80 characters and an empty body, with no trailers or attribution.
+jobs and the roadmap documentation audit for the current exact PR head before
+squash. Supply a single-line subject of at most 80 characters and an empty body,
+with no trailers or attribution.
 Update the handoff and queue after meaningful progress. This authorization
 persists across sessions and compactions; no repeat approval is required.
 
@@ -40,17 +41,18 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#113: native macOS, selected typed container/text/callback
+Main includes #74–#114: native macOS, selected typed container/text/callback
 ownership, exact wide reference counts and immediate last-owner reclamation.
 Registered unwind cleanup now protects compiler caller/reuse-token references
 and runtime application/capture preparation, plus map, selection, zip and fold
 unwind cleanup. Loop state/Step owners survive cancellation and payload
 preparation; flattened Again records remain unboxed. Original allocation gates
 remain intact. Constructor fields and remaining caller references stay protected
-before allocation; merged changes passed all exact-head production and documentation gates.
-Queue34 is skipped as a duplicate; queue35 is accepted. Deliver queue36 worker
-result boxing, then the
-remaining ownership work. Exact heads, failures, checks and the sole next action
+before allocation; merged changes passed all exact-head production and
+documentation gates. Worker result fields and remaining caller references now
+stay protected until record/variant boxing succeeds. Queue 34 is skipped as a
+duplicate; queues 35–36 are accepted. Deliver queue 37 worker argument
+preparation, then the remaining ownership work. Exact heads, failures, checks and the sole next action
 are in [the handoff](docs/development-state.md); historical platform evidence
 and repaired test controls are in [history](docs/roadmap-history.md).
 
