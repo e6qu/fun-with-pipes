@@ -14020,3 +14020,15 @@ Intel original golden context diagnosticc938d08175975904ef3889731319a3561c7635e7
 CI38046238343 is running after audit0.50CPU/3.80elapsed. Source/probes unchanged;
 compiler wrapper retains only the exact effects input and output, and invokes
 /usr/bin/clang with unchanged arguments. Full original snapshots remain strict.
+
+Worker37 independently rebased FROMactuale171da5957fd36dce057388381737c5f562ea2a2 ontobcd3b392050b30163256ad72610046a15e691dfe,
+yieldingc7cc3838eeb9562238bfa4104c9016e47f0d66c7; all source/probes/workflows byte-identical to originalba9f0f293ac8bd372a3a9ffe225af07d27a7186e.
+Guard0.08CPU/0.84elapsed; prior worker clean0.07/0.36s. Three original focused
+preparation/boxing/constructor tests16.35CPU/32.93elapsed pass. Final lint/docs
+publication and sequential actual-squash full gates remain required.
+
+HTTP2 exact-source diagnostic6f5ce79118ed2e9671d309a8b7b0f704dd2c7d60,
+CI38046362290, preserves the reserve-frame candidate and every strict assertion.
+Optional C export and always-run O2 assembly/artifacts only; format0.51CPU/0.83s
+and strong audit0.53CPU/3.92s pass before publication.
+Worker37 lint2.48CPU/5.01elapsed and format0.38/0.73s pass after original tests.
