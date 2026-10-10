@@ -15052,3 +15052,18 @@ before squash with `Protect flattened loop arguments during field preparation`
 and empty body. Next production after acceptance is queue39 variant preparation.
 
 Accepted queue38 in PR116 at 85198cc78ee7d0cb8af5d6ec30b1c42771c91748 on 25dd472a889baf61422c254eaa6b370147c81244. Exact frozen head e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 passes all six CI38076902840 jobs and docs38076903010. Raw squash subject 'Protect flattened loop arguments during field preparation' has 57 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree f53d2fe498e3f5de928bea64991cc225e56419b6 are verified. All11 live documents were hashed and restored byte-for-byte during fast-forward.
+
+PR116 merge passes0.25CPU/6.73elapsed; fetch0.04/1.10s, full raw-commit/tree
+verification and11-doc protection0.05/0.25s, acceptance audit0.67/5.75s pass.
+All44 link sets,106 immutable queue pairs/tags and76 live heads/bases pass.
+Duplicate main CI38081735040 is cancelled only after full tested-tree proof
+(0.04CPU/1.20elapsed); actual main docs38081735038 remains queued, not accepted.
+Final queue39 rebase passes0.09CPU/0.98elapsed on actual85198cc78ee7d0cb8af5d6ec30b1c42771c91748,
+FROMactual4289528c436b6a3cb1edf81fb45d588722277469. Native snapshot
+5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits and
+every original source/probe/workflow byte, including explicit preservation of
+the empty original docs commit after copying all11 live docs. Three original
+retain/loop-preparation/worker-preparation tests pass16.57CPU/33.39elapsed;
+all15 RC liveness units pass3.31CPU/6.81elapsed. No earlier disk-limit refusal
+was bypassed: these new workloads received fresh acceptance from the unchanged
+guard. Original negative exits3/7 and raw interpreter/native oracles remain.

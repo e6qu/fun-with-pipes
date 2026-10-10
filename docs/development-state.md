@@ -36,6 +36,10 @@ empty body and no trailers or attribution. Raw commit has one parent
 `25dd472a889baf61422c254eaa6b370147c81244` and complete tree `f53d2fe498e3f5de928bea64991cc225e56419b6`,
 identical to the tested head. All11 live docs were hashed in
 /private/tmp/fwp-main-docs-pre116 and restored byte-for-byte after fast-forward.
+Merge0.25CPU/6.73elapsed, fetch0.04/1.10s, protection0.05/0.25s and acceptance
+audit0.67/5.75s pass (44 link sets,106 immutable pairs/tags,76 live heads/bases).
+Duplicate main CI38081735040 was cancelled only after complete-tree proof
+(0.04CPU/1.20elapsed); actual main docs38081735038 is queued at the squash head.
 Queues35–38 are accepted in PRs113–116. Flattened loop argument preparation
 now protects the original box and each completed typed field duplicate until
 transfer. Alias/scalar bits, evaluation/trap order and original allocation
@@ -129,8 +133,12 @@ phase order. Recheck the finite exit inventory against merged source after the
 ownership queue is delivered. PR116 is accepted; current delivery is queue39 on its actual squash.
 Queue39 retain overflow source d98205af88dfc2300d19d2ca12b11a71146ded9a
 has been reviewed, with actual SIZE_MAX overflow and exact omitted partial/caller
-scope exits3/7 preserved. Its final rebase is prepared but not executed: FROM
-actual prepared38 4289528c436b onto the actual PR116 squash.
+scope exits3/7 preserved. Its final rebase passes0.09CPU/0.98elapsed: FROM
+actual prepared38 4289528c436b onto the actual PR116 squash. Final native
+snapshot5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits
+and every source/probe byte. All three original native regressions pass
+16.57CPU/33.39elapsed; all15 RC units3.31/6.81s, lint2.29/4.67s and
+format0.34/0.62s pass. Final docs publication and exact-head full CI remain pending.
 Independent ARM/Intel machine-code evidence passes both jobs in CI38077436743 at
 b0260c9d3aa72401dae338860e34c93600ec8dd1 on unchanged source39. Only
 capture/inspection/workflow files differ. The inspector tracks active cleanup
@@ -178,7 +186,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
+| 39 ownership-variant-preparation | 5c663ef544f0 | 85198cc78ee7 | Final actual-squash source preserves both original commits; all three retain/loop/worker regressions16.57CPU/33.39elapsed, all15 RC units3.31/6.81s, lint2.29/4.67s and format0.34/0.62s pass; original source/probes unchanged, including exact partial/caller omission exits3/7 and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required |
 | 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 41 ownership-variant-conversion | cca935846750 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
@@ -340,8 +348,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 
 The fun-refactor guard applies to the other repository. The shared target was
 last checked in /private/tmp/fwp-variant-preparation-worktree (queue39, d98205af88df):
-the unchanged original retain overflow test with actual binary capture passes
-10.63CPU/21.45elapsed; corrected inspection/layout passes0.35/0.93s. Previous
+final actual-squash native snapshot5c663ef544f0 passes all three original
+regressions16.57CPU/33.39elapsed, all15 RC units3.31/6.81s, lint2.29/4.67s
+and format0.34/0.62s. Earlier actual binary capture passes10.63/21.45s and
+corrected inspection/layout0.35/0.93s. Previous
 bounded package clean in queue38 removed88.9MiB (0.00CPU/0.13elapsed).
 An optional allocator-artifact metadata enrichment was not executed because the
 guard reported less than64GiB free. No limits were changed and no check was
