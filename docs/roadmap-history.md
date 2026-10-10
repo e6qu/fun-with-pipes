@@ -13954,3 +13954,55 @@ the fixture's known completed-copy path removes that spill in cross assembly
 selects only this already-true fixture path on x86 and removes state reassertion;
 ARM/copy/fence/collection and every original assertion stay intact. Formatting
 0.46/0.87s passes. Fresh four-way execution is required before propagation.
+
+PR110 Intel114122168181/38021138247 fails golden_run::run_snapshots only:
+effects.fwp native yields no stdout/stderr and signal exit instead of original
+expected output and exit1. Root raw/clean logs/private/tmp/fwp-pr110-05d354f-intel.
+Prior worker package clean0.00CPU/0.14elapsed; focused zip --no-run builds the
+exact05d354f compiler6.86/13.88s. Focused native effects probe compares raw
+FWP_NO_OPT=1 oracle and ten O1/ten O2 executions with seed42 on ARM; all
+stdout/stderr/exits agree1.97/3.94s. Actual binary headercffaedfe0c000001 confirms
+Mach-O64/ARM64; emitted C, both executables and report are saved under
+/private/tmp/fwp-effects-pr110-local. This does not reproduce or accept Intel.
+Worker36 independent rebase from actualbe0032a15ee3 onto bbd74db2977a preserves
+all original source/probes and yields2a9293881eabe6de8e99d960cc9af04f138b8696;
+guard0.06CPU/0.92elapsed. Prior constructor clean0.00/0.13s; eight original
+worker/constructor/preparation/caller tests28.60/57.36s pass. Candidate retained
+remotely under revision-036-2a9293881eab; final lint/docs publication remains
+pending while the current production crash takes priority.
+
+
+Effects binary diagnostics1ae75af6b78ece363173ece7276b399c7020accb, CI38044527408:
+all three platforms pass 100 O1 and 100 O2 executions of one binary per option.
+Intel/Linux ASan+UBSan output agrees exactly. ARM stdout/exit agree; stderr
+contains the ASan no-return stack warning plus the expected error, causing the
+strict diagnostic comparison to fail. No reported memory error or original
+Intel crash reproduction. Downloaded exact generated C, Mach-O binaries, O1
+assembly and reports to /private/tmp/fwp-effects-1ae75af-{arm,intel}. Production
+PR110 Linux also passes; Intel regular remains its sole failing gate.
+
+HTTP2 completed-copy candidate5fbac7ca5be09fc7d072e6bf82e6c95274af6cff,
+CI38023254715: Intel/ARM/GCC pass every unchanged positive/negative control;
+Linux Clang still exits0 rather than required1 for owner omission. Next narrow
+fixture experiment reserves the actual frame pointer on x86, without clobbering
+RBP/SP; inference from compiler/platform differences, not verified acceptance.
+Formatting0.45CPU/0.86elapsed passes. No source89 publication or propagation yet.
+
+Fresh effects local compilation probe: five independently emitted/compiled binaries
+per optimization agree with the original snapshot on ARM, guard6.46CPU/13.09elapsed.
+Fresh runner trials are still required; this is not an Intel reproduction or fix.
+
+Diagnostic publication75f311323722142480177599d7dcc51e68a33e6d launches
+CI38045910841 for 100 fresh C/compile/run trials per option on three platforms,
+preserving exact source/assembly for any failing trial. Audit0.53CPU/3.92elapsed
+passes before publication. Original runtime/compiler/probes/production CI unchanged.
+HTTP2 frame experiment346d2cc695345faf1bfe1771ee0c4c40724aa83b launches
+four-way CI38045956375; audit0.53CPU/3.92elapsed passes before publication.
+Neither queued run establishes acceptance. Prior worker/zip package clean
+0.00CPU/0.13elapsed keeps shared target bounded. Worker36 lint first used a
+nonexistent worker_boxing test name and failed0.07CPU/0.37elapsed; corrected
+target is worker_boxing_ownership, with no assertions or source changes.
+
+Worker36 corrected four-target lint2.46CPU/5.05elapsed and format0.41/0.60s pass.
+Original eight-test result and all code/probes remain unchanged. Documentation
+publication follows; prepared checks do not replace final exact-head full gates.
