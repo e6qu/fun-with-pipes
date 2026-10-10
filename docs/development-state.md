@@ -70,7 +70,7 @@ current ancestry and all later regression coverage.
 
 ## Active repair and independent work
 
-Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is queued on
+Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
 exact source112 `0da68ea8cdb1`, after both repairs propagated. Require all six
 production jobs plus docs, including actual WASI counts/disposal; this evidence
 does not replace any sequential PR gate. Original failed38016929326/3a97905ca980
@@ -122,7 +122,7 @@ still need their final squash rebases and six exact-head full gates.
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
-| 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests 16.18/32.57s; exact retain unit3.33/7.00s, lint 2.40/4.91s, format 0.35/0.75s and strong audit pass |
+| 39 ownership-variant-preparation | 842102d9c636 | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
 | 40 ownership-constructor-types | cccbe406449f | dd8444579ed0 | Three tests 16.23/32.69s plus fifteen IR tests 3.32/6.89s; lint 2.36/4.59s, format 0.35/0.75s and strong audit pass |
 | 41 ownership-variant-conversion | 172912b7b1c6 | cccbe406449f | Three tests 16.62/33.51s; exact conversion IR unit3.23/6.74s, lint 2.32/4.72s, format 0.35/0.62s and strong audit pass |
 | 42 ownership-record-update | 2b61f8cad333 | 172912b7b1c6 | Two updates15.01/30.20s; unit3.22/6.67s; lint 2.28/4.57s and format 0.34/0.60s pass |
@@ -326,8 +326,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-loop-preparation-worktree (row38, 4289528), with
-four original ownership controls passing17.27CPU/34.61elapsed. Before switching
+last checked in /private/tmp/fwp-variant-preparation-worktree (row39, 842102d), with
+three original ownership controls passing18.09CPU/36.22elapsed and the exact
+retain liveness unit3.47CPU/7.40elapsed. Before switching
 Rust checkouts, use bounded cargo clean -p fwp there, then rebuild the requested
 target. Never infer source identity from a shared target directory. Full gates
 run on GitHub. Temporary helpers may disappear; recorded actual bases and

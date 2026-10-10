@@ -14168,3 +14168,5 @@ CI38048799853 (queued), with separate retained tool logs, strict program oracle
 and actual-use-after-free control. Final strong audit0.63CPU/4.35elapsed passes.
 Original runtime/compiler/production probes and workflows unchanged. Known ARM
 stack-instrumentation limitation remains recorded; no complete ASan-stack claim.
+
+Retain-overflow preparation39 rebased FROMactual2a45666b37a1ba726ce0892f05e6097ebef168c1 ONTOactual4289528c436b6a3cb1edf81fb45d588722277469, preserving its one original feature commit and every compiler/runtime/probe/workflow byte. Guarded rebase0.05CPU/0.95elapsed passes. Focused command cargo test --test retain_unwind_ownership --test loop_preparation_ownership --test worker_preparation_ownership passes three original controls18.09CPU/36.22elapsed; cargo test --lib rc::tests::retain_liveness_excludes_the_unfinished_extra_reference -- --exact passes3.47CPU/7.40elapsed. Clippy on the three targets2.45CPU/4.94elapsed and cargo fmt --check0.34CPU/0.61elapsed pass. All commands use the fwp resource guard and FWP_OPENSSL_DIR. Final squash-base rebase and all exact-head production gates remain required.
