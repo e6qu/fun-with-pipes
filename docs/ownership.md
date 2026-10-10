@@ -172,6 +172,16 @@ Actual binaries, C, flags and both compiled layouts are in history. This is a
 constructor/layout improvement; storage disposal and general performance remain
 separate roadmap work.
 
+Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
+its payload at offset8. Original counters verify zero parent boxes versus one
+16-byte box in the comparison path. The program-thread frame is1280 bytes at
+O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
+body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
+startup and trap paths. Original inactive scalar/nullary tags and partial-retain
+cleanup remain checked. These are representation measurements, not executed
+instruction counts or timings; File/path allocations remain. Exact source,
+flags, binaries, disassembly and compiled layout are recorded in history.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
