@@ -15281,3 +15281,28 @@ snapshot5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits
 and every source/probe byte. All three original native regressions pass
 16.57CPU/33.39elapsed; all15 RC units3.31/6.81s, lint2.29/4.67s and
 format0.34/0.62s pass. Final docs publication passes1.60CPU/17.90elapsed at frozen3aeb9655d492; exact-head full CI remains pending.
+
+PR117 acceptance checks: guarded merge0.22CPU/6.85elapsed, fetch0.05/1.22s,
+raw proof/all11-doc protection0.05/0.13s and acceptance audit0.56/4.03s pass
+(44/106/75). Duplicate main production CI38086882594 cancelled only after
+complete-tree equality (0.04/1.24s); actual main docs38086882597 passes.
+
+Final queue40 rebase0.05CPU/1.10elapsed passes FROM actual prepared39
+d98205af88df ONTO actual PR117 squash571422b54647. Native snapshot
+a51b9cf7ca699ea97524c38cc6631c6add9d21eb preserves both original commits and
+every original source/probe/production-workflow byte. Docs-only original5ebcb2d
+became empty after resolving only docs conflicts with all11 live docs; parity
+and original commit count were verified before explicitly preserving that
+commit with --allow-empty -C. Bounded cargo clean -p fwp in previous queue39
+checkout removed89.0MiB (0.05CPU/0.36elapsed) before fresh focused checks.
+
+Fresh queue40 actual-squash validation passes through the absolute-root fwp
+guard with FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3: cargo test --test
+constructor_type_ownership --test retain_unwind_ownership --test
+worker_preparation_ownership --test constructor_unwind_ownership executes all
+four original tests, zero ignored,20.27CPU/40.70elapsed. All17 rc::tests units
+pass3.60/7.51s; clippy on those four targets with -D warnings2.51/5.10s and
+cargo fmt --all -- --check0.44/0.83s pass. Original exact omitted nested-child
+cleanup exit4 on both record/variant paths, aliases/scalar bits, GC stress/
+verification, reuse verification and raw interpreter/native O1/O2 agreement
+remain unchanged. Final seven exact-head production gates still remain.

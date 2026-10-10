@@ -36,22 +36,32 @@ empty body and no trailers or attribution. Raw commit has one parent
 `85198cc78ee7d0cb8af5d6ec30b1c42771c91748` and complete tree `5fa63ec44f134c96443adad74c6cbd1ff7c11656`,
 identical to the tested head. All11 live docs were hashed in
 /private/tmp/fwp-main-docs-pre117 and restored byte-for-byte after fast-forward.
+Merge0.22CPU/6.85elapsed, fetch0.05/1.22s, protection0.05/0.13s and
+acceptance audit0.56/4.03s pass (44 link sets,106 immutable pairs/tags,75 live
+heads/bases). Duplicate main CI38086882594 was cancelled only after complete-tree
+proof (0.04CPU/1.24elapsed); actual main docs38086882597 passes at the squash.
 Queues35–39 are accepted in PRs113–117. Multi-field typed retains now release
 completed extras on count overflow, with existing caller owners protected and
 unfinished extras excluded from the liveness checkpoint. Exact omission exits3/7,
 alias/scalar controls and raw interpreter/native agreement remain checked.
 Phase2 remains incomplete; phases3–6 are pending.
 
-Next production delivery is queue40 constructor type context, FROM actual
-prepared39 d98205af88df onto this actual PR117 squash. Preserve both original
-feature/docs commits, every original source/probe byte and exact outer-only
-cleanup exit4. Run fresh constructor/retain/constructor-unwind regressions,
-all RC units, lint and formatting under the unchanged guard; move any refused
-workload to CI. Copy all11 authoritative docs, audit, retain the old remote
-revision, publish with an exact lease and open the sole next production PR.
-Every final head requires all seven passing gates before match-head squash.
-Independent constructor machine-code and docs evidence stays outside production
-ancestry; its current results remain in the evidence section below.
+Next production delivery is queue40 constructor type context. Final rebase
+passes0.05CPU/1.10elapsed FROM actual prepared39 d98205af88df onto this actual
+PR117 squash; native snapshota51b9cf7ca699ea97524c38cc6631c6add9d21eb preserves
+both original commits and every source/probe/production-workflow byte. The
+original docs-only commit became empty during conflict resolution and was
+preserved explicitly after parity proof. Bounded clean in the previous queue39
+checkout removed89.0MiB (0.05CPU/0.36elapsed). Fresh four constructor-type,
+constructor-unwind, retain-overflow and worker-preparation regressions pass
+20.27CPU/40.70elapsed; all17 RC units3.60/7.51s, lint2.51/5.10s and format
+0.44/0.83s pass under the unchanged guard. Exact outer-only cleanup exit4 for
+record/variant, aliases/scalar bits, GC/reuse modes and raw interpreter/native
+O1/O2 agreement remain intact. Copy all11 authoritative docs, audit, retain the
+old remote revision, publish with an exact lease and open the sole next PR.
+After acceptance, deliver queue41 variant conversion FROM actual prepared40
+5ebcb2d6b0e2 onto queue40's eventual actual squash. Every final head requires
+all seven passing gates; independent binary evidence stays outside production.
 
 Independent constructor binary capture is published at
 `38a013a224acfcf105c6aa77f941b0043c831e26` on unchanged source40
@@ -205,7 +215,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 40 ownership-constructor-types | a51b9cf7ca69 | 571422b54647 | Final actual-squash source preserves both original commits; four original constructor-type/constructor-unwind/retain/worker regressions20.27CPU/40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s pass; original source/probes unchanged including exact outer-only exit4 for record/variant, aliases/scalar bits and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required |
 | 41 ownership-variant-conversion | cca935846750 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
@@ -368,12 +378,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-variant-preparation-worktree (queue39, d98205af88df):
-final actual-squash native snapshot5c663ef544f0 passes all three original
-regressions16.57CPU/33.39elapsed, all15 RC units3.31/6.81s, lint2.29/4.67s
-and format0.34/0.62s. Earlier actual binary capture passes10.63/21.45s and
-corrected inspection/layout0.35/0.93s. Previous
-bounded package clean in queue38 removed88.9MiB (0.00CPU/0.13elapsed).
+last checked in /private/tmp/fwp-constructor-types-worktree (queue40):
+actual-squash native snapshota51b9cf7ca69 passes four regressions20.27CPU/
+40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s.
+Bounded package clean in previous queue39 removed89.0MiB (0.05CPU/0.36elapsed).
 An optional allocator-artifact metadata enrichment was not executed because the
 guard reported less than64GiB free. No limits were changed and no check was
 bypassed. After subsequent disk recovery, fresh guarded evidence collection and
