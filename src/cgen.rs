@@ -2635,8 +2635,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     .as_ref()
                     .filter(|a| a.params.len() == args.len());
                 args.iter().enumerate().all(|(i, a)| {
-                    (matches!(a, Expr::Local(x) if *x == l)
-                        && abi.is_some_and(|a| a.params[i] == Some(n)))
+                    (is_local_through_counts(a, l) && abi.is_some_and(|a| a.params[i] == Some(n)))
                         || reads(a)
                 })
             }
