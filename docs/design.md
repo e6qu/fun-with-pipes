@@ -45,6 +45,10 @@ scratch through registered cleanup. Filter/take-while selection unwind similarly
 releases owned aliases, partial spines and scratch. Zip unwind releases owned
 callback results and partial spines, plus both borrowed scratch buffers, including
 failure while preparing the second buffer.
+Merged folds protect the current accumulator and each completed borrowed argument
+duplicate until callback transfer; right-fold scratch releases on unwind.
+Merged loops protect current state across cancellation ticks and Step payload
+preparation; flattened Again records remain unboxed.
 Other callback/runtime and exceptional ownership extensions are prepared separately.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
@@ -57,16 +61,19 @@ The runtime cleanup stack releases registered owners and scoped files before
 nonlocal failure, trap or cancellation invalidates their frames. Catching
 handlers bound cleanup, and task switches preserve separate chains. Compiler
 cleanup now protects typed caller and incoming-parameter references across
-calls, later-argument failures and cancelled entry ticks. Wider constructor
-and wider callback registration remains prepared work.
+calls, later-argument failures and cancelled entry ticks. Consumed constructor
+fields stay protected before allocation; worker result fields and remaining
+caller references stay protected until record/variant boxing succeeds. Worker
+argument preparation now protects original boxed arguments and each completed
+field duplicate until worker transfer. Wider callback registration remains prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
 pending-argument drop pointer to owned-function metadata (eight bytes on 64-bit
 targets); programs without possible unwind omit runtime registration. Scalar
-words stay uncounted. Prepared loop cleanup similarly protects counted current
-state at cancellation safe points and owned Step payload preparation. The loop extension still needs sequential
-full CI.
+words stay uncounted. Merged loop cleanup protects counted current state and
+owned Step payloads; flattened loop argument preparation now protects the original
+box and each completed field duplicate until transfer.
 
 Prepared resource lifetimes and storage are summarized in
 [ownership](ownership.md#original-resource-semantics). The queue records immutable
@@ -366,7 +373,8 @@ error. See [protocol.md](protocol.md).
 ## Prepared ownership implementation
 
 Compiler call ownership lowering must preserve allocation optimizations as well
-as exceptional lifetimes. Earlier counted arguments, including duplicated
+as exceptional lifetimes. PR113 protects consumed constructor fields and remaining
+caller references before allocation. Earlier counted arguments, including duplicated
 locals, stay registered while later arguments evaluate. A final consumed value
 can stay inline when no earlier counted argument needs protection, preserving
 direct stack, worker and flattened-loop representations. Later scalar
@@ -374,13 +382,11 @@ computations also finish before pending counted owners transfer, preserving
 cleanup when scalar evaluation fails. Existing allocation
 limits and raw-interpreter comparisons remain acceptance gates.
 
-
 Prepared record-worker calls keep returned locals as fields when every use is a
 field read or a complete call with the matching record ABI. Typed aliases and
 trap cleanup preserve field owners; partial and dynamic calls retain boxed
 captures. The ordinary worker/wrapper ABI is unchanged. Sequential full CI
 is still required; emitted box removal alone is not a speed claim.
-
 
 [Ownership](ownership.md#prepared-ownership-work) summarizes prepared contracts
 and acceptance limits; [the handoff](development-state.md) records current checks.

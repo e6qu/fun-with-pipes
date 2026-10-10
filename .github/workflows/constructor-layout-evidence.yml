@@ -17,6 +17,8 @@ jobs:
       RUST_TEST_THREADS: 1
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - name: OpenSSL 3 and unchanged compiler capture
         run: |
@@ -26,6 +28,8 @@ jobs:
           echo "FWP_LAYOUT_REAL_CC=$(command -v clang)" >> "$GITHUB_ENV"
           echo "CC=$GITHUB_WORKSPACE/scripts/capture-constructor-layout-cc.py" >> "$GITHUB_ENV"
           chmod +x scripts/capture-constructor-layout-cc.py
+      - name: Current handoff, immutable ancestry and documentation audit
+        run: python3 scripts/check-roadmap.py
       - name: Original allocation, alias and exact omission controls
         run: cargo test --test constructor_type_ownership -- --nocapture
       - name: Actual binaries, symbols, disassembly and compiled layouts
