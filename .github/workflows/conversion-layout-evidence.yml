@@ -1,0 +1,43 @@
+name: Boxed conversion binary evidence
+
+on:
+  push:
+    branches: [ownership-evidence-conversion-layout]
+
+jobs:
+  layout:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: OpenSSL 3 and unchanged compiler capture
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "FWP_LAYOUT_CAPTURE=$RUNNER_TEMP/conversion-layout" >> "$GITHUB_ENV"
+          echo "FWP_LAYOUT_REAL_CC=$(command -v clang)" >> "$GITHUB_ENV"
+          echo "CC=$GITHUB_WORKSPACE/scripts/capture-conversion-layout-cc.py" >> "$GITHUB_ENV"
+          chmod +x scripts/capture-conversion-layout-cc.py
+      - name: Current handoff and immutable roadmap audit
+        run: python3 scripts/check-roadmap.py
+      - name: Original allocation, alias and exact omission controls
+        run: cargo test --test variant_conversion_ownership -- --nocapture
+      - name: Actual binaries, symbols, disassembly and compiled layouts
+        run: python3 scripts/inspect-conversion-layout.py
+      - name: Retain actual evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conversion-layout-${{ matrix.runner }}
+          path: ${{ runner.temp }}/conversion-layout
+          if-no-files-found: error

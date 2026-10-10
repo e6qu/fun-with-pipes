@@ -114,6 +114,18 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
+The prepared source 112 declaration review separates 134 explicit contracts,
+19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
+signatures and 208 declarations requiring monomorphic/runtime review. These are
+373 declarations resolving to363 runtime symbols after40 explicit aliases,
+not a count of shared heap objects or ownership gaps.
+Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
+when no proven borrowing contract applies; scalar words remain uncounted.
+Reconstructed decode/parse values and retained network contexts can therefore
+still require tracing even when their temporary C buffers reclaim deterministically.
+Classify these conservative requirements explicitly before phase 3; phase 6 must
+prove eligibility separately. External AD/FFI state has its own lifetime contract.
+
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
@@ -133,6 +145,86 @@ aligned payloads where useful, and views with explicit backing lifetimes.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
 
+Focused ARM64 layout evidence for returned-variant preparation44 confirms an
+8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
+variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
+positive/control binaries, compiler inputs, flags and disassembly are retained
+and recorded in [history](roadmap-history.md). The O2 alias transfers share one
+32-byte stack slot; this shape-specific evidence is not a general ABI or timing
+claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+
+The six-I64 recursive worker in preparation65 has a 48-byte value, aligned to8,
+versus56 bytes for the boxed header and fields, excluding collector metadata.
+Actual ARM64 O1/O2 binaries return it through caller storage using x8; the
+recursive worker uses192/208-byte frames respectively, including trap temporaries
+and stack protection. O2 passes six fields in x1–x6 to the next worker and uses
+vector loads/stores for the result. Its own body has no record-allocation call;
+the boxed interface wrapper remains. These measurements on Apple M4 Pro,
+macOS15.6.1 and Apple clang17 retain the original flags and strict semantic
+controls. They establish an ABI baseline, not a timing improvement, constant
+stack use or whole-program allocation freedom. Phase3 must measure caller
+storage and spill costs alongside box elimination; details are in history.
+
+Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
+box (8-byte header plus8-byte field, excluding collector metadata). The generated
+program-thread frame is1232 bytes with typed fields versus1280 in the boxed
+control at both O1/O2; the launcher frame remains144 bytes. The File header is
+24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
+counters and partial-retain controls pass, with exact binaries/flags/disassembly
+retained. These are fixture-specific representation measurements; ordinary File
+and path allocations remain, and no timing or general ABI claim follows.
+
+Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
+with refs at offset8 and path bytes at offset16. The retained legacy control is
+24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
+original counters verify one leaf allocation requesting16+n+1 bytes versus two
+allocations requesting24+n+1, excluding allocator/collector metadata. Both
+original tests retain exact interpreter behavior and closed-handle display.
+Actual binaries, C, flags and both compiled layouts are in history. This is a
+constructor/layout improvement; storage disposal and general performance remain
+separate roadmap work.
+
+Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
+its payload at offset8. Original counters verify zero parent boxes versus one
+16-byte box in the comparison path. The program-thread frame is1280 bytes at
+O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
+body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
+startup and trap paths. Original inactive scalar/nullary tags and partial-retain
+cleanup remain checked. These are representation measurements, not executed
+instruction counts or timings; File/path allocations remain. Exact source,
+flags, binaries, disassembly and compiled layout are recorded in history.
+
+Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
+insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
+one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
+4096-byte name plus other fields, with copied inputs and last-owner release.
+The payload contains both terminated strings and a length-framed identity key;
+packing removes separate allocation requests, rather than the duplicated key
+bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
+binaries, disassembly and a layout executable use unchanged compiler arguments.
+Instrumented constructor frames are 208/144 bytes; observer code affects these
+frames, so they are not production ABI or timing claims. Details are in history.
+
+Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
+520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
+offset 24; complete copied address bytes follow the header at offset 272.
+Original counters verify one request of 272+n+1 bytes for an n-byte address;
+"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
+loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
+positive/control binaries, disassembly and compiled layouts are recorded in
+history. Requested sizes exclude allocator/collector metadata; no timing,
+cache-speed or general collector-free claim follows.
+
+A separate bounded local ARM allocator check reads actual Darwin malloc usable
+bytes and GC slot metadata from the captured generated C. TLS requests101/8311
+occupy112/8704 usable bytes. The short connection request278 occupies a320-byte
+GC slot; the original520-byte header-size allocation occupies640 in the same
+unchanged allocator. The latter measures the old size, without executing the old
+constructor. These capacities exclude allocator metadata and pool reservation.
+Hardware, compiler, flags, generated diagnostic C and actual binaries are in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity); Intel capacity
+and cache/timing effects remain unmeasured.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -144,6 +236,16 @@ contract and separate tests. Prioritize fused elementwise and gradient kernels,
 blocked matrix multiplication, reusable tape/scratch buffers and exceptional
 cleanup before adding accelerator backends. OpenCL discovery is not evidence
 that kernels executed on a real device.
+
+Prepared source112 also has actual ARM and Intel macOS layout evidence in
+CI38075612557 at evidence head5a56aa1ebbc2b609ebd51c675d44e454ddedba8d.
+Both original TLS-options/address probes pass without ignored tests. Both compiled
+layouts give TLS64/align8 and connection272 versus legacy520/align8; allocation
+requests remain101/8311 and278 for the stated fixtures. Actual C, Mach-O binaries,
+arguments, symbols, assembly, hardware/compiler and layout drivers are retained.
+These are prepared-source results; they do not accept later production heads.
+Instrumented frames and static instruction counts describe fixtures, not general
+speed, cache behavior or a production ABI. Full details are in history.
 
 ### Phase 3 delivery sequence
 
@@ -176,20 +278,26 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #110 includes the following contracts. Detailed primitive modes
+Main through PR #117 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Compiler reuse tokens clear dead fields before retaining empty young cells,
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
-  Compiler call liveness is merged; remaining constructor/callback paths stay prepared.
+  Compiler call liveness and consumed constructor-field protection are merged;
+  worker argument preparation is merged. Wider callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
   Compiler live caller/pending-argument and incoming-parameter cleanup is
   merged in PR106; runtime application and partial capture preparation in PR107.
-  Constructor and wider callback registration remains prepared.
+  Constructor fields and remaining caller references are registered before allocation
+  in PR113. Worker result fields and remaining caller references stay registered
+  until record/variant boxing succeeds in PR114. Worker argument preparation
+  protects original boxes and completed field duplicates until transfer in PR115;
+  flattened loop argument preparation protects original boxes and completed field
+  duplicates until transfer in PR116. Multi-field retains release completed extras on count overflow in PR117, with caller owners registered before duplication. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
@@ -218,12 +326,17 @@ and measurements are in [history](roadmap-history.md).
   preserves trap order. General unwind protection remains prepared work.
 - Loop consumes its state and transfers callback inputs; it retains selected
   typed Step payloads before destroying wrappers. Specialized/flattened workers
-  reclaim typed boxed inputs and ABI wrappers; general unwind work remains prepared.
+  reclaim typed boxed inputs and ABI wrappers. Registered cleanup protects current
+  state during first/later cancellation ticks and Step owners during payload
+  preparation; flattened Again records remain unboxed. Later reconstruction
+  and retained-callback extensions remain prepared.
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
-  own fresh spines; fold/right-fold transfer accumulators; zip owns callback
-  results; registered map, selection and zip cleanup releases owned results,
+  own fresh spines; fold/right-fold transfer accumulators; zip-with owns callback
+  results; fold preparation protects the current accumulator and completed
+  borrowed duplicates, and right-fold scratch releases on unwind. Registered
+  map, selection and zip cleanup releases owned results,
   partial spines and scratch on failure, trap or cancellation. Both zip scratch
   buffers release, including a failure while preparing the second buffer.
   Prefix/copy operations preserve owned aliases. Optional list results
@@ -254,8 +367,9 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
-when ignored; early close would change later IO failures. Internal ResourceRegion
-anchors are recorded before optimization and must survive inlining and fusion.
+when ignored; early close would change later IO failures. Prepared internal ResourceRegion
+anchors record these lifetimes before optimization and preserve them through
+inlining and fusion; their implementation still requires sequential delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 
