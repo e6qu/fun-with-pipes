@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #110. Arrays, maps and sets own typed elements.
+The tables describe main through PR #111. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -233,7 +233,6 @@ its own final rebase, focused checks and six passing exact-head full gates.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 32 | Fold retains its current accumulator until transfer, releases right-fold scratch on unwind and protects each borrowed argument duplicate during preparation | Sequential CI; aliases, partial duplicate failure, scalar safety and overapplication |
 | 33 | Loop protects counted current state at first/later cancellation safe points and owns Step through payload preparation | Sequential CI; flattened/nested state, aliases, scalar safety and payload-retain failures |
 | 34 | Immutable argument/capture preparation anchor; code/probes delivered in PR107 through row28 | Skip duplicate implementation PR after33 acceptance; preserve anchor and later coverage |
 | 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |

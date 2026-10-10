@@ -184,7 +184,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #110 includes the following contracts. Detailed primitive modes
+Main through PR #111 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -231,7 +231,9 @@ and measurements are in [history](roadmap-history.md).
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
   own fresh spines; fold/right-fold transfer accumulators; zip-with owns callback
-  results; registered map, selection and zip cleanup releases owned results,
+  results; fold preparation protects the current accumulator and completed
+  borrowed duplicates, and right-fold scratch releases on unwind. Registered
+  map, selection and zip cleanup releases owned results,
   partial spines and scratch on failure, trap or cancellation. Both zip scratch
   buffers release, including a failure while preparing the second buffer.
   Prefix/copy operations preserve owned aliases. Optional list results
