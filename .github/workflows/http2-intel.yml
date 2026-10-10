@@ -11,11 +11,16 @@ jobs:
       matrix:
         include:
           - runner: ubuntu-latest
+            cc: gcc
+          - runner: ubuntu-latest
+            cc: clang
+          - runner: macos-15
+            cc: clang
+          - runner: macos-15-intel
             cc: clang
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 25
     env:
-      FWP_HTTP2_C_DIAGNOSTIC: /tmp/fwp-http2-owner.c
       CC: ${{ matrix.cc }}
       CARGO_BUILD_JOBS: 2
       RUST_TEST_THREADS: 2
@@ -48,11 +53,3 @@ jobs:
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
       - name: Ownership checkpoints
         run: cargo test --lib rc::tests -- --nocapture
-      - name: Omitted-owner assembly diagnostics
-        if: always()
-        run: clang -S -O2 -std=gnu11 -ffp-contract=off -w /tmp/fwp-http2-owner.c -o /tmp/fwp-http2-owner.s
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: http2-clang-owner-assembly
-          path: /tmp/fwp-http2-owner.*

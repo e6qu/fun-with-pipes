@@ -33,11 +33,18 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
     let generated = if clear_stale_roots {
         let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
         assert_eq!(generated.matches(primitive).count(), 1);
-        generated.replacen(
-            primitive,
-            "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
-            1,
-        )
+        // The fixture always supplies a completed stream. Restate that state
+        // after the clock call so Clang cannot retain an obsolete owner spill
+        // for the unreachable waiting branch during the copy's collection.
+        let state = "    int64_t until = fwp_after(timeout);\n    g_stream *s = k->s;";
+        assert_eq!(generated.matches(state).count(), 1);
+        generated
+            .replacen(
+                primitive,
+                "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
+                1,
+            )
+            .replacen(state, &format!("{state}\n    s->remote_end = 1;"), 1)
     } else {
         generated
     };
@@ -130,9 +137,6 @@ static __attribute__((noinline)) V body(void){
                 .unwrap();
             assert!(out.status.success(), "{opt}/{poison}: {out:?}");
         }
-    }
-    if let Ok(path) = std::env::var("FWP_HTTP2_C_DIAGNOSTIC") {
-        std::fs::write(path, format!("{hooks}\n{broken}\n{fixture}")).unwrap();
     }
     fwp::cgen::compile_c(&format!("{hooks}\n{broken}\n{fixture}"), &exe, "-O2").unwrap();
     let out = Command::new(&exe).output().unwrap();
