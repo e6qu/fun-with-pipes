@@ -13781,3 +13781,13 @@ elapsed, focused clippy2.34/4.74s and formatting0.46/0.89s pass, after prior
 zip package clean0.07/0.37s. Dedicated runner matrix tests Linux GCC/Clang and
 macOS ARM/Intel Clang plus original resource, GC and ownership controls.
 Candidate is not accepted until all four pass. No second production PR opens.
+
+Fold independent rebase from actual ff84318a416d onto frozen zip05d354f57167
+yields b98eb6f1351b549731b3bf7fca74354a1310df1f, preserving every original source/probe/workflow byte and
+one implementation commit. Only authoritative docs conflicts were resolved;
+guard0.09CPU/0.90elapsed. Prior HTTP fixture package clean0.07/0.38s.
+Nine original fold/runtime-call controls24.44/49.14s, lint2.29/4.69s and
+format0.35/0.63s pass. Final squash rebase/full gates still required.
+HTTP fixture candidate0d54979de1ef/38021302113 Linux Clang strict omission
+still false-passes with0 (expected1); original positive controls pass.
+ARM and GCC pass. Failed candidate must not propagate.
