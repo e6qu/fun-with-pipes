@@ -33,18 +33,21 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
     let generated = if clear_stale_roots {
         let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
         assert_eq!(generated.matches(primitive).count(), 1);
-        // The fixture always supplies a completed stream. Restate that state
-        // after the clock call so Clang cannot retain an obsolete owner spill
-        // for the unreachable waiting branch during the copy's collection.
-        let state = "    int64_t until = fwp_after(timeout);\n    g_stream *s = k->s;";
-        assert_eq!(generated.matches(state).count(), 1);
+        // This fixture always copies a completed stream. Select its known
+        // path so Clang does not spill the owner for an unreachable wait loop.
+        let completed = "        if (s->remote_end) {\n            V b = fwp_str_new((const char *)s->data.d, s->data.len);";
+        assert_eq!(generated.matches(completed).count(), 1);
         generated
             .replacen(
                 primitive,
                 "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
                 1,
             )
-            .replacen(state, &format!("{state}\n    s->remote_end = 1;"), 1)
+            .replacen(
+                completed,
+                &completed.replacen("if (s->remote_end)", "if (1)", 1),
+                1,
+            )
     } else {
         generated
     };
