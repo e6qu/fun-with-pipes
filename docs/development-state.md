@@ -67,7 +67,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–75 are refreshed and published on their actual predecessors.
+Preparations39–76 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -81,15 +81,16 @@ executes without skip and agrees exactly with the interpreter. OpenCL57–58 use
 fake APIs, not hardware evidence. Closing channels preserves queued values;
 automatic unreachable-cycle reclamation remains unproved.
 
-File runtime-boundary76 at nativee69eb74df932 on actual75423a7ddcc760 passes
-all10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/
-92.82elapsed, exact contract inventory4.45/9.15s, lint2.60/5.33s and format0.45/
-0.86s. Original source/probes are unchanged. Scoped-result omission still exits101
-with duplicate discarded file; wrong ordinary-child freeing still exits29.
-Raw interpreter/native scoped/task/loop File results agree; GC/reuse/free switches
-and poisoning controls pass. Copy all11 docs and audit before retained publication;
-next77 WASI resource counts. Native bump checks must not be called actual WASI
-proof; mandatory actual WASI CI remains required at each final sequential head.
+WASI resource-count77 at nativee541c73548d5 on actual76603bb0b914db preserves
+original compiler/runtime/tests/workflows, including mandatory Linux
+FWP_REQUIRE_WASM_RESOURCE_COUNTS=1. Native bump control8.26CPU/17.53elapsed,
+lint2.64/5.25s and format0.44/0.83s pass. Count-disabled omission remains exact
+exit4 at O1/O2; repeated File-child release, wide counts, pointer-shaped scalars,
+overflow and metadata unlink checks remain intact. This local result is not
+actual WASI execution. Passing prepared actual WASI evidence remains full-queue
+0f8c531/CI38048222203; final sequential heads need fresh mandatory actual WASI CI.
+Copy all11 docs/audit before retained publication; next78 no-free count disposal.
+Physical bump storage remains allocated.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -185,7 +186,7 @@ still need their final squash rebases and six exact-head full gates.
 | 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | All nine File-owner/I/O/frame/unwind tests24.61CPU/49.55elapsed, lint2.62/5.40s and format0.44/0.82s pass; original source/probes unchanged, including exact owner/alias/text omission exits6/7/10 with GC on/off and no-free comparison; storage retains compatibility lifetime; final actual-squash/full gates required |
 | 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
 | 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | All10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/92.82elapsed, exact inventory4.45/9.15s, lint2.60/5.33s and format0.45/0.86s pass; original source/probes unchanged, including exact omitted result-owner exit101 and wrong-free exit29; raw interpreter/native File results agree; final actual-squash/full gates required |
-| 77 ownership-wasm-resource-counts | 231568d07731 | b5aee4eb6e95 | Actual WASI gates remain required; native bump checks are not WASI proof |
+| 77 ownership-wasm-resource-counts | e541c73548d5 | 603bb0b914db | Original native bump control8.26CPU/17.53elapsed, lint2.64/5.25s and format0.44/0.83s pass; original source/probes/mandatory WASI workflow unchanged, including exact count-disabled exit4; native checks are not actual WASI proof; final actual-squash/full and mandatory actual WASI gates required |
 | 78 ownership-wasm-count-disposal | c7ba897d8d9c | 231568d07731 | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | 8053dc693a13 | c7ba897d8d9c | Test10.09/21.47s; lint 6.10/13.03s and format 0.55/1.08s pass |
 | 80 ownership-file-inline-path | 0ea8a1c94115 | 8053dc693a13 | Two tests 10.54/21.29s; lint 6.87/13.94s and format 0.54/1.07s pass |
@@ -351,8 +352,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-runtime-boundaries-worktree (row76, nativee69eb74d),
-with all10 focused tests45.48CPU/92.82elapsed and exact contract inventory passing. Before switching Rust
+last checked in /private/tmp/fwp-wasm-resource-counts-worktree (row77, nativee541c735),
+with the native bump control8.26CPU/17.53elapsed passing; actual WASI stays on CI. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
