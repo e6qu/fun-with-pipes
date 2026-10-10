@@ -47,8 +47,8 @@ commits and source/probes are preserved; fresh docs were appended, so referenced
 snapshot833fa844901a stays reachable. Eight focused tests27.31CPU/54.70elapsed,
 all14 RC units3.37/6.99s, lint2.32/4.67s, format0.34/0.60s and all three audits
 pass. Oldbbd74db2977a is retained remotely before exact-lease publication.
-CI38060160102 and docs38060160207 are queued. Require all seven exact-head
-gates, then match-head squash with subject
+CI38060160102 passes bench; four macOS jobs run and Linux queues.
+Docs38060160207 passes. Require all seven exact-head gates, then match-head squash with subject
 `Protect consumed constructor fields before allocating storage` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
 Next production delivery after acceptance is queue36 worker result boxing.
@@ -67,7 +67,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–77 are refreshed and published on their actual predecessors.
+Preparations39–78 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -81,15 +81,16 @@ executes without skip and agrees exactly with the interpreter. OpenCL57–58 use
 fake APIs, not hardware evidence. Closing channels preserves queued values;
 automatic unreachable-cycle reclamation remains unproved.
 
-Disabled-free metadata78 at native7a60452cedbf on actual77f4a26004d5a8 preserves
-original source/probes/workflows. Native disposal8.79CPU/18.00elapsed, original
-bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and
-format0.45/0.87s pass. Missing aggregate/runtime disposal still requires exact
-exits5/9; count-disabled original exit4 remains intact at O1/O2. Child resources
-and metadata release while physical bump storage remains allocated. These native
-checks are not actual WASI proof; final sequential heads require mandatory
-actual WASI/full CI. Copy all11 docs/audit before retained publication;
-next79 keeps eligible frame records in typed fields, including actual binary inspection.
+Typed original frame-record79 at native886000670d59 on actual7813c77dbb7b82
+preserves original source/probes. The unchanged allocation/alias/partial-retain
+probe with actual binary capture11.03CPU/22.98elapsed, eight adjacent frame/caller
+tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s
+pass. Zero-vs-one parent-box counters and exact omitted File cleanup exit2 survive.
+All10 ARM64 binaries/C/flags/layout/disassembly retained; actual program-thread
+frames1232/1280 typed/boxed at O1/O2, one-field parent16 bytes excluding metadata.
+Inspection0.42/1.80s plus relevant-body extension0.19/0.85s pass. No timing/general
+ABI/whole-program zero-heap claim. Copy all11 docs/audit before retained publication;
+next80 inline File path storage. Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -187,7 +188,7 @@ still need their final squash rebases and six exact-head full gates.
 | 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | All10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/92.82elapsed, exact inventory4.45/9.15s, lint2.60/5.33s and format0.45/0.86s pass; original source/probes unchanged, including exact omitted result-owner exit101 and wrong-free exit29; raw interpreter/native File results agree; final actual-squash/full gates required |
 | 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Original native bump control8.26CPU/17.53elapsed, lint2.64/5.25s and format0.44/0.83s pass; original source/probes/mandatory WASI workflow unchanged, including exact count-disabled exit4; native checks are not actual WASI proof; final actual-squash/full and mandatory actual WASI gates required |
 | 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Native disposal8.79CPU/18.00elapsed, original bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and format0.45/0.87s pass; original source/probes/workflows unchanged, including exact omitted aggregate/runtime disposal exits5/9; physical bump storage remains allocated; final actual-squash/full and mandatory actual WASI gates required |
-| 79 ownership-resource-frame-fields | 8053dc693a13 | c7ba897d8d9c | Test10.09/21.47s; lint 6.10/13.03s and format 0.55/1.08s pass |
+| 79 ownership-resource-frame-fields | 886000670d59 | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 80 ownership-file-inline-path | 0ea8a1c94115 | 8053dc693a13 | Two tests 10.54/21.29s; lint 6.87/13.94s and format 0.54/1.07s pass |
 | 81 ownership-file-storage-disposal | 2fffa57d369d | 0ea8a1c94115 | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | c6cbacac0db9 | 2fffa57d369d | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
@@ -351,9 +352,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-wasm-disposal-worktree (row78, native7a60452c),
-with both native bump controls and two scoped File/task controls passing;
-actual WASI stays on CI. Before switching Rust
+last checked in /private/tmp/fwp-resource-frame-fields-worktree (row79, native88600067),
+with the original representation probe, eight adjacent tests, all23 RC units
+and actual binary/layout inspection passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

@@ -153,6 +153,15 @@ controls. They establish an ABI baseline, not a timing improvement, constant
 stack use or whole-program allocation freedom. Phase3 must measure caller
 storage and spill costs alongside box elimination; details are in history.
 
+Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
+box (8-byte header plus8-byte field, excluding collector metadata). The generated
+program-thread frame is1232 bytes with typed fields versus1280 in the boxed
+control at both O1/O2; the launcher frame remains144 bytes. The File header is
+24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
+counters and partial-retain controls pass, with exact binaries/flags/disassembly
+retained. These are fixture-specific representation measurements; ordinary File
+and path allocations remain, and no timing or general ABI claim follows.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
