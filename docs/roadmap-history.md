@@ -12931,3 +12931,683 @@ PR106-chain preparation refresh row62: 004eccb1f09205fbc9d1992df2a545d29fb69e51 
 PR106-chain preparation refresh row63: f1915b15033ee5d46f9a92d7d4b07b1a19a18063 to52bc4e64547be52907c5ac076ff77ced768892c7 on actual0ba865002acedb5119c850a0b62113ee2def6552, rebased FROMactual004eccb1f09205fbc9d1992df2a545d29fb69e51. Retained roadmap/revision-063-f1915b15033e before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
 
 PR106-chain preparation refresh row64: 04811432dc3d493985d773133ed42260a273941b tod364e70df27481612cf2daf5ff36532ea0c5eece on actual52bc4e64547be52907c5ac076ff77ced768892c7, rebased FROMactualf1915b15033ee5d46f9a92d7d4b07b1a19a18063. Retained roadmap/revision-064-04811432dc3d before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row65: 98f5c04f6260e56d57c86e437486bb04d392aa7d to886f8b0083c965375e0517e906d5fb94cac8ba9a on actuald364e70df27481612cf2daf5ff36532ea0c5eece, rebased FROMactual04811432dc3d493985d773133ed42260a273941b. Retained roadmap/revision-065-98f5c04f6260 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row66: bde11299c6262ef408f642bf252f18e5d0dd1755 tod8b4e2407fb18b04a0dee631cdaa05e75d53c545 on actual886f8b0083c965375e0517e906d5fb94cac8ba9a, rebased FROMactual98f5c04f6260e56d57c86e437486bb04d392aa7d. Retained roadmap/revision-066-bde11299c626 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row67: ff4e98c6979e5194095d6a269884898f00df6631 to221d8fa6ffcc55edd86dd682d5866207ec42ace2 on actuald8b4e2407fb18b04a0dee631cdaa05e75d53c545, rebased FROMactualbde11299c6262ef408f642bf252f18e5d0dd1755. Retained roadmap/revision-067-ff4e98c6979e before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Pre-streamlining PR107 and repair handoff
+
+## Main and next delivery
+
+Main is `ff29c268eed8669d812d40d1050e0c4bd188d52c` (#106).
+Accepted head `5683df1c8a96bad30e3c679987e87694387c3b62` passes all six
+production jobs in CI38006543549 and roadmap_docs38006543521. Explicit
+match-head squash at2026-10-10T00:44:53Z has the entire58-character message
+`Protect live compiler owners across calls and cancellation`, with empty body
+and no trailers/attribution. Complete tree943eb09f97dbf03a03fa69c59aeb6ff39f17dfc5
+matches the accepted head. Raw-message and tree proofs are saved locally.
+Duplicate main CI38010369877 is cancelled only after this parity/gate proof;
+main roadmap_docs38010369880 passes too. All11 docs are backed up and hashed
+in /private/tmp/fwp-main-docs-pre106 and restored byte-for-byte after main FF.
+Refresh that snapshot before the next main update.
+
+#74–#106 deliver native macOS and selected typed ownership through compiler
+reuse-token and live caller/pending-argument cleanup. Phase1 is done; phase2
+remains incomplete; phases3–6 are pending. Tracing remains the fallback.
+PR107 is open: https://github.com/e6qu/fun-with-pipes/pull/107. Its exact head is
+1dcbe79ac0777b83cad6f49b8ab4b28ad140c854 on actual squash baseff29c268eed8669d812d40d1050e0c4bd188d52c.
+Row28 protects runtime application/pending-argument cleanup and incorporates the
+original row34 capture-preparation repair. Both implementation commits survive
+the rebase; source/tests/scripts/workflows match prior131ec8ebdd06 byte-for-byte.
+All14 focused integration tests33.34CPU/67.02elapsed,13 IR controls3.29/6.83s,
+focused clippy2.34/4.66s, format0.34/0.61s and strong audit0.47/3.67s pass.
+All11 live docs are copied into the PR. Prior remote131ec8ebdd06 is retained at
+roadmap/revision-028-131ec8ebdd06 before exact-lease publication. Freeze this head
+except for actual fixes; record fresh production/documentation run IDs and wait
+for all seven exact-head gates before squash. Production CI38011227462 is running;
+its benchmark and ARM GC jobs pass. Roadmap docs38011227532 passes, all at head1dcbe79. While CI runs, refresh66–112 and
+scoped evidence using their recorded actual bases. Next production delivery29
+opens only after107 merges and its squash message/tree are verified.
+Squash subject: `Protect runtime application owners through preparation and unwind`;
+empty body, at most80 characters. Do not reopen or rewrite accepted106.
+
+Current106 repair preserves stack/reuse allocation limits while protecting
+computed, duplicated and scalar-final argument lifetimes. All final17 focused
+integration/allocation checks and13 ownership-IR checks, lint/format and audit
+pass before the seven full gates. Failed9c1b5a8/7a550b7 heads and runs are
+retained and archived; neither was accepted. Original pipe/effect/trap semantics
+and allocation assertions are unchanged.
+
+Later preparation repairs are separate:33 adds bound/inline Again record
+normalization and an emitted-layout cancellation observer;35 corrects new IR
+controls to select their pending calls;47 preserves evaluated CAFs during later
+scalar evaluation. Existing alias/release/scalar-bit assertions remain intact.
+Combined evidenceba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 passesCI38008988824
+on current41 at172912b7b1c66e3d6e50a60090b8b7559ffc4ffa, including all18 IR
+checks and original stack/reuse gates. All three loop checks pass13.79CPU/27.69elapsed
+locally, all18 IR checks3.33/7.13s. Rows42–49 exact repair refresh passes
+8.26CPU/93.23elapsed;50–57 passes8.53/92.92s;58–65 passes8.39/92.32s.
+Every prior head is retained; immutable OLD anchors stay fixed. Current65 is
+98f5c04f6260e56d57c86e437486bb04d392aa7d on actual04811432dc3d.
+Rows66–73 now inherit the reviewed repairs. The guard initially stopped on the
+row69 observer and row73 ResourceRegion compiler conflicts; both were reviewed:
+keep the generic observer plus the original flattened-field assertion, and retain
+both inline Again normalization and resource traversal. Original probe assertions
+and both row73 commits survive. Serial bounded parts:3.28CPU/37.18elapsed stopped
+at69;4.55/51.41s stopped at73;1.24/16.12s completes. Documentation-only continuations
+pass0.00/0.13–0.14s; an initial resolver invoked from root safely refuses without
+changing files. Current73 is006aba78f1f5f16406a4c7cca5864781f959cdcf on2990083331a2.
+Rows74–81 refresh passes8.66CPU/93.03elapsed with exact reviewed source
+inheritance; original probes and actual-WASI requirements remain unchanged.
+Rows82–89 refresh passes8.50CPU/93.22elapsed; both row85 commits and HTTP GC
+fixture controls remain intact. Rows90–97 refresh passes8.57CPU/93.54elapsed with strict compiler/runtime/probe
+parity apart from the reviewed inherited fixes. Rows98–105 refresh passes8.56CPU/92.90elapsed. Next refresh106–112 after diagnosing
+the failed cache/task conversion negative control; completed journals stay fixed.
+The table records actual bases; all earlier focused evidence predates these
+repairs unless stated otherwise. Each production delivery still needs its own
+final squash-base rebase and all seven fresh gates. Skip duplicate34 only after28
+full acceptance, preserving its immutable anchor and coverage.
+
+The merged million-step native tail regression passes O1/O2 with GCoff/on
+against a200-step FWP_NO_OPT=1 oracle. Full-size raw100000 local execution
+exceeds1GiB and was stopped; keep it on GitHub. Release-runner evidence81362c7
+CI37997969782 passes the same full-size raw program/output, using1893164KiB
+peak RSS; the debug runner overflows its existing4GiB stack. Neither proves
+constant raw interpreter stack or a speedup. Exact metadata and logs are in
+history. Never raise local or stack limits to repeat those probes.
+
+Cache/task evidence329e8db/CI38011548324 fails an original conversion negative
+control (exit7 instead of4). Local source52 reproduces8.10CPU/16.53elapsed.
+The emitted boxed match-to-worker conversion lacks a checkpoint for remaining
+caller owners. Repair it at row43 by recording the completed consumed match
+state; keep operation/duplicate checkpoints unchanged. A new precise IR control
+fails before the fix3.35CPU/7.11elapsed. With the fix, all20 row43 IR controls
+pass3.25/6.97s; seven native conversion/caller/partial-retain tests pass26.91/53.88s,
+including every original positive and exact negative assertion at O1/O2 with
+GC stress/verification and reuse poisoning. Focused lint2.38/4.81s, format0.35/0.63s
+pass. Original native probes and compiler allocation gates are unchanged.
+Row43 repair8c74505 is published with prior b42bfee retained. Refresh44–51
+passes in two bounded parts:3.23CPU/35.30elapsed stops at a CAF control insertion
+conflict;5.25/60.14s completes after preserving both exact controls.
+Rows52–59 now refresh successfully8.33CPU/93.48elapsed.
+Refresh60–112 from their actual bases and rerun the
+failed cache/task evidence on repaired52. Prior later source passes do not
+accept this new checkpoint. Keep PR107 frozen; its source lacks the later row43
+conversion feature. Log /private/tmp/fwp-task-runtime-38011548324-failure.clean.log
+and /private/tmp/fwp-match-conversion-owner-control.rs preserve local diagnosis.
+
+Typed-holder evidence372375a/CI38011999875 fails the original zero-parent-box
+variant-frame assertion (mode1 exit33). Local row83 reproduces8.96CPU/18.63elapsed.
+The general variant heuristic excludes direct constructors; the frame-holder
+analysis reused it after the argument repair made this constructor direct.
+Allow direct nonempty, eligible variant constructors only for original frame
+holders, respecting the variant-return flag. All five original variant/record/frame
+tests pass20.72CPU/41.72elapsed, preserving zero-parent-box and boxed controls,
+File lifetimes, returned aliases, inactive tags, GCoff/on, O1/O2 and reuse modes.
+Focused lint2.34CPU/4.77elapsed and format0.45/0.86s pass.
+No probe or allocation assertion changes. Row83 repair0621574 is published
+with prior8bf7da6 retained; strong audit0.42CPU/3.47elapsed passes. Include
+its exact code in later preparation refreshes, then rerun typed-holder evidence.
+Log /private/tmp/fwp-holders-38011999875-failure.clean.log preserves the failure.
+
+
+PR106-chain preparation refresh row68: 3135b0d66ba32ecf1c146e006df18b42bb0dccd8 to4f37224b0f6fcc35d2432f11194d2eb84a3edebf on actual221d8fa6ffcc55edd86dd682d5866207ec42ace2, rebased FROMactualff4e98c6979e5194095d6a269884898f00df6631. Retained roadmap/revision-068-3135b0d66ba3 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row69: 17d47b91a8f649236aa27f438094e3564f31dcf6 to04d75ff8a0e121288e20ca7614e9a47b37240e25 on actual4f37224b0f6fcc35d2432f11194d2eb84a3edebf, rebased FROMactual3135b0d66ba32ecf1c146e006df18b42bb0dccd8. Retained roadmap/revision-069-17d47b91a8f6 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row70: 3d10c5dd387de03e99091d7cb240b9315295f9dc tofa6e27813f3d23d7ddb8df093712aaf8eaa8a326 on actual04d75ff8a0e121288e20ca7614e9a47b37240e25, rebased FROMactual17d47b91a8f649236aa27f438094e3564f31dcf6. Retained roadmap/revision-070-3d10c5dd387d before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row71: 8c332516937ba39e44778725f0454a75e915c3c0 to55a6b0c6c7c51396f071f5fb8ff39a0689b6ca4d on actualfa6e27813f3d23d7ddb8df093712aaf8eaa8a326, rebased FROMactual3d10c5dd387de03e99091d7cb240b9315295f9dc. Retained roadmap/revision-071-8c332516937b before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row72: 2990083331a2b4176c73cf314c9d49cb22a8654f to54d816de6a93fa8e4dd509725fe469647982b643 on actual55a6b0c6c7c51396f071f5fb8ff39a0689b6ca4d, rebased FROMactual8c332516937ba39e44778725f0454a75e915c3c0. Retained roadmap/revision-072-2990083331a2 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Pre-streamlining shared target validation record
+
+The fun-refactor guard applies to the other repository. The shared target is
+last belonged to /private/tmp/fwp-runtime-call-worktree after the final
+squash-base rebase and bounded rebuild. Four focused integration targets pass
+14 tests33.34CPU/67.02elapsed; all13 IR controls3.29/6.83s, focused lint2.34/4.66s
+and format0.34/0.61s pass. Commands: cargo test --test runtime_call_ownership
+--test argument_preparation_ownership --test compiler_call_liveness --test unwind_cleanup;
+cargo test --lib rc::tests; cargo clippy for those four targets -- -D warnings;
+cargo fmt --all -- --check, all through the absolute-root guard with OpenSSL.
+It subsequently belonged to /private/tmp/fwp-record-conversion-worktree after bounded
+clean of source52(0.00CPU/0.14elapsed) and rebuild for the matched-result repair.
+The runtime28 clean before source52 reproduction passed0.07/0.38s.
+Current target belongs to /private/tmp/fwp-resource-frame-variants-worktree after
+bounded source43 clean0.07/0.38s and rebuild for the frame-holder repair.
+Prior compiler/loop target switches, failures and measurements are archived in
+[history](roadmap-history.md). Never assume a shared native binary belongs to a
+checkout until its bounded package clean and rebuild finish.
+
+The complete argument repair and later loop/control refresh preserve original
+allocation and alias assertions. Temporary helpers and their journals live in
+/private/tmp; the table, actual bases and retained remote tags are the durable
+recovery record. Completed journals must not be rerun blindly. Full-size raw
+tail evidence stays on GitHub because it exceeds local RSS limits.
+
+
+PR106-chain preparation refresh row73: 006aba78f1f5f16406a4c7cca5864781f959cdcf toe3bfb67a924480f47aea87842bb52292aa7c166f on actual54d816de6a93fa8e4dd509725fe469647982b643, rebased FROMactual2990083331a2b4176c73cf314c9d49cb22a8654f. Retained roadmap/revision-073-006aba78f1f5 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row74: 38d83189cedbfa52f9932b3f9f6ca5ad8715e724 toddbee893478ef94f8a65dfa5fb600a82258afebc on actuale3bfb67a924480f47aea87842bb52292aa7c166f, rebased FROMactual006aba78f1f5f16406a4c7cca5864781f959cdcf. Retained roadmap/revision-074-38d83189cedb before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row75: f7b57915dd7a1a478328758cd59216928905bcb3 toef04da0f3049cf123eec8aeedb28e0ba1a6202ae on actualddbee893478ef94f8a65dfa5fb600a82258afebc, rebased FROMactual38d83189cedbfa52f9932b3f9f6ca5ad8715e724. Retained roadmap/revision-075-f7b57915dd7a before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row76: 4c6618c4eb91038e095c01b92cec400eef82ffaa tof0034b6ab7c132a20f1aec22dbfdefd5f6c2c3ec on actualef04da0f3049cf123eec8aeedb28e0ba1a6202ae, rebased FROMactualf7b57915dd7a1a478328758cd59216928905bcb3. Retained roadmap/revision-076-4c6618c4eb91 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row77: 8d4ba07d6def07556d1f98264ed6a2588e3519a1 to8a2d845523c53c50002ff3c2b9b3849d8c394b54 on actualf0034b6ab7c132a20f1aec22dbfdefd5f6c2c3ec, rebased FROMactual4c6618c4eb91038e095c01b92cec400eef82ffaa. Retained roadmap/revision-077-8d4ba07d6def before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row78: e037bc5a06dcb4aed172a713eabc196757646708 to43773a07a26967f9cc5c02ec7cf16961fef3654f on actual8a2d845523c53c50002ff3c2b9b3849d8c394b54, rebased FROMactual8d4ba07d6def07556d1f98264ed6a2588e3519a1. Retained roadmap/revision-078-e037bc5a06dc before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row79: d6eabb576bd22567d7ccf82f80986c52e3900ff1 toec96643bfe266107e708b0696d00a3e65b6ef21a on actual43773a07a26967f9cc5c02ec7cf16961fef3654f, rebased FROMactuale037bc5a06dcb4aed172a713eabc196757646708. Retained roadmap/revision-079-d6eabb576bd2 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row80: 19ed00f179a38e60032cbe5b8681d6729bc6dccd to143444f5c43e60d071eaa499d38d84410f73db45 on actualec96643bfe266107e708b0696d00a3e65b6ef21a, rebased FROMactuald6eabb576bd22567d7ccf82f80986c52e3900ff1. Retained roadmap/revision-080-19ed00f179a3 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row81: 5a4d180478bb3a66171f2a4c070a1710b7515be2 toc4110b410f5642d08660fb08bd214bd3a0d00757 on actual143444f5c43e60d071eaa499d38d84410f73db45, rebased FROMactual19ed00f179a38e60032cbe5b8681d6729bc6dccd. Retained roadmap/revision-081-5a4d180478bb before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row82: 1dc8cfe230fcdbcfd1170455f384f61fbe8628de toaf8561c68820c2851d0c2d6cfd2a33c5b4232420 on actualc4110b410f5642d08660fb08bd214bd3a0d00757, rebased FROMactual5a4d180478bb3a66171f2a4c070a1710b7515be2. Retained roadmap/revision-082-1dc8cfe230fc before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row83: 06215746caaee09966e2d90cb899c1cef826e325 toed1091ff988c1ec83a9446904dbb861c34bdb065 on actualaf8561c68820c2851d0c2d6cfd2a33c5b4232420, rebased FROMactual1dc8cfe230fcdbcfd1170455f384f61fbe8628de. Retained roadmap/revision-083-06215746caae before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row84: 9a4fb29ee416da1698feb937987074fb0b3e9849 to26f529e6ba91355791218cc3578b8953042cbf07 on actualed1091ff988c1ec83a9446904dbb861c34bdb065, rebased FROMactual8bf7da674bb5479f16ea8272044d9f00e0809061. Retained roadmap/revision-084-9a4fb29ee416 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row85: b7e0cc99cf22a336a189fdff544ca47a8dda3afe to719905a41225a1187084822d3c6a5ef25d31652a on actual26f529e6ba91355791218cc3578b8953042cbf07, rebased FROMactual9a4fb29ee416da1698feb937987074fb0b3e9849. Retained roadmap/revision-085-b7e0cc99cf22 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row86: 807afa9962aa27d6aed23773f98271be68c36973 to8ebd4cbcc3ba130bd9584675fd3a4c240e9793ee on actual719905a41225a1187084822d3c6a5ef25d31652a, rebased FROMactualb7e0cc99cf22a336a189fdff544ca47a8dda3afe. Retained roadmap/revision-086-807afa9962aa before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row87: 67f022e9385806b05724274fb0f6e07e37e92314 to69f6062006227aae7e2e5bebbed6aa3d334ca157 on actual8ebd4cbcc3ba130bd9584675fd3a4c240e9793ee, rebased FROMactual807afa9962aa27d6aed23773f98271be68c36973. Retained roadmap/revision-087-67f022e93858 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row88: f194c55d435154d4ebaf8d1f5a2c520c55b30bb8 toacce7492f8d35c293622163ca1328bade941a268 on actual69f6062006227aae7e2e5bebbed6aa3d334ca157, rebased FROMactual67f022e9385806b05724274fb0f6e07e37e92314. Retained roadmap/revision-088-f194c55d4351 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row89: c2c14e491c30a9b4aaa05bb0a920a212955b5468 to9d8a6fb2a7df633a1a41b22e0eced3b5669515c2 on actualacce7492f8d35c293622163ca1328bade941a268, rebased FROMactualf194c55d435154d4ebaf8d1f5a2c520c55b30bb8. Retained roadmap/revision-089-c2c14e491c30 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row90: 7f2d4f4ffd466e5cf3c97493594c03be698e1483 to71d875caed41f61660e6e16772077fd9b96530e4 on actual9d8a6fb2a7df633a1a41b22e0eced3b5669515c2, rebased FROMactualc2c14e491c30a9b4aaa05bb0a920a212955b5468. Retained roadmap/revision-090-7f2d4f4ffd46 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row91: dee3f126a131c7cb01d2d352c380624e629b1b4d to36ea28337198b399937654ce313dd3b225618e65 on actual71d875caed41f61660e6e16772077fd9b96530e4, rebased FROMactual7f2d4f4ffd466e5cf3c97493594c03be698e1483. Retained roadmap/revision-091-dee3f126a131 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Accepted runtime application delivery PR107
+
+## Main and next delivery
+
+Main is `ff29c268eed8669d812d40d1050e0c4bd188d52c` (PR106). Accepted head
+`5683df1c8a96bad30e3c679987e87694387c3b62` passes all six production jobs in
+CI38006543549 and roadmap_docs38006543521. The squash message is exactly one
+line, 58 characters, with an empty body; its complete tree matches the tested
+head. Exact acceptance, message/tree proofs and prior failures are in [history](roadmap-history.md).
+Native macOS is delivered; selected ownership is delivered through compiler
+reuse-token and live caller/pending-argument cleanup. Phase2 remains incomplete;
+phases3–6 remain pending. Tracing is still the compatibility fallback.
+
+[PR107](https://github.com/e6qu/fun-with-pipes/pull/107) delivers queue28 runtime
+application and capture-preparation cleanup. Its frozen head is
+`1dcbe79ac0777b83cad6f49b8ab4b28ad140c854` on actual squash base `ff29c268eed8`.
+All14 focused integration tests,13 IR controls, focused lint, format and strong
+handoff audit pass; commands and timings are in history. CI38011227462 has
+passing bench, ARM macOS and both dedicated macOS GC jobs. Regular Intel macOS also passes; Linux is still running. Roadmap_docs38011227532 passes at the same head.
+Require all seven exact-head gates; fix any failure. Use the explicit squash
+subject `Protect runtime application owners through preparation and unwind`,
+with an empty body and --match-head-commit. A prepared local gate-check/merge
+helper is /private/tmp/fwp-merge-pr107.py; it refuses incomplete or stale gates.
+Verify the raw squash message and whole-tree parity, refresh and hash all11 docs
+before updating local main, and restore those docs byte-for-byte before updating
+the handoff. The old /private/tmp/fwp-main-docs-pre106 backup is now stale.
+
+Open queue29 map unwind only after107 merges. Use its recorded actual base,
+rebase onto the actual squash, run focused checks, copy all11 current docs and
+require fresh full gates. Skip duplicate queue34 only after28 full acceptance;
+its original implementation and regression probe were moved into28. Preserve
+all immutable anchors and later coverage.
+
+
+Actual PR107 squash c9b9f835ebf2e3a868bfa4bdf256f0f16800786c at2026-10-10T01:46:24Z accepts1dcbe79ac0777b83cad6f49b8ab4b28ad140c854 after all six exact-head jobs inCI38011227462 and roadmap_docs38011227532 pass. Explicit subject Protect runtime application owners through preparation and unwind, empty body, match-head supplied. Entire raw message is exactly65 characters on one line, with no terminal newline, body, trailers or attribution. Squash has one parent ff29c268eed8669d812d40d1050e0c4bd188d52c; complete tree2efc86ee42fb4cef265ca976bf1dcf43e618bfa0 matches the accepted head. Final gate proof /private/tmp/fwp-pr107-final-gate-proof.json and raw/tree proof /private/tmp/fwp-pr107-merge-proof.json saved. All11 authoritative docs are hashed/backed up in /private/tmp/fwp-main-docs-pre107 and restored byte-for-byte after local main fast-forward. Duplicate main CI38014464073 cancelled only after complete gate/message/tree proof; main roadmap_docs38014464086 passes.
+
+## Previous shared target before map delivery
+
+The fun-refactor guard applies to the other repository. Current shared target
+belongs to /private/tmp/fwp-resource-frame-variants-worktree, after bounded
+package clean of source43(0.07CPU/0.38elapsed) and rebuild for the verified
+frame-holder repair. Commands and earlier target switches are in history.
+Before switching Rust checkouts, run bounded cargo clean -p fwp in this checkout
+and rebuild the requested target. Never infer binary/source identity from a
+shared target directory. Temporary helper paths can disappear; the table,
+actual bases and retained tags are the durable recovery record. No local full
+gate or full-size raw tail run is authorized by historical resource observations.
+
+
+PR106-chain preparation refresh row92: 307010912bf9f35c7b2aaf80add04fae5f8a70de to5b15ee436b6974e8d3b7edcce35920d90d4ecf03 on actual36ea28337198b399937654ce313dd3b225618e65, rebased FROMactualdee3f126a131c7cb01d2d352c380624e629b1b4d. Retained roadmap/revision-092-307010912bf9 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row93: fec93c5ec707927ccda07d0061db5bb491eb838c toe7408fee761ac54c9b0b4442d0b282b250e98a6c on actual5b15ee436b6974e8d3b7edcce35920d90d4ecf03, rebased FROMactual307010912bf9f35c7b2aaf80add04fae5f8a70de. Retained roadmap/revision-093-fec93c5ec707 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row94: d1f35d6121a40215d5e28d1ccf8db7e0715016db to7c94141a1a9a5c6ea52158dec1dcd95be7d52fd0 on actuale7408fee761ac54c9b0b4442d0b282b250e98a6c, rebased FROMactualfec93c5ec707927ccda07d0061db5bb491eb838c. Retained roadmap/revision-094-d1f35d6121a4 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Refreshed typed holders after matched-result and frame-box repairs
+
+Evidence372375a15557/CI38011999875 failed the unchanged zero-parent-box
+variant-frame control (mode1 exit33). Source83 fixes direct constructors
+without changing native assertions; source43 fixes completed matched-result
+caller liveness. Evidence rebased from actual sourcef194c55d4351 onto repaired
+source88 acce7492f8d3, retaining both evidence commits. New exact head
+f7d7585b89ad76f69ffac20e9437db620fb022f4 matches all source/native probes/scripts/
+production workflows toacce7492 byte-for-byte; the evidence workflow retains
+all21 IR controls plus stack/reuse and the original tracing/holder/cycle checks.
+Guarded docs resolution0.00CPU/0.14elapsed and audit0.42/3.35s pass.
+Prior372375 is retained remotely as roadmap/evidence-holders-372375a15557
+before exact-lease publication. Fresh CI38015529998 is pending; no new platform
+or automatic cycle-reclamation claim follows from a queued run.
+
+PR106-chain preparation refresh row95: 1e5a5b4f4fb3b332cf4f6d79381f992d56306391 to279f9f73e3f30bdbecf641e7d34cf5410b04a2bf on actual7c94141a1a9a5c6ea52158dec1dcd95be7d52fd0, rebased FROMactuald1f35d6121a40215d5e28d1ccf8db7e0715016db. Retained roadmap/revision-095-1e5a5b4f4fb3 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row96: d94a2784952dd4c08eb43762eecbc4d99fe3c358 to8302c34681900210717f418631306a482d0552b6 on actual279f9f73e3f30bdbecf641e7d34cf5410b04a2bf, rebased FROMactual1e5a5b4f4fb3b332cf4f6d79381f992d56306391. Retained roadmap/revision-096-d94a2784952d before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row97: 080be7e655e38a0d7c9d98946776c7a63c7171d0 to351073f7254de65d7d3f85fcc73920e1b409229f on actual8302c34681900210717f418631306a482d0552b6, rebased FROMactuald94a2784952dd4c08eb43762eecbc4d99fe3c358. Retained roadmap/revision-097-080be7e655e3 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row98: 6bddc397735232021a867d25f72ccfdba7c6010c to1f6f668eff38f0041fc9baf528304fb5addf286a on actual351073f7254de65d7d3f85fcc73920e1b409229f, rebased FROMactual080be7e655e38a0d7c9d98946776c7a63c7171d0. Retained roadmap/revision-098-6bddc3977352 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row99: af556a1cf605c9ca3ac3a279335e07f6712eceee to96f523dfad9e932b0e623e38c9643e481819bb8b on actual1f6f668eff38f0041fc9baf528304fb5addf286a, rebased FROMactual6bddc397735232021a867d25f72ccfdba7c6010c. Retained roadmap/revision-099-af556a1cf605 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row100: 3bec687cea7d9f8d64d3268982a78b3d555dbde4 toa3d88c0b8f3d726d178619f73cee44855dc1e071 on actual96f523dfad9e932b0e623e38c9643e481819bb8b, rebased FROMactualaf556a1cf605c9ca3ac3a279335e07f6712eceee. Retained roadmap/revision-100-3bec687cea7d before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row101: 2ac08dea923adecf396a29a6bd177cfa46ebc8b5 toe0db0123a16cc7146fc506b2591adc75a777c5ef on actuala3d88c0b8f3d726d178619f73cee44855dc1e071, rebased FROMactual3bec687cea7d9f8d64d3268982a78b3d555dbde4. Retained roadmap/revision-101-2ac08dea923a before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Earlier scoped evidence handoff
+
+These source-specific historical passes were moved out of the live handoff
+on 2026-10-10. They do not accept rewritten preparation heads.
+
+| Scope | Exact evidence head | Run / status |
+|---|---|---|
+| Row110 environment cache | 46aacfbb3f6bd5d0058aa0b6f60b2d030ff63944 | CI37948869170 passes focused Linux checks |
+| Row111 packed TLS options | 823af3475560ed7709f958478580e364d89bdddf | CI37950759037 passes focused Linux checks |
+| Row112 full connection addresses | 4dbd0dcedfc297f8f0859aca22142a55cc0dd79d | CI37958243461 passes after formatting repair7621175 |
+| TLS/listener combined | 9bcae30119028b1870efb8fecfcf9746f5808acb | CI37730777345 all six pass |
+| WASM/resource combined | 5fd2ed65385a23f3226b2bef02eb10196f51aeb4 | CI37771769436 all six pass, including required actual WASI |
+| Rows101–106 gRPC client/connect/context | e4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 | CI37989574765 passes after fixture identity repair; runtime unchanged |
+| Rows89–91 HTTP2 roots/bounds/peer cleanup | 8e79458951a8b148e3a3c6a1df488e7f09470fba | CI37990203134 passes normal Linux checks; ARM focused checks pass |
+| Rows63–68 TLS roots, worker locals and timers | b9a6d7f46801d6c4c54b2fd612f2cd03f35bb61a | CI37978789380 passes focused Linux ownership/tracing and docs; source933deb7, actual basebbde0fa |
+| Rows57–62 external resource lifetimes | cd3a9d666bb21d6a682e541ae985e9f10de2e096 | CI37976525768 passes focused Linux lifetimes/tracing and docs; productionc61df65, actual base044ceae |
+| Rows53–56 channel/library runtime | 3d80e4fa8e2bd3c7927abe36013187db381378f0 | CI37974795204 passes Linux ownership/tracing and docs; productionac6de59, actual base625ac77 |
+| Rows42–46 records and type contexts | 20b948f8eac1c13b059e64b74d6c9a786c2fed9a | CI37972496949 passes Linux ownership/tracing and docs; productionf2262f9, actual base0b00524 |
+| Rows35–37 constructor/worker cleanup | c7e26bb43b6b7edd0c93afbbc25bc7c8e8eaf16f | CI37970487617 passes constructor/worker cleanup, tracing and docs; production3bd34da, actual base6032ecf |
+| Rows26–34 callback/loop/argument cleanup | d9017e310a326a885dd65ccb82b810f0d7eb7564 | CI38001360466 passes combined ownership/tracing/lint/docs; source/tests/scripts/production workflows match historical sourcec37df3b |
+| Row32 fold callback unwind | ef1e5826ffdeb2f2ee1bd238233d4f6e7fa2aff7 | CI37969003113 passes focused Linux and all-doc/tag checks; production4592876, actual basea282f63 |
+| Row31 zip callback unwind | c5da11f3b32df3c67422b470fc6c327001119026 | CI37967629573 passes normal Linux checks and all-doc/tag audit; productiona282f63, actual baseca33d31 |
+| Row30 selection callback unwind | 7a6ca031fc0b6a10295dc86e07bb83ef0601a295 | CI37966690637 passes normal repaired checks; productionca33d31, actual base84ef548 |
+| Row29 map callback unwind and preparation | 79dcc10eb1806d481600d2c7ccd9141b60d7376b | CI38000551924 passes focused ownership/tracing/lint/docs; source/tests/scripts/production workflows match published4c7d5ba; prior3389a973 CI37995710137 passed on78ed19f |
+| Row28 runtime application and preparation | 44f4297f270fd57ab34a20734e4635c65c6d40b2 | CI38000484752 passes ownership/tracing/lint/docs; source/tests/scripts/production workflows match published3e7ab59; prior2234160 CI37994225608 passed on7cfbe03 |
+| Row27 compiler call liveness | 550cd9bd7f3431bf6e25a7db35917c8ab2119444 | CI37962382433 passes focused Linux and all-doc/tag checks; productionc4eb75e, actual basebb77c07 |
+| Row26 compiler reuse tokens | 25fc86811242133c05c247b7ec766b55327b21d2 | CI37992999275 passes; source matches published0a7203f; shared immutable auditor |
+| Resource frames / stack binder | bf05481ac5c6e60c4e05872a241a2ff436cb457f | CI37798736754 all six pass |
+
+PR106-chain preparation refresh row102: 04e8557ca5e8f043fdd5ba693da0e9f944185924 to4c58f019e707cb5d8cf2a794163d73613174dbcf on actuale0db0123a16cc7146fc506b2591adc75a777c5ef, rebased FROMactual2ac08dea923adecf396a29a6bd177cfa46ebc8b5. Retained roadmap/revision-102-04e8557ca5e8 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row103: 6f1f030dfcce87ab5f3edce4d5488d35783a2da3 to32c500ef4444726d648d35e5b8599349ffae40f7 on actual4c58f019e707cb5d8cf2a794163d73613174dbcf, rebased FROMactual04e8557ca5e8f043fdd5ba693da0e9f944185924. Retained roadmap/revision-103-6f1f030dfcce before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row104: ac9558374a4d6798a0f0e75877c92ca5f5946755 tof0384f82c63e06db04856efd4be47b643f67e965 on actual32c500ef4444726d648d35e5b8599349ffae40f7, rebased FROMactual6f1f030dfcce87ab5f3edce4d5488d35783a2da3. Retained roadmap/revision-104-ac9558374a4d before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row105: 2711a516ee34692b268aa769ab8d08238ec64d64 toc7db1b368da03b0906deee9902261815e9199271 on actualf0384f82c63e06db04856efd4be47b643f67e965, rebased FROMactualac9558374a4d6798a0f0e75877c92ca5f5946755. Retained roadmap/revision-105-2711a516ee34 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row106: 29104d9449075725d09fc3e517d15567f5c3b47f to06b87f3c83af4976dc54341721192e2126830eec on actualc7db1b368da03b0906deee9902261815e9199271, rebased FROMactuala8ed839d69f54ebe99c3e999a15b03e1368de3d3. Retained roadmap/revision-106-29104d944907 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row107: c34c313ccfb05c1d9f6d6d9f9220b5a0570c297a tod4b360f6cc714dd70b8be6844af896badc72393f on actual06b87f3c83af4976dc54341721192e2126830eec, rebased FROMactual29104d9449075725d09fc3e517d15567f5c3b47f. Retained roadmap/revision-107-c34c313ccfb0 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row108: 8f66e28763b4d0f55fdd195272e907b474278122 to1362d3a239bcdf510e7189c69212d4c2bdf437ff on actuald4b360f6cc714dd70b8be6844af896badc72393f, rebased FROMactualc34c313ccfb05c1d9f6d6d9f9220b5a0570c297a. Retained roadmap/revision-108-8f66e28763b4 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Matched-result repair propagation through serving and client contexts
+
+Guarded batches92–99 (8.63CPU/92.83elapsed) and100–107 (8.50/91.57s) pass.
+Each preparation preserves its commit count, exact inherited argument/CAF/
+matched-result and direct frame-variant fixes, original native probes and
+production workflows. The prior remote head is retained under revision tags
+before exact-lease publication. Actual bases and current heads are in the live
+table; immutable OLD anchors are untouched. This is preparation verification,
+not acceptance of any new production PR or a general tracing-free claim.
+
+PR106-chain preparation refresh row109: cf14552bdba50683ad04221bfe483474b1d274bd to5a6b79b7a0084e96bc22d6f593b9f9412acc6a71 on actual1362d3a239bcdf510e7189c69212d4c2bdf437ff, rebased FROMactual8f66e28763b4d0f55fdd195272e907b474278122. Retained roadmap/revision-109-cf14552bdba5 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row110: 393456e6e5ca161b76ce18ead2ca6145f86a6be1 to66d7d93e57f5fa6d2be79411aedc81e7033ebead on actual5a6b79b7a0084e96bc22d6f593b9f9412acc6a71, rebased FROMactualcf14552bdba50683ad04221bfe483474b1d274bd. Retained roadmap/revision-110-393456e6e5ca before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row111: a4f347499f19e352351bdded9fa5dd1ef7878716 toa7d089cc5153c4945769c3ff44ce7494b92c2bbb on actual66d7d93e57f5fa6d2be79411aedc81e7033ebead, rebased FROMactual393456e6e5ca161b76ce18ead2ca6145f86a6be1. Retained roadmap/revision-111-a4f347499f19 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row112: 215d7badbd49fc5ce47a6857fa180dc16fd37f18 to996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3 on actuala7d089cc5153c4945769c3ff44ce7494b92c2bbb, rebased FROMactuala4f347499f19e352351bdded9fa5dd1ef7878716. Retained roadmap/revision-112-215d7badbd49 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 complete argument repair and its two IR controls; CAF preparations additionally preserve their evaluation-aware inline classification and the exact pending-CAF scalar control. Existing native pending-argument coverage adds the exact scalar-result variant. Loop normalization additionally inherits the exact reviewed inline/bound Again spine repair, with the exact emitted-layout observer and unchanged assertions. The exact matched-result conversion checkpoint and its failing-before-fix IR control are additionally inherited from verified row43; original native conversion positive and all three negative controls are unchanged. For rows84 and later, additionally inherit the exact reviewed direct resource-variant frame-holder eligibility patch from row83; all original zero/one parent-box, File, alias and inactive-payload assertions remain unchanged. Other compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Prior focused checks predate the ownership repair; refreshed runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+## Completed repair propagation and fresh gRPC evidence
+
+Final bounded refresh108–112 passes5.41CPU/61.58elapsed. Both compiler repairs
+now reach112; original probes, both row85 commits and immutable anchors remain.
+Current source100 isa3d88c0b8f3d726d178619f73cee44855dc1e071; source112 is
+996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3. Actual bases are in the live table.
+
+Serving evidence rebases from actual e6ae6c83dc46 ontoa3d88c0b8f3d. Reviewed
+add/add conflict preserves the merged stronger auditor; all11 root docs resolve
+remaining conflicts. Guarded rebase0.03/0.26s stops; docs continue0.00/0.14s passes.
+New head1ec30f21bc457fe97f9d74616f97baca9f7fa10f preserves its one evidence
+commit. Source/native probes/scripts/production workflows matcha3d88 byte-for-byte.
+Original gRPC/HTTP2 controls remain, with all21 RC controls and stack/reuse gates
+added. Audit0.43/3.47s passes. Retain3aca5cf remotely as
+evidence-serving-3aca5cf20d77 before exact-lease publication. CI38015884622 runs.
+
+Storage evidence rebases from actual215d7badbd49 onto996d5ee4ef4f. The old
+pure auditor addition is already absorbed by the stronger base; review verifies
+no staged difference before skipping only that commit. Three remaining evidence
+commits survive, with all11 root docs copied. Guarded rebase, skip and docs
+continue each use0.00CPU/0.14elapsed. New exact head
+a6505b8f17c19c6736966181d1017389a4a6e109 has byte-identical source/native probes/
+scripts/production workflows to996d5ee. Original HTTP2/client/root controls and
+exact interpreter TLS pool identity test remain; all21 RC controls and stack/
+reuse gates are added. Audit0.42/3.38s passes. Retain e5bbfd8 remotely as
+evidence-storage-e5bbfd84736f before exact-lease publication. CI38015942823 queues.
+Queued evidence does not prove new support or replace sequential full gates.
+
+Refreshed holder evidence f7d7585b89ad/CI38015529998 passes all original scope
+checks, including the zero-parent-box assertion that failed before repair,
+all21 IR controls, real tracing and stack/reuse. This source-specific Linux
+pass does not accept a production PR or prove automatic cycle reclamation.
+
+## File and actual-WASI evidence after matched-result repair
+
+File evidence rebase FROM actual4c6618c4eb91 ONTO current source76
+f0034b6ab7c132a20f1aec22dbfdefd5f6c2c3ec preserves both evidence commits;
+all11 root docs resolve only documentation conflicts. Guarded rebase0.03CPU/
+0.25elapsed stops at docs, continue0.04/0.26s and audit0.50/3.71s pass.
+New exact headcee001573c1ec0dd25f05097a71a57b662a03239 matches source/native
+probes/scripts/production workflows byte-for-byte. All21 RC controls and original
+File/frame/loop/tracing/stack/reuse probes remain. Previous c5665d0 is retained
+as roadmap/evidence-file-c5665d026228 before exact-lease publication.
+Fresh CI38016049553 runs; old CI38011728123 passes only the earlier source.
+
+WASI evidence rebase FROM actual e037bc5a06dc ONTO current source78
+43773a07a26967f9cc5c02ec7cf16961fef3654f preserves both evidence commits;
+all11 root docs resolve documentation conflicts. Guarded rebase0.05CPU/
+0.14elapsed stops, continue0.00/0.14s and audit0.46/3.56s pass.
+New exact head2378565fcf68780e0235dc120c3533f68c8868f0 matches source/native
+probes/scripts/production workflows byte-for-byte. FWP_REQUIRE_WASM_RESOURCE_COUNTS=1
+remains mandatory alongside original native/tracing/stack/reuse and all21 RC
+controls. Previous24e7e57 is retained as roadmap/evidence-wasi-24e7e57103f8
+before exact-lease publication. Fresh CI38016089987 queues; old CI38011802620
+passes only the earlier source. Queued/skipped evidence is not passing support.
+
+Fresh source-specific serving CI38015884622 and storage CI38015942823 pass
+on exact heads1ec30f21bc45 and a6505b8f17c1, respectively. Original scopes, all21
+RC controls, stack/reuse, tracing and documentation gates pass; these Linux
+scopes never replace each production PR's full exact-head platform gates.
+
+Refreshed actual-WASI CI38016089987 passes on exact2378565fcf68, including
+required WASI resource-count/disposal execution and all inherited original
+tracing, ownership, stack/reuse and documentation controls. This is scoped
+Linux/WASI evidence, not full sequential production acceptance.
+
+## Prepared primitive metadata inventory
+
+A standalone bounded Rust audit imports the unmodified ownership inventory
+from source112996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3 and enumerates
+`foreign "fwp"` symbols in its library modules. Command through the absolute
+root guard: python3 /private/tmp/fwp-run-primitive-coverage-audit.py;
+0.22CPU/0.86elapsed passes. The audit changes no compiler/runtime/probes and
+does not use the shared Cargo target. It reports metadata presence only:
+combinator lowering, scalar-only calls and runtime-specific lifetime wrappers
+require separate review. Absence of metadata is not proof of tracing use or
+an ownership defect. These are prepared-source findings, not main acceptance.
+
+```text
+Prepared source996d5ee4ef4f: explicit primitive contract metadata vs declarations without metadata
+lib/autodiff.fwp: 0 explicit / 3 declarations
+  no explicit metadata: ad.tape, ad.push, ad.backward
+lib/cli.fwp: 0 explicit / 5 declarations
+  no explicit metadata: cli.parse, cli.help, term.is-tty, term.width, term.read-secret
+lib/collections.fwp: 42 explicit / 42 declarations
+lib/csv.fwp: 0 explicit / 2 declarations
+  no explicit metadata: csv.parse-with, csv.decode
+lib/ffi.fwp: 0 explicit / 9 declarations
+  no explicit metadata: mem.alloc, mem.free, mem.string, ptr.cast, ptr.at, ptr.read, ptr.write, ptr.read-string, ptr.address
+lib/fs.fwp: 0 explicit / 12 declarations
+  no explicit metadata: file.exists, file.is-dir, file.info, file.remove, file.rename, file.append, file.read-bytes, file.write-bytes, dir.list, dir.create, dir.create-all, dir.remove
+lib/grpc.fwp: 0 explicit / 10 declarations
+  no explicit metadata: grpc.metadata, grpc.set-header, grpc.set-trailer, grpc.with-gzip, grpc.with-response-metadata, grpc.peer-subject, grpc.with-tls, grpc.with-metadata, grpc.with-deadline, grpc._force
+lib/http.fwp: 0 explicit / 20 declarations
+  no explicit metadata: http.parse-request-head, http.parse-response-head, http.field-ok, http.content-length, http.to-hex, http.parse-hex, gzip.compress, gzip.decompress-max, deflate.compress, deflate.decompress-max, gzip._chunk, gzip._crc32, gzip._end, http._h2-serve, http._h2-request, http._h2-body, http._h2-respond, http._h2-data, http._h2-send, http._h2-pooled
+lib/io.fwp: 3 explicit / 11 declarations
+  no explicit metadata: read-line, read-all, read-lines, env.get, env.vars, env.cwd, time.monotonic, time.unix
+lib/json.fwp: 0 explicit / 4 declarations
+  no explicit metadata: json.parse, json.encode, json.write, json.read
+lib/list.fwp: 26 explicit / 26 declarations
+lib/log.fwp: 0 explicit / 4 declarations
+  no explicit metadata: metrics.add, metrics.set, metrics.observe, metrics.snapshot
+lib/net.fwp: 0 explicit / 20 declarations
+  no explicit metadata: tcp.listen, tcp.local-addr, tcp.accept, tcp.accept-for, tcp.stop, tcp.connect, tcp.read, tcp.read-for, tcp.write, tcp.write-for, tcp.close, tcp.peer-addr, udp.bind, udp.local-addr, udp.send-to, udp.recv-from, udp.close, dns.resolve, signal.shutdown-requested, signal.request-shutdown
+lib/numeric.fwp: 0 explicit / 7 declarations
+  no explicit metadata: linalg.lu-solve, linalg.det, linalg.inverse, linalg.cholesky, linalg.qr, linalg.cg, list.transpose
+lib/prelude.fwp: 18 explicit / 101 declarations
+  no explicit metadata: syntax.show, id, const, flip, compose, apply, fork, both, dup, on, uncurry, curry, swap, first, second, if, then2, curry3, uncurry3, tap, prim.add, prim.sub, prim.mul, prim.div, prim.rem, prim.neg, prim.zero, prim.one, prim.from-int, prim.from-float, prim.trap, wrapping.add, wrapping.sub, wrapping.mul, saturating.add, saturating.sub, saturating.mul, overflowing.add, overflowing.sub, overflowing.mul, checked.add, checked.sub, checked.mul, checked.div, bit.and, bit.or, bit.xor, bit.not, bit.shl, bit.shr, int.convert, int.to-float, float.to-int, float.convert, prim.sqrt, prim.exp, prim.ln, prim.sin, prim.cos, prim.tan, pow, floor, ceil, round, abs, min, max, hash, not, and, or, list.flat-map, list.ap, get, put, modify, run-state, random.u64, random.f64, file.read, file.write-new, args, exit
+lib/process.fwp: 0 explicit / 2 declarations
+  no explicit metadata: process.run-input, process.call
+lib/simd.fwp: 0 explicit / 9 declarations
+  no explicit metadata: simd.splat, simd.from-array, simd.add, simd.sub, simd.mul, simd.div, simd.min, simd.max, simd.sum
+lib/string.fwp: 31 explicit / 31 declarations
+lib/task.fwp: 14 explicit / 14 declarations
+lib/tensor.fwp: 0 explicit / 4 declarations
+  no explicit metadata: device.run, device.sum, device.gpu-available, device.gpu-run
+lib/ternary.fwp: 0 explicit / 8 declarations
+  no explicit metadata: trit.from-sign, trit.to-int, tint.to-int, tint.of-int, tint.trits, tint.from-trits, trits.pack, trits.unpack
+lib/tls.fwp: 0 explicit / 17 declarations
+  no explicit metadata: tls._connect, tls._listen, tls.handshake, tls.alpn, tls.secure, tls.peer-subject, tls.available, tls.accept, tls.accept-for, tls.local-addr, tls.stop, tls.read, tls.read-for, tls.write, tls.write-for, tls.close, tls.peer-addr
+lib/url.fwp: 0 explicit / 4 declarations
+  no explicit metadata: url.split, url.encode, url.decode, form.decode
+lib/websocket.fwp: 0 explicit / 8 declarations
+  no explicit metadata: ws._accept, ws._key, ws._frame, ws._parse, ws._close-payload, ws._close-parse, ws._deflate, ws._inflate
+TOTAL 134 explicit / 373 declarations; 239 without metadata (lowering/runtime behavior not audited; scalar words stay uncounted)
+```
+
+## Archived delivery narrative from the plan
+
+The plan's historical delivery narrative was moved here on2026-10-10 so the
+live plan keeps only the current priorities and acceptance criteria.
+
+Main includes #74–#107: native macOS and selected ownership through typed
+repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
+wide counts, array/map/set elements and reclamation of old counted storage.
+Task result/deadline boundaries and registered runtime unwind cleanup merged
+in PR102–103 after all six exact-head production jobs and roadmap_docs passed.
+PR104 adds the bounded guard sampling repair; PR105 adds compiler reuse-token
+transfer/unwind cleanup and stronger handoff checks, after all exact-head gates.
+PR106 adds live caller/pending-argument cleanup with the original allocation
+gates preserved, after all exact-head checks pass. PR107 adds runtime application
+and partial capture-preparation cleanup after all seven exact-head gates pass.
+Deliver queue29 map unwind next, followed by remaining ownership work.
+Exact heads, commands, failures and acceptance remain in
+[the handoff](development-state.md).
+
+Separate evidence has restored baseline root/cache/tutorial fixes and the real
+wide-record boxing repair. Its unchanged full allocation test passes on Linux
+and both macOS architectures; all six TLS/listener evidence jobs passed.
+Later WASM/resource evidence exposed binary-read and gRPC test-control failures;
+both are repaired and all six WASM/resource gates pass. The next separate
+resource-frame evidence run exposed an HTTP GC signal failure; the whole
+stack-match binder ownership repair passes focused checks and all six full
+evidence gates. Every sequential PR still needs
+its own exact-head gates. Keep repairing failures.
+
+
+Plan-archive link audit initially fails0.00CPU/0.14elapsed because a moved
+relative handoff link still includes the old docs/ prefix. Correcting that
+archive-relative link restores the full audit:0.43CPU/3.44elapsed passes.
+
+## Full repaired ownership platform evidence
+
+Isolated branch ownership-evidence-full-ownership starts at prepared source112
+996d5ee4ef4fb0d01d13b43373ba3b9dd08ee5d3. Exact evidence head
+3a97905ca9801d4751f02798bc7240ddba2d8ccd preserves source/native probes/scripts/
+production workflows byte-for-byte. Its separate push-only full-ownership.yml
+copies all six production job definitions unchanged and appends the unchanged
+roadmap_docs job. Linux requires actual WASI; ARM/Intel regular and full GC
+stress, cross/browser tests, benchmarks and original allocation gates remain.
+All11 live docs are copied. Guarded worktree creation0.02CPU/0.26elapsed and
+audit0.42/3.36s pass. One new evidence commit has a single-line54-character
+subject, no body/trailers/attribution. Full evidence38016929326 runs on GitHub;
+no second PR is opened and no local full gate is attempted. A pending evidence
+run is not support; even a pass does not replace each production PR's exact-head
+acceptance. This run checks interactions across the prepared queue while the
+current production PR finishes.
+
+## Autodiff review findings for the later numeric phase
+
+Read prepared source112996d5ee4ef4f: runtime/fwp_rt_kernel.c and src/numerics.rs.
+Native backward detaches pa/pb/da/db into local tp before output validation;
+the mixed-tape branch frees adjoints then traps without freeing those buffers.
+Interpreter backward takes a local Tape, whose Vec buffers drop on the error.
+No runtime reproduction is claimed here; the next numeric lifetime regression
+must instrument native allocation/release and compare unchanged traps with the
+raw interpreter. Grad callback failure/cancellation before backward needs scoped
+tape ownership evidence. Both implementations use generation modulo32767;
+retained old tokens across that wrap need a regression and non-aliasing policy.
+The numerics page records these concrete checks. Runtime ownership deliveries,
+finite phase2 review and numeric representation still precede phase4 tape work.
+
+## Accepted map callback unwind delivery
+
+```json
+{
+  "sha": "12d03395b4e4818a4e27d2342ff677ca5fc145e1",
+  "mergedAt": "2026-10-10T02:46:18Z",
+  "subject": "Release map callback owners and partial results during unwind",
+  "message": "Release map callback owners and partial results during unwind",
+  "characters": 61,
+  "tree": "b30c517d37652d065731bc5654b885c85a2f4bf1",
+  "acceptedHead": "3c69084cec04ad0a5db3c2f8813a683140d3f40c",
+  "parents": [
+    "c9b9f835ebf2e3a868bfa4bdf256f0f16800786c"
+  ]
+}
+```
+
+All six exact-head production jobs in CI38015157922 and roadmap_docs38015157960
+pass before match-head squash. Guarded gate/merge0.36CPU/8.50elapsed and
+raw-message/tree/hash-backup/main-FF restoration0.04/0.26s pass. All11 docs
+are protected under /private/tmp/fwp-main-docs-pre108 with sha256/metadata proof.
+Duplicate main CI38018179750 is cancelled after exact acceptance and complete
+tree parity; main roadmap_docs38018179766 passes. Source29 merged; next30
+uses recorded actual25eda7b for final rebase.
+
+### Superseded PR107/108 live handoff
+
+## Main and next delivery
+
+Main is `c9b9f835ebf2e3a868bfa4bdf256f0f16800786c` (PR #107). Accepted head
+`1dcbe79ac0777b83cad6f49b8ab4b28ad140c854` passes all six production jobs in
+CI 38011227462 and roadmap_docs38011227532. Match-head squash at 2026-10-10T01:46:24Z
+has the exact 65-character message `Protect runtime application owners through preparation and unwind`,
+with one line, an empty body and no trailers/attribution. Complete tree
+`2efc86ee42fb4cef265ca976bf1dcf43e618bfa0` matches the tested head. Raw-message,
+tree and final-gate proofs are saved locally; full acceptance is in history.
+All 11 docs were hashed/backed up in /private/tmp/fwp-main-docs-pre107 and restored
+byte-for-byte after main FF. Refresh that now-stale backup before the next FF.
+Duplicate main CI 38014464073 is cancelled only after parity/gate proof; main
+roadmap_docs38014464086 passes. Native macOS and selected ownership are delivered
+through runtime application/capture preparation and compiler caller/reuse cleanup.
+Phase 2 remains incomplete; phases3–6 remain pending; tracing stays the fallback.
+
+[PR #108](https://github.com/e6qu/fun-with-pipes/pull/108) delivers queue 29 map
+unwind. Its frozen exact head is `3c69084cec04ad0a5db3c2f8813a683140d3f40c`
+on actual squash base `c9b9f835ebf2e3a868bfa4bdf256f0f16800786c`. Both implementation/
+probe commits survive the rebase; source/tests/scripts/production workflows
+match prior25eda7b byte-for-byte. Nine focused map/runtime tests 22.95CPU/46.05elapsed,
+focused clippy 2.32/4.65s, format 0.34/0.62s and strong audit 0.42/3.45s pass.
+All 11 live docs are copied into the PR; prior25eda7b is retained under
+roadmap/revision-029-25eda7b24ef5 before exact-lease publication. Freeze this head
+except for real fixes. Production CI 38015157922 passes bench, regular ARM/Intel macOS and both macOS
+GC stress jobs; Linux is running. Roadmap_docs38015157960 passes.
+Require all seven exact-head gates before merging.
+Squash subject: `Release map callback owners and partial results during unwind`;
+empty body and explicit --match-head-commit. After the accepted squash's message/
+tree proof and protected main update, deliver queue 30 selection unwind next.
+Keep one production PR open at a time; continue independent preparation while CI runs.
+
+Queue 34 is now a verified duplicate of the preparation code/probe delivered
+in107. Skip its implementation PR when reached after 33; preserve its immutable
+anchor, current source ancestry and all later regression coverage.
+
+
+## Final selection-unwind preparation after map acceptance
+
+Rebase FROM actual25eda7b24ef5e072ac3acd47e52a2bd30da3c913 ONTO accepted
+map squash12d03395b4e4818a4e27d2342ff677ca5fc145e1. Docs-only conflict
+stops guarded rebase0.05CPU/0.24elapsed; all11 protected root docs resolve it
+and continue0.03/0.14s. Source8819695137c02f0300102a8457687a616d075548
+preserves the original implementation commit. Compiler/runtime/native probes/
+scripts/production workflows match prior9979e9f byte-for-byte. Guarded clean
+of prior map package0.06/0.37s, six focused native/raw interpreter selection/
+filter/prefix checks21.01/42.15s, focused three-target clippy2.34/4.74s and
+format0.34/0.62s pass. GC stress/verification, reuse poison, scalar bits and
+original alias/release assertions remain. Six is the actual fresh test count;
+no broader support follows until all seven final exact-head jobs pass.
+
+Final selection docs audit passes0.43CPU/3.47elapsed:44 tracked Markdown
+link sets,106 immutable queue pairs/tags and83 live heads/bases, with whole
+commit messages checked. All11 live docs are copied into the final PR snapshot.
+
+Final selection docs commit8371fc50c9bfbbe57f0968b58e5a5541b60beefe passes
+strong audit0.43CPU/3.40elapsed. Before exact-lease publication, retain prior
+9979e9f remotely as roadmap/revision-030-9979e9fd1a27. PR109 opens only after
+PR108's all-gate acceptance, raw-message/tree proof and protected main FF.
+Production CI38018485993 queues; roadmap_docs38018485946 passes on exact8371fc5.
+Full gates remain required before squash; immutable source anchors stay fixed.
+
+## Independent zip preparation while PR109 tests
+
+Rebase FROM recorded9979e9fd1a27f2cbf208e3497cd090f607f1c077 ONTO frozen
+PR109 head8371fc50c9bfbbe57f0968b58e5a5541b60beefe. Guarded rebase0.02CPU/
+0.25elapsed stops only at docs; all11 root docs resolve them, continue0.00/0.14s
+passes. New zip sourceff84318a416d1d7fb9b2d30279597486524c17fc preserves its
+implementation commit and matches all source/native probes/scripts/production
+workflows to prior47776e7 byte-for-byte. Previous selection-package clean
+0.06/0.37s, six zip/selection controls20.99/42.22s, focused clippy2.27/4.62s,
+format0.35/0.63s and strong audit0.44/3.48s pass. Preserve original two-buffer
+allocation-failure/release, aliases, scalar bits, raw interpreter/O1O2/GC/reuse
+controls. Retain prior47776e7 remotely under revision-031-47776e738c26 before
+exact-lease publication. No additional PR opens; final rebase FROM actual8371fc5
+ONTO accepted PR109 squash and all seven exact-head gates remain required.
+
+## Independent fold preparation and full-queue worker failure
+
+Fold rebase FROM recorded47776e738c2628353c95bb988ac69714132bdf59 ONTO
+new zipff84318a416d1d7fb9b2d30279597486524c17fc. Docs-only guard stop0.02CPU/
+0.26elapsed, all11 root docs resolution/continue0.00/0.14s. New source
+9aed23988b194be403352b70eedfa315f81ead37 has byte-identical compiler/runtime/
+native probes/scripts/production workflows to priorc434692. Bounded zip clean
+0.07/0.38s, nine fold/runtime-call controls24.14/48.48s, lint2.33/4.77s,
+format0.35/0.62s and strong audit0.44/3.58s pass. Retain oldc434692 as
+revision-032-c434692ccb6f before exact-lease publication. No second PR opens.
+
+Full prepared queue3a97905c/CI38016929326 has one completed ARM failure in
+unboxed_worker_locals: transferred_record_fields_preserve_aliases_and_trap_cleanup
+fails its original `aliases boxed a worker argument` assertion at line246.
+The recursive worker test passes. Job114109159441 logs are saved raw/clean
+in /private/tmp/fwp-full-ownership-38016929326-arm-failure[.clean].log. gh run
+view refuses logs while the overall run is active; direct completed-job API
+with --allow-escape-sequences retrieves them, then ANSI is stripped locally.
+Original no-box/alias/scalar/trap controls must remain. Reproduce at earliest
+source65 and repair compiler representation before refreshed full evidence.
+
+## Worker-argument boxing regression and narrow repair
+
+Earliest affected preparation65 source886f8b0083c965375e0517e906d5fb94cac8ba9a
+reproduces original aliases no-box failure6.65CPU/13.68elapsed. Diagnostic
+Rust file-write saves generated C before the unchanged assertion, then finally
+restores the test file byte-for-byte; no native fixture/assertion changes remain.
+Generated aliases w3 first calls w0 then fwp_record(6,t3.f), proving the parent
+box occurs before w1. The worker-use classifier checked only Expr::Local, while
+earlier inline-argument repair exposes the same local under Dup/Drop.
+Use existing is_local_through_counts for complete arguments with the same record
+ABI; retain the complete-arity/field-count checks. Partial and dynamic calls
+still box, as required by the unchanged positive capture control.
+
+Bounded fold package clean0.00/0.14s; nine original native tests27.80/56.39s
+pass: unboxed_worker_locals2, record_conversion_ownership1, compiler_call_liveness5
+and retain_unwind_ownership1. All original no-box, required partial box, aliases,
+scalar address bits, exact omission exits, raw interpreter/O1O2/GC/reuse and trap
+controls remain. Format apply0.45/0.63s, focused four-target lint2.35/4.78s,
+final format0.35/0.73s pass. Repair changes only the worker-use predicate, plus
+authoritative docs; current evidence is not full acceptance. Publish at65 and
+propagate the exact change through66–112 before refreshed full platform evidence.
