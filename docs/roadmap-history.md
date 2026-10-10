@@ -13163,3 +13163,16 @@ all immutable anchors and later coverage.
 
 
 Actual PR107 squash c9b9f835ebf2e3a868bfa4bdf256f0f16800786c at2026-10-10T01:46:24Z accepts1dcbe79ac0777b83cad6f49b8ab4b28ad140c854 after all six exact-head jobs inCI38011227462 and roadmap_docs38011227532 pass. Explicit subject Protect runtime application owners through preparation and unwind, empty body, match-head supplied. Entire raw message is exactly65 characters on one line, with no terminal newline, body, trailers or attribution. Squash has one parent ff29c268eed8669d812d40d1050e0c4bd188d52c; complete tree2efc86ee42fb4cef265ca976bf1dcf43e618bfa0 matches the accepted head. Final gate proof /private/tmp/fwp-pr107-final-gate-proof.json and raw/tree proof /private/tmp/fwp-pr107-merge-proof.json saved. All11 authoritative docs are hashed/backed up in /private/tmp/fwp-main-docs-pre107 and restored byte-for-byte after local main fast-forward. Duplicate main CI38014464073 cancelled only after complete gate/message/tree proof; main roadmap_docs38014464086 passes.
+
+## Previous shared target before map delivery
+
+The fun-refactor guard applies to the other repository. Current shared target
+belongs to /private/tmp/fwp-resource-frame-variants-worktree, after bounded
+package clean of source43(0.07CPU/0.38elapsed) and rebuild for the verified
+frame-holder repair. Commands and earlier target switches are in history.
+Before switching Rust checkouts, run bounded cargo clean -p fwp in this checkout
+and rebuild the requested target. Never infer binary/source identity from a
+shared target directory. Temporary helper paths can disappear; the table,
+actual bases and retained tags are the durable recovery record. No local full
+gate or full-size raw tail run is authorized by historical resource observations.
+

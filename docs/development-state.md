@@ -43,10 +43,12 @@ through runtime application/capture preparation and compiler caller/reuse cleanu
 Phase2 remains incomplete; phases3–6 remain pending; tracing stays the fallback.
 
 No production PR is open after107 merges. Deliver queue29 map unwind next.
-Branch ownership-map-unwind at25eda7b24ef5e072ac3acd47e52a2bd30da3c913 has recorded
-actual base131ec8ebdd0691571eab15924dd598b921fbc6c1. Rebase FROM that base ONTO
-actual squashc9b9f83, preserve its implementation, run focused raw-interpreter/
-native ownership checks, lint/format/audit, copy all11 live docs and publish.
+Branch ownership-map-unwind is rebased FROM recorded actual131ec8ebdd0691571eab15924dd598b921fbc6c1
+ONTO actual squashc9b9f83 at691c60540829e5bbd5ddf290300c097afb3dcb17. Both commits
+survive; source/tests/scripts/production workflows match prior25eda7b byte-for-byte.
+All nine focused map/runtime tests pass22.95CPU/46.05elapsed. Focused clippy
+passes2.32/4.65s, format0.34/0.62s; strong audit passes. All11 live docs are copied
+for publication; fresh full gates follow.
 Open the next focused PR and require fresh full exact-head gates. Proposed
 squash subject: `Release map callback owners and partial results during unwind`;
 empty body, at most80 characters. Open only one production PR at a time.
@@ -112,7 +114,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 29 ownership-map-unwind | 25eda7b24ef5 | 131ec8ebdd06 | Seven tests24.26/48.82s; lint2.51/5.05s, format0.44/0.61s and strong audit pass; final sequential gates follow |
+| 29 ownership-map-unwind | 691c60540829 | c9b9f835ebf2 | Final squash-base source parity; nine focused map/runtime tests22.95CPU/46.05elapsed pass; lint2.32/4.65s, format0.34/0.62s and strong audit pass; full exact-head gates follow |
 | 30 ownership-selection-unwind | 9979e9fd1a27 | 25eda7b24ef5 | Seven tests24.42/48.98s; lint2.24/4.54s, format0.36/0.76s and strong audit pass; final sequential gates follow |
 | 31 ownership-zip-unwind | 47776e738c26 | 9979e9fd1a27 | Seven tests24.32/48.75s; lint2.35/4.66s, format0.36/0.75s and strong audit pass; final sequential gates follow |
 | 32 ownership-fold-unwind | c434692ccb6f | 47776e738c26 | Eight tests22.49/45.05s; lint2.37/4.77s, format0.34/0.62s and strong audit pass; final sequential gates follow |
@@ -332,14 +334,15 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. Current shared target
-belongs to /private/tmp/fwp-resource-frame-variants-worktree, after bounded
-package clean of source43(0.07CPU/0.38elapsed) and rebuild for the verified
-frame-holder repair. Commands and earlier target switches are in history.
-Before switching Rust checkouts, run bounded cargo clean -p fwp in this checkout
-and rebuild the requested target. Never infer binary/source identity from a
-shared target directory. Temporary helper paths can disappear; the table,
-actual bases and retained tags are the durable recovery record. No local full
-gate or full-size raw tail run is authorized by historical resource observations.
+belongs to /private/tmp/fwp-map-unwind-worktree after bounded package clean of
+row83(0.06CPU/0.37elapsed) and the final-squash rebase/rebuild. Focused command:
+cargo test --test map_unwind_ownership --test map_ownership --test runtime_call_ownership,
+through the absolute-root guard with OpenSSL; all nine tests pass22.95/46.05s.
+Before switching Rust checkouts, bounded cargo clean -p fwp in this checkout
+then rebuild the requested target. Earlier switches/checks are in history;
+never infer source identity from a shared target directory. Full gates run on
+GitHub. Temporary helpers may disappear; actual bases and retained tags are
+the durable recovery record.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
