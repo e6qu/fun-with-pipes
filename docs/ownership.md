@@ -279,8 +279,9 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
-when ignored; early close would change later IO failures. Internal ResourceRegion
-anchors are recorded before optimization and must survive inlining and fusion.
+when ignored; early close would change later IO failures. Prepared internal ResourceRegion
+anchors record these lifetimes before optimization and preserve them through
+inlining and fusion; their implementation still requires sequential delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 

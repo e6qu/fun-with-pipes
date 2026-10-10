@@ -40,13 +40,15 @@ that proof; main docs38059746845 is queued. Native macOS and selected ownership
 are delivered through loop state/Step unwind and flattened Again record preservation.
 Phase2 remains incomplete; phases3–6 remain pending and tracing remains fallback.
 
-Next production delivery is queue35 constructor cleanup (`ownership-constructor-unwind`).
-Rebase FROM actual duplicate34 `49705971b287bbaee6684a88b6de15183b3bea56`
-ONTO actual squash `486520c141d3c26888491d1f5434a7295d8e3cd7`, preserving both original
-feature and appended documentation commits. Run original constructor, retain
-and caller controls plus RC units, lint, format and all11 docs/audits; retain
-oldbbd74db2977a remotely before exact-lease publication, append fresh docs and
-open the sole next PR. All seven exact-head gates remain required before squash.
+Queue35 constructor cleanup (`ownership-constructor-unwind`) is finally rebased
+FROM actual duplicate3449705971b287 ONTO actual squash486520c141d3 at
+snapshot833fa844901a. Both original feature/documentation commits and every
+original compiler/runtime/probe byte are preserved. All eight constructor/caller/
+loop tests27.31CPU/54.70elapsed, all14 RC units3.37/6.99s, lint2.32/4.67s and
+format0.34/0.60s pass. Original omitted constructor cleanup still exits5 at
+O1/O2 with GC stress/verification and poisoning; raw interpreter/native agrees.
+Retain oldbbd74db2977a remotely before exact-lease publication, append fresh
+all11 docs and open the sole next PR. All seven exact-head gates are required.
 
 Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
 delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
@@ -138,7 +140,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
+| 35 ownership-constructor-unwind | 833fa844901a | 486520c141d3 | Final actual-squash rebase preserves both original feature/docs commits and source/probes; eight constructor/caller/loop tests27.31CPU/54.70elapsed, all14 RC units3.37/6.99s, lint2.32/4.67s and format0.34/0.60s pass; original omitted cleanup exit5 preserved; exact-head full gates required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
@@ -346,8 +348,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-io-errors-worktree (row72, nativebaae1a55),
-with all nine original File tests21.27CPU/42.63elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-constructor-unwind-worktree (row35, snapshot833fa844),
+with all eight focused tests27.31CPU/54.70elapsed and all14 RC units passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

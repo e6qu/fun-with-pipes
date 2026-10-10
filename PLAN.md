@@ -43,8 +43,10 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 Main includes #74–#112: native macOS, selected typed container/text/callback
 ownership, exact wide reference counts and immediate last-owner reclamation.
 Registered unwind cleanup now protects compiler caller/reuse-token references
-and runtime application/capture preparation, plus map, selection and zip result/spine/scratch unwind and fold preparation cleanup. Loop state/Step owners now survive cancellation and payload preparation; flattened Again records remain unboxed. Original allocation gates remain
-intact; merged changes passed all exact-head production and documentation gates.
+and runtime application/capture preparation, plus map, selection, zip and fold
+unwind cleanup. Loop state/Step owners survive cancellation and payload
+preparation; flattened Again records remain unboxed. Original allocation gates
+remain intact; merged changes passed all exact-head production and documentation gates.
 Skip duplicate queue34 and deliver queue35 constructor cleanup, then the
 remaining ownership work. Exact heads, failures, checks and the sole next action
 are in [the handoff](docs/development-state.md); historical platform evidence
