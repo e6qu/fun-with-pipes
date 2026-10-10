@@ -1,0 +1,52 @@
+name: Focused effects native binary diagnostics
+
+on:
+  push:
+    branches: [ownership-evidence-effects-crash]
+
+jobs:
+  effects:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain merged preparation review heads
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Docs and immutable anchors
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Linux native headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Focused compiler binary preparation
+        run: cargo test --test zip_unwind_ownership --no-run
+      - name: Raw interpreter and repeated O1/O2 binary oracle
+        run: python3 scripts/probe-effects-native.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 100
+      - name: Address and undefined behavior diagnostics
+        if: always()
+        run: python3 scripts/probe-effects-sanitizer.py "$PWD" "$RUNNER_TEMP/effects"
+      - name: Native headers and optimized assembly
+        if: always()
+        run: |
+          file "$RUNNER_TEMP/effects/effects-O1" "$RUNNER_TEMP/effects/effects-O2"
+          clang -S -O1 -std=gnu11 -ffp-contract=off -w "$RUNNER_TEMP/effects/effects.c" -o "$RUNNER_TEMP/effects/effects.s"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: effects-binary-${{ matrix.runner }}
+          path: ${{ runner.temp }}/effects/
