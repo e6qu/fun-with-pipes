@@ -51,7 +51,9 @@ cleanup handles failure, trap and cancellation, and unlinks before tail calls.
 The runtime cleanup stack releases registered owners and scoped files before
 nonlocal failure, trap or cancellation invalidates their frames. Catching
 handlers bound cleanup, and task switches preserve separate chains. Compiler
-registration of all owned references remains prepared work.
+cleanup now protects typed caller and incoming-parameter references across
+calls, later-argument failures and cancelled entry ticks. Wider constructor
+and runtime registration remains prepared work.
 
 Prepared runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
@@ -390,6 +392,10 @@ effectful discarded temporaries. If elimination cannot recover a safe type,
 it preserves the original typed binding rather than erasing its ownership.
 Inlined record projections similarly preserve the checked base type through
 scalar replacement so discarded nested children keep their typed destruction.
+Prepared loop normalization lifts both bound and inline Again record-field
+preparation through the same evaluation/drop spine for shape analysis and code
+emission. Cancellation observers read the actual counted-owner layout, including
+direct flattened String slots, while checking unchanged aliases and scalar bits.
 Prepared nested loop reconstruction keeps compatible nested records as flat
 state slots through Again updates. Reading a whole record reconstructs it with
 typed children; progressive retains and completed fields remain protected until
