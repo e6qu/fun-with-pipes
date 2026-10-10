@@ -47,7 +47,7 @@ commits and source/probes are preserved; fresh docs were appended, so referenced
 snapshot833fa844901a stays reachable. Eight focused tests27.31CPU/54.70elapsed,
 all14 RC units3.37/6.99s, lint2.32/4.67s, format0.34/0.60s and all three audits
 pass. Oldbbd74db2977a is retained remotely before exact-lease publication.
-CI38060160102 passes bench; four macOS jobs run and Linux queues.
+CI38060160102 passes bench; Linux and all four macOS jobs run.
 Docs38060160207 passes. Require all seven exact-head gates, then match-head squash with subject
 `Protect consumed constructor fields before allocating storage` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -67,30 +67,32 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–78 are refreshed and published on their actual predecessors.
+Preparations39–79 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
 publication journals must not rerun. Final squash rebases/full gates still remain.
 
-Actual ARM64 binary/layout evidence for44 and65 establishes the current8-byte
-slot baseline. The six-I64 worker value is48 bytes/aligned8 and returns through
+Actual ARM64 binary/layout evidence for44,65,79 and80 records the current8-byte
+slot baseline and tested aggregate/File layouts. The six-I64 worker value is48 bytes/aligned8 and returns through
 caller storage with192/208-byte frames; no speed or constant-stack claim.
 ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
 executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
 fake APIs, not hardware evidence. Closing channels preserves queued values;
-automatic unreachable-cycle reclamation remains unproved.
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
 
-Typed original frame-record79 at native886000670d59 on actual7813c77dbb7b82
-preserves original source/probes. The unchanged allocation/alias/partial-retain
-probe with actual binary capture11.03CPU/22.98elapsed, eight adjacent frame/caller
-tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s
-pass. Zero-vs-one parent-box counters and exact omitted File cleanup exit2 survive.
-All10 ARM64 binaries/C/flags/layout/disassembly retained; actual program-thread
-frames1232/1280 typed/boxed at O1/O2, one-field parent16 bytes excluding metadata.
-Inspection0.42/1.80s plus relevant-body extension0.19/0.85s pass. No timing/general
-ABI/whole-program zero-heap claim. Copy all11 docs/audit before retained publication;
-next80 inline File path storage. Final actual-squash/full gates remain required.
+Inline File path80 at native4e6a81a1c559 on actual792f842d5d266f preserves original
+source/probes. Both original binary-capture tests10.16CPU/20.43elapsed, eight
+constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/
+1.09s pass. Actual eight ARM64 binaries/C/flags/layouts/disassembly retained;
+inspection0.38/1.19s confirms header16/alignment8, refs offset8, path offset16
+versus legacy24/alignment8, refs16/path pointer8. Original counters require one
+allocation16+n+1 versus two24+n+1 for lengths0–4096; exact display/aliases and
+raw interpreter/native IO preserved. No timing/general allocation-free claim.
+Copy all11 docs/audit before retained publication; next81 last-owner File storage
+disposal. Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -189,7 +191,7 @@ still need their final squash rebases and six exact-head full gates.
 | 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Original native bump control8.26CPU/17.53elapsed, lint2.64/5.25s and format0.44/0.83s pass; original source/probes/mandatory WASI workflow unchanged, including exact count-disabled exit4; native checks are not actual WASI proof; final actual-squash/full and mandatory actual WASI gates required |
 | 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Native disposal8.79CPU/18.00elapsed, original bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and format0.45/0.87s pass; original source/probes/workflows unchanged, including exact omitted aggregate/runtime disposal exits5/9; physical bump storage remains allocated; final actual-squash/full and mandatory actual WASI gates required |
 | 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
-| 80 ownership-file-inline-path | 0ea8a1c94115 | 8053dc693a13 | Two tests 10.54/21.29s; lint 6.87/13.94s and format 0.54/1.07s pass |
+| 80 ownership-file-inline-path | 4e6a81a1c559 | 2f842d5d266f | Both original binary-capture tests10.16CPU/20.43elapsed, eight File constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/1.09s pass; original source/probes unchanged; actual ARM64 headers/layouts/disassembly and one-vs-two allocation counters preserved; final actual-squash/full gates required |
 | 81 ownership-file-storage-disposal | 2fffa57d369d | 0ea8a1c94115 | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
 | 82 ownership-file-construction-disposal | c6cbacac0db9 | 2fffa57d369d | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 53440f785f65 | c6cbacac0db9 | Direct frame-constructor repair: five original native tests 20.72CPU/41.72elapsed, lint 2.34/4.77s and format 0.45/0.86s pass; strong audit 0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
@@ -236,7 +238,9 @@ Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row 20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
 close preserves queued values; explicit drain breaks its counted cycle, while
-automatic unreachable-cycle reclamation remains unproved.
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
 
 ## Earlier argument-preparation repair
 
@@ -352,9 +356,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-resource-frame-fields-worktree (row79, native88600067),
-with the original representation probe, eight adjacent tests, all23 RC units
-and actual binary/layout inspection passing. Before switching Rust
+last checked in /private/tmp/fwp-file-inline-path-worktree (row80, native4e6a81a1),
+with both original representation tests, eight adjacent tests and actual
+binary/layout inspection passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

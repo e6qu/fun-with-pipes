@@ -162,6 +162,16 @@ counters and partial-retain controls pass, with exact binaries/flags/disassembly
 retained. These are fixture-specific representation measurements; ordinary File
 and path allocations remain, and no timing or general ABI claim follows.
 
+Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
+with refs at offset8 and path bytes at offset16. The retained legacy control is
+24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
+original counters verify one leaf allocation requesting16+n+1 bytes versus two
+allocations requesting24+n+1, excluding allocator/collector metadata. Both
+original tests retain exact interpreter behavior and closed-handle display.
+Actual binaries, C, flags and both compiled layouts are in history. This is a
+constructor/layout improvement; storage disposal and general performance remain
+separate roadmap work.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
