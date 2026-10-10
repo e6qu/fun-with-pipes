@@ -49,7 +49,8 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 22.82elapsed, lint2.57/5.19s, format0.44/0.83s and all pre/post-commit/root audits
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
-Production CI38054115210 and docs38054115151 are queued. Require all seven
+Production CI38054115210 has ARM regular tests running; five other production
+jobs and docs38054115151 remain queued (checked13:16UTC). Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -84,11 +85,13 @@ accepted. Old revisions are retained remotely; source/probes are unchanged.
 Scoped results51 is publishedf36bacf80bfc9aa8a07b98d3f3ca724763b819ef on
 actual505cfbbf10087a. Four original controls, contract inventory, lint, format
 and all audits pass; unchanged source/probes and old revision are preserved.
-Current independent task52 is counted task handles (`ownership-task-handles`):
-rebase FROM actualbb1e6b94fcfd ONTO published51. Preserve original scheduler,
-scope, cached-result, await-duplicate and failed/private-await omission controls;
-check task handles plus scope/deadline/retained callbacks, ownership units,
-lint, format and all11 docs/audit before retained-revision publication.
+Current independent task52 is counted task handles (`ownership-task-handles`),
+rebased FROM actualbb1e6b94fcfd ONTO published51 at native8cb13e34fe65.
+All five original task-handle/scope/deadline/retained-thunk controls pass20.97CPU/
+42.72elapsed, including all six original handle/result omission controls.
+All21 RC units3.49/7.14s, exact contract inventory0.00/0.13s,
+lint2.45/5.02s and format0.45/0.84s pass. Finish all11 docs/audit before
+retained-revision publication, then prepare queue53 typed channel queues.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -159,7 +162,7 @@ still need their final squash rebases and six exact-head full gates.
 | 49 ownership-task-thunks | 215e0edec0f1 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 50 ownership-task-within | 5cfbbf10087a | 215e0edec0f1 | Three original deadline/retained-thunk controls5.34CPU/10.77elapsed, exact contract inventory3.62/7.53s, lint2.44/4.88s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 51 ownership-task-scope | f36bacf80bfc | 5cfbbf10087a | Four original scope/deadline/retained-thunk controls15.75CPU/31.78elapsed, exact contract inventory3.45/7.06s lint2.48/4.97s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
-| 52 ownership-task-handles | cb32c2cea9bb | bb1e6b94fcfd | Test11.24/23.29s; lint 2.34/4.73s and format 0.44/0.74s pass |
+| 52 ownership-task-handles | 8cb13e34fe65 | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 53 ownership-channel-queues | 69bc96667a52 | cb32c2cea9bb | Test11.45/23.08s; inventory3.40/7.25s; lint 2.43/4.79s and format 0.45/0.87s pass |
 | 54 ownership-library-results | f53cccc88d45 | 69bc96667a52 | Test7.86/17.88s; lint 2.44/4.85s and format 0.34/0.61s pass |
 | 55 ownership-library-inputs | 067d547b3bfd | f53cccc88d45 | Two tests 8.27/18.38s; lint 2.34/4.68s and format 0.34/0.61s pass |
@@ -350,8 +353,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-task-scope-worktree (row51, nativef78efd1),
-with all four original controls15.75CPU/31.78elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-task-handle-worktree (row52, native8cb13e3),
+with all five original controls20.97CPU/42.72elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
