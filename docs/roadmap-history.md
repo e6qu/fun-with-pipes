@@ -12072,3 +12072,388 @@ audit44/106/87 pairs0.44/3.58s pass. Earlier native100000 probe passes0.00/
 0.38s; raw100000 guard stops at1GiB aggregate RSS, with no raised/bypassed limit.
 The smaller raw200 oracle passes0.37/0.74s; full-size raw evidence moves to CI.
 Post-merge guard tests pass0.18/1.36s.
+
+PR105 opens for published row269a21fd6cc844c0960cedd283fd09ab354ee32338
+on actual main1047520b8d5a1b07b07ad1a381c23be75a879470e0a. Retained
+cc297e6 remotely before leased publication. Final audit0.45CPU/3.59elapsed
+passes44/106/87 pairs and complete commit messages. Seven focused tests,
+lint/format and million-step native tail case pass as recorded above. Every
+new exact-head platform gate and roadmap_docs still must pass before squash.
+
+Published row272a2458b93d6c7d0f295cb675b5cfe6eef16a00b1 on actual PR105
+9a21fd6cc844c0960cedd283fd09ab354ee32338 after rebase from old actual0a7203f.
+Compiler/runtime/original call probe unchanged; inherited tail test and strong
+auditor. Twelve tests30.40CPU/61.02elapsed, lint2.35/4.73s, format0.35/0.62s
+and audit0.45/3.59s pass. Retained71c2405 remotely before leased publication.
+Full-size raw debug evidence37997457349 fails with interpreter stack overflow
+at unchanged4GiB budget, exit101,4163152KiB peak RSS,2.80user/1.82system/
+4.63elapsed on Linux x86_64 rustc1.99.0 GCC13.3.0. Other selected checks pass.
+Source-identical81362c76c301d4e7965e2961278c8661d178ff63 changes only evidence
+workflow to build the release interpreter on GitHub and repeat the same raw
+FWP_NO_OPT program. No limits are raised, no oracle assertion is weakened and
+no general performance/reclamation claim follows. Prior5d111b2 retained remotely.
+
+Release raw-tail evidence37997969782 passes at81362c76c301d4e7965e2961278c8661d178ff63
+with identical source and the same full100000-step FWP_NO_OPT=1 oracle.
+Linux x86_64 AMD EPYC7763 (4 assigned vCPUs), rustc1.99.0, GCC13.3.0 and
+standard Rust release profile (debug=false):1.13user/0.95system/2.10elapsed,
+1893164KiB maximum RSS, exit0 and exact `Ok (Box 0)` output. This is capacity
+evidence for this release-host workload, not constant raw-interpreter stack or
+a speedup against the failed debug run. Its peak RSS still prohibits local
+repeat under the1GiB guard. Log/private/tmp/fwp-raw-tail-release-37997969782.log.
+
+Published row283e7ab59e89c32f056a19bec6b327709e242d8393 on actual row27
+2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1. Compiler/runtime/original probes
+are byte-identical to7cfbe03; inherited long-tail test, audit and guard. Ten
+focused runtime/preparation/reuse tests pass27.43CPU/55.06elapsed, lint2.37/
+4.77s, format0.34/0.63s and strong audit0.46/3.69s. Prior7cfbe03 retained
+remotely before leased publication. Final sequential gates still required.
+
+Row29 refreshed78ed19ff401a3e6006d1bf6cff7ef10fbaa18eb8 to4c7d5ba450822f36eda7de8c5b762bf0471620f6 on actual3e7ab59e89c32f056a19bec6b327709e242d8393. Compiler/runtime/original probes are byte-identical; inherited long-tail regression, bounded guard repair and strong handoff audit match the new base. Seven focused map/preparation/reuse tests pass24.26CPU/48.82elapsed, clippy -D warnings2.51/5.05s, format0.44/0.61s and strong44/106/87 audit0.55/4.11s. Retained roadmap/revision-029-78ed19ff401a before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Refreshed runtime-call Linux evidence223416054406a975db1524b5c6866e248df91745 to44f4297f270fd57ab34a20734e4635c65c6d40b2 on current3e7ab59e89c32f056a19bec6b327709e242d8393; CI38000484752 queued/running. Refreshed map evidence3389a9730a8ec5f030b54cbafacbda95ce94529d to79dcc10eb1806d481600d2c7ccd9141b60d7376b on current4c7d5ba450822f36eda7de8c5b762bf0471620f6; CI38000551924 queued/running. Compiler/runtime/tests/scripts/production workflows match each source base exactly. Strong44/106/87 audits pass0.41CPU/3.49elapsed for both. Prior evidence heads retained remotely at roadmap/evidence-runtime-223416054406 and roadmap/evidence-map-3389a9730a8e before exact leased publication. These separate focused runs are not production PR acceptance.
+
+## Archived handoff detail after selection preparation refresh
+
+Review of row28 found that a capture duplicate can trap before the callback
+entry takes its argument prefix. The later row34 correction already protects
+this boundary and partial capture duplication. Its compiler/runtime/test patch
+9f56744 applies cleanly to row28 and is now copied locally into that preparation.
+This moves the existing correction earlier, without changing pipe semantics.
+Eleven focused runtime/call/preparation tests pass29.13CPU/58.52elapsed,
+including the unchanged negative control. Lint2.48/4.99s and format0.35/0.63s
+also pass. Row28 is published at7cfbe030d3de85a256c7d008a0a9eb6fa75ecab3
+on actual71c2405. Prior e06c447 is retained remotely at
+roadmap/revision-028-e06c447336ae. Fresh Linux evidence223416054406a975db1524b5c6866e248df91745 passes
+CI37994225608 and matches published7cfbe03 source exactly. Preserve row34's immutable OLD anchor;
+its implementation and probe are already included in28. Propagation through
+30–34 passes0.82CPU/21.38elapsed; current34 differs from33 only in documents.
+After28 passes full acceptance, skip a duplicate implementation PR at34 while
+retaining its anchor and regression coverage. No new full gate or complete exceptional-ownership claim.
+
+
+The fun-refactor guard is for the other repository. Shared target currently
+belongs to /private/tmp/fwp-map-unwind-worktree after guarded clean0.05/0.37s.
+Row29 published4c7d5ba450822f36eda7de8c5b762bf0471620f6 is rebased from
+actual7cfbe03 onto new actual3e7ab59. Compiler/runtime/original probes match
+previous78ed19f exactly; long-tail test/guard/strong audit are inherited.
+Seven focused map/preparation/reuse tests pass24.26CPU/48.82elapsed; focused
+clippy -D warnings2.51/5.05s, format0.44/0.61s and strong44/106/87 audit
+0.55/4.11s pass. No local workload remains running. Retained old78ed19f at
+roadmap/revision-029-78ed19ff401a before exact leased publication.
+Final rebase from actual3e7ab59 follows row28's accepted squash.
+Shared target subsequently cleaned with absolute root guard0.00CPU/0.14elapsed
+and switched to selection preparation /private/tmp/fwp-selection-unwind-worktree.
+Local unpublished row30c17d4a693b3235b13850890af27561f0029c5142 has actual
+base4c7d5ba, rebased from actual78ed19f. Compiler/runtime/original probes match
+published244dd2a; only inherited guard/audit and long-tail regression differ.
+Focused selection/preparation/reuse tests run in guarded session16557. Record
+results, lint/format/audit and retain old244dd2a before leased publication.
+Published table row30 remains244dd2a/base78ed19f until then.
+Row28 ten focused tests pass27.43CPU/55.06elapsed, lint2.37/4.77s, format0.34/
+0.63s and strong audit0.46/3.69s; published3e7ab59 is on actual2a2458b.
+Row26 final seven tests pass19.40/39.06s, lint2.30/4.73s, format0.35/0.63s
+and strong audit0.45/3.59s. The local rebase70f7b111 is on
+actual main1047520b8d; published row26 is9a21fd6 on7520b8d in PR105. The full-size raw tail probe hit the1GiB RSS limit and was
+stopped; keep it on CI. The smaller raw oracle and native100000-step probe pass.
+Row27 eleven focused tests pass30.85CPU/62.02elapsed, lint2.52/5.06s and
+format0.35/0.63s. Row28 eleven focused tests pass29.13/58.52s, lint2.48/4.99s
+and format0.35/0.63s. Row26 six tests pass18.68/37.65s, lint2.54/5.04s and
+format0.32/0.59s. All used the bounded guard with the named tests and -D warnings.
+Latest recorded disk observation is113625788KiB available and target143120KiB;
+these are historical samples, not current authorization.
+Every workload still samples current limits; observations do not authorize
+bypassing the guard. No local full gate was run. Earlier refusal/recovery
+chronology is in history; stop at limits and move checks to GitHub.
+Latest guarded audit scripts/check-roadmap.py passes all44 tracked Markdown
+link/heading sets,106 immutable queue pairs and tag identities, contiguous order
+and entire commit messages (latest0.38CPU/2.92elapsed). It caught a status update
+that accidentally replaced row112's OLD head; restored OLDedbc5e8d0e62,
+CURRENT762117573367. Immutable tags never moved. The temporary11-doc auditor
+could only check ancestry and did not detect this substitution.
+The portable script and exact-head roadmap_docs workflow merged in PR100.
+Row26 now prepares a stronger shared audit:87 live heads must match the queue
+and their recorded actual bases must be ancestors of those heads. It passes
+44 link sets/106 immutable tags/87 live pairs0.47CPU/3.69elapsed. Isolated stale
+head and stale base controls both fail as expected; restoring correct values
+passes (combined1.19CPU/9.17elapsed). Native compiler/runtime/tests are unchanged
+from source0a7203f. The audit/documentation refresh is published in row26 at
+cc297e6b31c9ea7564c1f196eddb5c06059525ec; it is not yet merged. Prior0a7203f
+is retained remotely at roadmap/revision-026-0a7203f5c559 before publication.
+Latest authoritative root audit uses the prepared stronger checker without
+changing main: `python3 scripts/local-guard.py python3 /private/tmp/fwp-audit-root-with-prepared-checker.py`.
+It passes44 link sets/106 immutable pairs/87 live pairs0.49CPU/3.84elapsed after
+the early protection propagation. After row26 merges, use the shared script
+directly. Run `python3 scripts/local-guard.py python3 scripts/check-roadmap.py`; fetch
+full history, immutable tags and retained PR heads on a fresh clone. Its workflow
+checks the actual PR head rather than GitHub's synthetic merge message. Later
+updates need fresh audit when links, refs or subjects change.
+
+
+Row30 refreshed244dd2a578af002cc7316b6227f423be6bd63d8f to c17d4a693b3235b13850890af27561f0029c5142 on actual4c7d5ba450822f36eda7de8c5b762bf0471620f6. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Seven focused selection/preparation/reuse tests pass24.42CPU/48.98elapsed, clippy -D warnings2.24/4.54s, format0.36/0.76s and strong44/106/87 audit0.42/3.46s. Retained roadmap/revision-030-244dd2a578af remotely before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Row31 refreshed687ae106193bb472e4db399907131a65fa571ff2 to5d411a886b737ff62fb1b0da84373d75539a8257 on actualc17d4a693b3235b13850890af27561f0029c5142. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Seven focused zip/preparation/reuse tests pass24.32CPU/48.75elapsed, clippy -D warnings2.35/4.66s, format0.36/0.75s and strong44/106/87 audit0.42/3.47s. Retained roadmap/revision-031-687ae106193b before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Row32 refreshed270525b5bb9ac18249bda39fc92a0c4782c8612d to a8e662267bbc4d050c2eb544fb1ade65b2dbfb11 on actual5d411a886b737ff62fb1b0da84373d75539a8257. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Eight focused fold/runtime-call/preparation tests pass22.49CPU/45.05elapsed, clippy -D warnings2.37/4.77s, format0.34/0.62s and strong44/106/87 audit0.42/3.36s. Retained roadmap/revision-032-270525b5bb9a before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Row33 refreshedc65514a8e6d4761884f23027240dd3a058935a6e to c37df3b0520c9a6f5b452bd416398cfb7992b119 on actuala8e662267bbc4d050c2eb544fb1ade65b2dbfb11. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Five focused loop/fold/preparation tests pass18.85CPU/37.91elapsed, clippy -D warnings2.24/4.52s, format0.35/0.63s and strong44/106/87 audit0.42/3.46s. Retained roadmap/revision-033-c65514a8e6d4 before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Combined callback cleanup Linux evidence refreshed1ac6dc99fde5f6813659be356f7f89c29b8a27b5 to d9017e310a326a885dd65ccb82b810f0d7eb7564 on current33c37df3b0520c9a6f5b452bd416398cfb7992b119. Compiler/runtime/tests/scripts/production workflows are exactly the source base; stronger base checker retained when old evidence's added predecessor checker conflicted. Strong44/106/87 audit passes0.44CPU/3.49elapsed. Retained roadmap/evidence-preparation-1ac6dc99fde5 before exact leased publication. CI38001360466 queued/running, not acceptance.
+Row34 docs-only preparation refreshed804e6a0cf9f31d75de0fe4b0831037fcd05b4987 to819fd83c48e263784b6d8cca6acb210711e3baeb on actual33c37df3b0520c9a6f5b452bd416398cfb7992b119. Entire compiler/runtime/tests/scripts/production workflows match33, and only three doc files differ. Strong audit passes0.44CPU/3.50elapsed. Retained roadmap/revision-034-804e6a0cf9f3 before exact leased publication. Its code/probe already belongs to earlier28; skip duplicate implementation PR34 after28 passes full acceptance. Immutable OLD anchor unchanged.
+
+Refreshed map evidence79dcc10eb1806d481600d2c7ccd9141b60d7376b passes CI38000551924: focused map/preparation/runtime/call/token/unwind/task/old-reclamation/ownership tests, actual tracing bounded-live-memory, lint, format and strong handoff audit. Exact source base4c7d5ba450822f36eda7de8c5b762bf0471620f6; this focused evidence does not replace each later production PR's full exact-head gates.
+
+Row35 refreshed82f58d851b73e3d00370adff43b1898b0e962e6a to26375deb676eef4f8490b415066c8ad5168ec6a9 on actual819fd83c48e263784b6d8cca6acb210711e3baeb. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Six focused constructor/preparation/reuse tests pass22.36CPU/45.17elapsed; exact ownership-IR constructor transfer unit passes3.39/7.02s; clippy -D warnings2.28/4.73s, format0.35/0.74s and strong44/106/87 audit0.44/3.62s. Retained roadmap/revision-035-82f58d851b73 before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Refreshed runtime-call evidence44f4297f270fd57ab34a20734e4635c65c6d40b2 passes CI38000484752: capture preparation/runtime/call/token/unwind/task/old-reclamation/ownership tests, actual tracing bounded-live-memory, lint, format and strong handoff audit. Exact source base3e7ab59e89c32f056a19bec6b327709e242d8393; focused evidence does not replace later full exact-head production gates.
+
+Row36 refreshed6032ecffcb7d8c1e663cd18bc73657bb77eae235 to928c619289bd205114bd7b4dd81c4e716a4e29b8 on actual26375deb676eef4f8490b415066c8ad5168ec6a9. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Three focused worker-boxing/constructor/preparation tests pass15.44CPU/31.12elapsed, clippy -D warnings2.40/4.94s, format0.35/0.62s and strong44/106/87 audit0.44/3.58s. Retained roadmap/revision-036-6032ecffcb7d before exact leased publication; final sequential full gates remain required.
+Combined callback cleanup evidence d9017e310a326a885dd65ccb82b810f0d7eb7564 passes CI38001360466 on source33c37df3b0520c9a6f5b452bd416398cfb7992b119: map/selection/zip/fold/loop/preparation/runtime-call/compiler-call/token/unwind/task/old-reclamation/ownership tests, actual tracing, lint, format and strong audit. Focused evidence does not replace sequential full PR acceptance.
+
+## Archived handoff before reuse-token merge
+
+## Main and next delivery
+
+Main is `7520b8d5a1b07b07ad1a381c23be75a879470e0a` (#104).
+All six production jobs in CI37991460642 and roadmap_docs CI37991460672
+pass at `925daae1a95e3d68f4d622b72d8f642aa5a4346b`. Explicit match-head
+squash at 2026-10-09T21:53:51Z has the entire one-line message:
+`Pause guarded compiler workloads while sampling target size` (59 characters).
+Its complete tree `39c93dd86e37638896f5df08c6392ebe1e50bcd1` matches the
+accepted PR head. Raw message verification passes. Duplicate post-merge main
+CI37996159178 is cancelled only after all accepted gates and tree parity.
+All 11 current authoritative/modified docs were backed up and hashed in
+/private/tmp/fwp-main-docs-pre104, then restored byte-for-byte after main FF.
+
+#74–#103 deliver native macOS and selected ownership through typed collections,
+old-storage reclamation, task result/deadline boundaries and registered runtime
+unwind cleanup. #104 fixes guard target sampling without changing limits.
+Phase1 is done; phase2 remains incomplete; phases3–6 are pending. Tracing
+remains the fallback. [PR105](https://github.com/e6qu/fun-with-pipes/pull/105)
+is the only open production PR, head `9a21fd6cc844c0960cedd283fd09ab354ee32338`,
+actual base main104 `7520b8d5a1b07b07ad1a381c23be75a879470e0a`.
+Fresh production CI37997170222 has passed benchmarks and all four ARM/Intel
+regular/GC macOS jobs; Linux remains running;
+roadmap_docs37997170102 passes at the exact PR head.
+Require all seven exact-head checks before squash with
+`Protect compiler reuse tokens through transfer and unwind` and empty body.
+
+Row26 final rebase from actual3bb3426 gives70f7b111 on7520b8d, with all 11
+current docs preserved. Compiler/runtime/auditor match previouscc297e6 exactly;
+the final commit adds the long-tail regression and current handoff. Seven
+focused ownership/unwind tests pass19.40CPU/39.06elapsed, lint2.30/4.73s,
+format0.35/0.63s and strong44/106/87 audit0.45/3.59s pass. Priorcc297e6 is
+retained remotely at roadmap/revision-026-cc297e6b31c9 before leased publication.
+Row27 is published at2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1 on actual
+current PR1059a21fd6, rebased from actual old0a7203f. Compiler/runtime/original
+call-liveness probe are byte-identical to71c2405; the new tail probe and strong
+audit are inherited. Twelve tests pass30.40CPU/61.02elapsed, lint2.35/4.73s,
+format0.35/0.62s and strong audit0.45/3.59s. Retained old71c2405 remotely at
+roadmap/revision-027-71c2405dd0e0 before leased publication. Open its PR only
+after105 merges, with final rebase from new actual9a21fd6 onto the actual squash.
+All OLD anchors stay fixed.
+
+The new million-step native tail regression passes atO1/O2 with GCoff/on
+against a200-step raw oracle. Native100000 probe passes0.00CPU/0.38elapsed.
+Raw100000 was stopped at1GiB aggregate RSS; do not repeat it locally or raise
+limits. Full-size raw evidence37997457349 at5d111b2 fails only its debug interpreter
+probe: stack overflow at the existing4GiB budget, exit101, peak4163152KiB,
+2.80user/1.82system/4.63elapsed. Other selected ownership/tracing/lint/docs
+checks pass. Do not raise the stack or local limits. Source-identical81362c7
+builds a release interpreter on the GitHub runner in CI37997969782, which
+passes the same FWP_NO_OPT=1 program/input/output oracle and all selected
+ownership/tracing/lint/docs checks. Debug stack limitation remains documented;
+Release probe passes1.13user/0.95system/2.10elapsed with1893164KiB peak
+RSS on an AMD EPYC7763 runner with4 vCPUs, rustc1.99.0, GCC13.3.0, standard
+Rust release profile (debug=false), FWP_NO_OPT=1. Saved log:
+/private/tmp/fwp-raw-tail-release-37997969782.log. This proves the result within
+the release runner budget, not constant interpreter stack or a speedup. Peak
+RSS still exceeds the local1GiB limit; do not repeat the full-size probe locally. The smaller raw oracle
+passes0.37/0.74s. Source syntax errors in the first probe draft were corrected.
+
+Later preparations inherit both CLI early-stdin-close and tracing-fixture
+repairs on final rebases. Row112's formatting failure is repaired and focused
+Linux/native checks pass. OLD heads remain retained by immutable tags; the
+stronger tag-identity audit repairs the row112 status-update error. Detailed
+failed/superseded logs and old handoffs remain in history. Current evidence
+and resource limits are below.
+
+
+PR105 accepted9a21fd6cc844c0960cedd283fd09ab354ee32338 passes all six jobs CI37997170222 and roadmap_docs37997170102. Explicit squash at2026-10-09T22:55:27Z yields2ef5510154cd52f9f4e94a4a5a2778a20e43ec01. Entire raw subject is57characters, no body/trailers/attribution: Protect compiler reuse tokens through transfer and unwind. First manual assertion incorrectly expected a terminal newline; GitHub raw message has none, and corrected exact subject check passes. Complete accepted/squash tree7213b49ea3b8b983c5f8dbc6f2ad9c75504106c9 matches. Duplicate main38001796693 cancelled after accepted gates and parity; main docs38001796557 passes. All11 docs backup /private/tmp/fwp-main-docs-pre105 with sha256.json verified before clearing root docs, ff-only main7520b8d to2ef5510, and byte-for-byte restoration. Next row27 final rebase FROMactual9a21fd6 ontoactual2ef5510 before focused checks/publication/PR.
+
+## Archived focused preparation checks before call-liveness delivery
+
+The fun-refactor guard is for the other repository. Shared target now belongs
+to /private/tmp/fwp-worker-boxing-worktree after absolute-root guarded package
+clean0.07CPU/0.38elapsed. Published row315d411a886b737ff62fb1b0da84373d75539a8257 has actual basec17d4a6,
+rebased from actual244dd2a. Compiler/runtime/original probes match687ae10;
+only inherited guard/audit and long-tail regression differ. Seven focused
+zip/preparation/reuse tests pass24.32CPU/48.75elapsed; clippy -D warnings
+2.35/4.66s, format0.36/0.75s and strong44/106/87 audit0.42/3.47s pass.
+Retained roadmap/revision-031-687ae106193b before exact leased publication.
+Final rebase from actualc17d4a6 follows row30's accepted squash.
+Published row32a8e662267bbc4d050c2eb544fb1ade65b2dbfb11 has actual base5d411a8,
+rebased from actual687ae10. Compiler/runtime/original probes match270525b;
+only inherited guard/audit and long-tail regression differ. Eight focused
+fold/runtime-call/preparation tests pass22.49CPU/45.05elapsed; clippy -D warnings
+2.37/4.77s, format0.34/0.62s and strong44/106/87 audit0.42/3.36s pass.
+Retained roadmap/revision-032-270525b5bb9a before exact leased publication.
+Final rebase from actual5d411a8 follows row31's accepted squash.
+Published row33c37df3b0520c9a6f5b452bd416398cfb7992b119 has actual basea8e6622,
+rebased from actual270525b. Compiler/runtime/original probes matchc65514a;
+only inherited guard/audit and long-tail regression differ. Five focused
+loop/fold/preparation tests pass18.85CPU/37.91elapsed; clippy -D warnings
+2.24/4.52s, format0.35/0.63s and strong44/106/87 audit0.42/3.46s pass.
+Retained roadmap/revision-033-c65514a8e6d4 before exact leased publication.
+Final rebase from actuala8e6622 follows row32's accepted squash.
+Published row3526375deb676eef4f8490b415066c8ad5168ec6a9 has actual base819fd83,
+rebased from actual9f56744. Compiler/runtime/original probes match82f58d8;
+only inherited guard/audit and long-tail regression differ. Six focused
+constructor/preparation/reuse tests pass22.36CPU/45.17elapsed, exact ownership-IR
+constructor unit3.39/7.02s, lint2.28/4.73s, format0.35/0.74s and strong44/106/87
+audit0.44/3.62s. Retained roadmap/revision-035-82f58d851b73 before exact leased
+publication. Final sequential rebase must
+use the recorded actual base819fd83 after earlier source deliveries merge;
+row34 duplicates already-covered code and is skipped only after28 acceptance.
+Published row36928c619289bd205114bd7b4dd81c4e716a4e29b8 has actual base26375de,
+rebased from actual82f58d8. Compiler/runtime/original probes match6032ecf;
+only inherited guard/audit and long-tail regression differ. Three focused
+worker-boxing/constructor/preparation tests pass15.44CPU/31.12elapsed; lint
+2.40/4.94s, format0.35/0.62s and strong44/106/87 audit0.44/3.58s pass.
+Retained roadmap/revision-036-6032ecffcb7d before exact leased publication.
+No local workload remains running. Final rebase from actual26375de follows
+row35's accepted squash.
+Published row30c17d4a693b3235b13850890af27561f0029c5142 has actual base4c7d5ba,
+rebased from actual78ed19f. Compiler/runtime/original probes match244dd2a;
+only inherited guard/audit and long-tail regression differ. Seven focused
+selection/preparation/reuse tests pass24.42CPU/48.98elapsed; clippy -D warnings
+2.24/4.54s, format0.36/0.76s and strong44/106/87 audit0.42/3.46s pass.
+Retained roadmap/revision-030-244dd2a578af before exact leased publication.
+Final rebase from actual4c7d5ba follows row29's accepted squash.
+
+The preparation table gives current focused results. Earlier package checks,
+disk observations, refusals and superseded revisions are archived in history.
+Every workload samples current limits; no historical observation authorizes
+bypassing the guard. Full-size raw tail evidence remains on GitHub because it
+exceeds local RSS. No local full gate was run.
+
+Row27 final rebase from actual9a21fd6cc844c0960cedd283fd09ab354ee32338 onto actual main1052ef5510154cd52f9f4e94a4a5a2778a20e43ec01 gives source3e82eca990cec698471b87252a75581bd17e7718. Compiler/runtime/tests/scripts/production workflows match previously published2a2458b exactly. Twelve focused call/token/unwind tests pass30.59CPU/61.49elapsed; eleven ownership-IR module tests pass3.27/6.84s; lint2.39/4.79s, format0.34/0.60s and strong44/106/86 audit0.43/3.49s pass. All11 current docs copied into the final PR; record final published head after documentation commit. Main105 complete-tree/raw-subject verification passes, and duplicate main run is cancelled.
+
+Published final row27 at9c1b5a861b156a48d9e4e55b96c336fc6e852e18 on actual accepted main1052ef5510154cd52f9f4e94a4a5a2778a20e43ec01 after retaining roadmap/revision-027-2a2458b93d6c remotely. Opened only production PR106, Protect live compiler owners across calls and cancellation. Final committed-head audit44/106/86 passes0.41CPU/3.44elapsed; compiler/runtime/tests/scripts/production workflows unchanged from2a2458b. Fresh exact-head productionCI38002299110 and docs38002299186 queued/running. Require all seven passes before explicit match-head squash, one-line subject and empty body. Later28 actual base2a2458b must be recorded after refreshing to9c1b5a8; final-rebase FROMthatactualnewbase onto106's accepted squash after merge.
+
+PR106-chain preparation refresh row28: 3e7ab59e89c32f056a19bec6b327709e242d8393 tofbb3bc84847b410219a4d4f58e1f4e9ba1c79a60 on actual9c1b5a861b156a48d9e4e55b96c336fc6e852e18, rebased FROMactual2a2458b93d6c7d0f295cb675b5cfe6eef16a00b1. Retained roadmap/revision-028-3e7ab59e89c3 before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row29: 4c7d5ba450822f36eda7de8c5b762bf0471620f6 to4147e018d2e0ef0ec5b19166cc596fbf56f4a6a5 on actualfbb3bc84847b410219a4d4f58e1f4e9ba1c79a60, rebased FROMactual3e7ab59e89c32f056a19bec6b327709e242d8393. Retained roadmap/revision-029-4c7d5ba45082 before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row30: c17d4a693b3235b13850890af27561f0029c5142 toc0afce27ff2e14ee54a65f9e04949c652226e539 on actual4147e018d2e0ef0ec5b19166cc596fbf56f4a6a5, rebased FROMactual4c7d5ba450822f36eda7de8c5b762bf0471620f6. Retained roadmap/revision-030-c17d4a693b32 before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row31: 5d411a886b737ff62fb1b0da84373d75539a8257 toeadec76e75e7566d4eb33d4dc61f23899e0fe2b4 on actualc0afce27ff2e14ee54a65f9e04949c652226e539, rebased FROMactualc17d4a693b3235b13850890af27561f0029c5142. Retained roadmap/revision-031-5d411a886b73 before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row32: a8e662267bbc4d050c2eb544fb1ade65b2dbfb11 to1523161a73148decf9bdf4420bd2197dd2ef0b41 on actualeadec76e75e7566d4eb33d4dc61f23899e0fe2b4, rebased FROMactual5d411a886b737ff62fb1b0da84373d75539a8257. Retained roadmap/revision-032-a8e662267bbc before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row33: c37df3b0520c9a6f5b452bd416398cfb7992b119 toce5a51c330f3a2fee89e48f746b995c39f3ef099 on actual1523161a73148decf9bdf4420bd2197dd2ef0b41, rebased FROMactuala8e662267bbc4d050c2eb544fb1ade65b2dbfb11. Retained roadmap/revision-033-c37df3b0520c before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row34: 819fd83c48e263784b6d8cca6acb210711e3baeb todcf18f01c2fbf005e47ab2736160e4657bd83857 on actualce5a51c330f3a2fee89e48f746b995c39f3ef099, rebased FROMactualc37df3b0520c9a6f5b452bd416398cfb7992b119. Retained roadmap/revision-034-819fd83c48e2 before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row35: 26375deb676eef4f8490b415066c8ad5168ec6a9 to432a3332c4f7f7094b50228748946aefef816116 on actualdcf18f01c2fbf005e47ab2736160e4657bd83857, rebased FROMactual819fd83c48e263784b6d8cca6acb210711e3baeb. Retained roadmap/revision-035-26375deb676e before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row36: 928c619289bd205114bd7b4dd81c4e716a4e29b8 to0584ab3ac77b29945b1eb915ff97cdb20543b86d on actual432a3332c4f7f7094b50228748946aefef816116, rebased FROMactual26375deb676eef4f8490b415066c8ad5168ec6a9. Retained roadmap/revision-036-928c619289bd before exact leased publication. Entire tracked source, tests, scripts, production/evidence workflows and assets are byte-identical to the prior head; only authoritative docs differ. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+Serial source-identical refresh28–36 completed under absolute-root guard9.24CPU/103.21elapsed, exit0. Journal /private/tmp/fwp-refresh-after-pr106-journal.json records every old head/actual old base/new base/new head/retention tag/publication stage. Entire non-doc tracked files remain byte-identical; no local Rust tests were repeated or new full acceptance claimed. Root handoff audit passes after every publication. Helper /private/tmp/fwp-refresh-preparations-after-pr106.py is completed and refuses an existing journal; inspect actual refs instead of rerunning. Shared compiled target still belongs to final-tested call-liveness source.
+
+Row37 refreshed3bd34dafb62f4aab253549d2e6d6b863be09f2b6 to7de346c56ec4e7a827edb88fa0cc49604ac530d6 on actual0584ab3ac77b29945b1eb915ff97cdb20543b86d, FROMactual6032ecffcb7d8c1e663cd18bc73657bb77eae235. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Three focused worker-preparation/worker-boxing/constructor tests pass15.91CPU/31.88elapsed; lint2.33/4.78s, format0.35/0.63s and strong44/106/86 audit0.43/3.50s pass. Retained roadmap/revision-037-3bd34dafb62f before exact leased publication. Final sequential squash rebase and all exact-head production gates remain required.
+
+Row38 refreshed032a764c1d3364a67cc0f8fa0beb1a54ef85c0b6 to61c5f8e91cc5a17c9bc16b739ca9d7bff17c7a32 on actual7de346c56ec4e7a827edb88fa0cc49604ac530d6, FROMactual3bd34dafb62f4aab253549d2e6d6b863be09f2b6. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Four focused loop-preparation/loop-unwind/worker-preparation tests pass16.61CPU/33.35elapsed; lint2.26/4.59s, format0.34/0.62s and strong44/106/86 audit0.42/3.49s pass. Retained roadmap/revision-038-032a764c1d33 before exact leased publication; final sequential full gates remain required.
+
+Row39 refreshed5a72ba8763e4bd1edb06ac22c814f15c23ea49a0 to a5ac41b405dd62b6dcad65bc012f4621efa0e381 on actual61c5f8e91cc5a17c9bc16b739ca9d7bff17c7a32, FROMactual032a764c1d3364a67cc0f8fa0beb1a54ef85c0b6. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Three focused retain/loop/worker preparation tests pass16.18CPU/32.57elapsed; exact retain-liveness unit3.33/7.00s; lint2.40/4.91s, format0.35/0.75s and strong44/106/86 audit0.42/3.47s. Retained roadmap/revision-039-5a72ba8763e4 before exact leased publication; final sequential full gates remain required. Live resource handoff now keeps only current target and latest check instead of accumulating competing old next actions.
+
+Row40 refresheddd6c405c77ebf8e5b19b6d4727fa784677fd8021 to5376d4a1f4ed3e36ce6e2786b496cc52e4bd0c3c on actuala5ac41b405dd62b6dcad65bc012f4621efa0e381, FROMactual5a72ba8763e4bd1edb06ac22c814f15c23ea49a0. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Three focused constructor-type/constructor-unwind/retain-unwind tests pass16.23CPU/32.69elapsed; fifteen ownership-IR tests including both new context cases pass3.32/6.89s; lint2.36/4.59s, format0.35/0.75s and strong44/106/86 audit0.42/3.46s pass. Retained roadmap/revision-040-dd6c405c77eb before exact leased publication; final sequential full gates remain required.
+
+Row41 refreshed67e37717ecf24fd5ce595e50084af805a9037ffc to9033d9f1072ebdb932e085d9dc598ab3b506e53d on actual5376d4a1f4ed3e36ce6e2786b496cc52e4bd0c3c, FROMactualdd6c405c77ebf8e5b19b6d4727fa784677fd8021. Compiler/runtime/original probes are byte-identical; only inherited guard/audit and long-tail regression differ. Three focused variant-conversion/constructor-type/retain-unwind tests pass16.62CPU/33.51elapsed; exact conversion ownership-IR unit3.23/6.74s; lint2.32/4.72s, format0.35/0.62s and strong44/106/86 audit0.42/3.46s pass. Retained roadmap/revision-041-67e37717ecf2 before exact leased publication; final sequential full gates remain required.
+
+Refreshed combined constructor/loop/variant Linux evidence3a9fcb512a37a745e65629b29b15e1d06ec0a992 toedabbc24e57d71eb5e8253f25f1c1697322da56a on current row419033d9f1072ebdb932e085d9dc598ab3b506e53d. Entire compiler/runtime/tests/scripts/production workflows match source base exactly; stronger base checker retained over historical predecessor add/add conflict. Strong44/106/86 audit passes0.40CPU/3.37elapsed. Retained roadmap/evidence-conversion-3a9fcb512a37 before exact leased publication. CI38004068610 running; all selected ownership/tracing and five exact IR units remain asserted. No new full production acceptance claimed.
+
+PR106-chain preparation refresh row42: 4ea62b69a2c4ee9f1fa142485c67458e5d80120f to00b9d0901485276b8c5aae60dd65f3d154e2b39b on actual9033d9f1072ebdb932e085d9dc598ab3b506e53d, rebased FROMactual67e37717ecf24fd5ce595e50084af805a9037ffc. Retained roadmap/revision-042-4ea62b69a2c4 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row43: ffbbcf9d5119aac6836b4b69784cdc6051b3135f to3df2c9d860596dd4051907a58db87e922b2efac2 on actual00b9d0901485276b8c5aae60dd65f3d154e2b39b, rebased FROMactual4ea62b69a2c4ee9f1fa142485c67458e5d80120f. Retained roadmap/revision-043-ffbbcf9d5119 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row44: b31400d03ac742fe146e89aadc8550b882612e7e to8ebfe6f5d701dc45dc7fc1afec7cd8bab279034b on actual3df2c9d860596dd4051907a58db87e922b2efac2, rebased FROMactualffbbcf9d5119aac6836b4b69784cdc6051b3135f. Retained roadmap/revision-044-b31400d03ac7 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row45: 0b00524a0a03f45fd417604c8eddcb88f4d4bc87 toe73b5b8e7ac74c62ad5b8c94f93316ea114f2cf0 on actual8ebfe6f5d701dc45dc7fc1afec7cd8bab279034b, rebased FROMactualb31400d03ac742fe146e89aadc8550b882612e7e. Retained roadmap/revision-045-0b00524a0a03 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row46: f2262f94ada45b65276df47db686933a959698e4 toae8933d991cbb6107396c9e813c497d79e351e32 on actuale73b5b8e7ac74c62ad5b8c94f93316ea114f2cf0, rebased FROMactual0b00524a0a03f45fd417604c8eddcb88f4d4bc87. Retained roadmap/revision-046-f2262f94ada4 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row47: fcfa8fb2d29681f838544cbc759b1a301e8227cc to4f75498ad664dd1d84028562bbfb05ebafb001e8 on actualae8933d991cbb6107396c9e813c497d79e351e32, rebased FROMactualf2262f94ada45b65276df47db686933a959698e4. Retained roadmap/revision-047-fcfa8fb2d296 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row48: ece7166b7a7982d941913b27f7e837ab84fe5b48 to3b142abc5f93a52c9116fa1a56555c43c17fe29e on actual4f75498ad664dd1d84028562bbfb05ebafb001e8, rebased FROMactualfcfa8fb2d29681f838544cbc759b1a301e8227cc. Retained roadmap/revision-048-ece7166b7a79 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row49: ec9a4133a2c19a189625a53f00a23b4966f6ad4f to4ab6648272441c6ef9d8612757bcb5c762035185 on actual3b142abc5f93a52c9116fa1a56555c43c17fe29e, rebased FROMactualece7166b7a7982d941913b27f7e837ab84fe5b48. Retained roadmap/revision-049-ec9a4133a2c1 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+Refreshed conversion evidenceedabbc24e57d71eb5e8253f25f1c1697322da56a passes CI38004068610 on exact source419033d9f1072ebdb932e085d9dc598ab3b506e53d. All selected constructor/worker/loop/variant and earlier ownership tests, inherited long-tail regression, actual tracing, lint, format, strong audit and five exact IR units pass. Focused evidence does not replace full sequential PR acceptance.
+Preparation42–49 refresh first stopped0.09CPU/1.14elapsed on the strict source parity gate: old42 lacked the merged25-line roadmap.yml. Reviewed the added workflow against accepted base9033d9f and verified exact byte parity; allowed only that specific inherited workflow, keeping native compiler/runtime and old-test source checks strict. Checked journal resume retained both original row42 commits. Successful refresh8.25CPU/90.92elapsed, exit0, with all retention tags pushed before exact leases and every root handoff audited. Journal /private/tmp/fwp-refresh-rows-42-49-journal.json is complete. Helper now refuses completed journals and verifies already-published entries when resuming a partial journal. No new full gate or rerun of unchanged source checks claimed.
+
+PR106-chain preparation refresh row50: 1b5fb056fa00d181ca7b03a436dee354169c68ab to91b625c60cb9c2c303a55bcf71480b68c8a68e18 on actual4ab6648272441c6ef9d8612757bcb5c762035185, rebased FROMactualec9a4133a2c19a189625a53f00a23b4966f6ad4f. Retained roadmap/revision-050-1b5fb056fa00 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row51: 245a0a24370ef7bcbb77009861631ebbd7deb65e to935554ad52c1c64d9de2a37fc34802aba6fb5e29 on actual91b625c60cb9c2c303a55bcf71480b68c8a68e18, rebased FROMactual1b5fb056fa00d181ca7b03a436dee354169c68ab. Retained roadmap/revision-051-245a0a24370e before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row52: fe8ed51eb078658eda0ae4f490fe87b47150b1e2 to8eab3e41f8ba6b30b4827f29545fdf91994d55ec on actual935554ad52c1c64d9de2a37fc34802aba6fb5e29, rebased FROMactual245a0a24370ef7bcbb77009861631ebbd7deb65e. Retained roadmap/revision-052-fe8ed51eb078 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row53: a30c1829d0d0eed5b0ba8da81e46ceab8a1f357d to40252d18e97e33f1f64748654fc68f91900391c4 on actual8eab3e41f8ba6b30b4827f29545fdf91994d55ec, rebased FROMactualfe8ed51eb078658eda0ae4f490fe87b47150b1e2. Retained roadmap/revision-053-a30c1829d0d0 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row54: f4d3784f4657f2bc1d6fe159f5c130dcf0e14d7c to9d87a377436375925f64c8c58e9265d4bb3c4cf4 on actual40252d18e97e33f1f64748654fc68f91900391c4, rebased FROMactuala30c1829d0d0eed5b0ba8da81e46ceab8a1f357d. Retained roadmap/revision-054-f4d3784f4657 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row55: 625ac7793f8467ce03acaf9258df6c61ab23b823 to825dfbfeb23f6a51cc48a1a67a479d5774a25e0d on actual9d87a377436375925f64c8c58e9265d4bb3c4cf4, rebased FROMactualf4d3784f4657f2bc1d6fe159f5c130dcf0e14d7c. Retained roadmap/revision-055-625ac7793f84 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row56: ac6de597fddcecfe5b548b30213725e897ce1454 toac74568b01138284b93f046eef7b6cbfcf4ee92d on actual825dfbfeb23f6a51cc48a1a67a479d5774a25e0d, rebased FROMactual625ac7793f8467ce03acaf9258df6c61ab23b823. Retained roadmap/revision-056-ac6de597fddc before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row57: 4ae80b641da159e2ef059e7c70b682b46a156173 to47992a27c19369e8506787443b26322d84ecff87 on actualac74568b01138284b93f046eef7b6cbfcf4ee92d, rebased FROMactualac6de597fddcecfe5b548b30213725e897ce1454. Retained roadmap/revision-057-4ae80b641da1 before exact leased publication. Native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Only authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused source checks remain evidence for unchanged bytes; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+Rows50–57 preparation refresh completes8.27CPU/92.49elapsed, exit0, preserving native compiler/runtime/old tests; exact merged guard/auditor/docs workflow/tail regression inherited. Every previous head retained before exact leased publication; root audited after every step. Journal /private/tmp/fwp-refresh-rows-50-57-journal.json complete.
+PR1069c1b5a8 production38002299110 regular ARM macOS job114062980966 fails allocation assertions in tests/reuse.rs and all four tests/stack.rs cases, while program outputs match. Reuse45.8MiB copied/30.5MiB reused; shapes61/30.5MiB, twice137.3/91.6MiB, wide366.2MiB, digits115.9/91.6MiB. Old head cannot merge despite passing GC/bench/docs. gh run --log-failed refuses incomplete full-run logs; gh api --allow-escape-sequences actions/jobs/114062980966/logs saves completed job data, stripped clean log /private/tmp/fwp-pr106-arm-job.clean.log. Diagnosis: binding the final consumed counted argument hides stack/worker/flattened-loop shapes. Precise repair keeps earlier counted arguments bound across later evaluation and leaves the final consumed argument inline; unchanged four stack allocation checks now pass10.34CPU/20.95elapsed. Patch /private/tmp/fwp-call-liveness-final-argument-repair.patch. No thresholds or test assertions changed. Finish reuse and ownership checks, publish and require all seven fresh exact-head gates; propagate the exact repair into later preparations.
+
+PR106 allocation repair validation: the initial final-consumed-argument inline
+change restores all four unchanged stack allocation gates and record reuse,
+but fails rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls
+(10/11 pass; 3.28 CPU / 6.90 elapsed seconds) and the corresponding native
+later-argument-failure cleanup probe (4/5 pass; 9.54 / 19.15 seconds). It is
+not published or acceptance. The refined lowering binds the final computation
+when earlier arguments require pending owners; its IR module passes all11
+(3.19 / 6.69 seconds). Native ownership and allocation checks are rerun.
+
+Pre-repair PR106 publication and preparation handoff:
+
+Final rebase from actual9a21fd6 gives source3e82eca on accepted squash2ef5510;
+the final docs commit gives9c1b5a8. Compiler/runtime/tests/scripts/production
+workflows match prior2a2458b exactly. Twelve focused integration tests pass
+30.59CPU/61.49elapsed; eleven ownership-IR tests3.27/6.84s, lint2.39/4.79s,
+format0.34/0.60s and final strong44/106/86 audit0.41/3.44s pass. All11 live docs
+are copied into the PR. Retained roadmap/revision-027-2a2458b93d6c before
+exact leased publication. Earlier preparation evidence stays in history.
+Row28 preparation is now fbb3bc84847b410219a4d4f58e1f4e9ba1c79a60 on actual
+PR1069c1b5a8, rebased FROMactual2a2458b. Compiler/runtime/tests/scripts/workflows
+match earlier3e7ab59 exactly. After106 merges, final-rebase FROMnewactual9c1b5a8
+onto its squash, run focused checks and open28's PR only then. Rows29–36 also
+refresh serially onto this chain with all non-doc bytes unchanged; their table
+records actual bases. Guarded refresh passes9.24CPU/103.21elapsed, preserving
+limits. Durable journal /private/tmp/fwp-refresh-after-pr106-journal.json records
+all9 publications and audits. Do not rerun the completed helper blindly.
+
+PR106 allocation repair published as7a550b724047a6080e8c1b80eb9383ab8c7e3124, actual base2ef5510154cd52f9f4e94a4a5a2778a20e43ec01. Retained failed9c1b5a861b156a48d9e4e55b96c336fc6e852e18 remotely under revision-027-9c1b5a861b15. Fresh full CI38006009928 and roadmap_docs38006009934 launch; superseded incomplete CI38002299110 is cancelled afterward. Final12 IR checks3.17CPU/6.64elapsed,16 integration/allocation checks34.14/68.60s, exact record reuse1.32/2.83s, focused lint2.26/4.71s, final format0.36/0.75s and strong44/106/86 audit0.43/3.48s pass. Initial format check failed whitespace only; rustfmt fixes it. Existing allocation thresholds and runtime probes unchanged; new duplicate-owner IR regression added. Fresh full exact-head acceptance remains required.
+
+PR106-chain preparation refresh row28: fbb3bc84847b410219a4d4f58e1f4e9ba1c79a60 to2ec80614a045f855966d7439c7dc36f87dedd495 on actual7a550b724047a6080e8c1b80eb9383ab8c7e3124, rebased FROMactual9c1b5a861b156a48d9e4e55b96c336fc6e852e18. Retained roadmap/revision-028-fbb3bc84847b before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row29: 4147e018d2e0ef0ec5b19166cc596fbf56f4a6a5 tob8633382f4a6e2caa84c35f75033ad5a59153cb1 on actual2ec80614a045f855966d7439c7dc36f87dedd495, rebased FROMactualfbb3bc84847b410219a4d4f58e1f4e9ba1c79a60. Retained roadmap/revision-029-4147e018d2e0 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row30: c0afce27ff2e14ee54a65f9e04949c652226e539 toa17f240c934107c5ddd36cc2ee9e021f3c3b0334 on actualb8633382f4a6e2caa84c35f75033ad5a59153cb1, rebased FROMactual4147e018d2e0ef0ec5b19166cc596fbf56f4a6a5. Retained roadmap/revision-030-c0afce27ff2e before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row31: eadec76e75e7566d4eb33d4dc61f23899e0fe2b4 to9ee50f37c5b932cb26a1386319756e6bb4dd330e on actuala17f240c934107c5ddd36cc2ee9e021f3c3b0334, rebased FROMactualc0afce27ff2e14ee54a65f9e04949c652226e539. Retained roadmap/revision-031-eadec76e75e7 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row32: 1523161a73148decf9bdf4420bd2197dd2ef0b41 to952b906059c6bf06fc3c49585d7d61a6fe3ea0ee on actual9ee50f37c5b932cb26a1386319756e6bb4dd330e, rebased FROMactualeadec76e75e7566d4eb33d4dc61f23899e0fe2b4. Retained roadmap/revision-032-1523161a7314 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row33: ce5a51c330f3a2fee89e48f746b995c39f3ef099 to09892c4d61ad51935b2d0d79252f185f3dc8f4c7 on actual952b906059c6bf06fc3c49585d7d61a6fe3ea0ee, rebased FROMactual1523161a73148decf9bdf4420bd2197dd2ef0b41. Retained roadmap/revision-033-ce5a51c330f3 before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+PR106-chain preparation refresh row34: dcf18f01c2fbf005e47ab2736160e4657bd83857 to926eb241633d8bdf2dc628797a858906d40774e0 on actual09892c4d61ad51935b2d0d79252f185f3dc8f4c7, rebased FROMactualce5a51c330f3a2fee89e48f746b995c39f3ef099. Retained roadmap/revision-034-dcf18f01c2fb before exact leased publication. Compiler ownership lowering inherits the exact verified PR106 final-argument repair, including its duplicate-owner regression. All other native compiler/runtime, original probes, production/evidence workflows and assets are byte-identical to the prior head. Authoritative docs and the exact merged guard/auditor/docs workflow/new tail regression are inherited; inherited files match the new source base byte-for-byte. Existing focused checks predate the ownership repair; fresh scoped runner evidence and final full gates remain required; no tests rerun or new full gate claimed. Strong handoff audit passes before publication. Final squash-base rebase and fresh full exact-head PR gates remain required.
+
+After publishing7a550b7, final-scalar pending-owner control fails (actual owners1, expected2),3.38CPU/7.16elapsed. Repair extends pending-owner protection to uncounted final computations. Expanded native fixture initially used unknown name len (9.07/18.09s); corrected to the existing string.length primitive. No assertions weakened. Refresh28–34 publishes the exact first repair with strict parity; row35 stops on adjacent constructor/duplicate-test source insertion conflict at /private/tmp/fwp-constructor-unwind-worktree. Guard7.19CPU/81.00elapsed exits1 safely. Journal /private/tmp/fwp-final-argument-refresh-rows-28-35-journal.json preserves the seven publications and paused35 actualbase926eb241633d. The root table contains all published actual heads/bases. Further repair requires fresh exact-head gates before merge.
+
+Complete PR106 repair passes the expanded native later-argument-failure probe (counted/scalar variants),4.19CPU/8.64elapsed. Final serial bounded verification through /private/tmp/fwp-verify-final-call-repair.py passes43.85CPU/87.62elapsed:16 integration/allocation tests73.07elapsed;13 IR tests6.81; exact record reuse2.60; focused lint4.46; format0.57. Scalar computation stays uncounted but runs before pending counted arguments transfer. Existing allocation assertions and native failure controls unchanged. Superseded row35 conflicted rebase is aborted back to recorded432a333 before fresh propagation; no published/native source changes lost.

@@ -22,7 +22,8 @@
 //! Only locals whose type may hold a pointer take part: integers, floats,
 //! `Bool`, `()` and other enumerations are never counted.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use crate::ir::*;
 
@@ -386,9 +387,11 @@ impl Pass<'_> {
         let mut binds: Vec<(Local, Expr)> = Vec::new();
         let mut xs = Vec::new();
         let mut drop_after: Vec<Local> = Vec::new();
-        // a borrowed part that is computed (and counted) becomes a
-        // temporary bound before the operation; every computed part before
-        // the last such one is bound too, to keep the order of evaluation
+        // Computed counted arguments stay owned while later arguments run.
+        // With no pending counted arguments, the final consumed argument can
+        // transfer directly, preserving stack, worker and loop representations.
+        // Scalar computations also finish before pending owners transfer, so
+        // their traps cannot strand earlier counted arguments.
         let inline = |p: &Expr| matches!(p, Expr::Local(_) | Expr::Const(_) | Expr::Func(_));
         // a borrowed part whose value is not counted needs no temporary:
         // nothing is dropped after the operation
@@ -397,7 +400,13 @@ impl Pass<'_> {
             .iter()
             .zip(modes)
             .enumerate()
-            .filter(|(i, (p, m))| matches!(m, Mode::Borrow) && !inline(p) && !uncounted[*i])
+            .filter(|(i, (p, mode))| {
+                !inline(p)
+                    && ((!uncounted[*i] && (matches!(mode, Mode::Borrow) || *i + 1 < parts.len()))
+                        || parts[..*i].iter().enumerate().any(|(j, earlier)| {
+                            !uncounted[j] && !matches!(earlier, Expr::Const(_) | Expr::Func(_))
+                        }))
+            })
             .map(|(i, _)| i)
             .next_back();
         for (i, (p, mode)) in parts.iter().zip(modes).enumerate() {
@@ -441,7 +450,10 @@ impl Pass<'_> {
                 }
                 (Mode::Consume, p) => {
                     let v = self.conv(p, &mine, &theirs);
-                    if inline(&v) || last_bound.is_none_or(|j| i > j) {
+                    if inline(&v)
+                        || ((uncounted[i] || i + 1 == parts.len())
+                            && last_bound.is_none_or(|j| i > j))
+                    {
                         xs.push(v);
                     } else {
                         let t = types[i].clone();
@@ -569,11 +581,42 @@ struct Checker<'a> {
     funcs: &'a [Func],
     shapes: &'a Shapes,
     locals: &'a [MT],
+    calls: Option<&'a RefCell<HashMap<*const Expr, CallLiveness>>>,
+}
+
+/// The references still held by the caller before and after argument evaluation.
+/// Borrowed pattern/field aliases never represent a separate owner. These maps
+/// refer to this exact IR tree; they must not be reused after replacing it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct CallLiveness {
+    pub before_arguments: Vec<(Local, u32)>,
+    pub at_entry: Vec<(Local, u32)>,
+}
+
+fn owned_references(st: &State) -> Vec<(Local, u32)> {
+    st.iter()
+        .filter_map(|(&l, h)| match h {
+            Held::Owned(n) if *n > 0 => Some((l, *n)),
+            _ => None,
+        })
+        .collect()
 }
 
 type State = BTreeMap<Local, Held>;
 
 impl Checker<'_> {
+    fn record_call(&self, e: &Expr, before: Option<Vec<(Local, u32)>>, st: &State) {
+        if let (Some(calls), Some(before_arguments)) = (self.calls, before) {
+            calls.borrow_mut().insert(
+                e as *const Expr,
+                CallLiveness {
+                    before_arguments,
+                    at_entry: owned_references(st),
+                },
+            );
+        }
+    }
+
     fn counted(&self, l: Local) -> bool {
         needs_rc(self.shapes, &self.locals[l as usize])
     }
@@ -626,16 +669,24 @@ impl Checker<'_> {
                 }
             }
             Expr::Const(_) | Expr::Func(_) => Ok(()),
-            Expr::Call(id, args) => args.iter().enumerate().try_for_each(|(j, a)| {
-                let c = consumes_arg(self.funcs, *id, j);
-                self.expr(a, st, c || !matches!(a, Expr::Local(_)))
-            }),
+            Expr::Call(id, args) => {
+                let before = self.calls.map(|_| owned_references(st));
+                args.iter().enumerate().try_for_each(|(j, a)| {
+                    let c = consumes_arg(self.funcs, *id, j);
+                    self.expr(a, st, c || !matches!(a, Expr::Local(_)))
+                })?;
+                self.record_call(e, before, st);
+                Ok(())
+            }
             Expr::Construct(_, a) | Expr::Record(a) => {
                 a.iter().try_for_each(|x| self.expr(x, st, true))
             }
             Expr::Apply(f, a) => {
+                let before = self.calls.map(|_| owned_references(st));
                 self.expr(f, st, true)?;
-                a.iter().try_for_each(|x| self.expr(x, st, true))
+                a.iter().try_for_each(|x| self.expr(x, st, true))?;
+                self.record_call(e, before, st);
+                Ok(())
             }
             Expr::SetFields(r, s) => {
                 self.expr(r, st, !matches!(**r, Expr::Local(_)))?;
@@ -725,10 +776,32 @@ impl Checker<'_> {
 /// more often than it is held, none is read after its last reference, and
 /// every one is released on every path.
 pub fn check(prog: &Program, f: &Func, body: &Expr, locals: &[MT]) -> Result<(), String> {
+    check_with_calls(prog, f, body, locals, None)
+}
+
+pub(crate) fn call_liveness(
+    prog: &Program,
+    f: &Func,
+    body: &Expr,
+    locals: &[MT],
+) -> Result<HashMap<*const Expr, CallLiveness>, String> {
+    let calls = RefCell::new(HashMap::new());
+    check_with_calls(prog, f, body, locals, Some(&calls))?;
+    Ok(calls.into_inner())
+}
+
+fn check_with_calls(
+    prog: &Program,
+    f: &Func,
+    body: &Expr,
+    locals: &[MT],
+    calls: Option<&RefCell<HashMap<*const Expr, CallLiveness>>>,
+) -> Result<(), String> {
     let c = Checker {
         funcs: &prog.funcs,
         shapes: &prog.shapes,
         locals,
+        calls,
     };
     let mut st = State::new();
     for l in 0..f.arity {
@@ -891,6 +964,136 @@ mod tests {
         let len = s.find("Call(2").unwrap();
         let cons = s.find("Construct(1").unwrap();
         assert!(len < cons, "{}", s);
+    }
+
+    #[test]
+    fn call_liveness_distinguishes_borrows_transfers_and_duplicate_owners() {
+        let mut p = prog(vec![list()], vec![MT::unit()], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "borrow".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::unit())),
+            body: Body::Prim("probe.borrow".into()),
+        });
+        let body = Expr::Dup(
+            0,
+            Box::new(Expr::Let(
+                1,
+                Box::new(Expr::Call(1, vec![Expr::Local(0)])),
+                Box::new(Expr::Drop(0, Box::new(Expr::Call(0, vec![Expr::Local(0)])))),
+            )),
+        );
+        let calls = call_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        assert!(calls
+            .values()
+            .any(|c| c.before_arguments == vec![(0, 2)] && c.at_entry == vec![(0, 2)]));
+        assert!(calls
+            .values()
+            .any(|c| c.before_arguments == vec![(0, 1)] && c.at_entry.is_empty()));
+    }
+
+    #[test]
+    fn earlier_consumed_arguments_remain_owned_during_later_calls() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "produce".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(list())),
+            body: Body::Prim("probe.produce".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Call(1, vec![Expr::Local(0)]),
+            Expr::Call(1, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let second = calls
+            .values()
+            .find(|c| c.at_entry.iter().any(|(l, _)| *l > 0))
+            .unwrap();
+        assert_eq!(second.at_entry.len(), 2); // input plus the first produced value
+        assert_eq!(second.at_entry[0], (0, 1));
+        assert_eq!(second.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn earlier_duplicate_remains_owned_during_the_final_call() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "produce".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(list())),
+            body: Body::Prim("probe.produce".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Local(0),
+            Expr::Call(1, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let call = calls.values().next().unwrap();
+        assert_eq!(call.at_entry.len(), 2);
+        assert_eq!(call.at_entry[0], (0, 1));
+        assert!(call.at_entry[1].0 > 0);
+        assert_eq!(call.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn earlier_owner_remains_owned_during_a_final_scalar_call() {
+        let mut p = prog(vec![list()], vec![], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "length".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::con("std::I64"))),
+            body: Body::Prim("len".into()),
+        });
+        p.funcs[0].body = Body::Expr(Expr::Record(vec![
+            Expr::Local(0),
+            Expr::Call(1, vec![Expr::Local(0)]),
+        ]));
+        let (body, locals) = counted(&p);
+        let calls = call_liveness(&p, &p.funcs[0], &body, &locals).unwrap();
+        let call = calls.values().next().unwrap();
+        assert_eq!(call.at_entry.len(), 2);
+        assert_eq!(call.at_entry[0], (0, 1));
+        assert!(call.at_entry[1].0 > 0);
+        assert_eq!(call.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn borrowed_pattern_values_are_not_unwind_owners() {
+        let mut p = prog(vec![list()], vec![list(), MT::unit()], Expr::Local(0));
+        p.funcs.push(Func {
+            name: "borrow".into(),
+            arity: 1,
+            locals: vec![list()],
+            ty: MT::Fun(Box::new(list()), Box::new(MT::unit())),
+            body: Body::Prim("probe.borrow".into()),
+        });
+        let body = Expr::Match(
+            Box::new(Expr::Local(0)),
+            vec![
+                (
+                    Pat::Construct(0, vec![]),
+                    Expr::Drop(0, Box::new(Expr::Construct(0, vec![]))),
+                ),
+                (
+                    Pat::Construct(1, vec![Pat::Wild, Pat::Bind(1)]),
+                    Expr::Let(
+                        2,
+                        Box::new(Expr::Call(1, vec![Expr::Local(1)])),
+                        Box::new(Expr::Drop(0, Box::new(Expr::Construct(0, vec![])))),
+                    ),
+                ),
+            ],
+        );
+        let calls = call_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls.values().next().unwrap().at_entry, vec![(0, 1)]);
     }
 
     #[test]

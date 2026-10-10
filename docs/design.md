@@ -44,6 +44,10 @@ Other callback/runtime and exceptional ownership extensions are prepared separat
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
 
+Compiler reuse tokens clear dead fields before retaining empty young cells,
+transfer into compatible constructors and release unused cells. Registered token
+cleanup handles failure, trap and cancellation, and unlinks before tail calls.
+
 The runtime cleanup stack releases registered owners and scoped files before
 nonlocal failure, trap or cancellation invalidates their frames. Catching
 handlers bound cleanup, and task switches preserve separate chains. Compiler
@@ -353,6 +357,16 @@ error. See [protocol.md](protocol.md).
 
 
 ## Prepared ownership implementation
+
+Compiler call ownership lowering must preserve allocation optimizations as well
+as exceptional lifetimes. Earlier counted arguments, including duplicated
+locals, stay registered while later arguments evaluate. A final consumed value
+can stay inline when no earlier counted argument needs protection, preserving
+direct stack, worker and flattened-loop representations. Later scalar
+computations also finish before pending counted owners transfer, preserving
+cleanup when scalar evaluation fails. Existing allocation
+limits and raw-interpreter comparisons remain acceptance gates.
+
 
 Prepared record-worker calls keep returned locals as fields when every use is a
 field read or a complete call with the matching record ABI. Typed aliases and

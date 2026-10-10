@@ -40,13 +40,14 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#103: native macOS and selected ownership through typed
+Main includes #74–#105: native macOS and selected ownership through typed
 repeat/range, zip/unzip/chunks, loop-state/Step/ABI wrappers, exact native
 wide counts, array/map/set elements and reclamation of old counted storage.
 Task result/deadline boundaries and registered runtime unwind cleanup merged
 in PR102–103 after all six exact-head production jobs and roadmap_docs passed.
-PR104 merges the bounded guard sampling repair after all exact-head gates.
-Deliver queue26 reuse tokens next, followed by the remaining ownership work.
+PR104 adds the bounded guard sampling repair; PR105 adds compiler reuse-token
+transfer/unwind cleanup and stronger handoff checks, after all exact-head gates.
+Deliver queue27 compiler call liveness next, followed by remaining ownership work.
 Exact heads, commands, failures and acceptance remain in
 [the handoff](docs/development-state.md).
 
