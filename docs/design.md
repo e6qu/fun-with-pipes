@@ -41,7 +41,8 @@ lex → parse (offside layout) → macro expansion → name collection
 Merged synchronous callback entries borrow typed inputs and return owned results;
 map/filter own fresh spines and results without promoting input elements to sharing.
 Map callback failure, trap and cancellation release results, partial spines and
-scratch through registered cleanup.
+scratch through registered cleanup. Filter/take-while selection unwind similarly
+releases owned aliases, partial spines and scratch.
 Other callback/runtime and exceptional ownership extensions are prepared separately.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.
