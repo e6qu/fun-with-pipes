@@ -111,7 +111,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 81 | file-storage-disposal | `ownership-file-storage-disposal` | `6e5063786651` | `750a5cffd46b` | `2d903d6617d9` |
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `ecfd9a28c39e` | `17869223a502` | `750a5cffd46b` |
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `7b7e45b20230` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `073a20c8d7ef` | `ae00e6929e86` | `786e4bbb99f1` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `57d27683b3f3` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `1236f09a1d85` | `3a0cbdb33b79` | `ae00e6929e86` |
 | 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f5a017db54da` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `08beb7c2bc23` | `8abfd46b3476` | `f85cc4e09db4` |
