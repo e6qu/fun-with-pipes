@@ -64,7 +64,8 @@ cleanup now protects typed caller and incoming-parameter references across
 calls, later-argument failures and cancelled entry ticks. Consumed constructor
 fields stay protected before allocation; worker result fields and remaining
 caller references stay protected until record/variant boxing succeeds. Worker
-argument preparation and wider callback registration remain prepared.
+argument preparation now protects original boxed arguments and each completed
+field duplicate until worker transfer. Wider callback registration remains prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed

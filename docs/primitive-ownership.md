@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #114. Arrays, maps and sets own typed elements.
+The tables describe main through PR #115. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -74,14 +74,29 @@ complete exceptional ownership or tracing-free support.
 
 ## Conservative reconstruction and external boundaries
 
-A bounded inventory audit of prepared source112 (`996d5ee4ef4f`) finds explicit
-contract entries for 134 of 373 `foreign "fwp"` declaration symbols. The
-remaining 239 lack entries in this inventory; this does not mean 239 runtime
-sharing boundaries. Some combinators lower away, scalar words need no counts,
-and runtime-specific wrappers have additional lifetime handling. Review the
-actual lowered calls and runtime paths before assigning a contract or claiming
-tracing-free coverage. Main acceptance remains separate from this prepared-source
-inventory; counts and module details are in [history](roadmap-history.md#prepared-primitive-metadata-inventory).
+A bounded audit of prepared source 112 (`b45e93a71d40`) enumerates 373 library primitive declarations,
+resolves 40 explicit foreign aliases and finds 363 distinct runtime symbols.
+It queries the unmodified shared contract module using those actual symbols
+and checks monomorphization templates:
+
+| Declaration category | Count | Meaning |
+|---|---|---|
+| Explicit ownership contract | 134 | IR counting and native wrapper selection use the shared inventory |
+| Combinator lowered to ordinary IR | 19 | `mono::foreign_instance` emits `Body::Expr`; ordinary function ownership applies |
+| Flat concrete scalar signature | 12 | No counted value parameters/results in these declared signatures; external state may still exist |
+| Runtime or specialization review | 208 | Inspect actual monomorphic types, lowering and wrappers before judging sharing or ownership |
+
+The208 review declarations resolve to198 distinct symbols; aliases remain
+declaration coverage, not extra runtime boundaries. Missing metadata alone
+does not identify a runtime sharing boundary. The scalar
+category includes `ad.tape`, which creates external tape state; scalar values do
+not prove allocation freedom or complete lifetime coverage. Generic numeric,
+boxed 128-bit, callback, resource and reconstructed-value cases require their
+actual representations. The corrected alias-aware audit passes through the root guard (0.18 CPU /
+0.72 elapsed s), without building the full compiler or changing source. It is
+prepared-source classification, not main acceptance or a tracing-free guarantee.
+Original counts and the new reproducible method are in
+[history](roadmap-history.md#effective-primitive-declaration-review).
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a
@@ -93,6 +108,26 @@ known descriptor does not establish ownership of every reconstructed node.
 | Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
 | Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
 | Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
+
+Source review of the same prepared head separates three concrete cases:
+
+- `parse-int` and `parse-float` already borrow String input and return a shared
+  `Option` result. Their wrappers select the monomorphic numeric kind; integer
+  parsing can include boxed numeric payloads. Counting only the outer `Some`
+  would not establish typed payload ownership.
+- `g_force` returns `cell->memo` on repeated reads and stores the decoded result
+  after the first successful force. A future counted contract must retain the
+  cache's owner and acquire independent reader aliases; scratch-buffer cleanup
+  alone does not supply that contract.
+- `grpc.with-tls` copies option text into explicitly owned C storage and releases
+  its scoped owner after `g_with_ctx`. Prepared task inheritance holds that C
+  storage separately. The current primitive wrapper still shares counted fwp
+  arguments, including callbacks; the C counter does not count their value graphs.
+
+These are source-reviewed compatibility policies, not new runtime tests or
+verified deterministic reclamation. Keep them in the finite phase 2 exit review;
+changing a boundary requires interpreter/native, alias, partial-failure and
+retention/teardown evidence before removing sharing.
 
 Keep these boundaries on tracing compatibility until their contracts and cleanup
 are proved. Phase2 records coverage and remaining fallback requirements; phase6
@@ -238,7 +273,7 @@ its own final rebase, focused checks and six passing exact-head full gates.
 | 34 | Immutable argument/capture preparation anchor; code/probes delivered in PR107 through row28 | Skipped after33 acceptance; preserve anchor and later coverage |
 | 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
 | 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
-| 37 | Boxed-to-worker wrappers protect original arguments before preparation and each completed typed field duplicate until worker entry | Sequential CI; partial retention failure, boxed/scalar arguments, aliases and worker entry transfer |
+| 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
 | 38 | Eligible loop state stays flattened through RC preparation; initial boxed input and each completed typed field duplicate stay owned until transfer | Sequential CI; partial field failures, cancellation slots, aliases and trap/evaluation order |
 | 39 | Multi-field typed retains protect each completed extra reference; caller liveness excludes unfinished retains through count overflow | Sequential CI; partial variant/stack retains, wide-count overflow and live aliases |
 | 40 | Monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | Sequential CI; later-field failure, dynamic arguments, updates and exact IR type checks |

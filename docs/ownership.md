@@ -114,6 +114,18 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
+The prepared source 112 declaration review separates 134 explicit contracts,
+19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
+signatures and 208 declarations requiring monomorphic/runtime review. These are
+373 declarations resolving to363 runtime symbols after40 explicit aliases,
+not a count of shared heap objects or ownership gaps.
+Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
+when no proven borrowing contract applies; scalar words remain uncounted.
+Reconstructed decode/parse values and retained network contexts can therefore
+still require tracing even when their temporary C buffers reclaim deterministically.
+Classify these conservative requirements explicitly before phase 3; phase 6 must
+prove eligibility separately. External AD/FFI state has its own lifetime contract.
+
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
@@ -182,6 +194,27 @@ cleanup remain checked. These are representation measurements, not executed
 instruction counts or timings; File/path allocations remain. Exact source,
 flags, binaries, disassembly and compiled layout are recorded in history.
 
+Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
+insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
+one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
+4096-byte name plus other fields, with copied inputs and last-owner release.
+The payload contains both terminated strings and a length-framed identity key;
+packing removes separate allocation requests, rather than the duplicated key
+bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
+binaries, disassembly and a layout executable use unchanged compiler arguments.
+Instrumented constructor frames are 208/144 bytes; observer code affects these
+frames, so they are not production ABI or timing claims. Details are in history.
+
+Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
+520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
+offset 24; complete copied address bytes follow the header at offset 272.
+Original counters verify one request of 272+n+1 bytes for an n-byte address;
+"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
+loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
+positive/control binaries, disassembly and compiled layouts are recorded in
+history. Requested sizes exclude allocator/collector metadata; no timing,
+cache-speed or general collector-free claim follows.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -193,6 +226,16 @@ contract and separate tests. Prioritize fused elementwise and gradient kernels,
 blocked matrix multiplication, reusable tape/scratch buffers and exceptional
 cleanup before adding accelerator backends. OpenCL discovery is not evidence
 that kernels executed on a real device.
+
+Prepared source112 also has actual ARM and Intel macOS layout evidence in
+CI38075612557 at evidence head5a56aa1ebbc2b609ebd51c675d44e454ddedba8d.
+Both original TLS-options/address probes pass without ignored tests. Both compiled
+layouts give TLS64/align8 and connection272 versus legacy520/align8; allocation
+requests remain101/8311 and278 for the stated fixtures. Actual C, Mach-O binaries,
+arguments, symbols, assembly, hardware/compiler and layout drivers are retained.
+These are prepared-source results; they do not accept later production heads.
+Instrumented frames and static instruction counts describe fixtures, not general
+speed, cache behavior or a production ABI. Full details are in history.
 
 ### Phase 3 delivery sequence
 
@@ -225,7 +268,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #114 includes the following contracts. Detailed primitive modes
+Main through PR #115 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -233,7 +276,7 @@ and measurements are in [history](roadmap-history.md).
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
   Compiler call liveness and consumed constructor-field protection are merged;
-  worker argument preparation and wider callback paths stay prepared.
+  worker argument preparation is merged. Wider callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
@@ -241,8 +284,9 @@ and measurements are in [history](roadmap-history.md).
   merged in PR106; runtime application and partial capture preparation in PR107.
   Constructor fields and remaining caller references are registered before allocation
   in PR113. Worker result fields and remaining caller references stay registered
-  until record/variant boxing succeeds in PR114; worker argument preparation
-  and wider callback registration remain prepared.
+  until record/variant boxing succeeds in PR114. Worker argument preparation
+  protects original boxes and completed field duplicates until transfer in PR115;
+  wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.
