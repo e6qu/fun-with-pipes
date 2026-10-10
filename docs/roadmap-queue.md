@@ -119,7 +119,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `fabe0ac7b24a` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `5029a447bcec` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `26545f1b279b` | `09751c8c65ac` | `3c268c34d15b` |
-| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `f1a357fb78da` | `a92c951fa6d9` | `09751c8c65ac` |
+| 93 | grpc-status-cleanup | `ownership-grpc-status-cleanup` | `36168a983c9d` | `a92c951fa6d9` | `09751c8c65ac` |
 | 94 | grpc-receive-cleanup | `ownership-grpc-receive-cleanup` | `df82d27c917b` | `8bd9e78743ab` | `a92c951fa6d9` |
 | 95 | grpc-force-cleanup | `ownership-grpc-force-cleanup` | `ab5723156bca` | `6b82bc5b8b2f` | `8bd9e78743ab` |
 | 96 | grpc-render-cleanup | `ownership-grpc-render-cleanup` | `8aa292c5a24a` | `ea79bdee1191` | `6b82bc5b8b2f` |
