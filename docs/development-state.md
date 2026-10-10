@@ -38,7 +38,7 @@ one parent `dd3b218b31e369383c019cc4ac3c9abc2d5042e1` and tree
 `518b07d89a774c77dca3093dc7014526ac338acf`, identical to the tested head.
 All 11 live docs were hashed in /private/tmp/fwp-main-docs-pre114 and restored
 byte-for-byte after main fast-forward. Duplicate main CI 38072406056 was cancelled
-only after that proof; actual main docs 38072406027 is pending.
+only after that proof; actual main docs 38072406027 passes at the squash head.
 Worker result fields and remaining caller references now stay protected until
 record/variant boxing succeeds. Constructor cleanup is accepted in #113;
 queue 36 is accepted in #114. Phase 2 remains incomplete; phases 3–6 remain pending.
@@ -46,8 +46,14 @@ queue 36 is accepted in #114. Phase 2 remains incomplete; phases 3–6 remain pe
 Next production delivery: queue 37 worker argument preparation. Rebase FROM
 actual queue 36 old `bcd3b392050b30163256ad72610046a15e691dfe` ONTO accepted
 squash `771191d622cc13c055c08f1ba23fc50d02950ac7`. Preserve both original feature/docs
-commits, original source/probes and immutable anchors; run focused worker/
-constructor/caller controls, lint/format and all 11 docs/audits before retained
+commits, original source/probes and immutable anchors. Native rebase completed
+once at `37ab9ca19ae6d9bdfb6c418200b087d246d2c785` (0.08 CPU / 1.06 elapsed s).
+The original docs-only commit was explicitly preserved after becoming empty;
+no successful rebase was repeated. All ten original worker/preparation/
+constructor/caller/loop tests pass (37.06 CPU / 74.19 elapsed s), including exact
+omitted partial scope exit 5 and raw interpreter/native agreement. All 14 RC
+units (3.82 / 7.83 s), lint (2.83 / 5.73 s) and format (0.44 / 0.82 s) pass.
+Complete all 11 docs/audits before retained
 publication and the next PR. Keep empty original docs commits explicitly when
 conflict resolution makes them empty. Require all seven fresh exact-head CI gates.
 
@@ -149,7 +155,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
+| 37 ownership-worker-preparation | 37ab9ca19ae6 | 771191d622cc | Final actual-squash source preserves both original feature/docs commits; ten worker/preparation/constructor/caller/loop tests37.06CPU/74.19elapsed, all14 RC units3.82/7.83s, lint2.83/5.73s and format0.44/0.82s pass; source/probes unchanged including exact omitted partial scope exit5 and raw interpreter/native agreement; exact-head full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
 | 40 ownership-constructor-types | 5ebcb2d6b0e2 | d98205af88df | Three original native tests16.68CPU/33.49elapsed and all17 ownership units3.54/7.28s, lint2.60/5.25s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
@@ -357,9 +363,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-packed-options-worktree (row111, nativea4b3803a),
-with all four packed-options/environment-cache/identity/capture tests12.58CPU/26.76elapsed passing.
-Previous package clean removed127.3MiB (0.05CPU/0.36elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-worker-preparation-worktree (row37, native37ab9ca1),
+with all ten worker/preparation/constructor/caller/loop tests37.06CPU/74.19elapsed passing.
+Previous package clean removed123.6MiB (0.00CPU/0.13elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
