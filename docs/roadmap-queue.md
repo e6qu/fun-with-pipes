@@ -108,7 +108,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `13c77dbb7b82` | `681dd55136b0` | `c889479eed7a` |
 | 79 | resource-frame-fields | `ownership-resource-frame-fields` | `2f842d5d266f` | `658e5b73ae1c` | `681dd55136b0` |
 | 80 | file-inline-path | `ownership-file-inline-path` | `010e622f064e` | `2d903d6617d9` | `658e5b73ae1c` |
-| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `2fffa57d369d` | `750a5cffd46b` | `2d903d6617d9` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `4505f1463a53` | `750a5cffd46b` | `2d903d6617d9` |
 | 82 | file-construction-disposal | `ownership-file-construction-disposal` | `c6cbacac0db9` | `17869223a502` | `750a5cffd46b` |
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `53440f785f65` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `073a20c8d7ef` | `ae00e6929e86` | `786e4bbb99f1` |

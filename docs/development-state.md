@@ -47,7 +47,7 @@ commits and source/probes are preserved; fresh docs were appended, so referenced
 snapshot833fa844901a stays reachable. Eight focused tests27.31CPU/54.70elapsed,
 all14 RC units3.37/6.99s, lint2.32/4.67s, format0.34/0.60s and all three audits
 pass. Oldbbd74db2977a is retained remotely before exact-lease publication.
-CI38060160102 passes bench; Linux and all four macOS jobs run.
+CI38060160102 passes bench and ARM GC stress; Linux and the other macOS jobs run.
 Docs38060160207 passes. Require all seven exact-head gates, then match-head squash with subject
 `Protect consumed constructor fields before allocating storage` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -67,7 +67,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–79 are refreshed and published on their actual predecessors.
+Preparations39–80 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -83,16 +83,14 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Inline File path80 at native4e6a81a1c559 on actual792f842d5d266f preserves original
-source/probes. Both original binary-capture tests10.16CPU/20.43elapsed, eight
-constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/
-1.09s pass. Actual eight ARM64 binaries/C/flags/layouts/disassembly retained;
-inspection0.38/1.19s confirms header16/alignment8, refs offset8, path offset16
-versus legacy24/alignment8, refs16/path pointer8. Original counters require one
-allocation16+n+1 versus two24+n+1 for lengths0–4096; exact display/aliases and
-raw interpreter/native IO preserved. No timing/general allocation-free claim.
-Copy all11 docs/audit before retained publication; next81 last-owner File storage
-disposal. Final actual-squash/full gates remain required.
+Last-owner File storage81 at native4505f1463a53 on actual80010e622f064e preserves
+original source/probes. All nine storage/inline-path/runtime/construction/scoped/
+unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass.
+Exact missing finalizer-removal/storage-disposal exits4/7 remain intact. Repeated
+unshared storage reuse with tracing off, unrelated retained Files, real finalization,
+shared/no-free fallback and poisoning pass. Copy all11 docs/audit before retained
+publication; next82 failed File constructor storage cleanup and finalizer registry
+growth. Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -192,7 +190,7 @@ still need their final squash rebases and six exact-head full gates.
 | 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Native disposal8.79CPU/18.00elapsed, original bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and format0.45/0.87s pass; original source/probes/workflows unchanged, including exact omitted aggregate/runtime disposal exits5/9; physical bump storage remains allocated; final actual-squash/full and mandatory actual WASI gates required |
 | 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
 | 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Both original binary-capture tests10.16CPU/20.43elapsed, eight File constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/1.09s pass; original source/probes unchanged; actual ARM64 headers/layouts/disassembly and one-vs-two allocation counters preserved; final actual-squash/full gates required |
-| 81 ownership-file-storage-disposal | 2fffa57d369d | 0ea8a1c94115 | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
+| 81 ownership-file-storage-disposal | 4505f1463a53 | 010e622f064e | All nine storage/inline-path/runtime/construction/scoped/unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass; original source/probes unchanged, including exact missing finalizer-removal/storage exits4/7, tracing-off reuse and unrelated live Files; shared/no-free lifetimes preserved; final actual-squash/full gates required |
 | 82 ownership-file-construction-disposal | c6cbacac0db9 | 2fffa57d369d | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
 | 83 ownership-resource-frame-variants | 53440f785f65 | c6cbacac0db9 | Direct frame-constructor repair: five original native tests 20.72CPU/41.72elapsed, lint 2.34/4.77s and format 0.45/0.86s pass; strong audit 0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
 | 84 ownership-resource-frame-binding-kinds | 073a20c8d7ef | 53440f785f65 | Test10.45/23.67s; lint 6.18/12.88s and format 0.45/0.83s pass |
@@ -356,9 +354,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-inline-path-worktree (row80, native4e6a81a1),
-with both original representation tests, eight adjacent tests and actual
-binary/layout inspection passing. Before switching Rust
+last checked in /private/tmp/fwp-file-storage-disposal-worktree (row81, native4505f146),
+with all nine storage and adjacent ownership tests30.46CPU/63.43elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
