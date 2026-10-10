@@ -37,6 +37,8 @@ jobs:
         run: cargo test --test zip_unwind_ownership --no-run
       - name: Raw interpreter and repeated O1/O2 binary oracle
         run: python3 scripts/probe-effects-native.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 100
+      - name: Independently generated native binary oracle
+        run: python3 scripts/probe-effects-fresh.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 100
       - name: Address and undefined behavior diagnostics
         if: always()
         run: python3 scripts/probe-effects-sanitizer.py "$PWD" "$RUNNER_TEMP/effects"

@@ -48,12 +48,17 @@ lint, format and final documentation audit pass; all original source/probe bytes
 are preserved. Prior ff84318a416d is retained remotely before exact-lease publication.
 CI38021138247 passes ARM regular/both GC/bench; Intel regular fails the
 existing effects.fwp native snapshot with signal exit and no buffered output.
-Linux continues. Docs38021138429 passes. Diagnose and fix this crash before merge.
+Linux passes. Docs38021138429 passes. Diagnose and fix this crash before merge.
 Focused exact-head ARM reproducer: raw interpreter and ten O1/ten O2 executions
 agree on stdout/stderr/exit (1.97CPU/3.94elapsed). Binary magic confirms ARM64
 Mach-O; emitted C, native binaries and report are saved in
 /private/tmp/fwp-effects-pr110-local. No local crash reproduction or Intel support
-is claimed. Prepare targeted runner binary/assembly/sanitizer diagnostics.
+is claimed. Runner diagnostics1ae75af/38044527408 pass all 100 executions
+per optimization on all three platforms; Intel/Linux sanitizer output agrees.
+ARM sanitizer output agrees except for its captured ASan no-return stack warning;
+that diagnostic job fails the byte comparison, not a reported memory error.
+Original Intel full-suite crash remains unresolved. Test independently generated
+C/binaries next; preserve any failing source, binary and optimized assembly.
 Freeze this head except for real repairs. Require all seven gates before squash
 with subject `Release zip callback results and both scratch buffers on nonlocal exits`
 and explicit empty body. Verify raw message/tree, protect all 11 live docs and
@@ -78,13 +83,14 @@ journals must not be rerun. Detailed failures, checks and batch metrics are in
 [history](roadmap-history.md).
 
 Repair the strict HTTP/2 fixture at source89 (`177a08a204d7`) before refreshing
-full evidence on current112. Both x86 Clang platforms still false-pass the
-omitted-owner control; ARM and GCC pass. Assembly shows an obsolete owner spill
+full evidence on current112. Candidate5fbac7/38023254715 passes Intel, ARM and GCC, but Linux Clang
+still false-passes the omitted-owner control. Assembly shows an obsolete owner spill
 for the unreachable waiting loop. The current candidate selects only the
 fixture's already-completed copy path on x86; ARM, actual copy/fence/collection,
 payload, finalizer and all exact positive/negative assertions remain intact.
 Four-way evidence must pass on Linux GCC/Clang and macOS ARM/Intel Clang before
-publishing source89 and propagating90–112. No candidate is accepted yet.
+publishing source89 and propagating90–112. No candidate is accepted yet. A new x86-only experiment reserves the actual
+frame pointer to exclude RBP as an uncleared heap register; four-way CI is required.
 Evidence branch: ownership-evidence-http2-intel. Assembly diagnostic578830243e16/
 38022478422 and rejected candidates are archived in history. Run full source112
 production-equivalent evidence only after both repairs are present.

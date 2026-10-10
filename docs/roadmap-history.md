@@ -13970,3 +13970,24 @@ guard0.06CPU/0.92elapsed. Prior constructor clean0.00/0.13s; eight original
 worker/constructor/preparation/caller tests28.60/57.36s pass. Candidate retained
 remotely under revision-036-2a9293881eab; final lint/docs publication remains
 pending while the current production crash takes priority.
+
+
+Effects binary diagnostics1ae75af6b78ece363173ece7276b399c7020accb, CI38044527408:
+all three platforms pass 100 O1 and 100 O2 executions of one binary per option.
+Intel/Linux ASan+UBSan output agrees exactly. ARM stdout/exit agree; stderr
+contains the ASan no-return stack warning plus the expected error, causing the
+strict diagnostic comparison to fail. No reported memory error or original
+Intel crash reproduction. Downloaded exact generated C, Mach-O binaries, O1
+assembly and reports to /private/tmp/fwp-effects-1ae75af-{arm,intel}. Production
+PR110 Linux also passes; Intel regular remains its sole failing gate.
+
+HTTP2 completed-copy candidate5fbac7ca5be09fc7d072e6bf82e6c95274af6cff,
+CI38023254715: Intel/ARM/GCC pass every unchanged positive/negative control;
+Linux Clang still exits0 rather than required1 for owner omission. Next narrow
+fixture experiment reserves the actual frame pointer on x86, without clobbering
+RBP/SP; inference from compiler/platform differences, not verified acceptance.
+Formatting0.45CPU/0.86elapsed passes. No source89 publication or propagation yet.
+
+Fresh effects local compilation probe: five independently emitted/compiled binaries
+per optimization agree with the original snapshot on ARM, guard6.46CPU/13.09elapsed.
+Fresh runner trials are still required; this is not an Intel reproduction or fix.
