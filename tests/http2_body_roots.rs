@@ -26,13 +26,33 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "body_roots").unwrap();
-    // GCC on x86-64 leaves dead call/stream pointers in callee-saved
+    // GCC and Clang on x86-64 can leave dead call/stream pointers in callee-saved
     // registers. Isolate construction and clear those stale roots in the
     // copying frame; a live post-copy owner fence forces a surviving spill.
-    let (compiler, _) = fwp::cgen::c_compiler().unwrap();
-    let clear_stale_roots = cfg!(target_arch = "x86_64") && fwp::cgen::is_gcc(&compiler);
+    let clear_stale_roots = cfg!(target_arch = "x86_64");
+    let generated = if clear_stale_roots {
+        let primitive = "static V fwp_p_http2_body(V max, V timeout, V call) {";
+        assert_eq!(generated.matches(primitive).count(), 1);
+        // This fixture always copies a completed stream. Select its known
+        // path so Clang does not spill the owner for an unreachable wait loop.
+        let completed = "        if (s->remote_end) {\n            V b = fwp_str_new((const char *)s->data.d, s->data.len);";
+        assert_eq!(generated.matches(completed).count(), 1);
+        generated
+            .replacen(
+                primitive,
+                "static __attribute__((always_inline)) inline V fwp_p_http2_body(V max, V timeout, V call) {",
+                1,
+            )
+            .replacen(
+                completed,
+                &completed.replacen("if (s->remote_end)", "if (1)", 1),
+                1,
+            )
+    } else {
+        generated
+    };
     let boundary = if clear_stale_roots {
-        "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();"
+        "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); clear_dead_stack(); inspect_owner();"
     } else {
         "static V fwp_str_new(const char *s, size_t len) { inspect_owner();"
     };
@@ -50,6 +70,7 @@ static unsigned char *watched_body;
 static int copy_active,released;
 static void inspect_owner(void);
 #if defined(__x86_64__)
+static void clear_dead_stack(void);
 #define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
 #endif
 "#;
@@ -98,6 +119,8 @@ static __attribute__((noinline)) void clear_dead_stack(void){
  volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;
 }
 static __attribute__((noinline)) V body(void){
+ /* Reserve rbp for the actual frame rather than an uncleared heap pointer. */
+ __asm__ volatile("" : : "r"(__builtin_frame_address(0)) : "memory");
  V call=make_call();clear_dead_stack();copy_active=1;
 "#,
             )
