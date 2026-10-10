@@ -45,6 +45,8 @@ scratch through registered cleanup. Filter/take-while selection unwind similarly
 releases owned aliases, partial spines and scratch. Zip unwind releases owned
 callback results and partial spines, plus both borrowed scratch buffers, including
 failure while preparing the second buffer.
+Merged folds protect the current accumulator and each completed borrowed argument
+duplicate until callback transfer; right-fold scratch releases on unwind.
 Other callback/runtime and exceptional ownership extensions are prepared separately.
 Consult [the current handoff](development-state.md) and [the immutable queue](roadmap-queue.md)
 for their exact status; prepared changes are not merged support.

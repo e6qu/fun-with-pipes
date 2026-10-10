@@ -133,6 +133,14 @@ aligned payloads where useful, and views with explicit backing lifetimes.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
 
+Focused ARM64 layout evidence for returned-variant preparation44 confirms an
+8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
+variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
+positive/control binaries, compiler inputs, flags and disassembly are retained
+and recorded in [history](roadmap-history.md). The O2 alias transfers share one
+32-byte stack slot; this shape-specific evidence is not a general ABI or timing
+claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -176,7 +184,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #110 includes the following contracts. Detailed primitive modes
+Main through PR #111 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -222,8 +230,10 @@ and measurements are in [history](roadmap-history.md).
 - Scan/iterate borrow callbacks and own each stored state, retaining initial
   aliases and adopting subsequent callback results.
 - Synchronous callbacks borrow typed inputs and return owned results. Map/filter
-  own fresh spines; fold/right-fold transfer accumulators; zip owns callback
-  results; registered map, selection and zip cleanup releases owned results,
+  own fresh spines; fold/right-fold transfer accumulators; zip-with owns callback
+  results; fold preparation protects the current accumulator and completed
+  borrowed duplicates, and right-fold scratch releases on unwind. Registered
+  map, selection and zip cleanup releases owned results,
   partial spines and scratch on failure, trap or cancellation. Both zip scratch
   buffers release, including a failure while preparing the second buffer.
   Prefix/copy operations preserve owned aliases. Optional list results

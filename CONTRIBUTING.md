@@ -54,6 +54,9 @@ order and whole commit messages. It also verifies live handoff heads against
 the queue and ancestry of their recorded actual rebase bases.
 CI checks the actual PR head and fetches review
 heads so merged preparation references remain available.
+Retain any pre-amend revision referenced by a frozen documentation snapshot
+under a remote revision tag before publication. A local object alone does not
+prove that a fresh CI clone can resolve the recorded head.
 
 CI runs these, and all of them must pass:
 
@@ -198,10 +201,9 @@ explanation of any gap.
 ## Commits and pull requests
 
 - Work on a branch and open a pull request against `main`.
-- Pull requests are merged by **squash**, so the pull request's title and
-  description become the commit on `main`. Write them as you would a
-  commit message: the title says what changed, and the description says
-  why and how it was checked.
+- Pull requests are merged by **squash**. The title says what changed;
+  the description explains why and how it was checked. Supply the
+  squash subject explicitly and leave the commit body empty.
 - One topic per pull request. A refactor needed for a feature can go in
   the same pull request; unrelated clean-ups get their own.
 - Every commit message is exactly one line, at most 80 characters, with
