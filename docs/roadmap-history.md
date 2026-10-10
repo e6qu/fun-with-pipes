@@ -1,6 +1,7 @@
 # Historical development notes
 
-Frozen on 2026-10-08. These are preserved observations and delivery history,
+This archive began on 2026-10-08 and grows with validated deliveries and repairs.
+These are preserved observations and delivery history,
 not current instructions or a priority queue. Consult [the active plan](../PLAN.md),
 [the current handoff](development-state.md) and [the preparation queue](roadmap-queue.md)
 for current heads, validation requirements and next actions. Old "next" actions,
