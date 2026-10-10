@@ -13800,3 +13800,14 @@ ARM remains unchanged; all original assertions remain. Previous broad primitive
 inlining broke ARM and is explicitly not repeated. Full four-way evidence
 must pass before propagation. Fold docs commitf3585147985d is published
 on05d354f57167; original implementation plus live docs are retained.
+
+Loop independent rebase from recordedc434692ccb6f onto foldf3585147985d
+yields37ab094371fc0b13a2e9e9fc75ac63d77b2c4fe7, preserving both original
+implementation and normalization repair commits. All original native code,
+probes and production workflows are byte-identical to527f84d405b77.
+Docs-only conflicts use all11 authoritative files; rebase0.08CPU/1.04elapsed.
+Prior fold clean0.07/0.37s; two loop tests10.51/21.10s, lint2.21/4.41s and
+format0.34/0.61s pass. Final actual-squash rebase/full gates remain required.
+Second HTTP2 candidate8ed52165833a/38022208742 still fails the exact omitted
+owner on Linux Clang; GCC/ARM pass. Diagnostic-only follow-up exports emitted
+broken C and O2 assembly on Linux Clang. No fixture candidate is accepted.
