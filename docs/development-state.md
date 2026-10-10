@@ -93,9 +93,11 @@ with original source/probes preserved. Corrected executed bounds unit and strict
 body-root control pass; initial zero-test filter is explicitly unverified/resolved
 in history. Three audits and publication1.75CPU/17.98elapsed pass.
 Rebase91 FROM actual90old1b4be82fe9b6 ONTO published90fabe0ac7b24a;
-run unchanged peer cleanup, actual TLS subject and strict body-root controls,
-lint/format and all11 docs/audits before retained publication. Keep exact omitted
-cleanup exit1 and all original TLS fault controls. Next92 gRPC peer completion.
+Native941647ed4bdc preserves original source/probes. All three original peer/TLS/
+body-root tests8.42CPU/19.26elapsed pass without skips, including actual OpenSSL
+subject handshakes, exact omitted cleanup exit1 and original TLS fault controls.
+Lint2.33CPU/4.70elapsed and format0.45/0.85s pass; finish all11 docs/audits
+before retained publication. Next92 gRPC peer completion.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -204,7 +206,7 @@ still need their final squash rebases and six exact-head full gates.
 | 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Both original cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s pass; source/probes and compiler/runtime unchanged; close preserves queued values and explicit drain releases counted cycles across O1/O2 GC/poison modes, without claiming automatic cycle reclamation; final actual-squash/full gates required |
 | 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
 | 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Corrected exact grpc::web bounds/error-order comparison executes one test and passes0.45CPU/1.94elapsed; strict HTTP2 root test7.17/15.39s, lint2.41/4.77s and format0.45/0.87s pass; original source/probes unchanged including exact omitted-fence exit1; earlier zero-test filter explicitly unverified/resolved; final actual-squash/full gates required |
-| 91 ownership-http2-peer-cleanup | 9900cc0d5229 | 1b4be82fe9b6 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 91 ownership-http2-peer-cleanup | 941647ed4bdc | fabe0ac7b24a | All three original peer/TLS/body-root tests8.42CPU/19.26elapsed, lint2.33/4.70s and format0.45/0.85s pass without skips; original source/probes unchanged including actual OpenSSL subject handshakes, strict omitted cleanup exit1 and TLS fault controls; final actual-squash/full gates required |
 | 92 ownership-grpc-peer-completion | e89105300eb3 | 9900cc0d5229 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 93 ownership-grpc-status-cleanup | f1a357fb78da | e89105300eb3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 94 ownership-grpc-receive-cleanup | df82d27c917b | f1a357fb78da | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -358,10 +360,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-http2-body-bounds-worktree (row90, native74ecfb65),
-with exact bounds comparison0.45CPU/1.94elapsed and body root test7.17/15.39s passing.
-The incorrect filename-based unit filter ran zero tests and is explicitly unverified
-in history. Previous package clean removed89.9MiB (0.00CPU/0.13elapsed).
+last checked in /private/tmp/fwp-http2-peer-cleanup-worktree (row91, native941647ed),
+with all three peer/TLS/body-root tests8.42CPU/19.26elapsed passing without skips.
+Previous package clean removed105.7MiB (0.00CPU/0.14elapsed).
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
