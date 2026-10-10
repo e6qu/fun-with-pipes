@@ -215,6 +215,16 @@ positive/control binaries, disassembly and compiled layouts are recorded in
 history. Requested sizes exclude allocator/collector metadata; no timing,
 cache-speed or general collector-free claim follows.
 
+A separate bounded local ARM allocator check reads actual Darwin malloc usable
+bytes and GC slot metadata from the captured generated C. TLS requests101/8311
+occupy112/8704 usable bytes. The short connection request278 occupies a320-byte
+GC slot; the original520-byte header-size allocation occupies640 in the same
+unchanged allocator. The latter measures the old size, without executing the old
+constructor. These capacities exclude allocator metadata and pool reservation.
+Hardware, compiler, flags, generated diagnostic C and actual binaries are in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity); Intel capacity
+and cache/timing effects remain unmeasured.
+
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
 the number of fields alone is not a machine-speed guarantee. The C backend
@@ -268,7 +278,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #115 includes the following contracts. Detailed primitive modes
+Main through PR #116 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -286,7 +296,8 @@ and measurements are in [history](roadmap-history.md).
   in PR113. Worker result fields and remaining caller references stay registered
   until record/variant boxing succeeds in PR114. Worker argument preparation
   protects original boxes and completed field duplicates until transfer in PR115;
-  wider callback registration remains prepared.
+  flattened loop argument preparation protects original boxes and completed field
+  duplicates until transfer in PR116. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

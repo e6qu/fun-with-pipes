@@ -569,6 +569,35 @@ impl Gen<'_> {
         format!("fwp_owner_ctx{id} {ctx} = {{{}}}; fwp_cleanup {node}; fwp_cleanup_push(&{node}, fwp_owner_release{id}, &{ctx});", initial.join(", "))
     }
 
+    /// Retain typed fields in order, owning only successfully completed extras.
+    fn duplicate_values(&mut self, values: &[(String, MT)], ctx: &str, node: &str) -> String {
+        let counted: Vec<_> = values
+            .iter()
+            .filter(|(_, ty)| crate::rc::needs_rc(&self.prog.shapes, ty))
+            .cloned()
+            .collect();
+        let empty: Vec<_> = counted
+            .iter()
+            .map(|(_, ty)| ("0".into(), ty.clone()))
+            .collect();
+        let protect = if counted.len() > 1 {
+            self.protect_values(&empty, ctx, node)
+        } else {
+            String::new()
+        };
+        let mut out = protect.clone();
+        for (j, (value, _)) in counted.iter().enumerate() {
+            let _ = write!(out, " fwp_rc_dup({value});");
+            if !protect.is_empty() {
+                let _ = write!(out, " {ctx}.v{j} = {value};");
+            }
+        }
+        if !protect.is_empty() {
+            let _ = write!(out, " fwp_cleanup_pop(&{node});");
+        }
+        out
+    }
+
     /// An allocation of compiled code: unique when references are counted.
     fn fresh(&self, alloc: String) -> String {
         if self.reuse {
@@ -1294,12 +1323,17 @@ impl<'p> Gen<'p> {
             if !self.reuse {
                 continue;
             }
-            let (mut d, mut r) = (String::new(), String::new());
+            let fields: Vec<_> = fs
+                .iter()
+                .enumerate()
+                .map(|(i, ty)| (format!("u->f[{i}]"), ty.clone()))
+                .collect();
+            let d = self.duplicate_values(&fields, "retained", "retaining_cleanup");
+            let mut r = String::new();
             for (i, ft) in fs.iter().enumerate() {
                 if !crate::rc::needs_rc(&self.prog.shapes, ft) {
                     continue;
                 }
-                let _ = write!(d, " fwp_rc_dup(u->f[{}]);", i);
                 let name = if free_enabled() && !matches!(ft, MT::Con(n, _) if n == "?") {
                     format!("fwp_drop{}", self.drop_id(ft))
                 } else {
@@ -1308,7 +1342,7 @@ impl<'p> Gen<'p> {
                 let _ = write!(r, " {}(u->f[{}]);", name, i);
             }
             if !d.is_empty() {
-                let _ = writeln!(dups, "    case {}:{} break;", tag, d);
+                let _ = writeln!(dups, "    case {}: {{ {} break; }}", tag, d);
                 let _ = writeln!(drops, "    case {}:{} break;", tag, r);
             }
         }
@@ -2844,16 +2878,19 @@ impl<'g, 'p> FnGen<'g, 'p> {
     }
 
     fn stack_children_count(&mut self, children: Vec<(String, MT)>, duplicate: bool) {
+        if duplicate {
+            let ctx = self.fresh();
+            let node = self.fresh();
+            let retained = self.g.duplicate_values(&children, &ctx, &node);
+            self.line(&retained);
+            return;
+        }
         for (value, ty) in children {
-            if duplicate {
-                self.line(&format!("fwp_rc_dup({value});"));
-            } else {
-                self.line(&format!(
-                    "/* stack argument child */ FWP_KEEP_ALIVE({value});"
-                ));
-                let release = self.typed_drop(&ty).unwrap_or_else(|| "fwp_rc_drop".into());
-                self.line(&format!("{release}({value});"));
-            }
+            self.line(&format!(
+                "/* stack argument child */ FWP_KEEP_ALIVE({value});"
+            ));
+            let release = self.typed_drop(&ty).unwrap_or_else(|| "fwp_rc_drop".into());
+            self.line(&format!("{release}({value});"));
         }
     }
 
@@ -3098,6 +3135,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
     /// The reference count change of a `Dup` or `Drop` of local `l`: none
     /// when the local is kept as its fields (there is no object).
     fn count(&mut self, e: &Expr, l: Local) {
+        let node = if matches!(e, Expr::Dup(..)) {
+            self.begin_call(e as *const Expr)
+        } else {
+            None
+        };
+        self.count_change(e, l);
+        self.end_call(node);
+    }
+
+    fn count_change(&mut self, e: &Expr, l: Local) {
         if let Some(children) = self.stack_children.get(&l).cloned() {
             self.stack_children_count(children, matches!(e, Expr::Dup(..)));
             return;
@@ -3179,6 +3226,13 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 }
             }
             self.line(&format!("{}(l{});", op, l));
+            return;
+        }
+        if matches!(e, Expr::Dup(..)) {
+            let ctx = self.fresh();
+            let node = self.fresh();
+            let retained = self.g.duplicate_values(&parts, &ctx, &node);
+            self.line(&retained);
             return;
         }
         for (v, t) in parts {

@@ -758,6 +758,10 @@ impl Checker<'_> {
                 Ok(())
             }
             Expr::Dup(l, b) => {
+                // A retain can allocate wide-count metadata. Protect existing
+                // references before it runs; the new reference does not exist yet.
+                let before = self.calls.map(|_| owned_references(st));
+                self.record_call(e, before, st);
                 if self.counted(*l) {
                     self.need_alive(st, *l, "is duplicated")?;
                     match st.get_mut(l) {
@@ -1021,6 +1025,26 @@ mod tests {
         assert_eq!(second.at_entry.len(), 2); // input plus the first produced value
         assert_eq!(second.at_entry[0], (0, 1));
         assert_eq!(second.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn retain_liveness_excludes_the_unfinished_extra_reference() {
+        let body = Expr::Dup(
+            0,
+            Box::new(Expr::Record(vec![
+                Expr::Local(0),
+                Expr::Local(0),
+                Expr::Local(1),
+            ])),
+        );
+        let p = prog(vec![list(), list()], vec![], body.clone());
+        let calls = call_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let retaining = calls.get(&(&body as *const Expr)).unwrap();
+        assert_eq!(retaining.before_arguments, vec![(0, 1), (1, 1)]);
+        assert_eq!(retaining.at_entry, vec![(0, 1), (1, 1)]);
+        assert!(calls
+            .values()
+            .any(|c| c.before_arguments == vec![(0, 2), (1, 1)] && c.at_entry.is_empty()));
     }
 
     #[test]
