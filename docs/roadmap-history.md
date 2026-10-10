@@ -13991,3 +13991,173 @@ Formatting0.45CPU/0.86elapsed passes. No source89 publication or propagation yet
 Fresh effects local compilation probe: five independently emitted/compiled binaries
 per optimization agree with the original snapshot on ARM, guard6.46CPU/13.09elapsed.
 Fresh runner trials are still required; this is not an Intel reproduction or fix.
+
+Diagnostic publication75f311323722142480177599d7dcc51e68a33e6d launches
+CI38045910841 for 100 fresh C/compile/run trials per option on three platforms,
+preserving exact source/assembly for any failing trial. Audit0.53CPU/3.92elapsed
+passes before publication. Original runtime/compiler/probes/production CI unchanged.
+HTTP2 frame experiment346d2cc695345faf1bfe1771ee0c4c40724aa83b launches
+four-way CI38045956375; audit0.53CPU/3.92elapsed passes before publication.
+Neither queued run establishes acceptance. Prior worker/zip package clean
+0.00CPU/0.13elapsed keeps shared target bounded. Worker36 lint first used a
+nonexistent worker_boxing test name and failed0.07CPU/0.37elapsed; corrected
+target is worker_boxing_ownership, with no assertions or source changes.
+
+Worker36 corrected four-target lint2.46CPU/5.05elapsed and format0.41/0.60s pass.
+Original eight-test result and all code/probes remain unchanged. Documentation
+publication follows; prepared checks do not replace final exact-head full gates.
+
+Worker36 publishedbcd3b392050b30163256ad72610046a15e691dfe on actualbbd74db2977a after audit0.52CPU/3.90elapsed.
+Prior e171da5957fd retained remotely; exact lease used. Both original feature and
+documentation commit preserved; all native/probe/workflow bytes unchanged.
+
+HTTP2 reserve-frame candidate346d2cc695345faf1bfe1771ee0c4c40724aa83b,
+CI38045956375: Intel/ARM/GCC pass, Linux Clang still fails the unchanged strict
+omission with exit0 instead of1; all positive and other resource controls pass.
+Reserve-frame hypothesis did not repair it. Add optional exact negative C export
+and actual O2 assembly artifacts; assertions/runtime/compiler unchanged.
+Intel original golden context diagnosticc938d08175975904ef3889731319a3561c7635e7,
+CI38046238343 is running after audit0.50CPU/3.80elapsed. Source/probes unchanged;
+compiler wrapper retains only the exact effects input and output, and invokes
+/usr/bin/clang with unchanged arguments. Full original snapshots remain strict.
+
+Worker37 independently rebased FROMactuale171da5957fd36dce057388381737c5f562ea2a2 ontobcd3b392050b30163256ad72610046a15e691dfe,
+yieldingc7cc3838eeb9562238bfa4104c9016e47f0d66c7; all source/probes/workflows byte-identical to originalba9f0f293ac8bd372a3a9ffe225af07d27a7186e.
+Guard0.08CPU/0.84elapsed; prior worker clean0.07/0.36s. Three original focused
+preparation/boxing/constructor tests16.35CPU/32.93elapsed pass. Final lint/docs
+publication and sequential actual-squash full gates remain required.
+
+HTTP2 exact-source diagnostic6f5ce79118ed2e9671d309a8b7b0f704dd2c7d60,
+CI38046362290, preserves the reserve-frame candidate and every strict assertion.
+Optional C export and always-run O2 assembly/artifacts only; format0.51CPU/0.83s
+and strong audit0.53CPU/3.92s pass before publication.
+Worker37 lint2.48CPU/5.01elapsed and format0.38/0.73s pass after original tests.
+
+Worker37 published8c4e9ffd71a5555298721921a1fbf3a2314411cf on actualbcd3b392050b; both original feature/docs
+commits preserved, priorba9f0f293ac8 retained before exact lease. Final strong
+audit0.50CPU/3.92elapsed passes. Native source/probes/workflows unchanged.
+HTTP2 diagnostic6f5ce79/38046362290: Linux strict omission still fails; Intel/GCC
+pass. ARM ownership tests pass; only assembly export fails missing openssl/ssl.h.
+Correct that diagnostic header path, without changing ARM fixture. Actual Linux
+C/O2 assembly downloaded to /private/tmp/fwp-http2-6f5ce79-linux. Body lines3033–
+3116 show make_call intoRBX, clear_dead_stack, then clock_gettime, then dead
+register clearing and GC. Existing wipe precedes a call that can save the owner
+in dead stack storage. New x86 hook additionally calls clear_dead_stack after
+clearing registers immediately before inspect_owner. This is a testable root
+hypothesis; original positives/negative exit1 remain mandatory. Format0.50/0.94s
+passes; four-way execution still required.
+
+Loop38 independently rebased FROMactualba9f0f293ac8bd372a3a9ffe225af07d27a7186e onto8c4e9ffd71a5555298721921a1fbf3a2314411cf, yielding
+5588b2ed261e63562faa81995978f7beb33426b0; original source/probes/workflows byte-identical. Guard0.06CPU/0.98s;
+prior target clean0.07/0.37s. Four original controls17.27CPU/34.61elapsed,
+lint2.61/5.29s and format0.42/0.83s pass. Final full sequential gates remain.
+
+HTTP2 accepted fixture8f6846a481ae99a22748318ad8ae9ec36f6debe0,
+CI38046812141: all four exact-head jobs pass strict omission exit1, O1/O2 with
+GC/reuse modes, payload/finalizer and library/TLS/actual-collection/IR controls.
+Four-way proof saved /private/tmp/fwp-http2-8f6846a-four-way-proof.json. Passing
+Linux O2 assembly saved /private/tmp/fwp-http2-8f6846a-linux: boundary clear
+stack at3107 follows clock_gettime3060 and precedes GC3117. Apply fixture-only
+repair to source89, excluding optional C export; no runtime/compiler changes.
+
+Effects diagnostic75f311323722/38045910841 passes 100 fresh C/compile/run trials
+per option on all three platforms. Intel/Linux ASan+UBSan pass; ARM strict
+instrumented stderr comparison fails solely on its recorded no-return warning.
+Original full golden contextc938d0817597/38046238343 passes346.60s on Intel.
+Captured C SHA25616158f03945926e297d95eb6eae05e9f372a274871b4b7a849ad91ca9b7a25fb
+matches earlier Intel diagnostic; headercffaedfe070000010300000002000000 confirms
+Mach-O64/x86-64. Original compiler arguments preserved, no crash report.
+After meaningful investigation and unchanged strict full snapshots, rerun the
+failed exact-head Intel production job in CI38021138247; initial crash remains
+unreproduced, no runtime/compiler fix claimed. Retest must pass before merge.
+
+Loop38 published4289528c436b6a3cb1edf81fb45d588722277469 on actual8c4e9ffd71a5, retaining original
+2a45666b37a1 before exact lease. Both original feature/docs commits survive;
+all source/probes/workflows unchanged. Strong audit0.54CPU/4.04elapsed passes.
+Source89 now has the exact accepted8f6846a fixture, excluding only its optional
+Rust C export; source compiler/runtime/other probes untouched. Four-way proof
+verified all exact job names/statuses/head before applying. Format0.53CPU/1.06s
+passes. Source publication and guarded descendant propagation follow.
+
+Accepted HTTP2 fixture source89 published3b72f38e6814d98506265d1dabd8a3446d0f5ba0 on actualb2d374878677;
+original feature and fixture repair commits preserved. Prior177a08a204d7 retained
+remotely before normal fast-forward publication. Compiler/runtime/other probes
+and workflows unchanged; all11 authoritative docs copied. Format0.53CPU/1.06s
+and final strong audit0.52CPU/4.03s pass. Propagate exact fixture through90–112.
+
+HTTP2 fixture propagation row90: c80d278dd53dba7bbb03af482ec978ebc9ce45db to1b4be82fe9b63a74d4cd5f93eedad05fc18066c0 on actual3b72f38e6814d98506265d1dabd8a3446d0f5ba0, FROMactual177a08a204d71a9f4278f0a16f81bc0a4968617b. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-090-c80d278dd53d, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row91: 16edf14e0b94fd9fc8cf3b680dbc996c6dd96df3 to9900cc0d522922c52f9eb7d61c16d9baabf9a06a on actual1b4be82fe9b63a74d4cd5f93eedad05fc18066c0, FROMactualc80d278dd53dba7bbb03af482ec978ebc9ce45db. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-091-16edf14e0b94, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row92: 52433827539e8b1f8e0ed5dfd438290c78d2a109 toe89105300eb35d288e87da5f585b237c96162ac2 on actual9900cc0d522922c52f9eb7d61c16d9baabf9a06a, FROMactual16edf14e0b94fd9fc8cf3b680dbc996c6dd96df3. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-092-52433827539e, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row93: aa2a5aa9a9120dc5d017b2757930b0c9656f119f tof1a357fb78da790bbdea2fc4f796eb373117cd98 on actuale89105300eb35d288e87da5f585b237c96162ac2, FROMactual52433827539e8b1f8e0ed5dfd438290c78d2a109. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-093-aa2a5aa9a912, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row94: e783dfc73c6ad353b70332aaab61fff47590b3fb todf82d27c917b3e08debc1cdbbdc5cf9b640985bc on actualf1a357fb78da790bbdea2fc4f796eb373117cd98, FROMactualaa2a5aa9a9120dc5d017b2757930b0c9656f119f. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-094-e783dfc73c6a, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row95: a4481338b05a155dfc3ed5c1d5f1e4b25f8df4b8 toab5723156bcaf2dee03df766e37f6f8023fecace on actualdf82d27c917b3e08debc1cdbbdc5cf9b640985bc, FROMactuale783dfc73c6ad353b70332aaab61fff47590b3fb. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-095-a4481338b05a, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row96: 2471ba8194d92671b619a654865c1241bedddfa6 to8aa292c5a24a75b23b091d2db58c0ece77b28497 on actualab5723156bcaf2dee03df766e37f6f8023fecace, FROMactuala4481338b05a155dfc3ed5c1d5f1e4b25f8df4b8. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-096-2471ba8194d9, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row97: 0aac7d0311f416d16ce9c2c673cf1e8b20c9368a tobf2371572323ed39f6b3e327a514d1e8ea5b60af on actual8aa292c5a24a75b23b091d2db58c0ece77b28497, FROMactual2471ba8194d92671b619a654865c1241bedddfa6. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-097-0aac7d0311f4, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row98: ae4ef94a5afb69893e86d9e4641b4ccbef33216f tob82589474d2a6cd057385b537de66876b9e7393c on actualbf2371572323ed39f6b3e327a514d1e8ea5b60af, FROMactual0aac7d0311f416d16ce9c2c673cf1e8b20c9368a. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-098-ae4ef94a5afb, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row99: eb5ae0a4a4c280961967117afe306963da80e5ae to3c67663986c7b4e22451c77e1fd9e7ce9970e8df on actualb82589474d2a6cd057385b537de66876b9e7393c, FROMactualae4ef94a5afb69893e86d9e4641b4ccbef33216f. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-099-eb5ae0a4a4c2, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row100: 3883d1abaccc23e101a6867bfbd1ebd9a27e20ad to61a0def48b7d6a47809d737b9ce679ace31c3584 on actual3c67663986c7b4e22451c77e1fd9e7ce9970e8df, FROMactualeb5ae0a4a4c280961967117afe306963da80e5ae. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-100-3883d1abaccc, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row101: 9bdd82863c396ff6dc4dd16cafbbae11b6d5501c toc05384110969ef79bd74809166f487868d933f28 on actual61a0def48b7d6a47809d737b9ce679ace31c3584, FROMactual3883d1abaccc23e101a6867bfbd1ebd9a27e20ad. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-101-9bdd82863c39, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row102: 7e011508db02e1d5701123210f7606403e500bc7 to7931f680a0038fa9668917b6cc18d4e7dab5b012 on actualc05384110969ef79bd74809166f487868d933f28, FROMactual9bdd82863c396ff6dc4dd16cafbbae11b6d5501c. All 2 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-102-7e011508db02, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row103: b7961a14d5dd857c6775cb8823135a07d861b77c to38e1e7ab8048376c2bcbd834f01c1b5ac6a231f1 on actual7931f680a0038fa9668917b6cc18d4e7dab5b012, FROMactual7e011508db02e1d5701123210f7606403e500bc7. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-103-b7961a14d5dd, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row104: 392a5721e544d321c59d4e5af0f2c92f87db344f to54cffe881e1f369adca1e7bcbff68d9612942448 on actual38e1e7ab8048376c2bcbd834f01c1b5ac6a231f1, FROMactualb7961a14d5dd857c6775cb8823135a07d861b77c. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-104-392a5721e544, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row105: 96174aaaf6bedc3282b7b1516749edf9539dea07 toc07c37877b47a9ef62c04e88c0a73a8d03e97dbd on actual54cffe881e1f369adca1e7bcbff68d9612942448, FROMactual392a5721e544d321c59d4e5af0f2c92f87db344f. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-105-96174aaaf6be, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row106: 8c53b11ae1d09267f15da997f74a9285a8005b56 to43757843a1b34e267ffb0b59f2d4a7592d867100 on actualc07c37877b47a9ef62c04e88c0a73a8d03e97dbd, FROMactual96174aaaf6bedc3282b7b1516749edf9539dea07. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-106-8c53b11ae1d0, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row107: e36c9af3743fea35d1f4b423203dbf1e79ea541f tof63fbe1de7c052f6824fae4e6c7249b9ccb14370 on actual43757843a1b34e267ffb0b59f2d4a7592d867100, FROMactual8c53b11ae1d09267f15da997f74a9285a8005b56. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-107-e36c9af3743f, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row108: edac8c6a96dc6218a1a559eeb359c6dc46562e48 tocd31bd02464f8455e43d74bd08f2d46b3e218673 on actualf63fbe1de7c052f6824fae4e6c7249b9ccb14370, FROMactuale36c9af3743fea35d1f4b423203dbf1e79ea541f. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-108-edac8c6a96dc, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row109: 1c471fb6b348dd0a2b94c6c788ebdbac567ac906 to6b206eae08ec258bfeacd3b03566cea23ed7e3d2 on actualcd31bd02464f8455e43d74bd08f2d46b3e218673, FROMactualedac8c6a96dc6218a1a559eeb359c6dc46562e48. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-109-1c471fb6b348, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row110: 93d088fb187d4efb73393eaaf1144a6d934eb550 to0caead68a6c3284d4f9531b2b7c845511cb14b20 on actual6b206eae08ec258bfeacd3b03566cea23ed7e3d2, FROMactual1c471fb6b348dd0a2b94c6c788ebdbac567ac906. All 1 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-110-93d088fb187d, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row111: 73e37788e5c6de5d5d14696d36fb47a719da2d3a tob2350957e6ff54de3a6bc9b1d6ff1d13151b48c8 on actual0caead68a6c3284d4f9531b2b7c845511cb14b20, FROMactual93d088fb187d4efb73393eaaf1144a6d934eb550. All 2 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-111-73e37788e5c6, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 fixture propagation row112: 12a2f3a988b29221816a9c7096aab3e9d534c119 to0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5 on actualb2350957e6ff54de3a6bc9b1d6ff1d13151b48c8, FROMactual73e37788e5c6de5d5d14696d36fb47a719da2d3a. All 2 original commits preserved. Exact four-way-tested fixture8f6846a inherited without optional C export; every other native/compiler/probe/workflow byte unchanged. All11 authoritative docs copied; prior revision retained atroadmap/revision-112-12a2f3a988b2, exact lease used, branch/root audits pass. No new full support claim; final squash-base rebase and exact-head production gates remain required.
+
+HTTP2 propagation90–112 completed through0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5 on actualb2350957e6ff54de3a6bc9b1d6ff1d13151b48c8. Original commit counts and immutable anchors preserved, exact tested fixture inherited, every other compiler/runtime/probe/workflow byte unchanged. All11 authoritative docs copied; retained remote revisions, exact leases and branch/root audits verified. Journals are complete and must never be rerun. First batch initially stopped at retained-tag publication for94 (7.09CPU/81.20elapsed); remote remained unchanged. After inspecting its exact lease and saved validated result, resumed without repeating90–93; retry succeeded and90–97 completed6.53CPU/70.11elapsed. Batch98–105 completed9.94CPU/106.03elapsed. Fresh full source112 evidence and final sequential PR gates remain required.
+
+Final HTTP2 propagation106–112 completes9.63CPU/95.68elapsed; all23 descendants
+are published and audited. Old native/probe/workflow bytes except the exact
+accepted fixture remain unchanged, original commit counts/anchors preserved.
+Live handoff reconciliation0.00CPU/0.13s removes superseded GCC-only fixture
+and old shared-target instructions. Last target is row38 loop preparation.
+Fresh full evidence0f8c53199b2cb2ab1ebf54e4323a9b2efe064656 on exact source112
+0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5 launchesCI38048222203 (queued).
+Guarded rebase/audit0.74CPU/5.60elapsed preserves all source/test/tool/production
+workflow bytes and the complete six-job plus docs evidence workflow, including
+FWP_REQUIRE_WASM_RESOURCE_COUNTS=1. All11 root docs copied. Old3a97905ca980
+retained at roadmap/revision-evidence-full-3a97905ca980 before exact leased
+publication. No passing full support is claimed until all current jobs pass.
+
+Root final handoff audit0.55CPU/4.12elapsed passes after full evidence publication.
+Sanitizer diagnostic repair separates tool reports using log_path while retaining
+the exact unchanged effects stdout/stderr/exit oracle. Only the exact previously
+recorded ASan no-return warning is classified as a stack-instrumentation limit;
+all other diagnostics fail. Positive local O1/O2 checks1.31CPU/3.14elapsed pass.
+A real injected heap-use-after-free occurs after the original program error,
+leaving stdout/stderr intact. First independent-fault control1.28CPU/2.78elapsed
+fails its own oracle prerequisite because Darwin defaults to abort(-6); the
+diagnostic itself correctly rejected the real error. Set portable ASan
+abort_on_error=0/exitcode=1 for the instrumentation, then real-fault control
+passes1.29CPU/2.77elapsed: exact original stdout/stderr/exit still agree while
+the sanitizer error independently fails the diagnostic at both O1/O2. Production
+source/tests/workflows unchanged; instrumentation warning is retained, not
+complete stack-sanitizer coverage. New focused runner diagnostic uses ten fresh
+compiles per option; the 100-trial source evidence remains75f3113/38045910841.

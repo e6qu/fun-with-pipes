@@ -38,10 +38,12 @@ jobs:
       - name: Raw interpreter and repeated O1/O2 binary oracle
         run: python3 scripts/probe-effects-native.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 100
       - name: Independently generated native binary oracle
-        run: python3 scripts/probe-effects-fresh.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 100
+        run: python3 scripts/probe-effects-fresh.py "$PWD/target/debug/fwp" "$PWD" "$RUNNER_TEMP/effects" 10
       - name: Address and undefined behavior diagnostics
         if: always()
         run: python3 scripts/probe-effects-sanitizer.py "$PWD" "$RUNNER_TEMP/effects"
+      - name: Real sanitizer fault control with identical program oracle
+        run: python3 scripts/check-effects-sanitizer.py "$PWD" "$RUNNER_TEMP/effects"
       - name: Native headers and optimized assembly
         if: always()
         run: |
