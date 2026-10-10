@@ -89,9 +89,11 @@ own scrutinee (`ownership-resource-record-binding-kinds`). Preparation85
 publishedebe69e13a935f99e170cbb231a5d2cba1b83c729 on actual84e2a2baa977fa;
 both original implementation/stack-child repair commits and original source/probes
 preserved. Three audits and publication1.78CPU/18.40elapsed pass.
-Rebase86 FROM actual85old1236f09a1d85 ONTO published85ebe69e13a935;
-run unchanged record/variant/nominal/stack/frame/caller controls, RC units,
-lint and format; copy all11 docs/audit and retain/publish. Next87 source nominal
+Rebase86 FROM actual85old1236f09a1d85 ONTO published85ebe69e13a935 succeeds
+at native0f6fa95faa5e (0.06CPU/1.03elapsed), with exact source/probe parity.
+All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed,
+all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass.
+Copy all11 docs/audit and retain/publish. Next87 source nominal
 context. Both binding paths must close once; preserve box/cleanup controls.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -197,7 +199,7 @@ still need their final squash rebases and six exact-head full gates.
 | 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Original variant control10.41CPU/22.82elapsed, nine frame/caller tests24.67/49.60s, all23 RC units3.77/7.98s, lint2.43/4.99s, format0.45/0.84s and binary inspection0.22/1.11s pass; both original feature/repair commits and source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 layout/disassembly recorded; final actual-squash/full gates required |
 | 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
 | 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | All13 original nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed, all23 RC units3.80/7.81s, lint2.45/5.02s and format0.51/0.83s pass; both original feature/stack-child repair commits and source/probes unchanged, including child-retain omission and strict File/box controls; final actual-squash/full gates required |
-| 86 ownership-resource-record-binding-kinds | f5a017db54da | 1236f09a1d85 | Test10.49/22.84s; lint 6.03/12.91s and format 0.41/0.86s pass |
+| 86 ownership-resource-record-binding-kinds | 0f6fa95faa5e | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
 | 87 ownership-nominal-source-context | 08beb7c2bc23 | f5a017db54da | Raw source/native test 13.09/26.43s; lint 6.14/13.07s and format 0.45/0.86s pass |
 | 88 ownership-channel-cycle-lifetimes | b2d374878677 | 08beb7c2bc23 | Two cycle/queue tests 13.30/26.87s; lint 5.94/13.04s and format 0.46/0.87s pass |
 | 89 ownership-http2-body-roots | 3b72f38e6814 | b2d374878677 | Four-way fixture8f6846a/38046812141 passes original strict omission and all controls; tested fixture applied without optional export; source published and propagated through112; final refresh/full gates required |
@@ -356,9 +358,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-match-scrutinee-worktree (row85, native3c7758fb),
-with all13 nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed passing.
-The previous checkout's bounded package clean removed112.6MiB (0.08CPU/0.51elapsed).
+last checked in /private/tmp/fwp-resource-record-binding-worktree (row86, native0f6fa95f),
+with all13 record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed passing.
+The previous checkout's bounded package clean removed125.3MiB (0.07CPU/0.37elapsed).
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared

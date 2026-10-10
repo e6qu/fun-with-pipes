@@ -1,9 +1,8 @@
 # Prepared roadmap queue
 
-Updated 2026-10-10. This file preserves preparation ancestry.
-Current merge status, actual rewritten bases and checks live only in
-[the handoff](development-state.md). This table preserves preparation ancestry;
-a published preparation is not verified main support.
+Updated 2026-10-10. This table preserves preparation ancestry. Current merge
+status, actual rewritten bases and checks live in [the handoff](development-state.md).
+A published preparation is not verified main support.
 
 Open one PR at a time after the previous PR passes all six exact-head gates
 and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
@@ -20,8 +19,8 @@ original preparation and can differ after rewrites. Never replace OLD anchors.
 Resolve documentation conflicts with all 11 authoritative docs listed in the
 handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
-Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
-queue instructions are preserved in [history](roadmap-history.md).
+Every final PR needs all six production jobs and roadmap_docs at its exact head.
+Prior evidence and superseded queue instructions are preserved in [history](roadmap-history.md).
 
 Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
 resolve full hashes before publication or merge. Checkout paths use
@@ -113,7 +112,7 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 83 | resource-frame-variants | `ownership-resource-frame-variants` | `7b7e45b20230` | `786e4bbb99f1` | `17869223a502` |
 | 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `e2a2baa977fa` | `ae00e6929e86` | `786e4bbb99f1` |
 | 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `ebe69e13a935` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f5a017db54da` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `0f6fa95faa5e` | `f85cc4e09db4` | `3a0cbdb33b79` |
 | 87 | nominal-source-context | `ownership-nominal-source-context` | `08beb7c2bc23` | `8abfd46b3476` | `f85cc4e09db4` |
 | 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `b2d374878677` | `dc2ad1febc5d` | `8abfd46b3476` |
 | 89 | http2-body-roots | `ownership-http2-body-roots` | `3b72f38e6814` | `d29dda936dff` | `e91dcb307c61` |
