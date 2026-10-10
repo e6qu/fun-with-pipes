@@ -97,11 +97,12 @@ and source/probes are preserved; fake OpenCL is not GPU hardware coverage.
 gRPC listener61 is publishedca75ca461682ad05511d13d9496d822cc7177c02 on
 actual603eb64f54869f. All three original gRPC/listener/resource controls,
 lint, format and all audits pass; source/probes and old revision are preserved.
-Current independent task62 is TLS cache failure cleanup (`ownership-tls-cache-failures`):
-rebase FROM actual91f9a30742f9 ONTO published61. Preserve prior cached contexts,
-partial context/name/cache/protocol owners, retry behavior and all five original
-omission/incomplete-publication controls. Check cache plus library-resource/gRPC
-regressions, lint, format and all11 docs/audit before retained-revision publication.
+Current independent task62 is TLS cache failure cleanup (`ownership-tls-cache-failures`),
+rebased FROM actual91f9a30742f9 ONTO published61 at native1973c43b0f12.
+All three original TLS-cache/resource/gRPC controls pass11.72CPU/27.33elapsed,
+including all five partial-owner/cache-publication controls. Lint2.44/4.93s
+and format0.45/0.86s pass. Finish all11 docs/audit before retained-revision
+publication, then prepare queue63 bounded ALPN wire buffers without GC scratch.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -182,7 +183,7 @@ still need their final squash rebases and six exact-head full gates.
 | 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
 | 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
 | 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
-| 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
+| 62 ownership-tls-cache-failures | 1973c43b0f12 | ca75ca461682 | Three original TLS-cache/resource/gRPC controls11.72CPU/27.33elapsed, lint2.44/4.93s and format0.45/0.86s pass; original source/probes unchanged, including all five partial-owner/cache-publication controls; final actual-squash/full gates required |
 | 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
 | 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
@@ -363,8 +364,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-server-worktree (row61, nativef4aeaf8),
-with all three original controls13.67CPU/30.41elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-tls-cache-worktree (row62, native1973c43),
+with all three original controls11.72CPU/27.33elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
