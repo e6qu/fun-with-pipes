@@ -52,7 +52,7 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
         generated
     };
     let boundary = if clear_stale_roots {
-        "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();"
+        "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); clear_dead_stack(); inspect_owner();"
     } else {
         "static V fwp_str_new(const char *s, size_t len) { inspect_owner();"
     };
@@ -70,6 +70,7 @@ static unsigned char *watched_body;
 static int copy_active,released;
 static void inspect_owner(void);
 #if defined(__x86_64__)
+static void clear_dead_stack(void);
 #define clear_dead_registers() __asm__ volatile("xor %%ebx,%%ebx; xor %%r12d,%%r12d; xor %%r13d,%%r13d; xor %%r14d,%%r14d; xor %%r15d,%%r15d" : : : "rbx","r12","r13","r14","r15","memory")
 #endif
 "#;

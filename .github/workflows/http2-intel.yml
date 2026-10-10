@@ -57,7 +57,16 @@ jobs:
         run: cargo test --lib rc::tests -- --nocapture
       - name: Exact strict omission assembly
         if: always()
-        run: $CC -O2 -std=gnu11 -ffp-contract=off -w -S "$RUNNER_TEMP/http2-owner.c" -o "$RUNNER_TEMP/http2-owner.s"
+        run: |
+          python3 - <<'PYCODE'
+          from pathlib import Path
+          import os, subprocess
+          directory = Path(os.environ['RUNNER_TEMP'])
+          args = [os.environ['CC'], '-O2', '-std=gnu11', '-ffp-contract=off', '-w', '-S', str(directory / 'http2-owner.c'), '-o', str(directory / 'http2-owner.s')]
+          if os.environ.get('FWP_OPENSSL_DIR'):
+              args += ['-I' + os.environ['FWP_OPENSSL_DIR'] + '/include']
+          subprocess.run(args, check=True)
+          PYCODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
