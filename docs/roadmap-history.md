@@ -13842,3 +13842,115 @@ original four-way matrix restored. ARM behavior is unchanged. This candidate
 still requires all four native compiler gates before source propagation.
 Duplicate34 docs commit49705971b287 is published after retaining734d3383addf;
 audit0.42CPU/3.37elapsed passes; no implementation PR or test rerun is needed.
+
+## Superseded staged repair handoff
+
+The following is historical context; the live handoff supplies current actions.
+
+## Staged repairs and next independent work
+
+Full queue evidence38016929326/3a97905c exposes the unchanged source65
+unboxed-worker aliases assertion: `aliases boxed a worker argument`. Local
+source65 reproduction fails6.65CPU/13.68elapsed with that exact assertion;
+its generated C boxes the six-field record before the worker call. Diagnostic
+file-write instrumentation is restored byte-for-byte; native assertions stay
+unchanged. Worker-use recognition accepted bare locals but missed locals under
+count operations after the earlier inline-argument repair. The narrow fix uses
+is_local_through_counts only for complete compatible worker arguments; partial
+and dynamic applications still box. All nine original worker/conversion/caller/
+retain tests pass27.80CPU/56.39elapsed, clippy2.35/4.78s and format0.35/0.73s
+pass. Earliest row65 repair `60b03078c3cd` is published; final commit audit
+0.42CPU/3.36elapsed passes. Prior886f8b0 is retained remotely. Preserve original
+native probes:66–73 refresh passes8.39CPU/91.73elapsed, preserving both
+resource-frame commits. Refresh74–81 passes8.62CPU/92.55elapsed and82–89 passes8.69/92.92s; 90–97 refresh is complete; 98–105 refresh passes8.58CPU/91.68elapsed; 106–112 refresh passes7.58CPU/79.22elapsed. All worker repairs now propagate
+through 112. The completed batches used
+/private/tmp/fwp-refresh-counted-worker-arguments.py, Repair the Intel HTTP/2 fixture before refreshing failed full
+evidence. Completed fwp-counted-worker-refresh journals must not be rerun. Full runs and
+production deliveries continue; failed evidence never establishes support. Raw/clean logs:
+/private/tmp/fwp-full-ownership-38016929326-arm-failure[.clean].log; emitted C:
+/private/tmp/fwp-worker-alias-886f8b-generated.c.
+
+Intel regular evidence also fails the strict HTTP/2 omitted-owner control:
+http2_body_roots expected exit 1 but got 0. Its positive collection/payload/
+finalizer controls pass; stale conservative roots can hide the omission.
+Extend only the existing x86-64 fixture isolation to Clang, retaining the ARM
+fixture and every original assertion. Verify on Intel Clang, Linux GCC/Clang
+and ARM before publication and propagation from row 89 through 112. This is a
+fixture repair, not verified runtime support. Old full evidence remains failed.
+Candidate ownership-evidence-http2-intel is based on source177a08a204d7. The
+only probe change extends the existing x86-only isolation to Clang; all positive
+and strict negative assertions stay intact. Local ARM test7.28CPU/15.25elapsed,
+lint2.34/4.74s and format0.46/0.89s pass. Candidate0d54979de1ef runs CI38021302113: ARM and Linux GCC pass, Linux Clang
+still returns0 for the omitted-owner control, Intel also fails the same strict omission assertion. Second candidate8ed52165833a forces
+only the x86 body-copy primitive into its copying frame as well. Second candidate also fails Linux Clang strict omission. Diagnostic578830243e16/38022478422 exports its emitted C and optimized assembly.
+Clang spills the owner at body rsp+48 before the remote_end test; only the
+unreachable waiting branch reloads it. Candidate restates the fixture's already
+completed stream state after timeout evaluation, only on x86, so the dead
+waiting-branch spill disappears. All original assertions and ARM remain unchanged.
+Four-way validation must pass before propagation.
+No candidate has been accepted; four native compiler/platform runner
+jobs must pass before the source89 repair and later propagation.
+
+Row 33 normalizes bound/inline Again records and reads cancellation owners by
+the actual emitted layout;35 selects the intended pending-call IR checkpoints;
+47 protects evaluated CAFs during later scalar evaluation. Original allocation,
+alias, release and scalar-bit assertions stay intact. Earlier source-specific
+passes and superseded heads are archived; they never accept rewritten sources.
+
+Cache/task evidence329e8db/CI 38011548324 exposed missing remaining-owner cleanup
+during boxed match-to-worker conversion. Local reproduction fails too. Row 43
+repair `8c7450568632` adds the completed consumed-match checkpoint without
+replacing operation/retain checkpoints. Its new IR control fails before the fix;
+all 20 row 43 IR controls and seven original native tests then pass, including all
+three exact omission controls, O1/O2, raw interpreter, GC verification and reuse
+poisoning. Original native probes are unchanged. Repaired cache/task evidence
+`2d5d52fd941c` runs CI 38013532481 on repaired source52 `cb32c2cea9bb` and includes
+all 21 IR controls and the original stack/reuse gates. The scoped run passes;
+this validates its Linux source, while each production PR still needs full gates.
+
+Typed-holder evidence372375a/CI 38011999875 exposed a parent-box allocation
+regression for a direct resource variant constructor. Row 83 repair
+`06215746caae` admits eligible direct constructors only for original frame
+holders, respecting the variant-return flag. All five original variant/record/
+frame tests, lint, format and audit pass. Zero/one parent-box, File lifetime,
+alias and inactive-payload assertions are unchanged. Refreshed holder evidence `f7d7585b89ad` is byte-identical in source, native
+probes, scripts and production workflows to repaired source88 `acce7492f8d3`.
+All 21 ownership IR controls and original stack/reuse gates remain required.
+CI 38015529998 passes; failed CI 38011999875 remains archived, not support.
+
+Both repairs now propagate through row 112. Each bounded batch verifies exact
+inherited code, original probes and commit counts, retains prior heads remotely,
+publishes with an exact lease and audits the handoff. Both resource-frame
+commits, the frame-holder repair and both nominal/whole-stack match commits
+survive. Detailed commands, timings and conflict resolutions are in history.
+Completed refresh journals must not be rerun. Fresh serving/storage evidence
+passes on repaired source100/112; prior passes do not accept these new heads.
+Every production PR still requires its own seven exact-head gates. Temporary
+helpers may disappear; the table, actual bases and retained remote tags preserve
+the recovery record.
+
+The million-step native tail regression is merged and tested at O1/O2 with
+GCoff/on against a200-step raw oracle. Full-size raw100000 exceeds local RSS;
+release runner evidence81362c7/CI 37997969782 passes using1893164KiB peak RSS,
+while debug exceeds its existing4GiB stack. Keep those workloads on GitHub;
+never raise local/stack limits. Neither result claims constant raw stack or a
+speedup. Exact hardware, flags and measurements are in history.
+
+
+Constructor independent rebase from actual734d3383addf onto duplicate49705971b287
+yields37bd48d416edf746144ad7db75a5f7d8ae525a39. Original source/probes/scripts/
+production workflows matchbe0032a15ee3 byte-for-byte; one original feature
+commit survives. Docs-only conflicts use all11 live docs. Guard0.05CPU/1.02
+elapsed; prior loop package clean0.06/0.38s. Six native constructor/caller
+controls22.32/44.76s and exact constructor IR3.18/6.70s pass. Focused lint
+2.28/4.58s and format0.34/0.61s pass. Final actual-squash rebase/full gates required.
+
+Rejected completed-state candidate27247feb091b/38022744063 fails both x86 Clang
+strict omissions; ARM/GCC pass. A focused cross-assembly-only check (no native
+execution) confirms the unreachable loop still retains an owner spill despite
+reasserting remote_end. Apple x86 O2 assembly guard0.19CPU/0.38elapsed; selecting
+the fixture's known completed-copy path removes that spill in cross assembly
+0.09/0.25s. This is diagnostic evidence, not platform acceptance. Next candidate
+selects only this already-true fixture path on x86 and removes state reassertion;
+ARM/copy/fence/collection and every original assertion stay intact. Formatting
+0.46/0.87s passes. Fresh four-way execution is required before propagation.
