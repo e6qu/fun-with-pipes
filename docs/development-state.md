@@ -49,8 +49,8 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 22.82elapsed, lint2.57/5.19s, format0.44/0.83s and all pre/post-commit/root audits
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
-Production CI38054115210 has ARM regular and Intel GC stress jobs running;
-four other production jobs remain queued; docs38054115151 passes. Require all seven
+Production CI38054115210 has Linux, ARM regular and both GC stress jobs running;
+bench and Intel regular remain queued; docs38054115151 passes. Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -93,12 +93,13 @@ native/interpreter fake-OpenCL and library-unload controls, lint, format and all
 audits pass; exact interpreter/native failure outputs agree. Source/probes and
 old revisions are preserved. The interpreter cache intentionally lives for the
 process; fake API coverage does not establish GPU hardware support.
-Current independent task59 is TLS listeners (`ownership-tls-listeners`): rebase
-FROM actual013b07eac021 ONTO published584119be1cdaf9. Preserve real OpenSSL
-context/ALPN ownership through accepted and raw HTTP/2 sessions, failed listener
-construction and all six release/retain/guard omissions. Check the original
-listener probe and focused TLS streams engine agreement, lint, format and all11
-docs/audit before retained-revision publication.
+Current independent task59 is TLS listeners (`ownership-tls-listeners`), rebased
+FROM actual013b07eac021 ONTO published584119be1cdaf9 at nativee94901b623ba.
+Original listener control passes8.98CPU/20.75elapsed, including all six omissions.
+Actual TLS streams passes7.58/18.01s without skip and preserves exact
+interpreter/native agreement before vendor-only snapshot normalization.
+Lint2.63/5.31s and format0.45/0.84s pass. Finish all11 docs/audit before
+retained-revision publication, then prepare queue60 library resource disposal.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -176,7 +177,7 @@ still need their final squash rebases and six exact-head full gates.
 | 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
 | 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | Both original fake-OpenCL/library-unload controls10.35CPU/30.64elapsed, lint2.50/5.00s and format0.44/0.82s pass; original source/probes unchanged; fake API does not verify GPU hardware; final actual-squash/full gates required |
 | 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
-| 59 ownership-tls-listeners | 64fc39f9738e | 013b07eac021 | Test8.61/19.51s; lint 2.46/5.00s and format 0.35/0.75s pass |
+| 59 ownership-tls-listeners | e94901b623ba | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
 | 60 ownership-library-resources | aa8dfb3a703e | 64fc39f9738e | Test8.04/18.34s; lint 2.48/4.99s and format 0.41/0.86s pass |
 | 61 ownership-grpc-server-cleanup | 91f9a30742f9 | aa8dfb3a703e | Test9.94/19.99s; lint 2.46/4.95s and format 0.44/0.86s pass |
 | 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
@@ -360,8 +361,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-interpreter-opencl-worktree (row58, nativeffec946),
-with both original controls14.15CPU/35.43elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-tls-listener-worktree (row59, nativee94901b),
+with listener and actual TLS streams controls passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
