@@ -50,7 +50,8 @@ all14 RC units3.25/6.88s, lint2.44/4.99s, format0.34/0.61s and all three audits
 pass. Publication1.75CPU/18.26elapsed and PR creation0.20/3.94s pass. Oldbcd3b392050b
 is retained remotely before exact-lease publication. Resolved empty-docs commit
 bookkeeping is archived in history; native rebase was not rerun.
-CI38066365077 passes ARM GC stress; all remaining five production jobs run.
+CI38066365077 passes both ARM/Intel GC stress and bench; Linux and both
+regular macOS jobs run.
 Docs38066365141 passes at the frozen head. Require all seven
 exact-head gates, then match-head squash with subject
 `Protect worker result fields until record and variant boxing succeeds` and empty body.
@@ -87,16 +88,16 @@ automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
 one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
 Exact binary/layout details and limits are in ownership/history.
 
-Current independent task99 releases canonical serialization scratch on traps
-and transcoder failure (`ownership-grpc-canonical-encoding`). Preparation98
-published9c2c91fa8e21e1051198312a952c024f7a099bf4 on actual970203804096d8,
-with original source/probes preserved. Four request/send/decode/peer controls pass;
-three audits and publication1.82CPU/18.61elapsed pass.
-Rebase99 FROM actual98oldb82589474d2a ONTO published989c2c91fa8e21;
-run unchanged canonical/request/send/force controls, lint/format and all11 docs/
-audits before retained publication. Preserve exact omitted cleanup exit1, canonical
-I64 bytes and tagged result offsets, exact serialization/transcoder trap text,
-O1/O2 and GC/poison modes. Next100 response encoding cleanup.
+Preparation99 canonical encoding cleanup rebased once onto actual published98
+9c2c91fa8e21e1051198312a952c024f7a099bf4, preserving all source/probes.
+All four original canonical/request/send/force tests pass (4.14CPU/10.05elapsed);
+Focused lint2.53/5.21s and format0.40/0.74s pass. The prior test process completed across compaction
+without a recoverable footer; only focused tests were repeated to recover actual
+results. Native rebase was not repeated. Exact omitted cleanup exit1, I64 bytes,
+tagged result offsets and serialization/transcoder trap text remain unchanged.
+Hooks inject traps after the original writer returns; arbitrary mid-write failure
+coverage is not claimed. Complete format/docs/audits and retained publication,
+then prepare100 served response encoding cleanup on final published99.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -134,7 +135,8 @@ Evidence branch: ownership-evidence-http2-intel. Rejected candidates and assembl
 artifacts are archived in history.
 
 Queue32 fold is merged in #111 and queue33 loop in #112. Queue34 is skipped
-as a verified docs-only duplicate; queue35 constructor cleanup is next.
+as a verified docs-only duplicate; queue35 constructor cleanup is accepted in #113.
+Queue36 worker result boxing is the current production PR #114.
 Later preparations still need actual-squash rebases and exact-head full gates.
 Preserve the earlier matched-result checkpoint, direct resource frame eligibility,
 CAF evaluation, loop layout and original allocation/omission controls during
@@ -213,7 +215,7 @@ still need their final squash rebases and six exact-head full gates.
 | 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | All four original send/force/receive/status tests15.07CPU/30.73elapsed, lint2.47/5.14s and format0.46/0.84s pass; source/probes unchanged including exact omitted cleanup exit1, plain/gzip frame bytes, partial/zero-window cancellation and resumed flow control across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | All four original request/send/force/peer tests14.14CPU/29.05elapsed, lint2.48/4.95s and format0.51/0.95s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, encode trap/reset text and suspended-send cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
-| 99 ownership-grpc-canonical-encoding | 3c67663986c7 | b82589474d2a | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 99 ownership-grpc-canonical-encoding | 7afa6a2bd85e | 9c2c91fa8e21 | All four original canonical/request/send/force tests4.14CPU/10.05elapsed lint2.53/5.21s and format0.40/0.74s pass; source/probes unchanged including exact omitted cleanup exit1, canonical bytes/tag offsets and trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
 | 100 ownership-grpc-response-encoding | 61a0def48b7d | 3c67663986c7 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 101 ownership-grpc-client-requests | c05384110969 | 61a0def48b7d | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 102 ownership-grpc-client-failure-text | 7931f680a003 | c05384110969 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -359,9 +361,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-grpc-request-encoding-worktree (row98, nativeff35c073),
-with all four request/send/force/peer tests14.14CPU/29.05elapsed passing.
-Previous package clean removed127.2MiB (0.07CPU/0.38elapsed); last disk sample76GiB free.
+last checked in /private/tmp/fwp-grpc-canonical-encoding-worktree (row99, native7afa6a2b),
+with all four canonical/request/send/force tests4.14CPU/10.05elapsed passing.
+Previous package clean removed127.2MiB (0.06CPU/0.36elapsed); last disk sample76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
