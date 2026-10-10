@@ -28,27 +28,32 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 ## Main and next delivery
 
-Main is `486520c141d3c26888491d1f5434a7295d8e3cd7` (PR #112). Accepted exact head
-`ac24ea45cbe03a4cb7aaa2ac1fba999fccd58b42` passes all six production jobs in
-CI38054115210 and roadmap_docs38054115151. Match-head squash at2026-10-10T14:28:32Z
-has exact 64-character subject `Protect loop state and Step payload owners across nonlocal exits`,
+Main is `dd3b218b31e369383c019cc4ac3c9abc2d5042e1` (PR #113). Accepted exact head
+`54249400ef16fe655593b4136ea8ca3c379f1255` passes all six production jobs in
+CI38060160102 and roadmap_docs38060160207. Match-head squash at2026-10-10T15:58:13Z
+has exact 61-character subject `Protect consumed constructor fields before allocating storage`,
 one line with empty body and no trailers or attribution. Raw commit has one
-parent837096b9a5dc and tree `d999a7ec3459ab9ac02d61aef42456b0b5a551b1`, identical to the tested head.
-All11 live docs were hashed in /private/tmp/fwp-main-docs-pre112 and restored
-byte-for-byte after main FF. Duplicate mainCI38059746844 cancelled only after
-that proof; main docs38059746845 is queued. Native macOS and selected ownership
-are delivered through loop state/Step unwind and flattened Again record preservation.
-Phase2 remains incomplete; phases3–6 remain pending and tracing remains fallback.
+parent486520c141d3 and tree `ddc1acfe9330b6c8d8aab21b90d53db69b1dd2c8`, identical to the tested head.
+All11 live docs were hashed in /private/tmp/fwp-main-docs-pre113 and restored
+byte-for-byte after main FF. Duplicate mainCI38065747650 cancelled only after
+that proof; actual main docs38065747672 queued. Native macOS and selected ownership
+are delivered through consumed constructor fields and remaining caller references,
+registered before constructor allocation. Phase2 remains incomplete; phases3–6
+remain pending and tracing remains fallback.
 
-Queue35 constructor cleanup (`ownership-constructor-unwind`) is finally rebased
-FROM actual duplicate3449705971b287 ONTO actual squash486520c141d3 at
-snapshot833fa844901a. Both original feature/documentation commits and every
-original compiler/runtime/probe byte are preserved. All eight constructor/caller/
-loop tests27.31CPU/54.70elapsed, all14 RC units3.37/6.99s, lint2.32/4.67s and
-format0.34/0.60s pass. Original omitted constructor cleanup still exits5 at
-O1/O2 with GC stress/verification and poisoning; raw interpreter/native agrees.
-Retain oldbbd74db2977a remotely before exact-lease publication, append fresh
-all11 docs and open the sole next PR. All seven exact-head gates are required.
+Next production delivery is queue36 worker result boxing (`ownership-worker-boxing`).
+Current prepared sourcebcd3b392050b30163256ad72610046a15e691dfe has actual old
+base35bbd74db2977a1a34f83e67dd92038dce93941786, with original feature and appended
+documentation commits. Rebase FROM that actual base ONTO accepted squashdd3b218b31e369383c019cc4ac3c9abc2d5042e1,
+Both original feature/docs commits and exact source/probes are preserved at
+snapshot6e2902d2c7e3. The rebase's count check caught the original docs-only commit
+becoming empty after conflict resolution; retained it with --allow-empty -C
+bcd3b392050b without rerunning native rebase (recovery0.04CPU/0.78elapsed passes).
+All nine original worker/constructor/caller/loop tests30.22CPU/60.66elapsed pass,
+including exact worker omitted-scope exit4 and constructor exit5. All14 RC units
+3.25CPU/6.88elapsed, lint2.44/4.99s and format0.34/0.61s pass; finish all11
+docs/audits before retained publication. Open only the next focused PR and require all seven
+exact-head full gates before squash. Fix failures and continue later preparation.
 
 Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
 delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
@@ -64,29 +69,29 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–71 are refreshed and published on their actual predecessors.
+Preparations39–89 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
 publication journals must not rerun. Final squash rebases/full gates still remain.
 
-Actual ARM64 binary/layout evidence for44 and65 establishes the current8-byte
-slot baseline. The six-I64 worker value is48 bytes/aligned8 and returns through
+Actual ARM64 binary/layout evidence for44,65,79,80 and83 records the current8-byte
+slot baseline and tested aggregate/File layouts. The six-I64 worker value is48 bytes/aligned8 and returns through
 caller storage with192/208-byte frames; no speed or constant-stack claim.
 ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
 executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
 fake APIs, not hardware evidence. Closing channels preserves queued values;
-automatic unreachable-cycle reclamation remains unproved.
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
 
-File I/O preparation72 at nativebaae1a5566a6 on published71702cd9b0a69a passes
-all nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/
-42.63elapsed, lint2.44/4.90s and format0.44/0.84s. Raw interpreter/native
-stdout/stderr/exit agree for invalid UTF-8 and directory errors; binary reads
-preserve arbitrary bytes with GC on/off. Buffer/stream omission exits5 and
-omitted write-error checking exits8 remain exact under O1/O2 and both poisoning
-settings. Copy all11 docs and audit before retained publication; next73 resource
-frames must preserve both original implementation and fusion repair commits.
-Final actual-squash/full gates remain required.
+Independent preparation89 published5bc4f862bd5aa26e4fd4bc7a225660849403361f
+on actual883db25573057b, preserving all three root/GCC/x86-Clang fixture commits
+and original source/probes. Three audits and publication1.74CPU/18.06elapsed pass.
+HTTP2 actual-major collection, payload/finalizer and exact omitted-fence exit1
+remain verified; final sequential full gates still required. Refresh90 body bounds
+on this actual published predecessor after queue36's next production PR opens.
+The immediate action is queue36's final rebase/checks/publication on accepted113.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -140,8 +145,7 @@ still need their final squash rebases and six exact-head full gates.
 |---|---|---|---|
 | 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
-| 35 ownership-constructor-unwind | 833fa844901a | 486520c141d3 | Final actual-squash rebase preserves both original feature/docs commits and source/probes; eight constructor/caller/loop tests27.31CPU/54.70elapsed, all14 RC units3.37/6.99s, lint2.32/4.67s and format0.34/0.60s pass; original omitted cleanup exit5 preserved; exact-head full gates required |
-| 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
+| 36 ownership-worker-boxing | 6e2902d2c7e3 | dd3b218b31e3 | Final actual-squash source preserves both original feature/docs commits; nine worker/constructor/caller/loop tests30.22CPU/60.66elapsed, all14 RC units3.25/6.88s, lint2.44/4.99s and format0.34/0.61s pass; original source/probes unchanged, including exact worker omission exit4 and constructor exit5; exact-head full gates required |
 | 37 ownership-worker-preparation | 8c4e9ffd71a5 | bcd3b392050b | Three original tests16.35CPU/32.93elapsed, lint2.48/5.01s and format0.38/0.73s pass; original source/probes byte-identical; audited docs published; final actual-squash rebase/full gates required |
 | 38 ownership-loop-preparation | 4289528c436b | 8c4e9ffd71a5 | Four original tests17.27CPU/34.61elapsed, lint2.61/5.29s and format0.42/0.83s pass; source/probes unchanged; audited docs published; final actual-squash/full gates required |
 | 39 ownership-variant-preparation | d98205af88df | 4289528c436b | Three original native tests18.09CPU/36.22elapsed, exact retain liveness unit3.47/7.40s, lint2.45/4.94s and format0.34/0.61s pass; source/probes unchanged; final actual-squash/full gates required |
@@ -178,23 +182,23 @@ still need their final squash rebases and six exact-head full gates.
 | 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | All four original construction/unwind tests10.29CPU/21.66elapsed, lint2.43/4.82s and format0.44/0.85s pass; original source/probes unchanged, including exact omitted-scope exit2 and stale-finalizer exit3; raw interpreter/native File behavior agrees; final actual-squash/full gates required |
 | 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | All six original write/construction/unwind tests12.54CPU/25.17elapsed, lint2.44/4.91s and format0.45/0.85s pass; original source/probes unchanged, including exact omitted-flush exit3; raw interpreter/native immediate write bytes agree; final actual-squash/full gates required |
 | 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
-| 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
-| 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
-| 75 ownership-file-discard | 4b8202419941 | d3fa39b37c83 | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
-| 76 ownership-file-runtime-boundaries | b5aee4eb6e95 | 4b8202419941 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
-| 77 ownership-wasm-resource-counts | 231568d07731 | b5aee4eb6e95 | Actual WASI gates remain required; native bump checks are not WASI proof |
-| 78 ownership-wasm-count-disposal | c7ba897d8d9c | 231568d07731 | Actual WASI gates required; source unchanged except inherited harness repairs |
-| 79 ownership-resource-frame-fields | 8053dc693a13 | c7ba897d8d9c | Test10.09/21.47s; lint 6.10/13.03s and format 0.55/1.08s pass |
-| 80 ownership-file-inline-path | 0ea8a1c94115 | 8053dc693a13 | Two tests 10.54/21.29s; lint 6.87/13.94s and format 0.54/1.07s pass |
-| 81 ownership-file-storage-disposal | 2fffa57d369d | 0ea8a1c94115 | Test8.53/19.18s; lint 6.72/13.84s and format 0.45/0.84s pass |
-| 82 ownership-file-construction-disposal | c6cbacac0db9 | 2fffa57d369d | Test8.16/18.70s; lint 6.09/12.99s and format 0.44/0.83s pass |
-| 83 ownership-resource-frame-variants | 53440f785f65 | c6cbacac0db9 | Direct frame-constructor repair: five original native tests 20.72CPU/41.72elapsed, lint 2.34/4.77s and format 0.45/0.86s pass; strong audit 0.42/3.47s passes; source0621574 published then rebased toed1091ff988c with exact code/probe parity; runner/full gates follow |
-| 84 ownership-resource-frame-binding-kinds | 073a20c8d7ef | 53440f785f65 | Test10.45/23.67s; lint 6.18/12.88s and format 0.45/0.83s pass |
-| 85 ownership-match-scrutinee-types | 1236f09a1d85 | 073a20c8d7ef | Two tests 12.49/27.27s; lint 6.11/13.31s and format 0.44/0.83s pass |
-| 86 ownership-resource-record-binding-kinds | f5a017db54da | 1236f09a1d85 | Test10.49/22.84s; lint 6.03/12.91s and format 0.41/0.86s pass |
-| 87 ownership-nominal-source-context | 08beb7c2bc23 | f5a017db54da | Raw source/native test 13.09/26.43s; lint 6.14/13.07s and format 0.45/0.86s pass |
-| 88 ownership-channel-cycle-lifetimes | b2d374878677 | 08beb7c2bc23 | Two cycle/queue tests 13.30/26.87s; lint 5.94/13.04s and format 0.46/0.87s pass |
-| 89 ownership-http2-body-roots | 3b72f38e6814 | b2d374878677 | Four-way fixture8f6846a/38046812141 passes original strict omission and all controls; tested fixture applied without optional export; source published; 90–112 propagation follows |
+| 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | Both original implementation/fusion repair commits preserved; all11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | All nine File-owner/I/O/frame/unwind tests24.61CPU/49.55elapsed, lint2.62/5.40s and format0.44/0.82s pass; original source/probes unchanged, including exact owner/alias/text omission exits6/7/10 with GC on/off and no-free comparison; storage retains compatibility lifetime; final actual-squash/full gates required |
+| 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
+| 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | All10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/92.82elapsed, exact inventory4.45/9.15s, lint2.60/5.33s and format0.45/0.86s pass; original source/probes unchanged, including exact omitted result-owner exit101 and wrong-free exit29; raw interpreter/native File results agree; final actual-squash/full gates required |
+| 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Original native bump control8.26CPU/17.53elapsed, lint2.64/5.25s and format0.44/0.83s pass; original source/probes/mandatory WASI workflow unchanged, including exact count-disabled exit4; native checks are not actual WASI proof; final actual-squash/full and mandatory actual WASI gates required |
+| 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Native disposal8.79CPU/18.00elapsed, original bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and format0.45/0.87s pass; original source/probes/workflows unchanged, including exact omitted aggregate/runtime disposal exits5/9; physical bump storage remains allocated; final actual-squash/full and mandatory actual WASI gates required |
+| 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
+| 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Both original binary-capture tests10.16CPU/20.43elapsed, eight File constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/1.09s pass; original source/probes unchanged; actual ARM64 headers/layouts/disassembly and one-vs-two allocation counters preserved; final actual-squash/full gates required |
+| 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | All nine storage/inline-path/runtime/construction/scoped/unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass; original source/probes unchanged, including exact missing finalizer-removal/storage exits4/7, tracing-off reuse and unrelated live Files; shared/no-free lifetimes preserved; final actual-squash/full gates required |
+| 82 ownership-file-construction-disposal | ecfd9a28c39e | 6e5063786651 | All nine constructor/storage/library-resource/scoped/unwind tests29.08CPU/63.78elapsed, lint2.70/5.69s and format0.50/0.96s pass; original source/probes unchanged, including hard-exit102 and exact premature growth/omitted disposal exits3/5; unrelated registry entries and rollback preserved; final actual-squash/full gates required |
+| 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Original variant control10.41CPU/22.82elapsed, nine frame/caller tests24.67/49.60s, all23 RC units3.77/7.98s, lint2.43/4.99s, format0.45/0.84s and binary inspection0.22/1.11s pass; both original feature/repair commits and source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 layout/disassembly recorded; final actual-squash/full gates required |
+| 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
+| 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | All13 original nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed, all23 RC units3.80/7.81s, lint2.45/5.02s and format0.51/0.83s pass; both original feature/stack-child repair commits and source/probes unchanged, including child-retain omission and strict File/box controls; final actual-squash/full gates required |
+| 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
+| 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
+| 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Both original cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s pass; source/probes and compiler/runtime unchanged; close preserves queued values and explicit drain releases counted cycles across O1/O2 GC/poison modes, without claiming automatic cycle reclamation; final actual-squash/full gates required |
+| 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
 | 90 fix-http2-body-bounds | 1b4be82fe9b6 | 3b72f38e6814 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 91 ownership-http2-peer-cleanup | 9900cc0d5229 | 1b4be82fe9b6 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 92 ownership-grpc-peer-completion | e89105300eb3 | 9900cc0d5229 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -232,7 +236,9 @@ Rows77–78 require real WASI on Linux in both free modes; native bump checks
 supply no WASI acceptance. Row 20 boxed128-bit payloads remain shared. Network
 context wrappers retain tracing compatibility; no complete ARC claim. Channel
 close preserves queued values; explicit drain breaks its counted cycle, while
-automatic unreachable-cycle reclamation remains unproved.
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
 
 ## Earlier argument-preparation repair
 
@@ -348,8 +354,10 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-constructor-unwind-worktree (row35, snapshot833fa844),
-with all eight focused tests27.31CPU/54.70elapsed and all14 RC units passing. Before switching Rust
+last checked in /private/tmp/fwp-worker-boxing-worktree (queue36, native6e2902d2),
+with all nine worker/constructor/caller/loop tests30.22CPU/60.66elapsed passing.
+The previous checkout's bounded package clean removed94.1MiB (0.00CPU/0.14elapsed).
+Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;

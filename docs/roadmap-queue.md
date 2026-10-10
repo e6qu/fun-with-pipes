@@ -1,9 +1,8 @@
 # Prepared roadmap queue
 
-Updated 2026-10-10. This file preserves preparation ancestry.
-Current merge status, actual rewritten bases and checks live only in
-[the handoff](development-state.md). This table preserves preparation ancestry;
-a published preparation is not verified main support.
+Updated 2026-10-10. This table preserves preparation ancestry. Current merge
+status, actual rewritten bases and checks live in [the handoff](development-state.md).
+A published preparation is not verified main support.
 
 Open one PR at a time after the previous PR passes all six exact-head gates
 and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
@@ -20,8 +19,8 @@ original preparation and can differ after rewrites. Never replace OLD anchors.
 Resolve documentation conflicts with all 11 authoritative docs listed in the
 handoff, plus other modified tracked documents. Rerun focused
 checks and publish with an explicit lease against the actual remote current head.
-Every final PR needs all six production jobs and roadmap_docs at its exact head. Prior evidence and superseded
-queue instructions are preserved in [history](roadmap-history.md).
+Every final PR needs all six production jobs and roadmap_docs at its exact head.
+Prior evidence and superseded queue instructions are preserved in [history](roadmap-history.md).
 
 Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
 resolve full hashes before publication or merge. Checkout paths use
@@ -62,8 +61,8 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 32 | fold-unwind | `ownership-fold-unwind` | `58986d22a451` | `968dac7ed9cf` | `c2a364544d92` |
 | 33 | loop-unwind | `ownership-loop-unwind` | `ac24ea45cbe0` | `988f2a3be97f` | `968dac7ed9cf` |
 | 34 | argument-preparation | `ownership-argument-preparation` | `49705971b287` | `49739182ecb6` | `988f2a3be97f` |
-| 35 | constructor-unwind | `ownership-constructor-unwind` | `833fa844901a` | `608ae7bb2d24` | `49739182ecb6` |
-| 36 | worker-boxing | `ownership-worker-boxing` | `bcd3b392050b` | `dc4f9461571b` | `608ae7bb2d24` |
+| 35 | constructor-unwind | `ownership-constructor-unwind` | `54249400ef16` | `608ae7bb2d24` | `49739182ecb6` |
+| 36 | worker-boxing | `ownership-worker-boxing` | `6e2902d2c7e3` | `dc4f9461571b` | `608ae7bb2d24` |
 | 37 | worker-preparation | `ownership-worker-preparation` | `8c4e9ffd71a5` | `c97dd03f8d89` | `dc4f9461571b` |
 | 38 | loop-preparation | `ownership-loop-preparation` | `4289528c436b` | `b879eca20812` | `c97dd03f8d89` |
 | 39 | variant-preparation | `ownership-variant-preparation` | `d98205af88df` | `1bb11bece9ae` | `b879eca20812` |
@@ -100,23 +99,23 @@ implementation PR at34 and keep its immutable anchor and later regression covera
 | 70 | file-construction | `ownership-file-construction` | `ab3a93780dc3` | `e9d575fdf990` | `b00215dc10f5` |
 | 71 | file-write-visibility | `ownership-file-write-visibility` | `702cd9b0a69a` | `5ac710398a14` | `e9d575fdf990` |
 | 72 | file-io-errors | `ownership-file-io-errors` | `eee4807a3954` | `06419f4c5989` | `5ac710398a14` |
-| 73 | resource-frames | `ownership-resource-frames` | `c5bc20fc095b` | `dcc5bbac318f` | `06419f4c5989` |
-| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `d3fa39b37c83` | `e21c92ea2f6c` | `368dafc5567d` |
-| 75 | file-discard | `ownership-file-discard` | `4b8202419941` | `923ad4a4fb07` | `e21c92ea2f6c` |
-| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `b5aee4eb6e95` | `30fe112db93c` | `923ad4a4fb07` |
-| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `231568d07731` | `046f7e85a9eb` | `30fe112db93c` |
-| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `c7ba897d8d9c` | `681dd55136b0` | `c889479eed7a` |
-| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `8053dc693a13` | `658e5b73ae1c` | `681dd55136b0` |
-| 80 | file-inline-path | `ownership-file-inline-path` | `0ea8a1c94115` | `2d903d6617d9` | `658e5b73ae1c` |
-| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `2fffa57d369d` | `750a5cffd46b` | `2d903d6617d9` |
-| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `c6cbacac0db9` | `17869223a502` | `750a5cffd46b` |
-| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `53440f785f65` | `786e4bbb99f1` | `17869223a502` |
-| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `073a20c8d7ef` | `ae00e6929e86` | `786e4bbb99f1` |
-| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `1236f09a1d85` | `3a0cbdb33b79` | `ae00e6929e86` |
-| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `f5a017db54da` | `f85cc4e09db4` | `3a0cbdb33b79` |
-| 87 | nominal-source-context | `ownership-nominal-source-context` | `08beb7c2bc23` | `8abfd46b3476` | `f85cc4e09db4` |
-| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `b2d374878677` | `dc2ad1febc5d` | `8abfd46b3476` |
-| 89 | http2-body-roots | `ownership-http2-body-roots` | `3b72f38e6814` | `d29dda936dff` | `e91dcb307c61` |
+| 73 | resource-frames | `ownership-resource-frames` | `3dba256655a3` | `dcc5bbac318f` | `06419f4c5989` |
+| 74 | file-runtime-owners | `ownership-file-runtime-owners` | `8d5cb3c4e3e4` | `e21c92ea2f6c` | `368dafc5567d` |
+| 75 | file-discard | `ownership-file-discard` | `423a7ddcc760` | `923ad4a4fb07` | `e21c92ea2f6c` |
+| 76 | file-runtime-boundaries | `ownership-file-runtime-boundaries` | `603bb0b914db` | `30fe112db93c` | `923ad4a4fb07` |
+| 77 | wasm-resource-counts | `ownership-wasm-resource-counts` | `f4a26004d5a8` | `046f7e85a9eb` | `30fe112db93c` |
+| 78 | wasm-count-disposal | `ownership-wasm-count-disposal` | `13c77dbb7b82` | `681dd55136b0` | `c889479eed7a` |
+| 79 | resource-frame-fields | `ownership-resource-frame-fields` | `2f842d5d266f` | `658e5b73ae1c` | `681dd55136b0` |
+| 80 | file-inline-path | `ownership-file-inline-path` | `010e622f064e` | `2d903d6617d9` | `658e5b73ae1c` |
+| 81 | file-storage-disposal | `ownership-file-storage-disposal` | `6e5063786651` | `750a5cffd46b` | `2d903d6617d9` |
+| 82 | file-construction-disposal | `ownership-file-construction-disposal` | `ecfd9a28c39e` | `17869223a502` | `750a5cffd46b` |
+| 83 | resource-frame-variants | `ownership-resource-frame-variants` | `7b7e45b20230` | `786e4bbb99f1` | `17869223a502` |
+| 84 | resource-frame-binding-kinds | `ownership-resource-frame-binding-kinds` | `e2a2baa977fa` | `ae00e6929e86` | `786e4bbb99f1` |
+| 85 | match-scrutinee-types | `ownership-match-scrutinee-types` | `ebe69e13a935` | `3a0cbdb33b79` | `ae00e6929e86` |
+| 86 | resource-record-binding-kinds | `ownership-resource-record-binding-kinds` | `a0de231a4c0c` | `f85cc4e09db4` | `3a0cbdb33b79` |
+| 87 | nominal-source-context | `ownership-nominal-source-context` | `5a4ef15301c8` | `8abfd46b3476` | `f85cc4e09db4` |
+| 88 | channel-cycle | `ownership-channel-cycle-lifetimes` | `3db25573057b` | `dc2ad1febc5d` | `8abfd46b3476` |
+| 89 | http2-body-roots | `ownership-http2-body-roots` | `5bc4f862bd5a` | `d29dda936dff` | `e91dcb307c61` |
 | 90 | http2-body-bounds | `fix-http2-body-bounds` | `1b4be82fe9b6` | `6f310b5483a8` | `d29dda936dff` |
 | 91 | http2-peer-cleanup | `ownership-http2-peer-cleanup` | `9900cc0d5229` | `3c268c34d15b` | `6f310b5483a8` |
 | 92 | grpc-peer-completion | `ownership-grpc-peer-completion` | `e89105300eb3` | `09751c8c65ac` | `3c268c34d15b` |

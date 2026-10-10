@@ -370,7 +370,8 @@ error. See [protocol.md](protocol.md).
 ## Prepared ownership implementation
 
 Compiler call ownership lowering must preserve allocation optimizations as well
-as exceptional lifetimes. Earlier counted arguments, including duplicated
+as exceptional lifetimes. PR113 protects consumed constructor fields and remaining
+caller references before allocation. Earlier counted arguments, including duplicated
 locals, stay registered while later arguments evaluate. A final consumed value
 can stay inline when no earlier counted argument needs protection, preserving
 direct stack, worker and flattened-loop representations. Later scalar
@@ -378,13 +379,11 @@ computations also finish before pending counted owners transfer, preserving
 cleanup when scalar evaluation fails. Existing allocation
 limits and raw-interpreter comparisons remain acceptance gates.
 
-
 Prepared record-worker calls keep returned locals as fields when every use is a
 field read or a complete call with the matching record ABI. Typed aliases and
 trap cleanup preserve field owners; partial and dynamic calls retain boxed
 captures. The ordinary worker/wrapper ABI is unchanged. Sequential full CI
 is still required; emitted box removal alone is not a speed claim.
-
 
 [Ownership](ownership.md#prepared-ownership-work) summarizes prepared contracts
 and acceptance limits; [the handoff](development-state.md) records current checks.
