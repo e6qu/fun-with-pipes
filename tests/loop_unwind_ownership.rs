@@ -71,18 +71,29 @@ fn function_id<'a>(emitted: &'a str, name: &str) -> &'a str {
         .next()
         .unwrap()
 }
-fn loop_scope(emitted: &str, id: &str) -> String {
+fn loop_scope(emitted: &str, id: &str) -> (String, usize) {
     let start = emitted
         .find(&format!("static V fwp_loop{id}(V s) {{"))
         .unwrap();
     let body = &emitted[start..];
-    body.split("fwp_cleanup_push(&state_cleanup, fwp_owner_release")
+    let slots = body
+        .split("V st[")
+        .nth(1)
+        .unwrap()
+        .split(']')
+        .next()
+        .unwrap()
+        .parse()
+        .unwrap();
+    let scope = body
+        .split("fwp_cleanup_push(&state_cleanup, fwp_owner_release")
         .nth(1)
         .unwrap()
         .split(',')
         .next()
         .unwrap()
-        .to_string()
+        .to_string();
+    (scope, slots)
 }
 #[test]
 fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
@@ -108,8 +119,19 @@ fn current_loop_states_release_at_first_and_later_cancellation_ticks() {
     let emitted = std::fs::read_to_string(cfile).unwrap();
     let step = function_id(&emitted, "record-step");
     let nested = function_id(&emitted, "nested-step");
-    let step_scope = loop_scope(&emitted, step);
-    let nested_scope = loop_scope(&emitted, nested);
+    let (step_scope, step_slots) = loop_scope(&emitted, step);
+    let (nested_scope, nested_slots) = loop_scope(&emitted, nested);
+    let step_read = match step_slots {
+        1 => "text=OBJ(((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0)->f[1];",
+        2 => "text=((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0;",
+        _ => panic!("unexpected record state width {step_slots}"),
+    };
+    let nested_read = match nested_slots {
+        1 => "V pair=OBJ(((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0)->f[1]; text=OBJ(pair)->f[0]; other=OBJ(pair)->f[1];",
+        2 => "V pair=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0; text=OBJ(pair)->f[0]; other=OBJ(pair)->f[1];",
+        3 => "text=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0; other=((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v1;",
+        _ => panic!("unexpected nested state width {nested_slots}"),
+    };
     let probe=r#"
 static fwp_task cancelled_loop;
 static volatile V original_text, state_box, capture, scalar_word, observed_text, observed_other;
@@ -123,10 +145,9 @@ static void cancel_at_loop_tick(void) {
         if (!owner->value) return;
         text=OBJ(owner->value)->f[1];
     } else if (fwp_cleanups->release==fwp_owner_releaseSCOPE) {
-        text=OBJ(((fwp_owner_ctxSCOPE *)fwp_cleanups->arg)->v0)->f[1];
+        READ_RECORD_OWNER
     } else if (fwp_cleanups->release==fwp_owner_releaseNSCOPE) {
-        V pair=OBJ(((fwp_owner_ctxNSCOPE *)fwp_cleanups->arg)->v0)->f[1];
-        text=OBJ(pair)->f[0];other=OBJ(pair)->f[1];
+        READ_NESTED_OWNER
     } else return;
     if (++current_tick!=wanted_tick) return;
     observed_text=text;observed_other=other;fwp_cur->cancelled=1;fwp_budget=0;
@@ -162,7 +183,7 @@ int main(void) {
     puts("loop states release at cancellation ticks with aliases and scalar bits intact");
     return 0;
 }
-"#.replace("NSCOPE",&nested_scope).replace("SCOPE",&step_scope).replace("NESTED",nested).replace("STEP",step).replace("GENERIC",function_id(&emitted,"generic")).replace("DYNAMIC",function_id(&emitted,"dynamic")).replace("CAPTURED",function_id(&emitted,"captured"));
+"#.replace("READ_RECORD_OWNER",step_read).replace("READ_NESTED_OWNER",nested_read).replace("NSCOPE",&nested_scope).replace("SCOPE",&step_scope).replace("NESTED",nested).replace("STEP",step).replace("GENERIC",function_id(&emitted,"generic")).replace("DYNAMIC",function_id(&emitted,"dynamic")).replace("CAPTURED",function_id(&emitted,"captured"));
     let runtime = "static void cancel_at_loop_tick(void);\n".to_string()
         + &emitted
             .replace("FWP_TICK();", "cancel_at_loop_tick(); FWP_TICK();")
