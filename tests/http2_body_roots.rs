@@ -26,11 +26,10 @@ fn body_copy_keeps_the_stream_alive_through_major_collection() {
         ..Program::default()
     };
     let (generated, _) = fwp::cgen::generate_library(&program, "body_roots").unwrap();
-    // GCC on x86-64 leaves dead call/stream pointers in callee-saved
+    // GCC and Clang on x86-64 can leave dead call/stream pointers in callee-saved
     // registers. Isolate construction and clear those stale roots in the
     // copying frame; a live post-copy owner fence forces a surviving spill.
-    let (compiler, _) = fwp::cgen::c_compiler().unwrap();
-    let clear_stale_roots = cfg!(target_arch = "x86_64") && fwp::cgen::is_gcc(&compiler);
+    let clear_stale_roots = cfg!(target_arch = "x86_64");
     let boundary = if clear_stale_roots {
         "static __attribute__((always_inline)) inline V fwp_str_new(const char *s, size_t len) { clear_dead_registers(); inspect_owner();"
     } else {

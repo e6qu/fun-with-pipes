@@ -176,14 +176,14 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #108 includes the following contracts. Detailed primitive modes
+Main through PR #109 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
 - Compiler reuse tokens clear dead fields before retaining empty young cells,
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
-  Compiler call liveness and remaining constructor/callback paths stay prepared.
+  Compiler call liveness is merged; remaining constructor/callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.

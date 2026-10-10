@@ -1,0 +1,55 @@
+name: HTTP2 strict owner fixture across native compilers
+
+on:
+  push:
+    branches: [ownership-evidence-http2-intel]
+
+jobs:
+  fixture:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            cc: gcc
+          - runner: ubuntu-latest
+            cc: clang
+          - runner: macos-15
+            cc: clang
+          - runner: macos-15-intel
+            cc: clang
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: ${{ matrix.cc }}
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Retain merged preparation review heads
+        run: git fetch origin "+refs/pull/*/head:refs/remotes/origin/review/*"
+      - name: Docs and immutable ancestry
+        run: python3 scripts/check-roadmap.py
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Linux native headers
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl@3
+          echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Formatting
+        run: cargo fmt --all -- --check
+      - name: Focused lint
+        run: cargo clippy --test http2_body_roots --test tls_alpn_roots --test library_resources -- -D warnings
+      - name: Strict omission and original resource controls
+        run: cargo test --test http2_body_roots --test tls_alpn_roots --test library_resources --no-fail-fast
+      - name: Actual collection
+        run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: Ownership checkpoints
+        run: cargo test --lib rc::tests -- --nocapture
