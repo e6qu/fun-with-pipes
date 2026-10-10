@@ -39,7 +39,7 @@ Raw commit has one parent and tree `2bad2574c29de5c0922e9a8d2658710e8b8551bd`,
 identical to the fully tested PR head. All11 live docs were hashed in
 /private/tmp/fwp-main-docs-pre110 and restored byte-for-byte after main FF.
 Duplicate main CI38049760508 was cancelled only after that proof; main docs
-38049760497 must finish. Native macOS and selected ownership are delivered
+38049760497 passes. Native macOS and selected ownership are delivered
 through zip callback result/spine and both scratch-buffer unwind. Phase2
 remains incomplete; phases3–6 remain pending and tracing remains the fallback.
 
@@ -69,11 +69,13 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Typed constructor preparation40 is locally rebased a5152227f99a on actual39
-d98205af88df. Three original native controls and all17 compiler ownership units,
-lint and format pass. Publication/docs audit are next; remote40 remainscccbe406449f.
-Exact checks/bases are archived in history. Continue preparing independently
-while PR111 CI runs; do not open another production PR before111 merges.
+Typed constructor preparation40 is published5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f
+on actual39 d98205af88df. Three original native controls and all17 compiler ownership
+units, lint, format and docs audit pass; priorcccbe406449f is retained remotely.
+Queue33 loop is locally rebasedcb2115d1c0d9 on frozenPR111head58986d22a451;
+both native implementation commits and original probes are unchanged. Focused
+checks/publication are next, then final actual-squash rebase after111 merges.
+Continue independently; do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
 exact source112 `0da68ea8cdb1`, after both repairs propagated. Require all six
@@ -120,7 +122,7 @@ still need their final squash rebases and six exact-head full gates.
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
 | 32 ownership-fold-unwind | 58986d22a451 | be5f96be51eb | Final actual-squash rebase preserves all source/probes/workflows; nine original tests25.20CPU/50.65elapsed, lint2.47/5.09s and format0.43/0.82s pass; audited docs precede sole next PR; all exact-head full gates required |
-| 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
+| 33 ownership-loop-unwind | cb2115d1c0d9 | 58986d22a451 | Both original implementation commits preserved; two native tests11.07CPU/22.21elapsed, lint2.46/4.88s and format0.42/0.82s pass; all source/probes unchanged; final actual-squash/full gates required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
 | 36 ownership-worker-boxing | bcd3b392050b | bbd74db2977a | Eight original tests28.60CPU/57.36elapsed, lint2.46/5.05s and format0.41/0.60s pass; original source/probes unchanged; audited docs published; final actual-squash rebase/full gates required |
@@ -330,8 +332,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-fold-unwind-worktree (row32, final rebase72ab8ee),
-with nine original ownership controls passing25.20CPU/50.65elapsed. Before
+last checked in /private/tmp/fwp-loop-unwind-worktree (row33, nativecb2115d),
+with both original loop controls passing11.07CPU/22.21elapsed. Before
 switching Rust checkouts, use the root absolute guard with bounded cargo clean
 -p fwp there, then rebuild the requested target. Never infer source identity
 from a shared target directory. Full gates run on GitHub. Temporary helpers
