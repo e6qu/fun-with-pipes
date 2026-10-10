@@ -91,10 +91,11 @@ children and detached senders, releasing after completion (`ownership-grpc-peer-
 Preparation91 published5029a447bcec5301caeca736701c581d329d9cb8 on actual90fabe0ac7b24a,
 with original source/probes preserved. Three audits and publication1.79CPU/18.60elapsed
 pass. Rebase92 FROM actual91old9900cc0d5229 ONTO published915029a447bcec;
-run unchanged completion, server cancellation, task-handle and HTTP2 peer controls,
-lint/format and all11 docs/audits before retained publication. Preserve child joins,
+Nativef3554c30b32e preserves original source/probes. All four completion/server/
+task-handle/HTTP2 peer tests17.42CPU/36.92elapsed pass, preserving child joins,
 detached sender completion, cancellation and original omitted-finalizer controls.
-Next93 gRPC status cleanup. Selected deterministic cleanup is not tracing-free support.
+Lint2.37CPU/4.94elapsed and format0.44/0.85s pass; finish all11 docs/audits
+before retained publication. Next93 gRPC status cleanup. Selected deterministic cleanup is not tracing-free support.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -204,7 +205,7 @@ still need their final squash rebases and six exact-head full gates.
 | 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
 | 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Corrected exact grpc::web bounds/error-order comparison executes one test and passes0.45CPU/1.94elapsed; strict HTTP2 root test7.17/15.39s, lint2.41/4.77s and format0.45/0.87s pass; original source/probes unchanged including exact omitted-fence exit1; earlier zero-test filter explicitly unverified/resolved; final actual-squash/full gates required |
 | 91 ownership-http2-peer-cleanup | 5029a447bcec | fabe0ac7b24a | All three original peer/TLS/body-root tests8.42CPU/19.26elapsed, lint2.33/4.70s and format0.45/0.85s pass without skips; original source/probes unchanged including actual OpenSSL subject handshakes, strict omitted cleanup exit1 and TLS fault controls; final actual-squash/full gates required |
-| 92 ownership-grpc-peer-completion | e89105300eb3 | 9900cc0d5229 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
+| 92 ownership-grpc-peer-completion | f3554c30b32e | 5029a447bcec | All four original completion/server/task-handle/peer tests17.42CPU/36.92elapsed, lint2.37/4.94s and format0.44/0.85s pass; original source/probes unchanged, preserving joined children, detached senders, cancellation and omitted-finalizer controls; selected cleanup verified without claiming tracing-free support; final actual-squash/full gates required |
 | 93 ownership-grpc-status-cleanup | f1a357fb78da | e89105300eb3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 94 ownership-grpc-receive-cleanup | df82d27c917b | f1a357fb78da | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 95 ownership-grpc-force-cleanup | ab5723156bca | df82d27c917b | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
@@ -357,9 +358,9 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-http2-peer-cleanup-worktree (row91, native941647ed),
-with all three peer/TLS/body-root tests8.42CPU/19.26elapsed passing without skips.
-Previous package clean removed105.7MiB (0.00CPU/0.14elapsed).
+last checked in /private/tmp/fwp-grpc-peer-completion-worktree (row92, nativef3554c30),
+with all four completion/server/task-handle/peer tests17.42CPU/36.92elapsed passing.
+Previous package clean removed116.1MiB (0.00CPU/0.13elapsed); disk remains76GiB free.
 Every guard samples current limits. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
