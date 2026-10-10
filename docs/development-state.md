@@ -67,7 +67,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–74 are refreshed and published on their actual predecessors.
+Preparations39–75 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -81,14 +81,15 @@ executes without skip and agrees exactly with the interpreter. OpenCL57–58 use
 fake APIs, not hardware evidence. Closing channels preserves queued values;
 automatic unreachable-cycle reclamation remains unproved.
 
-Original-frame File discard75 at native2e3288510b14 on actual748d5cb3c4e3e4
-passes all10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC
-units3.94/8.12s, three resource units0.00/0.13s, exact primitive inventory0.00/
-0.13s, lint2.49/5.12s and format0.45/0.83s. Source/probes are unchanged.
-The 64-iteration File loop succeeds with descriptor limit32 and GC/reuse/free
-off; omitted original-frame cleanup still requires exit1 and Too many open files.
-Copy all11 docs and audit before retained publication; next76 scoped File results
-and disabled-free runtime boundaries. Final actual-squash/full gates remain.
+File runtime-boundary76 at nativee69eb74df932 on actual75423a7ddcc760 passes
+all10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/
+92.82elapsed, exact contract inventory4.45/9.15s, lint2.60/5.33s and format0.45/
+0.86s. Original source/probes are unchanged. Scoped-result omission still exits101
+with duplicate discarded file; wrong ordinary-child freeing still exits29.
+Raw interpreter/native scoped/task/loop File results agree; GC/reuse/free switches
+and poisoning controls pass. Copy all11 docs and audit before retained publication;
+next77 WASI resource counts. Native bump checks must not be called actual WASI
+proof; mandatory actual WASI CI remains required at each final sequential head.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -183,7 +184,7 @@ still need their final squash rebases and six exact-head full gates.
 | 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | Both original implementation/fusion repair commits preserved; all11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | All nine File-owner/I/O/frame/unwind tests24.61CPU/49.55elapsed, lint2.62/5.40s and format0.44/0.82s pass; original source/probes unchanged, including exact owner/alias/text omission exits6/7/10 with GC on/off and no-free comparison; storage retains compatibility lifetime; final actual-squash/full gates required |
 | 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
-| 76 ownership-file-runtime-boundaries | b5aee4eb6e95 | 4b8202419941 | Test18.99/38.40s; lint 5.98/12.65s and format 0.46/0.84s pass |
+| 76 ownership-file-runtime-boundaries | e69eb74df932 | 423a7ddcc760 | All10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/92.82elapsed, exact inventory4.45/9.15s, lint2.60/5.33s and format0.45/0.86s pass; original source/probes unchanged, including exact omitted result-owner exit101 and wrong-free exit29; raw interpreter/native File results agree; final actual-squash/full gates required |
 | 77 ownership-wasm-resource-counts | 231568d07731 | b5aee4eb6e95 | Actual WASI gates remain required; native bump checks are not WASI proof |
 | 78 ownership-wasm-count-disposal | c7ba897d8d9c | 231568d07731 | Actual WASI gates required; source unchanged except inherited harness repairs |
 | 79 ownership-resource-frame-fields | 8053dc693a13 | c7ba897d8d9c | Test10.09/21.47s; lint 6.10/13.03s and format 0.55/1.08s pass |
@@ -350,9 +351,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-discard-worktree (row75, native2e328851),
-with all10 focused tests37.88CPU/75.92elapsed, all23 RC units plus resource/contract checks
-passing. Before switching Rust
+last checked in /private/tmp/fwp-file-runtime-boundaries-worktree (row76, nativee69eb74d),
+with all10 focused tests45.48CPU/92.82elapsed and exact contract inventory passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
