@@ -49,8 +49,8 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 22.82elapsed, lint2.57/5.19s, format0.44/0.83s and all pre/post-commit/root audits
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
-Production CI38054115210 has Linux, both regular macOS and both GC stress jobs
-running; bench remains queued and docs38054115151 passes. Require all seven
+Production CI38054115210 passes regular ARM macOS. Linux, regular Intel and
+both GC stress jobs run; bench remains queued. Docs38054115151 passes. Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -94,12 +94,12 @@ audits pass. Interpreter/native OpenCL failures and actual TLS stream outputs
 agree; the stream check executed without skip. Real resource disposal preserves
 unrelated host handles and sends no implicit TLS shutdown traffic. Old revisions
 and source/probes are preserved; fake OpenCL is not GPU hardware coverage.
-Current independent task61 is gRPC listener cleanup (`ownership-grpc-server-cleanup`):
-rebase FROM actualaa8dfb3a703e ONTO published603eb64f54869f. Preserve actual
-scheduler cancellation, failed construction, accepted-session context survival
-and original listener-guard/fd/context omission controls. Check gRPC plus
-listener/resource regressions, lint, format and all11 docs/audit before
-retained-revision publication.
+Current independent task61 is gRPC listener cleanup (`ownership-grpc-server-cleanup`),
+rebased FROM actualaa8dfb3a703e ONTO published603eb64f54869f at nativef4aeaf8efcb2.
+All three original gRPC/listener/resource controls pass13.67CPU/30.41elapsed,
+including scheduler cancellation and guard/fd/context omissions. Lint2.61/5.23s
+and format0.46/0.86s pass. Finish all11 docs/audit before retained-revision
+publication, then prepare queue62 TLS cache allocation failure cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -179,7 +179,7 @@ still need their final squash rebases and six exact-head full gates.
 | 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
 | 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
 | 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
-| 61 ownership-grpc-server-cleanup | 91f9a30742f9 | aa8dfb3a703e | Test9.94/19.99s; lint 2.46/4.95s and format 0.44/0.86s pass |
+| 61 ownership-grpc-server-cleanup | f4aeaf8efcb2 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
 | 62 ownership-tls-cache-failures | 0ba865002ace | 91f9a30742f9 | Test7.17/16.27s; lint 2.43/4.95s and format 0.40/0.73s pass |
 | 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
@@ -361,8 +361,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-library-resource-worktree (row60, native1d73b4f),
-with all three original controls12.71CPU/32.58elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-grpc-server-worktree (row61, nativef4aeaf8),
+with all three original controls13.67CPU/30.41elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
