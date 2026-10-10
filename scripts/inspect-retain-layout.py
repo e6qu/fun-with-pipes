@@ -48,8 +48,14 @@ for folder in folders:
     start = outcome + match.start(); end = code.index('\n}\n', start); retaining = code[start:end]
     repeat = re.search(r'static V f([0-9]+)\(', code[code.index('/* repeat :'):]).group(1)
     start = code.index('static fwp_r2 w' + repeat + '(V l0) {'); end = code.index('\n}', start); worker = code[start:end]
+    active = []
+    for operation, node in re.findall(r'fwp_cleanup_(push|pop)\(&([A-Za-z_][A-Za-z_0-9]*)', worker[:worker.index('fwp_rc_dup(l0);')]):
+        if operation == 'push': active.append(node)
+        else:
+            assert active and active[-1] == node, (operation, node, active)
+            active.pop()
     record = json.loads((folder / 'header.json').read_text())
-    record.update(directory=folder.name, binaryBytes=binary.stat().st_size, functions=functions, repeatWorker='w'+repeat, partialScopeRegistered='fwp_cleanup_push(&retaining_cleanup,' in retaining, callerScopeRegistered='fwp_cleanup_push(' in worker[:worker.index('fwp_rc_dup(l0);')])
+    record.update(directory=folder.name, binaryBytes=binary.stat().st_size, functions=functions, repeatWorker='w'+repeat, partialScopeRegistered='fwp_cleanup_push(&retaining_cleanup,' in retaining, callerScopeRegistered=bool(active))
     records.append(record)
     if folder.name.startswith('O2-') and record['partialScopeRegistered'] and record['callerScopeRegistered']:
         selected = folder
