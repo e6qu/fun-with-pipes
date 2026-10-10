@@ -86,11 +86,15 @@ Nominal match-context45 is published2b7dc81c7d1fa22c06fc7dfcae66cc733682ba09
 on current44, with original tests/lint/format/audits passing. Contribution rules
 now consistently require an explicit squash subject and empty body, and remote
 retention of pre-amend revisions referenced by frozen documentation.
-Current independent task is checked field-context46: local native
-14772eb77e293f5ecdd7856eda2bf3ea90a2d3a0 on current45. Original code/probes
-unchanged; focused tests are running. Finish lint/format, all11 docs/audit and
-retained-revision publication, then prepare47.
-Do not open another production PR before111 merges.
+Checked field-context46 is published6255a8f54f547e481ac72e61791bd9f2c2ccb652
+on current45. Original tests/lint/format pass; both pre/post-commit audits and
+retained-revision publication/root audit pass. Native reference remains an
+ancestor of the appended docs commit; completed publication journal must not rerun.
+Current independent task is cached CAF ownership47: local native
+5fd93678792b962a19229f2a5a07659c0a8b3874 on current46. Original code/probes,
+including pending-CAF scalar liveness, are unchanged; three focused tests are
+running. Finish ownership units/lint/format, all11 docs/audit and retained-revision
+publication, then prepare48. Do not open another production PR before111 merges.
 
 Fresh full prepared evidence `0f8c53199b2c` / CI38048222203 is running on
 exact source112 `0da68ea8cdb1`, after both repairs propagated. Require all six
@@ -152,7 +156,7 @@ still need their final squash rebases and six exact-head full gates.
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
-| 47 ownership-caf-cache | 7e507e993e58 | 3a87da04a671 | Three tests 11.54/24.96s; lint 2.38/4.80s and format 0.44/0.83s pass |
+| 47 ownership-caf-cache | 5fd93678792b | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
 | 48 ownership-inline-caf | 3dd5219cb896 | 7e507e993e58 | Two tests 12.68/26.01s; lint 2.47/4.90s and format 0.35/0.73s pass |
 | 49 ownership-task-thunks | 2c14070a6347 | 3dd5219cb896 | Two tests 10.19/20.78s; lint 2.33/4.82s and format 0.35/0.73s pass |
 | 50 ownership-task-within | f35dd8c34ea4 | 2c14070a6347 | Test8.95/18.26s; inventory unit3.33/6.98s; lint 2.43/4.79s and format 0.35/0.73s pass |
@@ -348,12 +352,13 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-field-context-worktree (row46, native14772eb),
-with both original controls9.56CPU/19.54elapsed passing. Before switching Rust
-checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
-then rebuild the requested target. Never infer source identity from a shared
-target directory. Full gates run on GitHub. Temporary helpers may disappear;
-actual bases and retained remote tags are the durable recovery record.
+last checked in /private/tmp/fwp-caf-ownership-worktree (row47, native5fd9367),
+with three native controls11.60CPU/25.24elapsed and all21 ownership units3.48CPU/
+7.37elapsed passing. Before switching Rust checkouts, use the root absolute guard
+with bounded cargo clean -p fwp there, then rebuild the requested target. Never
+infer source identity from a shared target directory. Full gates run on GitHub.
+Temporary helpers may disappear; actual bases and retained remote tags are the
+recovery record.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
