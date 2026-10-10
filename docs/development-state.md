@@ -46,29 +46,19 @@ Frozen exact head `05d354f5716744000d1f5177a861ad4a74f0173a` is on actual
 squash base `b5bf33c43144f663c7da77c1f0735e372d2bc6dd`. All six focused tests,
 lint, format and final documentation audit pass; all original source/probe bytes
 are preserved. Prior ff84318a416d is retained remotely before exact-lease publication.
-CI38021138247 passes ARM regular/both GC/bench; Intel regular fails the
-existing effects.fwp native snapshot with signal exit and no buffered output.
-Linux passes. Docs38021138429 passes. Diagnose and fix this crash before merge.
-Focused exact-head ARM reproducer: raw interpreter and ten O1/ten O2 executions
-agree on stdout/stderr/exit (1.97CPU/3.94elapsed). Binary magic confirms ARM64
-Mach-O; emitted C, native binaries and report are saved in
-/private/tmp/fwp-effects-pr110-local. No local crash reproduction or Intel support
-is claimed. Runner diagnostics1ae75af/38044527408 pass all 100 executions
-per optimization on all three platforms; Intel/Linux sanitizer output agrees.
-ARM sanitizer output agrees except for its captured ASan no-return stack warning;
-that diagnostic job fails the byte comparison, not a reported memory error.
-Original Intel full-suite crash remains unresolved. Test independently generated
-C/binaries next; preserve any failing source, binary and optimized assembly.
-Fresh diagnostic75f311323722 / CI38045910841 passes 100 independently
-emitted/compiled binaries per optimization on all three platforms. Intel/Linux
-sanitizers pass; ARM diagnostic still fails solely on its recorded ASan warning.
-Original full golden context diagnosticc938d0817597 / CI38046238343 passes
-on Intel (346.60s), with exact compiler C/binary capture. C SHA256 matches the
-earlier Intel probe; binary header confirms Mach-O64/x86-64. No crash report.
-Original signal remains unreproduced; no runtime/compiler fix claimed. Failed
-exact-head Intel production job in CI38021138247 is now rerunning after this
-investigation. All other original exact-head jobs/docs pass; merge still requires
-the retested Intel job to pass. Preserve the original failure and diagnostic evidence.
+Five production jobs in CI38021138247 and docs38021138429 pass. The original
+Intel regular job failed only effects.fwp native output with a signal exit.
+That crash remains unreproduced: 100 executions per option plus 100 independent
+C/compile/run trials per option pass on all three platforms in diagnostics
+1ae75af/38044527408 and75f3113/38045910841. Intel/Linux ASan+UBSan output agrees;
+ARM instrumentation adds its captured no-return stack warning and fails that
+strict diagnostic stderr comparison, without a reported memory error.
+Original Intel full execution snapshots pass in c938d08/38046238343 (346.60s).
+Captured C matches the earlier Intel probe byte-for-byte; native headers and
+optimized assembly are saved. No runtime/compiler fix for this signal is claimed.
+After that investigation, the failed exact-head Intel production job reruns as
+114198925571 in CI38021138247. Require its pass before merge. If it recurs,
+capture the exact failing binary, compiler input and operating system crash report.
 Freeze this head except for real repairs. Require all seven gates before squash
 with subject `Release zip callback results and both scratch buffers on nonlocal exits`
 and explicit empty body. Verify raw message/tree, protect all 11 live docs and
@@ -98,8 +88,10 @@ original positive/payload/finalizer/collection/ownership controls. Linux assembl
 confirms stale stack clearing at the copy boundary after clock_gettime and dead
 register clearing. Tested fixture is published at source89 (`3b72f38e6814`), excluding optional
 diagnostic export; compiler/runtime/other probes unchanged, format0.53/1.06s
-and strong audit0.52/4.03s pass. Propagate90–112 with retained revisions and exact leases,
-then refresh full production-equivalent evidence on current112. Phase2 remains
+and strong audit0.52/4.03s pass. Propagation90–112 is complete through `0da68ea8cdb1` on actual
+`b2350957e6ff`, preserving original commit counts, all other source/probes
+and immutable anchors. Completed journals must never be rerun. Refresh full
+production-equivalent evidence on this exact source112. Phase2 remains
 incomplete; four-way fixture acceptance is not complete prepared-queue support.
 Evidence branch: ownership-evidence-http2-intel. Rejected candidates and assembly
 artifacts are archived in history.
@@ -119,7 +111,7 @@ still need their final squash rebases and six exact-head full gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 31 ownership-zip-unwind | 05d354f57167 | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; publishing next focused PR; all seven exact-head gates required |
+| 31 ownership-zip-unwind | 05d354f57167 | b5bf33c43144 | Final actual-squash rebase preserves all source/probes/workflows; six focused tests21.57CPU/43.20elapsed, lint2.37/4.78s, format0.35/0.63s pass; PR110 open, exact-head Intel retest pending; all seven gates required |
 | 32 ownership-fold-unwind | f3585147985d | 05d354f57167 | Refreshed on frozen zip head; all original source/probes unchanged; nine tests24.44CPU/49.14elapsed, lint2.29/4.69s and format0.35/0.63s pass; actual-squash rebase and full gates required |
 | 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
@@ -200,7 +192,7 @@ still need their final squash rebases and six exact-head full gates.
 | 109 fix-grpc-tls-pool-identity | 6b206eae08ec | cd31bd02464f | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 110 ownership-grpc-environment-cache | 0caead68a6c3 | 6b206eae08ec | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 | 111 ownership-grpc-packed-options | b2350957e6ff | 0caead68a6c3 | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
-| 112 ownership-grpc-connection-addresses | 12a2f3a988b2 | 73e37788e5c6 | Verified fixture repairs inherited; compiler/runtime unchanged; sequential exact-head gates remain required |
+| 112 ownership-grpc-connection-addresses | 0da68ea8cdb1 | b2350957e6ff | Inherits four-way-tested HTTP2 fixture and counted-worker repair; original other source/probes unchanged; final sequential full gates required |
 
 Prepared focused evidence, detailed commands and earlier source-parity proofs
 remain in history. The Main and next delivery section supplies the sole live
@@ -303,12 +295,14 @@ sampler errors and the original target-size limit. The stronger handoff audit
 merged in PR #105 verifies recorded live heads and actual source-base ancestry.
 Commands and current limits are below; old diagnostics are archived in history.
 
-Preserve accepted HTTP2 omission controls: GCC x86-64 isolates allocation and
-clears only stale callee-saved registers in the test hook; other compilers keep
-the original probe. Positive collection, strict omission failures, payloads and
-finalizer checks remain mandatory. Accepted evidence8e79458951a8b148e3a3c6a1df488e7f09470fba
-passesCI37990203134; ARM focused checks also pass. Rejected broad-clobber,
-forced-inline and Clang fallback approaches are archived, never production fixes.
+Preserve HTTP2 fixture acceptance8f6846a/38046812141 on Linux GCC/Clang and
+macOS ARM/Intel Clang. The x86 fixture isolates construction, reserves the actual
+frame pointer, selects its already-completed copy path and clears stale saved
+registers/stack at the copy boundary. It never clobbers RBP/SP. ARM keeps its
+original fixture. Actual collection, exact omitted-owner exit1, copied payload
+and finalizer checks remain mandatory. The tested source89 fixture excludes its
+optional diagnostic export; rejected revisions and original GCC-only evidence
+are historical, not current instructions.
 
 Preserve client controls using static handler/TypeInfo fixture objects. Exact
 descriptor identity, code14 and transport-failure text remain checked. Accepted
@@ -328,15 +322,13 @@ limits and move work to CI; never raise or bypass them. Use:
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
 ```
 
-The fun-refactor guard applies to the other repository. Current shared target
-belongs to /private/tmp/fwp-unboxed-worker-worktree after bounded fold-package
-clean0.00CPU/0.14elapsed. Local original worker assertion fails6.65/13.68s before
-the repair; nine worker/conversion/caller/retain checks pass27.80/56.39s after.
-Before switching Rust checkouts, bounded cargo clean -p fwp in this checkout
-then rebuild the requested target. Earlier switches/checks are in history;
-never infer source identity from a shared target directory. Full gates run on
-GitHub. Temporary helpers may disappear; actual bases and retained tags are
-the durable recovery record.
+The fun-refactor guard applies to the other repository. The shared target was
+last checked in /private/tmp/fwp-loop-preparation-worktree (row38, 4289528), with
+four original ownership controls passing17.27CPU/34.61elapsed. Before switching
+Rust checkouts, use bounded cargo clean -p fwp there, then rebuild the requested
+target. Never infer source identity from a shared target directory. Full gates
+run on GitHub. Temporary helpers may disappear; recorded actual bases and
+retained remote tags are the durable recovery record.
 
 The preparation table gives current focused results; earlier package checks,
 refusals and superseded revisions are archived in history. Every workload
@@ -356,7 +348,7 @@ python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 
 Fetch full history, immutable tags and retained PR heads on a fresh clone.
 The roadmap_docs workflow checks the actual PR head. Audit again after changes
-to links, refs or commit subjects. Merged rows26–29 are archived and removed from
+to links, refs or commit subjects. Merged preparation rows are archived and removed from
 the live preparation table; their queue anchors and accepted heads stay fixed.
 
 Preserve all 11 authoritative docs before fast-forward/rebase conflict resolution:
