@@ -752,6 +752,9 @@ impl Checker<'_> {
                 self.expr(b, st, consume)
             }
             Expr::Match(s, arms) => {
+                // A boxed match result can enter a worker directly. Its
+                // conversion must retain the caller owners left by every arm.
+                let before = (self.include_values && consume).then(|| owned_references(st));
                 let Expr::Local(x) = &**s else {
                     return Err("a match on an expression, not a local".into());
                 };
@@ -793,6 +796,7 @@ impl Checker<'_> {
                     }
                 }
                 *st = after.unwrap_or_default();
+                self.record_call(e, before, st);
                 Ok(())
             }
             Expr::Dup(l, b) => {
@@ -1314,6 +1318,35 @@ mod tests {
         assert_eq!(call.at_entry[0], (0, 1));
         assert!(call.at_entry[1].0 > 0);
         assert_eq!(call.at_entry[1].1, 1);
+    }
+
+    #[test]
+    fn matched_value_conversion_keeps_remaining_caller_owners() {
+        let record = MT::Record(vec![("0".into(), list())]);
+        let body = Expr::Let(
+            2,
+            Box::new(Expr::Match(
+                Box::new(Expr::Local(0)),
+                vec![(Pat::Wild, Expr::Local(0))],
+            )),
+            Box::new(Expr::Drop(1, Box::new(Expr::Local(2)))),
+        );
+        let mut p = prog(
+            vec![record.clone(), list()],
+            vec![record.clone()],
+            body.clone(),
+        );
+        p.funcs[0].ty = MT::Fun(
+            Box::new(record.clone()),
+            Box::new(MT::Fun(Box::new(list()), Box::new(record))),
+        );
+        let live = ownership_liveness(&p, &p.funcs[0], &body, &p.funcs[0].locals).unwrap();
+        let Expr::Let(_, matched, _) = &body else {
+            unreachable!()
+        };
+        let value = live.get(&(&**matched as *const Expr)).unwrap();
+        assert_eq!(value.before_arguments, vec![(0, 1), (1, 1)]);
+        assert_eq!(value.at_entry, vec![(1, 1)]);
     }
 
     #[test]
