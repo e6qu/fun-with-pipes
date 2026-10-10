@@ -50,7 +50,7 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
 Production CI38054115210 passes bench, both ARM macOS jobs and Intel GC stress.
-Linux and regular Intel run. Docs38054115151 passes. Require all seven
+Linux passes; regular Intel runs. Docs38054115151 passes. Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -71,7 +71,7 @@ injected heap-use-after-free is rejected independently on each platform even
 when program output/exit still match. Compiler/runtime/production tests unchanged.
 This does not establish complete ASan stack coverage or fix the old signal.
 
-Preparations39–70 are refreshed and published on their actual predecessors.
+Preparations39–71 are refreshed and published on their actual predecessors.
 Original source/probes, multi-commit repairs and immutable anchors are preserved;
 focused controls, lint, format and all audits pass. Exact heads, bases and metrics
 are in the table; detailed checks and retained revisions are in history. Completed
@@ -85,12 +85,14 @@ executes without skip and agrees exactly with the interpreter. OpenCL57–58 use
 fake APIs, not hardware evidence. Closing channels preserves queued values;
 automatic unreachable-cycle reclamation remains unproved.
 
-File write visibility71 at nativec41525bcf849 on published70ab3a93780dc3 passes
-all six original write/construction/unwind tests12.54CPU/25.17elapsed,
-lint2.44/4.91s and format0.45/0.85s. Raw interpreter/native bytes agree before
-frame closure. Short write and flush errors preserve borrowed handles; omitting
-flush still requires exact exit3 at O1/O2 with GC stress/verification and poisoning.
-Copy all11 docs and audit before retained publication; next72 File I/O errors.
+File I/O preparation72 at nativebaae1a5566a6 on published71702cd9b0a69a passes
+all nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/
+42.63elapsed, lint2.44/4.90s and format0.44/0.84s. Raw interpreter/native
+stdout/stderr/exit agree for invalid UTF-8 and directory errors; binary reads
+preserve arbitrary bytes with GC on/off. Buffer/stream omission exits5 and
+omitted write-error checking exits8 remain exact under O1/O2 and both poisoning
+settings. Copy all11 docs and audit before retained publication; next73 resource
+frames must preserve both original implementation and fusion repair commits.
 Final actual-squash/full gates remain required.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
@@ -182,7 +184,7 @@ still need their final squash rebases and six exact-head full gates.
 | 69 ownership-nested-loop-boxing | 7a68a54d2660 | c0cdb26eb99b | All10 original nested-loop/loop-unwind/worker/caller tests22.68CPU/46.10elapsed, all21 RC units3.54/7.24s, lint2.45/4.83s and format0.45/0.86s pass; original source/probes unchanged, including all three exact omitted-scope exit2 controls; final actual-squash/full gates required |
 | 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | All four original construction/unwind tests10.29CPU/21.66elapsed, lint2.43/4.82s and format0.44/0.85s pass; original source/probes unchanged, including exact omitted-scope exit2 and stale-finalizer exit3; raw interpreter/native File behavior agrees; final actual-squash/full gates required |
 | 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | All six original write/construction/unwind tests12.54CPU/25.17elapsed, lint2.44/4.91s and format0.45/0.85s pass; original source/probes unchanged, including exact omitted-flush exit3; raw interpreter/native immediate write bytes agree; final actual-squash/full gates required |
-| 72 ownership-file-io-errors | 4aeff2223e3f | de6667643951 | Three tests 14.85/30.79s; lint 5.53/11.82s and format 0.35/0.62s pass |
+| 72 ownership-file-io-errors | baae1a5566a6 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
 | 73 ownership-resource-frames | c5bc20fc095b | 4aeff2223e3f | Three integrations12.65/25.47s; three units3.81/7.73s; lint 6.13/12.55s and format 0.44/0.84s pass |
 | 74 ownership-file-runtime-owners | d3fa39b37c83 | c5bc20fc095b | Test8.17/18.29s; lint 5.82/12.43s and format 0.43/0.83s pass |
 | 75 ownership-file-discard | 4b8202419941 | d3fa39b37c83 | Test13.04/26.17s; lint 5.83/12.17s and format 0.44/0.83s pass |
@@ -353,8 +355,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-file-write-visibility-worktree (row71, nativec41525bc),
-with all six write/construction/unwind tests12.54CPU/25.17elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-file-io-errors-worktree (row72, nativebaae1a55),
+with all nine original File tests21.27CPU/42.63elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
