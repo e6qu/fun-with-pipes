@@ -118,6 +118,8 @@ static __attribute__((noinline)) void clear_dead_stack(void){
  volatile uintptr_t scratch[256];for(size_t i=0;i<256;i++)scratch[i]=0;
 }
 static __attribute__((noinline)) V body(void){
+ /* Reserve rbp for the actual frame rather than an uncleared heap pointer. */
+ __asm__ volatile("" : : "r"(__builtin_frame_address(0)) : "memory");
  V call=make_call();clear_dead_stack();copy_active=1;
 "#,
             )

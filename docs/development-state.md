@@ -46,7 +46,19 @@ Frozen exact head `05d354f5716744000d1f5177a861ad4a74f0173a` is on actual
 squash base `b5bf33c43144f663c7da77c1f0735e372d2bc6dd`. All six focused tests,
 lint, format and final documentation audit pass; all original source/probe bytes
 are preserved. Prior ff84318a416d is retained remotely before exact-lease publication.
-CI 38021138247 passes bench; five platform jobs run. Docs 38021138429 passes.
+CI38021138247 passes ARM regular/both GC/bench; Intel regular fails the
+existing effects.fwp native snapshot with signal exit and no buffered output.
+Linux passes. Docs38021138429 passes. Diagnose and fix this crash before merge.
+Focused exact-head ARM reproducer: raw interpreter and ten O1/ten O2 executions
+agree on stdout/stderr/exit (1.97CPU/3.94elapsed). Binary magic confirms ARM64
+Mach-O; emitted C, native binaries and report are saved in
+/private/tmp/fwp-effects-pr110-local. No local crash reproduction or Intel support
+is claimed. Runner diagnostics1ae75af/38044527408 pass all 100 executions
+per optimization on all three platforms; Intel/Linux sanitizer output agrees.
+ARM sanitizer output agrees except for its captured ASan no-return stack warning;
+that diagnostic job fails the byte comparison, not a reported memory error.
+Original Intel full-suite crash remains unresolved. Test independently generated
+C/binaries next; preserve any failing source, binary and optimized assembly.
 Freeze this head except for real repairs. Require all seven gates before squash
 with subject `Release zip callback results and both scratch buffers on nonlocal exits`
 and explicit empty body. Verify raw message/tree, protect all 11 live docs and
@@ -71,13 +83,14 @@ journals must not be rerun. Detailed failures, checks and batch metrics are in
 [history](roadmap-history.md).
 
 Repair the strict HTTP/2 fixture at source89 (`177a08a204d7`) before refreshing
-full evidence on current112. Both x86 Clang platforms still false-pass the
-omitted-owner control; ARM and GCC pass. Assembly shows an obsolete owner spill
+full evidence on current112. Candidate5fbac7/38023254715 passes Intel, ARM and GCC, but Linux Clang
+still false-passes the omitted-owner control. Assembly shows an obsolete owner spill
 for the unreachable waiting loop. The current candidate selects only the
 fixture's already-completed copy path on x86; ARM, actual copy/fence/collection,
 payload, finalizer and all exact positive/negative assertions remain intact.
 Four-way evidence must pass on Linux GCC/Clang and macOS ARM/Intel Clang before
-publishing source89 and propagating90–112. No candidate is accepted yet.
+publishing source89 and propagating90–112. No candidate is accepted yet. A new x86-only experiment reserves the actual
+frame pointer to exclude RBP as an uncleared heap register; four-way CI is required.
 Evidence branch: ownership-evidence-http2-intel. Assembly diagnostic578830243e16/
 38022478422 and rejected candidates are archived in history. Run full source112
 production-equivalent evidence only after both repairs are present.
@@ -102,7 +115,7 @@ still need their final squash rebases and six exact-head full gates.
 | 33 ownership-loop-unwind | 0ec280e18416 | f3585147985d | Both original implementation/normalization commits preserved; all original source/probes byte-identical; two tests10.51CPU/21.10elapsed, lint2.21/4.41s and format0.34/0.61s pass; final squash-base rebase and full gates remain required |
 | 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
 | 35 ownership-constructor-unwind | bbd74db2977a | 49705971b287 | Refreshed original source/probes; six native tests22.32CPU/44.76elapsed and exact constructor IR3.18/6.70s pass; lint2.28/4.58s, format0.34/0.61s pass; final squash rebase/full gates remain required |
-| 36 ownership-worker-boxing | e171da5957fd | be0032a15ee3 | Three tests 15.44/31.12s; lint 2.40/4.94s, format 0.35/0.62s and strong audit pass; final sequential gates follow |
+| 36 ownership-worker-boxing | 2a9293881eab | bbd74db2977a | Eight original worker/constructor/preparation/caller tests28.60CPU/57.36elapsed pass; native code/probes unchanged; candidate retained remotely; fresh lint/docs publication pending while PR110 crash takes priority |
 | 37 ownership-worker-preparation | ba9f0f293ac8 | e171da5957fd | Three tests 15.91/31.88s; lint 2.33/4.78s, format 0.35/0.63s and strong audit pass; final sequential gates follow |
 | 38 ownership-loop-preparation | 2a45666b37a1 | ba9f0f293ac8 | Four tests 16.61/33.35s; lint 2.26/4.59s, format 0.34/0.62s and strong audit pass; final sequential gates follow |
 | 39 ownership-variant-preparation | dd8444579ed0 | 2a45666b37a1 | Three tests 16.18/32.57s; exact retain unit3.33/7.00s, lint 2.40/4.91s, format 0.35/0.75s and strong audit pass |
