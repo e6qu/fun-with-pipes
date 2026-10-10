@@ -34,13 +34,16 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Focused lint
         if: ${{ !cancelled() }}
-        run: cargo clippy --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_runtime_ownership --test resource_frames --test ownership --test gc -- -D warnings
+        run: cargo clippy --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_runtime_ownership --test resource_frames --test ownership --test gc --test stack --test reuse -- -D warnings
       - name: WebAssembly compiler lint
         if: ${{ !cancelled() }}
         run: cargo clippy --target wasm32-wasip1 -- -D warnings
       - name: Actual WASI File Task and Channel counts and free variants
         if: ${{ !cancelled() }}
-        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_runtime_ownership --test resource_frames --test ownership --no-fail-fast
+        run: cargo test --test wasm_resource_counts --test file_runtime_boundaries --test file_discard_ownership --test file_runtime_ownership --test resource_frames --test ownership --test stack --test reuse --no-fail-fast
       - name: Actual tracing churn and bounded live memory
         if: ${{ !cancelled() }}
         run: cargo test --test gc long_loop_runs_in_bounded_memory -- --exact --nocapture
+      - name: All ownership IR controls including pending CAF and scalar owners
+        if: ${{ !cancelled() }}
+        run: cargo test --lib rc::tests
