@@ -49,8 +49,8 @@ all original source/probes/workflows are preserved. Final two controls11.39CPU/
 22.82elapsed, lint2.57/5.19s, format0.44/0.83s and all pre/post-commit/root audits
 pass. Oldd098b98ad87a7a71b870182df162e36a61ff00c0 is retained remotely before
 exact-lease publication; appended docs keep referenced2471c06 reachable.
-Production CI38054115210 passes bench and regular ARM macOS. Linux, regular
-Intel and both GC stress jobs run. Docs38054115151 passes. Require all seven
+Production CI38054115210 passes bench and both ARM macOS jobs. Linux and
+both Intel jobs run. Docs38054115151 passes. Require all seven
 exact-head gates, then match-head squash with explicit subject
 `Protect loop state and Step payload owners across nonlocal exits` and empty body.
 Verify whole raw message/tree and preserve all11 live docs before advancing main.
@@ -98,12 +98,13 @@ Preparations61–62 are published on their actual refreshed predecessors. Origin
 gRPC cancellation and TLS cache failure/retry controls plus resource/listener
 regressions, lint, format and all audits pass. Original source/probes and old
 revisions are preserved; exact heads, bases and measurements are in the table.
-Current independent task63 is ALPN wire storage (`ownership-tls-wire-preparation`):
-rebase FROM actual0ba865002ace ONTO published620b51abc49371. Preserve invalid-name
-filtering, bounded lengths, checked allocation, no GC scratch and connection
-close on failure. Check wire/cache/listener controls and all11 docs/audit before
-retained-revision publication. Keep the original bounded-size control rather
-than attempting a multi-gigabyte local allocation.
+Current independent task63 is ALPN wire storage (`ownership-tls-wire-preparation`),
+rebased FROM actual0ba865002ace ONTO published620b51abc49371 at native9d611a0f83af.
+All three original wire/cache/listener controls pass10.61CPU/25.68elapsed,
+including a measured13-byte buffer for h2/http1.1 with no GC scratch, original
+allocation/invalid-name/connection-close controls and the bounded length fixture.
+Lint2.53/5.13s and format0.45/0.85s pass. Finish all11 docs/audit before
+retained-revision publication, then prepare queue64 TCP/TLS cancellation cleanup.
 
 Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
 all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
@@ -185,7 +186,7 @@ still need their final squash rebases and six exact-head full gates.
 | 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
 | 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
 | 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | Three original TLS-cache/resource/gRPC controls11.72CPU/27.33elapsed, lint2.44/4.93s and format0.45/0.86s pass; original source/probes unchanged, including all five partial-owner/cache-publication controls; final actual-squash/full gates required |
-| 63 ownership-tls-wire-preparation | 52bc4e64547b | 0ba865002ace | Test7.54/16.19s; lint 2.45/4.96s and format 0.45/0.86s pass |
+| 63 ownership-tls-wire-preparation | 9d611a0f83af | 0b51abc49371 | Three original wire/cache/listener controls10.61CPU/25.68elapsed, lint2.53/5.13s and format0.45/0.85s pass; original source/probes unchanged; measured 13-byte ALPN buffer without GC scratch and all original failure/length controls preserved; final actual-squash/full gates required |
 | 64 ownership-connect-cancellation | d364e70df274 | 52bc4e64547b | Test7.77/17.05s; lint 2.31/4.60s and format 0.44/0.60s pass |
 | 65 ownership-unboxed-worker-locals | 60b03078c3cd | d364e70df274 | Count-wrapped worker repair: nine original controls27.80CPU/56.39elapsed, lint2.35/4.78s, format0.35/0.73s and final audit0.42/3.36s pass; prior886f8b0 retained before exact-lease publication; propagation/full evidence follow |
 | 66 ownership-tls-peer-subject | cfe905046796 | 60b03078c3cd | Test7.47/16.47s; lint 2.33/4.59s and format 0.44/0.84s pass |
@@ -365,8 +366,8 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 ```
 
 The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-tls-cache-worktree (row62, native1973c43),
-with all three original controls11.72CPU/27.33elapsed passing. Before switching Rust
+last checked in /private/tmp/fwp-tls-wire-worktree (row63, native9d611a0),
+with all three original controls10.61CPU/25.68elapsed passing. Before switching Rust
 checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
 then rebuild the requested target. Never infer source identity from a shared
 target directory. Full gates run on GitHub. Temporary helpers may disappear;
