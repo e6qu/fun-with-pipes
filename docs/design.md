@@ -65,7 +65,12 @@ calls, later-argument failures and cancelled entry ticks. Consumed constructor
 fields stay protected before allocation; worker result fields and remaining
 caller references stay protected until record/variant boxing succeeds. Worker
 argument preparation now protects original boxed arguments and each completed
-field duplicate until worker transfer. Multi-field retain cleanup now releases completed extras on count overflow and protects existing caller owners before duplication. Nested constructor temporaries now inherit known monomorphic context for typed child cleanup; expression-inferred types remain authoritative. Wider callback registration remains prepared.
+field duplicate until worker transfer. Multi-field retain cleanup releases
+completed extras on count overflow and protects existing caller owners before
+duplication. Nested constructor temporaries inherit known monomorphic context
+for typed child cleanup; expression-inferred types remain authoritative. Boxed
+variant conversion keeps original boxed and remaining caller owners registered
+until typed payload retention succeeds. Wider callback registration stays prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
 arguments and original stack captures through nonlocal unwind. It adds a typed
@@ -541,8 +546,8 @@ before SSL cache disposal. Cache and hook state reset for reinitialization.
 Prepared packed TLS options use one checked allocation containing an aligned
 header followed by strings and the full length-framed key. Child string/key
 pointers are borrowed within that allocation; last-owner release frees its
-base once. Focused remote checks are pending, so allocation reduction is not
-yet verified support. Full connection addresses also use checked tail storage
+base once. Original allocation probes and actual ARM/Intel binary layouts pass
+on prepared source112; final sequential CI still gates merged support. Full connection addresses also use checked tail storage
 within the existing managed connection allocation, preserving complete pool
 keys without separate address allocation. Connection wrappers retain tracing
 compatibility. Canonical decode already frees temporary C buffers on normal
