@@ -5,17 +5,14 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 [Queue](roadmap-queue.md) preserves immutable anchors; [history](roadmap-history.md)
 preserves accepted and superseded evidence. Root docs are authoritative.
 
-Durable recovery branch: `roadmap/handoff-pr123-20261011`. Current checkpoint024780c803eb2f2871edace1e474c71e6e148f17. Its exact-head
-docs audit38164766142 failed on the same overbroad numeric-row parser;
-the section-scoped repair is prepared in scripts/check-roadmap.py. Previous69fa audit38162836405 completed
-successfully; it does not verify the newer checkpoint. It retains all11 docs and recovery recipes/helpers under
-scripts/roadmap-recovery/. The running finalizer binds this immutable checkpoint.
-Current recovery receipt is /private/tmp/fwp-finalization-checkpoint.json;
-driver receipt: /private/tmp/fwp-resource-finalization-driver-publication.json.
-Preserve the next publication receipt and fresh docs in a new checkpoint after
-publication; do not rerun completed publishers. Restore source by verified Git
-blob hashes with restore-roadmap-recovery.py if temporary files disappear.
-Source recovery is not runtime verification. Phases2–6 remain unfinished.
+Durable recovery branch: `roadmap/handoff-pr123-20261011`. Current checkpoint1df9126781c71604109e562d845b98b39db9557a passes exact-head documentation audit38168860336.
+It retains all11 authoritative docs, State source/fixtures and recovery recipes.
+Earlier024 audit failed the numeric-row parser; the section-scoped fix is verified.
+The next checkpoint also corrects the restore map to temporary destinations only.
+Receipt: /private/tmp/fwp-state-bundle-checkpoint.json. Never rerun completed
+publishers. Restore bytes using verified Git blob hashes with
+restore-roadmap-recovery.py; source recovery is not runtime verification.
+Phases2–6 remain unfinished.
 
 ## Execution contract
 
@@ -86,7 +83,7 @@ Documentation38164685131 and recovery audit38164766142 failed because
 check_handoff interpreted the numeric
 evidence row85 as a live roadmap row. The repair scopes parsing to the single
 Remaining ownership deliveries section and makes the evidence label unambiguous.
-Failed log: /private/tmp/fwp-pr124-docs-failed.log. The repair remains unexecuted. Regular ARM production job114544683069 also
+Failed log: /private/tmp/fwp-pr124-docs-failed.log. Recovery audit38168860336 verifies the repair. Regular ARM production job114544683069 also
 failed only the two library-format assertions for lib/autodiff.fwp; its
 formatting-stability/faithfulness test passed. Failed log:
 /private/tmp/fwp-pr124-arm-failed.log. Bench and both exact-head GC jobs pass.
@@ -95,7 +92,7 @@ State/format/docs repair and its final full exact-head matrix.
 
 Production PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124) is open at
 9550aab94bf5cb2adb4f6a462381537d37ce3644. CI38164685147 and
-roadmap_docs38164685131 are queued at that exact head. Source publication
+roadmap_docs38164685131 failed at that exact head as recorded above. Source publication
 receipt: /private/tmp/fwp-resource-network-finalized-export/publication.json;
 fresh-doc receipt: /private/tmp/fwp-finalized-bundle-doc-publication.json.
 Next: monitor these gates, fix any failures and prepare the finite phase2 review;
