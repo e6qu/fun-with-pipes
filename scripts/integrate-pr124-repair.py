@@ -82,7 +82,7 @@ for name in NATIVE:
         source = source.replace(edit['old'],edit['new'],1)
     assert source.encode() == blob(STATE,name), name
     (WT/name).write_text(source)
-inference_recipe = json.loads(blob('HEAD','scripts/instantiate-function-effects-patch.json'))
+inference_recipe = json.loads(blob('HEAD','scripts/call-row-ambient-patch.json'))
 assert set(inference_recipe) == {'src/infer.rs'}
 for name, edits in inference_recipe.items():
     source = (WT/name).read_text()
@@ -138,7 +138,7 @@ for name, expected in inventory_report['sourceHashes'].items():
 old_counts = 'its expected153 contracts\nand191 review declarations are not verified counts yet.'
 text = state_doc.read_text()
 assert text.count(old_counts) == 1
-text = text.replace('and escaping-closure State cases are prepared for the final bundle in\n/private/tmp/fwp-typed-state-expanded-test.rs and have not executed.', 'and escaping-closure State cases pass runner preflight against the raw interpreter\nat O1/O2, both stack settings and both reuse verification settings. The returned\nfunction effect-row inference fix passes library units and effect/type snapshots.')
+text = text.replace('and escaping-closure State cases are prepared for the final bundle in\n/private/tmp/fwp-typed-state-expanded-test.rs and have not executed.', 'and escaping-closure State cases pass runner preflight against the raw interpreter\nat O1/O2, both stack settings and both reuse verification settings. The ambient\ncall-row inference fix passes library units and effect/type snapshots.')
 state_doc.write_text(text.replace(old_counts,
     'the runner verifies153 contracts,191 review declarations/181 symbols,\n'
     '374 total declarations/364 symbols,40 aliases,19 IR combinators and11 flat\n'

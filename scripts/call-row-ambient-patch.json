@@ -1,0 +1,28 @@
+{
+  "src/infer.rs": [
+    {
+      "old": "    fn open_call(&mut self, ty: &Type) -> Type {",
+      "new": "    fn open_call(&mut self, ty: &Type, ambient: Option<&Row>) -> Type {"
+    },
+    {
+      "old": "                if e.tail.is_none() {\n                    e.tail = Some(self.env.table.fresh(Kind::Eff, self.level));\n                }\n                Type::Fun(a, b, e)\n",
+      "new": "                if e.tail.is_none() {\n                    e.tail = Some(self.env.table.fresh(Kind::Eff, self.level));\n                } else if let Some(ambient) = ambient {\n                    // Extend the temporary call row, rather than adding known\n                    // ambient labels to a stored function's effect variable.\n                    // In State[function], that would make the function's own\n                    // effect row recursively contain itself.\n                    let ambient = self.env.table.zonk_row(ambient);\n                    for (label, payload) in ambient.fields {\n                        if !e.fields.iter().any(|(existing, _)| existing == &label) {\n                            e.fields.push((label, payload));\n                        }\n                    }\n                    e.fields.sort_by(|a, b| a.0.cmp(&b.0));\n                }\n                Type::Fun(a, b, e)\n"
+    },
+    {
+      "old": "let rhs = self.open_call(rhs);\n                self.unify",
+      "new": "let rhs = self.open_call(rhs, Some(ctx));\n                self.unify"
+    },
+    {
+      "old": "let lhs = &self.open_call(lhs);",
+      "new": "let lhs = &self.open_call(lhs, None);"
+    },
+    {
+      "old": "let rhs = self.open_call(rhs);\n        self.unify",
+      "new": "let rhs = self.open_call(rhs, Some(&e));\n        self.unify"
+    },
+    {
+      "old": "let opened = self.open_call(&tf);",
+      "new": "let opened = self.open_call(&tf, Some(ctx));"
+    }
+  ]
+}
