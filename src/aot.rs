@@ -153,6 +153,7 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
         if let Ok(f) = std::fs::File::open(&exe) {
             let _ = f.set_modified(std::time::SystemTime::now());
         }
+        prune(&dir, &exe);
         return Ok(exe);
     }
     if !have_cc() {
@@ -171,21 +172,24 @@ pub fn executable(c_source: &str, opt: &str) -> Result<PathBuf, Error> {
         let _ = std::fs::remove_file(&tmp);
     }
     built.map_err(Error::Failed)?;
-    prune(&dir);
+    prune(&dir, &exe);
     Ok(exe)
 }
 
 /// Remove the least recently used executables beyond the cache's size.
-fn prune(dir: &Path) {
+fn prune(dir: &Path, keep: &Path) {
     let Ok(rd) = std::fs::read_dir(dir) else {
         return;
     };
     let mut entries: Vec<(std::time::SystemTime, PathBuf)> = rd
         .filter_map(|e| e.ok())
         .filter(|e| !e.file_name().to_string_lossy().starts_with('.'))
+        .filter(|e| e.path().as_path() != keep)
         .filter_map(|e| Some((e.metadata().ok()?.modified().ok()?, e.path())))
         .collect();
-    let max = cache_max();
+    // Keep the executable being returned even when the configured limit is zero.
+    // Reserve one slot for it; prune only older entries, regardless of timestamps.
+    let max = cache_max().saturating_sub(1);
     if entries.len() <= max {
         return;
     }

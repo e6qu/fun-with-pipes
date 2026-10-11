@@ -33,19 +33,20 @@ jobs:
           rustc --version > "$RUNNER_TEMP/gc-build-diagnostics/rustc.txt"
       - name: Preserve formatting diagnostics
         run: |
-          rustfmt src/cgen.rs src/ffi_interp.rs tests/gc.rs tests/compiler_diagnostics.rs
+          rustfmt src/cgen.rs src/ffi_interp.rs src/aot.rs tests/gc.rs tests/compiler_diagnostics.rs tests/cache_lifetime.rs
           mkdir -p "$RUNNER_TEMP/gc-build-diagnostics/formatted/src" "$RUNNER_TEMP/gc-build-diagnostics/formatted/tests"
-          cp src/cgen.rs src/ffi_interp.rs "$RUNNER_TEMP/gc-build-diagnostics/formatted/src/"
-          cp tests/gc.rs tests/compiler_diagnostics.rs "$RUNNER_TEMP/gc-build-diagnostics/formatted/tests/"
+          cp src/cgen.rs src/ffi_interp.rs src/aot.rs "$RUNNER_TEMP/gc-build-diagnostics/formatted/src/"
+          cp tests/gc.rs tests/compiler_diagnostics.rs tests/cache_lifetime.rs "$RUNNER_TEMP/gc-build-diagnostics/formatted/tests/"
           git diff > "$RUNNER_TEMP/gc-build-diagnostics/format.patch"
           git diff --exit-code
       - name: Focused lint and real failed compiler control
         env:
           FWP_GC_DIAGNOSTICS_ARTIFACTS: ${{ runner.temp }}/gc-build-diagnostics/fixtures
         run: |
-          cargo clippy --test gc --test compiler_diagnostics -- -D warnings
+          cargo clippy --test gc --test compiler_diagnostics --test cache_lifetime -- -D warnings
           cargo test --test gc gc_stress_reports_native_compiler_failure -- --exact --nocapture
           cargo test --test compiler_diagnostics -- --nocapture
+          cargo test --test cache_lifetime -- --nocapture
       - name: Verify a silenced compiler failure is rejected
         run: |
           python3 - <<'PY'
@@ -92,10 +93,33 @@ jobs:
           finally:
               p.write_bytes(original)
           PY
+      - name: Verify eviction of the current executable is rejected
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, subprocess
+          p = Path('src/aot.rs')
+          original = p.read_bytes()
+          old = b'.filter(|e| e.path().as_path() != keep)'
+          assert original.count(old) == 1
+          try:
+              p.write_bytes(original.replace(old, b'.filter(|_| true)'))
+              result = subprocess.run(['cargo', 'test', '--test', 'cache_lifetime',
+                  'cache_limit_preserves_current_executable_despite_future_timestamps',
+                  '--', '--exact', '--nocapture'], capture_output=True)
+              out = Path(os.environ['RUNNER_TEMP']) / 'gc-build-diagnostics'
+              (out / 'cache-eviction-control.stdout').write_bytes(result.stdout)
+              (out / 'cache-eviction-control.stderr').write_bytes(result.stderr)
+              (out / 'cache-eviction-control.status').write_text(str(result.returncode) + '\n')
+              assert result.returncode == 101, result.returncode
+              assert b'cache evicted the executable before it could run' in result.stdout + result.stderr
+          finally:
+              p.write_bytes(original)
+          PY
       - name: Record exact restored source hashes
         run: |
           git diff --exit-code
-          sha256sum src/cgen.rs src/ffi_interp.rs tests/gc.rs tests/compiler_diagnostics.rs target/debug/fwp > "$RUNNER_TEMP/gc-build-diagnostics/source-hashes.txt"
+          sha256sum src/cgen.rs src/ffi_interp.rs src/aot.rs tests/gc.rs tests/compiler_diagnostics.rs tests/cache_lifetime.rs target/debug/fwp > "$RUNNER_TEMP/gc-build-diagnostics/source-hashes.txt"
           sha256sum "$RUNNER_TEMP/gc-build-diagnostics/fixtures/"* > "$RUNNER_TEMP/gc-build-diagnostics/fixture-hashes.txt"
       - uses: actions/upload-artifact@v4
         if: always()
