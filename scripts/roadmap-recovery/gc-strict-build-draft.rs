@@ -107,7 +107,11 @@ fn retain_stress_failure(path: &Path, dir: &Path, want: &str, got: &str) {
         std::fs::copy(&exe, &retained).unwrap();
         eprintln!("GC stress binary retained at {}", retained.display());
     }
-    std::fs::copy(exe.with_extension("status"), retained.with_extension("status")).unwrap();
+    std::fs::copy(
+        exe.with_extension("status"),
+        retained.with_extension("status"),
+    )
+    .unwrap();
     std::fs::write(
         retained.with_extension("report"),
         format!("--- expected\n{want}--- got\n{got}"),

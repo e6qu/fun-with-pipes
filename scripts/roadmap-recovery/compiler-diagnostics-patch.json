@@ -6,7 +6,7 @@
     },
     {
       "old": "return Err(format!(\"C compiler failed:\\n{}{}\", err, hint));",
-      "new": "return Err(format!(\"{}{}\", compiler_failure(\"C compiler failed\", &res), hint));"
+      "new": "return Err(format!(\n            \"{}{}\",\n            compiler_failure(\"C compiler failed\", &res),\n            hint\n        ));"
     },
     {
       "old": "let tls = err.contains(\"openssl/\") || err.contains(\"-lssl\");",

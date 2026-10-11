@@ -9,12 +9,12 @@ RUNS = {
     'pr123_docs': (38138731036, '9e7d0b24610524cf54125c44b47ee07185c0b7c3'),
     'main122_docs': (38127751825, '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'),
     'resource_network_preparation': (38140923130, '82c7bc7509c04b9e94004c06b02d83d665539ac6'),
-    'gc_build_diagnostics': (38136959809, 'a44c3da1aa344266262fc99471b331b053db371b'),
+    'gc_build_diagnostics': (38151169253, 'a27f8e5f78ab12e397119b76049aa6eefbf88157'),
     'autodiff_allocations': (38145198463, 'e586a4d12a477aefcc854e12f6bbf2f640299de8'),
     'list_applicative': (38148442793, '05556bfb3d7f7e2299cdfcad84d220d5455f75f2'),
     'autodiff_scopes': (38141558055, '475cb242715961e5e396e4fe74026545160d2e3c'),
     'autodiff_tapes': (38139112950, '602e076604d3dd759c47b396c10cf848dd9dbb61'),
-    'streamlined_handoff_docs': (38147387372, '6d51eca63c7d907c47c05f92d2d9b90229dfc821'),
+    'streamlined_handoff_docs': (38149016348, '4282115f61132e4462a6fb8616c511dc36b8eb07'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

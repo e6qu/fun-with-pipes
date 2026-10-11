@@ -8,7 +8,8 @@ struct Cache(PathBuf);
 
 impl Cache {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("fwp-cache-lifetime-{}-{name}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("fwp-cache-lifetime-{}-{name}", std::process::id()));
         std::fs::create_dir(&dir).unwrap();
         Self(dir)
     }
@@ -50,9 +51,17 @@ impl Drop for Cache {
 }
 
 fn assert_output(output: &Output, expected: &[u8]) {
-    assert!(output.status.success(), "cache evicted the executable before it could run: {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "cache evicted the executable before it could run: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     assert_eq!(output.stdout, expected);
-    assert!(output.stderr.is_empty(), "{}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.stderr.is_empty(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 }
 
 #[test]
@@ -62,8 +71,15 @@ fn cache_limit_preserves_current_executable_despite_future_timestamps() {
         let first = cache.source("first");
         assert_output(&cache.run(&first, limit, false), b"first\n");
         let old = cache.entries();
-        assert_eq!(old.len(), 1, "native compilation must actually populate the cache");
-        std::fs::File::open(&old[0]).unwrap().set_modified(SystemTime::now() + Duration::from_secs(3600)).unwrap();
+        assert_eq!(
+            old.len(),
+            1,
+            "native compilation must actually populate the cache"
+        );
+        std::fs::File::open(&old[0])
+            .unwrap()
+            .set_modified(SystemTime::now() + Duration::from_secs(3600))
+            .unwrap();
         let second = cache.source("second");
         let native = cache.run(&second, limit, false);
         assert_output(&native, b"second\n");
@@ -84,12 +100,20 @@ fn cache_hit_applies_reduced_limit_without_deleting_current_executable() {
     let first = cache.source("first");
     let second = cache.source("second");
     let third = cache.source("third");
-    for (source, expected) in [(&first, b"first\n".as_slice()), (&second, b"second\n".as_slice()), (&third, b"third\n".as_slice())] {
+    for (source, expected) in [
+        (&first, b"first\n".as_slice()),
+        (&second, b"second\n".as_slice()),
+        (&third, b"third\n".as_slice()),
+    ] {
         assert_output(&cache.run(source, "8", false), expected);
     }
     assert_eq!(cache.entries().len(), 3);
     assert_output(&cache.run(&second, "0", false), b"second\n");
-    assert_eq!(cache.entries().len(), 1, "a cache hit must apply the reduced cache limit");
+    assert_eq!(
+        cache.entries().len(),
+        1,
+        "a cache hit must apply the reduced cache limit"
+    );
     assert_output(&cache.run(&second, "1", false), b"second\n");
     assert_eq!(cache.entries().len(), 1);
 }

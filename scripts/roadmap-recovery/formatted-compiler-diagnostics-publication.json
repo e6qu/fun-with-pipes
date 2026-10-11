@@ -1,0 +1,16 @@
+{
+  "head": "a27f8e5f78ab12e397119b76049aa6eefbf88157",
+  "previous": "a44c3da1aa344266262fc99471b331b053db371b",
+  "branch": "ownership-evidence-gc-build-diagnostics",
+  "failedRun": 38136959809,
+  "sourceHashes": {
+    "src/cgen.rs": "a58f82ad1172359f63ce318d6ffb2cae6e91dad13f2ff2cbab6ce526967c6cce",
+    "src/ffi_interp.rs": "636843db3813024f57d84e92af8a44063cdb9f3469318ce98a2ca670861cebd9",
+    "src/aot.rs": "e68fa7d18f066aa85938fffae183bab6fb5deef5367b21d59be8c0b59d55260f",
+    "tests/gc.rs": "9a105821da48fb4d75e0396934b0a9bd83b86bfd65aa3cdd15424ae97ed97c99",
+    "tests/compiler_diagnostics.rs": "a0884888cb77c255ffc82a4c65615781663a47a47c6b7de8c9d5e6a0dbd60f59",
+    "tests/cache_lifetime.rs": "b3fc63ed7a42f6a6972f73273ca2514bed66d03a5a52fd13442f354fc5403e7b",
+    "scripts/compiler-diagnostics-patch.json": "38bddca523a87a32c69760a600753b28111f873ace1aa0c213721625dc7b03e5"
+  },
+  "stage": "Runner formatting repaired; focused lint/tests/controls pending"
+}

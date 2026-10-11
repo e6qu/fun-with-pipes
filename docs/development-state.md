@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-list-allocation-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-formatted-diagnostics-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint6d51eca63c7d907c47c05f92d2d9b90229dfc821 has
-exact-head audit38147387372 queued. Earlier checkpoints and cancelled audits
+Current checkpoint4282115f61132e4462a6fb8616c511dc36b8eb07 has
+exact-head audit38149016348 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -475,8 +475,16 @@ PR123's native source remains unchanged by this later harness draft. Its new
 documentation-repair head requires all gates as recorded;
 the later harness repair does not count as passed support.
 Published independent validation branch: ownership-evidence-gc-build-diagnostics,
-heada44c3da1aa344266262fc99471b331b053db371b on PR123 native source.
-CI38136959809 is queued. Superseded38132388036 and38135741797 were confirmed
+heada27f8e5f78ab12e397119b76049aa6eefbf88157 on PR123 native source.
+CI38151169253 is queued. Previous38136959809 at a44c3da failed formatting
+before lint or native regression execution. Its 95KiB artifact is retained at
+/private/tmp/fwp-gc-build-diagnostics-a44-artifacts. The repair copies all six
+runner-formatted Rust files and updates the compiler replay recipe to reproduce
+those exact bytes from b0ae. Publication/source parity is verified; replacement
+formatting, lint, positive tests and omission controls remain pending. Receipt:
+/private/tmp/fwp-formatted-compiler-diagnostics-publication.json. No local compiler
+workload ran: free disk remains about9.5GiB, below the required64GiB reserve.
+Superseded38132388036 and38135741797 were confirmed
 cancelled while unstarted before adding the compiler and cache repairs.
 The replacement runs formatting, focused lint, a real failing-CC
 control and a positive native GC
