@@ -1,0 +1,18 @@
+{
+  "head": "ac7b518c5b1d80dd55c385728cdae5bbdde1f44e",
+  "previous": "cde7119b5e904006434993232f00202634e135bb",
+  "branch": "ownership-evidence-typed-state-allocations",
+  "unchangedNativeBlobs": {
+    "src/ownership.rs": "9076f2b1fffac31160ef91a7ed8f7b4711713719",
+    "src/cgen.rs": "252e9ddcd37aa46032fd7ea6707c99671b3a4495",
+    "runtime/fwp_rt.c": "bb068268f2797b1c19a0906285d1744fce669ff6",
+    "runtime/fwp_rt_task.c": "f530857f3c82e6073d4a957fca1ed525f2ccbc56",
+    "runtime/fwp_rt_prims.c": "8e21510220e64ade46b97acfa7e28105f7627e56"
+  },
+  "failedRun": 38166439358,
+  "failedLogHash": "b3835ed1c17c5e9b04a4e9ee2618219fe5f99a9eb6f6fa17d7915cf649f5418b",
+  "sourceHashes": {
+    "scripts/measure-typed-state-allocations.py": "f86561ef2a2dfdcde4cb94544bf63d853deae5aea0df6ca009d6d8af4b24f7a4"
+  },
+  "stage": "Allocation fixture repaired; measurements pending"
+}

@@ -1,0 +1,17 @@
+{
+  "head": "aedbd448b2cffb99ce9d4093bc68f9183754a659",
+  "base": "9550aab94bf5cb2adb4f6a462381537d37ce3644",
+  "branch": "ownership-evidence-typed-state",
+  "sourceHashes": {
+    "src/ownership.rs": "01e3a5f34394658dd381f9f9f614604579a526ce4a11039ace365904d0517151",
+    "src/cgen.rs": "ed843fdfac869c47460a53b4b8f3039f55eac649f60ea72c6b4bb54c905e725c",
+    "runtime/fwp_rt.c": "74660fa3404a737cda770fa777994e683ff7f225fe0662e96748dcfb7b341808",
+    "runtime/fwp_rt_task.c": "1798431e098079b2aa89ff936def415844cf055a6476617f08e52b9118e18ce7",
+    "runtime/fwp_rt_prims.c": "964cfe7f42f01c64cca7af557bd8bd6aa7a17718b646b58a3c984b2a6a88d737",
+    "tests/typed_state_ownership.rs": "a70a9dbfbf050846aabdc163216c01cef747b402357b1e2e5335a365a31c5a4b",
+    "tests/fixtures/typed_state_probe.c": "ac0b59c65ca77a60253693f9a64cb89ad79abc09742ee7bc082bf6aff6883069",
+    "scripts/typed-state-ownership-patch.json": "cca453a38a68e02dd9096ae4c5e2e419001f4f5d0a9d859a9828c5065a9fc769",
+    ".github/workflows/typed-state-evidence.yml": "c76ad1e8cb7f63a5ccd940bcecb5513d14d9bce9af28001a710a63c2bc64aa37"
+  },
+  "stage": "Independent State candidate published; compilation and runtime validation pending"
+}
