@@ -278,7 +278,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #116 includes the following contracts. Detailed primitive modes
+Main through PR #117 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -297,7 +297,7 @@ and measurements are in [history](roadmap-history.md).
   until record/variant boxing succeeds in PR114. Worker argument preparation
   protects original boxes and completed field duplicates until transfer in PR115;
   flattened loop argument preparation protects original boxes and completed field
-  duplicates until transfer in PR116. Wider callback registration remains prepared.
+  duplicates until transfer in PR116. Multi-field retains release completed extras on count overflow in PR117, with caller owners registered before duplication. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

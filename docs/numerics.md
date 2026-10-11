@@ -90,7 +90,7 @@ Reverse mode needs the tape's memory, 24 bytes per operation; there is no
 checkpointing.
 
 The later numeric phase must verify exceptional tape lifetimes before reusing
-capacity. Code review of prepared source112 (`996d5ee4ef4f`) finds that native
+capacity. Code review of prepared source112 (`b45e93a71d40`) finds that native
 `ad.backward` detaches four tape buffers before validating output tape IDs; its
 mixed-tape trap frees adjoints but does not release those buffers. The interpreter
 uses a local owned `Tape`, whose buffers drop on that error. Add a native
@@ -199,27 +199,15 @@ OpenCL device was available where this was written: the OpenCL host code
 is exercised only up to platform discovery, and the generated source is
 checked as text.
 
-**Performance.** A kernel of 100 fused steps of 8 operations (5 of them
-`sqrt`, `sin`, `exp`, `ln`, `cos`) summed with `tensor.sum-on`, on a
-4-core machine shared with other jobs (load average about 12, so the
-speedups are lower bounds):
-
-| elements | device | native | interpreter (release build) |
-|---|---|---|---|
-| 1 000 000 | `CpuParallel 1` | 3.37 s | |
-| 1 000 000 | `CpuParallel 2` | 1.84 s | |
-| 1 000 000 | `CpuParallel 4` | 1.75 s | |
-| 200 000 | `CpuParallel 1` | 0.60 s | 1.18 s |
-| 200 000 | `CpuParallel 4` | 0.26 s | 0.84 s |
-
-The times include building the input from a list (most of the
-interpreter's time); the kernel itself runs at the same speed in both
-backends, since both evaluate it with compiled loops.
-
-These are historical measurements, not macOS evidence. Framework loading
-on Darwin does not prove a usable double-precision device or successful
-kernel execution. Preserve the deterministic reduction order and disabled
-contraction while measuring SIMD, buffer reuse and fused gradients.
+Historical tensor-kernel timings are preserved in
+[history](roadmap-history.md#archived-tensor-kernel-timing-samples). They lack
+recorded processor/compiler details and allocation/live-memory measurements,
+so they cannot establish a current performance baseline or equal kernel speed
+between backends. Future comparisons must separate input construction from
+kernel execution and use equivalent workloads under the measurement contract.
+Framework loading on Darwin does not prove a usable double-precision device
+or successful kernel execution. Preserve deterministic reduction order and
+disabled contraction while measuring SIMD, buffer reuse and fused gradients.
 
 ## Not implemented
 

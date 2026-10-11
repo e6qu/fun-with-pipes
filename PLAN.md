@@ -41,21 +41,19 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#116: native macOS, selected typed container/text/callback
+Main includes #74–#117: native macOS, selected typed container/text/callback
 ownership, exact wide reference counts and immediate last-owner reclamation.
-Registered unwind cleanup now protects compiler caller/reuse-token references
-and runtime application/capture preparation, plus map, selection, zip and fold
-unwind cleanup. Loop state/Step owners survive cancellation and payload
-preparation; flattened Again records remain unboxed. Original allocation gates
-remain intact. Constructor fields and remaining caller references stay protected
-before allocation; merged changes passed all exact-head production and
-documentation gates. Worker result fields and remaining caller references now
-stay protected until record/variant boxing succeeds. Queue 34 is skipped as a
-duplicate; queues35–38 are accepted. Worker argument preparation protects original boxed
-arguments and each completed field duplicate until worker entry. Flattened loop argument preparation protects the original box and completed field
-duplicates until transfer. Deliver queue39 retain overflow, then the remaining ownership work. Exact heads, failures, checks and the sole next action
-are in [the handoff](docs/development-state.md); historical platform evidence
-and repaired test controls are in [history](docs/roadmap-history.md).
+Registered cleanup protects caller and reuse-token references, runtime application
+and captures, and map/selection/zip/fold unwind. Loop state and Step owners
+survive cancellation and payload preparation; eligible Again records stay unboxed.
+Constructor fields, worker results and boxed-to-worker arguments remain protected
+until transfer. Flattened loop preparation protects the original box and each
+completed field duplicate. Original allocation and semantic controls remain intact.
+
+Queues35–39 are accepted; queue34 is a verified duplicate already delivered in
+#107. Multi-field retain overflow cleanup is merged. Deliver queue40 constructor type context on the actual PR117 squash, then continue the remaining ownership queue. Exact heads, checks and
+the sole next action are in [the handoff](docs/development-state.md); prior
+platform evidence and repaired controls are in [history](docs/roadmap-history.md).
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
