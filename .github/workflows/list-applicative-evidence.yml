@@ -17,9 +17,12 @@ jobs:
       CARGO_BUILD_JOBS: 2
       CARGO_INCREMENTAL: 0
       CARGO_PROFILE_TEST_DEBUG: 0
+      CARGO_PROFILE_DEV_DEBUG: 0
       RUST_TEST_THREADS: 1
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -60,6 +63,8 @@ jobs:
           cargo test --test list_applicative_ownership -- --nocapture
           git diff --exit-code
           shasum -a 256 src/cgen.rs src/ownership.rs runtime/fwp_rt_prims.c tests/list_applicative_ownership.rs tests/fixtures/list_ap_probe.c target/debug/fwp > "$FWP_LIST_AP_ARTIFACTS/source-binary-hashes.txt"
+      - name: Equivalent callback pipeline allocations and counted reclamation
+        run: python3 scripts/measure-list-callback-allocations.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
