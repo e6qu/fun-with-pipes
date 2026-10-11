@@ -7849,6 +7849,29 @@ pub fn compile_c(c_source: &str, output: &std::path::Path, opt: &str) -> Result<
     compile_for(c_source, output, opt, Target::Native)
 }
 
+/// Preserve failed compiler output and termination details for native and FFI builds.
+pub(crate) fn compiler_failure(context: &str, output: &std::process::Output) -> String {
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let mut message = format!("{context}:\n{stdout}{stderr}");
+    if !message.ends_with('\n') {
+        message.push('\n');
+    }
+    write!(message, "compiler status: {}", output.status).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        write!(
+            message,
+            " (signal={:?}, core_dumped={})",
+            output.status.signal(),
+            output.status.core_dumped()
+        )
+        .unwrap();
+    }
+    message
+}
+
 fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     let res = cmd
         .output()
@@ -7856,7 +7879,11 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
     if !res.status.success() {
         let err = String::from_utf8_lossy(&res.stderr);
         // a program that uses TLS needs OpenSSL's headers and libraries
-        let tls = err.contains("openssl/") || err.contains("-lssl");
+        let stdout = String::from_utf8_lossy(&res.stdout);
+        let tls = err.contains("openssl/")
+            || err.contains("-lssl")
+            || stdout.contains("openssl/")
+            || stdout.contains("-lssl");
         let hint = match native_options().cross {
             Some(t) if tls => {
                 let deb = match t.split('-').next().unwrap_or_default() {
@@ -7873,7 +7900,7 @@ fn run_cc(cmd: &mut std::process::Command, cc: &str) -> Result<(), String> {
             _ if tls => "\nthe program uses TLS, which needs OpenSSL 3's headers and libraries (Debian and Ubuntu: libssl-dev; see docs/tls.md)".to_string(),
             _ => String::new(),
         };
-        return Err(format!("C compiler failed:\n{}{}", err, hint));
+        return Err(format!("{}{}", compiler_failure("C compiler failed", &res), hint));
     }
     Ok(())
 }
