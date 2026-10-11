@@ -31,8 +31,7 @@ jobs:
           FWP_ARRAY_SIZE_ARTIFACTS: ${{ runner.temp }}/array-size-evidence
         run: |
           rustfmt --edition 2021 src/prims_std.rs tests/array_size_limits.rs
-          cargo test --lib
-          cargo test --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture
+          cargo test --lib --test array_size_limits --test golden_check --test call_effects --no-fail-fast -- --nocapture
       - uses: actions/upload-artifact@v4
         if: always()
         with:
