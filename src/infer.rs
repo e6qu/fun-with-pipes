@@ -537,6 +537,33 @@ impl<'a> Infer<'a> {
         }
     }
 
+    /// A function value can satisfy a parameter that permits additional known
+    /// effects. Widen only its temporary outer row, preserving effect variables
+    /// shared with function-valued inputs; this is unrelated to caller effects.
+    fn argument_type(&mut self, expected: &Type, actual: &Type) -> Type {
+        let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
+            return actual.clone();
+        };
+        let permitted = self.env.table.zonk_row(&permitted);
+        if permitted.fields.is_empty() {
+            return actual.clone();
+        }
+        let Type::Fun(input, output, effects) = self.env.table.resolve(actual) else {
+            return actual.clone();
+        };
+        let mut effects = self.env.table.zonk_row(&effects);
+        if effects.tail.is_none() {
+            effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
+        }
+        for (label, payload) in permitted.fields {
+            if !effects.fields.iter().any(|(existing, _)| existing == &label) {
+                effects.fields.push((label, payload));
+            }
+        }
+        effects.sort();
+        Type::Fun(input, output, effects)
+    }
+
     // ----- binding groups ------------------------------------------------------
 
     fn check_group(&mut self, group: &[usize]) {
@@ -1517,10 +1544,11 @@ impl<'a> Infer<'a> {
     fn infer_app(&mut self, e: &Expr, f: &Expr, args: &[Expr], ctx: &Row) -> IResult<Type> {
         let mut tf = self.infer(f, ctx)?;
         for (i, arg) in args.iter().enumerate() {
-            let ta = self.infer(arg, ctx)?;
+            let mut ta = self.infer(arg, ctx)?;
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
+                    ta = self.argument_type(&p, &ta);
                     self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
                 }
                 Type::Var(_) | Type::App(..) => {}

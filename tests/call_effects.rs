@@ -163,3 +163,41 @@ read = match
         );
     }
 }
+
+
+#[test]
+fn higher_order_callback_rows_allow_known_effect_weakening() {
+    for source in [r#"
+pass-fn : (I64 -> I64 ! {Async | e}) -> (I64, I64) ! {Async | e}
+pass-fn = both (task.deadline 1h | apply 2) (apply 3)
+main = pass-fn (add 40) | echo
+"#, r#"
+pass-pure : (I64 -> I64) -> (I64, I64) ! {Async}
+pass-pure = both (task.deadline 1h | apply 2) (apply 3)
+main = pass-pure (add 40) | echo
+"#, r#"
+pass-io : (String -> String ! {IO | e}) -> (String, String) ! {Async, IO | e}
+pass-io = both (task.deadline 1h | apply "a") (apply "b")
+main = ()
+"#] {
+        check_source("higher-order-rows.fwp",source,None).unwrap_or_else(|error|panic!("{}",error.rendered));
+    }
+}
+
+#[test]
+fn weakening_callback_rows_preserves_required_async_and_io() {
+    for (source,required) in [(r#"
+bad : (I64 -> I64 ! e) -> (I64, I64) ! e
+bad = both (task.deadline 1h | apply 2) (apply 3)
+main = ()
+"#, "Async"), (r#"
+bad : (String -> String ! {IO}) -> (String, String) ! {Async}
+bad = both (task.deadline 1h | apply "a") (apply "b")
+main = ()
+"#, "IO")] {
+        match check_source("missing-callback-effects.fwp",source,None) {
+            Ok(_)=>panic!("missing {required} accepted"),
+            Err(error)=>assert!(error.rendered.contains(required),"{}",error.rendered),
+        }
+    }
+}
