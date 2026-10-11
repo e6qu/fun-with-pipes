@@ -65,6 +65,11 @@ for label,head in [('baseline',BASE),('candidate',CANDIDATE)]:
  marker='typedef uint64_t V;';assert source.count(marker)==1
  source=source.replace(marker,marker+'\nstatic uint64_t measured_calls,measured_bytes,measured_dup,measured_drop,measured_share,measured_clears;')
  marker='static inline void *fwp_gc_alloc(size_t n, int leaf) {';assert source.count(marker)==1
+ # Kind zero is exclusively the fwp_alloc_init slow-path delegation; count
+ # the public initializer once, including its fast path, without double counting.
+ assert source.count('fwp_gc_alloc(n, 0)') == 1
+ source=source.replace(marker,marker+'\n    if (leaf != 0) { measured_calls++;measured_bytes+=n; }')
+ marker='static inline void *fwp_alloc_init(size_t n) {';assert source.count(marker)==1
  source=source.replace(marker,marker+'\n    measured_calls++;measured_bytes+=n;')
  marker='static inline void fwp_rc_dup(V v) {\n    uint8_t *c = fwp_rc_slot(v);\n    if (c && *c) {';assert source.count(marker)==1
  source=source.replace(marker,marker+'\n        measured_dup++;')
@@ -101,7 +106,7 @@ for label,head in [('baseline',BASE),('candidate',CANDIDATE)]:
 report=dict(baseline=BASE,candidate=CANDIDATE,results=results,
  sourceHashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.iterdir() if p.is_file() and (p.suffix in {'.c','.fwp','.rs'} or p.name.endswith(('-O1','-O2')))},
  settings=dict(FWP_GC_STRESS='0',FWP_GC_VERIFY='1',FWP_REUSE_VERIFY='0'),
- limits='Equivalent 4096 runtime-dependent State handler calls after one warmup. Managed heap allocator API calls/requested bytes, counted increments/decrements and explicit shared count clears, not libc usable sizes or all external allocations. Freed bytes use the runtime counted-storage counter. Peak live bytes are collection samples; RSS is process high-water KiB. No timing or tracing-free claim.')
+ limits='Equivalent 4096 runtime-dependent State handler calls after one warmup. Managed heap allocator API calls/requested bytes, including initializer fast paths and counting slow-path delegation once, counted increments/decrements and explicit shared count clears, not libc usable sizes or all external allocations. Freed bytes use the runtime counted-storage counter. Peak live bytes are collection samples; RSS is process high-water KiB. No timing or tracing-free claim.')
 (OUT/'comparison.json').write_text(json.dumps(report,indent=2)+'\n')
 for opt in ['-O1','-O2']:
  before=results['baseline'+opt];after=results['candidate'+opt]

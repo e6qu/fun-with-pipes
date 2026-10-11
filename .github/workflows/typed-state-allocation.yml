@@ -1,7 +1,7 @@
 name: Equivalent typed State allocation comparison
 on:
   push:
-    branches: [ownership-evidence-typed-state-allocations]
+    branches: [ownership-evidence-typed-state-allocations-complete]
 permissions:
   contents: read
 jobs:
