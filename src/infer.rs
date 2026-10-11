@@ -397,6 +397,18 @@ impl<'a> Infer<'a> {
         found: &Type,
         what: &str,
     ) -> IResult<()> {
+        self.unify_presented(span, expected, found, found, what)
+    }
+
+    /// Check the adapted argument while describing its original value type.
+    fn unify_presented(
+        &mut self,
+        span: Span,
+        expected: &Type,
+        found: &Type,
+        presented: &Type,
+        what: &str,
+    ) -> IResult<()> {
         match self.env.table.unify(expected, found) {
             Ok(()) => {
                 for (a, b) in std::mem::take(&mut self.env.table.deferred) {
@@ -405,7 +417,7 @@ impl<'a> Infer<'a> {
                 Ok(())
             }
             Err(err) => {
-                let (e, f) = self.show2(expected, found);
+                let (e, f) = self.show2(expected, presented);
                 let mut d = Diagnostic::error(
                     span,
                     format!("type mismatch in {}: expected `{}`, found `{}`", what, e, f),
@@ -1557,8 +1569,9 @@ impl<'a> Infer<'a> {
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
-                    ta = self.argument_type(&p, &ta);
-                    self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
+                    let argument = self.argument_type(&p, &ta);
+                    self.unify_presented(arg.span, &p, &argument, &ta, &format!("argument {}", i + 1))?;
+                    ta = argument;
                 }
                 Type::Var(_) | Type::App(..) => {}
                 other => {

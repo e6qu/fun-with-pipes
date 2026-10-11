@@ -201,3 +201,16 @@ main = ()
         }
     }
 }
+
+
+#[test]
+fn argument_mismatch_reports_the_value_without_permitted_effects() {
+    let source="consume : (I64 -> I64 ! {IO}) -> ()\nconsume = ignore\nmain = consume string.length\n";
+    match check_source("argument-type.fwp",source,None) {
+        Ok(_)=>panic!("incompatible callback input accepted"),
+        Err(error)=>{
+            assert!(error.rendered.contains("found `String -> I64"),"{}",error.rendered);
+            assert!(!error.rendered.contains("found `String -> I64 ! {IO"),"{}",error.rendered);
+        }
+    }
+}
