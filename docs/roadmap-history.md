@@ -16886,3 +16886,57 @@ Accepted queue43 in PR121 at 0f32e7560398c048478c4186c63d90c32e7c1727 on ddef2e7
 Accepted primitive contract43, removed from prepared-only table:
 
 | 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |
+
+## Larger ownership bundles authorized, 2026-10-11
+
+The user requested bundling more related changes because full test cycles are
+too long. One production PR remains open at a time, now carrying coherent
+groups of roughly ten preparations. Every included original regression and
+negative control remains; full six-platform-job CI plus docs runs once per
+final bundle head. No passing gate is inherited from a different head.
+Next bundle44–53 follows accepted PR121; remaining54–112 use related groups,
+with the FFI pointer repair included alongside upcoming C-library/raw-memory work.
+Standalone queue44 delivery is superseded, preserving its immutable anchor.
+
+PR121 match-head merge0.25CPU/7.28elapsed, fetch0.03/1.07s, protected main
+update0.05/0.25s and acceptance0.00/0.13s pass. Exact squash
+0f32e7560398c048478c4186c63d90c32e7c1727 at2026-10-11T07:49:58Z has one
+parentddef2e7a7dc22048675c4958029635f8082739db and tree
+cc6f3985708ca65df7d260782735137977ce049f equal to testeddf5ac6202a77.
+Raw68-character one-line subject has empty body/no trailers/attribution.
+Actual-main docs38122701714 passes; duplicate CI38122701716 cancelled only
+after tested-tree proof. All11 live docs freshly hashed/restored at
+/private/tmp/fwp-main-docs-pre121. Proof /private/tmp/fwp-pr121-merge-proof.json.
+
+Bundle source b304e91f628c contains20 contiguous original commits FROM6b809877a1ac.
+First rebase0.51CPU/1.99elapsed failed its commit-count assertion because
+manual docs-only conflict resolution made historical docs commits empty.
+Its clean unpublished candidate is retained locally at
+roadmap/bundle-044-053-first-rebase-99f4512b0291.
+Corrected rebase explicitly preserves empty originals; all20 subjects/order
+and original prepared compiler/runtime/probe bytes match. Accepted golden
+diagnostics/artifact steps are inherited exactly. Native head
+77af0259095cfaf436978929558e514be2e36086 passes audit44/106/69;
+preparation1.25CPU/9.36elapsed. Full rebase log
+/private/tmp/fwp-compiler-task-bundle-rebase.log; journal
+/private/tmp/fwp-compiler-task-bundle-preparation.json.
+
+Before switching Rust checkouts, guarded clean in last conversion checkout
+removed116 files/94.6MiB,0.00CPU/0.14elapsed. Focused alias/channel/task-handle
+targets execute four original tests, zero ignored,18.91CPU/37.93elapsed.
+All21 RC units, focused lint and format pass together6.47CPU/12.90elapsed.
+Full bundle platform/GC/bench gates remain required. Shared outputs now belong
+to the bundle checkout; no other candidate was compiled locally.
+
+Independent48 CI38109342751: both original tests pass on ARM/Intel, but the
+inspector incorrectly expected total main drops0/1; actual1/2 includes the
+echoed-text cleanup. Retained C proves CAF argument local l0, dropped only in
+the intact positive, independently of common l2 echo-text drop. Correction
+selects the CAF-bound local; original tests/source/controls stay unchanged.
+Failure collection0.23CPU/6.83elapsed (also FFI) and artifact inspection
+0.07/3.21s pass; artifacts /private/tmp/fwp-inline-caf-failed-artifacts.
+FFI a7e782 preparation CI38109876885 passes Linux; ARM negative UBSan control
+returns a signal instead of required exit1, without recorded signal/stderr;
+Intel fails Rust toolchain DNS before tests. Corrected fresh controls must
+record signal/status, use distinct binaries and explicit UBSan exit policy.
+These failures are repair work, not roadmap or merge authorization blockers.

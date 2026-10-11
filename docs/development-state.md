@@ -38,6 +38,8 @@ roadmap_docs38109195711. Match-head squash at 2026-10-11T07:49:58Z has the exact
 body and no trailers or attribution. One parent `ddef2e7a7dc22048675c4958029635f8082739db` and
 complete tree `cc6f3985708ca65df7d260782735137977ce049f` match the tested head. All11 live docs were
 hashed in /private/tmp/fwp-main-docs-pre121 and restored byte-for-byte.
+Actual-main docs38122701714 passes at the squash. Duplicate CI38122701716
+was cancelled only after full tested-tree parity verification.
 Queue33 and35–43 are accepted; queue34 is a verified duplicate. Boxed record
 conversion protects the original box, remaining caller owners and completed
 typed field retains until worker transfer. Matched results preserve the remaining
@@ -62,6 +64,17 @@ before publication and the sole next PR. Include exact negative controls,
 alias/scalar, GC/reuse and raw interpreter agreement. Independent evidence
 stays outside production ancestry. Do not open a standalone queue44 PR.
 
+Bundle native head77af0259095cfaf436978929558e514be2e36086 preserves20
+original commits on actual0f32e7560398 and every prepared53 compiler/runtime/
+ownership probe byte. Golden diagnostics and CI artifact steps match main
+byte-for-byte. Preparation initially dropped empty docs-only commits and failed
+its count check; corrected rebase explicitly preserves them and passes1.25CPU/
+9.36elapsed. Bounded native alias/channel/task-handle targets pass four tests,
+zero ignored,18.91CPU/37.93elapsed. All21 RC units, focused lint and format
+pass together6.47CPU/12.90elapsed. Full bundled CI remains required. Journal:
+/private/tmp/fwp-compiler-task-bundle-preparation.json; focused logs/checks:
+/private/tmp/fwp-compiler-task-bundle-focused-checks.log and .json.
+
 ## Evidence and preservation requirements
 
 Queue48 unused-CAF-argument evidence32dbb066a08f448c4b68f64d7cd40ed4a4eb696e
@@ -70,7 +83,10 @@ and both original tests. The capture delegates original compiler arguments,
 retains four owner/control fixtures per architecture and selects the intact
 argument-drop fixture for compiled layout. Exact missing-release exit4 and
 original evaluation/trap order, GC/reuse and raw interpreter controls remain.
-This evidence is pending; final48 requires sequential acceptance and full gates.
+The original two tests pass on both architectures, but the evidence inspector
+fails: it incorrectly counted the echoed-text drop as the CAF argument drop.
+Correction selects the CAF-bound local explicitly. Corrected evidence CI is
+required; final48 is included in bundle44–53 and needs all production gates.
 Publication0.77CPU/6.56elapsed passes; a mistaken branch trigger was corrected
 in a separate commit0.07/2.45s before execution. Journal:
 /private/tmp/fwp-inline-caf-layout-publication.json.
@@ -239,9 +255,13 @@ preparations need final squash rebases and all seven exact-head production gates
 
 A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
 head a7e782cb1ccca48c15fe980f8db914a9b026a7a6 on actual main120, runs
-CI38109876885 (pending). Deliver it during the phase2 exit review after the
-prepared ownership queue, with a final actual-squash rebase and all production
-gates. No extra production PR is open. ptr.at uses unsigned pointer-width
+CI38109876885 passes Linux, but ARM fails the negative sanitizer exit-code
+assertion and Intel fails Rust toolchain DNS provisioning before tests. The
+original terminating signal was not recorded; corrected controls use explicit
+UBSan exit behavior, distinct binaries and retained status/C/binary diagnostics.
+A fresh exact-head preparation run is required. Include it with the next related C-library/raw-memory ownership bundle after
+44–53, with a final actual-squash rebase and all production gates. Do not open
+a separate pointer-only production PR. ptr.at uses unsigned pointer-width
 arithmetic in C and explicit wrapping multiplication/addition in the interpreter.
 Two new regressions cover84 independently specified address boundaries and12
 ordinary numeric pointer types, raw/native O1/O2 agreement with GC/reuse, and an
@@ -289,10 +309,11 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Last Rust checkout is /private/tmp/fwp-record-conversion-worktree, native
-66cc2dab2ed25eb0c29e5a750e5478b80813809a on actual PR120 squash.
-Seven focused native regressions pass32.85CPU/65.97elapsed, zero ignored.
-All20 RC units3.64CPU/7.56elapsed, lint2.46/5.11s and format0.35/0.63s pass.
+Last Rust checkout is /private/tmp/fwp-compiler-task-bundle-worktree, native
+77af0259095cfaf436978929558e514be2e36086 on actual PR121 squash.
+Alias/channel/task-handle targets pass four tests18.91CPU/37.93elapsed, zero
+ignored. All21 RC units plus focused lint and format pass6.47CPU/12.90elapsed.
+Previous conversion package clean removed116 files/94.6MiB,0.00CPU/0.14elapsed.
 Before switching Rust checkouts, use the absolute root guard
 with cargo clean -p fwp in that last checkout, then rebuild requested targets.
 Do not infer source identity from shared outputs. Refusals and prior metrics
