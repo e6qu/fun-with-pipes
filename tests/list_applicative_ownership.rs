@@ -235,7 +235,7 @@ main = [
     () | run-state "outer" (both (run-state "inner" get) get) | echo,
     () | run-state "outer" (attempt fail-change) | echo,
     () | run-state "outer" (attempt (run-state "inner" fail-change)) | echo,
-    child | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await | echo,
+    task.spawn child | tap (const () | task.yield) | tap task.cancel | task.await | echo,
     () | run-state "parent after child" get | echo,
 ] | ignore
 "#;
