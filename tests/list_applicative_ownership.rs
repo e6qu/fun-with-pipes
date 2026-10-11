@@ -27,10 +27,11 @@ fn retain(label: &str, source: &str, executable: &std::path::Path, output: &Outp
 #[test]
 fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     let scratch=Scratch::new("unwind");let input=scratch.0.join("ap.fwp");let cfile=scratch.0.join("ap.c");
-    std::fs::write(&input,"main = [1, 2] | list.ap [show, show] | echo\n").unwrap();
+    std::fs::write(&input,"main = () | task.yield | const [1, 2] | list.ap [show, show] | echo\n").unwrap();
     checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
         .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
     let original=std::fs::read_to_string(&cfile).unwrap();
+    assert!(original.contains("#define FWP_UNWIND 1"),"The native cleanup probe must use real unwind lowering");
     let marker="fwp_p_list_ap_owned(l0, l1, ";assert_eq!(original.matches(marker).count(),1);
     let ops=original.split(marker).nth(1).unwrap().split(')').next().unwrap().split(',').map(str::trim).collect::<Vec<_>>();
     assert_eq!(ops.len(),2);assert!(ops.iter().all(|op|op.starts_with("fwp_drop")));
