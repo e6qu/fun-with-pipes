@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-state-slot-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-fixture-repair-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint05dc6c6795de6ae229ea852f024cf3ac595a11b9 has
-exact-head audit38153270436 queued. Earlier checkpoints and cancelled audits
+Current checkpoint1992c95d376c343b00a6ca662ac5f9b5f1c28888 has
+exact-head audit38156304805 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -80,9 +80,9 @@ macOS CI found the stale comment; fix receipt is
 /private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
 /private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
 all original probes and focused checks remain in history.
-Current CI38138731040 has passed regular ARM macOS and ARM GC stress.
-The other four production jobs are queued. These are two required current-head
-gates, not merge acceptance. Docs38138731036 is queued. Require all six jobs and
+Current CI38138731040 has passed Linux, benchmarks, regular ARM macOS and both
+GC stress jobs. Regular Intel macOS is still running; docs38138731036 passed.
+These current-head results are not merge acceptance. Require all six jobs and
 roadmap_docs on this exact new head before squash; earlier-head passes do not
 transfer. The remaining superseded CI38128387224 jobs were cancelled to save
 runner time. Current acceptance helpers use the new head and run identities.
@@ -235,8 +235,8 @@ measured acceptance; the prepared ownership queue is not the whole plan.
 ## Autodiff tape bug fixes prepared for the next bundle
 
 Independent branch ownership-evidence-autodiff-tapes is at
-602e076604d3dd759c47b396c10cf848dd9dbb61; evidence38139112950 is queued for
-Linux, ARM macOS and Intel macOS. Drafts repair out-of-bounds parent/output
+602e076604d3dd759c47b396c10cf848dd9dbb61; evidence38139112950 passed on
+Linux, ARM macOS and Intel macOS. The source repairs out-of-bounds parent/output
 indices in both backends, register all five detached native buffers for normal
 and exceptional release, and retire exhausted generation slots instead of
 wrapping them. Backward still consumes the selected tape before validation;
@@ -252,9 +252,9 @@ injected result-allocation failure and actual task cancellation. Four omitted
 controls must fail specifically: registration/release41, wrapping46 and bounds31.
 Public Pipe cases compare raw FWP_NO_OPT=1 with optimized native builds. Artifacts
 retain source, binaries, output/statuses, compiler/hardware and formatted drafts.
-No build or test has run yet. These are candidate repairs, not merged support;
-The separate scope candidate below supplies callback failure/cancellation
-controls; those checks are also pending.
+All three focused tape jobs passed; final bundle gates and merged acceptance
+remain required. The separate scope candidate below supplies callback failure
+and cancellation controls; its replacement checks remain pending.
 
 Recipes /private/tmp/fwp-ad-ownership-patch.json reproduce both native files
 from immutable b0ae without replacing later device changes. Other drafts:
@@ -279,8 +279,8 @@ editing and lightweight remote administration ran here.
 ## Scoped gradient ownership candidate
 
 Branch ownership-evidence-autodiff-scopes at
-475cb242715961e5e396e4fe74026545160d2e3c builds on602e0766's bounds, cleanup
-and retirement fixes. Evidence38141558055 is queued for Linux and both macOS
+fbc7e38087b3708c60d21302e29b9013c7d6fa2c builds on602e0766's bounds, cleanup
+and retirement fixes. Replacement38159488927 is queued for Linux and both macOS
 architectures. The internal ad.scope primitive wraps value-and-grad and vjp;
 grad, grad-vector and reverse Jacobians use those paths. Public signatures,
 curried/data-last semantics and original numerical bodies stay unchanged.
@@ -303,29 +303,43 @@ Raw interpreter/native cases include the original reverse-AD golden program
 and gradient/vjp callback errors. Compiler argument vectors and artifacts are
 retained. Scoped evidence runs all library units and both AD integration targets;
 its FWP_BLESS regeneration and subsequent exact doc comparison verify the
-standard-library reference on GitHub. No test or compile has run yet. Before accepting the scope, measure equivalent
+standard-library reference on GitHub. Previous475cb242/run38141558055 failed all
+three jobs: its negative Pipe fixture used undeclared `panic`. Library/lint/doc,
+inherited tape tests and the native scope/omission controls passed before that
+fixture failed. The corrected fixture uses declared `prim.trap`; raw/native
+oracles now require exit101 and the actual runtime trap line, rejecting compiler
+errors that merely quote the fixture's message. It retains every semantic case,
+source/binary/status artifacts and both reuse modes. Native scope source is
+unchanged, verified by Git blob identity in
+/private/tmp/fwp-ad-scope-trap-publication.json. Failed log:
+/private/tmp/fwp-ad-scope-475-failed.log. Replacement ARM scope job passed;
+Linux and Intel jobs remain queued.
+Before accepting the scope, measure equivalent
 steady-state gradient allocation counts/bytes against602e0766 at O1/O2 on the
 runners. A stack owner does not establish that its curried callback/return
 bridges avoid extra managed boxes. Preserve public signatures and fix any
 allocation regression before final bundle acceptance. Do not claim zero-cost
 scopes or no-extra-allocation from the owner layout alone.
 
-Allocation comparison driver e586a4d12a477aefcc854e12f6bbf2f640299de8,
-branch ownership-evidence-autodiff-allocations, runs38145198463 (queued).
+Allocation comparison driver9ae50851389fbfa7c5c155fca477a4b958589c99,
+branch ownership-evidence-autodiff-allocations, runs38159536008 (queued).
 It preserves an explicit exported entry and compares runtime-dependent
 quadratic gradients on baseline602e0766 and
-scope candidate475cb242 at O1/O2 across Linux and both macOS architectures.
+scope candidatefbc7e380 at O1/O2 across Linux and both macOS architectures.
 The 4096-call steady-state probe requires real managed allocations and five
 external tape-buffer allocation calls per gradient. It records cold/warm
 requested bytes, external live/peak bytes, collected live/peak bytes, collections,
 tape size/alignment, compiler arguments, hardware and source/binary hashes.
 Acceptance requires no additional steady-state managed calls/bytes and identical
 external calls/bytes, with external live bytes equal to the persistent registry
-slot size after all tape buffers are released. All measurements remain pending; no speed or no-tracing
+slot size after all tape buffers are released. ARM comparison passed; Linux and
+Intel remain queued. No speed or no-tracing
 claim. Superseded50036dc3/run38144127914 was cancelled while entirely queued.
 The intermediatea2513d60/run38144375898 was also cancelled while entirely
 queued before fixing entry retention and checking external buffer reclamation.
-Receipt: /private/tmp/fwp-ad-allocation-publication.json. Recovery must retain
+The olde586/38145198463 was cancelled entirely queued before binding the repaired
+scope candidate; no measurement was discarded. Current receipt:
+/private/tmp/fwp-ad-allocation-trap-publication.json. Recovery must retain
 measure-ad-scope-allocations.py, ad-scope-allocation.yml and this receipt.
 
 The finalizer now requires all three allocation jobs and verifies downloaded
@@ -347,7 +361,7 @@ counts and phase2 exit remain unverified until merged-source runner evidence.
 ## List ownership and State root cleanup candidate
 
 Branch ownership-evidence-list-applicative at
-0d1c44fedd083aca203db7c5a4a4a8d4e27057a1 runs38156088446, queued on
+4f21a9ea99c1a06a3f1ba67818936194fe43e42a runs38160607296, queued on
 Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
 The recipe adds borrowed list.ap inputs, counted output spines
 and owned callback results. Two borrowed scratch arrays and the completed result
@@ -432,6 +446,27 @@ recipe is reproduced from PR123's exact baseline; bounded replacement counts
 also preserve prepared112's additional File handler. Finalization includes the
 new state_slot_probe.c and all three State runtime sources, rather than replacing
 whole earlier files. The previous88b5 evidence run was cancelled entirely queued.
+The final list fixtures use declared `prim.trap`, with exact raw/native trap
+exit101 and runtime diagnostics. The undeclared-name correction changed only
+tests, with all seven native source blobs and the recipe identical; receipt:
+/private/tmp/fwp-list-ap-trap-publication.json. The collector hook also now
+bounds its inspection by the actual scanned allocation during buffer growth,
+when the published capacity already describes the next allocation. That probe
+correction changes no runtime code; receipt:
+/private/tmp/fwp-state-probe-range-publication.json. Both preceding list runs
+were cancelled entirely queued, preserving every original control.
+ARM job114529582483 at e03/run38159610009 then passed the State collector/handler
+and real task controls, closure recovery and raw/native list semantics, but the
+combined ownership probe returned99: its tracker inspected only three scratch
+entries, while flat-map allocates four. A second fixture composed child before
+task.spawn, passing a String where a thunk was required. The repair tracks the
+latest unfreed allocation instance, handles reused addresses, detects repeated
+or unregistered frees before freeing, and explicitly uses task.spawn child.
+It changes only the two fixtures; all native source and recipe blobs remain
+identical. Current receipt: /private/tmp/fwp-list-probe-fixes-publication.json;
+failed log: /private/tmp/fwp-list-e03-arm-failed.log. The old run was cancelled
+only after verifying that its remaining two jobs were queued and none running.
+Those partial passes do not verify the replacement head or its allocation gate.
 
 Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
 fwp-list-ap-probe.c, fwp-closure-drop-probe.c, fwp-state-slot-probe.c,
@@ -467,7 +502,7 @@ Source editing and lightweight remote administration continue. Earlier refusals,
 recoveries and measurements are archived; no limit was raised or bypassed.
 
 Current preparation driver82c7bc7509c04b9e94004c06b02d83d665539ac6,
-branch ownership-roadmap-preparation, runs38140923130 (queued). It preserves
+branch ownership-roadmap-preparation, passed38140923130. It preserves
 all39 rows74–112 and85 original commits from source112b45e93a71d40/from73
 3dba256655a3 onto immutable candidateb0ae. Required native repairs, accepted
 golden diagnostics and mandatory WASI remain unchanged. Final rebase onto the
@@ -483,16 +518,27 @@ an exact successful runner head, blob hashes, all snapshot trees, messages,
 parents and author/committer instants, then publishes via the user's existing
 authorized connection. Publication uses atomic branch creation or GitHub's
 beforeOid lease for final rebase, with a resumable artifact publication.json.
-This is draft infrastructure; the corrected exporter and publisher have not
-run yet. GitHub confirmed the RefUpdate beforeOid field from its live schema.
+The exporter passed the exact preparation job. The first publisher attempt
+verified all117 blobs, then GitHub rejected a retained empty commit's empty tree
+update with HTTP422. The corrected publisher reuses the parent's verified tree
+for empty deltas and preserves their original commit metadata/subject. It is
+resuming from the journal, without discarding original commits or repeating blob
+creation. Publication now passed: ownership-resource-network-bundle is at
+066b497040ff7b7f59fec6ff3337c63428f83d77 with runner tree
+915ac11b269e90d0f9bc567b7f6e50a711061abd. All85 original commits, their parent
+sequence, metadata instants and single-line subjects are verified; source trees
+match the exported snapshots. The receipt is artifact publication.json, with
+export hash116ed0418eeb082ecb44b946f24849b97ed17506fce2f3de9b35a55a288a02b1.
+No production PR or finalization has run. Finalizer preparation binding now uses
+this verified published head. GitHub confirmed RefUpdate beforeOid from its live schema.
 No local build, rebase or broad credential grant is required.
 
-After38140923130 passes, download its bounded artifact into the path below
-and publish its verified Git objects with the existing user connection:
+The bounded artifact is /private/tmp/fwp-resource-network-verified-export;
+the resumable publication command is:
 
 ```sh
 nice -n 15 python3 /private/tmp/fwp-publish-exported-history.py \
-  --artifact /private/tmp/fwp-resource-network-preparation-82c7-artifacts \
+  --artifact /private/tmp/fwp-resource-network-verified-export \
   --run 38140923130 --driver 82c7bc7509c04b9e94004c06b02d83d665539ac6
 ```
 
@@ -598,7 +644,7 @@ below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits and move
 work to CI; never raise or bypass limits. The fun-refactor guard applies only to
 that other repository.
 
-Latest disk observation: df reports2,873,184KiB available, about2.7GiB.
+Latest disk observation: df reports38,958,772KiB available, about37.2GiB.
 No local compiled check, full documentation audit or rebase ran on this turn.
 Source edits and publication ran serially; GitHub runner validation remains
 required. State publication command:
@@ -606,6 +652,14 @@ required. State publication command:
 It verifies baseline recipe counts, staged/source hashes and the current branch
 parent before publication; receipt records head0d1c44fe. It is source verification,
 not a compiler or runtime result. Do not rerun completed publication helpers.
+
+Temporary files disappeared during continuation. Fifty-two recovery helpers
+were restored from checkpoint1992c95d after verifying every Git blob hash;
+/private/tmp/fwp-recovery-restoration.json records source identities. Root docs
+were preserved. Do not execute restored old publication helpers: receipts and
+current GitHub branch heads remain authoritative. The finalizer/monitor bindings
+were updated to current replacement gates after restoration. Restoring source
+does not establish runtime support or restore old passing artifact evidence.
 
 ```sh
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST

@@ -73,23 +73,54 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
     let scratch=Scratch::new("semantics");let input=scratch.0.join("gradient.fwp");
     let original=std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/run/autodiff_reverse.fwp")).unwrap();
     let cases=[("gradients",original,false),
-        ("callback-error","bad : List[Rev[F64]] -> Rev[F64]\nbad = const \"gradient callback control\" | panic\nmain = [1.0, 2.0] | grad bad | echo\n".into(),true),
-        ("vjp-error","bad : List[Rev[F64]] -> List[Rev[F64]]\nbad = const \"gradient callback control\" | panic\nmain = [1.0, 2.0] | vjp bad [1.0] | echo\n".into(),true)];
+        ("callback-error","bad : List[Rev[F64]] -> Rev[F64]\nbad = const \"gradient callback control\" | prim.trap\nmain = [1.0, 2.0] | grad bad | echo\n".into(),true),
+        ("vjp-error","bad : List[Rev[F64]] -> List[Rev[F64]]\nbad = const \"gradient callback control\" | prim.trap\nmain = [1.0, 2.0] | vjp bad [1.0] | echo\n".into(),true)];
     for (label,source,invalid) in cases {
         std::fs::write(&input,&source).unwrap();
         let reference=Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT","1")
             .args(["run","--interp"]).arg(&input).output().unwrap();
+        if let Some(directory)=std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+            let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+            std::fs::write(directory.join(format!("{label}.fwp")),&source).unwrap();
+            std::fs::write(directory.join(format!("{label}.raw.stdout")),&reference.stdout).unwrap();
+            std::fs::write(directory.join(format!("{label}.raw.stderr")),&reference.stderr).unwrap();
+            std::fs::write(directory.join(format!("{label}.raw.status")),format!("{}\n",reference.status)).unwrap();
+        }
         assert_eq!(reference.status.success(),!invalid,"{label}: {}",String::from_utf8_lossy(&reference.stderr));
-        if invalid { assert!(String::from_utf8_lossy(&reference.stderr).contains("gradient callback control")); }
+        if invalid {
+            assert_eq!(reference.status.code(),Some(101));
+            assert!(String::from_utf8_lossy(&reference.stderr).lines().any(|line|line=="fwp: trap: gradient callback control"));
+        }
         for opt in ["-O1","-O2"] {
             let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
+            let cfile=executable.with_extension("c");
             checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
-                .arg("build").arg(&input).args([opt,"-o"]).arg(&executable));
-            let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
-                .env("FWP_REUSE_VERIFY","1").output().unwrap();
-            assert_eq!(output.status.success(),reference.status.success(),"{label} {opt}: {}",String::from_utf8_lossy(&output.stderr));
-            assert_eq!(output.stdout,reference.stdout,"{label} {opt}");
-            if invalid { assert_eq!(output.status.code(),Some(101));assert!(String::from_utf8_lossy(&output.stderr).contains("gradient callback control")); }
+                .arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
+            let code=std::fs::read_to_string(cfile).unwrap();
+            if let Some(directory)=std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("{label}{}.c",&opt[1..])),&code).unwrap();
+            }
+            fwp::cgen::compile_c(&code,&executable,opt).unwrap();
+            for reuse in ["0","1"] {
+                let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1")
+                    .env("FWP_REUSE_VERIFY",reuse).output().unwrap();
+                if let Some(directory)=std::env::var_os("FWP_AD_SCOPE_ARTIFACTS") {
+                    let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                    let prefix=directory.join(format!("{label}{}-reuse{reuse}",&opt[1..]));
+                    std::fs::copy(&executable,prefix.with_extension("bin")).unwrap();
+                    std::fs::write(prefix.with_extension("c"),&code).unwrap();
+                    std::fs::write(prefix.with_extension("stdout"),&output.stdout).unwrap();
+                    std::fs::write(prefix.with_extension("stderr"),&output.stderr).unwrap();
+                    std::fs::write(prefix.with_extension("status"),format!("{}\n",output.status)).unwrap();
+                }
+                assert_eq!(output.status.success(),reference.status.success(),"{label} {opt}: {}",String::from_utf8_lossy(&output.stderr));
+                assert_eq!(output.stdout,reference.stdout,"{label} {opt}");
+                if invalid {
+                    assert_eq!(output.status.code(),Some(101));
+                    assert!(String::from_utf8_lossy(&output.stderr).lines().any(|line|line=="fwp: trap: gradient callback control"));
+                }
+            }
         }
     }
 }

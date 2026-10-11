@@ -1,0 +1,20 @@
+{
+  "head": "277681334b4dcaec7e702cd0a2b59d37260813b9",
+  "previous": "0d1c44fedd083aca203db7c5a4a4a8d4e27057a1",
+  "branch": "ownership-evidence-list-applicative",
+  "previousRun": 38156088446,
+  "sourceHashes": {
+    "tests/list_applicative_ownership.rs": "6b71da09c24ba96447a21080b613e8f267ec189c72c9f7642cde72cdf8d436ec"
+  },
+  "unchangedNativeBlobs": {
+    "src/cgen.rs": "4d01503fce2859359233a5cd4d13602a4d40d7bb",
+    "src/ownership.rs": "ae31fa80bdef02e343de2558bc17db4cdf8edc1a",
+    "runtime/fwp_rt.c": "aeccb283e25a39e80d0c6a67ff08044d899139b6",
+    "runtime/fwp_rt_prims.c": "9e256a57414ba8d1b1bd7329af37780137640af8",
+    "runtime/fwp_rt_gc.c": "efe7c70ec3dbc64eafa28c1f84ce74fb2e98d41a",
+    "runtime/fwp_rt_grpc.c": "e6974bf152b8ce2fbacb441e486844cc96e09546",
+    "runtime/fwp_rt_task.c": "b187590c9acf5e9fde0450ceea1b5aa139535be9",
+    "scripts/list-ap-ownership-patch.json": "f8473f812fee4d6f0534ef0ce846d63e8e3cae5e"
+  },
+  "stage": "Declared trap controls published; replacement checks pending"
+}

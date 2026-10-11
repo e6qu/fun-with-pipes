@@ -12,7 +12,17 @@ static void *list_ap_probe_alloc(size_t n) {
     void *p=fwp_mem_alloc(n);if(ap_allocations>=8) abort();ap_scratch[ap_allocations++]=p;return p;
 }
 static void list_ap_probe_free(void *p) {
-    for(unsigned i=0;i<3;i++) if(p && p==ap_scratch[i]) ap_frees[i]++;
+    /* Track allocation instances, including the fourth flat-map buffer and
+     * address reuse after a previous alias buffer has already been freed. */
+    if(p) {
+        unsigned found=0;
+        for(unsigned i=ap_allocations;i;i--) {
+            if(p==ap_scratch[i-1] && !ap_frees[i-1]) {
+                ap_frees[i-1]++;found=1;break;
+            }
+        }
+        if(!found) { fprintf(stderr,"unregistered or repeated scratch free\n");exit(114); }
+    }
     fwp_mem_free(p);
 }
 static V list_ap_probe_data(uint32_t tag,uint32_t n,const V *fields) {
@@ -80,8 +90,12 @@ static int flat_probe(void) {
             if(strcmp(fwp_trap_msg,expected)) return 98;
         }
         unsigned expected_allocations=ap_mode==0?4:ap_mode==3?2:1;
-        if(fwp_cleanups || ap_allocations!=expected_allocations) return 99;
-        for(unsigned i=0;i<ap_allocations;i++) if(!ap_scratch[i] || ap_frees[i]!=1) return 99;
+        if(fwp_cleanups || ap_allocations!=expected_allocations) {
+            fprintf(stderr,"flat-map mode %d: scratch %u expected %u; cleanup=%d\n",ap_mode,ap_allocations,expected_allocations,fwp_cleanups!=NULL);return 99;
+        }
+        for(unsigned i=0;i<ap_allocations;i++) if(!ap_scratch[i] || ap_frees[i]!=1) {
+            fprintf(stderr,"flat-map mode %d: scratch %u frees %u\n",ap_mode,i,ap_frees[i]);return 99;
+        }
         if((ap_mode==1 || ap_mode==2) && ap_list_drops!=2) return 102;
         if(ap_mode==3 && (ap_element_drops!=1 || ap_list_drops!=4)) return 103;
     }

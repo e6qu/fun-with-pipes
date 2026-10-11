@@ -1,0 +1,152 @@
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	﻿2026-10-11T16:59:15.9951510Z ##[group]Run cargo test --test ad_tape_ownership -- --nocapture
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:15.9952150Z ^[[36;1mcargo test --test ad_tape_ownership -- --nocapture^[[0m
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:15.9952660Z ^[[36;1mcargo test --test ad_tape_scopes -- --nocapture^[[0m
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:15.9953080Z ^[[36;1mgit diff --exit-code^[[0m
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:15.9953950Z ^[[36;1mshasum -a 256 src/numerics.rs src/interp.rs src/cgen.rs src/ownership.rs lib/autodiff.fwp runtime/fwp_rt_kernel.c tests/ad_tape_scopes.rs tests/fixtures/ad_scope_probe.c target/debug/fwp > "$FWP_AD_SCOPE_ARTIFACTS/source-binary-hashes.txt"^[[0m
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0176860Z shell: /bin/bash -e {0}
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0177320Z env:
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0177620Z   CC: /Users/runner/work/_temp/autodiff-scopes/record-cc
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0178060Z   CARGO_BUILD_JOBS: 2
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0178310Z   CARGO_INCREMENTAL: 0
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0178600Z   CARGO_PROFILE_TEST_DEBUG: 0
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0178850Z   RUST_TEST_THREADS: 1
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0179220Z   CARGO_HOME: /Users/runner/.cargo
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0179600Z   CARGO_TERM_COLOR: always
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0179990Z   FWP_OPENSSL_DIR: /opt/homebrew/opt/openssl@3
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0180370Z   FWP_AD_SCOPE_ARTIFACTS: /Users/runner/work/_temp/autodiff-scopes
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0180790Z ##[endgroup]
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.0996200Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.3217080Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.22s
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.3221360Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_ownership.rs (target/debug/deps/ad_tape_ownership-0d7700c727d810f4)
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.3256400Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:16.3262440Z running 2 tests
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:23.6307980Z test detached_tape_buffers_release_on_return_trap_and_cancellation ... ok
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.5451400Z test public_tape_tokens_agree_with_raw_interpreter ... ok
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.5452220Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.5452610Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 24.21s
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.5453420Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.5806990Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.9233330Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.35s
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.9239300Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_scopes.rs (target/debug/deps/ad_tape_scopes-90b17c792186d732)
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.9320950Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:40.9323500Z running 2 tests
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:45.6889870Z test callback_scopes_release_live_tapes_without_per_scope_heap_owners ... ok
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0243940Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0245090Z thread 'scoped_gradient_functions_agree_with_raw_interpreter' (10259) panicked at tests/ad_tape_scopes.rs:16:5:
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0246950Z env -u FWP_NO_OPT "/Users/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp" "build" "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-ad-scope-2312-semantics/gradient.fwp" "-O1" "-o" "/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-ad-scope-2312-semantics/callback-errorO1": exit status: 1: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/fwp-ad-scope-2312-semantics/gradient.fwp:2:43: error: unknown name `panic`
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0248730Z 2 | bad = const "gradient callback control" | panic
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0249100Z   |                                           ^^^^^
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0249320Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0249490Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0259890Z test scoped_gradient_functions_agree_with_raw_interpreter ... FAILED
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0260540Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0260900Z failures:
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0261380Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0261690Z failures:
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0262620Z     scoped_gradient_functions_agree_with_raw_interpreter
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0266240Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0268070Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.08s
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0273580Z 
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0276320Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test ad_tape_scopes`
+scopes (macos-15)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:01.0314760Z ##[error]Process completed with exit code 101.
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	﻿2026-10-11T16:59:25.3916202Z ##[group]Run cargo test --test ad_tape_ownership -- --nocapture
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3916770Z ^[[36;1mcargo test --test ad_tape_ownership -- --nocapture^[[0m
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3917316Z ^[[36;1mcargo test --test ad_tape_scopes -- --nocapture^[[0m
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3917720Z ^[[36;1mgit diff --exit-code^[[0m
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3918635Z ^[[36;1mshasum -a 256 src/numerics.rs src/interp.rs src/cgen.rs src/ownership.rs lib/autodiff.fwp runtime/fwp_rt_kernel.c tests/ad_tape_scopes.rs tests/fixtures/ad_scope_probe.c target/debug/fwp > "$FWP_AD_SCOPE_ARTIFACTS/source-binary-hashes.txt"^[[0m
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3960894Z shell: /usr/bin/bash -e {0}
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3961325Z env:
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3961679Z   CC: /home/runner/work/_temp/autodiff-scopes/record-cc
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3962069Z   CARGO_BUILD_JOBS: 2
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3962414Z   CARGO_INCREMENTAL: 0
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3962889Z   CARGO_PROFILE_TEST_DEBUG: 0
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3963352Z   RUST_TEST_THREADS: 1
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3963711Z   CARGO_HOME: /home/runner/.cargo
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3964234Z   CARGO_TERM_COLOR: always
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3964686Z   FWP_AD_SCOPE_ARTIFACTS: /home/runner/work/_temp/autodiff-scopes
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.3965105Z ##[endgroup]
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.4175070Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.5524494Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.14s
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.5527486Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_ownership.rs (target/debug/deps/ad_tape_ownership-09bbb4ae98e8f650)
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.5535663Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:25.5535922Z running 2 tests
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:35.0697169Z test detached_tape_buffers_release_on_return_trap_and_cancellation ... ok
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.6454338Z test public_tape_tokens_agree_with_raw_interpreter ... ok
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.6454739Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.6455326Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 27.09s
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.6455769Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.6621578Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.7936207Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.13s
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.7938600Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_scopes.rs (target/debug/deps/ad_tape_scopes-0e065583b33d08b2)
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.7947132Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:52.7947384Z running 2 tests
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T16:59:59.9059709Z test callback_scopes_release_live_tapes_without_per_scope_heap_owners ... ok
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6025116Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6026719Z thread 'scoped_gradient_functions_agree_with_raw_interpreter' (2948) panicked at tests/ad_tape_scopes.rs:16:5:
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6029024Z env -u FWP_NO_OPT "/home/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp" "build" "/tmp/fwp-ad-scope-2902-semantics/gradient.fwp" "-O1" "-o" "/tmp/fwp-ad-scope-2902-semantics/callback-errorO1": exit status: 1: /tmp/fwp-ad-scope-2902-semantics/gradient.fwp:2:43: error: unknown name `panic`
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6030736Z 2 | bad = const "gradient callback control" | panic
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6031303Z   |                                           ^^^^^
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6031690Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6032033Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6033088Z test scoped_gradient_functions_agree_with_raw_interpreter ... FAILED
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6033527Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6033742Z failures:
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6033949Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6034124Z failures:
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6034525Z     scoped_gradient_functions_agree_with_raw_interpreter
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6034837Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6035288Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 25.81s
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6035831Z 
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6039270Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test ad_tape_scopes`
+scopes (ubuntu-latest)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:18.6064442Z ##[error]Process completed with exit code 101.
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	﻿2026-10-11T17:00:45.9354980Z ##[group]Run cargo test --test ad_tape_ownership -- --nocapture
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9356630Z ^[[36;1mcargo test --test ad_tape_ownership -- --nocapture^[[0m
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9357490Z ^[[36;1mcargo test --test ad_tape_scopes -- --nocapture^[[0m
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9358200Z ^[[36;1mgit diff --exit-code^[[0m
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9360370Z ^[[36;1mshasum -a 256 src/numerics.rs src/interp.rs src/cgen.rs src/ownership.rs lib/autodiff.fwp runtime/fwp_rt_kernel.c tests/ad_tape_scopes.rs tests/fixtures/ad_scope_probe.c target/debug/fwp > "$FWP_AD_SCOPE_ARTIFACTS/source-binary-hashes.txt"^[[0m
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9452410Z shell: /bin/bash -e {0}
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9454290Z env:
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9467730Z   CC: /Users/runner/work/_temp/autodiff-scopes/record-cc
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9468810Z   CARGO_BUILD_JOBS: 2
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9469830Z   CARGO_INCREMENTAL: 0
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9470590Z   CARGO_PROFILE_TEST_DEBUG: 0
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9471570Z   RUST_TEST_THREADS: 1
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9472320Z   CARGO_HOME: /Users/runner/.cargo
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9473220Z   CARGO_TERM_COLOR: always
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9473900Z   FWP_OPENSSL_DIR: /usr/local/opt/openssl@3
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9474900Z   FWP_AD_SCOPE_ARTIFACTS: /Users/runner/work/_temp/autodiff-scopes
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:45.9476060Z ##[endgroup]
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:46.0509020Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:46.8894030Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.84s
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:46.8904000Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_ownership.rs (target/debug/deps/ad_tape_ownership-9540e89f7969bf35)
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:46.8957710Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:46.8958980Z running 2 tests
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:00:58.7672490Z test detached_tape_buffers_release_on_return_trap_and_cancellation ... ok
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.2924890Z test public_tape_tokens_agree_with_raw_interpreter ... ok
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.2925920Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.2926470Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 49.37s
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.2927590Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.3476050Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/Users/runner/work/fun-with-pipes/fun-with-pipes)
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.8609270Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 0.52s
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.8618600Z ^[[1m^[[92m     Running^[[0m tests/ad_tape_scopes.rs (target/debug/deps/ad_tape_scopes-9ed51d7f58551ba3)
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.8663740Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:36.8664870Z running 2 tests
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:01:49.3602230Z test callback_scopes_release_live_tapes_without_per_scope_heap_owners ... ok
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5287760Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5290280Z thread 'scoped_gradient_functions_agree_with_raw_interpreter' (44195) panicked at tests/ad_tape_scopes.rs:16:5:
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5296850Z env -u FWP_NO_OPT "/Users/runner/work/fun-with-pipes/fun-with-pipes/target/debug/fwp" "build" "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-ad-scope-15658-semantics/gradient.fwp" "-O1" "-o" "/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-ad-scope-15658-semantics/callback-errorO1": exit status: 1: /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/fwp-ad-scope-15658-semantics/gradient.fwp:2:43: error: unknown name `panic`
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5305470Z 2 | bad = const "gradient callback control" | panic
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5306540Z   |                                           ^^^^^
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5307190Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5307850Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5309390Z test scoped_gradient_functions_agree_with_raw_interpreter ... FAILED
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5310270Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5310940Z failures:
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5311290Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5311700Z failures:
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5312740Z     scoped_gradient_functions_agree_with_raw_interpreter
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5314220Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5315440Z test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 47.64s
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5316960Z 
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5319840Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test ad_tape_scopes`
+scopes (macos-15-intel)	Native scopes, gradients and inherited invalid-token controls	2026-10-11T17:02:24.5360920Z ##[error]Process completed with exit code 101.

@@ -1,0 +1,18 @@
+{
+  "head": "fbc7e38087b3708c60d21302e29b9013c7d6fa2c",
+  "previous": "475cb242715961e5e396e4fe74026545160d2e3c",
+  "branch": "ownership-evidence-autodiff-scopes",
+  "previousRun": 38141558055,
+  "sourceHashes": {
+    "tests/ad_tape_scopes.rs": "faf9ad2128f62395d9b7b26b7753b8701db9c3e2598eaf140a5fec17f8813aee"
+  },
+  "unchangedNativeBlobs": {
+    "src/numerics.rs": "d901650457fa28dd703533d5dbe1e27df235d7f4",
+    "src/interp.rs": "142c5857f0a787b1bec4ebb403cc88eed410e258",
+    "src/cgen.rs": "2bd5c671d10ec83e6d634f3c1467d3fb86440da4",
+    "src/ownership.rs": "1d5b7599a46045e1675cfc6e29bc580a1a883cdd",
+    "lib/autodiff.fwp": "a78dce3051dd4bbb78365565a3a296d5b24e6ef2",
+    "runtime/fwp_rt_kernel.c": "ecdedfcf22d9961a401df13e755bc104fa5ec4c1"
+  },
+  "stage": "Declared trap controls published; replacement checks pending"
+}

@@ -94,12 +94,16 @@ main = [
     [] | list.flat-map (concat "unused:" | repeat 2) | echo,
 ] | ignore
 "#;
-    let flat_negative="fail : I64 -> List[I64]\nfail = if (eq 2) (const \"list.ap order control\" | panic) (add 10 | repeat 2)\nmain = [1, 2, 3] | list.flat-map fail | echo\n";
-    let negative="fail : I64 -> I64\nfail = if (eq 2) (const \"list.ap order control\" | panic) (add 10)\nmain = [1, 2, 3] | list.ap [fail, mul 2] | echo\n";
+    let flat_negative="fail : I64 -> List[I64]\nfail = if (eq 2) (const \"list.ap order control\" | prim.trap) (add 10 | repeat 2)\nmain = [1, 2, 3] | list.flat-map fail | echo\n";
+    let negative="fail : I64 -> I64\nfail = if (eq 2) (const \"list.ap order control\" | prim.trap) (add 10)\nmain = [1, 2, 3] | list.ap [fail, mul 2] | echo\n";
     for (label,source,invalid) in [("aliases",positive,false),("trap-order",negative,true),("flat-trap-order",flat_negative,true)] {
         std::fs::write(&input,source).unwrap();
         let reference=Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT","1").args(["run","--interp"]).arg(&input).output().unwrap();
         assert_eq!(reference.status.success(),!invalid,"{label}: {}",String::from_utf8_lossy(&reference.stderr));
+        if invalid {
+            assert_eq!(reference.status.code(),Some(101));
+            assert!(String::from_utf8_lossy(&reference.stderr).lines().any(|line|line=="fwp: trap: list.ap order control"));
+        }
         if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
             let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
             std::fs::write(directory.join(format!("{label}.fwp")),source).unwrap();
@@ -122,7 +126,10 @@ main = [
                 retain(&format!("{label}{}-reuse{reuse}",&opt[1..]),&code,&executable,&output);
                 assert_eq!(output.status.success(),reference.status.success(),"{label} {opt}: {}",String::from_utf8_lossy(&output.stderr));
                 assert_eq!(output.stdout,reference.stdout,"{label} {opt}");
-                if invalid { assert_eq!(output.status.code(),Some(101));assert!(String::from_utf8_lossy(&output.stderr).contains("list.ap order control")); }
+                if invalid {
+                    assert_eq!(output.status.code(),Some(101));
+                    assert!(String::from_utf8_lossy(&output.stderr).lines().any(|line|line=="fwp: trap: list.ap order control"));
+                }
             }
         }
     }
@@ -228,7 +235,7 @@ main = [
     () | run-state "outer" (both (run-state "inner" get) get) | echo,
     () | run-state "outer" (attempt fail-change) | echo,
     () | run-state "outer" (attempt (run-state "inner" fail-change)) | echo,
-    child | task.spawn | tap (const () | task.yield) | tap task.cancel | task.await | echo,
+    task.spawn child | tap (const () | task.yield) | tap task.cancel | task.await | echo,
     () | run-state "parent after child" get | echo,
 ] | ignore
 "#;

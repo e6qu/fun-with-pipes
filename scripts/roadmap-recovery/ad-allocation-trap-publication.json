@@ -1,0 +1,13 @@
+{
+  "head": "9ae50851389fbfa7c5c155fca477a4b958589c99",
+  "previous": "e586a4d12a477aefcc854e12f6bbf2f640299de8",
+  "branch": "ownership-evidence-autodiff-allocations",
+  "previousRun": 38145198463,
+  "sourceHashes": {
+    ".github/workflows/ad-scope-allocation.yml": "568f18fb7d7a9e118858292e6ce9d136d1bd7378d0cf8238ce9cb2a486465d3d"
+  },
+  "unchangedNativeBlobs": {
+    "scripts/measure-ad-scope-allocations.py": "f71f649bca29cf315572ea404bdd21483c06216a"
+  },
+  "stage": "Declared trap controls published; replacement checks pending"
+}

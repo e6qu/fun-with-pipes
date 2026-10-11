@@ -65,7 +65,10 @@ for index,commit in enumerate(package['commits']):
  if index<len(state['commits']):
   mapped=state['commits'][index];assert mapped['exported']==commit['sha']
   parent=mapped['published'];parent_tree=commit['tree'];exported_parent=commit['sha'];continue
- tree=api('/git/trees',dict(base_tree=parent_tree,tree=commit['delta']))
+ # GitHub rejects an empty tree update. Preserve original empty commits by
+ # reusing their parent's verified tree, rather than dropping their history.
+ tree=(api('/git/trees',dict(base_tree=parent_tree,tree=commit['delta']))
+       if commit['delta'] else dict(sha=parent_tree))
  assert tree['sha']==commit['tree'],(commit['sha'],'Tree differs from runner-verified snapshot')
  result=api('/git/commits',dict(message=message,tree=tree['sha'],parents=[parent],
           author=commit['author'],committer=commit['committer']))
