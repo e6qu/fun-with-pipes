@@ -5420,6 +5420,7 @@ impl<'p> Gen<'p> {
                     ("linalg.cg", "fwp_p_cg(l0, l1, l2, l3, l4)"),
                     ("list.transpose", "fwp_p_list_transpose(l0)"),
                     ("ad.scope", "fwp_p_ad_scope(l0, l1)"),
+                    ("ad.scope2", "fwp_p_ad_scope2(l0, l1, l2)"),
                     ("ad.tape", "fwp_p_ad_tape(l0)"),
                     ("ad.push", "fwp_p_ad_push(l0)"),
                     ("ad.backward", "fwp_p_ad_backward(l0, l1, l2)"),

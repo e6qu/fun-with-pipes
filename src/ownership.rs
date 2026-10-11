@@ -186,6 +186,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(1)),
             &[1],
         ),
+        "ad.scope2" => (
+            &[B, B, B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0, 1, 2],
+        ),
         "ad.scope" => (
             &[B, B],
             ResultOwnership::OwnedCallback,

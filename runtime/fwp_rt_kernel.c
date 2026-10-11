@@ -74,16 +74,24 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
     }
 }
 
-static V fwp_p_ad_scope(V callback, V input) {
+static V fwp_ad_scope_apply(V callback, uint32_t argc, const V *args) {
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
-    V result = fwp_apply_borrowed(callback, 1, &input);
+    V result = fwp_apply_borrowed(callback, argc, args);
     fwp_cleanup_pop(&cleanup);
     fwp_tape_scope_release(&scope);
     FWP_KEEP_ALIVE(callback);
-    FWP_KEEP_ALIVE(input);
+    FWP_KEEP_ALIVE(args);
     return result;
+}
+
+static V fwp_p_ad_scope(V callback, V input) {
+    return fwp_ad_scope_apply(callback, 1, &input);
+}
+static V fwp_p_ad_scope2(V callback, V first, V second) {
+    V args[2] = {first, second};
+    return fwp_ad_scope_apply(callback, 2, args);
 }
 
 static const char *FWP_AD_OUTSIDE =
