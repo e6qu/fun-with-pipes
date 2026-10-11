@@ -16465,3 +16465,19 @@ Accepted queue42 in PR120 at ddef2e7a7dc22048675c4958029635f8082739db on 8770e73
 Accepted primitive contract42, removed from prepared-only table:
 
 | 42 | Record updates retain typed kept fields, release overwritten owners and protect replacement/partial-copy storage; general copies preserve borrowed original | Sequential CI; unique/copied updates, partial retention/allocation failures, scalar safety and aliases |
+
+PR120 acceptance operations: guarded merge0.27CPU/7.21elapsed, fetch0.04/1.10s,
+raw message/tree proof and all11 docs protection0.00/0.14s, handoff advancement
+0.00/0.14s and root audit0.45/3.57s pass (44 link sets,106 immutable pairs,
+70 live rows). Actual-main duplicate production38105239866 cancellation
+0.06/1.28s follows complete-tree proof; actual-main docs38105239779 awaits
+completion and is not yet passing evidence. The raw squash subject has61
+characters. Before switching package checks to43, guarded cargo clean in the
+last42 checkout removes50 files/88.2MiB,0.07/0.40s. Final43 rebase0.14/1.20s
+preserves all three original commits and byte-identical source/probes/workflow,
+including matched-result caller checkpoint repair. Native head66cc2dab2ed2;
+fresh seven-target checks are running, not yet passing evidence.
+
+Actual-main docs38105239779 now passes at PR120 squashddef2e7a7dc2. Fresh final43 seven-target native checks pass32.85CPU/65.97elapsed, seven original tests, zero ignored; all ownership units/lint/format remain to run.
+
+Final43 ownership units3.64CPU/7.56elapsed (all20 pass), seven-target lint2.46/5.11s and formatting0.35/0.63s pass. Original source/probes/workflow remain byte-identical to6b809877a1ac; full exact-head runner gates are required after publication.

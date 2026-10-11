@@ -35,6 +35,8 @@ roadmap_docs38101281524. Match-head squash at 2026-10-11T02:27:58Z has the exact
 body and no trailers or attribution. One parent `8770e73ed17ddaed44c03504faa380d1f724d070` and
 complete tree `7a74980019b2fbf9f8c39a05e1590c593edd6d45` match the tested head. All11 live docs were
 hashed in /private/tmp/fwp-main-docs-pre120 and restored byte-for-byte.
+Actual-main docs38105239779 passes at the squash. Duplicate production
+CI38105239866 was cancelled only after complete-tree parity proof.
 Queue33 and35–42 are accepted; queue34 is a verified duplicate. Record updates
 retain typed kept fields, release replaced owners and protect replacement,
 partial retained fields and unfinished copy storage. General copies preserve
@@ -135,7 +137,7 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits and the original docs commit preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 43 ownership-record-conversion | 66cc2dab2ed2 | ddef2e7a7dc2 | Final actual-squash source preserves all three original commits including matched-result caller checkpoint repair; seven original native regressions32.85CPU/65.97elapsed (zero ignored), all20 ownership units3.64/7.56s, lint2.46/5.11s and format0.35/0.63s pass; every original source/probe/workflow byte preserved, including original-box/caller/partial-retain omission exits3/7/4, aliases/scalar bits, SIZE_MAX, GC/reuse and raw interpreter agreement; independent ARM/Intel original-test binary/layout evidence passes; full exact-head gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
