@@ -33,9 +33,20 @@ jobs:
         run: |
           brew install openssl@3
           echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Retain boundary diagnostics
+        run: |
+          mkdir -p "$RUNNER_TEMP/ffi-boundary"
+          echo "FWP_FFI_BOUNDARY_ARTIFACTS=$RUNNER_TEMP/ffi-boundary" >> "$GITHUB_ENV"
+          uname -a > "$RUNNER_TEMP/ffi-boundary/hardware.txt"
+          clang --version > "$RUNNER_TEMP/ffi-boundary/compiler.txt"
       - name: Focused lint
         run: cargo clippy --test ffi_pointer_arithmetic -- -D warnings
       - name: Format
         run: cargo fmt --all -- --check
       - name: Pointer-width boundaries, raw/native oracles and signed-overflow control
         run: cargo test --test ffi_pointer_arithmetic -- --nocapture
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ffi-boundary-${{ matrix.runner }}
+          path: ${{ runner.temp }}/ffi-boundary/

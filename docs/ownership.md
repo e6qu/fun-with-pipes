@@ -133,6 +133,10 @@ managed-value ownership. ptr.read-string copies into a managed String. Verify
 borrowed input and fresh result contracts before claiming immediate reclamation.
 Compare pointer arithmetic and numeric widths with the interpreter, including
 boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
+The existing raw interpreter reproducibly panics on a large I16 element offset;
+native code uses signed overflow-prone arithmetic. A separate pointer-width
+wrapping repair is prepared, with boundary/native/sanitizer controls pending CI.
+It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
 
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
@@ -245,7 +249,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #120 includes the following contracts. Detailed primitive modes
+Main through PR #121 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -271,7 +275,9 @@ and measurements are in [history](roadmap-history.md).
   and remaining caller owners through typed retention in PR119. Record updates
   retain typed kept fields, release replaced owners and protect replacement,
   partial retains and unfinished copies in PR120; general copies preserve the
-  borrowed original. Wider callback registration remains prepared.
+  borrowed original. Boxed record conversion protects original boxes, remaining
+  caller owners and completed typed field retains in PR121, including matched
+  result checkpoints. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

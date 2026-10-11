@@ -71,7 +71,6 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     let dir = fwp::cgen::TempDir::new("fwp-pointer-arithmetic").unwrap();
     let source = dir.join("probe.fwp");
     let cfile = dir.join("probe.c");
-    let exe = dir.join("probe");
     let mut text = String::new();
     let names = [
         "I8", "U8", "I16", "U16", "I32", "U32", "I64", "U64", "F32", "F64", "ISize", "USize",
@@ -116,6 +115,7 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
     let control_file = dir.join("signed-control.c");
     std::fs::write(&control_file, control).unwrap();
     for opt in ["-O1", "-O2"] {
+        let exe = dir.join(format!("probe{opt}"));
         fwp::cgen::compile_c(&emitted, &exe, opt).unwrap();
         for poison in ["0", "1"] {
             let output = checked(
@@ -129,6 +129,12 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
         }
         let cc = std::env::var("CC").unwrap_or_else(|_| "cc".into());
         for (file, negative) in [(&cfile, false), (&control_file, true)] {
+            let kind = if negative {
+                "signed-control"
+            } else {
+                "unsigned"
+            };
+            let sanitized = dir.join(format!("ubsan{opt}-{kind}"));
             checked(
                 Command::new(&cc)
                     .args([
@@ -140,13 +146,50 @@ fn native_boundary_offsets_match_raw_interpreter_and_reject_signed_overflow() {
                         "-fno-sanitize-recover=undefined",
                         "-o",
                     ])
-                    .arg(&exe)
+                    .arg(&sanitized)
                     .arg(file)
                     .args(["-lm", "-lpthread"]),
             );
-            let result = Command::new(&exe).output().unwrap();
+            let artifacts =
+                std::env::var_os("FWP_FFI_BOUNDARY_ARTIFACTS").map(std::path::PathBuf::from);
+            if let Some(path) = &artifacts {
+                std::fs::create_dir_all(path).unwrap();
+                std::fs::copy(file, path.join(format!("ubsan{opt}-{kind}.c"))).unwrap();
+                std::fs::copy(&sanitized, path.join(format!("ubsan{opt}-{kind}.binary"))).unwrap();
+            }
+            let result = Command::new(&sanitized)
+                .env(
+                    "UBSAN_OPTIONS",
+                    "halt_on_error=1:abort_on_error=0:exitcode=1:print_stacktrace=1",
+                )
+                .output()
+                .unwrap();
+            eprintln!("{opt} {kind}: {}", result.status);
+            if let Some(path) = &artifacts {
+                std::fs::write(
+                    path.join(format!("ubsan{opt}-{kind}.stdout")),
+                    &result.stdout,
+                )
+                .unwrap();
+                std::fs::write(
+                    path.join(format!("ubsan{opt}-{kind}.stderr")),
+                    &result.stderr,
+                )
+                .unwrap();
+                std::fs::write(
+                    path.join(format!("ubsan{opt}-{kind}.status")),
+                    result.status.to_string(),
+                )
+                .unwrap();
+            }
             if negative {
-                assert_eq!(result.status.code(), Some(1));
+                assert_eq!(
+                    result.status.code(),
+                    Some(1),
+                    "{}: {}",
+                    result.status,
+                    String::from_utf8_lossy(&result.stderr)
+                );
                 assert!(String::from_utf8_lossy(&result.stderr).contains("signed integer overflow"));
             } else {
                 assert!(

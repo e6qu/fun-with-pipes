@@ -73,6 +73,8 @@ variant conversion keeps original boxed and remaining caller owners registered
 until typed payload retention succeeds. Record updates retain typed kept fields
 and release replaced owners; replacement, partial retains and unfinished copies
 stay protected through failure, while general copies preserve borrowed originals.
+Boxed record conversion protects the original box, remaining caller owners and
+completed typed field retains; matched results preserve the caller checkpoint.
 Wider callback registration stays prepared.
 
 Merged runtime application cleanup protects consumed functions, pending typed
