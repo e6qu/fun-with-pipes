@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-gradient-entry-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-streamlined-acceptance-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint4d1c1a6beddd78a6656138704bbf9e1937621a23 has
-exact-head audit38144819993 queued. Earlier checkpoints and cancelled audits
+Current checkpoint6bc5d83dadc6c4854b37a4333de3cf4b08538e6a has
+exact-head audit38145246447 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -95,7 +95,9 @@ Prepared acceptance helpers (not executed): /private/tmp/fwp-merge-pr123.py
 requires every exact-head gate; /private/tmp/fwp-protect-main-after123.py checks
 the raw squash message, parent/tree parity and protects all11 docs before FF;
 /private/tmp/fwp-record-pr123-acceptance.py removes20 accepted live rows and
-updates the next bundle. The acceptance update is a draft, not a passed check.
+updates the next bundle. The acceptance update is a draft, not a passed check. Its next-action text now
+uses the corrected82c7 preparation driver and38140923130, avoiding the failed
+App-token publication driver; runner execution remains pending.
 Run local updates and audits through the guard when resource limits permit;
 move final bundle rebasing to GitHub if the reserve remains below64GiB.
 
@@ -107,16 +109,10 @@ Original tests ran once per architecture, with zero ignored; controls,
 C/binaries/flags/disassembly and proof JSON remain retained. These runs do not
 replace the final production gates or establish speed/collector-free support.
 
-| Evidence | Passing CI | Frozen evidence head | Proof in /private/tmp |
-|---|---|---|---|
-| Queue44 variant alias | 38104532520 | ded20c6239f6 | fwp-variant-alias-layout-passing-proof.json |
-| Queue45 nominal match | 38105588952 | 8d138284bdd2 | fwp-match-context-layout-passing-proof.json |
-| Queue46 field projection | 38106022932 | 1494a3300d23 | fwp-field-context-layout-passing-proof.json |
-| Queue47 CAF caches | 38106592858 | 1a873414e446 | fwp-caf-layout-passing-proof.json |
-| Queue48 inlined CAF arguments | 38124620463 | 15c2f44d32ec | fwp-inline-caf-layout-passing-proof.json |
-| Queue43 record conversion, accepted #121 | 38101505851 | 342d7d47a729 | fwp-record-conversion-layout-passing-proof.json |
-| Prepared112 primitive inventory | 38099556010 | 669c19e7cb67 | fwp-primitive-inventory-passing-proof.json |
-| Full prepared112 integration, seven gates | 38048222203 | 0f8c53199b2c | fwp-full-0f8c531-passing-proof.json |
+Completed layout, pointer, prepared112 integration and inventory evidence is in
+[history](roadmap-history.md#completed-evidence-removed-from-the-live-pr123-handoff).
+It does not substitute for current-head gates. The frozen primitive baseline
+remains669c19e7cb67 / CI38099556010, with its proof and JSON retained locally.
 
 Preserve inherited worker, HTTP2/x86 root and static-handler fixture repairs,
 exact omission/allocation controls, raw interpreter comparisons and original
@@ -203,34 +199,15 @@ preparations need final squash rebases and all seven exact-head production gates
 ## Finish phase2, then continue the plan
 
 A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
-head227f15356da8f9a5c7675eea9fda074a6be8857a on actual main120 passes all
-three platform jobs in CI38123787995. Two original tests per platform execute,
-zero ignored. Twelve retained sanitizer binaries have exact success0/overflow1
-statuses; old signed-expression controls report signed integer overflow.
-Collector0.29CPU/9.19elapsed verifies C/binary hashes and hardware/compiler
-reports. Proof: /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts:
-/private/tmp/fwp-pointer-boundary-227f153-artifacts. Earlier38109876885 failed
-ARM exit assertion and Intel toolchain DNS provisioning. Explicit sanitizer
-exit policy, distinct binaries and diagnostics preserve the strict control.
-Include the repair in bundle54–73 with final actual-squash rebase and full
-production gates. No separate pointer-only PR. ptr.at wraps unsigned native
-pointer-width multiplication/addition; ordinary checked arithmetic is unchanged.
-The tests cover84 independently specified address boundaries and12
-ordinary numeric pointer types, raw/native O1/O2 agreement with GC/reuse, and an
-old signed-expression UBSan control. No boundary address is dereferenced.
-F16/128-bit, WebAssembly widths and raw-buffer lifetime acceptance remain separate.
-
-One guarded baseline run reproduces the old raw-interpreter panic101 after
-I8/U8 succeed; emitted C contains signed I16 arithmetic. Shared compiler SHA
-4a04b1c4c0000627b845469d817672612a936db3c669bc5e9affb823398ebdb9
-is recorded without inferring its source head. Evidence:
-/private/tmp/fwp-pointer-boundary-baseline/report.json. Corrected fixture check
-0.75CPU/1.44elapsed passes; preparation0.55/5.94s, format0.45/0.84s,
-format check0.33/0.61s and publication repairs0.13/3.08s +0.31/6.57s pass.
-Superseded preparation runs38109666010/38109740663 were cancelled, not passed.
-Independent boundary support is verified on three64-bit native platforms;
-merged acceptance and wider raw-memory coverage remain pending.
-Publication journal: /private/tmp/fwp-pointer-arithmetic-publication.json.
+head227f15356da8f9a5c7675eea9fda074a6be8857a passes Linux/ARM/Intel
+CI38123787995. Its repair is included in PR123, pending current production gates.
+The proof is /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts are
+/private/tmp/fwp-pointer-boundary-227f153-artifacts. Unsigned native pointer-width
+offsets wrap; ordinary checked arithmetic is unchanged. All84 specified address
+boundaries and12 numeric pointer types preserve raw/native behavior; twelve
+sanitizer binaries retain exact success0/overflow1 controls. Boundary addresses
+are never dereferenced. F16/128-bit/WASI widths and unsafe-buffer lifetimes remain
+separate. Full preparation chronology is retained in history.
 
 After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
 and [primitive contracts](primitive-ownership.md) against merged source. The
@@ -366,16 +343,11 @@ counts and phase2 exit remain unverified until merged-source runner evidence.
 
 ## Local resource incident and next preparation
 
-The attempted future bundle preparation was refused before execution when free
-disk fell below64GiB; observed available62.17GiB and project target101MiB.
-No refused compiler/check/preparation ran outside the guard, and limits were
-unchanged. Remote GitHub merge and Git metadata verification continued. Disk
-subsequently returned above64GiB without project cleanup, enabling guarded
-main update and final54–73 rebase. Disk again fell below reserve after PR123
-creation; stop local workloads. At 11:36 UTC, available space is approximately
-57.7 GiB. No local build, test or bundle preparation is authorized while the
-guard refuses the workload. Read-only source review and remote administration
-continue.
+Local compiled checks and rebases remain stopped below the64GiB reserve;
+latest observation is about13.6GiB free. Target data is approximately101MiB.
+Source editing and lightweight remote administration continue. Earlier refusals,
+recoveries and measurements are archived; no limit was raised or bypassed.
+
 Current preparation driver82c7bc7509c04b9e94004c06b02d83d665539ac6,
 branch ownership-roadmap-preparation, runs38140923130 (queued). It preserves
 all39 rows74–112 and85 original commits from source112b45e93a71d40/from73
@@ -505,16 +477,12 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Last Rust checkout is /private/tmp/fwp-library-resource-bundle-worktree,
-Current source ed442426ff6e0ce4e646913720c95c098596da02 passes focused
-raw-memory/pointer/resource-frame tests,65 library units, lint and format.
-Smaller candidate9664d0607d16 checks are scoped to that previous source;
-clean removed68files131.2MiB,0.00CPU/0.14elapsed before the expanded rebuild.
-The previous compiler/task package clean removed62 files/99.1MiB,
-0.00CPU/0.13elapsed. Source/check hashes:
-/private/tmp/fwp-library-raw-memory-focused-checks.json. Combined first run
-passes both pointer tests but fails raw-memory fixture RC insertion; corrected
-fixtures pass. History records subsequent fixture corrections and guard refusal.
+Last Rust checkout: /private/tmp/fwp-library-resource-bundle-worktree.
+Focused pointer/raw-memory/resource checks,65 units, lint and formatting passed
+on ed442426ff6e0ce4e646913720c95c098596da02 before the preserved final rebase.
+The source/check journal is /private/tmp/fwp-library-raw-memory-focused-checks.json;
+these earlier checks do not replace the current full PR gates.
+
 Before switching Rust checkouts, use the absolute root guard
 with cargo clean -p fwp in that last checkout, then rebuild requested targets.
 Do not infer source identity from shared outputs. Refusals and prior metrics

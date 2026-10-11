@@ -58,7 +58,7 @@ copy. C buffers still require mem.free. Fake OpenCL coverage does not prove
 GPU hardware support, and F16/128-bit/WASI pointer widths remain unverified.
 
 Next delivery: related resource/network items74–112. Inspect the GitHub runner
-preparation at drivercfcb70d16044915206c2e681a72618021ba0ea97, preserve85
+preparation38140923130 at driver82c7bc7509c04b9e94004c06b02d83d665539ac6, preserve85
 original commits and mandatory actual WASI
 requirements, then rebase onto this actual squash with all11 fresh root docs.
 Publish the sole next production PR after verified preparation; require six

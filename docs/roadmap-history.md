@@ -17326,3 +17326,72 @@ Expansion journal: /private/tmp/fwp-resource-network-expanded-runner-publication
 Its source112 already includes mandatory WASI test environment;
 preserve that alongside inherited golden artifact diagnostics when rebasing.
 
+
+## Completed evidence removed from the live PR123 handoff
+
+Historical evidence and resource observations; current actions are in the live handoff.
+
+| Evidence | Passing CI | Frozen evidence head | Proof in /private/tmp |
+|---|---|---|---|
+| Queue44 variant alias | 38104532520 | ded20c6239f6 | fwp-variant-alias-layout-passing-proof.json |
+| Queue45 nominal match | 38105588952 | 8d138284bdd2 | fwp-match-context-layout-passing-proof.json |
+| Queue46 field projection | 38106022932 | 1494a3300d23 | fwp-field-context-layout-passing-proof.json |
+| Queue47 CAF caches | 38106592858 | 1a873414e446 | fwp-caf-layout-passing-proof.json |
+| Queue48 inlined CAF arguments | 38124620463 | 15c2f44d32ec | fwp-inline-caf-layout-passing-proof.json |
+| Queue43 record conversion, accepted #121 | 38101505851 | 342d7d47a729 | fwp-record-conversion-layout-passing-proof.json |
+| Prepared112 primitive inventory | 38099556010 | 669c19e7cb67 | fwp-primitive-inventory-passing-proof.json |
+| Full prepared112 integration, seven gates | 38048222203 | 0f8c53199b2c | fwp-full-0f8c531-passing-proof.json |
+
+
+A separate FFI boundary preparation, branch `ownership-ffi-pointer-arithmetic`,
+head227f15356da8f9a5c7675eea9fda074a6be8857a on actual main120 passes all
+three platform jobs in CI38123787995. Two original tests per platform execute,
+zero ignored. Twelve retained sanitizer binaries have exact success0/overflow1
+statuses; old signed-expression controls report signed integer overflow.
+Collector0.29CPU/9.19elapsed verifies C/binary hashes and hardware/compiler
+reports. Proof: /private/tmp/fwp-pointer-boundary-passing-proof.json; artifacts:
+/private/tmp/fwp-pointer-boundary-227f153-artifacts. Earlier38109876885 failed
+ARM exit assertion and Intel toolchain DNS provisioning. Explicit sanitizer
+exit policy, distinct binaries and diagnostics preserve the strict control.
+Include the repair in bundle54–73 with final actual-squash rebase and full
+production gates. No separate pointer-only PR. ptr.at wraps unsigned native
+pointer-width multiplication/addition; ordinary checked arithmetic is unchanged.
+The tests cover84 independently specified address boundaries and12
+ordinary numeric pointer types, raw/native O1/O2 agreement with GC/reuse, and an
+old signed-expression UBSan control. No boundary address is dereferenced.
+F16/128-bit, WebAssembly widths and raw-buffer lifetime acceptance remain separate.
+
+One guarded baseline run reproduces the old raw-interpreter panic101 after
+I8/U8 succeed; emitted C contains signed I16 arithmetic. Shared compiler SHA
+4a04b1c4c0000627b845469d817672612a936db3c669bc5e9affb823398ebdb9
+is recorded without inferring its source head. Evidence:
+/private/tmp/fwp-pointer-boundary-baseline/report.json. Corrected fixture check
+0.75CPU/1.44elapsed passes; preparation0.55/5.94s, format0.45/0.84s,
+format check0.33/0.61s and publication repairs0.13/3.08s +0.31/6.57s pass.
+Superseded preparation runs38109666010/38109740663 were cancelled, not passed.
+Independent boundary support is verified on three64-bit native platforms;
+merged acceptance and wider raw-memory coverage remain pending.
+Publication journal: /private/tmp/fwp-pointer-arithmetic-publication.json.
+
+
+The attempted future bundle preparation was refused before execution when free
+disk fell below64GiB; observed available62.17GiB and project target101MiB.
+No refused compiler/check/preparation ran outside the guard, and limits were
+unchanged. Remote GitHub merge and Git metadata verification continued. Disk
+subsequently returned above64GiB without project cleanup, enabling guarded
+main update and final54–73 rebase. Disk again fell below reserve after PR123
+creation; stop local workloads. At 11:36 UTC, available space is approximately
+57.7 GiB. No local build, test or bundle preparation is authorized while the
+guard refuses the workload. Read-only source review and remote administration
+continue.
+
+Last Rust checkout is /private/tmp/fwp-library-resource-bundle-worktree,
+Current source ed442426ff6e0ce4e646913720c95c098596da02 passes focused
+raw-memory/pointer/resource-frame tests,65 library units, lint and format.
+Smaller candidate9664d0607d16 checks are scoped to that previous source;
+clean removed68files131.2MiB,0.00CPU/0.14elapsed before the expanded rebuild.
+The previous compiler/task package clean removed62 files/99.1MiB,
+0.00CPU/0.13elapsed. Source/check hashes:
+/private/tmp/fwp-library-raw-memory-focused-checks.json. Combined first run
+passes both pointer tests but fails raw-memory fixture RC insertion; corrected
+fixtures pass. History records subsequent fixture corrections and guard refusal.
