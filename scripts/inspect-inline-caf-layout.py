@@ -13,12 +13,12 @@ for folder in sorted((root/'owner').glob('O*-*')):
  assert digest==json.loads((folder/'header.json').read_text())['sourceSha256']
  start=code.index('/* main :');stop=start+code[start:].index('\n}\n')+3
  body=code[start:stop]
- binding=re.search(r'V (t\d+) = caf\d+\(\);\s+(l\d+) = \1;',body)
+ binding=re.search(r'V (?P<temp>t\d+) = caf(?P<caf>\d+)\(\);\s+(?P<owner>l\d+) = (?P=temp);',body)
  assert binding,body
- owner=binding.group(2)
+ owner=binding.group('owner');caf=binding.group('caf')
  argument_drops=len(re.findall(r'\bfwp_drop\d+\('+re.escape(owner)+r'\);',body))
  record=dict(directory=folder.name,sourceSha256=digest,argumentDropCalls=argument_drops,
-             totalTypedDropCalls=body.count('fwp_drop'),cafArgumentLocal=owner)
+             totalTypedDropCalls=body.count('fwp_drop'),cafArgumentLocal=owner,cafId=caf)
  for command,filename in [(['nm','-nm',str(folder/'probe')],'symbols.txt'),(['otool','-tv',str(folder/'probe')],'assembly.txt')]:
   result=subprocess.check_output(command,text=True);(folder/filename).write_text(result)
  records.append(record)
@@ -29,7 +29,8 @@ for opt in ['O1','O2']:
 positive=next(r for r in records if r['directory'].startswith('O2-') and r['argumentDropCalls']==1)
 folder=root/'owner'/positive['directory']
 layout=root/'layout.c'
-layout.write_text('#define main layout_original_main\n'+(folder/'probe.c').read_text()+'\n#undef main\n#include <stddef.h>\nint main(void){printf("V=%zu align=%zu object_header=%zu payload=%zu cleanup=%zu cache_value=%zu cache_state=%zu\\n",sizeof(V),_Alignof(V),sizeof(fwp_obj),offsetof(fwp_obj,f),sizeof(fwp_cleanup),sizeof(fwp_caf_value0),sizeof(fwp_caf_state0));return 0;}\n')
+caf=positive['cafId']
+layout.write_text(f'#define FWP_SELECTED_CAF_VALUE fwp_caf_value{caf}\n#define FWP_SELECTED_CAF_STATE fwp_caf_state{caf}\n'+'#define main layout_original_main\n'+(folder/'probe.c').read_text()+'\n#undef main\n#include <stddef.h>\nint main(void){printf("V=%zu align=%zu object_header=%zu payload=%zu cleanup=%zu cache_value=%zu cache_state=%zu\\n",sizeof(V),_Alignof(V),sizeof(fwp_obj),offsetof(fwp_obj,f),sizeof(fwp_cleanup),sizeof(FWP_SELECTED_CAF_VALUE),sizeof(FWP_SELECTED_CAF_STATE));return 0;}\n')
 args=json.loads((folder/'args.json').read_text())
 args=[str(layout) if arg.endswith('.c') else arg for arg in args]
 args[args.index('-o')+1]=str(root/'layout')

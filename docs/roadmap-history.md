@@ -16942,3 +16942,87 @@ record signal/status, use distinct binaries and explicit UBSan exit policy.
 These failures are repair work, not roadmap or merge authorization blockers.
 
 Compiler/task bundle44–53 published31d038c4ea78cbea81e1001f1662ef7bb771bbfa on actual0f32e7560398c048478c4186c63d90c32e7c1727; native77af0259095cfaf436978929558e514be2e36086. All20 original commits plus final all11-doc snapshot preserved; every prepared53 native/probe byte unchanged, accepted golden/CI diagnostics inherited exactly. All three44/106/69 audits pass; original preparation branches and immutable anchors untouched. Final-head full production matrix required.
+
+## Archived completed evidence before PR122 acceptance
+
+Queue47 cache ownership evidence1a873414e446dae3d005cfa3f3c620791c2d75b5
+passes ARM/Intel in CI38106592858 on unchanged source7e1c164a0e81. All three
+original tests execute once per platform, zero ignored; forty O1/O2 fixtures are
+retained. Root/previous-cache/return-owner/manual-teardown/source-teardown/caller
+omission exits3/12/11/9/3/4 remain exact, including retry/reentrancy, aliases,
+scalar bits, SIZE_MAX, GC/reuse and raw interpreter agreement. Intact layout
+hash310a9301bd04 matches both platforms: V8/align8, object header/payload8,
+cleanup24; separate cache value8/align8 and state4/align4 exclude linker padding.
+Proof: /private/tmp/fwp-caf-layout-passing-proof.json. Artifacts:
+/private/tmp/fwp-caf-layout-1a87341-artifacts. Final queue47 still requires
+sequential actual-squash rebase and full production gates.
+
+Queue46 field-projection evidence1494a3300d234ea852078d21ce319ac81bdd2cc5
+passes ARM/Intel in CI38106022932 on unchanged source6255a8f54f54. Both
+original tests execute once per platform, zero ignored; twelve actual O1/O2
+fixtures are retained. Typed-discard calls differ2/1 in intact/erased IR,
+with exact erased-type rejection exit3. Outer record construction remains
+eliminated; original alias/child, GC/reuse and raw interpreter controls pass.
+Source-positive layout hashc2bf508e3b1f matches both platforms: V8/align8,
+object header/payload8 and cleanup24. No speed or dynamic allocation claim.
+Proof: /private/tmp/fwp-field-context-layout-passing-proof.json. Artifacts:
+/private/tmp/fwp-field-context-layout-1494a33-artifacts. Final queue46 still
+requires sequential actual-squash rebase and full production gates.
+
+Queue45 nominal-match binary evidence8d138284bdd29114623dc89cea8f4fc090ba7e3c
+passes ARM/Intel in CI38105588952 on unchanged source2b7dc81c7d1f. Both original
+tests execute once per platform, zero ignored; twelve actual O1/O2 fixtures are
+retained. Typed-discard calls differ2/1 in the intact/erased IR fixtures;
+original exact erased-type rejection exit3 and GC/reuse/interpreter controls
+remain checked. Source-positive layout hashb2eb3e78fc03 matches both platforms:
+V8/align8, object header/payload8 and cleanup24. No production speed or allocation
+count claim follows. Proof: /private/tmp/fwp-match-context-layout-passing-proof.json.
+Artifacts: /private/tmp/fwp-match-context-layout-8d13828-artifacts. Final queue45
+still requires sequential actual-squash rebase and full production gates.
+
+Queue44 returned-alias binary evidence ded20c6239f657d4c47a1fa6c856fce9a9174c14
+passes both ARM/Intel jobs in CI38104532520 on unchanged sourceb094ffbe7e46.
+Both original tests execute once per platform, zero ignored; four O1/O2
+transfer/extra-retain Mach-O fixtures per platform are retained. Exact
+extra-retain rejection exit3, GC/reuse and raw interpreter agreement remain
+checked. Intact layout source hash3bf5a4633923 matches both platforms:
+V8/align8, array header/slot8 and variant32/align8/payload8. Holder code has no
+box/unbox bridge. Static instructions are not speed or dynamic allocation counts.
+Proof: /private/tmp/fwp-variant-alias-layout-passing-proof.json. Artifacts:
+/private/tmp/fwp-variant-alias-layout-ded20c6-artifacts. Final queue44 still
+requires actual-squash rebase and full production gates.
+
+Queue43 binary evidence342d7d47a729296ad458ad2ec6ce672cf0e6d324 passes both
+ARM/Intel jobs in CI38101505851 on unchanged source6b809877a1ac. The original
+record-conversion test executes once per platform, zero ignored; sixteen actual
+O1/O2 Mach-O fixtures are retained with C, flags, symbols and disassembly.
+Intact layout C hashb7bc11c046c3 and original-box/remaining-caller/partial-retain
+omission exits3/7/4 remain verified. Both platforms have V8/align8, object
+header/payload8, cleanup24; active scopes at the first retain protect one
+remaining caller8-byte context, original box8 and partial retained fields16.
+Owner context sizes are not summed into frames; no production speed/ABI/cache
+claim is inferred. Proof: /private/tmp/fwp-record-conversion-layout-passing-proof.json.
+Artifacts: /private/tmp/fwp-record-conversion-layout-342d7d4-artifacts.
+Queue43 accepted in PR121; acceptance proofs are recorded separately.
+
+Portable ownership inventory669c19e7cb6779536377af7f78651f97dc1e51d9 passes
+CI38099556010 on unchanged prepared112 sourceb45e93a71d40. It checks actual
+runtime-contract metadata and IR lowering, explicit aliases, all compiler/library
+source hashes and the documentation audit (44/106/72). Counts:373 declarations,
+363 distinct symbols,40 aliases;134 contracts,19 IR templates,12 flat scalar
+signatures and208 declarations/198 symbols requiring semantic review. Scalar
+signatures do not prove absence of externally allocated state. This is a finite
+source-review inventory, not runtime acceptance or tracing-free support.
+Proof: /private/tmp/fwp-primitive-inventory-passing-proof.json. Artifact and full
+log are retained locally and on GitHub; recheck against actual merged source at
+the phase2 exit checkpoint.
+
+Full prepared source112 integration0f8c53199b2c / CI38048222203 passes all seven
+gates, including actual mandatory WASI disposal/count controls with no skip.
+It is not sequential acceptance or collector-free support. Other binary evidence
+and diagnostic details are in ownership/history. Preserve inherited worker,
+HTTP2/x86 root and static-handler fixture repairs, exact omission/allocation
+controls, raw interpreter comparisons and every original multi-commit repair.
+Rows77–78 require actual WASI on Linux in both free modes; native checks do not
+replace them. OpenCL57–58 fake APIs are not hardware coverage.
+
