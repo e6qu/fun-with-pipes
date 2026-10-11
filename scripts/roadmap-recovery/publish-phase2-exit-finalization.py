@@ -14,7 +14,7 @@ def api(endpoint, payload=None):
     return json.loads(subprocess.check_output(argv, text=True))
 assert not RECEIPT.exists()
 proof=json.loads(Path('/private/tmp/fwp-pr124-merge-proof.json').read_text())
-assert proof['acceptedHead']=='d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0'
+assert proof['acceptedHead']=='3aae99bfa705e26babc2cf251b0e583dfd95cf38'
 assert proof['verification']=='GitHub verified signed commit payload'
 BASE=proof['sha'];assert api('/git/ref/heads/main')['object']['sha']==BASE
 assert 'Archived handoff after PR #124' in Path('docs/roadmap-history.md').read_text()
@@ -22,6 +22,7 @@ probe = subprocess.run(['gh', 'api', REPO + '/git/ref/heads/' + BRANCH], capture
 assert probe.returncode != 0 and '404' in probe.stderr
 files = {
  'scripts/finalize-phase2-exit.py':Path('/private/tmp/fwp-finalize-phase2-exit-on-runner.py').read_text(),
+ 'scripts/node24-actions-patch.json':Path('/private/tmp/fwp-node24-actions-patch.json').read_text(),
  'scripts/export_prepared_commits.py':Path('/private/tmp/fwp-export-prepared-commits.py').read_text(),
  '.github/workflows/phase2-exit-finalization.yml':Path('/private/tmp/fwp-phase2-exit-finalization.yml').read_text(),
 }

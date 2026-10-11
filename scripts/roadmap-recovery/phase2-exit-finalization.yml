@@ -17,7 +17,7 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: 0
       CARGO_PROFILE_TEST_DEBUG: 0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
@@ -48,7 +48,7 @@ jobs:
           echo "CC=$PWD/phase2-exit-evidence/record-cc" >> "$GITHUB_ENV"
       - name: Rebase and validate the finite ownership exit bundle
         run: python3 scripts/finalize-phase2-exit.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: phase2-exit-finalization

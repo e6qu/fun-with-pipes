@@ -29,13 +29,19 @@ WT=ROOT.parent/'phase2-exit-final';subprocess.run(['git','worktree','add','--det
 for path in FILES:(WT/path).parent.mkdir(parents=True,exist_ok=True);(WT/path).write_bytes(blob(PREP,path))
 for path in ARRAY_FILES:(WT/path).parent.mkdir(parents=True,exist_ok=True);(WT/path).write_bytes(blob(ARRAY,path))
 for path in DOCS:(WT/path).write_bytes(blob('HEAD',path))
+actions=json.loads(blob('HEAD','scripts/node24-actions-patch.json'))
+assert set(actions)=={'.github/workflows/ci.yml','.github/workflows/roadmap.yml'}
+for path,updated in actions.items():
+ original=blob(BASE,path).decode()
+ assert updated==original.replace('actions/checkout@v4','actions/checkout@v7').replace('actions/upload-artifact@v4','actions/upload-artifact@v7')
+ (WT/path).write_text(updated)
 env=dict(os.environ,CARGO_INCREMENTAL='0',CARGO_PROFILE_DEV_DEBUG='0',CARGO_PROFILE_TEST_DEBUG='0',RUST_TEST_THREADS='1',FWP_BUFFER_ARTIFACTS=str(OUT/'buffers'),FWP_CODEC_ARTIFACTS=str(OUT/'codecs'))
 def run(*a,environment=None):subprocess.run(a,cwd=WT,env=environment or env,check=True)
 run('rustfmt','--edition','2021','src/prims_std.rs','tests/structural_buffer.rs','tests/array_size_limits.rs');run('cargo','fmt','--check')
 run('cargo','clippy','--test','structural_buffer','--test','array_size_limits','--','-D','warnings')
 run('cargo','test','--lib');run('cargo','test','--no-fail-fast','--test','structural_buffer','--test','array_size_limits','--test','serializer_leaf_ownership','--test','golden_check','--test','fmt','--test','stdlib_doc')
 run('python3','scripts/check-roadmap.py')
-changed=set(FILES+ARRAY_FILES+DOCS);git('add',*sorted(changed),cwd=WT);assert set(git('diff','--cached','--name-only',cwd=WT).splitlines())<=changed
+changed=set(FILES+ARRAY_FILES+DOCS+list(actions));git('add',*sorted(changed),cwd=WT);assert set(git('diff','--cached','--name-only',cwd=WT).splitlines())<=changed
 git('commit','-m','Record ownership fallbacks and check allocation boundaries',cwd=WT)
 head=git('rev-parse','HEAD',cwd=WT)
 run('python3','scripts/check-primitive-inventory.py','--baseline','tests/fixtures/primitive-inventory-baseline.json','--output',str(OUT/'inventory.json'),environment=dict(env,FWP_INVENTORY_EXPECTED_HEAD=head))

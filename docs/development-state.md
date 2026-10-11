@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `40b1e147eb3123359d6b88a12d45ff7029ccdfc3` passes audit38184105171
+checkpoint `11be1ef9adbd3cb558a6ed3e2ede60b76b29f04e` passes audit38184692328
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -68,8 +68,9 @@ Production head is `3aae99bfa705e26babc2cf251b0e583dfd95cf38`, complete tree
 verified ownership export: the default artifact directory is a separate
 subdirectory and the source bytes are checked after copying. Both default and
 explicit artifact paths pass on Linux/ARM/Intel in38184029472 at647d45ca45a76f46aaa22d0901d7fd3ea7949220.
-Full CI38184549852 and roadmap_docs38184549850 are queued at the repaired head;
-no current-head production gate is recorded as passing yet. Require all seven.
+Full CI38184549852 passes bench; Linux and Intel regular and ARM GC run, while
+ARM regular and Intel GC are queued. Roadmap_docs38184549850 passes at the
+repaired head. Require all seven exact-head gates before squash.
 Receipt: fwp-codec-copy-production-publication.json. The earlier d5 full matrix
 38180852377 fails regular ARM because copying the fixture onto itself empties
 it on macOS; bench/both GC and docs pass, while Linux/Intel were still running. The superseded run was cancelled after
@@ -296,3 +297,15 @@ guarded cleaning before switching compiled checkouts when resources permit.
 Immutable tags, remote source heads and retained receipt hashes survive temporary
 file loss. Never treat an earlier head, skipped check or source snapshot as a
 passing production gate.
+
+The cancelled d5 Linux log independently confirms the same codec source-copy
+failure; retained Linux/Intel logs reveal no other completed test failure before
+cancellation. Cancelled jobs supply no passing evidence. A Node20 action-runtime
+deprecation warning was also encountered. Verified official checkout/upload v7
+manifests use Node24. A source-only action-version patch is prepared for the next
+phase2 exit bundle; job definitions, checks and artifact inputs remain intact.
+Its runner checkout/uploads and full platform gates are still required. Recipe:
+fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
+The future finalization publisher now pins repaired3aae99 and includes this
+patch. The accepted-source phase2 audit remains a source-only draft until the
+finite review bundle is merged and its exact source is checked.
