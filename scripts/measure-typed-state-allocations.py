@@ -8,7 +8,7 @@ CANDIDATE=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
 SOURCE='''body : () -> I64 ! {State[String]}
 body = both (const () | get | string.length) (const (concat "!") | modify) | .0
 export step : I64 -> I64
-step = show | fork id (const ()) | uncurry (flip run-state body) | .0
+step = show | both id (const ()) | uncurry (flip run-state body) | .0
 main = 3 | step | echo
 '''
 fixture=OUT/'state.fwp';fixture.write_text(SOURCE)
