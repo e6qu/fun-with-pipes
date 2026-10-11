@@ -67,8 +67,12 @@
 static char *fwp_heap_cur = 0, *fwp_heap_end = 0;
 
 static void *fwp_alloc(size_t n) {
+    if (n > SIZE_MAX - 15) {
+        fprintf(stderr, "fwp: out of memory\n");
+        exit(102);
+    }
     n = (n + 15) & ~(size_t)15;
-    if ((size_t)(fwp_heap_end - fwp_heap_cur) < n) {
+    if (!fwp_heap_cur || (size_t)(fwp_heap_end - fwp_heap_cur) < n) {
         size_t chunk = n > (1 << 20) ? n : (1 << 20);
         fwp_heap_cur = (char *)calloc(1, chunk);
         if (!fwp_heap_cur) {
