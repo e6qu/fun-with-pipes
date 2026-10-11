@@ -37,17 +37,33 @@ for row in rows:
     assert row['aliased'] in {'true', 'false'}
     row['aliased'] = row['aliased'] == 'true'
 counts = dict(Counter(row['bucket'] for row in rows))
-assert len(rows) == 373
+assert len(rows) == len(baseline['rows']) + 1
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == 363
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 1
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
 baseline_rows = {(row['file'], row['declared']): row for row in baseline['rows']}
-assert set(baseline_rows) == {(row['file'], row['declared']) for row in rows}
+new_key = ('lib/autodiff.fwp', 'ad.scope')
+assert set(baseline_rows) | {new_key} == {(row['file'], row['declared']) for row in rows}
 changed_symbols = set()
 for row in rows:
-    before = baseline_rows[(row['file'], row['declared'])]
+    key = (row['file'], row['declared'])
+    if key == new_key:
+        assert row == dict(file='lib/autodiff.fwp', declared='ad.scope', symbol='ad.scope',
+            aliased=False, bucket='contract', signature='(() -> a) -> a',
+            contract='Some(Contract { arguments: [Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0] })')
+        continue
+    before = baseline_rows[key]
+    if row['symbol'] in {'ad.tape', 'ad.push', 'ad.backward'}:
+        assert before['contract'] == 'None' and row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        arguments = '[Borrow, Borrow, Borrow]' if row['symbol'] == 'ad.backward' else '[Borrow]'
+        result = 'FreshLeaf' if row['symbol'] == 'ad.backward' else 'Shared'
+        expected = 'Some(Contract { arguments: ' + arguments + ', result: ' + result + ', callback: None, aliases: [] })'
+        assert row['contract'] == expected
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] not in raw_symbols:
         assert row == before, (before, row)
         continue
@@ -62,22 +78,24 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols
+assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols)
-expected_counts['runtime_or_specialization_review'] -= len(raw_symbols)
+expected_counts['contract'] += len(raw_symbols) + 4
+expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 2
+expected_counts['flat_scalar_signature'] -= 1
 assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols)
-files = [root / name for name in ['src/ownership.rs', 'src/mono.rs', 'src/cgen.rs', 'src/rc.rs', 'src/parser.rs']]
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 2
+files = [root / name for name in ['src/ownership.rs', 'src/mono.rs', 'src/cgen.rs', 'src/rc.rs', 'src/parser.rs', 'src/numerics.rs', 'src/interp.rs', 'runtime/fwp_rt_kernel.c']]
 files.extend(sorted((root / 'lib').rglob('*.fwp')))
 report = {
     'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
-    'declarations': len(rows), 'distinctSymbols': 363, 'explicitAliases': 40,
+    'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,
     'counts': counts, 'reviewSymbols': review_symbols, 'lowered': lowered,
     'baselineHead': baseline['head'],
     'changedContractSymbols': sorted(changed_symbols),
+    'addedContractSymbols': ['ad.scope'],
     'sourceHashes': {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
                      for path in files},
     'rows': rows,

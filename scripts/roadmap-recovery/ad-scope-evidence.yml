@@ -1,0 +1,71 @@
+name: Scoped gradient callback tape ownership
+on:
+  push:
+    branches: [ownership-evidence-autodiff-scopes]
+permissions:
+  contents: read
+jobs:
+  scopes:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: macOS OpenSSL
+        if: runner.os == 'macOS'
+        run: echo "FWP_OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+      - name: Record hardware, compiler and every native compiler invocation
+        run: |
+          export FWP_AD_SCOPE_ARTIFACTS="$RUNNER_TEMP/autodiff-scopes"
+          echo "FWP_AD_SCOPE_ARTIFACTS=$FWP_AD_SCOPE_ARTIFACTS" >> "$GITHUB_ENV"
+          mkdir -p "$FWP_AD_SCOPE_ARTIFACTS"
+          git rev-parse HEAD > "$FWP_AD_SCOPE_ARTIFACTS/head.txt"
+          uname -a > "$FWP_AD_SCOPE_ARTIFACTS/hardware.txt"
+          clang --version > "$FWP_AD_SCOPE_ARTIFACTS/compiler.txt"
+          rustc --version > "$FWP_AD_SCOPE_ARTIFACTS/rustc.txt"
+          cat > "$FWP_AD_SCOPE_ARTIFACTS/record-cc" <<'SH'
+          #!/bin/sh
+          printf 'clang argument vector\n' >> "$FWP_AD_SCOPE_ARTIFACTS/compiler-invocations.txt"
+          printf '%s\n' "$@" >> "$FWP_AD_SCOPE_ARTIFACTS/compiler-invocations.txt"
+          exec clang "$@"
+          SH
+          chmod +x "$FWP_AD_SCOPE_ARTIFACTS/record-cc"
+          echo "CC=$FWP_AD_SCOPE_ARTIFACTS/record-cc" >> "$GITHUB_ENV"
+      - name: Preserve formatting suggestions without changing tested source
+        run: |
+          rustfmt src/numerics.rs src/interp.rs src/ownership.rs src/cgen.rs tests/ad_tape_scopes.rs
+          mkdir -p "$FWP_AD_SCOPE_ARTIFACTS/formatted/src" "$FWP_AD_SCOPE_ARTIFACTS/formatted/tests"
+          cp src/numerics.rs src/interp.rs src/ownership.rs src/cgen.rs "$FWP_AD_SCOPE_ARTIFACTS/formatted/src/"
+          cp tests/ad_tape_scopes.rs "$FWP_AD_SCOPE_ARTIFACTS/formatted/tests/"
+          git diff > "$FWP_AD_SCOPE_ARTIFACTS/format.patch"
+          git restore src/numerics.rs src/interp.rs src/ownership.rs src/cgen.rs tests/ad_tape_scopes.rs
+      - name: Focused lint, library and interpreter lifetime controls
+        run: |
+          cargo clippy --lib --test ad_tape_ownership --test ad_tape_scopes -- -D warnings
+          cargo test --lib -- --nocapture
+          FWP_BLESS=1 cargo test --test stdlib_doc -- --nocapture
+          git diff --exit-code -- docs/stdlib.md
+          env -u FWP_BLESS cargo test --test stdlib_doc -- --nocapture
+      - name: Native scopes, gradients and inherited invalid-token controls
+        run: |
+          cargo test --test ad_tape_ownership -- --nocapture
+          cargo test --test ad_tape_scopes -- --nocapture
+          git diff --exit-code
+          shasum -a 256 src/numerics.rs src/interp.rs src/cgen.rs src/ownership.rs lib/autodiff.fwp runtime/fwp_rt_kernel.c tests/ad_tape_scopes.rs tests/fixtures/ad_scope_probe.c target/debug/fwp > "$FWP_AD_SCOPE_ARTIFACTS/source-binary-hashes.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: autodiff-scopes-${{ matrix.runner }}
+          path: ${{ runner.temp }}/autodiff-scopes/

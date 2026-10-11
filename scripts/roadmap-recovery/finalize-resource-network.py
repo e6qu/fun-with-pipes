@@ -21,8 +21,10 @@ GC_HEAD = os.environ['FWP_GC_EVIDENCE_HEAD']
 GC_RUN = int(os.environ['FWP_GC_EVIDENCE_RUN'])
 AD_HEAD = os.environ['FWP_AD_EVIDENCE_HEAD']
 AD_RUN = int(os.environ['FWP_AD_EVIDENCE_RUN'])
-PREP_RUN = 38130008122
-PREP_DRIVER = 'cfcb70d16044915206c2e681a72618021ba0ea97'
+SCOPE_HEAD = os.environ['FWP_SCOPE_EVIDENCE_HEAD']
+SCOPE_RUN = int(os.environ['FWP_SCOPE_EVIDENCE_RUN'])
+PREP_RUN = 38140923130
+PREP_DRIVER = '82c7bc7509c04b9e94004c06b02d83d665539ac6'
 BRANCH = 'ownership-resource-network-bundle'
 DOCS = ['CONTRIBUTING.md', 'PLAN.md', 'docs/design.md',
         'docs/development-state.md', 'docs/ownership.md',
@@ -62,6 +64,7 @@ docs = gate(38138731036, TESTED, {'roadmap_docs'})
 prep_gate = gate(PREP_RUN, PREP_DRIVER, {'prepare'})
 gc_gate = gate(GC_RUN, GC_HEAD, {'diagnostics'})
 ad_gate = gate(AD_RUN, AD_HEAD, {'tapes (ubuntu-latest)', 'tapes (macos-15)', 'tapes (macos-15-intel)'})
+scope_gate = gate(SCOPE_RUN, SCOPE_HEAD, {'scopes (ubuntu-latest)', 'scopes (macos-15)', 'scopes (macos-15-intel)'})
 post = json.loads(command('gh', 'api', REPO + '/pulls/123'))
 assert post['merged'] and post['head']['sha'] == TESTED
 assert post['base']['sha'] == OLD
@@ -94,8 +97,13 @@ prep = json.loads((artifact / 'preparation.json').read_text())
 assert prep['base'] == PREP_BASE and prep['branch'] == BRANCH
 assert prep['includedRows'] == list(range(74, 113))
 assert len(prep['originalCommits']) == len(prep['rebasedCommits']) == 85
-prepared = prep['head']
+prepared = os.environ['FWP_PREPARATION_HEAD']
 assert git('rev-parse', 'origin/' + BRANCH) == prepared
+assert git('rev-parse', prepared + '^{tree}') == prep['tree']
+assert len(git('rev-list', PREP_BASE + '..' + prepared).splitlines()) == prep['export']['commits']
+# Publication may normalize metadata; every complete snapshot tree is retained.
+for original, published in zip(prep['originalCommits'], git('rev-list', '--reverse', PREP_BASE + '..' + prepared).splitlines()):
+    assert git('show', '-s', '--format=%s', original) == git('show', '-s', '--format=%s', published)
 
 # Apply the reviewed acceptance updater on an actual-squash worktree first.
 accepted_wt = ROOT.parent / 'accepted-main'
@@ -215,13 +223,32 @@ for name, edits in ad_edits.items():
         source = source.replace(edit['old'], edit['new'])
     assert evidence_source.encode() == blob(AD_HEAD, name), name
     (wt / name).write_text(source)
-for name in ['tests/ad_tape_ownership.rs', 'tests/fixtures/ad_unwind_probe.c']:
+for name in ['tests/ad_tape_ownership.rs', 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
+                'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(AD_HEAD, name))
+# Add the checked gradient scope without copying older whole native files.
+scope_patch = blob(SCOPE_HEAD, 'scripts/ad-scope-patch.json')
+scope_edits = json.loads(scope_patch)
+assert set(scope_edits) == {'src/numerics.rs', 'src/interp.rs', 'src/ownership.rs',
+                            'src/cgen.rs', 'lib/autodiff.fwp', 'runtime/fwp_rt_kernel.c'}
+for name, edits in scope_edits.items():
+    evidence_source = blob(AD_HEAD, name).decode()
+    source = (wt / name).read_text()
+    for edit in edits:
+        assert evidence_source.count(edit['old']) == source.count(edit['old']) == 1, name
+        evidence_source = evidence_source.replace(edit['old'], edit['new'])
+        source = source.replace(edit['old'], edit['new'])
+    assert evidence_source.encode() == blob(SCOPE_HEAD, name), name
+    (wt / name).write_text(source)
+for name in ['tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
+    (wt / name).parent.mkdir(parents=True, exist_ok=True)
+    (wt / name).write_bytes(blob(SCOPE_HEAD, name))
 repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
                 'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml',
                 'src/numerics.rs', 'runtime/fwp_rt_kernel.c', 'tests/ad_tape_ownership.rs',
-                'tests/fixtures/ad_unwind_probe.c']
+                'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
+                'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']
 # Runner formatting makes the final candidate reviewable; full exact-head CI
 # verifies these candidate bytes rather than transferring older evidence gates.
 subprocess.run(['rustfmt', *[name for name in repair_files if name.endswith('.rs')]],
@@ -250,14 +277,15 @@ for revision in git('rev-list', accepted + '..HEAD', cwd=wt).splitlines():
 record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               originalCommits=prep['originalCommits'], rebasedCommits=rebased,
               includedRows=prep['includedRows'], gcEvidence=gc_gate, adEvidence=ad_gate,
+              scopeEvidence=scope_gate, scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
               adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,
               compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),
               sourceHashes={name: hashlib.sha256((wt / name).read_bytes()).hexdigest()
                             for name in DOCS + repair_files},
-              stage='Preparation only; publish one PR and require all exact-head production gates')
+              stage='Verified runner finalization exported; authorized exact-lease publication and full production CI pending')
+from export_prepared_commits import export_history
+record['export'] = export_history(wt, accepted, head, OUT / 'prepared-commits.json.gz')
+record['tree'] = record['export']['tree']
 (OUT / 'finalization.json').write_text(json.dumps(record, indent=2) + '\n')
-git('push', '--force-with-lease=refs/heads/' + BRANCH + ':' + prepared,
-    'origin', 'HEAD:refs/heads/' + BRANCH, cwd=wt)
-assert git('ls-remote', 'origin', 'refs/heads/' + BRANCH).split()[0] == head
-print(head)
+print('Verified finalization exported for authorized exact-lease publication: ' + head)

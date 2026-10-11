@@ -357,6 +357,7 @@ in [the handoff](development-state.md), rather than a second priority list here.
 | Networking and retained contexts | TLS/HTTP2/gRPC owners, cancellation, caches and context restoration | Bundle CI; metadata roots, callback lifetimes and protocol behavior |
 | Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
 | File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
+| Autodiff ownership | Scoped numeric buffers, validated/retired tokens and counted gradient arrays | Callback return/error/cancellation, nested scopes, actual GC/reuse and raw/native controls |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
 | Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 

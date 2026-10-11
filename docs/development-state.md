@@ -14,7 +14,11 @@ repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Earlier checkpoints and cancelled audits remain in history.
+Current checkpoint7e842cd43ad88deb0f205a20d5459b032e1e9389 has
+exact-head audit38139353448 queued. Earlier checkpoints and cancelled audits
+remain in history. Before publishing the finalization driver, set its recovery
+binding to this current checkpoint; its saved draft contains the preceding
+checkpoint identity because a commit cannot embed its own hash.
 
 The saved goal controller is active again, verified by get_goal on this resumed
 turn. Keep the full objective active: phases2–6 remain unfinished. Queued CI and
@@ -76,7 +80,8 @@ macOS CI found the stale comment; fix receipt is
 /private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
 /private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
 all original probes and focused checks remain in history.
-New full CI38138731040 and docs38138731036 are queued. Require all six jobs and
+New full CI38138731040 is live: ARM macOS GC is running; the other five
+jobs are queued. Docs38138731036 is queued. Require all six jobs and
 roadmap_docs on this exact new head before squash; earlier-head passes do not
 transfer. The remaining superseded CI38128387224 jobs were cancelled to save
 runner time. Current acceptance helpers use the new head and run identities.
@@ -286,9 +291,46 @@ The draft adds a cheap standard-library documentation preflight before Cargo
 gates in all six jobs, using the actual generator test; original full gates
 and mandatory WASI remain unchanged. Runner validation is pending.
 
-Local disk is about36.0GiB free at12:23UTC, below64GiB. No local build, test,
+Local disk is about32.9GiB free at13:12UTC, below64GiB. No local build, test,
 format or rebase is authorized while the reserve is unavailable; only source
 editing and lightweight remote administration ran here.
+
+## Scoped gradient ownership candidate
+
+Branch ownership-evidence-autodiff-scopes at
+475cb242715961e5e396e4fe74026545160d2e3c builds on602e0766's bounds, cleanup
+and retirement fixes. Evidence38141558055 is queued for Linux and both macOS
+architectures. The internal ad.scope primitive wraps value-and-grad and vjp;
+grad, grad-vector and reverse Jacobians use those paths. Public signatures,
+curried/data-last semantics and original numerical bodies stay unchanged.
+Native owners are stack cleanup records with stable slot links; backward
+unlinks consumed tapes. Task-local cleanup chains carry scope membership
+through existing switches. Interpreter RAII tracks only active scoped tokens,
+removing each on backward, including exceptional consumption.
+
+AD tape/push borrow inputs and return scalar tokens; backward borrows all three
+inputs and returns a counted fresh F64 array. The scoped callback borrows its
+function and transfers its typed owned result. New source recipes cover six
+files in /private/tmp/fwp-ad-scope-patch.json. Regression drafts are
+fwp-ad-scope-test.rs and fwp-ad-scope-probe.c. Tests cover callback return/error,
+actual task cancellation before backward, nested scopes, registry relocation,
+multiple live tapes and consumed unlinking. O1/O2 under actual collection and
+reuse verification require omitted linking61, unlinking62 and result counting76
+to fail specifically. Native output records tape alignment/size and stack
+context sizes; no measured layout or performance claim is made before runs.
+Raw interpreter/native cases include the original reverse-AD golden program
+and gradient/vjp callback errors. Compiler argument vectors and artifacts are
+retained. Scoped evidence runs all library units and both AD integration targets;
+its FWP_BLESS regeneration and subsequent exact doc comparison verify the
+standard-library reference on GitHub. No test or compile has run yet.
+
+Older scopea369/38140572629 andd262/38141448694 were cancelled while queued
+before adding counted-array controls and correcting the array destructor
+observation. Current finalization draft requires all three exact scope jobs,
+then applies both AD recipes without overwriting later native source, preserves
+all original tests and formats the final candidate on GitHub. Source inventory
+now intentionally includes the new scope and three AD refinements, but actual
+counts and phase2 exit remain unverified until merged-source runner evidence.
 
 ## Local resource incident and next preparation
 
@@ -302,27 +344,50 @@ creation; stop local workloads. At 11:36 UTC, available space is approximately
 57.7 GiB. No local build, test or bundle preparation is authorized while the
 guard refuses the workload. Read-only source review and remote administration
 continue.
-The current remote preparation drivercfcb70d16044915206c2e681a72618021ba0ea97,
-branch ownership-roadmap-preparation, runs CI38130008122 (queued). It targets
-original112 b45e93a71d40
-FROM73 3dba256655a3 onto published123 candidateb0ae00d5512d. It prepares
-all39 remaining rows74–112 as one resource/network bundle, preserving85
-original commits and exact tested raw-memory changes. It publishes
-ownership-resource-network-bundle as a preparation only, with both accepted
-golden diagnostics and mandatory WASI retained. Runner full validation and final
-actual123-squash rebase remain required. Driver workflow is outside production
-ancestry; no extra production PR is open. The earlier20-item preparation
-CI38129146591, head96f6b3d2c073, was verified cancelled before publishing its
-replacement; cancellation is not a passing check. The cancellation request
-initially remained queued, so publication waited for confirmed cancellation.
-Expansion journal: /private/tmp/fwp-resource-network-expanded-runner-publication.json.
-Its source112 already includes mandatory WASI test environment;
-preserve that alongside inherited golden artifact diagnostics when rebasing.
+Current preparation driver82c7bc7509c04b9e94004c06b02d83d665539ac6,
+branch ownership-roadmap-preparation, runs38140923130 (queued). It preserves
+all39 rows74–112 and85 original commits from source112b45e93a71d40/from73
+3dba256655a3 onto immutable candidateb0ae. Required native repairs, accepted
+golden diagnostics and mandatory WASI remain unchanged. Final rebase onto the
+actual accepted123 squash must retain its docs/stdlib.md repair.
+
+The preceding38130008122 rebase/docs checks succeeded, but publication failed:
+runner App tokens cannot update workflows. The corrected driver exports
+preparation.json, rebase.log and prepared-commits.json.gz with read-only
+permissions. /private/tmp/fwp-export-prepared-commits.py exports every linear
+snapshot, original metadata and changed blobs; limits are32MiB decoded/5MiB
+compressed,2MiB per blob. /private/tmp/fwp-publish-exported-history.py verifies
+an exact successful runner head, blob hashes, all snapshot trees, messages,
+parents and author/committer instants, then publishes via the user's existing
+authorized connection. Publication uses atomic branch creation or GitHub's
+beforeOid lease for final rebase, with a resumable artifact publication.json.
+This is draft infrastructure; the corrected exporter and publisher have not
+run yet. GitHub confirmed the RefUpdate beforeOid field from its live schema.
+No local build, rebase or broad credential grant is required.
+
+After38140923130 passes, download its bounded artifact into the path below
+and publish its verified Git objects with the existing user connection:
+
+```sh
+nice -n 15 python3 /private/tmp/fwp-publish-exported-history.py \
+  --artifact /private/tmp/fwp-resource-network-preparation-82c7-artifacts \
+  --run 38140923130 --driver 82c7bc7509c04b9e94004c06b02d83d665539ac6
+```
+
+Finalization also exports instead of pushing with a
+runner App; set FWP_PREPARATION_HEAD to the verified published SHA and provide
+the current recovery/evidence bindings before publishing its driver. Include
+scripts/export_prepared_commits.py beside the finalizer on that driver. After
+its successful exact head, publish its artifact with --expected-old matching
+finalization.json previous. Keep one production PR and require its full matrix.
+
 The phase2 exit inventory draft is /private/tmp/fwp-check-primitive-inventory-exit.py
 with /private/tmp/fwp-primitive-inventory-exit.rs. It compares every parsed
 declaration and actual Rust contract with the frozen669c19e baseline, allowing
-only the nine intentional raw-memory contract additions and preserving every
-other row. It has not executed or established new counts. Copy it into an
+only nine raw-memory contracts, three refined AD contracts and the one
+internal ad.scope declaration/owned callback contract; every other row stays
+identical. It checks actual borrowed AD inputs and fresh counted F64 gradient
+arrays, and hashes both runtime/interpreter tape implementations. It has not executed or established new counts. Copy it into an
 evidence branch on actual merged112-equivalent source and run on GitHub after
 the resource/network bundle is accepted; retain the old JSON as baseline.
 

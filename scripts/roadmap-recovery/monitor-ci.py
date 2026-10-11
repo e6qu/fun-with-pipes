@@ -8,10 +8,11 @@ RUNS = {
     'pr123_ci': (38138731040, '9e7d0b24610524cf54125c44b47ee07185c0b7c3'),
     'pr123_docs': (38138731036, '9e7d0b24610524cf54125c44b47ee07185c0b7c3'),
     'main122_docs': (38127751825, '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'),
-    'resource_network_preparation': (38130008122, 'cfcb70d16044915206c2e681a72618021ba0ea97'),
+    'resource_network_preparation': (38140923130, '82c7bc7509c04b9e94004c06b02d83d665539ac6'),
     'gc_build_diagnostics': (38136959809, 'a44c3da1aa344266262fc99471b331b053db371b'),
+    'autodiff_scopes': (38141558055, '475cb242715961e5e396e4fe74026545160d2e3c'),
     'autodiff_tapes': (38139112950, '602e076604d3dd759c47b396c10cf848dd9dbb61'),
-    'streamlined_handoff_docs': (38137278226, '186a9a38b980eadbe1a7a76b279c250a0d29a49d'),
+    'streamlined_handoff_docs': (38139353448, '7e842cd43ad88deb0f205a20d5459b032e1e9389'),
 }
 record = {'observedAt': datetime.now(timezone.utc).isoformat(), 'runs': {}}
 for label, (number, head) in RUNS.items():

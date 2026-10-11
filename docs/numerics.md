@@ -125,6 +125,15 @@ with raw interpreter/native and omitted-check controls; execution is pending,
 so no verified repair is claimed yet. Keep the
 current numeric phase order from [the plan](../PLAN.md).
 
+The candidate scoped repair adds internal ad.scope around value-and-grad and
+vjp, so grad, vector gradients and reverse Jacobian rows also release tapes
+when their callbacks fail before backward. Native scopes use stack owners and
+stable slot links in the existing task-local cleanup chain; interpreter scopes
+use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
+gradient arrays have explicit contracts. All candidate scope, counting, layout,
+trap/cancellation and raw interpreter/native checks remain queued; no verified
+scoped lifetime or no-tracing support is claimed before their final gates.
+
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).
 Future comparisons must record equivalent workloads, hardware, compiler,

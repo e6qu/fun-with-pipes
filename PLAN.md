@@ -57,7 +57,8 @@ one coherent resource/network bundle to avoid a second full CI cycle.
 [The handoff](docs/development-state.md) gives exact heads, checks and the sole
 next action. Prepared work still requires final rebases and full CI.
 
-Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
+Phase 2 remaining audits: scoped autodiff buffers and counted gradient arrays,
+borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
 and cycles. Repair reproduced FFI pointer-offset overflow and verify raw-memory
 boundaries. Prepared resource/unwind improvements require full CI per final bundle.

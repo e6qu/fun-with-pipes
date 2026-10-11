@@ -17297,3 +17297,32 @@ one-line subject and empty body. Prepare74–112 on a GitHub runner while CI run
 open its production PR after123 merges. Independent evidence does not replace
 production gates. Phases2–6 remain incomplete.
 
+
+## Runner preparation export replaces unsupported workflow publication
+
+CI38130008122 atcfcb70d16044915206c2e681a72618021ba0ea97 completed its85-commit
+rebase and both44/106/59 documentation audits, then failed publishing the
+workflow change: the GitHub runner App lacks workflows permission. The10,039-byte
+manifest/log artifact is retained in /private/tmp/fwp-resource-network-prep-failed-artifact.
+No preparation branch was published. Replacement driver82c7bc75 exports verified
+linear history with read-only contents permission; no broader credential or
+permission is requested. Neither the failed run nor its source-only checks
+count as final native acceptance. Previous handoff:
+
+The current remote preparation drivercfcb70d16044915206c2e681a72618021ba0ea97,
+branch ownership-roadmap-preparation, runs CI38130008122 (queued). It targets
+original112 b45e93a71d40
+FROM73 3dba256655a3 onto published123 candidateb0ae00d5512d. It prepares
+all39 remaining rows74–112 as one resource/network bundle, preserving85
+original commits and exact tested raw-memory changes. It publishes
+ownership-resource-network-bundle as a preparation only, with both accepted
+golden diagnostics and mandatory WASI retained. Runner full validation and final
+actual123-squash rebase remain required. Driver workflow is outside production
+ancestry; no extra production PR is open. The earlier20-item preparation
+CI38129146591, head96f6b3d2c073, was verified cancelled before publishing its
+replacement; cancellation is not a passing check. The cancellation request
+initially remained queued, so publication waited for confirmed cancellation.
+Expansion journal: /private/tmp/fwp-resource-network-expanded-runner-publication.json.
+Its source112 already includes mandatory WASI test environment;
+preserve that alongside inherited golden artifact diagnostics when rebasing.
+

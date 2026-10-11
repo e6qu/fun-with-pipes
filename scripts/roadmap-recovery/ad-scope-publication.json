@@ -1,0 +1,23 @@
+{
+  "head": "475cb242715961e5e396e4fe74026545160d2e3c",
+  "base": "602e076604d3dd759c47b396c10cf848dd9dbb61",
+  "branch": "ownership-evidence-autodiff-scopes",
+  "files": [
+    ".github/workflows/ad-scope-evidence.yml",
+    "docs/stdlib.md",
+    "lib/autodiff.fwp",
+    "runtime/fwp_rt_kernel.c",
+    "scripts/ad-scope-patch.json",
+    "scripts/check-primitive-inventory.py",
+    "scripts/primitive-inventory.rs",
+    "src/cgen.rs",
+    "src/interp.rs",
+    "src/numerics.rs",
+    "src/ownership.rs",
+    "tests/ad_tape_scopes.rs",
+    "tests/fixtures/ad_scope_probe.c"
+  ],
+  "stage": "Published source/test drafts; all runner checks pending",
+  "previous": "d2620a3935d173674d1751e76db001146403f913",
+  "reason": "Use real array destructor and its poison/returned-storage postcondition"
+}
