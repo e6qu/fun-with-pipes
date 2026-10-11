@@ -135,6 +135,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
+        // Raw address words are not managed owners. String conversion copies;
+        // only read-string returns a fresh managed leaf.
+        "mem.alloc" | "mem.free" | "mem.string" | "ptr.cast" | "ptr.address" | "ptr.read" => {
+            (&[B], R, None, &[])
+        }
+        "ptr.at" | "ptr.write" => (&[B, B], R, None, &[]),
+        "ptr.read-string" => (&[B], ResultOwnership::FreshLeaf, None, &[]),
         "task.spawn" => (
             &[B],
             ResultOwnership::OwnedTask,
@@ -492,6 +499,7 @@ mod tests {
             (include_str!("../lib/collections.fwp"), true),
             (include_str!("../lib/string.fwp"), false),
             (include_str!("../lib/task.fwp"), false),
+            (include_str!("../lib/ffi.fwp"), false),
         ] {
             for line in library.lines() {
                 let Some(declaration) = line.strip_prefix("foreign \"fwp\" ") else {
