@@ -5,13 +5,14 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 [Queue](roadmap-queue.md) preserves immutable anchors; [history](roadmap-history.md)
 preserves accepted and superseded evidence. Root docs are authoritative.
 
-Durable recovery branch: `roadmap/handoff-pr123-20261011`. Current checkpointb9527f81af81342742daf48ce386ec3c9bd9b37b passes exact-head documentation audit38169481098.
+Durable recovery branch: `roadmap/handoff-pr123-20261011`. Current checkpoint56ae30b4499292744a566ca6171fa5fa8761ecad retains the inference
+repair and corrected recovery helper. Exact-head audit38170442223 passes.
 It retains all11 authoritative docs, State source/fixtures and recovery recipes.
 Earlier024 audit failed the numeric-row parser; the section-scoped fix is verified.
 Recovery destinations are temporary files only. The prepared restore fix reads
 static maps with AST parsing, supports their actual compact formatting and
 defaults to the published tip; older explicit checkpoints require ancestry.
-Receipt: /private/tmp/fwp-combined-repair-checkpoint.json. Never rerun completed
+Receipt: /private/tmp/fwp-inference-recovery-checkpoint.json. Never rerun completed
 publishers. Restore bytes using verified Git blob hashes with
 restore-roadmap-recovery.py; source recovery is not runtime verification.
 Phases2–6 remain unfinished.
@@ -101,19 +102,25 @@ receipt: /private/tmp/fwp-resource-network-finalized-export/publication.json;
 fresh-doc receipt: /private/tmp/fwp-finalized-bundle-doc-publication.json.
 Combined preflight257/38169524910 passes formatting/stdlib docs and original
 State controls, but the new closure State case exposes a recursive effect row.
-Explicit pure signatures at c4/38169724664 reproduce it. Signature instantiation
-opens returned function rows before application, contaminating the stored type
-with its enclosing State effect. The prepared inference fix preserves those
-rows and lets existing application/composition logic open only the actual call.
-The original simple closure fixture is retained. Driver7d/38170194296 was cancelled with its only job queued because its
-snapshot target was named check instead of golden_check; no checks passed there.
-Replacement32205aeaae51cd9d38944e10d674847ee46cd53e includes all library units,
-effect regressions and type snapshots. Publication receipt:
-/private/tmp/fwp-combined-repair-snapshot-publication.json.
-Next: validate this combined runner repair, fix every failure, then publish the
+Explicit pure signatures at c4/38169724664 reproduce it. The call row shares the stored function's effect variable; adding the ambient
+State label makes that variable recursively contain itself. Removing signature
+row opening at322/38170352491 is too broad:71 library units pass, but existing
+effect/size snapshots reject it with standard-library combinator regressions.
+The replacement keeps instantiation and extends only temporary open call rows
+with known ambient labels. All original snapshots and the simple closure
+fixture remain required. Log: fwp-combined-repair-322-complete.log.
+Driver7d/38170194296 was cancelled with its only job queued because its
+snapshot target was misnamed; it provides no passing checks.
+Current runner driver21d8b0c57e18d19ec6575561687e879dcad6f322 runs38171839872.
+It preserves signature instantiation, extends temporary open call rows with
+known ambient labels, adds four pure/effectful callback positives and two
+missing-IO negatives across pipes/applications, and retains the raw/native
+State ownership fixture. Earlier7235/eccd drivers were cancelled with their
+only jobs queued while controls were completed; neither provides a passing gate.
+Current receipt: /private/tmp/fwp-combined-repair-literal-controls-publication.json.
+Next: validate this combined runner repair, fix every failure, then publish its
 exact-tree export with a9550 lease. Require a new full current-head matrix;
-earlier focused or production passes cannot gate squash. Recovery scripts and
-receipt names are retained on ownership-pr124-combined-repair.
+earlier focused or production passes cannot gate squash.
 
 Integrated inventory at runner head13c92139da8ddc3d7c9755539cd1e95d80a5b2b9
 reports374 declarations,364 symbols,40 aliases,149 explicit contracts,19 IR
@@ -206,6 +213,12 @@ and escaping-closure State cases are prepared for the final bundle in
 /private/tmp/fwp-typed-state-expanded-test.rs and have not executed. Full native,
 GC, reuse, resource/File and Linux WASI gates remain required. Later phase2
 reconstruction, retained-context, disposal and cycle classifications remain.
+A finite review map prepares191 declarations/181 symbols after excluding the
+four State entries from verified13c inventory; the integrated153-contract
+inventory must confirm it. Fourteen serializer/codec leaf contracts are
+source-reviewed drafts only, not published or validated; source recipe and
+preparation record: /private/tmp/fwp-serializer-leaf-ownership-patch.json and
+/private/tmp/fwp-serializer-leaf-preparation.json. Prioritize the current repair.
 
 ## Remaining ownership deliveries
 

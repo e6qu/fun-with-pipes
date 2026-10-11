@@ -1,0 +1,150 @@
+{
+  "sourceHead": "ec1915e7386128352a792071701c16b076084e75",
+  "ownershipBaseSha256": "01e3a5f34394658dd381f9f9f614604579a526ce4a11039ace365904d0517151",
+  "symbols": [
+    "json.encode",
+    "json.write",
+    "url.encode",
+    "int.to-hex",
+    "cli.help",
+    "zlib.gzip",
+    "zlib.gzip-chunk",
+    "zlib.deflate",
+    "ws.accept",
+    "ws.deflate",
+    "ws.key",
+    "zlib.gzip-end",
+    "ws.close-payload",
+    "ws.frame"
+  ],
+  "declarations": [
+    {
+      "file": "lib/cli.fwp",
+      "declared": "cli.help",
+      "symbol": "cli.help",
+      "aliased": false,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "o -> String"
+    },
+    {
+      "file": "lib/http.fwp",
+      "declared": "http.to-hex",
+      "symbol": "int.to-hex",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "I64 -> String"
+    },
+    {
+      "file": "lib/http.fwp",
+      "declared": "gzip.compress",
+      "symbol": "zlib.gzip",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Bytes -> Bytes"
+    },
+    {
+      "file": "lib/http.fwp",
+      "declared": "deflate.compress",
+      "symbol": "zlib.deflate",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Bytes -> Bytes"
+    },
+    {
+      "file": "lib/http.fwp",
+      "declared": "gzip._chunk",
+      "symbol": "zlib.gzip-chunk",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Bytes -> Bytes"
+    },
+    {
+      "file": "lib/http.fwp",
+      "declared": "gzip._end",
+      "symbol": "zlib.gzip-end",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "I64 -> I64 -> Bytes"
+    },
+    {
+      "file": "lib/json.fwp",
+      "declared": "json.encode",
+      "symbol": "json.encode",
+      "aliased": false,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Json -> String"
+    },
+    {
+      "file": "lib/json.fwp",
+      "declared": "json.write",
+      "symbol": "json.write",
+      "aliased": false,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "a -> String where Encode[a]"
+    },
+    {
+      "file": "lib/url.fwp",
+      "declared": "url.encode",
+      "symbol": "url.encode",
+      "aliased": false,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "String -> String"
+    },
+    {
+      "file": "lib/websocket.fwp",
+      "declared": "ws._accept",
+      "symbol": "ws.accept",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "String -> String"
+    },
+    {
+      "file": "lib/websocket.fwp",
+      "declared": "ws._key",
+      "symbol": "ws.key",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "() -> String ! {Network}"
+    },
+    {
+      "file": "lib/websocket.fwp",
+      "declared": "ws._frame",
+      "symbol": "ws.frame",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Bool -> I64 -> Bytes -> Bytes"
+    },
+    {
+      "file": "lib/websocket.fwp",
+      "declared": "ws._close-payload",
+      "symbol": "ws.close-payload",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "I64 -> String -> Bytes"
+    },
+    {
+      "file": "lib/websocket.fwp",
+      "declared": "ws._deflate",
+      "symbol": "ws.deflate",
+      "aliased": true,
+      "bucket": "runtime_or_specialization_review",
+      "contract": "None",
+      "signature": "Bytes -> Bytes"
+    }
+  ],
+  "stage": "Reviewed independent fresh leaf construction; prepared only, no publication or runtime validation",
+  "next": "Apply only after PR124 acceptance; preserve native buffer failures and add actual omitted-borrow/fresh-owner controls, raw/native semantics and allocation profiles before production gates"
+}

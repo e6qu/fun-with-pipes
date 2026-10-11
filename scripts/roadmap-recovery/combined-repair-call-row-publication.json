@@ -1,0 +1,24 @@
+{
+  "head": "7235d8fdd2499aeec986f573f54e77faf347ead1",
+  "previous": "32205aeaae51cd9d38944e10d674847ee46cd53e",
+  "base": "9550aab94bf5cb2adb4f6a462381537d37ce3644",
+  "branch": "ownership-pr124-combined-repair",
+  "recovery": "b9527f81af81342742daf48ce386ec3c9bd9b37b",
+  "sourceHashes": {
+    "scripts/integrate-pr124-repair.py": "ac7e17b9430f5cd002dd76c489618b884b3ed0d376db21d1e1bea3fa9bd47fdb",
+    "scripts/call-row-ambient-patch.json": "ecb353c71ec4432fdf14cbccd89b2af068f70a327f80f717986c4642c8db0542",
+    "scripts/typed-state-expanded-test.rs": "f306d6a47d587683f8680d35ae4954d9dfae48050baeaf514f193507fd694660",
+    "CONTRIBUTING.md": "542f28742abdf5e0d50923b7a037f932522e159ad43f7b0adabe9ff7291501b2",
+    "PLAN.md": "f384f948071988fb523fdb0bf45ef713e46b991fafc3d66372184fdaf33f66f9",
+    "docs/design.md": "42bf70e5948072b9485b7d5798fc13eeaec927de3b431a6251d845f65e018530",
+    "docs/development-state.md": "b0b4a7e3440c502ff194301cdfdb4fe869a1758dfc40e49d4bf17eade744dd9a",
+    "docs/ownership.md": "a680da5f1393084f888b8cb8a87b7021b216c7dfabe5db241051831468dff413",
+    "docs/primitive-ownership.md": "ac7a4cd268027a0e4fde784f56139ce5dad6bf72657ef2d3a8db347a65e55c30",
+    "docs/roadmap-queue.md": "5dde27287c6faa7043339ee5fe1525e51b869fe72b0bb873b44eda980f8b7d77",
+    "docs/roadmap-history.md": "9a8b50dfb9766a93055f3312fd19e7e00fae257a9adeb61438d105d006713211",
+    "docs/reference.md": "6904fe80560d3c0243cd85b43659680934aff93fbb06e8bbd06965f86bc75a8b",
+    "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+    "docs/numerics.md": "9bd75db8a915632f3481e7e9dcb7d2d345d08d39db26114f5f80cb9e61f42a44"
+  },
+  "stage": "Minimal repair published for preflight; production PR unchanged"
+}

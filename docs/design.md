@@ -153,11 +153,12 @@ stderr and the exit code. `tests/golden_run.rs` runs every program in
   compiler solves `Eq`, `Ord`, `Hash`, `Display`, `Dup`, `Encode` and
   `Decode` structurally. Integer and float literals are classes that fall
   back to `FromInt` and `FromFloat`, so `Dual[F64]` accepts literals.
-- Every arrow carries an effect row. Application opens only the current
-  call row for subeffecting. The prepared inference repair preserves returned
-  function rows during signature instantiation; the simple closure State
-  regression and existing type snapshots must pass before acceptance.
-  Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
+- Every arrow carries an effect row. Signature instantiation opens result
+  spine rows for subeffecting. Actual calls reopen only their own closed row;
+  the prepared repair adds known ambient labels to a temporary open call row
+  so State does not recursively contaminate a stored function type. Existing
+  effect/type snapshots and simple closure State controls must pass before
+  acceptance. Handlers (`attempt`, `try`, `run-state`) remove labels by unification.
 - Only the last arrow of a binding may have effects, so effects happen
   exactly when a call is saturated. Top-level values that are not
   functions must be pure (`main` and tests aside).
