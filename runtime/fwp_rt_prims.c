@@ -982,6 +982,40 @@ static V fwp_p_list_ap(V fs, V xs) {
     return fwp_list_from(out, k);
 }
 
+/* Own every completed Cartesian-product callback result until its list node
+ * takes it. Borrowed function/input scratch remains rooted and unwinds separately. */
+static size_t fwp_list_ap_count(size_t nf, size_t nx) {
+    size_t maximum = SIZE_MAX / sizeof(V) - 1;
+    if (nf && nx > maximum / nf) fwp_trap("list.ap too large");
+    return nf * nx;
+}
+static V fwp_p_list_ap_owned(V fs, V xs, void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t nf, nx;
+    V *functions = fwp_map_items(fs, &nf);
+    fwp_cleanup functions_cleanup;
+    fwp_scratch_protect(&functions, &functions_cleanup);
+    V *inputs = fwp_map_items(xs, &nx);
+    fwp_cleanup inputs_cleanup;
+    fwp_scratch_protect(&inputs, &inputs_cleanup);
+    size_t count = fwp_list_ap_count(nf, nx);
+    V *out = (V *)fwp_mem_alloc((count + 1) * sizeof(V));
+    fwp_map_owner owner = {out, 0, 0, element_drop, list_drop};
+    fwp_cleanup cleanup;
+    fwp_map_protect(&owner, &cleanup);
+    for (size_t i = 0; i < nf; i++) {
+        for (size_t j = 0; j < nx; j++) {
+            out[owner.count] = fwp_apply_borrowed(functions[i], 1, &inputs[j]);
+            owner.count++;
+        }
+    }
+    V result = fwp_map_finish_protected(&owner, &cleanup);
+    fwp_scratch_finish(&inputs, &inputs_cleanup);
+    fwp_scratch_finish(&functions, &functions_cleanup);
+    FWP_KEEP_ALIVE(fs);
+    FWP_KEEP_ALIVE(xs);
+    return result;
+}
+
 /* ---------------------------------------------------------------- strings */
 
 static int fwp_is_space(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }

@@ -5554,7 +5554,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 if matches!(
                                     sym.as_str(),
-                                    "map" | "filter" | "take-while" | "zip-with"
+                                    "map" | "filter" | "take-while" | "zip-with" | "list.ap"
                                 ) {
                                     let result = func.ty.params(func.arity as usize).1;
                                     let MT::Con(name, elements) = &result else {
@@ -5569,10 +5569,10 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                         .collect::<Vec<_>>()
                                         .join(", ");
                                     s = s.replace(
-                                        &format!("fwp_p_{}({args})", sym.replace('-', "_")),
+                                        &format!("fwp_p_{}({args})", sym.replace(['-', '.'], "_")),
                                         &format!(
                                             "fwp_p_{}_owned({args}, {ops})",
-                                            sym.replace('-', "_")
+                                            sym.replace(['-', '.'], "_")
                                         ),
                                     );
                                 }

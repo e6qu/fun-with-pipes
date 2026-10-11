@@ -197,6 +197,7 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         "split" | "string.split-once" | "string.find" | "bytes.find" | "bytes.get" => {
             (&[B, B], ResultOwnership::FreshTree, None, &[])
         }
+        "list.ap" => (&[B, B], ResultOwnership::FreshSpine, None, &[0, 1]),
         "map" => (
             &[B, B],
             ResultOwnership::FreshSpine,
@@ -468,6 +469,11 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        let ap = primitive("list.ap").unwrap();
+        assert_eq!(ap.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(ap.result, ResultOwnership::FreshSpine);
+        assert!(ap.callback.is_none());
+        assert_eq!(ap.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
             "channel.send",
