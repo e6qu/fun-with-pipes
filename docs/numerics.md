@@ -133,6 +133,11 @@ use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
 gradient arrays have explicit contracts. All candidate scope, counting, layout,
 trap/cancellation and raw interpreter/native checks remain queued; no verified
 scoped lifetime or no-tracing support is claimed before their final gates.
+Equivalent runtime-dependent gradients must also show no increase in managed
+steady-state allocation calls or requested bytes, with unchanged external buffer
+allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
+warmup, live/peak memory and tape layout separately; stack scope storage alone
+does not establish allocation parity for generic callback bridges.
 
 Historical timing samples are preserved in
 [the benchmark history](roadmap-history.md#archived-numerics-timing-samples).

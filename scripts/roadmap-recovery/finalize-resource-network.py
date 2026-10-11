@@ -88,6 +88,7 @@ for platform in ['ubuntu-latest', 'macos-15', 'macos-15-intel']:
             assert measured['head'] == head and measured['opt'] == opt
             assert measured['iterations'] == 4096 and measured['collections'] >= 2
             assert measured['managedCalls'] > 0 and measured['externalCalls'] == 5 * 4096
+            assert measured['externalLiveBytes'] == measured['tapeSize']
             assert label + '.measured.c' in report['sourceHashes']
             assert label + opt in report['sourceHashes']
         assert after['managedCalls'] <= before['managedCalls']

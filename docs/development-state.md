@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-scoped-export-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-gradient-entry-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint3c57a7187d3c43fca1b4d4f2ba4734c343c71ab0 has
-exact-head audit38142490677 queued. Earlier checkpoints and cancelled audits
+Current checkpoint4d1c1a6beddd78a6656138704bbf9e1937621a23 has
+exact-head audit38144819993 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -274,7 +274,8 @@ controls must fail specifically: registration/release41, wrapping46 and bounds31
 Public Pipe cases compare raw FWP_NO_OPT=1 with optimized native builds. Artifacts
 retain source, binaries, output/statuses, compiler/hardware and formatted drafts.
 No build or test has run yet. These are candidate repairs, not merged support;
-grad callback failure/cancellation before backward still needs scoped coverage.
+The separate scope candidate below supplies callback failure/cancellation
+controls; those checks are also pending.
 
 Recipes /private/tmp/fwp-ad-ownership-patch.json reproduce both native files
 from immutable b0ae without replacing later device changes. Other drafts:
@@ -329,17 +330,21 @@ bridges avoid extra managed boxes. Preserve public signatures and fix any
 allocation regression before final bundle acceptance. Do not claim zero-cost
 scopes or no-extra-allocation from the owner layout alone.
 
-Allocation comparison driver a2513d60fd086d1077533bdee7b31e50735fa369,
-branch ownership-evidence-autodiff-allocations, runs38144375898 (queued).
-It compares runtime-dependent quadratic gradients on baseline602e0766 and
+Allocation comparison driver e586a4d12a477aefcc854e12f6bbf2f640299de8,
+branch ownership-evidence-autodiff-allocations, runs38145198463 (queued).
+It preserves an explicit exported entry and compares runtime-dependent
+quadratic gradients on baseline602e0766 and
 scope candidate475cb242 at O1/O2 across Linux and both macOS architectures.
 The 4096-call steady-state probe requires real managed allocations and five
 external tape-buffer allocation calls per gradient. It records cold/warm
 requested bytes, external live/peak bytes, collected live/peak bytes, collections,
 tape size/alignment, compiler arguments, hardware and source/binary hashes.
 Acceptance requires no additional steady-state managed calls/bytes and identical
-external calls/bytes. All measurements remain pending; no speed or no-tracing
+external calls/bytes, with external live bytes equal to the persistent registry
+slot size after all tape buffers are released. All measurements remain pending; no speed or no-tracing
 claim. Superseded50036dc3/run38144127914 was cancelled while entirely queued.
+The intermediatea2513d60/run38144375898 was also cancelled while entirely
+queued before fixing entry retention and checking external buffer reclamation.
 Receipt: /private/tmp/fwp-ad-allocation-publication.json. Recovery must retain
 measure-ad-scope-allocations.py, ad-scope-allocation.yml and this receipt.
 

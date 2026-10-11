@@ -1,5 +1,5 @@
 {
-  "head": "a2513d60fd086d1077533bdee7b31e50735fa369",
+  "head": "e586a4d12a477aefcc854e12f6bbf2f640299de8",
   "candidate": "475cb242715961e5e396e4fe74026545160d2e3c",
   "baseline": "602e076604d3dd759c47b396c10cf848dd9dbb61",
   "branch": "ownership-evidence-autodiff-allocations",
@@ -8,6 +8,6 @@
     "scripts/measure-ad-scope-allocations.py"
   ],
   "stage": "Allocation comparison published; all measurements pending",
-  "previous": "50036dc35ac0964fcc53bd476ce41a6959a949e2",
-  "reason": "Runtime-dependent quadratic gradient, real tape allocation paths, external live/peak bytes and source/binary hashes"
+  "previous": "a2513d60fd086d1077533bdee7b31e50735fa369",
+  "reason": "Explicit optimized exported gradient entry and all external buffers released except the measured registry slot"
 }
