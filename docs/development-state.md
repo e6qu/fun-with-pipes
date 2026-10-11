@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `11be1ef9adbd3cb558a6ed3e2ede60b76b29f04e` passes audit38184692328
+checkpoint `c9468213bc0b8a85ea187718702b831ccf0c02cb` passes audit38185008317
 and retains the latest AD/input and callback diagnostic sources. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
 Git blob hashes using restore-roadmap-recovery.py. The AST-based restore repair
@@ -309,3 +309,10 @@ fwp-node24-actions-patch.json; preparation: fwp-node24-actions-preparation.json.
 The future finalization publisher now pins repaired3aae99 and includes this
 patch. The accepted-source phase2 audit remains a source-only draft until the
 finite review bundle is merged and its exact source is checked.
+
+The recovery checkpoint audit is being extended with actual temporary-file
+restoration on a disposable GitHub runner. It verifies the restored source
+hashes and preserves its report without executing publishers, merge helpers
+or compiler workloads. This is preparation, not a passed restoration check:
+fwp-validate-restoration-on-runner.py and the handoff-audit workflow must pass
+before the earlier unvalidated-restorer limitation can be removed.
