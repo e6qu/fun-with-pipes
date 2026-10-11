@@ -41,20 +41,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#118: native macOS, selected typed container/text/callback
-ownership, exact wide reference counts and immediate last-owner reclamation.
-Registered cleanup protects caller and reuse-token references, runtime application
-and captures, and map/selection/zip/fold unwind. Loop state and Step owners
-survive cancellation and payload preparation; eligible Again records stay unboxed.
-Constructor fields, worker results and boxed-to-worker arguments remain protected
-until transfer. Flattened loop preparation protects the original box and each
-completed field duplicate. Original allocation and semantic controls remain intact.
-
-Queues35–40 are accepted; queue34 is a verified duplicate already delivered in
-#107. Multi-field retain overflow cleanup is merged. Nested constructor ownership is merged. Deliver queue41 variant conversion on
-the actual PR118 squash, then continue the remaining ownership queue. Exact heads, checks and
-the sole next action are in [the handoff](docs/development-state.md); prior
-platform evidence and repaired controls are in [history](docs/roadmap-history.md).
+Main includes #74–#118: native macOS ARM/Intel support and selected ownership,
+last-owner reclamation and unwind protections. Queue33 and35–40 are accepted;
+queue34 is a verified duplicate already delivered in #107. Deliver queue41
+variant conversion on the actual PR118 squash, then finish ownership queues42–112.
+[The handoff](docs/development-state.md) gives exact heads, checks and the sole
+next action. Prepared work still requires final rebases and full CI.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks

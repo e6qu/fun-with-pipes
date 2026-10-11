@@ -1,26 +1,26 @@
 # Session handoff
 
 Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
-[design](design.md) before changing code. This is the live handoff;
-[queue](roadmap-queue.md) preserves immutable anchors and
-[history](roadmap-history.md) preserves detailed checks and superseded status.
-Prepared branch docs are historical snapshots; current root docs are authoritative.
+[design](design.md) before changing code. This is the sole live handoff. The
+[queue](roadmap-queue.md) preserves immutable anchors; [history](roadmap-history.md)
+contains detailed checks and superseded instructions. Root docs are authoritative;
+prepared branch docs are historical snapshots.
 
 ## Execution contract
 
-Complete the roadmap automatically, one focused PR at a time. Publication,
-PR creation, repairs and squash merges are authorized across sessions. Failing
-checks are repair tasks; CI gates merging while independent work continues.
-Keep tacit, curried, data-last pipes, immutable values, tracked effects, checked
-arithmetic, affine resources and evaluation/trap order. Use FWP_NO_OPT=1
-explicitly for raw interpreter oracles. Prepared work is not merged support.
+Finish the plan automatically, one focused production PR at a time. Publication,
+repairs and squash merges are authorized across sessions. Fix failing checks;
+CI gates merging while independent preparation continues. Preserve the language
+semantics and phase order in PLAN. Require all six exact-head jobs and roadmap_docs:
+`test`, `bench`, `macos (macos-15)`, `macos (macos-15-intel)`,
+`macos_gc (macos-15)`, `macos_gc (macos-15-intel)`. Skipped, queued, cancelled,
+superseded or earlier-head runs do not pass a gate. Regular macOS excludes only
+the golden GC stress suite; dedicated GC jobs execute it.
 
-Every entire commit message is one line, at most 80 characters, with no body,
-trailers or attribution. Use ordinary author metadata. Require all six passing
-jobs at the current exact PR head: test, bench, macos (macos-15), macos
-(macos-15-intel), macos_gc (macos-15), macos_gc (macos-15-intel). Regular macOS
-excludes only golden_programs_under_gc_stress; dedicated GC jobs execute it.
-Queued/skipped/cancelled/superseded/old runs are never passing gates. Squash:
+Every entire commit message is one line, at most80 characters, with no body,
+trailers or attribution. Use ordinary author metadata. Squash with an explicit
+subject, empty body and exact-head match. Verify the raw resulting message,
+one parent and complete-tree parity before updating main.
 
 ```sh
 gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SHA
@@ -30,7 +30,7 @@ gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SH
 
 Main is `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` (PR #118). Accepted frozen head
 `d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` passes all six jobs in CI38087199063 and
-roadmap_docs38087199031. Match-head squash at 2026-10-11T00:20:28Z has the
+roadmap_docs38087199031. Observed squash at 2026-10-11T00:20:28Z has the
 exact 74-character subject `Preserve nested constructor types for exceptional ownership cleanup (#118)`, one line,
 empty body and no trailers or attribution. Raw commit has one parent
 `571422b54647b5c95eb1bfe2d13bb3edf0176e0d` and complete tree `cb50c8e69950a2936c0f2e682b3da0edce5780a3`,
@@ -44,186 +44,50 @@ aliases/scalar bits and raw interpreter/native agreement remain checked.
 Phase2 remains incomplete; phases3–6 are pending.
 
 Next production delivery is queue41 variant conversion FROM actual prepared40
-5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f onto this actual PR118 squash.
-Preserve both original commits and every original source/probe byte. Run fresh
-variant-conversion, constructor-type and worker-boxing regressions, all RC units,
-lint and formatting under the unchanged guard. Preserve original-box exit3 and
-remaining-caller exit7, alias/scalar controls, GC/reuse modes and raw interpreter
-agreement. Copy all11 docs, audit, retain the old remote revision and publish
-with an exact lease before opening the sole next production PR. Every final
-head needs all seven passing gates. Independent evidence stays outside production.
+5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f onto this actual PR118 squash. Final
+rebase0.10CPU/1.05elapsed preserves both original commits and every source/probe/
+production-workflow byte at native78de90c921e33508119ebf09f5ab4197cdfa5f1e.
+Three original native regressions17.81/35.79s, all18 RC units3.46/7.10s,
+lint2.48/5.02s and format0.50/0.83s pass under the unchanged guard. Exact
+original-box exit3 and remaining-caller exit7, alias/scalar controls, GC/reuse
+modes and raw interpreter agreement remain intact. Copy all11 current docs,
+audit, retain the old remote revision and publish with an exact lease, then
+open the sole next production PR. After acceptance, deliver queue42 record
+update FROM actual prepared41 cca935846750 onto queue41's actual squash.
+Every final head needs all seven passing gates.
 
-Independent constructor binary capture is published at
-`38a013a224acfcf105c6aa77f941b0043c831e26` on unchanged source40
-5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. CI38082971623 passes both ARM/Intel jobs at the exact evidence head;
-capture/inspection/workflow files and the11-doc handoff snapshot differ. A
-remote-only metadata commit adds full-history checkout and the shared docs audit
-to both runner jobs after a local disk-limit refusal. Original e83b2a0b09cd
-remains reachable; its superseded queued run38082494104 is cancelled. It preserves the original
-later-field error test, record/variant negative exit4, alias/scalar controls,
-GC/reuse checks and raw interpreter/native O1/O2 agreement. New tooling regex
-and C newline validation passes0.00CPU/0.14elapsed after an escaping correction;
-publication0.08/2.51s passes. Both platforms execute the original test once with zero failed/ignored tests,
-inspect four actual O1/O2 positive/control binaries and pass the uploaded snapshot
-audit (44 link sets,106 immutable pairs/tags,76 live heads/bases). Compiled sizes
-agree: V8/align8, object header8/payload offset8, cleanup24 and each of the nine
-recorded typed Inner-owner contexts8/align8. These definitions do not sum to a
-frame size. Original exit4 controls for both record/variant paths remain intact.
-C, flags, hardware/compiler metadata, symbols and disassembly are retained in
-GitHub artifacts and /private/tmp/fwp-constructor-layout-38a013a-artifacts.
-Passing-proof verification/download passes0.22CPU/7.26elapsed, with original
-source/probe/production-workflow parity and four Mach-O binaries per platform.
-The isolated evidence checkout is fast-forwarded to38a013a224ac (0.00/0.13s). No final
-constructor production support is claimed; actual-squash/full gates remain. The
-refused snapshot audit passes on CI without bypassing the guard. After disk
-recovery to80.47GiB available, a fresh audit of the subsequently updated live
-docs passes0.49CPU/3.65elapsed (44/106/76). Limits remain unchanged.
+## Evidence and preservation requirements
 
-Independent boxed conversion binary evidence passes both jobs in CI38087378359
-at `0063d4f5f5c71ab7057b6693d8c59576271ca171` on unchanged prepared41
-cca935846750b6190b6a8823eb4f55d689c75c0e. Each original conversion-overflow test
-executes once with zero ignored tests; exact original-box/remaining-caller
-negative exits3/7, alias/scalar controls, GC/reuse modes and raw interpreter/native
-O1/O2 agreement remain unchanged. Both uploaded-snapshot docs audits pass44/106/75.
-Only three evidence files and all11 docs differ from source41; production code,
-probes and workflows are byte-exact. Both platforms inspect six actual Mach-O
-positive/control binaries. Compiled sizes agree: V8/align8, variant32/align8,
-payload8, cleanup24, wide entry24/count8. The two active conversion owner contexts
-are each8/align8; other recorded holder contexts range8–48 bytes and are not
-summed into a frame. Original-box or remaining-caller scope omission removes
-exactly one active scope, with popped entry-tick scopes excluded. Hardware,
-flags, C, binaries, symbols and disassembly are retained in GitHub and
-/private/tmp/fwp-conversion-layout-0063d4f-artifacts; passing proof is
-/private/tmp/fwp-conversion-layout-passing-proof.json. Tooling/audit0.52CPU/3.80s,
-publication0.21/3.68s and collection0.25/7.42s pass under unchanged limits.
-No production ABI/speed/cache claim; final actual-squash checks and all seven
-gates still remain for queue41. Completed publication/collection must not rerun.
+Queue41 binary evidence0063d4f5f5c71ab7057b6693d8c59576271ca171 passes both
+ARM/Intel jobs in CI38087378359 on original sourcecca935846750. Each unchanged
+test executes once, zero ignored; exact omission exits3/7 and O1/O2 GC/reuse,
+alias/scalar and raw interpreter controls remain mandatory. Six real Mach-O
+binaries per platform show V8/align8, variant32/align8, payload8, cleanup24 and
+two active8-byte owner contexts. C, layouts, flags, symbols and disassembly are
+retained in GitHub and /private/tmp/fwp-conversion-layout-0063d4f-artifacts.
+Proof: /private/tmp/fwp-conversion-layout-passing-proof.json. This accepts the
+prepared source evidence, not a future production head. All completed rebase,
+publication and collection journals must not rerun.
 
-Independent loop binary evidence passes both jobs in CI38076425571 at
-`d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8` on unchanged source38
-4289528c436b. Only capture/inspection/workflow files differ. Both architectures
-execute the original test without skips and capture four actual O1/O2 positive/control binaries.
-Tooling validation passes1.66CPU/3.46elapsed; publication0.13/3.18s.
-Compiled local sizes: V8/align8, state32, owner8/16, cleanup24 bytes.
-Passing-proof/artifact download passes0.19CPU/6.72elapsed. Instrumented
-positive loop frames are496 bytes ARM and456 Intel (saved registers included;
-Intel return address excluded); these are not production stack/speed guarantees.
-This evidence does not accept the final production head.
+Full prepared source112 integration0f8c53199b2c / CI38048222203 passes all seven
+gates, including actual mandatory WASI disposal/count controls with no skip.
+It is not sequential acceptance or collector-free support. Other binary evidence
+and diagnostic details are in ownership/history. Preserve inherited worker,
+HTTP2/x86 root and static-handler fixture repairs, exact omission/allocation
+controls, raw interpreter comparisons and every original multi-commit repair.
+Rows77–78 require actual WASI on Linux in both free modes; native checks do not
+replace them. OpenCL57–58 fake APIs are not hardware coverage.
 
-Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
-delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
-Keep one production PR open; prepare/fix later tasks while CI runs.
+## Remaining ownership deliveries
 
-## Active repair and independent work
-
-Effects diagnostic7bfc46903ce8ed35c3cd7049c633423a8b100113 passes all three
-platforms in CI38048799853: Linux and ARM/Intel macOS. Strict original program
-stdout/stderr/exit and normal/fresh compilation trials pass; separate sanitizer
-logs preserve the known ARM no-return stack-instrumentation limitation. Actual
-injected heap-use-after-free is rejected independently on each platform even
-when program output/exit still match. Compiler/runtime/production tests unchanged.
-This does not establish complete ASan stack coverage or fix the old signal.
-
-Preparations41–112 are refreshed and published on their actual predecessors.
-Original source/probes, multi-commit repairs and immutable anchors are preserved;
-focused controls, lint, format and all audits pass. Exact heads, bases and metrics
-are in the table; detailed checks and retained revisions are in history. Completed
-publication journals must not rerun. Final squash rebases/full gates still remain.
-
-Actual ARM64 binary/layout evidence for44,65,79,80,83,111 and112 records the current8-byte
-slot baseline and tested aggregate/File layouts. The six-I64 worker value is48 bytes/aligned8 and returns through
-caller storage with192/208-byte frames; no speed or constant-stack claim.
-ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
-executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
-fake APIs, not hardware evidence. Closing channels preserves queued values;
-automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
-one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
-Exact binary/layout details and limits are in ownership/history.
-
-Preparation 112 is published at b45e93a71d400ae3872142c70b29aa8128793e07 on actual
-111 5a01572cb2c6. Both original feature/format commits and all source/probes survive.
-Four original address/packed/identity/connection tests (11.32 CPU / 25.93 elapsed s),
-actual ARM64 binary/layout inspection (0.22 / 0.99 s), lint (2.64 / 5.34 s), format
-(0.44 / 0.85 s), three audits and retained publication (1.79 / 18.61 s) pass.
-Actual new/legacy headers are 272/520 bytes, aligned 8, with short request 278;
-long loopback/pool reuse and truncation exit 1 remain checked. Final sequential
-gates still remain. All completed publication/rebase journals must not rerun.
-Independent ARM/Intel binary evidence is published at
-`5a56aa1ebbc2b609ebd51c675d44e454ddedba8d` on source112 b45e93a71d40,
-branch ownership-evidence-grpc-layout. CI38075612557 passes both ARM/Intel jobs at the exact evidence head.
-Both original tests execute once per platform with zero failed/ignored tests. Original packed-options/address tests,
-compiler and runtime bytes are unchanged. Only a delegating capture wrapper,
-compiled-layout/disassembly inspector and evidence-only workflow were added.
-Compiled layouts agree on both architectures: TLS64/align8, connection272
-versus legacy520/align8; requests101/8311 and278 are unchanged.
-Real Mach-O C/binaries/symbols/disassembly and hardware/flags are retained;
-fault/observer frames are not production stack or performance guarantees.
-Local tooling validation passes1.83CPU/4.05elapsed; publication0.13/3.34s
-and passing-proof/artifact download0.35/9.06s. This evidence does not
-accept rewritten production heads or create another production PR. A bounded
-actual local allocator check passes0.60CPU/1.70elapsed: TLS101/8311 requested
-bytes occupy112/8704 malloc-usable bytes; short connection278 occupies320 GC
-slot bytes, versus640 for the old520-byte header-size allocation in the same
-allocator. This is ARM local capacity evidence, excluding metadata, reservation
-and cache/speed claims; full details and limits are in history.
-
-The finite phase2 review records prepared source112 policies after PR115 acceptance. The corrected effective audit resolves40 explicit foreign aliases:373 declarations
-map to363 distinct runtime symbols, with category counts134/19/12/208 unchanged
-(the208 review declarations represent198 symbols).
-Missing metadata alone is not a sharing gap.
-Numeric parsing borrows input but returns shared Option payloads; remote force
-memoizes results, and scoped TLS C owners do not count fwp callback graphs.
-These are source reviews, not new runtime checks or reclamation acceptance.
-Preserve conservative boundaries, cycle policy, original resource semantics and
-phase order. Recheck the finite exit inventory against merged source after the
-ownership queue is delivered. PR118 is accepted; current delivery is queue41 on its actual squash.
-Queue39 retain overflow is accepted in PR117; native5c663ef544f0 and original source d98205af88df remain reachable. 
-Independent ARM/Intel machine-code evidence passes both jobs in CI38077436743 at
-b0260c9d3aa72401dae338860e34c93600ec8dd1 on unchanged source39. Only
-capture/inspection/workflow files differ. The inspector tracks active cleanup
-scopes, excluding popped entry-tick scopes. Earlier6b1713dd5310 is retained
-remotely; superseded diagnostic CI38077259408 was cancelled, not accepted.
-The unchanged original test now passes locally with all six real positive/control
-binaries captured (10.63CPU/21.45elapsed). Corrected active-scope inspection and
-compiled layout driver pass0.35/0.93s: V8/align8, variant32/payload8, pair16,
-partial owner16, cleanup24, wide entry24/count offset8. Exact negative exits3/7
-and raw interpreter/native agreement remain intact. Artifact download and passing-proof
-verification pass0.18CPU/7.08elapsed; each platform executes the original test
-once with no skips and captures six actual O1/O2 positive/control binaries.
-Both runner layouts match the local sizes above; hardware, compiler, flags, C,
-symbols and disassembly are retained. Final actual-squash focused checks and all seven production gates pass for PR117.
-This adds no compiler/runtime change and does not accept a production head.
-
-
-Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
-all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
-Compiler/runtime/tests/scripts/production workflows match that source byte-for-byte;
-only the evidence workflow and three docs differ. Linux job114201941833 executes
-the mandatory actual WASI count/File-child disposal and disabled-free controls,
-with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1; all pass without a skip. Both regular
-macOS architectures and both GC stress jobs pass the repaired worker/HTTP2 probes.
-Saved exact-head gate proof and Linux log are recorded in history. This validates
-the prepared source, not merged support, phase2 completion or collector-free
-execution. Every sequential PR still requires its own final rebase and full gates.
-Original failed38016929326/3a97905ca980 remains retained and archived.
-
-Inherited worker and HTTP/2 repairs remain unchanged in refreshed preparations.
-Complete compatible counted record-worker calls transfer locally; partial/dynamic
-calls still box. The strict HTTP/2 body-root fixture passed GCC/Clang Linux and
-ARM/Intel macOS, including omitted-fence exit 1. Original negative controls,
-immutable anchors and multi-commit repairs must survive every final rebase.
-Detailed candidates, failed runs and completed propagations are in history;
-completed journals must not rerun.
-
-## Next sequential preparations
-
-Current bases differ from immutable OLD parents; never replace OLD anchors.
-All listed source oracles explicitly use FWP_NO_OPT=1. Published preparations
-still need their final squash rebases and six exact-head full gates.
+Use actual bases below, never immutable OLD parents. Preserve all11 root docs
+when resolving conflicts. Remove a live row only after verified acceptance or
+a verified duplicate, retaining its queue anchor and history. All listed
+preparations need final squash rebases and all seven exact-head production gates.
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 41 ownership-variant-conversion | cca935846750 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 41 ownership-variant-conversion | 78de90c921e3 | e07b03d9d404 | Final actual-squash source preserves both original commits; three original variant-conversion/constructor-type/worker-boxing regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s, lint2.48/5.02s and format0.50/0.83s pass; original source/probes unchanged including exact original-box/caller omission exits3/7, aliases/scalar bits and raw interpreter/native agreement; ARM/Intel actual binary evidence passes; exact-head full gates required |
 | 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
@@ -296,147 +160,51 @@ still need their final squash rebases and six exact-head full gates.
 | 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | All four original packed/cache/identity/capture tests12.58CPU/26.76elapsed, actual ARM64 binary/layout inspection0.20/0.82s, lint2.59/5.25s and format0.44/0.83s pass; both original feature/format commits and source/probes unchanged including one allocation101/8311 bytes, alignment8/header64, copy/last-owner/failure controls and cache releases10-to-5; final actual-squash/full gates required |
 | 112 ownership-grpc-connection-addresses | b45e93a71d40 | 5a01572cb2c6 | All four original address/packed/identity/connection tests11.32CPU/25.93elapsed, actual ARM64 binary/layout inspection0.22/0.99s, lint2.64/5.34s and format0.44/0.85s pass; both original feature/format commits and source/probes unchanged including truncation exit1, long loopback/pool reuse, copied addresses and actual272/520-byte headers aligned8 with short request278; final actual-squash/full gates required |
 
-Prepared focused evidence, detailed commands and earlier source-parity proofs
-remain in history. The Main and next delivery section supplies the sole live
-next action. Every production PR requires six exact-head full gates and the
-documentation audit.
+## Finish phase2, then continue the plan
 
-Use actual bases above for final rebases, never OLD anchors or rewritten
-predecessor heads. Preserve all 11 root docs for conflict resolution and
-inherited CLI/GC harness fixes. The table records actual bases; historical
-evidence bases never override them.
-Rows77–78 require real WASI on Linux in both free modes; native bump checks
-supply no WASI acceptance. Row 20 boxed128-bit payloads remain shared. Network
-context wrappers retain tracing compatibility; no complete ARC claim. Channel
-close preserves queued values; explicit drain breaks its counted cycle, while
-automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
-one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
-Exact binary/layout details and limits are in ownership/history.
+After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
+and [primitive contracts](primitive-ownership.md) against merged source. The
+prepared112 audit resolves373 declarations into363 runtime symbols after40
+aliases:134 explicit contracts,19 ordinary IR combinators,12 flat scalar
+signatures and208 review declarations representing198 symbols. Missing metadata
+alone is not a sharing bug. Preserve conservative fallbacks until concrete
+typed ownership and teardown are proved.
 
-## Earlier argument-preparation repair
+Review borrowed metadata roots, reconstruction/partial failure, retained
+callbacks/contexts and resource disposal. Channel close preserves queued values;
+explicit drain breaks its counted cycle, while automatic unreachable-cycle
+reclamation remains unproved. Scalar AD tape handles do not prove external
+buffer lifetimes. Numeric lifetime findings and future regressions are in
+[numerics](numerics.md). Complete phase2 before representation, numerics/AD,
+performance and tracing-free work. Phases3–6 still require implementation and
+measured acceptance; the prepared ownership queue is not the whole plan.
 
-Row 28 now includes row 34's capture-preparation correction: supplied arguments
-stay owned until capture duplication succeeds, and partial duplicated captures
-have registered cleanup. The unchanged negative control catches its omission.
-The live preparation table gives current heads and checks;
-previous revisions and propagation results are in history.
-Row 28 passed full acceptance in PR #107. Skip the duplicate implementation PR at
-row 34 while preserving its immutable anchor and regression coverage. Current
-row 34 differs from row 33 only in docs. No general exceptional-ownership claim.
+## Local checks and durable recovery
 
-## Remaining exit reviews
-
-The complete prepared ownership run and strict diagnostic controls above preserve
-current evidence. Older scoped runs and fixture repairs are in
-[history](roadmap-history.md#archived-handoff-details-after-pr-114). They do not
-accept rewritten production heads. Keep evidence workflows outside production
-ancestry, preserve original omission/allocation assertions, and retain both
-row 85 whole-value/stack-binder repair commits during sequential delivery.
-
-The numerics page now keeps incomplete tensor timings in history instead of
-duplicating them or inferring kernel speed; its source review is referenced to
-current prepared112 with verified unchanged numeric source bytes.
-Later numeric-phase review findings are in numerics.md: native backward mixed-tape
-cleanup, grad failure/cancellation before backward and 32767-generation wrap
-need concrete regressions. These are source-review findings; no new numeric
-implementation or full-lifetime guarantee is claimed. Keep phase order unchanged.
-
-Canonical C decode scratch already frees on normal success/error paths;
-reconstructed decoded aggregates remain shared. Audit typed reconstruction,
-partial construction, retained runtime contexts and automatic unreachable-cycle
-reclamation against the finite phase 2 exit criteria in ownership.md. Channel
-close preserves queued values; explicit drain alone proves its counted cycle
-can be broken. Preserve raw interpreter comparisons and original pipe semantics.
-
-## Accepted guard and fixture controls
-
-The guard sampling repair is merged in PR #104, with all exact-head platform gates.
-It suspends workloads during target-size sampling and preserves every resource
-limit. Three deterministic integration checks cover suspension/resumption,
-sampler errors and the original target-size limit. The stronger handoff audit
-merged in PR #105 verifies recorded live heads and actual source-base ancestry.
-Commands and current limits are below; old diagnostics are archived in history.
-
-Preserve HTTP2 fixture acceptance8f6846a/38046812141 on Linux GCC/Clang and
-macOS ARM/Intel Clang. The x86 fixture isolates construction, reserves the actual
-frame pointer, selects its already-completed copy path and clears stale saved
-registers/stack at the copy boundary. It never clobbers RBP/SP. ARM keeps its
-original fixture. Actual collection, exact omitted-owner exit1, copied payload
-and finalizer checks remain mandatory. The tested source89 fixture excludes its
-optional diagnostic export; rejected revisions and original GCC-only evidence
-are historical, not current instructions.
-
-Preserve client controls using static handler/TypeInfo fixture objects. Exact
-descriptor identity, code14 and transport-failure text remain checked. Accepted
-evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 passesCI37989574765 with ARM
-focused checks. Runtime behavior and original assertions are unchanged. Both
-fixture corrections propagate through 90–112; subsequent argument/loop repairs
-require refreshed evidence and final exact-head full gates.
-
-## Local limits and durable docs
-
-Full builds/tests, benchmarks and large regeneration run on GitHub. Focused
-local work is serial and low priority: sampled aggregate RSS below 1 GiB,
-target below 2 GiB, free disk at least 64 GiB, deadline 180 seconds. Stop at
-limits and move work to CI; never raise or bypass them. Use:
+Full builds/tests, benchmarks and large regeneration run on GitHub. Local work
+is serial, low priority and guarded: sampled aggregate RSS below1GiB, target
+below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits and move
+work to CI; never raise or bypass limits. The fun-refactor guard applies only to
+that other repository.
 
 ```sh
 env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
-```
-
-The fun-refactor guard applies to the other repository. The shared target was
-last checked in /private/tmp/fwp-constructor-types-worktree (queue40):
-actual-squash native snapshota51b9cf7ca69 passes four regressions20.27CPU/
-40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s.
-Bounded package clean in previous queue39 removed89.0MiB (0.05CPU/0.36elapsed).
-An optional allocator-artifact metadata enrichment was not executed because the
-guard reported less than64GiB free. No limits were changed and no check was
-bypassed. After subsequent disk recovery, fresh guarded evidence collection and
-live-docs auditing pass as recorded above. Latest read-only sample is84240648KiB
-available (80.34GiB) and target91356KiB; future guard sampling still governs. Do not retry the refused
-optional enrichment; its hardware/compiler metadata is already retained in the
-original binary evidence. Required focused checks still use the guard; move any
-refused workload to CI.
-Every guard samples current limits. Before switching Rust
-checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
-then rebuild the requested target. Never infer source identity from a shared
-target directory. Full gates run on GitHub. Temporary helpers may disappear;
-actual bases and retained remote tags are the durable recovery record.
-
-The preparation table gives current focused results; earlier package checks,
-refusals and superseded revisions are archived in history. Every workload
-samples current limits; historical observations never authorize bypassing the
-guard. Full-size raw tail evidence stays on GitHub because it exceeds local
-RSS. No local full gate was run.
-
-The latest streamlined handoff audit passes0.53CPU/3.94elapsed:44 link sets,
-106 immutable pairs/tags and73 live heads/bases. Already accepted queue33 and
-the verified queue34 duplicate were removed from the live table and archived;
-immutable anchors are unchanged. Earlier audit counts refer to their snapshots.
-
-The stronger shared audit is merged in PR #105: live heads must match the queue,
-and their recorded actual bases must be ancestors of those heads. It also
-checks all tracked Markdown link sets, immutable tags and whole commit messages.
-Isolated stale-head and stale-base controls fail as expected; corrected controls
-pass. Run the shared checker through the root guard:
-
-```sh
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Fetch full history, immutable tags and retained PR heads on a fresh clone.
-The roadmap_docs workflow checks the actual PR head. Audit again after changes
-to links, refs or commit subjects. Merged preparation rows are archived and removed from
-the live preparation table; their queue anchors and accepted heads stay fixed.
+Last Rust checkout is /private/tmp/fwp-variant-conversion-worktree, native
+78de90c921e33508119ebf09f5ab4197cdfa5f1e on actual PR118 squash. All three native regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s,
+lint2.48/5.02s and format0.50/0.83s pass. Before switching Rust checkouts, use the absolute root guard
+with cargo clean -p fwp in that last checkout, then rebuild requested targets.
+Do not infer source identity from shared outputs. Refusals and prior metrics
+remain in history; each new guard invocation samples current resources.
 
-Preserve all 11 authoritative docs before fast-forward/rebase conflict resolution:
+Protect all11 docs with a fresh hashed snapshot before each main fast-forward:
 CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
 docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
-docs/reference.md, docs/concurrency.md and docs/numerics.md. The numerics page
-keeps phase 2 exit gates ahead of representation work and links historical
-incomplete timings to the archive. Preserve any other modified tracked files too.
-Latest 11-doc snapshot is /private/tmp/fwp-main-docs-pre118 with sha256.json;
-all were restored byte-for-byte after updating main. Refresh before the next
-main update. Keep live status concise; archive chronology and superseded handoffs in
-history. Windows, new deployment interfaces and a new backend remain deferred.
-
+docs/reference.md, docs/concurrency.md and docs/numerics.md. Preserve other tracked
+user changes too. Latest snapshot: /private/tmp/fwp-main-docs-pre118, restored
+byte-for-byte. Actual bases, immutable preparation tags and retained revision
+tags are the recovery record if temporary helpers disappear. The shared audit
+checks all tracked links, whole commit messages, immutable ancestry and live
+head/base consistency. Audit again after links, refs or subjects change.
