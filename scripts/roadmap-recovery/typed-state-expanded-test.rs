@@ -14,10 +14,10 @@ fn checked(command: &mut Command) -> Output {
     assert!(output.status.success(), "{command:?}: {}: {}", output.status, String::from_utf8_lossy(&output.stderr));
     output
 }
-fn retain(label: &str, code: &str, executable: &Path, output: &Output) {
+fn retain(label: &str, code: &str, executable: &Path, output: &Output, extension: &str) {
     if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
         let directory = PathBuf::from(directory); std::fs::create_dir_all(&directory).unwrap();
-        std::fs::write(directory.join(format!("{label}.c")), code).unwrap();
+        std::fs::write(directory.join(format!("{label}.{extension}")), code).unwrap();
         std::fs::copy(executable, directory.join(format!("{label}.bin"))).unwrap();
         std::fs::write(directory.join(format!("{label}.stdout")), &output.stdout).unwrap();
         std::fs::write(directory.join(format!("{label}.stderr")), &output.stderr).unwrap();
@@ -83,7 +83,7 @@ main = [
             for reuse in ["0", "1"] {
                 let output = Command::new(&executable).env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1").env("FWP_REUSE_VERIFY", reuse).output().unwrap();
-                retain(&format!("{label}{opt}-reuse{reuse}"), &code, &executable, &output);
+                retain(&format!("{label}{opt}-reuse{reuse}"), &code, &executable, &output, "c");
                 assert_eq!(output.status.code(), Some(*expected), "{label}{opt} reuse={reuse}: {}", String::from_utf8_lossy(&output.stderr));
             }
         }
@@ -106,6 +106,8 @@ cancelled-child : () -> String ! {Async}
 cancelled-child = run-state ("cancelled" | concat " State") (tap (const 1s | task.sleep) | get) | .0
 change-closure : () -> String ! {State[(String -> String)]}
 change-closure = const ("captured" | concat ":") | concat | put | get | apply "!"
+change-runtime-closure : () -> String ! {State[(String -> String)]}
+change-runtime-closure = get | apply ":" | concat | put | get | apply "!"
 main = [
     () | run-state ("initial" | concat " State") read-change | echo,
     () | run-state "outer" (both (run-state "inner" get) get) | echo,
@@ -118,23 +120,38 @@ main = [
     () | run-state (["a", "b"] | array.from-list) (both get (const (array.map (concat "!")) | modify) | .0) | echo,
     () | run-state ("left", ["right"]) get | echo,
     () | run-state (concat "initial:") change-closure | .0 | echo,
-    () | run-state (concat "initial:") change-closure | .1 | apply "!" | echo,
+    apply "!" (() | run-state (concat "initial:") change-closure | .1) | echo,
+    () | run-state (concat "runtime:") change-runtime-closure | .0 | echo,
+    apply "!" (() | run-state (concat "runtime:") change-runtime-closure | .1) | echo,
 ] | ignore
 "#;
     std::fs::write(&input, source).unwrap();
+    if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
+        let directory = PathBuf::from(directory);
+        std::fs::create_dir_all(&directory).unwrap();
+        std::fs::write(directory.join("semantics.fwp"), source).unwrap();
+    }
     let reference = checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT", "1")
         .args(["run", "--interp"]).arg(&input));
     for opt in ["-O1", "-O2"] {
         for stack in ["0", "1"] {
             let executable = scratch.0.join(format!("semantics{opt}-stack{stack}"));
+            if let Some(directory) = std::env::var_os("FWP_TYPED_STATE_ARTIFACTS") {
+                let cfile = PathBuf::from(directory).join(format!("semantics{opt}-stack{stack}.c"));
+                checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
+                    .env("FWP_STACK", stack).env("FWP_REUSE", "1").env("FWP_FREE", "1")
+                    .arg("build").arg(&input).args([opt, "--emit-c", "-o"]).arg(cfile));
+            }
             checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT")
                 .env("FWP_STACK", stack).env("FWP_REUSE", "1").env("FWP_FREE", "1")
                 .arg("build").arg(&input).args([opt, "-o"]).arg(&executable));
             for reuse in ["0", "1"] {
-                let output = checked(Command::new(&executable).env("FWP_GC_STRESS", "1")
-                    .env("FWP_GC_VERIFY", "1").env("FWP_REUSE_VERIFY", reuse));
+                let output = Command::new(&executable).env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1").env("FWP_REUSE_VERIFY", reuse).output().unwrap();
+                retain(&format!("semantics{opt}-stack{stack}-reuse{reuse}"), source, &executable, &output, "fwp");
+                assert!(output.status.success(), "{opt} stack={stack} reuse={reuse}: {}: {}",
+                    output.status, String::from_utf8_lossy(&output.stderr));
                 assert_eq!(output.stdout, reference.stdout, "{opt} stack={stack} reuse={reuse}");
-                retain(&format!("semantics{opt}-stack{stack}-reuse{reuse}"), source, &executable, &output);
             }
         }
     }

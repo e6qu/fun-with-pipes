@@ -1,0 +1,124 @@
+repair	Integrate and validate the combined repair	﻿2026-10-11T20:22:54.1561502Z ##[group]Run python3 scripts/integrate-pr124-repair.py
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1561978Z ^[[36;1mpython3 scripts/integrate-pr124-repair.py^[[0m
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1619383Z shell: /usr/bin/bash -e {0}
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1619656Z env:
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1622851Z   GH_TOKEN: ***
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1623112Z   GH_REPO: e6qu/fun-with-pipes
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1623465Z   FWP_RECOVERY_HEAD: b9527f81af81342742daf48ce386ec3c9bd9b37b
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1623854Z   CARGO_HOME: /home/runner/.cargo
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1624143Z   CARGO_INCREMENTAL: 0
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1624394Z   CARGO_TERM_COLOR: always
+repair	Integrate and validate the combined repair	2026-10-11T20:22:54.1624647Z ##[endgroup]
+repair	Integrate and validate the combined repair	2026-10-11T20:22:58.8662494Z Preparing worktree (detached HEAD 9550aab)
+repair	Integrate and validate the combined repair	2026-10-11T20:22:58.9312397Z HEAD is now at 9550aab Focus the handoff on verified ownership progress and remaining gates
+repair	Integrate and validate the combined repair	2026-10-11T20:22:59.6256388Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/pr124-combined-repair)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:08.4608918Z ^[[1m^[[92m    Finished^[[0m `dev` profile [unoptimized] target(s) in 8.94s
+repair	Integrate and validate the combined repair	2026-10-11T20:23:09.7917891Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/pr124-combined-repair)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6496011Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 6.86s
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6503729Z ^[[1m^[[92m     Running^[[0m unittests src/lib.rs (target/debug/deps/fwp-cbe53280e50fe968)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6516786Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6517134Z running 71 tests
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6523291Z test cli::tests::field_comments ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6524144Z test cli::tests::names ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6524640Z test csv::tests::quoting ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6525450Z test escape::tests::applying_a_closure_does_not_let_it_escape ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6526508Z test escape::tests::counts_around_an_argument_are_seen_through ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6527308Z test escape::tests::match_aliases_are_followed ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6528044Z test escape::tests::passing_on_follows_the_callee ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6528822Z test escape::tests::reading_fields_does_not_escape ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6529500Z test escape::tests::returning_or_storing_escapes ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6531567Z test fmt::tests::comments_and_blank_lines ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6538892Z test fmt::tests::layout ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6546050Z test fmt::tests::spelling_and_ambiguities ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:16.6547454Z test grpc::pool_identity_tests::complete_tls_options_remain_distinct_in_interpreter_pool ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.7961122Z test grpc::web::tests::body_bounds_and_error_order_agree_with_native ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8008745Z test grpc::web::tests::frames_round_trip ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8010008Z test grpc::web::tests::sha1_and_accept ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8030326Z test grpc::web::tests::websocket_messages_deflate_and_inflate ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8034814Z test grpc::web::tests::zlib_round_trip ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8045945Z test gzip::tests::chunks_make_one_stream ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.8046943Z test gzip::tests::crc ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9120471Z test gzip::tests::others_read_ours ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9123005Z test gzip::tests::reads_other_encoders ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9134439Z test gzip::tests::rejects_bad_data ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9253838Z test gzip::tests::round_trip ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9254915Z test jsontype::tests::base64_round_trip ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9255683Z test jsontype::tests::durations ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9256954Z test jsontype::tests::exact_integers ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9258032Z test lexer::tests::hyphen_vs_negative ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9259186Z test lexer::tests::idents_and_selectors ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9260480Z test lexer::tests::layout_flags ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9267910Z test lexer::tests::numbers ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9268636Z test lexer::tests::strings_comments_macros ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9269397Z test numerics::tape_validation_tests::invalid_nodes_preserve_push_state_and_consume_backward_tapes ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9270714Z test numerics::tape_validation_tests::scoped_callbacks_release_only_their_live_tapes ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9271739Z test ownership::tests::declared_collection_and_text_boundaries_have_consistent_contracts ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9272742Z test rc::tests::a_borrowed_argument_lives_until_the_operation ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9274203Z test rc::tests::a_match_dups_the_fields_an_arm_keeps_and_drops_the_rest ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9275737Z test rc::tests::a_parameter_returned_is_moved ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9277559Z test rc::tests::a_parameter_used_twice_is_duplicated_once ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9278938Z test rc::tests::an_unused_parameter_is_dropped ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9281599Z test rc::tests::borrowed_pattern_values_are_not_unwind_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9283108Z test rc::tests::call_liveness_distinguishes_borrows_transfers_and_duplicate_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9284317Z test rc::tests::constructors_transfer_fields_and_keep_other_caller_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9285797Z test rc::tests::consumed_value_conversion_keeps_only_remaining_caller_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9288728Z test rc::tests::dynamic_arguments_and_updates_keep_nested_constructor_types ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9291276Z test rc::tests::earlier_caf_owner_remains_owned_during_a_final_scalar_call ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9293983Z test rc::tests::earlier_consumed_arguments_remain_owned_during_later_calls ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9296021Z test rc::tests::earlier_duplicate_remains_owned_during_the_final_call ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9298051Z test rc::tests::earlier_owner_remains_owned_during_a_final_scalar_call ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9299279Z test rc::tests::matched_value_conversion_keeps_remaining_caller_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9301615Z test rc::tests::nested_constructor_temporaries_inherit_the_function_result_shape ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9303208Z test rc::tests::original_resource_parameters_enter_the_frame_before_dead_drops ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9305252Z test rc::tests::parts_keep_their_order ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9306582Z test rc::tests::retain_liveness_excludes_the_unfinished_extra_reference ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9307793Z test rc::tests::scalars_are_not_counted ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9309027Z test rc::tests::the_checker_rejects_mistakes ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9311770Z test rc::tests::uninitialized_region_bindings_are_not_entry_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9313140Z test rc::tests::update_liveness_keeps_the_borrowed_base_and_remaining_owners ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9316500Z test resource::tests::fusion_preserves_resource_stage_frames_even_with_pure_bodies ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9317804Z test resource::tests::nominal_recursive_resource_graphs_and_nonowning_arrows ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9319143Z test resource::tests::owner_metadata_rejects_missing_duplicate_and_scalar_slots ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9322104Z test swagger::tests::converts_a_document ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9323387Z test value::tests::floats_round_trip_shortest ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9324681Z test value::tests::trits ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9325851Z test yaml::tests::anchors ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9328248Z test yaml::tests::block_collections ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9330150Z test yaml::tests::block_scalars ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9331259Z test yaml::tests::errors ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9332380Z test yaml::tests::flow_over_lines ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9335137Z test yaml::tests::reads_what_openapi_writes ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9336572Z test yaml::tests::scalars ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9336884Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9337437Z test result: ok. 71 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.28s
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9338119Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:19.9530333Z ^[[1m^[[92m   Compiling^[[0m fwp v0.1.0 (/home/runner/work/fun-with-pipes/pr124-combined-repair)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:28.3774825Z ^[[1m^[[92m    Finished^[[0m `test` profile [unoptimized] target(s) in 8.43s
+repair	Integrate and validate the combined repair	2026-10-11T20:23:28.3784268Z ^[[1m^[[92m     Running^[[0m tests/call_effects.rs (target/debug/deps/call_effects-f1319525a38f8e7e)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:28.3798797Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:28.3798981Z running 5 tests
+repair	Integrate and validate the combined repair	2026-10-11T20:23:44.7917366Z test call_related_effect_and_size_snapshots_stay_stable ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:47.4886624Z test effectful_callbacks_still_require_their_effects ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:52.1236787Z test inferred_pure_callbacks_agree_with_native_execution ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:53.0244211Z test pure_function_values_in_io_pipes_and_applications ... ok
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5164966Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5168541Z thread 'state_function_values_preserve_callback_effects_in_pipes_and_applications' (3380) panicked at tests/call_effects.rs:158:32:
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5169968Z accepted a callback without its IO effect
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5170694Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5181013Z test state_function_values_preserve_callback_effects_in_pipes_and_applications ... FAILED
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5181716Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5181875Z failures:
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5182128Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5182273Z failures:
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5182849Z     state_function_values_preserve_callback_effects_in_pipes_and_applications
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5183434Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5183959Z test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.14s
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5184630Z 
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.5194032Z ^[[1m^[[91merror^[[0m: test failed, to rerun pass `--test call_effects`
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6098982Z Traceback (most recent call last):
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6100484Z   File "/home/runner/work/fun-with-pipes/fun-with-pipes/scripts/integrate-pr124-repair.py", line 113, in <module>
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6102949Z     subprocess.run(['cargo','test','--test','call_effects','--test','golden_check','--test','fmt','--test','stdlib_doc','--test','typed_state_ownership','--','--nocapture'],cwd=WT,env=env,check=True)
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6104887Z   File "/usr/lib/python3.12/subprocess.py", line 571, in run
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6107728Z     raise CalledProcessError(retcode, process.args,
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6110142Z subprocess.CalledProcessError: Command '['cargo', 'test', '--test', 'call_effects', '--test', 'golden_check', '--test', 'fmt', '--test', 'stdlib_doc', '--test', 'typed_state_ownership', '--', '--nocapture']' returned non-zero exit status 101.
+repair	Integrate and validate the combined repair	2026-10-11T20:23:57.6249661Z ##[error]Process completed with exit code 1.

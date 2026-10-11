@@ -54,7 +54,8 @@ last-owner reclamation and unwind protections. Queues33 and35–73 are accepted;
 queue34 is a verified duplicate delivered in #107. Next bundle74–112 resource and
 network ownership on the actual PR123 squash, then the finite phase2
 exit review. [The handoff](docs/development-state.md) records exact heads,
-checks and the next action. Prepared work requires final rebases and full CI.
+checks and the next action. PR124 publishes the verified combined repair; its full current-head CI is
+running. Preserve that run and carry streamlined docs into the next bundle.
 
 Phase 2 remaining audits: scoped autodiff buffers and counted gradient arrays,
 borrowed resource metadata roots, reconstructed/untyped

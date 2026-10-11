@@ -1,0 +1,11 @@
+{
+  "head": "771c2b83b9a5db0142df759006b960704606a86a",
+  "base": "ac7b518c5b1d80dd55c385728cdae5bbdde1f44e",
+  "branch": "ownership-evidence-typed-state-allocations-complete",
+  "unchangedNativeTree": "d030dfc9cc37296a8c16a88bfd43507663f76be2",
+  "sourceHashes": {
+    "scripts/measure-typed-state-allocations.py": "50d737e9c3aefb22ad9480850b3a8a5446c93a13a05ebb23dfe25770e3910528",
+    ".github/workflows/typed-state-allocation.yml": "303a9812f5d8669cf7a32676317cddf94fa2e691d7ccad2de1ab815855bd2125"
+  },
+  "stage": "Source-identical allocation driver published; measurements pending"
+}

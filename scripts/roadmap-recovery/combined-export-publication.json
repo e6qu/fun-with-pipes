@@ -1,0 +1,46 @@
+{
+  "identity": {
+    "run": 38173831552,
+    "driver": "85b305ccad63527101a329e3f4bab2c3318458da",
+    "branch": "ownership-resource-network-bundle",
+    "base": "9550aab94bf5cb2adb4f6a462381537d37ce3644",
+    "exportedHead": "31c86694f4f7f6eec870ffa73add7dabbdd0eba0",
+    "tree": "e630e0ff07988dee60a7e2a61bb3689d089ed92b",
+    "exportHash": "cf86156c76f6db6efe7f0734aeb417a5e3b6f5b1abbc324c6ed92ef34bbff148",
+    "expectedOld": "9550aab94bf5cb2adb4f6a462381537d37ce3644"
+  },
+  "blobs": [
+    "864e205483f4c2f03f2d1927e40f4429b39e9b88",
+    "9077cf9888bf34c4e21a77f053af42a1ce3fd227",
+    "8eecf614c4983307bb2131c522c437ef3c48107b",
+    "94ad908359aa71951c6238456e709a675e6a0ddd",
+    "bb068268f2797b1c19a0906285d1744fce669ff6",
+    "8e21510220e64ade46b97acfa7e28105f7627e56",
+    "f530857f3c82e6073d4a957fca1ed525f2ccbc56",
+    "cb0db229caee3349b5c100ab723e9d3a7bc40e30",
+    "d00c75898b93c4ee007d6dc9a1a2f8663ca4cf76",
+    "ecd09b0ec10f2000a57a3c3dc6a0cadf0fc90012",
+    "75c9343ea87a5e102d90610702cec0b4431c7cf8",
+    "c994bd3071c19748007f9d0cb11aa1e0df8844f3",
+    "452d6b13df86b7183e6b7be528bfaa072053d5f7",
+    "5cc74963e7144a195a2739c8f4bf561945e8651a",
+    "5a80cc8b9f3e6864adbfb887016d7f3362854a38",
+    "b6ec40474a7eac33caa5deffa8cfca06e802c59a",
+    "deff6b493e7709a9f7b289e749e7df47ff93ace3"
+  ],
+  "commits": [
+    {
+      "exported": "274638ce5243ef4564ae2848653a4464a9507195",
+      "published": "ca23ebefa946ee81e8283af298fbdb23306dbae9",
+      "tree": "26f649873b44f57f2135e4b68150309e813df69d"
+    },
+    {
+      "exported": "31c86694f4f7f6eec870ffa73add7dabbdd0eba0",
+      "published": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+      "tree": "e630e0ff07988dee60a7e2a61bb3689d089ed92b"
+    }
+  ],
+  "head": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+  "tree": "e630e0ff07988dee60a7e2a61bb3689d089ed92b",
+  "stage": "Verified exported history published; final exact-head production gates required"
+}
