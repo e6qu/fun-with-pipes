@@ -323,7 +323,7 @@ impl<'p> Interp<'p> {
         let (params, result) = self.sig(id);
         match sym {
             "ad.scope" => {
-                crate::numerics::with_tape_scope(|| self.apply(a[0].clone(), vec![Value::unit()]))
+                crate::numerics::with_tape_scope(|| self.apply(a[0].clone(), vec![a[1].clone()]))
             }
             // arithmetic (data-last: `sub a b` is b - a)
             "prim.add" => arith(Op::Add, &a[1], &a[0], &result),

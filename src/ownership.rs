@@ -186,7 +186,13 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             Some(Callback::Borrowed(1)),
             &[1],
         ),
-        "task.scope" | "ad.scope" => (
+        "ad.scope" => (
+            &[B, B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
+        "task.scope" => (
             &[B],
             ResultOwnership::OwnedCallback,
             Some(Callback::Borrowed(0)),
@@ -550,7 +556,8 @@ mod tests {
         assert_eq!(ad_scope.argument(0), Argument::Borrow);
         assert_eq!(ad_scope.callback, Some(Callback::Borrowed(0)));
         assert_eq!(ad_scope.result, ResultOwnership::OwnedCallback);
-        assert_eq!(ad_scope.aliases, &[0]);
+        assert_eq!(ad_scope.argument(1), Argument::Borrow);
+        assert_eq!(ad_scope.aliases, &[0, 1]);
         let within = primitive("task.within").unwrap();
         assert_eq!(within.argument(1), Argument::Borrow);
         assert_eq!(within.callback, Some(Callback::Retained(1)));

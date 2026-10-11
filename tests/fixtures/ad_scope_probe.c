@@ -37,7 +37,7 @@ static V scope_outer_entry(V *args) {
         fwp_tape *t=&fwp_tapes[(((int64_t)scope_base>>32)&0xffff)-1];
         if (t->scope || t->live) scope_error=62;
     }
-    if (scope_mode==4 && fwp_p_ad_scope(PTR(&inner_scope_callback))!=11) scope_error=66;
+    if (scope_mode==4 && fwp_p_ad_scope(PTR(&inner_scope_callback), FWP_UNIT)!=11) scope_error=66;
     if (scope_mode==5) {
         scope_inner=fwp_p_ad_tape(3);scope_observe(scope_inner,4);
     }
@@ -60,11 +60,11 @@ int main(void) {
         if (scope_mode==2) {
             scope_saved_task=fwp_cur;memset(&scope_cancelled_task,0,sizeof(scope_cancelled_task));
             scope_cancelled_task.cancelled=1;fwp_cur=&scope_cancelled_task;
-            if (!setjmp(scope_cancelled_task.base)) { fwp_p_ad_scope(PTR(&outer_scope_callback));return 63; }
+            if (!setjmp(scope_cancelled_task.base)) { fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT);return 63; }
             fwp_cur=scope_saved_task;
             if (!scope_cancelled_task.unwinding) return 64;
         } else if (!setjmp(scope_recovered)) {
-            if (fwp_p_ad_scope(PTR(&outer_scope_callback))!=7 || scope_mode==1) return 67;
+            if (fwp_p_ad_scope(PTR(&outer_scope_callback), FWP_UNIT)!=7 || scope_mode==1) return 67;
         } else if (scope_mode!=1 || strcmp(fwp_trap_msg,"gradient callback control")) return 68;
         if (scope_error) return scope_error;
         if (fwp_cleanups) return 69;

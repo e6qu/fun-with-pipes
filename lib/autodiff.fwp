@@ -161,7 +161,7 @@ test "gradient" =
 Rev[T] = { value: T, vertex: I64 }
 
 # internal
-foreign "fwp" ad.scope : (() -> a) -> a
+foreign "fwp" ad.scope : (a -> b) -> a -> b
 # internal
 foreign "fwp" ad.tape : I64 -> I64
 # internal
@@ -288,7 +288,7 @@ rev._finish =
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
 value-and-grad =
-    curry (const | flip compose (uncurry rev._value-and-grad) | ad.scope)
+    curry (ad.scope (uncurry rev._value-and-grad))
 
 # internal
 rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
@@ -315,7 +315,7 @@ rev._vjp-finish = curry (make { 0 = .1 | .0, 1 = .1 | .1 | map .vertex, 2 = .0 }
 # Vector-Jacobian product: `xs | vjp f v` is vᵀ·J where J is the Jacobian
 # of f at xs (one backward pass, whatever the number of outputs).
 vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]
-vjp = curry3 (const | flip compose (uncurry3 rev._vjp) | ad.scope)
+vjp = curry3 (ad.scope (uncurry3 rev._vjp))
 
 # internal
 rev._vjp : (List[Rev[t]] -> List[Rev[t]]) -> List[t] -> List[t] -> List[t] where Float[t], Dup[t]

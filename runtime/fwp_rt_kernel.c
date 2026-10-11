@@ -74,15 +74,15 @@ static void fwp_tape_link_scope(fwp_tape *t, int32_t slot) {
     }
 }
 
-static V fwp_p_ad_scope(V callback) {
+static V fwp_p_ad_scope(V callback, V input) {
     fwp_tape_scope scope = {-1};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_tape_scope_release, &scope);
-    V unit = FWP_UNIT;
-    V result = fwp_apply_borrowed(callback, 1, &unit);
+    V result = fwp_apply_borrowed(callback, 1, &input);
     fwp_cleanup_pop(&cleanup);
     fwp_tape_scope_release(&scope);
     FWP_KEEP_ALIVE(callback);
+    FWP_KEEP_ALIVE(input);
     return result;
 }
 
