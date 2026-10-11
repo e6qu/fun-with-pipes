@@ -161,9 +161,9 @@ test "gradient" =
 Rev[T] = { value: T, vertex: I64 }
 
 # internal
-foreign "fwp" ad.scope : (a -> b) -> a -> b
+foreign "fwp" ad.scope : (a -> b) -> a -> b where Dup[a]
 # internal
-foreign "fwp" ad.scope2 : (a -> b -> c) -> a -> b -> c
+foreign "fwp" ad.scope2 : (a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]
 # internal
 foreign "fwp" ad.tape : I64 -> I64
 # internal
