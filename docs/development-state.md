@@ -17,7 +17,7 @@ semantics and phase order in PLAN. Require all six exact-head jobs and roadmap_d
 superseded or earlier-head runs do not pass a gate. Regular macOS excludes only
 the golden GC stress suite; dedicated GC jobs execute it.
 
-Every entire commit message is one line, at most80 characters, with no body,
+Every entire commit message is one line, at most 80 characters, with no body,
 trailers or attribution. Use ordinary author metadata. Squash with an explicit
 subject, empty body and exact-head match. Verify the raw resulting message,
 one parent and complete-tree parity before updating main.
@@ -44,18 +44,81 @@ the borrowed original. Exact unique omission exits3/8/11/7 and general omission
 exits9/8/11/7, aliases/scalar controls and raw interpreter agreement remain
 checked. Phase2 is incomplete; phases3–6 are pending.
 
-Next production delivery is queue43 record conversion FROM actual prepared42
-cd2c8fa4251aea65354d64f09f2fab0291ac4dc8 onto this actual PR120 squash.
-Preserve all three existing commits, including both conversion/checkpoint
-implementation and regression commits, and every original source/probe byte.
-Run fresh relevant native regressions, all RC units, lint and formatting under
-the unchanged guard. Preserve original-box/remaining-caller/partial-retain
-omission exits3/7/4, alias/scalar and GC/reuse controls, raw interpreter agreement.
-Copy all11 docs, audit, retain the old remote revision and publish with an exact
-lease before opening the sole next PR. Every final head needs all seven passing
-gates. Independent evidence stays outside production ancestry.
+[PR121](https://github.com/e6qu/fun-with-pipes/pull/121) is the sole open
+production PR, delivering queue43 boxed-record conversion on actual PR120 squash.
+Revised native head `8fad01ccfdeae145ea0b7de571f606c6d4ae44ed` retains all original conversion/checkpoint
+commits and adds a strict golden diagnostic repair: successful native runs
+remove their executable; mismatches retain the executable and O1 generated C.
+Unix termination reports the actual signal and core-dump flag. Regular macOS
+and Linux CI upload failed golden artifacts. Output/stderr/exit comparisons,
+all six required production jobs and test selections remain unchanged.
+Focused guarded clippy on golden_run passes0.12CPU/0.62elapsed; format passes
+0.44CPU/0.86elapsed. Full verification belongs on the revised exact published head.
+
+Previous head `095776b5633bc7d70b6a690cd60993a0fcee383b` passed Linux, bench, regular ARM,
+both GC stress jobs and docs38105436472. CI38105436468 regular Intel failed
+golden_run: native devices.fwp had empty stdout/stderr and rendered exit -1.
+The actual signal and cause were lost by the former harness; no runtime repair
+is established and no merge occurred. Failure log:
+/private/tmp/fwp-pr121-intel-failure.log; metadata:
+/private/tmp/fwp-pr121-ci-failure.json. Independent strict diagnostic
+CI38109048833 captures binaries and actual signals on unchanged previous source.
+Do not use old passing jobs to gate the revised head. Require all seven new
+exact-head gates before match-head squash with
+`Protect boxed records and remaining callers during worker conversion`
+and empty body. Preserve exact ownership controls3/7/4, aliases/scalars,
+SIZE_MAX, GC stress/verification, reuse and raw interpreter agreement.
+After acceptance, deliver queue44 variant aliases FROM actual prepared43
+6b809877a1ac493015e1902204cc5ea72b68a875 onto PR121's actual squash. Preserve
+both original commits and every source/probe/workflow byte, then run fresh
+focused checks. Independent binary evidence does not replace production gates.
+
+Diagnostic head `19eb6a8182e858ff79c2244e8113c7c494f823a4`, branch
+`ownership-evidence-devices-crash`, runs CI38109048833 on unchanged PR121
+compiler/runtime/library/test bytes. It preserves generated C, Mach-O binaries,
+headers, disassembly, code-sign metadata, actual Unix signals and available
+macOS crash reports. It compares both devices/effects raw interpreters and
+400 native executions per platform (ten fresh builds and ten runs for each
+O1/O2 program). It is diagnostic evidence, not a replacement production gate.
+Guarded preparation/publication `python3 scripts/local-guard.py python3
+/private/tmp/fwp-prepare-devices-diagnostics.py` passes0.55CPU/5.87elapsed.
 
 ## Evidence and preservation requirements
+
+Queue47 cache ownership evidence1a873414e446dae3d005cfa3f3c620791c2d75b5
+passes ARM/Intel in CI38106592858 on unchanged source7e1c164a0e81. All three
+original tests execute once per platform, zero ignored; forty O1/O2 fixtures are
+retained. Root/previous-cache/return-owner/manual-teardown/source-teardown/caller
+omission exits3/12/11/9/3/4 remain exact, including retry/reentrancy, aliases,
+scalar bits, SIZE_MAX, GC/reuse and raw interpreter agreement. Intact layout
+hash310a9301bd04 matches both platforms: V8/align8, object header/payload8,
+cleanup24; separate cache value8/align8 and state4/align4 exclude linker padding.
+Proof: /private/tmp/fwp-caf-layout-passing-proof.json. Artifacts:
+/private/tmp/fwp-caf-layout-1a87341-artifacts. Final queue47 still requires
+sequential actual-squash rebase and full production gates.
+
+Queue46 field-projection evidence1494a3300d234ea852078d21ce319ac81bdd2cc5
+passes ARM/Intel in CI38106022932 on unchanged source6255a8f54f54. Both
+original tests execute once per platform, zero ignored; twelve actual O1/O2
+fixtures are retained. Typed-discard calls differ2/1 in intact/erased IR,
+with exact erased-type rejection exit3. Outer record construction remains
+eliminated; original alias/child, GC/reuse and raw interpreter controls pass.
+Source-positive layout hashc2bf508e3b1f matches both platforms: V8/align8,
+object header/payload8 and cleanup24. No speed or dynamic allocation claim.
+Proof: /private/tmp/fwp-field-context-layout-passing-proof.json. Artifacts:
+/private/tmp/fwp-field-context-layout-1494a33-artifacts. Final queue46 still
+requires sequential actual-squash rebase and full production gates.
+
+Queue45 nominal-match binary evidence8d138284bdd29114623dc89cea8f4fc090ba7e3c
+passes ARM/Intel in CI38105588952 on unchanged source2b7dc81c7d1f. Both original
+tests execute once per platform, zero ignored; twelve actual O1/O2 fixtures are
+retained. Typed-discard calls differ2/1 in the intact/erased IR fixtures;
+original exact erased-type rejection exit3 and GC/reuse/interpreter controls
+remain checked. Source-positive layout hashb2eb3e78fc03 matches both platforms:
+V8/align8, object header/payload8 and cleanup24. No production speed or allocation
+count claim follows. Proof: /private/tmp/fwp-match-context-layout-passing-proof.json.
+Artifacts: /private/tmp/fwp-match-context-layout-8d13828-artifacts. Final queue45
+still requires sequential actual-squash rebase and full production gates.
 
 Queue44 returned-alias binary evidence ded20c6239f657d4c47a1fa6c856fce9a9174c14
 passes both ARM/Intel jobs in CI38104532520 on unchanged sourceb094ffbe7e46.
@@ -82,20 +145,6 @@ claim is inferred. Proof: /private/tmp/fwp-record-conversion-layout-passing-proo
 Artifacts: /private/tmp/fwp-record-conversion-layout-342d7d4-artifacts.
 Final queue43 still requires actual-squash rebase and production gates.
 
-Queue42 corrected binary evidenceb9b3f40f19d1e88e4a87fe2dbbec3cfba90ff244
-passes both ARM/Intel jobs in CI38100176797 on unchanged sourcecd2c8fa4251a.
-Each original record-update/general-copy test executes once per platform, zero
-ignored; forty real O1/O2 Mach-O binaries are retained. Compiled layouts select
-intact positive C hashes7fd5093fc0b7/54d8750cac83. Both platforms show V8/align8,
-object header/payload8 and cleanup24; unique owner contexts8/8/8/16/24 and
-general contexts8/8/8/16/16, align8. Static registered scopes are not simultaneous
-live scopes; context sizes are not summed into frames. Exact omission controls,
-alias/scalar, SIZE_MAX, GC/reuse and raw interpreter agreement remain unchanged.
-Proof: /private/tmp/fwp-record-update-layout-corrected-passing-proof.json.
-Artifacts: /private/tmp/fwp-record-update-layout-b9b3f40-artifacts. The original
-control-fixture selector and its qualification remain in history. This evidence
-does not replace PR120's full exact-head production gates.
-
 Portable ownership inventory669c19e7cb6779536377af7f78651f97dc1e51d9 passes
 CI38099556010 on unchanged prepared112 sourceb45e93a71d40. It checks actual
 runtime-contract metadata and IR lowering, explicit aliases, all compiler/library
@@ -107,17 +156,6 @@ source-review inventory, not runtime acceptance or tracing-free support.
 Proof: /private/tmp/fwp-primitive-inventory-passing-proof.json. Artifact and full
 log are retained locally and on GitHub; recheck against actual merged source at
 the phase2 exit checkpoint.
-
-Queue41 binary evidence0063d4f5f5c71ab7057b6693d8c59576271ca171 passes both
-ARM/Intel jobs in CI38087378359 on original sourcecca935846750. Each unchanged
-test executes once, zero ignored; exact omission exits3/7 and O1/O2 GC/reuse,
-alias/scalar and raw interpreter controls remain mandatory. Six real Mach-O
-binaries per platform show V8/align8, variant32/align8, payload8, cleanup24 and
-two active8-byte owner contexts. C, layouts, flags, symbols and disassembly are
-retained in GitHub and /private/tmp/fwp-conversion-layout-0063d4f-artifacts.
-Proof: /private/tmp/fwp-conversion-layout-passing-proof.json. The independent run accepts prepared-source evidence; PR119 separately passes
-all seven production gates for the final head. All completed rebase,
-publication and collection journals must not rerun.
 
 Full prepared source112 integration0f8c53199b2c / CI38048222203 passes all seven
 gates, including actual mandatory WASI disposal/count controls with no skip.
@@ -137,7 +175,7 @@ preparations need final squash rebases and all seven exact-head production gates
 
 | Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
 |---|---|---|---|
-| 43 ownership-record-conversion | 66cc2dab2ed2 | ddef2e7a7dc2 | Final actual-squash source preserves all three original commits including matched-result caller checkpoint repair; seven original native regressions32.85CPU/65.97elapsed (zero ignored), all20 ownership units3.64/7.56s, lint2.46/5.11s and format0.35/0.63s pass; every original source/probe/workflow byte preserved, including original-box/caller/partial-retain omission exits3/7/4, aliases/scalar bits, SIZE_MAX, GC/reuse and raw interpreter agreement; independent ARM/Intel original-test binary/layout evidence passes; full exact-head gates required |
+| 43 ownership-record-conversion | 8fad01ccfdea | ddef2e7a7dc2 | Original ownership checks pass; golden signal/artifact diagnostics added after Intel failure; revised exact-head full CI required |
 | 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
 | 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
 | 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
@@ -240,10 +278,11 @@ env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/f
 python3 scripts/local-guard.py python3 scripts/check-roadmap.py
 ```
 
-Last Rust checkout is /private/tmp/fwp-record-update-worktree, native
-8fe0adb0e54305e328b87933b84d52bbcc6b2649 on actual PR119 squash.
-Both original record-update/general-copy regressions pass (15.68CPU/31.41elapsed,
-zero ignored). All19 RC units3.33CPU/6.92elapsed, lint2.33/4.71s and format0.44/0.82s pass. Before switching Rust checkouts, use the absolute root guard
+Last Rust checkout is /private/tmp/fwp-record-conversion-worktree, native
+66cc2dab2ed25eb0c29e5a750e5478b80813809a on actual PR120 squash.
+Seven focused native regressions pass32.85CPU/65.97elapsed, zero ignored.
+All20 RC units3.64CPU/7.56elapsed, lint2.46/5.11s and format0.35/0.63s pass.
+Before switching Rust checkouts, use the absolute root guard
 with cargo clean -p fwp in that last checkout, then rebuild requested targets.
 Do not infer source identity from shared outputs. Refusals and prior metrics
 remain in history; each new guard invocation samples current resources.
