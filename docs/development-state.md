@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-list-callback-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-list-allocation-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint28c6a492d19ff76d320b0f6eec9fe487df5457b7 has
-exact-head audit38146494568 queued. Earlier checkpoints and cancelled audits
+Current checkpoint6d51eca63c7d907c47c05f92d2d9b90229dfc821 has
+exact-head audit38147387372 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -270,7 +270,7 @@ The draft adds a cheap standard-library documentation preflight before Cargo
 gates in all six jobs, using the actual generator test; original full gates
 and mandatory WASI remain unchanged. Runner validation is pending.
 
-Latest disk observation is about9.5GiB free, below64GiB. No local build, test,
+Latest disk observation is about8.6GiB free, below64GiB. No local build, test,
 format or rebase is authorized while the reserve is unavailable; only source
 editing and lightweight remote administration ran here.
 
@@ -345,7 +345,7 @@ counts and phase2 exit remain unverified until merged-source runner evidence.
 ## List applicative and flat-map ownership candidate
 
 Branch ownership-evidence-list-applicative at
-6840f7e0dedcd989fcf185416bea80d7e0f65c8b runs38147216423, queued on
+05556bfb3d7f7e2299cdfcad84d220d5455f75f2 runs38148442793, queued on
 Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
 The three-source recipe adds borrowed list.ap inputs, counted output spines
 and owned callback results. Two borrowed scratch arrays and the completed result
@@ -382,6 +382,23 @@ queued, then replaced by the combined three-platform matrix; no original
 applicative control was removed. The finite inventory draft permits exactly
 these two collection contracts, with actual derived counts still pending.
 
+The same focused jobs now include runner-only equivalent allocation evidence.
+/private/tmp/fwp-measure-list-callback-allocations.py compares the exact current
+candidate with PR123 head9e7d0b24 at O1/O2. An explicitly exported scalar entry
+keeps the optimized runtime-dependent pipeline reachable: show/repeat chunks,
+flat-map, applicative alias/fresh results, length and sum. All2048 calls must
+produce the independently computed numeric result. Raw interpreters must agree.
+It records warmup and steady-state managed allocator calls/requested bytes,
+counted increments/decrements, explicit sharing calls/count clears, counted-storage
+freed bytes, collection-sampled live/peak bytes, process peak RSS, value layout,
+compiler arguments/hardware and source/binary hashes. The finalizer verifies all
+three downloaded reports. Acceptance requires no increase in managed calls/bytes,
+fewer shared count clears and more counted-storage reclamation on this workload.
+No timing, total external-allocation or tracing-free claim; measurements pending.
+Build targets stay outside uploaded artifacts, on GitHub runners only.
+The preceding6840f7e0/run38147216423 was cancelled while all three jobs were
+queued before adding this measurement stage. Original controls remain intact.
+
 Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
 fwp-list-ap-probe.c, fwp-list-ap-evidence.yml and fwp-list-ap-publication.json.
 After all three focused jobs pass, the finalizer applies the exact tested recipe
@@ -393,7 +410,7 @@ actual list runtime; its derived counts still have not been verified.
 ## Local resource incident and next preparation
 
 Local compiled checks and rebases remain stopped below the64GiB reserve;
-latest observation is about9.5GiB free. Target data is approximately101MiB.
+latest observation is about8.6GiB free. Target data is approximately101MiB.
 Source editing and lightweight remote administration continue. Earlier refusals,
 recoveries and measurements are archived; no limit was raised or bypassed.
 

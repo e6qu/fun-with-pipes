@@ -99,6 +99,37 @@ for platform in ['ubuntu-latest', 'macos-15', 'macos-15-intel']:
         assert after['externalRequestedBytes'] == before['externalRequestedBytes']
     allocation_reports[platform] = report
 ap_gate = gate(AP_RUN, AP_HEAD, {'applicative (ubuntu-latest)', 'applicative (macos-15)', 'applicative (macos-15-intel)'})
+# Require equivalent managed allocation and reclamation evidence as well as
+# native lifetime controls; a source-level owner alone is not allocation proof.
+ap_artifacts = OUT / 'list-callbacks'
+subprocess.run(['gh', 'run', 'download', str(AP_RUN), '--pattern',
+                'list-applicative-*', '--dir', str(ap_artifacts)], check=True)
+ap_reports = {}
+for platform in ['ubuntu-latest', 'macos-15', 'macos-15-intel']:
+    directory = ap_artifacts / ('list-applicative-' + platform)
+    assert (directory / 'head.txt').read_text().strip() == AP_HEAD
+    measured_dir = directory / 'allocations'
+    report = json.loads((measured_dir / 'comparison.json').read_text())
+    assert report['baseline'] == TESTED and report['candidate'] == AP_HEAD
+    assert report['settings'] == dict(FWP_GC_STRESS='0', FWP_GC_VERIFY='1', FWP_REUSE_VERIFY='0')
+    assert set(report['results']) == {'baseline-O1', 'baseline-O2', 'candidate-O1', 'candidate-O2'}
+    for name, expected_hash in report['sourceHashes'].items():
+        assert Path(name).name == name
+        assert hashlib.sha256((measured_dir / name).read_bytes()).hexdigest() == expected_hash
+    for opt in ['-O1', '-O2']:
+        before, after = report['results']['baseline' + opt], report['results']['candidate' + opt]
+        for label, measured, head in [('baseline', before, TESTED), ('candidate', after, AP_HEAD)]:
+            assert measured['head'] == head and measured['opt'] == opt
+            assert measured['iterations'] == 2048 and measured['collections'] >= 2
+            assert measured['managedCalls'] > 0 and measured['peakRssKiB'] > 0
+            assert measured['valueSize'] == measured['valueAlignment'] == 8
+            assert label + '.measured.c' in report['sourceHashes']
+            assert label + opt in report['sourceHashes']
+        assert after['managedCalls'] <= before['managedCalls']
+        assert after['managedRequestedBytes'] <= before['managedRequestedBytes']
+        assert after['sharedCountClears'] < before['sharedCountClears']
+        assert after['managedFreedBytes'] > before['managedFreedBytes']
+    ap_reports[platform] = report
 post = json.loads(command('gh', 'api', REPO + '/pulls/123'))
 assert post['merged'] and post['head']['sha'] == TESTED
 assert post['base']['sha'] == OLD
@@ -329,6 +360,7 @@ record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               includedRows=prep['includedRows'], gcEvidence=gc_gate, adEvidence=ad_gate,
               scopeEvidence=scope_gate, allocationEvidence=allocation_gate,
               allocationReports=allocation_reports, applicativeEvidence=ap_gate,
+              applicativeAllocationReports=ap_reports,
               applicativePatchHash=hashlib.sha256(ap_patch).hexdigest(), scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
               adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,

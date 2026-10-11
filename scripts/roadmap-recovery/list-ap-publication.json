@@ -1,6 +1,6 @@
 {
-  "head": "6840f7e0dedcd989fcf185416bea80d7e0f65c8b",
-  "previous": "b53a5f8895ec87605de3f5642354485cf9df4f1e",
+  "head": "05556bfb3d7f7e2299cdfcad84d220d5455f75f2",
+  "previous": "6840f7e0dedcd989fcf185416bea80d7e0f65c8b",
   "base": "9e7d0b24610524cf54125c44b47ee07185c0b7c3",
   "branch": "ownership-evidence-list-applicative",
   "sourceHashes": {
@@ -10,7 +10,9 @@
     "scripts/list-ap-ownership-patch.json": "99cb13794efb259be63c523e1fe76ce0934817a1ad443e429ddc85cc5c42de88",
     "tests/list_applicative_ownership.rs": "2d753aa8b2cda16af4672d60aa20b285e4902d9458ddf5121898a58d11d88528",
     "tests/fixtures/list_ap_probe.c": "fac4b0bfda14987aea0a6da363f49c3763859140e9f583fbefff79a6c9b9923b",
-    ".github/workflows/list-applicative-evidence.yml": "ca2618eddc9443b7612e870b685be1cdf21ddd2c0fac28ad4d39b5a4c349c54e"
+    ".github/workflows/list-applicative-evidence.yml": "12136c5bff341ec61ec13b86844e9d4803d5a7ad899a3d5d5c6144539397e1ae",
+    "scripts/measure-list-callback-allocations.py": "c33af3dd3c50a59986ef529753e1094f120c4bcce5c0a103730302fb3fca5987"
   },
-  "stage": "Candidate ownership repair published; compilation and all focused evidence pending"
+  "stage": "Combined ownership and allocation evidence published; all focused checks pending",
+  "reason": "Equivalent allocation, counting, sharing, reclamation and memory evidence added to the same three-platform focused jobs"
 }
