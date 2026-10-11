@@ -46,6 +46,8 @@ int main(void) {
         outputs=fwp_arr_new(2);seeds=fwp_arr_new(2);
         ARR(outputs)->d[0]=selected_base;ARR(outputs)->d[1]=selected_base+1;
         ARR(seeds)->d[0]=fwp_from_f64(2);ARR(seeds)->d[1]=fwp_from_f64(3);
+        fwp_gc_collect();
+        if (!fwp_gc.armed || !fwp_gc.ncollect) return 52;
         if (probe_mode==1) ARR(outputs)->d[0]=other_base;
         if (probe_mode==2) ARR(outputs)->d[0]=selected_base+2;
         tracked[0]=t->pa;tracked[1]=t->pb;tracked[2]=t->da;tracked[3]=t->db;tracked[4]=0;

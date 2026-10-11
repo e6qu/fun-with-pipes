@@ -46,13 +46,16 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
     let unprotected = runtime.replace(push, "(void)cleanup;")
         .replace("fwp_cleanup_pop(&cleanup);\n        fwp_tape_buffers_release(&buffers);", "fwp_tape_buffers_release(&buffers);")
         .replace("fwp_cleanup_pop(&cleanup);\n    fwp_tape_buffers_release(&buffers);", "fwp_tape_buffers_release(&buffers);");
+    let unchecked = runtime.replace(
+        "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n", "");
+    assert_ne!(unchecked, runtime);
     let missing_release = runtime.replace("probe_free(b->pa);", "(void)b->pa;");
     let wrapping = runtime
         .replace("while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;", "while (slot < fwp_ntapes && fwp_tapes[slot].live) slot++;")
         .replace("t->gen++;", "t->gen = t->gen % 32767 + 1;");
     assert_ne!(wrapping, runtime);
     for opt in ["-O1", "-O2"] {
-        for (label, code, expected) in [("registered", &runtime, 0), ("unregistered", &unprotected, 41), ("missing-release", &missing_release, 41), ("wrapping", &wrapping, 46)] {
+        for (label, code, expected) in [("registered", &runtime, 0), ("unregistered", &unprotected, 41), ("missing-release", &missing_release, 41), ("wrapping", &wrapping, 46), ("unchecked", &unchecked, 31)] {
             let executable = scratch.0.join(format!("{label}{}", &opt[1..]));
             let source = format!("{code}\n{PROBE}");
             std::fs::write(executable.with_extension("c"), &source).unwrap();
@@ -60,10 +63,6 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
             for reuse in ["0", "1"] {
                 let output = Command::new(&executable).env("FWP_GC_STRESS", "1")
                     .env("FWP_GC_VERIFY", "1").env("FWP_REUSE_VERIFY", reuse).output().unwrap();
-                assert_eq!(output.status.code(), Some(expected), "{label} {opt} reuse={reuse}: {}", String::from_utf8_lossy(&output.stderr));
-                if expected==0 {
-                    assert_eq!(output.stdout, b"autodiff releases five detached buffers on return, trap and task cancellation\n");
-                }
                 if let Some(path) = std::env::var_os("FWP_AD_ARTIFACTS") {
                     let directory = PathBuf::from(path);
                     std::fs::create_dir_all(&directory).unwrap();
@@ -74,6 +73,11 @@ fn detached_tape_buffers_release_on_return_trap_and_cancellation() {
                     std::fs::copy(&executable, prefix.with_extension("bin")).unwrap();
                     std::fs::write(prefix.with_extension("c"), &source).unwrap();
                 }
+                assert_eq!(output.status.code(), Some(expected), "{label} {opt} reuse={reuse}: {}", String::from_utf8_lossy(&output.stderr));
+                if expected==0 {
+                    assert_eq!(output.stdout, b"autodiff releases five detached buffers on return, trap and task cancellation\n");
+                }
+
             }
         }
     }
