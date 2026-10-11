@@ -133,11 +133,12 @@ verified deterministic reclamation. Keep them in the finite phase 2 exit review;
 changing a boundary requires interpreter/native, alias, partial-failure and
 retention/teardown evidence before removing sharing.
 
-The independent list.ap candidate supplies borrowed inputs, owned synchronous
-callback results and counted spines, with scratch/result-prefix/partial-spine
-unwind controls. It remains pending focused Linux/macOS evidence and final
-bundle gates; list.flat-map and State slot policies remain on the tracing
-compatibility path. See the live handoff for exact candidate identities.
+The combined list.ap/list.flat-map candidate supplies borrowed inputs, owned
+synchronous callback results and counted spines, with scratch/result-prefix/
+partial-spine unwind controls. Flat-map copies retain typed element aliases and
+release the original callback chunks. Both repairs remain pending focused
+Linux/macOS evidence and final bundle gates; State slot policies remain on the
+tracing compatibility path. See the live handoff for exact candidate identities.
 
 The additional list and state rows are source review at main68f959bbf28c:
 [runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`

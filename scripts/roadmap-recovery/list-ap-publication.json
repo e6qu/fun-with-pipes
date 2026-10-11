@@ -1,17 +1,16 @@
 {
-  "head": "b53a5f8895ec87605de3f5642354485cf9df4f1e",
+  "head": "6840f7e0dedcd989fcf185416bea80d7e0f65c8b",
+  "previous": "b53a5f8895ec87605de3f5642354485cf9df4f1e",
   "base": "9e7d0b24610524cf54125c44b47ee07185c0b7c3",
   "branch": "ownership-evidence-list-applicative",
   "sourceHashes": {
-    "src/cgen.rs": "784f015c95220fa19fff8b85f857815ee8d15b8b17e2add93907fe242ecf86fd",
-    "src/ownership.rs": "6215653207c8907187115d2663c07e567e5d21e982ebcaadd5621a4689862218",
-    "runtime/fwp_rt_prims.c": "192c6154061215b7f487f42d864fdbd90e30850aae1873511968aa51b85e51e3",
-    "scripts/list-ap-ownership-patch.json": "1007d6b2ca3a023b19aac3c057d8257838f3726f696090ed56d4effc1fcb86c7",
-    "tests/list_applicative_ownership.rs": "79a21babd75824a94e45173dac0fe19c03a6d5235d23027261824311c022b704",
-    "tests/fixtures/list_ap_probe.c": "3ae0edf59020dcce0cb5a1fb0d273f3ad72772e1cf5fb6850e021410bcc79c22",
-    ".github/workflows/list-applicative-evidence.yml": "dbee784e9300ef64d4b9cce5098fe290c4a6d8cb7868abc638d1ff23653e38ae"
+    "src/cgen.rs": "684664c65aac34269eec20c66c10f8e90e1bb1bac932cb754c71f09dde2c61d9",
+    "src/ownership.rs": "7ef82efbbf44d271bf40c08e8d04695ae60ad6f8d92ac7ab0eb697d8a52dfe07",
+    "runtime/fwp_rt_prims.c": "71b97d4688694876ea31efbc2e3965266c79cafafcbd5f78693895e861a1b8da",
+    "scripts/list-ap-ownership-patch.json": "99cb13794efb259be63c523e1fe76ce0934817a1ad443e429ddc85cc5c42de88",
+    "tests/list_applicative_ownership.rs": "2d753aa8b2cda16af4672d60aa20b285e4902d9458ddf5121898a58d11d88528",
+    "tests/fixtures/list_ap_probe.c": "fac4b0bfda14987aea0a6da363f49c3763859140e9f583fbefff79a6c9b9923b",
+    ".github/workflows/list-applicative-evidence.yml": "ca2618eddc9443b7612e870b685be1cdf21ddd2c0fac28ad4d39b5a4c349c54e"
   },
-  "stage": "Candidate ownership repair published; compilation and all focused evidence pending",
-  "previous": "31172327d479020deedbc62e0216f14e5bac121e",
-  "reason": "Task-yield fixture forces actual unwind registration and the test asserts FWP_UNWIND=1"
+  "stage": "Candidate ownership repair published; compilation and all focused evidence pending"
 }

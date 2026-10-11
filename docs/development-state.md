@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-list-applicative-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-list-callback-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpointc4ce712ff25e0aa7bea43e6fdf4a8d74856bd007 has
-exact-head audit38145386569 queued. Earlier checkpoints and cancelled audits
+Current checkpoint28c6a492d19ff76d320b0f6eec9fe487df5457b7 has
+exact-head audit38146494568 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -80,8 +80,9 @@ macOS CI found the stale comment; fix receipt is
 /private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
 /private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
 all original probes and focused checks remain in history.
-New full CI38138731040 has passing ARM macOS GC stress; the other five
-jobs are queued or running (regular ARM is running). This is one required current-head gate, not merge acceptance. Docs38138731036 is queued. Require all six jobs and
+Current CI38138731040 has passed regular ARM macOS and ARM GC stress.
+The other four production jobs are queued. These are two required current-head
+gates, not merge acceptance. Docs38138731036 is queued. Require all six jobs and
 roadmap_docs on this exact new head before squash; earlier-head passes do not
 transfer. The remaining superseded CI38128387224 jobs were cancelled to save
 runner time. Current acceptance helpers use the new head and run identities.
@@ -269,7 +270,7 @@ The draft adds a cheap standard-library documentation preflight before Cargo
 gates in all six jobs, using the actual generator test; original full gates
 and mandatory WASI remain unchanged. Runner validation is pending.
 
-Latest disk observation is about13.6GiB free, below64GiB. No local build, test,
+Latest disk observation is about9.5GiB free, below64GiB. No local build, test,
 format or rebase is authorized while the reserve is unavailable; only source
 editing and lightweight remote administration ran here.
 
@@ -341,10 +342,10 @@ all original tests and formats the final candidate on GitHub. Source inventory
 now intentionally includes the new scope and three AD refinements, but actual
 counts and phase2 exit remain unverified until merged-source runner evidence.
 
-## List applicative ownership candidate
+## List applicative and flat-map ownership candidate
 
 Branch ownership-evidence-list-applicative at
-b53a5f8895ec87605de3f5642354485cf9df4f1e runs38146295630, queued on
+6840f7e0dedcd989fcf185416bea80d7e0f65c8b runs38147216423, queued on
 Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
 The three-source recipe adds borrowed list.ap inputs, counted output spines
 and owned callback results. Two borrowed scratch arrays and the completed result
@@ -364,18 +365,35 @@ No compile or test has run yet; these are candidate contracts, not accepted
 reclamation or tracing-free support. The preceding31172327/run38146139289
 was cancelled while entirely queued before requiring actual unwind lowering.
 
+The combined candidate also owns list.flat-map callback chunks before copying
+any output spine, preserving callback-before-copy evaluation order. Copied
+aliases acquire typed element references; the output stays protected while the
+original chunks are destroyed. Runtime owners use stack storage and existing
+scanned scratch. Scalar copies have no element retain function. These changes
+are source preparations, with no measured allocation/performance claim yet.
+
+Additional raw/native cases cover fresh and repeated String aliases, captured
+functions, scalar and empty chunks, and callback trap order. Native GC/reuse
+probes add callback failure, task cancellation, partial-spine construction and
+immediate chunk drop controls. Omitted chunk-prefix ownership must exit99;
+omitted copied-element retain must exit100 before reading freed storage.
+The precedingb53a5f88/run38146295630 was cancelled while every job remained
+queued, then replaced by the combined three-platform matrix; no original
+applicative control was removed. The finite inventory draft permits exactly
+these two collection contracts, with actual derived counts still pending.
+
 Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
 fwp-list-ap-probe.c, fwp-list-ap-evidence.yml and fwp-list-ap-publication.json.
 After all three focused jobs pass, the finalizer applies the exact tested recipe
 to the later resource bundle, preserving its source instead of copying older
 whole files. Full final-head production gates remain mandatory. The finite exit
-inventory draft permits this one additional explicit contract and hashes the
+inventory draft permits these two additional explicit contracts and hashes the
 actual list runtime; its derived counts still have not been verified.
 
 ## Local resource incident and next preparation
 
 Local compiled checks and rebases remain stopped below the64GiB reserve;
-latest observation is about13.6GiB free. Target data is approximately101MiB.
+latest observation is about9.5GiB free. Target data is approximately101MiB.
 Source editing and lightweight remote administration continue. Earlier refusals,
 recoveries and measurements are archived; no limit was raised or bypassed.
 
@@ -419,7 +437,7 @@ finalization.json previous. Keep one production PR and require its full matrix.
 The phase2 exit inventory draft is /private/tmp/fwp-check-primitive-inventory-exit.py
 with /private/tmp/fwp-primitive-inventory-exit.rs. It compares every parsed
 declaration and actual Rust contract with the frozen669c19e baseline, allowing
-only nine raw-memory contracts, three refined AD contracts, list.ap and the
+only nine raw-memory contracts, three refined AD contracts, list.ap, list.flat-map and the
 one internal ad.scope declaration/owned callback contract; every other row stays
 identical. It checks actual borrowed AD inputs and fresh counted F64 gradient
 arrays, and hashes both runtime/interpreter tape implementations. It has not executed or established new counts. Copy it into an
