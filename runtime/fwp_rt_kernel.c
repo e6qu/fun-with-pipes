@@ -273,7 +273,7 @@ static void fwp_kernel_eval(const fwp_kernel *k, size_t start, size_t len, doubl
     size_t sp = 0, li = 0, ci = 0;
     for (size_t pc = 0; pc < k->ncode; pc++) {
         int64_t op = k->code[pc];
-        double *x = stack + (sp - 1) * FWP_KCHUNK;
+        double *x = sp ? stack + (sp - 1) * FWP_KCHUNK : stack;
         switch (op) {
         case FWP_K_LEAF:
             memcpy(stack + sp * FWP_KCHUNK, k->inputs[li++] + start, len * sizeof(double));
