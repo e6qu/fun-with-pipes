@@ -5554,7 +5554,7 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 if matches!(
                                     sym.as_str(),
-                                    "map" | "filter" | "take-while" | "zip-with" | "list.ap"
+                                    "map" | "filter" | "take-while" | "zip-with" | "list.ap" | "list.flat-map"
                                 ) {
                                     let result = func.ty.params(func.arity as usize).1;
                                     let MT::Con(name, elements) = &result else {
@@ -5563,16 +5563,27 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     if name != "std::List" || elements.len() != 1 {
                                         return Err("list selection has a non-list result".into());
                                     }
-                                    let ops = self.map_ops(&elements[0]);
+                                    let mut ops = self.map_ops(&elements[0]);
+                                    let runtime = if sym == "list.flat-map" {
+                                        let duplicate = if crate::rc::needs_rc(&self.prog.shapes, &elements[0]) {
+                                            "fwp_rc_dup"
+                                        } else {
+                                            "NULL"
+                                        };
+                                        ops = format!("{duplicate}, {ops}");
+                                        "flat_map".to_string()
+                                    } else {
+                                        sym.replace(['-', '.'], "_")
+                                    };
                                     let args = (0..func.arity)
                                         .map(|i| format!("l{i}"))
                                         .collect::<Vec<_>>()
                                         .join(", ");
                                     s = s.replace(
-                                        &format!("fwp_p_{}({args})", sym.replace(['-', '.'], "_")),
+                                        &format!("fwp_p_{}({args})", runtime),
                                         &format!(
                                             "fwp_p_{}_owned({args}, {ops})",
-                                            sym.replace(['-', '.'], "_")
+                                            runtime
                                         ),
                                     );
                                 }

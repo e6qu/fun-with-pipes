@@ -198,6 +198,12 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
             (&[B, B], ResultOwnership::FreshTree, None, &[])
         }
         "list.ap" => (&[B, B], ResultOwnership::FreshSpine, None, &[0, 1]),
+        "list.flat-map" => (
+            &[B, B],
+            ResultOwnership::FreshSpine,
+            Some(Callback::Borrowed(0)),
+            &[0, 1],
+        ),
         "map" => (
             &[B, B],
             ResultOwnership::FreshSpine,
@@ -474,6 +480,11 @@ mod tests {
         assert_eq!(ap.result, ResultOwnership::FreshSpine);
         assert!(ap.callback.is_none());
         assert_eq!(ap.aliases, &[0, 1]);
+        let flat_map = primitive("list.flat-map").unwrap();
+        assert_eq!(flat_map.arguments, &[Argument::Borrow, Argument::Borrow]);
+        assert_eq!(flat_map.result, ResultOwnership::FreshSpine);
+        assert_eq!(flat_map.callback, Some(Callback::Borrowed(0)));
+        assert_eq!(flat_map.aliases, &[0, 1]);
         for symbol in [
             "channel.make",
             "channel.send",

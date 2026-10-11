@@ -982,6 +982,47 @@ static V fwp_p_list_ap(V fs, V xs) {
     return fwp_list_from(out, k);
 }
 
+/* Call every callback before rebuilding the flattened output, preserving
+ * function/input trap order. Returned chunks and copied aliases have distinct
+ * owners until each counted output node takes its element. */
+static V fwp_p_flat_map_owned(V f, V xs, void (*element_dup)(V), void (*element_drop)(V), void (*list_drop)(V)) {
+    size_t n;
+    V *items = fwp_map_items(xs, &n);
+    fwp_map_owner chunks = {items, 0, 0, list_drop, NULL};
+    fwp_cleanup chunks_cleanup;
+    fwp_map_protect(&chunks, &chunks_cleanup);
+    for (size_t i = 0; i < n; i++) {
+        items[i] = fwp_apply_borrowed(f, 1, &items[i]);
+        chunks.count++;
+    }
+    fwp_value_owner result = {0, list_drop};
+    fwp_cleanup result_cleanup;
+    fwp_value_protect(&result, &result_cleanup);
+    for (size_t i = n; i; i--) {
+        size_t count;
+        V *aliases = fwp_map_items(items[i - 1], &count);
+        fwp_map_owner copy = {aliases, 0, result.value, element_drop, list_drop};
+        fwp_cleanup copy_cleanup;
+        fwp_map_protect(&copy, &copy_cleanup);
+        result.value = 0;
+        for (size_t j = 0; j < count; j++) {
+            if (element_dup) element_dup(aliases[j]);
+            copy.count++;
+        }
+        result.value = fwp_map_finish_protected(&copy, &copy_cleanup);
+    }
+    /* The completed output stays protected while owned chunks are destroyed.
+     * The emptied chunk owner remains safe if destruction itself unwinds. */
+    fwp_map_release(&chunks);
+    V output = fwp_value_finish(&result, &result_cleanup);
+#if FWP_UNWIND
+    fwp_cleanup_pop(&chunks_cleanup);
+#endif
+    FWP_KEEP_ALIVE(f);
+    FWP_KEEP_ALIVE(xs);
+    return output;
+}
+
 /* Own every completed Cartesian-product callback result until its list node
  * takes it. Borrowed function/input scratch remains rooted and unwinds separately. */
 static size_t fwp_list_ap_count(size_t nf, size_t nx) {

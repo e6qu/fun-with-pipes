@@ -1,4 +1,4 @@
-//! Cartesian-product callbacks retain typed ownership and release on unwind.
+//! Applicative and flat-map callbacks retain typed ownership and release on unwind.
 use std::path::PathBuf;
 use std::process::{Command, Output};
 struct Scratch(PathBuf);
@@ -39,7 +39,7 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     let start=original.find("static void fwp_map_release(").unwrap();let end=original.find("static V fwp_p_map_owned(").unwrap();
     let ownership=original[start..end].replace("fwp_mem_free(","list_ap_probe_free(").replace("fwp_data(1, 2, fields)","list_ap_probe_data(1, 2, fields)");
     let original=format!("{}{}{}",&original[..start],ownership,&original[end..]);
-    let start=original.find("static V fwp_p_list_ap_owned(").unwrap();let end=original[start..].find("/* ---------------------------------------------------------------- strings */").unwrap()+start;
+    let start=original.find("static V fwp_p_flat_map_owned(").unwrap();let end=original[start..].find("/* ---------------------------------------------------------------- strings */").unwrap()+start;
     let helper=original[start..end].replace("fwp_map_items(","list_ap_probe_items(").replace("fwp_mem_alloc(","list_ap_probe_alloc(");
     let runtime=format!("{}{}{}",&original[..start],helper,&original[end..])
         .replace("static V *fwp_map_items(","static void list_ap_probe_free(void *);\nstatic void *list_ap_probe_alloc(size_t);\nstatic V *list_ap_probe_items(V,size_t *);\nstatic V list_ap_probe_data(uint32_t,uint32_t,const V *);\nstatic V *fwp_map_items(")
@@ -48,16 +48,24 @@ fn cartesian_results_and_scratch_release_on_trap_and_cancel() {
     let unprotected=runtime.replace(&helper,&unprotected_helper);
     let uncounted=runtime.replace("V node = fwp_rc_fresh(list_ap_probe_data(1, 2, fields));","V node = list_ap_probe_data(1, 2, fields);");assert_ne!(uncounted,runtime);
     let unchecked=runtime.replace("    if (nf && nx > maximum / nf) fwp_trap(\"list.ap too large\");", "    (void)maximum;");assert_ne!(unchecked,runtime);
+    let flat_unprotected_helper=helper.replace("    fwp_map_protect(&chunks, &chunks_cleanup);", "");assert_ne!(flat_unprotected_helper,helper);
+    let flat_unprotected=runtime.replace(&helper,&flat_unprotected_helper);
+    let flat_unduplicated_helper=helper.replace("            if (element_dup) element_dup(aliases[j]);", "            (void)element_dup;");assert_ne!(flat_unduplicated_helper,helper);
+    let flat_unduplicated=runtime.replace(&helper,&flat_unduplicated_helper);
     for opt in ["-O1","-O2"] {
-        for (label,source,first,expected) in [("owned",&runtime,0,0),("unprotected",&unprotected,1,81),("uncounted",&uncounted,0,86),("unchecked",&unchecked,0,88)] {
+        for (label,source,first,flat_first,expected) in [("owned",&runtime,0,0,0),("unprotected",&unprotected,1,0,81),("uncounted",&uncounted,0,0,86),("unchecked",&unchecked,0,0,88),("flat-unprotected",&flat_unprotected,0,1,99),("flat-unduplicated",&flat_unduplicated,0,0,100)] {
             let executable=scratch.0.join(format!("{label}{}",&opt[1..]));
-            let code=format!("{source}\n#define PROBE_FIRST_MODE {first}\n{probe}");
+            let code=format!("{source}\n#define PROBE_FIRST_MODE {first}\n#define FLAT_FIRST_MODE {flat_first}\n{probe}");
+            if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+                let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("{label}{}.c",&opt[1..])),&code).unwrap();
+            }
             fwp::cgen::compile_c(&code,&executable,opt).unwrap();
             for reuse in ["0","1"] {
                 let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY",reuse).output().unwrap();
                 retain(&format!("{label}{}-reuse{reuse}",&opt[1..]),&code,&executable,&output);
                 assert_eq!(output.status.code(),Some(expected),"{label} {opt} reuse={reuse}: {}",String::from_utf8_lossy(&output.stderr));
-                if expected==0 { assert!(String::from_utf8_lossy(&output.stdout).starts_with("list.ap callback and spine ownership; real collections=")); }
+                if expected==0 { assert!(String::from_utf8_lossy(&output.stdout).starts_with("list.ap and flat-map callback and spine ownership; real collections=")); }
             }
         }
     }
@@ -68,18 +76,27 @@ fn typed_applicative_aliases_and_evaluation_order_match_raw_interpreter() {
     let positive=r#"
 empty-functions : List[String -> String]
 empty-functions = []
+empty-chunk : String -> List[String]
+empty-chunk = const []
 use-functions : List[String -> String] -> (List[String], List[String])
 use-functions = make { 0 = flip list.ap ["!", "?"], 1 = map (apply ":") }
 main = [
     ["left:", "right:"] | map concat | use-functions | echo,
     "a b" | words | both (list.ap [id, concat "fresh:"]) id | echo,
     [1, 2, 3] | list.ap [add 1, mul 2] | echo,
+    "a b" | words | both (list.flat-map (repeat 2)) id | echo,
+    "a b" | words | list.flat-map (concat "fresh:" | repeat 2) | echo,
+    ["a:", "b:"] | map concat | list.flat-map (repeat 2) | map (apply "!") | echo,
+    [1, 2, 3] | list.flat-map (repeat 2) | echo,
+    ["a", "b"] | list.flat-map empty-chunk | echo,
     ["a", "b"] | list.ap empty-functions | echo,
     [] | list.ap [concat "unused:"] | echo,
+    [] | list.flat-map (concat "unused:" | repeat 2) | echo,
 ] | ignore
 "#;
+    let flat_negative="fail : I64 -> List[I64]\nfail = if (eq 2) (const \"list.ap order control\" | panic) (add 10 | repeat 2)\nmain = [1, 2, 3] | list.flat-map fail | echo\n";
     let negative="fail : I64 -> I64\nfail = if (eq 2) (const \"list.ap order control\" | panic) (add 10)\nmain = [1, 2, 3] | list.ap [fail, mul 2] | echo\n";
-    for (label,source,invalid) in [("aliases",positive,false),("trap-order",negative,true)] {
+    for (label,source,invalid) in [("aliases",positive,false),("trap-order",negative,true),("flat-trap-order",flat_negative,true)] {
         std::fs::write(&input,source).unwrap();
         let reference=Command::new(env!("CARGO_BIN_EXE_fwp")).env("FWP_NO_OPT","1").args(["run","--interp"]).arg(&input).output().unwrap();
         assert_eq!(reference.status.success(),!invalid,"{label}: {}",String::from_utf8_lossy(&reference.stderr));
@@ -95,6 +112,10 @@ main = [
             let cfile=executable.with_extension("c");
             checked(Command::new(env!("CARGO_BIN_EXE_fwp")).env_remove("FWP_NO_OPT").arg("build").arg(&input).args(["--emit-c","-o"]).arg(&cfile));
             let code=std::fs::read_to_string(cfile).unwrap();
+            if let Some(directory)=std::env::var_os("FWP_LIST_AP_ARTIFACTS") {
+                let directory=PathBuf::from(directory);std::fs::create_dir_all(&directory).unwrap();
+                std::fs::write(directory.join(format!("{label}{}.c",&opt[1..])),&code).unwrap();
+            }
             fwp::cgen::compile_c(&code,&executable,opt).unwrap();
             for reuse in ["0","1"] {
                 let output=Command::new(&executable).env("FWP_GC_STRESS","1").env("FWP_GC_VERIFY","1").env("FWP_REUSE_VERIFY",reuse).output().unwrap();
