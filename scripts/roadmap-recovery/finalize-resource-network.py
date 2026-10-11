@@ -25,6 +25,8 @@ SCOPE_HEAD = os.environ['FWP_SCOPE_EVIDENCE_HEAD']
 SCOPE_RUN = int(os.environ['FWP_SCOPE_EVIDENCE_RUN'])
 ALLOCATION_HEAD = os.environ['FWP_ALLOCATION_EVIDENCE_HEAD']
 ALLOCATION_RUN = int(os.environ['FWP_ALLOCATION_EVIDENCE_RUN'])
+AP_HEAD = os.environ['FWP_LIST_AP_EVIDENCE_HEAD']
+AP_RUN = int(os.environ['FWP_LIST_AP_EVIDENCE_RUN'])
 PREP_RUN = 38140923130
 PREP_DRIVER = '82c7bc7509c04b9e94004c06b02d83d665539ac6'
 BRANCH = 'ownership-resource-network-bundle'
@@ -96,6 +98,7 @@ for platform in ['ubuntu-latest', 'macos-15', 'macos-15-intel']:
         assert after['externalCalls'] == before['externalCalls']
         assert after['externalRequestedBytes'] == before['externalRequestedBytes']
     allocation_reports[platform] = report
+ap_gate = gate(AP_RUN, AP_HEAD, {'applicative (ubuntu-latest)', 'applicative (macos-15)', 'applicative (macos-15-intel)'})
 post = json.loads(command('gh', 'api', REPO + '/pulls/123'))
 assert post['merged'] and post['head']['sha'] == TESTED
 assert post['base']['sha'] == OLD
@@ -274,11 +277,28 @@ for name, edits in scope_edits.items():
 for name in ['tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']:
     (wt / name).parent.mkdir(parents=True, exist_ok=True)
     (wt / name).write_bytes(blob(SCOPE_HEAD, name))
+# Add owned Cartesian-product callbacks without replacing later native files.
+ap_patch = blob(AP_HEAD, 'scripts/list-ap-ownership-patch.json')
+ap_edits = json.loads(ap_patch)
+assert set(ap_edits) == {'src/cgen.rs', 'src/ownership.rs', 'runtime/fwp_rt_prims.c'}
+for name, edits in ap_edits.items():
+    evidence_source = blob(TESTED, name).decode()
+    source = (wt / name).read_text()
+    for edit in edits:
+        assert evidence_source.count(edit['old']) == source.count(edit['old']) == 1, name
+        evidence_source = evidence_source.replace(edit['old'], edit['new'])
+        source = source.replace(edit['old'], edit['new'])
+    assert evidence_source.encode() == blob(AP_HEAD, name), name
+    (wt / name).write_text(source)
+for name in ['tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c']:
+    (wt / name).parent.mkdir(parents=True, exist_ok=True)
+    (wt / name).write_bytes(blob(AP_HEAD, name))
 repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
                 'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml',
                 'src/numerics.rs', 'runtime/fwp_rt_kernel.c', 'tests/ad_tape_ownership.rs',
                 'tests/fixtures/ad_unwind_probe.c', 'src/interp.rs', 'src/ownership.rs',
                 'lib/autodiff.fwp', 'tests/ad_tape_scopes.rs', 'tests/fixtures/ad_scope_probe.c']
+repair_files += ['runtime/fwp_rt_prims.c', 'tests/list_applicative_ownership.rs', 'tests/fixtures/list_ap_probe.c']
 # Runner formatting makes the final candidate reviewable; full exact-head CI
 # verifies these candidate bytes rather than transferring older evidence gates.
 subprocess.run(['rustfmt', *[name for name in repair_files if name.endswith('.rs')]],
@@ -308,7 +328,8 @@ record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               originalCommits=prep['originalCommits'], rebasedCommits=rebased,
               includedRows=prep['includedRows'], gcEvidence=gc_gate, adEvidence=ad_gate,
               scopeEvidence=scope_gate, allocationEvidence=allocation_gate,
-              allocationReports=allocation_reports, scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
+              allocationReports=allocation_reports, applicativeEvidence=ap_gate,
+              applicativePatchHash=hashlib.sha256(ap_patch).hexdigest(), scopePatchHash=hashlib.sha256(scope_patch).hexdigest(),
               adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,
               compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),

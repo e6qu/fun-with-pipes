@@ -7,15 +7,15 @@ contains detailed checks and superseded instructions. Root docs are authoritativ
 prepared branch docs are historical snapshots.
 
 Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
-publication receipt is /private/tmp/fwp-streamlined-acceptance-checkpoint.json. It retains
+publication receipt is /private/tmp/fwp-list-applicative-checkpoint.json. It retains
 all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
 repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
 /private/tmp is lost; copy the inventory pair into repo scripts before its
 GitHub audit. Publication verifies source blobs, not draft execution or
 production acceptance. Inspect the exact current branch-head docs audit on
 GitHub; an earlier or cancelled audit does not verify the current snapshot.
-Current checkpoint6bc5d83dadc6c4854b37a4333de3cf4b08538e6a has
-exact-head audit38145246447 queued. Earlier checkpoints and cancelled audits
+Current checkpointc4ce712ff25e0aa7bea43e6fdf4a8d74856bd007 has
+exact-head audit38145386569 queued. Earlier checkpoints and cancelled audits
 remain in history. Before publishing the finalization driver, set its recovery
 binding to this current checkpoint; its saved draft contains the preceding
 checkpoint identity because a commit cannot embed its own hash.
@@ -341,6 +341,37 @@ all original tests and formats the final candidate on GitHub. Source inventory
 now intentionally includes the new scope and three AD refinements, but actual
 counts and phase2 exit remain unverified until merged-source runner evidence.
 
+## List applicative ownership candidate
+
+Branch ownership-evidence-list-applicative at
+b53a5f8895ec87605de3f5642354485cf9df4f1e runs38146295630, queued on
+Linux and both macOS architectures. Its exact baseline is PR123 head9e7d0b24.
+The three-source recipe adds borrowed list.ap inputs, counted output spines
+and owned callback results. Two borrowed scratch arrays and the completed result
+prefix have separate unwind owners; partial list construction transfers each
+result exactly once. Callback order remains function-major/input-minor.
+The Cartesian-product size is checked before allocating its output scratch.
+
+Two regression tests cover real collection, GC/reuse verification, raw/native
+alias and trap-order agreement, empty inputs/functions, shared function
+captures, callback failure, actual task cancellation, partial-spine allocation
+failure and size boundaries without dereferencing fabricated storage. Three
+omission controls require exact native exits: missing result-prefix owner81,
+missing counted spine86 and missing product-size guard88. The probe explicitly
+requires real FWP_UNWIND=1 from a task-yield fixture. It retains source, binaries,
+statuses, compiler arguments, hardware and source/binary hashes.
+No compile or test has run yet; these are candidate contracts, not accepted
+reclamation or tracing-free support. The preceding31172327/run38146139289
+was cancelled while entirely queued before requiring actual unwind lowering.
+
+Drafts: /private/tmp/fwp-list-ap-ownership-patch.json, fwp-list-ap-test.rs,
+fwp-list-ap-probe.c, fwp-list-ap-evidence.yml and fwp-list-ap-publication.json.
+After all three focused jobs pass, the finalizer applies the exact tested recipe
+to the later resource bundle, preserving its source instead of copying older
+whole files. Full final-head production gates remain mandatory. The finite exit
+inventory draft permits this one additional explicit contract and hashes the
+actual list runtime; its derived counts still have not been verified.
+
 ## Local resource incident and next preparation
 
 Local compiled checks and rebases remain stopped below the64GiB reserve;
@@ -388,8 +419,8 @@ finalization.json previous. Keep one production PR and require its full matrix.
 The phase2 exit inventory draft is /private/tmp/fwp-check-primitive-inventory-exit.py
 with /private/tmp/fwp-primitive-inventory-exit.rs. It compares every parsed
 declaration and actual Rust contract with the frozen669c19e baseline, allowing
-only nine raw-memory contracts, three refined AD contracts and the one
-internal ad.scope declaration/owned callback contract; every other row stays
+only nine raw-memory contracts, three refined AD contracts, list.ap and the
+one internal ad.scope declaration/owned callback contract; every other row stays
 identical. It checks actual borrowed AD inputs and fresh counted F64 gradient
 arrays, and hashes both runtime/interpreter tape implementations. It has not executed or established new counts. Copy it into an
 evidence branch on actual merged112-equivalent source and run on GitHub after

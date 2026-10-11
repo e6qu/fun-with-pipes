@@ -55,6 +55,13 @@ for row in rows:
             contract='Some(Contract { arguments: [Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0] })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] == 'list.ap':
+        assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
+        assert row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        assert row['contract'] == 'Some(Contract { arguments: [Borrow, Borrow], result: FreshSpine, callback: None, aliases: [0, 1] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'ad.tape', 'ad.push', 'ad.backward'}:
         assert before['contract'] == 'None' and row['bucket'] == 'contract'
         assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
@@ -78,16 +85,16 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward'}
+assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 4
-expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 2
+expected_counts['contract'] += len(raw_symbols) + 5
+expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 3
 expected_counts['flat_scalar_signature'] -= 1
 assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 2
-files = [root / name for name in ['src/ownership.rs', 'src/mono.rs', 'src/cgen.rs', 'src/rc.rs', 'src/parser.rs', 'src/numerics.rs', 'src/interp.rs', 'runtime/fwp_rt_kernel.c']]
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 3
+files = [root / name for name in ['src/ownership.rs', 'src/mono.rs', 'src/cgen.rs', 'src/rc.rs', 'src/parser.rs', 'src/numerics.rs', 'src/interp.rs', 'runtime/fwp_rt_kernel.c', 'runtime/fwp_rt_prims.c']]
 files.extend(sorted((root / 'lib').rglob('*.fwp')))
 report = {
     'head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip(),
