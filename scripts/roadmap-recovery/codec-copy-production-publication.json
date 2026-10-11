@@ -1,0 +1,9 @@
+{
+  "head": "3aae99bfa705e26babc2cf251b0e583dfd95cf38",
+  "previous": "d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0",
+  "branch": "ownership-resource-network-bundle",
+  "tree": "28ae0e5cea7fa5948683adb39a035ed40fb9b226",
+  "files": {
+    "tests/serializer_leaf_ownership.rs": "7f973f2ba61a6b3d3056b9f12d589fa127823297f118fa81344b3568f125aa3b"
+  }
+}

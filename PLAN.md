@@ -54,10 +54,11 @@ last-owner reclamation and unwind protections. Queues33 and35–73 are accepted;
 queue34 is a verified duplicate delivered in #107. Next bundle74–112 resource and
 network ownership on the actual PR123 squash, then the finite phase2
 exit review. [The handoff](docs/development-state.md) records exact heads,
-checks and the next action. PR124 publishes the verified combined repair; its full current-head CI is
-running. Complete counters exposed an included AD allocation regression; fold
-its verified repair, codec contracts and streamlined docs into PR124 before the
-final exact-head matrix. Preserve current-run diagnostics.
+checks and the next action. PR124 combines the verified resource/State,
+codec, callback-effect and scoped-gradient repairs. Its full matrix exposed a
+codec test that copies its fixture onto itself when the artifact directory is
+unset. Repair and validate both artifact-path modes before rerunning the final
+matrix; preserve the runtime alias/GC controls and current-run diagnostics.
 
 Phase2 remaining audits cover borrowed metadata roots, reconstructed/untyped
 aggregates, retained contexts, resource disposal and cycles. Verify each boundary
@@ -78,8 +79,9 @@ Never call skipped, queued, superseded or cancelled runs passing support.
 
 ## Concrete remaining deliveries
 
-Finish phase2 with the resource/State bundle, then serializer/codec contracts,
-the scoped-gradient allocation regression and the finite177-declaration review.
+Finish phase2 by accepting PR124's combined resource/State, codec and scoped
+gradient work, then the finite177-declaration review with checked structural
+buffer and array/bump allocation boundaries in one coherent next bundle.
 Classify each remaining boundary with its argument/result/alias/callback policy
 or explicit tracing fallback, including retained contexts, partial reconstruction
 and cycle lifetime. Complete allocator counters must include initializer fast

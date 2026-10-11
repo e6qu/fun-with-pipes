@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,json,subprocess
 REPO='repos/e6qu/fun-with-pipes'
-HEAD='d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0'
+HEAD='3aae99bfa705e26babc2cf251b0e583dfd95cf38'
 BASE='b4285fc177b3ae7afaf195e5ebd7115cc77b815c'
 SUBJECT='Own resource and State lifetimes and preserve inferred effects'
 def api(path):return json.loads(subprocess.check_output(['gh','api',REPO+path],text=True))

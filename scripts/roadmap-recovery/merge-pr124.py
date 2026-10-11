@@ -1,13 +1,13 @@
 import json, subprocess
 from pathlib import Path
-HEAD="d5ae8c2d5422fe2ef6e1c94009c6b62dffda9db0"
+HEAD="3aae99bfa705e26babc2cf251b0e583dfd95cf38"
 BASE="b4285fc177b3ae7afaf195e5ebd7115cc77b815c"
 SUBJECT="Own resource and State lifetimes and preserve inferred effects"
 assert len(SUBJECT)<=80 and "\n" not in SUBJECT
 NAMES={"test","bench","macos (macos-15)","macos (macos-15-intel)","macos_gc (macos-15)","macos_gc (macos-15-intel)"}
 def command(*args):return subprocess.check_output(list(args),text=True)
 def run(number):return json.loads(command("gh","run","view",str(number),"--json","headSha,status,conclusion,jobs"))
-ci=run(38180852377);docs=run(38180852369)
+ci=run(38184549852);docs=run(38184549850)
 for gate in [ci,docs]:
  assert gate["headSha"]==HEAD and gate["status"]=="completed" and gate["conclusion"]=="success",gate
 assert {j["name"] for j in ci["jobs"]}==NAMES

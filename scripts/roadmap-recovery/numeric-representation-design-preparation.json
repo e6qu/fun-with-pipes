@@ -480,7 +480,9 @@
     "Packed scalar storage is an unscanned leaf; pointer/boxed payloads retain typed owner handling.",
     "Views flatten backing ownership, validate bounds/offset arithmetic and alignment, and cannot reuse shared backing for mutation.",
     "Keep F16/128-bit representation limitations explicit.",
-    "Inspect bytes, sizeof/offsetof/alignment, ARM/Intel generated assembly, raw/native behavior, GC/reuse controls and requested/live allocation before acceptance."
+    "Inspect bytes, sizeof/offsetof/alignment, ARM/Intel generated assembly, raw/native behavior, GC/reuse controls and requested/live allocation before acceptance.",
+    "The108 direct Array references are an initial source map, not complete coverage: alias-based accesses, generated C workers/destructors, literals, parsing and foreign conversions must also be checked.",
+    "Preserve interpreter/native array-count and trap-order agreement at allocation boundaries. Keep the existing logical count limit unless an explicit semantic review changes it; natural-width native storage must not silently accept counts that the interpreter rejects."
   ],
   "next": "Complete accepted phase2 audit first; choose layout using equivalent workload overhead measurements and then implement every consumer in one coherent representation bundle.",
   "sourceReview": {
