@@ -1,0 +1,30 @@
+name: Finite ownership inventory evidence
+
+on:
+  push:
+    branches: [ownership-evidence-primitive-inventory]
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Current handoff and immutable roadmap audit
+        run: python3 scripts/check-roadmap.py
+      - name: Portable declaration, alias and actual contract inventory
+        run: |
+          rustfmt --check scripts/primitive-inventory.rs
+          python3 scripts/check-primitive-inventory.py --output "$RUNNER_TEMP/primitive-inventory.json"
+      - name: Retain source hashes and full declaration review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: primitive-inventory
+          path: ${{ runner.temp }}/primitive-inventory.json
+          if-no-files-found: error

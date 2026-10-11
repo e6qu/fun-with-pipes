@@ -14,6 +14,8 @@ tests, benchmarks and large regeneration run on GitHub. Require all six passing
 jobs and the roadmap documentation audit for the current exact PR head before
 squash. Supply a single-line subject of at most 80 characters and an empty body,
 with no trailers or attribution.
+Keep the roadmap run going through queued CI: monitor results, fix failures
+and prepare independent work until every phase meets its exit criteria.
 Update the handoff and queue after meaningful progress. This authorization
 persists across sessions and compactions; no repeat approval is required.
 
@@ -41,20 +43,12 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#114: native macOS, selected typed container/text/callback
-ownership, exact wide reference counts and immediate last-owner reclamation.
-Registered unwind cleanup now protects compiler caller/reuse-token references
-and runtime application/capture preparation, plus map, selection, zip and fold
-unwind cleanup. Loop state/Step owners survive cancellation and payload
-preparation; flattened Again records remain unboxed. Original allocation gates
-remain intact. Constructor fields and remaining caller references stay protected
-before allocation; merged changes passed all exact-head production and
-documentation gates. Worker result fields and remaining caller references now
-stay protected until record/variant boxing succeeds. Queue 34 is skipped as a
-duplicate; queues 35–36 are accepted. Deliver queue 37 worker argument
-preparation, then the remaining ownership work. Exact heads, failures, checks and the sole next action
-are in [the handoff](docs/development-state.md); historical platform evidence
-and repaired test controls are in [history](docs/roadmap-history.md).
+Main includes #74–#118: native macOS ARM/Intel support and selected ownership,
+last-owner reclamation and unwind protections. Queue33 and35–40 are accepted;
+queue34 is a verified duplicate already delivered in #107. Deliver queue41
+variant conversion on the actual PR118 squash, then finish ownership queues42–112.
+[The handoff](docs/development-state.md) gives exact heads, checks and the sole
+next action. Prepared work still requires final rebases and full CI.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks

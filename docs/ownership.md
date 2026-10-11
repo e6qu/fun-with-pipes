@@ -114,6 +114,18 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
+The prepared source 112 declaration review separates 134 explicit contracts,
+19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
+signatures and 208 declarations requiring monomorphic/runtime review. These are
+373 declarations resolving to363 runtime symbols after40 explicit aliases,
+not a count of shared heap objects or ownership gaps.
+Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
+when no proven borrowing contract applies; scalar words remain uncounted.
+Reconstructed decode/parse values and retained network contexts can therefore
+still require tracing even when their temporary C buffers reclaim deterministically.
+Classify these conservative requirements explicitly before phase 3; phase 6 must
+prove eligibility separately. External AD/FFI state has its own lifetime contract.
+
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
 and reuse verification, with allocation/live-memory evidence for reclamation.
 Shared fallback is documented coverage, not deterministic reclamation or a
@@ -133,75 +145,27 @@ aligned payloads where useful, and views with explicit backing lifetimes.
 Measure array-of-struct versus struct-of-arrays layouts for each workload.
 Do not pad every small object to a cache line.
 
-Focused ARM64 layout evidence for returned-variant preparation44 confirms an
-8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
-variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
-positive/control binaries, compiler inputs, flags and disassembly are retained
-and recorded in [history](roadmap-history.md). The O2 alias transfers share one
-32-byte stack slot; this shape-specific evidence is not a general ABI or timing
-claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+Actual binary/layout baselines are preserved in [history](roadmap-history.md#archived-representation-measurement-detail).
+These are fixture-specific results at prepared source heads; each final delivery
+still needs exact-head CI. They establish representations and allocation
+requests, not production speed, cache behavior or collector-free execution.
 
-The six-I64 recursive worker in preparation65 has a 48-byte value, aligned to8,
-versus56 bytes for the boxed header and fields, excluding collector metadata.
-Actual ARM64 O1/O2 binaries return it through caller storage using x8; the
-recursive worker uses192/208-byte frames respectively, including trap temporaries
-and stack protection. O2 passes six fields in x1–x6 to the next worker and uses
-vector loads/stores for the result. Its own body has no record-allocation call;
-the boxed interface wrapper remains. These measurements on Apple M4 Pro,
-macOS15.6.1 and Apple clang17 retain the original flags and strict semantic
-controls. They establish an ABI baseline, not a timing improvement, constant
-stack use or whole-program allocation freedom. Phase3 must measure caller
-storage and spill costs alongside box elimination; details are in history.
+| Preparation / platform | Verified representation or allocation difference |
+|---|---|
+| 44 / ARM | V8, array header8 and element slot8; three-field variant32/align8 |
+| 65 / ARM | Six-I64 worker value48/align8 versus boxed56; return through caller storage |
+| 79 / ARM | Typed frame holder removes one16-byte parent box; File/path allocation remains |
+| 80 / ARM | Inline File header16/align8 versus24; one request16+n+1 versus two requesting24+n+1 |
+| 83 / ARM | Variant holder16/align8; zero parent boxes versus one16-byte box |
+| 111 / ARM+Intel | Packed TLS header64/align8; one request101/8311 for the tested inputs |
+| 112 / ARM+Intel | Connection header272/align8 versus520; short address request278 |
 
-Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
-box (8-byte header plus8-byte field, excluding collector metadata). The generated
-program-thread frame is1232 bytes with typed fields versus1280 in the boxed
-control at both O1/O2; the launcher frame remains144 bytes. The File header is
-24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
-counters and partial-retain controls pass, with exact binaries/flags/disassembly
-retained. These are fixture-specific representation measurements; ordinary File
-and path allocations remain, and no timing or general ABI claim follows.
-
-Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
-with refs at offset8 and path bytes at offset16. The retained legacy control is
-24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
-original counters verify one leaf allocation requesting16+n+1 bytes versus two
-allocations requesting24+n+1, excluding allocator/collector metadata. Both
-original tests retain exact interpreter behavior and closed-handle display.
-Actual binaries, C, flags and both compiled layouts are in history. This is a
-constructor/layout improvement; storage disposal and general performance remain
-separate roadmap work.
-
-Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
-its payload at offset8. Original counters verify zero parent boxes versus one
-16-byte box in the comparison path. The program-thread frame is1280 bytes at
-O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
-body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
-startup and trap paths. Original inactive scalar/nullary tags and partial-retain
-cleanup remain checked. These are representation measurements, not executed
-instruction counts or timings; File/path allocations remain. Exact source,
-flags, binaries, disassembly and compiled layout are recorded in history.
-
-Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
-insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
-one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
-4096-byte name plus other fields, with copied inputs and last-owner release.
-The payload contains both terminated strings and a length-framed identity key;
-packing removes separate allocation requests, rather than the duplicated key
-bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
-binaries, disassembly and a layout executable use unchanged compiler arguments.
-Instrumented constructor frames are 208/144 bytes; observer code affects these
-frames, so they are not production ABI or timing claims. Details are in history.
-
-Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
-520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
-offset 24; complete copied address bytes follow the header at offset 272.
-Original counters verify one request of 272+n+1 bytes for an n-byte address;
-"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
-loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
-positive/control binaries, disassembly and compiled layouts are recorded in
-history. Requested sizes exclude allocator/collector metadata; no timing,
-cache-speed or general collector-free claim follows.
+A bounded ARM capacity check measures TLS requested101/8311 as112/8704 malloc
+usable bytes, and connection request278 as320 GC-slot bytes versus640 for an
+allocation of the old520-byte header size in the same allocator. It does not
+execute the old constructor. Metadata, pool reservation, Intel capacity and
+cache/timing effects are excluded or unmeasured; exact evidence is in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity).
 
 C ABI struct returns can use registers or caller storage. Check emitted arm64
 and x86-64 assembly for spills, floating-point register use, boxing and calls;
@@ -228,6 +192,15 @@ field types; generic/foreign boundaries keep explicit conversion contracts.
 | Views and reusable backing | Retain backing owners across escapes; unique updates preserve immutable aliases; cover zero-length/subrange/overflow cases and exceptional release |
 | Measured representation gate | Equivalent C/Rust work, allocation-inclusive and kernel-only results, requested/actual bytes and peak live memory; hardware/compiler/flags/assembly recorded |
 
+Natural-width storage must cover every producer and consumer, including owned
+array primitives, typed destruction, display/equality, JSON and binary decode,
+constant construction and callback/dynamic boundaries. The current fwp_arr
+header has a64-bit length followed by V slots; it has no spare32-bit field to
+reuse without a new layout contract. Preserve length/bounds/overflow behavior.
+Specialized hot loops should select concrete loads/stores at compile time;
+unknown or mixed runtime boundaries need an explicit representation fallback or
+conversion. A narrower array.get alone does not establish representation support.
+
 Handle boxed128-bit and F16 paths explicitly: retain current numeric behavior
 until their representation/conversion contracts pass. Keep default reduction
 order and floating-point contraction unchanged. Phase 4 owns numerical loop,
@@ -246,7 +219,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #114 includes the following contracts. Detailed primitive modes
+Main through PR #118 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -254,7 +227,7 @@ and measurements are in [history](roadmap-history.md).
   transfer to compatible constructors, release unused cells and unlink cleanup
   before tail calls. Failure/trap/cancellation releases registered tokens.
   Compiler call liveness and consumed constructor-field protection are merged;
-  worker argument preparation and wider callback paths stay prepared.
+  worker argument preparation is merged. Wider callback paths stay prepared.
 - Registered runtime owners and scoped files release exactly once before failure,
   trap or cancellation invalidates their frames. Cleanup stops at the caught
   handler boundary, and task switching preserves separate cleanup chains.
@@ -262,8 +235,13 @@ and measurements are in [history](roadmap-history.md).
   merged in PR106; runtime application and partial capture preparation in PR107.
   Constructor fields and remaining caller references are registered before allocation
   in PR113. Worker result fields and remaining caller references stay registered
-  until record/variant boxing succeeds in PR114; worker argument preparation
-  and wider callback registration remain prepared.
+  until record/variant boxing succeeds in PR114. Worker argument preparation
+  protects original boxes and completed field duplicates until transfer in PR115;
+  flattened loop argument preparation protects original boxes and completed field
+  duplicates until transfer in PR116. Multi-field retains release completed extras
+  on count overflow in PR117, with caller owners registered before duplication.
+  Nested constructor temporaries inherit known monomorphic context for typed
+  child cleanup in PR118. Wider callback registration remains prepared.
 - Arrays own typed elements across lookup, copies, generation, mapping and
   immutable updates; folds transfer accumulators. Typed destruction releases
   children without treating scalar bits as pointers. General unwind remains prepared.

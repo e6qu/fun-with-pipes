@@ -14499,3 +14499,1547 @@ Preparation111 retained publication1.80CPU/18.42elapsed passes; all three strong
 Preparation112 native snapshot8fe6765c9490987ae560113fe7d0ac0fe090ad96 preserves both original feature/format commits and all original source/probe/workflow bytes. All four original address/packed-options/identity/connection tests pass11.32CPU/25.93elapsed, including interpreter address parsing, actual long-address loopback/pool reuse, copied address inputs and truncation control exact exit1 atO1/O2. A delegating wrapper forwards unchanged args to /usr/bin/clang and retains four actual ARM64 Mach-O positive/control executables, each header `cffaedfe0c0000010000000002000000`. Original generated C SHA256: positive `64eb6638340319da99023e4ea19882d65d1e0bbce32bd41b3e6732d737e89cce`, truncation control `3cb9ba06fd2531b701e438d3c4226cb8f31cf295ea141d0105198ed50aa0b55d`. Temporary artifacts /private/tmp/fwp-connection-addresses-8fe6765-binaries include C, args, headers, symbols, actual disassembly and measured-layout executable; this paragraph preserves the durable facts without promising temporary file availability.
 
 On Apple M4 Pro/macOS15.6.1(24G90)/Apple clang17.0.0(clang-1700.4.4.1), original flags remain -O1/-O2 -std=gnu11 -ffp-contract=off -w, OpenSSL I/L/rpath and -lssl -lcrypto -lm -lpthread. Compiling the actual captured runtime and original legacy comparison struct gives g_conn size272/alignment8 versus legacy size520/alignment8; address pointer/legacy array both begin at24. Complete new string payload starts at272. Original executed counter requests272+n+1 bytes once per n-byte address; copied "short" requests278 bytes,242 fewer requested bytes than the legacy header alone. These are requested payload bytes, excluding allocator/collector metadata. Original long pool keys remain exact after scope release; reverting only to snprintf's256-byte truncation returns1. Original driver/observer hooks affect fixture assembly, so no production frame, cache-speed, timing or whole-program tracing-free claim follows. Actual binary/layout inspection0.22CPU/0.99elapsed passes; focused lint2.64/5.34s and format0.44/0.85s pass.
+
+Preparation112 publishedb45e93a71d400ae3872142c70b29aa8128793e07 on actual5a01572cb2c69ae272239e957b360f8ae1d6dc66, FROMactualb2350957e6ff54de3a6bc9b1d6ff1d13151b48c8. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Old0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5 retained at roadmap/revision-112-0da68ea8cdb1 before exact-lease publication. All four original address/packed/identity/connection tests11.32CPU/25.93elapsed, actual ARM64 binary/layout inspection0.22/0.99s, lint2.64/5.34s and format0.44/0.85s pass; both original feature/format commits and source/probes unchanged including truncation exit1, long loopback/pool reuse, copied addresses and actual272/520-byte headers aligned8 with short request278; final actual-squash/full gates required
+
+Preparation112 retained publication1.79CPU/18.61elapsed passes atb45e93a71d400ae3872142c70b29aa8128793e07 on actual1115a01572cb2c6. All three strong audits pass44 link sets/106 immutable anchors and tags/78 live heads and bases/whole messages. Both original feature/format commits and every native/compiler/probe/workflow byte unchanged. Preparations39–112 are now independently refreshed/published; actual-squash sequential production gates remain. Completed journals must not rerun.
+
+### Archived handoff details after PR #114
+
+These are historical snapshots; their former next-action wording does not set current priorities. The current development-state.md controls ongoing work.
+
+## Fixture repair status
+
+Earlier row 29 production84ef5480f4938e78c11c10823bf498a8a1a4e6f9 passes normal
+Linux evidence5c24e0d34ea3b0d9ff4639ba4f0e1bf50c407135, CI 37966274872:
+format/lint, map/call/reuse/cleanup/task ownership, actual tracing and all-doc/tag
+checks. No diagnostics remain. GDB identified a fixture call to
+fwp_gc_chunk_of(ci=NULL), which requires an output pointer; using local ci
+preserves all assertions and changes no runtime/compiler code.
+Row 30 ca33d3141a96 inherits that fix on actual84ef548 and fixes its identical
+observer. Normal evidence7a6ca031fc0b6a10295dc86e07bb83ef0601a295,
+CI 37966690637, passes.
+Rows29–32 and34 bring the known row 68 mandatory output-pointer repair into
+their earlier deliveries. Keep the later row 68 repair from overwriting these
+fixtures or inherited CLI/GC changes. Preserve
+all alias/reclamation assertions. Detailed failed/diagnostic logs stay in history.
+
+## Separate evidence and remaining audits
+
+Earlier passed evidence predates the complete PR #106 call repair unless stated
+otherwise. Refresh scoped evidence on the repaired source; no historical pass
+accepts a current production head. Superseded runs are archived in history.
+
+| Scope | Exact evidence head | Run / status |
+|---|---|---|
+| Complete prepared ownership queue through 112 | 0f8c53199b2cb2ab1ebf54e4323a9b2efe064656 | All seven jobsCI38048222203 pass on exact source1120da68ea8cdb1; Linux mandatory actual WASI counts/File disposal/disabled-free pass, compiler/runtime/tests/production workflows byte-identical. Prior failed3a97905/38016929326 retained in history. Prepared source only; final sequential exact-head PR gates still required |
+| Rows107–112 storage and repaired root controls | a6505b8f17c19c6736966181d1017389a4a6e109 | CI 38015942823 passes on repaired source112 996d5ee4ef4f; all 21 IR controls, original HTTP2/client/pool/storage/tracing probes and stack/reuse gates; strong audit 0.42/3.38s passes. Pure old auditor commit absorbed by stronger base; three remaining evidence commits preserved. Prior e5bbfd8/CI 37992657684 is historical |
+| Rows92–100 gRPC serving and encoding | 1ec30f21bc457fe97f9d74616f97baca9f7fa10f | CI 38015884622 passes on repaired source100 a3d88c0b8f3d; all 21 IR controls, original HTTP2/gRPC/tracing probes and stack/reuse gates; strong audit 0.43/3.47s passes. Prior3aca5cf/CI 37993159029 is historical |
+| Rows79–88 typed holders and explicit cycles | f7d7585b89ad76f69ffac20e9437db620fb022f4 | CI 38015529998 passes on repaired source88 acce7492f8d3; original holder/cycle/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.42/3.35s passes. Failed372375a/CI 38011999875 exposed direct-constructor boxing; its retained head and fix are in history. Explicit draining does not prove automatic cycle reclamation |
+| Rows77–78 actual WASI counts/disposal | 2378565fcf68780e0235dc120c3533f68c8868f0 | CI 38016089987 passes on recorded source78 43773a07a269; mandatory actual WASI, original resource/tracing probes, all 21 IR controls and stack/reuse gates. Strong audit 0.46/3.56s passes. Prior24e7e57/CI 38011802620 predates matched-result repair |
+| Rows69–76 File and original resource frames | cee001573c1ec0dd25f05097a71a57b662a03239 | CI 38016049553 passes on recorded source76 f0034b6ab7c1; original File/frame/loop probes, all 21 IR controls, stack/reuse and tracing gates. Strong audit 0.50/3.71s passes. Prior c5665d0/CI 38011728123 predates matched-result repair |
+| Rows47–52 cache and task runtime | 2d5d52fd941c03b6bd0ff0c908ff6edeaf3c634f | CI 38013532481 passes on repaired source52 cb32c2cea9bb; all 21 IR controls and unchanged native conversion/stack/reuse gates; strong audit 0.43/3.46s passes. Prior329e8db/CI 38011548324 failed matched conversion and is retained |
+| Rows26–41 callback/constructor/typed conversion | ba3a0f2412f8380a6b8a1c1e60e1496c425b73f5 | CI 38008988824 passes on recorded41 at 172912b; loop/observer and exact pending-call controls repaired; allocation gates, full IR module, tracing/lint/docs |
+
+Earlier scope heads and full run IDs are preserved in
+[the evidence archive](roadmap-history.md#earlier-scoped-evidence-handoff).
+
+Evidence workflows never enter production ancestry. Every sequential PR still
+requires all six gates at its own current head. Preserve both row 85 commits: its repaired typed
+whole-stack binder and nominal File disposal. Failed and superseded logs remain in history.
+
+Row 111 verifies one TLS-option allocation, exact requested bytes, alignment,
+copied inputs, last-owner release and allocation-failure cleanup. It makes no
+elapsed-speed or whole-program tracing-free claim. Row 110 verifies read-once
+cache teardown after blocked tasks and finalizers; row 111 changes selected
+cache releases from ten malloc allocations to five. Row 112 locally verifies long-address loopback/pool reuse, copied inputs and
+requested bytes below the legacy short-address layout atO1/O2 with GC/reuse
+variants. Focused Linux CI 37958243461 also passes; full sequential platform gates remain required.
+
+
+Historical worker/HTTP2 propagation handoff (completed before the current independent refresh):
+
+Worker repair60b03078c3cd recognizes counted local transfers only for complete
+compatible record workers; partial/dynamic applications still box. All nine
+original worker/conversion/caller/retain controls pass. The repair is published
+through the retained worker-only checkpoint12a2f3a988b2 and is inherited by
+current112 `0da68ea8cdb1`. All original probes,
+immutable anchors and multi-commit preparations survive. Completed refresh
+journals must not be rerun. Detailed failures, checks and batch metrics are in
+[history](roadmap-history.md).
+
+Strict HTTP/2 fixture candidate8f6846a481ae passes all four jobs in CI38046812141
+(Linux GCC/Clang and macOS ARM/Intel Clang), with exact omission exit1 and all
+original positive/payload/finalizer/collection/ownership controls. Linux assembly
+confirms stale stack clearing at the copy boundary after clock_gettime and dead
+register clearing. Tested fixture is published at source89 (`3b72f38e6814`), excluding optional
+diagnostic export; compiler/runtime/other probes unchanged, format0.53/1.06s
+and strong audit0.52/4.03s pass. Propagation90–112 is complete through `0da68ea8cdb1` on actual
+`b2350957e6ff`, preserving original commit counts, all other source/probes
+and immutable anchors. Completed journals must never be rerun. Full evidence38048222203 now passes
+all seven jobs on source112, including these strict controls. Phase2 remains
+incomplete until sequential delivery and exit reviews pass.
+Evidence branch: ownership-evidence-http2-intel. Rejected candidates and assembly
+artifacts are archived in history.
+
+Queue32 fold is merged in #111 and queue33 loop in #112. Queue34 is skipped
+as a verified docs-only duplicate; queue35 constructor cleanup is accepted in #113.
+Queue36 worker result boxing is accepted in #114; queue37 worker argument
+preparation is the next production delivery.
+Later preparations still need actual-squash rebases and exact-head full gates.
+Preserve the earlier matched-result checkpoint, direct resource frame eligibility,
+CAF evaluation, loop layout and original allocation/omission controls during
+rebases. Their prior source-specific evidence does not accept rewritten heads.
+
+
+### Effective primitive declaration review
+
+At published prepared source112 b45e93a71d400ae3872142c70b29aa8128793e07, a standalone bounded Rust audit imports the unchanged src/ownership.rs and enumerates all library foreign "fwp" declarations. A Python runner verifies a clean exact source head, reads the actual mono::combinator match arms, verifies foreign_instance maps templates to Body::Expr and other entries to Body::Prim, then invokes rustc only on the small standalone inventory helper. It queries ownership::primitive directly, records contract modes and signatures, and classifies only flat concrete I8/I16/I32/I64/U8/U16/U32/U64/F32/F64/Bool/() signatures without nested callbacks or aggregates. Whole compiler builds and the shared Cargo target are not used. Command: python3 scripts/local-guard.py python3 /private/tmp/fwp-run-effective-primitive-audit.py;0.24CPU/1.18elapsed passes.
+
+373 declarations are also373 distinct symbols:134 explicit contracts,19 IR combinator templates,12 flat concrete scalar signatures and208 runtime/specialization review cases. Templates: id,const,flip,compose,apply,fork,both,dup,on,uncurry,curry,swap,first,second,if,then2,curry3,uncurry3,tap. Scalar signatures: ad.tape,term.is-tty,term.width,signal.shutdown-requested,signal.request-shutdown,not,and,or,random.u64,random.f64,device.gpu-available,tls.available. Scalar ad.tape still creates external state; this category is not an allocation/lifetime guarantee. Generic/boxed numeric, callbacks, resources and reconstructed values require actual monomorphic/runtime review. Missing metadata is not an effective sharing or bug count. Full exact-head acceptance remains per production PR; no new semantics or broad tracing-free support is claimed.
+
+Temporary helper/report paths: /private/tmp/fwp-effective-primitive-audit.rs, /private/tmp/fwp-run-effective-primitive-audit.py, /private/tmp/fwp-effective-primitive-b45e93a.json. Durable source hashes:
+- src/ownership.rs: `10c376f8ba3501a302888d61fdf5b770a40e2816a4effda6b083796cac52f180`
+- src/mono.rs: `e5f6b1d76808a31f964518e899bb4850bd4c72d2b27d14583ab7059eb4efb3fd`
+- src/cgen.rs: `94782ebd6a38ae7c419ca9c2c4573c2fe54bfea630428f883368754afdbb75f7`
+- src/rc.rs: `7ea40cd4f1512d93c9b9aaf0531865b5b72f673d5fd98f0385faf96216e26415`
+
+The live handoff was shortened by moving completed fixture/old scoped-evidence details intact to the archived handoff section above. All44 link sets,106 immutable tags/pairs and78 live heads/bases/whole messages pass (0.50CPU/3.90elapsed). Original anchors and historical evidence remain intact.
+
+### Conservative numeric parsing and remote cache review
+
+Prepared source b45e93a71d400ae3872142c70b29aa8128793e07 was read without
+source mutation or new runtime tests. `src/ownership.rs` gives parse-int and
+parse-float Borrow input / Shared result; `src/cgen.rs` selects numeric kind
+from monomorphic Option payloads. `runtime/fwp_rt_prims.c` constructs Some
+around the parsed payload. Outer counting alone would not cover boxed payloads.
+`runtime/fwp_rt_grpc.c::g_force` returns the stored memo on repeated force and
+stores a first successful decoded result. Independent counted readers would
+need a retained cache owner. grpc.with-tls separately owns copied C option text,
+while unknown primitive wrappers still promote counted fwp arguments/callbacks
+to sharing. Prepared scoped/task C owner tests do not prove those graphs are
+counted. These concrete boundaries retain tracing compatibility; no new bug,
+performance result, completed ownership phase or collection-free support claimed.
+PR115 exact-head CI38072953927 currently passes bench and both ARM jobs;
+Linux and both Intel jobs remain running. Docs38072954043 passes at 0ddeedbb09a2.
+
+### Actual loop argument preparation binary inspection
+
+Queue38 source 4289528c436b6a3cb1edf81fb45d588722277469 remains unchanged
+on its existing prepared base; final rebase onto PR115's actual squash is pending.
+After cleaning only fwp in the previously checked source112 worktree (0.05 CPU /
+0.37 elapsed s), the unchanged loop_preparation_ownership test passes under
+`env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 CC=/private/tmp/fwp-capture-loop-preparation-cc.py FWP_LOOP_PREPARATION_CAPTURE=/private/tmp/fwp-loop-preparation-4289528-binaries python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test loop_preparation_ownership`
+from /private/tmp/fwp-loop-preparation-worktree (10.07 CPU /20.34 elapsed s).
+The wrapper delegates unchanged compiler arguments to Apple Clang and captures
+actual positive and omitted-partial-scope C/binaries at O1/O2. Original alias,
+scalar-bit, first/later duplicate failure and exact omitted-scope exit5 controls
+pass; raw FWP_NO_OPT=1 interpreter and native output agree.
+
+Guarded inspection (0.05 CPU /0.25 elapsed s) saves real nm symbols and otool
+assembly plus OS, hardware, compiler, arguments and source hashes in
+/private/tmp/fwp-loop-preparation-4289528-binaries/inspection.json. All four
+Mach-O headers are ARM64 cffaedfe0c0000010000000002000000. Positive C SHA256 is
+4779c5bfda10c9633d80dfa5277c3255a81972137fb85ce4e273bd1db4c39496;
+control is a43c921a9c9bcced028c9365376873ad56e734a399677f6601a7bdddbb9da7c0.
+On Apple M4 Pro/macOS15.6.1/Apple Clang17, the instrumented fwp_loop2 reserves
+496 bytes at both optimization levels, compared with464/448 for the broken
+omission control. Static instructions are623/567 versus608/553. These are
+fault-instrumented fixture measurements, not production stack/ABI guarantees
+or a speed comparison against a correct alternative. Flags remain O1/O2,
+gnu11, ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread. Preparation keeps
+the four-slot state flattened and changes exceptional ownership; this does not
+establish whole-program zero allocation or completed production support.
+Last shared-target Rust workload is now queue38, not source112. Clean fwp in
+that worktree through the absolute root guard before switching Rust sources.
+
+### Effective primitive alias correction
+
+The earlier declaration-name audit above did not resolve explicit foreign aliases;
+its claim of373 distinct runtime symbols is superseded. Source review of
+src/parser.rs confirms that `foreign "fwp" name : type = "symbol"` supplies the
+explicit symbol, defaulting to name when absent; mono::foreign_instance receives
+that symbol. The corrected bounded helper strips the alias from the type,
+queries the unmodified ownership module with the actual symbol and retains both
+exported name and symbol per row. All40 explicit aliases were checked;373
+library declarations resolve to363 runtime symbols because10 TLS declarations
+reuse TCP primitives. Category counts remain134 explicit contracts,19 ordinary
+IR combinators,12 flat concrete scalar signatures and208 declaration-level
+runtime/specialization review cases. Do not interpret the208 as distinct symbols,
+new bugs or shared object counts.
+
+Command `python3 scripts/local-guard.py python3 /private/tmp/fwp-run-effective-primitive-alias-audit.py`
+passes0.18CPU/0.72elapsed; report
+/private/tmp/fwp-effective-primitive-alias-b45e93a.json records every declaration,
+actual symbol, signature, bucket and unchanged source hashes at prepared112
+b45e93a71d400ae3872142c70b29aa8128793e07. Standalone Rust helper imports the
+actual contract module and the Python runner checks actual mono templates.
+No compiler/runtime source changed, no full build or new runtime test performed.
+The earlier report remains historical evidence; use the corrected method for
+phase2 review. The category counts were checked again after alias resolution.
+
+### Cross-architecture gRPC binary evidence publication
+
+Evidence branch ownership-evidence-grpc-layout is published at
+5a56aa1ebbc2b609ebd51c675d44e454ddedba8d on prepared112
+b45e93a71d400ae3872142c70b29aa8128793e07. Exact difference is only
+scripts/capture-grpc-layout-cc.py, scripts/inspect-grpc-layout.py and
+.github/workflows/grpc-layout-evidence.yml. Original compiler/runtime/tests
+are byte-identical. Original packed TLS allocation/alias/failure and connection
+address/truncation tests run unchanged on ARM and Intel macOS runners, with
+actual C, compiler arguments, Mach-O header, nm, otool, compiled layout drivers,
+OS/hardware/compiler and allocation-request limits retained as artifacts.
+No full production gate or production stack/speed claim is added.
+
+Bounded tooling validation recompiled six previously executed captured fixtures
+through the wrapper, then compiled actual layout drivers; it passes1.83CPU/
+4.05elapsed and reproduces TLS64/align8 with requests101/8311 and connection
+272/520/align8 with short request278. This is tooling validation, not a new
+execution of all runtime probes. Publication through the root guard passes
+0.13CPU/3.34elapsed. Whole commit subject is one line with no body or trailers.
+CI38075612557 is queued at the exact evidence head; runner results remain pending.
+Original omission controls and production workflows are unchanged. PR115 remains
+the only open production PR. Temporary publication helper/journal are
+/private/tmp/fwp-publish-grpc-layout-evidence.py and
+/private/tmp/fwp-grpc-layout-evidence-publication.json; completed publication
+must not rerun. The remote branch and committed tooling preserve recovery.
+
+### Passing ARM and Intel gRPC machine-code evidence
+
+CI38075612557 passes both required evidence jobs at exact
+5a56aa1ebbc2b609ebd51c675d44e454ddedba8d. Both named original tests execute
+once on each architecture, with exactly four `1 passed; 0 failed; 0 ignored`
+result lines. Allocation, long-address/pool, alias, failure and exact omission
+controls remain in those unchanged tests. Complete compiler/runtime/test source
+parity with b45e93a71d400ae3872142c70b29aa8128793e07 is verified; only the
+three evidence files differ. Proof/download through the guard passes
+0.35 CPU/9.06 elapsed s. Complete runner logs, both artifact trees and proof are
+/private/tmp/fwp-grpc-layout-5a56aa1.log,
+/private/tmp/fwp-grpc-layout-5a56aa1-artifacts and
+/private/tmp/fwp-grpc-layout-passing-proof.json. Completed recorder must not rerun.
+
+| Measured property | ARM runner | Intel runner |
+|---|---|---|
+| Hardware | Apple M1 (Virtual) | Core i7-8700B at3.20GHz |
+| OS/compiler | macOS15.7.9(24G830), Apple Clang17.0.0 | Same OS/compiler version |
+| TLS header size/alignment |64/8 bytes |64/8 bytes |
+| TLS insecure/key_len/users offsets |40/48/56 |40/48/56 |
+| TLS empty/long allocation requests |101/8311 bytes |101/8311 bytes |
+| Connection/legacy header size, alignment |272/520 bytes,8 |272/520 bytes,8 |
+| Address pointer/legacy array offset |24 |24 |
+| Short full-address allocation request |278 bytes |278 bytes |
+| Instrumented TLS constructor frame O1/O2 |208/144 bytes |168/136 bytes including saved registers, excluding return address |
+| Instrumented TLS constructor static instructions O1/O2 |146/185 |135/190 |
+| Instrumented full-address constructor frame O1/O2 |80/80 bytes |72/72 bytes including saved registers, excluding return address |
+
+All six actual binaries per architecture have their expected Mach-O headers:
+ARM cffaedfe0c0000010000000002000000; Intel
+cffaedfe070000010300000002000000. TLS C SHA256 on both runners is
+82514579b2481f79498eeb6c5ca51b106b73e1ccf65e98904455292f077b3ea5;
+address positive/control source hashes remain64eb6638340319da99023e4ea19882d65d1e0bbce32bd41b3e6732d737e89cce
+and3cb9ba06fd2531b701e438d3c4226cb8f31cf295ea141d0105198ed50aa0b55d.
+Full report hashes and arguments are retained in the runner artifacts. Flags
+remain O1/O2, gnu11, ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread.
+Frame numbers include observer/fault hooks and are not production guarantees;
+static counts are not speed measurements. Allocation requests exclude allocator
+and collector metadata, and packed options still duplicate identity-key bytes.
+Prepared evidence does not accept rewritten production heads or establish
+collection-free execution. All sequential PR gates remain mandatory.
+
+The corrected alias report also deduplicates within categories:134 explicit
+contract symbols,19 ordinary-IR templates,12 flat concrete scalar symbols and
+198 runtime/specialization review symbols sum to363. The208 review declarations
+include10 TCP/TLS duplicates. This is metadata classification, not a new runtime
+check or a count of ownership bugs. The live handoff now has one production
+next action, queue38 after PR115's accepted squash; phase2 policies are recorded
+without repeated competing audit actions.
+
+### Loop preparation runner evidence publication
+
+Branch ownership-evidence-loop-layout is published at
+ d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8 on original queue38 source
+4289528c436b6a3cb1edf81fb45d588722277469. Only
+scripts/capture-loop-layout-cc.py, scripts/inspect-loop-layout.py and
+.github/workflows/loop-layout-evidence.yml differ. Compiler/runtime/probes and
+exact original exit5 omission controls are unchanged. CI38076425571 is queued
+at the evidence head; no passing runner support claimed yet. Both ARM and Intel
+will run the original test and capture four actual O1/O2 positive/control C and
+Mach-O binaries, symbols, disassembly, flags, hardware/compiler and layout drivers.
+This evidence cannot replace final actual-squash checks or production gates.
+
+Local capture/inspection validation recompiles the four previously executed
+fixtures unchanged and passes1.66CPU/3.46elapsed, confirming V8/align8, four-slot
+state32, input owner8, partial owner16 and cleanup24 bytes. These static object
+sizes do not sum directly to optimized frame usage. Publication through the
+root guard passes0.13CPU/3.18elapsed; commit message is one line with no body or
+trailers. Completed publication journal must not rerun. Remote branch and
+committed tools preserve recovery; temporary journal is
+/private/tmp/fwp-loop-layout-evidence-publication.json. PR115's regular Intel
+job now passes; Linux is its sole unfinished gate, without reported failures.
+
+### Archived handoff after PR #115
+
+The following former statuses are historical, not current next actions.
+
+Main is `771191d622cc13c055c08f1ba23fc50d02950ac7` (PR #114). Accepted exact
+head `759bc59437a740370f982649d29641a1ae866ac4` passes all six jobs in
+CI 38066365077 and roadmap_docs 38066365141. Match-head squash at
+2026-10-10T17:36:07Z has the exact 69-character subject
+`Protect worker result fields until record and variant boxing succeeds`,
+one line with empty body and no trailers or attribution. The raw commit has
+one parent `dd3b218b31e369383c019cc4ac3c9abc2d5042e1` and tree
+`518b07d89a774c77dca3093dc7014526ac338acf`, identical to the tested head.
+All 11 live docs were hashed in /private/tmp/fwp-main-docs-pre114 and restored
+byte-for-byte after main fast-forward. Duplicate main CI 38072406056 was cancelled
+only after that proof; actual main docs 38072406027 passes at the squash head.
+Worker result fields and remaining caller references now stay protected until
+record/variant boxing succeeds. Constructor cleanup is accepted in #113;
+queue 36 is accepted in #114. Phase 2 remains incomplete; phases 3–6 remain pending.
+
+Queue 37 worker argument preparation is published at frozen head
+`0ddeedbb09a29235556808a499a665178cf13d83` on accepted main. Native snapshot
+`37ab9ca19ae6d9bdfb6c418200b087d246d2c785` remains reachable; both original
+feature/docs commits and all source/probes survive. All ten original focused
+tests (37.06 CPU / 74.19 elapsed s), all 14 RC units (3.82 / 7.83 s), lint
+(2.83 / 5.73 s), format (0.44 / 0.82 s), three strong audits and retained
+publication (1.91 / 19.47 s) pass. Old 8c4e9ffd71a5 is retained remotely.
+[PR #115](https://github.com/e6qu/fun-with-pipes/pull/115) is the sole open
+production PR. Creation passes (0.17 CPU / 3.87 elapsed s). CI 38072953927 and
+docs 38072954043 belong to frozen `0ddeedbb09a29235556808a499a665178cf13d83`.
+Bench, regular ARM/Intel macOS and both GC stress jobs pass; only Linux runs.
+Docs 38072954043 passes at the frozen head. Only passing current-head gates
+accept the head. Require all seven fresh exact-head gates
+before match-head squash with subject
+`Protect boxed arguments and partial fields before worker entry` and empty body.
+
+PR115 is accepted at25dd472a889baf61422c254eaa6b370147c81244 after all seven exact-head gates. Raw subject62characters, one parent771191d622cc13c055c08f1ba23fc50d02950ac7 and complete tree dc474e5a0f457bedead913f6e963990be85267a6 match the passing0ddeedbb09a29235556808a499a665178cf13d83 head. All11 live docs protected/restored byte-for-byte; duplicate main CI38076511839 cancelled only after proof. Actual main docs38076511888 pending. Merge0.26CPU/8.43elapsed, fetch0.04/1.08s, protect0.00/0.13s, cancel0.05/1.32s pass. Only live queue37 handoff row removed; immutable anchors and frozen accepted head remain. Next production queue38 on actual25dd472.
+
+### Passing loop preparation machine-code evidence
+
+CI38076425571 passes both ARM/Intel jobs at exact evidence head
+d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8 on unchanged4289528 source.
+Original flattened_loop_preparation_releases_original_and_partial_fields executes
+once per platform, zero failed/ignored tests; original exact exit5 negative and
+alias/scalar-bit controls remain unchanged. Guarded proof/artifact download passes
+0.19CPU/6.72elapsed. Proof, logs and both full artifact trees are retained at
+/private/tmp/fwp-loop-layout-passing-proof.json,
+/private/tmp/fwp-loop-layout-d9d1a02.log and
+/private/tmp/fwp-loop-layout-d9d1a02-artifacts. Completed recorder must not rerun.
+Source differs only by three evidence files. Positive/control C hashes are the
+same4779c5bfda10c9633d80dfa5277c3255a81972137fb85ce4e273bd1db4c39496
+and a43c921a9c9bcced028c9365376873ad56e734a399677f6601a7bdddbb9da7c0
+as the actual local binaries. Both Mach-O architectures, symbols/disassembly,
+original arguments and compiled layout drivers are retained.
+
+| Instrumented loop fixture | ARM | Intel |
+|---|---|---|
+| Hardware | Apple M1 (Virtual) | Core i7-8700B at3.20GHz |
+| OS/compiler | macOS15.7.9(24G830), Apple Clang17 | Same versions |
+| V size/alignment, flattened state |8/8,32 bytes |8/8,32 bytes |
+| Input owner, partial owner, cleanup record |8,16,24 bytes |8,16,24 bytes |
+| Positive frame O1/O2 |496/496 bytes |456/456 bytes |
+| Broken omission frame O1/O2 |464/448 bytes |408/408 bytes |
+| Positive static instructions O1/O2 |623/567 |787/698 |
+| Broken omission static instructions O1/O2 |608/553 |776/685 |
+
+Frames include saved registers; Intel return address is excluded. Static
+structure sizes do not sum directly to optimized frame usage. Fault-injected
+fixtures and broken omission controls do not establish production stack/ABI,
+cache behavior, allocation-free execution or speed improvements. Original flags
+remain O1/O2, gnu11, ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread.
+Fresh final queue38 native75e537988464d8f304bfdc409eb8334c46da99bd on actual
+PR115 squash25dd472 preserves both original commits and every source/probe byte.
+Rebase0.10CPU/0.95elapsed, package clean0.00/0.13s, four original focused
+regressions17.43/35.01s, all14 RC units3.37/6.83s, lint2.45/4.98s and
+format0.43/0.59s pass. Final publication and seven full exact-head gates remain.
+Actual main docs38076511888 passes at25dd472; queue37 acceptance is complete.
+
+Preparation38 publishede44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 on actual25dd472a889baf61422c254eaa6b370147c81244, FROMactual8c4e9ffd71a5555298721921a1fbf3a2314411cf. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Old4289528c436b6a3cb1edf81fb45d588722277469 retained at roadmap/revision-038-4289528c436b before exact-lease publication. Final actual-squash source preserves both original feature/docs commits; four loop/preparation/worker regressions17.43CPU/35.01elapsed, all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass; original source/probes unchanged including omitted partial scope exit5, scalar bits, aliases and raw interpreter/native agreement; independent ARM/Intel binary evidence passes; exact-head full gates required
+
+PR116 https://github.com/e6qu/fun-with-pipes/pull/116 is created at frozen
+e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 on actual main
+25dd472a889baf61422c254eaa6b370147c81244. Publication passes1.83CPU/
+19.16elapsed with all three strong audits:44 link sets,106 immutable anchors
+and77 live heads/bases. All three commits (two originals, including preserved
+empty docs commit, plus appended live docs) remain; old4289528c436b retained
+remotely before exact-lease publication. Creation0.16CPU/4.04elapsed passes.
+CI38076902840 and docs38076903010 queued at the frozen head. Require all seven
+exact-head passes before explicit match-head squash with one-line subject
+`Protect flattened loop arguments during field preparation` and empty body.
+Next production queue39 variant preparation, FROMactual prepared38 4289528,
+onto PR116's eventual actual squash. Completed publication/creation helpers
+must not rerun. This is the sole open production PR.
+
+### Retain overflow machine-code evidence preparation
+
+Queue39 source d98205af88dfc2300d19d2ca12b11a71146ded9a is reviewed: actual
+SIZE_MAX overflow checks partial variant retains and original caller owners,
+with exact original omission exits3 and7. Final rebase helper is prepared but
+not executed, FROMactual4289528c436b6a3cb1edf81fb45d588722277469 onto
+PR116's actual squash after full acceptance. Source/probes remain unchanged.
+
+Evidence branch ownership-evidence-retain-layout starts at
+6b1713dd5310c3eea570e734f7444e6374031ba4, published0.12CPU/3.27elapsed.
+Static review found that merely searching for a cleanup push could classify an
+already-popped entry-tick scope as active. A diagnostic-only follow-up commit
+b0260c9d3aa72401dae338860e34c93600ec8dd1 now processes push/pop order up to
+the retain. Original C/compiler/runtime/test bytes remain unchanged; original
+negative oracles are not weakened. Both entire commit messages are exact single
+lines <=80 characters, with no body/trailers or attribution. Earlier6b1713d is
+retained at roadmap/revision-evidence-retain-layout-6b1713dd5310 before exact
+lease publication. Repair0.20CPU/6.41elapsed passes. Superseded diagnostic run
+38077259408 is cancelled, not accepted. Fresh exact-head evidence CI38077436743
+is queued; scripts parse but no runner execution or layout result claimed yet.
+
+The workflow runs the unchanged original test on ARM/Intel and retains all six
+O1/O2 positive/partial-control/caller-control binaries, C, original arguments,
+symbols/disassembly and a compiled layout driver for V, variant/pair payload,
+cleanup and wide-count metadata. These diagnostic hooks do not prove production
+frames, zero allocation, speed or collection-free support. Only three evidence
+files differ from the original source39, and this is not another production PR.
+Completed initial publication and classifier repair helpers must not rerun;
+remote branch/tag and committed tooling preserve recovery. PR116 remains the
+sole open production PR, with current exact-head gates still queued.
+
+### Actual retain overflow local binary validation
+
+After guarded package clean in last checked queue38 (88.9MiB,0.00CPU/0.13elapsed),
+unchanged queue39 d98205af88dfc2300d19d2ca12b11a71146ded9a passes
+`env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 CC=/private/tmp/fwp-retain-layout-evidence-worktree/scripts/capture-retain-layout-cc.py FWP_LAYOUT_CAPTURE=/private/tmp/fwp-retain-d982-binaries FWP_LAYOUT_REAL_CC=/usr/bin/clang python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test retain_unwind_ownership`
+from /private/tmp/fwp-variant-preparation-worktree (10.63CPU/21.45elapsed).
+The original actual SIZE_MAX overflow, scalar-bit and caller/partial-owner checks
+pass, including exact negative exits3 and7 at O1/O2 and raw interpreter/native
+agreement. Six original C/binaries were captured through unchanged compiler
+arguments. Corrected active-scope inspector from evidence b0260c9 passes through
+the same guard0.35CPU/0.93elapsed, without changing runtime/test sources.
+
+Compiled actual layout: V8/align8, variant32 with payload offset8, pair16,
+partial-owner context16, cleanup24, wide-count entry24 with count offset8.
+Hardware Apple M4 Pro/macOS15.6.1/Apple Clang17.0.0; original O1/O2, gnu11,
+ffp-contract=off, OpenSSL I/L/rpath, lm and lpthread flags retained. Every actual
+Mach-O header is ARM64 cffaedfe0c0000010000000002000000. Inspector correctly
+classifies two positives, two omitted-partial controls and two omitted-caller
+controls. Reports, actual C/binaries, arguments, symbols, full disassembly and
+compiled layout driver are in /private/tmp/fwp-retain-d982-binaries. Helper
+bodies can be inlined; no separate helper-frame or performance guarantee claimed.
+
+Positive C hash a5352d25efe8f554ea1f21ebd3f44868ff6047a694f06f1c9de1e6733ef78b13;
+partial omission 1ed8c7d28effd6caa4bcf02b0574c639a3ab535205b34751971af2899239a317;
+caller omission d5601d1eadc791d1032b5f41b907c787009e6f85a30b7efa5323bb6e12694cd3.
+Wide entry size is a metadata layout, not total allocator cost or an absence of
+allocation. This is prepared-source/local ARM evidence, not the queued Intel
+runner result, final actual-squash checks or production acceptance. Last shared
+Rust target is now queue39 d98205af88df; clean fwp there through the absolute
+root guard before switching Rust source checkouts.
+
+## Passing retain overflow machine-code evidence
+
+CI38077436743 passes both ARM/Intel macOS jobs at diagnostic head
+b0260c9d3aa72401dae338860e34c93600ec8dd1, on unchanged source39
+d98205af88dfc2300d19d2ca12b11a71146ded9a. Only the capture script,
+inspection script and evidence workflow differ. Each platform executes the
+original wide_count_overflow_releases_partial_variant_retains_and_live_callers
+test once, with no ignored tests. Actual SIZE_MAX overflow, exact omitted partial
+and caller scope exits3/7 and raw interpreter/native O1/O2 agreement remain intact.
+
+Both runners use macOS15.7.9(24G830), Apple Clang17.0.0(1700.0.13.5);
+hardware is Apple M1(Virtual) and Intel Core i7-8700B3.20GHz. Each captures six
+actual Mach-O O1/O2 positive/control binaries, original arguments, generated C,
+symbols and complete disassembly. Compiled layouts agree: V8/align8, variant32,
+payload offset8, pair16, partial owner16, cleanup24 and wide-count entry24
+with count offset8. Helpers may be inlined; these instrumented fault/observer
+fixtures do not establish production frame size, ABI performance or zero allocation.
+
+Guarded proof and download pass0.18CPU/7.08elapsed. Proof:
+/private/tmp/fwp-retain-layout-passing-proof.json; logs:
+/private/tmp/fwp-retain-layout-b0260c9.log; artifacts:
+/private/tmp/fwp-retain-layout-b0260c9-artifacts. Source/compiler/runtime and
+original probe bytes are verified unchanged. This is preparation evidence, not
+acceptance of a later rebased production head. Superseded diagnostic run
+38077259408 remains cancelled; its earlier revision is retained remotely.
+
+The post-evidence roadmap audit passes0.43CPU/3.66elapsed with44 link sets,
+106 immutable queue pairs/tags and77 live heads/bases. An initial sandboxed
+invocation could not sample processes (`ps`: Operation not permitted); allowing
+process sampling resolved it with the same guard and unchanged resource limits.
+The current preserved11-doc snapshot is pre115, replacing a stale pre108 link
+in the live handoff. Refresh all11 documents before the next fast-forward.
+
+## Actual local gRPC allocator capacity
+
+A new bounded diagnostic main is compiled from actual captured source112
+8fe6765c9490987ae560113fe7d0ac0fe090ad96 address-fixture C, retaining all
+original probe bytes and compiler arguments. It executes the real packed
+g_tls_new and short-address g_conn_new at O1/O2 and reads Darwin malloc_size
+for malloc-owned TLS storage, and the collector metadata slot for GC-owned
+connections. malloc_size is never applied to a GC pointer. This does not rerun
+or replace the original ownership tests or weaken their negative controls.
+
+On Apple M4 Pro/macOS15.6.1(24G90)/Apple Clang17.0.0(1700.4.4.1), both
+optimizations agree: TLS requested101 uses112 malloc-usable bytes; requested8311
+uses8704. The actual short connection requests278 and occupies a320-byte GC
+slot. An allocation of the original520-byte connection header size in the same
+unchanged allocator occupies640 bytes. The old constructor is not executed;
+this comparison measures its header-size allocation, excluding its truncation
+semantics. runtime/fwp_rt_gc.c is byte-identical from prepared110 bf297ac299ea
+through prepared112 b45e93a71d40. Observed addresses meet type alignment.
+
+Guarded compile/execute/assembly capture passes0.60CPU/1.70elapsed. Actual
+Mach-O headers, generated diagnostic C, source hashes, original flags, results
+and disassembly are retained in /private/tmp/fwp-grpc-allocator-capacity-local
+with proof.json. Compiler flags retain gnu11, ffp-contract=off, OpenSSL paths,
+ssl/crypto, lm and pthread at O1/O2. Capacity excludes allocator metadata,
+collector chunk reservation, resident memory and unrelated buffers; this is
+local ARM evidence and does not establish Intel capacity, cache use or speed.
+
+Source review of the prepacking constructor at prepared110 confirms six
+allocation calls (one calloc header, four strdup strings and one malloc key);
+this count is a source finding, not a newly executed legacy measurement. The
+existing ten-to-five cache-free fixture result counts a broader workload and
+must not be described as the constructor's allocation count.
+
+## Local disk-limit refusal during allocator evidence bookkeeping
+
+The unchanged local guard refused optional proof-metadata enrichment before
+execution: less than64GiB free disk. The completed capacity compilation and
+measurements remain valid; no binary check or full gate was run after refusal.
+No limit was raised and no sampling was bypassed. The enrichment was dropped;
+hardware/compiler/OS are already recorded in the original captured evidence.
+A later read-only df sample reports68448288KiB available (65.28GiB), and the
+untracked generated target uses80888KiB. No build data or saved evidence was
+deleted. Future workloads require fresh guard acceptance; any refusal moves
+the required work to GitHub runners. Production CI continues remotely.
+
+## Archived handoff after PR #116
+
+Main is `25dd472a889baf61422c254eaa6b370147c81244` (PR #115). Accepted
+head `0ddeedbb09a29235556808a499a665178cf13d83` passes all six jobs in
+CI38072953927 and roadmap_docs38072954043. Match-head squash at
+2026-10-10T18:37:12Z has the exact62-character subject
+`Protect boxed arguments and partial fields before worker entry`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`771191d622cc13c055c08f1ba23fc50d02950ac7` and complete tree
+`dc474e5a0f457bedead913f6e963990be85267a6`, identical to the tested head.
+All11 live docs were hashed in /private/tmp/fwp-main-docs-pre115 and restored
+byte-for-byte after fast-forward. Duplicate main CI38076511839 was cancelled
+only after complete-tree proof; actual main docs38076511888 passes at the squash head.
+Merge passes0.26CPU/8.43elapsed; fetch0.04/1.08s, protection0.00/0.13s and
+cancellation0.05/1.32s pass. Queues35–37 are accepted in PRs113–115.
+Worker argument preparation now protects original boxed arguments and each
+completed typed field duplicate until transfer into the worker. Original aliases,
+scalar bits, failure controls and allocation behavior remain checked. Native
+snapshot37ab9ca19ae6d9bdfb6c418200b087d246d2c785 and old remote8c4e9ffd71a5
+remain reachable. Phase2 remains incomplete; phases3–6 pending. [PR116](https://github.com/e6qu/fun-with-pipes/pull/116) is the sole open
+production PR, delivering queue38 loop argument preparation.
+
+Queue38 loop argument preparation is next on the actual PR115 squash.
+Final native snapshot75e537988464d8f304bfdc409eb8334c46da99bd is on actual
+main25dd472a889baf61422c254eaa6b370147c81244, FROMactual old37 8c4e9ffd71a5.
+Both original feature/docs commits remain, including explicit empty docs commit
+preservation after conflict resolution; every source/probe byte matches4289528.
+Rebase passes0.10CPU/0.95elapsed; bounded package clean0.00/0.13s removes78.8MiB.
+All four original loop/preparation/worker regressions pass17.43CPU/35.01elapsed;
+all14 RC units3.37/6.83s, lint2.45/4.98s and format0.43/0.59s pass.
+Original alias/scalar-bit controls, exact omitted partial scope exit5 and raw
+interpreter/native agreement remain intact. Publication passes1.83CPU/19.16elapsed
+with all three strong audits (44 link sets,106 immutable pairs/tags,77 live heads).
+Frozen head `e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5` is published, with old
+4289528c436b retained remotely before exact-lease update. All three commits
+(two originals plus appended docs) and the native snapshot remain reachable.
+PR116 creation passes0.16CPU/4.04elapsed. CI38076902840 passes Linux, bench, ARM regular and both ARM/Intel GC stress jobs;
+Intel regular is still running. Docs38076903010 passes at the frozen head. Require all seven passing exact-head gates
+before squash with `Protect flattened loop arguments during field preparation`
+and empty body. Next production after acceptance is queue39 variant preparation.
+
+Accepted queue38 in PR116 at 85198cc78ee7d0cb8af5d6ec30b1c42771c91748 on 25dd472a889baf61422c254eaa6b370147c81244. Exact frozen head e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5 passes all six CI38076902840 jobs and docs38076903010. Raw squash subject 'Protect flattened loop arguments during field preparation' has 57 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree f53d2fe498e3f5de928bea64991cc225e56419b6 are verified. All11 live documents were hashed and restored byte-for-byte during fast-forward.
+
+PR116 merge passes0.25CPU/6.73elapsed; fetch0.04/1.10s, full raw-commit/tree
+verification and11-doc protection0.05/0.25s, acceptance audit0.67/5.75s pass.
+All44 link sets,106 immutable queue pairs/tags and76 live heads/bases pass.
+Duplicate main CI38081735040 is cancelled only after full tested-tree proof
+(0.04CPU/1.20elapsed); actual main docs38081735038 remains queued, not accepted.
+Final queue39 rebase passes0.09CPU/0.98elapsed on actual85198cc78ee7d0cb8af5d6ec30b1c42771c91748,
+FROMactual4289528c436b6a3cb1edf81fb45d588722277469. Native snapshot
+5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits and
+every original source/probe/workflow byte, including explicit preservation of
+the empty original docs commit after copying all11 live docs. Three original
+retain/loop-preparation/worker-preparation tests pass16.57CPU/33.39elapsed;
+all15 RC liveness units pass3.31CPU/6.81elapsed. No earlier disk-limit refusal
+was bypassed: these new workloads received fresh acceptance from the unchanged
+guard. Original negative exits3/7 and raw interpreter/native oracles remain.
+
+Preparation39 published3aeb9655d492253a9d4b01a604f1821a4edd9702 on actual85198cc78ee7d0cb8af5d6ec30b1c42771c91748, FROMactual4289528c436b6a3cb1edf81fb45d588722277469. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Oldd98205af88dfc2300d19d2ca12b11a71146ded9a retained at roadmap/revision-039-d98205af88df before exact-lease publication. Final actual-squash source preserves both original commits; all three retain/loop/worker regressions16.57CPU/33.39elapsed, all15 RC units3.31/6.81s, lint2.29/4.67s and format0.34/0.62s pass; original source/probes unchanged, including exact partial/caller omission exits3/7 and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required
+
+Queue39 final lint passes2.29CPU/4.67elapsed and formatting0.34/0.62s.
+Retained publication passes1.60CPU/17.90elapsed with all three audits
+(44 link sets,106 immutable pairs/tags,76 live heads/bases), publishing frozen
+3aeb9655d492253a9d4b01a604f1821a4edd9702 on actual main85198cc78ee7d0cb8af5d6ec30b1c42771c91748.
+All three commits (two originals plus appended docs) and native5c663ef544f0
+remain reachable. Old d98205af88dfc2300d19d2ca12b11a71146ded9a is retained at
+roadmap/revision-039-d98205af88df before the exact-lease update. PR117 opens
+with guard0.16CPU/4.23elapsed; CI38081959849/docs38081959890 are queued, not accepted.
+Actual PR116 squash docs38081735038 now passes at85198cc; its duplicate
+production run remains cancelled only after tested-tree proof.
+
+## Archived tensor kernel timing samples
+
+These old samples describe100 fused steps of8 operations (including sqrt, sin,
+exp, ln and cos), summed with tensor.sum-on. They ran on an unspecified shared
+4-core machine with reported load about12. Processor model, compiler/flags,
+allocations and live memory were not recorded, and input-list construction is
+included. They do not establish current macOS performance, a speedup lower
+bound or equal isolated kernel speed between interpreter and native backends.
+
+| elements | device | native | interpreter (release build) |
+|---|---|---|---|
+| 1 000 000 | `CpuParallel 1` | 3.37 s | |
+| 1 000 000 | `CpuParallel 2` | 1.84 s | |
+| 1 000 000 | `CpuParallel 4` | 1.75 s | |
+| 200 000 | `CpuParallel 1` | 0.60 s | 1.18 s |
+| 200 000 | `CpuParallel 4` | 0.26 s | 0.84 s |
+
+The live numerics page now links this archive instead of duplicating the table
+and its unverified performance inferences. Numeric lifetime source review is
+referenced to the current published source112 b45e93a71d40; runtime/fwp_rt_kernel.c
+and src/numerics.rs are byte-identical to the earlier reviewed996d5ee4ef4f.
+This documentation correction adds no numeric implementation or newly executed
+numeric regression. Ownership exit gates still precede representation/numerics.
+
+## Constructor cleanup binary evidence preparation
+
+Isolated evidence head e83b2a0b09cd1e5f8c590d4ce6707bf43f4fd9e2 is published
+on source40 5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. Only capture-constructor-layout-cc.py,
+inspect-constructor-layout.py and constructor-layout-evidence.yml differ;
+compiler/runtime/original probes/production workflows remain byte-identical.
+Worktree preparation passes0.08CPU/0.49elapsed. Static tooling validation found
+a C newline-escaping mistake (0.00CPU/0.16elapsed, exit1); fixing it before
+publication yields passing regex/C literal validation0.00CPU/0.14elapsed.
+No runtime/test oracle was changed. Publication passes0.08CPU/2.51elapsed.
+
+CI38082494104 is queued at the evidence head. It runs the unchanged original
+later_field_error_releases_nested_constructor_children test on ARM/Intel and
+retains the four actual positive/control O1/O2 binaries, source, flags, symbols,
+disassembly and a compiled layout driver. Exact outer-count-only negative exit4
+for both record/variant paths, aliases/scalar bits, GC/reuse modes and raw
+interpreter/native agreement remain mandatory. Queue40 final actual-squash
+checks and full production gates still remain. This run is not accepted yet.
+
+## Documentation audit moved to constructor evidence runners
+
+The unchanged guard refuses the next local shared-doc audit before execution:
+less than64GiB free (no workload run and no limits changed). The latest local
+docs are therefore uploaded as a snapshot to the existing evidence branch
+through a low-priority GitHub metadata operation. No local build or check runs.
+Remote commit38a013a224acfcf105c6aa77f941b0043c831e26 has one parent
+e83b2a0b09cd1e5f8c590d4ce6707bf43f4fd9e2 and a one-line subject with no body
+or trailers. The only additional changes are the11 authoritative docs and the
+evidence workflow's full-history checkout/shared audit step. Original compiler,
+runtime, probes and production workflows remain untouched.
+
+Fresh CI38082971623 is queued at38a013a; it audits the uploaded snapshot and
+executes the same original constructor test and actual layout inspection on
+both macOS architectures. Superseded queued38082494104 is cancelled and not
+accepted; e83b2a0b09cd remains its parent. The local evidence checkout remains
+at e83b2a0b09cd and must fetch/fast-forward before any later edit/publication;
+never rerun its completed initial publication helper or overwrite the remote
+metadata commit. Current production PR117/head3aeb9655d492 is unchanged.
+
+The design pipeline table now summarizes ownership/reuse and links the detailed
+contracts, instead of repeating the same lifetime policy and old measurements.
+It distinguishes borrowing from consuming primitive modes and describes reuse
+verification as poisoning released cells. The old tree33-collection/37MiB and
+constructor153MiB/164ms samples already remain in the historical changelog;
+they are removed from the live design overview as unqualified current claims.
+Platform review confirms that native --static linking and --memory static are
+different options; no new platform-support claim or runtime change is made.
+These latest documentation edits await the next focused production docs gate.
+
+## Passing constructor cleanup machine-code and docs evidence
+
+CI38082971623 passes both ARM/Intel jobs at38a013a224acfcf105c6aa77f941b0043c831e26
+on unchanged source40 5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. Remote comparison
+shows only the two capture/inspection scripts, the evidence workflow and
+authoritative docs changed. Original compiler/runtime/probes/production workflows
+remain unchanged. Remote raw commit metadata confirms a one-line subject and
+one parent e83b2a0b09cd, with tree8b8715d57b85c1569ceab9bb94e6b16a2c69875a.
+
+Actual ARM job114303516055 and Intel job114303515972 each execute
+later_field_error_releases_nested_constructor_children once:1passed/0failed/
+0ignored (7.63s ARM,15.73s Intel; runner test timing is not a performance claim).
+Original outer-count-only negative exit4 for both record/variant paths,
+alias/scalar controls, GC/reuse modes and raw interpreter/native O1/O2 agreement
+remain mandatory. Each inspection checks four actual Mach-O positive/control
+binaries and compiles/runs the layout driver. Both give V8/align8, object
+header8/payload offset8, cleanup24 and each of the nine recorded typed Inner
+owner-context definitions8/align8. Definitions do not sum to total stack usage;
+fault/observer fixtures are not production ABI/speed guarantees. Actual C,
+original flags, hardware/compiler metadata, symbols and full disassembly remain
+in artifacts constructor-layout-macos-15 and constructor-layout-macos-15-intel.
+
+Both runner shared audits pass44 link sets,106 immutable queue pairs/tags and
+76 live heads/bases, including whole commit messages, for the uploaded snapshot.
+This completes the audit moved from local disk refusal without retrying or
+bypassing the guard. Later live design/status edits await the next production
+docs gate. Local artifact downloads are deferred while local checks stay
+stopped; the saved GitHub artifacts are the primary evidence. Initial log
+lookup used an incorrect job ID and was corrected from run metadata; GH API
+log output required allowing escape sequences, which were removed before
+display. Neither read failure changed runtime code, tests or their oracles.
+Final queue40 actual-squash checks and all seven production gates still remain.
+
+## Constructor evidence collection and fresh local audit after recovery
+
+After available disk recovered to84375232KiB (80.47GiB), fresh workloads
+passed under python3 scripts/local-guard.py without changing its limits.
+Fetching passing constructor evidence38a013a224ac passes0.05CPU/1.13elapsed.
+python3 /private/tmp/fwp-record-constructor-layout-evidence.py passes
+0.22CPU/7.26elapsed; completed journal/proof must not rerun. Actual C, flags,
+compiled layouts, all eight Mach-O binaries, symbols and disassembly are in
+/private/tmp/fwp-constructor-layout-38a013a-artifacts, with proof in
+/private/tmp/fwp-constructor-layout-passing-proof.json. Both runner original
+tests execute once with zero ignored tests and both snapshot audits pass.
+Source/probe/runtime/production-workflow parity remains exact apart from the
+three evidence files and authoritative docs.
+
+A fresh shared audit of the subsequently updated root docs passes
+0.49CPU/3.65elapsed:44 link sets,106 immutable pairs/tags,76 live heads/bases.
+Deferred helper AST/doc-anchor checks pass0.00/0.14s. The isolated evidence
+checkout fast-forwards e83b2a0b09cd to38a013a224ac (0.00/0.13s). Earlier disk
+refusals remain historical; their snapshot audit moved to CI and passed there.
+No guard limit was raised and no full local build or test gate was run.
+
+Fresh current root documentation audit after constructor evidence bookkeeping passes0.55CPU/3.93elapsed through python3 scripts/local-guard.py python3 scripts/check-roadmap.py:44 link sets,106 immutable pairs/tags,76 live heads/bases and commit messages.
+
+## Archived handoff after PR #117
+
+Main is `85198cc78ee7d0cb8af5d6ec30b1c42771c91748` (PR #116). Accepted frozen head
+`e44bd10ac65e98b5c329f4e0adeaeb414c7a48f5` passes all six jobs in CI38076902840 and
+roadmap_docs38076903010. Match-head squash at 2026-10-10T19:55:51Z has the
+exact 57-character subject `Protect flattened loop arguments during field preparation`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`25dd472a889baf61422c254eaa6b370147c81244` and complete tree `f53d2fe498e3f5de928bea64991cc225e56419b6`,
+identical to the tested head. All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre116 and restored byte-for-byte after fast-forward.
+Merge0.25CPU/6.73elapsed, fetch0.04/1.10s, protection0.05/0.25s and acceptance
+audit0.67/5.75s pass (44 link sets,106 immutable pairs/tags,76 live heads/bases).
+Duplicate main CI38081735040 was cancelled only after complete-tree proof
+(0.04CPU/1.20elapsed); actual main docs38081735038 passes at the squash head.
+Queues35–38 are accepted in PRs113–116. Flattened loop argument preparation
+now protects the original box and each completed typed field duplicate until
+transfer. Alias/scalar bits, evaluation/trap order and original allocation
+controls remain intact. Phase2 remains incomplete; phases3–6 are pending.
+
+[PR117](https://github.com/e6qu/fun-with-pipes/pull/117) is the sole open production PR,
+delivering queue39 retain overflow on actual PR116 squash85198cc78ee7.
+Frozen head `3aeb9655d492253a9d4b01a604f1821a4edd9702` is published; both original
+commits, native snapshot5c663ef544f0 and old remote d98205af88df remain reachable.
+Rebase0.09CPU/0.98elapsed, three native regressions16.57/33.39s, all15 RC units
+3.31/6.81s, lint2.29/4.67s and format0.34/0.62s pass. Publication1.60/17.90s
+passes all three audits (44 link sets,106 immutable pairs/tags,76 live heads/bases).
+Old remote revision was retained before exact-lease update. PR creation passes
+0.16CPU/4.23elapsed. CI38081959849 passes bench, both ARM/Intel regular and both GC stress jobs;
+Linux is the remaining running gate. Docs38081959890 passes at the frozen head; require all seven passing gates before match-head squash with
+`Release partial retains and caller owners on count overflow` and an empty body.
+Next production after acceptance is queue40 constructor type context, FROM
+actual prepared39 d98205af88df onto PR117's eventual actual squash. Preserve both
+original commits and all original probes; run fresh focused checks on that base.
+Independent constructor binary capture is published at
+`38a013a224acfcf105c6aa77f941b0043c831e26` on unchanged source40
+5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. CI38082971623 passes both ARM/Intel jobs at the exact evidence head;
+capture/inspection/workflow files and the11-doc handoff snapshot differ. A
+remote-only metadata commit adds full-history checkout and the shared docs audit
+to both runner jobs after a local disk-limit refusal. Original e83b2a0b09cd
+remains reachable; its superseded queued run38082494104 is cancelled. It preserves the original
+later-field error test, record/variant negative exit4, alias/scalar controls,
+GC/reuse checks and raw interpreter/native O1/O2 agreement. New tooling regex
+and C newline validation passes0.00CPU/0.14elapsed after an escaping correction;
+publication0.08/2.51s passes. Both platforms execute the original test once with zero failed/ignored tests,
+inspect four actual O1/O2 positive/control binaries and pass the uploaded snapshot
+audit (44 link sets,106 immutable pairs/tags,76 live heads/bases). Compiled sizes
+agree: V8/align8, object header8/payload offset8, cleanup24 and each of the nine
+recorded typed Inner-owner contexts8/align8. These definitions do not sum to a
+frame size. Original exit4 controls for both record/variant paths remain intact.
+C, flags, hardware/compiler metadata, symbols and disassembly are retained in
+GitHub artifacts and /private/tmp/fwp-constructor-layout-38a013a-artifacts.
+Passing-proof verification/download passes0.22CPU/7.26elapsed, with original
+source/probe/production-workflow parity and four Mach-O binaries per platform.
+The isolated evidence checkout is fast-forwarded to38a013a224ac (0.00/0.13s). No final
+constructor production support is claimed; actual-squash/full gates remain. The
+refused snapshot audit passes on CI without bypassing the guard. After disk
+recovery to80.47GiB available, a fresh audit of the subsequently updated live
+docs passes0.49CPU/3.65elapsed (44/106/76). Limits remain unchanged.
+
+
+Accepted queue39 in PR117 at 571422b54647b5c95eb1bfe2d13bb3edf0176e0d on 85198cc78ee7d0cb8af5d6ec30b1c42771c91748. Frozen 3aeb9655d492253a9d4b01a604f1821a4edd9702 passes all six CI38081959849 jobs and docs38081959890. Raw subject 'Release partial retains and caller owners on count overflow' has 59 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree 5fa63ec44f134c96443adad74c6cbd1ff7c11656 are verified. All11 live docs were hashed and restored byte-for-byte during fast-forward.
+
+Earlier queue39 focused status, now accepted:
+Queue39 retain overflow source d98205af88dfc2300d19d2ca12b11a71146ded9a
+has been reviewed, with actual SIZE_MAX overflow and exact omitted partial/caller
+scope exits3/7 preserved. Its final rebase passes0.09CPU/0.98elapsed: FROM
+actual prepared38 4289528c436b onto the actual PR116 squash. Final native
+snapshot5c663ef544f08120181c9b247fdb0abc0f4f677f preserves both original commits
+and every source/probe byte. All three original native regressions pass
+16.57CPU/33.39elapsed; all15 RC units3.31/6.81s, lint2.29/4.67s and
+format0.34/0.62s pass. Final docs publication passes1.60CPU/17.90elapsed at frozen3aeb9655d492; exact-head full CI remains pending.
+
+PR117 acceptance checks: guarded merge0.22CPU/6.85elapsed, fetch0.05/1.22s,
+raw proof/all11-doc protection0.05/0.13s and acceptance audit0.56/4.03s pass
+(44/106/75). Duplicate main production CI38086882594 cancelled only after
+complete-tree equality (0.04/1.24s); actual main docs38086882597 passes.
+
+Final queue40 rebase0.05CPU/1.10elapsed passes FROM actual prepared39
+d98205af88df ONTO actual PR117 squash571422b54647. Native snapshot
+a51b9cf7ca699ea97524c38cc6631c6add9d21eb preserves both original commits and
+every original source/probe/production-workflow byte. Docs-only original5ebcb2d
+became empty after resolving only docs conflicts with all11 live docs; parity
+and original commit count were verified before explicitly preserving that
+commit with --allow-empty -C. Bounded cargo clean -p fwp in previous queue39
+checkout removed89.0MiB (0.05CPU/0.36elapsed) before fresh focused checks.
+
+Fresh queue40 actual-squash validation passes through the absolute-root fwp
+guard with FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3: cargo test --test
+constructor_type_ownership --test retain_unwind_ownership --test
+worker_preparation_ownership --test constructor_unwind_ownership executes all
+four original tests, zero ignored,20.27CPU/40.70elapsed. All17 rc::tests units
+pass3.60/7.51s; clippy on those four targets with -D warnings2.51/5.10s and
+cargo fmt --all -- --check0.44/0.83s pass. Original exact omitted nested-child
+cleanup exit4 on both record/variant paths, aliases/scalar bits, GC stress/
+verification, reuse verification and raw interpreter/native O1/O2 agreement
+remain unchanged. Final seven exact-head production gates still remain.
+
+Preparation40 publishedd5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f on actual571422b54647b5c95eb1bfe2d13bb3edf0176e0d, FROMactuald98205af88dfc2300d19d2ca12b11a71146ded9a. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Old5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f retained at roadmap/revision-040-5ebcb2d6b0e2 before exact-lease publication. Final actual-squash source preserves both original commits; four original constructor-type/constructor-unwind/retain/worker regressions20.27CPU/40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s pass; original source/probes unchanged including exact outer-only exit4 for record/variant, aliases/scalar bits and raw interpreter/native agreement; actual ARM/Intel binary evidence passes; exact-head full gates required
+
+Final queue40 publication1.92CPU/19.82elapsed passes all three shared audits
+(44/106/75); frozen headd5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f has both
+original commits plus an appended current-docs commit on actual squash571422b54647.
+All source/probe/production-workflow bytes remain original. Retained revision
+roadmap/revision-040-5ebcb2d6b0e2 precedes exact-lease publication. Sole production
+PR118 opens0.16CPU/3.76elapsed; exact-head CI38087199063 and docs38087199031
+are queued, not accepted support. Next delivery is41 on the eventual actual squash.
+
+## Boxed conversion machine-code evidence preparation
+
+Isolated prepared41 sourcecca935846750b6190b6a8823eb4f55d689c75c0e is preserved
+at evidence head0063d4f5f5c71ab7057b6693d8c59576271ca171. Only capture/inspection/
+evidence-workflow files and all11 current docs differ. Worktree creation
+0.03CPU/0.25elapsed, tooling AST plus shared audit0.52/3.80s (44/106/75) and
+publication0.21/3.68s pass through the unchanged guard. Original conversion
+probe/compiler/runtime/production workflows are byte-exact. CI38087378359 is
+queued, not accepted. Both platforms must execute the original overflow test
+once, retain exact original-box exit3 and remaining-caller exit7 at O1/O2,
+alias/scalar controls, GC/reuse modes and raw interpreter/native agreement.
+Tooling captures six actual binaries each, tracks active scopes after popped
+tick scopes and compiles layout drivers. No production speed/ABI/cache claim.
+Completed journal /private/tmp/fwp-conversion-layout-evidence-publication.json
+must not rerun. Current production remainsPR118 at frozend5959b7981d9.
+Deferred PR118 merge/protection and queue41 final rebase helpers parse
+(0.00CPU/0.13elapsed); their dependent actions remain unexecuted.
+
+## Obsolete accepted and duplicate preparation rows removed
+
+Removed the two remaining obsolete live handoff rows after confirming PR112
+acceptance at486520c141d3 on frozenac24ea45cbe0, all six CI38054115210 jobs
+and docs38054115151 passing. Queue34 was already verified as a docs-only
+duplicate delivered in PR107. Their immutable queue anchors and retained
+remote revisions remain untouched. Earlier rows are preserved here:
+
+| 33 ownership-loop-unwind | ac24ea45cbe0 | 837096b9a5dc | Final actual-squash rebase preserves both native implementations and all source/probes/workflows; two original tests11.39CPU/22.82elapsed, lint2.57/5.19s and format0.44/0.83s pass; exact-head full PR gates required |
+| 34 ownership-argument-preparation | 49705971b287 | 0ec280e18416 | Exact source/tests/scripts/workflow parity with current33; docs only; skip implementation PR after33 acceptance; original anchors and later coverage preserved |
+
+Streamlined live-handoff audit passes0.53CPU/3.94elapsed through python3 scripts/local-guard.py python3 scripts/check-roadmap.py:44 link sets,106 immutable pairs/tags,73 live heads/bases. Pending evidence snapshot audits still expect their original75 rows; no snapshot is rewritten or accepted by a newer result.
+
+## Passing boxed conversion machine-code evidence
+
+CI38087378359 passes both architecture jobs at0063d4f5f5c71ab7057b6693d8c59576271ca171
+on unchanged source41 cca935846750b6190b6a8823eb4f55d689c75c0e. Original compiler/
+runtime/probes/production workflows are byte-exact; only three evidence files
+and all11 docs differ. Original conversion_overflow_releases_box_and_remaining_callers
+executes once per platform, zero ignored, retaining exact omitted original-box
+exit3 and remaining-caller exit7 for O1/O2, aliases/scalar bits, actual SIZE_MAX
+overflow, GC/reuse modes and raw interpreter/native agreement. Both docs audits
+pass44/106/75 for the uploaded snapshot; current streamlined root has73 rows.
+
+Each architecture captures six actual Mach-O binaries with verified headers,
+C hashes, flags, symbols and disassembly. Layouts agree: V8/align8, variant32/
+align8, payload offset8, cleanup24, wide entry24/count offset8. The actual
+conversion boundary has remaining-caller context11 and original-box context12,
+each8/align8, under active scopes t21 and t23. Controls remove exactly the
+corresponding scope; popped entry-tick scopes are excluded. Twelve holder-context
+definitions range8–48 bytes; they are not summed into a stack-frame claim.
+Passing-proof/artifact collection0.25CPU/7.42elapsed passes under the unchanged
+guard, no original test rerun. Artifacts are in
+/private/tmp/fwp-conversion-layout-0063d4f-artifacts and proof in
+/private/tmp/fwp-conversion-layout-passing-proof.json; completed collectors
+must not rerun. No production ABI, speed, cache or collector-free claim.
+
+arm64: Apple M1 (Virtual); Apple clang version 17.0.0 (clang-1700.0.13.5); ProductName:		macOS; ProductVersion:		15.7.9; BuildVersion:		24G830; 
+O1 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 575 (controls have the same main count; this is not a runtime count).
+O2 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 666 (controls have the same main count; this is not a runtime count).
+
+x86_64: Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz; Apple clang version 17.0.0 (clang-1700.0.13.5); ProductName:		macOS; ProductVersion:		15.7.9; BuildVersion:		24G830; 
+O1 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 582 (controls have the same main count; this is not a runtime count).
+O2 positive Csha256 a7723d891e4c3144fa97e51cc007b331291d35e426da9d2bcf3ee983b83a681a; static main instructions 688 (controls have the same main count; this is not a runtime count).
+
+All seven final sequential production gates and the actual squash-base rebase remain for queue41. Current production PR118 remains frozen atd5959b7981d9.
+
+## Archived handoff after PR #118
+
+Main is `571422b54647b5c95eb1bfe2d13bb3edf0176e0d` (PR #117). Accepted frozen head
+`3aeb9655d492253a9d4b01a604f1821a4edd9702` passes all six jobs in CI38081959849 and
+roadmap_docs38081959890. Match-head squash at 2026-10-10T21:14:54Z has the
+exact 59-character subject `Release partial retains and caller owners on count overflow`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`85198cc78ee7d0cb8af5d6ec30b1c42771c91748` and complete tree `5fa63ec44f134c96443adad74c6cbd1ff7c11656`,
+identical to the tested head. All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre117 and restored byte-for-byte after fast-forward.
+Merge0.22CPU/6.85elapsed, fetch0.05/1.22s, protection0.05/0.13s and
+acceptance audit0.56/4.03s pass (44 link sets,106 immutable pairs/tags,75 live
+heads/bases). Duplicate main CI38086882594 was cancelled only after complete-tree
+proof (0.04CPU/1.24elapsed); actual main docs38086882597 passes at the squash.
+Queues35–39 are accepted in PRs113–117. Multi-field typed retains now release
+completed extras on count overflow, with existing caller owners protected and
+unfinished extras excluded from the liveness checkpoint. Exact omission exits3/7,
+alias/scalar controls and raw interpreter/native agreement remain checked.
+Phase2 remains incomplete; phases3–6 are pending.
+
+[PR118](https://github.com/e6qu/fun-with-pipes/pull/118) is the sole open production
+PR, delivering queue40 constructor type context on actual PR117 squash571422b54647.
+Frozen head `d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` preserves both original
+commits, native snapshota51b9cf7ca69 and every original source/probe/workflow byte.
+Rebase0.05CPU/1.10elapsed, four native regressions20.27/40.70s, all17 RC units
+3.60/7.51s, lint2.51/5.10s and format0.44/0.83s pass. Publication1.92/19.82s
+passes all three audits (44/106/75), retaining old5ebcb2d6b0e2 before the exact
+lease; PR creation0.16/3.76s passes. CI38087199063 has Linux, both regular macOS and both GC stress jobs running;
+bench and docs38087199031 are queued at the frozen head. Require all seven passing gates before match-head squash with
+`Preserve nested constructor types for exceptional ownership cleanup` and an
+empty body. Exact outer-only cleanup exit4 for record/variant, aliases/scalar bits,
+GC/reuse modes and raw interpreter/native O1/O2 agreement remain intact.
+Next production after acceptance is queue41 variant conversion FROM actual
+prepared40 5ebcb2d6b0e2 onto PR118's eventual actual squash. Preserve both original
+commits and all original probes, then run fresh focused checks. Independent
+binary evidence stays outside production ancestry and does not replace final gates.
+
+
+Accepted queue40 in PR118 at e07b03d9d4040ad458072c4aaf401a26c79f4fb9 on 571422b54647b5c95eb1bfe2d13bb3edf0176e0d. Frozen d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f passes all six CI38087199063 jobs and docs38087199031. Raw subject 'Preserve nested constructor types for exceptional ownership cleanup (#118)' has 74 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree cb50c8e69950a2936c0f2e682b3da0edce5780a3 are verified. All11 live docs were hashed and restored byte-for-byte during fast-forward.
+
+## Archived verbose handoff at PR118
+
+# Session handoff
+
+Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
+[design](design.md) before changing code. This is the live handoff;
+[queue](roadmap-queue.md) preserves immutable anchors and
+[history](roadmap-history.md) preserves detailed checks and superseded status.
+Prepared branch docs are historical snapshots; current root docs are authoritative.
+
+## Execution contract
+
+Complete the roadmap automatically, one focused PR at a time. Publication,
+PR creation, repairs and squash merges are authorized across sessions. Failing
+checks are repair tasks; CI gates merging while independent work continues.
+Keep tacit, curried, data-last pipes, immutable values, tracked effects, checked
+arithmetic, affine resources and evaluation/trap order. Use FWP_NO_OPT=1
+explicitly for raw interpreter oracles. Prepared work is not merged support.
+
+Every entire commit message is one line, at most 80 characters, with no body,
+trailers or attribution. Use ordinary author metadata. Require all six passing
+jobs at the current exact PR head: test, bench, macos (macos-15), macos
+(macos-15-intel), macos_gc (macos-15), macos_gc (macos-15-intel). Regular macOS
+excludes only golden_programs_under_gc_stress; dedicated GC jobs execute it.
+Queued/skipped/cancelled/superseded/old runs are never passing gates. Squash:
+
+```sh
+gh pr merge NUMBER --squash --subject 'SUBJECT' --body '' --match-head-commit SHA
+```
+
+## Main and next delivery
+
+Main is `e07b03d9d4040ad458072c4aaf401a26c79f4fb9` (PR #118). Accepted frozen head
+`d5959b7981d9553bbf8d1fdeb15a45b9b6cbf37f` passes all six jobs in CI38087199063 and
+roadmap_docs38087199031. Match-head squash at 2026-10-11T00:20:28Z has the
+exact 74-character subject `Preserve nested constructor types for exceptional ownership cleanup (#118)`, one line,
+empty body and no trailers or attribution. Raw commit has one parent
+`571422b54647b5c95eb1bfe2d13bb3edf0176e0d` and complete tree `cb50c8e69950a2936c0f2e682b3da0edce5780a3`,
+identical to the tested head. All11 live docs were hashed in
+/private/tmp/fwp-main-docs-pre118 and restored byte-for-byte after fast-forward.
+Queues35–40 are accepted in PRs113–118. Ownership temporaries now inherit
+known monomorphic constructor/field/result context when expression types are
+missing, so later-field failure releases nested children. Expression-inferred
+types remain authoritative. Exact outer-only cleanup exit4 for record/variant,
+aliases/scalar bits and raw interpreter/native agreement remain checked.
+Phase2 remains incomplete; phases3–6 are pending.
+
+Next production delivery is queue41 variant conversion FROM actual prepared40
+5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f onto this actual PR118 squash.
+Preserve both original commits and every original source/probe byte. Run fresh
+variant-conversion, constructor-type and worker-boxing regressions, all RC units,
+lint and formatting under the unchanged guard. Preserve original-box exit3 and
+remaining-caller exit7, alias/scalar controls, GC/reuse modes and raw interpreter
+agreement. Copy all11 docs, audit, retain the old remote revision and publish
+with an exact lease before opening the sole next production PR. Every final
+head needs all seven passing gates. Independent evidence stays outside production.
+
+Independent constructor binary capture is published at
+`38a013a224acfcf105c6aa77f941b0043c831e26` on unchanged source40
+5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. CI38082971623 passes both ARM/Intel jobs at the exact evidence head;
+capture/inspection/workflow files and the11-doc handoff snapshot differ. A
+remote-only metadata commit adds full-history checkout and the shared docs audit
+to both runner jobs after a local disk-limit refusal. Original e83b2a0b09cd
+remains reachable; its superseded queued run38082494104 is cancelled. It preserves the original
+later-field error test, record/variant negative exit4, alias/scalar controls,
+GC/reuse checks and raw interpreter/native O1/O2 agreement. New tooling regex
+and C newline validation passes0.00CPU/0.14elapsed after an escaping correction;
+publication0.08/2.51s passes. Both platforms execute the original test once with zero failed/ignored tests,
+inspect four actual O1/O2 positive/control binaries and pass the uploaded snapshot
+audit (44 link sets,106 immutable pairs/tags,76 live heads/bases). Compiled sizes
+agree: V8/align8, object header8/payload offset8, cleanup24 and each of the nine
+recorded typed Inner-owner contexts8/align8. These definitions do not sum to a
+frame size. Original exit4 controls for both record/variant paths remain intact.
+C, flags, hardware/compiler metadata, symbols and disassembly are retained in
+GitHub artifacts and /private/tmp/fwp-constructor-layout-38a013a-artifacts.
+Passing-proof verification/download passes0.22CPU/7.26elapsed, with original
+source/probe/production-workflow parity and four Mach-O binaries per platform.
+The isolated evidence checkout is fast-forwarded to38a013a224ac (0.00/0.13s). No final
+constructor production support is claimed; actual-squash/full gates remain. The
+refused snapshot audit passes on CI without bypassing the guard. After disk
+recovery to80.47GiB available, a fresh audit of the subsequently updated live
+docs passes0.49CPU/3.65elapsed (44/106/76). Limits remain unchanged.
+
+Independent boxed conversion binary evidence passes both jobs in CI38087378359
+at `0063d4f5f5c71ab7057b6693d8c59576271ca171` on unchanged prepared41
+cca935846750b6190b6a8823eb4f55d689c75c0e. Each original conversion-overflow test
+executes once with zero ignored tests; exact original-box/remaining-caller
+negative exits3/7, alias/scalar controls, GC/reuse modes and raw interpreter/native
+O1/O2 agreement remain unchanged. Both uploaded-snapshot docs audits pass44/106/75.
+Only three evidence files and all11 docs differ from source41; production code,
+probes and workflows are byte-exact. Both platforms inspect six actual Mach-O
+positive/control binaries. Compiled sizes agree: V8/align8, variant32/align8,
+payload8, cleanup24, wide entry24/count8. The two active conversion owner contexts
+are each8/align8; other recorded holder contexts range8–48 bytes and are not
+summed into a frame. Original-box or remaining-caller scope omission removes
+exactly one active scope, with popped entry-tick scopes excluded. Hardware,
+flags, C, binaries, symbols and disassembly are retained in GitHub and
+/private/tmp/fwp-conversion-layout-0063d4f-artifacts; passing proof is
+/private/tmp/fwp-conversion-layout-passing-proof.json. Tooling/audit0.52CPU/3.80s,
+publication0.21/3.68s and collection0.25/7.42s pass under unchanged limits.
+No production ABI/speed/cache claim; final actual-squash checks and all seven
+gates still remain for queue41. Completed publication/collection must not rerun.
+
+Independent loop binary evidence passes both jobs in CI38076425571 at
+`d9d1a02b5c8e7c52e15d0c8077a3b3b8071b71b8` on unchanged source38
+4289528c436b. Only capture/inspection/workflow files differ. Both architectures
+execute the original test without skips and capture four actual O1/O2 positive/control binaries.
+Tooling validation passes1.66CPU/3.46elapsed; publication0.13/3.18s.
+Compiled local sizes: V8/align8, state32, owner8/16, cleanup24 bytes.
+Passing-proof/artifact download passes0.19CPU/6.72elapsed. Instrumented
+positive loop frames are496 bytes ARM and456 Intel (saved registers included;
+Intel return address excluded); these are not production stack/speed guarantees.
+This evidence does not accept the final production head.
+
+Queue34 is skipped as a verified docs-only duplicate of preparation code/probes
+delivered in #107. Its immutable anchor, ancestry and later coverage are preserved.
+Keep one production PR open; prepare/fix later tasks while CI runs.
+
+## Active repair and independent work
+
+Effects diagnostic7bfc46903ce8ed35c3cd7049c633423a8b100113 passes all three
+platforms in CI38048799853: Linux and ARM/Intel macOS. Strict original program
+stdout/stderr/exit and normal/fresh compilation trials pass; separate sanitizer
+logs preserve the known ARM no-return stack-instrumentation limitation. Actual
+injected heap-use-after-free is rejected independently on each platform even
+when program output/exit still match. Compiler/runtime/production tests unchanged.
+This does not establish complete ASan stack coverage or fix the old signal.
+
+Preparations41–112 are refreshed and published on their actual predecessors.
+Original source/probes, multi-commit repairs and immutable anchors are preserved;
+focused controls, lint, format and all audits pass. Exact heads, bases and metrics
+are in the table; detailed checks and retained revisions are in history. Completed
+publication journals must not rerun. Final squash rebases/full gates still remain.
+
+Actual ARM64 binary/layout evidence for44,65,79,80,83,111 and112 records the current8-byte
+slot baseline and tested aggregate/File layouts. The six-I64 worker value is48 bytes/aligned8 and returns through
+caller storage with192/208-byte frames; no speed or constant-stack claim.
+ALPN67 passes actual major tracing and exact omitted-fence exit1. TLS59 streams
+executes without skip and agrees exactly with the interpreter. OpenCL57–58 uses
+fake APIs, not hardware evidence. Closing channels preserves queued values;
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
+
+Preparation 112 is published at b45e93a71d400ae3872142c70b29aa8128793e07 on actual
+111 5a01572cb2c6. Both original feature/format commits and all source/probes survive.
+Four original address/packed/identity/connection tests (11.32 CPU / 25.93 elapsed s),
+actual ARM64 binary/layout inspection (0.22 / 0.99 s), lint (2.64 / 5.34 s), format
+(0.44 / 0.85 s), three audits and retained publication (1.79 / 18.61 s) pass.
+Actual new/legacy headers are 272/520 bytes, aligned 8, with short request 278;
+long loopback/pool reuse and truncation exit 1 remain checked. Final sequential
+gates still remain. All completed publication/rebase journals must not rerun.
+Independent ARM/Intel binary evidence is published at
+`5a56aa1ebbc2b609ebd51c675d44e454ddedba8d` on source112 b45e93a71d40,
+branch ownership-evidence-grpc-layout. CI38075612557 passes both ARM/Intel jobs at the exact evidence head.
+Both original tests execute once per platform with zero failed/ignored tests. Original packed-options/address tests,
+compiler and runtime bytes are unchanged. Only a delegating capture wrapper,
+compiled-layout/disassembly inspector and evidence-only workflow were added.
+Compiled layouts agree on both architectures: TLS64/align8, connection272
+versus legacy520/align8; requests101/8311 and278 are unchanged.
+Real Mach-O C/binaries/symbols/disassembly and hardware/flags are retained;
+fault/observer frames are not production stack or performance guarantees.
+Local tooling validation passes1.83CPU/4.05elapsed; publication0.13/3.34s
+and passing-proof/artifact download0.35/9.06s. This evidence does not
+accept rewritten production heads or create another production PR. A bounded
+actual local allocator check passes0.60CPU/1.70elapsed: TLS101/8311 requested
+bytes occupy112/8704 malloc-usable bytes; short connection278 occupies320 GC
+slot bytes, versus640 for the old520-byte header-size allocation in the same
+allocator. This is ARM local capacity evidence, excluding metadata, reservation
+and cache/speed claims; full details and limits are in history.
+
+The finite phase2 review records prepared source112 policies after PR115 acceptance. The corrected effective audit resolves40 explicit foreign aliases:373 declarations
+map to363 distinct runtime symbols, with category counts134/19/12/208 unchanged
+(the208 review declarations represent198 symbols).
+Missing metadata alone is not a sharing gap.
+Numeric parsing borrows input but returns shared Option payloads; remote force
+memoizes results, and scoped TLS C owners do not count fwp callback graphs.
+These are source reviews, not new runtime checks or reclamation acceptance.
+Preserve conservative boundaries, cycle policy, original resource semantics and
+phase order. Recheck the finite exit inventory against merged source after the
+ownership queue is delivered. PR118 is accepted; current delivery is queue41 on its actual squash.
+Queue39 retain overflow is accepted in PR117; native5c663ef544f0 and original source d98205af88df remain reachable. 
+Independent ARM/Intel machine-code evidence passes both jobs in CI38077436743 at
+b0260c9d3aa72401dae338860e34c93600ec8dd1 on unchanged source39. Only
+capture/inspection/workflow files differ. The inspector tracks active cleanup
+scopes, excluding popped entry-tick scopes. Earlier6b1713dd5310 is retained
+remotely; superseded diagnostic CI38077259408 was cancelled, not accepted.
+The unchanged original test now passes locally with all six real positive/control
+binaries captured (10.63CPU/21.45elapsed). Corrected active-scope inspection and
+compiled layout driver pass0.35/0.93s: V8/align8, variant32/payload8, pair16,
+partial owner16, cleanup24, wide entry24/count offset8. Exact negative exits3/7
+and raw interpreter/native agreement remain intact. Artifact download and passing-proof
+verification pass0.18CPU/7.08elapsed; each platform executes the original test
+once with no skips and captures six actual O1/O2 positive/control binaries.
+Both runner layouts match the local sizes above; hardware, compiler, flags, C,
+symbols and disassembly are retained. Final actual-squash focused checks and all seven production gates pass for PR117.
+This adds no compiler/runtime change and does not accept a production head.
+
+
+Full prepared ownership evidence `0f8c53199b2cb2ab1ebf54e4323a9b2efe064656` / CI38048222203 passes
+all six production jobs plus docs on exact source112 `0da68ea8cdb18b3d7a5ba4a2cb923cb16fe643d5`.
+Compiler/runtime/tests/scripts/production workflows match that source byte-for-byte;
+only the evidence workflow and three docs differ. Linux job114201941833 executes
+the mandatory actual WASI count/File-child disposal and disabled-free controls,
+with FWP_REQUIRE_WASM_RESOURCE_COUNTS=1; all pass without a skip. Both regular
+macOS architectures and both GC stress jobs pass the repaired worker/HTTP2 probes.
+Saved exact-head gate proof and Linux log are recorded in history. This validates
+the prepared source, not merged support, phase2 completion or collector-free
+execution. Every sequential PR still requires its own final rebase and full gates.
+Original failed38016929326/3a97905ca980 remains retained and archived.
+
+Inherited worker and HTTP/2 repairs remain unchanged in refreshed preparations.
+Complete compatible counted record-worker calls transfer locally; partial/dynamic
+calls still box. The strict HTTP/2 body-root fixture passed GCC/Clang Linux and
+ARM/Intel macOS, including omitted-fence exit 1. Original negative controls,
+immutable anchors and multi-commit repairs must survive every final rebase.
+Detailed candidates, failed runs and completed propagations are in history;
+completed journals must not rerun.
+
+## Next sequential preparations
+
+Current bases differ from immutable OLD parents; never replace OLD anchors.
+All listed source oracles explicitly use FWP_NO_OPT=1. Published preparations
+still need their final squash rebases and six exact-head full gates.
+
+| Row / branch | Current head | Actual current base | Focused tests (CPU / elapsed) |
+|---|---|---|---|
+| 41 ownership-variant-conversion | cca935846750 | 5ebcb2d6b0e2 | Three original native tests17.38CPU/34.92elapsed and exact conversion unit3.48/7.20s, lint2.48/4.96s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 42 ownership-record-update | cd2c8fa4251a | cca935846750 | Both original commits preserved; two native tests16.05CPU/32.33elapsed and exact update unit3.62/7.57s, lint2.80/5.59s and format0.44/0.86s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 43 ownership-record-conversion | 6b809877a1ac | cd2c8fa4251a | Both original conversion/checkpoint repair commits preserved; seven native tests34.28CPU/68.76elapsed and all20 ownership units3.61/7.63s, lint2.53/5.21s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 44 ownership-variant-alias | b094ffbe7e46 | 6b809877a1ac | Two original tests9.66CPU/19.51elapsed, lint2.55/5.17s and format0.35/0.62s pass; exact positive/control binaries and ARM64 layout/disassembly retained; original source/probes unchanged; final actual-squash/full gates required |
+| 45 ownership-match-context | 2b7dc81c7d1f | b094ffbe7e46 | Two original tests9.14CPU/18.85elapsed, lint2.49/5.03s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 46 ownership-field-context | 6255a8f54f54 | 2b7dc81c7d1f | Two original tests9.56CPU/19.54elapsed, lint2.59/5.13s and format0.44/0.82s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 47 ownership-caf-cache | 7e1c164a0e81 | 6255a8f54f54 | Three original native tests11.60CPU/25.24elapsed and all21 ownership units3.48/7.37s, lint2.50/4.92s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 48 ownership-inline-caf | 36fb4e1de52e | 7e1c164a0e81 | Two original unused-argument evaluation/release tests12.99CPU/26.95elapsed, lint2.57/5.15s and format0.38/0.71s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 49 ownership-task-thunks | 215e0edec0f1 | 36fb4e1de52e | Both original retained-capture and failed-spawn controls11.38CPU/23.18elapsed, lint2.63/5.26s and format0.43/0.81s pass; all original source/probes unchanged; final actual-squash/full gates required |
+| 50 ownership-task-within | 5cfbbf10087a | 215e0edec0f1 | Three original deadline/retained-thunk controls5.34CPU/10.77elapsed, exact contract inventory3.62/7.53s, lint2.44/4.88s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 51 ownership-task-scope | f36bacf80bfc | 5cfbbf10087a | Four original scope/deadline/retained-thunk controls15.75CPU/31.78elapsed, exact contract inventory3.45/7.06s lint2.48/4.97s and format0.44/0.82s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 52 ownership-task-handles | df26a860c99f | f36bacf80bfc | Five original task-handle/scope/deadline/retained-thunk controls20.97CPU/42.72elapsed, all21 RC units3.49/7.14s, exact contract inventory0.00/0.13s, lint2.45/5.02s and format0.45/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 53 ownership-channel-queues | b304e91f628c | df26a860c99f | Five original channel/task-alias/task-handle controls19.72CPU/39.59elapsed, all21 RC units3.59/7.54s, exact contract inventory0.00/0.13s, lint2.49/4.99s and format0.44/0.83s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 54 ownership-library-results | 46afd27c986c | b304e91f628c | Original C library result control7.96CPU/17.73elapsed, lint2.47/4.88s and format0.43/0.82s pass; original source/probes unchanged, including all four reclamation/string/guard/evaluation controls; final actual-squash/full gates required |
+| 55 ownership-library-inputs | 96ee4fd963e3 | 46afd27c986c | Three original C library input/result controls9.78CPU/22.08elapsed, lint2.46/4.98s and format0.44/0.82s pass; original source/probes unchanged, including input rollback/transfer omissions and missing Bytes-length diagnostic; final actual-squash/full gates required |
+| 56 ownership-library-unload | 6c367aa9a921 | 96ee4fd963e3 | Four original unload/input/result controls12.41CPU/31.49elapsed, lint2.50/5.12s and format0.44/0.82s pass; original source/probes unchanged, including actual loader/static-exit behavior and all six teardown omissions; final actual-squash/full gates required |
+| 57 ownership-opencl-lifetime | 3dd39a69a430 | 6c367aa9a921 | Both original fake-OpenCL/library-unload controls10.35CPU/30.64elapsed, lint2.50/5.00s and format0.44/0.82s pass; original source/probes unchanged; fake API does not verify GPU hardware; final actual-squash/full gates required |
+| 58 ownership-interpreter-opencl | 4119be1cdaf9 | 3dd39a69a430 | Both original fake-OpenCL/library-unload controls14.15CPU/35.43elapsed, lint2.41/4.87s and format0.45/0.84s pass; interpreter/native failure outputs agree; original source/probes unchanged; no GPU hardware claim; final actual-squash/full gates required |
+| 59 ownership-tls-listeners | f5e2a298537d | 4119be1cdaf9 | Original listener control8.98CPU/20.75elapsed and actual TLS streams engine agreement7.58/18.01s pass without skip; lint2.63/5.31s and format0.45/0.84s pass; original source/probes unchanged, including all six omissions; final actual-squash/full gates required |
+| 60 ownership-library-resources | 3eb64f54869f | f5e2a298537d | Three original resource/listener/unload controls12.71CPU/32.58elapsed, lint2.54/5.13s and format0.45/0.84s pass; original source/probes unchanged, including six resource/shutdown omissions and host handle survival; final actual-squash/full gates required |
+| 61 ownership-grpc-server-cleanup | ca75ca461682 | 3eb64f54869f | Three original gRPC/listener/resource controls13.67CPU/30.41elapsed, lint2.61/5.23s and format0.46/0.86s pass; original source/probes unchanged, including scheduler cancellation and guard/fd/context omissions; final actual-squash/full gates required |
+| 62 ownership-tls-cache-failures | 0b51abc49371 | ca75ca461682 | Three original TLS-cache/resource/gRPC controls11.72CPU/27.33elapsed, lint2.44/4.93s and format0.45/0.86s pass; original source/probes unchanged, including all five partial-owner/cache-publication controls; final actual-squash/full gates required |
+| 63 ownership-tls-wire-preparation | 2c2c562401ab | 0b51abc49371 | Three original wire/cache/listener controls10.61CPU/25.68elapsed, lint2.53/5.13s and format0.45/0.85s pass; original source/probes unchanged; measured 13-byte ALPN buffer without GC scratch and all original failure/length controls preserved; final actual-squash/full gates required |
+| 64 ownership-connect-cancellation | d7641a1ab055 | 2c2c562401ab | Three original connect/wire/cache controls10.02CPU/23.52elapsed, lint2.57/5.19s and format0.44/0.82s pass; original source/probes unchanged, including all four resolver/descriptor/handshake omissions; final actual-squash/full gates required |
+| 65 ownership-unboxed-worker-locals | e217ad8ce0d9 | d7641a1ab055 | Both original worker/repair commits preserved; 12 original native controls40.51CPU/81.23elapsed, all21 RC units3.62/7.48s, lint2.50/5.14s and format0.44/0.82s pass; original source/probes unchanged; exact ARM64 worker binaries/layout/disassembly retained; final actual-squash/full gates required |
+| 66 ownership-tls-peer-subject | 7250692d5758 | e217ad8ce0d9 | Three original subject/cache/listener controls10.61CPU/26.65elapsed, lint2.45/5.01s and format0.43/0.82s pass; original source/probes unchanged, including certificate/BIO/buffer/allocation omissions; final actual-squash/full gates required |
+| 67 ownership-tls-alpn-roots | 6d80e63524c2 | 7250692d5758 | Three original ALPN-root/subject/listener controls9.86CPU/23.27elapsed, lint2.49/4.99s and format0.44/0.82s pass; original source/probes unchanged, including actual major collection and exact omitted-fence exit1; final actual-squash/full gates required |
+| 68 ownership-ci-probe-repairs | c0cdb26eb99b | 6d80e63524c2 | Original timer regression10.62CPU/22.32elapsed, lint2.66/5.30s and format0.44/0.83s pass; original source/probes unchanged; raw interpreter agrees across O1/O2, three preemption slices, both reuse modes and delayed overtaking; final actual-squash/full gates required |
+| 69 ownership-nested-loop-boxing | 7a68a54d2660 | c0cdb26eb99b | All10 original nested-loop/loop-unwind/worker/caller tests22.68CPU/46.10elapsed, all21 RC units3.54/7.24s, lint2.45/4.83s and format0.45/0.86s pass; original source/probes unchanged, including all three exact omitted-scope exit2 controls; final actual-squash/full gates required |
+| 70 ownership-file-construction | ab3a93780dc3 | 7a68a54d2660 | All four original construction/unwind tests10.29CPU/21.66elapsed, lint2.43/4.82s and format0.44/0.85s pass; original source/probes unchanged, including exact omitted-scope exit2 and stale-finalizer exit3; raw interpreter/native File behavior agrees; final actual-squash/full gates required |
+| 71 ownership-file-write-visibility | 702cd9b0a69a | ab3a93780dc3 | All six original write/construction/unwind tests12.54CPU/25.17elapsed, lint2.44/4.91s and format0.45/0.85s pass; original source/probes unchanged, including exact omitted-flush exit3; raw interpreter/native immediate write bytes agree; final actual-squash/full gates required |
+| 72 ownership-file-io-errors | eee4807a3954 | 702cd9b0a69a | All nine original File I/O/byte-text/write/construction/unwind tests21.27CPU/42.63elapsed, lint2.44/4.90s and format0.44/0.84s pass; source/probes unchanged, including exact buffer/stream omission exit5 and omitted write-error exit8; raw interpreter/native stdout/stderr/exit agree; final actual-squash/full gates required |
+| 73 ownership-resource-frames | 3dba256655a3 | eee4807a3954 | Both original implementation/fusion repair commits preserved; all11 frame/File/unwind/loop tests30.28CPU/60.68elapsed, three resource units3.79/7.76s, all21 RC units0.02/0.32s, lint2.51/5.11s and format0.44/0.84s pass; original source/probes unchanged; final actual-squash/full gates required |
+| 74 ownership-file-runtime-owners | 8d5cb3c4e3e4 | 3dba256655a3 | All nine File-owner/I/O/frame/unwind tests24.61CPU/49.55elapsed, lint2.62/5.40s and format0.44/0.82s pass; original source/probes unchanged, including exact owner/alias/text omission exits6/7/10 with GC on/off and no-free comparison; storage retains compatibility lifetime; final actual-squash/full gates required |
+| 75 ownership-file-discard | 423a7ddcc760 | 8d5cb3c4e3e4 | All10 discard/frame/runtime/caller tests37.88CPU/75.92elapsed, all23 RC units3.94/8.12s, three resource units0.00/0.13s, exact inventory0.00/0.13s, lint2.49/5.12s and format0.45/0.83s pass; original source/probes unchanged, including low-descriptor GC/reuse/free-off runs and exact omitted frame exit1; final actual-squash/full gates required |
+| 76 ownership-file-runtime-boundaries | 603bb0b914db | 423a7ddcc760 | All10 scoped-result/discard/runtime/frame/task-handle/unwind tests45.48CPU/92.82elapsed, exact inventory4.45/9.15s, lint2.60/5.33s and format0.45/0.86s pass; original source/probes unchanged, including exact omitted result-owner exit101 and wrong-free exit29; raw interpreter/native File results agree; final actual-squash/full gates required |
+| 77 ownership-wasm-resource-counts | f4a26004d5a8 | 603bb0b914db | Original native bump control8.26CPU/17.53elapsed, lint2.64/5.25s and format0.44/0.83s pass; original source/probes/mandatory WASI workflow unchanged, including exact count-disabled exit4; native checks are not actual WASI proof; final actual-squash/full and mandatory actual WASI gates required |
+| 78 ownership-wasm-count-disposal | 13c77dbb7b82 | f4a26004d5a8 | Native disposal8.79CPU/18.00elapsed, original bump1.01/2.19s, two scoped File/task tests17.02/34.70s, lint3.00/6.03s and format0.45/0.87s pass; original source/probes/workflows unchanged, including exact omitted aggregate/runtime disposal exits5/9; physical bump storage remains allocated; final actual-squash/full and mandatory actual WASI gates required |
+| 79 ownership-resource-frame-fields | 2f842d5d266f | 13c77dbb7b82 | Original frame-field binary capture11.03CPU/22.98elapsed, eight frame/caller tests24.39/48.85s, all23 RC units3.95/8.30s, lint2.73/5.52s and format0.44/0.84s pass; source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 binaries/layout/disassembly retained; final actual-squash/full gates required |
+| 80 ownership-file-inline-path | 010e622f064e | 2f842d5d266f | Both original binary-capture tests10.16CPU/20.43elapsed, eight File constructor/I/O/runtime/unwind tests26.13/53.21s, lint2.95/5.96s and format0.55/1.09s pass; original source/probes unchanged; actual ARM64 headers/layouts/disassembly and one-vs-two allocation counters preserved; final actual-squash/full gates required |
+| 81 ownership-file-storage-disposal | 6e5063786651 | 010e622f064e | All nine storage/inline-path/runtime/construction/scoped/unwind tests30.46CPU/63.43elapsed, lint2.61/5.44s and format0.42/0.77s pass; original source/probes unchanged, including exact missing finalizer-removal/storage exits4/7, tracing-off reuse and unrelated live Files; shared/no-free lifetimes preserved; final actual-squash/full gates required |
+| 82 ownership-file-construction-disposal | ecfd9a28c39e | 6e5063786651 | All nine constructor/storage/library-resource/scoped/unwind tests29.08CPU/63.78elapsed, lint2.70/5.69s and format0.50/0.96s pass; original source/probes unchanged, including hard-exit102 and exact premature growth/omitted disposal exits3/5; unrelated registry entries and rollback preserved; final actual-squash/full gates required |
+| 83 ownership-resource-frame-variants | 7b7e45b20230 | ecfd9a28c39e | Original variant control10.41CPU/22.82elapsed, nine frame/caller tests24.67/49.60s, all23 RC units3.77/7.98s, lint2.43/4.99s, format0.45/0.84s and binary inspection0.22/1.11s pass; both original feature/repair commits and source/probes unchanged, including zero/one parent boxes and exact omitted cleanup exit2; actual ARM64 layout/disassembly recorded; final actual-squash/full gates required |
+| 84 ownership-resource-frame-binding-kinds | e2a2baa977fa | 7b7e45b20230 | Ten original variant/frame/caller tests35.20CPU/70.70elapsed, all23 RC units3.67/7.54s, lint2.40/4.89s and format0.44/0.84s pass; original source/probes unchanged, including both binding paths, close exactly once, zero/one parent boxes and exact omitted cleanup exit2; final actual-squash/full gates required |
+| 85 ownership-match-scrutinee-types | ebe69e13a935 | e2a2baa977fa | All13 original nominal/stack/variant/frame/caller tests39.97CPU/80.61elapsed, all23 RC units3.80/7.81s, lint2.45/5.02s and format0.51/0.83s pass; both original feature/stack-child repair commits and source/probes unchanged, including child-retain omission and strict File/box controls; final actual-squash/full gates required |
+| 86 ownership-resource-record-binding-kinds | a0de231a4c0c | ebe69e13a935 | All13 original record/variant/nominal/stack/frame/caller tests41.43CPU/83.19elapsed, all23 RC units3.90/8.04s, lint2.89/5.90s and format0.45/0.86s pass; original source/probes unchanged, including both record paths, close exactly once and strict original box/cleanup controls; final actual-squash/full gates required |
+| 87 ownership-nominal-source-context | 5a4ef15301c8 | a0de231a4c0c | Original source nominal-match test13.04CPU/26.20elapsed, lint2.43/4.94s and format0.43/0.83s pass; source/probes and compiler/runtime unchanged, including 64 File discards under descriptor limit32 and raw interpreter agreement for optimized/unoptimized O1/O2 GC/reuse/free/poison modes; final actual-squash/full gates required |
+| 88 ownership-channel-cycle-lifetimes | 3db25573057b | 5a4ef15301c8 | Both original cycle/queue tests12.82CPU/25.69elapsed, lint2.40/4.89s and format0.49/0.96s pass; source/probes and compiler/runtime unchanged; close preserves queued values and explicit drain releases counted cycles across O1/O2 GC/poison modes, without claiming automatic cycle reclamation; final actual-squash/full gates required |
+| 89 ownership-http2-body-roots | 5bc4f862bd5a | 3db25573057b | Original HTTP2 actual-major/root/payload/finalizer test7.08CPU/15.04elapsed, lint2.50/4.96s and format0.45/0.86s pass; all three original root/GCC/x86-Clang repair commits and source/probes unchanged, including exact omitted-fence exit1; accepted four-way fixture evidence retained, final actual-squash/full gates required |
+| 90 fix-http2-body-bounds | fabe0ac7b24a | 5bc4f862bd5a | Corrected exact grpc::web bounds/error-order comparison executes one test and passes0.45CPU/1.94elapsed; strict HTTP2 root test7.17/15.39s, lint2.41/4.77s and format0.45/0.87s pass; original source/probes unchanged including exact omitted-fence exit1; earlier zero-test filter explicitly unverified/resolved; final actual-squash/full gates required |
+| 91 ownership-http2-peer-cleanup | 5029a447bcec | fabe0ac7b24a | All three original peer/TLS/body-root tests8.42CPU/19.26elapsed, lint2.33/4.70s and format0.45/0.85s pass without skips; original source/probes unchanged including actual OpenSSL subject handshakes, strict omitted cleanup exit1 and TLS fault controls; final actual-squash/full gates required |
+| 92 ownership-grpc-peer-completion | 26545f1b279b | 5029a447bcec | All four original completion/server/task-handle/peer tests17.42CPU/36.92elapsed, lint2.37/4.94s and format0.44/0.85s pass; original source/probes unchanged, preserving joined children, detached senders, cancellation and omitted-finalizer controls; selected cleanup verified without claiming tracing-free support; final actual-squash/full gates required |
+| 93 ownership-grpc-status-cleanup | 9ad102d5a16f | 26545f1b279b | All four original status/completion/server/task tests20.89CPU/42.76elapsed, lint2.43/4.94s and format0.45/0.85s pass; original source/probes unchanged including both omitted-release exit2 controls, status-copy hard exit102/exact stderr and GC on/off/poison modes; final actual-squash/full gates required |
+| 94 ownership-grpc-receive-cleanup | ec0fd11c6b26 | 9ad102d5a16f | All four original receive/status/completion/body-root tests15.65CPU/32.13elapsed, lint2.43/4.90s and format0.44/0.84s pass; source/probes unchanged including all three omitted-release exit1 controls, exact message bytes/status text and cancelled-wait cleanup across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 95 ownership-grpc-force-cleanup | 91ab62452636 | ec0fd11c6b26 | All four original force/receive/status/completion tests16.95CPU/34.13elapsed, lint2.40/4.89s and format0.44/0.85s pass; source/probes unchanged including three omitted-release exit1 controls, decoder/copy traps, typed error/text transfers and O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 96 ownership-grpc-render-cleanup | b4087dc07beb | 91ab62452636 | All four original rendering/force/receive/status tests15.08CPU/31.06elapsed, lint2.45/5.06s and format0.42/0.83s pass; source/probes unchanged including exact omitted cleanup exit1, original render/final service-error trap strings and O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 97 ownership-grpc-send-cleanup | 0203804096d8 | b4087dc07beb | All four original send/force/receive/status tests15.07CPU/30.73elapsed, lint2.47/5.14s and format0.46/0.84s pass; source/probes unchanged including exact omitted cleanup exit1, plain/gzip frame bytes, partial/zero-window cancellation and resumed flow control across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 98 ownership-grpc-request-encoding | 9c2c91fa8e21 | 0203804096d8 | All four original request/send/force/peer tests14.14CPU/29.05elapsed, lint2.48/4.95s and format0.51/0.95s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, encode trap/reset text and suspended-send cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 99 ownership-grpc-canonical-encoding | 58bf72dbf3df | 9c2c91fa8e21 | All four original canonical/request/send/force tests4.14CPU/10.05elapsed lint2.53/5.21s and format0.40/0.74s pass; source/probes unchanged including exact omitted cleanup exit1, canonical bytes/tag offsets and trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 100 ownership-grpc-response-encoding | 3b13964722ba | 58bf72dbf3df | All four original response/canonical/request/send tests12.11CPU/25.13elapsed, lint2.43/4.95s and format0.43/0.83s pass; source/probes unchanged including both exact omitted cleanup exit1 controls, unary/stream/error bytes and trap/cancellation release counts across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 101 ownership-grpc-client-requests | a584b59ec896 | 3b13964722ba | All four original client-request/response/request/send tests12.36CPU/25.32elapsed, lint2.45/4.94s and format0.45/0.85s pass; source/probes unchanged including exact omitted cleanup exit1, request/wire release counts, exact client encode/missing response text and suspended cancellation across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 102 ownership-grpc-client-failure-text | 4e6dbbddf888 | a584b59ec896 | All four original failure-text/client-request/force/receive tests13.37CPU/28.29elapsed, lint2.34/4.93s and format0.45/0.86s pass; both original feature/longjmp repair commits and all source/probes unchanged including exact omitted cleanup exit1, raw trap/GrpcError text and once-only release across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 103 ownership-grpc-client-receive | 09b5e3e70117 | 4e6dbbddf888 | All four original client-receive/failure-text/client-request/force tests14.38CPU/28.87elapsed, lint2.42/4.95s and format0.45/0.87s pass; source/probes unchanged including all three exact omitted cleanup exit1 controls, retry/error/decode/channel cancellation and exact trap text across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 104 ownership-grpc-connect-cleanup | 518e5cfaca02 | 09b5e3e70117 | All four original connection/client-receive/client-request/TLS listener tests15.12CPU/33.91elapsed, lint2.46/4.93s and format0.44/0.84s pass without skip; source/probes unchanged including omitted descriptor exit1 and SSL exit3, actual lookup/socket/handshake cancellation and ownership transfer across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 105 ownership-grpc-connect-startup | 4802e1dfb8a5 | 518e5cfaca02 | All four original startup/connection/peer-completion/task-handle tests20.62CPU/42.55elapsed, lint2.40/4.93s and format0.45/0.85s pass; source/probes unchanged including both omitted reference/startup exit1 controls, static marker exit8 and failed task-spawn teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 106 ownership-grpc-context-restore | 2308b7c1db43 | 4802e1dfb8a5 | All four original context/startup/peer/task-handle tests20.84CPU/41.74elapsed, lint2.53/5.15s and format0.45/0.87s pass; source/probes unchanged including exact omitted restoration exit1 and nested return/typed-error/trap/cancellation restoration across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 107 ownership-grpc-context-resources | a2b3b132f094 | 2308b7c1db43 | All four original context-resource/restoration/startup/task-handle tests19.18CPU/40.38elapsed, lint2.48/5.17s and format0.44/0.84s pass; source/probes unchanged including all omitted TLS/task/scope owner exit1 controls, escaped tasks, spawn rollback and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 108 ownership-grpc-capture-resources | ef437370ca74 | a2b3b132f094 | All four original capture/context-resource/restoration/task-handle tests15.96CPU/34.26elapsed, lint2.42/4.88s and format0.44/0.86s pass; source/probes unchanged including all three omitted owner exit1 controls, atomic overflow rollback, inherited captures and plain task-only generation across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 109 fix-grpc-tls-pool-identity | c9d841ee5a9d | ef437370ca74 | All four original native identity/capture/context-resource/connection tests13.37CPU/30.03elapsed, exact interpreter pool-key unit5.33/11.12s (one executed), lint2.35/4.76s and format0.45/0.85s pass; source/probes unchanged including old collision exit1, all fields/long/separator options, copied keys and pool reuse across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 110 ownership-grpc-environment-cache | bf297ac299ea | c9d841ee5a9d | All four original environment-cache/identity/capture/context-resource tests13.41CPU/29.53elapsed, lint2.56/5.22s and format0.44/0.82s pass; source/probes unchanged including omitted cache cleanup exit1, read-once inputs, blocked-task/finalizer order and repeated teardown across O1/O2 GC/poison modes; final actual-squash/full gates required |
+| 111 ownership-grpc-packed-options | 5a01572cb2c6 | bf297ac299ea | All four original packed/cache/identity/capture tests12.58CPU/26.76elapsed, actual ARM64 binary/layout inspection0.20/0.82s, lint2.59/5.25s and format0.44/0.83s pass; both original feature/format commits and source/probes unchanged including one allocation101/8311 bytes, alignment8/header64, copy/last-owner/failure controls and cache releases10-to-5; final actual-squash/full gates required |
+| 112 ownership-grpc-connection-addresses | b45e93a71d40 | 5a01572cb2c6 | All four original address/packed/identity/connection tests11.32CPU/25.93elapsed, actual ARM64 binary/layout inspection0.22/0.99s, lint2.64/5.34s and format0.44/0.85s pass; both original feature/format commits and source/probes unchanged including truncation exit1, long loopback/pool reuse, copied addresses and actual272/520-byte headers aligned8 with short request278; final actual-squash/full gates required |
+
+Prepared focused evidence, detailed commands and earlier source-parity proofs
+remain in history. The Main and next delivery section supplies the sole live
+next action. Every production PR requires six exact-head full gates and the
+documentation audit.
+
+Use actual bases above for final rebases, never OLD anchors or rewritten
+predecessor heads. Preserve all 11 root docs for conflict resolution and
+inherited CLI/GC harness fixes. The table records actual bases; historical
+evidence bases never override them.
+Rows77–78 require real WASI on Linux in both free modes; native bump checks
+supply no WASI acceptance. Row 20 boxed128-bit payloads remain shared. Network
+context wrappers retain tracing compatibility; no complete ARC claim. Channel
+close preserves queued values; explicit drain breaks its counted cycle, while
+automatic unreachable-cycle reclamation remains unproved. Frame-record79 avoids
+one16-byte parent box; inline File80 reduces the header24→16 and allocations2→1.
+Exact binary/layout details and limits are in ownership/history.
+
+## Earlier argument-preparation repair
+
+Row 28 now includes row 34's capture-preparation correction: supplied arguments
+stay owned until capture duplication succeeds, and partial duplicated captures
+have registered cleanup. The unchanged negative control catches its omission.
+The live preparation table gives current heads and checks;
+previous revisions and propagation results are in history.
+Row 28 passed full acceptance in PR #107. Skip the duplicate implementation PR at
+row 34 while preserving its immutable anchor and regression coverage. Current
+row 34 differs from row 33 only in docs. No general exceptional-ownership claim.
+
+## Remaining exit reviews
+
+The complete prepared ownership run and strict diagnostic controls above preserve
+current evidence. Older scoped runs and fixture repairs are in
+[history](roadmap-history.md#archived-handoff-details-after-pr-114). They do not
+accept rewritten production heads. Keep evidence workflows outside production
+ancestry, preserve original omission/allocation assertions, and retain both
+row 85 whole-value/stack-binder repair commits during sequential delivery.
+
+The numerics page now keeps incomplete tensor timings in history instead of
+duplicating them or inferring kernel speed; its source review is referenced to
+current prepared112 with verified unchanged numeric source bytes.
+Later numeric-phase review findings are in numerics.md: native backward mixed-tape
+cleanup, grad failure/cancellation before backward and 32767-generation wrap
+need concrete regressions. These are source-review findings; no new numeric
+implementation or full-lifetime guarantee is claimed. Keep phase order unchanged.
+
+Canonical C decode scratch already frees on normal success/error paths;
+reconstructed decoded aggregates remain shared. Audit typed reconstruction,
+partial construction, retained runtime contexts and automatic unreachable-cycle
+reclamation against the finite phase 2 exit criteria in ownership.md. Channel
+close preserves queued values; explicit drain alone proves its counted cycle
+can be broken. Preserve raw interpreter comparisons and original pipe semantics.
+
+## Accepted guard and fixture controls
+
+The guard sampling repair is merged in PR #104, with all exact-head platform gates.
+It suspends workloads during target-size sampling and preserves every resource
+limit. Three deterministic integration checks cover suspension/resumption,
+sampler errors and the original target-size limit. The stronger handoff audit
+merged in PR #105 verifies recorded live heads and actual source-base ancestry.
+Commands and current limits are below; old diagnostics are archived in history.
+
+Preserve HTTP2 fixture acceptance8f6846a/38046812141 on Linux GCC/Clang and
+macOS ARM/Intel Clang. The x86 fixture isolates construction, reserves the actual
+frame pointer, selects its already-completed copy path and clears stale saved
+registers/stack at the copy boundary. It never clobbers RBP/SP. ARM keeps its
+original fixture. Actual collection, exact omitted-owner exit1, copied payload
+and finalizer checks remain mandatory. The tested source89 fixture excludes its
+optional diagnostic export; rejected revisions and original GCC-only evidence
+are historical, not current instructions.
+
+Preserve client controls using static handler/TypeInfo fixture objects. Exact
+descriptor identity, code14 and transport-failure text remain checked. Accepted
+evidencee4a5c1cab0b01d5b6dd9f7bc7a1859185a7f69e0 passesCI37989574765 with ARM
+focused checks. Runtime behavior and original assertions are unchanged. Both
+fixture corrections propagate through 90–112; subsequent argument/loop repairs
+require refreshed evidence and final exact-head full gates.
+
+## Local limits and durable docs
+
+Full builds/tests, benchmarks and large regeneration run on GitHub. Focused
+local work is serial and low priority: sampled aggregate RSS below 1 GiB,
+target below 2 GiB, free disk at least 64 GiB, deadline 180 seconds. Stop at
+limits and move work to CI; never raise or bypass them. Use:
+
+```sh
+env FWP_OPENSSL_DIR=/opt/homebrew/opt/openssl@3 python3 /Users/zardoz/projects/fun-with-pipes/scripts/local-guard.py cargo test --test RELEVANT_TEST
+```
+
+The fun-refactor guard applies to the other repository. The shared target was
+last checked in /private/tmp/fwp-constructor-types-worktree (queue40):
+actual-squash native snapshota51b9cf7ca69 passes four regressions20.27CPU/
+40.70elapsed, all17 RC units3.60/7.51s, lint2.51/5.10s and format0.44/0.83s.
+Bounded package clean in previous queue39 removed89.0MiB (0.05CPU/0.36elapsed).
+An optional allocator-artifact metadata enrichment was not executed because the
+guard reported less than64GiB free. No limits were changed and no check was
+bypassed. After subsequent disk recovery, fresh guarded evidence collection and
+live-docs auditing pass as recorded above. Latest read-only sample is84240648KiB
+available (80.34GiB) and target91356KiB; future guard sampling still governs. Do not retry the refused
+optional enrichment; its hardware/compiler metadata is already retained in the
+original binary evidence. Required focused checks still use the guard; move any
+refused workload to CI.
+Every guard samples current limits. Before switching Rust
+checkouts, use the root absolute guard with bounded cargo clean -p fwp there,
+then rebuild the requested target. Never infer source identity from a shared
+target directory. Full gates run on GitHub. Temporary helpers may disappear;
+actual bases and retained remote tags are the durable recovery record.
+
+The preparation table gives current focused results; earlier package checks,
+refusals and superseded revisions are archived in history. Every workload
+samples current limits; historical observations never authorize bypassing the
+guard. Full-size raw tail evidence stays on GitHub because it exceeds local
+RSS. No local full gate was run.
+
+The latest streamlined handoff audit passes0.53CPU/3.94elapsed:44 link sets,
+106 immutable pairs/tags and73 live heads/bases. Already accepted queue33 and
+the verified queue34 duplicate were removed from the live table and archived;
+immutable anchors are unchanged. Earlier audit counts refer to their snapshots.
+
+The stronger shared audit is merged in PR #105: live heads must match the queue,
+and their recorded actual bases must be ancestors of those heads. It also
+checks all tracked Markdown link sets, immutable tags and whole commit messages.
+Isolated stale-head and stale-base controls fail as expected; corrected controls
+pass. Run the shared checker through the root guard:
+
+```sh
+python3 scripts/local-guard.py python3 scripts/check-roadmap.py
+```
+
+Fetch full history, immutable tags and retained PR heads on a fresh clone.
+The roadmap_docs workflow checks the actual PR head. Audit again after changes
+to links, refs or commit subjects. Merged preparation rows are archived and removed from
+the live preparation table; their queue anchors and accepted heads stay fixed.
+
+Preserve all 11 authoritative docs before fast-forward/rebase conflict resolution:
+CONTRIBUTING.md, PLAN.md, docs/design.md, docs/development-state.md, docs/ownership.md,
+docs/primitive-ownership.md, docs/roadmap-queue.md, docs/roadmap-history.md,
+docs/reference.md, docs/concurrency.md and docs/numerics.md. The numerics page
+keeps phase 2 exit gates ahead of representation work and links historical
+incomplete timings to the archive. Preserve any other modified tracked files too.
+Latest 11-doc snapshot is /private/tmp/fwp-main-docs-pre118 with sha256.json;
+all were restored byte-for-byte after updating main. Refresh before the next
+main update. Keep live status concise; archive chronology and superseded handoffs in
+history. Windows, new deployment interfaces and a new backend remain deferred.
+
+
+
+PR118 was already merged remotely when its exact-head gate checker reached
+the OPEN-state assertion; no second merge was attempted. All seven frozen-head
+gates pass; raw actual squashe07b03d9d4040ad458072c4aaf401a26c79f4fb9 has one
+parent571422b54647 and complete treecb50c8e69950a2936c0f2e682b3da0edce5780a3
+identical to testedd5959b7981d9. Entire message is74 characters, one line,
+empty body and no trailers/attribution. The (#118) suffix was already present
+in the remote merge and meets the requested format. Fetch0.04CPU/1.20elapsed,
+all11-doc protection0.04/0.24s and acceptance bookkeeping0.00/0.14s pass.
+Duplicate main CI38098095233 cancelled only after complete-tree proof
+(0.05/1.29s); actual main docs38098095374 is queued, not accepted.
+
+Final queue41 rebase0.10CPU/1.05elapsed passes FROMactual prepared40 5ebcb2d6b0e2
+ONTOactual PR118 squashe07b03d9d404, preserving both original commits and all
+original source/probe/production-workflow bytes at78de90c921e33508119ebf09f5ab4197cdfa5f1e.
+The empty docs-only original commit was explicitly preserved after parity/count
+proof. Bounded cargo clean -p fwp in previous queue40 removed90.5MiB
+(0.07CPU/0.36elapsed). Fresh cargo test --test variant_conversion_ownership
+--test constructor_type_ownership --test worker_boxing_ownership passes all
+three original tests, zero ignored,17.81CPU/35.79elapsed. All18 rc::tests
+units3.46/7.10s, focused clippy -D warnings2.48/5.02s and fmt0.50/0.83s pass.
+Original box/caller omission exits3/7, aliases/scalar bits, SIZE_MAX overflow,
+O1/O2 GC/reuse modes and raw interpreter agreement remain mandatory.
+
+Live handoff reduced to207 lines before fresh queue41 validation status; full
+prior text archived under Archived verbose handoff at PR118. Removed duplicated
+historical evidence and superseded next actions from live docs, keeping current
+queue/base/checkouts, exact gates, finite phase2 exit review and phases3–6.
+PLAN reduced to65 lines; ownership queue completion is not whole-plan completion.
+
+Preparation41 published5a068dc348f3b331a262543ae4ee2b1fcf88f0ab on actuale07b03d9d4040ad458072c4aaf401a26c79f4fb9, FROMactual5ebcb2d6b0e25b8d0ae49d8d6b634d42c90a984f. All2 original commits and every original native/compiler/probe/workflow byte preserved; all11 docs copied and both pre/post-commit audits pass. Oldcca935846750b6190b6a8823eb4f55d689c75c0e retained at roadmap/revision-041-cca935846750 before exact-lease publication. Final actual-squash source preserves both original commits; three original variant-conversion/constructor-type/worker-boxing regressions17.81CPU/35.79elapsed, all18 RC units3.46/7.10s, lint2.48/5.02s and format0.50/0.83s pass; original source/probes unchanged including exact original-box/caller omission exits3/7, aliases/scalar bits and raw interpreter/native agreement; ARM/Intel actual binary evidence passes; exact-head full gates required
+
+## Delivered primitive contracts removed from the prepared table
+
+## Prepared refinements
+
+Rows marked delivered or skipped already have main acceptance; the remaining
+contracts are published preparations. Exact heads and immutable parent anchors
+are in [the queue](roadmap-queue.md); current commands
+and failures are in [the handoff](development-state.md). Each sequential PR needs
+its own final rebase, focused checks and six passing exact-head full gates.
+
+| Queue | Prepared contract | Remaining acceptance |
+|---|---|---|
+| 33 | Delivered in PR112: loop state/Step unwind and flattened Again preservation | All seven exact-head gates pass; later reconstruction extensions remain prepared |
+| 34 | Immutable argument/capture preparation anchor; code/probes delivered in PR107 through row28 | Skipped after33 acceptance; preserve anchor and later coverage |
+| 35 | Constructors protect consumed typed fields before allocating storage; caller owners stay separate until actual transfer | Sequential CI; record/variant allocation failures, aliases and IR transfer checks |
+| 36 | Owned worker record/variant results keep typed field owners until boxing succeeds; remaining caller owners stay protected | Sequential CI; boxing allocation failures, external aliases and nested typed fields |
+| 37 | Delivered in PR115: boxed-to-worker wrappers protect original arguments and completed typed field duplicates until worker entry | All seven exact-head gates pass; partial retention failure, boxed/scalar arguments, aliases and transfer preserved |
+| 38 | Delivered in PR116: eligible loop state stays flattened; initial boxes and completed typed field duplicates stay owned until transfer | All seven exact-head gates pass; partial field failures, cancellation slots, aliases and trap/evaluation order preserved |
+| 39 | Delivered in PR117: multi-field retains protect completed extras and existing caller owners through count overflow | All seven exact-head gates pass; unfinished references excluded, partial variant/stack retains and aliases preserved |
+| 40 | Delivered in PR118: monomorphic context supplies missing nested constructor/field temporary types; inferred expression types remain authoritative | All seven exact-head gates pass; later-field failure, dynamic arguments, updates and exact IR types |
+
+Rows33 and35–40 are accepted in PRs112–118; row34 is a verified duplicate.
+Current merged contracts remain in ownership/design. Immutable queue anchors
+and all original acceptance evidence are preserved. The live prepared table
+now begins at41 and contains only remaining contracts.
+
+## Archived representation measurement detail
+
+Focused ARM64 layout evidence for returned-variant preparation44 confirms an
+8-byte `V`, an 8-byte array header and 8-byte element slots; its three-field
+variant occupies32 bytes, aligned to8, with fields at offset8. Exact original
+positive/control binaries, compiler inputs, flags and disassembly are retained
+and recorded in [history](roadmap-history.md). The O2 alias transfers share one
+32-byte stack slot; this shape-specific evidence is not a general ABI or timing
+claim. Natural-width numeric slots and broader register/FFI evidence remain phase3.
+
+The six-I64 recursive worker in preparation65 has a 48-byte value, aligned to8,
+versus56 bytes for the boxed header and fields, excluding collector metadata.
+Actual ARM64 O1/O2 binaries return it through caller storage using x8; the
+recursive worker uses192/208-byte frames respectively, including trap temporaries
+and stack protection. O2 passes six fields in x1–x6 to the next worker and uses
+vector loads/stores for the result. Its own body has no record-allocation call;
+the boxed interface wrapper remains. These measurements on Apple M4 Pro,
+macOS15.6.1 and Apple clang17 retain the original flags and strict semantic
+controls. They establish an ABI baseline, not a timing improvement, constant
+stack use or whole-program allocation freedom. Phase3 must measure caller
+storage and spill costs alongside box elimination; details are in history.
+
+Preparation79's actual ARM64 frame-record control eliminates one16-byte parent
+box (8-byte header plus8-byte field, excluding collector metadata). The generated
+program-thread frame is1232 bytes with typed fields versus1280 in the boxed
+control at both O1/O2; the launcher frame remains144 bytes. The File header is
+24 bytes/aligned8 before inline-path preparation80. Original zero/one allocation
+counters and partial-retain controls pass, with exact binaries/flags/disassembly
+retained. These are fixture-specific representation measurements; ordinary File
+and path allocations remain, and no timing or general ABI claim follows.
+
+Preparation80's actual ARM64 inline-path File header is16 bytes/aligned8,
+with refs at offset8 and path bytes at offset16. The retained legacy control is
+24 bytes/aligned8, with its path pointer at8 and refs at16. For an n-byte path,
+original counters verify one leaf allocation requesting16+n+1 bytes versus two
+allocations requesting24+n+1, excluding allocator/collector metadata. Both
+original tests retain exact interpreter behavior and closed-handle display.
+Actual binaries, C, flags and both compiled layouts are in history. This is a
+constructor/layout improvement; storage disposal and general performance remain
+separate roadmap work.
+
+Preparation83's actual ARM64 variant holder occupies16 bytes/aligned8, with
+its payload at offset8. Original counters verify zero parent boxes versus one
+16-byte box in the comparison path. The program-thread frame is1280 bytes at
+O1 and1264 at O2, versus1280 boxed; both launcher frames are128 bytes. Static
+body instructions are506/539 typed/boxed at O1 and572/625 at O2, including
+startup and trap paths. Original inactive scalar/nullary tags and partial-retain
+cleanup remain checked. These are representation measurements, not executed
+instruction counts or timings; File/path allocations remain. Exact source,
+flags, binaries, disassembly and compiled layout are recorded in history.
+
+Preparation 111's actual ARM64 packed TLS-options header is 64 bytes/aligned 8;
+insecure/key-length/users fields are at offsets 40/48/56. Original probes verify
+one allocation of 101 bytes for empty inputs and 8311 bytes for the tested
+4096-byte name plus other fields, with copied inputs and last-owner release.
+The payload contains both terminated strings and a length-framed identity key;
+packing removes separate allocation requests, rather than the duplicated key
+bytes. These requested sizes exclude allocator metadata. Captured O1/O2 Mach-O
+binaries, disassembly and a layout executable use unchanged compiler arguments.
+Instrumented constructor frames are 208/144 bytes; observer code affects these
+frames, so they are not production ABI or timing claims. Details are in history.
+
+Preparation 112's actual ARM64 connection header is 272 bytes/aligned 8, versus
+520 bytes/aligned 8 in the retained legacy layout. The address pointer is at
+offset 24; complete copied address bytes follow the header at offset 272.
+Original counters verify one request of 272+n+1 bytes for an n-byte address;
+"short" requests 278 bytes instead of the legacy 520-byte header. Long-address
+loopback/pool reuse and the exact truncation-control failure pass. Actual O1/O2
+positive/control binaries, disassembly and compiled layouts are recorded in
+history. Requested sizes exclude allocator/collector metadata; no timing,
+cache-speed or general collector-free claim follows.
+
+A separate bounded local ARM allocator check reads actual Darwin malloc usable
+bytes and GC slot metadata from the captured generated C. TLS requests101/8311
+occupy112/8704 usable bytes. The short connection request278 occupies a320-byte
+GC slot; the original520-byte header-size allocation occupies640 in the same
+unchanged allocator. The latter measures the old size, without executing the old
+constructor. These capacities exclude allocator metadata and pool reservation.
+Hardware, compiler, flags, generated diagnostic C and actual binaries are in
+[history](roadmap-history.md#actual-local-grpc-allocator-capacity); Intel capacity
+and cache/timing effects remain unmeasured.
+
+Prepared source112 also has actual ARM and Intel macOS layout evidence in
+CI38075612557 at evidence head5a56aa1ebbc2b609ebd51c675d44e454ddedba8d.
+Both original TLS-options/address probes pass without ignored tests. Both compiled
+layouts give TLS64/align8 and connection272 versus legacy520/align8; allocation
+requests remain101/8311 and278 for the stated fixtures. Actual C, Mach-O binaries,
+arguments, symbols, assembly, hardware/compiler and layout drivers are retained.
+These are prepared-source results; they do not accept later production heads.
+Instrumented frames and static instruction counts describe fixtures, not general
+speed, cache behavior or a production ABI. Full details are in history.
+
+
+Final queue41 publication1.99CPU/19.24elapsed and all three audits44/106/72
+pass at frozen5a068dc348f3b331a262543ae4ee2b1fcf88f0ab. Both original commits
+and original source/probe/workflow bytes survive; oldcca935846750 retained
+before exact lease. Sole PR119 opens0.16CPU/3.76elapsed with actualbase
+e07b03d9d404. CI38098598991/docs38098598965 queued, not accepted gates. Actual
+main118 docs38098095374 passes. Removed accepted33–40/duplicate34 rows from
+the live primitive prepared table; current contracts remain in merged ownership.
+Condensed representation measurement detail into a baseline table plus links,
+keeping exact C/binary/layout/flags and limitations in the archive. Next queue42
+has three existing commits, including both original feature/regression commits;
+its eventual final rebase must retain all three.
+
+Fresh streamlined-docs audit0.47CPU/3.94elapsed passes44 link sets,106 immutable
+pairs/tags and72 live heads/bases. Deferred PR119 merge/protection/acceptance
+and three-commit queue42 rebase helpers parse0.00/0.14s with current doc anchors.
+Recovered PR118 exact-head gate proof confirms all seven jobs completed
+successfully before the observed remote merge (0.11CPU/2.60elapsed).
+Source-only representation review of actual maine07b03d9d404 confirms fwp_arr
+uses uint64_t len plus V slots, with no spare32-bit header field. Natural-width
+acceptance now explicitly includes owned primitives, destruction, display/
+equality, JSON/binary decode, constants and callback/dynamic boundaries; it
+preserves length/overflow behavior and requires compile-time hot-loop loads
+plus explicit fallback/conversion contracts. No representation code changed.
+
+Removed stale design claim that packed TLS focused remote checks remain pending: prepared source112 now has passing original allocation probes and actual ARM/Intel binary/layout evidence, while sequential production gates remain required. Deduplicated the library-cache prepared acceptance note without changing its pre-packing ten-free control or later packing evidence.
