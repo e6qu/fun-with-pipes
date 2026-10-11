@@ -106,6 +106,8 @@ cancelled-child : () -> String ! {Async}
 cancelled-child = run-state ("cancelled" | concat " State") (tap (const 1s | task.sleep) | get) | .0
 change-closure : () -> String ! {State[(String -> String)]}
 change-closure = const ("captured" | concat ":") | concat | put | get | apply "!"
+change-runtime-closure : () -> String ! {State[(String -> String)]}
+change-runtime-closure = get | apply ":" | concat | put | get | apply "!"
 main = [
     () | run-state ("initial" | concat " State") read-change | echo,
     () | run-state "outer" (both (run-state "inner" get) get) | echo,
@@ -119,6 +121,8 @@ main = [
     () | run-state ("left", ["right"]) get | echo,
     () | run-state (concat "initial:") change-closure | .0 | echo,
     () | run-state (concat "initial:") change-closure | .1 | apply "!" | echo,
+    () | run-state (concat "runtime:") change-runtime-closure | .0 | echo,
+    () | run-state (concat "runtime:") change-runtime-closure | .1 | apply "!" | echo,
 ] | ignore
 "#;
     std::fs::write(&input, source).unwrap();
