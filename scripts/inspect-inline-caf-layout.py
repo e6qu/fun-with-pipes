@@ -1,4 +1,4 @@
-import hashlib, json, os, platform, subprocess
+import hashlib, json, os, platform, re, subprocess
 from pathlib import Path
 root=Path(os.environ['FWP_LAYOUT_CAPTURE'])
 cc=os.environ['FWP_LAYOUT_REAL_CC']
@@ -13,7 +13,12 @@ for folder in sorted((root/'owner').glob('O*-*')):
  assert digest==json.loads((folder/'header.json').read_text())['sourceSha256']
  start=code.index('/* main :');stop=start+code[start:].index('\n}\n')+3
  body=code[start:stop]
- record=dict(directory=folder.name,sourceSha256=digest,argumentDropCalls=body.count('fwp_drop'))
+ binding=re.search(r'V (t\d+) = caf\d+\(\);\s+(l\d+) = \1;',body)
+ assert binding,body
+ owner=binding.group(2)
+ argument_drops=len(re.findall(r'\bfwp_drop\d+\('+re.escape(owner)+r'\);',body))
+ record=dict(directory=folder.name,sourceSha256=digest,argumentDropCalls=argument_drops,
+             totalTypedDropCalls=body.count('fwp_drop'),cafArgumentLocal=owner)
  for command,filename in [(['nm','-nm',str(folder/'probe')],'symbols.txt'),(['otool','-tv',str(folder/'probe')],'assembly.txt')]:
   result=subprocess.check_output(command,text=True);(folder/filename).write_text(result)
  records.append(record)

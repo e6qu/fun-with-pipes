@@ -8,7 +8,9 @@ prior deliveries and measurements, without supplying new priorities.
 
 ## Authorized execution
 
-Complete this roadmap automatically, one focused PR at a time. Fix failing tests;
+Complete this roadmap automatically, one coherent bundle PR at a time. Group
+related prepared changes to reduce cycle time; preserve their original tests
+and run full CI once for each final bundle head. Fix failing tests;
 CI gates merging, not implementation or next-task preparation. Full builds,
 tests, benchmarks and large regeneration run on GitHub. Require all six passing
 jobs and the roadmap documentation audit for the current exact PR head before
@@ -43,16 +45,19 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#120: native macOS ARM/Intel support and selected ownership,
-last-owner reclamation and unwind protections. Queue33 and35–42 are accepted;
-queue34 is a verified duplicate delivered in #107. Deliver queue43 record
-conversion on the actual PR120 squash, then finish ownership queues44–112.
+Main includes #74–#121: native macOS ARM/Intel support and selected ownership,
+last-owner reclamation and unwind protections. Queue33 and35–43 are accepted;
+queue34 is a verified duplicate delivered in #107. Deliver queues44–53 together
+on the actual PR121 squash, then bundle the remaining ownership preparations
+54–112 in related groups of roughly ten. Adjust boundaries for dependencies
+and reviewability; a new failing check is part of the bundle's repair work.
 [The handoff](docs/development-state.md) gives exact heads, checks and the sole
 next action. Prepared work still requires final rebases and full CI.
 
 Phase 2 remaining audits: borrowed resource metadata roots, reconstructed/untyped
 aggregate ownership, general resource discard and teardown, retained callbacks
-and cycles. Prepared resource/unwind improvements require sequential full CI.
+and cycles. Repair reproduced FFI pointer-offset overflow and verify raw-memory
+boundaries. Prepared resource/unwind improvements require sequential full CI.
 Finish phase 2 before numeric representation, numerics/autodiff and optional
 tracing-free work. Windows, new deployment interfaces and a new backend remain
 deferred unless the user changes priorities.
