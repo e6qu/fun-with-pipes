@@ -126,11 +126,12 @@ requirements until phase 6 proves eligibility for execution without collection.
 | Reconstructed values and external boundaries | Typed ownership where established; explicit shared fallback for decode/parse/FFI cases, including partial failure and retained results |
 | Cycles | Close preserves queued values; explicit drain/scoped lifetime controls; automatic unreachable-cycle reclamation or an explicit tracing requirement |
 
-The prepared source 112 declaration review separates 134 explicit contracts,
-19 combinators lowered to ordinary owned IR functions, 12 flat concrete scalar
-signatures and 208 declarations requiring monomorphic/runtime review. These are
-373 declarations resolving to363 runtime symbols after40 explicit aliases,
-not a count of shared heap objects or ownership gaps.
+The PR124 final integration38179558348 verifies375 declarations resolving to365
+runtime symbols after40 aliases:168 explicit contracts,19 ordinary IR combinators,
+11 flat scalar signatures and177 review declarations representing167 symbols.
+This includes typed State, internal ad.scope/ad.scope2 and14 fresh codec leaves.
+These counts classify boundaries rather than heap objects or bugs. Full production
+acceptance is recorded in [the handoff](development-state.md).
 Unknown `Body::Prim`, C and remote boundaries share pointer-bearing arguments
 when no proven borrowing contract applies; scalar words remain uncounted.
 Reconstructed decode/parse values and retained network contexts can therefore

@@ -322,8 +322,8 @@ impl<'p> Interp<'p> {
     fn prim(&mut self, id: FuncId, sym: &str, mut a: Vec<Value>) -> R<Value> {
         let (params, result) = self.sig(id);
         match sym {
-            "ad.scope" => {
-                crate::numerics::with_tape_scope(|| self.apply(a[0].clone(), vec![Value::unit()]))
+            "ad.scope" | "ad.scope2" => {
+                crate::numerics::with_tape_scope(|| self.apply(a[0].clone(), a[1..].to_vec()))
             }
             // arithmetic (data-last: `sub a b` is b - a)
             "prim.add" => arith(Op::Add, &a[1], &a[0], &result),

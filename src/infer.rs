@@ -397,6 +397,18 @@ impl<'a> Infer<'a> {
         found: &Type,
         what: &str,
     ) -> IResult<()> {
+        self.unify_presented(span, expected, found, found, what)
+    }
+
+    /// Check the adapted argument while describing its original value type.
+    fn unify_presented(
+        &mut self,
+        span: Span,
+        expected: &Type,
+        found: &Type,
+        presented: &Type,
+        what: &str,
+    ) -> IResult<()> {
         match self.env.table.unify(expected, found) {
             Ok(()) => {
                 for (a, b) in std::mem::take(&mut self.env.table.deferred) {
@@ -405,7 +417,7 @@ impl<'a> Infer<'a> {
                 Ok(())
             }
             Err(err) => {
-                let (e, f) = self.show2(expected, found);
+                let (e, f) = self.show2(expected, presented);
                 let mut d = Diagnostic::error(
                     span,
                     format!("type mismatch in {}: expected `{}`, found `{}`", what, e, f),
@@ -535,6 +547,47 @@ impl<'a> Infer<'a> {
             }
             other => other,
         }
+    }
+
+    /// A function value can satisfy a parameter that permits additional known
+    /// effects. Widen only its temporary outer row, preserving effect variables
+    /// shared with function-valued inputs; this is unrelated to caller effects.
+    fn argument_type(&mut self, expected: &Type, actual: &Type) -> Type {
+        let Type::Fun(_, _, permitted) = self.env.table.resolve(expected) else {
+            return actual.clone();
+        };
+        let permitted = self.env.table.zonk_row(&permitted);
+        if permitted.fields.is_empty() {
+            return actual.clone();
+        }
+        let Type::Fun(input, output, effects) = self.env.table.resolve(actual) else {
+            return actual.clone();
+        };
+        let mut effects = self.env.table.zonk_row(&effects);
+        // Forbidden effects cannot be weakened away. Keep the original value
+        // type on this failure path so diagnostics do not invent permitted ones.
+        if permitted.tail.is_none()
+            && effects
+                .fields
+                .iter()
+                .any(|(label, _)| !permitted.fields.iter().any(|(allowed, _)| allowed == label))
+        {
+            return actual.clone();
+        }
+        if effects.tail.is_none() {
+            effects.tail = Some(self.env.table.fresh(Kind::Eff, self.level));
+        }
+        for (label, payload) in permitted.fields {
+            if !effects
+                .fields
+                .iter()
+                .any(|(existing, _)| existing == &label)
+            {
+                effects.fields.push((label, payload));
+            }
+        }
+        effects.sort();
+        Type::Fun(input, output, effects)
     }
 
     // ----- binding groups ------------------------------------------------------
@@ -1517,11 +1570,19 @@ impl<'a> Infer<'a> {
     fn infer_app(&mut self, e: &Expr, f: &Expr, args: &[Expr], ctx: &Row) -> IResult<Type> {
         let mut tf = self.infer(f, ctx)?;
         for (i, arg) in args.iter().enumerate() {
-            let ta = self.infer(arg, ctx)?;
+            let mut ta = self.infer(arg, ctx)?;
             let r = self.fresh();
             match self.env.table.resolve(&tf) {
                 Type::Fun(p, _, _) => {
-                    self.unify(arg.span, &p, &ta, &format!("argument {}", i + 1))?;
+                    let argument = self.argument_type(&p, &ta);
+                    self.unify_presented(
+                        arg.span,
+                        &p,
+                        &argument,
+                        &ta,
+                        &format!("argument {}", i + 1),
+                    )?;
+                    ta = argument;
                 }
                 Type::Var(_) | Type::App(..) => {}
                 other => {

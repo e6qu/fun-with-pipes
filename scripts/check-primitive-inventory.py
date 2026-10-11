@@ -69,24 +69,39 @@ observed = dict(head=head, baselineHead=baseline['head'], baselineSha256=baselin
                 lowered=lowered, rows=rows, sourceHashes=source_hashes,
                 status='Observed candidate; contract assertions have not passed')
 args.output.with_suffix('.observed.json').write_text(json.dumps(observed, indent=2) + '\n')
-assert len(rows) == len(baseline['rows']) + 1
+assert len(rows) == len(baseline['rows']) + 2
 assert len({(row['file'], row['declared']) for row in rows}) == len(rows)
-assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 1
+assert len({row['symbol'] for row in rows}) == baseline['distinctSymbols'] + 2
 assert sum(row['aliased'] for row in rows) == 40
 raw_symbols = {'mem.alloc', 'mem.free', 'mem.string', 'ptr.cast', 'ptr.at',
                'ptr.read', 'ptr.write', 'ptr.read-string', 'ptr.address'}
 baseline_rows = {(row['file'], row['declared']): row for row in baseline['rows']}
-new_key = ('lib/autodiff.fwp', 'ad.scope')
-assert set(baseline_rows) | {new_key} == {(row['file'], row['declared']) for row in rows}
+new_keys = {('lib/autodiff.fwp', 'ad.scope'), ('lib/autodiff.fwp', 'ad.scope2')}
+leaf_symbols = {'json.encode', 'json.write', 'url.encode', 'int.to-hex', 'cli.help', 'zlib.gzip', 'zlib.gzip-chunk', 'zlib.deflate', 'ws.accept', 'ws.deflate', 'ws.key', 'zlib.gzip-end', 'ws.close-payload', 'ws.frame'}
+assert set(baseline_rows) | new_keys == {(row['file'], row['declared']) for row in rows}
 changed_symbols = set()
 for row in rows:
     key = (row['file'], row['declared'])
-    if key == new_key:
-        assert row == dict(file='lib/autodiff.fwp', declared='ad.scope', symbol='ad.scope',
-            aliased=False, bucket='contract', signature='(() -> a) -> a',
-            contract='Some(Contract { arguments: [Borrow], result: OwnedCallback, callback: Some(Borrowed(0)), aliases: [0] })')
+    if key in new_keys:
+        name = key[1]
+        arity = 2 if name == 'ad.scope' else 3
+        signature = '(a -> b) -> a -> b where Dup[a]' if arity == 2 else '(a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]'
+        arguments = '[Borrow, Borrow]' if arity == 2 else '[Borrow, Borrow, Borrow]'
+        aliases = '[0, 1]' if arity == 2 else '[0, 1, 2]'
+        assert row == dict(file='lib/autodiff.fwp', declared=name, symbol=name,
+            aliased=False, bucket='contract', signature=signature,
+            contract='Some(Contract { arguments: ' + arguments + ', result: OwnedCallback, callback: Some(Borrowed(0)), aliases: ' + aliases + ' })')
         continue
     before = baseline_rows[key]
+    if row['symbol'] in leaf_symbols:
+        assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
+        assert row['bucket'] == 'contract'
+        assert all(row[name] == before[name] for name in fields if name not in {'bucket', 'contract'})
+        arity = 3 if row['symbol'] == 'ws.frame' else 2 if row['symbol'] in {'zlib.gzip-end', 'ws.close-payload'} else 1
+        arguments = '[' + ', '.join(['Borrow'] * arity) + ']'
+        assert row['contract'] == 'Some(Contract { arguments: ' + arguments + ', result: FreshLeaf, callback: None, aliases: [] })'
+        changed_symbols.add(row['symbol'])
+        continue
     if row['symbol'] in {'get', 'put', 'modify', 'run-state'}:
         assert before['contract'] == 'None' and before['bucket'] == 'runtime_or_specialization_review'
         assert row['bucket'] == 'contract'
@@ -128,15 +143,15 @@ for row in rows:
                 ', callback: None, aliases: [] }')
     assert row['contract'] == 'Some(' + expected + ')', row
     changed_symbols.add(row['symbol'])
-assert changed_symbols == raw_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
+assert changed_symbols == raw_symbols | leaf_symbols | {'ad.tape', 'ad.push', 'ad.backward', 'list.ap', 'list.flat-map', 'get', 'put', 'modify', 'run-state'}
 expected_counts = dict(baseline['counts'])
-expected_counts['contract'] += len(raw_symbols) + 10
-expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 8
+expected_counts['contract'] += len(raw_symbols) + 25
+expected_counts['runtime_or_specialization_review'] -= len(raw_symbols) + 22
 expected_counts['flat_scalar_signature'] -= 1
 assert counts == expected_counts, counts
 review = [row for row in rows if row['bucket'] == 'runtime_or_specialization_review']
 review_symbols = len({row['symbol'] for row in review})
-assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 8
+assert review_symbols == baseline['reviewSymbols'] - len(raw_symbols) - 22
 report = {
     'head': head,
     'declarations': len(rows), 'distinctSymbols': len({row['symbol'] for row in rows}), 'explicitAliases': 40,
@@ -144,7 +159,7 @@ report = {
     'baselineHead': baseline['head'],
     'baselineSha256': baseline_hash,
     'changedContractSymbols': sorted(changed_symbols),
-    'addedContractSymbols': ['ad.scope'],
+    'addedContractSymbols': ['ad.scope', 'ad.scope2'],
     'sourceHashes': source_hashes,
     'rows': rows,
     'status': 'Expected contract changes verified',

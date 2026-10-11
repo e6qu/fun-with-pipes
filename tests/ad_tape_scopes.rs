@@ -240,3 +240,64 @@ fn scoped_gradient_functions_agree_with_raw_interpreter() {
         }
     }
 }
+
+#[test]
+fn borrowed_scope_inputs_reject_affine_files() {
+    for source in [
+        "bad : File -> File\nbad = ad.scope id\nmain = ()\n",
+        "bad : File -> () -> File\nbad = ad.scope2 const\nmain = ()\n",
+    ] {
+        match fwp::driver::check_source("affine-scopes.fwp", source, None) {
+            Ok(_) => panic!("borrowed scope duplicated an affine File"),
+            Err(error) => assert!(
+                error.rendered.contains("File") && error.rendered.contains("Dup"),
+                "{}",
+                error.rendered
+            ),
+        }
+    }
+}
+
+#[test]
+fn scoped_callbacks_return_independently_owned_input_aliases() {
+    let scratch = Scratch::new("input-aliases");
+    let input = scratch.0.join("input-aliases.fwp");
+    std::fs::write(
+        &input,
+        r#"
+main = read-all () | concat "runtime-owned scope input" | make {
+    single = ad.scope id | both id string.length,
+    pair = flip (ad.scope2 const) () | both id string.length,
+} | echo
+"#,
+    )
+    .unwrap();
+    let fwp = env!("CARGO_BIN_EXE_fwp");
+    let raw = checked(
+        Command::new(fwp)
+            .env("FWP_NO_OPT", "1")
+            .args(["run", "--interp"])
+            .arg(&input),
+    );
+    for opt in ["-O1", "-O2"] {
+        let executable = scratch.0.join(format!("aliases{opt}"));
+        checked(
+            Command::new(fwp)
+                .env_remove("FWP_NO_OPT")
+                .args(["build"])
+                .arg(&input)
+                .args([opt, "-o"])
+                .arg(&executable),
+        );
+        for reuse in ["0", "1"] {
+            let output = checked(
+                Command::new(&executable)
+                    .env("FWP_GC_STRESS", "1")
+                    .env("FWP_GC_VERIFY", "1")
+                    .env("FWP_REUSE_VERIFY", reuse),
+            );
+            assert_eq!(output.stdout, raw.stdout, "{opt} reuse={reuse}");
+            assert_eq!(output.stderr, raw.stderr);
+        }
+    }
+}

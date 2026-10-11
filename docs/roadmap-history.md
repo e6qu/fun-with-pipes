@@ -17948,3 +17948,346 @@ draft, with final documentation audit and all production gates still required.
 Its workflow bindings must follow any repaired evidence heads. Local main
 requires a separate guarded protection/update when the disk reserve permits.
 
+
+
+## PR124 combined repair preflight chronology
+
+## Current verified bundle evidence
+
+Documentation38164685131 and recovery audit38164766142 failed because
+check_handoff interpreted the numeric
+evidence row85 as a live roadmap row. The repair scopes parsing to the single
+Remaining ownership deliveries section and makes the evidence label unambiguous.
+Failed log: /private/tmp/fwp-pr124-docs-failed.log. Recovery audit38168860336 verifies the repair. Regular ARM production job114544683069 also
+failed only the two library-format assertions for lib/autodiff.fwp; its
+formatting-stability/faithfulness test passed. Failed log:
+/private/tmp/fwp-pr124-arm-failed.log. Bench and both exact-head GC jobs pass.
+Original38164685147 is complete: all three regular jobs fail only autodiff
+formatting assertions, including browser fmt_and_lint on Linux. Other tests
+pass, as do bench and both GC jobs. Logs: fwp-pr124-linux-failed.log and
+fwp-pr124-intel-failed.log. These failures require a repaired full matrix.
+
+Production PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124) is open at
+9550aab94bf5cb2adb4f6a462381537d37ce3644. CI38164685147 completed with the formatting failures above;
+roadmap_docs38164685131 failed at that exact head as recorded above. Source publication
+receipt: /private/tmp/fwp-resource-network-finalized-export/publication.json;
+fresh-doc receipt: /private/tmp/fwp-finalized-bundle-doc-publication.json.
+Combined preflight257/38169524910 passes formatting/stdlib docs and original
+State controls, but the new closure State case exposes a recursive effect row.
+Explicit pure signatures at c4/38169724664 reproduce it. The call row shares the stored function's effect variable; adding the ambient
+State label makes that variable recursively contain itself. Removing signature
+row opening at322/38170352491 is too broad:71 library units pass, but existing
+effect/size snapshots reject it with standard-library combinator regressions.
+The replacement keeps instantiation and extends only temporary open call rows
+with known ambient labels. All original snapshots and the simple closure
+fixture remain required. Log: fwp-combined-repair-322-complete.log.
+Driver7d/38170194296 was cancelled with its only job queued because its
+snapshot target was misnamed; it provides no passing checks.
+Driver21d8/38171839872 preserves all71 library units and existing effect
+snapshots/raw-native callback tests, and accepts the four new pure/effectful
+State cases. Its missing-IO negative catches an unsafe row-unifier overwrite:
+matching a payload binds an outer tail, then stale row-tail handling discards
+that required IO. The prepared fix re-flattens/rechecks tails after common
+payload unification, preserving required effects. Source:
+/private/tmp/fwp-row-tail-refresh-patch.json; log fwp-combined-repair-21-failed.log.
+Combinedc7/38172978312 verifies both fixes:71 units, all five effect tests
+(including four positives/two missing-IO negatives), all type snapshots, fwp
+format stability/faithfulness, stdlib docs and original State ownership controls
+pass. The remaining fixture error pipes an escaped function into apply, invoking
+composition under the existing semantics. The repair uses ordinary application,
+retains runtime-dependent heap captures, and saves actual C, binaries and statuses
+before native assertions. Source-language artifacts use their correct extension.
+Log: /private/tmp/fwp-combined-repair-c7-failed.log.
+All original and new controls remain required. Earlier7235/eccd drivers were
+cancelled with their only jobs queued while controls were completed; neither
+provides a passing gate. The next runner includes both inference fixes.
+Next: validate this combined runner repair, fix every failure, then publish its
+exact-tree export with a9550 lease. Require a new full current-head matrix;
+earlier focused or production passes cannot gate squash.
+
+Integrated inventory at runner head13c92139da8ddc3d7c9755539cd1e95d80a5b2b9
+reports374 declarations,364 symbols,40 aliases,149 explicit contracts,19 IR
+combinators,11 flat signatures and195 review declarations representing185
+symbols. It permits exactly nine raw contracts, three AD refinements, two list
+contracts and internal ad.scope. This is source classification, not a count
+of ownership bugs or a replacement for runtime/phase2 exit evidence.
+
+| Work | Exact source / driver | Passing run |
+|---|---|---|
+| Resource history (85 commits) | preparation driver82c7bc7509c04b9e94004c06b02d83d665539ac6 | 38140923130 |
+| Compiler failure and cache lifetime controls | 6f2ff860197831b990c2c918e25aa29871488ea3 | 38161909445 |
+| AD bounds, tape cleanup and token retirement | 602e076604d3dd759c47b396c10cf848dd9dbb61 | 38139112950; Linux/ARM/Intel |
+| Scoped gradients and owned F64 results | fbc7e38087b3708c60d21302e29b9013c7d6fa2c | 38159488927; Linux/ARM/Intel |
+| Equivalent gradient allocation comparison | 9ae50851389fbfa7c5c155fca477a4b958589c99 | 38159536008; Linux/ARM/Intel |
+| List/closure/State controls and allocation comparison | 4f21a9ea99c1a06a3f1ba67818936194fe43e42a | 38160607296; Linux/ARM/Intel |
+| Integrated export and primitive inventory | 77f4e22f5d3b280482e65616e5f03abae1ac350e | 38163941948 |
+
+The finalizer verifies downloaded allocation reports and their source/binary
+hashes. Scoped gradients add no steady-state managed calls/bytes on the tested
+4096-call O1/O2 workload and preserve five external buffer calls per gradient.
+List ownership adds no managed calls/bytes on the tested2048-call O1/O2 workload,
+reduces shared-count clears and increases counted-storage reclamation. These
+are workload-specific allocation results, with no timing or tracing-free claim.
+
+All original controls remain: raw FWP_NO_OPT=1/native semantics, real collection,
+GC/reuse verification, O1/O2, callback/trap order, allocation failure, task
+cancellation and exact omission exits before invalid reads. Native compiler
+failures now fail the GC gate; diagnostics include stdout/stderr/status/signals.
+Cache pruning protects the returned executable and retains at least one entry.
+AD bounds/identity cleanup preserves consumption and failure precedence; slots
+retire at generation32767 rather than wrapping. Internal scopes preserve public
+Pipe signatures. List.ap/flat-map own callback results and counted spines.
+Closure nonlocal cleanup clears discarded work contexts and releases spills.
+State pop/restore/task exit clear inactive scanned words without changing active
+suspended states or proving typed State ownership. Final production gates remain
+required for this combination. Detailed failures and controls are in
+[preparation history](roadmap-history.md#resource-bundle-preparation-before-finalization).
+
+The read-only finalizer exports complete snapshots instead of pushing with a
+runner App. The publisher verifies blob hashes, all snapshot trees, one-line
+subjects, parent chains and original metadata instants. Empty commits reuse
+their parent's tree. Publication uses GitHub beforeOid as an exact branch lease.
+The verified integrated branch head is0dac249f2d3767021c46be89de123b78d0970791. Its exact-head
+production gates remain pending; do not substitute the focused passes. Export metadata is retained in
+/private/tmp/fwp-resource-network-finalized-export; binaries stay on GitHub.
+
+## Typed State work for the current bundle
+
+The user requested larger coherent bundles. Include the verified typed State
+candidate with PR124's formatting/docs repair, then run one final exact-head
+production matrix. Passing focused branch ownership-evidence-typed-state is
+at ec1915e7386128352a792071701c16b076084e75, CI38167118922, all three platforms.
+Its five exact-source transformations reproduce PR124 native head9550aab9.
+Four contracts cover get/put/modify/run-state. Stack scope records own typed
+values independently of the scanned buffer, preserve borrowed initial aliases,
+return separately owned gets/results and release replaced values. Task switches
+save the active scope head; normal/error/trap/cancellation and result-boxing
+failure clear it before frames disappear. Unknown legacy activations and boxed
+unmodeled payloads keep their documented tracing fallback.
+
+Native O1/O2 controls under real collection and both reuse modes preserve all
+six exact omission exits120/127/125/126/128, with scalar address-shaped-bit
+checks before invalid payload reads. Raw/native controls verify nested errors,
+get/modify aliases and actual task switching/cancellation. All71 library units
+and focused lint pass. Source is unchanged across fixture repairs: the first
+omitted IO effect and treated metadata addresses as allocation liveness; the
+second needed call-time task creation and lost-retain detection before poisoning.
+Receipts/logs: fwp-typed-state-control-fixes-publication.json,
+fwp-typed-state-poison-task-publication.json, fwp-typed-state-aed-arm-failed.log
+and fwp-typed-state-ee-arm-failed.log, all under /private/tmp.
+
+Equivalent allocation driver ac7b518c5b1d80dd55c385728cdae5bbdde1f44e passes
+all three jobs in38166896486. Its native source matches the State candidate;
+baseline9550aab9/candidateac7b compare4096 runtime-dependent State calls at
+O1/O2, raw interpretation, real collections, compiler arguments/hardware and
+source/binary hashes. No additional managed calls/bytes, fewer shared count
+clears and more counted-storage frees on this workload. The earliercde driver
+failed before measurement because its fixture used fork instead of pair-producing
+both; the corrected script retains every acceptance assertion. Receipt:
+/private/tmp/fwp-typed-state-allocation-fixture-fix-publication.json.
+These are allocation results, with no timing or tracing-free claim.
+
+Runner integration must preserve all original resource tests and mandatory WASI,
+apply the exact five-source recipe, format Rust and lib/autodiff.fwp, and execute
+cheap docs/fwp-format checks before publication. The strict inventory extension
+permits only these four additional State contracts; its expected153 contracts
+and191 review declarations are not verified counts yet. Additional array/record
+and escaping-closure State cases are prepared for the final bundle in
+/private/tmp/fwp-typed-state-expanded-test.rs and have not executed. Full native,
+GC, reuse, resource/File and Linux WASI gates remain required. Later phase2
+reconstruction, retained-context, disposal and cycle classifications remain.
+A finite review map prepares191 declarations/181 symbols after excluding the
+four State entries from verified13c inventory; the integrated153-contract
+inventory must confirm it. Fourteen serializer/codec leaf contracts are
+source-reviewed drafts only, not published or validated; source recipe and
+preparation record: /private/tmp/fwp-serializer-leaf-ownership-patch.json and
+/private/tmp/fwp-serializer-leaf-preparation.json. Prioritize the current repair.
+
+
+
+## Historical list and State source observations
+
+The additional list and state rows are source review at main68f959bbf28c:
+[runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`
+and reconstruct their outputs; state handlers store V words without typed slot
+drop metadata. [Task switching](../runtime/fwp_rt_task.c) saves and restores the
+state buffer, and typed-error handlers restore its depth. These observations
+identify remaining contract work. The prepared root-clearing fix addresses
+source-visible retention without supplying a new reclamation result. Preserve
+callback order and nested task/error/trap behavior
+when extending ownership; the existing tracing fallback remains required.
+
+
+
+## PR124 allocation and callback repairs before final integration
+
+## Current verified bundle evidence
+
+Combined driver `85b305ccad63527101a329e3f4bab2c3318458da` passes preflight38173831552.
+The published tree matches runner export31c86694f4f7f6eec870ffa73add7dabbdd0eba0.
+All71 library units, type snapshots, effect controls, format stability/faithfulness,
+stdlib docs and expanded State ownership tests pass together. Four positive
+stored-callback cases and two missing-IO negatives protect both inference fixes:
+call-time ambient labels extend temporary call rows, while row unification
+refreshes tails after common payload unification. Signature instantiation and
+function-pipe composition semantics stay intact.
+
+State stack records own typed values, retain borrowed initials and gets, protect
+replacement/callback results, and release on normal/error/trap/cancellation and
+boxing failure. Task switches preserve each owner chain. Scalar address-shaped
+bits remain uncounted. Array/record States and runtime-dependent heap-capturing
+closures agree between raw interpretation and native O1/O2 with stack placement
+on/off, real GC stress/verification and reuse verification on/off. C/source/
+binary/status artifacts are retained before assertions. Unknown legacy activations
+and boxed unmodeled payloads retain their documented tracing fallback.
+
+Strict integrated inventory verifies374 declarations,364 symbols,40 aliases,
+153 contracts,19 IR combinators,11 flat signatures and191 review declarations
+representing181 symbols. Missing contracts are classification work, not inherently
+bugs. State focused evidence38167118922 and allocation evidence38166896486 pass
+Linux/ARM/Intel. Existing resource, WASI and omission controls remain required.
+
+Original production38164685147 failed only lib/autodiff formatting assertions;
+its documentation38164685131 failed the numeric-row parser. Both repairs pass the
+combined preflight. Earlier failed/cancelled preflights are archived in
+[history](roadmap-history.md#pr124-combined-repair-preflight-chronology).
+
+Next: monitor all six jobs on the current production head, repair any failures,
+collect its diagnostics. The corrected counters exposed an allocation regression
+in the scoped AD code already included here: fix that before merging. Integrate
+the verified AD repair, passing codec contracts and streamlined docs into the
+same coherent PR124 bundle, then require a new full six-job current-head matrix
+and roadmap_docs before exact-head squash. A native-source change warrants this
+rerun; a docs-only restart did not. Prepare remaining phase2 classifications
+while CI runs; no later production PR opens before #124 merges.
+
+Allocation evidence review found that fwp_alloc_init has a fast path bypassing
+fwp_gc_alloc. Existing managedCalls/managedRequestedBytes instrumentation counts
+only fwp_gc_alloc entries; it does not count every managed allocation. The
+published comparison is valid only for that entry-point subset. Correct the
+instrumentation and rerun equivalent State/AD/list reports on runners before
+using those counters for phase2 acceptance. Do not claim total allocation parity
+from the earlier reports. No timing or tracing-free claim is established.
+
+Corrected State driver771c2b83b9a5db0142df759006b960704606a86a passes all
+three jobs in38174682933. On4096 equivalent calls at O1/O2 on all three
+platforms, total managed calls fall16384→12288 and requested bytes272212→206676;
+counted freed bytes rise0→262144. Both initializer fast paths and slow delegation
+are counted once. Report/hardware/compiler/flags/source/binary metadata is retained
+in /private/tmp/fwp-complete-state-allocation-metadata; binaries stay on GitHub.
+These workload-specific results establish neither timing gains nor tracing-free
+support. Earlier partial counters are superseded for total allocation claims.
+
+Corrected AD/list driver e9a758112918ad7bd0246fa260fde67e2f53043b fails
+all three jobs in38174792982 on the AD allocation assertion; list was skipped
+by step sequencing, so it is unverified. Linux reveals33→40 managed allocations
+and720→872 requested bytes per gradient, with lower live memory and unchanged
+steady-state external buffer requests. The old scope wrapper constructs dynamic
+const/compose callbacks. Keep the allocation assertions; fix the implementation.
+Direct scoped-callback driver a1884052b14968f9692d41560be5963a05654d0b,
+branch ownership-evidence-ad-scope-direct, CI38175358973 pending, passes the
+actual input directly to a borrowed callback instead of allocating those wrapper
+closures. All Linux semantic and scope controls pass, but the corrected allocation
+assertion still fails at36 allocations/792 bytes per gradient. The first direct
+path removes four wrappers but still boxes the input tuple and value/gradient
+pair. Preserve the assertion. Revised dd7f5d8015028856bc12dd2fd19b8af644e7e280
+adds internal ad.scope2 for direct borrowed arguments and computes grad inside
+its scope before returning the list. Public grad/vjp signatures stay intact.
+CI38175814025 passes Linux and ARM macOS; Intel remains running. The subsequent
+448842081a776e6e2afae6e6d38d2471d00d0efa adds explicit Dup bounds for
+borrowed inputs. Its run38176077763 was superseded and cancellation requested
+after proving replacement42774f981491bb321f4d66a43d6c7088da7db70b changes
+only tests/ad_tape_scopes.rs and preserves every native source blob. That partial
+run does not provide a passing gate. Proof: fwp-ad-scope-448-superseded-cancellation.json.
+Latest42774 adds affine File rejection and owned input-alias controls;
+CI38176126768 passes all three platforms, including complete allocation parity.
+Do not substitute dd/448 passes for its actual controls.
+Draft strict inventory assertions expect375 declarations/365 symbols,168
+contracts,177 review declarations/167 symbols after scope2 and14 codecs; these
+counts are not verified yet. Source: fwp-check-primitive-inventory-final-bundle-draft.py.
+Failing log: /private/tmp/fwp-ad-direct-linux-failed.log. List measurements now run
+independently at186cd79f64a0781cb9588975f863c983b072d1ac on
+ownership-evidence-list-allocations-complete, CI38175393180 passes all three platforms. Complete counters show43008
+managed calls and965374 requested bytes for both baseline and candidate on2048
+O1/O2 calls, with counted freed bytes65536→917504 on all three platforms.
+Metadata: /private/tmp/fwp-complete-list-allocation-metadata. These are
+workload-specific allocation/reclamation results, without a timing or tracing-free
+claim.
+
+Serializer/codec candidate b837f55fc91f073ef147455916d704b1ed12c673 passes
+all three jobs in38175125107 on ownership-evidence-serializer-leaves. Fourteen
+contracts borrow inputs and return independent fresh leaves. All71 library units,
+existing leaf controls and new raw/native input-alias cases pass at O1/O2,
+stack on/off and GC/reuse verification on/off. Firstff9527 workflow was invalid
+before any job ran; the fix moves runner.temp artifact configuration into its
+supported step context. No production acceptance or allocation benefit is claimed.
+Recipe: /private/tmp/fwp-serializer-leaf-ownership-patch.json; publication and
+workflow repair receipts: fwp-serializer-leaf-publication.json and
+fwp-serializer-workflow-fix-publication.json. Generated C/binaries/statuses remain
+on GitHub. Include these validated contracts, the verified AD allocation repair and
+streamlined docs in PR124 before its final gates. Remaining classifications
+continue in the next bundle after #124 acceptance.
+
+The regular ARM full job114573042599 fails only the original task callback
+case pass-fn = both (task.deadline 1h | apply 2) (apply 3): two stages share the
+callback input effect variable but have different outer rows. The new argument
+comparison widens only the temporary outer function row to known effects
+permitted by its parameter, preserving the actual value and nested input rows.
+It does not open abstract result sizes or use the caller's ambient effects.
+Front candidate bbb68321b522f5e732c6988df8b77345967ecd2f passes runner38177992930:
+all71 units, all original golden snapshots, seven effect tests with positive
+higher-order and missing Async/IO controls, original native task aliases and
+expanded State ownership. No original task fixture was changed. First69a4ec
+preflight38177637757 passed all runtime/effect controls but displayed synthetic
+permitted labels in one forbidden Error diagnostic; the guard preserves the
+original value type and existing negative snapshots. Logs:
+fwp-pr124-combined-arm-failed.log and fwp-function-argument-effects-69-failed.log.
+Include this front fix in the final combined runner and full production matrix.
+Final integration recipe: /private/tmp/fwp-integrate-final-ownership-on-runner.py;
+strict inventory draft: fwp-check-primitive-inventory-final-bundle-draft.py.
+All inputs are verified individually; the combined final tree is not yet verified.
+
+
+
+## Before the final PR124 ownership integration
+
+## Current verified bundle evidence
+
+Final integration driver489508a071d908d7c5396cd7a117176173980e39 passes
+runner38179558348. It combines direct scoped gradients,14 fresh codec contracts,
+typed State, the callback effect repair and complete allocator instrumentation.
+All71 library units, original type snapshots, task/State/AD controls, affine File
+rejection, input aliases, formatting and stdlib docs pass together. Its strict
+inventory verifies375 declarations/365 symbols,40 aliases,168 contracts,
+19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
+
+The final diagnostic refinement6ff1ffb1a7ad14b83e2149757f5c476d806803b4 passes
+runner38179961853: eight effect controls, original snapshots, native task aliases,
+State controls and71 library units. Argument comparison permits only the
+parameter's known outer effects, preserves nested input rows and displays the
+original callback type on every mismatch. No original task fixture was changed.
+Integrate this refinement and these docs before publication and full gates.
+
+Complete counters include initializer fast paths and count slow delegation once.
+Independent Linux/ARM/Intel State38174682933, list38175393180 and scoped
+AD38176126768 comparisons pass; combined-source Linux profiles also pass in
+38179558348. State4096-call O1/O2 managed calls fall16384→12288 and requested
+bytes272212→206676; counted freed bytes rise0→262144. List2048-call profiles
+retain43008 calls/965374 bytes and raise counted freed bytes65536→917504.
+Scoped grad4096-call profiles match the baseline33 calls/720 bytes per gradient,
+repairing the40-call/872-byte regression without weakening assertions. Hardware,
+compiler, flags and source/binary hashes remain in the runner artifacts.
+No timing or tracing-free claim is established.
+
+The old production38174221614 is complete: regular Linux/ARM/Intel fail only
+the original pass-fn callback comparison; bench and both GC jobs pass.
+Documentation38174221611 passes. These are earlier-head diagnostics, not final
+gates. Logs: fwp-pr124-combined-{linux,arm,intel}-failed.log.
+
+Next: rerun the final integration with6ff1ff and the streamlined docs, publish
+its exact-tree export with the1aadb lease, then require all six current-head
+production jobs and roadmap_docs before squash. Keep one production PR. Prepare
+the finite177-declaration phase2 classification while CI runs. Earlier preflights
+and cancelled runs cannot supply final production gates. Phases2–6 remain open.
+Integration recipe: /private/tmp/fwp-integrate-final-ownership-on-runner.py.
+

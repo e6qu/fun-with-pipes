@@ -121,8 +121,8 @@ indexing can panic, while the native indexing can access outside the allocation.
 Validate tokens before use, preserve valid operation and reduction order, and
 verify exceptional buffer release as part of that fix. This is a source-review
 finding. Candidate bounds and detached-buffer cleanup repairs are published
-with raw interpreter/native and omitted-check controls; execution is pending,
-so no verified repair is claimed yet. Keep the
+with passing Linux/ARM/Intel raw interpreter/native and omitted-check controls;
+final combined production gates remain required. Keep the
 current numeric phase order from [the plan](../PLAN.md).
 
 The candidate scoped repair adds internal ad.scope around value-and-grad and
@@ -130,9 +130,10 @@ vjp, so grad, vector gradients and reverse Jacobian rows also release tapes
 when their callbacks fail before backward. Native scopes use stack owners and
 stable slot links in the existing task-local cleanup chain; interpreter scopes
 use RAII and remove consumed tokens. Borrowed AD inputs and counted fresh F64
-gradient arrays have explicit contracts. All candidate scope, counting, layout,
-trap/cancellation and raw interpreter/native checks remain queued; no verified
-scoped lifetime or no-tracing support is claimed before their final gates.
+gradient arrays have explicit contracts. Focused scope, counting, layout,
+trap/cancellation and raw interpreter/native checks pass on Linux/ARM/Intel.
+The direct scoped-callback allocation repair is being validated separately;
+final combined gates and merge remain required. No tracing-free support is claimed.
 Equivalent runtime-dependent gradients must also show no increase in managed
 steady-state allocation calls or requested bytes, with unchanged external buffer
 allocation calls/bytes, at O1/O2 on Linux and both macOS architectures. Report
@@ -253,3 +254,17 @@ disabled contraction while measuring SIMD, buffer reuse and fused gradients.
 - Nested reverse mode and checkpointing.
 - Kernels other than elementwise expressions and sums (matrix products,
   reductions along an axis) on devices.
+
+
+## Scoped-gradient allocation validation
+
+Complete managed-allocation counters include initializer fast paths and count
+slow delegation once. They exposed a33→40 calls/720→872 bytes regression per
+gradient in the first scoped wrapper. Direct borrowed arguments through internal
+ad.scope/ad.scope2 and projection inside the grad callback restore33 calls/720
+bytes, matching the baseline on4096 equivalent O1/O2 calls across Linux and
+ARM/Intel macOS. The combined candidate Linux profiles also pass. Public grad/vjp
+signatures stay intact; borrowed scoped inputs require Dup, and affine File
+rejection, input aliases and tape cleanup controls pass. [The handoff](development-state.md)
+records exact candidates and final production gates. No timing gain or tracing-free
+support is established, and earlier partial counters do not prove allocation parity.
