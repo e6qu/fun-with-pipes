@@ -1,0 +1,12 @@
+{
+  "head": "ff9527f64e5fda735f2b2a7fe6a25d33664994bb",
+  "base": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+  "branch": "ownership-evidence-serializer-leaves",
+  "unchangedNativeTree": "e630e0ff07988dee60a7e2a61bb3689d089ed92b",
+  "sourceHashes": {
+    "src/ownership.rs": "13e5a9d1d2ebb5b23bd210a39d25dfc22d5bd45d59a3145001f15e94ed4809e7",
+    "tests/serializer_leaf_ownership.rs": "5d6ea4bfd5f35d8d25ee3af8aadbac9bcd0600807da7c3ff2e109b4ea7d25592",
+    ".github/workflows/serializer-leaf-evidence.yml": "b77a63394737f68c18cd0ac2d40bcb4c946700a4536bf37fd1c7000cd7b05768"
+  },
+  "stage": "Source-identical allocation driver published; measurements pending"
+}

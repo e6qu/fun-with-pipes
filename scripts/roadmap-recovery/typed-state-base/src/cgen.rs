@@ -5991,6 +5991,62 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                     "return fwp_p_file_with_owned(l0, l1, {err}, {drop}, {dup});"
                                 );
                             }
+                            ResultOwnership::OwnedState => {
+                                let returned = func.ty.params(func.arity as usize).1.clone();
+                                match sym.as_str() {
+                                    "get" => {
+                                        let dup =
+                                            if crate::rc::needs_rc(&self.prog.shapes, &returned) {
+                                                self.value_dup(&returned)
+                                            } else {
+                                                "NULL"
+                                            };
+                                        s = format!("return fwp_p_get_owned({dup});");
+                                    }
+                                    "put" => {
+                                        let state = &func.locals[0];
+                                        let dup = if crate::rc::needs_rc(&self.prog.shapes, state) {
+                                            self.value_dup(state)
+                                        } else {
+                                            "NULL"
+                                        };
+                                        s = format!("return fwp_p_put_owned(l0, {dup});");
+                                    }
+                                    "modify" => {
+                                        let state = func.locals[0].params(1).1.clone();
+                                        let dup = if crate::rc::needs_rc(&self.prog.shapes, &state)
+                                        {
+                                            self.value_dup(&state)
+                                        } else {
+                                            "NULL"
+                                        };
+                                        let drop = self.value_drop(&state);
+                                        s = format!(
+                                            "return fwp_p_modify_owned(l0, {dup}, {drop});"
+                                        );
+                                    }
+                                    "run-state" => {
+                                        let MT::Record(fields) = &returned else {
+                                            return Err("run-state has a non-pair result".into());
+                                        };
+                                        if fields.len() != 2 || fields[1].1 != func.locals[0] {
+                                            return Err(
+                                                "run-state result lacks its state type".into()
+                                            );
+                                        }
+                                        let state = &func.locals[0];
+                                        let dup = if crate::rc::needs_rc(&self.prog.shapes, state) {
+                                            self.value_dup(state)
+                                        } else {
+                                            "NULL"
+                                        };
+                                        let drop_state = self.value_drop(state);
+                                        let drop_result = self.value_drop(&fields[0].1);
+                                        s = format!("return fwp_p_run_state_owned(l0, l1, l2, {dup}, {drop_state}, {drop_result});");
+                                    }
+                                    _ => return Err(format!("unmodeled State contract: {sym}")),
+                                }
+                            }
                             ResultOwnership::OwnedAttempt => {
                                 let MT::Con(_, types) = func.ty.params(func.arity as usize).1
                                 else {

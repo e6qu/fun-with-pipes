@@ -100,11 +100,11 @@ prepared-source classification, not main acceptance or a tracing-free guarantee.
 Counts and scope are recorded in
 [history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
-Integrated finalization38163941948 at runner head13c92139da8d verifies the
+Combined repair38173831552 at runner head31c86694f4f7 verifies the
 expected changes against that frozen baseline:374 declarations,364 symbols,
-40 aliases,149 contracts,19 IR combinators,11 flat signatures and195 review
-declarations representing185 symbols. It adds only internal ad.scope and the
-recorded raw-memory, AD and list contracts. Final production gates and merged
+40 aliases,153 contracts,19 IR combinators,11 flat signatures and191 review
+declarations representing181 symbols in the combined candidate. It adds only internal ad.scope and the
+recorded raw-memory, AD, list and four typed State contracts. Final production gates and merged
 source classification remain required. These counts do not prove reclamation.
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
@@ -118,7 +118,7 @@ known descriptor does not establish ownership of every reconstructed node.
 | Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
 | Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
 | list.flat-map and list.ap | Generic runtime application and list reconstruction retain the compatibility path; owned callback results, temporary storage and copied spines need explicit contracts before tracing-free eligibility |
-| State handlers | get/put/modify/run-state retain values in per-task runtime state storage; typed ownership of slots and restoration on every nonlocal exit need separate evidence |
+| State handlers | The PR124 candidate owns typed get/put/modify/run-state values and preserves per-task scope chains; focused nonlocal-exit and escaping-capture controls pass, while full production acceptance remains required |
 
 Source review of the same prepared head separates three concrete cases:
 
@@ -157,18 +157,15 @@ release the original callback chunks. Both repairs pass focused Linux/ARM/Intel 
 gates remain required. The same candidate clears inactive
 State buffer words after pop, depth restoration and task exit; collector-scan,
 alias/error and real scheduler controls pass the same focused matrix. Clearing dead roots
-does not count or destroy live State values. Typed State slot policies remain
+does not count or destroy live State values. Candidate typed State scope controls now pass; legacy/unmodeled fallbacks remain
 on the tracing compatibility path. See the handoff for candidate identities.
 
-The additional list and state rows are source review at main68f959bbf28c:
-[runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`
-and reconstruct their outputs; state handlers store V words without typed slot
-drop metadata. [Task switching](../runtime/fwp_rt_task.c) saves and restores the
-state buffer, and typed-error handlers restore its depth. These observations
-identify remaining contract work. The prepared root-clearing fix addresses
-source-visible retention without supplying a new reclamation result. Preserve
-callback order and nested task/error/trap behavior
-when extending ownership; the existing tracing fallback remains required.
+Current list callback and typed State candidates have focused retention and
+cleanup evidence described above. The earlier main68f source observations are
+archived in [history](roadmap-history.md#historical-list-and-state-source-observations).
+Legacy/unmodeled states, reconstruction and unknown runtime callbacks still
+require explicit fallback classification. Preserve callback evaluation order
+and task/error/trap behavior when extending ownership.
 
 Keep these boundaries on tracing compatibility until their contracts and cleanup
 are proved. Phase2 records coverage and remaining fallback requirements; phase6

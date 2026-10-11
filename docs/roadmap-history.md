@@ -18103,3 +18103,17 @@ source-reviewed drafts only, not published or validated; source recipe and
 preparation record: /private/tmp/fwp-serializer-leaf-ownership-patch.json and
 /private/tmp/fwp-serializer-leaf-preparation.json. Prioritize the current repair.
 
+
+
+## Historical list and State source observations
+
+The additional list and state rows are source review at main68f959bbf28c:
+[runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`
+and reconstruct their outputs; state handlers store V words without typed slot
+drop metadata. [Task switching](../runtime/fwp_rt_task.c) saves and restores the
+state buffer, and typed-error handlers restore its depth. These observations
+identify remaining contract work. The prepared root-clearing fix addresses
+source-visible retention without supplying a new reclamation result. Preserve
+callback order and nested task/error/trap behavior
+when extending ownership; the existing tracing fallback remains required.
+

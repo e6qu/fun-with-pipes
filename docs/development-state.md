@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `fd021cf198e753e3a9f356136b335c903dd50f10` passes audit38171968563.
+checkpoint `16a5d8d7c428d6519ed39eaff04498b2e70bf6ec` passes audit38174719540.
 The next checkpoint retains the completed repair export and this streamlined
 handoff. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
@@ -106,11 +106,13 @@ combined preflight. Earlier failed/cancelled preflights are archived in
 [history](roadmap-history.md#pr124-combined-repair-preflight-chronology).
 
 Next: monitor all six jobs on the current production head, repair any failures,
-then exact-head squash with the required one-line subject and empty body. Preserve
-this running full matrix rather than restarting it solely for docs. Carry the
-streamlined root docs into the next bundle after merge. Prepare the remaining
-phase2 classification and concrete fixes while CI runs; no later production PR
-opens before #124 merges.
+collect its diagnostics. The corrected counters exposed an allocation regression
+in the scoped AD code already included here: fix that before merging. Integrate
+the verified AD repair, passing codec contracts and streamlined docs into the
+same coherent PR124 bundle, then require a new full six-job current-head matrix
+and roadmap_docs before exact-head squash. A native-source change warrants this
+rerun; a docs-only restart did not. Prepare remaining phase2 classifications
+while CI runs; no later production PR opens before #124 merges.
 
 Allocation evidence review found that fwp_alloc_init has a fast path bypassing
 fwp_gc_alloc. Existing managedCalls/managedRequestedBytes instrumentation counts
@@ -120,15 +122,44 @@ instrumentation and rerun equivalent State/AD/list reports on runners before
 using those counters for phase2 acceptance. Do not claim total allocation parity
 from the earlier reports. No timing or tracing-free claim is established.
 
-Corrected State allocation driver771c2b83b9a5db0142df759006b960704606a86a
-on ownership-evidence-typed-state-allocations-complete is published; three-platform
-measurements are pending. It counts initializer fast paths and counts their
-slow-path delegation once. Receipt: /private/tmp/fwp-typed-state-allocation-complete-publication.json. AD/list counter repairs still need equivalent reruns.
+Corrected State driver771c2b83b9a5db0142df759006b960704606a86a passes all
+three jobs in38174682933. On4096 equivalent calls at O1/O2 on all three
+platforms, total managed calls fall16384→12288 and requested bytes272212→206676;
+counted freed bytes rise0→262144. Both initializer fast paths and slow delegation
+are counted once. Report/hardware/compiler/flags/source/binary metadata is retained
+in /private/tmp/fwp-complete-state-allocation-metadata; binaries stay on GitHub.
+These workload-specific results establish neither timing gains nor tracing-free
+support. Earlier partial counters are superseded for total allocation claims.
 
-Fourteen serializer/codec leaf contracts remain source-reviewed unpublished
-drafts: /private/tmp/fwp-serializer-leaf-ownership-patch.json and
-/private/tmp/fwp-serializer-leaf-preparation.json. Bundle validated contracts,
-classification and the measurement repair in the next coherent delivery.
+Corrected AD/list driver e9a758112918ad7bd0246fa260fde67e2f53043b fails
+all three jobs in38174792982 on the AD allocation assertion; list was skipped
+by step sequencing, so it is unverified. Linux reveals33→40 managed allocations
+and720→872 requested bytes per gradient, with lower live memory and unchanged
+steady-state external buffer requests. The old scope wrapper constructs dynamic
+const/compose callbacks. Keep the allocation assertions; fix the implementation.
+Direct scoped-callback driver a1884052b14968f9692d41560be5963a05654d0b,
+branch ownership-evidence-ad-scope-direct, CI38175358973 pending, passes the
+actual input directly to a borrowed callback instead of allocating those wrapper
+closures. This changes only the internal ad.scope signature; public grad/vjp
+signatures stay intact. Exact production-source drafts, all original scope
+omission controls, interpreter/native gradients and complete counter comparisons
+are prepared. It is not runtime-verified yet. List measurements now run
+independently at186cd79f64a0781cb9588975f863c983b072d1ac on
+ownership-evidence-list-allocations-complete, CI38175393180 pending.
+
+Serializer/codec candidate b837f55fc91f073ef147455916d704b1ed12c673 passes
+all three jobs in38175125107 on ownership-evidence-serializer-leaves. Fourteen
+contracts borrow inputs and return independent fresh leaves. All71 library units,
+existing leaf controls and new raw/native input-alias cases pass at O1/O2,
+stack on/off and GC/reuse verification on/off. Firstff9527 workflow was invalid
+before any job ran; the fix moves runner.temp artifact configuration into its
+supported step context. No production acceptance or allocation benefit is claimed.
+Recipe: /private/tmp/fwp-serializer-leaf-ownership-patch.json; publication and
+workflow repair receipts: fwp-serializer-leaf-publication.json and
+fwp-serializer-workflow-fix-publication.json. Generated C/binaries/statuses remain
+on GitHub. Include these validated contracts, the verified AD allocation repair and
+streamlined docs in PR124 before its final gates. Remaining classifications
+continue in the next bundle after #124 acceptance.
 
 ## Remaining ownership deliveries
 
@@ -217,7 +248,7 @@ workloads are serial, low priority and guarded: sampled aggregate RSS below1GiB,
 target below2GiB, at least64GiB free disk, deadline180 seconds. Stop at limits;
 never raise or bypass them. Use `python3 scripts/local-guard.py COMMAND...` for
 fwp checks. The fun-refactor guard applies to that other repository.
-Latest disk observation:44,108,824KiB available, about42.1GiB; local target
+Latest disk observation:44,150,024KiB available, about42.1GiB; local target
 103,696KiB, about101.3MiB. The64GiB reserve remains unavailable. No local compiled
 check, broad doc audit, rebase or fast-forward ran. Only source edits and bounded
 remote metadata publication/downloads ran serially at low priority.
