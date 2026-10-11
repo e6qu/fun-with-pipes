@@ -5684,13 +5684,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 s = format!("V result = {result}; fwp_own_tree{owner}(result); return result;");
                             }
                             ResultOwnership::FreshLeaf | ResultOwnership::FreshContainer => {
-                                let r = s
-                                    .strip_prefix("return ")
-                                    .and_then(|r| r.strip_suffix(';'))
-                                    .ok_or_else(|| {
+                                let (prefix, returned) =
+                                    s.rsplit_once("return ").ok_or_else(|| {
                                         format!("fresh primitive `{sym}` has no return expression")
                                     })?;
-                                s = format!("return fwp_rc_fresh({r});");
+                                let r = returned.strip_suffix(';').ok_or_else(|| {
+                                    format!("fresh primitive `{sym}` has no return expression")
+                                })?;
+                                s = format!("{prefix}return fwp_rc_fresh({r});");
                             }
                             ResultOwnership::AliasArgument { argument } => {
                                 if crate::rc::needs_rc(&self.prog.shapes, &func.locals[argument]) {
