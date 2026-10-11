@@ -65,3 +65,5 @@ pub mod types;
 pub mod value;
 pub mod web;
 pub mod yaml;
+
+pub(crate) mod resource;

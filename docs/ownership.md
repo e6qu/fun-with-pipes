@@ -57,6 +57,17 @@ host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
 the ownership gap. `--memory static` provisions bounded memory, not static
 lifetimes. None of these is a general collector-free execution guarantee.
 
+
+PR122 merges direct typed variant alias transfer and checked nominal context for
+match/field elimination. CAF caches own typed results, return separate owners,
+and release after task teardown; inlined arguments still evaluate and release
+before the callee. Spawn/deadline callbacks retain captures with rollback;
+scopes protect result/storage through joining and unwind. Counted task handles
+own cached results, and await returns separate owners. Typed channel queues
+retain elements and transfer them on receive; close preserves queued values.
+Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
+reclamation remains unproved. Other resource boundaries stay prepared.
+
 ## Remaining ownership coverage
 
 Container contracts and comparison-key borrowing are merged. Selected leaves,
@@ -135,7 +146,10 @@ Compare pointer arithmetic and numeric widths with the interpreter, including
 boundary arithmetic without dereferencing addresses and WebAssembly pointer width.
 The existing raw interpreter reproducibly panics on a large I16 element offset;
 native code uses signed overflow-prone arithmetic. A separate pointer-width
-wrapping repair is prepared, with boundary/native/sanitizer controls pending CI.
+wrapping repair passes boundary/native/sanitizer controls on Linux and both
+macOS architectures; final bundle acceptance is pending. Bundle54–73 also
+prepares borrowed raw-memory contracts and counted ptr.read-string copies,
+with copy independence and last-owner native release controls.
 It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
 
 Acceptance includes full exact-head Linux and ARM/Intel macOS gates, GC stress
@@ -249,7 +263,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #121 includes the following contracts. Detailed primitive modes
+Main through PR #122 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 
@@ -335,13 +349,13 @@ in [the handoff](development-state.md), rather than a second priority list here.
 
 | Area | Prepared contract | Acceptance still required |
 |---|---|---|
-| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Sequential CI; aliases, traps and cancellation |
-| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Sequential CI; ambiguous nominal contexts and nested holders |
-| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Sequential CI; shared graph/cycle policy and actual device evidence |
-| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Sequential CI; all escaping/error/shared boundaries |
-| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Sequential CI; shared/stale handles and actual WASI behavior |
+| Containers and callbacks | Typed elements, retained results, owning runtime boundaries and unwind cleanup | Bundle CI; aliases, traps and cancellation |
+| Aggregates and compiler temporaries | Typed constructors, reconstruction, worker/loop/variant conversion and CAF ownership | Bundle CI; ambiguous nominal contexts and nested holders |
+| Tasks, channels, libraries and devices | Owned handles/queues/caches, teardown, retained callbacks and library roots | Bundle CI; shared graph/cycle policy and actual device evidence |
+| Files and original frames | Logical ownership, borrowed IO, original scope anchors and deterministic close | Bundle CI; all escaping/error/shared boundaries |
+| File storage | Inline path, finalizer removal, last-owner storage release and constructor rollback | Bundle CI; shared/stale handles and actual WASI behavior |
 | WASM resources | Logical aggregate/task counts and disposal metadata | Actual-WASI full gates; physical bump storage remains allocated |
-| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Sequential CI; nested holders and partial-retain traps |
+| Frame representation | Typed record fields and variant structs, per-path pattern initialization | Bundle CI; nested holders and partial-retain traps |
 
 ## Original resource semantics
 
@@ -349,7 +363,7 @@ File values stay affine: no duplication trait or resource capture is added.
 A File parameter remains alive until its original function frame exits, even
 when ignored; early close would change later IO failures. Prepared internal ResourceRegion
 anchors record these lifetimes before optimization and preserve them through
-inlining and fusion; their implementation still requires sequential delivery.
+inlining and fusion; their implementation still requires accepted bundle delivery.
 Returned/error aliases retain their owners. Partially failed patterns retain
 already bound locals until frame exit, matching the interpreter.
 

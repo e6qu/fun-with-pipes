@@ -50,24 +50,54 @@ static SSL_CTX *fwp_tls_ctx_new(int server) {
 /* protocols in ALPN's wire format; names that are empty or longer than
  * 255 bytes are left out */
 static unsigned char *fwp_alpn_wire(V protos, unsigned *len) {
-    size_t n;
-    V *items = fwp_list_items(protos, &n);
+    *len = 0;
     size_t total = 0;
-    for (size_t i = 0; i < n; i++) total += 1 + STR(items[i])->len;
-    unsigned char *w = (unsigned char *)malloc(total + 1);
-    size_t k = 0;
-    for (size_t i = 0; i < n; i++) {
-        size_t l = STR(items[i])->len;
+    const size_t limit = UINT_MAX;
+    for (V xs = protos; xs; xs = OBJ(xs)->f[1]) {
+        uint64_t l = STR(OBJ(xs)->f[0])->len;
         if (l == 0 || l > 255) continue;
+        size_t entry = (size_t)l + 1;
+        if (entry > limit || total > limit - entry || total > SIZE_MAX - 1 - entry) {
+            snprintf(fwp_tls_err, sizeof fwp_tls_err, "TLS protocol list is too large");
+            return 0;
+        }
+        total += entry;
+    }
+    unsigned char *w = (unsigned char *)malloc(total + 1);
+    if (!w) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS protocol list");
+        return 0;
+    }
+    size_t k = 0;
+    for (V xs = protos; xs; xs = OBJ(xs)->f[1]) {
+        fwp_str *s = STR(OBJ(xs)->f[0]);
+        if (s->len == 0 || s->len > 255) continue;
+        size_t l = (size_t)s->len;
         w[k++] = (unsigned char)l;
-        memcpy(w + k, STR(items[i])->d, l);
+        memcpy(w + k, s->d, l);
         k += l;
     }
+    w[k] = 0;
     *len = (unsigned)k;
     return w;
 }
 
 typedef struct { unsigned char *w; unsigned n; } fwp_alpn;
+
+/* SSL sessions keep this server owner alive after its listener stops. The
+ * existing context app-data slot carries no process-global free callback, so
+ * raw session transfer into HTTP/2/gRPC preserves the same ownership. */
+typedef struct { fwp_alpn alpn; size_t refs; } fwp_tls_server_owner;
+
+static void fwp_tls_server_drop(void *p) {
+    SSL_CTX *ctx = (SSL_CTX *)p;
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)SSL_CTX_get_app_data(ctx);
+    if (!owner || !owner->refs) abort();
+    if (--owner->refs) return;
+    SSL_CTX_free(ctx);
+    free(owner->alpn.w);
+    free(owner);
+}
 
 /* the server's choice among the client's protocols: the first of its own
  * that the client offers; none (the handshake goes on) otherwise */
@@ -90,8 +120,9 @@ static int fwp_alpn_select(SSL *ssl, const unsigned char **out, unsigned char *o
     return SSL_TLSEXT_ERR_NOACK;
 }
 
-/* a server context; 0 with the reason in fwp_tls_err. Contexts live as
- * long as the program (they are few: one per listener). With a CA file
+/* A server context owns ALPN storage only on success; on failure the caller
+ * still owns the wire buffer. Listener and accepted-session owners release it.
+ * With a CA file
  * (`client_ca`, "" for none), clients must present a certificate that the
  * CA signed (mutual TLS). */
 static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned char *alpn, unsigned alpn_n,
@@ -117,12 +148,6 @@ static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned c
         SSL_CTX_free(ctx);
         return 0;
     }
-    if (alpn_n) {
-        fwp_alpn *a = (fwp_alpn *)malloc(sizeof *a);
-        a->w = alpn;
-        a->n = alpn_n;
-        SSL_CTX_set_alpn_select_cb(ctx, fwp_alpn_select, a);
-    }
     if (*client_ca) {
         if (SSL_CTX_load_verify_locations(ctx, client_ca, 0) != 1) {
             snprintf(fwp_tls_err, sizeof fwp_tls_err, "%s: cannot load CA certificates: %s", client_ca,
@@ -136,6 +161,22 @@ static SSL_CTX *fwp_tls_server_ctx(const char *cert, const char *key, unsigned c
         ERR_clear_error();
         SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, 0);
     }
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)malloc(sizeof *owner);
+    if (!owner) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS protocol state");
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+    owner->alpn.w = alpn;
+    owner->alpn.n = alpn_n;
+    owner->refs = 1;
+    if (!SSL_CTX_set_app_data(ctx, owner)) {
+        snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot store TLS protocol state");
+        free(owner);
+        SSL_CTX_free(ctx);
+        return 0;
+    }
+    if (alpn_n) SSL_CTX_set_alpn_select_cb(ctx, fwp_alpn_select, &owner->alpn);
     return ctx;
 }
 
@@ -152,10 +193,12 @@ static char *fwp_tls_peer_subject(SSL *ssl) {
         X509_NAME_print_ex(bio, name, 0, XN_FLAG_RFC2253);
         char *p = 0;
         long n = BIO_get_mem_data(bio, &p);
-        if (n >= 0 && p) {
+        if (n >= 0 && p && (uintmax_t)n < SIZE_MAX) {
             out = (char *)malloc((size_t)n + 1);
-            memcpy(out, p, (size_t)n);
-            out[n] = 0;
+            if (out) {
+                memcpy(out, p, (size_t)n);
+                out[n] = 0;
+            }
         }
     }
     if (bio) BIO_free(bio);
@@ -169,6 +212,19 @@ static char *fwp_tls_peer_subject(SSL *ssl) {
 typedef struct { char *ca; int verify; SSL_CTX *ctx; } fwp_tls_client;
 static fwp_tls_client *fwp_tls_clients = 0;
 static size_t fwp_tls_nclients = 0;
+
+#ifdef FWP_LIBRARY
+/* Sessions are finalized first; then give up the cache's context owners. */
+static void fwp_tls_clients_finish(void) {
+    for (size_t i = 0; i < fwp_tls_nclients; i++) {
+        SSL_CTX_free(fwp_tls_clients[i].ctx);
+        free(fwp_tls_clients[i].ca);
+    }
+    free(fwp_tls_clients);
+    fwp_tls_clients = 0;
+    fwp_tls_nclients = 0;
+}
+#endif
 
 static SSL_CTX *fwp_tls_client_ctx(const char *ca, int verify) {
     for (size_t i = 0; i < fwp_tls_nclients; i++)
@@ -192,11 +248,22 @@ static SSL_CTX *fwp_tls_client_ctx(const char *ca, int verify) {
     } else {
         SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, 0);
     }
-    fwp_tls_clients = (fwp_tls_client *)realloc(fwp_tls_clients, (fwp_tls_nclients + 1) * sizeof *fwp_tls_clients);
-    fwp_tls_clients[fwp_tls_nclients].ca = strdup(ca);
-    fwp_tls_clients[fwp_tls_nclients].verify = verify;
-    fwp_tls_clients[fwp_tls_nclients++].ctx = ctx;
+    /* Publish only a complete entry, preserving the old cache on failure. */
+    if (fwp_tls_nclients >= SIZE_MAX / sizeof *fwp_tls_clients) goto allocation_failed;
+    char *name = strdup(ca);
+    if (!name) goto allocation_failed;
+    fwp_tls_client *clients = (fwp_tls_client *)realloc(fwp_tls_clients, (fwp_tls_nclients + 1) * sizeof *fwp_tls_clients);
+    if (!clients) { free(name); goto allocation_failed; }
+    clients[fwp_tls_nclients].ca = name;
+    clients[fwp_tls_nclients].verify = verify;
+    clients[fwp_tls_nclients].ctx = ctx;
+    fwp_tls_clients = clients;
+    fwp_tls_nclients++;
     return ctx;
+allocation_failed:
+    SSL_CTX_free(ctx);
+    snprintf(fwp_tls_err, sizeof fwp_tls_err, "cannot allocate TLS client context cache");
+    return 0;
 }
 
 static int fwp_is_ip(const char *s) {
@@ -343,17 +410,30 @@ static ssize_t fwp_tls_send(void *p, const char *buf, size_t n, int *ww) {
     return k;
 }
 
-/* send close_notify (without waiting for the peer's) and free the session */
+/* Dispose without network traffic, including during library unload. */
+static void fwp_tls_dispose(void *p) {
+    SSL *ssl = (SSL *)p;
+    SSL_CTX *ctx = SSL_get_SSL_CTX(ssl);
+    int server = SSL_CTX_get_app_data(ctx) != 0;
+    SSL_free(ssl);
+    if (server) fwp_tls_server_drop(ctx);
+}
+
+/* Explicit close sends close_notify without waiting for the peer. */
 static void fwp_tls_free(void *p) {
     SSL *ssl = (SSL *)p;
     if (SSL_is_init_finished(ssl)) SSL_shutdown(ssl);
     ERR_clear_error();
-    SSL_free(ssl);
+    fwp_tls_dispose(p);
 }
 
 static void *fwp_tls_accepted(void *ctx, int fd) {
+    fwp_tls_server_owner *owner = (fwp_tls_server_owner *)SSL_CTX_get_app_data((SSL_CTX *)ctx);
+    if (!owner || !owner->refs) abort();
+    if (owner->refs == SIZE_MAX) fwp_trap("too many TLS context references");
     SSL *ssl = SSL_new((SSL_CTX *)ctx);
     if (!ssl) return 0;
+    owner->refs++;
     SSL_set_fd(ssl, fd);
     SSL_set_accept_state(ssl);
     return ssl;
@@ -392,24 +472,37 @@ static void fwp_host_of(const char *addr, char *out, size_t n) {
 
 /* ------------------------------------------------------------ primitives */
 
+static void fwp_tls_connect_drop(void *p) { fwp_p_sock_close(*(V *)p); }
+
 /* CA file, insecure, server name ("" for the host), protocols, client
  * certificate and key ("" for none), address */
 static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V addr, const fwp_desc *err) {
     V c = fwp_p_tcp_connect(addr, err);
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_connect_drop, &c);
     char host[256];
     if (STR(name)->len) snprintf(host, sizeof host, "%s", STR(name)->d);
     else fwp_host_of(STR(addr)->d, host, sizeof host);
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
+    if (!alpn) {
+        fwp_cleanup_pop(&cleanup);
+        fwp_p_sock_close(c);
+        return fwp_io_error("tls", fwp_tls_err, err);
+    }
     SSL *ssl = fwp_tls_client_new(SOCK(c)->fd, STR(ca)->d, insecure == FWP_FALSE, host, alpn, alpn_n, STR(cert)->d,
                                   STR(key)->d);
     free(alpn);
     if (ssl) {
         SOCK(c)->tls = ssl;
-        if (fwp_tls_finish(ssl, SOCK(c)->fd, 0)) return c;
+        if (fwp_tls_finish(ssl, SOCK(c)->fd, 0)) {
+            fwp_cleanup_pop(&cleanup);
+            return c;
+        }
     }
     char msg[1024];
     snprintf(msg, sizeof msg, "%s: %s", STR(addr)->d, fwp_tls_err);
+    fwp_cleanup_pop(&cleanup);
     fwp_p_sock_close(c);
     return fwp_io_error("tls", msg, err);
 }
@@ -418,13 +511,17 @@ static V fwp_p_tls_connect(V ca, V insecure, V name, V protos, V cert, V key, V 
 static V fwp_p_tls_listen(V cert, V key, V protos, V client_ca, V addr, const fwp_desc *err) {
     unsigned alpn_n;
     unsigned char *alpn = fwp_alpn_wire(protos, &alpn_n);
+    if (!alpn) return fwp_io_error("tls", fwp_tls_err, err);
     SSL_CTX *ctx = fwp_tls_server_ctx(STR(cert)->d, STR(key)->d, alpn, alpn_n, STR(client_ca)->d);
     if (!ctx) {
         free(alpn);
         return fwp_io_error("tls", fwp_tls_err, err);
     }
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_server_drop, ctx);
     V l = fwp_p_tcp_listen(addr, err);
     SOCK(l)->tls = ctx;
+    fwp_cleanup_pop(&cleanup);
     return l;
 }
 
@@ -439,16 +536,24 @@ static V fwp_p_tls_alpn(V c) {
     const unsigned char *p = 0;
     unsigned n = 0;
     if (SOCK(c)->tls && SOCK(c)->kind == 1) SSL_get0_alpn_selected((SSL *)SOCK(c)->tls, &p, &n);
-    return fwp_str_new(p ? (const char *)p : "", p ? n : 0);
+    V result = fwp_str_new(p ? (const char *)p : "", p ? n : 0);
+    /* Protocol bytes live in SSL storage, outside the collector's heap. */
+    FWP_KEEP_ALIVE(c);
+    return result;
 }
 
 static V fwp_p_tls_secure(V c) { return SOCK(c)->tls && SOCK(c)->kind == 1 ? FWP_TRUE : FWP_FALSE; }
+
+static void fwp_tls_subject_free(void *p) { free(p); }
 
 static V fwp_p_tls_peer_subject(V c) {
     if (!SOCK(c)->tls || SOCK(c)->kind != 1) return FWP_NONE;
     char *s = fwp_tls_peer_subject((SSL *)SOCK(c)->tls);
     if (!s) return FWP_NONE;
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_tls_subject_free, s);
     V v = fwp_cstr(s);
-    free(s);
+    fwp_cleanup_pop(&cleanup);
+    fwp_tls_subject_free(s);
     return fwp_some(v);
 }

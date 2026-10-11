@@ -218,6 +218,12 @@ static void g_stream_final(void *p) {
 
 static void g_conn_final(void *p) {
     g_conn *c = (g_conn *)p;
+#ifdef FWP_LIBRARY
+#ifdef FWP_TLS
+    if (c->ssl) { fwp_tls_dispose(c->ssl); c->ssl = 0; }
+#endif
+    if (c->fd >= 0) { close(c->fd); c->fd = -1; }
+#endif
     h2_hpack_free(&c->dec);
     h2b_free(&c->in);
     h2b_free(&c->out);
@@ -2021,12 +2027,35 @@ static SSL_CTX *g_server_tls(const char *cert, const char *key, const char *ca, 
         *failed = 1;
         return 0;
     }
-    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, (unsigned char *)strdup("\x02h2"), 3, ca);
+    unsigned char *alpn = (unsigned char *)strdup("\x02h2");
+    if (!alpn) {
+        fprintf(stderr, "fwp serve: cannot allocate TLS protocol list\n");
+        *failed = 1;
+        return 0;
+    }
+    SSL_CTX *ctx = fwp_tls_server_ctx(cert, key, alpn, 3, ca);
     if (!ctx) {
+        free(alpn);
         fprintf(stderr, "fwp serve: %s\n", fwp_tls_err);
         *failed = 1;
     }
     return ctx;
+}
+
+typedef struct { int fd; SSL_CTX *tls; } g_listener_owner;
+static void g_listener_finish(void *p) {
+    g_listener_owner *owner = (g_listener_owner *)p;
+    if (owner->fd >= 0) {
+        int fd = owner->fd;
+        owner->fd = -1;
+        fwp_fd_closing(fd);
+        close(fd);
+    }
+    if (owner->tls) {
+        SSL_CTX *ctx = owner->tls;
+        owner->tls = 0;
+        fwp_tls_server_drop(ctx);
+    }
 }
 
 static int fwp_serve(const fwp_service *s, int argc, char **argv) {
@@ -2050,6 +2079,9 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     int failed;
     SSL_CTX *tls = g_server_tls(cert, key, ca, &failed);
     if (failed) return 1;
+    g_listener_owner listener = {-1, tls};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, g_listener_finish, &listener);
     if (!listen_at) {
         listen_at = getenv(s->env);
         if (!listen_at || !*listen_at) listen_at = s->default_addr;
@@ -2063,12 +2095,17 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
                 "fwp serve: %s needs a certificate and key (--tls-cert and --tls-key, or FWP_TLS_CERT and "
                 "FWP_TLS_KEY)\n",
                 listen_at);
+        fwp_cleanup_pop(&cleanup);
+        g_listener_finish(&listener);
         return 1;
     }
     char bound[300];
     int fd = h2_listen(hostport, bound, sizeof bound);
+    listener.fd = fd;
     if (fd < 0) {
         fprintf(stderr, "fwp serve: %s\n", h2_err);
+        fwp_cleanup_pop(&cleanup);
+        g_listener_finish(&listener);
         return 1;
     }
     g_server *srv = (g_server *)fwp_mem_alloc(sizeof *srv);
@@ -2091,6 +2128,8 @@ static int fwp_serve(const fwp_service *s, int argc, char **argv) {
     fflush(stderr);
     fwp_tasks_init();
     g_accept_loop(fd, srv);
+    fwp_cleanup_pop(&cleanup);
+    g_listener_finish(&listener);
     return 1;
 }
 

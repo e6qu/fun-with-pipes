@@ -122,6 +122,9 @@ impl<'p> Behaviors<'p> {
 
     fn expr(&mut self, e: &Expr) -> Traps {
         match e {
+            // Resource release is observable even when the source arrow is
+            // pure. Fusion must not interleave an original frame's cleanup.
+            Expr::ResourceRegion { .. } => None,
             Expr::Dup(_, b) | Expr::Drop(_, b) => self.expr(b),
             Expr::Local(_) | Expr::Const(_) => none(),
             // a constant binding is evaluated; a function is a value
@@ -303,6 +306,15 @@ impl Fuser<'_> {
 
     fn expr(&mut self, e: Expr) -> Expr {
         let e = match e {
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body: Box::new(self.expr(*body)),
+            },
             Expr::Call(id, args) => {
                 Expr::Call(id, args.into_iter().map(|a| self.expr(a)).collect())
             }

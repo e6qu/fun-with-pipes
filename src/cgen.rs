@@ -439,6 +439,15 @@ fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
     let all = |es: &[Expr]| es.iter().map(go).collect::<Option<Vec<Expr>>>();
     Some(match e {
         Expr::Dup(l, b) | Expr::Drop(l, b) if *l == x => go(b)?,
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(go(body)?),
+        },
         Expr::Dup(l, b) => Expr::Dup(*l, Box::new(go(b)?)),
         Expr::Drop(l, b) => Expr::Drop(*l, Box::new(go(b)?)),
         Expr::Local(l) if *l == x => return None,
@@ -468,7 +477,9 @@ fn without_counts(e: &Expr, x: Local) -> Option<Expr> {
 fn is_local_through_counts(e: &Expr, x: Local) -> bool {
     match e {
         Expr::Local(l) => *l == x,
-        Expr::Dup(_, b) | Expr::Drop(_, b) => is_local_through_counts(b, x),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            is_local_through_counts(b, x)
+        }
         _ => false,
     }
 }
@@ -626,7 +637,10 @@ impl Gen<'_> {
         match e {
             Expr::Call(id, _) => self.abis[*id].as_ref()?.ret,
             Expr::Record(xs) if (1..=MAX_UNBOXED).contains(&xs.len()) => Some(xs.len()),
-            Expr::Let(_, _, b) | Expr::Dup(_, b) | Expr::Drop(_, b) => self.unboxed_value(b),
+            Expr::Let(_, _, b)
+            | Expr::Dup(_, b)
+            | Expr::Drop(_, b)
+            | Expr::ResourceRegion { body: b, .. } => self.unboxed_value(b),
             Expr::Match(_, arms) => {
                 let n = self.unboxed_value(&arms.first()?.1)?;
                 arms.iter()
@@ -634,6 +648,77 @@ impl Gen<'_> {
                     .then_some(n)
             }
             _ => None,
+        }
+    }
+
+    /// RC preparation names computed record arguments. Track those typed
+    /// producers when deciding which nested loop fields can remain unboxed.
+    fn local_record_width(
+        &self,
+        e: &Expr,
+        locals: &[MT],
+        known: &HashMap<Local, usize>,
+    ) -> Option<usize> {
+        match e {
+            Expr::Local(l) => known.get(l).copied(),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.local_record_width(b, locals, known)
+            }
+            Expr::Let(l, v, b) => {
+                let mut known = known.clone();
+                if let Some(n) = self
+                    .local_record_width(v, locals, &known)
+                    .filter(|n| small_record(self.prog, &locals[*l as usize]) == Some(*n))
+                {
+                    known.insert(*l, n);
+                } else {
+                    known.remove(l);
+                }
+                self.local_record_width(b, locals, &known)
+            }
+            Expr::Match(_, arms) => {
+                let n = self.local_record_width(&arms.first()?.1, locals, known)?;
+                arms.iter()
+                    .all(|(_, b)| self.local_record_width(b, locals, known) == Some(n))
+                    .then_some(n)
+            }
+            _ => self.unboxed_value(e),
+        }
+    }
+
+    fn loop_field_unboxed(
+        &self,
+        e: &Expr,
+        field: usize,
+        n: usize,
+        locals: &[MT],
+        known: &HashMap<Local, usize>,
+    ) -> bool {
+        match e {
+            Expr::Let(l, v, b) => {
+                let mut known = known.clone();
+                if let Some(m) = self
+                    .local_record_width(v, locals, &known)
+                    .filter(|m| small_record(self.prog, &locals[*l as usize]) == Some(*m))
+                {
+                    known.insert(*l, m);
+                } else {
+                    known.remove(l);
+                }
+                self.loop_field_unboxed(b, field, n, locals, &known)
+            }
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.loop_field_unboxed(b, field, n, locals, known)
+            }
+            Expr::Match(_, arms) => arms
+                .iter()
+                .all(|(_, b)| self.loop_field_unboxed(b, field, n, locals, known)),
+            Expr::Construct(0, xs) => match xs.as_slice() {
+                [Expr::Record(fs)] => self.local_record_width(&fs[field], locals, known) == Some(n),
+                _ => false,
+            },
+            Expr::Construct(1, _) => true,
+            _ => false,
         }
     }
 }
@@ -816,7 +901,9 @@ fn variant_uses(e: &Expr, l: Local, returned: bool) -> bool {
     match e {
         Expr::Local(x) => *x != l || returned,
         Expr::Const(_) | Expr::Func(_) => true,
-        Expr::Dup(_, b) | Expr::Drop(_, b) => variant_uses(b, l, returned),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            variant_uses(b, l, returned)
+        }
         Expr::Call(_, xs) | Expr::Construct(_, xs) | Expr::Record(xs) => all(xs),
         Expr::Apply(f, xs) => variant_uses(f, l, false) && all(xs),
         Expr::Field(r, _) => variant_uses(r, l, false),
@@ -1842,7 +1929,9 @@ fn allocates(e: &Expr, n: usize) -> bool {
         Expr::SetFields(r, xs) => allocates(r, n) || xs.iter().any(|(_, x)| allocates(x, n)),
         Expr::Let(_, v, b) => allocates(v, n) || allocates(b, n),
         Expr::Match(s, arms) => allocates(s, n) || arms.iter().any(|(_, b)| allocates(b, n)),
-        Expr::Dup(_, b) | Expr::Drop(_, b) => allocates(b, n),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            allocates(b, n)
+        }
     }
 }
 
@@ -2035,7 +2124,10 @@ fn hof_def(
 /// The tail positions of an expression: what it can evaluate to last.
 fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
     match e {
-        Expr::Let(_, _, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => tails(body, out),
+        Expr::Let(_, _, body)
+        | Expr::Dup(_, body)
+        | Expr::Drop(_, body)
+        | Expr::ResourceRegion { body, .. } => tails(body, out),
         Expr::Match(_, arms) => {
             for (_, b) in arms {
                 tails(b, out);
@@ -2046,12 +2138,22 @@ fn tails<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
 }
 
 fn tail_calls(e: &Expr) -> std::collections::HashSet<*const Expr> {
+    fn gather(e: &Expr, out: &mut Vec<*const Expr>) {
+        match e {
+            Expr::ResourceRegion { .. } => {}
+            Expr::Let(_, _, body) | Expr::Dup(_, body) | Expr::Drop(_, body) => gather(body, out),
+            Expr::Match(_, arms) => {
+                for (_, body) in arms {
+                    gather(body, out);
+                }
+            }
+            Expr::Call(..) | Expr::Apply(..) => out.push(e as *const Expr),
+            _ => {}
+        }
+    }
     let mut out = Vec::new();
-    tails(e, &mut out);
-    out.into_iter()
-        .filter(|e| matches!(e, Expr::Call(..) | Expr::Apply(..)))
-        .map(|e| e as *const Expr)
-        .collect()
+    gather(e, &mut out);
+    out.into_iter().collect()
 }
 
 /// Integer types of at most 64 bits, which a `V` holds sign-extended
@@ -2072,7 +2174,9 @@ fn int64_kind(t: &MT) -> Option<bool> {
 fn state_by_fields(e: &Expr) -> bool {
     match e {
         // the state's own references: no object when it is kept by fields
-        Expr::Dup(_, b) | Expr::Drop(_, b) => state_by_fields(b),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            state_by_fields(b)
+        }
         Expr::Local(0) => false,
         Expr::Field(r, _) if matches!(**r, Expr::Local(0)) => true,
         Expr::Local(_) | Expr::Const(_) | Expr::Func(_) => true,
@@ -2094,6 +2198,15 @@ fn state_by_fields(e: &Expr) -> bool {
 // spine, preserving the evaluation and release order of every field.
 fn again_record(e: &Expr) -> Option<Expr> {
     Some(match e {
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(again_record(body)?),
+        },
         Expr::Record(_) => Expr::Construct(0, vec![e.clone()]),
         Expr::Let(l, v, b) => Expr::Let(*l, v.clone(), Box::new(again_record(b)?)),
         Expr::Dup(l, b) => Expr::Dup(*l, Box::new(again_record(b)?)),
@@ -2107,6 +2220,15 @@ fn loop_state_expr(e: &Expr) -> Expr {
         Expr::Construct(0, xs) if xs.len() == 1 => {
             again_record(&xs[0]).unwrap_or_else(|| e.clone())
         }
+        Expr::ResourceRegion {
+            parameters,
+            bindings,
+            body,
+        } => Expr::ResourceRegion {
+            parameters: parameters.clone(),
+            bindings: bindings.clone(),
+            body: Box::new(loop_state_expr(body)),
+        },
         Expr::Let(l, v, b) => {
             if let Expr::Construct(0, xs) = &**b {
                 if xs.len() == 1 && matches!(xs[0], Expr::Local(k) if k == *l) {
@@ -2224,7 +2346,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             return Some(m);
         }
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.unboxed(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.unboxed(b)
+            }
             Expr::Local(l) if self.fields.contains_key(l) => Some(self.fields[l].len()),
             // `let x = v in x` (with its reference counts)
             Expr::Let(x, v, b) if is_local_through_counts(b, *x) => self.unboxed(v),
@@ -2288,6 +2412,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
+            Expr::ResourceRegion { body, .. } => self.expr_fields(body, n),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_fields(b, n)
@@ -2503,6 +2628,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     }
                 }
             }
+            Expr::ResourceRegion { body, .. } => self.expr_variant(body, m, ty),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr_variant(b, m, ty)
@@ -2621,6 +2747,54 @@ impl<'g, 'p> FnGen<'g, 'p> {
         self.bind(format!("fwp_vbox{}({})", k, c))
     }
 
+    /// Field reads and complete calls to workers with the matching record ABI
+    /// can consume fields directly. Partial/dynamic calls still need a box.
+    fn field_uses(&self, e: &Expr, l: Local, n: usize) -> bool {
+        let reads = |e: &Expr| self.field_uses(e, l, n);
+        match e {
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => reads(b),
+            Expr::Local(x) => *x != l,
+            Expr::Field(r, _) if matches!(**r, Expr::Local(x) if x == l) => true,
+            Expr::Const(_) | Expr::Func(_) => true,
+            Expr::Call(id, args) => {
+                let abi = self.g.abis[*id]
+                    .as_ref()
+                    .filter(|a| a.params.len() == args.len());
+                args.iter().enumerate().all(|(i, a)| {
+                    (is_local_through_counts(a, l) && abi.is_some_and(|a| a.params[i] == Some(n)))
+                        || reads(a)
+                })
+            }
+            Expr::Construct(0, args)
+                if self
+                    .in_loop
+                    .as_ref()
+                    .is_some_and(|lg| lg.record && lg.tails.contains(&(e as *const Expr))) =>
+            {
+                let lg = self.in_loop.as_ref().unwrap();
+                match args.as_slice() {
+                    [Expr::Record(fs)] => fs.iter().enumerate().all(|(i, value)| {
+                        (matches!(value, Expr::Local(x) if *x == l) && lg.slots[i].1 == Some(n))
+                            || reads(value)
+                    }),
+                    _ => args.iter().all(reads),
+                }
+            }
+            Expr::Construct(_, args) | Expr::Record(args) => args.iter().all(reads),
+            Expr::Apply(f, args) => reads(f) && args.iter().all(reads),
+            Expr::Field(r, _) => reads(r),
+            Expr::SetFields(r, fs) => reads(r) && fs.iter().all(|(_, e)| reads(e)),
+            Expr::Let(x, v, b) if is_local_through_counts(v, l) => {
+                *x != l
+                    && small_record(self.g.prog, &self.locals[*x as usize]) == Some(n)
+                    && reads(b)
+                    && self.field_uses(b, *x, n)
+            }
+            Expr::Let(_, v, b) => reads(v) && reads(b),
+            Expr::Match(s, arms) => reads(s) && arms.iter().all(|(_, b)| reads(b)),
+        }
+    }
+
     /// `l = v` before `body`: a record that `body` reads only through its
     /// fields and that `v` gives unboxed is kept as its fields. Returns the
     /// rest of `body` to generate (a copy that reuses its original takes
@@ -2660,7 +2834,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
             }
         }
         if let Some(n) = self.unboxed(v) {
-            if !matches!(v, Expr::Record(_)) && crate::opt::only_fields(body, l) {
+            if (!matches!(v, Expr::Record(_)) || self.in_loop.is_some())
+                && self.field_uses(body, l, n)
+            {
                 let fs = self.expr_fields(v, n);
                 let names: Vec<String> = fs.into_iter().map(|f| self.bind(f)).collect();
                 self.fields.insert(l, names);
@@ -3544,7 +3720,9 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 Some((g, xs.len()))
             }
             Expr::Local(l) => self.known_callbacks.get(l).copied(),
-            Expr::Dup(_, b) | Expr::Drop(_, b) => self.callback_origin(b),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                self.callback_origin(b)
+            }
             _ => None,
         }
     }
@@ -3859,25 +4037,29 @@ impl<'g, 'p> FnGen<'g, 'p> {
                         Some(m) => {
                             let fs: Vec<String> =
                                 (off..off + m).map(|k| format!("st[{}]", k)).collect();
+                            let original = self.begin_call(e as *const Expr);
+                            let mut values = Vec::new();
                             if self.g.reuse {
                                 let state_fields =
                                     record_fields(&self.g.prog.shapes, &self.locals[0]).unwrap();
                                 let inner = &state_fields[*i as usize].1;
-                                let counted = record_fields(&self.g.prog.shapes, inner)
+                                values = record_fields(&self.g.prog.shapes, inner)
                                     .unwrap()
                                     .iter()
                                     .enumerate()
-                                    .filter(|(_, (_, ty))| {
-                                        crate::rc::needs_rc(&self.g.prog.shapes, ty)
-                                    })
-                                    .map(|(j, _)| off + j)
+                                    .map(|(j, (_, ty))| (fs[j].clone(), ty.clone()))
                                     .collect::<Vec<_>>();
-                                for slot in counted {
-                                    self.line(&format!("fwp_rc_dup(st[{slot}]);"));
-                                }
+                                let ctx = self.fresh();
+                                let node = self.fresh();
+                                let retain = self.g.duplicate_values(&values, &ctx, &node);
+                                self.line(&retain);
                             }
+                            let pending = self.begin_values(&values);
                             let r = format!("fwp_record({}, {})", m, Self::array(&fs));
-                            self.bind(self.g.fresh(r))
+                            let result = self.bind(self.g.fresh(r));
+                            self.end_call(pending);
+                            self.end_call(original);
+                            result
                         }
                     };
                 }
@@ -3922,6 +4104,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
                     self.expr(b)
                 }
             },
+            Expr::ResourceRegion { body, .. } => self.expr(body),
             Expr::Dup(l, b) | Expr::Drop(l, b) => {
                 self.count(e, *l);
                 self.expr(b)
@@ -4317,7 +4500,7 @@ impl<'p> Gen<'p> {
             "ptr.at" => {
                 let t = crate::ffi::classify_scalar(&elem(&p(1), 0));
                 format!(
-                    "return (V)((int64_t)l1 + (int64_t)l0 * (int64_t)sizeof({}));",
+                    "return (V)((uintptr_t)l1 + (uintptr_t)l0 * sizeof({}));",
                     crate::ffi::c_name(&t)
                 )
             }
@@ -4596,7 +4779,7 @@ impl<'p> Gen<'p> {
                     "dir.remove" => ("fwp_p_dir_remove", 1),
                     "file.rename" => ("fwp_p_file_rename", 2),
                     "file.append" => ("fwp_p_file_append", 2),
-                    "file.read-bytes" => ("fwp_p_file_read", 1),
+                    "file.read-bytes" => ("fwp_p_file_read_bytes", 1),
                     "file.write-bytes" => ("fwp_p_file_write_bytes", 2),
                     "dir.list" => ("fwp_p_dir_list", 1),
                     "dir.create" => ("fwp_p_dir_create", 1),
@@ -5008,15 +5191,7 @@ impl<'p> Gen<'p> {
             let w = field_tys
                 .get(j)
                 .and_then(|t| small_record(self.prog, t))
-                .filter(|m| {
-                    ts.iter().all(|t| match t {
-                        Expr::Construct(0, xs) => match &xs[0] {
-                            Expr::Record(fs) => self.unboxed_value(&fs[j]) == Some(*m),
-                            _ => false,
-                        },
-                        _ => true,
-                    })
-                });
+                .filter(|m| self.loop_field_unboxed(e, j, *m, &f.locals, &HashMap::new()));
             slots.push((n, w));
             n += w.unwrap_or(1);
         }
@@ -5684,13 +5859,14 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                                 s = format!("V result = {result}; fwp_own_tree{owner}(result); return result;");
                             }
                             ResultOwnership::FreshLeaf | ResultOwnership::FreshContainer => {
-                                let r = s
-                                    .strip_prefix("return ")
-                                    .and_then(|r| r.strip_suffix(';'))
-                                    .ok_or_else(|| {
+                                let (prefix, returned) =
+                                    s.rsplit_once("return ").ok_or_else(|| {
                                         format!("fresh primitive `{sym}` has no return expression")
                                     })?;
-                                s = format!("return fwp_rc_fresh({r});");
+                                let r = returned.strip_suffix(';').ok_or_else(|| {
+                                    format!("fresh primitive `{sym}` has no return expression")
+                                })?;
+                                s = format!("{prefix}return fwp_rc_fresh({r});");
                             }
                             ResultOwnership::AliasArgument { argument } => {
                                 if crate::rc::needs_rc(&self.prog.shapes, &func.locals[argument]) {
@@ -6016,6 +6192,70 @@ fn ffi_from_c(t: &crate::ffi::CType, e: &str) -> String {
 }
 
 impl Gen<'_> {
+    /// Copy a C export argument into owned language storage. Ordinary foreign
+    /// calls keep their existing converters and borrowing convention.
+    fn library_arg(
+        &mut self,
+        out: &mut String,
+        name: &str,
+        c: &crate::ffi::CType,
+        ty: &MT,
+        value: &str,
+    ) {
+        use crate::ffi::CType;
+        if !self.reuse {
+            let _ = writeln!(out, "    V {name} = {};", ffi_from_c(c, value));
+            return;
+        }
+        if let CType::Struct { fields, .. } = c {
+            let types = record_fields(&self.prog.shapes, ty)
+                .expect("exported C record shape")
+                .to_vec();
+            let ctx = format!("{name}_fields_owner");
+            let node = format!("{name}_fields_cleanup");
+            let empty: Vec<_> = fields
+                .iter()
+                .map(|(_, i, _)| ("0".into(), types[*i].1.clone()))
+                .collect();
+            let protect = self.protect_values(&empty, &ctx, &node);
+            let _ = writeln!(
+                out,
+                "    V {name}_fields[{}] = {{0}};\n    {protect}",
+                fields.len()
+            );
+            let mut slot = 0;
+            for (field, index, ft) in fields {
+                let converted = ffi_from_c(ft, &format!("{value}.{field}"));
+                let converted = if matches!(ft, CType::Str | CType::OptPtr) {
+                    self.fresh(converted)
+                } else {
+                    converted
+                };
+                let _ = writeln!(out, "    {name}_fields[{index}] = {converted};");
+                if crate::rc::needs_rc(&self.prog.shapes, &types[*index].1) {
+                    let _ = writeln!(out, "    {ctx}.v{slot} = {name}_fields[{index}];");
+                    slot += 1;
+                }
+            }
+            let _ = writeln!(
+                out,
+                "    V {name} = {};",
+                self.fresh(format!("fwp_record({}, {name}_fields)", fields.len()))
+            );
+            if !protect.is_empty() {
+                let _ = writeln!(out, "    fwp_cleanup_pop(&{node});");
+            }
+        } else {
+            let converted = ffi_from_c(c, value);
+            let converted = if matches!(c, CType::Str | CType::OptPtr) {
+                self.fresh(converted)
+            } else {
+                converted
+            };
+            let _ = writeln!(out, "    V {name} = {converted};");
+        }
+    }
+
     /// Struct definitions and converters for the structs among `types`.
     fn ffi_structs(&mut self, types: &[crate::ffi::CType]) {
         use crate::ffi::CType;
@@ -6227,6 +6467,11 @@ fn export_sigs(prog: &Program) -> Result<Vec<ExportSig>, String> {
                 name
             ));
         }
+        if params.iter().any(|(_, c)| *c == crate::ffi::CType::Bytes) {
+            return Err(format!(
+                "exported function `{name}`: `Bytes` parameters have no length in the C export ABI"
+            ));
+        }
         out.push((c_export_name(name), *fid, params, ret));
     }
     Ok(out)
@@ -6384,7 +6629,9 @@ fn live_functions(prog: &Program, extra: &[FuncId]) -> Vec<bool> {
     }
     fn refs(e: &Expr, out: &mut Vec<FuncId>) {
         match e {
-            Expr::Dup(_, b) | Expr::Drop(_, b) => refs(b, out),
+            Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+                refs(b, out)
+            }
             Expr::Local(_) => {}
             Expr::Const(v) => value_refs(v, out),
             Expr::Func(f) => out.push(*f),
@@ -6561,8 +6808,11 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
     }
     let mut lib_defs = String::new();
     if let Mode::Library = mode {
+        // Register exit cleanup before runtime dependencies can be loaded.
+        // Darwin terminates dlopened images before archive destructors. The
+        // guarded finish also runs at dynamic unload; repeated calls are safe.
         lib_defs.push_str(
-            "static int fwp_lib_ready = 0;\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
+            "static int fwp_lib_ready = 0;\n#if FWP_GC\nstatic void fwp_lib_finish(void);\n#endif\n\nstatic void fwp_lib_init(void) {\n    if (fwp_lib_ready) return;\n#if FWP_GC\n    if (atexit(fwp_lib_finish)) fwp_trap(\"cannot register library cleanup\");\n    fwp_closure_drop_init();\n#endif\n    fwp_lib_ready = 1;\n    fwp_fns = fwp_fn_table;\n    fwp_prog_out = stdout;\n    clock_gettime(CLOCK_MONOTONIC, &fwp_start_time);\n    fwp_seed_rng();\n    fwp_init_consts();\n}\n\n",
         );
         for (cname, fid, ps, r) in export_sigs(prog)? {
             let mut all: Vec<crate::ffi::CType> = ps.iter().map(|(_, c)| c.clone()).collect();
@@ -6574,10 +6824,7 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                 .collect();
             let f = &prog.funcs[fid];
             let args: Vec<String> = (0..f.arity as usize)
-                .map(|i| match ps.iter().find(|(j, _)| *j == i) {
-                    Some((_, c)) => ffi_from_c(c, &format!("a{}", i)),
-                    None => "FWP_UNIT".into(),
-                })
+                .map(|i| format!("input_arg{i}"))
                 .collect();
             let call = if f.arity == 0 {
                 format!("caf{}()", fid)
@@ -6595,10 +6842,69 @@ fn generate_mode(prog: &Program, mode: Mode) -> Result<String, String> {
                     decl.join(", ")
                 }
             );
-            if r == crate::ffi::CType::Void {
-                let _ = writeln!(lib_defs, "    (void){};\n}}\n", call);
+            let types = f.ty.params(f.arity as usize).0;
+            let empty: Vec<_> = types.iter().map(|ty| ("0".into(), (*ty).clone())).collect();
+            let protection = g.protect_values(&empty, "inputs_owner", "inputs_cleanup");
+            let _ = writeln!(lib_defs, "    {protection}");
+            let mut slot = 0;
+            let mut consumed_slots = Vec::new();
+            for (i, ty) in types.iter().enumerate() {
+                if let Some((_, c)) = ps.iter().find(|(j, _)| *j == i) {
+                    g.library_arg(&mut lib_defs, &args[i], c, ty, &format!("a{i}"));
+                } else {
+                    let _ = writeln!(lib_defs, "    V {} = FWP_UNIT;", args[i]);
+                }
+                if !protection.is_empty() && crate::rc::needs_rc(&prog.shapes, ty) {
+                    let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = {};", args[i]);
+                    if crate::rc::consumes_arg(&prog.funcs, fid, i) {
+                        consumed_slots.push(slot);
+                    }
+                    slot += 1;
+                }
+            }
+            for slot in consumed_slots {
+                let _ = writeln!(lib_defs, "    inputs_owner.v{slot} = 0;");
+            }
+            let finish_inputs = if protection.is_empty() {
+                ""
             } else {
-                let _ = writeln!(lib_defs, "    return {};\n}}\n", ffi_to_c(&r, &call));
+                "    fwp_cleanup_pop(&inputs_cleanup); inputs_cleanup.release(inputs_cleanup.arg);\n"
+            };
+            if r == crate::ffi::CType::Void {
+                let _ = writeln!(lib_defs, "    (void){call};\n{finish_inputs}}}\n");
+            } else {
+                // The C result copies scalars and records, but string pointers
+                // escape into host storage for the lifetime of the library.
+                // Evaluate once (OptPtr conversion reads its value twice),
+                // and protect the owned result if string conversion traps.
+                let result_ty = f.ty.params(f.arity as usize).1.clone();
+                let drop = if g.reuse {
+                    g.value_drop(&result_ty)
+                } else {
+                    "NULL".into()
+                };
+                let _ = writeln!(lib_defs,
+                    "    V result = {call};\n{finish_inputs}    fwp_value_owner owner = {{result, {drop}}}; fwp_cleanup cleanup;\n    fwp_value_protect(&owner, &cleanup);\n    {} converted = {};",
+                    crate::ffi::c_name(&r), ffi_to_c(&r, "result"));
+                if g.reuse {
+                    match &r {
+                        crate::ffi::CType::Str => {
+                            lib_defs.push_str("    fwp_rc_share(result);\n");
+                        }
+                        crate::ffi::CType::Struct { fields, .. } => {
+                            for (_, index, ty) in fields {
+                                if *ty == crate::ffi::CType::Str {
+                                    let _ = writeln!(
+                                        lib_defs,
+                                        "    fwp_rc_share(OBJ(result)->f[{index}]);"
+                                    );
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                lib_defs.push_str("    (void)fwp_value_finish(&owner, &cleanup);\n    owner.value = result; fwp_value_release(&owner);\n    return converted;\n}\n\n");
             }
         }
     }
@@ -6995,6 +7301,9 @@ static const fwp_exec_spec exec_spec{i} = {{
     };
     let mut out = String::new();
     out.push_str("/* Generated by fwp. */\n");
+    if matches!(mode, Mode::Library) {
+        out.push_str("#define FWP_LIBRARY 1\n");
+    }
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
     let web = uses_web(prog);
     let tls = uses_services || web || uses_tls(prog);
@@ -7228,7 +7537,7 @@ static const fwp_exec_spec exec_spec{i} = {{
     if let Mode::Library = mode {
         let _ = write!(
             out,
-            "static void fwp_init_consts(void) {{\n{}}}\n\n{}",
+            "static void fwp_init_consts(void) {{\n{}}}\n\n{}\n#if FWP_GC\nstatic void __attribute__((destructor)) fwp_lib_finish(void) {{\n    if (!fwp_lib_ready) return;\n    fwp_lib_ready = 0;\n    fwp_library_tasks_finish();\n    fwp_caf_finish();\n    fwp_cl_finish();\n    fwp_gc_finish();\n#ifdef FWP_TLS\n    fwp_tls_clients_finish();\n#endif\n    fwp_closure_drop_finish();\n}}\n#endif\n",
             g.const_init, lib_defs
         );
         return Ok(out);
@@ -7304,6 +7613,7 @@ static void *fwp_main_thread(void *arg) {{
     fwp_init_consts();
 {run}
     fwp_caf_finish();
+    fwp_cl_finish();
     fflush(stdout);
     return 0;
 }}

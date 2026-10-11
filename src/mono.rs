@@ -1471,7 +1471,9 @@ fn field_infos(fs: &[(String, MT)]) -> Value {
 /// Functions referenced by an expression.
 fn funcs_in(e: &Expr, out: &mut Vec<FuncId>) {
     match e {
-        Expr::Dup(_, b) | Expr::Drop(_, b) => funcs_in(b, out),
+        Expr::Dup(_, b) | Expr::Drop(_, b) | Expr::ResourceRegion { body: b, .. } => {
+            funcs_in(b, out)
+        }
         Expr::Func(f) => out.push(*f),
         Expr::Call(f, a) => {
             out.push(*f);
@@ -1657,6 +1659,8 @@ pub fn lower(env: &Env, typed: &Typed, roots: Roots) -> MResult<Program> {
         }
     };
     check(&prog, "lowering");
+    crate::resource::preserve_frames(&mut prog);
+    check(&prog, "resource frames");
     if std::env::var("FWP_NO_OPT").is_err() {
         crate::opt::optimize(&mut prog);
         check(&prog, "optimizing");

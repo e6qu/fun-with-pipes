@@ -1,11 +1,14 @@
 # Prepared roadmap queue
 
-Updated 2026-10-10. This table preserves preparation ancestry. Current merge
+Updated 2026-10-11. This table preserves preparation ancestry. Current merge
 status, actual rewritten bases and checks live in [the handoff](development-state.md).
 A published preparation is not verified main support.
 
-Open one PR at a time after the previous PR passes all six exact-head gates
-and squash-merges. Rebase with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
+Deliver related preparations as coherent bundles, one production PR at a time.
+Open the next PR after the previous one passes all six exact-head jobs plus
+roadmap_docs and squash-merges. Run the full matrix once per final bundle head.
+Keep original commits and probes; preparation branches remain recovery anchors.
+Rebase bundles with `git rebase --onto NEW_MAIN ACTUAL_BASE BRANCH`.
 Immutable OLD heads are retained remotely by lightweight tags
 `roadmap/preparation-007` through `roadmap/preparation-112`. Their ancestor
 parents remain reachable through those tags. On a clean clone, fetch tags
@@ -26,10 +29,9 @@ Ancestry checks use OLD parent → OLD head. Prefixes uniquely resolve here;
 resolve full hashes before publication or merge. Checkout paths use
 `/private/tmp/fwp-NAME-worktree`; consult the handoff for exceptions.
 
-Row34's argument/capture preparation repair and regression probe are now moved
-into row28 to protect callback entry earlier. Current34 is documentation-only
-relative to refreshed33. Row28 passed full acceptance in PR107; skip the duplicate
-implementation PR at34 and keep its immutable anchor and later regression coverage.
+Row34 is an accepted duplicate: its argument/capture preparation repair moved
+into row28 and passed full acceptance in PR107. Its current docs-only head and
+immutable anchor remain for ancestry and regression evidence.
 
 | Order | NAME | Branch | Current head | Immutable OLD head | Immutable OLD parent |
 |---|---|---|---|---|---|

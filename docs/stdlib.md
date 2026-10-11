@@ -2540,7 +2540,7 @@ mem.free : Ptr[a] -> () ! {Unsafe}
 mem.string : String -> Ptr[U8] ! {Unsafe}
 ptr.cast : Ptr[a] -> Ptr[b]
 
-# the address of the n-th element
+# the address of the n-th element; offsets wrap at the native pointer width
 ptr.at : I64 -> Ptr[a] -> Ptr[a] where Numeric[a]
 ptr.read : Ptr[a] -> a ! {Unsafe} where Numeric[a]
 ptr.write : a -> Ptr[a] -> () ! {Unsafe} where Numeric[a]

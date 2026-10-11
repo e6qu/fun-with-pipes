@@ -217,6 +217,10 @@ static volatile int fwp_shutdown = 0;
 static volatile sig_atomic_t fwp_shutdown = 0;
 #endif
 static int fwp_signals_installed = 0;
+#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
+static struct sigaction fwp_prior_sigint, fwp_prior_sigterm;
+static int fwp_saved_sigint, fwp_saved_sigterm;
+#endif
 
 static int64_t fwp_now_ns(void) {
     struct timespec t;
@@ -455,6 +459,7 @@ static void fwp_task_drop(V value) {
 /* stacks of finished tasks, kept for reuse */
 static char *fwp_stack_pool[64];
 static int fwp_stack_pool_n = 0;
+#define FWP_NATIVE_TASK_STACK ((size_t)256 << 20)
 
 static void fwp_free_zombie(void) {
     if (fwp_zombie && fwp_zombie != fwp_cur) {
@@ -802,7 +807,7 @@ static fwp_task *fwp_spawn_task(V thunk, void (*cfn)(void *, int), void *carg, i
     t->stack_size = FWP_STATIC_TASK_STACK;
     t->stack = fwp_static_task_stack();
 #else
-    t->stack_size = (size_t)256 << 20;
+    t->stack_size = FWP_NATIVE_TASK_STACK;
     if (fwp_stack_pool_n > 0) {
         t->stack = fwp_stack_pool[--fwp_stack_pool_n];
     } else {
@@ -1236,6 +1241,8 @@ static char fwp_tls_err[512];
 static ssize_t fwp_tls_recv(void *ssl, char *buf, size_t n, int *ww);
 static ssize_t fwp_tls_send(void *ssl, const char *buf, size_t n, int *ww);
 static void fwp_tls_free(void *ssl);
+static void fwp_tls_dispose(void *ssl);
+static void fwp_tls_server_drop(void *ctx);
 static void *fwp_tls_accepted(void *ctx, int fd);
 #endif
 
@@ -1293,11 +1300,29 @@ static void fwp_nonblock(int fd) {
     fcntl(fd, F_SETFD, FD_CLOEXEC);
 }
 
+#ifdef FWP_LIBRARY
+/* Implicit teardown must not send close_notify or alter host SIGPIPE policy. */
+static void fwp_sock_final(void *p) {
+    fwp_sock *s = (fwp_sock *)p;
+#ifdef FWP_TLS
+    if (s->tls) {
+        if (s->kind == 0) fwp_tls_server_drop(s->tls);
+        else fwp_tls_dispose(s->tls);
+        s->tls = 0;
+    }
+#endif
+    if (s->fd >= 0) { close(s->fd); s->fd = -1; }
+}
+#endif
+
 static V fwp_sock_new(int fd, int kind) {
     fwp_sock *s = (fwp_sock *)fwp_mem_alloc(sizeof(fwp_sock));
     s->fd = fd;
     s->kind = kind;
     s->tls = 0;
+#ifdef FWP_LIBRARY
+    fwp_gc_finalizer(s, fwp_sock_final);
+#endif
     return PTR(s);
 }
 
@@ -1446,17 +1471,39 @@ static V fwp_p_tcp_stop(V l) {
         fwp_fd_closing(fd);
         close(fd);
     }
+#ifdef FWP_TLS
+    if (SOCK(l)->tls) { fwp_tls_server_drop(SOCK(l)->tls); SOCK(l)->tls = 0; }
+#endif
     return FWP_UNIT;
+}
+
+typedef struct { int fd; struct addrinfo *addresses; } fwp_connect_owner;
+static void fwp_connect_finish(void *p) {
+    fwp_connect_owner *owner = (fwp_connect_owner *)p;
+    int saved = errno;
+    if (owner->fd >= 0) {
+        int fd = owner->fd;
+        owner->fd = -1;
+        fwp_fd_closing(fd);
+        close(fd);
+    }
+    if (owner->addresses) { freeaddrinfo(owner->addresses); owner->addresses = 0; }
+    errno = saved;
 }
 
 static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
     fwp_tasks_init();
     fwp_check_cancel();
+    fwp_connect_owner owner = {-1, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_connect_finish, &owner);
     struct addrinfo *res = fwp_resolve(STR(addr)->d, SOCK_STREAM, 0, "connect", err);
+    owner.addresses = res;
     int fd = -1;
     errno = 0;
     for (struct addrinfo *ai = res; ai; ai = ai->ai_next) {
         fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+        owner.fd = fd;
         if (fd < 0) continue;
         fwp_nonblock(fd);
         if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
@@ -1469,15 +1516,24 @@ static V fwp_p_tcp_connect(V addr, const fwp_desc *err) {
             errno = e;
         }
         int e = errno;
+        owner.fd = -1;
+        fwp_fd_closing(fd);
         close(fd);
         errno = e;
         fd = -1;
     }
     freeaddrinfo(res);
-    if (fd < 0) return fwp_os_error("connect", STR(addr)->d, err);
+    owner.addresses = 0;
+    if (fd < 0) {
+        fwp_cleanup_pop(&cleanup);
+        return fwp_os_error("connect", STR(addr)->d, err);
+    }
     int one = 1;
     setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof one);
-    return fwp_sock_new(fd, 1);
+    V result = fwp_sock_new(fd, 1);
+    owner.fd = -1; /* the socket wrapper now owns it */
+    fwp_cleanup_pop(&cleanup);
+    return result;
 }
 
 /* returns 0 on timeout */
@@ -1676,8 +1732,18 @@ static void fwp_on_signal(int sig) {
 static V fwp_p_shutdown_requested(void) {
     if (!fwp_signals_installed) {
         fwp_signals_installed = 1;
+#ifdef FWP_LIBRARY
+        struct sigaction action;
+        memset(&action, 0, sizeof action);
+        action.sa_handler = fwp_on_signal;
+        action.sa_flags = SA_RESTART;
+        sigemptyset(&action.sa_mask);
+        fwp_saved_sigint = sigaction(SIGINT, &action, &fwp_prior_sigint) == 0;
+        fwp_saved_sigterm = sigaction(SIGTERM, &action, &fwp_prior_sigterm) == 0;
+#else
         signal(SIGINT, fwp_on_signal);
         signal(SIGTERM, fwp_on_signal);
+#endif
     }
     return fwp_shutdown ? FWP_TRUE : FWP_FALSE;
 }
@@ -1746,6 +1812,53 @@ static V fwp_p_metrics_snapshot(void) {
     }
     return fwp_list_from(items, fwp_nmetrics);
 }
+
+#if defined(FWP_LIBRARY) && !defined(FWP_FIBERS)
+static void fwp_library_tasks_finish(void) {
+    if (fwp_cur && fwp_cur != fwp_root) abort();
+    if (fwp_root) {
+        fwp_root->unwinding = 1;
+        /* Detached runtime tasks are not root children, but still have stacks
+         * in this list. Cancel all of them before disposing any mapping. */
+        for (fwp_task *t = fwp_gc_tasks; t; t = t->gc_next) fwp_cancel_tree(t);
+        while (fwp_gc_tasks) {
+            fwp_make_ready(fwp_root);
+            fwp_block();
+            fwp_free_zombie();
+        }
+    }
+    fwp_free_zombie();
+#ifndef FWP_STATIC_MEMORY
+    while (fwp_stack_pool_n) munmap(fwp_stack_pool[--fwp_stack_pool_n], FWP_NATIVE_TASK_STACK);
+#endif
+    if (fwp_epfd >= 0) close(fwp_epfd);
+    fwp_epfd = -1;
+#ifdef __linux__
+    fwp_fdws = 0;
+    fwp_nfdws = 0;
+#endif
+    fwp_io_waiting = 0;
+    fwp_cur = fwp_root = fwp_zombie = 0;
+    fwp_gc_tasks = fwp_ready_head = fwp_ready_tail = fwp_timers = 0;
+    fwp_cleanups = 0;
+    fwp_handlers = 0;
+    fwp_state = 0;
+    fwp_state_len = fwp_state_cap = 0;
+    struct sigaction current;
+    if (fwp_saved_sigint && sigaction(SIGINT, 0, &current) == 0 &&
+        !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
+        sigaction(SIGINT, &fwp_prior_sigint, 0);
+    if (fwp_saved_sigterm && sigaction(SIGTERM, 0, &current) == 0 &&
+        !(current.sa_flags & SA_SIGINFO) && current.sa_handler == fwp_on_signal)
+        sigaction(SIGTERM, &fwp_prior_sigterm, 0);
+    fwp_saved_sigint = fwp_saved_sigterm = fwp_signals_installed = 0;
+    fwp_shutdown = 0;
+    for (size_t i = 0; i < fwp_nmetrics; i++) free(fwp_metrics[i].name);
+    free(fwp_metrics);
+    fwp_metrics = 0;
+    fwp_nmetrics = fwp_metrics_cap = 0;
+}
+#endif
 
 /* ----- stack overflow */
 

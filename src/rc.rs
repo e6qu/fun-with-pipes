@@ -362,6 +362,15 @@ impl Pass<'_> {
                     None => m,
                 }
             }
+            Expr::ResourceRegion {
+                parameters,
+                bindings,
+                body,
+            } => Expr::ResourceRegion {
+                parameters: parameters.clone(),
+                bindings: bindings.clone(),
+                body: Box::new(self.conv_typed(body, owned, borrowed, expected)),
+            },
             Expr::Dup(..) | Expr::Drop(..) => unreachable!("reference counting runs once"),
         }
     }
@@ -564,6 +573,7 @@ fn free_in(e: &Expr, bound: &mut Set, out: &mut Set) {
                 free_in(b, bound, out);
             }
         }
+        Expr::ResourceRegion { body, .. } => free_in(body, bound, out),
         Expr::Dup(l, b) | Expr::Drop(l, b) => {
             if !bound.contains(l) {
                 out.insert(*l);
@@ -751,7 +761,14 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 Ok(())
             }
-            Expr::Field(r, _) => self.expr(r, st, !matches!(**r, Expr::Local(_))),
+            Expr::Field(r, _) => {
+                // Reading flattened loop state may reconstruct a boxed value,
+                // retaining its typed children before an allocating constructor.
+                let before = self.include_values.then(|| owned_references(st));
+                self.expr(r, st, !matches!(**r, Expr::Local(_)))?;
+                self.record_call(e, before, st);
+                Ok(())
+            }
             Expr::Let(l, v, b) => {
                 self.expr(v, st, true)?;
                 if self.counted(*l) {
@@ -815,6 +832,7 @@ impl Checker<'_> {
                 self.record_call(e, before, st);
                 Ok(())
             }
+            Expr::ResourceRegion { body, .. } => self.expr(body, st, consume),
             Expr::Dup(l, b) => {
                 // A retain can allocate wide-count metadata. Protect existing
                 // references before it runs; the new reference does not exist yet.

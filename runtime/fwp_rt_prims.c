@@ -2440,44 +2440,17 @@ static V fwp_io_error_path(const char *kind, const char *path, const fwp_desc *d
     return fwp_io_error(kind, buf, d);
 }
 
-static V fwp_file_value(FILE *f, const char *path) {
-    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
-    h->f = f;
-    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
-    strcpy(p, path);
-    h->path = p;
-    return PTR(h);
+#ifdef FWP_LIBRARY
+static void fwp_file_final(void *p) {
+    fwp_file *h = (fwp_file *)p;
+    if (h->f) { fclose(h->f); h->f = 0; }
 }
-
-static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
-    FILE *f = fopen(STR(path)->d, create ? "w+b" : "rb");
-    if (!f) return fwp_io_error_path("open", STR(path)->d, err);
-    return fwp_file_value(f, STR(path)->d);
-}
+#endif
 
 static V fwp_p_file_close(V h) {
     fwp_file *f = (fwp_file *)(uintptr_t)h;
     if (f->f) { fclose(f->f); f->f = 0; }
     return FWP_UNIT;
-}
-
-static V fwp_p_file_read_all(V h, const fwp_desc *err) {
-    fwp_file *f = (fwp_file *)(uintptr_t)h;
-    fwp_buf b = {0};
-    if (f->f) {
-        char tmp[65536];
-        size_t n;
-        while ((n = fread(tmp, 1, sizeof tmp, f->f)) > 0) buf_put(&b, tmp, n);
-        if (ferror(f->f)) { free(b.d); return fwp_io_error("read", strerror(errno), err); }
-    }
-    return fwp_tuple2(buf_to_str(&b), h);
-}
-
-static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
-    fwp_file *f = (fwp_file *)(uintptr_t)h;
-    if (f->f && fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len)
-        return fwp_io_error("write", strerror(errno), err);
-    return h;
 }
 
 typedef struct { FILE *stream; V handle; } fwp_file_cleanup;
@@ -2487,15 +2460,84 @@ static void fwp_close_scoped_file(void *arg) {
     else fclose(file->stream); /* allocation failed before a handle existed */
 }
 
+static V fwp_file_value(FILE *f, const char *path) {
+    fwp_file_cleanup file = {f, 0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
+    fwp_file *h = (fwp_file *)fwp_alloc(sizeof(fwp_file));
+    h->f = f;
+    h->path = path;
+    file.handle = PTR(h);
+#ifdef FWP_LIBRARY
+    fwp_gc_finalizer(h, fwp_file_final);
+#endif
+    char *p = (char *)fwp_alloc_leaf(strlen(path) + 1);
+    strcpy(p, path);
+    h->path = p;
+    FWP_KEEP_ALIVE(path);
+    fwp_cleanup_pop(&cleanup);
+    return PTR(h);
+}
+
+static V fwp_p_file_open(V path, int create, const fwp_desc *err) {
+    FILE *f = fopen(STR(path)->d, create ? "w+b" : "rb");
+    if (!f) return fwp_io_error_path("open", STR(path)->d, err);
+    return fwp_file_value(f, STR(path)->d);
+}
+
+static void fwp_file_buffer_cleanup(void *arg) {
+    fwp_buf *b = arg;
+    free(b->d);
+    b->d = 0;
+}
+
+/* The temporary buffer belongs to the read, not to the borrowed File. */
+static V fwp_p_file_read_all(V h, const fwp_desc *err) {
+    fwp_file *f = (fwp_file *)(uintptr_t)h;
+    fwp_buf b = {0};
+    fwp_cleanup cleanup;
+    fwp_cleanup_push(&cleanup, fwp_file_buffer_cleanup, &b);
+    if (f->f) {
+        char tmp[65536];
+        size_t n;
+        while ((n = fread(tmp, 1, sizeof tmp, f->f)) > 0) buf_put(&b, tmp, n);
+        if (ferror(f->f)) {
+            int error = errno;
+            fwp_cleanup_pop(&cleanup);
+            fwp_file_buffer_cleanup(&b);
+            return fwp_io_error("read", strerror(error), err);
+        }
+    }
+    if (!fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) {
+        fwp_cleanup_pop(&cleanup);
+        fwp_file_buffer_cleanup(&b);
+        return fwp_io_error("read", "stream did not contain valid UTF-8", err);
+    }
+    V text = buf_to_str(&b);
+    b.d = 0;
+    V result = fwp_tuple2(text, h);
+    FWP_KEEP_ALIVE(h);
+    fwp_cleanup_pop(&cleanup);
+    return result;
+}
+
+static V fwp_p_file_write(V s, V h, const fwp_desc *err) {
+    fwp_file *f = (fwp_file *)(uintptr_t)h;
+    /* Rust File::write_all writes through to the descriptor. Flush stdio's
+     * buffer before returning so later reads see the same effects and errors. */
+    if (f->f && (fwrite(STR(s)->d, 1, STR(s)->len, f->f) != STR(s)->len || fflush(f->f) != 0))
+        return fwp_io_error("write", strerror(errno), err);
+    return h;
+}
+
 static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, "r+b");
     if (!f) f = fopen(STR(path)->d, "w+b");
     if (!f) return fwp_io_error_path("open", STR(path)->d, err);
-    fwp_file_cleanup file = {f, 0};
+    V h = fwp_file_value(f, STR(path)->d);
+    fwp_file_cleanup file = {f, h};
     fwp_cleanup cleanup;
     fwp_cleanup_push(&cleanup, fwp_close_scoped_file, &file);
-    V h = fwp_file_value(f, STR(path)->d);
-    file.handle = h;
     fwp_handler hd;
     hd.prev = fwp_handlers;
     hd.state_depth = fwp_state_len;
@@ -2514,22 +2556,56 @@ static V fwp_p_file_with(V path, V fn, const fwp_desc *err) {
     return 0;
 }
 
-static V fwp_p_file_read(V path, const fwp_desc *err) {
+static V fwp_p_file_read_impl(V path, const fwp_desc *err, int text) {
     FILE *f = fopen(STR(path)->d, "rb");
     if (!f) return fwp_io_error_path("read", STR(path)->d, err);
+    fwp_file_cleanup file = {f, 0};
+    fwp_cleanup stream_cleanup;
+    fwp_cleanup_push(&stream_cleanup, fwp_close_scoped_file, &file);
     fwp_buf b = {0};
+    fwp_cleanup buffer_cleanup;
+    fwp_cleanup_push(&buffer_cleanup, fwp_file_buffer_cleanup, &b);
     char tmp[65536];
     size_t n;
     while ((n = fread(tmp, 1, sizeof tmp, f)) > 0) buf_put(&b, tmp, n);
+    int error = ferror(f) ? errno : 0;
     fclose(f);
-    return buf_to_str(&b);
+    fwp_cleanup_pop(&buffer_cleanup);
+    fwp_cleanup_pop(&stream_cleanup);
+    if (error) {
+        fwp_file_buffer_cleanup(&b);
+        errno = error;
+        return fwp_io_error_path("read", STR(path)->d, err);
+    }
+    if (text && !fwp_valid_utf8((const unsigned char *)(b.d ? b.d : ""), b.len)) {
+        fwp_file_buffer_cleanup(&b);
+        char message[1024];
+        snprintf(message, sizeof message, "%s: stream did not contain valid UTF-8", STR(path)->d);
+        return fwp_io_error("read", message, err);
+    }
+    fwp_cleanup_push(&buffer_cleanup, fwp_file_buffer_cleanup, &b);
+    V result = buf_to_str(&b);
+    b.d = 0;
+    fwp_cleanup_pop(&buffer_cleanup);
+    return result;
+}
+
+static V fwp_p_file_read(V path, const fwp_desc *err) {
+    return fwp_p_file_read_impl(path, err, 1);
+}
+static V fwp_p_file_read_bytes(V path, const fwp_desc *err) {
+    return fwp_p_file_read_impl(path, err, 0);
 }
 
 static V fwp_p_file_write_new(V path, V s, const fwp_desc *err) {
     FILE *f = fopen(STR(path)->d, "wb");
     if (!f) return fwp_io_error_path("write", STR(path)->d, err);
-    fwrite(STR(s)->d, 1, STR(s)->len, f);
-    fclose(f);
+    int error = fwrite(STR(s)->d, 1, STR(s)->len, f) == STR(s)->len ? 0 : errno;
+    if (fclose(f) != 0 && !error) error = errno;
+    if (error) {
+        errno = error;
+        return fwp_io_error_path("write", STR(path)->d, err);
+    }
     return FWP_UNIT;
 }
 
