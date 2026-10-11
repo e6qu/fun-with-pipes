@@ -2,7 +2,7 @@ name: Unused CAF argument ownership binary evidence
 
 on:
   push:
-    branches: [ownership-evidence-inline-inline-caf-layout]
+    branches: [ownership-evidence-inline-caf-layout]
 
 jobs:
   layout:
