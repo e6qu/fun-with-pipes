@@ -16741,3 +16741,202 @@ No retries, skipped tests, comparison tolerance or source-runtime repair claim.
 Guarded focused clippy0.12CPU/0.62elapsed and format0.44CPU/0.86elapsed pass.
 All seven revised exact-head gates remain required. Previous095776 failure is
 preserved as evidence, not treated as success.
+
+## PR121 revised publication and macOS diagnostic results
+
+Revised production head df5ac6202a77a3c0f6f4e315f0a73bbab266db63 includes
+golden diagnostic repair8fad01ccfdeae145ea0b7de571f606c6d4ae44ed and fresh
+all11 docs. Guarded publisher1.58CPU/16.34elapsed passes all three44/106/70
+audits. Old095776 retained before exact-lease publication. Current required
+gates are CI38109195705/docs38109195711; previous-head passes do not count.
+PR description update0.07CPU/1.67elapsed passes.
+
+Independent19eb6a diagnostics CI38109048833 pass ARM/Intel:800 executions
+and80 retained O1/O2 Mach-O binaries, all strict stdout/stderr/exit comparisons.
+Raw devices/effects oracles pass per architecture. Generated C is identical
+between architectures and optimization settings: devices
+ed3d11ff5abb7e46abe4be3f38539c5ef6bcdd073346dc33956006cda75e1c05; effects
+0477163181f61667db920cf20ae2cc900294463a2aebbb46f19236e7bbee03c9.
+Apple M1 Virtual/7GiB and Intel i7-8700B3.2GHz/14GiB, Apple Clang17
+(1700.0.13.5), native flags from unchanged source recorded. Actual signals and
+code-sign metadata retained; none of these executions terminated by signal.
+Intel contains an unrelated Spotlight mds_stores diagnostic, which provides
+no evidence of the original program crash. Linux remains separately pending.
+This does not establish a runtime repair or infrastructure cause.
+
+Collector initially failed0.59CPU/12.72elapsed because gh run logs are unavailable
+until the entire run finishes; retry0.15/2.60s reached the completed-job API
+but hit its ANSI-output protection. Corrected API capture to file succeeds
+0.20CPU/3.94elapsed, revalidating already downloaded artifacts without another
+download. Proof /private/tmp/fwp-devices-macos-diagnostic-proof.json; artifacts
+/private/tmp/fwp-devices-crash-19eb6a8-macos-artifacts and per-job logs.
+
+## Queue48 unchanged-source binary evidence preparation
+
+Head32dbb066a08f448c4b68f64d7cd40ed4a4eb696e on unchanged36fb4e1de52e
+runs CI38109342751. All original compiler/runtime/library/ownership-test bytes
+remain unchanged; only capture/inspection/evidence workflow and all11 docs differ.
+Original two tests execute once per architecture; owner/control fixtures preserve
+exact missing-release exit4, evaluation/trap order, raw interpreter and GC/reuse
+oracles. Expected four actual fixtures per architecture; no passing claim yet.
+Publication0.77CPU/6.56elapsed passed; its branch trigger mistakenly doubled
+inline, so a separate correction0.07/2.45s preserves original76cfd4dc ancestry
+and matches the published branch before execution. The evidence is independent
+of production ancestry and cannot gate a future delivery.
+
+## FFI pointer-offset overflow reproduction and phase2 preparation
+
+ptr.at native signed addition/multiplication can overflow; the interpreter
+wrapped addition but multiplied i64 normally. One guarded existing shared
+compiler artifact validates a pure address round-trip program across12 ordinary
+numeric pointer types, emits the original signed I16 offset expression, then
+raw execution panics101 on I16 multiplication after I8/U8 return True.
+No boundary address is dereferenced; original allocated addresses are freed
+on completed cases. Compiler SHA
+4a04b1c4c0000627b845469d817672612a936db3c669bc5e9affb823398ebdb9;
+fixture21084d19b4507c77d1a63128523e2fdf5195a36e1cdf646989755dcbabfdf3fc;
+emitted C f11a5a934521526279d9ca9a484c00d64dd7b695ec2bf5550a10dfeb13614b25.
+The artifact source head is not inferred from shared outputs. Full proof:
+/private/tmp/fwp-pointer-boundary-baseline/report.json.
+
+First fixture check0.00CPU/0.13elapsed failed because same-0/probe-0 are invalid
+Pipe names. Names corrected to same-i8/probe-i8 etc.; check0.75/1.44s then
+reproduces overflow. The parser and surface syntax remain untouched.
+Separate preparation a7e782cb1ccca48c15fe980f8db914a9b026a7a6 on main120
+wraps offsets at uintptr_t/usize width, including multiplication, preserving
+ordinary checked arithmetic. Independent fixed boundary identities and raw/native
+round-trip tests cover12 pointer types, O1/O2 GC/reuse and a signed-expression
+UBSan rejection control. This is a prepared phase2 exit-review repair, not current
+main support. F16/128-bit, WebAssembly and external buffer lifetimes remain
+separate acceptance. CI38109876885 is pending; future delivery needs a final
+actual-squash rebase and every production gate. PR121 remains the sole open PR.
+
+Guarded initial publication0.55CPU/5.94elapsed, formatting0.45/0.84s, independent
+identity/format publication0.13/3.08s, format check0.33/0.61s and valid-name
+publication/cancellation0.31/6.57s pass. Superseded preparation runs38109666010
+and38109740663 are cancelled, not passing. No candidate compilation or native
+test was performed locally. Journal /private/tmp/fwp-pointer-arithmetic-publication.json.
+
+## Archived handoff after PR #121
+
+Main is `ddef2e7a7dc22048675c4958029635f8082739db` (PR #120). Accepted frozen head
+`f2b2688a179d3a1209d8eec41113f8335e26162a` passes all six jobs in CI38101281491 and
+roadmap_docs38101281524. Match-head squash at 2026-10-11T02:27:58Z has the exact
+61-character subject `Retain typed record fields and release replaced update owners`, one line, empty
+body and no trailers or attribution. One parent `8770e73ed17ddaed44c03504faa380d1f724d070` and
+complete tree `7a74980019b2fbf9f8c39a05e1590c593edd6d45` match the tested head. All11 live docs were
+hashed in /private/tmp/fwp-main-docs-pre120 and restored byte-for-byte.
+Actual-main docs38105239779 passes at the squash. Duplicate production
+CI38105239866 was cancelled only after complete-tree parity proof.
+Queue33 and35–42 are accepted; queue34 is a verified duplicate. Record updates
+retain typed kept fields, release replaced owners and protect replacement,
+partial retained fields and unfinished copy storage. General copies preserve
+the borrowed original. Exact unique omission exits3/8/11/7 and general omission
+exits9/8/11/7, aliases/scalar controls and raw interpreter agreement remain
+checked. Phase2 is incomplete; phases3–6 are pending.
+
+[PR121](https://github.com/e6qu/fun-with-pipes/pull/121) is the sole open
+production PR, delivering queue43 boxed-record conversion on actual PR120 squash.
+Frozen revised production head `df5ac6202a77a3c0f6f4e315f0a73bbab266db63` (native repair `8fad01ccfdeae145ea0b7de571f606c6d4ae44ed`) retains all original conversion/checkpoint
+commits and adds a strict golden diagnostic repair: successful native runs
+remove their executable; mismatches retain the executable and O1 generated C.
+Unix termination reports the actual signal and core-dump flag. Regular macOS
+and Linux CI upload failed golden artifacts. Output/stderr/exit comparisons,
+all six required production jobs and test selections remain unchanged.
+Focused guarded clippy on golden_run passes0.12CPU/0.62elapsed; format passes
+0.44CPU/0.86elapsed. Full verification runs in CI38109195705 and docs38109195711 on the revised
+exact published head; both are pending. Publication1.58CPU/16.34elapsed passes
+all three documentation audits (44 link sets/106 immutable pairs/70 live rows).
+Previous095776 is retained at roadmap/revision-043-095776b5633b.
+
+Previous head `095776b5633bc7d70b6a690cd60993a0fcee383b` passed Linux, bench, regular ARM,
+both GC stress jobs and docs38105436472. CI38105436468 regular Intel failed
+golden_run: native devices.fwp had empty stdout/stderr and rendered exit -1.
+The actual signal and cause were lost by the former harness; no runtime repair
+is established and no merge occurred. Failure log:
+/private/tmp/fwp-pr121-intel-failure.log; metadata:
+/private/tmp/fwp-pr121-ci-failure.json. Independent strict diagnostic
+CI38109048833 captures binaries and actual signals on unchanged previous source.
+Do not use old passing jobs to gate the revised head. Require all seven new
+exact-head gates before match-head squash with
+`Protect boxed records and remaining callers during worker conversion`
+and empty body. Preserve exact ownership controls3/7/4, aliases/scalars,
+SIZE_MAX, GC stress/verification, reuse and raw interpreter agreement.
+After acceptance, deliver queue44 variant aliases FROM actual prepared43
+6b809877a1ac493015e1902204cc5ea72b68a875 onto PR121's actual squash. Preserve
+both original commits and every source/probe/workflow byte, then run fresh
+focused checks. Independent binary evidence does not replace production gates.
+
+Diagnostic head `19eb6a8182e858ff79c2244e8113c7c494f823a4`, branch
+`ownership-evidence-devices-crash`, passes both macOS jobs in CI38109048833
+on unchanged previous PR121 source. Each compares both raw interpreter oracles
+and400 native executions (ten fresh builds and ten runs for each O1/O2 program).
+Eighty Mach-O binaries, C, headers, disassembly, code-sign metadata and platform
+reports are retained; no native signal reproduced. An unrelated Intel Spotlight
+report is not a crash report for either program. Linux remains queued and this
+is not a replacement production gate or a runtime repair. Proof:
+/private/tmp/fwp-devices-macos-diagnostic-proof.json; artifacts:
+/private/tmp/fwp-devices-crash-19eb6a8-macos-artifacts. Guarded preparation
+passes0.55CPU/5.87elapsed; corrected collection0.20/3.94s. Full production gates
+must pass at revised df5ac6202a77; do not rerun completed macOS collection.
+
+
+Accepted queue43 in PR121 at 0f32e7560398c048478c4186c63d90c32e7c1727 on ddef2e7a7dc22048675c4958029635f8082739db. Frozen df5ac6202a77a3c0f6f4e315f0a73bbab266db63 passes all six CI38109195705 jobs and docs38109195711. Raw subject 'Protect boxed records and remaining callers during worker conversion' has 68 characters, one line, empty body and no trailers or attribution. One parent and complete tested tree cc6f3985708ca65df7d260782735137977ce049f verified. All11 live docs protected and restored byte-for-byte.
+
+Accepted primitive contract43, removed from prepared-only table:
+
+| 43 | Boxed record conversion protects consumed original and caller owners before each typed worker-field retain; partial extras release on failure | Sequential CI; count-overflow conversion, external aliases, scalar safety and entry transfer |
+
+## Larger ownership bundles authorized, 2026-10-11
+
+The user requested bundling more related changes because full test cycles are
+too long. One production PR remains open at a time, now carrying coherent
+groups of roughly ten preparations. Every included original regression and
+negative control remains; full six-platform-job CI plus docs runs once per
+final bundle head. No passing gate is inherited from a different head.
+Next bundle44–53 follows accepted PR121; remaining54–112 use related groups,
+with the FFI pointer repair included alongside upcoming C-library/raw-memory work.
+Standalone queue44 delivery is superseded, preserving its immutable anchor.
+
+PR121 match-head merge0.25CPU/7.28elapsed, fetch0.03/1.07s, protected main
+update0.05/0.25s and acceptance0.00/0.13s pass. Exact squash
+0f32e7560398c048478c4186c63d90c32e7c1727 at2026-10-11T07:49:58Z has one
+parentddef2e7a7dc22048675c4958029635f8082739db and tree
+cc6f3985708ca65df7d260782735137977ce049f equal to testeddf5ac6202a77.
+Raw68-character one-line subject has empty body/no trailers/attribution.
+Actual-main docs38122701714 passes; duplicate CI38122701716 cancelled only
+after tested-tree proof. All11 live docs freshly hashed/restored at
+/private/tmp/fwp-main-docs-pre121. Proof /private/tmp/fwp-pr121-merge-proof.json.
+
+Bundle source b304e91f628c contains20 contiguous original commits FROM6b809877a1ac.
+First rebase0.51CPU/1.99elapsed failed its commit-count assertion because
+manual docs-only conflict resolution made historical docs commits empty.
+Its clean unpublished candidate is retained locally at
+roadmap/bundle-044-053-first-rebase-99f4512b0291.
+Corrected rebase explicitly preserves empty originals; all20 subjects/order
+and original prepared compiler/runtime/probe bytes match. Accepted golden
+diagnostics/artifact steps are inherited exactly. Native head
+77af0259095cfaf436978929558e514be2e36086 passes audit44/106/69;
+preparation1.25CPU/9.36elapsed. Full rebase log
+/private/tmp/fwp-compiler-task-bundle-rebase.log; journal
+/private/tmp/fwp-compiler-task-bundle-preparation.json.
+
+Before switching Rust checkouts, guarded clean in last conversion checkout
+removed116 files/94.6MiB,0.00CPU/0.14elapsed. Focused alias/channel/task-handle
+targets execute four original tests, zero ignored,18.91CPU/37.93elapsed.
+All21 RC units, focused lint and format pass together6.47CPU/12.90elapsed.
+Full bundle platform/GC/bench gates remain required. Shared outputs now belong
+to the bundle checkout; no other candidate was compiled locally.
+
+Independent48 CI38109342751: both original tests pass on ARM/Intel, but the
+inspector incorrectly expected total main drops0/1; actual1/2 includes the
+echoed-text cleanup. Retained C proves CAF argument local l0, dropped only in
+the intact positive, independently of common l2 echo-text drop. Correction
+selects the CAF-bound local; original tests/source/controls stay unchanged.
+Failure collection0.23CPU/6.83elapsed (also FFI) and artifact inspection
+0.07/3.21s pass; artifacts /private/tmp/fwp-inline-caf-failed-artifacts.
+FFI a7e782 preparation CI38109876885 passes Linux; ARM negative UBSan control
+returns a signal instead of required exit1, without recorded signal/stderr;
+Intel fails Rust toolchain DNS before tests. Corrected fresh controls must
+record signal/status, use distinct binaries and explicit UBSan exit policy.
+These failures are repair work, not roadmap or merge authorization blockers.

@@ -1,8 +1,8 @@
 //! Ownership at native primitive boundaries. Unknown primitives, foreign
 //! calls and remote calls keep the conservative runtime-sharing fallback.
 //! Contracts cover containers, text/byte results and synchronous list callbacks.
-//! Array/map/set elements are typed owners. Retained runtime callbacks
-//! still use conservative sharing.
+//! Array/map/set elements are typed owners. Spawned task thunks retain a
+//! counted callback owner, as do deadline calls; other retained callbacks share.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Argument {
@@ -18,6 +18,14 @@ pub enum Argument {
 pub enum ResultOwnership {
     Shared,
     FreshContainer,
+    /// A synchronous callback returns a typed owned value.
+    OwnedCallback,
+    /// Runtime task storage owns its cached typed result.
+    OwnedTask,
+    /// Owned Option storage and a typed task-result reference.
+    OwnedTaskOption,
+    /// Counted channel storage and typed queue ownership.
+    ChannelOperation,
     /// Typed array boundary, including scalar/optional/list results.
     ArrayOperation {
         consumed: Option<usize>,
@@ -74,6 +82,9 @@ pub enum ResultOwnership {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Callback {
     Shared(usize),
+    /// Retain a counted callback reference for asynchronous invocation.
+    /// The task takes that owner on entry or releases it on cancellation.
+    Retained(usize),
     /// Invoke synchronously without retaining the callback function itself.
     /// Supplied values borrow by type; returned values carry ownership.
     Borrowed(usize),
@@ -98,7 +109,7 @@ impl Contract {
 
     pub fn callback_argument(self) -> Option<usize> {
         self.callback.map(|c| match c {
-            Callback::Shared(i) | Callback::Borrowed(i) => i,
+            Callback::Shared(i) | Callback::Borrowed(i) | Callback::Retained(i) => i,
         })
     }
 
@@ -113,9 +124,10 @@ impl Contract {
 /// Complete array/map/set contracts and selected String/Bytes contracts. Comparison-only keys
 /// borrow; arrays/maps/sets own typed element references.
 /// Synchronous list/container callbacks borrow;
-/// retained callbacks share. Slices and set operations copy storage.
+/// spawned/deadline thunks retain a counted owner; other retained callbacks share.
+/// Slices and set operations copy storage.
 pub fn primitive(symbol: &str) -> Option<Contract> {
-    use Argument::{Borrow as B, Consume as C, Share as S};
+    use Argument::{Borrow as B, Consume as C};
     use ResultOwnership::Shared as R;
     let (arguments, result, callback, aliases): (
         &'static [Argument],
@@ -123,25 +135,37 @@ pub fn primitive(symbol: &str) -> Option<Contract> {
         Option<Callback>,
         &'static [usize],
     ) = match symbol {
-        "task.spawn" => (&[S], R, Some(Callback::Shared(0)), &[0]),
-        "task.scope" => (&[S], R, Some(Callback::Shared(0)), &[0]),
+        "task.spawn" => (
+            &[B],
+            ResultOwnership::OwnedTask,
+            Some(Callback::Retained(0)),
+            &[0],
+        ),
+        "task.scope" => (
+            &[B],
+            ResultOwnership::OwnedCallback,
+            Some(Callback::Borrowed(0)),
+            &[0],
+        ),
         "task.within" => (
-            &[B, S],
-            ResultOwnership::FreshOuter,
-            Some(Callback::Shared(1)),
+            &[B, B],
+            ResultOwnership::OwnedTaskOption,
+            Some(Callback::Retained(1)),
             &[1],
         ),
-        "task.await" | "channel.recv" => (&[S], ResultOwnership::FreshOuter, None, &[0]),
-        "channel.recv-for" => (&[B, S], ResultOwnership::FreshOuter, None, &[1]),
+        "task.await" => (&[B], ResultOwnership::OwnedTaskOption, None, &[0]),
+        "channel.recv" => (&[B], ResultOwnership::ChannelOperation, None, &[0]),
+        "channel.recv-for" => (&[B, B], ResultOwnership::ChannelOperation, None, &[1]),
         "task.deadline" => (
             &[B, B],
             ResultOwnership::AliasArgument { argument: 1 },
             None,
             &[1],
         ),
-        "task.sleep" | "task.yield" | "task.cancelled" | "channel.make" => (&[B], R, None, &[]),
-        "task.cancel" | "channel.close" => (&[S], R, None, &[]),
-        "channel.send" => (&[S, S], R, None, &[]),
+        "task.sleep" | "task.yield" | "task.cancelled" => (&[B], R, None, &[]),
+        "task.cancel" => (&[B], R, None, &[]),
+        "channel.make" | "channel.close" => (&[B], ResultOwnership::ChannelOperation, None, &[]),
+        "channel.send" => (&[B, B], ResultOwnership::ChannelOperation, None, &[]),
         "trim" | "trim-start" | "trim-end" | "lower" | "upper" | "string.reverse" => {
             (&[B], ResultOwnership::FreshLeaf, None, &[])
         }
@@ -437,6 +461,33 @@ mod tests {
 
     #[test]
     fn declared_collection_and_text_boundaries_have_consistent_contracts() {
+        for symbol in [
+            "channel.make",
+            "channel.send",
+            "channel.recv",
+            "channel.recv-for",
+            "channel.close",
+        ] {
+            let channel = primitive(symbol).unwrap();
+            assert_eq!(channel.result, ResultOwnership::ChannelOperation);
+            assert!(channel.arguments.iter().all(|arg| *arg == Argument::Borrow));
+        }
+        let spawn = primitive("task.spawn").unwrap();
+        assert_eq!(spawn.argument(0), Argument::Borrow);
+        assert_eq!(spawn.callback, Some(Callback::Retained(0)));
+        assert_eq!(spawn.result, ResultOwnership::OwnedTask);
+        let await_contract = primitive("task.await").unwrap();
+        assert_eq!(await_contract.argument(0), Argument::Borrow);
+        assert_eq!(await_contract.result, ResultOwnership::OwnedTaskOption);
+        assert!(!spawn.borrows_callback()); // asynchronous callbacks still escape
+        let scope = primitive("task.scope").unwrap();
+        assert!(scope.borrows_callback());
+        assert_eq!(scope.argument(0), Argument::Borrow);
+        assert_eq!(scope.result, ResultOwnership::OwnedCallback);
+        let within = primitive("task.within").unwrap();
+        assert_eq!(within.argument(1), Argument::Borrow);
+        assert_eq!(within.callback, Some(Callback::Retained(1)));
+        assert!(!within.borrows_callback());
         for (library, collections) in [
             (include_str!("../lib/collections.fwp"), true),
             (include_str!("../lib/string.fwp"), false),
@@ -459,7 +510,8 @@ mod tests {
                 if let Some(i) = c.callback_argument() {
                     assert_eq!(
                         c.argument(i),
-                        if c.borrows_callback() {
+                        if c.borrows_callback() || matches!(c.callback, Some(Callback::Retained(_)))
+                        {
                             Argument::Borrow
                         } else {
                             Argument::Share

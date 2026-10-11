@@ -82,7 +82,10 @@ impl<'p> Opt<'p> {
     /// Cheap expressions that can be duplicated freely.
     fn trivial(&self, e: &Expr) -> bool {
         match e {
-            Expr::Local(_) | Expr::Func(_) => true,
+            Expr::Local(_) => true,
+            // CAF evaluation may allocate or trap and must occur before the
+            // callee, even when its argument is unused after inlining.
+            Expr::Func(id) => self.arity(*id) > 0,
             Expr::Const(v) => {
                 !matches!(
                     v,
@@ -161,7 +164,36 @@ impl<'p> Opt<'p> {
             }
             Expr::Record(a) => Expr::Record(a.into_iter().map(|x| self.expr(x, depth)).collect()),
             Expr::Field(r, i) => {
+                // Inlining a record-producing call can leave a bare Record,
+                // whose nominal field types the expression does not carry.
+                // Keep the checked base type for scalar replacement and RC.
+                let base_ty = type_of(
+                    &|id: FuncId| &self.funcs[id].ty,
+                    self.shapes,
+                    &self.locals,
+                    &r,
+                );
                 let r = self.expr(*r, depth);
+                if let Some(ty) = base_ty {
+                    if type_of(
+                        &|id: FuncId| &self.funcs[id].ty,
+                        self.shapes,
+                        &self.locals,
+                        &r,
+                    )
+                    .is_none()
+                    {
+                        let l = self.fresh(&ty);
+                        return self.expr(
+                            Expr::Let(
+                                l,
+                                Box::new(r),
+                                Box::new(Expr::Field(Box::new(Expr::Local(l)), i)),
+                            ),
+                            depth,
+                        );
+                    }
+                }
                 match r {
                     Expr::Record(mut fs) if fs.iter().all(|x| self.pure(x)) => {
                         fs.swap_remove(i as usize)
@@ -186,10 +218,26 @@ impl<'p> Opt<'p> {
                         && arms.iter().all(|(_, a)| uses(a, l) == 0)
                         && (builds_object(&v) || self.case_of_case(&v, arms))
                     {
-                        let Expr::Match(_, arms) = *b else {
-                            unreachable!()
-                        };
-                        return self.expr(Expr::Match(Box::new(v), arms), depth);
+                        let ty = self.locals[l as usize].clone();
+                        if let Some(out) = self.known_ctor(&v, arms, Some(&ty)) {
+                            return self.expr(out, depth);
+                        }
+                        if matches!(&v, Expr::Record(_)) {
+                            let lowered = known_record(v.clone(), arms.clone());
+                            if !matches!(&lowered, Expr::Match(s, _) if matches!(&**s, Expr::Record(_)))
+                            {
+                                return self.expr(lowered, depth);
+                            }
+                        }
+                        // A bare constructor/record does not carry its nominal
+                        // type. Keep its typed binding when elimination fails.
+                        let func = |id: FuncId| &self.funcs[id].ty;
+                        if type_of(&func, self.shapes, &self.locals, &v).is_some() {
+                            let Expr::Match(_, arms) = *b else {
+                                unreachable!()
+                            };
+                            return self.expr(Expr::Match(Box::new(v), arms), depth);
+                        }
                     }
                 }
                 // a partial application used once: substituted, so that
@@ -264,7 +312,7 @@ impl<'p> Opt<'p> {
                         .collect();
                     return self.expr(Expr::Match(is, iarms), depth);
                 }
-                if let Some(e) = self.known_ctor(&s, &arms) {
+                if let Some(e) = self.known_ctor(&s, &arms, None) {
                     return self.expr(e, depth);
                 }
                 let arms: Vec<(Pat, Expr)> = arms
@@ -297,24 +345,29 @@ impl<'p> Opt<'p> {
     /// A match on a constructor applied to arguments: the arm it selects,
     /// with the arguments bound to the arm's names in their order. `None`
     /// when an arm before it could match or not depending on the fields.
-    fn known_ctor(&mut self, s: &Expr, arms: &[(Pat, Expr)]) -> Option<Expr> {
+    fn known_ctor(&mut self, s: &Expr, arms: &[(Pat, Expr)], ty: Option<&MT>) -> Option<Expr> {
         let Expr::Construct(tag, args) = s else {
             return None;
         };
+        let fields = ty.and_then(|t| match self.shapes.get(t) {
+            Some(TypeShape::Adt(variants)) => variants.get(*tag as usize).map(|(_, fs)| fs.clone()),
+            _ => None,
+        });
         let irrefutable = |p: &Pat| matches!(p, Pat::Bind(_) | Pat::Wild);
         for (p, body) in arms {
             match p {
                 Pat::Construct(t, _) if t != tag => continue,
                 Pat::Construct(_, ps) if ps.iter().all(irrefutable) && ps.len() == args.len() => {
                     let mut binds = Vec::new();
-                    for (sp, a) in ps.iter().zip(args) {
+                    for (i, (sp, a)) in ps.iter().zip(args).enumerate() {
                         match sp {
                             Pat::Bind(x) => binds.push((*x, a.clone())),
                             _ if self.pure(a) => {}
                             _ => {
                                 let funcs = self.funcs;
                                 let func = |id: FuncId| &funcs[id].ty;
-                                let t = type_of(&func, self.shapes, &self.locals, a)?;
+                                let t = type_of(&func, self.shapes, &self.locals, a)
+                                    .or_else(|| fields.as_ref()?.get(i).cloned())?;
                                 let l = self.fresh(&t);
                                 binds.push((l, a.clone()));
                             }

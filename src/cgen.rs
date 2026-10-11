@@ -1362,6 +1362,12 @@ impl<'p> Gen<'p> {
     }
 
     fn drop_body(&mut self, mt: &MT, id: usize) -> String {
+        if matches!(mt, MT::Con(n, _) if n == "std::Channel") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_channel_drop(v); }}\n");
+        }
+        if matches!(mt, MT::Con(n, _) if n == "std::Task") {
+            return format!("static void fwp_drop{id}(V v) {{ fwp_task_drop(v); }}\n");
+        }
         if matches!(mt, MT::Fun(..)) {
             return format!("static void fwp_drop{id}(V v) {{ fwp_closure_drop(v); }}\n");
         }
@@ -2454,6 +2460,16 @@ impl<'g, 'p> FnGen<'g, 'p> {
                 parts(&t)
             }
             Expr::Let(l, v, b) => {
+                // A returned alias transfers the existing field owners. Boxing
+                // it would retain an extra set whose original has been consumed.
+                if variant_uses(b, *l, true) {
+                    if let Expr::Local(source) = &**v {
+                        if let Some(value) = self.vlocals.get(source).cloned() {
+                            self.vlocals.insert(*l, value);
+                            return self.expr_variant(b, m, ty);
+                        }
+                    }
+                }
                 let local_ty = self.locals[*l as usize].clone();
                 if self.unboxed_variant(v, &local_ty) == Some(m) && variant_uses(b, *l, true) {
                     let (tag, fields) = self.expr_variant(v, m, &local_ty);
@@ -3914,7 +3930,7 @@ impl<'g, 'p> FnGen<'g, 'p> {
             Expr::Const(v) => self.g.const_expr(v),
             Expr::Func(id) => {
                 if self.g.prog.funcs[*id].arity == 0 {
-                    self.bind(format!("caf{}()", id))
+                    self.bind_call(e as *const Expr, format!("caf{}()", id))
                 } else {
                     self.g.used_closures[*id] = true;
                     format!("PTR(&fc{})", id)
@@ -5233,6 +5249,32 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                 let func = f.clone();
                 let mut s = self.prim(&func, &sym)?;
                 if self.reuse {
+                    if let Some(crate::ownership::Callback::Retained(i)) =
+                        crate::ownership::primitive(&sym).and_then(|c| c.callback)
+                    {
+                        let result = func.locals[i].params(1).1;
+                        let drop = self.value_drop(result);
+                        let dup = if crate::rc::needs_rc(&self.prog.shapes, result) {
+                            "fwp_rc_dup"
+                        } else {
+                            "NULL"
+                        };
+                        match sym.as_str() {
+                            "task.spawn" => {
+                                s = s.replace(
+                                    "fwp_p_task_spawn(l0)",
+                                    &format!("fwp_p_task_spawn_retained(l0, {drop})"),
+                                )
+                            }
+                            "task.within" => {
+                                s = s.replace(
+                                    "fwp_p_task_within(l0, l1)",
+                                    &format!("fwp_p_task_within_retained(l0, l1, {drop}, {dup})"),
+                                )
+                            }
+                            _ => unreachable!("unmodeled retained callback: {sym}"),
+                        }
+                    }
                     // with counted references: arrays written in place, and
                     // new ones owned by compiled code
                     if let Some(crate::ownership::Contract {
@@ -5261,6 +5303,79 @@ static inline __attribute__((always_inline)) int fs{}(V *st, V *nx, V *out) {{
                     } else if let Some(contract) = crate::ownership::primitive(&sym) {
                         use crate::ownership::ResultOwnership;
                         match contract.result {
+                            ResultOwnership::ChannelOperation => {
+                                let ty = if sym == "channel.make" {
+                                    func.ty.params(func.arity as usize).1
+                                } else {
+                                    &func.locals[usize::from(sym == "channel.recv-for")]
+                                };
+                                let MT::Con(name, elements) = ty else {
+                                    return Err("channel boundary lacks its channel type".into());
+                                };
+                                if name != "std::Channel" || elements.len() != 1 {
+                                    return Err("channel boundary lacks its element type".into());
+                                }
+                                let drop = self.value_drop(&elements[0]);
+                                let dup = if crate::rc::needs_rc(&self.prog.shapes, &elements[0]) {
+                                    "fwp_rc_dup"
+                                } else {
+                                    "NULL"
+                                };
+                                match sym.as_str() {
+                                    "channel.make" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_make(l0)",
+                                            &format!("fwp_p_channel_make_owned(l0, {drop}, {dup})"),
+                                        )
+                                    }
+                                    "channel.send" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_send(l0, l1)",
+                                            &format!("fwp_p_channel_send_owned(l0, l1, {dup})"),
+                                        )
+                                    }
+                                    "channel.recv" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_recv(l0)",
+                                            &format!("fwp_p_channel_recv_owned(l0, {dup})"),
+                                        )
+                                    }
+                                    "channel.recv-for" => {
+                                        s = s.replace(
+                                            "fwp_p_channel_recv_for(l0, l1)",
+                                            &format!("fwp_p_channel_recv_for_owned(l0, l1, {dup})"),
+                                        )
+                                    }
+                                    "channel.close" => {}
+                                    _ => unreachable!("unmodeled channel operation: {sym}"),
+                                }
+                            }
+                            ResultOwnership::OwnedTaskOption if sym == "task.await" => {
+                                let ty = func.ty.params(func.arity as usize).1;
+                                let MT::Con(_, args) = ty else {
+                                    return Err("task await result is not an Option".into());
+                                };
+                                let [element] = args.as_slice() else {
+                                    return Err("task await result lacks its element type".into());
+                                };
+                                let dup = if crate::rc::needs_rc(&self.prog.shapes, element) {
+                                    "fwp_rc_dup"
+                                } else {
+                                    "NULL"
+                                };
+                                s = s.replace(
+                                    "fwp_p_task_await(l0)",
+                                    &format!("fwp_p_task_await_owned(l0, {dup})"),
+                                );
+                            }
+                            ResultOwnership::OwnedCallback => {
+                                let ty = func.ty.params(func.arity as usize).1;
+                                let drop = self.value_drop(ty);
+                                s = s.replace(
+                                    "fwp_p_task_scope(l0)",
+                                    &format!("fwp_p_task_scope_borrowed(l0, {drop})"),
+                                );
+                            }
                             ResultOwnership::FreshSpine | ResultOwnership::AliasTail { .. } => {
                                 if matches!(
                                     sym.as_str(),
@@ -6845,6 +6960,39 @@ static const fwp_exec_spec exec_spec{i} = {{
             let _ = writeln!(owned_defs, "static void fwp_caps{id}(V v, int duplicate) {{\n{caps}    if (!duplicate) {{ {release} }}\n}}\nstatic V fwp_owned_entry{id}(V *a) {{\n{entry_pre}    V result = f{id}({});\n{entry_post}{cleanup}    return result;\n}}\nstatic void fwp_args{id}(V *a, uint32_t start, uint32_t n) {{\n{arguments}}}\nstatic const fwp_owned_fninfo fwp_owned_info{id} = {{fwp_owned_entry{id}, fwp_caps{id}, fwp_args{id}, {pending_drop}}};", args.join(", "));
         }
     }
+    // Each counted CAF owns its cached result. Calls return a separate owner;
+    // scalar caches never send machine words through generic RC operations.
+    // Prepare typed drops before emitting the helper definitions.
+    let mut caf_defs = String::new();
+    let mut caf_finish = String::new();
+    for (id, f) in prog
+        .funcs
+        .iter()
+        .enumerate()
+        .filter(|(id, f)| live[*id] && f.arity == 0)
+    {
+        if g.reuse && crate::rc::needs_rc(&prog.shapes, &f.ty) {
+            let drop = g.value_drop(&f.ty);
+            // Initialization may yield and reenter. Replacing a result cached
+            // during evaluation releases that cache owner, preserving callers.
+            let _ = writeln!(caf_defs,
+                "static int fwp_caf_state{id}; static V fwp_caf_value{id};\nstatic V caf{id}(void) {{ if (!fwp_caf_state{id}) {{ V next = f{id}(); V previous = fwp_caf_state{id} ? fwp_caf_value{id} : 0; fwp_caf_value{id} = next; fwp_caf_state{id} = 1; {drop}(previous); }} fwp_rc_dup(fwp_caf_value{id}); return fwp_caf_value{id}; }}");
+            let _ = writeln!(caf_finish,
+                "    if (fwp_caf_state{id}) {{ V v = fwp_caf_value{id}; fwp_caf_value{id} = 0; fwp_caf_state{id} = 0; {drop}(v); }}");
+        } else {
+            let _ = writeln!(caf_defs,
+                "static V caf{id}(void) {{ static int st = 0; static V v; if (st == 0) {{ v = f{id}(); st = 1; }} return v; }}");
+        }
+    }
+    let _ = writeln!(
+        caf_defs,
+        "static void fwp_caf_finish(void) {{\n{caf_finish}}}"
+    );
+    let main_drop = if g.reuse && crate::rc::needs_rc(&prog.shapes, &main_ty) {
+        format!("{}(r);", g.value_drop(&main_ty))
+    } else {
+        String::new()
+    };
     let mut out = String::new();
     out.push_str("/* Generated by fwp. */\n");
     let _ = writeln!(out, "#define FWP_UNWIND {}", u8::from(g.unwind));
@@ -7018,17 +7166,8 @@ static const fwp_exec_spec exec_spec{i} = {{
     for (i, (sym, _, k)) in g.hofs.iter().enumerate() {
         let _ = writeln!(out, "{};", hof_sig(i, sym, *k));
     }
-    // constant applicative forms
-    for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
-        if f.arity == 0 {
-            let _ = writeln!(
-                out,
-                "static V caf{id}(void) {{ static int st = 0; static V v; if (st == 0) {{ v = {get}; st = 1; }} return v; }}",
-                id = id,
-                get = shared(g.reuse, format!("f{}()", id))
-            );
-        }
-    }
+    // Constant applicative forms retain their typed cached owners.
+    out.push_str(&caf_defs);
     // entries and the function table (whose entries for functions nothing
     // reaches stay, without code, so function ids keep their positions)
     for (id, f) in prog.funcs.iter().enumerate().filter(|(id, _)| live[*id]) {
@@ -7138,7 +7277,7 @@ static const fwp_exec_spec exec_spec{i} = {{
         r
     } else {
         format!(
-            "    V r = caf{}();\n    fwp_tasks_finish();\n    (void){};\n    fwp_exit_code = {};",
+            "    V r = caf{}();\n    fwp_tasks_finish();\n    {main_drop}\n    (void){};\n    fwp_exit_code = {};",
             main,
             main_desc,
             if exit_code {
@@ -7164,6 +7303,7 @@ static void *fwp_main_thread(void *arg) {{
     fwp_stack_guard_init(fwp_main_stack);
     fwp_init_consts();
 {run}
+    fwp_caf_finish();
     fflush(stdout);
     return 0;
 }}
