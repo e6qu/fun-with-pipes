@@ -1,0 +1,78 @@
+name: GC native build failure diagnostics
+
+on:
+  push:
+    branches: [ownership-evidence-gc-build-diagnostics]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CC: clang
+      CARGO_BUILD_JOBS: 2
+      CARGO_INCREMENTAL: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+      RUST_TEST_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Record source, hardware and compiler
+        run: |
+          mkdir -p "$RUNNER_TEMP/gc-build-diagnostics"
+          git rev-parse HEAD > "$RUNNER_TEMP/gc-build-diagnostics/head.txt"
+          uname -a > "$RUNNER_TEMP/gc-build-diagnostics/hardware.txt"
+          clang --version > "$RUNNER_TEMP/gc-build-diagnostics/compiler.txt"
+          rustc --version > "$RUNNER_TEMP/gc-build-diagnostics/rustc.txt"
+      - name: Preserve formatting diagnostics
+        run: |
+          rustfmt tests/gc.rs
+          cp tests/gc.rs "$RUNNER_TEMP/gc-build-diagnostics/formatted-gc.rs"
+          git diff -- tests/gc.rs > "$RUNNER_TEMP/gc-build-diagnostics/format.patch"
+          git diff --exit-code -- tests/gc.rs
+      - name: Focused lint and real failed compiler control
+        env:
+          FWP_GC_DIAGNOSTICS_ARTIFACTS: ${{ runner.temp }}/gc-build-diagnostics/fixtures
+        run: |
+          cargo clippy --test gc -- -D warnings
+          cargo test --test gc gc_stress_reports_native_compiler_failure -- --exact --nocapture
+      - name: Verify a silenced compiler failure is rejected
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import os, subprocess
+          p = Path('tests/gc.rs')
+          original = p.read_bytes()
+          old = b'return render(b"", &b.stderr, b.status.code().unwrap_or(-1));'
+          assert original.count(old) == 1
+          try:
+              p.write_bytes(original.replace(old, b'return String::new();'))
+              result = subprocess.run(['cargo', 'test', '--test', 'gc',
+                  'gc_stress_reports_native_compiler_failure', '--', '--exact', '--nocapture'],
+                  capture_output=True)
+              out = Path(os.environ['RUNNER_TEMP']) / 'gc-build-diagnostics'
+              (out / 'silenced-control.stdout').write_bytes(result.stdout)
+              (out / 'silenced-control.stderr').write_bytes(result.stderr)
+              (out / 'silenced-control.status').write_text(str(result.returncode) + '\n')
+              assert result.returncode == 101, result.returncode
+              assert b'native compiler failure was not reported' in result.stdout + result.stderr
+          finally:
+              p.write_bytes(original)
+          PY
+      - name: Record exact restored source hashes
+        run: |
+          git diff --exit-code
+          sha256sum tests/gc.rs target/debug/fwp > "$RUNNER_TEMP/gc-build-diagnostics/source-hashes.txt"
+          sha256sum "$RUNNER_TEMP/gc-build-diagnostics/fixtures/"* > "$RUNNER_TEMP/gc-build-diagnostics/fixture-hashes.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gc-build-diagnostics
+          path: ${{ runner.temp }}/gc-build-diagnostics/

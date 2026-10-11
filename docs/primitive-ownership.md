@@ -110,6 +110,8 @@ known descriptor does not establish ownership of every reconstructed node.
 | Descriptor-based text/binary decode | Normal scratch cleanup does not make returned trees counted; fresh nodes, aliases and partial construction require typed review |
 | Remote values and memoized decoding | Cached decoded results may have several readers; preserve a cache owner before returning independently owned aliases |
 | Foreign values and retained callbacks | Explicit sharing protects unknown retention; ownership requires a verified host/runtime lifetime and teardown contract |
+| list.flat-map and list.ap | Generic runtime application and list reconstruction retain the compatibility path; owned callback results, temporary storage and copied spines need explicit contracts before tracing-free eligibility |
+| State handlers | get/put/modify/run-state retain values in per-task runtime state storage; typed ownership of slots and restoration on every nonlocal exit need separate evidence |
 
 Source review of the same prepared head separates three concrete cases:
 
@@ -130,6 +132,15 @@ These are source-reviewed compatibility policies, not new runtime tests or
 verified deterministic reclamation. Keep them in the finite phase 2 exit review;
 changing a boundary requires interpreter/native, alias, partial-failure and
 retention/teardown evidence before removing sharing.
+
+The additional list and state rows are source review at main68f959bbf28c:
+[runtime list helpers](../runtime/fwp_rt_prims.c) call generic `fwp_apply1`
+and reconstruct their outputs; state handlers store V words without typed slot
+drop metadata. [Task switching](../runtime/fwp_rt_task.c) saves and restores the
+state buffer, and typed-error handlers restore its depth. These observations
+identify remaining contract work, not a reproduced semantic failure or a new
+reclamation result. Preserve callback order and nested task/error/trap behavior
+when extending ownership; the existing tracing fallback remains required.
 
 Keep these boundaries on tracing compatibility until their contracts and cleanup
 are proved. Phase2 records coverage and remaining fallback requirements; phase6

@@ -98,6 +98,13 @@ allocation/release regression and preserve the same trap and raw interpreter
 behavior when fixing this path. Grad callback failure and cancellation before
 `ad.backward` also need explicit scoped lifetime evidence.
 
+Preserve failure consumption when repairing backward cleanup: both backends
+detach the selected tape before checking output IDs, and the interpreter's
+local Tape then drops on error. Register the detached native buffers and
+adjoints for cleanup rather than leaving the tape live by moving validation
+ahead of detachment. Normal return, mixed-tape failure, recoverable traps and
+cancellation need separate controls; capacity reuse must preserve those exits.
+
 Both token implementations wrap the slot generation after 32767 uses. The
 ordinary stale-token check therefore needs a regression across that wrap and a
 policy that prevents an old token from identifying a new tape. These are

@@ -12,6 +12,12 @@ publication hashes; journal: /private/tmp/fwp-pr123-handoff-publication.json.
 This is a docs recovery branch, with no production PR or native changes.
 The latest streamlined edits await the next GitHub roadmap audit; local checks
 remain stopped below the disk reserve. Later progress stays in this live file.
+The same recovery branch now also retains the six recovery/audit drafts under
+`scripts/roadmap-recovery/` at a9d6a33a3368d03c8f96e37d132161cb5c6699d4.
+Their published blobs are verified, not their execution. Restore temporary
+helpers from those paths if /private/tmp is lost. The inventory draft must be
+copied into `scripts/` on the eventual evidence branch before running it.
+Journal: /private/tmp/fwp-roadmap-recovery-helpers-publication.json.
 
 ## Execution contract
 
@@ -65,7 +71,7 @@ PR122 squash. All42 original commits and probes plus both new repairs remain;
 accepted diagnostics inherit exactly. Eight focused tests and65 library units,
 lint and format pass at identical native source hashes. Publication2.41CPU/
 22.57elapsed and PR creation0.18CPU/4.35elapsed pass. Full CI38128387224 and
-docs38128387231 remain pending. Intel macOS GC stress has started; the other
+docs38128387231 remain pending. Intel macOS GC stress passes; the other
 jobs are queued. Require all seven passing gates before squash. Latest remote
 status: /private/tmp/fwp-roadmap-active-ci-status.json; refresh with the remote
 administration helper /private/tmp/fwp-monitor-roadmap-ci.py.
@@ -222,7 +228,11 @@ alone is not a sharing bug. Preserve conservative fallbacks until concrete
 typed ownership and teardown are proved.
 
 Review borrowed metadata roots, reconstruction/partial failure, retained
-callbacks/contexts and resource disposal. Channel close preserves queued values;
+callbacks/contexts and resource disposal. The source-reviewed fallback list also
+includes generic list.flat-map/list.ap reconstruction and per-task State slots;
+see [primitive contracts](primitive-ownership.md). Typed slot teardown and
+callback/temporary ownership remain acceptance work, without a reproduced
+failure or new reclamation claim. Channel close preserves queued values;
 explicit drain breaks its counted cycle, while automatic unreachable-cycle
 reclamation remains unproved. Scalar AD tape handles do not prove external
 buffer lifetimes. Numeric lifetime findings and future regressions are in
@@ -265,8 +275,35 @@ only the nine intentional raw-memory contract additions and preserving every
 other row. It has not executed or established new counts. Copy it into an
 evidence branch on actual merged112-equivalent source and run on GitHub after
 the resource/network bundle is accepted; retain the old JSON as baseline.
-Do not use the unchanged exact-inherited-ci assertion for that later bundle:
-verify only the intentional WASI requirement in addition to accepted base CI.
+
+New GC harness source-review finding: tests/gc.rs returns None for every native
+build failure, so a failed valid O2 compilation can silently leave stress
+coverage. Draft /private/tmp/fwp-gc-strict-build-draft.rs instead compares build
+errors with expected snapshots, records real exit/signal/core status and keeps
+failed binaries/C/reports outside the temporary directory. A real failing-CC
+control checks propagation and retained C/status. This draft has not compiled
+or executed; run focused checks on GitHub and include it in the next bundle,
+preserving every original regression. /private/tmp/fwp-gc-diagnostics-ci-draft.yml
+adds failure artifacts to both macOS GC jobs. Apply only its added GC steps to
+the future workflow; copying the whole draft would lose mandatory WASI.
+PR123's frozen head remains unchanged. Current gates are required as recorded;
+the later harness repair does not count as passed support.
+Published independent validation branch: ownership-evidence-gc-build-diagnostics,
+head9a7c7da652e2bc95e209e1fc0f98a45c1ef942dc on PR123 native source.
+CI38132388036 is queued. It runs formatting, focused lint, a real failing-CC
+control and a positive native GC
+execution, then requires exact Rust test exit101 and the specific diagnostic
+when compiler failure reporting is deliberately silenced. Artifacts include
+generated C, the positive binary, real statuses, hardware/compiler and hashes.
+Evidence is pending, with no production PR or extra full matrix. Copy only the
+tested gc.rs and added GC failure steps into the next bundle; keep the evidence
+workflow outside production ancestry and preserve mandatory actual WASI.
+Journal: /private/tmp/fwp-gc-build-diagnostics-publication.json.
+For the original85-commit preparation, preserve accepted base CI plus the
+intentional mandatory WASI requirement. After the GC repair is verified and
+integrated, additionally allow its explicit GC failure-artifact steps. Preserve
+all six job names, full test commands and inherited golden diagnostics; do not
+resolve either change by replacing the entire workflow with an older snapshot.
 
 ## Local checks and durable recovery
 
