@@ -361,7 +361,7 @@ pub fn pointer_prim(sym: &str, a: &[Value], params: &[MT], result: &MT) -> R<Val
             "ptr.at" => {
                 let size = elem_size(&ptr_elem(&params[1]));
                 let i = a[0].as_i128().unwrap_or(0) as i64;
-                Value::U64((addr(&a[1]) as i64).wrapping_add(i * size as i64) as u64)
+                Value::U64(addr(&a[1]).wrapping_add((i as usize).wrapping_mul(size)) as u64)
             }
             "ptr.read" => {
                 let p = addr(&a[0]) as *const u8;
