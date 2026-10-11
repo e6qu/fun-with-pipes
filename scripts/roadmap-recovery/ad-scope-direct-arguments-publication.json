@@ -1,0 +1,13 @@
+{
+  "head": "dd7f5d8015028856bc12dd2fd19b8af644e7e280",
+  "previous": "a1884052b14968f9692d41560be5963a05654d0b",
+  "branch": "ownership-evidence-ad-scope-direct",
+  "tree": "904eb384a557894e50d3717d91dc0abde6396350",
+  "files": {
+    "src/interp.rs": "dd743604f59ca7b32116a49a7ce435ddeed1f3c82939413794bf145b122dd787",
+    "src/cgen.rs": "5cb9f0212c713a7f5ad257cab50ab512bfe9e2b49afdb014f92cd1b76776ca74",
+    "src/ownership.rs": "f843c2d74ed9f894863991a5cf562e0b74cc4150f9732f20bd576f2a4f1aa8fe",
+    "lib/autodiff.fwp": "d1dd2423551c530bc2e706e483c0f1fdb8c0bcddb2e854c9b50eaa75bf084e68",
+    "runtime/fwp_rt_kernel.c": "c205d5b43438d36af0b63e40a5aab4669d53dc1747109b3f56e118c84cf186c7"
+  }
+}

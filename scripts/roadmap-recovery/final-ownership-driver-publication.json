@@ -1,0 +1,28 @@
+{
+  "head": "489508a071d908d7c5396cd7a117176173980e39",
+  "base": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+  "branch": "ownership-pr124-final-ownership",
+  "unchangedNativeTree": "e630e0ff07988dee60a7e2a61bb3689d089ed92b",
+  "sourceHashes": {
+    "scripts/integrate-final-ownership.py": "04d7237311dbdb42a366c21da3813261e8455fe7d9d112906a48460dd8a24e77",
+    "scripts/export_prepared_commits.py": "63be0cd83351414289202dd99983a513558915796fb36207ff8b2cb0cb8dd343",
+    "scripts/codec-leaf-ownership-patch.json": "9a7fd7eefc472a9bc871e65d084fa7c1d9c6797b82ae3798397df4c02cc850d6",
+    "scripts/check-primitive-inventory-final.py": "4bfef417944c1be3828a69f9213b90131b6dddd11a12cadc57fe401ba9b6c54e",
+    "scripts/measure-typed-state-allocations-complete.py": "50d737e9c3aefb22ad9480850b3a8a5446c93a13a05ebb23dfe25770e3910528",
+    "scripts/measure-ad-scope-allocations-complete.py": "fa95e3c3cdc436ae38d9017e4f2da706f2f8407b432ed081cd8b6a152060f3f7",
+    "scripts/measure-list-callback-allocations-complete.py": "11e51785a01d72bf10bbb18f17efc03a75c02351291e204bc4ea1b7f0e53420a",
+    ".github/workflows/final-ownership-preflight.yml": "eb837364a189d1c885269d582fbb2810b38bbeb1c9ecc323bdad6abd79c46186",
+    "CONTRIBUTING.md": "542f28742abdf5e0d50923b7a037f932522e159ad43f7b0adabe9ff7291501b2",
+    "PLAN.md": "62f676fb3fa612c3dfb397f16b4dd19a37e89f60ffc6d9029e9944fc802b925f",
+    "docs/design.md": "fc4017ab4d0e7266609f92fd8b9435d56784fdd7b8408afcb6dd0ac4a6cced4a",
+    "docs/development-state.md": "9dd67c2ec0584f711c2370ffcbe7a13d93c4c5f150164823984504df776cb585",
+    "docs/ownership.md": "e90b9e266ed28b96c73a6a49b519eaad28d8ade9475d2b40460f53c150e38616",
+    "docs/primitive-ownership.md": "cd03f5e027c9dc577ff5287f1c1b637f1f30ed45961e466c2ff7adc33617ec67",
+    "docs/roadmap-queue.md": "5dde27287c6faa7043339ee5fe1525e51b869fe72b0bb873b44eda980f8b7d77",
+    "docs/roadmap-history.md": "4d6baf7b92d5dddd973413f44dd4ba4e253c9db608ccc795013cebfdcb13f5ab",
+    "docs/reference.md": "6904fe80560d3c0243cd85b43659680934aff93fbb06e8bbd06965f86bc75a8b",
+    "docs/concurrency.md": "a14cc48731fff6340993abcd979fd9d864dc04d3760d6d678afd9d34359fa960",
+    "docs/numerics.md": "755757f1e1b6e8c342fbcf3a487bc0b5fc8a3ceb830515aadfeeeeb1f628e3e9"
+  },
+  "stage": "Source-identical allocation driver published; measurements pending"
+}

@@ -1,0 +1,7 @@
+{
+  "base": "1aadb8a075e1737d0e6a4db96eae5d675f6fb404",
+  "failureRun": 38174221614,
+  "failureJob": 114573042599,
+  "stage": "Prepared only; no compiler execution or runtime validation",
+  "reason": "Task deadline and apply callbacks share their input effect variable but require different outer stage rows"
+}

@@ -1,0 +1,9 @@
+{
+  "head": "42774f981491bb321f4d66a43d6c7088da7db70b",
+  "previous": "448842081a776e6e2afae6e6d38d2471d00d0efa",
+  "branch": "ownership-evidence-ad-scope-direct",
+  "tree": "4edcd8a678db3e019601460104d04dc1bfe51b32",
+  "files": {
+    "tests/ad_tape_scopes.rs": "b2e738099d7dff8e318dbece4abe8152c910b7c41fc89ca0e853b292c99ad6a5"
+  }
+}

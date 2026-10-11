@@ -100,12 +100,12 @@ prepared-source classification, not main acceptance or a tracing-free guarantee.
 Counts and scope are recorded in
 [history](roadmap-history.md#portable-finite-ownership-inventory-2026-10-11).
 
-Combined repair38173831552 at runner head31c86694f4f7 verifies the
-expected changes against that frozen baseline:374 declarations,364 symbols,
-40 aliases,153 contracts,19 IR combinators,11 flat signatures and191 review
-declarations representing181 symbols in the combined candidate. It adds only internal ad.scope and the
-recorded raw-memory, AD, list and four typed State contracts. Final production gates and merged
-source classification remain required. These counts do not prove reclamation.
+Final integration38179558348 verifies375 declarations,365 symbols,40 aliases,
+168 contracts,19 IR combinators,11 flat signatures and177 review declarations
+representing167 symbols in the PR124 candidate. It includes internal ad.scope
+and ad.scope2, raw-memory, AD, list, typed State and14 codec contracts. Final
+production gates and merged-source classification remain required. These counts
+classify boundaries and do not establish tracing-free eligibility.
 
 Unknown primitive, foreign and remote boundaries keep the explicit shared
 fallback in [src/ownership.rs](../src/ownership.rs). A successful result or a

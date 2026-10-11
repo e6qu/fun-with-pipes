@@ -161,7 +161,9 @@ test "gradient" =
 Rev[T] = { value: T, vertex: I64 }
 
 # internal
-foreign "fwp" ad.scope : (a -> b) -> a -> b
+foreign "fwp" ad.scope : (a -> b) -> a -> b where Dup[a]
+# internal
+foreign "fwp" ad.scope2 : (a -> b -> c) -> a -> b -> c where Dup[a], Dup[b]
 # internal
 foreign "fwp" ad.tape : I64 -> I64
 # internal
@@ -287,8 +289,7 @@ rev._finish =
 # The value of a scalar function and its gradient at a point, in one
 # forward and one backward pass.
 value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
-value-and-grad =
-    curry (ad.scope (uncurry rev._value-and-grad))
+value-and-grad = ad.scope2 rev._value-and-grad
 
 # internal
 rev._value-and-grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> (t, List[t]) where Float[t], One[t], Dup[t]
@@ -298,7 +299,11 @@ rev._value-and-grad = second | compose rev._seed | flip compose rev._finish
 # the same numbers as `gradient`, for any number of inputs at the cost of
 # about one evaluation).
 grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where Float[t], One[t], Dup[t]
-grad = value-and-grad | flip compose .1
+grad = ad.scope2 rev._grad
+
+# internal
+rev._grad : (List[Rev[t]] -> Rev[t]) -> List[t] -> List[t] where Float[t], One[t], Dup[t]
+rev._grad = rev._value-and-grad | flip compose .1
 
 # `grad` of a function of a vector
 grad-vector : (Vector[Rev[t], n] -> Rev[t]) -> Vector[t, n] -> Vector[t, n] where Float[t], One[t], Dup[t]

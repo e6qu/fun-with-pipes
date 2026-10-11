@@ -1,0 +1,10 @@
+{
+  "head": "6ff1ffb1a7ad14b83e2149757f5c476d806803b4",
+  "previous": "bbb68321b522f5e732c6988df8b77345967ecd2f",
+  "branch": "ownership-evidence-function-argument-effects",
+  "tree": "391e97eb6b38430d2d7030fe2fd239c2f7a80e4a",
+  "files": {
+    "src/infer.rs": "b0fef763bdb2bcb25bb3855c7ebcc22b99de4335123894d965d3aa01b9408335",
+    "tests/call_effects.rs": "319881be02d4d3058139e13249cde1364c051326e4a69e40b0c820a034722a46"
+  }
+}

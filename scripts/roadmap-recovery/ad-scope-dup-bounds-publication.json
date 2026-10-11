@@ -1,0 +1,9 @@
+{
+  "head": "448842081a776e6e2afae6e6d38d2471d00d0efa",
+  "previous": "dd7f5d8015028856bc12dd2fd19b8af644e7e280",
+  "branch": "ownership-evidence-ad-scope-direct",
+  "tree": "02bc35504c568cad676514fa76f9c401fceacea0",
+  "files": {
+    "lib/autodiff.fwp": "a18e4435f97e516e2243d0c0c76bb92b9d83c43840d0a4125469902311c55f7b"
+  }
+}

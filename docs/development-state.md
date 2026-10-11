@@ -6,7 +6,7 @@ Updated 2026-10-12. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 preserves accepted and superseded evidence. Root docs are authoritative.
 
 Durable recovery branch: `roadmap/handoff-pr123-20261011`. Last verified
-checkpoint `16a5d8d7c428d6519ed39eaff04498b2e70bf6ec` passes audit38174719540.
+checkpoint `160a5ef367316fe1e9647a5bea441b91c21a4771` passes audit38175639142.
 The next checkpoint retains the completed repair export and this streamlined
 handoff. Query the branch tip when recovering; do not assume an embedded
 checkpoint identifies its own commit. Restore only temporary paths with verified
@@ -65,7 +65,8 @@ Current delivery is PR[#124](https://github.com/e6qu/fun-with-pipes/pull/124):
 resource/network items74–112, compiler/cache diagnostics, AD tape/scoped-gradient
 lifetimes, list callback owners, closure cleanup and typed State ownership.
 Production head is `1aadb8a075e1737d0e6a4db96eae5d675f6fb404`, complete tree
-`e630e0ff07988dee60a7e2a61bb3689d089ed92b`. CI38174221614 is running;
+`e630e0ff07988dee60a7e2a61bb3689d089ed92b`. CI38174221614 finished; Linux and both regular macOS jobs fail the original
+task_ownership pass-fn effect comparison, while bench and both GC jobs pass;
 roadmap_docs38174221611 passes at that head. No full-matrix acceptance yet.
 Publication receipt: /private/tmp/fwp-pr124-combined-repair-export/publication.json.
 
@@ -76,90 +77,43 @@ This is duplicate-run avoidance, not a passing main gate. Proof:
 
 ## Current verified bundle evidence
 
-Combined driver `85b305ccad63527101a329e3f4bab2c3318458da` passes preflight38173831552.
-The published tree matches runner export31c86694f4f7f6eec870ffa73add7dabbdd0eba0.
-All71 library units, type snapshots, effect controls, format stability/faithfulness,
-stdlib docs and expanded State ownership tests pass together. Four positive
-stored-callback cases and two missing-IO negatives protect both inference fixes:
-call-time ambient labels extend temporary call rows, while row unification
-refreshes tails after common payload unification. Signature instantiation and
-function-pipe composition semantics stay intact.
+Final integration driver489508a071d908d7c5396cd7a117176173980e39 passes
+runner38179558348. It combines direct scoped gradients,14 fresh codec contracts,
+typed State, the callback effect repair and complete allocator instrumentation.
+All71 library units, original type snapshots, task/State/AD controls, affine File
+rejection, input aliases, formatting and stdlib docs pass together. Its strict
+inventory verifies375 declarations/365 symbols,40 aliases,168 contracts,
+19 IR combinators,11 flat signatures and177 review declarations/167 symbols.
 
-State stack records own typed values, retain borrowed initials and gets, protect
-replacement/callback results, and release on normal/error/trap/cancellation and
-boxing failure. Task switches preserve each owner chain. Scalar address-shaped
-bits remain uncounted. Array/record States and runtime-dependent heap-capturing
-closures agree between raw interpretation and native O1/O2 with stack placement
-on/off, real GC stress/verification and reuse verification on/off. C/source/
-binary/status artifacts are retained before assertions. Unknown legacy activations
-and boxed unmodeled payloads retain their documented tracing fallback.
+The final diagnostic refinement6ff1ffb1a7ad14b83e2149757f5c476d806803b4 passes
+runner38179961853: eight effect controls, original snapshots, native task aliases,
+State controls and71 library units. Argument comparison permits only the
+parameter's known outer effects, preserves nested input rows and displays the
+original callback type on every mismatch. No original task fixture was changed.
+Integrate this refinement and these docs before publication and full gates.
 
-Strict integrated inventory verifies374 declarations,364 symbols,40 aliases,
-153 contracts,19 IR combinators,11 flat signatures and191 review declarations
-representing181 symbols. Missing contracts are classification work, not inherently
-bugs. State focused evidence38167118922 and allocation evidence38166896486 pass
-Linux/ARM/Intel. Existing resource, WASI and omission controls remain required.
+Complete counters include initializer fast paths and count slow delegation once.
+Independent Linux/ARM/Intel State38174682933, list38175393180 and scoped
+AD38176126768 comparisons pass; combined-source Linux profiles also pass in
+38179558348. State4096-call O1/O2 managed calls fall16384→12288 and requested
+bytes272212→206676; counted freed bytes rise0→262144. List2048-call profiles
+retain43008 calls/965374 bytes and raise counted freed bytes65536→917504.
+Scoped grad4096-call profiles match the baseline33 calls/720 bytes per gradient,
+repairing the40-call/872-byte regression without weakening assertions. Hardware,
+compiler, flags and source/binary hashes remain in the runner artifacts.
+No timing or tracing-free claim is established.
 
-Original production38164685147 failed only lib/autodiff formatting assertions;
-its documentation38164685131 failed the numeric-row parser. Both repairs pass the
-combined preflight. Earlier failed/cancelled preflights are archived in
-[history](roadmap-history.md#pr124-combined-repair-preflight-chronology).
+The old production38174221614 is complete: regular Linux/ARM/Intel fail only
+the original pass-fn callback comparison; bench and both GC jobs pass.
+Documentation38174221611 passes. These are earlier-head diagnostics, not final
+gates. Logs: fwp-pr124-combined-{linux,arm,intel}-failed.log.
 
-Next: monitor all six jobs on the current production head, repair any failures,
-collect its diagnostics. The corrected counters exposed an allocation regression
-in the scoped AD code already included here: fix that before merging. Integrate
-the verified AD repair, passing codec contracts and streamlined docs into the
-same coherent PR124 bundle, then require a new full six-job current-head matrix
-and roadmap_docs before exact-head squash. A native-source change warrants this
-rerun; a docs-only restart did not. Prepare remaining phase2 classifications
-while CI runs; no later production PR opens before #124 merges.
-
-Allocation evidence review found that fwp_alloc_init has a fast path bypassing
-fwp_gc_alloc. Existing managedCalls/managedRequestedBytes instrumentation counts
-only fwp_gc_alloc entries; it does not count every managed allocation. The
-published comparison is valid only for that entry-point subset. Correct the
-instrumentation and rerun equivalent State/AD/list reports on runners before
-using those counters for phase2 acceptance. Do not claim total allocation parity
-from the earlier reports. No timing or tracing-free claim is established.
-
-Corrected State driver771c2b83b9a5db0142df759006b960704606a86a passes all
-three jobs in38174682933. On4096 equivalent calls at O1/O2 on all three
-platforms, total managed calls fall16384→12288 and requested bytes272212→206676;
-counted freed bytes rise0→262144. Both initializer fast paths and slow delegation
-are counted once. Report/hardware/compiler/flags/source/binary metadata is retained
-in /private/tmp/fwp-complete-state-allocation-metadata; binaries stay on GitHub.
-These workload-specific results establish neither timing gains nor tracing-free
-support. Earlier partial counters are superseded for total allocation claims.
-
-Corrected AD/list driver e9a758112918ad7bd0246fa260fde67e2f53043b fails
-all three jobs in38174792982 on the AD allocation assertion; list was skipped
-by step sequencing, so it is unverified. Linux reveals33→40 managed allocations
-and720→872 requested bytes per gradient, with lower live memory and unchanged
-steady-state external buffer requests. The old scope wrapper constructs dynamic
-const/compose callbacks. Keep the allocation assertions; fix the implementation.
-Direct scoped-callback driver a1884052b14968f9692d41560be5963a05654d0b,
-branch ownership-evidence-ad-scope-direct, CI38175358973 pending, passes the
-actual input directly to a borrowed callback instead of allocating those wrapper
-closures. This changes only the internal ad.scope signature; public grad/vjp
-signatures stay intact. Exact production-source drafts, all original scope
-omission controls, interpreter/native gradients and complete counter comparisons
-are prepared. It is not runtime-verified yet. List measurements now run
-independently at186cd79f64a0781cb9588975f863c983b072d1ac on
-ownership-evidence-list-allocations-complete, CI38175393180 pending.
-
-Serializer/codec candidate b837f55fc91f073ef147455916d704b1ed12c673 passes
-all three jobs in38175125107 on ownership-evidence-serializer-leaves. Fourteen
-contracts borrow inputs and return independent fresh leaves. All71 library units,
-existing leaf controls and new raw/native input-alias cases pass at O1/O2,
-stack on/off and GC/reuse verification on/off. Firstff9527 workflow was invalid
-before any job ran; the fix moves runner.temp artifact configuration into its
-supported step context. No production acceptance or allocation benefit is claimed.
-Recipe: /private/tmp/fwp-serializer-leaf-ownership-patch.json; publication and
-workflow repair receipts: fwp-serializer-leaf-publication.json and
-fwp-serializer-workflow-fix-publication.json. Generated C/binaries/statuses remain
-on GitHub. Include these validated contracts, the verified AD allocation repair and
-streamlined docs in PR124 before its final gates. Remaining classifications
-continue in the next bundle after #124 acceptance.
+Next: rerun the final integration with6ff1ff and the streamlined docs, publish
+its exact-tree export with the1aadb lease, then require all six current-head
+production jobs and roadmap_docs before squash. Keep one production PR. Prepare
+the finite177-declaration phase2 classification while CI runs. Earlier preflights
+and cancelled runs cannot supply final production gates. Phases2–6 remain open.
+Integration recipe: /private/tmp/fwp-integrate-final-ownership-on-runner.py.
 
 ## Remaining ownership deliveries
 
@@ -222,8 +176,8 @@ F16/128-bit, WASI pointer widths and automatic raw-buffer lifetimes remain
 separate requirements. Production acceptance is recorded above.
 
 After queue112 is delivered, recheck the finite [ownership exit gates](ownership.md#phase-2-exit-gates)
-and [primitive contracts](primitive-ownership.md) against merged source. The current153-contract inventory leaves191 declarations/181 symbols for
-classification. Preserve conservative fallbacks until typed ownership and
+and [primitive contracts](primitive-ownership.md) against merged source. The verified final candidate168-contract inventory leaves177 declarations/167
+symbols for classification. Preserve conservative fallbacks until typed ownership and
 teardown are proved.
 
 Review borrowed metadata roots, reconstruction/partial failure, retained
