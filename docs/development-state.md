@@ -6,15 +6,15 @@ Updated 2026-10-11. Read [PLAN](../PLAN.md), [ownership](ownership.md) and
 contains detailed checks and superseded instructions. Root docs are authoritative;
 prepared branch docs are historical snapshots.
 
-Durable recovery: `roadmap/handoff-pr123-20261011`. The latest completed
-checkpoint is becc2fae2deceeec90afda6eb526801b64acb92f; the current cache-lifetime
-checkpoint publication is recorded in /private/tmp/fwp-cache-lifetime-checkpoint.json.
-It retains all11 authoritative docs and fourteen recovery/inventory/repair drafts
-under `scripts/roadmap-recovery/`. Restore helpers there if /private/tmp is lost;
-copy the inventory pair into repo `scripts/` before running its audit on GitHub.
-Publication verifies source blobs, not draft execution or production acceptance.
-The latest accepted-status corrections and cache recipe await the new exact-head
-recovery audit. Earlier cancelled audit records are archived in history.
+Durable recovery: current tip of `roadmap/handoff-pr123-20261011`. The latest
+publication receipt is /private/tmp/fwp-ad-roadmap-checkpoint.json. It retains
+all11 authoritative docs and the recovery/inventory/compiler/cache/autodiff
+repair drafts under `scripts/roadmap-recovery/`. Restore helpers there if
+/private/tmp is lost; copy the inventory pair into repo scripts before its
+GitHub audit. Publication verifies source blobs, not draft execution or
+production acceptance. Inspect the exact current branch-head docs audit on
+GitHub; an earlier or cancelled audit does not verify the current snapshot.
+Earlier checkpoints and cancelled audits remain in history.
 
 The saved goal controller is active again, verified by get_goal on this resumed
 turn. Keep the full objective active: phases2–6 remain unfinished. Queued CI and
@@ -57,7 +57,7 @@ and complete tree `ccb67ec38e9ee3adfa222dcd1979374da688a9d7` match the tested he
 were hashed in /private/tmp/fwp-main-docs-pre122 and restored byte-for-byte.
 Protected main update0.05CPU/0.26elapsed and acceptance record0.00CPU/0.14elapsed
 pass; docs audit44/106/59 passes0.73CPU/5.16elapsed. Actual-main docs38127751825
-is queued. Duplicate production38127751789 has the identical tested tree and
+passes. Duplicate production38127751789 has the identical tested tree and
 was cancelled after strict gate/tree proof checks,0.15CPU/3.18elapsed.
 Queue33 and35–53 are accepted; queue34 is a verified duplicate. Bundle44–53
 adds direct typed variant alias transfer, nominal match/field cleanup context,
@@ -69,22 +69,22 @@ remains unproved. Phase2 is incomplete; phases3–6 are pending.
 
 [PR123](https://github.com/e6qu/fun-with-pipes/pull/123) is the sole open
 production PR, bundling library/OpenCL/TLS/file/resource items54–73 plus the
-pointer and raw-memory string-copy repairs. Published head
-b0ae00d5512df825271970cafcf569f52dbfc0cd, nativefd930e541db6, is on this actual
-PR122 squash. All42 original commits and probes plus both new repairs remain;
-accepted diagnostics inherit exactly. Eight focused tests and65 library units,
-lint and format pass at identical native source hashes. Publication2.41CPU/
-22.57elapsed and PR creation0.18CPU/4.35elapsed pass. Full CI38128387224 and
-docs38128387231 remain pending. Intel macOS GC stress passes. Regular ARM job
-114437427481 started at11:39:35UTC; formatting and lint pass, and its full
-non-GC test gate is running. The other four production jobs and docs are queued.
-Require all seven passing gates before squash. Latest remote
-status: /private/tmp/fwp-roadmap-active-ci-status.json; refresh with the remote
-administration helper /private/tmp/fwp-monitor-roadmap-ci.py.
-Next concrete action: monitor/fix those gates, then squash with the recorded
-one-line subject and empty body. Prepare74–112 on a GitHub runner while CI runs;
-open its production PR after123 merges. Independent evidence does not replace
-production gates. Phases2–6 remain incomplete.
+pointer and raw-memory repairs. Current head
+9e7d0b24610524cf54125c44b47ee07185c0b7c3 adds only docs/stdlib.md to b0ae:
+the generated pointer-offset comment now matches lib/ffi.fwp. Required ARM
+macOS CI found the stale comment; fix receipt is
+/private/tmp/fwp-pr123-stdlib-repair.json and its completed ARM job log is
+/private/tmp/fwp-pr123-arm-regular-failed.log. Native source remainsfd930e541db6;
+all original probes and focused checks remain in history.
+New full CI38138731040 and docs38138731036 are queued. Require all six jobs and
+roadmap_docs on this exact new head before squash; earlier-head passes do not
+transfer. The remaining superseded CI38128387224 jobs were cancelled to save
+runner time. Current acceptance helpers use the new head and run identities.
+Next concrete action: monitor and fix the new gates, then squash with the
+recorded one-line subject and empty body. Prepare74–112 concurrently on GitHub;
+open its sole production PR after123 merges. Refresh the exact-head remote
+status using /private/tmp/fwp-monitor-roadmap-ci.py. Independent evidence never
+replaces final production gates. Phases2–6 remain incomplete.
 
 Prepared acceptance helpers (not executed): /private/tmp/fwp-merge-pr123.py
 requires every exact-head gate; /private/tmp/fwp-protect-main-after123.py checks
@@ -248,6 +248,48 @@ buffer lifetimes. Numeric lifetime findings and future regressions are in
 performance and tracing-free work. Phases3–6 still require implementation and
 measured acceptance; the prepared ownership queue is not the whole plan.
 
+## Autodiff tape bug fixes prepared for the next bundle
+
+Independent branch ownership-evidence-autodiff-tapes is at
+602e076604d3dd759c47b396c10cf848dd9dbb61; evidence38139112950 is queued for
+Linux, ARM macOS and Intel macOS. Drafts repair out-of-bounds parent/output
+indices in both backends, register all five detached native buffers for normal
+and exceptional release, and retire exhausted generation slots instead of
+wrapping them. Backward still consumes the selected tape before validation;
+push failure leaves it live. Mixed-tape and outside-lifetime trap precedence,
+zipped-output behavior, negative constants and arithmetic order are preserved.
+Zero-input backward remains valid. Slots stop at generation32767 and 65535
+slots; exhaustion traps instead of recycling old identities.
+
+One interpreter unit regression checks bounds, gradients, consumption, mixed
+precedence, empty/unpaired outputs and an injected terminal-generation boundary.
+Native O1/O2 probes require a real GC and exercise return, mixed/invalid traps,
+injected result-allocation failure and actual task cancellation. Four omitted
+controls must fail specifically: registration/release41, wrapping46 and bounds31.
+Public Pipe cases compare raw FWP_NO_OPT=1 with optimized native builds. Artifacts
+retain source, binaries, output/statuses, compiler/hardware and formatted drafts.
+No build or test has run yet. These are candidate repairs, not merged support;
+grad callback failure/cancellation before backward still needs scoped coverage.
+
+Recipes /private/tmp/fwp-ad-ownership-patch.json reproduce both native files
+from immutable b0ae without replacing later device changes. Other drafts:
+fwp-ad-ownership-test.rs, fwp-ad-unwind-probe.c and fwp-ad-ownership-evidence.yml.
+Original evidence89447/38138590114 failed workflow validation before any jobs:
+runner.temp was used in job env. Corrected6f781/38138762594 was cancelled while
+still queued before strengthening real-collection and omission controls.
+Current finalization draft requires all three current AD jobs as well as
+PR123/preparation/GC gates, adds the exact AD transforms and tests, and formats
+the final candidate on GitHub before its own full exact-head CI. It stages new
+test files before comparing the repair-file whitelist. Rebase retains the
+accepted docs/stdlib.md fix while preserving the preparation's b0ae anchor.
+The draft adds a cheap standard-library documentation preflight before Cargo
+gates in all six jobs, using the actual generator test; original full gates
+and mandatory WASI remain unchanged. Runner validation is pending.
+
+Local disk is about36.0GiB free at12:23UTC, below64GiB. No local build, test,
+format or rebase is authorized while the reserve is unavailable; only source
+editing and lightweight remote administration ran here.
+
 ## Local resource incident and next preparation
 
 The attempted future bundle preparation was refused before execution when free
@@ -294,7 +336,8 @@ or executed; run focused checks on GitHub and include it in the next bundle,
 preserving every original regression. /private/tmp/fwp-gc-diagnostics-ci-draft.yml
 adds failure artifacts to both macOS GC jobs. Apply only its added GC steps to
 the future workflow; copying the whole draft would lose mandatory WASI.
-PR123's frozen head remains unchanged. Current gates are required as recorded;
+PR123's native source remains unchanged by this later harness draft. Its new
+documentation-repair head requires all gates as recorded;
 the later harness repair does not count as passed support.
 Published independent validation branch: ownership-evidence-gc-build-diagnostics,
 heada44c3da1aa344266262fc99471b331b053db371b on PR123 native source.

@@ -3,7 +3,7 @@ import hashlib, json, subprocess
 ROOT=Path('/Users/zardoz/projects/fun-with-pipes')
 DOCS=['CONTRIBUTING.md','PLAN.md','docs/design.md','docs/development-state.md','docs/ownership.md','docs/primitive-ownership.md','docs/roadmap-queue.md','docs/roadmap-history.md','docs/reference.md','docs/concurrency.md','docs/numerics.md']
 BASE='68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'
-HEAD='b0ae00d5512df825271970cafcf569f52dbfc0cd'
+HEAD='9e7d0b24610524cf54125c44b47ee07185c0b7c3'
 SUBJECT='Own library file and raw-memory resource lifetimes'
 def git(*args):return subprocess.check_output(['git',*args],cwd=ROOT)
 post=json.loads(Path('/private/tmp/fwp-pr123-postmerge.json').read_text())

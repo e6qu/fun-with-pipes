@@ -5,7 +5,7 @@ import re
 import subprocess
 
 ROOT = Path('/Users/zardoz/projects/fun-with-pipes')
-HEAD = 'b0ae00d5512df825271970cafcf569f52dbfc0cd'
+HEAD = '9e7d0b24610524cf54125c44b47ee07185c0b7c3'
 BASE = '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'
 proof = json.loads(Path('/private/tmp/fwp-pr123-merge-proof.json').read_text())
 gates = json.loads(Path('/private/tmp/fwp-pr123-final-gate-proof.json').read_text())
@@ -41,7 +41,7 @@ with history.open('a') as out:
     out.write('\nAccepted primitive preparation rows54–73:\n\n' +
               '\n'.join(primitive_rows) + '\n')
 current = f'''Main is `{sha}` (PR #123). Frozen head `{HEAD}`
-passes all six exact-head jobs in CI38128387224 and roadmap_docs38128387231
+passes all six exact-head jobs in CI38138731040 and roadmap_docs38138731036
 before match-head squash at {proof['mergedAt']}. Subject `{proof['subject']}`
 has {proof['characters']} characters, one line, empty body and no trailers or
 attribution. One parent `{BASE}` and complete tree `{proof['tree']}` match

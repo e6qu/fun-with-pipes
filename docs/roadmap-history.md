@@ -17265,3 +17265,35 @@ primitive summary. The actual PR122 gate/merge proofs above remain their
 acceptance evidence. These latest documentation edits await the next audit.
 
 Audit38135983611 was subsequently confirmed cancelled while unstarted before its replacement checkpoint. Cancellation is not verification.
+
+## PR123 documentation repair before final acceptance
+
+The earlier b0ae head is superseded by 9e7d0b24610524cf54125c44b47ee07185c0b7c3.
+ARM regular job114437427481 failed only stdlib_doc: the generated reference
+still had the old ptr.at comment. Other ARM targets passed. Old bench and Intel
+GC passed, and docs38128387231 and actual-main docs38127751825 passed.
+The remaining old CI38128387224 jobs were cancelled after publishing the
+one-line generated-comment repair. These checks do not transfer to the new head.
+
+Historical preparation and old-head checks:
+
+[PR123](https://github.com/e6qu/fun-with-pipes/pull/123) is the sole open
+production PR, bundling library/OpenCL/TLS/file/resource items54–73 plus the
+pointer and raw-memory string-copy repairs. Published head
+b0ae00d5512df825271970cafcf569f52dbfc0cd, nativefd930e541db6, is on this actual
+PR122 squash. All42 original commits and probes plus both new repairs remain;
+accepted diagnostics inherit exactly. Eight focused tests and65 library units,
+lint and format pass at identical native source hashes. Publication2.41CPU/
+22.57elapsed and PR creation0.18CPU/4.35elapsed pass. Full CI38128387224 and
+docs38128387231 remain pending. Intel macOS GC stress passes. Regular ARM job
+114437427481 started at11:39:35UTC; formatting and lint pass, and its full
+non-GC test gate is running. Regular Intel job114437427476 started at11:53:06UTC
+and is running its non-GC tests too. Linux, bench, ARM GC and docs remain queued.
+Require all seven passing gates before squash. Latest remote
+status: /private/tmp/fwp-roadmap-active-ci-status.json; refresh with the remote
+administration helper /private/tmp/fwp-monitor-roadmap-ci.py.
+Next concrete action: monitor/fix those gates, then squash with the recorded
+one-line subject and empty body. Prepare74–112 on a GitHub runner while CI runs;
+open its production PR after123 merges. Independent evidence does not replace
+production gates. Phases2–6 remain incomplete.
+

@@ -14,10 +14,13 @@ OUT = ROOT / 'finalization-evidence'
 OUT.mkdir()
 REPO = 'repos/e6qu/fun-with-pipes'
 OLD = '68f959bbf28cfc00ed91a9f4c6dd6836020ff2a4'
-TESTED = 'b0ae00d5512df825271970cafcf569f52dbfc0cd'
+PREP_BASE = 'b0ae00d5512df825271970cafcf569f52dbfc0cd'
+TESTED = '9e7d0b24610524cf54125c44b47ee07185c0b7c3'
 RECOVERY = os.environ['FWP_RECOVERY_HEAD']
 GC_HEAD = os.environ['FWP_GC_EVIDENCE_HEAD']
 GC_RUN = int(os.environ['FWP_GC_EVIDENCE_RUN'])
+AD_HEAD = os.environ['FWP_AD_EVIDENCE_HEAD']
+AD_RUN = int(os.environ['FWP_AD_EVIDENCE_RUN'])
 PREP_RUN = 38130008122
 PREP_DRIVER = 'cfcb70d16044915206c2e681a72618021ba0ea97'
 BRANCH = 'ownership-resource-network-bundle'
@@ -54,10 +57,11 @@ def gate(number, head, names):
     return result
 
 
-ci = gate(38128387224, TESTED, NAMES)
-docs = gate(38128387231, TESTED, {'roadmap_docs'})
+ci = gate(38138731040, TESTED, NAMES)
+docs = gate(38138731036, TESTED, {'roadmap_docs'})
 prep_gate = gate(PREP_RUN, PREP_DRIVER, {'prepare'})
 gc_gate = gate(GC_RUN, GC_HEAD, {'diagnostics'})
+ad_gate = gate(AD_RUN, AD_HEAD, {'tapes (ubuntu-latest)', 'tapes (macos-15)', 'tapes (macos-15-intel)'})
 post = json.loads(command('gh', 'api', REPO + '/pulls/123'))
 assert post['merged'] and post['head']['sha'] == TESTED
 assert post['base']['sha'] == OLD
@@ -87,7 +91,7 @@ artifact = OUT / 'preparation'
 subprocess.run(['gh', 'run', 'download', str(PREP_RUN), '--name',
                 'resource-network-preparation', '--dir', str(artifact)], check=True)
 prep = json.loads((artifact / 'preparation.json').read_text())
-assert prep['base'] == TESTED and prep['branch'] == BRANCH
+assert prep['base'] == PREP_BASE and prep['branch'] == BRANCH
 assert prep['includedRows'] == list(range(74, 113))
 assert len(prep['originalCommits']) == len(prep['rebasedCommits']) == 85
 prepared = prep['head']
@@ -132,17 +136,20 @@ state_path.write_text(state)
 wt = ROOT.parent / 'final-resource-network'
 git('worktree', 'add', '--detach', str(wt), prepared)
 result = subprocess.run(['git', 'rebase', '--reapply-cherry-picks', '--empty=keep',
-                         '--onto', accepted, TESTED], cwd=wt,
+                         '--onto', accepted, PREP_BASE], cwd=wt,
                         env=dict(os.environ, GIT_EDITOR='true'), capture_output=True)
 (OUT / 'rebase.stdout').write_bytes(result.stdout)
 (OUT / 'rebase.stderr').write_bytes(result.stderr)
 assert result.returncode == 0, 'Unexpected conflict: retain evidence and repair it'
 rebased = git('rev-list', '--reverse', accepted + '..HEAD', cwd=wt).splitlines()
-before = git('rev-list', '--reverse', TESTED + '..' + prepared).splitlines()
+before = git('rev-list', '--reverse', PREP_BASE + '..' + prepared).splitlines()
 assert len(rebased) == len(before)
 for old, new in zip(before, rebased):
     assert git('show', '-s', '--format=%s', old) == git('show', '-s', '--format=%s', new)
-assert git('rev-parse', 'HEAD^{tree}', cwd=wt) == git('rev-parse', prepared + '^{tree}')
+# The sole accepted tree change after preparation is generated stdlib docs.
+assert git('diff', '--name-only', prepared, 'HEAD', cwd=wt).splitlines() == ['docs/stdlib.md']
+assert (wt / 'docs/stdlib.md').read_bytes() == blob(TESTED, 'docs/stdlib.md')
+assert git('diff', '--name-only', PREP_BASE, TESTED).splitlines() == ['docs/stdlib.md']
 
 # Integrate only the tested harness and its GC artifact additions. In particular,
 # preserve the new mandatory WASI environment and every existing test command.
@@ -177,13 +184,51 @@ anchor = ('      - name: Full GC stress and verification golden suite\n'
 assert original_ci.count(anchor) == 1 and addition not in original_ci
 updated_ci = original_ci.replace(anchor, anchor + addition, 1)
 assert updated_ci.replace(addition, '', 1) == original_ci
+# Fail on stale generated docs before the expensive Cargo gates, using the
+# actual generator test rather than a second implementation of its rules.
+preflight = (
+    '      - name: Generated standard-library docs preflight\n'
+    '        run: |\n'
+    '          CARGO_MANIFEST_DIR="$PWD" rustc --test tests/stdlib_doc.rs -o "$RUNNER_TEMP/fwp-stdlib-doc-check"\n'
+    '          env -u FWP_BLESS "$RUNNER_TEMP/fwp-stdlib-doc-check" --exact stdlib_doc_is_current\n')
+assert updated_ci.count('      - name: fmt\n') == 2
+updated_ci = updated_ci.replace('      - name: fmt\n', preflight + '      - name: fmt\n')
+assert updated_ci.count('      - name: Full GC stress and verification golden suite\n') == 1
+updated_ci = updated_ci.replace('      - name: Full GC stress and verification golden suite\n',
+                               preflight + '      - name: Full GC stress and verification golden suite\n')
+assert updated_ci.count('      - name: benchmarks against C and Rust (docs/benchmarks.md)\n') == 1
+updated_ci = updated_ci.replace('      - name: benchmarks against C and Rust (docs/benchmarks.md)\n',
+                               preflight + '      - name: benchmarks against C and Rust (docs/benchmarks.md)\n')
+assert updated_ci.count(preflight) == 4
+assert updated_ci.replace(preflight, '').replace(addition, '', 1) == original_ci
 (wt / '.github/workflows/ci.yml').write_text(updated_ci)
-assert set(git('diff', '--name-only', cwd=wt).splitlines()) == {
-    'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
-    'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml'}
-git('add', 'tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
-    'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml', cwd=wt)
-git('commit', '-m', 'Preserve cached executable lifetimes and compiler diagnostics', cwd=wt)
+# Preserve all later device changes when adding the independently checked AD repair.
+ad_patch = blob(AD_HEAD, 'scripts/ad-ownership-patch.json')
+ad_edits = json.loads(ad_patch)
+assert set(ad_edits) == {'src/numerics.rs', 'runtime/fwp_rt_kernel.c'}
+for name, edits in ad_edits.items():
+    evidence_source = blob(PREP_BASE, name).decode()
+    source = (wt / name).read_text()
+    for edit in edits:
+        assert evidence_source.count(edit['old']) == source.count(edit['old']) == 1, name
+        evidence_source = evidence_source.replace(edit['old'], edit['new'])
+        source = source.replace(edit['old'], edit['new'])
+    assert evidence_source.encode() == blob(AD_HEAD, name), name
+    (wt / name).write_text(source)
+for name in ['tests/ad_tape_ownership.rs', 'tests/fixtures/ad_unwind_probe.c']:
+    (wt / name).parent.mkdir(parents=True, exist_ok=True)
+    (wt / name).write_bytes(blob(AD_HEAD, name))
+repair_files = ['tests/gc.rs', 'tests/compiler_diagnostics.rs', 'tests/cache_lifetime.rs',
+                'src/cgen.rs', 'src/ffi_interp.rs', 'src/aot.rs', '.github/workflows/ci.yml',
+                'src/numerics.rs', 'runtime/fwp_rt_kernel.c', 'tests/ad_tape_ownership.rs',
+                'tests/fixtures/ad_unwind_probe.c']
+# Runner formatting makes the final candidate reviewable; full exact-head CI
+# verifies these candidate bytes rather than transferring older evidence gates.
+subprocess.run(['rustfmt', *[name for name in repair_files if name.endswith('.rs')]],
+               cwd=wt, check=True)
+git('add', *repair_files, cwd=wt)
+assert set(git('diff', '--cached', '--name-only', cwd=wt).splitlines()) == set(repair_files)
+git('commit', '-m', 'Protect autodiff buffers and cached executable lifetimes', cwd=wt)
 for name in DOCS:
     (wt / name).write_bytes((accepted_wt / name).read_bytes())
 reference = wt / 'docs/reference.md'
@@ -204,14 +249,12 @@ for revision in git('rev-list', accepted + '..HEAD', cwd=wt).splitlines():
                    ('co-authored', 'authored-by', 'authored by', 'ai attribution'))
 record = dict(base=accepted, head=head, previous=prepared, branch=BRANCH,
               originalCommits=prep['originalCommits'], rebasedCommits=rebased,
-              includedRows=prep['includedRows'], gcEvidence=gc_gate,
+              includedRows=prep['includedRows'], gcEvidence=gc_gate, adEvidence=ad_gate,
+              adPatchHash=hashlib.sha256(ad_patch).hexdigest(),
               preparationGate=prep_gate, recoveryHead=RECOVERY,
               compilerPatchHash=hashlib.sha256(compiler_patch).hexdigest(),
               sourceHashes={name: hashlib.sha256((wt / name).read_bytes()).hexdigest()
-                            for name in DOCS + ['tests/gc.rs', 'tests/compiler_diagnostics.rs',
-                                               'tests/cache_lifetime.rs', 'src/aot.rs',
-                                               'src/cgen.rs', 'src/ffi_interp.rs',
-                                               '.github/workflows/ci.yml']},
+                            for name in DOCS + repair_files},
               stage='Preparation only; publish one PR and require all exact-head production gates')
 (OUT / 'finalization.json').write_text(json.dumps(record, indent=2) + '\n')
 git('push', '--force-with-lease=refs/heads/' + BRANCH + ':' + prepared,

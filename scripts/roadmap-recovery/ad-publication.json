@@ -1,0 +1,14 @@
+{
+  "head": "602e076604d3dd759c47b396c10cf848dd9dbb61",
+  "branch": "ownership-evidence-autodiff-tapes",
+  "base": "b0ae00d5512df825271970cafcf569f52dbfc0cd",
+  "files": [
+    ".github/workflows/ad-ownership-evidence.yml",
+    "runtime/fwp_rt_kernel.c",
+    "scripts/ad-ownership-patch.json",
+    "src/numerics.rs",
+    "tests/ad_tape_ownership.rs",
+    "tests/fixtures/ad_unwind_probe.c"
+  ],
+  "stage": "Published drafts; no checks executed"
+}

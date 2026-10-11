@@ -17,13 +17,18 @@ jobs:
       GH_REPO: e6qu/fun-with-pipes
       # Replace these frozen evidence bindings if a focused repair is needed.
       # Publish this driver only after PR123, preparation and GC evidence pass.
-      FWP_RECOVERY_HEAD: becc2fae2deceeec90afda6eb526801b64acb92f
+      FWP_RECOVERY_HEAD: 186a9a38b980eadbe1a7a76b279c250a0d29a49d
       FWP_GC_EVIDENCE_HEAD: a44c3da1aa344266262fc99471b331b053db371b
+      FWP_AD_EVIDENCE_HEAD: 602e076604d3dd759c47b396c10cf848dd9dbb61
+      FWP_AD_EVIDENCE_RUN: "38139112950"
       FWP_GC_EVIDENCE_RUN: "38136959809"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
       - name: Retain actual main, evidence and immutable preparation tags
         run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' '+refs/tags/*:refs/tags/*'
       - name: Ordinary commit metadata

@@ -1,0 +1,62 @@
+{
+  "src/numerics.rs": [
+    {
+      "old": "tapes.iter().position(|t| !t.live)",
+      "new": "tapes.iter().position(|t| !t.live && t.gen < 32767)"
+    },
+    {
+      "old": "t.gen = t.gen % 32767 + 1;",
+      "new": "t.gen += 1;"
+    },
+    {
+      "old": "/// The slot of a live tape id.",
+      "new": "const INVALID_NODE: &str = \"autodiff: invalid node index\";\n\n/// The slot of a live tape id."
+    },
+    {
+      "old": "    t.pa.push((ra & 0xffff_ffff) as i32);",
+      "new": "    if (ra & 0xffff_ffff) as usize >= idx\n        || (rb >= 0 && (rb & 0xffff_ffff) as usize >= idx)\n    {\n        return trap(INVALID_NODE);\n    }\n    t.pa.push((ra & 0xffff_ffff) as i32);"
+    },
+    {
+      "old": "        adj[(*o & 0xffff_ffff) as usize] += *s;",
+      "new": "        let node = (*o & 0xffff_ffff) as usize;\n        if node >= adj.len() {\n            return trap(INVALID_NODE);\n        }\n        adj[node] += *s;"
+    },
+    {
+      "old": "        Err(e) => Some(Err(e)),\n    }\n}\n",
+      "new": "        Err(e) => Some(Err(e)),\n    }\n}\n\n#[cfg(test)]\nmod tape_validation_tests {\n    use super::*;\n\n    fn expect_trap<T>(result: R<T>, expected: &str) {\n        match result {\n            Err(Ctl::Trap(message)) => assert_eq!(message, expected),\n            _ => panic!(\"expected autodiff trap: {expected}\"),\n        }\n    }\n\n    #[test]\n    fn invalid_nodes_preserve_push_state_and_consume_backward_tapes() {\n        let base = tape_new(2).unwrap();\n        let other = tape_new(1).unwrap();\n        for invalid in [base + 2, base | 0xffff_ffff] {\n            expect_trap(push(invalid, 1.0, -1, 0.0), INVALID_NODE);\n            expect_trap(push(base, 1.0, invalid, 1.0), INVALID_NODE);\n            expect_trap(push(-1, 0.0, invalid, 1.0), INVALID_NODE);\n        }\n        // Mixing computations retains precedence over checking node indices.\n        expect_trap(push(base + 2, 1.0, other, 1.0), MIXED);\n        let node = push(base, 4.0, base + 1, 5.0).unwrap();\n        assert_eq!(node, base + 2);\n        assert_eq!(backward(base, &[node, base + 1], &[2.0, 3.0]).unwrap(), [8.0, 13.0]);\n        expect_trap(push(base, 1.0, -1, 0.0), USED_OUTSIDE);\n        expect_trap(backward(other, &[other + 1], &[1.0]), INVALID_NODE);\n        expect_trap(backward(other, &[], &[]), USED_OUTSIDE);\n\n        let base = tape_new(1).unwrap();\n        let other = tape_new(1).unwrap();\n        expect_trap(backward(base, &[other | 0xffff_ffff], &[1.0]), MIXED);\n        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);\n        assert_eq!(backward(other, &[other], &[3.0]).unwrap(), [3.0]);\n\n        // Zip semantics ignore unpaired outputs and constant sentinels.\n        let base = tape_new(0).unwrap();\n        assert!(backward(base, &[-1, base | 0xffff_ffff], &[1.0]).unwrap().is_empty());\n        assert_eq!(push(-1, 1.0, -2, 2.0).unwrap(), -1);\n\n        // Exhaust a generation without resetting its identity to an old token.\n        let slot = ((base >> 32) & 0xffff) as usize - 1;\n        TAPES.lock().unwrap()[slot].gen = 32766;\n        let last = tape_new(0).unwrap();\n        assert_eq!((last >> 32) & 0xffff, (base >> 32) & 0xffff);\n        assert_eq!(last >> 48, 32767);\n        assert!(backward(last, &[], &[]).unwrap().is_empty());\n        let next = tape_new(0).unwrap();\n        assert_ne!((next >> 32) & 0xffff, (last >> 32) & 0xffff);\n        expect_trap(backward(last, &[], &[]), USED_OUTSIDE);\n        expect_trap(backward(base, &[], &[]), USED_OUTSIDE);\n        assert!(backward(next, &[], &[]).unwrap().is_empty());\n    }\n}\n"
+    }
+  ],
+  "runtime/fwp_rt_kernel.c": [
+    {
+      "old": "while (slot < fwp_ntapes && fwp_tapes[slot].live) slot++;",
+      "new": "while (slot < fwp_ntapes && (fwp_tapes[slot].live || fwp_tapes[slot].gen >= 32767)) slot++;"
+    },
+    {
+      "old": "t->gen = t->gen % 32767 + 1;",
+      "new": "t->gen++;"
+    },
+    {
+      "old": "static void *fwp_k_malloc(size_t n) {",
+      "new": "static const char *FWP_AD_INVALID_NODE = \"autodiff: invalid node index\";\n\n/* Own detached tape buffers until backward returns or unwinds. */\ntypedef struct {\n    int32_t *pa, *pb;\n    double *da, *db, *adj;\n} fwp_tape_buffers;\n\nstatic void fwp_tape_buffers_release(void *arg) {\n    fwp_tape_buffers *b = (fwp_tape_buffers *)arg;\n    free(b->pa);\n    free(b->pb);\n    free(b->da);\n    free(b->db);\n    free(b->adj);\n}\n\nstatic void *fwp_k_malloc(size_t n) {"
+    },
+    {
+      "old": "    fwp_tape_reserve(t, idx + 1);",
+      "new": "    if ((ra & 0xffffffff) >= idx || (rb >= 0 && (rb & 0xffffffff) >= idx))\n        fwp_trap(FWP_AD_INVALID_NODE);\n    fwp_tape_reserve(t, idx + 1);"
+    },
+    {
+      "old": "    double *adj = (double *)calloc((size_t)(tp.len ? tp.len : 1), sizeof(double));",
+      "new": "    fwp_tape_buffers buffers = {tp.pa, tp.pb, tp.da, tp.db, 0};\n    fwp_cleanup cleanup;\n    fwp_cleanup_push(&cleanup, fwp_tape_buffers_release, &buffers);\n    double *adj = (double *)calloc((size_t)(tp.len ? tp.len : 1), sizeof(double));\n    buffers.adj = adj;"
+    },
+    {
+      "old": "    if (!adj) {\n        fprintf(stderr, \"fwp: out of memory\\n\");",
+      "new": "    if (!adj) {\n        fwp_cleanup_pop(&cleanup);\n        fwp_tape_buffers_release(&buffers);\n        fprintf(stderr, \"fwp: out of memory\\n\");"
+    },
+    {
+      "old": "        if ((o >> 32) != id) {\n            free(adj);\n            fwp_trap(FWP_AD_MIXED);\n        }\n        adj[o & 0xffffffff] += fwp_f64(ARR(seeds)->d[i]);",
+      "new": "        if ((o >> 32) != id) fwp_trap(FWP_AD_MIXED);\n        if ((o & 0xffffffff) >= tp.len) fwp_trap(FWP_AD_INVALID_NODE);\n        adj[o & 0xffffffff] += fwp_f64(ARR(seeds)->d[i]);"
+    },
+    {
+      "old": "    free(adj);\n    free(tp.pa);\n    free(tp.pb);\n    free(tp.da);\n    free(tp.db);\n    return r;",
+      "new": "    fwp_cleanup_pop(&cleanup);\n    fwp_tape_buffers_release(&buffers);\n    return r;"
+    }
+  ]
+}

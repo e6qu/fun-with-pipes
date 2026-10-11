@@ -108,8 +108,10 @@ cancellation need separate controls; capacity reuse must preserve those exits.
 Both token implementations wrap the slot generation after 32767 uses. The
 ordinary stale-token check therefore needs a regression across that wrap and a
 policy that prevents an old token from identifying a new tape. These are
-prepared-source review findings, not verified cleanup or stale-token guarantees
-for all lifetimes.
+prepared-source review findings. The candidate ownership repair retires a
+slot after generation32767, with an explicit terminal-boundary regression; its
+runner checks and final bundle gates remain pending. It does not establish
+verified cleanup or stale-token guarantees for all lifetimes.
 
 The public `ad.push` and `ad.backward` primitives accept `I64` tokens. Current
 code validates tape identity but does not check the low-word node index against
@@ -118,7 +120,9 @@ indices therefore need explicit interpreter/native bounds regressions: Rust
 indexing can panic, while the native indexing can access outside the allocation.
 Validate tokens before use, preserve valid operation and reduction order, and
 verify exceptional buffer release as part of that fix. This is a source-review
-finding; no invalid-index execution or verified repair is claimed yet. Keep the
+finding. Candidate bounds and detached-buffer cleanup repairs are published
+with raw interpreter/native and omitted-check controls; execution is pending,
+so no verified repair is claimed yet. Keep the
 current numeric phase order from [the plan](../PLAN.md).
 
 Historical timing samples are preserved in
