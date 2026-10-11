@@ -57,6 +57,17 @@ host's unknown roots. `FWP_GC=off` disables tracing, not all allocation and not
 the ownership gap. `--memory static` provisions bounded memory, not static
 lifetimes. None of these is a general collector-free execution guarantee.
 
+
+PR122 merges direct typed variant alias transfer and checked nominal context for
+match/field elimination. CAF caches own typed results, return separate owners,
+and release after task teardown; inlined arguments still evaluate and release
+before the callee. Spawn/deadline callbacks retain captures with rollback;
+scopes protect result/storage through joining and unwind. Counted task handles
+own cached results, and await returns separate owners. Typed channel queues
+retain elements and transfer them on receive; close preserves queued values.
+Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
+reclamation remains unproved. Other resource boundaries stay prepared.
+
 ## Remaining ownership coverage
 
 Container contracts and comparison-key borrowing are merged. Selected leaves,
@@ -136,7 +147,7 @@ boundary arithmetic without dereferencing addresses and WebAssembly pointer widt
 The existing raw interpreter reproducibly panics on a large I16 element offset;
 native code uses signed overflow-prone arithmetic. A separate pointer-width
 wrapping repair passes boundary/native/sanitizer controls on Linux and both
-macOS architectures; final bundle acceptance is pending. Bundle54–63 also
+macOS architectures; final bundle acceptance is pending. Bundle54–73 also
 prepares borrowed raw-memory contracts and counted ptr.read-string copies,
 with copy independence and last-owner native release controls.
 It does not establish F16/128-bit, WebAssembly or raw-buffer lifetime coverage.
@@ -252,7 +263,7 @@ validate Darwin root discovery, task ABIs or Apple Silicon numeric behavior.
 
 ## Merged ownership boundaries
 
-Main through PR #121 includes the following contracts. Detailed primitive modes
+Main through PR #122 includes the following contracts. Detailed primitive modes
 are in [primitive-ownership.md](primitive-ownership.md), and original validation
 and measurements are in [history](roadmap-history.md).
 

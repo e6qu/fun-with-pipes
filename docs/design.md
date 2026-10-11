@@ -228,6 +228,17 @@ this rule it has no implicit generalization at top level either. Each
 generic in a program is one the programmer wrote down. Monomorphization's
 cost is code size, so explicit generics keep that cost visible.
 
+
+PR122 merges direct typed variant alias transfer and checked nominal context for
+match/field elimination. CAF caches own typed results, return separate owners,
+and release after task teardown; inlined arguments still evaluate and release
+before the callee. Spawn/deadline callbacks retain captures with rollback;
+scopes protect result/storage through joining and unwind. Counted task handles
+own cached results, and await returns separate owners. Typed channel queues
+retain elements and transfer them on receive; close preserves queued values.
+Explicit draining breaks the tested counted cycle; automatic unreachable-cycle
+reclamation remains unproved. Other resource boundaries stay prepared.
+
 ## Runtime
 
 - In C every value is a 64-bit word. Integers up to 64 bits and floats are

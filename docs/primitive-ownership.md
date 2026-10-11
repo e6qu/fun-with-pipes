@@ -17,7 +17,7 @@ containers returned by an owning wrapper. That last category includes copies,
 in-place updates, missing-key no-ops and `array.set`'s optional container.
 Every failure path still consumes its specified reference.
 
-The tables describe main through PR #121. Arrays, maps and sets own typed elements.
+The tables describe main through PR #122. Arrays, maps and sets own typed elements.
 Exceptional and retained-runtime refinements remain in [the queue](roadmap-queue.md).
 
 | Array primitives | Arguments in data-last order | Result / aliasing | Callback |
@@ -263,7 +263,7 @@ passed all six production gates and the documentation audit.
 
 ## Prepared refinements
 
-Bundle54–63 also prepares raw-memory contracts: address words borrow without
+Bundle54–73 also prepares raw-memory contracts: address words borrow without
 managed counting; mem.string copies a borrowed managed String; ptr.read-string
 returns a fresh counted managed String independent of the raw buffer. Buffers
 from mem.alloc/mem.string require manual mem.free. These are locally checked
@@ -279,16 +279,6 @@ prepared rows and acceptance evidence are in history.
 
 | Queue | Prepared contract | Remaining acceptance |
 |---|---|---|
-| 44 | Returned variant aliases transfer existing typed field owners directly, avoiding an extra box or retain set | Bundle CI; emitted ownership counts, aliases across yields and source/native agreement |
-| 45 | Match elimination preserves nominal types for effectful discarded constructor fields and their child destruction | Bundle CI; nested fields, aliasing, effects and evaluation order |
-| 46 | Inlined record projections retain checked base types while removing outer storage and dropping discarded children | Bundle CI; aliases, discarded nested fields and evaluation order |
-| 47 | Typed CAF cache owners survive caller drops; calls return separate owners and executable teardown releases caches after tasks | Bundle CI; initialization failures, reentry, overflow, aliases and teardown |
-| 48 | Inlining evaluates CAF arguments before the callee, including unused arguments, and releases their temporary owners | Bundle CI; first-trap order, raw interpreter agreement and missing-release control |
-| 49 | task.spawn borrows the caller thunk and retains a typed task owner until entry or cancellation; failed preparation rolls back before publication | Bundle CI; stack/scope failures, captures, aliases and scalar results; task graph still shares |
-| 50 | task.within borrows the caller thunk and retains typed captures through deadline completion or cancellation | Bundle CI; external aliases and rollback; task results still share |
-| 51 | task.scope borrows its callback, returns an owned result and protects result/scope storage through joining, traps and cancellation | Bundle CI; handler restoration, aliases and cleanup omission controls |
-| 52 | Counted task handles own typed cached results; scheduler/scope owners preserve tasks and each await returns an independent typed result owner | Bundle CI; minor roots, repeated awaits, overflow and cancelled/failed private awaits |
-| 53 | Typed channels retain queued elements and transfer queue ownership into receive results; close preserves queued values | Bundle CI; blocked calls, allocation/retain failures, minor roots and cycle policy |
 | 54 | C exports evaluate results once, release copied wrappers and preserve library-owned string pointers for the host | Bundle CI; conversion failure, nullable pointers, cached calls and host lifetimes |
 | 55 | C library strings/records are copied into owned inputs; partial conversion protects earlier arguments and fields until transfer | Bundle CI; invalid inputs, allocation/callee traps, scalar/pointer ABI and lengthless Bytes rejection |
 | 56 | Native library unload drains tasks, releases caches/runtime regions and restores host signal handlers; static archives clean at exit | Bundle CI; actual reload, finalizer order, descriptors, mappings and pthread cleanup metadata |

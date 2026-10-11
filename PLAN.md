@@ -45,12 +45,10 @@ optional tracing-free mode. Prepared branches do not establish merged support.
 
 ## Current delivery
 
-Main includes #74–#121: native macOS ARM/Intel support and selected ownership,
-last-owner reclamation and unwind protections. Queue33 and35–43 are accepted;
-queue34 is a verified duplicate delivered in #107. Deliver queues44–53 together
-on the actual PR121 squash, then bundle the remaining ownership preparations
-54–112 in related groups of roughly ten. Adjust boundaries for dependencies
-and reviewability; a new failing check is part of the bundle's repair work.
+Main includes #74–#122: native macOS ARM/Intel support and selected ownership,
+last-owner reclamation and unwind protections. Queues33 and35–53 are accepted;
+queue34 is a verified duplicate delivered in #107. Deliver54–73 with the raw-memory
+repairs on the actual PR122 squash, then bundle ownership74–112 in related groups.
 [The handoff](docs/development-state.md) gives exact heads, checks and the sole
 next action. Prepared work still requires final rebases and full CI.
 
